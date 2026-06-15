@@ -1,0 +1,39 @@
+ユーザー詳細取得
+
+GET /api/users/:userId
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "user": {
+    "id": "12345",
+    "firstName": "山田",
+    "firstNameKana": "ヤマダ",
+    "lastName": "太郎",
+    "lastNameKana": "タロウ",
+    "email": "yamada.taro@test.com",
+    "phoneNumber": "0312345678",
+    "position": "担当者",
+    "role": "一般社員",
+    "siteId": "123"
+  }
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当するユーザが見つかりませんでした。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

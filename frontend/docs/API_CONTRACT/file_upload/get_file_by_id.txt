@@ -1,0 +1,34 @@
+GET /api/file/:fileId
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "file": {
+    "fileId": "f_12345",
+    "fileName": "contract.pdf",
+    "mimeType": "application/pdf",
+    "size": 234123,
+    "uploadedAt": "2026-01-29T09:30:00Z",
+    "uploadedBy": "user123",
+    "downloadUrl": "/api/files/f_12345/download"
+  }
+}
+
+Response - Error (HTTP 404)
+{
+  "statusCode": "NOT_FOUND",
+  "message": "ファイルが見つかりません。"
+}
+
+Response - Error (HTTP 403)
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このファイルにアクセスする権限がありません。"
+}
+
+Response - Error (HTTP 401)
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "認証に失敗しました。有効なトークンを提供してください。"
+}

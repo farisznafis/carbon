@@ -1,0 +1,66 @@
+20260521_「モニタリング報告書」の出力
+# monitoring_report_upload
+
+POST /api/project/:projectId/monitoring-report
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: multipart/form-data
+
+Request Body (JSON):
+{
+  "reportDate": "2025-12-31",
+  "projectId": "12",
+  "fileT"
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "message": "モニタリング報告書が正常にアップロードされました。",
+  "data": {
+    "reportId": "r_12345",
+    "projectId": "123456",
+    "reportDate": "2025-12-31",
+    "reportFileUrl": "/api/files/r_12345",
+    "createdAt": "2026-05-21T10:00:00Z"
+  }
+}
+
+ERROR RESPONSES
+# 413 Payload Too Large
+{
+  "statusCode": "FILE_TOO_LARGE",
+  "message": "アップロードされたファイルは、許可されている最大サイズを超えています。",
+  "details": {
+    "maxSizeMB": 10,
+    "actualSizeMB": 18.4
+  }
+}
+# 415 Unsupported Media Type
+{
+  "statusCode": "UNSUPPORTED_FILE_TYPE",
+  "message": "このファイル形式はアップロードできません。",
+  "details": {
+    # only xlsx and xls are allowed for monitoring report uploads
+    
+  }
+},
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当するプロジェクトが見つかりませんでした。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+},
+{
+  "errorCode": “MISSING_FILES",
+  "message": "モニタリング報告書のファイルが見つかりませんでした。"
+}

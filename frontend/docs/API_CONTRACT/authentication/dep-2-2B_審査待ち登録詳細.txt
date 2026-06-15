@@ -1,0 +1,95 @@
+# 2-2B 審査後対応(承認・非承認) - 詳細取得
+# get_registration_detail
+# This API is called when the Admin clicks on any row in the queue table to view the full details of the registrant in the left panel (Page 2-2).
+
+GET /api/admin/registrations/{registrationId}
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+{
+  "statusCode": "OK",
+  "registrationData": {
+    "registrationId": "REG-20260423-001",
+    "status": "PENDING",
+    "submittedAt": "2026-04-23T10:00:00Z",
+    
+    "companyInfo": {
+      "corporateNumber": "1234567890123", 
+      "corporateName": "株式会社サンプル",
+      "corporateNameKana": "カブシキガイシャサンプル",
+      "companyNameEnglish": "Sample Corporation"
+    },
+    "address": {
+      "postalCode": "1234567",
+      "prefecture": "東京都",
+      "city": "渋谷区",
+      "address": "桜丘町1-1",
+      "building": "サンプルビル 3F"
+    },
+    "representativeInfo": {
+      "lastName": "山田",
+      "firstName": "太郎",
+      "lastNameKana": "ヤマダ",
+      "firstNameKana": "タロウ",
+      "position": "代表取締役社長"
+    },
+    "picInfo": {
+      "isSameAsRepresentative": false,
+      "picLastName": "佐藤",
+      "picFirstName": "次郎",
+      "picLastNameKana": "サトウ",
+      "picFirstNameKana": "ジロウ",
+      "picDepartmentPosition": "環境部 部長",
+      "picPhoneNumber": "03-1234-5678",
+      "picFaxNumber": "03-1234-5679",
+      "picEmail": "sato@company.com"
+    },
+    "projectRegistration": {
+      "methodologies": [
+        {
+          "methodology": "EN-R-002",
+          "installationDate": "2025-04-07",
+          "equipmentItems": [
+            {
+              "manufacturer": "パナソニック", 
+              "model": "ABC-1234",
+              "evidenceFileId": "FILE-889900",
+              "evidenceFileUrl": "https://s3.aws.com/.../file-889900.pdf" // Tambahan dari Backend agar Admin bisa langsung klik/download file
+            }
+          ],
+          "hasSubsidy": true, 
+          "subsidyName": "省エネ設備導入補助金"
+        }
+      ],
+      "projectDocuments": [
+        {
+          "documentType": "PROJECT_PLAN",
+          "fileId": "FILE-112233",
+          "fileUrl": "https://s3.aws.com/.../file-112233.pdf" // Tambahan URL dari Backend
+        }
+      ]
+    }
+  }
+}
+
+ERROR RESPONSES
+Response - Error (HTTP 401)
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "認証に失敗しました。有効なトークンを提供してください。"
+}
+Response - Error (HTTP 403)
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+}
+Response - Error (HTTP 404)
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する登録申請が見つかりませんでした。"
+}
+Response - Error (HTTP 500)
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

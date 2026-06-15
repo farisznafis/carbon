@@ -1,0 +1,73 @@
+GET /api/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+Response - Success (HTTP 200) //マスターダッシュボードのユーザー一覧
+{
+  "statusCode": "OK",
+  "users": [
+    {
+      "id": "1",
+      "firstName": "山田",
+      "firstNameKana": "ヤマダ",
+      "lastName": "太郎",
+      "lastNameKana": "タロウ",
+      "email": "taroyamada@test.com",
+      "siteId": null,//マスターユーザーの場合
+    },
+    {
+      "id": "2",
+      "firstName": "山口",
+      "firstNameKana": "ヤマグチ",
+      "lastName": "太郎",
+      "lastNameKana": "タロウ",
+      "email": "taroyamaguchi@test.com",
+      "siteId": "1234",
+    }
+  ]
+  "sites": [
+    {
+      "id": "1",
+      "siteName": "ABC支店",
+      "postalCode": "1110000"
+      "prefName": "東京都",   
+      "cityName": "千代田区",
+      "blockName": "千代田1-1-1",
+      "addressDetail": "○○マンション101号室",
+      "picFirstName": "山田",
+      "picLastName": "太郎",
+      "projects": ["ProjectA"]
+    },
+    {
+      "id": "2",
+      "siteName": "ABC工場",
+      "postalCode": "1110000"
+      "prefName": "東京都",   
+      "cityName": "千代田区",
+      "blockName": "千代田1-1-11-1-1",
+      "addressDetail": "○○マンション102号室",
+      "picFirstName": "山口",
+      "picLastName": "太郎",
+      "projects": []
+    }
+  ]
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+

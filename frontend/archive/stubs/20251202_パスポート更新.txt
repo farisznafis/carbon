@@ -1,0 +1,45 @@
+POST /api/users/change-password
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body (JSON): 
+{
+  "userId": "12345",
+  "currentPassword": "OldPassword123!",
+  "newPassword": "NewPassword456!",
+}
+
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "INVALID_CURRENT_PASSWORD",
+  "message": "現在のパスワードが正しくありません。"
+},
+{
+  "statusCode": "WEAK_NEW_PASSWORD",
+  "message": "新しいパスワードはセキュリティ基準を満たしていません。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+

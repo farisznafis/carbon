@@ -1,0 +1,58 @@
+20260422_プロフィール更新
+
+PATCH /api/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body (JSON): //必要な値だけ送信する
+{
+  "firstName": "太郎",
+  "firstNameKana": "タロウ",
+  "lastName": "山田",
+  "lastNameKana": "ヤマダ",
+  "email": "yamada.taro@test.com",
+  "phoneNumber": "0312345678",
+  "position": "担当者"
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "profile": {
+    "id": "12345",
+    "firstName": "太郎",
+    "firstNameKana": "タロウ",
+    "lastName": "山田",
+    "lastNameKana": "ヤマダ",
+    "email": "yamada.taro@test.com",
+    "phoneNumber": "0312345678",
+    "position": "担当者",
+    "role": "マスター",
+    "siteId": "123"
+  }
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "VALIDATION_ERROR",
+  "errors": {
+    "email": "メールアドレスの形式が正しくありません。",
+    "phoneNumber": "電話番号の形式が正しくありません。"
+  }
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "ユーザープロファイルが見つかりません。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

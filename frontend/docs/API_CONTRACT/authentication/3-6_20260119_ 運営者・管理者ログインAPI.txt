@@ -1,0 +1,44 @@
+運営管理者 User Login
+# auth_admin_login
+
+URL: POST /auth/admin/login
+Content-Type: application/json
+
+Request Body (JSON): 
+{
+  	"email": "tyamada@test.com",
+  	"password": "StrongPassword123!"
+}
+
+Response – Success (HTTP 200):
+{   
+    "statusCode": "OK",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6...",
+    "admin": {
+        "id": 123, 
+        "email": tyamada@test.com,
+        "name": "太郎山田",
+        "email": "user@example.com",
+	       }	
+}
+
+Response – Error:
+{   
+	"statusCode": "INVALID_FORMAT",
+  	"message": "ユーザー名またはパスワードまたは企業IDが正しくありません。"
+}
+--
+{   
+    	"errorCode": "SERVER_ERROR",
+  	"message": "サーバー内部でエラーが発生しました。"
+}
+--
+{   
+    	"errorCode": "ACCOUNT_INACTIVE",
+  	"message": "アカウントが無効化されています。"
+}
+--
+{   
+    	"errorCode": "TOO_MANY_ATTEMPTS",
+  	"message": "試行回数が上限に達しました。しばらくしてからお試しください。"
+}

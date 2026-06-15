@@ -1,0 +1,80 @@
+User Login
+URL: POST/auth/login
+
+
+Request Body (JSON): 
+{
+  	"companyId": "00123",
+ 	"identifier": "user@example.com", //username ok
+  	"password": "StrongPassword123!"
+}
+
+Response – Success (HTTP 200):
+{   
+    "success": true,
+  	"message": "ログインに成功しました",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6...",
+  	"user": {
+        "username": tyamada,
+        "name": "太郎山田",
+        "role": "master", //master or regular
+        "email": "user@example.com",
+        "companyId": "00123",
+	}	
+}
+
+Response - Error
+{
+  "loginErrors": [
+    { //http 400
+        "success": "false",
+        "errorCode": "MISSING_FIELDS",
+        "message": "必須項目が入力されていません。",
+    },
+    {//http 400
+        "success": "false",
+        "errorCode": "INVALID_FORMAT",
+        "message": "入力形式が正しくありません。"
+    },
+    {//http 400
+        "success": "false",
+        "errorCode": "PASSWORD_TOO_SHORT",
+        "message": "パスワードが短すぎます。"
+    },
+    {//http 401
+      "success": "false",
+      "errorCode": "INVALID_CREDENTIALS",
+      "message": "ユーザー名またはパスワードが正しくありません。"
+    },
+    {//http 403
+        "success": "false",
+        "errorCode": "ACCOUNT_INACTIVE",
+        "message": "アカウントが無効化されています。"
+    },
+    {//http 404
+        "success": "false",
+        "errorCode": "COMPANY_NOT_FOUND",
+        "message": "会社IDが見つかりません。"
+    },
+    {//http 404
+        "success": "false",
+        "errorCode": "USER_NOT_FOUND",
+        "message": "ユーザーが見つかりません。"
+    },
+    {//http 429
+        "success": "false",
+        "errorCode": "TOO_MANY_ATTEMPTS",
+        "message": "試行回数が上限に達しました。しばらくしてからお試しください。"
+    },
+    {//http 500
+        "success": "false",
+        "errorCode": "SERVER_ERROR",
+        "message": "サーバー内部でエラーが発生しました。"
+    },
+    {//http 503
+        "success": "false",
+        "errorCode": "SERVICE_UNAVAILABLE",
+        "message": "現在サービスを利用できません。"
+    }
+  ]
+}

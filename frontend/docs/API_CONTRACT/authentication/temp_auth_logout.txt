@@ -1,0 +1,27 @@
+20260422_ログアウト
+
+POST /api/logout
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body (JSON):
+{}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK"
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "INVALID_TOKEN",
+  "message": "認証トークンが無効です。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

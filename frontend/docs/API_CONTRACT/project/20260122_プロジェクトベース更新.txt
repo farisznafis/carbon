@@ -1,0 +1,70 @@
+20260122_プロジェクトベース更新
+# update_project
+
+運営・管理者専用
+URL: PATCH /api/projects/:projectId 
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body (JSON): //必要な値だけ送信する
+{
+  "projectName": "太陽光発電導入プロジェクトA",
+  "baselineEmissions": 0,
+  "postProjectEmission": 0,
+  "repFirstName": "太郎",
+  "repFirstNameKana": "タロウ",
+  "repLastName": "山田",
+  "repLastNameKana": "ヤマダ",
+  "repEmail": "rep@example.com",
+  "repPhoneNumber": "0312345678",
+  "repPosition": "代表取締役",
+  "picFirstName": "花子",
+  "picFirstNameKana": "ハナコ",
+  "picLastName": "佐藤",
+  "picLastNameKana": "サトウ",
+  "picEmail": "pic@example.com",
+  "picPhoneNumber": "0398765432",
+  "picPosition": "担当マネージャー",
+  "dataManagementPic": "データ管理担当名",
+  "companyName": "株式会社サンプル",
+  "regionalCategory": "九州",
+  "methodologyVersion": "Ver.2.0",
+  "methodCategory": "カテゴリーA",
+  "methodNumber": "M-001",
+  "methodName": "太陽光発電方法",
+  "methodMainEmission": "CO2",
+  "methodCombiFeasibility": true,
+  "methodDetails": "手法の詳細説明テキスト"
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK"
+  "project": { //プロジェクトベースオブジェクト　将来に複数オブジェクトを送信する
+    "updatedAt": "2026-01-22T09:15:00Z",
+    "projectName": "太陽光発電導入プロジェクトA",
+    "regionalCategory": "九州",
+    "methodologyVersion": "2.0",
+  }
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当するプロジェクトが見つかりませんでした。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+
+

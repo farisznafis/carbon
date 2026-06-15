@@ -1,0 +1,53 @@
+20260129_プロジェクトファイル
+# upload_file
+
+URL: POST /api/files
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: multipart/form-data
+
+
+Response - Success (HTTP 200)
+{
+ 
+  "fileId": "f_12345",
+  "fileName": "contract.pdf",
+  "mimeType": "application/pdf",
+  "size": 234123,
+  "downloadUrl": "/api/files/f_12345",
+  "createdAt": "2026-01-29T09:30:00Z"
+
+}
+
+ERROR RESPONSES
+
+{ //error 413
+  "statusCode": "FILE_TOO_LARGE",
+  "message": "アップロードされたファイルは、許可されている最大サイズを超えています。"
+  "details": {
+    "maxSizeMB": 10,
+    "actualSizeMB": 18.4
+  }
+},
+{ //error 415
+  "statusCode": "UNSUPPORTED_FILE_TYPE",
+  "message": "このファイル形式はアップロードできません。"
+  "details": {
+    "allowedTypes": ["application/pdf", "image/png"],
+    "receivedType": "application/x-msdownload"
+  }
+},
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+
+

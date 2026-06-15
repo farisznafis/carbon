@@ -1,0 +1,77 @@
+7-4 IoTデバイス情報の更新 (Update IoT Device Information) 
+
+PATCH /iot-devices/{deviceId}
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body (JSON):
+{
+  "memberId": "member-123",
+  "deviceId": "dev-001",
+  "deviceType": "temperature-sensor",
+  "model": "TS-1000",
+  "firmwareVersion": "1.0.3",
+  "location": "東京本社 3F 会議室",
+  "description": "メイン会議室の温湿度センサー"
+}
+
+Response - Success (HTTP 201)
+{
+  "deviceId": "dev-001",
+  "memberId": "member-123",
+  "deviceType": "temperature-sensor",
+  "model": "TS-1000",
+  "firmwareVersion": "1.0.3",
+  "location": "東京本社 3F 会議室",
+  "description": "メイン会議室の温湿度センサー",
+  "status": "ACTIVE",
+  "iotCoreThingName": "member-123-dev-001",
+  "certificateId": "abcd1234",
+  "certificateArn": "arn:aws:iot:ap-northeast-1:123456789012:cert/abcd1234",
+  "certificatePem": "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----",
+  "privateKey": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----",
+  "caCertificatePem": "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----",
+  "createdAt": "2025-04-07T10:00:00Z",
+  "lastUpdatedAt": "2025-04-07T10:00:00Z"
+}
+
+Response - Error (HTTP 400)
+{
+  "statusCode": "VALIDATION_ERROR",
+  "message": "入力内容に不備があります。",
+  "fields": {
+    "memberId": "memberId は必須項目です。",
+    "deviceId": "deviceId は必須項目です。",
+    "status": "status は PENDING, ACTIVE, DISABLED, DELETED のいずれかを指定してください。"
+  }
+}
+
+Response - Error (HTTP 401)
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "認証に失敗しました。再度ログインしてください。"
+}
+
+Response - Error (HTTP 403)
+{
+  "statusCode": "FORBIDDEN",
+  "message": "この会員のIoTデバイス情報を更新する権限がありません。"
+}
+
+Response - Error (HTTP 404)
+{
+  "statusCode": "DEVICE_NOT_FOUND",
+  "message": "指定されたデバイスが見つかりません。memberId と deviceId を確認してください。"
+}
+
+Response - Error (HTTP 409)
+{
+  "statusCode": "INVALID_STATUS_TRANSITION",
+  "message": "指定されたステータスには変更できません。"
+}
+
+Response - Error (HTTP 500)
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバ内部でエラーが発生しました。時間をおいて再度お試しください。"
+}

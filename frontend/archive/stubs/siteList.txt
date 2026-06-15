@@ -1,0 +1,44 @@
+POST /api/siteList
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "siteList": [
+    {
+      "id": "1",
+      "siteName": "ABC支店",
+      "address": "東京市新宿区1-2-3",
+      "picFirstName": "山田",
+      "picLastName": "太郎",
+      "projects": ["ProjectA"]
+    },
+    {
+    "id": "2",
+    "siteName": "ABC工場",
+    "address": "東京市新宿区1-2-4",
+    "picFirstName": "山口",
+    "picLastName": "太郎",
+    "projects": []
+    }
+  ]
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+

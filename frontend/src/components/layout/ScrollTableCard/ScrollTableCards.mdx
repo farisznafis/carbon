@@ -1,0 +1,47 @@
+
+---
+
+## ScrollTableCard
+
+スクロール可能なテーブルを内包したカードレイアウトコンポーネント。  
+外側カードタイトル、テーブルタイトル、アイテム、クリックハンドラを注入できます。
+
+### 型
+
+```ts
+type Item = {
+  id: string | number   // React key 用の一意 ID
+  label: string         // 行に表示する文字列
+}
+
+type ScrollTableCardProps = {
+  cardTitle: string          // 外側カードのタイトル
+  tableTitle: string         // テーブルカードのタイトル
+  items: Item[]              // 表示するアイテム配列
+  onEdit?: (item: Item) => void    // 編集ボタンクリック時
+  onRowClick?: (item: Item) => void // 行クリック時
+}
+```
+
+### 使用例
+
+```tsx
+const items = [
+  { id: 1, label: "項目 1" },
+  { id: 2, label: "項目 2" },
+]
+
+<ScrollTableCard
+  cardTitle="ラップカード"
+  tableTitle="リスト"
+  items={items}
+  onRowClick={(item) => console.log("row", item)}
+  onEdit={(item) => console.log("edit", item)}
+/>
+```
+
+### 挙動
+
+- `items` が縦に並び、最大高さを超えると内部スクロール。
+- 行全体クリックで `onRowClick` が呼ばれる。
+- 右側のペンアイコンを押すと `onEdit` が呼ばれ、行クリックは発火しない（`stopPropagation` 済み）。

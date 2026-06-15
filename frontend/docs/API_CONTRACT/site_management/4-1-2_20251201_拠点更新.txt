@@ -1,0 +1,60 @@
+20251201_拠点更新
+# update_site
+# This API allows authenticated users to update the information of a specific site associated with their company, including address details and contact information.
+
+PATCH /api/company/sites/:siteId
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body (JSON): 
+{
+  
+  "postalCode": "100-0001",
+  "blockName": "千代田1-1-1",
+  "addressDetail": "○○マンション101号室",
+
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "site": {
+    "siteId": "123",
+    "siteName": "ABC工場",
+    "postalCode": "100-0001",
+    "prefName": "東京都",   
+    "cityName": "千代田区",
+    "blockName": "千代田1-1-1",
+    "addressDetail": "○○マンション101号室",
+    "picFirstName": "山田",
+    "picLastName": "太郎",
+  }
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+// Validation Error (invalid input)
+{
+  "statusCode": "BAD_REQUEST",
+  "message": "入力に誤りがあります。",
+  "errors": {
+    "email": "正しいメールアドレスを入力してください。",
+    "phone": "電話番号はハイフン付きで入力してください。"
+  }
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+

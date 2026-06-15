@@ -1,0 +1,7 @@
+uses PreviousValueField Component for these fields: 
+2. 太陽光発電設備による発電電力量
+3. 太陽光発電設備による発電電力量 のうち他者に提供した電力量
+5. モニタリング期間中の蓄電池放電電力量
+
+If 蓄電池交換の有無 = 無 and 計測器の仕様書 has been uploaded, don't show
+else, required

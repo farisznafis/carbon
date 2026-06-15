@@ -1,0 +1,77 @@
+GET /api/admin/projects?page=1&limit=15
+
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+Response - Success (HTTP 200) //プロジェクトと会員一覧
+{
+  "statusCode": "OK",
+  "projects": [
+    {
+      "id": "1",
+      "firstName": "山田",
+      "firstNameKana": "ヤマダ",
+      "lastName": "太郎",
+      "lastNameKana": "タロウ",
+      "email": "taroyamada@test.com",
+      "siteId": null,//マスターユーザーの場合
+    },
+    {
+      "id": "2",
+      "firstName": "山口",
+      "firstNameKana": "ヤマグチ",
+      "lastName": "太郎",
+      "lastNameKana": "タロウ",
+      "email": "taroyamaguchi@test.com",
+      "siteId": "1234",
+    }
+  ]
+  "meta": {
+    "page": 1,
+    "limit": 15,
+    "total": 483
+  }
+}
+
+GET /api/admin/users?page=1&limit=15&role=マスター
+
+{
+  "statusCode": "OK",
+  "users": [
+    {
+    "userId": "12345",
+    "firstName": "山口",
+    "firstNameKana": "ヤマグチ",
+    "lastName": "太郎",
+    "lastNameKana": "タロウ",
+    "email": "ytaro@test.com",
+    "phoneNumber": "123453789",
+    "role": "一般社員",
+    "siteId”: "123"
+  }
+  ]
+  "meta": {
+    "page": 1,
+    "limit": 20,
+    "total": 483
+  }
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+
