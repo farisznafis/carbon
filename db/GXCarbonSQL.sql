@@ -72,7 +72,7 @@ CREATE TABLE account (
     holder_prefecture VARCHAR(100) NOT NULL,
     holder_city VARCHAR(100) NOT NULL,
     holder_address VARCHAR(500) NOT NULL,
-    is_holder_undecided BOOLEAN NOT NULL,
+    is_holder_undecided BOOLEAN NOT NULL, 
     operator_company_id INT NOT NULL REFERENCES operator_company(id)
 );
 
