@@ -1,0 +1,124 @@
+トークン取得
+POST /api/v1/j/token
+
+{
+  "grant_type": "client_credentials",
+  "client_id": "TEST7t6fj7eqC5v6UDaHlpvvtesttest",
+  "secret_key": "testGzhSdzpZ1muyICtest0123456789"
+}
+
+Response - Success (HTTP 200)
+{
+  "scope": "J1",
+  "token_type": "Bearer",
+  "expires_in": 123456,
+  "token": "{アクセストークン}"
+}
+
+Error Responses
+{
+  "request_id": "(API実行時に発行される識別ID)",
+  "error_code": "400-1028-0001",
+  "message": "クライアントIDまたはシークレットキーが違います"
+}
+{
+  "request_id": "(API実行時に発行される識別ID)",
+  "error_code": "401-1028-0001",
+  "message": "スコープがありません"
+}
+{
+  "request_id": "(API実行時に発行される識別ID)",
+  "error_code": "403-1028-0001",
+  "message": "登録情報の不一致です"
+}
+{
+  "request_id": "(API実行時に発行される識別ID)",
+  "error_code": "500-1028-0001",
+  "message": "サーバー内部エラー"
+}
+
+郵便番号で検索
+GET /api/v1/searchcode/{search_code}
+
+Response - Success (HTTP 200)
+{
+  "addresses": [
+    {
+      "dgacode": null,
+      "zip_code": 100492,
+      "pref_code": "05",
+      "pref_name": "秋田県",
+      "pref_kana": null,
+      "pref_roma": null,
+      "city_code": 5368,
+      "city_name": "南秋田郡大潟村",
+      "city_kana": null,
+      "city_roma": null,
+      "town_name": "字西",
+      "town_kana": null,
+      "town_roma": null,
+      "biz_name": "あきたこまち生産者協会",
+      "biz_kana": "アキタコマチセイサンシヤキヨウカイ",
+      "biz_roma": null,
+      "block_name": "４丁目８８",
+      "other_name": null,
+      "address": null,
+      "longitude": null,
+      "latitude": null
+    },
+    {
+      "dgacode": null,
+      "zip_code": 100492,
+      "pref_code": "05",
+      "pref_name": "秋田県",
+      "pref_kana": null,
+      "pref_roma": null,
+      "city_code": 5368,
+      "city_name": "南秋田郡大潟村",
+      "city_kana": null,
+      "city_roma": null,
+      "town_name": "字西",
+      "town_kana": null,
+      "town_roma": null,
+      "biz_name": "あきたこまち生産者協会",
+      "biz_kana": "アキタコマチセイサンシヤキヨウカイ",
+      "biz_roma": null,
+      "block_name": "４丁目８８",
+      "other_name": null,
+      "address": null,
+      "longitude": null,
+      "latitude": null
+    }
+  ],
+  "searchtype": "bizzipcode",
+  "limit": 10,
+  "count": 1,
+  "page": 1
+}
+
+Error Responses
+{
+  "request_id": "(API実行時に発行される識別ID)",
+  "error_code": "400-1029-0001",
+  "message": "検索パラメータが正しくありません"
+}
+
+{
+  "request_id": "(API実行時に発行される識別ID)",
+  "error_code": "401-9001-0001",
+  "message": "トークンが不正です"
+}
+
+{
+  "request_id": "(API実行時に発行される識別ID)",
+  "error_code": "404-1029-0001",
+  "message": "該当するデジタルアドレスが存在しません"
+}
+
+{
+  "request_id": "(API実行時に発行される識別ID)",
+  "error_code": "500-1029-0001",
+  "message": "サーバー内部エラー"
+}
+
+

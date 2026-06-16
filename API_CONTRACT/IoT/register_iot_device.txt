@@ -1,0 +1,78 @@
+7-1 IoTデバイス連携 (IoT Device Integration) 
+
+POST /iot-devices/register
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body (JSON):
+{
+  "memberId": "member-123",
+  "deviceId": "dev-001",
+  "deviceType": "temperature-sensor",
+  "model": "TS-2000",
+  "firmwareVersion": "1.1.0",
+  "location": "東京本社 4F 会議室",
+  "description": "4F 会議室用に移設・アップデート済み",
+  "status": "ACTIVE"
+}
+
+Response - Success (HTTP 201)
+{
+  "deviceId": "dev-001",
+  "memberId": "member-123",
+  "deviceType": "temperature-sensor",
+  "model": "TS-1000",
+  "firmwareVersion": "1.0.3",
+  "location": "東京本社 3F 会議室",
+  "description": "メイン会議室の温湿度センサー",
+  "status": "ACTIVE",
+  "iotCoreThingName": "member-123-dev-001",
+  "certificateId": "abcd1234",
+  "certificateArn": "arn:aws:iot:ap-northeast-1:123456789012:cert/abcd1234",
+  "certificatePem": "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----",
+  "privateKey": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----",
+  "caCertificatePem": "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----",
+  "createdAt": "2025-04-07T10:00:00Z",
+  "lastUpdatedAt": "2025-04-07T10:00:00Z"
+}
+
+Response - Error (HTTP 400)
+{
+  "statusCode": "VALIDATION_ERROR",
+  "message": "入力内容に不備があります。",
+  "fields": {
+    "memberId": "memberId は必須項目です。",
+    "deviceId": "deviceId は会員内で一意な文字列である必要があります。",
+    "deviceType": "deviceType は必須項目です。"
+  }
+}
+
+Response - Error (HTTP 401)
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "認証に失敗しました。再度ログインしてください。"
+}
+
+Response - Error (HTTP 403)
+{
+  "statusCode": "FORBIDDEN",
+  "message": "この会員のIoTデバイスを登録する権限がありません。"
+}
+
+Response - Error (HTTP 404)
+{
+  "statusCode": "MEMBER_NOT_FOUND",
+  "message": "指定された会員が見つかりません。"
+}
+
+Response - Error (HTTP 409)
+{
+  "statusCode": "DEVICE_ID_ALREADY_USED",
+  "message": "この deviceId は既に登録されています。別のIDを指定してください。"
+}
+
+Response - Error (HTTP 500)
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバ内部でエラーが発生しました。時間をおいて再度お試しください。"
+}

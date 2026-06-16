@@ -1,0 +1,79 @@
+20260528_「プロジェクト計画書」の出力
+
+POST /api/project/{siteId}/application
+GET /api/project/{siteId}/{projectId}/application
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "projectPlan": {
+    "application_category": "モニタリング報告書",
+    "is_using_exam_cost_support": true,
+    "project_number": "P421",
+    "project_name": "太陽光発電導入プロジェクト",
+    "project_operator_name_ja": "株式会社グリーンエナジー",
+    "project_operator_kana": "ヤマダ タロウ",
+    "corp_number": "1234567890123",
+    "corp_position": "代表取締役",
+    "corp_name": "株式会社グリーンエナジー",
+    "prefecture": "東京都",
+    "city": "千代田区",
+    "address": "千代田1-1-1",
+    "representative_position": "代表取締役",
+    "representative_name": "山田 太郎",
+    "pic_position": "プロジェクト担当",
+    "pic_name": "佐藤 花子",
+    "pic_email": "hanako.sato@example.com",
+    "pic_phone_number": "09012345678",
+    "other_contact_buisness_name": "その他担当者所属",
+    "other_contact_pic_position": "その他担当者",
+    "other_contacts_pic_name": "鈴木 一郎",
+    "other_contacts_pic_email": "ichiro.suzuki@example.com",
+    "other_contacts_pic_phone_number": "08012345678",
+    "account_no": "1234567",
+    "account_name": "山田 太郎",
+    "reviewer_name": "一般財団法人日本海事協会",
+    "verification_date": "2026-05-28",
+    "certification_date": "2026-06-30"
+  }
+}
+
+ERROR - Not Found (HTTP 404)
+{
+  "statusCode": "NOT_FOUND",
+  "message": "プロジェクトが見つかりませんでした。"
+}
+
+ERROR - Unauthorized (HTTP 401)
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "認証に失敗しました。アクセストークンを確認してください。"
+}
+
+ERROR - Validation Error (HTTP 422)
+{
+  "statusCode": "VALIDATION_ERROR",
+  "errors": {
+    "projectId": "プロジェクトIDは必須項目です。"
+  }
+}
+
+ERROR - Forbidden (HTTP 403)
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このプロジェクトにアクセスする権限がありません。"
+}
+
+ERROR - Internal Server Error (HTTP 500)
+{
+  "statusCode": "INTERNAL_SERVER_ERROR",
+  "message": "サーバーでエラーが発生しました。時間をおいて再度お試しください。"
+}
+
+ERROR - Server Error (HTTP 500)
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
