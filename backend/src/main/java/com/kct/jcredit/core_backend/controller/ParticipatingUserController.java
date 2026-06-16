@@ -1,0 +1,110 @@
+package com.kct.jcredit.core_backend.controller;
+
+import com.kct.jcredit.core_backend.dto.request.CreateUserRequest;
+import com.kct.jcredit.core_backend.dto.request.DeleteUserSite;
+import com.kct.jcredit.core_backend.dto.request.UpdateUserRequest;
+import com.kct.jcredit.core_backend.dto.response.CreateUserResponse;
+import com.kct.jcredit.core_backend.dto.response.DeleteUserSiteResponse;
+import com.kct.jcredit.core_backend.dto.response.NotificationListResponse;
+import com.kct.jcredit.core_backend.dto.response.UpdateUserResponse;
+import com.kct.jcredit.core_backend.dto.response.UserListResponse;
+import com.kct.jcredit.core_backend.dto.response.UserProfileResponse;
+import com.kct.jcredit.core_backend.service.UserService;
+import com.kct.jcredit.core_backend.service.NotificationService;
+import com.kct.jcredit.core_backend.util.JwtUtil;
+import com.kct.jcredit.core_backend.util.ResponseUtil;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/user")
+@RequiredArgsConstructor
+public class ParticipatingUserController {
+
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
+    private final NotificationService notificationService;
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('master')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<UserListResponse> getUsers(Authentication authentication) {
+
+        UserListResponse response = userService.getUsersByCompany(jwtUtil.extractCompanyId(authentication.getCredentials().toString()));
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @DeleteMapping("/site")
+    @PreAuthorize("hasAnyRole('master')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<DeleteUserSiteResponse> deleteUserSite(DeleteUserSite request) {
+
+        DeleteUserSiteResponse response = userService.removeUserSiteConnection(request);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @PostMapping
+    @PreAuthorize("hasAnyRole('master')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<CreateUserResponse> createUser(
+            Authentication authentication,
+            @RequestBody @Valid CreateUserRequest request) {
+            String companyId = jwtUtil.extractCompanyId(
+            authentication.getCredentials().toString()
+        );
+        String username = jwtUtil.extractUsername(authentication.getCredentials().toString());
+        
+        CreateUserResponse response = userService.createUser(companyId, username, request);
+        
+        // レスポンスのステータスコードに応じたHTTPステータスを返す
+        return new ResponseEntity<>(
+            response, 
+            ResponseUtil.getHttpStatus(response.getStatusCode())
+        );
+    }
+
+    @PatchMapping
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<UpdateUserResponse> updateUser(
+            Authentication authentication,
+            @RequestBody @Valid UpdateUserRequest request) {
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+        String username = jwtUtil.extractUsername(authentication.getCredentials().toString());
+        UpdateUserResponse response = userService.updateUser(companyId, username, request);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }  
+
+    @GetMapping("/profile/{userId}")
+    @PreAuthorize("hasAnyRole('master', 'operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<UserProfileResponse> getUserProfileById(
+            @PathVariable Integer userId,
+            Authentication authentication) {
+        String role = jwtUtil.extractRole(authentication.getCredentials().toString());
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+
+        UserProfileResponse response = userService.getUserProfileById(userId, role, companyId);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @GetMapping("/notifications")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<NotificationListResponse> getNotifications(
+            Authentication authentication,
+            @RequestParam(required = false, defaultValue = "false") Boolean unreadOnly,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+        Integer userId = jwtUtil.extractUserId(authentication.getCredentials().toString());
+        boolean isOperatingUser = jwtUtil.extractRole(authentication.getCredentials().toString()).equals("operator");
+
+        NotificationListResponse response = notificationService.getNotifications(userId,unreadOnly, page, size, isOperatingUser);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }  
+}

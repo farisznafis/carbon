@@ -1,0 +1,402 @@
+package com.kct.jcredit.core_backend.service.impl;
+
+import com.kct.jcredit.core_backend.constant.ResponseConstants;
+import com.kct.jcredit.core_backend.constant.RoleConstants;
+import com.kct.jcredit.core_backend.dto.request.CreateSiteRequest;
+import com.kct.jcredit.core_backend.dto.request.UpdateSiteRequest;
+import com.kct.jcredit.core_backend.dto.response.CreateSiteResponse;
+import com.kct.jcredit.core_backend.dto.response.EquipmentSolarRegisterResponse;
+import com.kct.jcredit.core_backend.dto.response.SiteInfoResponse;
+import com.kct.jcredit.core_backend.dto.response.SiteListResponse;
+import com.kct.jcredit.core_backend.dto.response.details.EquipmentItemSolarResponse;
+import com.kct.jcredit.core_backend.dto.response.details.SiteDataResponse;
+import com.kct.jcredit.core_backend.dto.response.details.SiteResponse;
+import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
+import com.kct.jcredit.core_backend.entity.ParticipatingUser;
+import com.kct.jcredit.core_backend.entity.Project;
+import com.kct.jcredit.core_backend.entity.Site;
+import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
+import com.kct.jcredit.core_backend.entity.SiteR002EquipmentFile;
+import com.kct.jcredit.core_backend.entity.SiteR002MemberData;
+import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
+import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
+import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
+import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
+import com.kct.jcredit.core_backend.repository.postgres.SiteR002EquipmentFileRepository;
+import com.kct.jcredit.core_backend.repository.postgres.SiteR002MemberDataRepository;
+import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
+import com.kct.jcredit.core_backend.service.SiteService;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class SiteServiceImpl implements SiteService {
+
+    private final SiteRepository siteRepository;
+    private final ParticipatingCompanyRepository participatingCompanyRepository;
+    private final ProjectRepository projectRepository;
+    private final SiteR002MemberDataRepository siteR002MemberDataRepository;
+    private final SiteR002EquipmentFileRepository siteR002EquipmentFileRepository;
+    private final SiteProjectRelationRepository siteProjectRelationRepository;
+    private final ParticipatingUserRepository participatingUserRepository;
+
+    @Override
+    public SiteListResponse getSitesByCompanyId(String companyId) {
+        SiteListResponse response = SiteListResponse.builder().build();
+
+        ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(companyId)
+            .orElse(null);
+
+        if (Objects.isNull(company)) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
+            return response;
+        }
+
+        List<Site> sites = siteRepository.findByCompany(company);
+
+        if (sites.isEmpty()) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
+            return response;
+        }
+
+        List<SiteResponse> siteList = sites.stream().map(site -> SiteResponse.builder()
+                .id(String.valueOf(site.getId()))
+                .siteName(site.getSiteName())
+            .postalCode(site.getPostalCode())
+            .prefecture(site.getPrefecture())
+            .city(site.getCity())
+            .town(site.getTown())
+            .block(site.getBlocknum())
+                .address(site.getAddress())
+                .picFirstName(site.getPicFirstName())
+                .picLastName(site.getPicLastName())
+                .projects(site.getSiteProjectRelations() == null ? List.of() :
+                        site.getSiteProjectRelations().stream()
+                                .map(SiteProjectRelation::getProject)
+                                .map(Project::getProjectName)
+                                .collect(Collectors.toList()))
+            .data(null)
+                .build()
+        ).collect(Collectors.toList());
+
+        response.setSiteList(siteList);
+        response.setStatusCode("OK");
+        return response;
+    }
+
+    @Override
+    public SiteInfoResponse getSiteById(int siteId) {
+        SiteInfoResponse response = new SiteInfoResponse();
+        SiteResponse siteDetails = new SiteResponse();
+
+        try {
+            Optional<Site> siteOpt = siteRepository.findById(siteId);
+            if (siteOpt.isEmpty()) {
+                response.setStatusCode(ResponseConstants.NOT_FOUND);
+                response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
+                return response;
+            }
+
+            Site site = siteOpt.get();
+
+            SiteDataResponse data = new SiteDataResponse();
+
+            //To be updated
+            data.setJCredit("1");
+            data.setSumEmissionReduction("0.5");
+            data.setSumEmission("1.5");
+
+            siteDetails.setId(String.valueOf(site.getId()));
+            siteDetails.setSiteName(site.getSiteName());
+                siteDetails.setPostalCode(site.getPostalCode());
+                siteDetails.setPrefecture(site.getPrefecture());
+                siteDetails.setCity(site.getCity());
+                siteDetails.setTown(site.getTown());
+                siteDetails.setBlock(site.getBlocknum());
+                siteDetails.setAddress(site.getAddress());
+            siteDetails.setPicFirstName(site.getPicFirstName());
+            siteDetails.setPicLastName(site.getPicLastName());
+                siteDetails.setProjects(site.getSiteProjectRelations() == null ? List.of() :
+                    site.getSiteProjectRelations().stream()
+                        .map(SiteProjectRelation::getProject)
+                        .map(Project::getProjectName)
+                        .collect(Collectors.toList()));
+            siteDetails.setData(data);
+
+            response.setSite(siteDetails);
+            response.setStatusCode(ResponseConstants.OK);
+
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            response.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR);
+            response.setMessage(ResponseConstants.MSG_INTERNAL_ERROR);
+        }
+
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public CreateSiteResponse createSite(CreateSiteRequest request, String companyId) {
+        CreateSiteResponse response = new CreateSiteResponse();
+        ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(companyId)
+                .orElseGet(() -> {
+                    response.setStatusCode(ResponseConstants.NOT_FOUND);
+                    response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
+                    return null;
+                });
+
+        if (Objects.isNull(company)) {
+            return response;
+        }
+
+        Site site = Site.builder()
+                .siteName(request.getSiteName())
+                .postalCode(request.getPostalCode())
+                .prefecture(company.getPrefecture())
+                .city(company.getCity())
+                .company(company)
+                .town(request.getTownName())
+                .blocknum(request.getBlockName())
+                .address(request.getAddress())
+                .picFirstName(request.getPicFirstName())
+                .picFirstNameKana(request.getPicFirstNameKana())
+                .picLastName(request.getPicLastName())
+                .picLastNameKana(request.getPicLastNameKana())
+                .picEmail(request.getPicEmail())
+                .picPhoneNumber(request.getPicPhoneNumber())
+                .picPosition(request.getPicPosition())
+
+                .build();
+        site.setCreatedBy(company.getNameJa());
+        try {
+            response.setId(siteRepository.save(site).getId());
+            response.setStatusCode(ResponseConstants.OK);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            response.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR);
+            response.setMessage(ResponseConstants.MSG_INTERNAL_ERROR);
+        }
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public SiteInfoResponse updateSite(String siteId, String companyId, UpdateSiteRequest request) {
+        //StringUtils.isEmpty(value) use this for null object logic (its concise)
+
+        SiteInfoResponse response = new SiteInfoResponse();
+        
+        // Find site by ID
+        Site site = siteRepository.findById(Integer.parseInt(siteId)).orElse(null);
+        
+        if (Objects.isNull(site)) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_NOT_FOUND);
+            return response;
+        }
+        
+        // Check if site belongs to the company (security check)
+        if (!site.getCompany().getCompanyId().equals(companyId)) {
+            response.setStatusCode(ResponseConstants.FORBIDDEN);
+            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+            return response;
+        }
+        
+        // Update site adress with request data
+        Site updatedSite = updateSite(site, request);
+        
+        // Build response using SiteResponse
+        SiteResponse siteResponse = SiteResponse.builder()
+            .id(String.valueOf(updatedSite.getId()))
+            .siteName(updatedSite.getSiteName())
+            .postalCode(updatedSite.getPostalCode())
+            .prefecture(updatedSite.getPrefecture())
+            .city(updatedSite.getCity())
+            .town(updatedSite.getTown())              
+            .block(updatedSite.getBlocknum())      
+            .address(updatedSite.getAddress())
+            .picFirstName(updatedSite.getPicFirstName())
+            .picLastName(updatedSite.getPicLastName())
+            .build();
+
+        
+        response.setStatusCode(ResponseConstants.OK);
+        response.setSite(siteResponse);
+
+        return response;
+    }
+
+    @Override
+    public EquipmentSolarRegisterResponse getSiteProjectEquipment(
+            Integer siteId,
+            Integer projectId,
+            String companyId,
+            String role,
+            String username) {
+        EquipmentSolarRegisterResponse response = new EquipmentSolarRegisterResponse();        
+
+        try {
+            Site site = siteRepository.findById(siteId).orElse(null);
+            if (site == null) {
+                response.setStatusCode(ResponseConstants.NOT_FOUND);
+                response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
+                return response;
+            }
+
+            Project project = projectRepository.findById(projectId).orElse(null);
+            if (project == null) {
+                response.setStatusCode(ResponseConstants.NOT_FOUND);
+                response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
+                return response;
+            }
+
+            if (!hasAccessToSite(site, companyId, role, username)) {
+                response.setStatusCode(ResponseConstants.FORBIDDEN);
+                response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+                return response;
+            }
+
+            SiteProjectRelation relation = siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId);
+            if (relation == null) {
+                response.setStatusCode(ResponseConstants.NOT_FOUND);
+                response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
+                return response;
+            }
+
+            SiteR002MemberData memberData = siteR002MemberDataRepository
+                    .findByProject_IdAndSite_Id(projectId, siteId)
+                    .orElse(null);
+            if (memberData == null) {
+                response.setStatusCode(ResponseConstants.NOT_FOUND);
+                response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
+                return response;
+            }
+
+            List<SiteR002EquipmentFile> equipmentFiles = siteR002EquipmentFileRepository
+                    .findByMemberData_Id(memberData.getId());
+            if (equipmentFiles.isEmpty() && !memberData.getId().equals(siteId)) {
+                equipmentFiles = siteR002EquipmentFileRepository.findByMemberData_Id(siteId);
+            }
+
+            List<String> evidenceDocuments = equipmentFiles.stream()
+                    .map(SiteR002EquipmentFile::getS3Key)
+                    .map(this::extractFileNameFroms3Key)
+                    .filter(Objects::nonNull)
+                    .filter(name -> !name.isBlank())
+                    .collect(Collectors.toList());
+
+            EquipmentItemSolarResponse item = EquipmentItemSolarResponse.builder()
+                    .equipmentId(memberData.getId())
+                    .pcsManufacturer(memberData.getPcsManufacturer())
+                    .pcsModel(memberData.getPcsModel())
+                    .powerCondUnitCount(memberData.getPowerCondUnitCount())
+                    .deviceNo(memberData.getDeviceNo())
+                    .powerCondStandby(memberData.getPowerCondStandby())
+                    // .categoryBc(memberData.getCategoryBc()) category bc in other table/take it from dynamo
+                    .nominalMaxOutput(memberData.getNominalMaxOutput())
+                    .ictEquipmentPowerConsumption(memberData.getIctEquipmentPowerConsumption())
+                    .additionalEquipment(memberData.getAdditionalEquipment())
+                    .additionalEquipmentDate(memberData.getAdditionalEquipmentDate())
+                    .additionalEquipmentType(memberData.getAdditionalEquipmentType())
+                    .additionalUnitCount(memberData.getAdditionalUnitCount())
+                    .additionalDeviceUniqueNo(memberData.getAdditionalDeviceUniqueNo())
+                    // .equipmentId(evidenceDocuments)
+                    .build();
+
+            response.setEquipments(List.of(item));
+            response.setStatusCode(ResponseConstants.OK);
+            return response;
+        } catch (Exception e) {
+            log.error("SiteServiceImpl.getSiteProjectEquipment error", e);
+            response.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR);
+            response.setMessage(ResponseConstants.MSG_INTERNAL_ERROR);
+            return response;
+        }
+    }
+
+    private boolean hasAccessToSite(Site site, String companyId, String role, String username) {
+        if (site == null || site.getCompany() == null || site.getCompany().getCompanyId() == null) {
+            return false;
+        }
+
+        if (!site.getCompany().getCompanyId().equals(companyId)) {
+            return false;
+        }
+
+        if (RoleConstants.MASTER.equals(role)) {
+            return true;
+        }
+
+        if (RoleConstants.USER.equals(role)) {
+            ParticipatingUser user = participatingUserRepository
+                    .findByUsernameAndCompanyId(username, companyId)
+                    .orElse(null);
+            if (user == null || user.getSite() == null || user.getSite().getId() == null) {
+                return false;
+            }
+            return user.getSite().getId().equals(site.getId());
+        }
+
+        return false;
+    }
+
+    private String extractFileNameFroms3Key(String s3Key) {
+        if (s3Key == null || s3Key.isBlank()) {
+            return null;
+        }
+
+        String key = s3Key.startsWith("/") ? s3Key.substring(1) : s3Key;
+        int lastSlash = key.lastIndexOf('/');
+        String baseName = lastSlash >= 0 ? key.substring(lastSlash + 1) : key;
+
+        if (baseName.startsWith("file_")) {
+            int secondUnderscore = baseName.indexOf('_', "file_".length());
+            if (secondUnderscore > 0 && secondUnderscore + 1 < baseName.length()) {
+                return baseName.substring(secondUnderscore + 1);
+            }
+        }
+
+        return baseName;
+    }
+
+    private Site updateSite(Site site, UpdateSiteRequest request) {
+        if (StringUtils.isNotBlank(request.getPostalCode())) {
+            site.setPostalCode(request.getPostalCode());
+        }
+        if (StringUtils.isNotBlank(request.getPrefName())) {
+            site.setPrefecture(request.getPrefName());
+        }
+        if (StringUtils.isNotBlank(request.getCityName())) {
+            site.setCity(request.getCityName());
+        }
+        if (StringUtils.isNotBlank(request.getTownName())) {
+            site.setTown(request.getTownName());
+        }
+        if (StringUtils.isNotBlank(request.getBlockName())) {
+            site.setBlocknum(request.getBlockName());
+        } 
+        if (StringUtils.isNotBlank(request.getAddress())) {
+            site.setAddress(request.getAddress());
+        }
+        site.setUpdatedAt(LocalDateTime.now());
+
+        return siteRepository.save(site);
+    }
+}

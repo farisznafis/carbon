@@ -1,0 +1,28 @@
+package com.kct.jcredit.core_backend.dto.response.details;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import java.util.List;
+
+@Data
+@EqualsAndHashCode(callSuper = false)
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class SiteResponse{
+    private String id;
+    private String siteName;
+    private String postalCode;     
+    private String prefecture;    
+    private String city;
+    private String town;
+    private String block;  
+    private String address;
+    private String picFirstName;
+    private String picLastName;
+    private List<String> projects;
+    private SiteDataResponse data;
+}

@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: core-backend-db
+    environment:
+      POSTGRES_DB: jcredit
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: shark0723
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: core-backend-app
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/jcredit
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: shark0723
+      SERVER_PORT: 8081
+    ports:
+      - "8081:8081"
+
+volumes:
+  db_data:
