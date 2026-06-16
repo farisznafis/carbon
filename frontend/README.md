@@ -1,4 +1,5 @@
 # GX Frontend
+> Updated on: 2026/06/16
 
 Modern React-based frontend application with TypeScript, featuring responsive design and efficient state management.
 
@@ -22,46 +23,30 @@ Modern React-based frontend application with TypeScript, featuring responsive de
 - npm or yarn
 
 ### Setup
-
+Go to the frontend directory and install dependencies:
 ```bash
 cd frontend
 npm install
 ```
 
 ### Development
-
+Start the local development server:
 ```bash
 npm run dev
 ```
+By default, Vite runs on:
+```
+http://localhost:3000
+```
 
 ### Build
-
+Build the production bundle:
 ```bash
 npm run build
 ```
-
 ---
 
-## 📁 Project Structure
-
-```
-src/
-├── components/     # Reusable UI components
-├── pages/          # Page-level views and layouts
-├── hooks/          # Custom React hooks
-├── context/        # Context providers and consumers
-├── api/            # API calls and utilities
-├── lib/            # Core utilities, helpers, and shared logic
-├── stores/         # State management (Zustand stores)
-├── assets/         # Images, fonts, and static files
-├── styles/         # Global styles and theme configuration
-├── types/          # TypeScript type definitions
-└── App.tsx         # Root component
-```
-
----
-
-## 🛠️ Available Scripts
+## Available Scripts
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
@@ -70,13 +55,26 @@ src/
 - `npm run type-check` - Run TypeScript type checking
 
 ---
+## Root Files and Folders
 
-## 📚 Documentation
-
-For more information about the project structure and conventions, please refer to the main project documentation.
+`docs/`: Text files and documentation related to the frontend application. (e.g., API contracts, design guidelines, etc.)
+`public/`: Static assets like images, icons, and fonts.
+`src/`: Source code for the frontend application, including components, pages, styles, and utilities
+`components.json`: shadcn/ui-style configuration for aliases, Tailwind, and icons.
+`eslint.config.js`: ESLint configuration for code quality and consistency.
+`index.html`: Vite HTML entrypoint.
+`package-lock.json`: npm package lock file for dependency management.
+`package.json`: npm package configuration with scripts and dependencies.
+`postcss.config.js`: PostCSS configuration for Tailwind CSS and autoprefixer.
+`tailwind.config.js`: Tailwind CSS configuration for custom styles and themes.
+`tsconfig.app.json`: TypeScript configuration for the frontend app.
+`tsconfig.json`: Root TypeScript configuration.
+`tsconfig.node.json`: TypeScript configuration for Node.js environment.
+`vite-env.d.ts`: TypeScript declaration file for Vite environment.
+`vite.config.ts`: Vite configuration for development and production builds.
 
 ---
 
-## 📝 License
+## License
 
 This project is part of the GX platform.
