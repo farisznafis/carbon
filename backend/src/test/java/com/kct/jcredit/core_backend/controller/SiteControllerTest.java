@@ -327,13 +327,13 @@ class SiteControllerTest {
     void testGetSite_NullSiteId() {
         // Arrange
         String siteId = null;
-        // ← tidak perlu stub apapun, service tidak akan dipanggil
+        // 
 
         // Act & Assert — tidak perlu MockedStatic juga, ResponseUtil tidak pernah dicapai
         assertThrows(NumberFormatException.class, () ->
                 siteController.getSite(siteId));
 
-        // Verify — pastikan service benar-benar tidak dipanggil
+        // Verify 
         verifyNoInteractions(siteService);
     }
 
