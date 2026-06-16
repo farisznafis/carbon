@@ -33,6 +33,7 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
     private static final int DEFAULT_PASSWORD_LENGTH = 12;
     private static final String REG_STATUS_PENDING = "PENDING";
     private static final String REG_STATUS_APPROVED = "APPROVED";
+    private static final String REG_STATUS_REJECTED = "REJECTED";
 
     private final ParticipatingCompanyRepository companyRepository;
     private final ParticipatingUserRepository userRepository;
@@ -135,7 +136,8 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
         }
 
         try {
-            companyRepository.delete(company);
+            company.setRegStatus(REG_STATUS_REJECTED);
+            companyRepository.save(company);
             notificationService.sendCompanyRejectionNotification(company, rejectionReason);
         } catch (Exception ex) {
             log.error("Failed to reject company {}", companyId, ex);

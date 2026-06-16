@@ -118,11 +118,20 @@ public class AuthServiceImpl implements AuthService {
         String token = jwtUtil.generateToken(user.getId(),user.getUsername(), user.getCompanyId(), user.getRole());
 
         UserInfoResponse resData = UserInfoResponse.builder()
+                .id(String.valueOf(user.getId()))
                 .username(user.getUsername())
-                .name(user.getLastName() + " " + user.getFirstName()) // full name
+                .name(user.getLastName() + " " + user.getFirstName())
+                .firstName(user.getFirstName())
+                .firstNameKana(user.getFirstNameKana())
+                .lastName(user.getLastName())
+                .lastNameKana(user.getLastNameKana())
+                .phoneNumber(user.getPhoneNumber())
+                .userPosition(user.getUserPosition())
                 .role(user.getRole())
                 .email(user.getEmail())
-                .companyId(request.getCompanyId()) // from your previous request
+                .siteId(user.getSite() != null ? String.valueOf(user.getSite().getId()) : null)
+                .siteName(user.getSite() != null ? user.getSite().getSiteName() : null)
+                .companyId(request.getCompanyId())
                 .build();
 
         response.setToken(token);

@@ -122,14 +122,14 @@ public class ProjectApplicationRequest {
     @NotBlank
     @Size(max = 20)
     @HankakuWithSymbols(allowedSymbols = "-")
-    @JsonProperty("energy_act_ope_number")
-    private String energyActOpeNumber;
+    @JsonProperty("energy_act_operation_number")
+    private String energyActOperationNumber;
 
     @NotBlank
     @Size(max = 20)
     @Hankaku
-    @JsonProperty("energy_manag_factory_number")
-    private String energyManagFactoryNumber;
+    @JsonProperty("energy_manage_factory_number")
+    private String energyManageFactoryNumber;
 
     @NotBlank
     @Size(max = 100)
@@ -188,11 +188,11 @@ public class ProjectApplicationRequest {
 
     @Size(max = 255)
     @Zenkaku
-    @JsonProperty("other_contact_buisness_name")
-    private String otherContactBuisnessName;
+    @JsonProperty("other_contact_business_name")
+    private String otherContactBusinessName;
 
-    @JsonProperty("is_change_other_contact_buisness_name")
-    private Boolean isChangeOtherContactBuisnessName;
+    @JsonProperty("is_change_other_contact_business_name")
+    private Boolean isChangeOtherContactBusinessName;
 
     @Size(max = 100)
     @Zenkaku
