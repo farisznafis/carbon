@@ -45,46 +45,46 @@ public class ProjectApplicationRequest {
     @NotBlank
     @Size(max = 20)
     @Pattern(regexp = "^(登録|計画変更|認証権限保有主体変更)$")
-    @JsonProperty("application_category")
+    @JsonProperty("applicationCategory")
     private String applicationCategory;
 
     @NotNull
-    @JsonProperty("is_using_exam_cost_support")
+    @JsonProperty("isUsingExamCostSupport")
     private Boolean isUsingExamCostSupport;
 
     @NotBlank
     @Size(max = 255)
     @Katakana
-    @JsonProperty("project_operator_kana")
+    @JsonProperty("projectOperatorKana")
     private String projectOperatorKana;
 
     @NotBlank
     @Size(max = 255)
     @Zenkaku
-    @JsonProperty("project_operator_name_ja")
+    @JsonProperty("projectOperatorNameJa")
     private String projectOperatorNameJa;
 
     @NotBlank
     @Size(max = 255)
     @HankakuWithSymbols(allowedSymbols = "&.,' -")
-    @JsonProperty("project_operator_name_en")
+    @JsonProperty("projectOperatorNameEn")
     private String projectOperatorNameEn;
 
     @NotBlank
     @CorpNumber
-    @JsonProperty("corp_number")
+    @JsonProperty("corpNumber")
     private String corpNumber;
 
     @NotBlank
     @Size(max = 100)
     @Zenkaku
-    @JsonProperty("corp_position")
+    @JsonProperty("corpPosition")
     private String corpPosition;
 
     @NotBlank
     @Size(max = 255)
     @JapaneseText(allowAlphanumeric = true)
-    @JsonProperty("corp_name")
+    @JsonProperty("corpName")
     private String corpName;
 
     @NotBlank
@@ -106,149 +106,149 @@ public class ProjectApplicationRequest {
     private String address;
 
     @NotNull
-    @JsonProperty("is_designated_emitter")
+    @JsonProperty("isDesignatedEmitter")
     private Boolean isDesignatedEmitter;
 
     @NotBlank
     @Size(min = 9, max = 9)
     @NumericOnly
-    @JsonProperty("emitter_code")
+    @JsonProperty("emitterCode")
     private String emitterCode;
 
     @NotNull
-    @JsonProperty("has_energy_act_period_report")
+    @JsonProperty("hasEnergyActPeriodReport")
     private Boolean hasEnergyActPeriodReport;
 
     @NotBlank
     @Size(max = 20)
     @HankakuWithSymbols(allowedSymbols = "-")
-    @JsonProperty("energy_act_operation_number")
+    @JsonProperty("energyActOperationNumber")
     private String energyActOperationNumber;
 
     @NotBlank
     @Size(max = 20)
     @Hankaku
-    @JsonProperty("energy_manage_factory_number")
+    @JsonProperty("energyManageFactoryNumber")
     private String energyManageFactoryNumber;
 
     @NotBlank
     @Size(max = 100)
     @Zenkaku
-    @JsonProperty("representative_position")
+    @JsonProperty("representativePosition")
     private String representativePosition;
 
-    @JsonProperty("is_change_representative_position")
+    @JsonProperty("isChangeRepresentativePosition")
     private Boolean isChangeRepresentativePosition;
 
     @NotBlank
     @Size(max = 50)
     @ZenkakuWithSymbols
-    @JsonProperty("representative_name")
+    @JsonProperty("representativeName")
     private String representativeName;
 
-    @JsonProperty("is_change_representative_name")
+    @JsonProperty("isChangeRepresentativeName")
     private Boolean isChangeRepresentativeName;
 
     @NotBlank
     @Size(max = 100)
     @ZenkakuWithSymbols
-    @JsonProperty("pic_position")
+    @JsonProperty("picPosition")
     private String picPosition;
 
-    @JsonProperty("is_change_pic_position")
+    @JsonProperty("isChangePicPosition")
     private Boolean isChangePicPosition;
 
     @NotBlank
     @Size(max = 50)
     @ZenkakuWithSymbols
-    @JsonProperty("pic_name")
+    @JsonProperty("picName")
     private String picName;
 
-    @JsonProperty("is_change_pic_name")
+    @JsonProperty("isChangePicName")
     private Boolean isChangePicName;
 
     @NotBlank
     @Size(max = 254)
     @Email
     @HankakuWithSymbols(allowedSymbols = "@._+-")
-    @JsonProperty("pic_email")
+    @JsonProperty("picEmail")
     private String picEmail;
 
-    @JsonProperty("is_change_pic_email")
+    @JsonProperty("isChangePicEmail")
     private Boolean isChangePicEmail;
 
     @NotBlank
     @Size(max = 20)
     @PhoneNumber
-    @JsonProperty("pic_phone_number")
+    @JsonProperty("picPhoneNumber")
     private String picPhoneNumber;
 
-    @JsonProperty("is_change_pic_phone_number")
+    @JsonProperty("isChangePicPhoneNumber")
     private Boolean isChangePicPhoneNumber;
 
     @Size(max = 255)
     @Zenkaku
-    @JsonProperty("other_contact_business_name")
+    @JsonProperty("otherContactBusinessName")
     private String otherContactBusinessName;
 
-    @JsonProperty("is_change_other_contact_business_name")
+    @JsonProperty("isChangeOtherContactBusinessName")
     private Boolean isChangeOtherContactBusinessName;
 
     @Size(max = 100)
     @Zenkaku
-    @JsonProperty("other_contact_pic_position")
+    @JsonProperty("otherContactPicPosition")
     private String otherContactPicPosition;
 
-    @JsonProperty("is_change_other_contact_pic_position")
+    @JsonProperty("isChangeOtherContactPicPosition")
     private Boolean isChangeOtherContactPicPosition;
 
     @Size(max = 50)
     @ZenkakuWithSymbols
-    @JsonProperty("other_contacts_pic_name")
+    @JsonProperty("otherContactsPicName")
     private String otherContactsPicName;
 
-    @JsonProperty("is_change_other_contacts_pic_name")
+    @JsonProperty("isChangeOtherContactsPicName")
     private Boolean isChangeOtherContactsPicName;
 
     @Size(max = 254)
     @Email
     @HankakuWithSymbols(allowedSymbols = "@._+-")
-    @JsonProperty("other_contacts_pic_email")
+    @JsonProperty("otherContactsPicEmail")
     private String otherContactsPicEmail;
 
-    @JsonProperty("is_change_other_contacts_pic_email")
+    @JsonProperty("isChangeOtherContactsPicEmail")
     private Boolean isChangeOtherContactsPicEmail;
 
     @Size(max = 20)
     @PhoneNumber
-    @JsonProperty("other_contacts_pic_phone_number")
+    @JsonProperty("otherContactsPicPhoneNumber")
     private String otherContactsPicPhoneNumber;
 
-    @JsonProperty("is_change_other_contacts_pic_phone_number")
+    @JsonProperty("isChangeOtherContactsPicPhoneNumber")
     private Boolean isChangeOtherContactsPicPhoneNumber;
 
     @NotBlank
     @Size(max = 10)
     @Pattern(regexp = "^P[0-9]+$")
-    @JsonProperty("project_number")
+    @JsonProperty("projectNumber")
     private String projectNumber;
 
     @NotBlank
     @Size(max = 100)
     @Zenkaku
-    @JsonProperty("project_name")
+    @JsonProperty("projectName")
     private String projectName;
 
     @NotBlank
     @Size(max = 10)
     @Pattern(regexp = "^(EN-S|EN-R|IN|AG|WA)$")
-    @JsonProperty("methodology_category")
+    @JsonProperty("methodologyCategory")
     private String methodologyCategory;
 
     @NotBlank
     @Size(min = 3, max = 3)
     @NumericOnly
-    @JsonProperty("methodology_number")
+    @JsonProperty("methodologyNumber")
     private String methodologyNumber;
 
     @NotBlank
@@ -266,74 +266,60 @@ public class ProjectApplicationRequest {
     @NotBlank
     @Size(max = 50)
     @HankakuWithSymbols(allowedSymbols = " -.,'&")
-    @JsonProperty("location_en")
+    @JsonProperty("locationEn")
     private String locationEn;
 
     @NotBlank
     @Size(max = 1000)
     @JapaneseText(allowAlphanumeric = true)
-    @JsonProperty("project_outline")
+    @JsonProperty("projectOutline")
     private String projectOutline;
 
     @NotBlank
     @Size(max = 10)
     @Pattern(regexp = "^(北海道|東北|関東|中部|近畿|中国|四国|九州|沖縄)$")
-    @JsonProperty("regional_category")
+    @JsonProperty("regionalCategory")
     private String regionalCategory;
 
     @NotBlank
     @Size(max = 255)
     @Zenkaku
-    @JsonProperty("group_name")
+    @JsonProperty("groupName")
     private String groupName;
 
     @NotBlank
     @Size(max = 255)
     @Katakana
-    @JsonProperty("group_name_furigana")
+    @JsonProperty("groupNameFurigana")
     private String groupNameFurigana;
 
     @NotNull
-    @JsonProperty("is_participating_cn_act")
+    @JsonProperty("isParticipatingCnAct")
     private Boolean isParticipatingCnAct;
 
     @NotBlank
     @Size(max = 255)
     @JapaneseText(allowAlphanumeric = true)
-    @JsonProperty("validation_check_reviewer_name")
+    @JsonProperty("validationCheckReviewerName")
     private String validationCheckReviewerName;
 
     @DateFormat
-    @JsonProperty("application_date")
+    @JsonProperty("applicationDate")
     private String applicationDate;
 
     @DateFormat
-    @JsonProperty("registration_date")
+    @JsonProperty("registrationDate")
     private String registrationDate;
 
     @NotBlank
     @Size(max = 255)
     @Zenkaku
-    @JsonProperty("reviewer_name")
+    @JsonProperty("reviewerName")
     private String reviewerName;
 
     @DateFormat
-    @JsonProperty("application_change_date")
+    @JsonProperty("applicationChangeDate")
     private String applicationChangeDate;
-
-    @Size(max = 20)
-    @PhoneNumber
-    @JsonProperty("operator_phone_number")
-    private String operatorPhoneNumber;
-
-    @Size(max = 255)
-    @Zenkaku
-    @JsonProperty("implimentation_area")
-    private String implimentationArea;
-
-    @DateFormat
-    @JsonProperty("cert_target_period_start")
-    private String certTargetPeriodStart;
 
     @DynamoDbPartitionKey
     @DynamoDbAttribute("PK")

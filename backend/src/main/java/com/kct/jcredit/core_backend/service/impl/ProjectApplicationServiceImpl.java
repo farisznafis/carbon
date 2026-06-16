@@ -264,7 +264,6 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
             request.setRepresentativePosition(company.getRepPosition());
             request.setRepresentativeName(buildFullName(company.getRepLastName(), company.getRepFirstName()));
             request.setPicPosition(company.getRepPosition());
-            request.setOperatorPhoneNumber(company.getPhoneNumber());
         }
 
         if (masterUser != null) {
