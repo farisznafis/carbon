@@ -23,6 +23,8 @@ public class ResponseConstants {
     public static final String CONFLICT = "CONFLICT";
     public static final String EMAIL_ALREADY_USED = "EMAIL_ALREADY_USED";
     public static final String CORP_NUMBER_ALREADY_USED = "CORP_NUMBER_ALREADY_USED";
+    public static final String PROJECT_NUMBER_ALREADY_USED = "PROJECT_NUMBER_ALREADY_USED";
+    public static final String METHOD_NUMBER_ALREADY_USED = "METHOD_NUMBER_ALREADY_USED";
 
     // Messages
     public static final String MSG_LOGIN_NEEDED = "ログインが必要です。";
@@ -41,6 +43,11 @@ public class ResponseConstants {
     public static final String MSG_USED_EMAIL = "このメールアドレスは既に使用されています。";
     public static final String MSG_EMAIL_ALREADY_USED = "このメールアドレスは既に使用されています。";
     public static final String MSG_CORP_NUMBER_ALREADY_USED = "この法人番号は既に登録されています。";
+    public static final String MSG_DUPLICATE_INPUT_DATA = "入力データに重複があります。";
+    public static final String MSG_PROJECT_NUMBER_ALREADY_USED = "このプロジェクト番号は既に登録されています。";
+    public static final String MSG_PROJECT_NUMBER_DUPLICATED_IN_REQUEST = "同じリクエスト内でプロジェクト番号が重複しています。";
+    public static final String MSG_METHOD_NUMBER_ALREADY_USED = "この方法論番号は既に登録されています。";
+    public static final String MSG_METHOD_NUMBER_DUPLICATED_IN_REQUEST = "同じリクエスト内で方法論番号が重複しています。";
     public static final String MSG_USED_USERNAME = "このユーザ名は既に使用されています。";
     public static final String MSG_ACCOUNT_LOCKED = "アカウントがロックされています。しばらくしてから再度お試しください。";
     public static final String MSG_FILE_TOO_LARGE = "アップロードされたファイルは、許可されている最大サイズを超えています。";

@@ -119,13 +119,11 @@ public class ProjectApplicationRequest {
     @JsonProperty("hasEnergyActPeriodReport")
     private Boolean hasEnergyActPeriodReport;
 
-    @NotBlank
     @Size(max = 20)
     @HankakuWithSymbols(allowedSymbols = "-")
     @JsonProperty("energyActOperationNumber")
     private String energyActOperationNumber;
 
-    @NotBlank
     @Size(max = 20)
     @Hankaku
     @JsonProperty("energyManageFactoryNumber")

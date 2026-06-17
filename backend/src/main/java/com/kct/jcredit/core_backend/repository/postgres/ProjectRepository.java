@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Integer>, JpaSpecificationExecutor<Project>  {
 	java.util.Optional<Project> findByProjectNumber(String projectNumber);
+	boolean existsByProjectNumber(String projectNumber);
+	boolean existsByMethodNumber(String methodNumber);
 }

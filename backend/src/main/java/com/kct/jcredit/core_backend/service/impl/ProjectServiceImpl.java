@@ -36,8 +36,11 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -108,6 +111,15 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Transactional
     public CreateProjectResponse createProject(CreateProjectRequest request) {
+        Map<String, String> duplicateErrors = validateDuplicateProjectData(request.getProject());
+        if (!duplicateErrors.isEmpty()) {
+            CreateProjectResponse response = new CreateProjectResponse();
+            response.setStatusCode(ResponseConstants.CONFLICT);
+            response.setMessage(ResponseConstants.MSG_DUPLICATE_INPUT_DATA);
+            response.setErrors(duplicateErrors);
+            return response;
+        }
+
         List<Project> projectList = request.getProject().stream()
             .map(projectDto -> convertProjectDtoToEntity(projectDto, request.getCreatedBy(), request.getOperatorCompanyId()))
             .collect(Collectors.toList());
@@ -117,6 +129,49 @@ public class ProjectServiceImpl implements ProjectService {
         response.setStatusCode(ResponseConstants.OK);
 
         return response;
+    }
+
+    private Map<String, String> validateDuplicateProjectData(List<ProjectDtoReq> projectDtos) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        Set<String> seenProjectNumbers = new HashSet<>();
+        Set<String> duplicatedProjectNumbersInRequest = new HashSet<>();
+        Set<String> seenMethodNumbers = new HashSet<>();
+        Set<String> duplicatedMethodNumbersInRequest = new HashSet<>();
+
+        for (int i = 0; i < projectDtos.size(); i++) {
+            ProjectDtoReq projectDto = projectDtos.get(i);
+            String projectNumber = projectDto.getProjectNumber();
+            if (projectNumber == null || projectNumber.isBlank()) {
+                // Bean validation reports blank values; duplicate validation only checks provided values.
+            } else if (!seenProjectNumbers.add(projectNumber)) {
+                duplicatedProjectNumbersInRequest.add(projectNumber);
+                errors.put("project[" + i + "].projectNumber", ResponseConstants.MSG_PROJECT_NUMBER_DUPLICATED_IN_REQUEST);
+            } else if (projectRepository.existsByProjectNumber(projectNumber)) {
+                errors.put("project[" + i + "].projectNumber", ResponseConstants.MSG_PROJECT_NUMBER_ALREADY_USED);
+            }
+
+            String methodNumber = projectDto.getMethodNumber();
+            if (methodNumber == null || methodNumber.isBlank()) {
+                // Bean validation reports blank values; duplicate validation only checks provided values.
+            } else if (!seenMethodNumbers.add(methodNumber)) {
+                duplicatedMethodNumbersInRequest.add(methodNumber);
+                errors.put("project[" + i + "].methodNumber", ResponseConstants.MSG_METHOD_NUMBER_DUPLICATED_IN_REQUEST);
+            } else if (projectRepository.existsByMethodNumber(methodNumber)) {
+                errors.put("project[" + i + "].methodNumber", ResponseConstants.MSG_METHOD_NUMBER_ALREADY_USED);
+            }
+        }
+
+        for (int i = 0; i < projectDtos.size(); i++) {
+            ProjectDtoReq projectDto = projectDtos.get(i);
+            if (duplicatedProjectNumbersInRequest.contains(projectDto.getProjectNumber())) {
+                errors.putIfAbsent("project[" + i + "].projectNumber", ResponseConstants.MSG_PROJECT_NUMBER_DUPLICATED_IN_REQUEST);
+            }
+            if (duplicatedMethodNumbersInRequest.contains(projectDto.getMethodNumber())) {
+                errors.putIfAbsent("project[" + i + "].methodNumber", ResponseConstants.MSG_METHOD_NUMBER_DUPLICATED_IN_REQUEST);
+            }
+        }
+
+        return errors;
     }
 
     @Override

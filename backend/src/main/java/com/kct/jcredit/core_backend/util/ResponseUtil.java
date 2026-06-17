@@ -18,6 +18,10 @@ public class ResponseUtil {
                 return HttpStatus.BAD_REQUEST;
             case ResponseConstants.VALIDATION_ERROR:
                 return HttpStatus.BAD_REQUEST;
+            case ResponseConstants.CONFLICT:
+            case ResponseConstants.PROJECT_NUMBER_ALREADY_USED:
+            case ResponseConstants.METHOD_NUMBER_ALREADY_USED:
+                return HttpStatus.CONFLICT;
             case ResponseConstants.UNAUTHORIZED:
             case ResponseConstants.INVALID_CREDENTIALS:
                 return HttpStatus.UNAUTHORIZED;
