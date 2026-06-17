@@ -30,9 +30,9 @@ export const LOCATION_OPTIONS = z.enum([
 ]);
 
 export const APPLICATION_CATEGORY_OPTIONS = [
-  'プロジェクト登録',
-  'プロジェクト計画更新',
-  '認証権限保有主体更新',
+  '登録',
+  '計画変更',
+  '認証権限保有主体変更',
 ] as const;
 
 export const projectApplicationSchema = z
@@ -304,7 +304,7 @@ export const projectApplicationSchema = z
   })
   .refine(
     (data) => {
-      if (data.applicationCategory === '認証権限保有主体更新') {
+      if (data.applicationCategory === '認証権限保有主体変更') {
         return true;
       } else {
         // Check required fields

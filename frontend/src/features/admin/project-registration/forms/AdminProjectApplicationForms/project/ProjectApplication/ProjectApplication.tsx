@@ -1,4 +1,4 @@
-﻿import { FieldConfig } from '@/components/forms/shared/GenericFormFields/GenericFormFields';
+import { FieldConfig } from '@/components/forms/shared/GenericFormFields/GenericFormFields';
 import { FormValues } from '@/features/admin/project-registration/forms/projectFormTypes';
 import { PREFECTURES } from '@/lib/constants/prefectures';
 import { REGIONALS } from '@/lib/constants/regionals';
@@ -10,15 +10,15 @@ import {
 } from '@/lib/constants/select_types';
 
 export const projectApplication: FieldConfig<FormValues>[] = [
-  // if 認証権限保有主体更新 selected, all below form is disable
+  // if 認証権限保有主体変更 selected, all below form is disable
   {
     name: 'projectApplication.applicationCategory',
     label: '申請区分',
     type: 'select',
     options: [
       { label: 'プロジェクト登録', value: '登録' },
-      { label: 'プロジェクト計画変更', value: '計画更新' },
-      { label: '認証権限保有主体変更', value: '認証権限保有主体更新' },
+      { label: 'プロジェクト計画変更', value: '計画変更' },
+      { label: '認証権限保有主体変更', value: '認証権限保有主体変更' },
     ],
   },
   {
@@ -28,7 +28,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: SELECTS_REQUIRED,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -37,7 +37,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -46,7 +46,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -55,7 +55,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -64,7 +64,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -73,7 +73,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -82,7 +82,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
 
@@ -93,7 +93,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: PREFECTURES,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
 
@@ -103,7 +103,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -112,7 +112,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -122,7 +122,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: IS_DESIGNATED_EMITTERS,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   // if isdesignatedemitter false, disable
@@ -137,7 +137,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
 
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -150,7 +150,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     ],
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   // if hasEnergyActPeriodReport false, disable
@@ -164,7 +164,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     },
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   // if hasEnergyActPeriodReport false, disable
@@ -178,7 +178,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     },
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -187,7 +187,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -197,7 +197,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: SELECTS_REQUIRED,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -206,7 +206,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -216,7 +216,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: SELECTS_REQUIRED,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -225,7 +225,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -235,7 +235,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: SELECTS_REQUIRED,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -244,7 +244,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -254,7 +254,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: SELECTS_REQUIRED,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -263,7 +263,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'email',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -273,7 +273,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: SELECTS_REQUIRED,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -282,7 +282,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -292,7 +292,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: SELECTS_REQUIRED,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -301,7 +301,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -311,7 +311,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: SELECTS_REQUIRED,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -320,7 +320,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -330,7 +330,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: SELECTS_REQUIRED,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -339,7 +339,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -349,7 +349,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: SELECTS_REQUIRED,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -358,7 +358,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'email',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -368,7 +368,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: SELECTS_REQUIRED,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -377,7 +377,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -387,7 +387,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: SELECTS_REQUIRED,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -396,7 +396,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -405,7 +405,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -415,7 +415,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: METHODS,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -424,7 +424,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -433,7 +433,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -451,7 +451,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     ],
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   // not sure
@@ -461,7 +461,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   // not sure
@@ -471,7 +471,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -481,7 +481,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: REGIONALS,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -490,7 +490,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -500,7 +500,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -521,7 +521,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     ],
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -531,7 +531,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: REVIEWER_NAMES,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -540,7 +540,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'date',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -549,7 +549,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'date',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -559,7 +559,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     options: REVIEWER_NAMES,
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   {
@@ -568,7 +568,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'date',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
-      value: '認証権限保有主体更新',
+      value: '認証権限保有主体変更',
     },
   },
   //

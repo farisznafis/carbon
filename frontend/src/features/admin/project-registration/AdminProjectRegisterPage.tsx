@@ -291,104 +291,105 @@ export const AdminProjectRegister: React.FC = () => {
     }
   };
 
+  if (mode === 'confirm') {
+    return (
+      <ConfirmationLayout
+        pageName='プロジェクト作成の確認'
+        title='入力内容'
+        description='以下の内容をご確認ください。'
+        onBack={backToForm}
+        backText='戻る'
+        onConfirm={handleConfirm}
+        isSubmitting={isSubmitting}
+      >
+        <PageDropdown
+          steps={visibleSteps}
+          value={confirmationStep}
+          onChange={jumpToConfirmationStep}
+        />
+        {visibleSteps
+          .find((visibleStep) => visibleStep.id === confirmationStep)
+          ?.fields.map((field) => {
+            const value = form.getValues(
+              field.name as FieldPath<AdminProjectRegisterFormInputValues>,
+            );
+            const display = getConfirmationDisplayValue(value, field.options);
+
+            return (
+              <ConfirmationItem
+                key={String(field.name)}
+                label={field.label}
+                value={display}
+              />
+            );
+          })}
+        {submitError && <p className='text-sm text-red-600'>{submitError}</p>}
+      </ConfirmationLayout>
+    );
+  }
+
   return (
     <FormPageWrapper
       pageName='プロジェクト登録申請'
       title=''
-      onBack={mode === 'form' ? () => navigate(paths.adminDashboard) : undefined}
+      onBack={() => navigate(paths.adminDashboard)}
       backText='戻る'
       contentMaxWidth='max-w-3xl'
     >
-      {mode === 'form' ? (
-        <>
-          <div className='mb-4 flex items-center justify-between gap-3'>
-            <PageDropdown
-              steps={visibleSteps}
-              value={step}
-              onChange={jumpToStep}
-            />
-            {step === 1 && <TemporaryAdminProjectAutofillButton form={form} />}
-            {step === 2 && (
-              <TemporaryAdminProjectApplicationAutofillButton form={form} />
-            )}
-          </div>
+      <div className='mb-4 flex items-center justify-between gap-3'>
+        <PageDropdown
+          steps={visibleSteps}
+          value={step}
+          onChange={jumpToStep}
+        />
+        {step === 1 && <TemporaryAdminProjectAutofillButton form={form} />}
+        {step === 2 && (
+          <TemporaryAdminProjectApplicationAutofillButton form={form} />
+        )}
+      </div>
 
-          <MultiStepForm
-            form={form}
-            step={step}
-            stepsOverride={visibleSteps}
-          />
+      <MultiStepForm
+        form={form}
+        step={step}
+        stepsOverride={visibleSteps}
+      />
 
-          <div className='mt-6 flex justify-between gap-2'>
-            {step === 1 && (
-              <Button
-                type='button'
-                variant='outline'
-                onClick={onSave}
-                disabled={isSavingProjectBase}
-              >
-                {isSavingProjectBase ? '保存中...' : '保存'}
-              </Button>
-            )}
-            {step > 1 && (
-              <Button
-                type='button'
-                variant='outline'
-                onClick={goBack}
-              >
-                戻る
-              </Button>
-            )}
-            <Button
-              type='button'
-              onClick={goNext}
-              disabled={
-                isSavingProjectBase ||
-                isLoadingApplication ||
-                (step === 1 && !isProjectBaseSaved)
-              }
-            >
-              {step === maxStep
-                ? '確認へ'
-                : isLoadingApplication
-                  ? '読み込み中...'
-                  : '次へ'}
-            </Button>
-          </div>
-        </>
-      ) : (
-        <ConfirmationLayout
-          pageName='プロジェクト作成の確認'
-          title='入力内容'
-          description='以下の内容をご確認ください。'
-          onBack={backToForm}
-          backText='戻る'
-          onConfirm={handleConfirm}
-          isSubmitting={isSubmitting}
+      <div className='mt-6 flex justify-between gap-2'>
+        {step === 1 && (
+          <Button
+            type='button'
+            variant='outline'
+            onClick={onSave}
+            disabled={isSavingProjectBase}
+          >
+            {isSavingProjectBase ? '保存中...' : '保存'}
+          </Button>
+        )}
+        {step > 1 && (
+          <Button
+            type='button'
+            variant='outline'
+            onClick={goBack}
+          >
+            戻る
+          </Button>
+        )}
+        <Button
+          type='button'
+          onClick={goNext}
+          disabled={
+            isSavingProjectBase ||
+            isLoadingApplication ||
+            (step === 1 && !isProjectBaseSaved)
+          }
         >
-          <PageDropdown
-            steps={visibleSteps}
-            value={confirmationStep}
-            onChange={jumpToConfirmationStep}
-          />
-          {visibleSteps
-            .find((visibleStep) => visibleStep.id === confirmationStep)
-            ?.fields.map((field) => {
-              const value = form.getValues(
-                field.name as FieldPath<AdminProjectRegisterFormInputValues>,
-              );
-              const display = getConfirmationDisplayValue(value, field.options);
-
-              return (
-                <ConfirmationItem
-                  key={String(field.name)}
-                  label={field.label}
-                  value={display}
-                />
-              );
-            })}
-        </ConfirmationLayout>
-      )}
+          {step === maxStep
+            ? '確認へ'
+            : isLoadingApplication
+              ? '読み込み中...'
+              : '次へ'}
+        </Button>
+      </div>
       {submitError && <p className='text-sm text-red-600'>{submitError}</p>}
     </FormPageWrapper>
   );

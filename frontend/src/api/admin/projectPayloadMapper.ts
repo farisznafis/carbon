@@ -29,6 +29,14 @@ function joinName(lastName: unknown, firstName: unknown): string | undefined {
   return parts.length > 0 ? parts.join(' ') : undefined;
 }
 
+function normalizeApplicationCategory(value: unknown): unknown {
+  if (value === 'プロジェクト登録') return '登録';
+  if (value === 'プロジェクト計画更新' || value === '計画更新') return '計画変更';
+  if (value === '認証権限保有主体更新') return '認証権限保有主体変更';
+
+  return value;
+}
+
 function toBooleanValue(value: unknown): unknown {
   if (typeof value === 'boolean') return value;
   if (typeof value !== 'string') return value;
@@ -179,7 +187,7 @@ export function mapAdminProjectPlanApplicationPayload(
 
   return cleanPayload({
     ...projectApplication,
-    applicationCategory: projectApplication.applicationCategory,
+    applicationCategory: normalizeApplicationCategory(projectApplication.applicationCategory),
     isUsingExamCostSupport: projectApplication.isUsingExamCostSupport ?? projectApplication.isUsingCostSupport,
     projectOperatorKana: projectApplication.projectOperatorKana,
     projectOperatorNameJa: projectApplication.projectOperatorNameJa ?? projectApplication.projectOperatorJa,
