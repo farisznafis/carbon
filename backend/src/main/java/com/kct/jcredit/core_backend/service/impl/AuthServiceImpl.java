@@ -250,15 +250,22 @@ public class AuthServiceImpl implements AuthService {
             OperatingUser currentUser, 
             PasswordChangeRequest request, String token) {
         PasswordChangeResponse response = new PasswordChangeResponse();
+        Integer targetUserId;
+
+        try {
+            targetUserId = parseTargetUserId(request);
+        } catch (IllegalArgumentException ex) {
+            return badRequestResponse();
+        }
 
         // Case 1: 自分自身のパスワード変更
-        if (request.getUserId() == null) {
+        if (targetUserId == null) {
             return updateOperatingUserPassword(currentUser, request, token, true);
         }
         
         // Case 2: 他のユーザーのパスワード変更
         // Participating User を探す
-        ParticipatingUser targetParticipating = userRepository.findById(request.getUserId()).orElse(null);
+        ParticipatingUser targetParticipating = userRepository.findById(targetUserId).orElse(null);
         if (targetParticipating == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_NOT_FOUND);
@@ -289,9 +296,16 @@ public class AuthServiceImpl implements AuthService {
             PasswordChangeRequest request, String token) {
 
         PasswordChangeResponse response = new PasswordChangeResponse();
+        Integer targetUserId;
+
+        try {
+            targetUserId = parseTargetUserId(request);
+        } catch (IllegalArgumentException ex) {
+            return badRequestResponse();
+        }
         
         // Case 1: 自分自身のパスワード変更
-        if (request.getUserId() == null || request.getUserId().equals(currentUser.getId())) {
+        if (targetUserId == null || targetUserId.equals(currentUser.getId())) {
             return updateParticipatingUserPassword(currentUser, request,token, true);
         }
         
@@ -311,7 +325,7 @@ public class AuthServiceImpl implements AuthService {
         }
         
         // 対象ユーザーを取得（Participating User のみ）
-        ParticipatingUser targetUser = userRepository.findById(request.getUserId()).orElse(null);
+        ParticipatingUser targetUser = userRepository.findById(targetUserId).orElse(null);
         if (targetUser == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_NOT_FOUND);
@@ -329,6 +343,42 @@ public class AuthServiceImpl implements AuthService {
         
         // パスワード変更実行
         return updateParticipatingUserPassword(targetUser, request,token, false);
+    }
+
+    private Integer parseTargetUserId(PasswordChangeRequest request) {
+        Object rawUserId = request.getUserId();
+        if (rawUserId == null) {
+            return null;
+        }
+
+        if (rawUserId instanceof Number number) {
+            int value = number.intValue();
+            if (value <= 0) {
+                throw new IllegalArgumentException("userId must be positive");
+            }
+            return value;
+        }
+
+        String value = rawUserId.toString().trim();
+        if (value.isEmpty() || value.startsWith("COMP")) {
+            return null;
+        }
+        if (!value.matches("\\d+")) {
+            throw new IllegalArgumentException("userId must be numeric");
+        }
+
+        try {
+            return Integer.valueOf(value);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("userId is out of range", ex);
+        }
+    }
+
+    private PasswordChangeResponse badRequestResponse() {
+        PasswordChangeResponse response = new PasswordChangeResponse();
+        response.setStatusCode(ResponseConstants.BAD_REQUEST);
+        response.setMessage(ResponseConstants.MSG_BAD_REQUEST);
+        return response;
     }
 
      private PasswordChangeResponse updateOperatingUserPassword(

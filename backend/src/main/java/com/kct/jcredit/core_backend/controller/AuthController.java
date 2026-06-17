@@ -25,6 +25,7 @@ import com.kct.jcredit.core_backend.util.ResponseUtil;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
@@ -64,7 +65,7 @@ public class AuthController {
     @PostMapping("/user/change-password")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<PasswordChangeResponse> changePassword(Authentication authentication, @RequestHeader("Authorization") String authHeader,
-                                                                @RequestBody PasswordChangeRequest request) {
+                                                                @Valid @RequestBody PasswordChangeRequest request) {
         String username = authentication.getName();
         String token = authHeader.substring(7); 
         PasswordChangeResponse response = authService.changePassword(username, token, request);
