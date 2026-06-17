@@ -10,9 +10,11 @@ import { SiteTable } from '@/components/data-display/tables/SiteTable';
 import { UserTable } from '@/components/data-display/tables/UserTable';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { paths } from '@/routes/paths';
+import { useAuth } from '@/contexts/AuthContext';
 
 const MasterDashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const sites = useDashboardStore((state) => state.sites) ?? [];
   const users = useDashboardStore((state) => state.users) ?? [];
@@ -64,7 +66,7 @@ const MasterDashboard = () => {
     navigate(`/user-edit/${user.id}`, { state: { user } });
   };
 
-  const companyName = '株式会社サンプル';
+  const companyName = user?.companyName ?? user?.siteName ?? '';
 
   return (
     <div className='min-h-screen bg-slate-50'>

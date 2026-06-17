@@ -114,6 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           email,
           role: data.role,
           companyId,
+          companyName: data.companyName,
           siteId: data.siteId != null ? String(data.siteId) : '',
           siteName: data.companyName,
         };

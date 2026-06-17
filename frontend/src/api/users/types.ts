@@ -25,6 +25,7 @@ export interface User {
   username?: string;
   role?: 'master' | 'user' | 'admin';
   companyId?: string;
+  companyName?: string;
   siteId: string;
   siteName?: string;
 }
