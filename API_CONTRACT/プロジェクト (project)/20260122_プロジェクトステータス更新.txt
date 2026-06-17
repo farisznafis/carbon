@@ -1,1 +1,52 @@
-﻿運営・管理者専用URL: PATCH /api/projects/:projectId:/statusAuthorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...Content-Type: application/jsonRequest Body (JSON): //必要な値だけ送信する{ "projectStatus": "却下"   // 　リストからの選択 　// 作成済 - created gray// 準備中 - being prepared yellow// 変更中 - being changed yellow// 妥当性確認処理 - validation check processing yellow// 却下 - cancle red// 実施中 -  in progress green // 検証中 - being tested green// クレジット申請中 - J credit application processing green// 終了 - complete gray/black}Response - Success (HTTP 200){  "statusCode": "OK"  "project": { //プロジェクトベースオブジェクト　将来に複数オブジェクトを送信する    "updatedAt": "2026-01-22T09:15:00Z",    "projectName": "太陽光発電導入プロジェクトA",    “oldStatus": "作成済み",    "newStatus": "却下",  }}ERROR RESPONSES{  "statusCode": "UNAUTHORIZED",  "message": "この操作を行うにはログインが必要です。"},{  "statusCode": "FORBIDDEN",  "message": "このリソースにアクセスする権限がありません。"},{  "statusCode": "NOT_FOUND",  "message": "該当するプロジェクトが見つかりませんでした。"},{  "statusCode": "SERVER_ERROR",  "message": "サーバー内部でエラーが発生しました。"}
+﻿運営・管理者専用
+URL: PATCH /api/projects/:projectId:/status
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body (JSON): //必要な値だけ送信する
+{
+ "projectStatus": "却下"  
+// 　リストからの選択 　
+// 作成済 - created gray
+// 準備中 - being prepared yellow
+// 変更中 - being changed yellow
+// 妥当性確認処理 - validation check processing yellow
+// 却下 - cancle red
+// 実施中 -  in progress green 
+// 検証中 - being tested green
+// クレジット申請中 - J credit application processing green
+// 終了 - complete gray/black
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK"
+  "project": { //プロジェクトベースオブジェクト　将来に複数オブジェクトを送信する
+    "updatedAt": "2026-01-22T09:15:00Z",
+    "projectName": "太陽光発電導入プロジェクトA",
+    “oldStatus": "作成済み",
+    "newStatus": "却下",
+  }
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当するプロジェクトが見つかりませんでした。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+
+
+
