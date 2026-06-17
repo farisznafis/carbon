@@ -55,7 +55,7 @@ public class SiteController {
 
     @GetMapping("/{siteId}/project")
     @PreAuthorize("hasAnyRole('master','user')")
-    @SecurityRequirement(name = "bearerAuth") 
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "拠点に紐付くプロジェクト一覧取得", description = "指定された拠点に紐付くプロジェクトの一覧を取得します。")
     public ResponseEntity<ProjectListInfoResponse> getProjectsBySiteId(Authentication authentication, @PathVariable Integer siteId) {
         String token = authentication.getCredentials().toString();
