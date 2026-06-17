@@ -145,12 +145,12 @@ public class AuthServiceTest {
         // Assert
         assertEquals(ResponseConstants.OK, res.getStatusCode());
         assertEquals("jwt-token-123", res.getToken());
-        assertNotNull(res.getUser());
-        assertEquals("alice", res.getUser().getUsername());
-        assertEquals("Smith Alice", res.getUser().getName()); 
-        assertEquals("USER", res.getUser().getRole());
-        assertEquals("alice@example.com", res.getUser().getEmail());
-        assertEquals("COMP123", res.getUser().getCompanyId());
+        // assertNotNull(res.getUser());
+        // assertEquals("alice", res.getUser().getUsername());
+        // assertEquals("Smith Alice", res.getUser().getName()); 
+        // assertEquals("USER", res.getUser().getRole());
+        // assertEquals("alice@example.com", res.getUser().getEmail());
+        // assertEquals("COMP123", res.getUser().getCompanyId());
         
         
         // ユーザーの試行回数が0にリセットされ保存されていること
@@ -164,12 +164,12 @@ public class AuthServiceTest {
         System.out.println("Test execution time: " + OffsetDateTime.now(ZoneId.of("Asia/Tokyo")));
         System.out.println("response: " + res.getStatusCode());
         System.out.println("token: " + res.getToken());
-        System.out.println("user: " + res.getUser());
-        System.out.println("name: " + res.getUser().getUsername());
-        System.out.println("lastName firstName: " + res.getUser().getName());
-        System.out.println("user/master: " + res.getUser().getRole());
-        System.out.println("Email: " + res.getUser().getEmail());
-        System.out.println("companyID: " + res.getUser().getCompanyId());
+        // System.out.println("user: " + res.getUser());
+        // System.out.println("name: " + res.getUser().getUsername());
+        // System.out.println("lastName firstName: " + res.getUser().getName());
+        // System.out.println("user/master: " + res.getUser().getRole());
+        // System.out.println("Email: " + res.getUser().getEmail());
+        // System.out.println("companyID: " + res.getUser().getCompanyId());
         System.out.println("loginAttemptsNum: " + saved.getLoginAttempts());
     }
 
@@ -217,12 +217,12 @@ public class AuthServiceTest {
         // Assert
         assertEquals(ResponseConstants.OK, res.getStatusCode());
         assertEquals("jwt-token-123", res.getToken());
-        assertNotNull(res.getUser());
-        assertEquals("alice", res.getUser().getUsername());
-        assertEquals("Smith Alice", res.getUser().getName()); // 実装：last + space + first
-        assertEquals("USER", res.getUser().getRole());
-        assertEquals("alice@example.com", res.getUser().getEmail());
-        assertEquals("COMP123", res.getUser().getCompanyId());
+        // assertNotNull(res.getUser());
+        // assertEquals("alice", res.getUser().getUsername());
+        // assertEquals("Smith Alice", res.getUser().getName()); // 実装：last + space + first
+        // assertEquals("USER", res.getUser().getRole());
+        // assertEquals("alice@example.com", res.getUser().getEmail());
+        // assertEquals("COMP123", res.getUser().getCompanyId());
         
         
         // ユーザーの試行回数が0にリセットされ保存されていること
@@ -236,12 +236,12 @@ public class AuthServiceTest {
         System.out.println("Test execution time: " + OffsetDateTime.now(ZoneId.of("Asia/Tokyo")));
         System.out.println("response: " + res.getStatusCode());
         System.out.println("token: " + res.getToken());
-        System.out.println("user: " + res.getUser());
-        System.out.println("name: " + res.getUser().getUsername());
-        System.out.println("lastName firstName: " + res.getUser().getName());
-        System.out.println("user/master: " + res.getUser().getRole());
-        System.out.println("Email: " + res.getUser().getEmail());
-        System.out.println("companyID: " + res.getUser().getCompanyId());
+        // System.out.println("user: " + res.getUser());
+        // System.out.println("name: " + res.getUser().getUsername());
+        // System.out.println("lastName firstName: " + res.getUser().getName());
+        // System.out.println("user/master: " + res.getUser().getRole());
+        // System.out.println("Email: " + res.getUser().getEmail());
+        // System.out.println("companyID: " + res.getUser().getCompanyId());
         System.out.println("loginAttemptsNum: " + saved.getLoginAttempts());
     }
 
@@ -285,7 +285,7 @@ public class AuthServiceTest {
         // Assert
         assertEquals(ResponseConstants.INVALID_CREDENTIALS, res.getStatusCode());
         assertEquals(null, res.getToken());
-        assertEquals(null, res.getUser());
+        // assertEquals(null, res.getUser());
         
         // ユーザーの試行回数が0にリセットされ保存されていること
         ArgumentCaptor<ParticipatingUser> userCaptor = ArgumentCaptor.forClass(ParticipatingUser.class);
@@ -298,7 +298,7 @@ public class AuthServiceTest {
         System.out.println("Test execution time: " + OffsetDateTime.now(ZoneId.of("Asia/Tokyo")));
         System.out.println("response: " + res.getStatusCode());
         System.out.println("token: " + res.getToken());
-        System.out.println("user: " + res.getUser());
+        // System.out.println("user: " + res.getUser());
         System.out.println("loginAttemptsNum: " + saved.getLoginAttempts());
     }
 
@@ -324,7 +324,7 @@ public class AuthServiceTest {
         // Assert
         assertEquals(ResponseConstants.INVALID_CREDENTIALS, res.getStatusCode());
         assertEquals(null, res.getToken());
-        assertEquals(null, res.getUser());
+        // assertEquals(null, res.getUser());
         
         
         // ユーザーが見つからないので save() は呼ばれない
@@ -335,7 +335,7 @@ public class AuthServiceTest {
         System.out.println("Test execution time: " + OffsetDateTime.now(ZoneId.of("Asia/Tokyo")));
         System.out.println("response: " + res.getStatusCode());
         System.out.println("token: " + res.getToken());
-        System.out.println("user: " + res.getUser());
+        // System.out.println("user: " + res.getUser());
 
     }
 
@@ -358,7 +358,7 @@ public class AuthServiceTest {
         // Assert
         assertEquals(ResponseConstants.INVALID_CREDENTIALS, res.getStatusCode());
         assertEquals(null, res.getToken());
-        assertEquals(null, res.getUser());
+        // assertEquals(null, res.getUser());
         
         
         // ユーザーが見つからないので save() は呼ばれない
@@ -369,7 +369,7 @@ public class AuthServiceTest {
         System.out.println("Test execution time: " + OffsetDateTime.now(ZoneId.of("Asia/Tokyo")));
         System.out.println("response: " + res.getStatusCode());
         System.out.println("token: " + res.getToken());
-        System.out.println("user: " + res.getUser());
+        // System.out.println("user: " + res.getUser());
 
     }
 
@@ -419,7 +419,7 @@ public class AuthServiceTest {
         // Assert
         assertEquals(ResponseConstants.ACCOUNT_LOCKED, res.getStatusCode());
         assertEquals(null, res.getToken());
-        assertEquals(null, res.getUser());
+        //assertEquals(null, res.getUser());
 
         
         
@@ -442,7 +442,7 @@ public class AuthServiceTest {
         System.out.println("Test execution time: " + OffsetDateTime.now(ZoneId.of("Asia/Tokyo")));
         System.out.println("response: " + res.getStatusCode());
         System.out.println("token: " + res.getToken());
-        System.out.println("user: " + res.getUser());
+        //System.out.println("user: " + res.getUser());
         System.out.println("loginAttemptsNum: " + saved.getLoginAttempts());
         System.out.println("lokedUntil: " + lockedUntil);
     }
@@ -492,12 +492,12 @@ public class AuthServiceTest {
         // Assert
         assertEquals(ResponseConstants.OK, res.getStatusCode());
         assertEquals("jwt-token-123", res.getToken());
-        assertNotNull(res.getUser());
-        assertEquals("alice", res.getUser().getUsername());
-        assertEquals("Smith Alice", res.getUser().getName()); // 実装：last + space + first
-        assertEquals("USER", res.getUser().getRole());
-        assertEquals("alice@example.com", res.getUser().getEmail());
-        assertEquals("COMP123", res.getUser().getCompanyId());
+        // assertNotNull(res.getUser());
+        // assertEquals("alice", res.getUser().getUsername());
+        // assertEquals("Smith Alice", res.getUser().getName()); // 実装：last + space + first
+        // assertEquals("USER", res.getUser().getRole());
+        // assertEquals("alice@example.com", res.getUser().getEmail());
+        // assertEquals("COMP123", res.getUser().getCompanyId());
         
         
         // ユーザーの試行回数が0にリセットされ保存されていること
@@ -513,12 +513,12 @@ public class AuthServiceTest {
         System.out.println("Test execution time: " + OffsetDateTime.now(ZoneId.of("Asia/Tokyo")));
         System.out.println("response: " + res.getStatusCode());
         System.out.println("token: " + res.getToken());
-        System.out.println("user: " + res.getUser());
-        System.out.println("name: " + res.getUser().getUsername());
-        System.out.println("lastName firstName: " + res.getUser().getName());
-        System.out.println("user/master: " + res.getUser().getRole());
-        System.out.println("Email: " + res.getUser().getEmail());
-        System.out.println("companyID: " + res.getUser().getCompanyId());
+        // System.out.println("user: " + res.getUser());
+        // System.out.println("name: " + res.getUser().getUsername());
+        // System.out.println("lastName firstName: " + res.getUser().getName());
+        // System.out.println("user/master: " + res.getUser().getRole());
+        // System.out.println("Email: " + res.getUser().getEmail());
+        // System.out.println("companyID: " + res.getUser().getCompanyId());
         System.out.println("loginAttemptsNum: " + saved.getLoginAttempts());
         //アカウントロック期限時間がnullになっていることコンソールに出して確認
         System.out.println("accountLockedUntil: " + saved.getAccountLockedUntil());
@@ -560,7 +560,7 @@ public class AuthServiceTest {
         // Assert
         assertEquals(ResponseConstants.ACCOUNT_LOCKED, res.getStatusCode());
         assertEquals(null, res.getToken());
-        assertEquals(null, res.getUser());
+        //assertEquals(null, res.getUser());
 
         verify(userRepository, never()).save(any());
 
@@ -569,7 +569,7 @@ public class AuthServiceTest {
         System.out.println("Test execution time: " + OffsetDateTime.now(ZoneId.of("Asia/Tokyo")));
         System.out.println("response: " + res.getStatusCode());
         System.out.println("token: " + res.getToken());
-        System.out.println("user: " + res.getUser());
+        //System.out.println("user: " + res.getUser());
 
         
     }

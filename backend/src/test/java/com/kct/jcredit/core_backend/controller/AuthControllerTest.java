@@ -113,7 +113,7 @@ class AuthControllerTest {
         LoginResponse res = new LoginResponse();
         res.setStatusCode(ResponseConstants.OK);
         res.setToken("token01");
-        res.setUser(UserInfoResponse.builder().username("username01").build());
+        //res.setUser(UserInfoResponse.builder().username("username01").build());
 
         // authService.userLogin(request)の際、
         // thenReturn(res)の内容が返ってくる
@@ -142,7 +142,7 @@ class AuthControllerTest {
         LoginResponse res = new LoginResponse();
         res.setStatusCode("INVALID_CREDENTIALS");
         res.setToken("token01");
-        res.setUser(UserInfoResponse.builder().username("username01").build());
+        //res.setUser(UserInfoResponse.builder().username("username01").build());
 
         // authService.userLogin(request)の際、
         // thenReturn(res)の内容が返ってくる

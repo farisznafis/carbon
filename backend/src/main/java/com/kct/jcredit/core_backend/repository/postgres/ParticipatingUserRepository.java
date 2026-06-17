@@ -17,7 +17,6 @@ public interface ParticipatingUserRepository extends JpaRepository<Participating
     @Query("SELECT u FROM ParticipatingUser u WHERE (u.username = :username OR u.email = :email) AND u.companyId = :companyId")
     Optional<ParticipatingUser> findByUsernameOrEmailAndCompanyId(String username, String email, String companyId);
     List<ParticipatingUser> findByCompanyId(String companyId);
-
     Optional<ParticipatingUser> findByCompanyIdAndRole(String companyId, String role);
     Optional<ParticipatingUser> findByUsernameAndCompanyId(String username, String companyId);
     boolean existsByUsername(String username);

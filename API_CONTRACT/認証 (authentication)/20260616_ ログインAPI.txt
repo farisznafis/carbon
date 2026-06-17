@@ -4,6 +4,7 @@ Content-Type: application/json
 
 Request Body (JSON): 
 {
+	"companyId": "00123",
  	"identifier": "user@example.com", //username or email
   	"password": "StrongPassword123!"
 }
@@ -13,6 +14,8 @@ Response – Success (HTTP 200):
     "statusCode": "OK",
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6...",
 	"companyName":"会社例",
+	"role": "マスター",
+	"siteId”: “123”
   	
 }
 

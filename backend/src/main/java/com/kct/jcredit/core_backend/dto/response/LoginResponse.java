@@ -13,6 +13,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginResponse extends BaseResponse {
+    private String role;
+    private Integer SiteId;
     private String token;
-    private UserInfoResponse user;
+    private String companyName;
+    //private UserInfoResponse user;
 }

@@ -18,6 +18,7 @@ import com.kct.jcredit.core_backend.dto.response.details.UserInfoResponse;
 import com.kct.jcredit.core_backend.entity.OperatingUser;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.entity.Site;
+import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
@@ -40,7 +41,110 @@ public class AuthServiceImpl implements AuthService {
     private final OperatingUserRepository operatingUserRepository;
     private final ParticipatingCompanyRepository participatingCompanyRepository;
 
-   gi
+    
+    @Override
+    public LoginResponse userLogin(LoginRequest request) {
+        LoginResponse response = new LoginResponse();
+
+        // ユーザーの入力した企業IDが存在しているかどうか
+         // Validate company ID
+        if (!participatingCompanyRepository.findByCompanyId(request.getCompanyId()).isPresent()) {
+            response.setStatusCode("INVALID_CREDENTIALS");
+            response.setMessage(ResponseConstants.MSG_LOGIN_FAILED);
+            return response;
+        }
+        ParticipatingUser user = userRepository
+            .findByUsernameOrEmailAndCompanyId(
+                request.getIdentifier(), request.getIdentifier(), request.getCompanyId()
+            )
+            .orElse(null);
+
+        
+        //userを、企業ID＆ユーザID/メールアドレスで検索して存在しない場合
+        if(user == null) {
+            response.setStatusCode("INVALID_CREDENTIALS");
+            response.setMessage(ResponseConstants.MSG_LOGIN_FAILED);
+            return response;
+        }
+
+        //アカウントがロック中か確認し、ロック中なら拒否、期限切れなら解除
+        //check if locked from attempts
+        if(user.getAccountLockedUntil() != null){
+            //現在時刻がロック期限より前は、ACCOUNT_LOCKEDを返して処理終了
+            //if still locked
+            if(LocalDateTime.now().isBefore(user.getAccountLockedUntil())) {
+                response.setStatusCode(ResponseConstants.ACCOUNT_LOCKED);
+                response.setMessage(ResponseConstants.MSG_ACCOUNT_LOCKED);
+                return response;
+            }
+            //ロックが解除される
+            else{
+                //unlock account
+                user.setAccountLockedUntil(null);
+                user.setLoginAttempts(0);
+                userRepository.save(user);
+            }
+        }
+
+        //パスワード不一致の際のアカウントロック処理
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            Integer attempts = user.getLoginAttempts();
+            //失敗回数が５を超えているなら
+            if(attempts > 4) {
+                //今から12時間後に設定してロックし保存
+                user.setAccountLockedUntil(LocalDateTime.now().plusHours(12)); //lock for 12 hours
+                //現在の失敗回数を取得
+                userRepository.save(user);
+                response.setStatusCode(ResponseConstants.ACCOUNT_LOCKED);
+                response.setMessage(ResponseConstants.MSG_ACCOUNT_LOCKED);
+                return response;
+            }
+            response.setStatusCode(ResponseConstants.INVALID_CREDENTIALS);
+            response.setMessage(ResponseConstants.MSG_LOGIN_FAILED);
+            //attemptsが4になったらロック
+            user.setLoginAttempts(attempts + 1);
+            userRepository.save(user);
+            return response;
+        }
+        //reset attempts on successful login
+        user.setLoginAttempts(0);
+        userRepository.save(user);
+
+        //ユーザが有効でないならアクセス拒否する
+        if(!user.getIsActive()) {
+            response.setStatusCode(ResponseConstants.FORBIDDEN);
+            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+            return response;
+        }
+            
+        String token = jwtUtil.generateToken(user.getId(),user.getUsername(), user.getCompanyId(), user.getRole());
+
+        //もしユーザの情報は必要なら、レスポンスにユーザの情報も入れる
+        // UserInfoResponse resData = UserInfoResponse.builder()
+        //         .id(String.valueOf(user.getId()))
+        //         .username(user.getUsername())
+        //         .name(user.getLastName() + " " + user.getFirstName())
+        //         .firstName(user.getFirstName())
+        //         .firstNameKana(user.getFirstNameKana())
+        //         .lastName(user.getLastName())
+        //         .lastNameKana(user.getLastNameKana())
+        //         .phoneNumber(user.getPhoneNumber())
+        //         .userPosition(user.getUserPosition())
+        //         .role(user.getRole())
+        //         .email(user.getEmail())
+        //         .siteId(user.getSite() != null ? String.valueOf(user.getSite().getId()) : null)
+        //         .siteName(user.getSite() != null ? user.getSite().getSiteName() : null)
+        //         .companyId(request.getCompanyId())
+        //         .build();
+        //response.setUser(resData);
+        response.setRole(user.getRole());
+        response.setSiteId(user.getSite() != null ? user.getSite().getId() : null);
+        response.setCompanyName(participatingCompanyRepository.findByCompanyId(request.getCompanyId()).map(ParticipatingCompany::getNameJa).orElse(null));
+        response.setToken(token);
+        response.setStatusCode(ResponseConstants.OK);
+
+        return response;
+    }
 
     @Override
     public AdminLoginResponse operatorLogin(AdminLoginRequest request) {
