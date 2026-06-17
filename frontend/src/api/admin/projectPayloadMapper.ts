@@ -10,8 +10,9 @@ function toOptionalString(value: string | number | undefined): string | undefine
 }
 
 function toStringValue(value: unknown): string | undefined {
-  if (value === undefined || value === null || value === '') return undefined;
-  return String(value);
+  if (value === undefined || value === null) return undefined;
+  const stringValue = String(value).trim();
+  return stringValue === '' ? undefined : stringValue;
 }
 
 function firstStringValue(...values: unknown[]): string | undefined {
@@ -90,6 +91,21 @@ function normalizeProjectApplicationBooleans(
   );
 }
 
+function cleanPayload(payload: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(payload)
+      .map(([key, value]) => {
+        if (typeof value === 'string') {
+          return [key, value.trim()] as const;
+        }
+        return [key, value] as const;
+      })
+      .filter(([, value]) => value !== undefined && value !== null && value !== ''),
+  );
+}
+
+const NOT_APPLICABLE_ENERGY_ACT_NUMBER = '0';
+
 export function mapAdminProjectPayload(
   values: AdminProjectPayloadFormValues,
   createdBy: string,
@@ -146,8 +162,22 @@ export function mapAdminProjectPlanApplicationPayload(
   const projectApplication = normalizeProjectApplicationBooleans(
     values.projectApplication ?? {},
   );
+  const shouldSendEnergyActNumbers =
+    projectApplication.hasEnergyActPeriodReport === true;
+  const energyActOperationNumber = shouldSendEnergyActNumbers
+    ? firstStringValue(
+        projectApplication.energyActOperationNumber,
+        projectApplication.energyActOpeNumber,
+      ) ?? NOT_APPLICABLE_ENERGY_ACT_NUMBER
+    : NOT_APPLICABLE_ENERGY_ACT_NUMBER;
+  const energyManageFactoryNumber = shouldSendEnergyActNumbers
+    ? firstStringValue(
+        projectApplication.energyManageFactoryNumber,
+        projectApplication.energyManagFactoryNumber,
+      ) ?? NOT_APPLICABLE_ENERGY_ACT_NUMBER
+    : NOT_APPLICABLE_ENERGY_ACT_NUMBER;
 
-  return {
+  return cleanPayload({
     ...projectApplication,
     applicationCategory: projectApplication.applicationCategory,
     isUsingExamCostSupport: projectApplication.isUsingExamCostSupport ?? projectApplication.isUsingCostSupport,
@@ -160,9 +190,10 @@ export function mapAdminProjectPlanApplicationPayload(
     isDesignatedEmitter: projectApplication.isDesignatedEmitter,
     emitterCode: projectApplication.emitterCode,
     hasEnergyActPeriodReport: projectApplication.hasEnergyActPeriodReport,
-    energyActOpeNumber: projectApplication.energyActOpeNumber,
-    energyManagFactoryNumber:
-      projectApplication.energyManagFactoryNumber ?? projectApplication.energyManageFactoryNumber,
+    energyActOperationNumber,
+    energyActOpeNumber: undefined,
+    energyManageFactoryNumber,
+    energyManagFactoryNumber: undefined,
     representativePosition: firstStringValue(
       projectApplication.representativePosition,
       projectBase.repPosition,
@@ -199,5 +230,5 @@ export function mapAdminProjectPlanApplicationPayload(
     validationCheckReviewerName: projectApplication.validationCheckReviewerName,
     reviewerName: projectApplication.reviewerName,
     projectOutline: projectApplication.projectOutline,
-  };
+  });
 }

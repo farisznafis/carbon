@@ -66,7 +66,7 @@ const AUTOFILL_VALUES = {
     operatorCompanyId: 'COMP001',
   },
   projectApplication: {
-    applicationCategory: APPLICATION_CATEGORY_OPTIONS[0],
+    applicationCategory: 'プロジェクト登録',
     isUsingCostSupport: SELECT_TYPE_REQUIRED_OPTIONS[1],
     projectOperatorKana: 'トウキョウエナジーカブシキガイシャ',
     projectOperatorJa: '東京エネルギー株式会社',
