@@ -119,7 +119,7 @@ export const otherProjectOperator: FieldConfig<FormValues>[] = [
     type: 'text',
     showWhen: {
       field: 'otherProjectOperator.isDesignatedEmitter',
-      value: '特定排出者である',
+      value: true,
     },
   },
 

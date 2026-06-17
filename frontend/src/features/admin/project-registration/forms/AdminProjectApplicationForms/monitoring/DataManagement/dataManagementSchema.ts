@@ -2,7 +2,6 @@ import {
   IS_INDEPENDENT_OF_LEGAL_OPTIONS,
   IS_SIMILAR_OPTIONS,
   IS_SIMILAR_VALIDATION,
-  SELECT_TYPE_REQUIRED_OPTIONS,
   SELECT_TYPE_REQUIRED_VALIDATION,
 } from '@/lib/constants/select_types';
 import {
@@ -43,11 +42,7 @@ export const dataManagementSchema = z
 
     dataStoring: z.number(),
 
-    isRisksForEmission: z.enum(
-      SELECT_TYPE_REQUIRED_OPTIONS,
-      SELECT_TYPE_REQUIRED_VALIDATION,
-    ),
-    //   .enum(SELECT_TYPE_REQUIRED_OPTIONS, SELECT_TYPE_REQUIRED_VALIDATION),
+    isRisksForEmission: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION),
 
     riskFactors: z
       .string()

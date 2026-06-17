@@ -70,6 +70,18 @@ const getAutofillData = (response: unknown): Record<string, unknown> => {
   return value as Record<string, unknown>;
 };
 
+const getConfirmationDisplayValue = (
+  value: unknown,
+  options?: { label: string; value: unknown }[],
+) => {
+  if (value === null || value === undefined || value === '') {
+    return '-';
+  }
+
+  const selectedOption = options?.find((option) => Object.is(option.value, value));
+  return selectedOption?.label ?? String(value);
+};
+
 export const AdminProjectRegister: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -365,10 +377,7 @@ export const AdminProjectRegister: React.FC = () => {
               const value = form.getValues(
                 field.name as FieldPath<AdminProjectRegisterFormInputValues>,
               );
-              const display =
-                value === null || value === undefined || value === ''
-                  ? '-'
-                  : String(value);
+              const display = getConfirmationDisplayValue(value, field.options);
 
               return (
                 <ConfirmationItem

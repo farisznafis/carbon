@@ -8,7 +8,6 @@ import {
 } from './projectBaseSchema';
 import {
   APPLICATION_CATEGORY_OPTIONS,
-  IS_PARTICIPATING_ACTS,
   LOCATION_OPTIONS,
 } from './AdminProjectApplicationForms/project/ProjectApplication/projectApplicationSchema';
 import { METHOD_OPTIONS } from '@/lib/constants/methodology';
@@ -80,7 +79,7 @@ const AUTOFILL_VALUES = {
     address: '丸の内1-1-1',
     isDesignatedEmitter: IS_DESIGNATED_EMITTER_OPTIONS[1],
     emitterCode: '123456789',
-    hasEnergyActPeriodReport: '対象でない',
+    hasEnergyActPeriodReport: false,
     energyActOpeNumber: '123456789',
     energyManageFactoryNumber: '1234567890',
     representativePosition: '代表取締役',
@@ -111,12 +110,12 @@ const AUTOFILL_VALUES = {
     methodologyNumber: '002',
     methodology: '太陽光発電設備の導入',
     location: LOCATION_OPTIONS.options[1],
-    SaaS: '審査機関A',
+    SaaS: 'Review Agency A',
     projectOutline: '太陽光発電設備を導入し、電力使用に伴う排出量を削減する。',
     regionCategory: REGIONAL_OPTIONS[2],
     groupName: '東京エネルギーグループ',
     groupNameFurigana: 'トウキョウエナジーグループ',
-    isParticipatingCnAct: IS_PARTICIPATING_ACTS.options[1],
+    isParticipatingCnAct: false,
     validationCheckReviewerName: REVIEWER_NAME_OPTIONS[0],
     // applicationDate: '2026-06-03',
     // registrationDate: '2026-06-03',

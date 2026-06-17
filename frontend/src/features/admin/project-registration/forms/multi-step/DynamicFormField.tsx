@@ -140,7 +140,11 @@ export function DynamicFormField<TFormValues extends FieldValues = FieldValues>(
 
       {field.type === 'select' && (
         <Select
-          value={String(form.watch(field.name) || '')}
+          value={
+            form.watch(field.name) === null || form.watch(field.name) === undefined
+              ? ''
+              : String(form.watch(field.name))
+          }
           onValueChange={(value) => {
             const selected = field.options?.find(
               (option) => String(option.value) === value,

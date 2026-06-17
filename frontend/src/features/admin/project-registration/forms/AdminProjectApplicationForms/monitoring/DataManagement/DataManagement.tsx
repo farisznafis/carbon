@@ -47,7 +47,7 @@ export const dataManagement: FieldConfig<FormValues>[] = [
     type: 'textarea',
     hideWhen: {
       field: 'dataManagement.isRisksForEmission',
-      value: '無',
+      value: false,
     },
   },
   {

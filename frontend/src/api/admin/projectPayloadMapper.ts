@@ -28,6 +28,68 @@ function joinName(lastName: unknown, firstName: unknown): string | undefined {
   return parts.length > 0 ? parts.join(' ') : undefined;
 }
 
+function toBooleanValue(value: unknown): unknown {
+  if (typeof value === 'boolean') return value;
+  if (typeof value !== 'string') return value;
+
+  if (['true', '有', 'はい', '対象である', '特定排出者である'].includes(value)) {
+    return true;
+  }
+
+  if (['false', '無', 'いいえ', '対象でない', '特定排出者でない'].includes(value)) {
+    return false;
+  }
+
+  if (
+    value ===
+    'カーボンニュートラル行動計画に参加する削減活動の実施者による削減活動を含む'
+  ) {
+    return true;
+  }
+
+  if (
+    value ===
+    'カーボンニュートラル行動計画に参加する削減活動の実施者による削減活動を含まない'
+  ) {
+    return false;
+  }
+
+  return value;
+}
+
+function normalizeProjectApplicationBooleans(
+  projectApplication: Record<string, unknown>,
+) {
+  const booleanFields = [
+    'isUsingCostSupport',
+    'isUsingExamCostSupport',
+    'isDesignatedEmitter',
+    'hasEnergyActPeriodReport',
+    'isChangeRepresentativePosition',
+    'isChangeRepresentativeName',
+    'isChangePicPosition',
+    'isChangePicName',
+    'isChangePicEmail',
+    'isChangePicPhone',
+    'isChangeOtherContactBusinessName',
+    'isChangeOtherContactPicPosition',
+    'isChangeOtherContactPicName',
+    'isChangeOtherContactPicEmail',
+    'isChangeOtherContactPicPhone',
+    'isParticipatingCnAct',
+  ];
+
+  return booleanFields.reduce<Record<string, unknown>>(
+    (normalized, fieldName) => {
+      if (fieldName in normalized) {
+        normalized[fieldName] = toBooleanValue(normalized[fieldName]);
+      }
+      return normalized;
+    },
+    { ...projectApplication },
+  );
+}
+
 export function mapAdminProjectPayload(
   values: AdminProjectPayloadFormValues,
   createdBy: string,
@@ -81,7 +143,9 @@ export function mapAdminProjectPlanApplicationPayload(
   values: AdminProjectPlanApplicationPayloadFormValues,
 ): CreateAdminProjectPlanApplicationPayload {
   const projectBase = values.projectBase ?? {};
-  const projectApplication = values.projectApplication ?? {};
+  const projectApplication = normalizeProjectApplicationBooleans(
+    values.projectApplication ?? {},
+  );
 
   return {
     ...projectApplication,

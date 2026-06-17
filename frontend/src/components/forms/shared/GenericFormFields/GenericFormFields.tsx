@@ -164,7 +164,11 @@ export function GenericFormFields<TFormValues extends FieldValues>({
                   />
                 ) : config.type === "select" ? (
                   <Select
-                    value={String(field.value)}
+                    value={
+                      field.value === null || field.value === undefined
+                        ? ""
+                        : String(field.value)
+                    }
                     onValueChange={(value) => {
                       const selected = config.options?.find(
                         (opt) => String(opt.value) === value

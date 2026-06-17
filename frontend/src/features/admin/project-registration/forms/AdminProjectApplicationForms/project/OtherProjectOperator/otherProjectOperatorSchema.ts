@@ -10,11 +10,8 @@ import {
   PREFECTURE_VALIDATION,
 } from '@/lib/constants/prefectures';
 import {
-  IS_DESIGNATED_EMITTER_OPTIONS,
   IS_DESIGNATED_EMITTER_VALIDATION,
-  SELECT_TYPE_REQUIRED_OPTIONS,
   SELECT_TYPE_REQUIRED_VALIDATION,
-  SELECTS_REQUIRED,
 } from '@/lib/constants/select_types';
 
 /**
@@ -67,10 +64,7 @@ export const otherProjectOperatorSchema = z
       .min(1, '必須項目です')
       .max(100, VALIDATION_MESSAGES.MAX_CHARACTERS(100)),
 
-    isChangeRepresentativePosition: z.enum(
-      SELECT_TYPE_REQUIRED_OPTIONS,
-      SELECT_TYPE_REQUIRED_VALIDATION,
-    ),
+    isChangeRepresentativePosition: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION),
 
     /** 代表者氏名 */
     representativeName: z
@@ -78,30 +72,21 @@ export const otherProjectOperatorSchema = z
       .min(1, '必須項目です')
       .max(50, VALIDATION_MESSAGES.MAX_CHARACTERS(50)),
 
-    isChangeRepresentativeName: z.enum(
-      SELECT_TYPE_REQUIRED_OPTIONS,
-      SELECT_TYPE_REQUIRED_VALIDATION,
-    ),
+    isChangeRepresentativeName: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION),
 
     picPosition: z
       .string()
       .min(1, '必須項目です')
       .max(100, VALIDATION_MESSAGES.MAX_CHARACTERS(100)),
 
-    isChangePicPosition: z.enum(
-      SELECT_TYPE_REQUIRED_OPTIONS,
-      SELECT_TYPE_REQUIRED_VALIDATION,
-    ),
+    isChangePicPosition: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION),
 
     picName: z
       .string()
       .min(1, '必須項目です')
       .max(50, VALIDATION_MESSAGES.MAX_CHARACTERS(50)),
 
-    isChangePicName: z.enum(
-      SELECT_TYPE_REQUIRED_OPTIONS,
-      SELECT_TYPE_REQUIRED_VALIDATION,
-    ),
+    isChangePicName: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION),
 
     picEmail: z
       .string()
@@ -109,10 +94,7 @@ export const otherProjectOperatorSchema = z
       .min(1, '必須項目です')
       .max(254, VALIDATION_MESSAGES.MAX_CHARACTERS(254)),
 
-    isChangePicEmail: z.enum(
-      SELECT_TYPE_REQUIRED_OPTIONS,
-      SELECT_TYPE_REQUIRED_VALIDATION,
-    ),
+    isChangePicEmail: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION),
 
     picPhoneNumber: z
       .string()
@@ -120,16 +102,10 @@ export const otherProjectOperatorSchema = z
       .max(20, VALIDATION_MESSAGES.MAX_NUMBERS(20)),
     // .regex(/^[0-9+\-\s]+$/, "電話番号の形式で入力してください")
 
-    isChangePicPhoneNumber: z.enum(
-      SELECT_TYPE_REQUIRED_OPTIONS,
-      SELECT_TYPE_REQUIRED_VALIDATION,
-    ),
+    isChangePicPhoneNumber: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION),
 
     /** 特定排出者であるか */
-    isDesignatedEmitter: z.enum(
-      IS_DESIGNATED_EMITTER_OPTIONS,
-      IS_DESIGNATED_EMITTER_VALIDATION,
-    ),
+    isDesignatedEmitter: z.boolean(IS_DESIGNATED_EMITTER_VALIDATION),
 
     /** 特定排出者コード（特定排出者である場合） */ //get from other schema
     emitterCode: z
@@ -140,10 +116,7 @@ export const otherProjectOperatorSchema = z
       .optional(),
 
     /** プログラム型運営・管理者の地球温暖化対策の推進に関する法律に基づく算定・報告・公表制度の有無 */
-    hasEnergyActReport: z.enum(
-      SELECT_TYPE_REQUIRED_OPTIONS,
-      SELECT_TYPE_REQUIRED_VALIDATION,
-    ),
+    hasEnergyActReport: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION),
     energyActOpeNumber: z
       .string()
       .max(50, VALIDATION_MESSAGES.MAX_NUMBERS(50))
@@ -159,7 +132,7 @@ export const otherProjectOperatorSchema = z
   .refine(
     (data) => {
       // If isDesignatedEmitter is true, emitterCode must be present and non-empty
-      if (data.isDesignatedEmitter === '特定排出者である') {
+      if (data.isDesignatedEmitter === true) {
         return data.emitterCode && data.emitterCode.trim().length > 0;
       }
       return true; // No restriction if isDesignatedEmitter is false or undefined

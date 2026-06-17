@@ -16,8 +16,8 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     label: '申請区分',
     type: 'select',
     options: [
-      { label: 'プロジェクト登録', value: 'プロジェクト登録' },
-      { label: 'プロジェクト計画変更', value: 'プロジェクト計画更新' },
+      { label: 'プロジェクト登録', value: '登録' },
+      { label: 'プロジェクト計画変更', value: '計画更新' },
       { label: '認証権限保有主体変更', value: '認証権限保有主体更新' },
     ],
   },
@@ -132,7 +132,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     showWhen: {
       field: 'projectApplication.isDesignatedEmitter',
-      value: '特定排出者である',
+      value: true,
     },
 
     hideWhen: {
@@ -145,8 +145,8 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     label: 'エネルギ ーの使用の合理化等に関する法律に基づく定期報告有無',
     type: 'select',
     options: [
-      { label: '対象である', value: '対象である' },
-      { label: '対象でない', value: '対象でない' },
+      { label: '対象である', value: true },
+      { label: '対象でない', value: false },
     ],
     hideWhen: {
       field: 'projectApplication.applicationCategory',
@@ -160,7 +160,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     showWhen: {
       field: 'projectApplication.hasEnergyActPeriodReport',
-      value: '対象である',
+      value: true,
     },
     hideWhen: {
       field: 'projectApplication.applicationCategory',
@@ -174,7 +174,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
     type: 'text',
     showWhen: {
       field: 'projectApplication.hasEnergyActPeriodReport',
-      value: '対象である',
+      value: true,
     },
     hideWhen: {
       field: 'projectApplication.applicationCategory',
@@ -511,14 +511,12 @@ export const projectApplication: FieldConfig<FormValues>[] = [
       {
         label:
           'カーボンニュートラル行動計画に参加する削減活動の実施者による削減活動を含む',
-        value:
-          'カーボンニュートラル行動計画に参加する削減活動の実施者による削減活動を含む',
+        value: true,
       },
       {
         label:
           'カーボンニュートラル行動計画に参加する削減活動の実施者による削減活動を含まない',
-        value:
-          'カーボンニュートラル行動計画に参加する削減活動の実施者による削減活動を含まない',
+        value: false,
       },
     ],
     hideWhen: {

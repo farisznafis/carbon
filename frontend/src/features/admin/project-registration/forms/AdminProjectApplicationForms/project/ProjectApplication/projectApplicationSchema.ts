@@ -16,9 +16,6 @@ import {
   REVIEWER_NAME_VALIDATION,
 } from '@/lib/constants/reviewer_names';
 import {
-  IS_DESIGNATED_EMITTER_OPTIONS,
-  IS_DESIGNATED_EMITTER_VALIDATION,
-  SELECT_TYPE_REQUIRED_OPTIONS,
   SELECT_TYPE_REQUIRED_VALIDATION,
 } from '@/lib/constants/select_types';
 
@@ -32,11 +29,6 @@ export const LOCATION_OPTIONS = z.enum([
   '建築物', // building
 ]);
 
-export const IS_PARTICIPATING_ACTS = z.enum([
-  'カーボンニュートラル行動計画に参加する削減活動の実施者による削減活動を含む',
-  'カーボンニュートラル行動計画に参加する削減活動の実施者による削減活動を含まない',
-]);
-
 export const APPLICATION_CATEGORY_OPTIONS = [
   'プロジェクト登録',
   'プロジェクト計画更新',
@@ -47,8 +39,7 @@ export const projectApplicationSchema = z
   .object({
     applicationCategory: z.enum(APPLICATION_CATEGORY_OPTIONS),
 
-    isUsingCostSupport: z
-      .enum(SELECT_TYPE_REQUIRED_OPTIONS, SELECT_TYPE_REQUIRED_VALIDATION),
+    isUsingCostSupport: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION),
 
     projectOperatorKana: z
       .string()
@@ -109,9 +100,7 @@ export const projectApplicationSchema = z
       .max(500, VALIDATION_MESSAGES.MAX_CHARACTERS(500))
       .optional(),
 
-    isDesignatedEmitter: z
-      .enum(IS_DESIGNATED_EMITTER_OPTIONS, IS_DESIGNATED_EMITTER_VALIDATION)
-      .optional(),
+    isDesignatedEmitter: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     // show when isDesignatedEmitter is yes
     emitterCode: z
@@ -121,10 +110,7 @@ export const projectApplicationSchema = z
       .regex(REGEX_PATTERNS.NUMERIC_9_DIGITS, REGEX_MESSAGES.NUMERIC_9_DIGITS)
       .optional(),
 
-    hasEnergyActPeriodReport: z
-      .string()
-      .min(1, '定期報告有無の選択は必須です')
-      .optional(),
+    hasEnergyActPeriodReport: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     energyActOpeNumber: z
       .string()
@@ -153,9 +139,7 @@ export const projectApplicationSchema = z
       // )
       .optional(),
 
-    isChangeRepresentativePosition: z
-      .enum(SELECT_TYPE_REQUIRED_OPTIONS, SELECT_TYPE_REQUIRED_VALIDATION)
-      .optional(),
+    isChangeRepresentativePosition: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     representativeName: z
       .string()
@@ -163,9 +147,7 @@ export const projectApplicationSchema = z
       .max(50, VALIDATION_MESSAGES.MAX_CHARACTERS(50))
       .optional(),
 
-    isChangeRepresentativeName: z
-      .enum(SELECT_TYPE_REQUIRED_OPTIONS, SELECT_TYPE_REQUIRED_VALIDATION)
-      .optional(),
+    isChangeRepresentativeName: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     picPosition: z
       .string()
@@ -174,9 +156,7 @@ export const projectApplicationSchema = z
       .optional(),
     // .regex(REGEX_PATTERNS.FULLWIDTH_SYMBOLS, REGEX_MESSAGES.FULLWIDTH_SYMBOLS)
 
-    isChangePicPosition: z
-      .enum(SELECT_TYPE_REQUIRED_OPTIONS, SELECT_TYPE_REQUIRED_VALIDATION)
-      .optional(),
+    isChangePicPosition: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     picName: z
       .string()
@@ -184,9 +164,7 @@ export const projectApplicationSchema = z
       .max(50, VALIDATION_MESSAGES.MAX_CHARACTERS(50))
       .optional(),
     // .regex(REGEX_PATTERNS.FULLWIDTH_SYMBOLS, REGEX_MESSAGES.FULLWIDTH_SYMBOLS)
-    isChangePicName: z
-      .enum(SELECT_TYPE_REQUIRED_OPTIONS, SELECT_TYPE_REQUIRED_VALIDATION)
-      .optional(),
+    isChangePicName: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     picEmail: z
       .string()
@@ -195,9 +173,7 @@ export const projectApplicationSchema = z
       .email('メールアドレスの形式が正しくありません')
       .optional(),
 
-    isChangePicEmail: z
-      .enum(SELECT_TYPE_REQUIRED_OPTIONS, SELECT_TYPE_REQUIRED_VALIDATION)
-      .optional(),
+    isChangePicEmail: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     picPhone: z
       .string()
@@ -206,9 +182,7 @@ export const projectApplicationSchema = z
       .regex(REGEX_PATTERNS.PHONE_NUMBER, REGEX_MESSAGES.PHONE_NUMBER)
       .optional(),
 
-    isChangePicPhone: z
-      .enum(SELECT_TYPE_REQUIRED_OPTIONS, SELECT_TYPE_REQUIRED_VALIDATION)
-      .optional(),
+    isChangePicPhone: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     otherContactBusinessName: z
       .string()
@@ -220,9 +194,7 @@ export const projectApplicationSchema = z
 
       .optional(),
 
-    isChangeOtherContactBusinessName: z
-      .enum(SELECT_TYPE_REQUIRED_OPTIONS, SELECT_TYPE_REQUIRED_VALIDATION)
-      .optional(),
+    isChangeOtherContactBusinessName: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     otherContactPicPosition: z
       .string()
@@ -234,9 +206,7 @@ export const projectApplicationSchema = z
 
       .optional(),
 
-    isChangeOtherContactPicPosition: z
-      .enum(SELECT_TYPE_REQUIRED_OPTIONS, SELECT_TYPE_REQUIRED_VALIDATION)
-      .optional(),
+    isChangeOtherContactPicPosition: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     otherContactPicName: z
       .string()
@@ -244,9 +214,7 @@ export const projectApplicationSchema = z
       .regex(REGEX_PATTERNS.FULLWIDTH_SYMBOLS, REGEX_MESSAGES.FULLWIDTH_SYMBOLS)
       .optional(),
 
-    isChangeOtherContactPicName: z
-      .enum(SELECT_TYPE_REQUIRED_OPTIONS, SELECT_TYPE_REQUIRED_VALIDATION)
-      .optional(),
+    isChangeOtherContactPicName: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     otherContactPicEmail: z
       .string()
@@ -254,9 +222,7 @@ export const projectApplicationSchema = z
       .email('メールアドレスの形式が正しくありません')
       .optional(),
 
-    isChangeOtherContactPicEmail: z
-      .enum(SELECT_TYPE_REQUIRED_OPTIONS, SELECT_TYPE_REQUIRED_VALIDATION)
-      .optional(),
+    isChangeOtherContactPicEmail: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     otherContactPicPhone: z
       .string()
@@ -264,9 +230,7 @@ export const projectApplicationSchema = z
       .regex(REGEX_PATTERNS.PHONE_NUMBER, REGEX_MESSAGES.PHONE_NUMBER)
       .optional(),
 
-    isChangeOtherContactPicPhone: z
-      .enum(SELECT_TYPE_REQUIRED_OPTIONS, SELECT_TYPE_REQUIRED_VALIDATION)
-      .optional(),
+    isChangeOtherContactPicPhone: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     projectNumber: z
       .string()
@@ -320,7 +284,7 @@ export const projectApplicationSchema = z
       .max(255, VALIDATION_MESSAGES.MAX_CHARACTERS(255))
       .regex(REGEX_PATTERNS.KATAKANA_MINUS, REGEX_MESSAGES.KATAKANA_MINUS),
 
-    isParticipatingCnAct: IS_PARTICIPATING_ACTS.optional(),
+    isParticipatingCnAct: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     // not sure
     validationCheckReviewerName: z
@@ -345,7 +309,7 @@ export const projectApplicationSchema = z
       } else {
         // Check required fields
         const baseRequired =
-          data.isUsingCostSupport &&
+          data.isUsingCostSupport !== undefined &&
           data.projectOperatorKana &&
           data.projectOperatorJa &&
           data.projectOperatorEn &&
@@ -355,8 +319,8 @@ export const projectApplicationSchema = z
           data.prefecture &&
           data.city &&
           data.address &&
-          data.isDesignatedEmitter &&
-          data.hasEnergyActPeriodReport &&
+          data.isDesignatedEmitter !== undefined &&
+          data.hasEnergyActPeriodReport !== undefined &&
           data.picPosition &&
           data.picName &&
           data.picEmail &&
@@ -370,16 +334,16 @@ export const projectApplicationSchema = z
           data.SaaS &&
           data.projectOutline &&
           data.regionCategory &&
-          data.isParticipatingCnAct &&
+          data.isParticipatingCnAct !== undefined &&
           data.validationCheckReviewerName &&
           data.reviewerName;
         // Conditional required
         const emitterRequired =
-          data.isDesignatedEmitter === '特定排出者である'
+          data.isDesignatedEmitter === true
             ? data.emitterCode
             : true;
         const energyRequired =
-          data.hasEnergyActPeriodReport === '対象である'
+          data.hasEnergyActPeriodReport === true
             ? data.energyActOpeNumber
             : true;
         return baseRequired && emitterRequired && energyRequired;

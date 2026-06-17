@@ -3,18 +3,18 @@
 
 export const SELECTS_REQUIRED = [
   // { label: '', value: '' },
-  { label: '有', value: '有' },
-  { label: '無', value: '無' },
+  { label: '有', value: true },
+  { label: '無', value: false },
 ];
 
 export const SELECTS_OPTIONAL = [
   { label: '未選択', value: '' },
-  { label: '有', value: '有' },
-  { label: '無', value: '無' },
+  { label: '有', value: true },
+  { label: '無', value: false },
 ];
 export const IS_DESIGNATED_EMITTERS = [
-  { label: '特定排出者である', value: '特定排出者である' },
-  { label: '特定排出者でない', value: '特定排出者でない' },
+  { label: '特定排出者である', value: true },
+  { label: '特定排出者でない', value: false },
 ];
 export const MONITOR_CALC_BASELINES = [
   { label: '排出量の算定を行う', value: '排出量の算定を行う' },
@@ -83,12 +83,9 @@ export type Is_Similar = (typeof IS_SIMILAR)[number];
 export type Is_Independent_Of_Legal = (typeof IS_INDEPENDENT_OF_LEGALS)[number];
 
 // for schema
-export const SELECT_TYPE_REQUIRED_OPTIONS = ['有', '無'] as const;
+export const SELECT_TYPE_REQUIRED_OPTIONS = [true, false] as const;
 export const SELECT_TYPE_OPTIONAL_OPTIONS = ['未選択', '有', '無'] as const;
-export const IS_DESIGNATED_EMITTER_OPTIONS = [
-  '特定排出者である',
-  '特定排出者でない',
-] as const;
+export const IS_DESIGNATED_EMITTER_OPTIONS = [true, false] as const;
 export const MONITOR_CALC_BASELINE_OPTIONS = [
   '排出量の算定を行う',
   '排出量の算定を行わない',
