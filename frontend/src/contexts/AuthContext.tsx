@@ -108,15 +108,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       try {
         const data = await authApi.login(companyId, email, password);
-        
+
+        const loginUser: User = {
+          id: companyId,
+          email,
+          role: data.role,
+          companyId,
+          siteId: data.siteId != null ? String(data.siteId) : '',
+          siteName: data.companyName,
+        };
+
         storage.set(storageKeys.authToken, data.token);
-        storage.setJson(storageKeys.user, data.user);
-        storage.set(storageKeys.siteId, data.user.siteId || '');
+        storage.setJson(storageKeys.user, loginUser);
+        storage.set(storageKeys.siteId, loginUser.siteId);
         setSessionExpiry();
-        setUser(data.user);
+        setUser(loginUser);
         setIsAuthenticated(true);
 
-        return data.user;
+        return loginUser;
       } catch (err) {
         logger.error('Login error:', err);
         throw err;

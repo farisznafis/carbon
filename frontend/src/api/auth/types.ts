@@ -1,9 +1,9 @@
-import type { User } from '../users/types';
-
 export interface LoginResponse {
   statusCode: string;
+  role: 'master' | 'user' | 'admin';
   token: string;
-  user: User;
+  companyName: string;
+  siteId?: string | number | null;
 }
 
 export interface SignUpData {
