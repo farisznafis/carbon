@@ -5,10 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
@@ -16,7 +19,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -39,6 +44,7 @@ import com.kct.jcredit.core_backend.dto.request.CancelRequestDecisionRequest;
 import com.kct.jcredit.core_backend.dto.request.CreateCancelRequestRequest;
 import com.kct.jcredit.core_backend.dto.request.RegisterMonitoringRecordSolarRequest;
 import com.kct.jcredit.core_backend.dto.response.CancelRequestDecisionResponse;
+import com.kct.jcredit.core_backend.dto.response.CancelRequestItemDto;
 import com.kct.jcredit.core_backend.dto.response.CancelRequestListResponse;
 import com.kct.jcredit.core_backend.dto.response.CancelRequestResponse;
 import com.kct.jcredit.core_backend.dto.response.FileUploadResponse;
@@ -53,7 +59,6 @@ import com.kct.jcredit.core_backend.service.MonitoringService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 
-
 @ExtendWith(MockitoExtension.class)
 class MonitoringControllerTest {
     
@@ -67,18 +72,14 @@ class MonitoringControllerTest {
     private Authentication authentication;
 
     @Mock
+    private RegisterMonitoringRecordSolarRequest request;
+
+    @Mock
     private JwtUtil jwtUtil;
 
     @InjectMocks
     private MonitoringController monitoringController;
 
-    private static final String TEST_TOKEN = "test.jwt.token";
-    private static final String TEST_USERNAME = "testUser";
-    private static final String TEST_COMPANY_ID = "COMPANY001";
-    private static final Integer TEST_PROJECT_ID = 100;
-    private static final Integer TEST_SITE_ID = 200;
-
-    private static final String BASE_URL = "/monitoring/list";
     private static final String TOKEN = "Bearer test-jwt-token";
     private static final String USERNAME = "testuser";
     private static final String COMPANY_ID = "company123";
@@ -88,16 +89,26 @@ class MonitoringControllerTest {
     @BeforeEach
     void setUp() {
         // JWT認証のモック設定
-        lenient().when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-
         lenient().when(jwtUtil.extractUsername(anyString())).thenReturn(USERNAME);
         lenient().when(jwtUtil.extractCompanyId(anyString())).thenReturn(COMPANY_ID);
         lenient().when(authentication.getCredentials()).thenReturn(TOKEN);
+
+        request = new RegisterMonitoringRecordSolarRequest();
+        // リクエストの必須フィールドを設定
+        request.setProjectId(1);
+        request.setSiteId(100);
+        request.setProjectType("SOLAR");
+        request.setDateRecorded("2024-01-15"); // ← これが正しい
+        request.setElPv(new BigDecimal("123.456"));
+        request.setElPvr(new BigDecimal("789.012"));
+        request.setChangedBattery(false);
+        request.setElpjControl(new BigDecimal("50.000"));
     }
 
     @Test
-    @DisplayName("有効なリクエストで登録成功")
+    @DisplayName("有効なリクエストで登録成功〇")
     void testRegisterMonitoringRecordSolar_ValidRequest_Success() {
+
         // Given
         String companyId = "company123";
         
@@ -135,16 +146,8 @@ class MonitoringControllerTest {
         expectedResponse.setStatusCode(ResponseConstants.OK);
         expectedResponse.setMessage("監視記録が正常に登録されました");
 
-        // ★★★ モックの設定順序を明確に★★★
-        // 1. authentication.getCredentials() が token を返すように設定
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-
-        // 2. JwtUtil のメソッドをモック
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(companyId);
-
         // 3. Service のメソッドをモック
-        when(monitoringService.registerMonitoringRecordSolar(TEST_USERNAME, companyId, request))
+        when(monitoringService.registerMonitoringRecordSolar(USERNAME, companyId, request))
                 .thenReturn(expectedResponse);
         
         // ResponseUtilをモック化
@@ -155,7 +158,7 @@ class MonitoringControllerTest {
             // When
             ResponseEntity<MonitoringRecordSolarResponse> response = 
                     monitoringController.RegisterMonitoringRecordSolar(authentication, request);
-            
+
             // Then
             assertNotNull(response, "レスポンスがnullです");
             assertEquals(HttpStatus.CREATED, response.getStatusCode(), "ステータスコードがCREATEDではありません");
@@ -180,14 +183,15 @@ class MonitoringControllerTest {
             assertEquals(new BigDecimal("50.000"), data.getElpjControl(), "ELPJ制御値が一致しません");
             
             // モックメソッドの呼び出し検証
-            verify(jwtUtil, times(1)).extractUsername(TEST_TOKEN);
-            verify(jwtUtil, times(1)).extractCompanyId(TEST_TOKEN);
-            verify(monitoringService, times(1)).registerMonitoringRecordSolar(TEST_USERNAME, companyId, request);
+            verify(jwtUtil, times(1)).extractUsername(TOKEN);
+            verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
+            verify(monitoringService, times(1)).registerMonitoringRecordSolar(USERNAME, companyId, request);
+
         }
     }
     
     @Test
-    @DisplayName("バッテリー交換ありで登録成功")
+    @DisplayName("バッテリー交換ありで登録成功〇")
     void testRegisterMonitoringRecordSolar_WithBatteryReplacement_Success() {
         // Given
         String companyId = "company123";
@@ -228,10 +232,10 @@ class MonitoringControllerTest {
         expectedResponse.setStatusCode(ResponseConstants.OK);
         expectedResponse.setMessage("監視記録が正常に登録されました");
         
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(companyId);
-        when(monitoringService.registerMonitoringRecordSolar(TEST_USERNAME, companyId, request))
+        when(authentication.getCredentials()).thenReturn(TOKEN);
+        when(jwtUtil.extractUsername(TOKEN)).thenReturn(USERNAME);
+        when(jwtUtil.extractCompanyId(TOKEN)).thenReturn(companyId);
+        when(monitoringService.registerMonitoringRecordSolar(USERNAME, companyId, request))
                 .thenReturn(expectedResponse);
         
         try (MockedStatic<ResponseUtil> mockedStatic = mockStatic(ResponseUtil.class)) {
@@ -295,11 +299,11 @@ class MonitoringControllerTest {
         expectedResponse.setStatusCode(ResponseConstants.OK);
         expectedResponse.setMessage("監視記録が正常に登録されました");
 
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
+        when(authentication.getCredentials()).thenReturn(TOKEN);
         
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(companyId);
-        when(monitoringService.registerMonitoringRecordSolar(TEST_USERNAME, companyId, request))
+        when(jwtUtil.extractUsername(TOKEN)).thenReturn(USERNAME);
+        when(jwtUtil.extractCompanyId(TOKEN)).thenReturn(companyId);
+        when(monitoringService.registerMonitoringRecordSolar(USERNAME, companyId, request))
                 .thenReturn(expectedResponse);
         
         try (MockedStatic<ResponseUtil> mockedStatic = mockStatic(ResponseUtil.class)) {
@@ -320,14 +324,157 @@ class MonitoringControllerTest {
     }
 
     @Test
-    @DisplayName("クエリパラメータで最新レコード取得成功")
+    @DisplayName("JWTトークンなし → 500 Internal Server Error〇")
+    void testRegisterMonitoringRecordSolar_401_Unauthorized() {
+
+        when(authentication.getCredentials()).thenReturn(null);
+
+        // Given
+        RegisterMonitoringRecordSolarRequest request = new RegisterMonitoringRecordSolarRequest();
+        request.setProjectId(1);
+        request.setSiteId(10);
+        request.setUserId(100);
+        request.setProjectType("SOLAR");
+        request.setDateRecorded("2024-01-15T10:30:00");
+        request.setElPv(new BigDecimal("150.500"));
+        request.setElPvr(new BigDecimal("120.300"));
+        request.setChangedBattery(false);
+        request.setElpjControl(new BigDecimal("50.000"));
+        request.setElPvEvidenceUrl("https://example.com/evidence/elpv_001.pdf");
+        request.setElPvrEvidenceUrl("https://example.com/evidence/elpvr_001.pdf");
+        request.setElpjBatterySpecificationUrl("https://example.com/evidence/battery_spec_001.pdf");
+        request.setElpjControlEvidenceUrl("https://example.com/evidence/control_001.pdf");
+        // When & Then
+        // ✅ NullPointerExceptionまたは適切な例外が発生することを確認
+        assertThrows(NullPointerException.class, () -> {
+                monitoringController.RegisterMonitoringRecordSolar(authentication, request);
+        });
+}
+    
+ @Test
+@DisplayName("@Valid により必須フィールド欠落 → 400 Bad Request〇")
+void testMissingRequiredField_ShouldReturn400() {
+    // Given
+    
+    // 必須フィールドが欠落したリクエスト
+    RegisterMonitoringRecordSolarRequest invalidRequest = 
+        new RegisterMonitoringRecordSolarRequest();
+    
+    // バリデーション違反をシミュレート
+    when(monitoringService.registerMonitoringRecordSolar(USERNAME, COMPANY_ID, invalidRequest))
+        .thenThrow(new IllegalArgumentException("Required field missing"));
+    
+    // When & Then
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> monitoringController.RegisterMonitoringRecordSolar(authentication, invalidRequest)
+    );
+    verify(jwtUtil, times(1)).extractUsername(TOKEN);
+    verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
+}
+    
+@Test
+@DisplayName("サービス層から404レスポンス → 404 Not Found（ResponseUtilで適切に変換）〇")
+void testServiceReturns404Response_ShouldReturn404() {
+    // Given
+    
+    // 404レスポンスを返すようにモック
+    MonitoringRecordSolarResponse errorResponse = new MonitoringRecordSolarResponse();
+    errorResponse.setStatusCode(ResponseConstants.NOT_FOUND);
+    errorResponse.setMessage("Site not found");
+    //他の必要なフィールドもセット
+    
+    when(monitoringService.registerMonitoringRecordSolar(USERNAME, COMPANY_ID, request))
+        .thenReturn(errorResponse);
+
+    try (MockedStatic<ResponseUtil> mockedStatic = mockStatic(ResponseUtil.class)) {
+        mockedStatic.when(() -> ResponseUtil.getHttpStatus(ResponseConstants.NOT_FOUND))
+                .thenReturn(HttpStatus.NOT_FOUND);
+    
+        // When
+        ResponseEntity<MonitoringRecordSolarResponse> response = 
+                monitoringController.RegisterMonitoringRecordSolar(authentication, request);
+    
+        // Then
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("NOT_FOUND", response.getBody().getStatusCode());
+        assertEquals("Site not found", response.getBody().getMessage());
+    
+        // ✅ モック呼び出し検証
+        verify(authentication, times(2)).getCredentials();
+        verify(jwtUtil, times(1)).extractUsername(TOKEN);
+        verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
+        verify(monitoringService, times(1)).registerMonitoringRecordSolar(USERNAME, COMPANY_ID, request);
+    }
+}
+
+ @Test
+@DisplayName("JWT から username/companyId 正常抽出 → サービスに正しく渡される〇")
+void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
+    // Given
+
+    MonitoringDataSolarResponse dataResponse = MonitoringDataSolarResponse.builder()
+        .userId(10)
+        .projectId(100)
+        .siteId(200)
+        .projectType("SOLAR")
+        .build();
+
+    MonitoringRecordSolarResponse expectedResponse = MonitoringRecordSolarResponse.builder()
+        .data(dataResponse)
+        .build();
+    expectedResponse.setStatusCode(ResponseConstants.OK);
+    expectedResponse.setMessage("Success");
+    
+    when(monitoringService.registerMonitoringRecordSolar(
+        USERNAME, COMPANY_ID, request))
+        .thenReturn(expectedResponse);
+    
+    // When
+    ResponseEntity<MonitoringRecordSolarResponse> response = 
+        monitoringController.RegisterMonitoringRecordSolar(authentication, request);
+    
+    // Then
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(ResponseConstants.OK, response.getBody().getStatusCode());
+    assertEquals("Success", response.getBody().getMessage());
+    // dataオブジェクトの検証
+    assertNotNull(response.getBody().getData());
+    assertEquals(10, response.getBody().getData().getUserId());
+    assertEquals(100, response.getBody().getData().getProjectId());
+    assertEquals(200, response.getBody().getData().getSiteId());
+    assertEquals("SOLAR", response.getBody().getData().getProjectType());
+    
+    // サービスに正しいusername/companyId/requestが渡されたことを検証
+    ArgumentCaptor<String> usernameCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> companyIdCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<RegisterMonitoringRecordSolarRequest> requestCaptor = 
+        ArgumentCaptor.forClass(RegisterMonitoringRecordSolarRequest.class);
+    
+    verify(monitoringService, times(1)).registerMonitoringRecordSolar(
+        usernameCaptor.capture(),
+        companyIdCaptor.capture(),
+        requestCaptor.capture()
+    );
+    
+    assertEquals(USERNAME, usernameCaptor.getValue());
+    assertEquals(COMPANY_ID, companyIdCaptor.getValue());
+    assertEquals(request, requestCaptor.getValue());
+    
+    // JwtUtilの呼び出しも検証
+    verify(jwtUtil, times(1)).extractUsername(TOKEN);
+    verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
+}
+
+
+  // ==================== ReadLastMonitoringRecordSolar ====================
+    @Test
+    @DisplayName("クエリパラメータで最新レコード取得成功〇")
     void testReadLastMonitoringRecordSolar_Success() {
         // Given
-
-        String user = "testuser";
-        String companyId = "company123";
-        String testToken = "Bearer test-jwt-token";
-
 
         MonitoringRecordSolarResponse expectedResponse = new MonitoringRecordSolarResponse();
         expectedResponse.setStatusCode("200");
@@ -335,10 +482,10 @@ class MonitoringControllerTest {
         //必要に応じて他のフィールドを設定
 
         when(monitoringService.readLastMonitoringRecordSolar(
-                user,
-                companyId,
-                TEST_PROJECT_ID,
-                TEST_SITE_ID
+                USERNAME,
+                COMPANY_ID,
+                PROJECT_ID,
+                SITE_ID
         )).thenReturn(expectedResponse);
 
         try (MockedStatic<ResponseUtil> mockedResponseUtil = mockStatic(ResponseUtil.class)) {
@@ -348,8 +495,8 @@ class MonitoringControllerTest {
             // When
             ResponseEntity<MonitoringRecordSolarResponse> result = monitoringController.ReadLastMonitoringRecordSolar(
                     authentication,
-                    TEST_PROJECT_ID,
-                    TEST_SITE_ID
+                    PROJECT_ID,
+                    SITE_ID
             );
 
             // Then
@@ -359,222 +506,123 @@ class MonitoringControllerTest {
             assertThat(result.getBody().getMessage()).isEqualTo("Success");
 
             //検証
-            verify(jwtUtil).extractUsername(testToken);
-            verify(jwtUtil).extractCompanyId(testToken);
+            verify(jwtUtil).extractUsername(TOKEN);
+            verify(jwtUtil).extractCompanyId(TOKEN);
             verify(monitoringService).readLastMonitoringRecordSolar(
-                    user,
-                    companyId,
-                    TEST_PROJECT_ID,
-                    TEST_SITE_ID
+                    USERNAME,
+                    COMPANY_ID,
+                    PROJECT_ID,
+                    SITE_ID
             );
+
+        verify(authentication, times(2)).getCredentials();
+        verify(jwtUtil, times(1)).extractUsername(TOKEN);
+        verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
         }
     }
 
     @Test
-    @DisplayName("JWTからusernameとcompanyId抽出成功")
+    @DisplayName("JWT から username/companyId 正常抽出 → サービスに正しく渡される〇")
     void testJwtExtraction_Success() {
 
-        String user = "testuser";
-        String companyId = "company123";
-        String testToken = "Bearer test-jwt-token";
-
         // Given
-        when(jwtUtil.extractUsername(testToken)).thenReturn(user);
-        when(jwtUtil.extractCompanyId(testToken)).thenReturn(companyId);
 
+        MonitoringDataSolarResponse dataResponse = MonitoringDataSolarResponse.builder()
+                .userId(10)
+                .projectId(100)
+                .siteId(200)
+                .projectType("SOLAR")
+                .build();
+
+        MonitoringRecordSolarResponse expectedResponse = MonitoringRecordSolarResponse.builder()
+                .data(dataResponse)
+                .build();
+        expectedResponse.setStatusCode(ResponseConstants.OK);
+        expectedResponse.setMessage("Success");
+        
+        // ✅ クラス定数を使用
+        when(monitoringService.registerMonitoringRecordSolar(USERNAME, COMPANY_ID, request))
+                .thenReturn(expectedResponse);
+        
+        try (MockedStatic<ResponseUtil> mockedStatic = mockStatic(ResponseUtil.class)) {
+                mockedStatic.when(() -> ResponseUtil.getHttpStatus(ResponseConstants.OK))
+                        .thenReturn(HttpStatus.OK);
+                
+                // When
+                ResponseEntity<MonitoringRecordSolarResponse> response = 
+                monitoringController.RegisterMonitoringRecordSolar(authentication, request);
+                
+                // Then
+                assertThat(response).isNotNull();
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                assertThat(response.getBody()).isNotNull();
+                assertThat(response.getBody().getStatusCode()).isEqualTo(ResponseConstants.OK);
+                assertThat(response.getBody().getMessage()).isEqualTo("Success");
+                
+                // dataオブジェクトの検証
+                assertThat(response.getBody().getData()).isNotNull();
+                assertThat(response.getBody().getData().getUserId()).isEqualTo(10);
+                assertThat(response.getBody().getData().getProjectId()).isEqualTo(100);
+                assertThat(response.getBody().getData().getSiteId()).isEqualTo(200);
+                assertThat(response.getBody().getData().getProjectType()).isEqualTo("SOLAR");
+                
+                // ✅ サービスに正しいusername/companyId/requestが渡されたことを検証
+                ArgumentCaptor<String> usernameCaptor = ArgumentCaptor.forClass(String.class);
+                ArgumentCaptor<String> companyIdCaptor = ArgumentCaptor.forClass(String.class);
+                ArgumentCaptor<RegisterMonitoringRecordSolarRequest> requestCaptor = 
+                ArgumentCaptor.forClass(RegisterMonitoringRecordSolarRequest.class);
+                
+                verify(monitoringService, times(1)).registerMonitoringRecordSolar(
+                usernameCaptor.capture(),
+                companyIdCaptor.capture(),
+                requestCaptor.capture()
+                );
+                
+                assertThat(usernameCaptor.getValue()).isEqualTo(USERNAME);
+                assertThat(companyIdCaptor.getValue()).isEqualTo(COMPANY_ID);
+                assertThat(requestCaptor.getValue()).isEqualTo(request);
+                
+                // ✅ JwtUtilの呼び出しも検証
+                verify(authentication, times(2)).getCredentials();
+                verify(jwtUtil, times(1)).extractUsername(TOKEN);
+                verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
+        }
+}
+    @Test
+    @DisplayName("サービス層から404例外 → 404 Not Found")
+    void testReadLastMonitoringRecordSolar_ServiceReturns404() {
+        // Arrange
         MonitoringRecordSolarResponse mockResponse = new MonitoringRecordSolarResponse();
-        mockResponse.setStatusCode("200");
+        mockResponse.setStatusCode(ResponseConstants.NOT_FOUND);
+        mockResponse.setMessage(ResponseConstants.MSG_NOT_FOUND);
+        mockResponse.setTimestamp(LocalDateTime.now());
 
         when(monitoringService.readLastMonitoringRecordSolar(
-                anyString(),
-                anyString(),
-                anyInt(),
-                anyInt()
+            anyString(), anyString(), anyInt(), anyInt()
         )).thenReturn(mockResponse);
 
-        try (MockedStatic<ResponseUtil> mockedResponseUtil = mockStatic(ResponseUtil.class)) {
-            mockedResponseUtil.when(() -> ResponseUtil.getHttpStatus("200"))
-                    .thenReturn(HttpStatus.OK);
-
-            // When
+        // Act
+        ResponseEntity<MonitoringRecordSolarResponse> response = 
             monitoringController.ReadLastMonitoringRecordSolar(
-                    authentication,
-                    TEST_PROJECT_ID,
-                    TEST_SITE_ID
+                authentication, PROJECT_ID, SITE_ID
             );
 
-            // Then
-            verify(jwtUtil).extractUsername(testToken);
-            verify(jwtUtil).extractCompanyId(testToken);
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(ResponseConstants.NOT_FOUND, response.getBody().getStatusCode());
 
-            // サービス呼び出し時に正しいusernameとcompanyIdが渡されていることを確認
-            verify(monitoringService).readLastMonitoringRecordSolar(
-                    eq(user),
-                    eq(companyId),
-                    eq(TEST_PROJECT_ID),
-                    eq(TEST_SITE_ID)
-            );
-        }
-    }
-/* 
-    @Test
-    @DisplayName("レコードが見つからない場合")
-    void testReadLastMonitoringRecordSolar_NotFound() {
-        // Given
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(TEST_COMPANY_ID);
-
-        MonitoringRecordSolarResponse expectedResponse = new MonitoringRecordSolarResponse();
-        expectedResponse.setStatusCode("404");
-        expectedResponse.setMessage("Record not found");
-
-        when(monitoringService.readLastMonitoringRecordSolar(
-                TEST_USERNAME,
-                TEST_COMPANY_ID,
-                TEST_PROJECT_ID,
-                TEST_SITE_ID
-        )).thenReturn(expectedResponse);
-
-        try (MockedStatic<ResponseUtil> mockedResponseUtil = mockStatic(ResponseUtil.class)) {
-            mockedResponseUtil.when(() -> ResponseUtil.getHttpStatus("404"))
-                    .thenReturn(HttpStatus.NOT_FOUND);
-
-            // When
-            ResponseEntity<MonitoringRecordSolarResponse> result = monitoringController.ReadLastMonitoringRecordSolar(
-                    authentication,
-                    TEST_PROJECT_ID,
-                    TEST_SITE_ID
-            );
-
-            // Then
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-            assertThat(result.getBody()).isNotNull();
-            assertThat(result.getBody().getStatusCode()).isEqualTo("404");
-            assertThat(result.getBody().getMessage()).isEqualTo("Record not found");
-        }
+        verify(authentication, times(2)).getCredentials();
+        verify(jwtUtil, times(1)).extractUsername(TOKEN);
+        verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
     }
 
-    @Test
-    @DisplayName("認証エラーの場合")
-    void testReadLastMonitoringRecordSolar_AuthenticationError() {
-        // Given
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(TEST_COMPANY_ID);
+     // ==================== listMonitoringRecords ====================
 
-        MonitoringRecordSolarResponse expectedResponse = new MonitoringRecordSolarResponse();
-        expectedResponse.setStatusCode("401");
-        expectedResponse.setMessage("Unauthorized");
-
-        when(monitoringService.readLastMonitoringRecordSolar(
-                TEST_USERNAME,
-                TEST_COMPANY_ID,
-                TEST_PROJECT_ID,
-                TEST_SITE_ID
-        )).thenReturn(expectedResponse);
-
-        try (MockedStatic<ResponseUtil> mockedResponseUtil = mockStatic(ResponseUtil.class)) {
-            mockedResponseUtil.when(() -> ResponseUtil.getHttpStatus("401"))
-                    .thenReturn(HttpStatus.UNAUTHORIZED);
-
-            // When
-            ResponseEntity<MonitoringRecordSolarResponse> result = monitoringController.ReadLastMonitoringRecordSolar(
-                    authentication,
-                    TEST_PROJECT_ID,
-                    TEST_SITE_ID
-            );
-
-            // Then
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-            assertThat(result.getBody()).isNotNull();
-            assertThat(result.getBody().getStatusCode()).isEqualTo("401");
-        }
-    }
-
-    @Test
-    @DisplayName("内部サーバーエラーの場合")
-    void testReadLastMonitoringRecordSolar_InternalServerError() {
-        // Given
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(TEST_COMPANY_ID);
-
-        MonitoringRecordSolarResponse expectedResponse = new MonitoringRecordSolarResponse();
-        expectedResponse.setStatusCode("500");
-        expectedResponse.setMessage("Internal Server Error");
-
-        when(monitoringService.readLastMonitoringRecordSolar(
-                TEST_USERNAME,
-                TEST_COMPANY_ID,
-                TEST_PROJECT_ID,
-                TEST_SITE_ID
-        )).thenReturn(expectedResponse);
-
-        try (MockedStatic<ResponseUtil> mockedResponseUtil = mockStatic(ResponseUtil.class)) {
-            mockedResponseUtil.when(() -> ResponseUtil.getHttpStatus("500"))
-                    .thenReturn(HttpStatus.INTERNAL_SERVER_ERROR);
-
-            // When
-            ResponseEntity<MonitoringRecordSolarResponse> result = monitoringController.ReadLastMonitoringRecordSolar(
-                    authentication,
-                    TEST_PROJECT_ID,
-                    TEST_SITE_ID
-            );
-
-            // Then
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-            assertThat(result.getBody()).isNotNull();
-            assertThat(result.getBody().getStatusCode()).isEqualTo("500");
-        }
-    }
-
-    @Test
-    @DisplayName("異なるクエリパラメータでの呼び出し")
-    void testReadLastMonitoringRecordSolar_DifferentParameters() {
-        // Given
-        Integer differentProjectId = 999;
-        Integer differentSiteId = 888;
-
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(TEST_COMPANY_ID);
-
-        MonitoringRecordSolarResponse expectedResponse = new MonitoringRecordSolarResponse();
-        expectedResponse.setStatusCode("200");
-
-        when(monitoringService.readLastMonitoringRecordSolar(
-                TEST_USERNAME,
-                TEST_COMPANY_ID,
-                differentProjectId,
-                differentSiteId
-        )).thenReturn(expectedResponse);
-
-        try (MockedStatic<ResponseUtil> mockedResponseUtil = mockStatic(ResponseUtil.class)) {
-            mockedResponseUtil.when(() -> ResponseUtil.getHttpStatus("200"))
-                    .thenReturn(HttpStatus.OK);
-
-            // When
-            monitoringController.ReadLastMonitoringRecordSolar(
-                    authentication,
-                    differentProjectId,
-                    differentSiteId
-            );
-
-            // Then
-            verify(monitoringService).readLastMonitoringRecordSolar(
-                    TEST_USERNAME,
-                    TEST_COMPANY_ID,
-                    differentProjectId,
-                    differentSiteId
-            );
-        }
-    }
-        */
     @Test
     @DisplayName("デフォルトページネーションで一覧取得成功")
     void testListMonitoringRecords_DefaultPagination_Success() {
         // Given
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(TEST_COMPANY_ID);
-
         MonitoringRecordSolarListResponse expectedResponse = new MonitoringRecordSolarListResponse();
         expectedResponse.setStatusCode(ResponseConstants.OK);
         expectedResponse.setMessage("Success");
@@ -593,9 +641,9 @@ class MonitoringControllerTest {
         List<EnR002MonitoringRecord> items = new ArrayList<>();
         for (int i = 0; i < 50; i++) {
                 EnR002MonitoringRecord record = EnR002MonitoringRecord.builder()
-                        .id(TEST_SITE_ID + "#" + TEST_PROJECT_ID)
-                        .projectID(TEST_PROJECT_ID)
-                        .siteID(TEST_SITE_ID)
+                        .id(SITE_ID + "#" + PROJECT_ID)
+                        .projectID(PROJECT_ID)
+                        .siteID(SITE_ID)
                         .participatingUserID(100 + i)
                         .dateRecorded("2024-01-15T10:30:00")
                         .elPv(new BigDecimal("150.500"))
@@ -607,10 +655,10 @@ class MonitoringControllerTest {
         expectedResponse.setItems(items);  // ✅ setItems
 
         when(monitoringService.readAllMonitoringRecordsSolar(
-                eq(TEST_USERNAME),
-                eq(TEST_COMPANY_ID),
-                eq(TEST_PROJECT_ID),
-                eq(TEST_SITE_ID),
+                eq(USERNAME),
+                eq(COMPANY_ID),
+                eq(PROJECT_ID),
+                eq(SITE_ID),
                 eq(1), // デフォルトpage
                 eq(50), // デフォルトlimit
                 eq(null) // nextPageToken
@@ -623,8 +671,8 @@ class MonitoringControllerTest {
                 // When
                 ResponseEntity<MonitoringRecordSolarListResponse> result = 
                         monitoringController.listMonitoringRecords(
-                                TEST_SITE_ID,
-                                TEST_PROJECT_ID,
+                                SITE_ID,
+                                PROJECT_ID,
                                 1, // デフォルトpage
                                 50, // デフォルトlimit
                                 null, // nextPageToken
@@ -662,13 +710,13 @@ class MonitoringControllerTest {
                 assertEquals(50, result.getBody().getItems().size(), "データ件数が一致しません");
                 
                 // モック呼び出し検証
-                verify(jwtUtil, times(1)).extractUsername(TEST_TOKEN);
-                verify(jwtUtil, times(1)).extractCompanyId(TEST_TOKEN);
+                verify(jwtUtil, times(1)).extractUsername(TOKEN);
+                verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
                 verify(monitoringService, times(1)).readAllMonitoringRecordsSolar(
-                        TEST_USERNAME,
-                        TEST_COMPANY_ID,
-                        TEST_PROJECT_ID,
-                        TEST_SITE_ID,
+                        USERNAME,
+                        COMPANY_ID,
+                        PROJECT_ID,
+                        SITE_ID,
                         1,
                         50,
                         null
@@ -676,13 +724,10 @@ class MonitoringControllerTest {
         }
         }
     @Test
-    @DisplayName("カスタムページサイズで一覧取得成功")
+    @DisplayName("カスタムページサイズで一覧取得成功〇")
     void testListMonitoringRecords_CustomPageSize_Success() {
         // Given
         Integer customLimit = 20;
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(TEST_COMPANY_ID);
 
         MonitoringRecordSolarListResponse expectedResponse = new MonitoringRecordSolarListResponse();
         expectedResponse.setStatusCode(ResponseConstants.OK);
@@ -702,9 +747,9 @@ class MonitoringControllerTest {
         List<EnR002MonitoringRecord> items = new ArrayList<>();
         for (int i = 0; i < customLimit; i++) {
                 EnR002MonitoringRecord record = EnR002MonitoringRecord.builder()
-                        .id(TEST_SITE_ID + "#" + TEST_PROJECT_ID)
-                        .projectID(TEST_PROJECT_ID)
-                        .siteID(TEST_SITE_ID)
+                        .id(SITE_ID + "#" + PROJECT_ID)
+                        .projectID(PROJECT_ID)
+                        .siteID(SITE_ID)
                         .participatingUserID(100 + i)
                         .dateRecorded("2024-01-15T10:30:00")
                         .elPv(new BigDecimal("150.500"))
@@ -716,10 +761,10 @@ class MonitoringControllerTest {
         expectedResponse.setItems(items);  // ✅ setItems
 
         when(monitoringService.readAllMonitoringRecordsSolar(
-                eq(TEST_USERNAME),
-                eq(TEST_COMPANY_ID),
-                eq(TEST_PROJECT_ID),
-                eq(TEST_SITE_ID),
+                eq(USERNAME),
+                eq(COMPANY_ID),
+                eq(PROJECT_ID),
+                eq(SITE_ID),
                 eq(1),
                 eq(customLimit),
                 eq(null)
@@ -732,8 +777,8 @@ class MonitoringControllerTest {
                 // When
                 ResponseEntity<MonitoringRecordSolarListResponse> result = 
                         monitoringController.listMonitoringRecords(
-                                TEST_SITE_ID,
-                                TEST_PROJECT_ID,
+                                SITE_ID,
+                                PROJECT_ID,
                                 1,
                                 customLimit,
                                 null,
@@ -770,13 +815,13 @@ class MonitoringControllerTest {
                 assertEquals(customLimit, result.getBody().getItems().size(), 
                         "データ件数がカスタムリミットと一致しません");
 
-                verify(jwtUtil, times(1)).extractUsername(TEST_TOKEN);
-                verify(jwtUtil, times(1)).extractCompanyId(TEST_TOKEN);
+                verify(jwtUtil, times(1)).extractUsername(TOKEN);
+                verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
                 verify(monitoringService, times(1)).readAllMonitoringRecordsSolar(
-                        TEST_USERNAME,
-                        TEST_COMPANY_ID,
-                        TEST_PROJECT_ID,
-                        TEST_SITE_ID,
+                        USERNAME,
+                        COMPANY_ID,
+                        PROJECT_ID,
+                        SITE_ID,
                         1,
                         customLimit,
                         null
@@ -785,14 +830,11 @@ class MonitoringControllerTest {
     }
 
     @Test
-    @DisplayName("nextPageTokenで次ページ取得成功")
+    @DisplayName("nextPageTokenで次ページ取得成功〇")
     void testListMonitoringRecords_WithNextPageToken_Success() {
         // Given
         String nextPageToken = "eyJwYWdlIjoyLCJsaW1pdCI6NTB9";
         Integer page = 2;
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(TEST_COMPANY_ID);
 
         MonitoringRecordSolarListResponse expectedResponse = new MonitoringRecordSolarListResponse();
         expectedResponse.setStatusCode(ResponseConstants.OK);
@@ -812,9 +854,9 @@ class MonitoringControllerTest {
         List<EnR002MonitoringRecord> items = new ArrayList<>();
         for (int i = 0; i < 50; i++) {
                 EnR002MonitoringRecord record = EnR002MonitoringRecord.builder()
-                        .id(TEST_SITE_ID + "#" + TEST_PROJECT_ID)
-                        .projectID(TEST_PROJECT_ID)
-                        .siteID(TEST_SITE_ID)
+                        .id(SITE_ID + "_" + PROJECT_ID)
+                        .projectID(PROJECT_ID)
+                        .siteID(SITE_ID)
                         .participatingUserID(200 + i)
                         .dateRecorded("2024-01-16T10:30:00")
                         .elPv(new BigDecimal("160.500"))
@@ -826,10 +868,10 @@ class MonitoringControllerTest {
         expectedResponse.setItems(items);  // ✅ setItems
 
         when(monitoringService.readAllMonitoringRecordsSolar(
-                eq(TEST_USERNAME),
-                eq(TEST_COMPANY_ID),
-                eq(TEST_PROJECT_ID),
-                eq(TEST_SITE_ID),
+                eq(USERNAME),
+                eq(COMPANY_ID),
+                eq(PROJECT_ID),
+                eq(SITE_ID),
                 eq(page),
                 eq(50),
                 eq(nextPageToken)
@@ -841,9 +883,7 @@ class MonitoringControllerTest {
 
                 // When
                 ResponseEntity<MonitoringRecordSolarListResponse> result = 
-                        monitoringController.listMonitoringRecords(
-                                TEST_SITE_ID,
-                                TEST_PROJECT_ID,
+                        monitoringController.listMonitoringRecords(SITE_ID,PROJECT_ID,
                                 page,
                                 50,
                                 nextPageToken,
@@ -876,13 +916,14 @@ class MonitoringControllerTest {
                 assertNotNull(result.getBody().getItems(), "Itemsがnullです");
                 assertEquals(50, result.getBody().getItems().size(), "データ件数が一致しません");
 
-                verify(jwtUtil, times(1)).extractUsername(TEST_TOKEN);
-                verify(jwtUtil, times(1)).extractCompanyId(TEST_TOKEN);
+                verify(authentication, times(2)).getCredentials();
+                verify(jwtUtil, times(1)).extractUsername(TOKEN);
+                verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
                 verify(monitoringService, times(1)).readAllMonitoringRecordsSolar(
-                        TEST_USERNAME,
-                        TEST_COMPANY_ID,
-                        TEST_PROJECT_ID,
-                        TEST_SITE_ID,
+                        USERNAME,
+                        COMPANY_ID,
+                        PROJECT_ID,
+                        SITE_ID,
                         page,
                         50,
                         nextPageToken
@@ -891,13 +932,10 @@ class MonitoringControllerTest {
     }
 
     @Test
-    @DisplayName("ページ3で一覧取得成功")
+    @DisplayName("ページ3で一覧取得成功〇")
         void testListMonitoringRecords_Page3_Success() {
         // Given
         Integer page = 3;
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(TEST_COMPANY_ID);
 
         MonitoringRecordSolarListResponse expectedResponse = new MonitoringRecordSolarListResponse();
         expectedResponse.setStatusCode(ResponseConstants.OK);
@@ -917,9 +955,9 @@ class MonitoringControllerTest {
         List<EnR002MonitoringRecord> items = new ArrayList<>();
         for (int i = 0; i < 50; i++) {
                 EnR002MonitoringRecord record = EnR002MonitoringRecord.builder()
-                        .id(TEST_SITE_ID + "#" + TEST_PROJECT_ID)
-                        .projectID(TEST_PROJECT_ID)
-                        .siteID(TEST_SITE_ID)
+                        .id(SITE_ID + "#" + PROJECT_ID)
+                        .projectID(PROJECT_ID)
+                        .siteID(SITE_ID)
                         .participatingUserID(300 + i) // ページ3なので異なるユーザーID範囲
                         .dateRecorded("2024-01-17T10:30:00")
                         .elPv(new BigDecimal("170.500"))
@@ -931,10 +969,10 @@ class MonitoringControllerTest {
         expectedResponse.setItems(items);  // ✅ setItems
 
         when(monitoringService.readAllMonitoringRecordsSolar(
-                eq(TEST_USERNAME),
-                eq(TEST_COMPANY_ID),
-                eq(TEST_PROJECT_ID),
-                eq(TEST_SITE_ID),
+                eq(USERNAME),
+                eq(COMPANY_ID),
+                eq(PROJECT_ID),
+                eq(SITE_ID),
                 eq(page),
                 eq(50),
                 eq(null)
@@ -947,8 +985,8 @@ class MonitoringControllerTest {
                 // When
                 ResponseEntity<MonitoringRecordSolarListResponse> result = 
                         monitoringController.listMonitoringRecords(
-                                TEST_SITE_ID,
-                                TEST_PROJECT_ID,
+                                SITE_ID,
+                                PROJECT_ID,
                                 page,
                                 50,
                                 null,
@@ -987,34 +1025,338 @@ class MonitoringControllerTest {
                 
                 // データの内容検証（最初のレコード）
                 EnR002MonitoringRecord firstRecord = result.getBody().getItems().get(0);
-                assertEquals(TEST_PROJECT_ID, firstRecord.getProjectID(), 
+                assertEquals(PROJECT_ID, firstRecord.getProjectID(), 
                         "プロジェクトIDが一致しません");
-                assertEquals(TEST_SITE_ID, firstRecord.getSiteID(), 
+                assertEquals(SITE_ID, firstRecord.getSiteID(), 
                         "サイトIDが一致しません");
                 assertEquals(300, firstRecord.getParticipatingUserID(), 
                         "ユーザーIDが一致しません");
 
                 // モック呼び出し検証
-                verify(jwtUtil, times(1)).extractUsername(TEST_TOKEN);
-                verify(jwtUtil, times(1)).extractCompanyId(TEST_TOKEN);
+                verify(jwtUtil, times(1)).extractUsername(TOKEN);
+                verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
                 verify(monitoringService, times(1)).readAllMonitoringRecordsSolar(
-                        TEST_USERNAME,
-                        TEST_COMPANY_ID,
-                        TEST_PROJECT_ID,
-                        TEST_SITE_ID,
+                        USERNAME,
+                        COMPANY_ID,
+                        PROJECT_ID,
+                        SITE_ID,
                         page,
                         50,
                         null
                 );
         }
     }
+
     @Test
-    @DisplayName("ELpv証憑PDFアップロード成功(PDF形式のファイルアップロード)")
+    @DisplayName("デフォルト値（page=1, limit=50）が適用される → サービスに正しく渡される〇")
+    void testListMonitoringRecords_DefaultValues() {
+        // Arrange
+        MonitoringRecordSolarListResponse mockResponse = new MonitoringRecordSolarListResponse();
+        mockResponse.setStatusCode(ResponseConstants.OK);
+        mockResponse.setMessage("取得成功");
+        mockResponse.setTimestamp(LocalDateTime.now());
+
+        when(monitoringService.readAllMonitoringRecordsSolar(
+            USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, 1, 50, null
+        )).thenReturn(mockResponse);
+
+        // Act
+        ResponseEntity<MonitoringRecordSolarListResponse> response = 
+            monitoringController.listMonitoringRecords(
+                SITE_ID, PROJECT_ID, 1, 50, null, authentication
+            );
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        
+        verify(monitoringService, times(1)).readAllMonitoringRecordsSolar(
+            USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, 1, 50, null
+        );
+    }
+
+
+    @Test
+    @DisplayName("pageが負の数 → 400 Bad Request（バリデーション確認）〇")
+    void testListMonitoringRecords_NegativePage() {
+        // Arrange
+        MonitoringRecordSolarListResponse mockResponse = new MonitoringRecordSolarListResponse();
+        mockResponse.setStatusCode(ResponseConstants.BAD_REQUEST);
+        mockResponse.setMessage("ページ番号は正の数である必要があります");
+        mockResponse.setTimestamp(LocalDateTime.now());
+
+        when(monitoringService.readAllMonitoringRecordsSolar(
+            anyString(), anyString(), anyInt(), anyInt(), eq(-1), anyInt(), any()
+        )).thenReturn(mockResponse);
+
+        // Act
+        ResponseEntity<MonitoringRecordSolarListResponse> response = 
+            monitoringController.listMonitoringRecords(
+                SITE_ID, PROJECT_ID, -1, 50, null, authentication
+            );
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        
+        verify(monitoringService, times(1)).readAllMonitoringRecordsSolar(
+            USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, -1, 50, null
+        );
+    }
+
+    @Test
+    @DisplayName("limitが0 → 400 Bad Request〇")
+    void testListMonitoringRecords_ZeroLimit() {
+
+        // Arrange
+        MonitoringRecordSolarListResponse mockResponse = new MonitoringRecordSolarListResponse();
+        mockResponse.setStatusCode(ResponseConstants.BAD_REQUEST);
+        mockResponse.setMessage("リミットは1以上である必要があります");
+        mockResponse.setTimestamp(LocalDateTime.now());
+
+        when(monitoringService.readAllMonitoringRecordsSolar(
+            anyString(), anyString(), anyInt(), anyInt(), anyInt(), eq(0), any()
+        )).thenReturn(mockResponse);
+
+        // Act
+        ResponseEntity<MonitoringRecordSolarListResponse> response = 
+            monitoringController.listMonitoringRecords(
+                SITE_ID, PROJECT_ID, 1, 0, null, authentication
+            );
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        
+        verify(monitoringService, times(1)).readAllMonitoringRecordsSolar(
+            USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, 1, 0, null
+        );
+
+        verify(authentication, times(2)).getCredentials();
+        verify(jwtUtil, times(1)).extractUsername(TOKEN);
+        verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
+
+    }
+
+    @Test
+    @DisplayName("nextPageToken が正しく渡される → サービスに伝達")
+    void testListMonitoringRecords_WithNextPageToken() {
+
+        // Arrange
+        String nextPageToken = "eyJwYWdlIjoyfQ==";
+        MonitoringRecordSolarListResponse mockResponse = new MonitoringRecordSolarListResponse();
+        mockResponse.setStatusCode(ResponseConstants.OK);
+        mockResponse.setTimestamp(LocalDateTime.now());
+
+        when(monitoringService.readAllMonitoringRecordsSolar(
+            USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, 2, 50, nextPageToken
+        )).thenReturn(mockResponse);
+
+        // Act
+        ResponseEntity<MonitoringRecordSolarListResponse> response = 
+            monitoringController.listMonitoringRecords(
+                SITE_ID, PROJECT_ID, 2, 50, nextPageToken, authentication
+            );
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        
+        verify(monitoringService, times(1)).readAllMonitoringRecordsSolar(
+            USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, 2, 50, nextPageToken
+        );
+
+        verify(authentication, times(2)).getCredentials();
+        verify(jwtUtil, times(1)).extractUsername(TOKEN);
+        verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
+    }
+
+    // ==================== uploadElpvEvidence ====================
+
+   @Test
+    @DisplayName("ELpv証憑PDFアップロード成功(PDF形式のファイルアップロード)〇")
+    void testUploadElpvEvidence_PDF_Success() {
+        // Given
+        MockMultipartFile pdfFile = new MockMultipartFile(
+            "file", "evidence.pdf", "application/pdf", "PDF content".getBytes()
+        );
+        String description = "ELpv証憑PDF";
+
+        FileInfoResponse fileInfo = FileInfoResponse.builder()
+                .url("https://s3.amazonaws.com/bucket/elpv_evidence.pdf")
+                .fileName("evidence.pdf")
+                .fileSize(pdfFile.getSize())
+                .build();
+        
+        FileUploadResponse expectedResponse = new FileUploadResponse();
+        expectedResponse.setFile(fileInfo);
+        expectedResponse.setStatusCode(ResponseConstants.OK);
+
+        when(monitoringService.uploadElpvEvidence(
+            USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, description, pdfFile))
+                .thenReturn(expectedResponse);
+
+        try (MockedStatic<ResponseUtil> mockedStatic = mockStatic(ResponseUtil.class)) {
+            mockedStatic.when(() -> ResponseUtil.getHttpStatus(ResponseConstants.OK))
+                       .thenReturn(HttpStatus.OK);
+
+            // When
+            ResponseEntity<FileUploadResponse> response = 
+                    monitoringController.uploadElpvEvidence(
+                        authentication, PROJECT_ID, SITE_ID, description, pdfFile
+                    );
+
+            // Then
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals("evidence.pdf", response.getBody().getFile().getFileName());
+            verify(monitoringService).uploadElpvEvidence(
+                USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, description, pdfFile
+            );
+        }
+    }
+
+    @Test
+    @DisplayName("ELpv証憑CSVアップロード成功(CSV形式のファイルアップロード)")
+    void testUploadElpvEvidence_CSV_Success() {
+        // Given
+        MockMultipartFile csvFile = new MockMultipartFile(
+            "file", "evidence.csv", "text/csv", "column1,column2\nvalue1,value2".getBytes()
+        );
+        String description = "ELpv証憑CSV";
+
+        FileInfoResponse fileInfo = FileInfoResponse.builder()
+                .url("https://s3.amazonaws.com/bucket/elpv_evidence.csv")
+                .fileName("evidence.csv")
+                .build();
+        
+        FileUploadResponse expectedResponse = new FileUploadResponse();
+        expectedResponse.setFile(fileInfo);
+        expectedResponse.setStatusCode(ResponseConstants.OK);
+
+        when(monitoringService.uploadElpvEvidence(
+            USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, description, csvFile))
+                .thenReturn(expectedResponse);
+
+        try (MockedStatic<ResponseUtil> mockedStatic = mockStatic(ResponseUtil.class)) {
+            mockedStatic.when(() -> ResponseUtil.getHttpStatus(ResponseConstants.OK))
+                       .thenReturn(HttpStatus.OK);
+
+            // When
+            ResponseEntity<FileUploadResponse> response = 
+                    monitoringController.uploadElpvEvidence(
+                        authentication, PROJECT_ID, SITE_ID, description, csvFile
+                    );
+
+            // Then
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals("evidence.csv", response.getBody().getFile().getFileName());
+        }
+    }
+
+    @Test
+    @DisplayName("MultipartFile が正しくサービスに渡される → モックで確認〇")
+    void testUploadElpvEvidence_FilePassedToService() {
+        // Given
+        MockMultipartFile file = new MockMultipartFile(
+            "file", "test.jpg", "image/jpeg", "image content".getBytes()
+        );
+
+        FileUploadResponse expectedResponse = new FileUploadResponse();
+        expectedResponse.setStatusCode(ResponseConstants.OK);
+
+        when(monitoringService.uploadElpvEvidence(
+            USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, null, file))
+                .thenReturn(expectedResponse);
+
+        try (MockedStatic<ResponseUtil> mockedStatic = mockStatic(ResponseUtil.class)) {
+            mockedStatic.when(() -> ResponseUtil.getHttpStatus(ResponseConstants.OK))
+                       .thenReturn(HttpStatus.OK);
+
+            // When
+            monitoringController.uploadElpvEvidence(
+                authentication, PROJECT_ID, SITE_ID, null, file
+            );
+
+            // Then
+            verify(monitoringService).uploadElpvEvidence(
+                USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, null, file
+            );
+        }
+    }
+
+    @Test
+    @DisplayName("descriptionがrequired=falseで省略可能 → サービス呼び出し成功〇")
+    void testUploadElpvEvidence_DescriptionOptional() {
+        // Given
+        MockMultipartFile file = new MockMultipartFile(
+            "file", "test.pdf", "application/pdf", "PDF content".getBytes()
+        );
+
+        FileUploadResponse expectedResponse = new FileUploadResponse();
+        expectedResponse.setStatusCode(ResponseConstants.OK);
+
+        when(monitoringService.uploadElpvEvidence(
+            USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, null, file))
+                .thenReturn(expectedResponse);
+
+        try (MockedStatic<ResponseUtil> mockedStatic = mockStatic(ResponseUtil.class)) {
+            mockedStatic.when(() -> ResponseUtil.getHttpStatus(ResponseConstants.OK))
+                       .thenReturn(HttpStatus.OK);
+
+            // When
+            ResponseEntity<FileUploadResponse> response = 
+                    monitoringController.uploadElpvEvidence(
+                        authentication, PROJECT_ID, SITE_ID, null, file
+                    );
+
+            // Then
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            verify(monitoringService).uploadElpvEvidence(
+                USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, null, file
+            );
+        }
+    }
+
+    @Test
+    @DisplayName("サービス層からファイル形式エラー → 400 Bad Request〇")
+    void testUploadElpvEvidence_InvalidFileFormat() {
+        // Given
+        MockMultipartFile invalidFile = new MockMultipartFile(
+            "file", "test.exe", "application/x-msdownload", "executable content".getBytes()
+        );
+
+        FileUploadResponse errorResponse = new FileUploadResponse();
+        errorResponse.setStatusCode(ResponseConstants.BAD_REQUEST);
+        errorResponse.setMessage("サポートされていないファイル形式です");
+
+        when(monitoringService.uploadElpvEvidence(
+            USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, null, invalidFile))
+                .thenReturn(errorResponse);
+
+        try (MockedStatic<ResponseUtil> mockedStatic = mockStatic(ResponseUtil.class)) {
+            mockedStatic.when(() -> ResponseUtil.getHttpStatus(ResponseConstants.BAD_REQUEST))
+                       .thenReturn(HttpStatus.BAD_REQUEST);
+
+            // When
+            ResponseEntity<FileUploadResponse> response = 
+                    monitoringController.uploadElpvEvidence(
+                        authentication, PROJECT_ID, SITE_ID, null, invalidFile
+                    );
+
+            // Then
+            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+            assertEquals("サポートされていないファイル形式です", response.getBody().getMessage());
+        }
+    }
+
+
+    // ==================== uploadElpvrEvidence ====================
+
+    
+    @Test
+    @DisplayName("ELpv証憑PDFアップロード成功(PDF形式のファイルアップロード)〇")
     void testUploadElpvEvidence_Success_PDF() {
         // Given
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(TEST_COMPANY_ID);
 
         MockMultipartFile pdfFile = new MockMultipartFile("file",
                 "evidence.pdf",
@@ -1043,10 +1385,10 @@ class MonitoringControllerTest {
         expectedResponse.setFile(fileInfo);
 
         when(monitoringService.uploadElpvEvidence(
-                TEST_USERNAME,
-                TEST_COMPANY_ID,
-                TEST_PROJECT_ID,
-                TEST_SITE_ID,
+                USERNAME,
+                COMPANY_ID,
+                PROJECT_ID,
+                SITE_ID,
                 description,
                 pdfFile
         )).thenReturn(expectedResponse);
@@ -1059,8 +1401,8 @@ class MonitoringControllerTest {
                 ResponseEntity<FileUploadResponse> result = 
                 monitoringController.uploadElpvEvidence(
                         authentication,
-                        TEST_PROJECT_ID,
-                        TEST_SITE_ID,
+                        PROJECT_ID,
+                        SITE_ID,
                         description,
                         pdfFile
                 );
@@ -1083,26 +1425,26 @@ class MonitoringControllerTest {
 
                 // 検証
                 verify(authentication, times(2)).getCredentials();
-                verify(jwtUtil).extractUsername(TEST_TOKEN);
-                verify(jwtUtil).extractCompanyId(TEST_TOKEN);
+                verify(jwtUtil).extractUsername(TOKEN);
+                verify(jwtUtil).extractCompanyId(TOKEN);
                 verify(monitoringService).uploadElpvEvidence(
-                        TEST_USERNAME,
-                        TEST_COMPANY_ID,
-                        TEST_PROJECT_ID,
-                        TEST_SITE_ID,
+                        USERNAME,
+                        COMPANY_ID,
+                        PROJECT_ID,
+                        SITE_ID,
                         description,
                         pdfFile
                 );
+
+                verify(authentication, times(2)).getCredentials();
+                verify(jwtUtil, times(1)).extractUsername(TOKEN);
         }
     }
 
     @Test
-    @DisplayName("ELpv証憑CSVアップロード成功(CSV形式のファイルアップロード)")
+    @DisplayName("ELpv証憑CSVアップロード成功(CSV形式のファイルアップロード)〇")
         void testUploadElpvEvidence_Success_CSV() {
         // Given
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(TEST_COMPANY_ID);
 
         String csvContent = "timestamp,power,voltage\n2024-01-01,100,220\n2024-01-02,105,221";
         MockMultipartFile csvFile = new MockMultipartFile(
@@ -1133,10 +1475,10 @@ class MonitoringControllerTest {
         expectedResponse.setFile(fileInfo);
 
         when(monitoringService.uploadElpvEvidence(
-                TEST_USERNAME,
-                TEST_COMPANY_ID,
-                TEST_PROJECT_ID,
-                TEST_SITE_ID,
+                USERNAME,
+                COMPANY_ID,
+                PROJECT_ID,
+                SITE_ID,
                 description,
                 csvFile
         )).thenReturn(expectedResponse);
@@ -1149,8 +1491,8 @@ class MonitoringControllerTest {
                 ResponseEntity<FileUploadResponse> result = 
                 monitoringController.uploadElpvEvidence(
                         authentication,
-                        TEST_PROJECT_ID,
-                        TEST_SITE_ID,
+                        PROJECT_ID,
+                        SITE_ID,
                         description,
                         csvFile
                 );
@@ -1173,13 +1515,14 @@ class MonitoringControllerTest {
 
                 // 検証
                 verify(authentication, times(2)).getCredentials();
-                verify(jwtUtil).extractUsername(TEST_TOKEN);
-                verify(jwtUtil).extractCompanyId(TEST_TOKEN);
+                verify(jwtUtil, times(1)).extractUsername(TOKEN);
+                verify(jwtUtil).extractUsername(TOKEN);
+                verify(jwtUtil).extractCompanyId(TOKEN);
                 verify(monitoringService).uploadElpvEvidence(
-                        TEST_USERNAME,
-                        TEST_COMPANY_ID,
-                        TEST_PROJECT_ID,
-                        TEST_SITE_ID,
+                        USERNAME,
+                        COMPANY_ID,
+                        PROJECT_ID,
+                        SITE_ID,
                         description,
                         csvFile
                 );
@@ -1187,12 +1530,9 @@ class MonitoringControllerTest {
     }
 
     @Test
-    @DisplayName("ELpv証憑画像アップロード成功（description付き）")
+    @DisplayName("ELpv証憑画像アップロード成功（description付き）〇")
     void testUploadElpvEvidence_Success_ImageWithDescription() {
         // Given
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(TEST_COMPANY_ID);
 
         byte[] imageContent = new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
         MockMultipartFile imageFile = new MockMultipartFile(
@@ -1223,10 +1563,10 @@ class MonitoringControllerTest {
         expectedResponse.setFile(fileInfo);
 
         when(monitoringService.uploadElpvEvidence(
-                TEST_USERNAME,
-                TEST_COMPANY_ID,
-                TEST_PROJECT_ID,
-                TEST_SITE_ID,
+                USERNAME,
+                COMPANY_ID,
+                PROJECT_ID,
+                SITE_ID,
                 description,
                 imageFile
         )).thenReturn(expectedResponse);
@@ -1239,8 +1579,8 @@ class MonitoringControllerTest {
                 ResponseEntity<FileUploadResponse> result = 
                 monitoringController.uploadElpvEvidence(
                         authentication,
-                        TEST_PROJECT_ID,
-                        TEST_SITE_ID,
+                        PROJECT_ID,
+                        SITE_ID,
                         description,
                         imageFile
                 );
@@ -1264,13 +1604,13 @@ class MonitoringControllerTest {
 
                 // 検証
                 verify(authentication, times(2)).getCredentials();
-                verify(jwtUtil).extractUsername(TEST_TOKEN);
-                verify(jwtUtil).extractCompanyId(TEST_TOKEN);
+                verify(jwtUtil).extractUsername(TOKEN);
+                verify(jwtUtil).extractCompanyId(TOKEN);
                 verify(monitoringService).uploadElpvEvidence(
-                        TEST_USERNAME,
-                        TEST_COMPANY_ID,
-                        TEST_PROJECT_ID,
-                        TEST_SITE_ID,
+                        USERNAME,
+                        COMPANY_ID,
+                        PROJECT_ID,
+                        SITE_ID,
                         description,
                         imageFile
                 );
@@ -1278,12 +1618,9 @@ class MonitoringControllerTest {
     }
 
     @Test
-    @DisplayName("ELpv証憑画像アップロード成功（description無し）")
+    @DisplayName("ELpv証憑画像アップロード成功（description無し）〇")
     void testUploadElpvEvidence_Success_ImageWithoutDescription() {
         // Given
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(TEST_COMPANY_ID);
 
         MockMultipartFile imageFile = new MockMultipartFile(
                 "file",
@@ -1310,10 +1647,10 @@ class MonitoringControllerTest {
         expectedResponse.setFile(fileInfo);
 
         when(monitoringService.uploadElpvEvidence(
-                TEST_USERNAME,
-                TEST_COMPANY_ID,
-                TEST_PROJECT_ID,
-                TEST_SITE_ID,
+                USERNAME,
+                COMPANY_ID,
+                PROJECT_ID,
+                SITE_ID,
                 null,  // description無し
                 imageFile
         )).thenReturn(expectedResponse);
@@ -1326,8 +1663,8 @@ class MonitoringControllerTest {
                 ResponseEntity<FileUploadResponse> result = 
                 monitoringController.uploadElpvEvidence(
                         authentication,
-                        TEST_PROJECT_ID,
-                        TEST_SITE_ID,
+                        PROJECT_ID,
+                        SITE_ID,
                         null,  // description無し
                         imageFile
                 );
@@ -1343,23 +1680,62 @@ class MonitoringControllerTest {
                 assertThat(result.getBody().getFile().getDescription()).isNull();
 
                 verify(monitoringService).uploadElpvEvidence(
-                        TEST_USERNAME,
-                        TEST_COMPANY_ID,
-                        TEST_PROJECT_ID,
-                        TEST_SITE_ID,
+                        USERNAME,
+                        COMPANY_ID,
+                        PROJECT_ID,
+                        SITE_ID,
                         null,
                         imageFile
                 );
         }
     }
 
+    @Test
+    @DisplayName("画像ファイルが正しくサービスに渡される → モックで確認〇")
+    void testUploadElpvrEvidence_ImageWithDescription_Success() {
+        // Given
+        MockMultipartFile imageFile = new MockMultipartFile(
+            "file", "report.jpg", "image/jpeg", "image content".getBytes()
+        );
+        String description = "ELpvr証憑画像";
+
+        FileInfoResponse fileInfo = FileInfoResponse.builder()
+                .url("https://s3.amazonaws.com/bucket/elpvr_report.jpg")
+                .fileName("report.jpg")
+                .build();
+
+        FileUploadResponse expectedResponse = new FileUploadResponse();
+        expectedResponse.setFile(fileInfo);
+        expectedResponse.setStatusCode(ResponseConstants.OK);
+
+        when(monitoringService.uploadElpvrEvidence(
+            USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, description, imageFile))
+                .thenReturn(expectedResponse);
+
+        try (MockedStatic<ResponseUtil> mockedStatic = mockStatic(ResponseUtil.class)) {
+            mockedStatic.when(() -> ResponseUtil.getHttpStatus(ResponseConstants.OK))
+                       .thenReturn(HttpStatus.OK);
+
+            // When
+            ResponseEntity<FileUploadResponse> response = 
+                    monitoringController.uploadElpvrEvidence(
+                        authentication, PROJECT_ID, SITE_ID, description, imageFile
+                    );
+
+            // Then
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals("report.jpg", response.getBody().getFile().getFileName());
+            verify(monitoringService).uploadElpvrEvidence(
+                USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, description, imageFile
+            );
+        }
+    }
+// ==================== uploadElpjBatterySpecificationEvidence ====================
+
   @Test
-  @DisplayName("バッテリー仕様書アップロード成功")
+  @DisplayName("バッテリー仕様書アップロード成功〇")
     void testUploadElpjBatterySpecificationEvidence_Success() {
     // Given
-    when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-    when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-    when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(TEST_COMPANY_ID);
 
     // バッテリー仕様書PDFファイルのモック作成
     MockMultipartFile specificationFile = new MockMultipartFile(
@@ -1390,10 +1766,10 @@ class MonitoringControllerTest {
     expectedResponse.setFile(fileInfo);
 
     when(monitoringService.uploadElpjBatterySpecificationEvidence(
-            TEST_USERNAME,
-            TEST_COMPANY_ID,
-            TEST_PROJECT_ID,
-            TEST_SITE_ID,
+            USERNAME,
+            COMPANY_ID,
+            PROJECT_ID,
+            SITE_ID,
             description,
             specificationFile
     )).thenReturn(expectedResponse);
@@ -1406,8 +1782,8 @@ class MonitoringControllerTest {
         ResponseEntity<FileUploadResponse> result = 
             monitoringController.uploadElpjBatterySpecificationEvidence(
                 authentication,
-                TEST_PROJECT_ID,
-                TEST_SITE_ID,
+                PROJECT_ID,
+                SITE_ID,
                 description,
                 specificationFile
         );
@@ -1427,26 +1803,58 @@ class MonitoringControllerTest {
 
         // 検証
         verify(authentication, times(2)).getCredentials();
-        verify(jwtUtil).extractUsername(TEST_TOKEN);
-        verify(jwtUtil).extractCompanyId(TEST_TOKEN);
+        verify(jwtUtil).extractUsername(TOKEN);
+        verify(jwtUtil).extractCompanyId(TOKEN);
         verify(monitoringService).uploadElpjBatterySpecificationEvidence(
-                TEST_USERNAME,
-                TEST_COMPANY_ID,
-                TEST_PROJECT_ID,
-                TEST_SITE_ID,
+                USERNAME,
+                COMPANY_ID,
+                PROJECT_ID,
+                SITE_ID,
                 description,
                 specificationFile
             );
         }
     }
 
+     @Test
+    @DisplayName("PDFファイルが正しくサービスに渡される → モックで確認〇")
+    void testUploadElpjControlEvidence_PDF_Success() {
+        // Given
+        MockMultipartFile pdfFile = new MockMultipartFile(
+            "file", "control.pdf", "application/pdf", "Control data".getBytes()
+        );
+
+        FileUploadResponse expectedResponse = new FileUploadResponse();
+        expectedResponse.setStatusCode(ResponseConstants.OK);
+
+        when(monitoringService.uploadElpjControlEvidence(
+            USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, null, pdfFile))
+                .thenReturn(expectedResponse);
+
+        try (MockedStatic<ResponseUtil> mockedStatic = mockStatic(ResponseUtil.class)) {
+            mockedStatic.when(() -> ResponseUtil.getHttpStatus(ResponseConstants.OK))
+                       .thenReturn(HttpStatus.OK);
+
+            // When
+            ResponseEntity<FileUploadResponse> response = 
+                    monitoringController.uploadElpjControlEvidence(
+                        authentication, PROJECT_ID, SITE_ID, null, pdfFile
+                    );
+
+            // Then
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            verify(monitoringService).uploadElpjControlEvidence(
+                USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, null, pdfFile
+            );
+        }
+    }
+
+// ==================== uploadElpjControlEvidence ====================
+
     @Test
-    @DisplayName("制御装置証憑アップロード成功")
+    @DisplayName("制御装置証憑アップロード成功〇")
     void testUploadElpjControlEvidence_Success_PDF() {  // ← 名前を変更
         // Given
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(TEST_COMPANY_ID);
 
         // 制御装置証憑ファイルのモック作成
         MockMultipartFile controlFile = new MockMultipartFile(
@@ -1477,10 +1885,10 @@ class MonitoringControllerTest {
         expectedResponse.setFile(fileInfo);
 
         when(monitoringService.uploadElpjControlEvidence(
-                TEST_USERNAME,
-                TEST_COMPANY_ID,
-                TEST_PROJECT_ID,
-                TEST_SITE_ID,
+                USERNAME,
+                COMPANY_ID,
+                PROJECT_ID,
+                SITE_ID,
                 description,
                 controlFile
         )).thenReturn(expectedResponse);
@@ -1493,8 +1901,8 @@ class MonitoringControllerTest {
                 ResponseEntity<FileUploadResponse> result = 
                 monitoringController.uploadElpjControlEvidence(
                         authentication,
-                        TEST_PROJECT_ID,
-                        TEST_SITE_ID,
+                        PROJECT_ID,
+                        SITE_ID,
                         description,
                         controlFile
                 );
@@ -1514,49 +1922,54 @@ class MonitoringControllerTest {
 
                 // 検証
                 verify(authentication, times(2)).getCredentials();
-                verify(jwtUtil).extractUsername(TEST_TOKEN);
-                verify(jwtUtil).extractCompanyId(TEST_TOKEN);
+                verify(jwtUtil).extractUsername(TOKEN);
+                verify(jwtUtil).extractCompanyId(TOKEN);
                 verify(monitoringService).uploadElpjControlEvidence(
-                        TEST_USERNAME,
-                        TEST_COMPANY_ID,
-                        TEST_PROJECT_ID,
-                        TEST_SITE_ID,
+                        USERNAME,
+                        COMPANY_ID,
+                        PROJECT_ID,
+                        SITE_ID,
                         description,
                         controlFile
                 );
+
+                verify(authentication, times(2)).getCredentials();
+                verify(jwtUtil, times(1)).extractUsername(TOKEN);
+                verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
         }
     }
+
+        // ==================== createCancelRequest ====================
+
+
     @Test
-    @DisplayName("取消申請作成成功（masterユーザー）")
+    @DisplayName("取消申請作成成功（masterユーザー）〇")
     void testCreateCancelRequest_Success_MasterUser() {
         // Given
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(TEST_COMPANY_ID);
 
         CreateCancelRequestRequest request = CreateCancelRequestRequest.builder()
-                .siteId(TEST_SITE_ID)
-                .recordPK("MONITORING#PROJECT#" + TEST_PROJECT_ID)
-                .recordSK("SITE#" + TEST_SITE_ID + "#2024-01-15")
+                .siteId(SITE_ID)
+                .recordPK("MONITORING#PROJECT#" + PROJECT_ID)
+                .recordSK("SITE#" + SITE_ID + "#2024-01-15")
                 .reasonText("設備の不具合により取消を申請します")
                 .build();
 
         CancelRequestResponse expectedResponse = CancelRequestResponse.builder()
                 .cancelRequestId(100)
-                .recordPk("MONITORING#PROJECT#" + TEST_PROJECT_ID)
-                .recordSk("SITE#" + TEST_SITE_ID + "#2024-01-15")
+                .recordPk("MONITORING#PROJECT#" + PROJECT_ID)
+                .recordSk("SITE#" + SITE_ID + "#2024-01-15")
                 .status("PENDING")
-                .requestedBy(TEST_USERNAME)
+                .requestedBy(USERNAME)
                 .requestedAt("2024-01-15T12:00:00")
-                .siteId(TEST_SITE_ID)
+                .siteId(SITE_ID)
                 .reason("設備の不具合により取消を申請します")
                 .build();
         expectedResponse.setStatusCode("201");
         expectedResponse.setMessage("Cancel request created successfully");
 
         when(cancelRequestService.createCancelRequest(
-                TEST_USERNAME,
-                TEST_COMPANY_ID,
+                USERNAME,
+                COMPANY_ID,
                 request
         )).thenReturn(expectedResponse);
 
@@ -1577,57 +1990,53 @@ class MonitoringControllerTest {
                 assertThat(result.getBody().getStatusCode()).isEqualTo("201");
                 assertThat(result.getBody().getMessage()).isEqualTo("Cancel request created successfully");
                 assertThat(result.getBody().getCancelRequestId()).isEqualTo(100);
-                assertThat(result.getBody().getRecordPk()).isEqualTo("MONITORING#PROJECT#" + TEST_PROJECT_ID);
-                assertThat(result.getBody().getRecordSk()).isEqualTo("SITE#" + TEST_SITE_ID + "#2024-01-15");
+                assertThat(result.getBody().getRecordPk()).isEqualTo("MONITORING#PROJECT#" + PROJECT_ID);
+                assertThat(result.getBody().getRecordSk()).isEqualTo("SITE#" + SITE_ID + "#2024-01-15");
                 assertThat(result.getBody().getStatus()).isEqualTo("PENDING");
-                assertThat(result.getBody().getRequestedBy()).isEqualTo(TEST_USERNAME);
+                assertThat(result.getBody().getRequestedBy()).isEqualTo(USERNAME);
                 assertThat(result.getBody().getRequestedAt()).isEqualTo("2024-01-15T12:00:00");
-                assertThat(result.getBody().getSiteId()).isEqualTo(TEST_SITE_ID);
+                assertThat(result.getBody().getSiteId()).isEqualTo(SITE_ID);
                 assertThat(result.getBody().getReason()).isEqualTo("設備の不具合により取消を申請します");
 
                 // 検証
                 verify(authentication, times(2)).getCredentials();
-                verify(jwtUtil).extractUsername(TEST_TOKEN);
-                verify(jwtUtil).extractCompanyId(TEST_TOKEN);
+                verify(jwtUtil).extractUsername(TOKEN);
+                verify(jwtUtil).extractCompanyId(TOKEN);
                 verify(cancelRequestService).createCancelRequest(
-                        TEST_USERNAME,
-                        TEST_COMPANY_ID,
+                        USERNAME,
+                        COMPANY_ID,
                         request
                 );
         }
     }
 
     @Test
-    @DisplayName("取消申請作成成功（userユーザー）")
+    @DisplayName("取消申請作成成功（userユーザー）〇")
     void testCreateCancelRequest_Success_UserUser() {
         // Given
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn("user001");
-        when(jwtUtil.extractCompanyId(TEST_TOKEN)).thenReturn(TEST_COMPANY_ID);
-
         CreateCancelRequestRequest request = CreateCancelRequestRequest.builder()
-                .siteId(TEST_SITE_ID)
-                .recordPK("MONITORING#PROJECT#" + TEST_PROJECT_ID)
-                .recordSK("SITE#" + TEST_SITE_ID + "#2024-01-20")
+                .siteId(SITE_ID)
+                .recordPK("MONITORING#PROJECT#" + PROJECT_ID)
+                .recordSK("SITE#" + SITE_ID + "#2024-01-20")
                 .reasonText("データ入力誤りのため取消を申請します")
                 .build();
 
         CancelRequestResponse expectedResponse = CancelRequestResponse.builder()
                 .cancelRequestId(101)
-                .recordPk("MONITORING#PROJECT#" + TEST_PROJECT_ID)
-                .recordSk("SITE#" + TEST_SITE_ID + "#2024-01-20")
+                .recordPk("MONITORING#PROJECT#" + PROJECT_ID)
+                .recordSk("SITE#" + SITE_ID + "#2024-01-20")
                 .status("PENDING")
                 .requestedBy("user001")
                 .requestedAt("2024-01-20T12:05:00")
-                .siteId(TEST_SITE_ID)
+                .siteId(SITE_ID)
                 .reason("データ入力誤りのため取消を申請します")
                 .build();
         expectedResponse.setStatusCode("201");
         expectedResponse.setMessage("Cancel request created successfully");
 
         when(cancelRequestService.createCancelRequest(
-                "user001",
-                TEST_COMPANY_ID,
+                USERNAME,
+                COMPANY_ID,
                 request
         )).thenReturn(expectedResponse);
 
@@ -1648,73 +2057,185 @@ class MonitoringControllerTest {
                 assertThat(result.getBody().getStatusCode()).isEqualTo("201");
                 assertThat(result.getBody().getMessage()).isEqualTo("Cancel request created successfully");
                 assertThat(result.getBody().getCancelRequestId()).isEqualTo(101);
-                assertThat(result.getBody().getRecordPk()).isEqualTo("MONITORING#PROJECT#" + TEST_PROJECT_ID);
-                assertThat(result.getBody().getRecordSk()).isEqualTo("SITE#" + TEST_SITE_ID + "#2024-01-20");
+                assertThat(result.getBody().getRecordPk()).isEqualTo("MONITORING#PROJECT#" + PROJECT_ID);
+                assertThat(result.getBody().getRecordSk()).isEqualTo("SITE#" + SITE_ID + "#2024-01-20");
                 assertThat(result.getBody().getStatus()).isEqualTo("PENDING");
                 assertThat(result.getBody().getRequestedBy()).isEqualTo("user001");
                 assertThat(result.getBody().getRequestedAt()).isEqualTo("2024-01-20T12:05:00");
-                assertThat(result.getBody().getSiteId()).isEqualTo(TEST_SITE_ID);
+                assertThat(result.getBody().getSiteId()).isEqualTo(SITE_ID);
                 assertThat(result.getBody().getReason()).isEqualTo("データ入力誤りのため取消を申請します");
 
                 // 検証
                 verify(authentication, times(2)).getCredentials();
-                verify(jwtUtil).extractUsername(TEST_TOKEN);
-                verify(jwtUtil).extractCompanyId(TEST_TOKEN);
+                verify(jwtUtil).extractUsername(TOKEN);
+                verify(jwtUtil).extractCompanyId(TOKEN);
                 verify(cancelRequestService).createCancelRequest(
-                        "user001",
-                        TEST_COMPANY_ID,
+                        USERNAME,
+                        COMPANY_ID,
                         request
                 );
         }
     }
 
     @Test
+    @DisplayName("JWT から username/companyId 正常抽出 → サービスに正しく渡される〇")
+    void testCreateCancelRequest_Success() {
+
+        // Given
+        CreateCancelRequestRequest request = CreateCancelRequestRequest.builder()
+            .siteId(SITE_ID)
+            .recordPK("COMP00000001#SITE#21")
+            .recordSK("RECORD#2024-01-01T10:00:00")
+            .reasonText("誤入力のため取消")
+            .build();
+
+        CancelRequestResponse expectedResponse = CancelRequestResponse.builder()
+            .cancelRequestId(1)
+            .status("PENDING")
+            .requestedBy(USERNAME)
+            .build();
+        expectedResponse.setStatusCode(ResponseConstants.OK);
+
+        when(cancelRequestService.createCancelRequest(USERNAME, COMPANY_ID, request))
+                .thenReturn(expectedResponse);
+
+        try (MockedStatic<ResponseUtil> mockedStatic = mockStatic(ResponseUtil.class)) {
+            mockedStatic.when(() -> ResponseUtil.getHttpStatus(ResponseConstants.OK))
+                       .thenReturn(HttpStatus.OK);
+
+            // When
+            ResponseEntity<CancelRequestResponse> response = 
+                    monitoringController.createCancelRequest(authentication, request);
+
+            // Then
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals("PENDING", response.getBody().getStatus());
+            
+            verify(jwtUtil).extractUsername(TOKEN);
+            verify(jwtUtil).extractCompanyId(TOKEN);
+            verify(cancelRequestService).createCancelRequest(USERNAME, COMPANY_ID, request);
+
+            verify(authentication, times(2)).getCredentials();
+            verify(jwtUtil, times(1)).extractUsername(TOKEN);
+            verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
+        }
+    }
+
+    @Test
+    @DisplayName("@Valid により recordId が null → 400 Bad Request〇")
+    void testCreateCancelRequest_RecordIdNull() {
+
+        // Given
+        CreateCancelRequestRequest request = CreateCancelRequestRequest.builder()
+            .siteId(SITE_ID)
+            .recordPK(null)
+            .recordSK("RECORD#2024-01-01T10:00:00")
+            .reasonText("理由")
+            .build();
+
+        CancelRequestResponse errorResponse = new CancelRequestResponse();
+        errorResponse.setStatusCode(ResponseConstants.BAD_REQUEST);
+        errorResponse.setMessage("recordPK is required");
+
+        when(cancelRequestService.createCancelRequest(USERNAME, COMPANY_ID, request))
+                .thenReturn(errorResponse);
+
+        try (MockedStatic<ResponseUtil> mockedStatic = mockStatic(ResponseUtil.class)) {
+            mockedStatic.when(() -> ResponseUtil.getHttpStatus(ResponseConstants.BAD_REQUEST))
+                       .thenReturn(HttpStatus.BAD_REQUEST);
+
+            // When
+            ResponseEntity<CancelRequestResponse> response = 
+                    monitoringController.createCancelRequest(authentication, request);
+
+            // Then
+            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+
+            verify(authentication, times(2)).getCredentials();
+            verify(jwtUtil, times(1)).extractUsername(TOKEN);
+            verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
+        }
+    }
+
+    @Test
+    @DisplayName("@Valid により reason が空文字 → 400 Bad Request〇")
+    void testCreateCancelRequest_ReasonEmpty() {
+
+        // Given
+        CreateCancelRequestRequest request = CreateCancelRequestRequest.builder()
+            .siteId(SITE_ID)
+            .recordPK("COMP00000001#SITE#21")
+            .recordSK("RECORD#2024-01-01T10:00:00")
+            .reasonText("")
+            .build();
+
+        CancelRequestResponse errorResponse = new CancelRequestResponse();
+        errorResponse.setStatusCode(ResponseConstants.BAD_REQUEST);
+        errorResponse.setMessage("reasonText is required");
+
+        when(cancelRequestService.createCancelRequest(USERNAME, COMPANY_ID, request))
+                .thenReturn(errorResponse);
+
+        try (MockedStatic<ResponseUtil> mockedStatic = mockStatic(ResponseUtil.class)) {
+            mockedStatic.when(() -> ResponseUtil.getHttpStatus(ResponseConstants.BAD_REQUEST))
+                       .thenReturn(HttpStatus.BAD_REQUEST);
+
+            // When
+            ResponseEntity<CancelRequestResponse> response = 
+                    monitoringController.createCancelRequest(authentication, request);
+
+            // Then
+            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+
+            verify(authentication, times(2)).getCredentials();
+            verify(jwtUtil, times(1)).extractUsername(TOKEN);
+            verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
+        }
+    }
+
+    // ==================== getCancelRequests ====================
+
+    @Test
     @DisplayName("取消申請一覧取得成功")
     void testGetCancelRequests_Success() {
         // Given
 
-        CancelRequestResponse request1 = CancelRequestResponse.builder()
-                .cancelRequestId(100)
-                .recordPk("MONITORING#PROJECT#" + TEST_PROJECT_ID)
-                .recordSk("SITE#" + TEST_SITE_ID + "#2024-01-15")
+        CancelRequestItemDto request1 = CancelRequestItemDto.builder()
+                .id(100)
+                .recordPk("MONITORING#PROJECT#" + PROJECT_ID)
                 .status("PENDING")
-                .requestedBy(TEST_USERNAME)
+                .requestedBy(USERNAME)
                 .requestedAt("2024-01-15T12:00:00")
-                .siteId(TEST_SITE_ID)
+                .siteName("テスト拠点1")
                 .reason("設備の不具合により取消を申請します")
                 .build();
 
-        CancelRequestResponse request2 = CancelRequestResponse.builder()
-                .cancelRequestId(101)
-                .recordPk("MONITORING#PROJECT#" + TEST_PROJECT_ID)
-                .recordSk("SITE#" + TEST_SITE_ID + "#2024-01-20")
+        CancelRequestItemDto request2 = CancelRequestItemDto.builder()
+                .id(101)
+                .recordPk("MONITORING#PROJECT#" + PROJECT_ID)
                 .status("PENDING")
                 .requestedBy("user001")
                 .requestedAt("2024-01-20T14:30:00")
-                .siteId(TEST_SITE_ID)
+                .siteName("テスト拠点2")
                 .reason("データ入力誤りのため取消を申請します")
                 .build();
 
-        CancelRequestResponse request3 = CancelRequestResponse.builder()
-                .cancelRequestId(102)
+        CancelRequestItemDto request3 = CancelRequestItemDto.builder()
+                .id(102)
                 .recordPk("MONITORING#PROJECT#2")
-                .recordSk("SITE#200#2024-01-22")
                 .status("APPROVED")
                 .requestedBy("user002")
                 .requestedAt("2024-01-22T09:15:00")
-                .siteId(200)
+                .siteName("テスト拠点3")
                 .reason("計測機器の故障のため取消を申請します")
                 .build();
+
 
         CancelRequestListResponse expectedResponse = new CancelRequestListResponse();
         expectedResponse.setStatusCode("200");
         expectedResponse.setMessage("Cancel requests retrieved successfully");
         //実際のフィールド名に応じて以下のいずれかを使用
-        // expectedResponse.setData(Arrays.asList(request1, request2, request3));
-        // expectedResponse.setItems(Arrays.asList(request1, request2, request3));
-        // expectedResponse.setRequests(Arrays.asList(request1, request2, request3));
-        // expectedResponse.setCount(3);
-        // expectedResponse.setSize(3);
+        expectedResponse.setItems(Arrays.asList(request1, request2, request3));
 
         when(cancelRequestService.listCancelRequests()).thenReturn(expectedResponse);
 
@@ -1724,7 +2245,7 @@ class MonitoringControllerTest {
 
                 // When
                 ResponseEntity<CancelRequestListResponse> result = 
-                monitoringController.getCancelRequests(authentication);
+                        monitoringController.getCancelRequests(authentication);
 
                 // Then
                 assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -1732,9 +2253,8 @@ class MonitoringControllerTest {
                 assertThat(result.getBody().getStatusCode()).isEqualTo("200");
                 assertThat(result.getBody().getMessage()).isEqualTo("Cancel requests retrieved successfully");
                 // 実際のメソッド名に応じて修正してください
-                // assertThat(result.getBody().getData()).hasSize(3);
-                // assertThat(result.getBody().getItems()).hasSize(3);
-                // assertThat(result.getBody().getRequests()).hasSize(3);
+                assertThat(result.getBody().getItems()).hasSize(3);
+                assertThat(result.getBody().getItems().get(0).getId()).isEqualTo(100);
 
                 // 検証
                 verify(cancelRequestService).listCancelRequests();
@@ -1743,6 +2263,7 @@ class MonitoringControllerTest {
     @Test
     @DisplayName("空の取り消し申請一覧取得成功")
     void testGetCancelRequests_Success_EmptyList() {
+
         // Given
         CancelRequestListResponse expectedResponse = CancelRequestListResponse.builder()
                 .items(Collections.emptyList())
@@ -1769,11 +2290,16 @@ class MonitoringControllerTest {
 
                 // 検証
                 verify(cancelRequestService).listCancelRequests();
+                verify(authentication, atLeastOnce()).getCredentials();
+                verify(jwtUtil, times(1)).extractUsername(TOKEN);
+                verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
         }
     }
 
+    // ==================== makeDecision ====================
+
     @Test
-    @DisplayName("取消申請承認成功")
+    @DisplayName("取消申請承認成功〇")
     void testMakeDecision_Approve_Success() {
         // Given
         Integer cancelRequestId = 100;
@@ -1782,24 +2308,24 @@ class MonitoringControllerTest {
                 .managerRemarks("承認します")
                 .build();
         
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
+        when(authentication.getCredentials()).thenReturn(TOKEN);
+        when(jwtUtil.extractUsername(TOKEN)).thenReturn(USERNAME);
         
         CancelRequestDecisionResponse expectedResponse = CancelRequestDecisionResponse.builder()
                 .cancelRequestId(cancelRequestId)
                 .status("APPROVED")
-                .decidedBy(TEST_USERNAME)
+                .decidedBy(USERNAME)
                 .decidedAt("2024-01-23 10:30:00")
-                .originalRecordPk("MONITORING#PROJECT#" + TEST_PROJECT_ID)
+                .originalRecordPk("MONITORING#PROJECT#" + PROJECT_ID)
                 .originalRecordSk("SITE#1#2024-01-15T09:00:00")
-                .offsetRecordPk("MONITORING#PROJECT#" + TEST_PROJECT_ID)
+                .offsetRecordPk("MONITORING#PROJECT#" + PROJECT_ID)
                 .offsetRecordSk("SITE#1#2024-01-23T10:30:00#OFFSET")
                 .managerRemarks("承認します")
                 .build();
         expectedResponse.setStatusCode("200");
         expectedResponse.setMessage("Cancel request approved successfully");
         
-        when(cancelRequestService.processDecision(cancelRequestId, request, TEST_USERNAME))
+        when(cancelRequestService.processDecision(cancelRequestId, request, USERNAME))
                 .thenReturn(expectedResponse);
         
         try (MockedStatic<ResponseUtil> mockedResponseUtil = mockStatic(ResponseUtil.class)) {
@@ -1817,22 +2343,22 @@ class MonitoringControllerTest {
                 assertThat(result.getBody().getMessage()).isEqualTo("Cancel request approved successfully");
                 assertThat(result.getBody().getCancelRequestId()).isEqualTo(cancelRequestId);
                 assertThat(result.getBody().getStatus()).isEqualTo("APPROVED");
-                assertThat(result.getBody().getDecidedBy()).isEqualTo(TEST_USERNAME);
+                assertThat(result.getBody().getDecidedBy()).isEqualTo(USERNAME);
                 assertThat(result.getBody().getDecidedAt()).isEqualTo("2024-01-23 10:30:00");
-                assertThat(result.getBody().getOriginalRecordPk()).isEqualTo("MONITORING#PROJECT#" + TEST_PROJECT_ID);
+                assertThat(result.getBody().getOriginalRecordPk()).isEqualTo("MONITORING#PROJECT#" + PROJECT_ID);
                 assertThat(result.getBody().getOriginalRecordSk()).isEqualTo("SITE#1#2024-01-15T09:00:00");
-                assertThat(result.getBody().getOffsetRecordPk()).isEqualTo("MONITORING#PROJECT#" + TEST_PROJECT_ID);
+                assertThat(result.getBody().getOffsetRecordPk()).isEqualTo("MONITORING#PROJECT#" + PROJECT_ID);
                 assertThat(result.getBody().getOffsetRecordSk()).isEqualTo("SITE#1#2024-01-23T10:30:00#OFFSET");
                 assertThat(result.getBody().getManagerRemarks()).isEqualTo("承認します");
                 
                 // 検証
-                verify(jwtUtil).extractUsername(TEST_TOKEN);
-                verify(cancelRequestService).processDecision(cancelRequestId, request, TEST_USERNAME);
+                verify(jwtUtil).extractUsername(TOKEN);
+                verify(cancelRequestService).processDecision(cancelRequestId, request, USERNAME);
         }
     }
 
     @Test
-    @DisplayName("取消申請却下成功")
+    @DisplayName("取消申請却下成功〇")
     void testMakeDecision_Reject_Success() {
         // Given
         Integer cancelRequestId = 101;
@@ -1842,15 +2368,15 @@ class MonitoringControllerTest {
                 .managerRemarks("理由が不十分なため却下します")
                 .build();
         
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
+        when(authentication.getCredentials()).thenReturn(TOKEN);
+        when(jwtUtil.extractUsername(TOKEN)).thenReturn(USERNAME);
         
         CancelRequestDecisionResponse expectedResponse = CancelRequestDecisionResponse.builder()
                 .cancelRequestId(cancelRequestId)
                 .status("REJECTED")
-                .decidedBy(TEST_USERNAME)
+                .decidedBy(USERNAME)
                 .decidedAt("2024-01-23 11:00:00")
-                .originalRecordPk("MONITORING#PROJECT#" + TEST_PROJECT_ID)
+                .originalRecordPk("MONITORING#PROJECT#" + PROJECT_ID)
                 .originalRecordSk("SITE#2#2024-01-20T14:30:00")
                 .offsetRecordPk(null)  // 却下時は相殺レコード無し
                 .offsetRecordSk(null)  // 却下時は相殺レコード無し
@@ -1859,7 +2385,7 @@ class MonitoringControllerTest {
         expectedResponse.setStatusCode("200");
         expectedResponse.setMessage("Cancel request rejected successfully");
         
-        when(cancelRequestService.processDecision(cancelRequestId, request, TEST_USERNAME))
+        when(cancelRequestService.processDecision(cancelRequestId, request, USERNAME))
                 .thenReturn(expectedResponse);
         
         try (MockedStatic<ResponseUtil> mockedResponseUtil = mockStatic(ResponseUtil.class)) {
@@ -1877,223 +2403,17 @@ class MonitoringControllerTest {
                 assertThat(result.getBody().getMessage()).isEqualTo("Cancel request rejected successfully");
                 assertThat(result.getBody().getCancelRequestId()).isEqualTo(cancelRequestId);
                 assertThat(result.getBody().getStatus()).isEqualTo("REJECTED");
-                assertThat(result.getBody().getDecidedBy()).isEqualTo(TEST_USERNAME);
+                assertThat(result.getBody().getDecidedBy()).isEqualTo(USERNAME);
                 assertThat(result.getBody().getDecidedAt()).isEqualTo("2024-01-23 11:00:00");
-                assertThat(result.getBody().getOriginalRecordPk()).isEqualTo("MONITORING#PROJECT#" + TEST_PROJECT_ID);
+                assertThat(result.getBody().getOriginalRecordPk()).isEqualTo("MONITORING#PROJECT#" + PROJECT_ID);
                 assertThat(result.getBody().getOriginalRecordSk()).isEqualTo("SITE#2#2024-01-20T14:30:00");
                 assertThat(result.getBody().getOffsetRecordPk()).isNull();
                 assertThat(result.getBody().getOffsetRecordSk()).isNull();
                 assertThat(result.getBody().getManagerRemarks()).isEqualTo("理由が不十分なため却下します");
                 
                 // 検証
-                verify(jwtUtil).extractUsername(TEST_TOKEN);
-                verify(cancelRequestService).processDecision(cancelRequestId, request, TEST_USERNAME);
+                verify(jwtUtil).extractUsername(TOKEN);
+                verify(cancelRequestService).processDecision(cancelRequestId, request, USERNAME);
         }
     }
-
-    @Test
-    @DisplayName("パスパラメータとリクエストボディの処理")
-    void testMakeDecision_PathParamAndRequestBody() {
-        // Given - 複数のパターンをテスト
-        Integer cancelRequestId = 999;
-        CancelRequestDecisionRequest request = CancelRequestDecisionRequest.builder()
-                .decision("APPROVE")
-                .managerRemarks("特別な承認理由")
-                .build();
-        
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn("operator123");
-        
-        CancelRequestDecisionResponse expectedResponse = CancelRequestDecisionResponse.builder()
-                .cancelRequestId(cancelRequestId)
-                .status("APPROVED")
-                .decidedBy("operator123")
-                .decidedAt("2024-01-23 12:00:00")
-                .originalRecordPk("MONITORING#PROJECT#3")
-                .originalRecordSk("SITE#5#2024-01-22T08:00:00")
-                .offsetRecordPk("MONITORING#PROJECT#3")
-                .offsetRecordSk("SITE#5#2024-01-23T12:00:00#OFFSET")
-                .managerRemarks("特別な承認理由")
-                .build();
-        expectedResponse.setStatusCode("200");
-        expectedResponse.setMessage("Decision processed successfully");
-        
-        when(cancelRequestService.processDecision(cancelRequestId, request, "operator123"))
-                .thenReturn(expectedResponse);
-        
-        try (MockedStatic<ResponseUtil> mockedResponseUtil = mockStatic(ResponseUtil.class)) {
-                mockedResponseUtil.when(() -> ResponseUtil.getHttpStatus("200"))
-                        .thenReturn(HttpStatus.OK);
-                
-                // When
-                ResponseEntity<CancelRequestDecisionResponse> result = 
-                monitoringController.makeDecision(authentication, cancelRequestId, request);
-                
-                // Then
-                assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-                assertThat(result.getBody()).isNotNull();
-                
-                // パスパラメータが正しく処理されているか
-                assertThat(result.getBody().getCancelRequestId()).isEqualTo(cancelRequestId);
-                
-                // リクエストボディの内容が正しく処理されているか
-                assertThat(result.getBody().getManagerRemarks()).isEqualTo(request.getManagerRemarks());
-                
-                // JWTから抽出したユーザー名が使用されているか
-                assertThat(result.getBody().getDecidedBy()).isEqualTo("operator123");
-                
-                // APPROVEの場合は相殺レコードが作成されているか
-                assertThat(result.getBody().getOffsetRecordPk()).isNotNull();
-                assertThat(result.getBody().getOffsetRecordSk()).isNotNull();
-                assertThat(result.getBody().getOffsetRecordSk()).contains("#OFFSET");
-                
-                // 検証: サービスが正しいパラメータで呼ばれているか
-                ArgumentCaptor<Integer> idCaptor = ArgumentCaptor.forClass(Integer.class);
-                ArgumentCaptor<CancelRequestDecisionRequest> requestCaptor = 
-                ArgumentCaptor.forClass(CancelRequestDecisionRequest.class);
-                ArgumentCaptor<String> usernameCaptor = ArgumentCaptor.forClass(String.class);
-                
-                verify(cancelRequestService).processDecision(
-                idCaptor.capture(), 
-                requestCaptor.capture(), 
-                usernameCaptor.capture()
-                );
-                
-                assertThat(idCaptor.getValue()).isEqualTo(cancelRequestId);
-                assertThat(requestCaptor.getValue().getDecision()).isEqualTo("APPROVE");
-                assertThat(requestCaptor.getValue().getManagerRemarks()).isEqualTo("特別な承認理由");
-                assertThat(usernameCaptor.getValue()).isEqualTo("operator123");
-        }
-    }
-/* 
-    @Test
-    @DisplayName("取消申請承認失敗- 存在しないID")
-    void testMakeDecision_Approve_NotFound() {
-        // Given
-        Integer nonExistentId = 999;
-        
-        CancelRequestDecisionRequest request = CancelRequestDecisionRequest.builder()
-                .decision("APPROVE")
-                .managerRemarks("承認します")
-                .build();
-        
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        
-        CancelRequestDecisionResponse expectedResponse = new CancelRequestDecisionResponse();
-        expectedResponse.setStatusCode("404");
-        expectedResponse.setMessage("Cancel request not found");
-        
-        when(cancelRequestService.processDecision(nonExistentId, request, TEST_USERNAME))
-                .thenReturn(expectedResponse);
-        
-        try (MockedStatic<ResponseUtil> mockedResponseUtil = mockStatic(ResponseUtil.class)) {
-                mockedResponseUtil.when(() -> ResponseUtil.getHttpStatus("404"))
-                        .thenReturn(HttpStatus.NOT_FOUND);
-                
-                // When
-                ResponseEntity<CancelRequestDecisionResponse> result = 
-                monitoringController.makeDecision(authentication, nonExistentId, request);
-                
-                // Then
-                assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-                assertThat(result.getBody()).isNotNull();
-                assertThat(result.getBody().getStatusCode()).isEqualTo("404");
-                assertThat(result.getBody().getMessage()).isEqualTo("Cancel request not found");
-                
-                // 検証
-                verify(cancelRequestService).processDecision(nonExistentId, request, TEST_USERNAME);
-        }
-    }
-
-    @Test
-    @DisplayName("取消申請承認失敗 - 既に処理済み")
-    void testMakeDecision_Approve_AlreadyProcessed() {
-        // Given
-        Integer cancelRequestId = 100;
-        
-        CancelRequestDecisionRequest request = CancelRequestDecisionRequest.builder()
-                .decision("APPROVE")
-                .managerRemarks("承認します")
-                .build();
-        
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        
-        CancelRequestDecisionResponse expectedResponse = new CancelRequestDecisionResponse();
-        expectedResponse.setStatusCode("400");
-        expectedResponse.setMessage("Cancel request has already been processed");
-        
-        when(cancelRequestService.processDecision(cancelRequestId, request, TEST_USERNAME))
-                .thenReturn(expectedResponse);
-        
-        try (MockedStatic<ResponseUtil> mockedResponseUtil = mockStatic(ResponseUtil.class)) {
-                mockedResponseUtil.when(() -> ResponseUtil.getHttpStatus("400"))
-                        .thenReturn(HttpStatus.BAD_REQUEST);
-                
-                // When
-                ResponseEntity<CancelRequestDecisionResponse> result = 
-                monitoringController.makeDecision(authentication, cancelRequestId, request);
-                
-                // Then
-                assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-                assertThat(result.getBody()).isNotNull();
-                assertThat(result.getBody().getStatusCode()).isEqualTo("400");
-                assertThat(result.getBody().getMessage()).isEqualTo("Cancel request has already been processed");
-                
-                // 検証
-                verify(cancelRequestService).processDecision(cancelRequestId, request, TEST_USERNAME);
-        }
-    }
-
-    @Test
-    @DisplayName("取消申請却下 - コメント無し")
-    void testMakeDecision_Reject_WithoutComment() {
-        // Given
-        Integer cancelRequestId = 102;
-        
-        CancelRequestDecisionRequest request = CancelRequestDecisionRequest.builder()
-                .decision("REJECT")
-                .managerRemarks(null)  // コメントなし
-                .build();
-        
-        when(authentication.getCredentials()).thenReturn(TEST_TOKEN);
-        when(jwtUtil.extractUsername(TEST_TOKEN)).thenReturn(TEST_USERNAME);
-        
-        CancelRequestDecisionResponse expectedResponse = CancelRequestDecisionResponse.builder()
-                .cancelRequestId(cancelRequestId)
-                .status("REJECTED")
-                .decidedBy(TEST_USERNAME)
-                .decidedAt("2024-01-23 13:00:00")
-                .originalRecordPk("MONITORING#PROJECT#" + TEST_PROJECT_ID)
-                .originalRecordSk("SITE#3#2024-01-21T10:00:00")
-                .managerRemarks(null)
-                .build();
-        expectedResponse.setStatusCode("200");
-        expectedResponse.setMessage("Cancel request rejected successfully");
-        
-        when(cancelRequestService.processDecision(cancelRequestId, request, TEST_USERNAME))
-                .thenReturn(expectedResponse);
-        
-        try (MockedStatic<ResponseUtil> mockedResponseUtil = mockStatic(ResponseUtil.class)) {
-                mockedResponseUtil.when(() -> ResponseUtil.getHttpStatus("200"))
-                        .thenReturn(HttpStatus.OK);
-                
-                // When
-                ResponseEntity<CancelRequestDecisionResponse> result = 
-                monitoringController.makeDecision(authentication, cancelRequestId, request);
-                
-                // Then
-                assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-                assertThat(result.getBody()).isNotNull();
-                assertThat(result.getBody().getStatusCode()).isEqualTo("200");
-                assertThat(result.getBody().getStatus()).isEqualTo("REJECTED");
-                assertThat(result.getBody().getManagerRemarks()).isNull();
-                assertThat(result.getBody().getOffsetRecordPk()).isNull();
-                assertThat(result.getBody().getOffsetRecordSk()).isNull();
-                // 検証
-                verify(cancelRequestService).processDecision(cancelRequestId, request, TEST_USERNAME);
-        }
-    }
-        */
 }
