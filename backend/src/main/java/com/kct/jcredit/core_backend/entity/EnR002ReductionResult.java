@@ -6,10 +6,17 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import com.kct.jcredit.core_backend.entity.base.BaseEntity;
+
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "en_r002_reduction_result")
+@SQLDelete(sql = "UPDATE en_r002_reduction_result SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Builder
@@ -49,4 +56,10 @@ public class EnR002ReductionResult extends BaseEntity {
     
     @Column(name = "empj_s_battery", precision = 12, scale = 3)
     private BigDecimal empjSBattery;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by", length = 100)
+    private String deletedBy;
 }

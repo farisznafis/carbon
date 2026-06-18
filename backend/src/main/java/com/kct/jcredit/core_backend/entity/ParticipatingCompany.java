@@ -11,8 +11,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 @Entity
 @Table(name = "participating_company")
+@SQLDelete(sql = "UPDATE participating_company SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,7 +26,7 @@ import java.util.List;
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ParticipatingCompany extends BaseEntity {
 
-    @Column(name = "company_id", nullable = false, unique = true, length = 12)
+    @Column(name = "company_id", nullable = false, length = 12)
     private String companyId;
 
     @Column(name = "name_ja", nullable = false, length = 255)
@@ -39,7 +44,7 @@ public class ParticipatingCompany extends BaseEntity {
     @Column(name = "phone_number", nullable = false, length = 20)
     private String phoneNumber;
 
-    @Column(name = "corp_number", nullable = false, unique = true, length = 13)
+    @Column(name = "corp_number", nullable = false, length = 13)
     private String corpNumber;
 
     @Column(name = "postal_code", nullable = false, length = 8)
@@ -105,6 +110,12 @@ public class ParticipatingCompany extends BaseEntity {
 
     @Column(name = "suspension_date")
     private LocalDateTime suspensionDate;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by", length = 100)
+    private String deletedBy;
 
     public boolean isSuspended() {
         return subscriptionStatus == SubscriptionStatus.SUSPENDED;

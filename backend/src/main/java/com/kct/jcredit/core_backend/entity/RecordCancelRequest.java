@@ -7,6 +7,9 @@ import com.kct.jcredit.core_backend.entity.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 /**
  * モニタリングレコード取消申請エンティティ
  * 
@@ -17,6 +20,8 @@ import lombok.*;
  */
 @Entity
 @Table(name = "record_cancel_request")
+@SQLDelete(sql = "UPDATE record_cancel_request SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Builder
@@ -92,4 +97,10 @@ public class RecordCancelRequest extends BaseEntity {
      */
     @Column(name = "offset_record_sk")
     private String offsetRecordSk;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by", length = 100)
+    private String deletedBy;
 }

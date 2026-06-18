@@ -17,4 +17,10 @@ public interface SiteR002EquipmentFileRepository extends JpaRepository<SiteR002E
     @Modifying
     @Query("UPDATE SiteR002EquipmentFile f SET f.s3Key = :s3Key WHERE f.id = :id")
     void updates3Key(@Param("id") Integer id, @Param("s3Key") String s3Key);
+
+    @Modifying
+    @Query(value = "UPDATE site_r002_equipment_file f SET deleted_at = CURRENT_TIMESTAMP, deleted_by = :deletedBy "
+         + "WHERE f.member_data_id IN (SELECT md.id FROM site_r002_member_data md WHERE md.company_id = :companyId)",
+         nativeQuery = true)
+    void softDeleteByCompanyId(@Param("companyId") String companyId, @Param("deletedBy") String deletedBy);
 }
