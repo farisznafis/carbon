@@ -151,6 +151,17 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
+  .password-input-hide-native-toggle::-ms-reveal,
+  .password-input-hide-native-toggle::-ms-clear {
+    display: none;
+  }
+
+  .password-input-hide-native-toggle::-webkit-credentials-auto-fill-button {
+    display: none !important;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
   .gradient-primary {
     background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
   }

@@ -57,7 +57,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
         <Input
           ref={ref}
           type={isVisible ? 'text' : 'password'}
-          className={cn('pr-10', className)}
+          className={cn('password-input-hide-native-toggle pr-10', className)}
           disabled={disabled}
           value={value}
           defaultValue={defaultValue}
