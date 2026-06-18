@@ -249,7 +249,7 @@ public class SiteServiceTest {
          * - repositoryのメソッドが正しく呼ばれる
          */
     @Test
-    @DisplayName("有効な企業IDで複数の拠点が存在する場合、拠点一覧とプロジェクト名を返す")
+    @DisplayName("UT-SS-101 有効な企業IDで複数の拠点が存在する場合、拠点一覧とプロジェクト名を返す")
     void getSitesByCompanyId_validCompanyWithMultipleSites_returnsSiteList() {
         // Arrange
         String companyId = "COMP001";
@@ -327,7 +327,7 @@ public class SiteServiceTest {
      * - dataフィールドはnull
      */
     @Test
-    @DisplayName("拠点のプロジェクトリレーションがnullの場合、空のプロジェクトリストを返す")
+    @DisplayName("UT-SS-102 拠点のプロジェクトリレーションがnullの場合、空のプロジェクトリストを返す")
     void getSitesByCompanyId_siteWithNullProjectRelations_returnsEmptyProjects() {
         // Arrange
         String companyId = "COMP002";
@@ -374,7 +374,7 @@ public class SiteServiceTest {
      * - dataフィールドはnull
      */
     @Test
-    @DisplayName("拠点のプロジェクトリレーションが空のリストの場合、空のプロジェクトリストを返す")
+    @DisplayName("UT-SS-103 拠点のプロジェクトリレーションが空のリストの場合、空のプロジェクトリストを返す")
     void getSitesByCompanyId_siteWithEmptyProjectRelations_returnsEmptyProjects() {
         // Arrange
         String companyId = "COMP003";
@@ -421,7 +421,7 @@ public class SiteServiceTest {
      * - siteRepository.findByCompany() は呼ばれない
      */
     @Test
-    @DisplayName("企業が見つからない場合、NOT_FOUNDステータスを返す")
+    @DisplayName("UT-SS-104 企業が見つからない場合、NOT_FOUNDステータスを返す")
     void getSitesByCompanyId_companyNotFound_returnsNotFound() {
         // Arrange
         String companyId = "COMP999";
@@ -456,7 +456,7 @@ public class SiteServiceTest {
      * - siteList = null
      */
     @Test
-    @DisplayName("企業は存在するが拠点が見つからない場合、NOT_FOUNDステータスを返す")
+    @DisplayName("UT-SS-105 企業は存在するが拠点が見つからない場合、NOT_FOUNDステータスを返す")
     void getSitesByCompanyId_companyExistsButNoSites_returnsNotFound() {
         // Arrange
         String companyId = "COMP004";
@@ -482,11 +482,13 @@ public class SiteServiceTest {
 
     //METHOD 2 GET/SITE{SITEID}
     @Test
-        @DisplayName("有効なIDで拠点が存在する場合、すべてのフィールドを含む拠点情報を返す")
+        @DisplayName("UT-SS-201 有効なIDで拠点が存在する場合、すべてのフィールドを含む拠点情報を返す")
         void getSiteById_validId_returnsSiteInfoWithAllFields() {
             // Arrange
             int siteId = 1;
-            Site site = buildSite(siteId, null, null);
+            ParticipatingCompany company = buildCompany("COMP005");
+            Site site = buildSite(siteId, company, "東京本社");
+            site.setAddress("オフィスビルA 10階");
 
             // プロジェクトリレーションを設定
             Project project1 = buildProject("太陽光発電プロジェクトA");
@@ -546,7 +548,7 @@ public class SiteServiceTest {
          * - その他のフィールドは正常に設定される
          */
     @Test
-    @DisplayName("拠点のプロジェクトリレーションがnullの場合、空のプロジェクトリストを返す")
+    @DisplayName("UT-SS-202 拠点のプロジェクトリレーションがnullの場合、空のプロジェクトリストを返す")
     void getSiteById_siteWithNullProjectRelations_returnsEmptyProjects() {
         // Arrange
         int siteId = 5;
@@ -579,7 +581,7 @@ public class SiteServiceTest {
         verify(siteRepository, times(1)).findById(siteId);
     }
     @Test
-        @DisplayName("拠点が見つからない場合、NOT_FOUNDステータスを返す")
+        @DisplayName("UT-SS-203 拠点が見つからない場合、NOT_FOUNDステータスを返す")
         void getSiteById_siteNotFound_returnsNotFound() {
             // Arrange
             int siteId = 999;
@@ -612,7 +614,7 @@ public class SiteServiceTest {
          * - 例外がキャッチされ、適切なエラーレスポンスが返される
          */
     @Test
-    @DisplayName("リポジトリが例外をスローした場合、INTERNAL_SERVER_ERRORステータスを返す")
+    @DisplayName("UT-SS-204 リポジトリが例外をスローした場合、INTERNAL_SERVER_ERRORステータスを返す")
     void getSiteById_repositoryThrowsException_returnsInternalServerError() {
         // Arrange
         int siteId = 1;
@@ -665,7 +667,7 @@ public class SiteServiceTest {
      * 注意: このテストは @Disabled を使用せず、意図的に失敗させます
      */
     @Test
-    @DisplayName("【バグ】統計データがハードコードされている - データベースから取得すべき")
+    @DisplayName("UT-SS-205【バグ】統計データがハードコードされている - データベースから取得すべき")
     void getSiteById_statisticData_shouldNotBeHardcoded() {
         // TODO: 統計データはデータベースから取得する必要があります
         // 現在の実装では以下の値がハードコードされています:
@@ -742,7 +744,7 @@ public class SiteServiceTest {
      * - リポジトリメソッドが正しく呼ばれる
      */
     @Test
-    @DisplayName("有効なリクエストで拠点作成が成功し、IDとOKステータスを返す")
+    @DisplayName("UT-SS-301 有効なリクエストで拠点作成が成功し、IDとOKステータスを返す")
     void createSite_validRequest_returnsSiteIdWithOkStatus() {
         // Arrange
         String companyId = "COMP001";
@@ -801,7 +803,7 @@ public class SiteServiceTest {
      * - createdBy が設定されている
      */
     @Test
-    @DisplayName("有効なリクエストですべてのフィールドが正しくマッピングされることを検証")
+    @DisplayName("UT-SS-302 有効なリクエストですべてのフィールドが正しくマッピングされることを検証")
     void createSite_validRequest_verifiesAllFieldsMappedCorrectly() {
         // Arrange
         String companyId = "COMP002";
@@ -866,7 +868,7 @@ public class SiteServiceTest {
      * - siteRepository.save() は呼ばれない
      */
     @Test
-    @DisplayName("企業が見つからない場合、NOT_FOUNDステータスを返し保存処理を実行しない")
+    @DisplayName("UT-SS-303 企業が見つからない場合、NOT_FOUNDステータスを返し保存処理を実行しない")
     void createSite_companyNotFound_returnsNotFound() {
         // Arrange
         String companyId = "COMP999";
@@ -903,7 +905,7 @@ public class SiteServiceTest {
      * - 例外がキャッチされ、適切なエラーレスポンスが返される
      */
     @Test
-    @DisplayName("リポジトリが例外をスローした場合、INTERNAL_SERVER_ERRORステータスを返す")
+    @DisplayName("UT-SS-304 リポジトリが例外をスローした場合、INTERNAL_SERVER_ERRORステータスを返す")
     void createSite_repositoryThrowsException_returnsInternalServerError() {
         // Arrange
         String companyId = "COMP003";
@@ -963,7 +965,7 @@ public class SiteServiceTest {
      * - 修正が完了したらテストがパスする
      */
     @Test
-    @DisplayName("【バグ】都道府県と市区町村はリクエストから取得すべき（現在は company から取得している）")
+    @DisplayName("UT-SS-305【バグ】都道府県と市区町村はリクエストから取得すべき（現在は company から取得している）")
     void createSite_prefectureAndCity_shouldComeFromRequest_notFromCompany() {
         // TODO [BUG]: 都道府県と市区町村はリクエストから取得する必要があります
         // 現在の実装:
@@ -1057,7 +1059,7 @@ public class SiteServiceTest {
         * - 修正が完了したらテストがパスする
         */
     @Test
-    @DisplayName("【バグ】createdBy はログインユーザーから設定すべき（現在は company 名が使用されている）")
+    @DisplayName("UT-SS-306【バグ】createdBy はログインユーザーから設定すべき（現在は company 名が使用されている）")
     void createSite_createdBy_shouldComeFromLoggedInUser_notFromCompanyName() {
         // TODO [BUG]: createdByはログインユーザーから設定する必要があります
         // 現在の実装:
@@ -1124,7 +1126,7 @@ public class SiteServiceTest {
 
 // METHOD 4 UPDATE SITE {PATCH}
     @Test
-    @DisplayName("すべての住所フィールドが提供された場合、全てのフィールドを更新する")
+    @DisplayName("UT-SS-401 すべての住所フィールドが提供された場合、全てのフィールドを更新する")
     void updateSite_allFieldsProvided_updatesAllAddressFields() {
         // Arrange
         String siteId = "1";
@@ -1201,7 +1203,7 @@ public class SiteServiceTest {
      *   元の値のまま変更されない
      */
     @Test
-    @DisplayName("郵便番号のみ提供された場合、郵便番号だけを更新する")
+    @DisplayName("UT-SS-402 郵便番号のみ提供された場合、郵便番号だけを更新する")
     void updateSite_onlyPostalCodeProvided_updatesOnlyPostalCode() {
         // Arrange
         String siteId = "2";
@@ -1279,7 +1281,7 @@ public class SiteServiceTest {
      * - 他の4フィールドは元の値のまま
      */
     @Test
-    @DisplayName("一部のフィールドのみ提供された場合、該当フィールドだけを更新する")
+    @DisplayName("UT-SS-403 一部のフィールドのみ提供された場合、該当フィールドだけを更新する")
     void updateSite_partialFields_updatesOnlyNonBlankFields() {
         // Arrange
         String siteId = "3";
@@ -1356,7 +1358,7 @@ public class SiteServiceTest {
      * - siteRepository.save() は呼ばれない
      */
     @Test
-    @DisplayName("拠点が見つからない場合、NOT_FOUNDステータスを返す")
+    @DisplayName("UT-SS-404 拠点が見つからない場合、NOT_FOUNDステータスを返す")
     void updateSite_siteNotFound_returnsNotFound() {
         // Arrange
         String siteId = "999";
@@ -1395,7 +1397,7 @@ public class SiteServiceTest {
      * - siteRepository.save() は呼ばれない
      */
     @Test
-    @DisplayName("拠点が異なる企業に属している場合、FORBIDDENステータスを返す")
+    @DisplayName("UT-SS-405 拠点が異なる企業に属している場合、FORBIDDENステータスを返す")
     void updateSite_siteFromDifferentCompany_returnsForbidden() {
         // Arrange
         String siteId = "10";
@@ -1438,7 +1440,7 @@ public class SiteServiceTest {
      * このテストは現在の動作を文書化するためのものです。
      */
     @Test
-    @DisplayName("数値でないsiteIDが渡された場合、NumberFormatExceptionをスローする")
+    @DisplayName("UT-SS-406 数値でないsiteIDが渡された場合、NumberFormatExceptionをスローする")
     void updateSite_nonNumericSiteId_throwsNumberFormatException() {
         // Arrange
         String invalidSiteId = "invalid-id";
@@ -1507,7 +1509,7 @@ public class SiteServiceTest {
      * - 修正が完了したらテストがパスする
      */
     @Test
-    @DisplayName("【バグ】サイト名とサイト名カナの更新が実装されていない")
+    @DisplayName("UT-SS-407【バグ】サイト名とサイト名カナの更新が実装されていない")
     void updateSite_siteNameAndSiteNameKana_shouldBeUpdatable() {
         // TODO [BUG]: サイト名とサイト名カナの更新が実装されていません
         // 
@@ -1526,7 +1528,7 @@ public class SiteServiceTest {
         
         // 初期値の設定
         existingSite.setSiteName("旧サイト名");
-        // existingSite.setSiteNameKana("キュウサイトメイ");
+        //existingSite.setSiteNameKana("キュウサイトメイ");
         existingSite.setPostalCode("100-0001");
         existingSite.setPrefecture("東京都");
         existingSite.setCity("千代田区");
@@ -1620,7 +1622,7 @@ public class SiteServiceTest {
          * - 設備情報がすべて設定されている
          */
         @Test
-        @DisplayName("MASTERロールで全データが存在する場合、設備情報を返す")
+        @DisplayName("UT-SS-501 MASTERロールで全データが存在する場合、設備情報を返す")
         void getSiteProjectEquipment_masterRole_returnsEquipmentData() {
             // Arrange
             Integer siteId = 1;
@@ -1690,7 +1692,7 @@ public class SiteServiceTest {
          * - hasAccessToSite() が true を返す
          */
         @Test
-        @DisplayName("USERロールで割り当てられた拠点の場合、設備情報を返す")
+        @DisplayName("UT-SS-502 USERロールで割り当てられた拠点の場合、設備情報を返す")
         void getSiteProjectEquipment_userRoleWithAssignedSite_returnsEquipmentData() {
             // Arrange
             Integer siteId = 2;
@@ -1763,7 +1765,7 @@ public class SiteServiceTest {
          * - ファイルがなくても設備情報は返される
          */
         @Test
-        @DisplayName("設備ファイルが空でも memberData から設備情報を返す")
+        @DisplayName("UT-SS-503 設備ファイルが空でも memberData から設備情報を返す")
         void getSiteProjectEquipment_emptyEquipmentFiles_returnsEquipmentItemWithoutFiles() {
             // Arrange
             Integer siteId = 3;
@@ -1826,7 +1828,7 @@ public class SiteServiceTest {
          * - message = ResponseConstants.MSG_SITE_NOT_FOUND
          */
         @Test
-        @DisplayName("拠点が見つからない場合、NOT_FOUNDステータスを返す")
+        @DisplayName("UT-SS-504 拠点が見つからない場合、NOT_FOUNDステータスを返す")
         void getSiteProjectEquipment_siteNotFound_returnsNotFound() {
             // Arrange
             Integer siteId = 999;
@@ -1864,7 +1866,7 @@ public class SiteServiceTest {
          * - message = ResponseConstants.MSG_PROJECT_NOT_FOUND
          */
         @Test
-        @DisplayName("プロジェクトが見つからない場合、NOT_FOUNDステータスを返す")
+        @DisplayName("UT-SS-505 プロジェクトが見つからない場合、NOT_FOUNDステータスを返す")
         void getSiteProjectEquipment_projectNotFound_returnsNotFound() {
             // Arrange
             Integer siteId = 1;
@@ -1907,7 +1909,7 @@ public class SiteServiceTest {
          * - message = ResponseConstants.MSG_FORBIDDEN
          */
         @Test
-        @DisplayName("企業IDが一致しない場合、FORBIDDENステータスを返す")
+        @DisplayName("UT-SS-506 企業IDが一致しない場合、FORBIDDENステータスを返す")
         void getSiteProjectEquipment_companyIdMismatch_returnsForbidden() {
             // Arrange
             Integer siteId = 1;
@@ -1953,7 +1955,7 @@ public class SiteServiceTest {
          * - message = ResponseConstants.MSG_FORBIDDEN
          */
         @Test
-        @DisplayName("USERロールで割り当てられていない拠点の場合、FORBIDDENステータスを返す")
+        @DisplayName("UT-SS-507 USERロールで割り当てられていない拠点の場合、FORBIDDENステータスを返す")
         void getSiteProjectEquipment_userRoleNotAssignedToThisSite_returnsForbidden() {
             // Arrange
             Integer siteId = 1;
@@ -2002,7 +2004,7 @@ public class SiteServiceTest {
          * - message = ResponseConstants.MSG_FORBIDDEN
          */
         @Test
-        @DisplayName("USERロールだがユーザーがデータベースに存在しない場合、FORBIDDENステータスを返す")
+        @DisplayName("UT-SS-508 USERロールだがユーザーがデータベースに存在しない場合、FORBIDDENステータスを返す")
         void getSiteProjectEquipment_userRoleUserNotFoundInDb_returnsForbidden() {
             // Arrange
             Integer siteId = 1;
@@ -2050,7 +2052,7 @@ public class SiteServiceTest {
          * - message = ResponseConstants.MSG_SITE_NOT_FOUND
          */
         @Test
-        @DisplayName("拠点とプロジェクトのリレーションが見つからない場合、NOT_FOUNDステータスを返す")
+        @DisplayName("UT-SS-509 拠点とプロジェクトのリレーションが見つからない場合、NOT_FOUNDステータスを返す")
         void getSiteProjectEquipment_siteProjectRelationNotFound_returnsNotFound() {
             // Arrange
             Integer siteId = 1;
@@ -2098,7 +2100,7 @@ public class SiteServiceTest {
          * - message = ResponseConstants.MSG_SITE_NOT_FOUND
          */
         @Test
-        @DisplayName("memberDataが見つからない場合、NOT_FOUNDステータスを返す")
+        @DisplayName("UT-SS-510 memberDataが見つからない場合、NOT_FOUNDステータスを返す")
         void getSiteProjectEquipment_memberDataNotFound_returnsNotFound() {
             // Arrange
             Integer siteId = 1;
@@ -2151,7 +2153,7 @@ public class SiteServiceTest {
          * - 例外がキャッチされ、適切なエラーレスポンスが返される
          */
         @Test
-        @DisplayName("予期しない例外が発生した場合、INTERNAL_SERVER_ERRORステータスを返す")
+        @DisplayName("UT-SS-511 予期しない例外が発生した場合、INTERNAL_SERVER_ERRORステータスを返す")
         void getSiteProjectEquipment_unexpectedException_returnsInternalServerError() {
             // Arrange
             Integer siteId = 1;
@@ -2219,7 +2221,7 @@ public class SiteServiceTest {
          * - 修正が完了したらテストがパスする
          */
         @Test
-        @DisplayName("【バグ】フォールバックロジックで siteId を memberDataId として使用している")
+        @DisplayName("UT-SS-512【バグ】フォールバックロジックで siteId を memberDataId として使用している")
         void getSiteProjectEquipment_fallbackLogic_shouldNotQueryWithSiteIdAsMemberDataId() {
             // TODO [BUG]: site_idとmemberData_idは異なるテーブルのIDです。フォールバックロジックが誤っています
             //
