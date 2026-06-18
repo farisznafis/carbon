@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -72,10 +73,10 @@ public class MonitoringServiceImpl implements MonitoringService {
                     .orElseThrow(() -> new RuntimeException(ResponseConstants.MSG_UNEXPEXTED_ERROR));
 
             // Validate user belongs to the company
-            // ユーザが企業に所属していない場合エラー→"User not in this company"
+            // ユーザが企業に所属していない場合
             if (!user.getCompanyId().equals(companyId)) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
-                response.setMessage("User not in this company");
+                response.setMessage(ResponseConstants.MSG_USER_NOT_IN_COMPANY);
                 return response;
             }
 
@@ -93,7 +94,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             //サイトに企業が紐付いていない（データ不整合）or サイトは存在するが、別の企業のもの
             if (site.getCompany() == null || !site.getCompany().getCompanyId().equals(companyId)) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
-                response.setMessage("Site not in this company");
+                response.setMessage(ResponseConstants.MSG_SITE_NOT_IN_COMPANY);
                 return response;
             }
 
@@ -123,17 +124,21 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // 5) Validate all 4 mandatory evidence URLs are provided
             //4つの証憑ファイルURLがnulか空文字の場合
-            if (!validateMandatoryEvidenceProvided(request)) {
-                response.setStatusCode(ResponseConstants.BAD_REQUEST);
-                response.setMessage("4つの必須の証憑ファイルURLが全て提供されていません。(ELpv、ELpvr、ELPJ仕様書、ELPJ制御値)");
+            Map<String, String> evidenceErrors = collectMandatoryEvidenceErrors(request);
+            if (!evidenceErrors.isEmpty()) {
+                response.setStatusCode(ResponseConstants.VALIDATION_ERROR);
+                response.setMessage(ResponseConstants.MSG_VALIDATION_ERROR);
+                response.setErrors(evidenceErrors);
                 return response;
             }
 
             // 6) Validate numerical data to prevent NullPointerException
             // elpv,elpvr,elpjcontrolが0未満の場合
-            if (!validateMonitoringData(request)) {
+            Map<String, String> monitoringDataErrors = collectMonitoringDataErrors(request);
+            if (!monitoringDataErrors.isEmpty()) {
                 response.setStatusCode(ResponseConstants.VALIDATION_ERROR);
-                response.setMessage("監視データが無効です。数値は0以上である必要があります。");
+                response.setMessage(ResponseConstants.MSG_VALIDATION_ERROR);
+                response.setErrors(monitoringDataErrors);
                 return response;
             }
 
@@ -188,7 +193,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             // レスポンスの作成
             response.setData(mapEntityToResponse(entity, request.getProjectType()));
             response.setStatusCode(ResponseConstants.OK);
-            response.setMessage("監視レコードが正常に登録されました。");
+            response.setMessage(ResponseConstants.MSG_MONITORING_RECORD_REGISTERED);
             return response;
 
         } catch (Exception e) {
@@ -217,7 +222,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             // ユーザが指定した会社に所属していない場合
             if (!user.getCompanyId().equals(companyId)) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
-                response.setMessage("User not in this company");
+                response.setMessage(ResponseConstants.MSG_USER_NOT_IN_COMPANY);
                 return response;
             }
 
@@ -234,7 +239,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             //サイトに企業が紐付いていない（データ不整合）or サイトは存在するが、別の企業のもの
             if (site.getCompany() == null || !site.getCompany().getCompanyId().equals(companyId)) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
-                response.setMessage("Site not in this company");
+                response.setMessage(ResponseConstants.MSG_SITE_NOT_IN_COMPANY);
                 return response;
             }
 
@@ -330,7 +335,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             //ユーザが指定した会社に所属していない場合
             if (!user.getCompanyId().equals(companyId)) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
-                response.setMessage("User not in this company");
+                response.setMessage(ResponseConstants.MSG_USER_NOT_IN_COMPANY);
                 return response;
             }
 
@@ -347,7 +352,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             //サイトに企業が紐付いていない（データ不整合）or サイトは存在するが、別の企業のもの
             if (site.getCompany() == null || !site.getCompany().getCompanyId().equals(companyId)) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
-                response.setMessage("Site not in this company");
+                response.setMessage(ResponseConstants.MSG_SITE_NOT_IN_COMPANY);
                 return response;
             }
 
@@ -392,7 +397,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             //entitiesが空文字の場合
             if (entities.isEmpty()) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
-                response.setMessage("No monitoring records found");
+                response.setMessage(ResponseConstants.MSG_MONITORING_RECORD_NOT_FOUND);
                 return response;
             }
 
@@ -439,34 +444,33 @@ public class MonitoringServiceImpl implements MonitoringService {
             // Validate user belongs to the company
             if (!user.getCompanyId().equals(companyId)) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
-                response.setMessage("User not in this company");
+                response.setMessage(ResponseConstants.MSG_USER_NOT_IN_COMPANY);
                 return response;
             }
 
             Site site = siteRepository.findById(siteId).orElse(null);
             if (site == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
-                response.setMessage("Site not found: " + siteId);
+                response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
                 return response;
             }
 
             // Validate site belongs to the company
             if (site.getCompany() == null) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
-                response.setMessage("Site " + siteId + " has no company assigned (company_id FK is NULL)");
+                response.setMessage(ResponseConstants.MSG_SITE_HAS_NO_COMPANY);
                 return response;
             }
             if (!site.getCompany().getCompanyId().equals(companyId)) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
-                response.setMessage("Site " + siteId + " belongs to company " + site.getCompany().getCompanyId() + 
-                        ", not " + companyId);
+                response.setMessage(ResponseConstants.MSG_SITE_NOT_IN_COMPANY);
                 return response;
             }
 
             Project project = projectRepository.findById(projectId).orElse(null);
             if (project == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
-                response.setMessage("Project not found: " + projectId);
+                response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
                 return response;
             }
 
@@ -480,7 +484,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             // 4) Validate site-project relation
             if (!siteProjectRelationRepository.existsByProjectAndSite(project, site)) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
-                response.setMessage("Site-Project relation not found: Site=" + siteId + ", Project=" + projectId);
+                response.setMessage(ResponseConstants.MSG_SITE_PROJECT_RELATION_NOT_FOUND);
                 return response;
             }
 
@@ -560,40 +564,49 @@ public class MonitoringServiceImpl implements MonitoringService {
     /**
      * Requirement 6.2 & Update 1: Validate that all 4 mandatory evidence URLs are provided
      */
-    private boolean validateMandatoryEvidenceProvided(RegisterMonitoringRecordSolarRequest request) {
-        //ELpv（電力使用量）の証憑ファイルURLがnullか空文字の場合
-        return request.getElPvEvidenceUrl() != null && !request.getElPvEvidenceUrl().trim().isEmpty()
-                //ELpvr（電力供給量）の証憑ファイルURLがnullか空文字の場合
-                && request.getElPvrEvidenceUrl() != null && !request.getElPvrEvidenceUrl().trim().isEmpty()
-                //ELPJ（バッテリー仕様書）の証憑ファイルURLがnullか空文字の場合
-                && request.getElpjBatterySpecificationUrl() != null && !request.getElpjBatterySpecificationUrl().trim().isEmpty()
-                //ELPJ制御値の証憑ファイルURLがnullか空文字の場合
-                && request.getElpjControlEvidenceUrl() != null && !request.getElpjControlEvidenceUrl().trim().isEmpty();
+    private Map<String, String> collectMandatoryEvidenceErrors(RegisterMonitoringRecordSolarRequest request) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        if (isBlank(request.getElPvEvidenceUrl())) {
+            errors.put("ELpv_evidence", ResponseConstants.MSG_ELPV_EVIDENCE_REQUIRED);
+        }
+        if (isBlank(request.getElPvrEvidenceUrl())) {
+            errors.put("ELpvr_evidence", ResponseConstants.MSG_ELPVR_EVIDENCE_REQUIRED);
+        }
+        if (isBlank(request.getElpjBatterySpecificationUrl())) {
+            errors.put("ELPJ_battery_evidence", ResponseConstants.MSG_ELPJ_BATTERY_EVIDENCE_REQUIRED);
+        }
+        if (isBlank(request.getElpjControlEvidenceUrl())) {
+            errors.put("ELPJ_control_equipment_spec_files", ResponseConstants.MSG_ELPJ_CONTROL_EVIDENCE_REQUIRED);
+        }
+
+        return errors;
     }
 
     /**
      * Requirement 6.1: Validate monitoring data to prevent NullPointerException
      */
-    private boolean validateMonitoringData(RegisterMonitoringRecordSolarRequest request) {
-        // Validate elPv
-        //elPvがnullもしくは0未満の場合
+    private Map<String, String> collectMonitoringDataErrors(RegisterMonitoringRecordSolarRequest request) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
         if (request.getElPv() == null || request.getElPv().compareTo(BigDecimal.ZERO) < 0) {
-            return false;
+            errors.put("ELpv_value", ResponseConstants.MSG_ELPV_VALUE_MIN);
         }
-
-        // Validate elPvr
-        //elPvrがnullもしくは0未満の場合
         if (request.getElPvr() == null || request.getElPvr().compareTo(BigDecimal.ZERO) < 0) {
-            return false;
+            errors.put("ELpvr_value", ResponseConstants.MSG_ELPVR_VALUE_MIN);
         }
-
-        // Validate elpjControl
-        // ElpjControlがnullもしくは0未満の場合
         if (request.getElpjControl() == null || request.getElpjControl().compareTo(BigDecimal.ZERO) < 0) {
-            return false;
+            errors.put("ELPJ_control_value", ResponseConstants.MSG_ELPJ_CONTROL_VALUE_MIN);
+        }
+        if (Boolean.TRUE.equals(request.getChangedBattery()) && request.getElpjBatteryValue() == null) {
+            errors.put("ELPJ_battery_value", ResponseConstants.MSG_ELPJ_BATTERY_VALUE_REQUIRED_WHEN_CHANGED);
         }
 
-        return true;
+        return errors;
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 
     /**

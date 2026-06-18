@@ -36,6 +36,21 @@ public class ResponseConstants {
     public static final String MSG_INTERNAL_ERROR = "サイト情報の取得中にエラーが発生しました。";
     public static final String MSG_BAD_REQUEST = "入力値に誤りがあります。";
     public static final String MSG_VALIDATION_ERROR = "入力内容に誤りがあります。";
+    public static final String MSG_ELPV_EVIDENCE_REQUIRED = "ELpv（電力使用量）の証憑ファイルURLが必須です。";
+    public static final String MSG_ELPVR_EVIDENCE_REQUIRED = "ELpvr（電力供給量）の証憑ファイルURLが必須です。";
+    public static final String MSG_ELPJ_BATTERY_EVIDENCE_REQUIRED = "ELPJ（バッテリー仕様書）の証憑ファイルURLが必須です。";
+    public static final String MSG_ELPJ_CONTROL_EVIDENCE_REQUIRED = "ELPJ制御値の証憑ファイルURLが必須です。";
+    public static final String MSG_ELPV_VALUE_MIN = "ELpv（電力使用量）は0以上で入力してください。";
+    public static final String MSG_ELPVR_VALUE_MIN = "ELpvr（電力供給量）は0以上で入力してください。";
+    public static final String MSG_ELPJ_CONTROL_VALUE_MIN = "ELPJ制御値は0以上で入力してください。";
+    public static final String MSG_ELPJ_BATTERY_VALUE_REQUIRED_WHEN_CHANGED =
+            "バッテリー交換がある場合、ELPJバッテリー値を入力してください。";
+    public static final String MSG_USER_NOT_IN_COMPANY = "ユーザーはこの企業に所属していません。";
+    public static final String MSG_SITE_NOT_IN_COMPANY = "サイトはこの企業に所属していません。";
+    public static final String MSG_SITE_HAS_NO_COMPANY = "サイトに企業情報が設定されていません。";
+    public static final String MSG_SITE_PROJECT_RELATION_NOT_FOUND = "サイトとプロジェクトの関連が見つかりませんでした。";
+    public static final String MSG_MONITORING_RECORD_NOT_FOUND = "監視レコードが見つかりませんでした。";
+    public static final String MSG_MONITORING_RECORD_REGISTERED = "監視レコードが正常に登録されました。";
     public static final String MSG_LOGIN_FAILED = "ユーザー名またはパスワードまたは企業IDが正しくありません。";
     public static final String MSG_UNEXPEXTED_ERROR = "想定外エラーがあります。";
     public static final String MSG_FORBIDDEN = "このリソースにアクセスすることができません。";

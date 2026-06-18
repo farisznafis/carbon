@@ -1,5 +1,9 @@
 package com.kct.jcredit.core_backend.handler;
- 
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -24,6 +28,8 @@ import com.kct.jcredit.core_backend.util.ResponseUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.Field;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -114,14 +120,14 @@ public class GlobalErrorHandler {
         log.warn("Validation failed: {}", ex.getMessage());
 
         BaseResponse response = new BaseResponse();
-        // Join all validation error messages
         Map<String, String> errors = ex.getBindingResult()
             .getFieldErrors()
             .stream()
             .collect(Collectors.toMap(
-                FieldError::getField,
+                fieldError -> resolveJsonFieldName(fieldError.getField(), fieldError.getObjectName()),
                 FieldError::getDefaultMessage,
-                (first, second) -> first
+                (first, second) -> first,
+                LinkedHashMap::new
             ));
         response.setStatusCode(ResponseConstants.VALIDATION_ERROR);
         response.setMessage(ResponseConstants.MSG_VALIDATION_ERROR);
@@ -143,6 +149,10 @@ public class GlobalErrorHandler {
         log.warn("Invalid request body: {}", ex.getMessage());
 
         BaseResponse response = BaseResponse.error(ResponseConstants.BAD_REQUEST, ResponseConstants.MSG_BAD_REQUEST);
+        Map<String, String> errors = resolveJsonParseErrors(ex);
+        if (!errors.isEmpty()) {
+            response.setErrors(errors);
+        }
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
@@ -158,6 +168,103 @@ public class GlobalErrorHandler {
         response.setMessage(ResponseConstants.MSG_INTERNAL_ERROR);
 
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    private String resolveJsonFieldName(String fieldPath, String objectName) {
+        Class<?> targetClass = resolveClassFromObjectName(objectName);
+        if (targetClass == null) {
+            return fieldPath;
+        }
+
+        String[] pathParts = fieldPath.split("\\.");
+        Class<?> currentClass = targetClass;
+        StringBuilder jsonPath = new StringBuilder();
+
+        for (String pathPart : pathParts) {
+            String collectionSuffix = "";
+            String fieldName = pathPart;
+            int collectionStart = pathPart.indexOf('[');
+            if (collectionStart >= 0) {
+                collectionSuffix = pathPart.substring(collectionStart);
+                fieldName = pathPart.substring(0, collectionStart);
+            }
+
+            String jsonFieldName = resolveJsonFieldName(currentClass, fieldName);
+            if (jsonPath.length() > 0) {
+                jsonPath.append(".");
+            }
+            jsonPath.append(jsonFieldName).append(collectionSuffix);
+
+            Field nestedField = findField(currentClass, fieldName);
+            if (nestedField != null) {
+                currentClass = nestedField.getType();
+            }
+        }
+
+        return jsonPath.toString();
+    }
+
+    private Class<?> resolveClassFromObjectName(String objectName) {
+        String basePackage = "com.kct.jcredit.core_backend.dto.request.";
+        String className = Character.toUpperCase(objectName.charAt(0)) + objectName.substring(1);
+        try {
+            return Class.forName(basePackage + className);
+        } catch (ClassNotFoundException ex) {
+            return null;
+        }
+    }
+
+    private String resolveJsonFieldName(Class<?> targetClass, String fieldName) {
+        Field field = findField(targetClass, fieldName);
+        if (field == null) {
+            return fieldName;
+        }
+
+        JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
+        if (jsonProperty != null && !jsonProperty.value().isBlank()) {
+            return jsonProperty.value();
+        }
+
+        return fieldName;
+    }
+
+    private Field findField(Class<?> targetClass, String fieldName) {
+        Class<?> currentClass = targetClass;
+        while (currentClass != null && currentClass != Object.class) {
+            try {
+                return currentClass.getDeclaredField(fieldName);
+            } catch (NoSuchFieldException ex) {
+                currentClass = currentClass.getSuperclass();
+            }
+        }
+        return null;
+    }
+
+    private Map<String, String> resolveJsonParseErrors(HttpMessageNotReadableException ex) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        Throwable cause = ex.getCause();
+        if (!(cause instanceof JsonMappingException mappingException)) {
+            return errors;
+        }
+
+        String fieldName = mappingException.getPath().stream()
+                .map(JsonMappingException.Reference::getFieldName)
+                .filter(name -> name != null && !name.isBlank())
+                .reduce((first, second) -> second)
+                .orElse(null);
+
+        if (fieldName == null) {
+            return errors;
+        }
+
+        if (mappingException instanceof InvalidFormatException) {
+            errors.put(fieldName, "入力形式が正しくありません。");
+        } else if (mappingException instanceof MismatchedInputException) {
+            errors.put(fieldName, "入力値の型が正しくありません。");
+        } else {
+            errors.put(fieldName, ResponseConstants.MSG_BAD_REQUEST);
+        }
+        return errors;
     }
 }
 
