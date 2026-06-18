@@ -4,7 +4,7 @@ import com.kct.jcredit.core_backend.dto.response.EquipmentSolarRegisterResponse;
 import com.kct.jcredit.core_backend.dto.request.EquipmentRegisterSolarRequest;
 import com.kct.jcredit.core_backend.dto.response.FileSolarUploadResponse;
 import com.kct.jcredit.core_backend.enums.EquipmentFileType;
-import com.kct.jcredit.core_backend.service.EquipmentSolarService;
+import com.kct.jcredit.core_backend.service.SiteProjectService;
 import com.kct.jcredit.core_backend.service.FileUploadSolarService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
@@ -27,12 +27,12 @@ public class SiteProjectController {
 
     private final JwtUtil jwtUtil;
     private final FileUploadSolarService fileUploadSolarService;
-    private final EquipmentSolarService equipmentSolarService;
+    private final SiteProjectService equipmentSolarService;
 
     public SiteProjectController(
             JwtUtil jwtUtil,
             FileUploadSolarService fileUploadSolarService,
-            EquipmentSolarService equipmentSolarService) {
+            SiteProjectService equipmentSolarService) {
         this.jwtUtil = jwtUtil;
         this.fileUploadSolarService = fileUploadSolarService;
         this.equipmentSolarService = equipmentSolarService;

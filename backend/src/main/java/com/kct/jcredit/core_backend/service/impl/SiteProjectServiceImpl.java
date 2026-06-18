@@ -8,7 +8,7 @@ import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.EquipmentItemSolarRequest;
 import com.kct.jcredit.core_backend.dto.response.details.EquipmentItemSolarResponse;
 import com.kct.jcredit.core_backend.dto.response.details.ValidationErrorDetail;
-import com.kct.jcredit.core_backend.service.EquipmentSolarService;
+import com.kct.jcredit.core_backend.service.SiteProjectService;
 import com.kct.jcredit.core_backend.service.FileUploadSolarService;
 import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.entity.Site;
@@ -46,7 +46,7 @@ import java.util.Collections;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class EquipmentSolarServiceImpl implements EquipmentSolarService {
+public class SiteProjectServiceImpl implements SiteProjectService {
 
     private final SiteProjectRelationRepository siteProjectRelationRepository;
     private final SiteR002MemberDataRepository  memberDataRepository;
