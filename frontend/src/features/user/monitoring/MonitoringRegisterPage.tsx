@@ -14,6 +14,7 @@ import {
   uploadElpvFile,
   uploadElpvrFile,
 } from '@/api/monitoring';
+import { ApiError } from '@/api/_shared/errors';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import type { MonitoringData } from '@/api/monitoring';
@@ -34,6 +35,36 @@ function asRecord(data: MonitoringFormData): Record<string, unknown> {
   return data as Record<string, unknown>;
 }
 
+function toErrorMessage(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value.map(toErrorMessage).filter(Boolean).join('\n');
+  }
+
+  if (value && typeof value === 'object' && 'message' in value) {
+    return toErrorMessage((value as { message: unknown }).message);
+  }
+
+  return typeof value === 'string' ? value : '';
+}
+
+function toServerFieldErrors(errors: unknown): Record<string, string> {
+  if (!errors || typeof errors !== 'object' || Array.isArray(errors)) {
+    return {};
+  }
+
+  return Object.entries(errors as Record<string, unknown>).reduce<
+    Record<string, string>
+  >((fieldErrors, [field, value]) => {
+    const message = toErrorMessage(value);
+
+    if (message) {
+      fieldErrors[field] = message;
+    }
+
+    return fieldErrors;
+  }, {});
+}
+
 const MonitoringRegister = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -51,6 +82,7 @@ const MonitoringRegister = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [serverFieldErrors, setServerFieldErrors] = useState<Record<string, string>>({});
   const originalDataRef = useRef<MonitoringFormData | null>(null);
 
   useEffect(() => {
@@ -145,6 +177,7 @@ const MonitoringRegister = () => {
     }
 
     setSubmitError(null);
+    setServerFieldErrors({});
     setUploadProgress({ done: 0, total: uploadPromises.length });
     setIsSubmitting(true);
 
@@ -200,6 +233,31 @@ const MonitoringRegister = () => {
       navigate(-1);
     } catch (error) {
       logger.error('Monitoring submit error:', error);
+
+      const fieldErrors =
+        error instanceof ApiError
+          ? toServerFieldErrors(error.payload?.errors)
+          : {};
+
+      if (Object.keys(fieldErrors).length > 0) {
+        const message =
+          error instanceof ApiError
+            ? error.payload?.message || error.message
+            : '入力内容に誤りがあります。';
+        const description = Object.values(fieldErrors).slice(0, 3).join('\n');
+
+        setServerFieldErrors(fieldErrors);
+        setSubmitError(null);
+        setStep('form');
+        toast({
+          title: message || '入力内容に誤りがあります。',
+          description,
+          variant: 'destructive',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       setSubmitError(
         'データの送信に失敗しました。しばらくしてから再度お試しください。',
       );
@@ -212,7 +270,12 @@ const MonitoringRegister = () => {
       mode='create'
       value={formData}
       onChange={setFormData}
-      onNext={() => setStep('confirm')}
+      serverErrors={serverFieldErrors}
+      onNext={() => {
+        setServerFieldErrors({});
+        setSubmitError(null);
+        setStep('confirm');
+      }}
       onBack={() => navigate(-1)}
     />
   ) : (

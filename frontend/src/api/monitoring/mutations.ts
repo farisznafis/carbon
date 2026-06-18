@@ -1,4 +1,6 @@
 import { apiFetch, parseJsonResponse } from "../_shared/httpClient";
+import { ApiError, getApiErrorMessage } from "../_shared/errors";
+import type { ApiErrorPayload } from "../_shared/types";
 import type { MonitoringData, SubmitDataResponse } from "./types";
 import type { MonitoringEvidenceKind } from "./types";
 
@@ -61,13 +63,22 @@ export async function submitMonitoringData(
     body: data,
   });
 
-  const { data: json, rawBody } = await parseJsonResponse<SubmitDataResponse | { message?: string }>(response);
+  const { data: json, rawBody } =
+    await parseJsonResponse<SubmitDataResponse & ApiErrorPayload>(response);
 
   if (!response.ok) {
-    throw new Error(
-      json && "message" in json && json.message
-        ? json.message
-        : rawBody || "Failed to submit monitoring data",
+    throw new ApiError(
+      getApiErrorMessage(
+        response,
+        json,
+        rawBody,
+        "Failed to submit monitoring data",
+      ),
+      {
+        status: response.status,
+        payload: json,
+        rawBody,
+      },
     );
   }
 

@@ -1,10 +1,9 @@
 import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, type FieldPath } from 'react-hook-form';
 import { z } from 'zod';
 import { FileSelectButton } from '@/components/inputs/FileSelectButton/FileSelectButton';
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
-import { PreviousValueField } from '@/components/inputs/PreviousValueField/PreviousValueField';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -65,6 +64,7 @@ interface MonitoringSolarFormProps {
   mode: 'create' | 'edit';
   value: MonitoringSolarFormData;
   previousData?: Partial<MonitoringSolarFormData>;
+  serverErrors?: Record<string, string>;
   onChange: (data: MonitoringSolarFormData) => void;
   onNext: () => void;
   onBack: () => void;
@@ -73,7 +73,7 @@ interface MonitoringSolarFormProps {
 
 export function MonitoringSolarForm({
   value,
-  previousData,
+  serverErrors,
   onChange,
   onNext,
   onBack,
@@ -92,6 +92,17 @@ export function MonitoringSolarForm({
     }
   }, [form, isBatteryChanged]);
 
+  useEffect(() => {
+    Object.entries(serverErrors ?? {}).forEach(([fieldName, message]) => {
+      if (!message) return;
+
+      form.setError(fieldName as FieldPath<MonitoringSolarFormData>, {
+        type: 'server',
+        message,
+      });
+    });
+  }, [form, serverErrors]);
+
   return (
     <FormPageWrapper
       pageName='モニタリング登録'
@@ -103,6 +114,7 @@ export function MonitoringSolarForm({
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit((values) => {
+            form.clearErrors();
             onChange(values);
             onNext();
           })}
@@ -130,18 +142,15 @@ export function MonitoringSolarForm({
             name='ELpv_value'
             render={({ field }) => (
               <FormItem>
-                <PreviousValueField
-                  label='発電量 (ELPV)'
-                  value={String(field.value ?? '')}
-                  onChange={(nextValue) => field.onChange(nextValue)}
-                  previousValue={
-                    previousData
-                      ? String(previousData.ELpv_value ?? '')
-                      : undefined
-                  }
-                  unit=''
-                  placeholder='数値を入力'
-                />
+                <FormLabel>発電量 (ELPV)</FormLabel>
+                <FormControl>
+                  <Input
+                    type='number'
+                    value={String(field.value ?? '')}
+                    onChange={(event) => field.onChange(event.target.value)}
+                    placeholder='数値を入力'
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -152,18 +161,15 @@ export function MonitoringSolarForm({
             name='ELpvr_value'
             render={({ field }) => (
               <FormItem>
-                <PreviousValueField
-                  label='自家消費量 (ELPVR)'
-                  value={String(field.value ?? '')}
-                  onChange={(nextValue) => field.onChange(nextValue)}
-                  previousValue={
-                    previousData
-                      ? String(previousData.ELpvr_value ?? '')
-                      : undefined
-                  }
-                  unit=''
-                  placeholder='数値を入力'
-                />
+                <FormLabel>自家消費量 (ELPVR)</FormLabel>
+                <FormControl>
+                  <Input
+                    type='number'
+                    value={String(field.value ?? '')}
+                    onChange={(event) => field.onChange(event.target.value)}
+                    placeholder='数値を入力'
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -208,19 +214,16 @@ export function MonitoringSolarForm({
               name='ELPJ_battery_value'
               render={({ field }) => (
                 <FormItem>
-                  <PreviousValueField
-                    label='蓄電池放電量 (ELPJ)'
-                    value={field.value == null ? '' : String(field.value)}
-                    onChange={(nextValue) => field.onChange(nextValue)}
-                    previousValue={
-                      previousData
-                        ? String(previousData.ELPJ_battery_value ?? '')
-                        : undefined
-                    }
-                    unit=''
-                    placeholder='数値を入力'
-                    disabled={!isBatteryChanged}
-                  />
+                  <FormLabel>蓄電池放電量 (ELPJ)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='number'
+                      value={field.value == null ? '' : String(field.value)}
+                      onChange={(event) => field.onChange(event.target.value)}
+                      placeholder='数値を入力'
+                      disabled={!isBatteryChanged}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -232,18 +235,15 @@ export function MonitoringSolarForm({
             name='ELPJ_control_value'
             render={({ field }) => (
               <FormItem>
-                <PreviousValueField
-                  label='制御機器稼働時間 (ELPJ)'
-                  value={String(field.value ?? '')}
-                  onChange={(nextValue) => field.onChange(nextValue)}
-                  previousValue={
-                    previousData
-                      ? String(previousData.ELPJ_control_value ?? '')
-                      : undefined
-                  }
-                  unit=''
-                  placeholder='数値を入力'
-                />
+                <FormLabel>制御機器稼働時間 (ELPJ)</FormLabel>
+                <FormControl>
+                  <Input
+                    type='number'
+                    value={String(field.value ?? '')}
+                    onChange={(event) => field.onChange(event.target.value)}
+                    placeholder='数値を入力'
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
