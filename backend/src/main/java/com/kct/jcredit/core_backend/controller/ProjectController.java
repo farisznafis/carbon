@@ -71,7 +71,7 @@ public class ProjectController {
 
     //update project details
     @PatchMapping("/{projectId}")
-    @PreAuthorize("hasAnyRole('operator','master')") // allow both operator and master to update project details
+    @PreAuthorize("hasAnyRole('operator','master','user')") // allow both operator and master to update project details
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ProjectResponse> updateProject(Authentication authentication,
             @PathVariable Integer projectId,
@@ -98,7 +98,7 @@ public class ProjectController {
 
     //get project details
     @GetMapping("/{projectId}")
-    @PreAuthorize("hasAnyRole('operator','master')") 
+    @PreAuthorize("hasAnyRole('operator','master','user')") 
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ProjectResponse> getProject(Authentication authentication,
             @PathVariable Integer projectId) {

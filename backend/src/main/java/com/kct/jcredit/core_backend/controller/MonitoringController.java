@@ -39,7 +39,6 @@ public class MonitoringController {
     /*CompanyId validated against token for security*/
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('master')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<MonitoringRecordSolarResponse> RegisterMonitoringRecordSolar(
             Authentication authentication,

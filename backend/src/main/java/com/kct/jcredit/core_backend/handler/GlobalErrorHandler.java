@@ -124,6 +124,7 @@ public class GlobalErrorHandler {
                 (first, second) -> first
             ));
         response.setStatusCode(ResponseConstants.VALIDATION_ERROR);
+        response.setMessage(ResponseConstants.MSG_VALIDATION_ERROR);
         response.setErrors(errors);
 
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));

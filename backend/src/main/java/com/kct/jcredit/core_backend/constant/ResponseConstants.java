@@ -35,6 +35,7 @@ public class ResponseConstants {
     public static final String MSG_USER_NOT_FOUND = "該当するユーザーが見つかりませんでした。";
     public static final String MSG_INTERNAL_ERROR = "サイト情報の取得中にエラーが発生しました。";
     public static final String MSG_BAD_REQUEST = "入力値に誤りがあります。";
+    public static final String MSG_VALIDATION_ERROR = "入力内容に誤りがあります。";
     public static final String MSG_LOGIN_FAILED = "ユーザー名またはパスワードまたは企業IDが正しくありません。";
     public static final String MSG_UNEXPEXTED_ERROR = "想定外エラーがあります。";
     public static final String MSG_FORBIDDEN = "このリソースにアクセスすることができません。";

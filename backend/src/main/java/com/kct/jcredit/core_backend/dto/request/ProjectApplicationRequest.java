@@ -42,13 +42,16 @@ public class ProjectApplicationRequest {
     @JsonIgnore
     private String sk;
 
-    @NotBlank
-    @Size(max = 20)
-    @Pattern(regexp = "^(登録|計画変更|認証権限保有主体変更)$")
+    @NotBlank(message = "申請区分は必須です。")
+    @Size(max = 20, message = "申請区分は20文字以内で入力してください。")
+    @Pattern(
+        regexp = "^(登録|計画変更|認証権限保有主体変更)$",
+        message = "申請区分は「登録」「計画変更」「認証権限保有主体変更」のいずれかを入力してください。"
+    )
     @JsonProperty("applicationCategory")
     private String applicationCategory;
 
-    @NotNull
+    @NotNull(message = "審査費用支援の利用有無は必須です。")
     @JsonProperty("isUsingExamCostSupport")
     private Boolean isUsingExamCostSupport;
 
@@ -105,7 +108,7 @@ public class ProjectApplicationRequest {
     @JsonProperty("address")
     private String address;
 
-    @NotNull
+    @NotNull(message = "特定排出者の該当有無は必須です。")
     @JsonProperty("isDesignatedEmitter")
     private Boolean isDesignatedEmitter;
 
@@ -165,19 +168,19 @@ public class ProjectApplicationRequest {
     @JsonProperty("isChangePicName")
     private Boolean isChangePicName;
 
-    @NotBlank
-    @Size(max = 254)
-    @Email
-    @HankakuWithSymbols(allowedSymbols = "@._+-")
+    @NotBlank(message = "担当者メールアドレスは必須です。")
+    @Size(max = 254, message = "担当者メールアドレスは254文字以内で入力してください。")
+    @Email(message = "担当者メールアドレスの形式が正しくありません。")
+    @HankakuWithSymbols(allowedSymbols = "@._+-", message = "担当者メールアドレスは半角英数字と許可された記号で入力してください。")
     @JsonProperty("picEmail")
     private String picEmail;
 
     @JsonProperty("isChangePicEmail")
     private Boolean isChangePicEmail;
 
-    @NotBlank
-    @Size(max = 20)
-    @PhoneNumber
+    @NotBlank(message = "担当者電話番号は必須です。")
+    @Size(max = 20, message = "担当者電話番号は20文字以内で入力してください。")
+    @PhoneNumber(message = "担当者電話番号の形式が正しくありません。（例: 03-1234-5678）")
     @JsonProperty("picPhoneNumber")
     private String picPhoneNumber;
 
@@ -225,9 +228,9 @@ public class ProjectApplicationRequest {
     @JsonProperty("isChangeOtherContactsPicPhoneNumber")
     private Boolean isChangeOtherContactsPicPhoneNumber;
 
-    @NotBlank
-    @Size(max = 10)
-    @Pattern(regexp = "^P[0-9]+$")
+    @NotBlank(message = "プロジェクト番号は必須です。")
+    @Size(max = 10, message = "プロジェクト番号は10文字以内で入力してください。")
+    @Pattern(regexp = "^P[0-9]+$", message = "プロジェクト番号はPで始まる数字で入力してください。")
     @JsonProperty("projectNumber")
     private String projectNumber;
 
@@ -237,15 +240,15 @@ public class ProjectApplicationRequest {
     @JsonProperty("projectName")
     private String projectName;
 
-    @NotBlank
-    @Size(max = 10)
-    @Pattern(regexp = "^(EN-S|EN-R|IN|AG|WA)$")
+    @NotBlank(message = "方法論分類は必須です。")
+    @Size(max = 10, message = "方法論分類は10文字以内で入力してください。")
+    @Pattern(regexp = "^(EN-S|EN-R|IN|AG|WA)$", message = "方法論分類はEN-S、EN-R、IN、AG、WAのいずれかを入力してください。")
     @JsonProperty("methodologyCategory")
     private String methodologyCategory;
 
-    @NotBlank
-    @Size(min = 3, max = 3)
-    @NumericOnly
+    @NotBlank(message = "方法論番号は必須です。")
+    @Size(min = 3, max = 3, message = "方法論番号は3桁で入力してください。")
+    @NumericOnly(message = "方法論番号は数字のみで入力してください。")
     @JsonProperty("methodologyNumber")
     private String methodologyNumber;
 
@@ -261,9 +264,9 @@ public class ProjectApplicationRequest {
     @JsonProperty("location")
     private String location;
 
-    @NotBlank
-    @Size(max = 50)
-    @HankakuWithSymbols(allowedSymbols = " -.,'&")
+    @NotBlank(message = "所在地（英語）は必須です。")
+    @Size(max = 50, message = "所在地（英語）は50文字以内で入力してください。")
+    @HankakuWithSymbols(allowedSymbols = " -.,'&", message = "所在地（英語）は半角英数字と許可された記号で入力してください。")
     @JsonProperty("locationEn")
     private String locationEn;
 
