@@ -2,6 +2,92 @@
 
 This document describes every file under `src/api/`. It is intended for developers who need to understand the API layer structure, public imports, internal helpers, and ownership boundaries.
 
+> [!IMPORTANT]
+> **Start here when changing an API request.** The tables below show where each request payload, query parameter, and path parameter is defined or assembled. Update the listed payload type or mapper first instead of constructing a second payload shape in UI code.
+
+## Payload Location Index
+
+### Auth
+
+| API function | Method and endpoint | Request data | Payload location |
+| --- | --- | --- | --- |
+| `login` | `POST /auth/user/login` | JSON body: `companyId`, `identifier`, `password` | [Inline body](auth/auth.ts#L24) |
+| `adminLogin` | `POST /auth/admin/login` | JSON body: `identifier`, `password` | [Inline body](auth/auth.ts#L47) |
+| `logout` | `POST /logout` | No request payload | [Request implementation](auth/auth.ts#L59) |
+| `signUp` | `POST /company/signup` | JSON body: complete signup data | [`SignUpData`](auth/types.ts#L9); [request body](auth/auth.ts#L75) |
+| `changePassword` | `POST /auth/user/change-password` | JSON body: `userId`, `currentPassword`, `newPassword` | [`ChangePasswordPayload`](auth/types.ts#L40); [request body](auth/auth.ts#L104) |
+
+### Admin
+
+| API function | Method and endpoint | Request data | Payload location |
+| --- | --- | --- | --- |
+| `getPendingCompanies` | `GET /admin/companies/pending` | No request payload | [Request implementation](admin/pendingCompanies.ts#L83) |
+| `approvePendingCompany` | `POST /admin/companies/:companyId/approve` | JSON body: `companyId`; path: `companyId` | [Inline body and path](admin/pendingCompanies.ts#L125) |
+| `rejectPendingCompany` | `POST /admin/companies/:companyId/reject` | JSON body: `rejectionReason`; path: `companyId` | [Inline body and path](admin/pendingCompanies.ts#L137) |
+| `getAdminProjectDetail` | `GET /project/:projectId` | Path: `projectId` | [Function parameter and path](admin/projects.ts#L30) |
+| `createAdminProject` | `POST /project` | JSON project creation body | [`CreateAdminProjectPayload`](admin/types.ts#L52); [`mapAdminProjectPayload`](admin/projectPayloadMapper.ts#L117) |
+| `updateAdminProject` | `PATCH /project/:projectId` | JSON project update body; path: `projectId` | [`UpdateAdminProjectPayload`](admin/types.ts#L118); [request implementation](admin/projects.ts#L78) |
+| `updateAdminProjectStatus` | `PATCH /project/:projectId/status` | JSON status body; path: `projectId` | [`UpdateProjectStatusPayload`](admin/types.ts#L283); [request implementation](admin/projects.ts#L98) |
+| `getAdminProjectPlanApplication` | `GET /projectplan/:projectId/application` | Path: `projectId` | [Function parameter and path](admin/projects.ts#L129) |
+| `getProjectPlanAutofillByProject` | `GET /projectplan/autofill/:projectId` | Path: `projectId` | [Function parameter and path](admin/projects.ts#L155) |
+| `getProjectPlanAutofillDefaults` | `GET /projectplan/autofill` | No request payload | [Request implementation](admin/projects.ts#L182) |
+| `createAdminProjectPlanApplication` | `POST /projectplan/:projectId/application` | JSON application body; path: `projectId` | [`CreateAdminProjectPlanApplicationPayload`](admin/types.ts#L192); [`mapAdminProjectPlanApplicationPayload`](admin/projectPayloadMapper.ts#L166); [request implementation](admin/projects.ts#L204) |
+
+### Company
+
+| API function | Method and endpoint | Request data | Payload location |
+| --- | --- | --- | --- |
+| `updateCompany` | `PATCH /company` | JSON body: changed company fields | [`Partial<Company>` input](company/mutations.ts#L4); [`Company`](users/types.ts#L1); [request body](company/mutations.ts#L10) |
+
+### Monitoring
+
+| API function | Method and endpoint | Request data | Payload location |
+| --- | --- | --- | --- |
+| `submitMonitoringData` | `POST /monitoring` | JSON monitoring body | [`MonitoringData`](monitoring/types.ts#L1); [request implementation](monitoring/mutations.ts#L56) |
+| `uploadElpvFile` | `POST /monitoring/upload-elpv-evidence` | Multipart body: `file`; query: `projectId`, `siteId`, optional `description` | [`FormData` and query assembly](monitoring/mutations.ts#L13); [public function](monitoring/mutations.ts#L77) |
+| `uploadElpvrFile` | `POST /monitoring/upload-elpvr-evidence` | Multipart body: `file`; query: `projectId`, `siteId`, optional `description` | [`FormData` and query assembly](monitoring/mutations.ts#L13); [public function](monitoring/mutations.ts#L86) |
+| `uploadElpjBatteryFile` | `POST /monitoring/upload-elpj-battery-specification-evidence` | Multipart body: `file`; query: `projectId`, `siteId`, optional `description` | [`FormData` and query assembly](monitoring/mutations.ts#L13); [public function](monitoring/mutations.ts#L95) |
+| `uploadElpjControlFile` | `POST /monitoring/upload-elpj-control-evidence` | Multipart body: `file`; query: `projectId`, `siteId`, optional `description` | [`FormData` and query assembly](monitoring/mutations.ts#L13); [public function](monitoring/mutations.ts#L104) |
+| `getMonitoringRecent` | `GET /monitoring` | Query: `projectId`, optional `siteId`, optional `limit` | [Parameter type and query assembly](monitoring/queries.ts#L14) |
+
+### Profile And Projects
+
+| API function | Method and endpoint | Request data | Payload location |
+| --- | --- | --- | --- |
+| `getProfile` | `GET /auth/user/profile` | No request payload | [Request implementation](profile/profile.ts#L8) |
+| `getUserProfileById` | `GET /user/profile/:userId` | Path: `userId` | [Function parameter and path](profile/profile.ts#L32) |
+| `getProjectDetails` | `GET /project/:projectId` | Path: `projectId` | [Function parameter and path](projects/queries.ts#L11) |
+| `getProjects` | `GET /project` | No request payload | [Request implementation](projects/queries.ts#L30) |
+
+### Site
+
+| API function | Method and endpoint | Request data | Payload location |
+| --- | --- | --- | --- |
+| `registerSite` | `POST /site` | JSON site creation body | [`CreateSitePayload`](site/payloads.ts#L1); [`mapCreateSitePayload`](site/payloadMappers.ts#L16); [request implementation](site/mutations.ts#L19) |
+| `updateSite` | `PATCH /site/:siteId` | JSON site update body; path: `siteId` | [`UpdateSitePayload`](site/payloads.ts#L19); [`mapUpdateSitePayload`](site/payloadMappers.ts#L36); [request implementation](site/mutations.ts#L56) |
+| `deleteSite` | `DELETE /site/:siteId` | Path: `siteId`; no request body | [Function parameter and path](site/mutations.ts#L76) |
+| `getSiteData` | `GET /site/:siteId` | Path: `siteId` | [Function parameter and path](site/dashboard.ts#L5) |
+| `getSites` | `GET /site` | Query: `companyId` | [Parameter resolution and query assembly](site/list.ts#L28) |
+| `getSiteProjects` | `GET /site/:siteId/project` | Path: `siteId` | [Function parameter and path](site/projects.ts#L5) |
+
+### Users
+
+| API function | Method and endpoint | Request data | Payload location |
+| --- | --- | --- | --- |
+| `getUsers` | `GET /user` | No request payload | [Request implementation](users/list.ts#L11) |
+| `getUserNotifications` | `GET /user/notifications` | No request payload | [Request implementation](users/notifications.ts#L40) |
+| `registerUser` | `POST /user` | JSON user creation body | [`RegisterUserPayload`](users/mutations.ts#L5); [`UserFormData`](users/types.ts#L51); [payload mapping](users/mutations.ts#L55) |
+| `updateUser` | `PATCH /user` | JSON user update body, including `userId` | [`UpdateUserPayload`](users/mutations.ts#L22); [`UserFormData`](users/types.ts#L51); [payload mapping](users/mutations.ts#L84) |
+| `deleteUser` | `DELETE /user/:userId` | Path: `userId`; no request body | [Function parameter and path](users/mutations.ts#L163) |
+
+### Payload Ownership Rules
+
+- Put reusable request body types in the owning domain's `types.ts` or dedicated `payloads.ts`.
+- Put form-to-API transformations in `payloadMappers.ts` or a clearly named payload mapper.
+- Keep a payload inline only when it is small, used by one request, and does not need reuse.
+- Treat query and path parameters as request payload documentation too, even when there is no HTTP body.
+- When an endpoint changes, update its implementation, payload type or mapper, and this index together.
+
 ## Import Guidelines
 
 - Prefer domain-level imports for application code:
@@ -96,15 +182,15 @@ This document describes every file under `src/api/`. It is intended for develope
 
 ### `admin/projectPayloadMapper.ts`
 
-- **Purpose:** Converts admin project form values into the create-project API payload.
-- **Main exports:** `mapAdminProjectPayload`.
+- **Purpose:** Converts admin project form values into project and project-plan application API payloads.
+- **Main exports:** `mapAdminProjectPayload`, `mapAdminProjectPlanApplicationPayload`.
 - **Boundary:** Payload mapping only.
 - **Notes:** This currently bridges form-shaped data to API payload shape. If form ownership changes later, this mapper can move closer to the admin project registration feature.
 
 ### `admin/projects.ts`
 
-- **Purpose:** Admin project detail and creation API calls.
-- **Main exports:** `getAdminProjectDetail`, `createAdminProject`.
+- **Purpose:** Admin project queries, mutations, status updates, autofill reads, and project-plan application submission.
+- **Main exports:** `getAdminProjectDetail`, `createAdminProject`, `updateAdminProject`, `updateAdminProjectStatus`, `getAdminProjectPlanApplication`, `getProjectPlanAutofillByProject`, `getProjectPlanAutofillDefaults`, `createAdminProjectPlanApplication`.
 - **Boundary:** Admin project queries and mutations.
 - **Notes:** Uses shared HTTP helpers and admin-specific types.
 
@@ -133,9 +219,9 @@ This document describes every file under `src/api/`. It is intended for develope
 ### `auth/types.ts`
 
 - **Purpose:** Auth and signup type definitions.
-- **Main exports:** `LoginResponse`, `EquipmentItem`, `MethodologyRequest`, `SignUpData`, `SignUpResponse`, `ChangePasswordPayload`, `ChangePasswordResponse`.
+- **Main exports:** `LoginResponse`, `SignUpData`, `SignUpResponse`, `ChangePasswordPayload`, `ChangePasswordResponse`.
 - **Boundary:** Type-only auth module file.
-- **Notes:** `EquipmentItem` here belongs to signup methodology payloads.
+- **Notes:** Request payloads for signup and password changes are defined here. The small login bodies remain inline in `auth/auth.ts`.
 
 ## `company`
 
@@ -197,19 +283,19 @@ This document describes every file under `src/api/`. It is intended for develope
 ### `profile/index.ts`
 
 - **Purpose:** Public barrel for profile API.
-- **Main exports:** `getProfile`, `ProfileViewModel`, profile API response types.
+- **Main exports:** `getProfile`, `getUserProfileById`, `ProfileCompanyViewModel`, `ProfileViewModel`, profile API response types.
 - **Boundary:** Public profile module entrypoint.
 
 ### `profile/mappers.ts`
 
 - **Purpose:** Maps profile API responses into the profile view model.
-- **Main exports:** `ProfileViewModel`, `mapProfileApiResponseToProfileViewModel`.
+- **Main exports:** `ProfileCompanyViewModel`, `ProfileViewModel`, `mapProfileApiResponseToProfileViewModel`.
 - **Boundary:** Mapping only.
 
 ### `profile/profile.ts`
 
-- **Purpose:** Profile read API call.
-- **Main exports:** `getProfile`.
+- **Purpose:** Current-user and selected-user profile read API calls.
+- **Main exports:** `getProfile`, `getUserProfileById`.
 - **Boundary:** Profile queries only.
 
 ### `profile/types.ts`
@@ -306,7 +392,7 @@ This document describes every file under `src/api/`. It is intended for develope
 ### `users/index.ts`
 
 - **Purpose:** Public barrel for user API.
-- **Main exports:** `getUsers`, `registerUser`, `updateUser`, `deleteUser`, user/company types.
+- **Main exports:** `getUsers`, `getUserNotifications`, `registerUser`, `updateUser`, `deleteUser`, notification and user/company types.
 - **Boundary:** Public users module entrypoint.
 - **Notes:** Company mutation APIs live in `company`, not `users`.
 
@@ -315,6 +401,12 @@ This document describes every file under `src/api/`. It is intended for develope
 - **Purpose:** Fetches the user list.
 - **Main exports:** `getUsers`.
 - **Boundary:** User list query.
+
+### `users/notifications.ts`
+
+- **Purpose:** Fetches and normalizes notifications for the authenticated user.
+- **Main exports:** `getUserNotifications`, `UserNotification`.
+- **Boundary:** User notification query and response normalization.
 
 ### `users/mutations.ts`
 

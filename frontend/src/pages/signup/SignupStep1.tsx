@@ -282,7 +282,7 @@ export const SignupStep1 = () => {
                 <FormItem>
                   <FormLabel className="text-sm">住所 <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="桜丘町1-1" {...field} />
+                    <Input placeholder="桜丘町" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
