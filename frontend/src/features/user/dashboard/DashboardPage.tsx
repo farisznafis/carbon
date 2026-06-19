@@ -111,24 +111,19 @@ const Dashboard = () => {
         )}
 
         <div className='mb-8 animate-slide-up'>
-          <div className='flex items-center gap-4'>
+          <div className='space-y-1'>
             <h2 className='mb-2'>{site?.siteName || '拠点ダッシュボード'}</h2>
-            <InlineHelp
-              content={
-                <>
-                  <h4>
+            <div className='space-y-1 text-sm text-muted-foreground'>
+              <p>
                     担当者:{' '}
-                    {(site?.picLastName || '') +
-                      ' ' +
-                      (site?.picFirstName || '')}
-                  </h4>
+              {`${site?.picLastName ?? ''} ${site?.picFirstName ?? ''}`.trim() ||
+                '-'}
+              </p>
                   <p>住所: {site?.address || '-'}</p>
-                </>
-              }
-            />
           </div>
         </div>
 
+        </div>
         <div className='gap-6'>
           <div className='space-y-6'>
             <Card>

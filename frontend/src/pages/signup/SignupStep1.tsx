@@ -172,7 +172,7 @@ export const SignupStep1 = () => {
             name="companyNameEnglish"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>企業名（英語）</FormLabel>
+                <FormLabel>企業名（英語）<span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
                 <FormControl>
                   <Input placeholder="Sample Corporation" {...field} />
                 </FormControl>
@@ -217,7 +217,7 @@ export const SignupStep1 = () => {
               name="postalCode"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">郵便番号</FormLabel>
+                  <FormLabel className="text-sm">郵便番号<span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
                   <div className="flex gap-2 items-center">
                     <FormControl>
                       <Input
@@ -240,7 +240,7 @@ export const SignupStep1 = () => {
                 name="prefecture"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm">都道府県</FormLabel>
+                    <FormLabel className="text-sm">都道府県<span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -265,7 +265,7 @@ export const SignupStep1 = () => {
                 name="city"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm">市区町村</FormLabel>
+                    <FormLabel className="text-sm">市区町村<span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
                     <FormControl>
                       <Input placeholder="渋谷区" {...field} />
                     </FormControl>
@@ -410,7 +410,7 @@ export const SignupStep1 = () => {
             )}
           />
 
-          <FormField
+          {/* <FormField
             control={form.control}
             name="faxNumber"
             render={({ field }) => (
@@ -422,7 +422,7 @@ export const SignupStep1 = () => {
                 <FormMessage />
               </FormItem>
             )}
-          />
+          /> */}
 
           <FormField
             control={form.control}
