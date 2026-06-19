@@ -560,7 +560,7 @@ public class SiteProjectServiceImpl implements SiteProjectService {
         .isEligible(item.getIsEligible())
         .equipmentOpDate(item.getEquipmentOpDate())
         .pcsManufacturer(item.getPcsManufacturer())
-        .pcsModel(item.getPcsModel())                // Hapus 'set'
+        .pcsModel(item.getPcsModel())
         .powerCondUnitCount(item.getPowerCondUnitCount())
         .deviceNo(item.getDeviceNo())
         .powerCondStandby(item.getPowerCondStandby())
@@ -592,7 +592,6 @@ public class SiteProjectServiceImpl implements SiteProjectService {
             .memberData(savedMemberData)
             .fileType(fileReq.getFileType())
             .fileId(fileReq.getFileId())
-            // .fieldReference(fileReq.getFileType().getValue())
             .s3Key(fileReq.getS3Key())
             .originalName(fileReq.getFileName())
             .build();
