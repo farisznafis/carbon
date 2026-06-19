@@ -65,11 +65,6 @@ public class SiteProjectServiceImpl implements SiteProjectService {
             EquipmentFileType.ELECTRICITY_BILL
     );
 
-    // @Value("${app.s3.bucket:gx-monitoring-files}")
-    // private String bucketName;
-
-    // PUBLIC METHOD
-
     @Override
     @Transactional
     public EquipmentSolarRegisterResponse registerEquipments(
@@ -146,7 +141,7 @@ public class SiteProjectServiceImpl implements SiteProjectService {
                             .map(f -> buildFileEntity(f, saved))
                             .collect(Collectors.toList());
                     List<SiteR002EquipmentFile> savedFileList = 
-                            equipmentFileRepository.saveAll(fileEntities); // <-- fileEntities harus di scope yang sama
+                            equipmentFileRepository.saveAll(fileEntities); 
                     savedFiles.addAll(savedFileList);  
                 
                     return EquipmentItemSolarResponse.builder()
@@ -557,8 +552,6 @@ public class SiteProjectServiceImpl implements SiteProjectService {
     private SiteR002MemberData buildMemberDataEntity(
             EquipmentItemSolarRequest item,
             SiteProjectRelation relation) {
-
-    // Kuncinya ada di sini: tulis "return" di awal builder
     return SiteR002MemberData.builder()
         .project(relation.getProject())              
         .site(relation.getSite())                    

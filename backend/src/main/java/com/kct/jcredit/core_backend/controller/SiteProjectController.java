@@ -27,7 +27,7 @@ public class SiteProjectController {
 
     private final JwtUtil jwtUtil;
     private final FileUploadSolarService fileUploadSolarService;
-    private final SiteProjectService equipmentSolarService;
+    private final SiteProjectService siteProjectService;
 
     public SiteProjectController(
             JwtUtil jwtUtil,
@@ -35,7 +35,7 @@ public class SiteProjectController {
             SiteProjectService equipmentSolarService) {
         this.jwtUtil = jwtUtil;
         this.fileUploadSolarService = fileUploadSolarService;
-        this.equipmentSolarService = equipmentSolarService;
+        this.siteProjectService = equipmentSolarService;
     }
     // upload file temp
         @PostMapping(value = "/{siteId}/{projectId}/files/upload",
@@ -70,7 +70,7 @@ public class SiteProjectController {
             String token = authentication.getCredentials().toString();
             request.setProcessedBy(jwtUtil.extractUsername(token));
 
-            EquipmentSolarRegisterResponse response = equipmentSolarService
+            EquipmentSolarRegisterResponse response = siteProjectService
                     .registerEquipments(siteId, projectId, jwtUtil.extractCompanyId(token), request);
 
             return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode())
