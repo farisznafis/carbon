@@ -61,7 +61,7 @@ class CompanyApprovalServiceImplTest {
     private CompanyApprovalServiceImpl companyApprovalService;
 
     @Test
-    @DisplayName("SC-1: 全ての検証を通過し通知が成功した場合、会社が承認されマスターアカウントが作成される")
+    @DisplayName("UT-AS-001: 全ての検証を通過し通知が成功した場合、会社が承認されマスターアカウントが作成される")
     void approveCompany_allValidationsPassAndNotificationSucceeds_returnsOkWithMasterAccount() {
         // Arrange
         String companyId = "COMP001";
@@ -87,8 +87,6 @@ class CompanyApprovalServiceImplTest {
         // Act
         ApproveCompanyResponse response = companyApprovalService.approveCompany(companyId);
 
-        // Assert — bukti spec compliance: akun master BENAR-BENAR dibuat & credential BENAR-BENAR terkirim,
-        // bukan cuma cek status code-nya OK
         assertThat(response.getStatusCode()).isEqualTo(ResponseConstants.OK);
         assertThat(response.getCompanyId()).isEqualTo(companyId);
         assertThat(response.getMasterUsername()).isEqualTo(repEmail);
@@ -109,14 +107,14 @@ class CompanyApprovalServiceImplTest {
     }
 
     @Test
-    @DisplayName("EC-4: regStatus が小文字 'pending' でも大文字小文字を区別せず処理が継続される")
+    @DisplayName("UT-AS-001: regStatus が小文字 'pending' でも大文字小文字を区別せず処理が継続される")
     void approveCompany_regStatusPendingLowercase_proceedsSuccessfully() {
         // Arrange
         String companyId = "COMP002";
         String repEmail = "rep2@example.com";
 
         ParticipatingCompany company = mock(ParticipatingCompany.class);
-        when(company.getRegStatus()).thenReturn("pending"); // huruf kecil, sengaja untuk verifikasi equalsIgnoreCase
+        when(company.getRegStatus()).thenReturn("pending"); //verifikasi equalsIgnoreCase
         when(company.getRepEmail()).thenReturn(repEmail);
 
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
@@ -129,7 +127,7 @@ class CompanyApprovalServiceImplTest {
         // Act
         ApproveCompanyResponse response = companyApprovalService.approveCompany(companyId);
 
-        // Assert — proses LANJUT (tidak ke-block di status check) walau casing berbeda
+        // Assert
         assertThat(response.getStatusCode()).isEqualTo(ResponseConstants.OK);
         verify(companyRepository).save(company);
         verify(notificationService).sendMasterAccountCredentials(any(), any(), any());
@@ -137,7 +135,7 @@ class CompanyApprovalServiceImplTest {
 
 
     @Test
-    @DisplayName("EC-1: companyId に対応する会社が見つからない場合、NOT_FOUND を返す")
+    @DisplayName("UT-AS-003: companyId に対応する会社が見つからない場合、NOT_FOUND を返す")
     void approveCompany_companyNotFound_returnsNotFound() {
         // Arrange
         String companyId = "COMP999";
@@ -155,7 +153,7 @@ class CompanyApprovalServiceImplTest {
     }
 
     @Test
-    @DisplayName("EC-2: regStatus が null の場合、BAD_REQUEST を返す")
+    @DisplayName("UT-AS-004: regStatus が null の場合、BAD_REQUEST を返す")
     void approveCompany_regStatusNull_returnsBadRequest() {
         // Arrange
         String companyId = "COMP001";
@@ -175,7 +173,7 @@ class CompanyApprovalServiceImplTest {
     }
 
     @Test
-    @DisplayName("EC-3: regStatus が PENDING ではない場合（既に処理済み）、BAD_REQUEST を返す")
+    @DisplayName("UT-AS-005: regStatus が PENDING ではない場合（既に処理済み）、BAD_REQUEST を返す")
     void approveCompany_regStatusNotPending_returnsBadRequest() {
         // Arrange
         String companyId = "COMP001";
@@ -195,7 +193,7 @@ class CompanyApprovalServiceImplTest {
     }
 
     @Test
-    @DisplayName("EC-5: 既にマスターユーザーが存在する場合、BAD_REQUEST を返す")
+    @DisplayName("UT-AS-006: 既にマスターユーザーが存在する場合、BAD_REQUEST を返す")
     void approveCompany_masterUserAlreadyExists_returnsBadRequest() {
         // Arrange
         String companyId = "COMP001";
@@ -219,7 +217,7 @@ class CompanyApprovalServiceImplTest {
     }
 
     @Test
-    @DisplayName("EC-6: ユーザー名が既に使用されている場合、USED_USERNAME を返す")
+    @DisplayName("UT-AS-007: ユーザー名が既に使用されている場合、USED_USERNAME を返す")
     void approveCompany_usernameAlreadyUsed_returnsUsedUsername() {
         // Arrange
         String companyId = "COMP001";
@@ -245,7 +243,7 @@ class CompanyApprovalServiceImplTest {
     }
 
     @Test
-    @DisplayName("EC-7: メールアドレスが既に使用されている場合、USED_EMAIL を返す")
+    @DisplayName("UT-AS-008: メールアドレスが既に使用されている場合、USED_EMAIL を返す")
     void approveCompany_emailAlreadyUsed_returnsUsedEmail() {
         // Arrange
         String companyId = "COMP001";
@@ -271,7 +269,7 @@ class CompanyApprovalServiceImplTest {
     }
 
     @Test
-    @DisplayName("EC-8: 通知メール送信が失敗した場合、INTERNAL_SERVER_ERROR を返す（ロールバック対象）")
+    @DisplayName("UT-AS-009: 通知メール送信が失敗した場合、INTERNAL_SERVER_ERROR を返す（ロールバック対象）")
     void approveCompany_notificationFails_returnsInternalServerError() {
         // Arrange
         String companyId = "COMP001";
@@ -300,17 +298,14 @@ class CompanyApprovalServiceImplTest {
             assertThat(response.getMessage()).isEqualTo(ResponseConstants.MSG_APPROVAL_EMAIL_FAILED);
 
             verify(mockStatus).setRollbackOnly();
-            // save() TETAP terjadi sebelum notifikasi gagal — efek rollback transaksi sesungguhnya
-            // (data tidak ter-commit) hanya bisa dibuktikan di integration test, bukan di sini.
             verify(companyRepository).save(company);
             verify(userRepository).save(any(ParticipatingUser.class)); 
         }
         
     }
 
-
     @Test
-    @DisplayName("EC-9: companyRepository.save() が失敗した場合、graceful に INTERNAL_SERVER_ERROR を返すべき")
+    @DisplayName("UT-AS-010: companyRepository.save() が失敗した場合、graceful に INTERNAL_SERVER_ERROR を返すべき")
     void approveCompany_companySaveThrows_shouldReturnInternalServerErrorGracefully() {
         // Arrange
         String companyId = "COMP001";
@@ -331,8 +326,7 @@ class CompanyApprovalServiceImplTest {
             mockedTx.when(TransactionAspectSupport::currentTransactionStatus).thenReturn(mockStatus);
 
             // Act & Assert
-            // CATATAN PENTING: pola penanganan error yang konsisten (lihat EC-8 di atas & rejectCompany
-            // EC-3a di bawah) seharusnya membungkus kegagalan save() ini juga, lalu mengembalikan response
+            //  pola penanganan error yang konsisten seharusnya membungkus kegagalan save() ini juga, lalu mengembalikan response
             // INTERNAL_SERVER_ERROR secara graceful — BUKAN melempar exception mentah ke pemanggil.
             // Berdasarkan kode approveCompany yang diberikan, companyRepository.save() dipanggil DI LUAR
             // try-catch (beda dengan rejectCompany yang membungkus save() di dalam try), sehingga test ini
@@ -347,7 +341,7 @@ class CompanyApprovalServiceImplTest {
     }
 
     @Test
-    @DisplayName("SC-1: 会社が PENDING で通知が成功した場合、却下され通知が送信される")
+    @DisplayName("UT-AS-011: 会社が PENDING で通知が成功した場合、却下され通知が送信される")
     void rejectCompany_companyPendingAndNotificationSucceeds_returnsOk() {
         // Arrange
         String companyId = "COMP001";
@@ -359,7 +353,6 @@ class CompanyApprovalServiceImplTest {
         // Act
         RejectCompanyResponse response = companyApprovalService.rejectCompany(companyId, rejectionReason);
 
-        // Assert — bukti spec compliance: notifikasi BENAR-BENAR terkirim
         assertThat(response.getStatusCode()).isEqualTo(ResponseConstants.OK);
         assertThat(response.getCompanyId()).isEqualTo(companyId);
 
@@ -369,14 +362,14 @@ class CompanyApprovalServiceImplTest {
     }
 
     @Test
-    @DisplayName("EC-1: companyId に対応する会社が見つからない場合、NOT_FOUND を返す")
+    @DisplayName("UT-AS-012: companyId に対応する会社が見つからない場合、NOT_FOUND を返す")
     void rejectCompany_companyNotFound_returnsNotFound() {
         // Arrange
         String companyId = "COMP999";
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.empty());
 
         // Act
-        RejectCompanyResponse response = companyApprovalService.rejectCompany(companyId, "alasan apapun");
+        RejectCompanyResponse response = companyApprovalService.rejectCompany(companyId, "");
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(ResponseConstants.NOT_FOUND);
@@ -387,7 +380,7 @@ class CompanyApprovalServiceImplTest {
     }
 
     @Test
-    @DisplayName("EC-2: regStatus が PENDING ではない場合、BAD_REQUEST を返す")
+    @DisplayName("UT-AS-013: regStatus が PENDING ではない場合、BAD_REQUEST を返す")
     void rejectCompany_regStatusNotPending_returnsBadRequest() {
         // Arrange
         String companyId = "COMP001";
@@ -396,7 +389,7 @@ class CompanyApprovalServiceImplTest {
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
 
         // Act
-        RejectCompanyResponse response = companyApprovalService.rejectCompany(companyId, "alasan apapun");
+        RejectCompanyResponse response = companyApprovalService.rejectCompany(companyId, "");
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(ResponseConstants.BAD_REQUEST);
@@ -407,7 +400,7 @@ class CompanyApprovalServiceImplTest {
     }
 
     @Test
-    @DisplayName("EC-3a: companyRepository.save() が失敗した場合、INTERNAL_SERVER_ERROR を返す")
+    @DisplayName("UT-AS-014: companyRepository.save() が失敗した場合、INTERNAL_SERVER_ERROR を返す")
     void rejectCompany_saveThrows_returnsInternalServerError() {
         // Arrange
         String companyId = "COMP001";
@@ -434,7 +427,7 @@ class CompanyApprovalServiceImplTest {
     }
 
     @Test
-    @DisplayName("EC-3b: save() は成功するが通知送信が失敗した場合、INTERNAL_SERVER_ERROR を返す")
+    @DisplayName("UT-AS-015: save() は成功するが通知送信が失敗した場合、INTERNAL_SERVER_ERROR を返す")
     void rejectCompany_notificationThrows_returnsInternalServerError() {
         // Arrange
         String companyId = "COMP001";
@@ -463,7 +456,7 @@ class CompanyApprovalServiceImplTest {
     }
 
     @Test
-    @DisplayName("SC-1: 承認待ちの会社が存在する場合、フィールドが正しくマッピングされる（id が null の場合も含む）")
+    @DisplayName("UT-AS-016: 承認待ちの会社が存在する場合、フィールドが正しくマッピングされる（id が null の場合も含む）")
     void getPendingCompanies_hasDataIncludingNullId_mapsCorrectly() {
         // Arrange
         ParticipatingCompany companyWithId = mock(ParticipatingCompany.class);
@@ -512,7 +505,7 @@ class CompanyApprovalServiceImplTest {
     }
 
     @Test
-    @DisplayName("SC-2: 承認待ちの会社が存在しない場合、空リストを返す")
+    @DisplayName("UT-AS-017: 承認待ちの会社が存在しない場合、空リストを返す")
     void getPendingCompanies_noData_returnsEmptyList() {
         // Arrange
         when(companyRepository.findByRegStatus(REG_STATUS_PENDING)).thenReturn(List.of());
