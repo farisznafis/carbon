@@ -13,9 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.kct.jcredit.core_backend.dto.response.CorporationMasterResponse;
+import com.kct.jcredit.core_backend.dto.response.OtherOperatorProjectsResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectMasterResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectApplicationResponse;
+import com.kct.jcredit.core_backend.dto.request.OtherOperatorProjectsRequest;
 import com.kct.jcredit.core_backend.dto.request.ProjectApplicationRequest;
+import com.kct.jcredit.core_backend.service.OtherOperatorProjectsService;
 import com.kct.jcredit.core_backend.service.ProjectApplicationService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
@@ -31,6 +34,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 @RequiredArgsConstructor
 public class ProjectPlanController {
     private final ProjectApplicationService projectApplicationService;
+    private final OtherOperatorProjectsService otherOperatorProjectsService;
     private final JwtUtil jwtUtil;
 
         @GetMapping("/autofill")
@@ -98,6 +102,52 @@ public class ProjectPlanController {
             @PathVariable Integer projectId) {
         String token = authentication.getCredentials().toString();
         ProjectApplicationResponse response = projectApplicationService.getProjectApplication(
+            projectId,
+            jwtUtil.extractCompanyId(token),
+            jwtUtil.extractRole(token),
+            jwtUtil.extractUsername(token));
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+        }
+
+        @PostMapping("/{projectId}/other-operator-projects")
+        @PreAuthorize("hasRole('operator')")
+        @SecurityRequirement(name = "bearerAuth")
+        public ResponseEntity<OtherOperatorProjectsResponse> submitOtherOperatorProjects(Authentication authentication,
+            @PathVariable Integer projectId,
+            @Valid @RequestBody OtherOperatorProjectsRequest request) {
+        String token = authentication.getCredentials().toString();
+        OtherOperatorProjectsResponse response = otherOperatorProjectsService.submitOtherOperatorProjects(
+            projectId,
+            request,
+            jwtUtil.extractCompanyId(token),
+            jwtUtil.extractRole(token),
+            jwtUtil.extractUsername(token));
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+        }
+
+        @PutMapping("/{projectId}/other-operator-projects")
+        @PreAuthorize("hasRole('operator')")
+        @SecurityRequirement(name = "bearerAuth")
+        public ResponseEntity<OtherOperatorProjectsResponse> updateOtherOperatorProjects(Authentication authentication,
+            @PathVariable Integer projectId,
+            @Valid @RequestBody OtherOperatorProjectsRequest request) {
+        String token = authentication.getCredentials().toString();
+        OtherOperatorProjectsResponse response = otherOperatorProjectsService.updateOtherOperatorProjects(
+            projectId,
+            request,
+            jwtUtil.extractCompanyId(token),
+            jwtUtil.extractRole(token),
+            jwtUtil.extractUsername(token));
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+        }
+
+        @GetMapping("/{projectId}/other-operator-projects")
+        @PreAuthorize("hasRole('operator')")
+        @SecurityRequirement(name = "bearerAuth")
+        public ResponseEntity<OtherOperatorProjectsResponse> getOtherOperatorProjects(Authentication authentication,
+            @PathVariable Integer projectId) {
+        String token = authentication.getCredentials().toString();
+        OtherOperatorProjectsResponse response = otherOperatorProjectsService.getOtherOperatorProjects(
             projectId,
             jwtUtil.extractCompanyId(token),
             jwtUtil.extractRole(token),
