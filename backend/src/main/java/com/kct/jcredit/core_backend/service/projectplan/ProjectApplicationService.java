@@ -1,4 +1,4 @@
-package com.kct.jcredit.core_backend.service;
+package com.kct.jcredit.core_backend.service.projectplan;
 
 import com.kct.jcredit.core_backend.dto.request.ProjectApplicationRequest;
 import com.kct.jcredit.core_backend.dto.response.CorporationMasterResponse;

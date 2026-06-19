@@ -1,4 +1,4 @@
-package com.kct.jcredit.core_backend.service.impl;
+package com.kct.jcredit.core_backend.service.impl.projectplan;
 
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.constant.RoleConstants;
@@ -15,7 +15,7 @@ import com.kct.jcredit.core_backend.repository.dynamodb.ProjectApplicationReposi
 import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
-import com.kct.jcredit.core_backend.service.ProjectApplicationService;
+import com.kct.jcredit.core_backend.service.projectplan.ProjectApplicationService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

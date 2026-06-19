@@ -1,16 +1,16 @@
-package com.kct.jcredit.core_backend.service.impl;
+package com.kct.jcredit.core_backend.service.impl.projectplan;
 
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.constant.RoleConstants;
-import com.kct.jcredit.core_backend.dto.request.OtherOperatorProjectsRequest;
-import com.kct.jcredit.core_backend.dto.response.OtherOperatorProjectsResponse;
+import com.kct.jcredit.core_backend.dto.request.ApplicableConditionsRequest;
+import com.kct.jcredit.core_backend.dto.response.ApplicableConditionsResponse;
 import com.kct.jcredit.core_backend.entity.OperatingUser;
 import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.Project;
-import com.kct.jcredit.core_backend.repository.dynamodb.OtherOperatorProjectsRepository;
+import com.kct.jcredit.core_backend.repository.dynamodb.ApplicableConditionsRepository;
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
-import com.kct.jcredit.core_backend.service.OtherOperatorProjectsService;
+import com.kct.jcredit.core_backend.service.projectplan.ApplicableConditionsService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,19 +21,19 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsService {
+public class ApplicableConditionsServiceImpl implements ApplicableConditionsService {
 
-    private static final String OTHER_OPERATOR_PROJECTS_SK = "OTHER_OPERATOR_PROJECTS";
+    private static final String APPLICABLE_CONDITIONS_SK = "APPLICABLE_CONDITIONS";
 
     private final OperatingUserRepository operatorUserRepository;
     private final ProjectRepository projectRepository;
-    private final OtherOperatorProjectsRepository otherOperatorProjectsRepository;
+    private final ApplicableConditionsRepository applicableConditionsRepository;
 
     @Override
     @Transactional
-    public OtherOperatorProjectsResponse submitOtherOperatorProjects(
+    public ApplicableConditionsResponse submitApplicableConditions(
             Integer projectId,
-            OtherOperatorProjectsRequest request,
+            ApplicableConditionsRequest request,
             String companyId,
             String role,
             String username) {
@@ -42,9 +42,9 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
 
     @Override
     @Transactional
-    public OtherOperatorProjectsResponse updateOtherOperatorProjects(
+    public ApplicableConditionsResponse updateApplicableConditions(
             Integer projectId,
-            OtherOperatorProjectsRequest request,
+            ApplicableConditionsRequest request,
             String companyId,
             String role,
             String username) {
@@ -53,12 +53,12 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
 
     @Override
     @Transactional(readOnly = true)
-    public OtherOperatorProjectsResponse getOtherOperatorProjects(
+    public ApplicableConditionsResponse getApplicableConditions(
             Integer projectId,
             String companyId,
             String role,
             String username) {
-        OtherOperatorProjectsResponse response = new OtherOperatorProjectsResponse();
+        ApplicableConditionsResponse response = new ApplicableConditionsResponse();
 
         Project project = projectRepository.findById(projectId).orElse(null);
         if (project == null) {
@@ -74,25 +74,26 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
         }
 
         String pk = buildPk(projectId);
-        OtherOperatorProjectsRequest data = otherOperatorProjectsRepository
-                .findByPkAndSk(pk, OTHER_OPERATOR_PROJECTS_SK)
-                .orElseGet(OtherOperatorProjectsRequest::new);
+        ApplicableConditionsRequest data = applicableConditionsRepository
+                .findByPkAndSk(pk, APPLICABLE_CONDITIONS_SK)
+                .orElseGet(ApplicableConditionsRequest::new);
 
+        applySqlMasterFields(data, project);
         data.setPk(pk);
-        data.setSk(OTHER_OPERATOR_PROJECTS_SK);
+        data.setSk(APPLICABLE_CONDITIONS_SK);
 
         response.setData(data);
         response.setStatusCode(ResponseConstants.OK);
         return response;
     }
 
-    private OtherOperatorProjectsResponse validateAndSave(
+    private ApplicableConditionsResponse validateAndSave(
             Integer projectId,
-            OtherOperatorProjectsRequest request,
+            ApplicableConditionsRequest request,
             String companyId,
             String role,
             String username) {
-        OtherOperatorProjectsResponse response = new OtherOperatorProjectsResponse();
+        ApplicableConditionsResponse response = new ApplicableConditionsResponse();
 
         Project project = projectRepository.findById(projectId).orElse(null);
         if (project == null) {
@@ -107,23 +108,35 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
             return response;
         }
 
-        return saveOtherOperatorProjects(projectId, request);
+        return saveApplicableConditions(projectId, request);
     }
 
-    private OtherOperatorProjectsResponse saveOtherOperatorProjects(
+    private ApplicableConditionsResponse saveApplicableConditions(
             Integer projectId,
-            OtherOperatorProjectsRequest request) {
+            ApplicableConditionsRequest request) {
         String pk = buildPk(projectId);
 
         request.setPk(pk);
-        request.setSk(OTHER_OPERATOR_PROJECTS_SK);
+        request.setSk(APPLICABLE_CONDITIONS_SK);
 
-        otherOperatorProjectsRepository.save(request);
+        applicableConditionsRepository.save(request);
 
-        OtherOperatorProjectsResponse response = new OtherOperatorProjectsResponse();
+        ApplicableConditionsResponse response = new ApplicableConditionsResponse();
         response.setData(request);
         response.setStatusCode(ResponseConstants.OK);
         return response;
+    }
+
+    private void applySqlMasterFields(ApplicableConditionsRequest request, Project project) {
+        request.setMethodologyCode(buildMethodologyCode(project));
+        request.setMethodologyVersion(project.getMethodologyVersion());
+
+        OperatorCompany company = project.getOperatorCompany();
+        if (company != null) {
+            request.setBusinessName(company.getNameJa());
+            request.setRepresentativePosition(company.getRepPosition());
+            request.setRepresentativeName(buildFullName(company.getRepLastName(), company.getRepFirstName()));
+        }
     }
 
     private boolean hasAccessToProject(Project project, String companyId, String role, String username) {
@@ -145,5 +158,23 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
 
     private String buildPk(Integer projectId) {
         return String.valueOf(projectId);
+    }
+
+    private String buildMethodologyCode(Project project) {
+        String category = project.getMethodCategory();
+        String number = project.getMethodNumber();
+        if (category == null || category.isBlank()) {
+            return number;
+        }
+        if (number == null || number.isBlank()) {
+            return category;
+        }
+        return category + "-" + number;
+    }
+
+    private String buildFullName(String lastName, String firstName) {
+        String safeLast = lastName == null ? "" : lastName.trim();
+        String safeFirst = firstName == null ? "" : firstName.trim();
+        return (safeLast + " " + safeFirst).trim();
     }
 }

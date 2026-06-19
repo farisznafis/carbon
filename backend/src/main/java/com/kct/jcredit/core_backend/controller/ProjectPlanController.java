@@ -12,14 +12,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import com.kct.jcredit.core_backend.dto.response.ApplicableConditionsResponse;
 import com.kct.jcredit.core_backend.dto.response.CorporationMasterResponse;
 import com.kct.jcredit.core_backend.dto.response.OtherOperatorProjectsResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectMasterResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectApplicationResponse;
+import com.kct.jcredit.core_backend.dto.request.ApplicableConditionsRequest;
 import com.kct.jcredit.core_backend.dto.request.OtherOperatorProjectsRequest;
 import com.kct.jcredit.core_backend.dto.request.ProjectApplicationRequest;
-import com.kct.jcredit.core_backend.service.OtherOperatorProjectsService;
-import com.kct.jcredit.core_backend.service.ProjectApplicationService;
+import com.kct.jcredit.core_backend.service.projectplan.ApplicableConditionsService;
+import com.kct.jcredit.core_backend.service.projectplan.OtherOperatorProjectsService;
+import com.kct.jcredit.core_backend.service.projectplan.ProjectApplicationService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 import jakarta.validation.Valid;
@@ -35,6 +38,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 public class ProjectPlanController {
     private final ProjectApplicationService projectApplicationService;
     private final OtherOperatorProjectsService otherOperatorProjectsService;
+    private final ApplicableConditionsService applicableConditionsService;
     private final JwtUtil jwtUtil;
 
         @GetMapping("/autofill")
@@ -148,6 +152,52 @@ public class ProjectPlanController {
             @PathVariable Integer projectId) {
         String token = authentication.getCredentials().toString();
         OtherOperatorProjectsResponse response = otherOperatorProjectsService.getOtherOperatorProjects(
+            projectId,
+            jwtUtil.extractCompanyId(token),
+            jwtUtil.extractRole(token),
+            jwtUtil.extractUsername(token));
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+        }
+
+        @PostMapping("/{projectId}/applicable-conditions")
+        @PreAuthorize("hasRole('operator')")
+        @SecurityRequirement(name = "bearerAuth")
+        public ResponseEntity<ApplicableConditionsResponse> submitApplicableConditions(Authentication authentication,
+            @PathVariable Integer projectId,
+            @Valid @RequestBody ApplicableConditionsRequest request) {
+        String token = authentication.getCredentials().toString();
+        ApplicableConditionsResponse response = applicableConditionsService.submitApplicableConditions(
+            projectId,
+            request,
+            jwtUtil.extractCompanyId(token),
+            jwtUtil.extractRole(token),
+            jwtUtil.extractUsername(token));
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+        }
+
+        @PutMapping("/{projectId}/applicable-conditions")
+        @PreAuthorize("hasRole('operator')")
+        @SecurityRequirement(name = "bearerAuth")
+        public ResponseEntity<ApplicableConditionsResponse> updateApplicableConditions(Authentication authentication,
+            @PathVariable Integer projectId,
+            @Valid @RequestBody ApplicableConditionsRequest request) {
+        String token = authentication.getCredentials().toString();
+        ApplicableConditionsResponse response = applicableConditionsService.updateApplicableConditions(
+            projectId,
+            request,
+            jwtUtil.extractCompanyId(token),
+            jwtUtil.extractRole(token),
+            jwtUtil.extractUsername(token));
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+        }
+
+        @GetMapping("/{projectId}/applicable-conditions")
+        @PreAuthorize("hasRole('operator')")
+        @SecurityRequirement(name = "bearerAuth")
+        public ResponseEntity<ApplicableConditionsResponse> getApplicableConditions(Authentication authentication,
+            @PathVariable Integer projectId) {
+        String token = authentication.getCredentials().toString();
+        ApplicableConditionsResponse response = applicableConditionsService.getApplicableConditions(
             projectId,
             jwtUtil.extractCompanyId(token),
             jwtUtil.extractRole(token),
