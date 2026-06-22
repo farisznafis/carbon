@@ -213,7 +213,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
               name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>名前（性） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                  <FormLabel>名前（姓） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
                   <FormControl>
                     <Input placeholder="山田" {...field} />
                   </FormControl>
@@ -243,7 +243,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
               name="lastNameKana"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>名前（性）（カナ） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                  <FormLabel>名前（姓）（カナ） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
                   <FormControl>
                     <Input placeholder="ヤマダ" {...field} />
                   </FormControl>

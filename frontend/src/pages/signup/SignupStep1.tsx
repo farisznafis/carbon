@@ -41,9 +41,9 @@ const signupStep1Schema = z.object({
   blocknum: z.string().min(1, '番地を入力してください').max(100, '番地は100文字以内で入力してください'),
   
   // Personal Information
-  lastName: z.string().min(1, '名前（性）を入力してください').max(50, '名前（性）は50文字以内で入力してください'),
+  lastName: z.string().min(1, '名前（姓）を入力してください').max(50, '名前（姓）は50文字以内で入力してください'),
   firstName: z.string().min(1, '名前（名）を入力してください').max(50, '名前（名）は50文字以内で入力してください'),
-  lastNameKana: katakanaSchema.min(1, '名前（性）（カナ）を入力してください').max(50, '名前（性）（カナ）は50文字以内で入力してください'),
+  lastNameKana: katakanaSchema.min(1, '名前（姓）（カナ）を入力してください').max(50, '名前（姓）（カナ）は50文字以内で入力してください'),
   firstNameKana: katakanaSchema.min(1, '名前（名）（カナ）を入力してください').max(50, '名前（名）（カナ）は50文字以内で入力してください'),
   position: z.string().min(1, '役職を入力してください').max(50, '役職は50文字以内で入力してください'),
   phoneNumber: phoneNumberSchema,
@@ -328,7 +328,7 @@ export const SignupStep1 = () => {
               name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>名前（性） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                  <FormLabel>名前（姓） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
                   <FormControl>
                     <Input placeholder="山田" {...field} />
                   </FormControl>
@@ -358,7 +358,7 @@ export const SignupStep1 = () => {
               name="lastNameKana"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>名前（性）（カナ） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                  <FormLabel>名前（姓）（カナ） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
                   <FormControl>
                     <Input placeholder="ヤマダ" {...field} />
                   </FormControl>
