@@ -1,0 +1,53 @@
+﻿GET /api/users/master_users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+Response - Success (HTTP 200) //管理者ダッシュボードの会員一覧
+{
+  "statusCode": "OK",
+  "master_users": [
+    {
+      
+      "id": "1",
+      "CompanyName": "例企業",
+      "firstName": "山田",
+      "firstNameKana": "ヤマダ",
+      "lastName": "太郎",
+      "lastNameKana": "タロウ",
+      "email": "taroyamada@test.com",
+      "role": "master",
+      "siteName": "ABC工場"
+    },
+    {
+      "id": "2",
+       "CompanyName": "例企業２",
+      "firstName": "山口",
+      "firstNameKana": "ヤマグチ",
+      "lastName": "太郎",
+      "lastNameKana": "タロウ",
+      "email": "taroyamaguchi@test.com",
+      "role": "master"
+    }
+  ]
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+
+
+
