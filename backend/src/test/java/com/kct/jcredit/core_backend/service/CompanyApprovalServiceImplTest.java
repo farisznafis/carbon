@@ -324,15 +324,6 @@ class CompanyApprovalServiceImplTest {
         try (MockedStatic<TransactionAspectSupport> mockedTx = mockStatic(TransactionAspectSupport.class)) {
             TransactionStatus mockStatus = mock(TransactionStatus.class);
             mockedTx.when(TransactionAspectSupport::currentTransactionStatus).thenReturn(mockStatus);
-
-            // Act & Assert
-            //  pola penanganan error yang konsisten seharusnya membungkus kegagalan save() ini juga, lalu mengembalikan response
-            // INTERNAL_SERVER_ERROR secara graceful — BUKAN melempar exception mentah ke pemanggil.
-            // Berdasarkan kode approveCompany yang diberikan, companyRepository.save() dipanggil DI LUAR
-            // try-catch (beda dengan rejectCompany yang membungkus save() di dalam try), sehingga test ini
-            // KEMUNGKINAN BESAR akan gagal dengan DataAccessResourceFailureException yang ter-propagate,
-            // bukan assertion failure biasa. Itu sendiri adalah temuan inconsistency yang valid untuk
-            // dilaporkan/didiskusikan, bukan kesalahan penulisan test.
             ApproveCompanyResponse response = companyApprovalService.approveCompany(companyId);
 
             assertThat(response.getStatusCode()).isEqualTo(ResponseConstants.INTERNAL_SERVER_ERROR);
