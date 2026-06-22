@@ -96,11 +96,10 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
                 .companyId(companyId)
                 .build();
 
-        company.setRegStatus(REG_STATUS_APPROVED);
-        companyRepository.save(company);
-        userRepository.save(masterUser);
-
         try {
+            company.setRegStatus(REG_STATUS_APPROVED);
+            companyRepository.save(company);
+            userRepository.save(masterUser);
             notificationService.sendMasterAccountCredentials(company, masterUsername, plainPassword);
         } catch (Exception ex) {
             log.error("Failed to send master credentials email for company {}", companyId, ex);
