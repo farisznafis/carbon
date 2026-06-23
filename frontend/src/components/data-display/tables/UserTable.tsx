@@ -1,4 +1,8 @@
-import { Action, Column, ProTable } from '@/components/data-display/ProTable/ProTable';
+import {
+  Action,
+  Column,
+  ProTable,
+} from '@/components/data-display/ProTable/ProTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { InlineHelp } from '@/components/feedback/InlineHelp/InlineHelp';
 import { Badge } from '@/components/ui/badge';
@@ -18,8 +22,20 @@ export function UserTable({ users, onEdit, onRowClick }: UserTableProps) {
       id: 'user-name',
       key: 'firstName',
       label: '氏名',
-      render: (_value, row) =>
-        `${row.lastName ?? ''} ${row.firstName ?? ''}`.trim(),
+      render: (_value, row) => {
+        const fullName = `${row.lastName ?? ''} ${row.firstName ?? ''}`.trim();
+
+        return (
+          <div className='flex items-center gap-2'>
+            <span>{fullName}</span>
+            {row.role === 'master' && (
+              <Badge className='bg-blue-600 hover:bg-blue-600 text-white font-medium px-2 py-0.5 text-xs rounded'>
+                マスタ
+              </Badge>
+            )}
+          </div>
+        );
+      },
       sortable: true,
       truncate: true,
       maxWidth: 'max-w-[180px]',
@@ -83,11 +99,11 @@ export function UserTable({ users, onEdit, onRowClick }: UserTableProps) {
         title={
           <p className='flex items-center gap-2 text-2xl font-bold'>
             <Users className='h-6 w-6' />
-            ユーザー
+            ユーザ
             <InlineHelp
               content={
                 <div className='text-sm'>
-                  ユーザーの行をクリックすると、プロフィール詳細へ移動します。
+                  ユーザの行をクリックすると、プロフィール詳細へ移動します。
                 </div>
               }
             />
@@ -100,7 +116,7 @@ export function UserTable({ users, onEdit, onRowClick }: UserTableProps) {
         height='max-h-[300px]'
         emptyState={
           <p className='text-muted-foreground'>
-            まだユーザーが登録されていません
+            まだユーザが登録されていません
           </p>
         }
         clickable={Boolean(onRowClick)}
