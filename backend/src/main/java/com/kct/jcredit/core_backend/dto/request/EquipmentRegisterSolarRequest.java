@@ -39,6 +39,7 @@ public class EquipmentRegisterSolarRequest extends BaseRequest {
     @NotNull private Boolean isKeidanrenParticipation;
     @NotNull private Boolean isEmitter;
     @NotNull private Boolean isAdjustedEmissionsAdded;
+    @NotNull private Boolean isPeriodicReportTypeOne;
  
     // isEmitter = true
     private String emitterCode;
@@ -51,6 +52,7 @@ public class EquipmentRegisterSolarRequest extends BaseRequest {
     private String factoryCode;
  
     // Page 3
+    @NotBlank private String companyName;
     @NotBlank private String repName;
     @NotBlank private String repRole;
     @NotNull  private Boolean hasConsent;

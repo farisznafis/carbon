@@ -1,8 +1,14 @@
 package com.kct.jcredit.core_backend.controller;
 
 import com.kct.jcredit.core_backend.dto.response.EquipmentSolarRegisterResponse;
+import com.kct.jcredit.core_backend.dto.request.EquipmentItemSolarRequest;
 import com.kct.jcredit.core_backend.dto.request.EquipmentRegisterSolarRequest;
+import com.kct.jcredit.core_backend.dto.request.FinalAgreementValidateRequest;
+import com.kct.jcredit.core_backend.dto.request.JigyoushaValidateRequest;
+import com.kct.jcredit.core_backend.dto.request.TncValidateRequest;
 import com.kct.jcredit.core_backend.dto.response.FileSolarUploadResponse;
+import com.kct.jcredit.core_backend.dto.response.JigyoushaDefaultResponse;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.enums.EquipmentFileType;
 import com.kct.jcredit.core_backend.service.SiteProjectService;
 import com.kct.jcredit.core_backend.service.FileUploadSolarService;
@@ -13,6 +19,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.MediaType;
 
 import java.io.IOException;
+import java.util.*;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
@@ -56,7 +63,8 @@ public class SiteProjectController {
             FileSolarUploadResponse response = fileUploadSolarService
                     .uploadFile(siteId, projectId, fileTypeEnum, uploadedBy, file);
             return ResponseEntity.ok(response);
-}
+        }
+
         // 5.2 register solar equipment
         @PostMapping("/{siteId}/{projectId}/solar/register")
         @PreAuthorize("hasAnyRole('master','user')")
@@ -76,4 +84,55 @@ public class SiteProjectController {
             return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode())
         );
     }
+    
+        // Halaman 1a
+        @PostMapping("/equipments/validate")
+        @PreAuthorize("hasAnyRole('master','user')")
+        @SecurityRequirement(name = "bearerAuth")
+        public ResponseEntity<BaseResponse> validateEquipments(
+                @RequestBody @Valid List<EquipmentItemSolarRequest> equipments) {
+        siteProjectService.validateEquipmentsNotEmpty(equipments);
+        siteProjectService.validateAllEquipments(equipments);
+        return ResponseEntity.ok(BaseResponse.success("入力内容に問題ありません。"));
+        }
+
+        // Halaman 2
+        @PostMapping("/tnc/validate")
+        @PreAuthorize("hasAnyRole('master','user')")
+        @SecurityRequirement(name = "bearerAuth")
+        public ResponseEntity<BaseResponse> validateTnc(
+                @RequestBody @Valid TncValidateRequest request) {
+        siteProjectService.validateTnc(request);
+        return ResponseEntity.ok(BaseResponse.success("入力内容に問題ありません。"));
+        }
+
+        // Halaman 3 — auto-fill
+        @GetMapping("/{siteId}/{projectId}/jigyousha/default")
+        @PreAuthorize("hasAnyRole('master','user')")
+        @SecurityRequirement(name = "bearerAuth")
+        public ResponseEntity<JigyoushaDefaultResponse> getJigyoushaDefault(
+                @PathVariable Integer siteId,
+                @PathVariable Integer projectId) {
+        return ResponseEntity.ok(siteProjectService.getJigyoushaDefault(siteId, projectId));
+        }
+
+        // Halaman 3 — validate
+        @PostMapping("/jigyousha/validate")
+        @PreAuthorize("hasAnyRole('master','user')")
+        @SecurityRequirement(name = "bearerAuth")
+        public ResponseEntity<BaseResponse> validateJigyousha(
+                @RequestBody @Valid JigyoushaValidateRequest request) {
+        siteProjectService.validateJigyousha(request);
+        return ResponseEntity.ok(BaseResponse.success("入力内容に問題ありません。"));
+        }
+
+        // Halaman 4
+        @PostMapping("/final/validate")
+        @PreAuthorize("hasAnyRole('master','user')")
+        @SecurityRequirement(name = "bearerAuth")
+        public ResponseEntity<BaseResponse> validateFinalAgreement(
+                @RequestBody @Valid FinalAgreementValidateRequest request) {
+        siteProjectService.validateFinalAgreement(request);
+        return ResponseEntity.ok(BaseResponse.success("入力内容に問題ありません。"));
+        }
 }
