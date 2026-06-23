@@ -12,6 +12,7 @@ import { postalCodeSchema, phoneNumberSchema, katakanaSchema, corporateNumberSch
 import { useState } from 'react';
 import { useRedirectIfLoggedIn } from '@/hooks/useRedirectIfLoggedIn';
 import { logger } from '@/lib/logger';
+import { RequiredLabel } from '@/components/forms/shared/RequiredLabel';
 
 const prefectures = [
   '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
@@ -130,7 +131,7 @@ export const SignupStep1 = () => {
             name="corporateNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>法人番号 <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                <RequiredLabel>法人番号</RequiredLabel>
                 <FormControl>
                   <Input placeholder="1234567890123" {...field} />
                 </FormControl>
@@ -144,7 +145,7 @@ export const SignupStep1 = () => {
             name="companyName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>企業名 <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                <RequiredLabel>企業名</RequiredLabel>
                 <FormControl>
                   <Input placeholder="株式会社サンプル" {...field} />
                 </FormControl>
@@ -158,7 +159,7 @@ export const SignupStep1 = () => {
             name="companyNameKana"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>企業名（カナ） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                <RequiredLabel>企業名（カナ）</RequiredLabel>
                 <FormControl>
                   <Input placeholder="カブシキガイシャサンプル" {...field} />
                 </FormControl>
@@ -172,7 +173,7 @@ export const SignupStep1 = () => {
             name="companyNameEnglish"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>企業名（英語）<span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                <RequiredLabel>企業名（英語）</RequiredLabel>
                 <FormControl>
                   <Input placeholder="Sample Corporation" {...field} />
                 </FormControl>
@@ -186,7 +187,7 @@ export const SignupStep1 = () => {
             name="corporateEmail"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>法人メールアドレス <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                <RequiredLabel>法人メールアドレス</RequiredLabel>
                 <FormControl>
                   <Input type="email" placeholder="corporate@company.com" {...field} />
                 </FormControl>
@@ -200,7 +201,7 @@ export const SignupStep1 = () => {
             name="corporatePhoneNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>法人電話番号 <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                <RequiredLabel>法人電話番号</RequiredLabel>
                 <FormControl>
                   <Input type="tel" placeholder="03-1234-5678" {...field} />
                 </FormControl>
@@ -210,14 +211,13 @@ export const SignupStep1 = () => {
           />
 
           <div className="space-y-4">
-            <p className="font-medium">所在地 <span className="text-red-500 text-xs ml-1">必須</span></p>
-            
+            <h3 className="text-lg font-semibold">住所情報</h3>
             <FormField
               control={form.control}
               name="postalCode"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">郵便番号<span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                  <RequiredLabel>郵便番号</RequiredLabel>
                   <div className="flex gap-2 items-center">
                     <FormControl>
                       <Input
@@ -240,7 +240,7 @@ export const SignupStep1 = () => {
                 name="prefecture"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm">都道府県<span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                    <RequiredLabel>都道府県</RequiredLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -265,7 +265,7 @@ export const SignupStep1 = () => {
                 name="city"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm">市区町村<span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                    <RequiredLabel>市区町村</RequiredLabel>
                     <FormControl>
                       <Input placeholder="渋谷区" {...field} />
                     </FormControl>
@@ -280,7 +280,7 @@ export const SignupStep1 = () => {
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">住所 <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                  <RequiredLabel>住所</RequiredLabel>
                   <FormControl>
                     <Input placeholder="桜丘町" {...field} />
                   </FormControl>
@@ -294,7 +294,7 @@ export const SignupStep1 = () => {
               name="town"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">町名 <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                  <RequiredLabel>町名</RequiredLabel>
                   <FormControl>
                     <Input placeholder="桜丘町" {...field} />
                   </FormControl>
@@ -308,7 +308,7 @@ export const SignupStep1 = () => {
               name="blocknum"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">番地 <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                  <RequiredLabel>番地</RequiredLabel>
                   <FormControl>
                     <Input placeholder="1-1" {...field} />
                   </FormControl>
@@ -328,7 +328,7 @@ export const SignupStep1 = () => {
               name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>名前（姓） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                  <RequiredLabel>名前（姓）</RequiredLabel>
                   <FormControl>
                     <Input placeholder="山田" {...field} />
                   </FormControl>
@@ -342,7 +342,7 @@ export const SignupStep1 = () => {
               name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>名前（名） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                  <RequiredLabel>名前（名）</RequiredLabel>
                   <FormControl>
                     <Input placeholder="太郎" {...field} />
                   </FormControl>
@@ -358,7 +358,7 @@ export const SignupStep1 = () => {
               name="lastNameKana"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>名前（姓）（カナ） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                  <RequiredLabel>名前（姓）（カナ）</RequiredLabel>
                   <FormControl>
                     <Input placeholder="ヤマダ" {...field} />
                   </FormControl>
@@ -372,7 +372,7 @@ export const SignupStep1 = () => {
               name="firstNameKana"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>名前（名）（カナ） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                  <RequiredLabel>名前（名）（カナ）</RequiredLabel>
                   <FormControl>
                     <Input placeholder="タロウ" {...field} />
                   </FormControl>
@@ -387,7 +387,7 @@ export const SignupStep1 = () => {
             name="position"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>役職 <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                <RequiredLabel>役職</RequiredLabel>
                 <FormControl>
                   <Input placeholder="部長" {...field} />
                 </FormControl>
@@ -401,7 +401,7 @@ export const SignupStep1 = () => {
             name="phoneNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>電話番号 <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                <RequiredLabel>電話番号</RequiredLabel>
                 <FormControl>
                   <Input type="tel" placeholder="03-1234-5678" {...field} />
                 </FormControl>
@@ -429,7 +429,7 @@ export const SignupStep1 = () => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>メールアドレス <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                <RequiredLabel>メールアドレス</RequiredLabel>
                 <FormControl>
                   <Input type="email" placeholder="yamada@company.com" {...field} />
                 </FormControl>
