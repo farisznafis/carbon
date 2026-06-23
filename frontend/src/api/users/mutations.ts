@@ -118,18 +118,23 @@ export const updateUser = async (
   }
 
   const updatedUser: UserList =
-    json?.user ?? {
-      id: String(userId),
-      firstName: payload.firstName,
-      firstNameKana: payload.firstNameKana,
-      lastName: payload.lastName,
-      lastNameKana: payload.lastNameKana,
-      email: payload.email,
-      phoneNumber: payload.phoneNumber,
-      role: mergedData?.role ?? "user",
-      siteId: String(payload.siteId),
-      position: payload.userPosition,
-    };
+    json?.user
+      ? {
+          ...json.user,
+          position: json.user.position, // ✅ normalize API response
+        }
+      : {
+          id: String(userId),
+          firstName: payload.firstName,
+          firstNameKana: payload.firstNameKana,
+          lastName: payload.lastName,
+          lastNameKana: payload.lastNameKana,
+          email: payload.email,
+          phoneNumber: payload.phoneNumber,
+          role: mergedData?.role ?? "user",
+          siteId: String(payload.siteId),
+          position: payload.userPosition,
+        };
 
   const updatedSites =
     currSite && prevSite && masterUser && mergedData
