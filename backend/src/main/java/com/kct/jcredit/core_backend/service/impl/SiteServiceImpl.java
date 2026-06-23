@@ -78,12 +78,11 @@ public class SiteServiceImpl implements SiteService {
         List<SiteResponse> siteList = sites.stream().map(site -> SiteResponse.builder()
                 .id(String.valueOf(site.getId()))
                 .siteName(site.getSiteName())
-            .postalCode(site.getPostalCode())
-            .prefecture(site.getPrefecture())
-            .city(site.getCity())
-            .town(site.getTown())
-            .block(site.getBlocknum())
-                .address(site.getAddress())
+                .postalCode(site.getPostalCode())
+                .prefecture(site.getPrefecture())
+                .municipality(site.getMunicipality())
+                .blocknum(site.getBlocknum())
+                .buildingName(site.getBuildingName())
                 .picFirstName(site.getPicFirstName())
                 .picLastName(site.getPicLastName())
                 .projects(site.getSiteProjectRelations() == null ? List.of() :
@@ -124,12 +123,11 @@ public class SiteServiceImpl implements SiteService {
 
             siteDetails.setId(String.valueOf(site.getId()));
             siteDetails.setSiteName(site.getSiteName());
-                siteDetails.setPostalCode(site.getPostalCode());
-                siteDetails.setPrefecture(site.getPrefecture());
-                siteDetails.setCity(site.getCity());
-                siteDetails.setTown(site.getTown());
-                siteDetails.setBlock(site.getBlocknum());
-                siteDetails.setAddress(site.getAddress());
+            siteDetails.setPostalCode(site.getPostalCode());
+            siteDetails.setPrefecture(site.getPrefecture());
+            siteDetails.setMunicipality(site.getMunicipality());
+            siteDetails.setBlocknum(site.getBlocknum());
+            siteDetails.setBuildingName(site.getBuildingName());
             siteDetails.setPicFirstName(site.getPicFirstName());
             siteDetails.setPicLastName(site.getPicLastName());
                 siteDetails.setProjects(site.getSiteProjectRelations() == null ? List.of() :
@@ -169,12 +167,11 @@ public class SiteServiceImpl implements SiteService {
         Site site = Site.builder()
                 .siteName(request.getSiteName())
                 .postalCode(request.getPostalCode())
-                .prefecture(company.getPrefecture())
-                .city(company.getCity())
+                .prefecture(request.getPrefecture())
+                .municipality(request.getMunicipality())
+                .blocknum(request.getBlocknum())
+                .buildingName(request.getBuildingName())
                 .company(company)
-                .town(request.getTownName())
-                .blocknum(request.getBlockName())
-                .address(request.getAddress())
                 .picFirstName(request.getPicFirstName())
                 .picFirstNameKana(request.getPicFirstNameKana())
                 .picLastName(request.getPicLastName())
@@ -228,10 +225,9 @@ public class SiteServiceImpl implements SiteService {
             .siteName(updatedSite.getSiteName())
             .postalCode(updatedSite.getPostalCode())
             .prefecture(updatedSite.getPrefecture())
-            .city(updatedSite.getCity())
-            .town(updatedSite.getTown())              
-            .block(updatedSite.getBlocknum())      
-            .address(updatedSite.getAddress())
+            .municipality(updatedSite.getMunicipality())
+            .blocknum(updatedSite.getBlocknum())
+            .buildingName(updatedSite.getBuildingName())
             .picFirstName(updatedSite.getPicFirstName())
             .picLastName(updatedSite.getPicLastName())
             .build();
@@ -346,7 +342,7 @@ public class SiteServiceImpl implements SiteService {
 
         if (RoleConstants.USER.equals(role)) {
             ParticipatingUser user = participatingUserRepository
-                    .findByUsernameAndCompanyId(username, companyId)
+                    .findByUsernameAndCompanyId(username, site.getCompany().getId())
                     .orElse(null);
             if (user == null || user.getSite() == null || user.getSite().getId() == null) {
                 return false;
@@ -376,24 +372,22 @@ public class SiteServiceImpl implements SiteService {
         return baseName;
     }
 
+    //TODO: Fix for in accordance with Site user relationships
     private Site updateSite(Site site, UpdateSiteRequest request) {
         if (StringUtils.isNotBlank(request.getPostalCode())) {
             site.setPostalCode(request.getPostalCode());
         }
-        if (StringUtils.isNotBlank(request.getPrefName())) {
-            site.setPrefecture(request.getPrefName());
+        if (StringUtils.isNotBlank(request.getPrefecture())) {
+            site.setPrefecture(request.getPrefecture());
         }
-        if (StringUtils.isNotBlank(request.getCityName())) {
-            site.setCity(request.getCityName());
+        if (StringUtils.isNotBlank(request.getMunicipality())) {
+            site.setMunicipality(request.getMunicipality());
         }
-        if (StringUtils.isNotBlank(request.getTownName())) {
-            site.setTown(request.getTownName());
+        if (StringUtils.isNotBlank(request.getBlocknum())) {
+            site.setBlocknum(request.getBlocknum());
         }
-        if (StringUtils.isNotBlank(request.getBlockName())) {
-            site.setBlocknum(request.getBlockName());
-        } 
-        if (StringUtils.isNotBlank(request.getAddress())) {
-            site.setAddress(request.getAddress());
+        if (StringUtils.isNotBlank(request.getBuildingName())) {
+            site.setBuildingName(request.getBuildingName());
         }
         site.setUpdatedAt(LocalDateTime.now());
 

@@ -64,8 +64,9 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
                 .corpName(company.getNameJa())
                 .corpPosition(company.getRepPosition())
                 .prefecture(company.getPrefecture())
-                .city(company.getCity())
-                .address(company.getAddress())
+                .municipality(company.getMunicipality())
+                .blocknum(company.getBlocknum())
+                .buildingName(company.getBuildingName())
                 .representativePosition(company.getRepPosition())
                 .representativeName(buildFullName(company.getRepLastName(), company.getRepFirstName()))
                 .picPosition(company.getRepPosition())
@@ -259,8 +260,9 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
             request.setCorpPosition(company.getRepPosition());
             request.setCorpName(company.getNameJa());
             request.setPrefecture(company.getPrefecture());
-            request.setCity(company.getCity());
-            request.setAddress(company.getAddress());
+            request.setMunicipality(company.getMunicipality());
+            request.setBlocknum(company.getBlocknum());
+            request.setBuildingName(company.getBuildingName());
             request.setRepresentativePosition(company.getRepPosition());
             request.setRepresentativeName(buildFullName(company.getRepLastName(), company.getRepFirstName()));
             request.setPicPosition(company.getRepPosition());

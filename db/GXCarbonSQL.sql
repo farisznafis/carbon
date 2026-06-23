@@ -14,9 +14,8 @@ DROP TABLE IF EXISTS project_solar_data CASCADE;
 DROP TABLE IF EXISTS project_files CASCADE;
 DROP TABLE IF EXISTS EN_R002_reduction_result_total CASCADE;
 DROP TABLE IF EXISTS EN_R002_reduction_result CASCADE;
-DROP TABLE IF EXISTS batch_process_history CASCADE;
+DROP TABLE IF EXISTS batch_processing_history CASCADE;
 DROP TABLE IF EXISTS record_cancel_request CASCADE;
-DROP TABLE IF EXISTS record_cancle_request CASCADE;
 DROP TABLE IF EXISTS site_r002_member_data CASCADE;
 DROP TABLE IF EXISTS site_r002_equipment_file  CASCADE;
 DROP TABLE IF EXISTS subscription_log CASCADE;
@@ -43,11 +42,10 @@ CREATE TABLE operator_company (
     phone_number VARCHAR(20) NOT NULL,
     corp_number VARCHAR(13) NOT NULL UNIQUE CHECK (corp_number ~ '^[0-9]{13}$'),
     postal_code VARCHAR(8) NOT NULL CHECK (postal_code ~ '^[0-9]{3}-?[0-9]{4}$'),
-    prefecture VARCHAR(100) NOT NULL,
-    city VARCHAR(100) NOT NULL,
-    town VARCHAR(100) NOT NULL,
+    prefecture VARCHAR(10) NOT NULL,
+    municipality VARCHAR(150) NOT NULL,
     blocknum VARCHAR(100) NOT NULL,
-    address VARCHAR(500) NOT NULL,
+    building_name VARCHAR(255),
     rep_first_name VARCHAR(50) NOT NULL,
     rep_first_name_kana VARCHAR(50) NOT NULL,
     rep_last_name VARCHAR(50) NOT NULL,
@@ -136,11 +134,10 @@ CREATE TABLE participating_company (
     phone_number VARCHAR(20) NOT NULL,
     corp_number VARCHAR(13) NOT NULL UNIQUE CHECK (corp_number ~ '^[0-9]{13}$'),
     postal_code VARCHAR(8) NOT NULL CHECK (postal_code ~ '^[0-9]{3}-?[0-9]{4}$'),
-    prefecture VARCHAR(100) NOT NULL,
-    city VARCHAR(100) NOT NULL,
-    town VARCHAR(100) NOT NULL,
+    prefecture VARCHAR(10) NOT NULL,
+    municipality VARCHAR(150) NOT NULL,
     blocknum VARCHAR(100) NOT NULL,
-    address VARCHAR(500) NOT NULL,
+    building_name VARCHAR(255),
     fax VARCHAR(20),
     rep_first_name VARCHAR(50) NOT NULL,
     rep_first_name_kana VARCHAR(50) NOT NULL,
@@ -168,11 +165,10 @@ CREATE TABLE site (
     updated_by VARCHAR(100),
     site_name VARCHAR(255) NOT NULL,
     postal_code VARCHAR(8) NOT NULL CHECK (postal_code ~ '^[0-9]{3}-?[0-9]{4}$'),
-    prefecture VARCHAR(100) NOT NULL,
-    city VARCHAR(100) NOT NULL,
-    town VARCHAR(100) NOT NULL,
+    prefecture VARCHAR(10) NOT NULL,
+    municipality VARCHAR(150) NOT NULL,
     blocknum VARCHAR(100) NOT NULL,
-    address VARCHAR(500) NOT NULL,
+    building_name VARCHAR(255),
     pic_first_name VARCHAR(50) NOT NULL,
     pic_first_name_kana VARCHAR(50) NOT NULL,
     pic_last_name VARCHAR(50) NOT NULL,
@@ -232,8 +228,8 @@ CREATE TABLE operating_user (
     role VARCHAR(10) NOT NULL CHECK (role IN ('operator', 'user')),
 	login_attempts INT NOT NULL,
 	account_locked_until TIMESTAMP,
-    company_id VARCHAR(12) NOT NULL
-        REFERENCES operator_company(company_id)
+    company_id INT NOT NULL
+        REFERENCES operator_company(id)
 );
 
 
@@ -247,7 +243,7 @@ CREATE TABLE site_r002_member_data (
     updated_by VARCHAR(100),
     project_id INT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
     site_id INT NOT NULL REFERENCES site(id) ON DELETE CASCADE,
-    company_id VARCHAR(12) NOT NULL REFERENCES participating_company(company_id) ON DELETE CASCADE,
+    participating_company_id INT NOT NULL REFERENCES participating_company(id) ON DELETE CASCADE
     methodology_number CHAR(3) NOT NULL,
     is_eligible BOOLEAN NOT NULL,
     equipment_op_date DATE NOT NULL,
@@ -314,8 +310,10 @@ CREATE TABLE participating_user (
 	login_attempts INT NOT NULL,
 	account_locked_until TIMESTAMP,
     site_id INT REFERENCES site(id) ON DELETE SET NULL,
-    company_id VARCHAR(12) NOT NULL
-        REFERENCES participating_company(company_id)
+    company_id INT NOT NULL
+        REFERENCES participating_company(id)
+
+
 );
 
 
@@ -328,7 +326,7 @@ CREATE TABLE EN_R002_reduction_result_total(
     updated_by VARCHAR(100),
     batch_id INT,
     processing_date DATE,
-    project_id INT,
+    project_id INT REFERENCES project(id) ON DELETE CASCADE,
     start_time TIMESTAMP,
     end_time TIMESTAMP,
     empj DECIMAL(12,3),
@@ -347,10 +345,10 @@ CREATE TABLE EN_R002_reduction_result(
     updated_by VARCHAR(100),
     batch_id INT,
     processing_date DATE,
-    project_id INT,
+    project_id INT REFERENCES project(id) ON DELETE CASCADE,
     start_time TIMESTAMP,
     end_time TIMESTAMP,
-    site_id INT,
+    site_id INT REFERENCES site(id) ON DELETE CASCADE,
     empj DECIMAL(12,3),
     empj_m DECIMAL(12,3),
     empj_s DECIMAL(12,3),
@@ -435,3 +433,11 @@ CREATE TABLE notification (
     operating_user_id INT REFERENCES operating_user(id) ON UPDATE CASCADE ON DELETE CASCADE,
     participating_user_id INT REFERENCES participating_user(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
+
+-- 読み込む負担を軽減するために、頻繁に検索されるカラムにインデックスを作成します。
+--テーブル数検索で制限整理のために、頻繁に検索されるカラムにインデックスを作成します。
+CREATE INDEX idx_participating_user_company_id ON participating_user (company_id);
+
+CREATE INDEX idx_participating_user_site_id ON participating_user (site_id);
+
+CREATE INDEX idx_site_participating_company_id ON site (participating_company_id);

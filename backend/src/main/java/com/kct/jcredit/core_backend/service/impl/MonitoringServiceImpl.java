@@ -74,7 +74,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // Validate user belongs to the company
             // ユーザが企業に所属していない場合
-            if (!user.getCompanyId().equals(companyId)) {
+            if (!user.getCompany().getCompanyId().equals(companyId)) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
                 response.setMessage(ResponseConstants.MSG_USER_NOT_IN_COMPANY);
                 return response;
@@ -220,7 +220,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // Validate user belongs to the company
             // ユーザが指定した会社に所属していない場合
-            if (!user.getCompanyId().equals(companyId)) {
+            if (!user.getCompany().getCompanyId().equals(companyId)) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
                 response.setMessage(ResponseConstants.MSG_USER_NOT_IN_COMPANY);
                 return response;
@@ -333,7 +333,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // Validate user belongs to the company
             //ユーザが指定した会社に所属していない場合
-            if (!user.getCompanyId().equals(companyId)) {
+            if (!user.getCompany().getCompanyId().equals(companyId)) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
                 response.setMessage(ResponseConstants.MSG_USER_NOT_IN_COMPANY);
                 return response;
@@ -442,7 +442,7 @@ public class MonitoringServiceImpl implements MonitoringService {
                     .orElseThrow(() -> new RuntimeException(ResponseConstants.MSG_UNEXPEXTED_ERROR));
 
             // Validate user belongs to the company
-            if (!user.getCompanyId().equals(companyId)) {
+            if (!user.getCompany().getCompanyId().equals(companyId)) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
                 response.setMessage(ResponseConstants.MSG_USER_NOT_IN_COMPANY);
                 return response;
@@ -731,7 +731,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             }
 
             // Check if user has companyId set
-            if (user.getCompanyId() == null) {
+            if (user.getCompany() == null) {
                 return false;
             }
 
@@ -741,7 +741,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             }
 
             // CRITICAL: Check if user's company ID matches site's company ID
-            if (!site.getCompany().getCompanyId().equals(user.getCompanyId())) {
+            if (!site.getCompany().getCompanyId().equals(user.getCompany().getCompanyId())) {
                 return false;
             }
 

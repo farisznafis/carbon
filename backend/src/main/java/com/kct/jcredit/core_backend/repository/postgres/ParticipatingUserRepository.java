@@ -15,10 +15,11 @@ public interface ParticipatingUserRepository extends JpaRepository<Participating
     Optional<ParticipatingUser> findByUsername(String username);
     Optional<ParticipatingUser> findByEmail(String email);
     @Query("SELECT u FROM ParticipatingUser u WHERE (u.username = :username OR u.email = :email) AND u.companyId = :companyId")
-    Optional<ParticipatingUser> findByUsernameOrEmailAndCompanyId(String username, String email, String companyId);
-    List<ParticipatingUser> findByCompanyId(String companyId);
-    Optional<ParticipatingUser> findByCompanyIdAndRole(String companyId, String role);
-    Optional<ParticipatingUser> findByUsernameAndCompanyId(String username, String companyId);
+    Optional<ParticipatingUser> findByUsernameOrEmailAndCompanyId(String username, String email, Integer companyId);
+    List<ParticipatingUser> findByCompanyId(Integer companyId);
+    Optional<ParticipatingUser> findByCompanyIdAndRole(Integer companyId, String role);
+    Optional<ParticipatingUser> findByUsernameAndCompanyId(String username, Integer companyId);
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
+    long countByCompany_IdAndSite_Id(Integer companyId, Integer siteId);
 }

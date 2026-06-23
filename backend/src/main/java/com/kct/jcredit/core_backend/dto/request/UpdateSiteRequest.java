@@ -3,6 +3,8 @@ package com.kct.jcredit.core_backend.dto.request;
 import com.kct.jcredit.core_backend.validation.JapaneseText;
 import com.kct.jcredit.core_backend.validation.PostalCode;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
+
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,27 +15,34 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UpdateSiteRequest {
     
+    @Size(max = 255, message = "サイト名は255文字以内で入力してください。")
+    private String siteName;
+
+    @Size(max = 255, message = "サイト名カナは255文字以内で入力してください。")
+    private String siteNameKana; // optional
+
     @PostalCode
     private String postalCode;
 
     @Zenkaku
-    @Size(max = 100, message = "都道府県名は100文字以内で入力してください。")
-    private String prefName;
+    @Size(max = 10, message = "都道府県名は100文字以内で入力してください。")
+    private String prefecture;
 
     @Zenkaku
-    @Size(max = 100, message = "市区町村名は100文字以内で入力してください。")
-    private String cityName;
-
-    @Zenkaku
-    @Size(max = 100, message = "町名は100文字以内で入力してください。")
-    private String townName;
+    @Size(max = 150, message = "市区町村名は150文字以内で入力してください。")
+    private String municipality;
 
     @JapaneseText(allowAlphanumeric = true)
     @Size(max = 100, message = "番地は100文字以内で入力してください。")
-    private String blockName;
+    private String blocknum;
 
-    @Size(max = 500, message = "住所は500文字以内で入力してください。")
-    private String address;
+    @Size(max = 255, message = "建物名は255文字以内で入力してください。")
+    private String buildingName;
 
+    // サイトID 
+    @Min(value = 1, message = "サイトIDは1以上の数値を指定してください。")
+    private Integer siteId;  // Nullable - role="master" の場合は不要
+
+    
     
 }

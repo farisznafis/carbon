@@ -48,14 +48,23 @@ public class AuthServiceImpl implements AuthService {
 
         // ユーザーの入力した企業IDが存在しているかどうか
          // Validate company ID
-        if (!participatingCompanyRepository.findByCompanyId(request.getCompanyId()).isPresent()) {
+        ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(request.getCompanyId()).orElse(null);
+        if (company == null) {
             response.setStatusCode("INVALID_CREDENTIALS");
             response.setMessage(ResponseConstants.MSG_LOGIN_FAILED);
             return response;
         }
+
+        // 企業がサスペンドされているかどうか
+        if (company.isSuspended()) {
+            response.setStatusCode(ResponseConstants.FORBIDDEN);
+            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+            return response;
+        }
+
         ParticipatingUser user = userRepository
             .findByUsernameOrEmailAndCompanyId(
-                request.getIdentifier(), request.getIdentifier(), request.getCompanyId()
+                request.getIdentifier(), request.getIdentifier(), company.getId()
             )
             .orElse(null);
 
@@ -117,7 +126,7 @@ public class AuthServiceImpl implements AuthService {
             return response;
         }
             
-        String token = jwtUtil.generateToken(user.getId(),user.getUsername(), user.getCompanyId(), user.getRole());
+        String token = jwtUtil.generateToken(user.getId(),user.getUsername(), company.getCompanyId(), user.getRole());
 
         //もしユーザの情報は必要なら、レスポンスにユーザの情報も入れる
         // UserInfoResponse resData = UserInfoResponse.builder()
@@ -195,7 +204,7 @@ public class AuthServiceImpl implements AuthService {
         operatingUserRepository.save(operator); 
         
         // Generate JWT
-        String token = jwtUtil.generateToken(operator.getId(), operator.getUsername(), operator.getCompanyId(), operator.getRole());
+        String token = jwtUtil.generateToken(operator.getId(), operator.getUsername(), operator.getCompany().getCompanyId(), operator.getRole());
 
         // Build response
         AdminResponse admin = AdminResponse.builder()
@@ -335,7 +344,7 @@ public class AuthServiceImpl implements AuthService {
       
         
         // 権限チェック: 同じ会社のみ
-        if (!currentUser.getCompanyId().equals(targetUser.getCompanyId())) {
+        if (!currentUser.getCompany().getCompanyId().equals(targetUser.getCompany().getCompanyId())) {
             response.setStatusCode(ResponseConstants.FORBIDDEN);
             response.setMessage(ResponseConstants.MSG_FORBIDDEN);
             return response;
@@ -477,6 +486,10 @@ public class AuthServiceImpl implements AuthService {
     public ParticipatingUser createDummyUser(CreateDummyUserRequest req) {
         Site site = siteRepository.findById(req.getSiteId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid site ID"));
+        
+         ParticipatingCompany company = participatingCompanyRepository
+            .findByCompanyId(req.getParticipatingCompanyId())
+            .orElseThrow(() -> new IllegalArgumentException("Participating company not found"));
 
         ParticipatingUser user = ParticipatingUser.builder()
                 .username(req.getUsername())
@@ -489,7 +502,7 @@ public class AuthServiceImpl implements AuthService {
                 .password(passwordEncoder.encode(req.getPassword()))
                 .role(req.getRole())
                 .site(site)
-                .companyId(req.getParticipatingCompanyId())
+                .company(company)
                 .build();
 
         System.out.println("DEBUG USER " + user);
@@ -499,6 +512,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public OperatingUser createDummyOperatorUser(CreateDummyUserRequest req) {
+
+         ParticipatingCompany company = participatingCompanyRepository
+            .findByCompanyId(req.getParticipatingCompanyId())
+            .orElseThrow(() -> new IllegalArgumentException("Participating company not found"));
+            
         OperatingUser user = OperatingUser.builder()
                 .username(req.getUsername())
                 .firstName(req.getFirstName())
@@ -509,7 +527,7 @@ public class AuthServiceImpl implements AuthService {
                 .phoneNumber(req.getPhoneNumber())
                 .password(passwordEncoder.encode(req.getPassword()))
                 .role(req.getRole())
-                .companyId(req.getParticipatingCompanyId())
+                .company(company)
                 .build();
 
         System.out.println("DEBUG OPE USER " + user);

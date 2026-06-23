@@ -253,7 +253,7 @@ public Notification createNotification(
     public void createNotificationForParticipatingCompany(
             String title, 
             String message, 
-            String companyId,
+            Integer companyId,
             Integer operatingUserId) {
         
         log.info("Creating notifications for company - companyId: {}, title: {}", companyId, title);

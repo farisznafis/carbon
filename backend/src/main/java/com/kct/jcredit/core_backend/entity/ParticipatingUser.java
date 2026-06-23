@@ -59,6 +59,7 @@ public class ParticipatingUser extends BaseEntity {
     @JoinColumn(name = "site_id", nullable = true)
     private Site site;
 
-    @Column(name = "company_id", nullable = false, length = 12)
-    private String companyId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private ParticipatingCompany company;
 }

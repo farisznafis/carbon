@@ -14,6 +14,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -51,29 +52,28 @@ public class PartiCompanyRegisterRequest {
     @PhoneNumber
     private String corporatePhoneNumber;
 
-    @NotBlank(message = "郵便番号は7桁の数字で入力してください。（例: 1234567）")
+    @NotBlank(message = "郵便番号を入力してください。")
     @PostalCode
     private String postalCode;
 
-    @NotBlank(message = "都道府県を選択してください。")
+    @NotNull(message = "都道府県を選択してください。")
     @Zenkaku
+    @Size(max = 10, message = "都道府県名は100文字以内で入力してください。")
     private String prefecture;
 
-    @NotBlank(message = "市区町村を入力してください。")
+    @NotNull(message = "市区町村を選択してください。")
     @Zenkaku
-    private String city;
+    @Size(max = 150, message = "市区町村名は150文字以内で入力してください。")
+    private String municipality;
 
-    @NotBlank(message = "住所を入力してください。")
+    @NotNull(message = "番地を入力してください。")
     @JapaneseText(allowAlphanumeric = true)
-    private String address;
-
-    @NotBlank(message = "市区町村を入力してください")
-    @JapaneseText(allowAlphanumeric = true)
-    private String town;
-
-    @NotBlank(message = "番地を入力してください")
-    @JapaneseText(allowAlphanumeric = true)
+    @Size(max = 100, message = "番地は100文字以内で入力してください。")
     private String blocknum;
+
+    @NotBlank(message = "建物名を入力してください。")
+    @Size(max = 255, message = "建物名は255文字以内で入力してください。")
+    private String buildingName;
 
     @NotBlank(message = "姓を入力してください。")
     @ZenkakuWithSymbols

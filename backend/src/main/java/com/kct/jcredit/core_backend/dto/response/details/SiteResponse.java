@@ -14,13 +14,12 @@ import java.util.List;
 @Builder
 public class SiteResponse{
     private String id;
-    private String siteName;
-    private String postalCode;     
-    private String prefecture;    
-    private String city;
-    private String town;
-    private String block;  
-    private String address;
+    private String siteName;  
+    private String postalCode;
+    private String prefecture;
+    private String municipality;
+    private String blocknum;
+    private String buildingName;    
     private String picFirstName;
     private String picLastName;
     private List<String> projects;

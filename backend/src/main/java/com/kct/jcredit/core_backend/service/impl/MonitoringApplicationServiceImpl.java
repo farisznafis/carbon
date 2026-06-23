@@ -65,14 +65,14 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
             return response;
         }
 
-        if (!hasAccessToCompany(role, username, requesterCompanyId)) {
+        if (!hasAccessToCompany(role, username, company)) {
             response.setStatusCode(ResponseConstants.FORBIDDEN);
             response.setMessage(ResponseConstants.MSG_FORBIDDEN);
             return response;
         }
 
         ParticipatingUser masterUser = participatingUserRepository
-                .findByCompanyIdAndRole(requesterCompanyId, RoleConstants.MASTER)
+                .findByCompanyIdAndRole(company.getId(), RoleConstants.MASTER)
                 .orElse(null);
 
         String picName = masterUser == null ? null : buildFullName(masterUser.getLastName(), masterUser.getFirstName());
@@ -82,8 +82,9 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
                 .corpName(company.getNameJa())
                 .corpPosition(company.getRepPosition())
                 .prefecture(company.getPrefecture())
-                .city(company.getCity())
-                .address(company.getAddress())
+                .municipality(company.getMunicipality())
+                .blocknum(company.getBlocknum())
+                .buildingName(company.getBuildingName())
                 .representativePosition(company.getRepPosition())
                 .representativeName(buildFullName(company.getRepLastName(), company.getRepFirstName()))
                 .picPosition(masterUser == null ? null : masterUser.getUserPosition())
@@ -102,6 +103,13 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
     public ProjectMasterResponse getProjectMaster(Integer projectId, String companyId, String role, String username) {
         ProjectMasterResponse response = new ProjectMasterResponse();
 
+        ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(companyId).orElse(null);
+        if (company == null) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_NOT_FOUND);
+            return response;
+        }
+
         Project project = projectRepository.findById(projectId).orElse(null);
         if (project == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -109,7 +117,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
             return response;
         }
 
-        if (!hasAccessToProject(project, companyId, role, username)) {
+        if (!hasAccessToProject(project, company, role, username)) {
             response.setStatusCode(ResponseConstants.FORBIDDEN);
             response.setMessage(ResponseConstants.MSG_FORBIDDEN);
             return response;
@@ -214,13 +222,13 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
 
     // ==================== Authorization Helpers ====================
 
-    private boolean hasAccessToCompany(String role, String username, String companyId) {
+    private boolean hasAccessToCompany(String role, String username, ParticipatingCompany company) {
         if (RoleConstants.MASTER.equals(role)) {
             return true;
         }
         if (RoleConstants.USER.equals(role)) {
             ParticipatingUser user = participatingUserRepository
-                    .findByUsernameAndCompanyId(username, companyId)
+                    .findByUsernameAndCompanyId(username, company.getId())
                     .orElse(null);
             return user != null && user.getSite() != null && user.getSite().getId() != null;
         }
@@ -239,7 +247,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
         }
         if (RoleConstants.USER.equals(role)) {
             ParticipatingUser user = participatingUserRepository
-                    .findByUsernameAndCompanyId(username, companyId)
+                    .findByUsernameAndCompanyId(username, site.getCompany().getId())
                     .orElse(null);
             if (user == null || user.getSite() == null || user.getSite().getId() == null) {
                 return false;
@@ -249,7 +257,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
         return false;
     }
 
-    private boolean hasAccessToProject(Project project, String companyId, String role, String username) {
+    private boolean hasAccessToProject(Project project, ParticipatingCompany company, String role, String username) {
         if (project == null) {
             return false;
         }
@@ -259,11 +267,11 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
                     .map(SiteProjectRelation::getSite)
                     .filter(Objects::nonNull)
                     .anyMatch(site -> site.getCompany() != null
-                            && companyId.equals(site.getCompany().getCompanyId()));
+                            && company.getId().equals(site.getCompany().getId()));
         }
         if (RoleConstants.USER.equals(role)) {
             ParticipatingUser user = participatingUserRepository
-                    .findByUsernameAndCompanyId(username, companyId)
+                    .findByUsernameAndCompanyId(username, company.getId())
                     .orElse(null);
             if (user == null || user.getSite() == null) {
                 return false;

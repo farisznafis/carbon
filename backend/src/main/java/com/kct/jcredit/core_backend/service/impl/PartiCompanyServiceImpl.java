@@ -58,7 +58,8 @@ public class PartiCompanyServiceImpl implements PartiCompanyService {
                     .phoneNumber(company.getPhoneNumber())
                     .fax(company.getFax())
                     .corpNumber(company.getCorpNumber())
-                    .address(company.getAddress())
+                    //make a string of the adress from the address fields
+                    .address(String.format("%s %s %s %s", company.getPrefecture(), company.getMunicipality(), company.getBlocknum(), company.getBuildingName()))
                     .isSuspended(company.isSuspended())
                     .build();
 

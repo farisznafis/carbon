@@ -57,7 +57,8 @@ public class OperatingUser extends BaseEntity {
     @Column(name = "account_locked_until", nullable = true)
     private LocalDateTime accountLockedUntil;
 
-    @Column(name = "company_id", nullable = false, length = 12)
-    private String companyId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private ParticipatingCompany company;
 
 }

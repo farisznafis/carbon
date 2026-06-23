@@ -36,7 +36,7 @@ public class SiteAuthorization {
         String username = jwtUtil.extractUsername(token);
         String companyId = jwtUtil.extractCompanyId(token);
 
-        Optional<ParticipatingUser> userOpt = userRepository.findByUsernameAndCompanyId(username, companyId);
+        Optional<ParticipatingUser> userOpt = userRepository.findByUsername(username);
         if (userOpt.isEmpty()) {
             return false;
         }
@@ -55,7 +55,7 @@ public class SiteAuthorization {
         String username = jwtUtil.extractUsername(token);
         String companyId = jwtUtil.extractCompanyId(token);
 
-        Optional<ParticipatingUser> userOpt = userRepository.findByUsernameAndCompanyId(username, companyId);
+        Optional<ParticipatingUser> userOpt = userRepository.findByUsername(username);
         return userOpt.filter(u -> u.getSite() != null).map(u -> u.getSite().getId());
     }
 

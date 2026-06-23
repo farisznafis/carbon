@@ -26,7 +26,7 @@ public interface NotificationService {
     void createNotificationForParticipatingCompany(
             String title, 
             String message, 
-            String companyId,
+            Integer companyId,
             Integer operatingUserId);
 
     void createNotificationForOperatingCompany(
