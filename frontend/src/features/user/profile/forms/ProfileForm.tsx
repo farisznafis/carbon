@@ -5,7 +5,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { RequiredBadge, RequiredLabel } from '@/components/forms/shared';
 import { profileFormSchema } from '@/lib/validations';
 import { useRef, useState } from 'react';
 import { useRedirectIfLoggedIn } from '@/hooks/useRedirectIfLoggedIn';
@@ -129,7 +130,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
             name="corporateNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>法人番号 <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                <RequiredLabel>法人番号</RequiredLabel>
                 <FormControl>
                   <Input placeholder="1234567890123" {...field} />
                 </FormControl>
@@ -143,7 +144,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
             name="companyName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>企業名 <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                <RequiredLabel>企業名</RequiredLabel>
                 <FormControl>
                   <Input placeholder="株式会社サンプル" {...field} />
                 </FormControl>
@@ -157,7 +158,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
             name="companyNameKana"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>企業名（カナ） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                <RequiredLabel>企業名（カナ）</RequiredLabel>
                 <FormControl>
                   <Input placeholder="カブシキガイシャサンプル" {...field} />
                 </FormControl>
@@ -171,7 +172,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
             name="companyNameEnglish"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>企業名（英語）</FormLabel>
+                <RequiredLabel required={false}>企業名（英語）</RequiredLabel>
                 <FormControl>
                   <Input placeholder="Sample Corporation" {...field} />
                 </FormControl>
@@ -181,14 +182,17 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
           />
 
           <div className="space-y-4">
-            <p className="font-medium">所在地 <span className="text-red-500 text-xs ml-1">必須</span></p>
+            <p className="flex items-center justify-between gap-2 font-medium">
+              <span>所在地</span>
+              <RequiredBadge />
+            </p>
 
             <FormField
               control={form.control}
               name="postalCode"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">郵便番号</FormLabel>
+                  <RequiredLabel className="text-sm">郵便番号</RequiredLabel>
                   <div className="flex gap-2 items-center">
                     <FormControl>
                       <Input
@@ -212,7 +216,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
                 name="prefecture"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>都道府県</FormLabel>
+                    <RequiredLabel>都道府県</RequiredLabel>
                     <FormControl>
                       <Select onValueChange={field.onChange} value={field.value ?? ''}>
                         <SelectTrigger>
@@ -238,7 +242,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
                 name="city"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm">市区町村</FormLabel>
+                    <RequiredLabel className="text-sm">市区町村</RequiredLabel>
                     <FormControl>
                       <Input placeholder="渋谷区" {...field} />
                     </FormControl>
@@ -253,7 +257,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">番地</FormLabel>
+                  <RequiredLabel className="text-sm">番地</RequiredLabel>
                   <FormControl>
                     <Input placeholder="桜丘町1-1" {...field} />
                   </FormControl>
@@ -267,7 +271,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
               name="building"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">建物名</FormLabel>
+                  <RequiredLabel className="text-sm" required={false}>建物名</RequiredLabel>
                   <FormControl>
                     <Input placeholder="サンプルビル 3F" {...field} />
                   </FormControl>
@@ -287,7 +291,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
               name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>名前（姓） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                  <RequiredLabel>名前（姓）</RequiredLabel>
                   <FormControl>
                     <Input placeholder="山田" {...field} />
                   </FormControl>
@@ -301,7 +305,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
               name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>名前（名） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                  <RequiredLabel>名前（名）</RequiredLabel>
                   <FormControl>
                     <Input placeholder="太郎" {...field} />
                   </FormControl>
@@ -317,7 +321,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
               name="lastNameKana"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>名前（姓）（カナ） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                  <RequiredLabel>名前（姓）（カナ）</RequiredLabel>
                   <FormControl>
                     <Input placeholder="ヤマダ" {...field} />
                   </FormControl>
@@ -331,7 +335,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
               name="firstNameKana"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>名前（名）（カナ） <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                  <RequiredLabel>名前（名）（カナ）</RequiredLabel>
                   <FormControl>
                     <Input placeholder="タロウ" {...field} />
                   </FormControl>
@@ -346,7 +350,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
             name="position"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>役職 <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                <RequiredLabel>役職</RequiredLabel>
                 <FormControl>
                   <Input placeholder="部長" {...field} />
                 </FormControl>
@@ -360,7 +364,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
             name="phoneNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>電話番号 <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                <RequiredLabel>電話番号</RequiredLabel>
                 <FormControl>
                   <Input type="tel" placeholder="03-1234-5678" {...field} />
                 </FormControl>
@@ -374,7 +378,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
             name="faxNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>FAX番号</FormLabel>
+                <RequiredLabel required={false}>FAX番号</RequiredLabel>
                 <FormControl>
                   <Input type="tel" placeholder="03-1234-5679" {...field} />
                 </FormControl>
@@ -388,7 +392,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>メールアドレス <span className="text-red-500 text-xs ml-1">必須</span></FormLabel>
+                <RequiredLabel>メールアドレス</RequiredLabel>
                 <FormControl>
                   <Input type="email" placeholder="yamada@company.com" {...field} />
                 </FormControl>

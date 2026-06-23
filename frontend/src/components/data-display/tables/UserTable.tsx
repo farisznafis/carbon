@@ -1,6 +1,7 @@
 import { Action, Column, ProTable } from '@/components/data-display/ProTable/ProTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { InlineHelp } from '@/components/feedback/InlineHelp/InlineHelp';
+import { Badge } from '@/components/ui/badge';
 import type { UserList } from '@/api/users';
 import { usePagination } from '@/hooks/usePagination';
 import { Users } from 'lucide-react';
@@ -45,7 +46,13 @@ export function UserTable({ users, onEdit, onRowClick }: UserTableProps) {
       id: 'user-site',
       key: 'siteId',
       label: '拠点',
-      render: (_value, row) => row.siteName ?? row.siteId ?? '',
+      render: (_value, row) => {
+        if (row.siteId == null || row.siteId === '') {
+          return <Badge variant='destructive'>拠点に未接続</Badge>;
+        }
+
+        return row.siteName ?? row.siteId;
+      },
       sortable: true,
       truncate: true,
       maxWidth: 'max-w-[220px]',

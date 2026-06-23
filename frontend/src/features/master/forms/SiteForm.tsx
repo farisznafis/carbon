@@ -18,9 +18,9 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { RequiredLabel } from '@/components/forms/shared';
 import { SiteSchema } from '@/lib/validations';
 import { prefectures } from '@/lib/constants/prefectures';
 import { Separator } from '@/components/ui/separator';
@@ -168,7 +168,7 @@ export function SiteForm({
                 name='siteName'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>拠点名</FormLabel>
+                    <RequiredLabel>拠点名</RequiredLabel>
                     <FormControl>
                       <Input
                         placeholder='東京本社'
@@ -185,7 +185,7 @@ export function SiteForm({
                 name='siteNameKana'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>拠点名（カナ）</FormLabel>
+                    <RequiredLabel>拠点名（カナ）</RequiredLabel>
                     <FormControl>
                       <Input
                         placeholder='トウキョウホンシャ'
@@ -216,7 +216,7 @@ export function SiteForm({
               name='postalCode'
               render={({ field }) => (
                 <FormItem className='flex-1'>
-                  <FormLabel>郵便番号（ハイフン無し）</FormLabel>
+                  <RequiredLabel>郵便番号（ハイフン無し）</RequiredLabel>
                   <FormControl>
                     <Input
                       placeholder='1000001'
@@ -241,7 +241,7 @@ export function SiteForm({
             name='prefectureName'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>都道府県</FormLabel>
+                <RequiredLabel>都道府県</RequiredLabel>
                 <Select
                   onValueChange={field.onChange}
                   value={field.value ?? ''}
@@ -272,7 +272,7 @@ export function SiteForm({
             name='cityName'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>市区町村</FormLabel>
+                <RequiredLabel>市区町村</RequiredLabel>
                 <FormControl>
                   <Input
                     placeholder='千代田区'
@@ -289,7 +289,7 @@ export function SiteForm({
             name='townName'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>町域</FormLabel>
+                <RequiredLabel>町域</RequiredLabel>
                 <FormControl>
                   <Input
                     placeholder='千代田'
@@ -306,7 +306,7 @@ export function SiteForm({
             name='blockName'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>番地</FormLabel>
+                <RequiredLabel>番地</RequiredLabel>
                 <FormControl>
                   <Input
                     placeholder='1-1-1'
@@ -325,7 +325,7 @@ export function SiteForm({
                 name='addressDetail'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>建物名・部屋番号</FormLabel>
+                    <RequiredLabel required={false}>建物名・部屋番号</RequiredLabel>
                     <FormControl>
                       <Input
                         placeholder='東京ビル3F305室'

@@ -2,10 +2,10 @@
 import {
   FormField,
   FormItem,
-  FormLabel,
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
+import { RequiredLabel } from "@/components/forms/shared/RequiredLabel";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -47,6 +47,7 @@ export interface FieldConfig<TFormValues extends FieldValues = FieldValues> {
   label: string;
   type: FieldType;
   placeholder?: string;
+  required?: boolean;
   options?: SelectOption<unknown>[]; // for select
   //for file
   accept?: string; // MIME types or file extensions (e.g. "image/*")
@@ -102,7 +103,7 @@ export function GenericFormFields<TFormValues extends FieldValues>({
           name={config.name}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{config.label}</FormLabel>
+              <RequiredLabel required={config.required === true}>{config.label}</RequiredLabel>
               <FormControl>
                 {config.type === "file" ? (
                   <Input
