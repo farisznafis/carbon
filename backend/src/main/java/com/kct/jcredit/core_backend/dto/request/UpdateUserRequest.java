@@ -3,7 +3,6 @@ package com.kct.jcredit.core_backend.dto.request;
 import com.kct.jcredit.core_backend.validation.Katakana;
 import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.ZenkakuWithSymbols;
-import com.kct.jcredit.core_backend.validation.NumericOnly;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -60,7 +59,7 @@ public class UpdateUserRequest {
    
     
     // サイトID 
-    @NumericOnly
+    @Min(value = 1, message = "サイトIDは1以上の数値を指定してください。")
     private Integer siteId;  // Nullable - role="master" の場合は不要
     
 }

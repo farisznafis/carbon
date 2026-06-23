@@ -90,7 +90,6 @@ public class CreateUserRequest {
     
    
     // サイトID 
-    @NotNull(message = "拠点IDは必須です。") 
     @Min(value = 1, message = "サイトIDは1以上の数値を指定してください。")
     private Integer siteId;  // Nullable - role="master" の場合は不要
     

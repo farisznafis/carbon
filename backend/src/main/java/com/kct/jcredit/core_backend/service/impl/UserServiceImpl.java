@@ -179,8 +179,10 @@ public class UserServiceImpl implements UserService {
         CreateUserResponse response = new CreateUserResponse();
         
         // サイトを取得 & 存在チェック
-        Site site = siteRepository.findById(request.getSiteId())
-                .orElse(null);
+        Site site = null;
+        if (request.getSiteId() != null) {
+            site = siteRepository.findById(request.getSiteId())
+                    .orElse(null);
         
         if (site == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -202,6 +204,7 @@ public class UserServiceImpl implements UserService {
             response.setStatusCode(ResponseConstants.FORBIDDEN);
             response.setMessage(ResponseConstants.MSG_FORBIDDEN);
             return response;
+        }
         }
         // 6. メールアドレスの重複チェック
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -240,14 +243,17 @@ public class UserServiceImpl implements UserService {
         ParticipatingUser savedUser = userRepository.save(newUser);
 
         // 9. サイトのPIC情報を新規ユーザーに更新
-        updateSitePIC(site, savedUser);
-        Site savedSite = siteRepository.save(site);
+        Site savedSite = null;
+        if (site != null) {
+            updateSitePIC(site, savedUser);
+            savedSite = siteRepository.save(site);
+        }
 
         response.setStatusCode(ResponseConstants.OK);
         response.setMessage("ユーザーが正常に作成されました。");
         
         // 10. レスポンスにサイト情報とユーザー情報を設定
-        SiteResponse siteResponse = mapToSiteResponse(savedSite);
+        SiteResponse siteResponse = savedSite != null ? mapToSiteResponse(savedSite) : null;
         UserInfoResponse userResponse = mapToUserInfoResponse(savedUser);
 
         response.setSite(siteResponse);
