@@ -59,7 +59,7 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
                   to='/forgot-password'
                   className='text-sm text-primary hover:underline'
                 >
-                  会員IDまたはパスワードを忘れの方
+                  企業IDまたはパスワードをお忘れの方
                 </Link>
               </div>
               <div className='mt-8 border-t border-gray-300 pt-4 text-center'>
