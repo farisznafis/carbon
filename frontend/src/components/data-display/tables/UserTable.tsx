@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import type { UserList } from '@/api/users';
 import { usePagination } from '@/hooks/usePagination';
 import { Users } from 'lucide-react';
+import { useMemo } from 'react';
 
 type UserTableProps = {
   users: UserList[];
@@ -17,20 +18,32 @@ type UserTableProps = {
 };
 
 export function UserTable({ users, onEdit, onRowClick }: UserTableProps) {
+  // 1. Sort users so that 'master' role is always at the top
+  const sortedUsers = useMemo(() => {
+    return [...users].sort((a, b) => {
+      const aIsMaster = a.role === 'master';
+      const bIsMaster = b.role === 'master';
+
+      if (aIsMaster && !bIsMaster) return -1; // 'a' goes first
+      if (!aIsMaster && bIsMaster) return 1;  // 'b' goes first
+      return 0; // keep original order for others
+    });
+  }, [users]);
+
   const userColumns: Column<UserList>[] = [
     {
-      id: 'user-name',
+      id: 'first-name',
       key: 'firstName',
       label: '氏名',
       render: (_value, row) => {
         const fullName = `${row.lastName ?? ''} ${row.firstName ?? ''}`.trim();
-
+        
         return (
-          <div className='flex items-center gap-2'>
+          <div className="flex items-center gap-2">
             <span>{fullName}</span>
             {row.role === 'master' && (
-              <Badge className='bg-blue-600 hover:bg-blue-600 text-white font-medium px-2 py-0.5 text-xs rounded'>
-                マスタ
+              <Badge className="bg-blue-600 hover:bg-blue-600 text-white font-medium px-2 py-0.5 text-xs rounded">
+                マスター
               </Badge>
             )}
           </div>
@@ -38,22 +51,31 @@ export function UserTable({ users, onEdit, onRowClick }: UserTableProps) {
       },
       sortable: true,
       truncate: true,
-      maxWidth: 'max-w-[180px]',
+      maxWidth: 'max-w-[120px]',
     },
+    // {
+    //   id: 'user-kana',
+    //   key: 'firstNameKana',
+    //   label: 'ユーザー名',
+    //   render: (_value, row) =>
+    //     `${row.lastNameKana ?? ''} ${row.firstNameKana ?? ''}`.trim(),
+    //   sortable: true,
+    //   truncate: true,
+    //   maxWidth: 'max-w-[120px]',
+    // },
     {
       id: 'user-email',
       key: 'email',
-      label: 'メール',
+      label: 'メールアドレス',
       sortable: true,
       truncate: true,
       maxWidth: 'max-w-[240px]',
     },
     {
-      id: 'user-kana',
-      key: 'firstNameKana',
-      label: 'ユーザー名',
-      render: (_value, row) =>
-        `${row.lastNameKana ?? ''} ${row.firstNameKana ?? ''}`.trim(),
+      id: 'username',
+      key: 'username',
+      label: 'ユーザ名',
+      render: (_value, row) => row.username ?? '—',
       sortable: true,
       truncate: true,
       maxWidth: 'max-w-[220px]',
@@ -83,6 +105,7 @@ export function UserTable({ users, onEdit, onRowClick }: UserTableProps) {
     },
   ];
 
+  // 2. Pass the SORTED list to the pagination hook
   const {
     currentPage,
     totalPages,
@@ -91,7 +114,7 @@ export function UserTable({ users, onEdit, onRowClick }: UserTableProps) {
     paginatedItems: paginatedUsers,
     goToPage,
     setItemsPerPage,
-  } = usePagination(users);
+  } = usePagination(sortedUsers);
 
   return (
     <>
@@ -99,11 +122,11 @@ export function UserTable({ users, onEdit, onRowClick }: UserTableProps) {
         title={
           <p className='flex items-center gap-2 text-2xl font-bold'>
             <Users className='h-6 w-6' />
-            ユーザ
+            ユーザー
             <InlineHelp
               content={
                 <div className='text-sm'>
-                  ユーザの行をクリックすると、プロフィール詳細へ移動します。
+                  ユーザーの行をクリックすると、プロフィール詳細へ移動します。
                 </div>
               }
             />
@@ -116,7 +139,7 @@ export function UserTable({ users, onEdit, onRowClick }: UserTableProps) {
         height='max-h-[300px]'
         emptyState={
           <p className='text-muted-foreground'>
-            まだユーザが登録されていません
+            まだユーザーが登録されていません
           </p>
         }
         clickable={Boolean(onRowClick)}

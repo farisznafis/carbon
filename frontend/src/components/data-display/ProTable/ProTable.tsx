@@ -131,7 +131,7 @@ export function ProTable<T extends { id: string }>({
   description,
 }: Readonly<ProTableProps<T>>) {
   const [search, setSearch] = useState("");
-  const [sortColumn, setSortColumn] = useState<keyof T>(columns[0].key);
+  const [sortColumn, setSortColumn] = useState<keyof T | null>(null);
   const [sortAsc, setSortAsc] = useState(false);
 
   // Filter + sort data
@@ -143,30 +143,31 @@ export function ProTable<T extends { id: string }>({
       );
     });
 
-    filtered.sort((a, b) => {
-      const aValue = a[sortColumn];
-      const bValue = b[sortColumn];
+    if (sortColumn !== null) { // only sort when user has clicked a column header
+      filtered.sort((a, b) => {
+        const aValue = a[sortColumn];
+        const bValue = b[sortColumn];
 
-      // For strings/numbers
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        return sortAsc
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-      if (typeof aValue === "number" && typeof bValue === "number") {
-        return sortAsc ? aValue - bValue : bValue - aValue;
-      }
-      return 0;
-    });
+        if (typeof aValue === "string" && typeof bValue === "string") {
+          return sortAsc
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        }
+        if (typeof aValue === "number" && typeof bValue === "number") {
+          return sortAsc ? aValue - bValue : bValue - aValue;
+        }
+        return 0;
+      });
+    }
 
     return filtered;
   }, [data, search, sortColumn, sortAsc]);
 
   const handleSort = (col: keyof T, sortable?: boolean) => {
     if (!sortable) return;
-    if (sortColumn === col) setSortAsc(!sortAsc);
+    if (sortColumn === col) setSortAsc(!sortAsc); // toggle direction on same column
     else {
-      setSortColumn(col);
+      setSortColumn(col);                          // switch to new column
       setSortAsc(true);
     }
   };
