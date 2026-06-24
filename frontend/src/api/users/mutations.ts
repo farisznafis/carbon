@@ -12,7 +12,7 @@ type RegisterUserPayload = {
   phoneNumber: string;
   userPosition: string;
   password: string;
-  siteId: number;
+  siteId: number | null;
 };
 
 type UpdateUserInput = Partial<UserFormData> & {
@@ -28,7 +28,7 @@ type UpdateUserPayload = {
   email: string;
   phoneNumber: string;
   userPosition: string;
-  siteId: number;
+  siteId: number | null;
 };
 
 type UpdateUserResponse = {
@@ -65,7 +65,7 @@ export const registerUser = async (
     phoneNumber: String(userData.phoneNumber ?? "").replace(/-/g, ""),
     userPosition: userData.userPosition ?? "",
     password: userData.password ?? "",
-    siteId: Number(userData.siteId),
+    siteId: userData.siteId ? Number(userData.siteId) : null,
   };
 
   const response = await apiFetch("/user", {
@@ -118,18 +118,23 @@ export const updateUser = async (
   }
 
   const updatedUser: UserList =
-    json?.user ?? {
-      id: String(userId),
-      firstName: payload.firstName,
-      firstNameKana: payload.firstNameKana,
-      lastName: payload.lastName,
-      lastNameKana: payload.lastNameKana,
-      email: payload.email,
-      phoneNumber: payload.phoneNumber,
-      role: mergedData?.role ?? "user",
-      siteId: String(payload.siteId),
-      position: payload.userPosition,
-    };
+    json?.user
+      ? {
+          ...json.user,
+          position: json.user.position, // ✅ normalize API response
+        }
+      : {
+          id: String(userId),
+          firstName: payload.firstName,
+          firstNameKana: payload.firstNameKana,
+          lastName: payload.lastName,
+          lastNameKana: payload.lastNameKana,
+          email: payload.email,
+          phoneNumber: payload.phoneNumber,
+          role: mergedData?.role ?? "user",
+          siteId: String(payload.siteId),
+          position: payload.userPosition,
+        };
 
   const updatedSites =
     currSite && prevSite && masterUser && mergedData

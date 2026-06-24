@@ -13,10 +13,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
-import com.kct.jcredit.core_backend.dto.request.PartiCompanyRegisterRequest;
+import com.kct.jcredit.core_backend.dto.request.ApproveDeletionRequest;
+import com.kct.jcredit.core_backend.dto.request.CreateDeletionRequest;
 import com.kct.jcredit.core_backend.dto.request.ReactivationRequest;
+import com.kct.jcredit.core_backend.dto.request.RejectDeletionRequest;
 import com.kct.jcredit.core_backend.dto.request.SuspendCompanyRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdatePartiCompanyRequest;
+import com.kct.jcredit.core_backend.dto.request.PartiCompanyRegisterRequest;
+import com.kct.jcredit.core_backend.dto.response.DeleteCompanyResponse;
+import com.kct.jcredit.core_backend.dto.response.DeletionRequestResponse;
 import com.kct.jcredit.core_backend.dto.response.ReactivationResponse;
 import com.kct.jcredit.core_backend.dto.response.SuspendCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.UpdatePartiCompanyResponse;
@@ -24,6 +29,7 @@ import com.kct.jcredit.core_backend.dto.response.details.PartiCompanyResponseDet
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
+import com.kct.jcredit.core_backend.service.CompanyDeletionService;
 import com.kct.jcredit.core_backend.service.PartiCompanyRegisterService;
 import com.kct.jcredit.core_backend.service.PartiCompanyService;
 import com.kct.jcredit.core_backend.service.PaymentGatewayService;
@@ -44,6 +50,8 @@ public class PartiCompanyController {
     private final SubscriptionService subscriptionService;
     private final PaymentGatewayService paymentGatewayService;
     private final PartiCompanyRegisterService registerService;
+    private final JwtUtil jwtUtil;
+    private final CompanyDeletionService companyDeletionService;
 
     @PatchMapping
     @PreAuthorize("hasAnyRole('master')")
@@ -150,5 +158,44 @@ public class PartiCompanyController {
                     .isSuspended(true)
                     .build());
         }
+    }
+
+    @PostMapping("/{companyId}/deletion-request")
+    @PreAuthorize("hasAnyRole('master')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<DeletionRequestResponse> createDeletionRequest(
+            Authentication authentication,
+            @PathVariable String companyId,
+            @RequestBody @Valid CreateDeletionRequest request) {
+        String operatorId = jwtUtil.extractUsername(authentication.getCredentials().toString());
+        DeletionRequestResponse response = companyDeletionService.createDeletionRequest(
+                companyId, operatorId, request.getReason());
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @PostMapping("/{companyId}/deletion-approve")
+    @PreAuthorize("hasAnyRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<DeletionRequestResponse> approveDeletionRequest(
+            Authentication authentication,
+            @PathVariable String companyId,
+            @RequestBody @Valid ApproveDeletionRequest request) {
+        String operatorId = jwtUtil.extractUsername(authentication.getCredentials().toString());
+        DeletionRequestResponse response = companyDeletionService.approveDeletionRequest(
+                companyId, operatorId);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @PostMapping("/{companyId}/deletion-reject")
+    @PreAuthorize("hasAnyRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<DeletionRequestResponse> rejectDeletionRequest(
+            Authentication authentication,
+            @PathVariable String companyId,
+            @RequestBody @Valid RejectDeletionRequest request) {
+        String operatorId = jwtUtil.extractUsername(authentication.getCredentials().toString());
+        DeletionRequestResponse response = companyDeletionService.rejectDeletionRequest(
+                companyId, operatorId, request.getRejectionReason());
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 }

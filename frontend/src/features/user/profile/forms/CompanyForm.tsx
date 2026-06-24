@@ -14,10 +14,10 @@ import {
   Form,
   FormField,
   FormItem,
-  FormLabel,
   FormControl,
   FormMessage,
 } from '@/components/ui/form';
+import { RequiredLabel } from '@/components/forms/shared';
 import { useProfileStore } from '@/stores/ProfileStore';
 import { CompanyFormValues, companySchema } from '@/lib/schemas/companySchema';
 
@@ -124,7 +124,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
                   name='phoneNumber'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>電話番号</FormLabel>
+                      <RequiredLabel required={false}>電話番号</RequiredLabel>
                       <FormControl>
                         <Input
                           placeholder='03-1234-5678'
@@ -142,7 +142,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
                   name='fax'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>FAX番号（任意）</FormLabel>
+                      <RequiredLabel required={false}>FAX番号（任意）</RequiredLabel>
                       <FormControl>
                         <Input
                           placeholder='03-1234-5678'
@@ -160,7 +160,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
                   name='email'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>メールアドレス</FormLabel>
+                      <RequiredLabel required={false}>メールアドレス</RequiredLabel>
                       <FormControl>
                         <Input
                           type='email'

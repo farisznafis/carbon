@@ -11,9 +11,9 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { RequiredLabel } from "@/components/forms/shared/RequiredLabel";
 
 const schema = z.object({
   postcode: z
@@ -95,7 +95,7 @@ export function AddressForm({ defaultValues }: Readonly<AddressFormProps>) {
             name="postcode"
             render={({ field }) => (
               <FormItem className="flex-1">
-                <FormLabel>Postcode</FormLabel>
+                <RequiredLabel>Postcode</RequiredLabel>
                 <FormControl>
                   <Input placeholder="1000001" {...field} />
                 </FormControl>
@@ -122,7 +122,7 @@ export function AddressForm({ defaultValues }: Readonly<AddressFormProps>) {
           name="pref"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Prefecture</FormLabel>
+              <RequiredLabel required={false}>Prefecture</RequiredLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -136,7 +136,7 @@ export function AddressForm({ defaultValues }: Readonly<AddressFormProps>) {
           name="city"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>City / Ward</FormLabel>
+              <RequiredLabel required={false}>City / Ward</RequiredLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -150,7 +150,7 @@ export function AddressForm({ defaultValues }: Readonly<AddressFormProps>) {
           name="town"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Town / Area</FormLabel>
+              <RequiredLabel required={false}>Town / Area</RequiredLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>

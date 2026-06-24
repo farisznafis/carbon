@@ -8,8 +8,13 @@ import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.kct.jcredit.core_backend.entity.base.BaseEntity;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 @Entity
 @Table(name = "participating_user")
+@SQLDelete(sql = "UPDATE participating_user SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,7 +24,7 @@ import com.kct.jcredit.core_backend.entity.base.BaseEntity;
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ParticipatingUser extends BaseEntity {
 
-    @Column(name = "username", nullable = false, unique = true, length = 50)
+    @Column(name = "username", nullable = false, length = 50)
     private String username;
 
     @Column(name = "first_name", nullable = false, length = 50)
@@ -61,4 +66,10 @@ public class ParticipatingUser extends BaseEntity {
 
     @Column(name = "company_id", nullable = false, length = 12)
     private String companyId;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by", length = 100)
+    private String deletedBy;
 }

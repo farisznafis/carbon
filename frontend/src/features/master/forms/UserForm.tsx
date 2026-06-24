@@ -7,11 +7,11 @@ import {
   Form,
   FormField,
   FormItem,
-  FormLabel,
   FormControl,
   FormMessage,
   FormDescription,
 } from '@/components/ui/form';
+import { RequiredLabel } from '@/components/forms/shared';
 import { useMemo, useState } from 'react';
 import {
   Select,
@@ -27,6 +27,7 @@ import { DeleteAlertDialog } from '@/components/feedback/DeleteAlertDialog/Delet
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
 import type { UserFormData } from '@/api/users';
 import type { Site } from '@/api/site';
+import { X } from 'lucide-react';
 
 export type { UserFormData } from '@/api/users';
 
@@ -133,7 +134,7 @@ export function UserForm({
               name='lastName'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>姓</FormLabel>
+                  <RequiredLabel>姓</RequiredLabel>
                   <FormControl>
                     <Input
                       placeholder='山田'
@@ -149,7 +150,7 @@ export function UserForm({
               name='firstName'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>名</FormLabel>
+                  <RequiredLabel>名</RequiredLabel>
                   <FormControl>
                     <Input
                       placeholder='太郎'
@@ -168,7 +169,7 @@ export function UserForm({
               name='lastNameKana'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>セイ</FormLabel>
+                  <RequiredLabel>セイ</RequiredLabel>
                   <FormControl>
                     <Input
                       placeholder='ヤマダ'
@@ -184,7 +185,7 @@ export function UserForm({
               name='firstNameKana'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>メイ</FormLabel>
+                  <RequiredLabel>メイ</RequiredLabel>
                   <FormControl>
                     <Input
                       placeholder='タロウ'
@@ -202,7 +203,7 @@ export function UserForm({
             name='phoneNumber'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>電話番号（ハイフン無し）</FormLabel>
+                <RequiredLabel>電話番号（ハイフン無し）</RequiredLabel>
                 <FormControl>
                   <Input
                     placeholder='0312345678'
@@ -219,7 +220,7 @@ export function UserForm({
             name='userPosition'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>役職</FormLabel>
+                <RequiredLabel>役職</RequiredLabel>
                 <FormControl>
                   <Input
                     placeholder='営業部部長'
@@ -239,7 +240,7 @@ export function UserForm({
             name='username'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>ユーザー名</FormLabel>
+                <RequiredLabel>ユーザー名</RequiredLabel>
                 <FormControl>
                   <Input
                     placeholder='tanaka_taro'
@@ -255,7 +256,7 @@ export function UserForm({
             name='email'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>メールアドレス</FormLabel>
+                <RequiredLabel>メールアドレス</RequiredLabel>
                 <FormControl>
                   <Input
                     type='email'
@@ -270,7 +271,7 @@ export function UserForm({
 
           {/* <FormField control={form.control} name="emailConfirmation" render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>メールアドレス（確認）</FormLabel>
+                                        <RequiredLabel>メールアドレス（確認）</RequiredLabel>
                                         <FormControl><Input type="email" placeholder="example@company.com" {...field} /></FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -283,7 +284,7 @@ export function UserForm({
                 name='password'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>パスワード</FormLabel>
+                    <RequiredLabel>パスワード</RequiredLabel>
                     <FormControl>
                       <PasswordInput
                         placeholder='••••••••'
@@ -305,7 +306,7 @@ export function UserForm({
                 name='passwordConfirmation'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>パスワード（確認）</FormLabel>
+                    <RequiredLabel>パスワード（確認）</RequiredLabel>
                     <FormControl>
                       <Input
                         type='password'
@@ -325,16 +326,21 @@ export function UserForm({
             <div className='text-2xl pb-2'>拠点</div>
           )}
           {shouldShowSiteSelect() && (
-            <FormField
-              control={form.control}
-              name='siteId'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>担当する拠点</FormLabel>
+          <FormField
+            control={form.control}
+            name='siteId'
+            render={({ field }) => (
+              <FormItem>
+                <RequiredLabel required={false}>担当する拠点</RequiredLabel>
+                <div className='flex items-center gap-2'>
                   <Select
                     value={field.value ?? ''}
-                    onValueChange={field.onChange}
-                    disabled={isSiteOptionsLoading || Boolean(siteOptionsError) || sites.length === 0}
+                    onValueChange={(val) => field.onChange(val)}
+                    disabled={
+                      isSiteOptionsLoading ||
+                      Boolean(siteOptionsError) ||
+                      sites.length === 0
+                    }
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -352,11 +358,25 @@ export function UserForm({
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
+
+                  {/* ✅ Clear button — only visible when a site is selected */}
+                  {field.value && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      aria-label='拠点をクリア'
+                      onClick={() => field.onChange(null)}
+                    >
+                      <X className='h-4 w-4 text-muted-foreground' />
+                    </Button>
+                  )}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
           <div className='flex justify-between items-center gap-4 w-full py-8'>
             {onDelete && defaultValues?.siteId !== null ? (

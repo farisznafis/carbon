@@ -9,12 +9,17 @@ import com.kct.jcredit.core_backend.entity.base.BaseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "site_r002_member_data")
+@SQLDelete(sql = "UPDATE site_r002_member_data SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @Builder
@@ -110,4 +115,10 @@ public class SiteR002MemberData extends BaseEntity {
 
     @OneToMany(mappedBy = "memberData", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SiteR002EquipmentFile> files = new ArrayList<>();
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by", length = 100)
+    private String deletedBy;
 }
