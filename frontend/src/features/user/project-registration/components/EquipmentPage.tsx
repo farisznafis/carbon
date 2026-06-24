@@ -1,8 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { FormProvider, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { SolarPowerEquipmentForm } from "./equipment-forms/SolarPowerEquipmentForm";
 import type { SolarPowerFormData } from "@/lib/equipmentValidations";
 import { FormPageWrapper } from "@/components/layout/FormPageWrapper/FormPageWrapper";
+import { Form } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 //import { BatteryEquipmentForm } from "@/components/BatteryEquipmentForm";
 
 export const EquipmentPage = () => {
@@ -10,33 +12,34 @@ export const EquipmentPage = () => {
   const navigate = useNavigate();
   const form = useForm<SolarPowerFormData>();
 
-  const handleSave = () => {
-    const data = form.getValues();
+  const handleSave = (data: SolarPowerFormData) => {
     // Navigate back to Step1 with the new equipment in state
     navigate("/equipmentStep", { state: { newEquipment: data } });
   };
 
   return (
-    <FormProvider {...form}>
-      <FormPageWrapper
-        pageName="設備登録"
-        title="設備登録"
-        onBack={() => navigate(-1)}
-        contentMaxWidth="max-w-2xl"
-      >
-        {type === "solar" && <SolarPowerEquipmentForm form={form} />}
+    <FormPageWrapper
+      pageName="設備登録"
+      title="設備登録"
+      onBack={() => navigate(-1)}
+      backText="戻る"
+      contentMaxWidth="max-w-3xl"
+    >
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(handleSave)}
+          className="space-y-4"
+        >
+          {type === "solar" && <SolarPowerEquipmentForm form={form} />}
 
-        <div className="flex justify-center">
-          <button
-            type="button"
-            className="px-6 py-2 bg-green-500 text-white rounded"
-            onClick={handleSave}
-          >
-            保存
-          </button>
-        </div>
-      </FormPageWrapper>
-    </FormProvider>
+          <div className="flex justify-center border-t pt-4">
+            <Button type="submit" className="w-full max-w-lg">
+              保存
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </FormPageWrapper>
   );
 };
 
