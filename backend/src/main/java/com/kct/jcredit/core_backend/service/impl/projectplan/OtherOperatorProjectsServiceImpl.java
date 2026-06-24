@@ -11,6 +11,7 @@ import com.kct.jcredit.core_backend.repository.dynamodb.OtherOperatorProjectsRep
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.service.projectplan.OtherOperatorProjectsService;
+import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
     private static final String OTHER_OPERATOR_PROJECTS_SK = "OTHER_OPERATOR_PROJECTS";
 
     private final OperatingUserRepository operatorUserRepository;
+    private final OperatorCompanyRepository operatorCompanyRepository;
     private final ProjectRepository projectRepository;
     private final OtherOperatorProjectsRepository otherOperatorProjectsRepository;
 
@@ -127,14 +129,19 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
     }
 
     private boolean hasAccessToProject(Project project, String companyId, String role, String username) {
+
         if (project == null) {
             return false;
+        }
+        OperatorCompany company = project.getOperatorCompany();
+        if (company == null) {
+            company = operatorCompanyRepository.findByCompanyId(companyId).orElse(null);
         }
         if (!RoleConstants.OPERATOR.equals(role)) {
             return false;
         }
         OperatingUser user = operatorUserRepository
-                .findByUsernameAndCompanyId(username, companyId)
+                .findByUsernameAndCompany_Id(username, company.getId())
                 .orElse(null);
         if (user == null) {
             return false;

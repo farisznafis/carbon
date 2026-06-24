@@ -12,14 +12,30 @@ import java.util.List;
 
 @Repository
 public interface ParticipatingUserRepository extends JpaRepository<ParticipatingUser, Integer> {
-    Optional<ParticipatingUser> findByUsername(String username);
+   Optional<ParticipatingUser> findByUsername(String username);
+
     Optional<ParticipatingUser> findByEmail(String email);
-    @Query("SELECT u FROM ParticipatingUser u WHERE (u.username = :username OR u.email = :email) AND u.companyId = :companyId")
-    Optional<ParticipatingUser> findByUsernameOrEmailAndCompanyId(String username, String email, Integer companyId);
-    List<ParticipatingUser> findByCompanyId(Integer companyId);
-    Optional<ParticipatingUser> findByCompanyIdAndRole(Integer companyId, String role);
-    Optional<ParticipatingUser> findByUsernameAndCompanyId(String username, Integer companyId);
+
+    @Query("""
+        SELECT u FROM ParticipatingUser u
+        WHERE (u.username = :username OR u.email = :email)
+        AND u.company.id = :companyId
+    """)
+    Optional<ParticipatingUser> findByUsernameOrEmailAndCompanyId(
+            String username,
+            String email,
+            Integer companyId
+    );
+
+    List<ParticipatingUser> findByCompany_Id(Integer companyId);
+
+    Optional<ParticipatingUser> findByCompany_IdAndRole(Integer companyId, String role);
+
+    Optional<ParticipatingUser> findByUsernameAndCompany_Id(String username, Integer companyId);
+
     boolean existsByUsername(String username);
+
     boolean existsByEmail(String email);
+
     long countByCompany_IdAndSite_Id(Integer companyId, Integer siteId);
 }

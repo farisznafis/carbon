@@ -243,7 +243,7 @@ CREATE TABLE site_r002_member_data (
     updated_by VARCHAR(100),
     project_id INT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
     site_id INT NOT NULL REFERENCES site(id) ON DELETE CASCADE,
-    participating_company_id INT NOT NULL REFERENCES participating_company(id) ON DELETE CASCADE
+    participating_company_id INT NOT NULL REFERENCES participating_company(id) ON DELETE CASCADE,
     methodology_number CHAR(3) NOT NULL,
     is_eligible BOOLEAN NOT NULL,
     equipment_op_date DATE NOT NULL,

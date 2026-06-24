@@ -259,7 +259,7 @@ public Notification createNotification(
         log.info("Creating notifications for company - companyId: {}, title: {}", companyId, title);
         
         // 企業の全ユーザーを取得
-        List<ParticipatingUser> users = participatingUserRepository.findByCompanyId(companyId);
+        List<ParticipatingUser> users = participatingUserRepository.findByCompany_Id(companyId);
         
         if (users.isEmpty()) {
             log.warn("No users found for company: {}", companyId);
@@ -272,28 +272,7 @@ public Notification createNotification(
         }
         log.info("Created {} notifications for company {}", users.size(), companyId);
     }
-
-    @Override
-    @Transactional
-    public void createNotificationForOperatingCompany(
-            String title,
-            String message,
-            String operatorCompanyId) {
-        log.info("Creating notifications for operator company - operatorCompanyId: {}, title: {}", operatorCompanyId, title);
-
-        List<OperatingUser> users = operatingUserRepository.findByCompanyId(operatorCompanyId);
-        if (users.isEmpty()) {
-            log.warn("No operating users found for operator company: {}", operatorCompanyId);
-            return;
-        }
-
-        for (OperatingUser user : users) {
-            createNotification(title, message, null, user.getId());
-        }
-
-        log.info("Created {} notifications for operator company {}", users.size(), operatorCompanyId);
-    }
-
+    
     @Override
     @Transactional
     public void createNotificationForAllOperatingUsers(

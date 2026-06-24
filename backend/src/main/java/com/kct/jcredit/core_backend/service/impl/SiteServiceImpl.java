@@ -342,7 +342,7 @@ public class SiteServiceImpl implements SiteService {
 
         if (RoleConstants.USER.equals(role)) {
             ParticipatingUser user = participatingUserRepository
-                    .findByUsernameAndCompanyId(username, site.getCompany().getId())
+                    .findByUsernameAndCompany_Id(username, site.getCompany().getId())
                     .orElse(null);
             if (user == null || user.getSite() == null || user.getSite().getId() == null) {
                 return false;

@@ -85,7 +85,7 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
         }
 
         if (RoleConstants.USER.equals(role)) {
-            Optional<ParticipatingUser> userOpt = userRepository.findByUsernameAndCompanyId(
+            Optional<ParticipatingUser> userOpt = userRepository.findByUsernameAndCompany_Id(
                     jwtUtil.extractUsername(token), company.getId());
             if (userOpt.isPresent()) {
                 ParticipatingUser user = userOpt.get();

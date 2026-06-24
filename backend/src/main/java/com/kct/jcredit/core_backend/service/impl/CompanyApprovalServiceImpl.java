@@ -58,7 +58,7 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
             return response;
         }
 
-        if (userRepository.findByCompanyIdAndRole(company.getId(), RoleConstants.MASTER).isPresent()) {
+        if (userRepository.findByCompany_IdAndRole(company.getId(), RoleConstants.MASTER).isPresent()) {
             response.setStatusCode(ResponseConstants.BAD_REQUEST);
             response.setMessage(ResponseConstants.MSG_MASTER_USER_EXISTS);
             return response;

@@ -72,7 +72,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
         }
 
         ParticipatingUser masterUser = participatingUserRepository
-                .findByCompanyIdAndRole(company.getId(), RoleConstants.MASTER)
+                .findByCompany_IdAndRole(company.getId(), RoleConstants.MASTER)
                 .orElse(null);
 
         String picName = masterUser == null ? null : buildFullName(masterUser.getLastName(), masterUser.getFirstName());
@@ -228,7 +228,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
         }
         if (RoleConstants.USER.equals(role)) {
             ParticipatingUser user = participatingUserRepository
-                    .findByUsernameAndCompanyId(username, company.getId())
+                    .findByUsernameAndCompany_Id(username, company.getId())
                     .orElse(null);
             return user != null && user.getSite() != null && user.getSite().getId() != null;
         }
@@ -247,7 +247,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
         }
         if (RoleConstants.USER.equals(role)) {
             ParticipatingUser user = participatingUserRepository
-                    .findByUsernameAndCompanyId(username, site.getCompany().getId())
+                    .findByUsernameAndCompany_Id(username, site.getCompany().getId())
                     .orElse(null);
             if (user == null || user.getSite() == null || user.getSite().getId() == null) {
                 return false;
@@ -271,7 +271,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
         }
         if (RoleConstants.USER.equals(role)) {
             ParticipatingUser user = participatingUserRepository
-                    .findByUsernameAndCompanyId(username, company.getId())
+                    .findByUsernameAndCompany_Id(username, company.getId())
                     .orElse(null);
             if (user == null || user.getSite() == null) {
                 return false;

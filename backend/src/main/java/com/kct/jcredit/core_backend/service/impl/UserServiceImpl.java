@@ -117,7 +117,7 @@ public class UserServiceImpl implements UserService {
         }
         
         List<ParticipatingUser> users =
-                userRepository.findByCompanyId(company.getId());
+                userRepository.findByCompany_Id(company.getId());
 
         // Map entities → DTO
         List<UserInfoResponse> userInfoList = users.stream()
@@ -153,7 +153,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         ParticipatingUser siteMaster = userRepository
-            .findByCompanyIdAndRole(site.getCompany().getId(), RoleConstants.MASTER).orElse(null);
+            .findByCompany_IdAndRole(site.getCompany().getId(), RoleConstants.MASTER).orElse(null);
         if (siteMaster == null) {
             response.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR);
             response.setMessage(ResponseConstants.MSG_UNEXPEXTED_ERROR);

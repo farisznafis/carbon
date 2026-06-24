@@ -54,7 +54,7 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
         }
 
         OperatingUser operatorUser = operatorUserRepository
-            .findByCompanyIdAndRole(requesterCompanyId, RoleConstants.MASTER)
+            .findByCompany_IdAndRole(company.getId(), RoleConstants.MASTER)
             .orElse(null);
 
         String picName = operatorUser == null ? null : buildFullName(operatorUser.getLastName(), operatorUser.getFirstName());
@@ -202,11 +202,13 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
     }
 
     private boolean hasAccessToCompany(String role, String username, String companyId) {
+        OperatorCompany company = operatorCompanyRepository.findByCompanyId(companyId).orElse(null);
+        
         if (!RoleConstants.OPERATOR.equals(role)) {
             return false;
         }
         OperatingUser user = operatorUserRepository
-                .findByUsernameAndCompanyId(username, companyId)
+                .findByUsernameAndCompany_Id(username, company.getId())
                 .orElse(null);
         return user != null;
     }
@@ -215,11 +217,15 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
         if (project == null) {
             return false;
         }
+        OperatorCompany company = project.getOperatorCompany();
+        if (company == null) {
+            company = operatorCompanyRepository.findByCompanyId(companyId).orElse(null);
+        }
         if (!RoleConstants.OPERATOR.equals(role)) {
             return false;
         }
         OperatingUser user = operatorUserRepository
-                .findByUsernameAndCompanyId(username, companyId)
+                .findByUsernameAndCompany_Id(username, company.getId())
                 .orElse(null);
         if (user == null) {
             return false;
@@ -249,7 +255,7 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
         }
 
         OperatingUser masterUser = operatorUserRepository
-                .findByCompanyIdAndRole(companyId, RoleConstants.MASTER)
+                .findByCompany_IdAndRole(company.getId(), RoleConstants.MASTER)
                 .orElse(null);
 
         if (company != null) {
