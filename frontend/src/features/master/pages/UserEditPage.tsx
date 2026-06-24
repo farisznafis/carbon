@@ -32,7 +32,7 @@ export default function UserEdit() {
     lastNameKana: user?.lastNameKana ?? '',
     firstNameKana: user?.firstNameKana ?? '',
     phoneNumber: user?.phoneNumber ?? '',
-    userPosition: user?.position ?? '',
+    userPosition: user?.position ?? (user as any)?.userPosition ?? '',
     email: user?.email ?? '',
     password: '',
     passwordConfirmation: '',
