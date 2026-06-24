@@ -459,7 +459,7 @@ CREATE TABLE company_deletion_request (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(100),
     updated_by VARCHAR(100),
-    company_id VARCHAR(12) NOT NULL REFERENCES participating_company(company_id),
+    company_id INTEGER REFERENCES participating_company(id),
     requested_by VARCHAR(100) NOT NULL,
     requested_at TIMESTAMP NOT NULL,
     reason TEXT,
