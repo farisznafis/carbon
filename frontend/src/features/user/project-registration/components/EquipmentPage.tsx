@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
 import { SolarPowerEquipmentForm } from "./equipment-forms/SolarPowerEquipmentForm";
 import type { SolarPowerFormData } from "@/lib/equipmentValidations";
-import { PageBackButton } from "@/components/navigation/PageBackButton";
+import { FormPageWrapper } from "@/components/layout/FormPageWrapper/FormPageWrapper";
 //import { BatteryEquipmentForm } from "@/components/BatteryEquipmentForm";
 
 export const EquipmentPage = () => {
@@ -18,26 +18,24 @@ export const EquipmentPage = () => {
 
   return (
     <FormProvider {...form}>
-    
-    <div className="max-w-2xl mx-auto space-y-6">
-      <PageBackButton
-        onClick={() => navigate(-1)}
-        label='戻る'
-        className='mt-6 rounded-full'
-      />
-      {type === "solar" && <SolarPowerEquipmentForm form={form} />}
+      <FormPageWrapper
+        pageName="設備登録"
+        title="設備登録"
+        onBack={() => navigate(-1)}
+        contentMaxWidth="max-w-2xl"
+      >
+        {type === "solar" && <SolarPowerEquipmentForm form={form} />}
 
-      <div className="flex justify-center">
-        <button
-          type="button"
-          className="px-6 py-2 bg-green-500 text-white rounded"
-          onClick={handleSave}
-        >
-          保存
-        </button>
-      </div>
-    </div>
-
+        <div className="flex justify-center">
+          <button
+            type="button"
+            className="px-6 py-2 bg-green-500 text-white rounded"
+            onClick={handleSave}
+          >
+            保存
+          </button>
+        </div>
+      </FormPageWrapper>
     </FormProvider>
   );
 };
