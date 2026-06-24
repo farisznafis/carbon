@@ -40,6 +40,8 @@ public interface ParticipatingUserRepository extends JpaRepository<Participating
     boolean existsByEmail(String email);
 
     long countByCompany_IdAndSite_Id(Integer companyId, Integer siteId);
+    
+    long countByCompany_Id(Integer companyId);
 
     @Modifying
     @Query("UPDATE ParticipatingUser u SET u.deletedAt = CURRENT_TIMESTAMP, u.deletedBy = :deletedBy WHERE u.company.id = :companyId")
