@@ -31,20 +31,17 @@ public class Site extends BaseEntity {
     @Column(name = "postal_code", nullable = false, length = 8)
     private String postalCode;
 
-    @Column(name = "prefecture", nullable = false, length = 100)
+    @Column(name = "prefecture", nullable = false, length = 10)
     private String prefecture;
 
-    @Column(name = "city", nullable = false, length = 100)
-    private String city;
-
-    @Column(name = "town", nullable = false, length = 100)
-    private String town;
+    @Column(name = "municipality", nullable = false, length = 150)
+    private String municipality;
 
     @Column(name = "blocknum", nullable = false, length = 100)
     private String blocknum;
 
-    @Column(name = "address", nullable = false, length = 500)
-    private String address;
+    @Column(name = "building_name", length = 255)
+    private String buildingName;
 
     @Column(name = "pic_first_name", nullable = false, length = 50)
     private String picFirstName;

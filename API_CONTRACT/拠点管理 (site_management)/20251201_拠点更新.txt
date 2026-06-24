@@ -8,6 +8,8 @@ Request Body (JSON):
   "postalCode": "100-0001",
   "blockName": "千代田1-1-1",
   "addressDetail": "○○マンション101号室",
+  "SiteName": "拠点例",
+  "PICUserID": "124",
 
 }
 
@@ -52,6 +54,10 @@ ERROR RESPONSES
 {
   "errorCode": "SERVER_ERROR",
   "message": "サーバー内部でエラーが発生しました。"
+},
+{
+  "errorCode": "LIMIT_ERROR",
+  "message": "上限に達しています。"
 }
 
 

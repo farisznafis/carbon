@@ -68,6 +68,10 @@ ERROR RESPONSES
 {
   "errorCode": "SERVER_ERROR",
   "message": "サーバー内部でエラーが発生しました。"
+},
+{
+  "errorCode": "LIMIT_ERROR",
+  "message": "上限に達しています。"
 }
 
 

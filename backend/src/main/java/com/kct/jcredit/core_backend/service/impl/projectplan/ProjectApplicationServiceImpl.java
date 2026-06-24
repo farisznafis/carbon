@@ -54,7 +54,7 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
         }
 
         OperatingUser operatorUser = operatorUserRepository
-            .findByCompanyIdAndRole(requesterCompanyId, RoleConstants.MASTER)
+            .findByCompany_IdAndRole(company.getId(), RoleConstants.MASTER)
             .orElse(null);
 
         String picName = operatorUser == null ? null : buildFullName(operatorUser.getLastName(), operatorUser.getFirstName());
@@ -64,8 +64,9 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
                 .corpName(company.getNameJa())
                 .corpPosition(company.getRepPosition())
                 .prefecture(company.getPrefecture())
-                .city(company.getCity())
-                .address(company.getAddress())
+                .municipality(company.getMunicipality())
+                .blocknum(company.getBlocknum())
+                .buildingName(company.getBuildingName())
                 .representativePosition(company.getRepPosition())
                 .representativeName(buildFullName(company.getRepLastName(), company.getRepFirstName()))
                 .picPosition(company.getRepPosition())
@@ -201,11 +202,13 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
     }
 
     private boolean hasAccessToCompany(String role, String username, String companyId) {
+        OperatorCompany company = operatorCompanyRepository.findByCompanyId(companyId).orElse(null);
+        
         if (!RoleConstants.OPERATOR.equals(role)) {
             return false;
         }
         OperatingUser user = operatorUserRepository
-                .findByUsernameAndCompanyId(username, companyId)
+                .findByUsernameAndCompany_Id(username, company.getId())
                 .orElse(null);
         return user != null;
     }
@@ -214,11 +217,15 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
         if (project == null) {
             return false;
         }
+        OperatorCompany company = project.getOperatorCompany();
+        if (company == null) {
+            company = operatorCompanyRepository.findByCompanyId(companyId).orElse(null);
+        }
         if (!RoleConstants.OPERATOR.equals(role)) {
             return false;
         }
         OperatingUser user = operatorUserRepository
-                .findByUsernameAndCompanyId(username, companyId)
+                .findByUsernameAndCompany_Id(username, company.getId())
                 .orElse(null);
         if (user == null) {
             return false;
@@ -248,7 +255,7 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
         }
 
         OperatingUser masterUser = operatorUserRepository
-                .findByCompanyIdAndRole(companyId, RoleConstants.MASTER)
+                .findByCompany_IdAndRole(company.getId(), RoleConstants.MASTER)
                 .orElse(null);
 
         if (company != null) {
@@ -259,8 +266,9 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
             request.setCorpPosition(company.getRepPosition());
             request.setCorpName(company.getNameJa());
             request.setPrefecture(company.getPrefecture());
-            request.setCity(company.getCity());
-            request.setAddress(company.getAddress());
+            request.setMunicipality(company.getMunicipality());
+            request.setBlocknum(company.getBlocknum());
+            request.setBuildingName(company.getBuildingName());
             request.setRepresentativePosition(company.getRepPosition());
             request.setRepresentativeName(buildFullName(company.getRepLastName(), company.getRepFirstName()));
             request.setPicPosition(company.getRepPosition());

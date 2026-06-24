@@ -91,22 +91,27 @@ public class ProjectApplicationRequest {
     private String corpName;
 
     @NotBlank
-    @Size(max = 50)
+    @Size(max = 10)
     @Zenkaku
     @JsonProperty("prefecture")
     private String prefecture;
 
     @NotBlank
-    @Size(max = 100)
+    @Size(max = 150)
     @Zenkaku
-    @JsonProperty("city")
-    private String city;
+    @JsonProperty("municipality")
+    private String municipality;
 
     @NotBlank
-    @Size(max = 500)
+    @Size(max = 100)
     @JapaneseText(allowAlphanumeric = true)
-    @JsonProperty("address")
-    private String address;
+    @JsonProperty("blocknum")
+    private String blocknum;
+
+    @Size(max = 255)
+    @JapaneseText(allowAlphanumeric = true)
+    @JsonProperty("buildingName")
+    private String buildingName;
 
     @NotNull(message = "特定排出者の該当有無は必須です。")
     @JsonProperty("isDesignatedEmitter")

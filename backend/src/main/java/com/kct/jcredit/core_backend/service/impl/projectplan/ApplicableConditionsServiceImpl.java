@@ -11,6 +11,8 @@ import com.kct.jcredit.core_backend.repository.dynamodb.ApplicableConditionsRepo
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.service.projectplan.ApplicableConditionsService;
+import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
+
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ public class ApplicableConditionsServiceImpl implements ApplicableConditionsServ
     private final OperatingUserRepository operatorUserRepository;
     private final ProjectRepository projectRepository;
     private final ApplicableConditionsRepository applicableConditionsRepository;
+    private final OperatorCompanyRepository operatorCompanyRepository;
 
     @Override
     @Transactional
@@ -143,11 +146,16 @@ public class ApplicableConditionsServiceImpl implements ApplicableConditionsServ
         if (project == null) {
             return false;
         }
+
+        OperatorCompany company = project.getOperatorCompany();
+        if (company == null) {
+            company = operatorCompanyRepository.findByCompanyId(companyId).orElse(null);
+        }
         if (!RoleConstants.OPERATOR.equals(role)) {
             return false;
         }
         OperatingUser user = operatorUserRepository
-                .findByUsernameAndCompanyId(username, companyId)
+                .findByUsernameAndCompany_Id(username, company.getId())
                 .orElse(null);
         if (user == null) {
             return false;
