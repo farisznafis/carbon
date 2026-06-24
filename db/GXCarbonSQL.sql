@@ -14,7 +14,7 @@ DROP TABLE IF EXISTS project_solar_data CASCADE;
 DROP TABLE IF EXISTS project_files CASCADE;
 DROP TABLE IF EXISTS EN_R002_reduction_result_total CASCADE;
 DROP TABLE IF EXISTS EN_R002_reduction_result CASCADE;
-DROP TABLE IF EXISTS batch_processing_history CASCADE;
+DROP TABLE IF EXISTS batch_process_history CASCADE;
 DROP TABLE IF EXISTS record_cancel_request CASCADE;
 DROP TABLE IF EXISTS site_r002_member_data CASCADE;
 DROP TABLE IF EXISTS site_r002_equipment_file  CASCADE;
