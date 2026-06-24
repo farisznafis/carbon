@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.kct.jcredit.core_backend.entity.base.BaseEntity;
@@ -13,6 +15,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "site")
+@SQLDelete(sql = "UPDATE site SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -66,5 +70,10 @@ public class Site extends BaseEntity {
 
     @OneToMany(mappedBy = "site", fetch = FetchType.LAZY)
     private List<SiteProjectRelation> siteProjectRelations;
-    
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by", length = 100)
+    private String deletedBy;
 }

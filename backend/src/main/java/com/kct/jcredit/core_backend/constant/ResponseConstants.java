@@ -84,6 +84,15 @@ public class ResponseConstants {
     public static final String MSG_COMPANY_REJECTED = "会社の申請は却下され、登録データは削除されました。";
     public static final String MSG_COMPANY_REJECT_FAILED = "会社の却下処理に失敗しました。";
     public static final String MSG_RELOGIN_REQUIRED = "パスワード変更後のトークンは無効です。再度ログインしてください。";
+    public static final String MSG_DELETE_SUCCESS = "会社が削除されました。";
+    public static final String MSG_COMPANY_ALREADY_DELETED = "この会社は既に削除されています。";
+    public static final String MSG_DELETION_REQUEST_SUBMITTED = "削除申請が提出されました。";
+    public static final String MSG_DELETION_REQUEST_NOT_FOUND = "削除申請が見つかりませんでした。";
+    public static final String MSG_DELETION_ALREADY_REQUESTED = "この会社の削除申請は既に提出されています。";
+    public static final String MSG_DELETION_REQUEST_APPROVED = "削除申請が承認され、会社が削除されました。";
+    public static final String MSG_DELETION_REQUEST_REJECTED = "削除申請が却下されました。";
+    public static final String MSG_CANNOT_APPROVE_OWN_REQUEST = "自分の削除申請は承認できません。";
+    public static final String MSG_DELETION_ALREADY_PROCESSED = "この削除申請は既に処理されています。";
     public static final String MSG_LIMIT_EXCEEDED = "上限に達しています。";
     
     private ResponseConstants() {}

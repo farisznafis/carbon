@@ -3,6 +3,7 @@ package com.kct.jcredit.core_backend.repository.postgres;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -27,4 +28,8 @@ public interface ParticipatingCompanyRepository extends JpaRepository<Participat
     List<ParticipatingCompany> findBySubscriptionStatus(@Param("status") SubscriptionStatus status);
 
     List<ParticipatingCompany> findByRegStatus(String regStatus);
+
+    @Modifying
+    @Query("UPDATE ParticipatingCompany pc SET pc.deletedAt = CURRENT_TIMESTAMP, pc.deletedBy = :deletedBy WHERE pc.companyId = :companyId")
+    void softDeleteByCompanyId(@Param("companyId") String companyId, @Param("deletedBy") String deletedBy);
 }

@@ -2,6 +2,9 @@ package com.kct.jcredit.core_backend.repository.postgres;
 
 import com.kct.jcredit.core_backend.entity.SiteR002MemberData;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -19,4 +22,8 @@ public interface SiteR002MemberDataRepository extends JpaRepository<SiteR002Memb
     boolean existsBySite_IdAndProject_Id(Integer siteId, Integer projectId);
 
     void deleteByCompany_CompanyId(String companyId);
+
+    @Modifying
+    @Query("UPDATE SiteR002MemberData md SET md.deletedAt = CURRENT_TIMESTAMP, md.deletedBy = :deletedBy WHERE md.company.companyId = :companyId")
+    void softDeleteByCompanyId(@Param("companyId") String companyId, @Param("deletedBy") String deletedBy);
 }

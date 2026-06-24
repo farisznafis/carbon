@@ -33,11 +33,13 @@ public class TncAgreementEquip {
     private Boolean isAdjustedEmissionsAdded;
     private String emitterCode;
     private Boolean isSubjectToPeriodicReport;
+    private Boolean isPeriodicReportTypeOne;
     private String energyReport;
     private String energyBusinessCode;
     private String factoryCode;
     private String repName;
     private String repRole;
+    private String companyName;
     private Boolean hasConsent;
     private Boolean isAgreeTerms;
     private String agreedAt;
@@ -99,6 +101,9 @@ public class TncAgreementEquip {
 
     @DynamoDbAttribute("factory_code")
     public String getFactoryCode() { return factoryCode; }
+
+    @DynamoDbAttribute("company_name")
+    public String getCompanyName() { return companyName; }
 
     @DynamoDbAttribute("rep_name")
     public String getRepName() { return repName; }

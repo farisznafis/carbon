@@ -5,6 +5,7 @@ import com.kct.jcredit.core_backend.entity.EnR002ReductionResult;
 import java.time.LocalDate;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.Query;
@@ -39,4 +40,9 @@ public interface EnR002ReductionResultRepository extends JpaRepository<EnR002Red
         @Param("siteId") Integer siteId
     );
 
+    @Modifying
+    @Query(value = "UPDATE en_r002_reduction_result r SET deleted_at = CURRENT_TIMESTAMP, deleted_by = :deletedBy "
+         + "WHERE r.site_id IN (SELECT s.id FROM site s JOIN participating_company pc ON pc.id = s.participating_company_id WHERE pc.company_id = :companyId)",
+         nativeQuery = true)
+    void softDeleteByCompanyId(@Param("companyId") String companyId, @Param("deletedBy") String deletedBy);
 }

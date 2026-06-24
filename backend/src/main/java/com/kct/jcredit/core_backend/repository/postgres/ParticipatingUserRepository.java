@@ -1,7 +1,9 @@
 package com.kct.jcredit.core_backend.repository.postgres;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
@@ -38,4 +40,8 @@ public interface ParticipatingUserRepository extends JpaRepository<Participating
     boolean existsByEmail(String email);
 
     long countByCompany_IdAndSite_Id(Integer companyId, Integer siteId);
+
+    @Modifying
+    @Query("UPDATE ParticipatingUser u SET u.deletedAt = CURRENT_TIMESTAMP, u.deletedBy = :deletedBy WHERE u.company.id = :companyId")
+    void softDeleteByCompanyId(@Param("companyId") Integer companyId, @Param("deletedBy") String deletedBy);
 }

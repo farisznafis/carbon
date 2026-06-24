@@ -19,6 +19,7 @@ import {
   methodologyFormSchema,
   participationMethodologies,
 } from './signupStep2Model';
+import { RequiredLabel } from '@/components/forms/shared/RequiredLabel';
 
 export const SignupStep2 = () => {
   const { signupData, updateSignupData, setCurrentStep } = useSignup();
@@ -57,11 +58,7 @@ export const SignupStep2 = () => {
           render={({ field }) => (
             <FormItem>
               <div className="space-y-4">
-                <FormLabel>
-                  参加したいプロジェクト
-                  <span className="text-red-500 text-xs ml-1">必須</span>
-                </FormLabel>
-
+                <RequiredLabel>参加したいプロジェクト</RequiredLabel>
                 <Card className="overflow-hidden rounded-md">
                   {participationMethodologies.map((methodology) => {
                     const checked = field.value.includes(methodology.value);
@@ -105,7 +102,7 @@ export const SignupStep2 = () => {
             <FormItem>
               <FormLabel>
                 現在の活動情報
-                <span className="text-red-500 text-xs ml-1">必須</span>
+                <span className="text-red-500 text-xs ml-1"></span>
               </FormLabel>
               <p className="text-sm text-muted-foreground">
                 ※排出量削減活動の概要をご記入ください。

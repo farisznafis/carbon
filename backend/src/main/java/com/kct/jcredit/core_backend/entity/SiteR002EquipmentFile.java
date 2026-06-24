@@ -1,5 +1,7 @@
 package com.kct.jcredit.core_backend.entity;
 
+import java.time.LocalDateTime;
+
 import com.kct.jcredit.core_backend.entity.base.BaseEntity;
 import com.kct.jcredit.core_backend.enums.EquipmentFileType;
 
@@ -11,10 +13,13 @@ import lombok.Setter;
 
 import jakarta.persistence.*;
 
-
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "site_r002_equipment_file")
+@SQLDelete(sql = "UPDATE site_r002_equipment_file SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -41,4 +46,10 @@ public class SiteR002EquipmentFile extends BaseEntity {
 
     @Column(name = "original_name", length = 255)
     private String originalName;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by", length = 100)
+    private String deletedBy;
 }

@@ -18,6 +18,7 @@ DROP TABLE IF EXISTS batch_processing_history CASCADE;
 DROP TABLE IF EXISTS record_cancel_request CASCADE;
 DROP TABLE IF EXISTS site_r002_member_data CASCADE;
 DROP TABLE IF EXISTS site_r002_equipment_file  CASCADE;
+DROP TABLE IF EXISTS company_deletion_request CASCADE;
 DROP TABLE IF EXISTS subscription_log CASCADE;
 DROP TABLE IF EXISTS notification CASCADE;
 
@@ -152,7 +153,9 @@ CREATE TABLE participating_company (
     suspension_reason TEXT,
     suspension_date DATE,
     subscription_status VARCHAR(20),
-    reg_status VARCHAR(20)
+    reg_status VARCHAR(20),
+    deleted_at TIMESTAMP,
+    deleted_by VARCHAR(100)
 );
 
 -- Site
@@ -176,7 +179,9 @@ CREATE TABLE site (
     pic_email VARCHAR(254) NOT NULL,
     pic_phone_number VARCHAR(20) NOT NULL,
     pic_position VARCHAR(100) NOT NULL,
-    participating_company_id INT NOT NULL REFERENCES participating_company(id) ON DELETE CASCADE
+    participating_company_id INT NOT NULL REFERENCES participating_company(id) ON DELETE CASCADE,
+    deleted_at TIMESTAMP,
+    deleted_by VARCHAR(100)
 );
 
 -- Site-Project Relation
@@ -192,7 +197,9 @@ CREATE TABLE site_project_relation (
     application_date DATE NOT NULL,
     activity_start_date DATE NOT NULL,
     participating_company_id INT NOT NULL REFERENCES participating_company(id) ON DELETE CASCADE,
-    status VARCHAR(100) NOT NULL
+    status VARCHAR(100) NOT NULL,
+    deleted_at TIMESTAMP,
+    deleted_by VARCHAR(100)
 );
 
 -- Project Files
@@ -267,7 +274,9 @@ CREATE TABLE site_r002_member_data (
     has_subsidy BOOLEAN NOT NULL,
     subsidy_name VARCHAR(200),
     subsidy_amount DECIMAL(15,0),
-    pre_project_unit_price DECIMAL(10,2)
+    pre_project_unit_price DECIMAL(10,2),
+    deleted_at TIMESTAMP,
+    deleted_by VARCHAR(100)
 );
 
 -- site_r002_equipment_file 
@@ -283,6 +292,8 @@ CREATE TABLE site_r002_equipment_file (
     file_type VARCHAR(50) NOT NULL,
     s3_key VARCHAR(1000) NOT NULL, 
     original_name VARCHAR(255),
+    deleted_at TIMESTAMP,
+    deleted_by VARCHAR(100),
     CONSTRAINT fk_member_data 
         FOREIGN KEY (member_data_id) 
         REFERENCES site_r002_member_data(id) 
@@ -311,9 +322,9 @@ CREATE TABLE participating_user (
 	account_locked_until TIMESTAMP,
     site_id INT REFERENCES site(id) ON DELETE SET NULL,
     company_id INT NOT NULL
-        REFERENCES participating_company(id)
-
-
+        REFERENCES participating_company(id),
+    deleted_at TIMESTAMP,
+    deleted_by VARCHAR(100)
 );
 
 
@@ -333,7 +344,9 @@ CREATE TABLE EN_R002_reduction_result_total(
     empj_m DECIMAL(12,3),
     empj_s DECIMAL(12,3),
     empj_s_control DECIMAL(12,3),
-    empj_s_battery DECIMAL(12,3)
+    empj_s_battery DECIMAL(12,3),
+    deleted_at TIMESTAMP,
+    deleted_by VARCHAR(100)
 );
 
 CREATE TABLE EN_R002_reduction_result(
@@ -353,10 +366,12 @@ CREATE TABLE EN_R002_reduction_result(
     empj_m DECIMAL(12,3),
     empj_s DECIMAL(12,3),
     empj_s_control DECIMAL(12,3),
-    empj_s_battery DECIMAL(12,3)
+    empj_s_battery DECIMAL(12,3),
+    deleted_at TIMESTAMP,
+    deleted_by VARCHAR(100)
 );
 
-CREATE TABLE batch_processing_history(
+CREATE TABLE batch_process_history(
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     is_active BOOLEAN NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -387,7 +402,9 @@ CREATE TABLE record_cancel_request(
     decided_at TIMESTAMP,
     offset_record_pk VARCHAR(10),
     offset_record_sk VARCHAR(50),
-    site_id INT NOT NULL REFERENCES site(id) ON UPDATE CASCADE ON DELETE CASCADE
+    site_id INT NOT NULL REFERENCES site(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    deleted_at TIMESTAMP,
+    deleted_by VARCHAR(100)
 );
 
 -- subscription_log
@@ -432,6 +449,24 @@ CREATE TABLE notification (
 
     operating_user_id INT REFERENCES operating_user(id) ON UPDATE CASCADE ON DELETE CASCADE,
     participating_user_id INT REFERENCES participating_user(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+-- Company Deletion Request
+CREATE TABLE company_deletion_request (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+    company_id VARCHAR(12) NOT NULL REFERENCES participating_company(company_id),
+    requested_by VARCHAR(100) NOT NULL,
+    requested_at TIMESTAMP NOT NULL,
+    reason TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    decided_by VARCHAR(100),
+    decided_at TIMESTAMP,
+    rejection_reason TEXT
 );
 
 -- 読み込む負担を軽減するために、頻繁に検索されるカラムにインデックスを作成します。

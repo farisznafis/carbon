@@ -144,9 +144,9 @@ export const profileFormSchema = z.object({
   building: z.string().max(100, '建物名は100文字以内で入力してください').optional(),
 
   // Personal Information
-  lastName: z.string().min(1, '名前（性）を入力してください').max(50, '名前（性）は50文字以内で入力してください'),
+  lastName: z.string().min(1, '名前（姓）を入力してください').max(50, '名前（姓）は50文字以内で入力してください'),
   firstName: z.string().min(1, '名前（名）を入力してください').max(50, '名前（名）は50文字以内で入力してください'),
-  lastNameKana: katakanaSchema.min(1, '名前（性）（カナ）を入力してください').max(50, '名前（性）（カナ）は50文字以内で入力してください'),
+  lastNameKana: katakanaSchema.min(1, '名前（姓）（カナ）を入力してください').max(50, '名前（姓）（カナ）は50文字以内で入力してください'),
   firstNameKana: katakanaSchema.min(1, '名前（名）（カナ）を入力してください').max(50, '名前（名）（カナ）は50文字以内で入力してください'),
   position: z.string().min(1, '役職を入力してください').max(50, '役職は50文字以内で入力してください'),
   phoneNumber: phoneNumberSchema,

@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import com.kct.jcredit.core_backend.entity.base.BaseEntity;
 
@@ -14,6 +16,8 @@ import lombok.*;
 @Entity
 @Table(name = "site_project_relation",
        uniqueConstraints = @UniqueConstraint(columnNames = {"project_id", "site_id"}))
+@SQLDelete(sql = "UPDATE site_project_relation SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -37,4 +41,10 @@ public class SiteProjectRelation extends BaseEntity {
 
     @Column(name = "status", nullable = false)
     private String status;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by", length = 100)
+    private String deletedBy;
 }
