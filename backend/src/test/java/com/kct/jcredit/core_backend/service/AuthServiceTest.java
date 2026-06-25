@@ -124,6 +124,7 @@ public class AuthServiceTest {
         // 企業IDが存在
         ParticipatingCompany existingCompany = new ParticipatingCompany();
         existingCompany.setId(123);
+        existingCompany.setCompanyId("123");
         when(participatingCompanyRepository.findByCompanyId("123"))
                 .thenReturn(Optional.of(existingCompany));
         
@@ -135,6 +136,7 @@ public class AuthServiceTest {
         user.setEmail("alice@example.com");
         ParticipatingCompany company = new ParticipatingCompany();
         company.setId(123);
+        company.setCompanyId("123");
         user.setCompany(company); 
         user.setRole("USER");
         user.setFirstName("Alice");
@@ -194,13 +196,16 @@ public class AuthServiceTest {
     @Test
     void authService_userLogin_username_username_succes() throws Exception {
         LoginRequest req = new LoginRequest();
-        req.setCompanyId(123);
+        req.setCompanyId("123");
         req.setIdentifier("alice"); // username でも email でもOK
         req.setPassword("raw-pass");
 
         // 企業IDが存在
-        when(participatingCompanyRepository.findByCompanyId(123))
-                .thenReturn(Optional.of(new ParticipatingCompany()));
+        ParticipatingCompany existingCompany = new ParticipatingCompany();
+        existingCompany.setId(123);
+        existingCompany.setCompanyId("123");
+        when(participatingCompanyRepository.findByCompanyId("123"))
+                .thenReturn(Optional.of(existingCompany));
         
         
         // ユーザーの用意（ロックなし・有効）
@@ -208,7 +213,10 @@ public class AuthServiceTest {
         user.setId(1);
         user.setUsername("alice");
         user.setEmail("alice@example.com");
-        user.setCompanyId(123);
+        ParticipatingCompany company = new ParticipatingCompany();
+        company.setId(123);
+        company.setCompanyId("123");
+        user.setCompany(company);
         user.setRole("USER");
         user.setFirstName("Alice");
         user.setLastName("Smith");
