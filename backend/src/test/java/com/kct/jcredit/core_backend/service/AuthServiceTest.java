@@ -638,7 +638,10 @@ public class AuthServiceTest {
         operator.setId(1);
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        operator.setCompanyId(123);
+        ParticipatingCompany company = new ParticipatingCompany();
+        company.setId(123);
+        company.setCompanyId("123");
+        operator.setCompany(company);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
@@ -703,7 +706,10 @@ public class AuthServiceTest {
         operator.setId(1);
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        operator.setCompanyId(123);
+        ParticipatingCompany company = new ParticipatingCompany();
+        company.setId(123);
+        company.setCompanyId("123");
+        operator.setCompany(company);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
