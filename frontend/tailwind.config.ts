@@ -17,6 +17,11 @@ export default {
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
+      placeholder: 'hsl(var(--placeholder))',
+      disabled: {
+        DEFAULT: 'hsl(var(--disabled))',
+        foreground: 'hsl(var(--disabled-foreground))'
+      },
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			primary: {
@@ -81,6 +86,10 @@ export default {
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
+      boxShadow: {
+        'app-sm': 'var(--shadow-sm)',
+        'app-md': 'var(--shadow-md)'
+      },
   		keyframes: {
   			'accordion-down': {
   				from: {

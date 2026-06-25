@@ -21,7 +21,7 @@ export function RequiredBadge({
   return (
     <span
       className={cn(
-        'inline-flex shrink-0 items-center rounded bg-red-700 px-2 py-1 text-xs font-semibold leading-none text-white',
+        'inline-flex shrink-0 items-center rounded bg-destructive px-2 py-1 text-xs font-semibold leading-none text-destructive-foreground',
         className,
       )}
     >
