@@ -87,7 +87,7 @@ public class SiteServiceTest {
         company.setCompanyId(companyId);
         company.setNameJa("テスト株式会社");
         company.setPrefecture("東京都");
-        company.setCity("渋谷区");
+        company.setMunicipality("渋谷区");
         return company;
     }
 
@@ -97,10 +97,9 @@ public class SiteServiceTest {
         site.setSiteName(siteName);
         site.setPostalCode("100-0001");
         site.setPrefecture("東京都");
-        site.setCity("千代田区");
-        site.setTown("千代田");
+        site.setMunicipality("千代田区");
         site.setBlocknum("1-1");
-        site.setAddress("ビルA");
+        site.setBuildingName("ビルA");
         site.setPicFirstName("太郎");
         site.setPicLastName("山田");
         site.setCompany(company);
@@ -128,11 +127,10 @@ public class SiteServiceTest {
         request.setSiteName("東京支社");
         request.setSiteNameKana("トウキョウシシャ");
         request.setPostalCode("100-0001");
-        request.setPrefName("東京都");
-        request.setCityName("千代田区");
-        request.setTownName("千代田");
-        request.setBlockName("1-1");
-        request.setAddress("オフィスビルA10階");
+        request.setPrefecture("東京都");
+        request.setMunicipality("千代田区");
+        request.setBlocknum("1-1");
+        request.setBuildingName("オフィスビルA10階");
         
         // 担当者情報（PIC: Person In Charge）
         request.setPicFirstName("太郎");
@@ -164,19 +162,18 @@ public class SiteServiceTest {
 
     private UpdateSiteRequest buildUpdateSiteRequest(
             String postalCode,
-            String prefName,
-            String cityName,
+            String Prefecture,
+            String Municipality,
             String townName,
             String blockName,
             String address) {
         
         UpdateSiteRequest request = new UpdateSiteRequest();
         request.setPostalCode(postalCode);
-        request.setPrefName(prefName);
-        request.setCityName(cityName);
-        request.setTownName(townName);
-        request.setBlockName(blockName);
-        request.setAddress(address);
+        request.setPrefecture(Prefecture);
+        request.setMunicipality(Municipality);
+        request.setBlocknum(blockName);
+        request.setBuildingName(address);
         
         return request;
     }
@@ -206,7 +203,7 @@ public class SiteServiceTest {
 
         ParticipatingUser user = new ParticipatingUser();
         user.setUsername(username);
-        user.setCompanyId(companyId);
+        user.setId(123);
         user.setSite(userSite);
         return user;
     }
@@ -289,10 +286,9 @@ public class SiteServiceTest {
         assertThat(siteResponse1.getSiteName()).isEqualTo("東京本社");
         assertThat(siteResponse1.getPostalCode()).isEqualTo("100-0001");
         assertThat(siteResponse1.getPrefecture()).isEqualTo("東京都");
-        assertThat(siteResponse1.getCity()).isEqualTo("千代田区");
-        assertThat(siteResponse1.getTown()).isEqualTo("千代田");
-        assertThat(siteResponse1.getBlock()).isEqualTo("1-1");
-        assertThat(siteResponse1.getAddress()).isEqualTo("ビルA");
+        assertThat(siteResponse1.getMunicipality()).isEqualTo("千代田区");
+        assertThat(siteResponse1.getBlocknum()).isEqualTo("1-1");
+        assertThat(siteResponse1.getBuildingName()).isEqualTo("ビルA");
         assertThat(siteResponse1.getPicFirstName()).isEqualTo("太郎");
         assertThat(siteResponse1.getPicLastName()).isEqualTo("山田");
         assertThat(siteResponse1.getProjects()).isNotNull();
@@ -488,7 +484,7 @@ public class SiteServiceTest {
             int siteId = 1;
             ParticipatingCompany company = buildCompany("COMP005");
             Site site = buildSite(siteId, company, "東京本社");
-            site.setAddress("オフィスビルA 10階");
+            site.setBuildingName("オフィスビルA 10階");
 
             // プロジェクトリレーションを設定
             Project project1 = buildProject("太陽光発電プロジェクトA");
@@ -513,10 +509,9 @@ public class SiteServiceTest {
             assertThat(siteResponse.getSiteName()).isEqualTo("東京本社");
             assertThat(siteResponse.getPostalCode()).isEqualTo("100-0001");
             assertThat(siteResponse.getPrefecture()).isEqualTo("東京都");
-            assertThat(siteResponse.getCity()).isEqualTo("千代田区");
-            assertThat(siteResponse.getTown()).isEqualTo("千代田");
-            assertThat(siteResponse.getBlock()).isEqualTo("1-1");
-            assertThat(siteResponse.getAddress()).isEqualTo("オフィスビルA 10階");
+            assertThat(siteResponse.getMunicipality()).isEqualTo("千代田区");
+            assertThat(siteResponse.getBlocknum()).isEqualTo("1-1");
+            assertThat(siteResponse.getBuildingName()).isEqualTo("オフィスビルA 10階");
             assertThat(siteResponse.getPicFirstName()).isEqualTo("太郎");
             assertThat(siteResponse.getPicLastName()).isEqualTo("山田");
 
@@ -756,11 +751,10 @@ public class SiteServiceTest {
                 .siteName(request.getSiteName())
                 .postalCode(request.getPostalCode())
                 .prefecture(company.getPrefecture())
-                .city(company.getCity())
+                .municipality(company.getMunicipality())
                 .company(company)
-                .town(request.getTownName())
-                .blocknum(request.getBlockName())
-                .address(request.getAddress())
+                .blocknum(request.getBlocknum())
+                .buildingName(request.getBuildingName())
                 .picFirstName(request.getPicFirstName())
                 .picFirstNameKana(request.getPicFirstNameKana())
                 .picLastName(request.getPicLastName())
@@ -831,9 +825,8 @@ public class SiteServiceTest {
         // リクエストから直接マッピングされるべきフィールドの検証
         assertThat(capturedSite.getSiteName()).isEqualTo(request.getSiteName());
         assertThat(capturedSite.getPostalCode()).isEqualTo(request.getPostalCode());
-        assertThat(capturedSite.getTown()).isEqualTo(request.getTownName());
-        assertThat(capturedSite.getBlocknum()).isEqualTo(request.getBlockName());
-        assertThat(capturedSite.getAddress()).isEqualTo(request.getAddress());
+        assertThat(capturedSite.getBlocknum()).isEqualTo(request.getBlocknum());
+        assertThat(capturedSite.getBuildingName()).isEqualTo(request.getBuildingName());
 
         // PIC（担当者）情報の検証
         assertThat(capturedSite.getPicFirstName()).isEqualTo(request.getPicFirstName());
@@ -943,11 +936,11 @@ public class SiteServiceTest {
      *
      * 現在の実装:
      * - site.prefecture = company.getPrefecture()← BUG
-     * - site.city = company.getCity()              ← BUG
+     * - site.city = company.getMunicipality()              ← BUG
      *
      * 期待される実装:
-     * - site.prefecture = request.getPrefName()
-     * - site.city = request.getCityName()
+     * - site.prefecture = request.getPrefecture()
+     * - site.city = request.getMunicipalityName()
      *
      * 問題点:
      * - リクエストで指定された都道府県・市区町村が無視される
@@ -956,8 +949,8 @@ public class SiteServiceTest {
      *
      * 修正方法:
      * Site.builder() で以下のように変更:
-     * .prefecture(request.getPrefName())
-     * .city(request.getCityName())
+     * .prefecture(request.getPrefecture())
+     * .city(request.getMunicipalityName())
      *
      * このテストの目的:
      * - バグを文書化する
@@ -970,11 +963,11 @@ public class SiteServiceTest {
         // TODO [BUG]: 都道府県と市区町村はリクエストから取得する必要があります
         // 現在の実装:
         //.prefecture(company.getPrefecture())
-        //   .city(company.getCity())
+        //   .city(company.getMunicipality())
         // 
         // 正しい実装:
-        //   .prefecture(request.getPrefName())
-        //   .city(request.getCityName())
+        //   .prefecture(request.getPrefecture())
+        //   .city(request.getMunicipalityName())
         //
         // この問題により、企業の本社所在地が常に使用され、
         // リクエストで指定された拠点の実際の所在地が無視されます。
@@ -984,13 +977,13 @@ public class SiteServiceTest {
         CreateSiteRequest request = buildCreateSiteRequest();
         
         // リクエストには大阪の住所を設定
-        request.setPrefName("大阪府");
-        request.setCityName("大阪市");
+        request.setPrefecture("大阪府");
+        request.setMunicipality("大阪市");
         
         // 企業の本社は東京
         ParticipatingCompany company = buildCompany(companyId);
         company.setPrefecture("東京都");
-        company.setCity("千代田区");
+        company.setMunicipality("千代田区");
 
         Site savedSite = Site.builder().build();
         savedSite.setId(300);
@@ -1016,18 +1009,18 @@ public class SiteServiceTest {
                 .as("都道府県はリクエスト（大阪府）から取得されるべきですが、" +
                     "現在は company の都道府県（東京都）が使用されています")
                 .isNotEqualTo(company.getPrefecture())// company の値ではないことを確認
-                .isEqualTo(request.getPrefName());       // request の値であることを確認
+                .isEqualTo(request.getPrefecture());       // request の値であることを確認
 
-        assertThat(capturedSite.getCity())
+        assertThat(capturedSite.getMunicipality())
                 .as("市区町村はリクエスト（大阪市）から取得されるべきですが、" +
                     "現在は company の市区町村（千代田区）が使用されています")
-                .isNotEqualTo(company.getCity())        // company の値ではないことを確認
-                .isEqualTo(request.getCityName());       // request の値であることを確認
+                .isNotEqualTo(company.getMunicipality())        // company の値ではないことを確認
+                .isEqualTo(request.getMunicipality());       // request の値であることを確認
 
         // Note: このテストが失敗している間、以下の修正が必要です:
         // Site.builder() の中で:
-        //   .prefecture(company.getPrefecture()) → .prefecture(request.getPrefName())
-        //   .city(company.getCity()) → .city(request.getCityName())
+        //   .prefecture(company.getPrefecture()) → .prefecture(request.getPrefecture())
+        //   .city(company.getMunicipality()) → .city(request.getMunicipalityName())
 
         verify(participatingCompanyRepository, times(1)).findByCompanyId(companyId);
     }
@@ -1136,15 +1129,14 @@ public class SiteServiceTest {
         //初期値の設定
         existingSite.setPostalCode("100-0001");
         existingSite.setPrefecture("東京都");
-        existingSite.setCity("千代田区");
-        existingSite.setTown("千代田");
+        existingSite.setMunicipality("千代田区");
         existingSite.setBlocknum("1-1");
-        existingSite.setAddress("旧ビルA");
+        existingSite.setBuildingName("旧ビルA");
 
         UpdateSiteRequest request = buildUpdateSiteRequest(
                 "123-4567",    // postalCode
-                "大阪府",       // prefName
-                "大阪市",       // cityName
+                "大阪府",       // Prefecture
+                "大阪市",       // Municipality
                 "北区",         // townName
                 "中之島3-3-3", // blockName
                 "新ビルB5階"  // address
@@ -1152,11 +1144,10 @@ public class SiteServiceTest {
 
         Site updatedSite = buildSiteWithCompany(1, companyId);
         updatedSite.setPostalCode(request.getPostalCode());
-        updatedSite.setPrefecture(request.getPrefName());
-        updatedSite.setCity(request.getCityName());
-        updatedSite.setTown(request.getTownName());
-        updatedSite.setBlocknum(request.getBlockName());
-        updatedSite.setAddress(request.getAddress());
+        updatedSite.setPrefecture(request.getPrefecture());
+        updatedSite.setMunicipality(request.getMunicipality());
+        updatedSite.setBlocknum(request.getBlocknum());
+        updatedSite.setBuildingName(request.getBuildingName());
         updatedSite.setUpdatedAt(LocalDateTime.now());
 
         when(siteRepository.findById(1)).thenReturn(Optional.of(existingSite));
@@ -1174,10 +1165,9 @@ public class SiteServiceTest {
         SiteResponse siteResponse = response.getSite();
         assertThat(siteResponse.getPostalCode()).isEqualTo("123-4567");
         assertThat(siteResponse.getPrefecture()).isEqualTo("大阪府");
-        assertThat(siteResponse.getCity()).isEqualTo("大阪市");
-        assertThat(siteResponse.getTown()).isEqualTo("北区");
-        assertThat(siteResponse.getBlock()).isEqualTo("中之島3-3-3");
-        assertThat(siteResponse.getAddress()).isEqualTo("新ビルB5階");
+        assertThat(siteResponse.getMunicipality()).isEqualTo("大阪市");
+        assertThat(siteResponse.getBlocknum()).isEqualTo("中之島3-3-3");
+        assertThat(siteResponse.getBuildingName()).isEqualTo("新ビルB5階");
 
         // save() に渡された Site をキャプチャして updatedAt を検証
         verify(siteRepository).save(siteCaptor.capture());
@@ -1213,16 +1203,15 @@ public class SiteServiceTest {
         // 初期値の設定
         existingSite.setPostalCode("100-0001");
         existingSite.setPrefecture("東京都");
-        existingSite.setCity("千代田区");
-        existingSite.setTown("千代田");
+        existingSite.setMunicipality("千代田区");
         existingSite.setBlocknum("1-1");
-        existingSite.setAddress("オリジナルビル");
+        existingSite.setBuildingName("オリジナルビル");
 
         // postalCode のみ設定、他は blank/null
         UpdateSiteRequest request = buildUpdateSiteRequest(
                 "123-4567",  // postalCode
-                null,        // prefName
-                "",          // cityName (blank)
+                null,        // Prefecture
+                "",          // Municipality (blank)
                 null,        // townName
                 "",          // blockName (blank)
                 null         // address
@@ -1231,10 +1220,9 @@ public class SiteServiceTest {
         Site updatedSite = buildSiteWithCompany(2, companyId);
         updatedSite.setPostalCode("123-4567");
         updatedSite.setPrefecture("東京都");      // 変更なし
-        updatedSite.setCity("千代田区");          // 変更なし
-        updatedSite.setTown("千代田");            // 変更なし
+        updatedSite.setMunicipality("千代田区");          // 変更なし         // 変更なし
         updatedSite.setBlocknum("1-1");          // 変更なし
-        updatedSite.setAddress("オリジナルビル"); // 変更なし
+        updatedSite.setBuildingName("オリジナルビル"); // 変更なし
         updatedSite.setUpdatedAt(LocalDateTime.now());
 
         when(siteRepository.findById(2)).thenReturn(Optional.of(existingSite));
@@ -1256,10 +1244,9 @@ public class SiteServiceTest {
 
         // 他のフィールドは元の値のまま
         assertThat(capturedSite.getPrefecture()).isEqualTo("東京都");
-        assertThat(capturedSite.getCity()).isEqualTo("千代田区");
-        assertThat(capturedSite.getTown()).isEqualTo("千代田");
+        assertThat(capturedSite.getMunicipality()).isEqualTo("千代田区");
         assertThat(capturedSite.getBlocknum()).isEqualTo("1-1");
-        assertThat(capturedSite.getAddress()).isEqualTo("オリジナルビル");
+        assertThat(capturedSite.getBuildingName()).isEqualTo("オリジナルビル");
 
         assertThat(capturedSite.getUpdatedAt()).isNotNull();
 
@@ -1273,7 +1260,7 @@ public class SiteServiceTest {
      * 前提条件:
      * - 拠点が存在する
      * - companyId が一致する
-     * - リクエストに postalCode と cityName のみ設定
+     * - リクエストに postalCode と Municipality のみ設定
      *
      * 期待結果:
      * - statusCode = ResponseConstants.OK
@@ -1291,16 +1278,15 @@ public class SiteServiceTest {
         // 初期値の設定
         existingSite.setPostalCode("100-0001");
         existingSite.setPrefecture("東京都");
-        existingSite.setCity("渋谷区");
-        existingSite.setTown("渋谷");
+        existingSite.setMunicipality("渋谷区");
         existingSite.setBlocknum("2-2-2");
-        existingSite.setAddress("元のアドレス");
+        existingSite.setBuildingName("元のアドレス");
 
-        // postalCode と cityName のみ設定
+        // postalCode と Municipality のみ設定
         UpdateSiteRequest request = buildUpdateSiteRequest(
                 "999-8888",  // postalCode
-                null,        // prefName
-                "新宿区",     // cityName
+                null,        // Prefecture
+                "新宿区",     // Municipality
                 "",          // townName (blank)
                 null,        // blockName
                 ""           // address (blank)
@@ -1309,10 +1295,9 @@ public class SiteServiceTest {
         Site updatedSite = buildSiteWithCompany(3, companyId);
         updatedSite.setPostalCode("999-8888");
         updatedSite.setPrefecture("東京都");    // 変更なし
-        updatedSite.setCity("新宿区");          // 更新される
-        updatedSite.setTown("渋谷");            // 変更なし
+        updatedSite.setMunicipality("新宿区");          // 更新される
         updatedSite.setBlocknum("2-2-2");      // 変更なし
-        updatedSite.setAddress("元のアドレス"); // 変更なし
+        updatedSite.setBuildingName("元のアドレス"); // 変更なし
         updatedSite.setUpdatedAt(LocalDateTime.now());
 
         when(siteRepository.findById(3)).thenReturn(Optional.of(existingSite));
@@ -1331,13 +1316,12 @@ public class SiteServiceTest {
 
         // 更新されたフィールド
         assertThat(capturedSite.getPostalCode()).isEqualTo("999-8888");
-        assertThat(capturedSite.getCity()).isEqualTo("新宿区");
+        assertThat(capturedSite.getMunicipality()).isEqualTo("新宿区");
 
         // 変更されていないフィールド
         assertThat(capturedSite.getPrefecture()).isEqualTo("東京都");
-        assertThat(capturedSite.getTown()).isEqualTo("渋谷");
         assertThat(capturedSite.getBlocknum()).isEqualTo("2-2-2");
-        assertThat(capturedSite.getAddress()).isEqualTo("元のアドレス");
+        assertThat(capturedSite.getBuildingName()).isEqualTo("元のアドレス");
 
         assertThat(capturedSite.getUpdatedAt()).isNotNull();
 
@@ -1531,10 +1515,9 @@ public class SiteServiceTest {
         //existingSite.setSiteNameKana("キュウサイトメイ");
         existingSite.setPostalCode("100-0001");
         existingSite.setPrefecture("東京都");
-        existingSite.setCity("千代田区");
-        existingSite.setTown("千代田");
+        existingSite.setMunicipality("千代田区");
         existingSite.setBlocknum("1-1");
-        existingSite.setAddress("旧ビル");
+        existingSite.setBuildingName("旧ビル");
 
         UpdateSiteRequest request = buildUpdateSiteRequest(
                 "123-4567",
@@ -1554,10 +1537,9 @@ public class SiteServiceTest {
         // updatedSite.setSiteNameKana("キュウサイトメイ"); // 更新されない（バグ）
         updatedSite.setPostalCode("123-4567");
         updatedSite.setPrefecture("大阪府");
-        updatedSite.setCity("大阪市");
-        updatedSite.setTown("北区");
+        updatedSite.setMunicipality("大阪市");
         updatedSite.setBlocknum("2-2-2");
-        updatedSite.setAddress("新ビル");
+        updatedSite.setBuildingName("新ビル");
         updatedSite.setUpdatedAt(LocalDateTime.now());
 
         when(siteRepository.findById(5)).thenReturn(Optional.of(existingSite));
@@ -1674,7 +1656,7 @@ public class SiteServiceTest {
             verify(siteR002EquipmentFileRepository, times(1)).findByMemberData_Id(memberData.getId());
             
             // MASTER ロールなので user リポジトリは呼ばれない
-            verify(participatingUserRepository, never()).findByUsernameAndCompanyId(anyString(), anyString());
+            verify(participatingUserRepository, never()).findByUsernameAndCompany_Id(username, projectId);
         }
 
         /**
@@ -1714,7 +1696,7 @@ public class SiteServiceTest {
 
             when(siteRepository.findById(siteId)).thenReturn(Optional.of(site));
             when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
-            when(participatingUserRepository.findByUsernameAndCompanyId(username, companyId))
+            when(participatingUserRepository.findByUsernameAndCompany_Id(username, projectId))
                     .thenReturn(Optional.of(user));
             when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
                     .thenReturn(relation);
@@ -1745,7 +1727,7 @@ public class SiteServiceTest {
             // Verify interactions
             verify(siteRepository, times(1)).findById(siteId);
             verify(projectRepository, times(1)).findById(projectId);
-            verify(participatingUserRepository, times(1)).findByUsernameAndCompanyId(username, companyId);
+            verify(participatingUserRepository, times(1)).findByUsernameAndCompany_Id(username, projectId);
             verify(siteProjectRelationRepository, times(1)).findByProjectIdAndSiteId(projectId, siteId);
             verify(siteR002MemberDataRepository, times(1)).findByProject_IdAndSite_Id(projectId, siteId);
             verify(siteR002EquipmentFileRepository, times(1)).findByMemberData_Id(memberData.getId());
@@ -1971,7 +1953,7 @@ public class SiteServiceTest {
 
             when(siteRepository.findById(siteId)).thenReturn(Optional.of(site));
             when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
-            when(participatingUserRepository.findByUsernameAndCompanyId(username, companyId))
+            when(participatingUserRepository.findByUsernameAndCompany_Id(username, projectId))
                     .thenReturn(Optional.of(user));
 
             // Act
@@ -1988,7 +1970,7 @@ public class SiteServiceTest {
             // Verify interactions
             verify(siteRepository, times(1)).findById(siteId);
             verify(projectRepository, times(1)).findById(projectId);
-            verify(participatingUserRepository, times(1)).findByUsernameAndCompanyId(username, companyId);
+            verify(participatingUserRepository, times(1)).findByUsernameAndCompany_Id(username, projectId);
             verify(siteProjectRelationRepository, never()).findByProjectIdAndSiteId(anyInt(), anyInt());
         }
 
@@ -1997,7 +1979,7 @@ public class SiteServiceTest {
          *
          * 前提条件:
          * - role = USER
-         * - findByUsernameAndCompanyId() が Optional.empty() を返す
+         * - findByUsernameAndCompany_Id() が Optional.empty() を返す
          *
          * 期待結果:
          * - statusCode = ResponseConstants.FORBIDDEN
@@ -2018,7 +2000,7 @@ public class SiteServiceTest {
 
             when(siteRepository.findById(siteId)).thenReturn(Optional.of(site));
             when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
-            when(participatingUserRepository.findByUsernameAndCompanyId(username, companyId))
+            when(participatingUserRepository.findByUsernameAndCompany_Id(username, projectId))
                     .thenReturn(Optional.empty());
 
             // Act
@@ -2035,7 +2017,7 @@ public class SiteServiceTest {
             // Verify interactions
             verify(siteRepository, times(1)).findById(siteId);
             verify(projectRepository, times(1)).findById(projectId);
-            verify(participatingUserRepository, times(1)).findByUsernameAndCompanyId(username, companyId);
+            verify(participatingUserRepository, times(1)).findByUsernameAndCompany_Id(username, projectId);
             verify(siteProjectRelationRepository, never()).findByProjectIdAndSiteId(anyInt(), anyInt());
         }
 
