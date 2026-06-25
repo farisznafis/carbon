@@ -14,8 +14,9 @@ public class CorporationMasterData {
     private String corpName;
     private String corpPosition;
     private String prefecture;
-    private String city;
-    private String address;
+    private String municipality;
+    private String blocknum;
+    private String buildingName;
     private String representativePosition;
     private String representativeName;
     private String picPosition;

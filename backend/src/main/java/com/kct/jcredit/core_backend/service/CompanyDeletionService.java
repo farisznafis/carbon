@@ -245,7 +245,7 @@ public class CompanyDeletionService {
             siteProjectRelationRepository.softDeleteByCompanyId(companyId, deletedBy);
 
             siteRepository.softDeleteByCompanyId(companyId, deletedBy);
-            participatingUserRepository.softDeleteByCompanyId(companyId, deletedBy);
+            participatingUserRepository.softDeleteByCompanyId(company.getId(), deletedBy);
 
             participatingCompanyRepository.softDeleteByCompanyId(companyId, deletedBy);
 

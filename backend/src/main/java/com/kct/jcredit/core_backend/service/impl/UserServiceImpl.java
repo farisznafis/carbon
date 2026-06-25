@@ -43,6 +43,8 @@ public class UserServiceImpl implements UserService {
     private final SiteRepository siteRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenBlacklistService tokenBlacklistService;
+    private static final int MAX_USERS_PER_SITE = 5; // Maximum number of users allowed per site
+    private static final int MAX_USERS_PER_COMPANY = 50; // Maximum number of users allowed per company
 
     @Override
     public UserProfileResponse getUserProfile(String username) {
@@ -68,7 +70,7 @@ public class UserServiceImpl implements UserService {
                     .phoneNumber(company.getPhoneNumber())
                     .fax(company.getFax())
                     .corpNumber(company.getCorpNumber())
-                    .address(company.getAddress())
+                    .address(String.format("%s %s %s %s", company.getPrefecture(), company.getMunicipality(), company.getBlocknum(), company.getBuildingName()))
                     .isSuspended(company.isSuspended())
                     .build();
             }
@@ -87,7 +89,7 @@ public class UserServiceImpl implements UserService {
                 .role(user.getRole())
                 .siteId(user.getSite() != null ? user.getSite().getId().toString() : null)
                 .siteName(user.getSite() != null ? user.getSite().getSiteName() : null)
-                .companyId(user.getCompanyId())
+                .companyId(user.getCompany().getCompanyId())
                 .company(companyInfo)
                 .build();
             
@@ -117,7 +119,7 @@ public class UserServiceImpl implements UserService {
         }
         
         List<ParticipatingUser> users =
-                userRepository.findByCompanyId(companyId);
+                userRepository.findByCompany_Id(company.getId());
 
         // Map entities → DTO
         List<UserInfoResponse> userInfoList = users.stream()
@@ -153,7 +155,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         ParticipatingUser siteMaster = userRepository
-            .findByCompanyIdAndRole(site.getCompany().getCompanyId(), RoleConstants.MASTER).orElse(null);
+            .findByCompany_IdAndRole(site.getCompany().getId(), RoleConstants.MASTER).orElse(null);
         if (siteMaster == null) {
             response.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR);
             response.setMessage(ResponseConstants.MSG_UNEXPEXTED_ERROR);
@@ -177,32 +179,47 @@ public class UserServiceImpl implements UserService {
     @Override
     public CreateUserResponse createUser(String masterCompanyId, String username, CreateUserRequest request) {
         CreateUserResponse response = new CreateUserResponse();
-        
-        // サイトを取得 & 存在チェック
-        Site site = siteRepository.findById(request.getSiteId())
-                .orElse(null);
-        
-        if (site == null) {
+        ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(masterCompanyId)
+        .orElse(null);
+
+        if (company == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_NOT_FOUND);
             return response;
         }
-        // 権限チェック: Masterは自分の会社のサイトにのみユーザーを作成可能
-        if (!masterCompanyId.equals(site.getCompany().getCompanyId())) {
-            response.setStatusCode(ResponseConstants.FORBIDDEN);
-            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
-            return response; 
-        }
-        // 現在のユーザー（マスター）情報を取得
-        ParticipatingUser masterUser = userRepository.findByUsername(username)
-        .orElseThrow(() -> new IllegalStateException("想定外のエラーが発生しました。"));
-
-        // 4. サイトのPICがマスターユーザー自身であることを確認
-        if (!isSitePIC(site, masterUser)) {
-            response.setStatusCode(ResponseConstants.FORBIDDEN);
-            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+        // Check if the user count for the company exceeds the limit
+        long userCountForCompany = userRepository.countByCompany_Id(company.getId());
+        if (userCountForCompany >= MAX_USERS_PER_COMPANY) {
+            response.setStatusCode(ResponseConstants.LIMIT_EXCEEDED);
+            response.setMessage(ResponseConstants.MSG_LIMIT_EXCEEDED);
             return response;
         }
+
+        Site site = siteRepository.findById(request.getSiteId())
+                .orElse(null);
+        // 1. サイトが指定されている場合は存在確認
+        if(request.getSiteId() != null) {
+            if (site == null) {
+                response.setStatusCode(ResponseConstants.NOT_FOUND);
+                response.setMessage(ResponseConstants.MSG_NOT_FOUND);
+                return response;
+            }
+        
+            // 権限チェック: Masterは自分の会社のサイトにのみユーザーを作成可能
+            if (!masterCompanyId.equals(site.getCompany().getCompanyId())) {
+                response.setStatusCode(ResponseConstants.FORBIDDEN);
+                response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+                return response; 
+            }
+
+            if(userRepository.countByCompany_IdAndSite_Id(company.getId(), request.getSiteId()) >= MAX_USERS_PER_SITE) {
+                response.setStatusCode(ResponseConstants.LIMIT_EXCEEDED);
+                response.setMessage(ResponseConstants.MSG_LIMIT_EXCEEDED);
+                return response;
+            }
+            
+        }
+
         // 6. メールアドレスの重複チェック
         if (userRepository.existsByEmail(request.getEmail())) {
             response.setStatusCode(ResponseConstants.USED_EMAIL);
@@ -231,7 +248,7 @@ public class UserServiceImpl implements UserService {
                 .loginAttempts(0)
                 .accountLockedUntil(null)
                 .site(site)
-                .companyId(masterCompanyId)  // Masterと同じ会社ID
+                .company(company)  // Masterと同じ会社ID
                 .build();
         newUser.setIsActive(true);
         newUser.setCreatedAt(currentTime);
@@ -260,18 +277,14 @@ public class UserServiceImpl implements UserService {
     public UpdateUserResponse updateUser(String masterCompanyId,
             String username, UpdateUserRequest request) {
         
-                //想定外エラが出る
-                //too long spread it out a bit
-                //handle master case differently 
-
         UpdateUserResponse response = new UpdateUserResponse();
         List<SiteResponse> updatedSites = new ArrayList<>();
 
         try {
             // 1. リクエスト元のユーザーを取得
-            ParticipatingUser requestingUser = userRepository.findByUsername(username)
-            .orElseThrow(() -> new IllegalStateException("想定外エラーが発せしました。"));
             ParticipatingCompany masterCompany = participatingCompanyRepository.findByCompanyId(masterCompanyId)
+            .orElseThrow(() -> new IllegalStateException("想定外エラーが発せしました。"));
+            ParticipatingUser requestingUser = userRepository.findByUsernameAndCompany_Id(username, masterCompany.getId())
             .orElseThrow(() -> new IllegalStateException("想定外エラーが発せしました。"));
         
 
@@ -294,26 +307,22 @@ public class UserServiceImpl implements UserService {
 
             // サイト変更の有無を確認
             Site currentSite = targetUser.getSite();
-            if (currentSite == null && !isMasterRequest) {
-                response.setStatusCode(ResponseConstants.NOT_FOUND);
-                response.setMessage(ResponseConstants.NOT_FOUND);
-                return response;
-            }
-            
             Integer currentSiteId = (currentSite != null) ? currentSite.getId() : null;
             Integer requestedSiteId = request.getSiteId();
-            boolean siteChangeRequested = (requestedSiteId != null && !requestedSiteId.equals(currentSiteId));
-            
-            // 4. 一般ユーザーがサイト変更を要求している場合はエラー
-            if (siteChangeRequested && !isMasterRequest) {
+            boolean isSelfUpdate = targetUser.getId().equals(requestingUser.getId());
+            boolean siteChangeAllowed = isMasterRequest && !isSelfUpdate;
+            boolean siteChangeRequested = siteChangeAllowed && requestedSiteId != null && !requestedSiteId.equals(currentSiteId);
+            boolean siteRemovalRequested = siteChangeAllowed && requestedSiteId == null && currentSite != null;
+
+            // 4. 一般ユーザーまたはマスターの自己更新がサイト変更を要求している場合はエラー
+            if ((siteChangeRequested || (requestedSiteId != null && isSelfUpdate)) && !siteChangeAllowed) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
                 response.setMessage(ResponseConstants.FORBIDDEN);
                 return response;
             }
-            
+
             // 5. サイト変更がない場合、基本情報のみ更新
-            if (!siteChangeRequested) {
-                //マスターがPICとなっているすべてのサイトを検索する必要がある
+            if (!siteChangeRequested && !siteRemovalRequested) {
                 String oldEmail = targetUser.getEmail();
 
                 boolean userInfoChanged = updateUserInfo(targetUser, request);
@@ -361,53 +370,45 @@ public class UserServiceImpl implements UserService {
             }
             
             // ここからはサイト変更処理（マスターユーザーのみ）
-            
-            // 6. 新しいサイトを取得
-            Site newSite = siteRepository.findById(requestedSiteId).orElse(null);
-            if (newSite == null) {
-                response.setStatusCode(ResponseConstants.NOT_FOUND);
-                response.setMessage("該当する拠点が見つかりませんでした。");
-                return response;
+
+            Site newSite = null;
+            if (requestedSiteId != null) {
+                newSite = siteRepository.findById(requestedSiteId).orElse(null);
+                if (newSite == null) {
+                    response.setStatusCode(ResponseConstants.NOT_FOUND);
+                    response.setMessage("該当する拠点が見つかりませんでした。");
+                    return response;
+                }
             }
-            
+
             // 7. 会社IDの一致確認（セキュリティチェック）
-            if (!masterCompanyId.equals(currentSite.getCompany().getCompanyId()) ||
-                !masterCompanyId.equals(newSite.getCompany().getCompanyId()) ||
-                !masterCompanyId.equals(targetUser.getCompanyId())) {
+            if ((currentSite != null && !masterCompanyId.equals(currentSite.getCompany().getCompanyId())) ||
+                (newSite != null && !masterCompanyId.equals(newSite.getCompany().getCompanyId())) ||
+                !masterCompanyId.equals(targetUser.getCompany().getCompanyId())) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
                 response.setMessage(ResponseConstants.MSG_FORBIDDEN);
                 return response;
             }
-            
-            // 8. 新サイトに既存ユーザーがいないことを確認（マスターがPICである必要がある）
-            if (!isSitePIC(newSite, requestingUser)) {
-                response.setStatusCode(ResponseConstants.FORBIDDEN);
-                response.setMessage("この拠点は既に担当者がいるのでユーザを割り当てることができません。");
-                return response;
+
+            // 8. 現在のサイトがある場合、ターゲットユーザーをサイトから切り離す
+            if (currentSite != null && (siteChangeRequested || siteRemovalRequested)) {
+                if (isSitePIC(currentSite, targetUser)) {
+                    updateSitePIC(currentSite, requestingUser);
+                    Site savedCurrentSite = siteRepository.save(currentSite);
+                    updatedSites.add(mapToSiteResponse(savedCurrentSite));
+                }
             }
-            
-            // 9. 現在のサイトのPIC処理
-            if (isSitePIC(currentSite, targetUser)) {
-                // 現在のユーザーがPICの場合、マスターをPICに設定
-                updateSitePIC(currentSite, requestingUser); // マスターをPICに
-                Site savedCurrentSite = siteRepository.save(currentSite);
-                updatedSites.add(mapToSiteResponse(savedCurrentSite));
-            }
-            
-            // 10. ユーザー情報の更新
+
+            // 9. ユーザー情報の更新
             updateUserInfo(targetUser, request);
-            
-            // 11. 新サイトのPIC情報を更新
-            updateSitePIC(newSite, targetUser, request);
-            Site savedNewSite = siteRepository.save(newSite);
-            updatedSites.add(mapToSiteResponse(savedNewSite));
-            
-            // 12. ユーザーのサイト情報を更新
-            targetUser.setSite(newSite);
+
+            // 10. サイトの割り当て変更
+            if (siteChangeRequested || siteRemovalRequested) {
+                targetUser.setSite(newSite);
+            }
             targetUser.setUpdatedAt(LocalDateTime.now());
             ParticipatingUser savedUser = userRepository.save(targetUser);
-            
-            // 13. レスポンス作成
+
             response.setStatusCode(ResponseConstants.OK);
             response.setMessage("ユーザー情報とサイト割り当てが正常に更新されました。");
             response.setUser(mapToUserInfoResponse(savedUser));
@@ -432,7 +433,7 @@ public class UserServiceImpl implements UserService {
             }
 
             if ("master".equals(requestingRole)) {
-                if (!requestingCompanyId.equals(user.getCompanyId())) {
+                if (!requestingCompanyId.equals(user.getCompany().getCompanyId())) {
                     response.setStatusCode(ResponseConstants.FORBIDDEN);
                     response.setMessage(ResponseConstants.MSG_FORBIDDEN);
                     return response;
@@ -452,7 +453,7 @@ public class UserServiceImpl implements UserService {
                     .phoneNumber(company.getPhoneNumber())
                     .fax(company.getFax())
                     .corpNumber(company.getCorpNumber())
-                    .address(company.getAddress())
+                    .address(String.format("%s %s %s %s", company.getPrefecture(), company.getMunicipality(), company.getBlocknum(), company.getBuildingName()))
                     .isSuspended(company.isSuspended())
                     .build();
             }
@@ -573,10 +574,9 @@ public class UserServiceImpl implements UserService {
             .siteName(site.getSiteName())
             .postalCode(site.getPostalCode())
             .prefecture(site.getPrefecture())
-            .city(site.getCity())
-            .town(site.getTown())
-            .block(site.getBlocknum())  
-            .address(site.getAddress())  
+            .municipality(site.getMunicipality())
+            .blocknum(site.getBlocknum())  
+            .buildingName(site.getBuildingName())  
             .picFirstName(site.getPicFirstName())
             .picLastName(site.getPicLastName())
             .projects(getProjectsForSite(site))
@@ -606,7 +606,7 @@ public class UserServiceImpl implements UserService {
                 .role(user.getRole())
                 .siteId(user.getSite() != null ? String.valueOf(user.getSite().getId()) : null)
                 .siteName(user.getSite() != null ? user.getSite().getSiteName() : null)
-                .companyId(user.getCompanyId())
+                .companyId(user.getCompany() != null ? String.valueOf(user.getCompany().getCompanyId()) : null)
                 .build();
     }
 

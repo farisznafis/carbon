@@ -141,7 +141,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         notificationService.createNotificationForParticipatingCompany(
                 "一時利用停止のお知らせ",
                 "停止されている理由: " + reason,
-                company.getCompanyId(),
+                company.getId(),
                 null
         );
     }
@@ -169,7 +169,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 notificationService.createNotificationForParticipatingCompany(
                 "ご利用再開のお知らせ",
                 "利用再開されました。ご利用ありがとうございます。",
-                company.getCompanyId(),
+                company.getId(),
                 null
         );
     }

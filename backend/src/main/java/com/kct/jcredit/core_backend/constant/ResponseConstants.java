@@ -25,6 +25,7 @@ public class ResponseConstants {
     public static final String CORP_NUMBER_ALREADY_USED = "CORP_NUMBER_ALREADY_USED";
     public static final String PROJECT_NUMBER_ALREADY_USED = "PROJECT_NUMBER_ALREADY_USED";
     public static final String METHOD_NUMBER_ALREADY_USED = "METHOD_NUMBER_ALREADY_USED";
+    public static final String LIMIT_EXCEEDED = "LIMIT_EXCEEDED";
 
     // Messages
     public static final String MSG_LOGIN_NEEDED = "ログインが必要です。";
@@ -92,6 +93,7 @@ public class ResponseConstants {
     public static final String MSG_DELETION_REQUEST_REJECTED = "削除申請が却下されました。";
     public static final String MSG_CANNOT_APPROVE_OWN_REQUEST = "自分の削除申請は承認できません。";
     public static final String MSG_DELETION_ALREADY_PROCESSED = "この削除申請は既に処理されています。";
+    public static final String MSG_LIMIT_EXCEEDED = "上限に達しています。";
     
     private ResponseConstants() {}
 }

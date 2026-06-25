@@ -68,10 +68,9 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
 
         entity.setPostalCode(request.getPostalCode());
         entity.setPrefecture(request.getPrefecture());
-        entity.setCity(request.getCity());
-        entity.setTown(request.getTown());
+        entity.setMunicipality(request.getMunicipality());
         entity.setBlocknum(request.getBlocknum());
-        entity.setAddress(request.getAddress());
+        entity.setBuildingName(request.getBuildingName());
 
         entity.setRepFirstName(request.getFirstName());
         entity.setRepLastName(request.getLastName());
@@ -117,10 +116,9 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
                 + "■ 住所\n"
                 + "郵便番号: " + request.getPostalCode() + "\n"
                 + "都道府県: " + request.getPrefecture() + "\n"
-                + "市区町村: " + request.getCity() + "\n"
-                + "町名: " + request.getTown() + "\n"
+                + "市区町村: " + request.getMunicipality() + "\n"
                 + "番地: " + request.getBlocknum() + "\n"
-                + "住所: " + request.getAddress() + "\n\n"
+                + "建物名: " + request.getBuildingName() + "\n\n"
                 + "■ 代表者情報\n"
                 + "氏名: " + request.getLastName() + " " + request.getFirstName() + "\n"
                 + "氏名（カナ）: " + request.getLastNameKana() + " " + request.getFirstNameKana() + "\n"
