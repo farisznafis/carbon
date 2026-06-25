@@ -1,37 +1,39 @@
 package com.kct.jcredit.core_backend.service.impl.projectplan;
 
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
-import com.kct.jcredit.core_backend.constant.RoleConstants;
 import com.kct.jcredit.core_backend.dto.request.ApplicableConditionsRequest;
 import com.kct.jcredit.core_backend.dto.response.ApplicableConditionsResponse;
-import com.kct.jcredit.core_backend.entity.OperatingUser;
 import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.repository.dynamodb.ApplicableConditionsRepository;
-import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
-import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.service.projectplan.ApplicableConditionsService;
-import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
-
+import com.kct.jcredit.core_backend.service.impl.projectplan.ProjectPlanContextService.ProjectContext;
+import com.kct.jcredit.core_backend.service.impl.projectplan.ProjectPlanContextService.ProjectContextStatus;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
+/**
+ * Handles the applicable-conditions project-plan form.
+ *
+ * Editable form data is stored in the shared project-plan DynamoDB table
+ * under a static SK. Authoritative methodology and operator-company fields are
+ * read from PostgreSQL and overlaid when the form is retrieved.
+ */
 @Service
 @RequiredArgsConstructor
 public class ApplicableConditionsServiceImpl implements ApplicableConditionsService {
 
     private static final String APPLICABLE_CONDITIONS_SK = "APPLICABLE_CONDITIONS";
 
-    private final OperatingUserRepository operatorUserRepository;
-    private final ProjectRepository projectRepository;
+    private final ProjectPlanContextService projectPlanContextService;
     private final ApplicableConditionsRepository applicableConditionsRepository;
-    private final OperatorCompanyRepository operatorCompanyRepository;
 
+    /**
+     * Creates or replaces the applicable-conditions form for a project.
+     */
     @Override
     @Transactional
     public ApplicableConditionsResponse submitApplicableConditions(
@@ -43,6 +45,9 @@ public class ApplicableConditionsServiceImpl implements ApplicableConditionsServ
         return validateAndSave(projectId, request, companyId, role, username);
     }
 
+    /**
+     * Replaces the existing applicable-conditions form for a project.
+     */
     @Override
     @Transactional
     public ApplicableConditionsResponse updateApplicableConditions(
@@ -54,6 +59,9 @@ public class ApplicableConditionsServiceImpl implements ApplicableConditionsServ
         return validateAndSave(projectId, request, companyId, role, username);
     }
 
+    /**
+     * Returns the stored form with current PostgreSQL master fields overlaid.
+     */
     @Override
     @Transactional(readOnly = true)
     public ApplicableConditionsResponse getApplicableConditions(
@@ -63,16 +71,9 @@ public class ApplicableConditionsServiceImpl implements ApplicableConditionsServ
             String username) {
         ApplicableConditionsResponse response = new ApplicableConditionsResponse();
 
-        Project project = projectRepository.findById(projectId).orElse(null);
-        if (project == null) {
-            response.setStatusCode(ResponseConstants.NOT_FOUND);
-            response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
-            return response;
-        }
-
-        if (!hasAccessToProject(project, companyId, role, username)) {
-            response.setStatusCode(ResponseConstants.FORBIDDEN);
-            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+        ProjectContext context = projectPlanContextService.resolveProject(projectId, companyId, role, username);
+        if (!context.isAuthorized()) {
+            applyContextError(response, context);
             return response;
         }
 
@@ -81,7 +82,8 @@ public class ApplicableConditionsServiceImpl implements ApplicableConditionsServ
                 .findByPkAndSk(pk, APPLICABLE_CONDITIONS_SK)
                 .orElseGet(ApplicableConditionsRequest::new);
 
-        applySqlMasterFields(data, project);
+        // PostgreSQL remains authoritative for master fields shown in this form.
+        applySqlMasterFields(data, context.project());
         data.setPk(pk);
         data.setSk(APPLICABLE_CONDITIONS_SK);
 
@@ -98,16 +100,9 @@ public class ApplicableConditionsServiceImpl implements ApplicableConditionsServ
             String username) {
         ApplicableConditionsResponse response = new ApplicableConditionsResponse();
 
-        Project project = projectRepository.findById(projectId).orElse(null);
-        if (project == null) {
-            response.setStatusCode(ResponseConstants.NOT_FOUND);
-            response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
-            return response;
-        }
-
-        if (!hasAccessToProject(project, companyId, role, username)) {
-            response.setStatusCode(ResponseConstants.FORBIDDEN);
-            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+        ProjectContext context = projectPlanContextService.resolveProject(projectId, companyId, role, username);
+        if (!context.isAuthorized()) {
+            applyContextError(response, context);
             return response;
         }
 
@@ -119,6 +114,7 @@ public class ApplicableConditionsServiceImpl implements ApplicableConditionsServ
             ApplicableConditionsRequest request) {
         String pk = buildPk(projectId);
 
+        // DynamoDB keys are server-managed and cannot be supplied by clients.
         request.setPk(pk);
         request.setSk(APPLICABLE_CONDITIONS_SK);
 
@@ -142,26 +138,14 @@ public class ApplicableConditionsServiceImpl implements ApplicableConditionsServ
         }
     }
 
-    private boolean hasAccessToProject(Project project, String companyId, String role, String username) {
-        if (project == null) {
-            return false;
+    private void applyContextError(ApplicableConditionsResponse response, ProjectContext context) {
+        if (context.status() == ProjectContextStatus.NOT_FOUND) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
+            return;
         }
-
-        OperatorCompany company = project.getOperatorCompany();
-        if (company == null) {
-            company = operatorCompanyRepository.findByCompanyId(companyId).orElse(null);
-        }
-        if (!RoleConstants.OPERATOR.equals(role)) {
-            return false;
-        }
-        OperatingUser user = operatorUserRepository
-                .findByUsernameAndCompany_Id(username, company.getId())
-                .orElse(null);
-        if (user == null) {
-            return false;
-        }
-        OperatorCompany operatorCompany = project.getOperatorCompany();
-        return operatorCompany != null && companyId.equals(operatorCompany.getCompanyId());
+        response.setStatusCode(ResponseConstants.FORBIDDEN);
+        response.setMessage(ResponseConstants.MSG_FORBIDDEN);
     }
 
     private String buildPk(Integer projectId) {
