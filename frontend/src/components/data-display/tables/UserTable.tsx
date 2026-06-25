@@ -42,7 +42,7 @@ export function UserTable({ users, onEdit, onRowClick }: UserTableProps) {
           <div className="flex items-center gap-2">
             <span>{fullName}</span>
             {row.role === 'master' && (
-              <Badge className="bg-blue-600 hover:bg-blue-600 text-white font-medium px-2 py-0.5 text-xs rounded">
+              <Badge className="bg-blue-600 hover:bg-blue-600 text-white font-medium px-2 py-0.5 text-xs rounded-full">
                 マスター
               </Badge>
             )}

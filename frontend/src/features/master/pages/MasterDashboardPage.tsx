@@ -108,7 +108,7 @@ const MasterDashboard = () => {
             <div className='mt-6 flex justify-center'>
               <Button
                 onClick={() => navigate('/master/user-register')}
-                disabled={sites.length < users.length}
+                disabled={49 < users.length}
                 className='w-full max-w-lg bg-primary/100 hover:bg-primary/60'
               >
                 <Plus className='h-4 w-4 mr-2' />

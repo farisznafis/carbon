@@ -7,6 +7,7 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { RequiredLabel } from '@/components/forms/shared/RequiredLabel';
@@ -78,7 +79,8 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
             name='companyId'
             render={({ field }) => (
               <FormItem>
-                <RequiredLabel>会員ID</RequiredLabel>
+                {/* <RequiredLabel>会員ID</RequiredLabel> */}
+                <FormLabel>会員ID</FormLabel>
                 <FormControl>
                   <Input type='text' placeholder='会員IDを入力' {...field} />
                 </FormControl>
@@ -92,7 +94,8 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
             name='email'
             render={({ field }) => (
               <FormItem>
-                <RequiredLabel>メールアドレス</RequiredLabel>
+                {/* <RequiredLabel>メールアドレス</RequiredLabel> */}
+                <FormLabel>メールアドレス</FormLabel>
                 <FormControl>
                   <Input type='email' placeholder='you@company.com' {...field} />
                 </FormControl>
@@ -106,7 +109,8 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
             name='password'
             render={({ field }) => (
               <FormItem>
-                <RequiredLabel>パスワード</RequiredLabel>
+                {/* <RequiredLabel>パスワード</RequiredLabel> */}
+                <FormLabel>パスワード</FormLabel>
                 <FormControl>
                   <PasswordInput
                     placeholder='パスワードを入力'

@@ -1,36 +1,36 @@
 package com.kct.jcredit.core_backend.service.impl.projectplan;
 
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
-import com.kct.jcredit.core_backend.constant.RoleConstants;
 import com.kct.jcredit.core_backend.dto.request.OtherOperatorProjectsRequest;
 import com.kct.jcredit.core_backend.dto.response.OtherOperatorProjectsResponse;
-import com.kct.jcredit.core_backend.entity.OperatingUser;
-import com.kct.jcredit.core_backend.entity.OperatorCompany;
-import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.repository.dynamodb.OtherOperatorProjectsRepository;
-import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
-import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.service.projectplan.OtherOperatorProjectsService;
-import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
+import com.kct.jcredit.core_backend.service.impl.projectplan.ProjectPlanContextService.ProjectContext;
+import com.kct.jcredit.core_backend.service.impl.projectplan.ProjectPlanContextService.ProjectContextStatus;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
+/**
+ * Handles the other-operator-projects project-plan form.
+ *
+ * Project ownership is resolved from PostgreSQL, while form data is stored
+ * in the shared project-plan DynamoDB table under a form-specific static SK.
+ */
 @Service
 @RequiredArgsConstructor
 public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsService {
 
     private static final String OTHER_OPERATOR_PROJECTS_SK = "OTHER_OPERATOR_PROJECTS";
 
-    private final OperatingUserRepository operatorUserRepository;
-    private final OperatorCompanyRepository operatorCompanyRepository;
-    private final ProjectRepository projectRepository;
+    private final ProjectPlanContextService projectPlanContextService;
     private final OtherOperatorProjectsRepository otherOperatorProjectsRepository;
 
+    /**
+     * Creates or replaces the other-operator-projects form for a project.
+     */
     @Override
     @Transactional
     public OtherOperatorProjectsResponse submitOtherOperatorProjects(
@@ -42,6 +42,9 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
         return validateAndSave(projectId, request, companyId, role, username);
     }
 
+    /**
+     * Replaces the existing other-operator-projects form for a project.
+     */
     @Override
     @Transactional
     public OtherOperatorProjectsResponse updateOtherOperatorProjects(
@@ -53,6 +56,9 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
         return validateAndSave(projectId, request, companyId, role, username);
     }
 
+    /**
+     * Returns the stored form, or an empty keyed form when none has been saved.
+     */
     @Override
     @Transactional(readOnly = true)
     public OtherOperatorProjectsResponse getOtherOperatorProjects(
@@ -62,16 +68,9 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
             String username) {
         OtherOperatorProjectsResponse response = new OtherOperatorProjectsResponse();
 
-        Project project = projectRepository.findById(projectId).orElse(null);
-        if (project == null) {
-            response.setStatusCode(ResponseConstants.NOT_FOUND);
-            response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
-            return response;
-        }
-
-        if (!hasAccessToProject(project, companyId, role, username)) {
-            response.setStatusCode(ResponseConstants.FORBIDDEN);
-            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+        ProjectContext context = projectPlanContextService.resolveProject(projectId, companyId, role, username);
+        if (!context.isAuthorized()) {
+            applyContextError(response, context);
             return response;
         }
 
@@ -96,16 +95,9 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
             String username) {
         OtherOperatorProjectsResponse response = new OtherOperatorProjectsResponse();
 
-        Project project = projectRepository.findById(projectId).orElse(null);
-        if (project == null) {
-            response.setStatusCode(ResponseConstants.NOT_FOUND);
-            response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
-            return response;
-        }
-
-        if (!hasAccessToProject(project, companyId, role, username)) {
-            response.setStatusCode(ResponseConstants.FORBIDDEN);
-            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+        ProjectContext context = projectPlanContextService.resolveProject(projectId, companyId, role, username);
+        if (!context.isAuthorized()) {
+            applyContextError(response, context);
             return response;
         }
 
@@ -117,6 +109,7 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
             OtherOperatorProjectsRequest request) {
         String pk = buildPk(projectId);
 
+        // DynamoDB keys are server-managed and cannot be supplied by clients.
         request.setPk(pk);
         request.setSk(OTHER_OPERATOR_PROJECTS_SK);
 
@@ -128,26 +121,14 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
         return response;
     }
 
-    private boolean hasAccessToProject(Project project, String companyId, String role, String username) {
-
-        if (project == null) {
-            return false;
+    private void applyContextError(OtherOperatorProjectsResponse response, ProjectContext context) {
+        if (context.status() == ProjectContextStatus.NOT_FOUND) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
+            return;
         }
-        OperatorCompany company = project.getOperatorCompany();
-        if (company == null) {
-            company = operatorCompanyRepository.findByCompanyId(companyId).orElse(null);
-        }
-        if (!RoleConstants.OPERATOR.equals(role)) {
-            return false;
-        }
-        OperatingUser user = operatorUserRepository
-                .findByUsernameAndCompany_Id(username, company.getId())
-                .orElse(null);
-        if (user == null) {
-            return false;
-        }
-        OperatorCompany operatorCompany = project.getOperatorCompany();
-        return operatorCompany != null && companyId.equals(operatorCompany.getCompanyId());
+        response.setStatusCode(ResponseConstants.FORBIDDEN);
+        response.setMessage(ResponseConstants.MSG_FORBIDDEN);
     }
 
     private String buildPk(Integer projectId) {

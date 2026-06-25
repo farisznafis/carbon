@@ -16,10 +16,9 @@ Request Body (JSON):
 
   "postalCode": "1234567",
   "prefecture": "東京",
-  "city": "渋谷区",
-  "town": "桜丘町",
+  "municipality": "渋谷区桜丘町",
   "blocknum": "1-1"
-  "address": "サンプルビル 3F",
+  "buildingName": "サンプルビル 3F",
 
   "lastName": "山田",                   # 法人代表者姓
   "firstName": "太郎",                  # 法人代表者名

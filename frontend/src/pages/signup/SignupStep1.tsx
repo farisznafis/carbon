@@ -410,7 +410,7 @@ export const SignupStep1 = () => {
             )}
           />
 
-          {/* <FormField
+          <FormField
             control={form.control}
             name="faxNumber"
             render={({ field }) => (
@@ -422,7 +422,7 @@ export const SignupStep1 = () => {
                 <FormMessage />
               </FormItem>
             )}
-          /> */}
+          />
 
           <FormField
             control={form.control}
