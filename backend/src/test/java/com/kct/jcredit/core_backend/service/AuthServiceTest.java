@@ -275,20 +275,26 @@ public class AuthServiceTest {
     @Test
     void authService_userLogin_email_password_false() throws Exception {
         LoginRequest req = new LoginRequest();
-        req.setCompanyId(123);
+        req.setCompanyId("123");
         req.setIdentifier("alice@example.com"); // username でも email でもOK
         req.setPassword("raw-pass");
 
         // 企業IDが存在
-        when(participatingCompanyRepository.findByCompanyId(123))
-                .thenReturn(Optional.of(new ParticipatingCompany()));
+        ParticipatingCompany existingCompany = new ParticipatingCompany();
+        existingCompany.setId(123);
+        existingCompany.setCompanyId("123");
+        when(participatingCompanyRepository.findByCompanyId("123"))
+                .thenReturn(Optional.of(existingCompany));
         
         
         // ユーザーの用意（ロックなし・有効）
         ParticipatingUser user = new ParticipatingUser();
         user.setUsername("alice");
         user.setEmail("alice@example.com");
-        user.setCompanyId(123);
+        ParticipatingCompany company = new ParticipatingCompany();
+        company.setId(123);
+        company.setCompanyId("123");
+        user.setCompany(company);
         user.setRole("USER");
         user.setFirstName("Alice");
         user.setLastName("Smith");
@@ -331,13 +337,16 @@ public class AuthServiceTest {
     @Test
     void authService_userLogin_email_email_false() throws Exception {
         LoginRequest req = new LoginRequest();
-        req.setCompanyId(123);
+        req.setCompanyId("123");
         req.setIdentifier("alice@example.co"); // username でも email でもOK
         req.setPassword("raw-pass");
 
         // 企業IDが存在
-        when(participatingCompanyRepository.findByCompanyId(123))
-                .thenReturn(Optional.of(new ParticipatingCompany()));
+        ParticipatingCompany existingCompany = new ParticipatingCompany();
+        existingCompany.setId(123);
+        existingCompany.setCompanyId("123");
+        when(participatingCompanyRepository.findByCompanyId("123"))
+                .thenReturn(Optional.of(existingCompany));
         
         when(userRepository.findByUsernameOrEmailAndCompanyId("alice@example.co", "alice@example.co", 123))
                 .thenReturn(Optional.empty());
