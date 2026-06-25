@@ -38,9 +38,11 @@ import com.kct.jcredit.core_backend.dto.response.AdminLoginResponse;
 import com.kct.jcredit.core_backend.dto.response.LoginResponse;
 import com.kct.jcredit.core_backend.dto.response.PasswordChangeResponse;
 import com.kct.jcredit.core_backend.entity.OperatingUser;
+import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
+import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
@@ -55,6 +57,8 @@ public class AuthServiceTest {
     ParticipatingCompanyRepository participatingCompanyRepository;
     @Mock 
     OperatingUserRepository operatingUserRepository;
+    @Mock 
+    OperatorCompanyRepository operatingCompanyRepository;
     @Mock
     ParticipatingUserRepository userRepository;
     @Mock 
@@ -70,10 +74,13 @@ public class AuthServiceTest {
 
 
     private ParticipatingUser participatingUser;
+    // private ParticipatingCompany operatingCompany;
     private OperatingUser operatingUser;
+    private OperatorCompany operatorCompany;
 
     @BeforeEach
     void setUp() {
+        
         // テスト用ユーザーの初期化
         participatingUser = new ParticipatingUser();
         participatingUser.setId(1);
@@ -81,10 +88,12 @@ public class AuthServiceTest {
         participatingUser.setEmail("user1@example.com");
         participatingUser.setPassword("$2a$...oldhash..."); // モックでマッチング
         participatingUser.setRole("user");
-        participatingUser.setCompanyId("COMP123");
         participatingUser.setFirstName("First");
         participatingUser.setLastName("Last");
         participatingUser.setIsActive(true);
+        ParticipatingCompany dummyCompany = new ParticipatingCompany();
+            dummyCompany.setId(123); 
+            participatingUser.setCompany(dummyCompany);
         // テスト用OperatingUserの初期化
         operatingUser = new OperatingUser();
         operatingUser.setId(1);
@@ -92,10 +101,12 @@ public class AuthServiceTest {
         operatingUser.setEmail("operating1@example.com");
         operatingUser.setPassword("$2a$...oldhash...");
         operatingUser.setRole("admin");
-        operatingUser.setCompanyId("OPE001");
         operatingUser.setFirstName("Operating");
         operatingUser.setLastName("User");
         operatingUser.setIsActive(true);
+        ParticipatingCompany dummyOperatorCompany = new ParticipatingCompany();
+            dummyOperatorCompany.setId(123); 
+            operatingUser.setCompany(dummyOperatorCompany);
 }
 
     //正しい企業ID/正しいメールアドレス/パスワードでログイン成功
@@ -104,13 +115,15 @@ public class AuthServiceTest {
         log.info("=== START {} ===", testInfo.getDisplayName());
 
         LoginRequest req = new LoginRequest();
-        req.setCompanyId("COMP123");
+        req.setCompanyId("123");
         req.setIdentifier("alice@example.com"); 
         req.setPassword("raw-pass");
 
         // 企業IDが存在
-        when(participatingCompanyRepository.findByCompanyId("COMP123"))
-                .thenReturn(Optional.of(new ParticipatingCompany()));
+        ParticipatingCompany existingCompany = new ParticipatingCompany();
+        existingCompany.setId(123);
+        when(participatingCompanyRepository.findByCompanyId("123"))
+                .thenReturn(Optional.of(existingCompany));
         
         
         // ユーザーの用意（ロックなし・有効）
@@ -118,7 +131,9 @@ public class AuthServiceTest {
         user.setId(1);
         user.setUsername("alice");
         user.setEmail("alice@example.com");
-        user.setCompanyId("COMP123");
+        ParticipatingCompany company = new ParticipatingCompany();
+        company.setId(123);
+        user.setCompany(company); 
         user.setRole("USER");
         user.setFirstName("Alice");
         user.setLastName("Smith");
@@ -127,7 +142,7 @@ public class AuthServiceTest {
         user.setLoginAttempts(2); // 成功時に0へリセットされることを検証
         user.setIsActive(true);
 
-        when(userRepository.findByUsernameOrEmailAndCompanyId("alice@example.com", "alice@example.com", "COMP123"))
+        when(userRepository.findByUsernameOrEmailAndCompanyId("alice@example.com", "alice@example.com", 123))
                 .thenReturn(Optional.of(user));
         
 
@@ -136,7 +151,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1,"alice", "COMP123", "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1, "alice", "123", "USER")).thenReturn("jwt-token-123");
 
         // Act
         LoginResponse res = authServiceImpl.userLogin(req);
@@ -150,7 +165,7 @@ public class AuthServiceTest {
         // assertEquals("Smith Alice", res.getUser().getName()); 
         // assertEquals("USER", res.getUser().getRole());
         // assertEquals("alice@example.com", res.getUser().getEmail());
-        // assertEquals("COMP123", res.getUser().getCompanyId());
+        // assertEquals(123, res.getUser().getCompanyId());
         
         
         // ユーザーの試行回数が0にリセットされ保存されていること
@@ -177,12 +192,12 @@ public class AuthServiceTest {
     @Test
     void authService_userLogin_username_username_succes() throws Exception {
         LoginRequest req = new LoginRequest();
-        req.setCompanyId("COMP123");
+        req.setCompanyId(123);
         req.setIdentifier("alice"); // username でも email でもOK
         req.setPassword("raw-pass");
 
         // 企業IDが存在
-        when(participatingCompanyRepository.findByCompanyId("COMP123"))
+        when(participatingCompanyRepository.findByCompanyId(123))
                 .thenReturn(Optional.of(new ParticipatingCompany()));
         
         
@@ -191,7 +206,7 @@ public class AuthServiceTest {
         user.setId(1);
         user.setUsername("alice");
         user.setEmail("alice@example.com");
-        user.setCompanyId("COMP123");
+        user.setCompanyId(123);
         user.setRole("USER");
         user.setFirstName("Alice");
         user.setLastName("Smith");
@@ -200,7 +215,7 @@ public class AuthServiceTest {
         user.setLoginAttempts(2); // 成功時に0へリセットされることを検証
         user.setIsActive(true);
 
-        when(userRepository.findByUsernameOrEmailAndCompanyId("alice", "alice", "COMP123"))
+        when(userRepository.findByUsernameOrEmailAndCompanyId("alice", "alice", 123))
                 .thenReturn(Optional.of(user));
         
 
@@ -209,7 +224,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1, "alice", "COMP123", "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1, "alice", 123, "USER")).thenReturn("jwt-token-123");
 
         // Act
         LoginResponse res = authServiceImpl.userLogin(req);
@@ -222,7 +237,7 @@ public class AuthServiceTest {
         // assertEquals("Smith Alice", res.getUser().getName()); // 実装：last + space + first
         // assertEquals("USER", res.getUser().getRole());
         // assertEquals("alice@example.com", res.getUser().getEmail());
-        // assertEquals("COMP123", res.getUser().getCompanyId());
+        // assertEquals(123, res.getUser().getCompanyId());
         
         
         // ユーザーの試行回数が0にリセットされ保存されていること
@@ -250,12 +265,12 @@ public class AuthServiceTest {
     @Test
     void authService_userLogin_email_password_false() throws Exception {
         LoginRequest req = new LoginRequest();
-        req.setCompanyId("COMP123");
+        req.setCompanyId(123);
         req.setIdentifier("alice@example.com"); // username でも email でもOK
         req.setPassword("raw-pass");
 
         // 企業IDが存在
-        when(participatingCompanyRepository.findByCompanyId("COMP123"))
+        when(participatingCompanyRepository.findByCompanyId(123))
                 .thenReturn(Optional.of(new ParticipatingCompany()));
         
         
@@ -263,7 +278,7 @@ public class AuthServiceTest {
         ParticipatingUser user = new ParticipatingUser();
         user.setUsername("alice");
         user.setEmail("alice@example.com");
-        user.setCompanyId("COMP123");
+        user.setCompanyId(123);
         user.setRole("USER");
         user.setFirstName("Alice");
         user.setLastName("Smith");
@@ -272,7 +287,7 @@ public class AuthServiceTest {
         user.setLoginAttempts(2); // 成功時に0へリセットされることを検証
         user.setIsActive(true);
 
-        when(userRepository.findByUsernameOrEmailAndCompanyId("alice@example.com", "alice@example.com", "COMP123"))
+        when(userRepository.findByUsernameOrEmailAndCompanyId("alice@example.com", "alice@example.com", 123))
                 .thenReturn(Optional.of(user));
         
 
@@ -306,15 +321,15 @@ public class AuthServiceTest {
     @Test
     void authService_userLogin_email_email_false() throws Exception {
         LoginRequest req = new LoginRequest();
-        req.setCompanyId("COMP123");
+        req.setCompanyId(123);
         req.setIdentifier("alice@example.co"); // username でも email でもOK
         req.setPassword("raw-pass");
 
         // 企業IDが存在
-        when(participatingCompanyRepository.findByCompanyId("COMP123"))
+        when(participatingCompanyRepository.findByCompanyId(123))
                 .thenReturn(Optional.of(new ParticipatingCompany()));
         
-        when(userRepository.findByUsernameOrEmailAndCompanyId("alice@example.co", "alice@example.co", "COMP123"))
+        when(userRepository.findByUsernameOrEmailAndCompanyId("alice@example.co", "alice@example.co", 123))
                 .thenReturn(Optional.empty());
                 
         // Act
@@ -377,12 +392,12 @@ public class AuthServiceTest {
         @Test
     void authService_userLogin_account_lock() throws Exception {
         LoginRequest req = new LoginRequest();
-        req.setCompanyId("COMP123");
+        req.setCompanyId(123);
         req.setIdentifier("alice@example.com"); // username でも email でもOK
         req.setPassword("raw-pass");
 
         // 企業IDが存在
-        when(participatingCompanyRepository.findByCompanyId("COMP123"))
+        when(participatingCompanyRepository.findByCompanyId(123))
                 .thenReturn(Optional.of(new ParticipatingCompany()));
         
         
@@ -390,7 +405,7 @@ public class AuthServiceTest {
         ParticipatingUser user = new ParticipatingUser();
         user.setUsername("alice");
         user.setEmail("alice@example.com");
-        user.setCompanyId("COMP123");
+        user.setCompanyId(123);
         user.setRole("USER");
         user.setFirstName("Alice");
         user.setLastName("Smith");
@@ -402,7 +417,7 @@ public class AuthServiceTest {
         user.setIsActive(true);
 
         //ユーザ検索しユーザを返す
-        when(userRepository.findByUsernameOrEmailAndCompanyId("alice@example.com", "alice@example.com", "COMP123"))
+        when(userRepository.findByUsernameOrEmailAndCompanyId("alice@example.com", "alice@example.com", 123))
                 .thenReturn(Optional.of(user));
 
         // パスワード一致
@@ -452,12 +467,12 @@ public class AuthServiceTest {
     @Test
     void authService_userLogin_afterLock12Hours_success() throws Exception {
         LoginRequest req = new LoginRequest();
-        req.setCompanyId("COMP123");
+        req.setCompanyId(123);
         req.setIdentifier("alice@example.com"); // username でも email でもOK
         req.setPassword("raw-pass");
 
         // 企業IDが存在
-        when(participatingCompanyRepository.findByCompanyId("COMP123"))
+        when(participatingCompanyRepository.findByCompanyId(123))
                 .thenReturn(Optional.of(new ParticipatingCompany()));
         
         
@@ -466,7 +481,7 @@ public class AuthServiceTest {
         user.setId(1);
         user.setUsername("alice");
         user.setEmail("alice@example.com");
-        user.setCompanyId("COMP123");
+        user.setCompanyId(123);
         user.setRole("USER");
         user.setFirstName("Alice");
         user.setLastName("Smith");
@@ -475,7 +490,7 @@ public class AuthServiceTest {
         user.setLoginAttempts(5); // 成功時に0へリセットされることを検証
         user.setIsActive(true);
 
-        when(userRepository.findByUsernameOrEmailAndCompanyId("alice@example.com", "alice@example.com", "COMP123"))
+        when(userRepository.findByUsernameOrEmailAndCompanyId("alice@example.com", "alice@example.com", 123))
                 .thenReturn(Optional.of(user));
         
 
@@ -484,7 +499,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1, "alice", "COMP123", "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1, "alice", 123, "USER")).thenReturn("jwt-token-123");
 
         // Act
         LoginResponse res = authServiceImpl.userLogin(req);
@@ -497,7 +512,7 @@ public class AuthServiceTest {
         // assertEquals("Smith Alice", res.getUser().getName()); // 実装：last + space + first
         // assertEquals("USER", res.getUser().getRole());
         // assertEquals("alice@example.com", res.getUser().getEmail());
-        // assertEquals("COMP123", res.getUser().getCompanyId());
+        // assertEquals(123, res.getUser().getCompanyId());
         
         
         // ユーザーの試行回数が0にリセットされ保存されていること
@@ -528,12 +543,12 @@ public class AuthServiceTest {
     @Test
     void authService_userLogin_accountLocked_failure() throws Exception {
         LoginRequest req = new LoginRequest();
-        req.setCompanyId("COMP123");
+        req.setCompanyId(123);
         req.setIdentifier("alice@example.com"); // username でも email でもOK
         req.setPassword("raw-pass");
 
         // 企業IDが存在
-        when(participatingCompanyRepository.findByCompanyId("COMP123"))
+        when(participatingCompanyRepository.findByCompanyId(123))
                 .thenReturn(Optional.of(new ParticipatingCompany()));
         
         
@@ -541,7 +556,7 @@ public class AuthServiceTest {
         ParticipatingUser user = new ParticipatingUser();
         user.setUsername("alice");
         user.setEmail("alice@example.com");
-        user.setCompanyId("COMP123");
+        user.setCompanyId(123);
         user.setRole("USER");
         user.setFirstName("Alice");
         user.setLastName("Smith");
@@ -551,7 +566,7 @@ public class AuthServiceTest {
         user.setIsActive(true);
 
         //ユーザ検索しユーザを返す
-        when(userRepository.findByUsernameOrEmailAndCompanyId("alice@example.com", "alice@example.com", "COMP123"))
+        when(userRepository.findByUsernameOrEmailAndCompanyId("alice@example.com", "alice@example.com", 123))
                 .thenReturn(Optional.of(user));
          
         // Act
@@ -586,7 +601,7 @@ public class AuthServiceTest {
         operator.setId(1);
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        operator.setCompanyId("COMP123");
+        operator.setCompanyId(123);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
@@ -605,7 +620,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1, "alice", "COMP123", "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1, "alice", 123, "USER")).thenReturn("jwt-token-123");
 
         // Act
         AdminLoginResponse res = authServiceImpl.operatorLogin(req);
@@ -651,7 +666,7 @@ public class AuthServiceTest {
         operator.setId(1);
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        operator.setCompanyId("COMP123");
+        operator.setCompanyId(123);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
@@ -670,7 +685,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1,   "alice", "COMP123", "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1,   "alice", 123, "USER")).thenReturn("jwt-token-123");
 
         // Act
         AdminLoginResponse res = authServiceImpl.operatorLogin(req);
@@ -716,7 +731,7 @@ public class AuthServiceTest {
         operator.setId(1);
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        operator.setCompanyId("COMP123");
+        operator.setCompanyId(123);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
@@ -800,7 +815,7 @@ public class AuthServiceTest {
         OperatingUser operator = new OperatingUser();
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        operator.setCompanyId("COMP123");
+        operator.setCompanyId(123);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
@@ -819,7 +834,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1, "alice", "COMP123", "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1, "alice", 123, "USER")).thenReturn("jwt-token-123");
 
         // Act
         AdminLoginResponse res = authServiceImpl.operatorLogin(req);
@@ -864,7 +879,7 @@ public class AuthServiceTest {
         OperatingUser operator = new OperatingUser();
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        operator.setCompanyId("COMP123");
+        operator.setCompanyId(123);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
@@ -933,7 +948,7 @@ public class AuthServiceTest {
         operator.setId(1);
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        operator.setCompanyId("COMP123");
+        operator.setCompanyId(123);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
@@ -952,7 +967,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1, "alice", "COMP123", "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1, "alice", 123, "USER")).thenReturn("jwt-token-123");
 
         // Act
         AdminLoginResponse res = authServiceImpl.operatorLogin(req);
@@ -1001,7 +1016,7 @@ public class AuthServiceTest {
         OperatingUser operator = new OperatingUser();
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        operator.setCompanyId("COMP123");
+        operator.setCompanyId(123);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
@@ -1159,7 +1174,7 @@ public class AuthServiceTest {
         masterUser.setUsername("master1");
         masterUser.setPassword("$2a$...masterhash...");
         masterUser.setRole("master");
-        masterUser.setCompanyId("COMP123");
+        masterUser.setCompanyId(123);
         masterUser.setIsActive(true);
 
         ParticipatingUser targetMasterUser = new ParticipatingUser();
@@ -1167,7 +1182,7 @@ public class AuthServiceTest {
         targetMasterUser.setUsername("master2");
         targetMasterUser.setPassword("$2a$...oldhash...");
         targetMasterUser.setRole("master");
-        targetMasterUser.setCompanyId("COMP123");
+        targetMasterUser.setCompanyId(123);
         targetMasterUser.setIsActive(true);
         //★
 
@@ -1239,7 +1254,7 @@ public class AuthServiceTest {
         masterUser.setUsername("master1");
         masterUser.setPassword("$2a$...masterhash...");
         masterUser.setRole("master");
-        masterUser.setCompanyId("COMP123");
+        masterUser.setCompanyId(123);
         masterUser.setIsActive(true);
 
         ParticipatingUser targetGeneralUser = new ParticipatingUser();
@@ -1247,7 +1262,7 @@ public class AuthServiceTest {
         targetGeneralUser.setUsername("user2");
         targetGeneralUser.setPassword("$2a$...oldhash...");
         targetGeneralUser.setRole("user");
-        targetGeneralUser.setCompanyId("COMP123");
+        targetGeneralUser.setCompanyId(123);
         targetGeneralUser.setIsActive(true);
         //★
 
@@ -1316,7 +1331,7 @@ public class AuthServiceTest {
         targetMasterUser.setUsername("master1");
         targetMasterUser.setPassword("$2a$...oldhash...");
         targetMasterUser.setRole("master");
-        targetMasterUser.setCompanyId("COMP123");
+        targetMasterUser.setCompanyId(123);
         targetMasterUser.setIsActive(true);
         //★
 
@@ -1587,7 +1602,7 @@ public class AuthServiceTest {
         masterUser.setUsername("master1");
         masterUser.setPassword("$2a$...masterhash...");
         masterUser.setRole("master");
-        masterUser.setCompanyId("COMP123");
+        masterUser.setCompanyId(123);
         masterUser.setIsActive(true);
 
         ParticipatingUser targetUser = new ParticipatingUser();
@@ -1638,7 +1653,7 @@ public class AuthServiceTest {
         masterUser.setUsername("master1");
         masterUser.setPassword("$2a$...masterhash...");
         masterUser.setRole("master");
-        masterUser.setCompanyId("COMP123");
+        masterUser.setCompanyId(123);
         masterUser.setIsActive(true);
 
         PasswordChangeRequest request = new PasswordChangeRequest();
@@ -1716,7 +1731,7 @@ public class AuthServiceTest {
         generalUser.setUsername("user2");
         generalUser.setPassword("$2a$...oldhash...");
         generalUser.setRole("user");
-        generalUser.setCompanyId("COMP123");
+        generalUser.setCompanyId(123);
         generalUser.setIsActive(true);
 
         PasswordChangeRequest request = new PasswordChangeRequest();
