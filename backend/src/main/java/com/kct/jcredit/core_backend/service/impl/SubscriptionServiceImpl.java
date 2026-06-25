@@ -1,5 +1,13 @@
 package com.kct.jcredit.core_backend.service.impl;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.SubscriptionLog;
 import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
@@ -8,15 +16,9 @@ import com.kct.jcredit.core_backend.repository.postgres.SubscriptionLogRepositor
 import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.service.PaymentGatewayService;
 import com.kct.jcredit.core_backend.service.SubscriptionService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -182,15 +184,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public void suspendCompanyManually(String companyId, String reason) {
         log.info("Manually suspending company: {}", companyId);
         
+        //企業IDで企業を検索し、nullの場合は"Company not found: " + companyIdを返す
         ParticipatingCompany company = companyRepository.findByCompanyId(companyId)
                 .orElseThrow(() -> new RuntimeException("Company not found: " + companyId));
-        
+        //企業を停止状態にする
         company.setSubscriptionStatus(SubscriptionStatus.SUSPENDED);
         company.setSuspensionReason(reason != null ? reason : "Manual suspension");
         company.setSuspensionDate(LocalDateTime.now());
         company.setIsActive(false);
         companyRepository.save(company);
 
+        //
         SubscriptionLog subscriptionLog = SubscriptionLog.builder()
                 .company(company)
                 .actionType("MANUAL_SUSPENSION")
@@ -200,6 +204,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .build();
         subscriptionLogRepository.save(subscriptionLog);
 
+        //
         notificationService.sendSuspensionNotification(company);
         
         log.info("Company suspended manually: {}", companyId);

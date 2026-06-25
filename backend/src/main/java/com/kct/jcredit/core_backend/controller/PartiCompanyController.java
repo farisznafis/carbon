@@ -6,7 +6,9 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,12 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.ApproveDeletionRequest;
 import com.kct.jcredit.core_backend.dto.request.CreateDeletionRequest;
+import com.kct.jcredit.core_backend.dto.request.PartiCompanyRegisterRequest;
 import com.kct.jcredit.core_backend.dto.request.ReactivationRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectDeletionRequest;
 import com.kct.jcredit.core_backend.dto.request.SuspendCompanyRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdatePartiCompanyRequest;
-import com.kct.jcredit.core_backend.dto.request.PartiCompanyRegisterRequest;
-import com.kct.jcredit.core_backend.dto.response.DeleteCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.DeletionRequestResponse;
 import com.kct.jcredit.core_backend.dto.response.ReactivationResponse;
 import com.kct.jcredit.core_backend.dto.response.SuspendCompanyResponse;
@@ -34,6 +35,7 @@ import com.kct.jcredit.core_backend.service.PartiCompanyRegisterService;
 import com.kct.jcredit.core_backend.service.PartiCompanyService;
 import com.kct.jcredit.core_backend.service.PaymentGatewayService;
 import com.kct.jcredit.core_backend.service.SubscriptionService;
+import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -70,6 +72,7 @@ public class PartiCompanyController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    //運用・管理者のみ機能
     @PostMapping("/suspend")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
@@ -85,7 +88,9 @@ public class PartiCompanyController {
                     .build());
         }
 
+        //企業情報取得
         ParticipatingCompany company = companyOpt.get();
+        //会社が停止されているかどうか確認
         if (company.getSubscriptionStatus() == SubscriptionStatus.SUSPENDED) {
             return ResponseEntity.badRequest().body(SuspendCompanyResponse.builder()
                     .statusCode(ResponseConstants.BAD_REQUEST)
@@ -94,6 +99,7 @@ public class PartiCompanyController {
                     .build());
         }
 
+        //Service実施
         subscriptionService.suspendCompanyManually(request.getCompanyId(), request.getReason());
         
         return ResponseEntity.ok(SuspendCompanyResponse.builder()
@@ -104,6 +110,7 @@ public class PartiCompanyController {
                 .build());
     }
 
+    //運用・管理者のみ機能
     @PostMapping("/reactivate")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
@@ -160,6 +167,7 @@ public class PartiCompanyController {
         }
     }
 
+    //マスターのみ機能
     @PostMapping("/{companyId}/deletion-request")
     @PreAuthorize("hasAnyRole('master')")
     @SecurityRequirement(name = "bearerAuth")
@@ -173,6 +181,7 @@ public class PartiCompanyController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
+    //運用・管理者のみ機能
     @PostMapping("/{companyId}/deletion-approve")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
@@ -186,6 +195,7 @@ public class PartiCompanyController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
+    //運用・管理者のみ機能
     @PostMapping("/{companyId}/deletion-reject")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")

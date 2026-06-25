@@ -7,6 +7,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,15 +19,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
+import com.kct.jcredit.core_backend.dto.request.SuspendCompanyRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdatePartiCompanyRequest;
 import com.kct.jcredit.core_backend.dto.response.UpdatePartiCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.details.CompanyInfoResponse;
+import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.service.PartiCompanyRegisterService;
 import com.kct.jcredit.core_backend.service.PartiCompanyService;
 import com.kct.jcredit.core_backend.service.PaymentGatewayService;
 import com.kct.jcredit.core_backend.service.SubscriptionService;
-
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("PartiCompanyController 単体テスト")
@@ -57,13 +60,6 @@ public class PartiCompanyControllerTest {
     @BeforeEach
     void setUp() {
 
-    }
-
-    //有効なリクエストで企業情報の更新が成功する（statusCode=200）
-    @Test
-    @DisplayName("有効なリクエストで企業情報の更新が成功する（statusCode=200）")
-    void updateCompany_Success() {
-
         String companyId = "COMP00000001";
 
         //リクエスト作成
@@ -88,6 +84,13 @@ public class PartiCompanyControllerTest {
         .address("サンプルビル 3F")
         .isSuspended(false)
         .build();
+
+    }
+
+    //有効なリクエストで企業情報の更新が成功する（statusCode=200）
+    @Test
+    @DisplayName("有効なリクエストで企業情報の更新が成功する（statusCode=200）")
+    void updateCompany_Success() {
 
         
         UpdatePartiCompanyResponse res = new UpdatePartiCompanyResponse();
@@ -214,6 +217,8 @@ public class PartiCompanyControllerTest {
         assertEquals("サイト情報の取得中にエラーが発生しました。", res.getMessage());
     }
 
+    //==========================================================
+
     //有効なリクエストで企業情報の更新が成功する（statusCode=200）
     @Test
     @DisplayName("有効なリクエストで企業情報の更新が成功する（statusCode=200）")
@@ -222,34 +227,36 @@ public class PartiCompanyControllerTest {
         String companyId = "COMP00000001";
 
         //リクエスト作成
-        UpdatePartiCompanyRequest req = new UpdatePartiCompanyRequest();
+        SuspendCompanyRequest req = new SuspendCompanyRequest();
         req.setCompanyId(companyId);
-        req.setPhoneNumber("070-1234-5678");
-        req.setFax("03-1234-5679");
-        req.setEmail("corporate@company.com");
-
+        req.setReason("停止理由");
 
         // ParticipatingCompany（Entity）を作成
         CompanyInfoResponse companyDetails = CompanyInfoResponse.builder()
-        .id("1")
-        .companyId(companyId)
-        .nameJA("株式会社サンプル")
-        .nameFurigana("カブシキガイシャサンプル")
-        .nameEN("Sumple Corporation")
-        .email("corporate@company.com") //←リクエストの値に更新される
-        .phoneNumber("070-1234-5678") //←リクエストの値に更新される
-        .fax("03-1234-5679") //←リクエストの値に更新される
-        .corpNumber("123467890123")
-        .address("サンプルビル 3F")
-        .isSuspended(false)
-        .build();
+            .id("1")
+            .companyId(companyId)
+            .nameJA("株式会社サンプル")
+            .nameFurigana("カブシキガイシャサンプル")
+            .nameEN("Sumple Corporation")
+            .email("corporate@company.com") //←リクエストの値に更新される
+            .phoneNumber("070-1234-5678") //←リクエストの値に更新される
+            .fax("03-1234-5679") //←リクエストの値に更新される
+            .corpNumber("123467890123")
+            .address("サンプルビル 3F")
+            .isSuspended(false)
+            .build();
 
         
         UpdatePartiCompanyResponse res = new UpdatePartiCompanyResponse();
         res.setCompany(companyDetails);
         res.setStatusCode(ResponseConstants.OK);
 
-        when(companyService.updateCompany(companyId, req))
+        Optional<ParticipatingCompany> company = companyRepository.findByCompanyId(companyId);
+
+        when(companyRepository.findByCompanyId(companyId))
+            .thenReturn(Optional.of(company));
+
+        when(subscriptionService.suspendCompanyManually(companyId, req.getReason()))
             .thenReturn(res);
 
         //テスト実行
