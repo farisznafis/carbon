@@ -81,6 +81,11 @@ public class AuthServiceTest {
     @BeforeEach
     void setUp() {
         
+        // テスト用会社の初期化
+        ParticipatingCompany dummyCompany = new ParticipatingCompany();
+        dummyCompany.setId(123);
+        dummyCompany.setCompanyId("123");
+        
         // テスト用ユーザーの初期化
         participatingUser = new ParticipatingUser();
         participatingUser.setId(1);
@@ -91,9 +96,8 @@ public class AuthServiceTest {
         participatingUser.setFirstName("First");
         participatingUser.setLastName("Last");
         participatingUser.setIsActive(true);
-        ParticipatingCompany dummyCompany = new ParticipatingCompany();
-            dummyCompany.setId(123); 
-            participatingUser.setCompany(dummyCompany);
+        participatingUser.setCompany(dummyCompany);
+        
         // テスト用OperatingUserの初期化
         operatingUser = new OperatingUser();
         operatingUser.setId(1);
@@ -104,9 +108,7 @@ public class AuthServiceTest {
         operatingUser.setFirstName("Operating");
         operatingUser.setLastName("User");
         operatingUser.setIsActive(true);
-        ParticipatingCompany dummyOperatorCompany = new ParticipatingCompany();
-            dummyOperatorCompany.setId(123); 
-            operatingUser.setCompany(dummyOperatorCompany);
+        operatingUser.setCompany(dummyCompany);
 }
 
     //正しい企業ID/正しいメールアドレス/パスワードでログイン成功
