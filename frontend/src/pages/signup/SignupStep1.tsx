@@ -214,13 +214,13 @@ export const SignupStep1 = () => {
                 name="postalCode"
                 render={({ field }) => (
                   <FormItem>
-                    <RequiredLabel>郵便番号</RequiredLabel>
+                    <RequiredLabel>郵便番号（ハイフン無し）</RequiredLabel>
                     <div className="relative">
                       <FormControl>
                         <Input
                           inputSize="sm"
                           maxLength={8}
-                          placeholder="1234567890111"
+                          placeholder="1000001"
                           {...field}
                           onChange={(e) => handlePostalCodeChange(e.target.value, field.onChange)}
                         />
@@ -282,7 +282,7 @@ export const SignupStep1 = () => {
                   <FormItem>
                     <RequiredLabel>番地</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="桜丘町1-1" {...field} />
+                      <Input inputSize="sm" placeholder="1-1" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -384,9 +384,9 @@ export const SignupStep1 = () => {
                 name="phoneNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <RequiredLabel>電話番号</RequiredLabel>
+                    <RequiredLabel>電話番号（ハイフン無し）</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" type="tel" placeholder="03-1234-5678" {...field} />
+                      <Input inputSize="sm" type="tel" placeholder="0312345678" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -398,9 +398,9 @@ export const SignupStep1 = () => {
                 name="faxNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <RequiredLabel required={false}>FAX番号</RequiredLabel>
+                    <RequiredLabel required={false}>FAX番号（ハイフン無し）</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" type="tel" placeholder="03-1234-5678" {...field} />
+                      <Input inputSize="sm" type="tel" placeholder="0312345678" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -414,7 +414,7 @@ export const SignupStep1 = () => {
                   <FormItem>
                     <RequiredLabel>メールアドレス</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" type="email" placeholder="1109yamada.taro@tokyo-energy.co.jp" {...field} />
+                      <Input inputSize="sm" type="email" placeholder="yamada.taro@tokyo-energy.co.jp" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
