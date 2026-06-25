@@ -234,7 +234,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1, "alice", 123, "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1, "alice", "123", "USER")).thenReturn("jwt-token-123");
 
         // Act
         LoginResponse res = authServiceImpl.userLogin(req);
@@ -530,7 +530,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1, "alice", 123, "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1, "alice", "123", "USER")).thenReturn("jwt-token-123");
 
         // Act
         LoginResponse res = authServiceImpl.userLogin(req);
@@ -660,7 +660,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1, "alice", 123, "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1, "alice", "123", "USER")).thenReturn("jwt-token-123");
 
         // Act
         AdminLoginResponse res = authServiceImpl.operatorLogin(req);
@@ -728,7 +728,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1,   "alice", 123, "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1,   "alice", "123", "USER")).thenReturn("jwt-token-123");
 
         // Act
         AdminLoginResponse res = authServiceImpl.operatorLogin(req);
@@ -774,7 +774,8 @@ public class AuthServiceTest {
         operator.setId(1);
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        operator.setCompanyId(123);
+        ParticipatingCompany company = new ParticipatingCompany();
+        company.setId(123);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
@@ -858,7 +859,8 @@ public class AuthServiceTest {
         OperatingUser operator = new OperatingUser();
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        operator.setCompanyId(123);
+        ParticipatingCompany company = new ParticipatingCompany();
+        company.setId(123);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
@@ -877,7 +879,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1, "alice", 123, "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1, "alice", "123", "USER")).thenReturn("jwt-token-123");
 
         // Act
         AdminLoginResponse res = authServiceImpl.operatorLogin(req);
@@ -922,7 +924,8 @@ public class AuthServiceTest {
         OperatingUser operator = new OperatingUser();
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        operator.setCompanyId(123);
+        ParticipatingCompany company = new ParticipatingCompany();
+        company.setId(123);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
@@ -991,7 +994,8 @@ public class AuthServiceTest {
         operator.setId(1);
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        operator.setCompanyId(123);
+        ParticipatingCompany company = new ParticipatingCompany();
+        company.setId(123);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
@@ -1010,7 +1014,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1, "alice", 123, "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1, "alice", "123", "USER")).thenReturn("jwt-token-123");
 
         // Act
         AdminLoginResponse res = authServiceImpl.operatorLogin(req);
@@ -1059,7 +1063,8 @@ public class AuthServiceTest {
         OperatingUser operator = new OperatingUser();
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        operator.setCompanyId(123);
+        ParticipatingCompany company = new ParticipatingCompany();
+        company.setId(123);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
@@ -1217,7 +1222,9 @@ public class AuthServiceTest {
         masterUser.setUsername("master1");
         masterUser.setPassword("$2a$...masterhash...");
         masterUser.setRole("master");
-        masterUser.setCompanyId(123);
+        ParticipatingCompany company = new ParticipatingCompany();
+        company.setId(123);
+        company.setCompanyId("123");
         masterUser.setIsActive(true);
 
         ParticipatingUser targetMasterUser = new ParticipatingUser();
@@ -1225,7 +1232,9 @@ public class AuthServiceTest {
         targetMasterUser.setUsername("master2");
         targetMasterUser.setPassword("$2a$...oldhash...");
         targetMasterUser.setRole("master");
-        targetMasterUser.setCompanyId(123);
+        ParticipatingCompany targetMasterUserId = new ParticipatingCompany();
+        targetMasterUserId.setId(123);
+        targetMasterUserId.setCompanyId("123");
         targetMasterUser.setIsActive(true);
         //★
 
@@ -1297,7 +1306,9 @@ public class AuthServiceTest {
         masterUser.setUsername("master1");
         masterUser.setPassword("$2a$...masterhash...");
         masterUser.setRole("master");
-        masterUser.setCompanyId(123);
+        ParticipatingCompany targetMasterUserId = new ParticipatingCompany();
+        targetMasterUserId.setId(123);
+        targetMasterUserId.setCompanyId("123");
         masterUser.setIsActive(true);
 
         ParticipatingUser targetGeneralUser = new ParticipatingUser();
@@ -1305,7 +1316,9 @@ public class AuthServiceTest {
         targetGeneralUser.setUsername("user2");
         targetGeneralUser.setPassword("$2a$...oldhash...");
         targetGeneralUser.setRole("user");
-        targetGeneralUser.setCompanyId(123);
+        ParticipatingCompany targetGeneralUserId = new ParticipatingCompany();
+        targetGeneralUserId.setId(123);
+        targetGeneralUserId.setCompanyId("123");
         targetGeneralUser.setIsActive(true);
         //★
 
@@ -1374,7 +1387,9 @@ public class AuthServiceTest {
         targetMasterUser.setUsername("master1");
         targetMasterUser.setPassword("$2a$...oldhash...");
         targetMasterUser.setRole("master");
-        targetMasterUser.setCompanyId(123);
+        ParticipatingCompany targetMasterUserId = new ParticipatingCompany();
+        targetMasterUserId.setId(123);
+        targetMasterUserId.setCompanyId("123");
         targetMasterUser.setIsActive(true);
         //★
 
@@ -1645,7 +1660,9 @@ public class AuthServiceTest {
         masterUser.setUsername("master1");
         masterUser.setPassword("$2a$...masterhash...");
         masterUser.setRole("master");
-        masterUser.setCompanyId(123);
+                ParticipatingCompany targetMasterUserId = new ParticipatingCompany();
+        targetMasterUserId.setId(123);
+        targetMasterUserId.setCompanyId("123");
         masterUser.setIsActive(true);
 
         ParticipatingUser targetUser = new ParticipatingUser();
@@ -1653,7 +1670,9 @@ public class AuthServiceTest {
         targetUser.setUsername("user2");
         targetUser.setPassword("$2a$...oldhash...");
         targetUser.setRole("user");
-        targetUser.setCompanyId("COMP999");
+        ParticipatingCompany targetUserId = new ParticipatingCompany();
+        targetUserId.setId(123);
+        targetUserId.setCompanyId("123");
         targetUser.setIsActive(true);
 
         PasswordChangeRequest request = new PasswordChangeRequest();
@@ -1696,7 +1715,9 @@ public class AuthServiceTest {
         masterUser.setUsername("master1");
         masterUser.setPassword("$2a$...masterhash...");
         masterUser.setRole("master");
-        masterUser.setCompanyId(123);
+                ParticipatingCompany targetMasterUserId = new ParticipatingCompany();
+        targetMasterUserId.setId(123);
+        targetMasterUserId.setCompanyId("123");
         masterUser.setIsActive(true);
 
         PasswordChangeRequest request = new PasswordChangeRequest();
@@ -1774,7 +1795,9 @@ public class AuthServiceTest {
         generalUser.setUsername("user2");
         generalUser.setPassword("$2a$...oldhash...");
         generalUser.setRole("user");
-        generalUser.setCompanyId(123);
+        ParticipatingCompany targetGeneralUserId = new ParticipatingCompany();
+        targetGeneralUserId.setId(123);
+        targetGeneralUserId.setCompanyId("123");
         generalUser.setIsActive(true);
 
         PasswordChangeRequest request = new PasswordChangeRequest();

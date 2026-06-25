@@ -138,7 +138,8 @@ class MonitoringServiceImplTest {
         masterUser = new ParticipatingUser();
         masterUser.setId(13);
         masterUser.setUsername("multi_site_master");
-        masterUser.setCompanyId("COMP00000002");
+        ParticipatingCompany masterCompany = new ParticipatingCompany(); 
+        masterUser.setCompany(masterCompany);
         masterUser.setRole("master");
         masterUser.setIsActive(true);
         masterUser.setPassword("$2a$10$Gz/GpXFrN/J6zWwGQxfhbuxtZfYL1vFIfa1FNsdpnRD5zkPfI0IuO");
@@ -148,7 +149,9 @@ class MonitoringServiceImplTest {
         regularUser = new ParticipatingUser();
         regularUser.setId(14);
         regularUser.setUsername("tokyo_operator");
-        regularUser.setCompanyId("COMP00000002");
+        ParticipatingCompany regularCompany = new ParticipatingCompany(); 
+        regularCompany.setId(2);
+        regularUser.setCompany(regularCompany);
         regularUser.setRole("user");
         regularUser.setIsActive(true);
         regularUser.setSite(tokyoSite); // Only Tokyo site
@@ -272,7 +275,9 @@ class MonitoringServiceImplTest {
         ParticipatingUser otherCompanyUser = new ParticipatingUser();
         otherCompanyUser.setId(1);
         otherCompanyUser.setUsername(username);
-        otherCompanyUser.setCompanyId("COMP00000001"); // Different!
+        ParticipatingCompany regularCompany = new ParticipatingCompany(); 
+        regularCompany.setId(2);
+        otherCompanyUser.setCompany(regularCompany);
         otherCompanyUser.setRole("master");
         otherCompanyUser.setIsActive(true);
 
@@ -789,13 +794,16 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "unknown_role_user";
         String companyId = "COMP00000002";
+        Integer Id = 123;
         Integer projectId = 1;
         Integer siteId = 21;
 
         ParticipatingUser unknownRoleUser = new ParticipatingUser();
         unknownRoleUser.setId(99);
         unknownRoleUser.setUsername(username);
-        unknownRoleUser.setCompanyId(companyId);
+        ParticipatingCompany unknownRoleCompany = new ParticipatingCompany(); // ✅ Fix: was unknownRoleUser.setCompanyId(companyId)
+        unknownRoleCompany.setId(Id);
+        unknownRoleUser.setCompany(unknownRoleCompany);
         unknownRoleUser.setRole("admin"); // Unknown role
         unknownRoleUser.setIsActive(true);
 

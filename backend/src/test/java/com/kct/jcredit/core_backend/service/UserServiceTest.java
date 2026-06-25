@@ -106,10 +106,13 @@ public class UserServiceTest {
                 .phoneNumber("03-1234-5678")
                 .fax("03-1234-5679")
                 .corpNumber("1234567890123")
-                .address("東京都渋谷区")
+                .buildingName("東京都渋谷区")
                 .subscriptionStatus(SubscriptionStatus.ACTIVE)
                 .build();
         testCompany.setId(1);
+
+        ParticipatingCompany generalCompany = new ParticipatingCompany(); 
+        generalCompany.setCompanyId("COMP001");
 
         generalUser = ParticipatingUser.builder()
             .username("general_user")
@@ -122,7 +125,7 @@ public class UserServiceTest {
             .userPosition("営業")
             .password("encodedPassword")
             .role(RoleConstants.USER) // "user"
-            .companyId("COMP001")
+            .company(generalCompany)
             .loginAttempts(0)
             .build();
         generalUser.setId(2);
@@ -146,6 +149,9 @@ public class UserServiceTest {
 
         generalUser.setSite(testSite);
 
+        ParticipatingCompany generalUser = new ParticipatingCompany();
+        generalUser.setCompanyId("COMP001");
+
         // テスト用のマスターユーザーを作成
         masterUser = ParticipatingUser.builder()
                 .username("master_user")
@@ -159,12 +165,15 @@ public class UserServiceTest {
                 .password("encoded_password")
                 .role(RoleConstants.MASTER)
                 .site(testSite)
-                .companyId("COMP001")
+                .company(generalUser)
                 .loginAttempts(0)
                 .build();
         masterUser.setId(1);
         masterUser.setIsActive(true);
         masterUser.setCreatedAt(LocalDateTime.now());
+
+        ParticipatingCompany masterUser = new ParticipatingCompany(); // ✅ Fix
+        masterUser.setCompanyId("COMP001");
 
         // テスト用の一般ユーザーを作成
         normalUser = ParticipatingUser.builder()
@@ -179,7 +188,7 @@ public class UserServiceTest {
                 .password("encoded_password")
                 .role(RoleConstants.USER)
                 .site(testSite)
-                .companyId("COMP001")
+                .company(masterUser)
                 .loginAttempts(0)
                 .build();
         normalUser.setId(2);
@@ -318,7 +327,7 @@ public class UserServiceTest {
         
         when(participatingCompanyRepository.findByCompanyId(companyId))
                 .thenReturn(Optional.of(testCompany));
-        when(userRepository.findByCompanyId(companyId)).thenReturn(users);
+        when(userRepository.findByCompany_Id(testCompany.getId())).thenReturn(users);
 
         // When
         UserListResponse response = userService.getUsersByCompany(companyId);
@@ -340,7 +349,7 @@ public class UserServiceTest {
         //participatingCompanyRepository.findByCompanyIdが1回だけ呼ばれたことを確認
         verify(participatingCompanyRepository, times(1)).findByCompanyId(companyId);
         //userRepository.findByCompanyIdが1回だけ呼ばれたことを確認
-        verify(userRepository, times(1)).findByCompanyId(companyId);
+        verify(userRepository, times(1)).findByCompany_Id(testCompany.getId());
     }
 
     
@@ -353,7 +362,7 @@ public class UserServiceTest {
         
         when(participatingCompanyRepository.findByCompanyId(companyId))
                 .thenReturn(Optional.of(testCompany));
-        when(userRepository.findByCompanyId(companyId)).thenReturn(user);
+        when(userRepository.findByCompany_Id(testCompany.getId())).thenReturn(user);
 
         // When
         UserListResponse response = userService.getUsersByCompany(companyId);
@@ -381,7 +390,7 @@ public class UserServiceTest {
         //participatingCompanyRepository.findByCompanyIdが1回だけ呼ばれたことを確認
         verify(participatingCompanyRepository, times(1)).findByCompanyId(companyId);
         //userRepository.findByCompanyIdが1回だけ呼ばれたことを確認
-        verify(userRepository, times(1)).findByCompanyId(companyId);
+        verify(userRepository, times(1)).findByCompany_Id(testCompany.getId());
     }
 
     @Test
@@ -393,7 +402,7 @@ public class UserServiceTest {
         
         when(participatingCompanyRepository.findByCompanyId(companyId))
                 .thenReturn(Optional.of(testCompany));
-        when(userRepository.findByCompanyId(companyId)).thenReturn(nulluser);
+        when(userRepository.findByCompany_Id(testCompany.getId())).thenReturn(nulluser);
 
         // When
         UserListResponse response = userService.getUsersByCompany(companyId);
@@ -411,7 +420,7 @@ public class UserServiceTest {
         //participatingCompanyRepository.findByCompanyIdが1回だけ呼ばれたことを確認
         verify(participatingCompanyRepository, times(1)).findByCompanyId(companyId);
         //userRepository.findByCompanyIdが1回だけ呼ばれたことを確認
-        verify(userRepository, times(1)).findByCompanyId(companyId);
+        verify(userRepository, times(1)).findByCompany_Id(testCompany.getId());
     }
 
     @Test
@@ -457,8 +466,10 @@ public class UserServiceTest {
 
     //最初に作成していた11本の正常系
     @Test
-    @DisplayName("UT-S-009: ユーザと拠点のつながりを切ることができること")
-    void testRemoveUserSiteConnection() {
+        @DisplayName("UT-S-009: ユーザと拠点のつながりを切ることができること")
+        void testRemoveUserSiteConnection() {
+        ParticipatingUser masterUser = new ParticipatingUser();
+        masterUser.setEmail("master@test.com");
         // Given
         DeleteUserSite request = new DeleteUserSite();
         request.setUserId("2");
@@ -466,7 +477,7 @@ public class UserServiceTest {
 
         when(userRepository.findById(2)).thenReturn(Optional.of(normalUser));
         when(siteRepository.findById(1)).thenReturn(Optional.of(testSite));
-        when(userRepository.findByCompanyIdAndRole("COMP001", RoleConstants.MASTER))
+        when(userRepository.findByCompany_IdAndRole(anyInt(), anyString()))
                 .thenReturn(Optional.of(masterUser));
         when(userRepository.save(any(ParticipatingUser.class))).thenReturn(normalUser);
         when(siteRepository.save(any(Site.class))).thenReturn(testSite);
@@ -484,7 +495,7 @@ public class UserServiceTest {
         //siteRepository.saveが1回だけ呼ばれ、拠点の担当者メールがマスターユーザーのメールになっていることを確認
         verify(siteRepository, times(1)).save(argThat(site -> 
                 site.getPicEmail().equals(masterUser.getEmail())));
-    }
+        }
 
     
     @Test
@@ -511,7 +522,7 @@ public class UserServiceTest {
         verify(userRepository, times(1)).findById(999);
 
         verify(siteRepository, never()).findById(anyInt());
-        verify(userRepository, never()).findByCompanyIdAndRole(anyString(), anyString());
+        verify(userRepository, never()).findByCompany_IdAndRole(anyInt(), anyString());
         // userRepository.saveも呼ばれていることを確認（副次的な検証）
         verify(userRepository, never()).save(any(ParticipatingUser.class));
         verify(siteRepository, never()).save(any(Site.class));
@@ -631,10 +642,9 @@ public class UserServiceTest {
                 .siteName("本社")
                 .postalCode("100-0001")
                 .prefecture("東京都")
-                .city("千代田区")
-                .town("千代田")
+                .municipality("千代田区")
                 .blocknum("1-1-1")
-                .address("東京都千代田区千代田1-1-1")
+                .buildingName("東京都千代田区千代田1-1-1")
                 .picFirstName("Taro")
                 .picLastName("Yamada")
                 .picFirstNameKana("タロウ")
@@ -658,7 +668,7 @@ public class UserServiceTest {
         verify(userRepository, times(1)).findById(2);
         verify(siteRepository, times(1)).findById(1);
         verify(userRepository, times(1)).save(any(ParticipatingUser.class));
-        verify(userRepository, never()).findByCompanyIdAndRole(anyString(), anyString());
+        verify(userRepository, never()).findByCompany_IdAndRole(anyInt(), anyString());
         // ユーザのsiteがnullのまま保存されることを確認
         verify(siteRepository, never()).save(any(Site.class));
     }
@@ -720,7 +730,7 @@ public class UserServiceTest {
                 .password("encoded_password")
                 .role(RoleConstants.USER)
                 .site(testSite)
-                .companyId("COMP001")
+                .company(testCompany)
                 .build();
         
         newUser.setId(3);
@@ -841,9 +851,8 @@ public class UserServiceTest {
         assertThat(savedUser.getSite().getSiteName()).isEqualTo("本社");
 
         // 6. 会社IDの検証
-        assertThat(savedUser.getCompanyId()).isEqualTo("COMP001");
-        assertThat(savedUser.getCompanyId()).isEqualTo(masterCompanyId);
-
+        assertThat(savedUser.getCompany().getCompanyId()).isEqualTo("COMP001");
+        assertThat(savedUser.getCompany().getCompanyId()).isEqualTo(masterCompanyId);
         // 7. アクティブフラグの検証
         assertThat(savedUser.getIsActive()).isTrue();
 
@@ -1100,8 +1109,8 @@ public class UserServiceTest {
                 .as("ロールの初期値がUSERであること")
                 .isEqualTo(RoleConstants.USER);
         
-        // 7. 会社IDが設定されていることを検証
-        assertThat(savedUser.getCompanyId())
+         // 7. 会社IDが設定されていることを検証
+        assertThat(savedUser.getCompany().getCompanyId())
                 .as("会社IDがnullでないこと")
                 .isNotNull()
                 .as("会社IDがmasterの会社IDと一致すること")
@@ -1284,7 +1293,7 @@ public class UserServiceTest {
         verify(userRepository, times(1)).save(captor.capture());
         ParticipatingUser savedUser = captor.getValue();
 
-        assertThat(savedUser.getCompanyId())
+        assertThat(savedUser.getCompany().getCompanyId())
                 .as("新規ユーザーの会社IDが正しく設定されていること")
                 .isNotNull()
                 .isNotEmpty()
@@ -1843,10 +1852,9 @@ public class UserServiceTest {
                 .siteName("会社なしサイト")
                 .postalCode("150-0001")
                 .prefecture("東京都")
-                .city("渋谷区")
-                .town("神宮前")
+                .municipality("渋谷区")
                 .blocknum("1-2-3")
-                .address("東京都渋谷区神宮前1-2-3")
+                .buildingName("東京都渋谷区神宮前1-2-3")
                 .picFirstName("太郎")
                 .picFirstNameKana("タロウ")
                 .picLastName("山田")
@@ -1964,7 +1972,7 @@ public class UserServiceTest {
                 .userPosition("部長")
                 .password("encodedPassword123")
                 .role(RoleConstants.USER)
-                .companyId("testCompany")
+                .company(testCompany)
                 .build();
         savedUser.setId(999);
         savedUser.setIsActive(true);
@@ -2362,10 +2370,9 @@ void testUpdateUser_GeneralUserSelf_AsPIC_SiteUpdated() {
                 .siteName("営業所B")
                 .postalCode("100-0002")
                 .prefecture("東京都")
-                .city("千代田区")
-                .town("丸の内")
+                .municipality("千代田区")
                 .blocknum("2-2")
-                .address("丸の内ビル")
+                .buildingName("丸の内ビル")
                 .picFirstName("太郎")              // 別の人がPIC
                 .picFirstNameKana("タロウ")
                 .picLastName("山田")
@@ -3082,7 +3089,7 @@ void testUpdateUser_MasterCompanyIdMismatchWithOldSite_ReturnsForbidden() {
     generalUser.setEmail("general@test.com");
     generalUser.setSite(oldSite);
     generalUser.setRole(RoleConstants.USER);
-    generalUser.setCompanyId("COMP999"); // 異なる会社ID
+    generalUser.setCompany(testCompany);
     
     masterUser.setSite(testSite);
     
@@ -3144,7 +3151,7 @@ void testUpdateUser_MasterCompanyIdMismatchWithNewSite_ReturnsForbidden() {
     generalUser.setEmail("general@test.com");
     generalUser.setSite(oldSite);
     generalUser.setRole(RoleConstants.USER);
-    generalUser.setCompanyId("COMP001");
+    generalUser.setCompany(testCompany);
     
     masterUser.setSite(testSite);
     
@@ -3188,7 +3195,7 @@ void testUpdateUser_NewSiteAlreadyHasNonMasterUser_ReturnsForbidden() {
             .firstName("次郎")
             .lastName("佐藤")
             .email("another@test.com")
-            .companyId("COMP001")
+            .company(testCompany)
             .role("user")
             .build();
     anotherUser.setId(3);
@@ -3297,7 +3304,7 @@ void testUpdateUser_OldSiteCompanyIsNull_ThrowsNullPointerException() {
     generalUser.setEmail("general@test.com");
     generalUser.setSite(oldSite);
     generalUser.setRole(RoleConstants.USER);
-    generalUser.setCompanyId("COMP001");
+    generalUser.setCompany(testCompany);
     
     masterUser.setSite(testSite);
     
@@ -3349,7 +3356,7 @@ void testUpdateUser_NewSiteCompanyIsNull_ThrowsNullPointerException() {
     generalUser.setEmail("general@test.com");
     generalUser.setSite(oldSite);
     generalUser.setRole(RoleConstants.USER);
-    generalUser.setCompanyId("COMP001");
+    generalUser.setCompany(testCompany);
     
     masterUser.setSite(testSite);
     

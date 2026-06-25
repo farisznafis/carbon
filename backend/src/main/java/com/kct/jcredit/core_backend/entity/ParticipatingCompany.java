@@ -112,7 +112,7 @@ public class ParticipatingCompany extends BaseEntity {
     private LocalDateTime deletedAt;
 
     @Column(name = "deleted_by", length = 100)
-    private String deletedBy;""
+    private String deletedBy;
 
     public boolean isSuspended() {
         return subscriptionStatus == SubscriptionStatus.SUSPENDED;

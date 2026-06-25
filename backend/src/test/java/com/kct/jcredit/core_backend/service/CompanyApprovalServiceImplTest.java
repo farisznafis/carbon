@@ -64,7 +64,9 @@ class CompanyApprovalServiceImplTest {
     @DisplayName("UT-AS-001: 全ての検証を通過し通知が成功した場合、会社が承認されマスターアカウントが作成される")
     void approveCompany_allValidationsPassAndNotificationSucceeds_returnsOkWithMasterAccount() {
         // Arrange
-        String companyId = "COMP001";
+        String companyId = "001";
+        Integer Id = 123;
+        String role = "master";
         String repEmail = "rep@example.com";
 
         ParticipatingCompany company = mock(ParticipatingCompany.class);
@@ -78,7 +80,7 @@ class CompanyApprovalServiceImplTest {
         when(company.getRepPosition()).thenReturn("代表取締役");
 
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
-        when(userRepository.findByCompanyIdAndRole(companyId, RoleConstants.MASTER))
+        when(userRepository.findByCompany_IdAndRole(Id, role))
                 .thenReturn(Optional.empty());
         when(userRepository.existsByUsername(repEmail)).thenReturn(false);
         when(userRepository.existsByEmail(repEmail)).thenReturn(false);
@@ -100,7 +102,7 @@ class CompanyApprovalServiceImplTest {
         assertThat(savedUser.getUsername()).isEqualTo(repEmail);
         assertThat(savedUser.getEmail()).isEqualTo(repEmail);
         assertThat(savedUser.getRole()).isEqualTo(RoleConstants.MASTER);
-        assertThat(savedUser.getCompanyId()).isEqualTo(companyId);
+        assertThat(savedUser.getCompany().getId()).isEqualTo(companyId);
         assertThat(savedUser.getPassword()).isEqualTo("ENCODED_PASSWORD");
 
         verify(notificationService).sendMasterAccountCredentials(eq(company), eq(repEmail), anyString());
@@ -111,6 +113,8 @@ class CompanyApprovalServiceImplTest {
     void approveCompany_regStatusPendingLowercase_proceedsSuccessfully() {
         // Arrange
         String companyId = "COMP002";
+        Integer Id = 123;
+        String role = "master";
         String repEmail = "rep2@example.com";
 
         ParticipatingCompany company = mock(ParticipatingCompany.class);
@@ -118,7 +122,7 @@ class CompanyApprovalServiceImplTest {
         when(company.getRepEmail()).thenReturn(repEmail);
 
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
-        when(userRepository.findByCompanyIdAndRole(companyId, RoleConstants.MASTER))
+        when(userRepository.findByCompany_IdAndRole(Id, role))
                 .thenReturn(Optional.empty());
         when(userRepository.existsByUsername(repEmail)).thenReturn(false);
         when(userRepository.existsByEmail(repEmail)).thenReturn(false);
@@ -197,10 +201,12 @@ class CompanyApprovalServiceImplTest {
     void approveCompany_masterUserAlreadyExists_returnsBadRequest() {
         // Arrange
         String companyId = "COMP001";
+        Integer Id = 123;
+        String role = "master";
         ParticipatingCompany company = mock(ParticipatingCompany.class);
         when(company.getRegStatus()).thenReturn(REG_STATUS_PENDING);
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
-        when(userRepository.findByCompanyIdAndRole(companyId, RoleConstants.MASTER))
+        when(userRepository.findByCompany_IdAndRole(Id, role))
                 .thenReturn(Optional.of(mock(ParticipatingUser.class)));
 
         // Act
@@ -221,12 +227,14 @@ class CompanyApprovalServiceImplTest {
     void approveCompany_usernameAlreadyUsed_returnsUsedUsername() {
         // Arrange
         String companyId = "COMP001";
+        Integer Id = 123;
+        String role = "master";
         String repEmail = "rep@example.com";
         ParticipatingCompany company = mock(ParticipatingCompany.class);
         when(company.getRegStatus()).thenReturn(REG_STATUS_PENDING);
         when(company.getRepEmail()).thenReturn(repEmail);
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
-        when(userRepository.findByCompanyIdAndRole(companyId, RoleConstants.MASTER))
+        when(userRepository.findByCompany_IdAndRole(Id, role))
                 .thenReturn(Optional.empty());
         when(userRepository.existsByUsername(repEmail)).thenReturn(true);
 
@@ -247,12 +255,14 @@ class CompanyApprovalServiceImplTest {
     void approveCompany_emailAlreadyUsed_returnsUsedEmail() {
         // Arrange
         String companyId = "COMP001";
+        Integer Id = 123;
+        String role = "master";
         String repEmail = "rep@example.com";
         ParticipatingCompany company = mock(ParticipatingCompany.class);
         when(company.getRegStatus()).thenReturn(REG_STATUS_PENDING);
         when(company.getRepEmail()).thenReturn(repEmail);
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
-        when(userRepository.findByCompanyIdAndRole(companyId, RoleConstants.MASTER))
+        when(userRepository.findByCompany_IdAndRole(Id, role))
                 .thenReturn(Optional.empty());
         when(userRepository.existsByUsername(repEmail)).thenReturn(false);
         when(userRepository.existsByEmail(repEmail)).thenReturn(true);
@@ -273,12 +283,14 @@ class CompanyApprovalServiceImplTest {
     void approveCompany_notificationFails_returnsInternalServerError() {
         // Arrange
         String companyId = "COMP001";
+        Integer Id = 123;
+        String role = "master";
         String repEmail = "rep@example.com";
         ParticipatingCompany company = mock(ParticipatingCompany.class);
         when(company.getRegStatus()).thenReturn(REG_STATUS_PENDING);
         when(company.getRepEmail()).thenReturn(repEmail);
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
-        when(userRepository.findByCompanyIdAndRole(companyId, RoleConstants.MASTER))
+        when(userRepository.findByCompany_IdAndRole(Id, role))
                 .thenReturn(Optional.empty());
         when(userRepository.existsByUsername(repEmail)).thenReturn(false);
         when(userRepository.existsByEmail(repEmail)).thenReturn(false);
@@ -309,12 +321,14 @@ class CompanyApprovalServiceImplTest {
     void approveCompany_companySaveThrows_shouldReturnInternalServerErrorGracefully() {
         // Arrange
         String companyId = "COMP001";
+        Integer Id = 123;
+        String role = "master";
         String repEmail = "rep@example.com";
         ParticipatingCompany company = mock(ParticipatingCompany.class);
         when(company.getRegStatus()).thenReturn(REG_STATUS_PENDING);
         when(company.getRepEmail()).thenReturn(repEmail);
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
-        when(userRepository.findByCompanyIdAndRole(companyId, RoleConstants.MASTER))
+        when(userRepository.findByCompany_IdAndRole(Id, role))
                 .thenReturn(Optional.empty());
         when(userRepository.existsByUsername(repEmail)).thenReturn(false);
         when(userRepository.existsByEmail(repEmail)).thenReturn(false);
@@ -460,7 +474,7 @@ class CompanyApprovalServiceImplTest {
         when(companyWithId.getPhoneNumber()).thenReturn("0123456789");
         when(companyWithId.getFax()).thenReturn("0123456780");
         when(companyWithId.getCorpNumber()).thenReturn("1234567890123");
-        when(companyWithId.getAddress()).thenReturn("熊本県熊本市");
+        when(companyWithId.getBuildingName()).thenReturn("熊本県熊本市");
         when(companyWithId.isSuspended()).thenReturn(false);
 
         ParticipatingCompany companyWithNullId = mock(ParticipatingCompany.class);
