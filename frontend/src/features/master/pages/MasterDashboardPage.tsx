@@ -73,7 +73,7 @@ const MasterDashboard = () => {
 
   if (loading || loadingStore) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-6 text-center text-sm font-medium text-muted-foreground">
+      <div className="text-small flex min-h-screen items-center justify-center bg-background px-6 text-center text-muted-foreground">
         読み込み中...
       </div>
     );
@@ -82,16 +82,16 @@ const MasterDashboard = () => {
   const companyName = user?.companyName ?? user?.siteName ?? '-';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-card">
       <MasterDashboardHero
         companyName={companyName}
         lastUpdated={lastUpdated}
       />
 
-      <Tabs defaultValue="sites" className="bg-card">
+      <Tabs defaultValue="sites" className="flex flex-1 flex-col bg-card">
         <MasterDashboardTabs />
 
-        <main className="bg-card">
+        <main className="flex-1 bg-card">
           <TabsContent value="sites" className="m-0">
             <DashboardSection
               title="拠点"
@@ -102,7 +102,7 @@ const MasterDashboard = () => {
               {errorMessage ? (
                 <DashboardEmptyState>{errorMessage}</DashboardEmptyState>
               ) : sites.length > 0 ? (
-                <div className="space-y-1.5">
+                <div className="space-y-3">
                   {sites.map((site) => (
                     <SiteDashboardCard
                       key={site.id}
@@ -132,7 +132,7 @@ const MasterDashboard = () => {
               {errorMessage ? (
                 <DashboardEmptyState>{errorMessage}</DashboardEmptyState>
               ) : sortedUsers.length > 0 ? (
-                <div className="space-y-1.5">
+                <div className="space-y-3">
                   {sortedUsers.map((dashboardUser) => (
                     <UserDashboardCard
                       key={dashboardUser.id}

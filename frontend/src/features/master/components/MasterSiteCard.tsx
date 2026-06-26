@@ -18,62 +18,73 @@ export function MasterSiteCard({ site, onOpen }: MasterSiteCardProps) {
     <button
       type="button"
       onClick={() => onOpen(site)}
-      className="group grid min-h-[66px] w-full grid-cols-[minmax(0,1fr)_56px] overflow-hidden rounded-[8px] border border-border bg-card text-left shadow-app-sm transition hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:grid-cols-[minmax(0,1fr)_56px]"
+      className="group grid min-h-[112px] w-full grid-cols-[minmax(0,1fr)_80px] overflow-hidden rounded-[8px] border border-border bg-card text-left shadow-app-sm transition hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:grid-cols-[minmax(0,1fr)_96px]"
     >
-      <div className="grid min-w-0 gap-3 px-3 py-2.5 md:grid-cols-[minmax(0,1fr)_minmax(260px,0.75fr)] md:items-center md:px-4 xl:grid-cols-[minmax(0,1fr)_minmax(400px,0.72fr)]">
+      <div className="grid min-w-0 gap-5 px-5 py-5 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)] md:items-start md:px-7 xl:grid-cols-[minmax(0,1fr)_minmax(430px,0.75fr)]">
         <div className="min-w-0">
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
-              <Factory className="h-4 w-4" />
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
+              <Factory className="h-5 w-5" />
             </span>
-            <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
-              <h3 className="truncate text-base font-bold leading-6 tracking-normal text-foreground">
+            <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h3 className="truncate text-foreground">
                 {site.siteName || '-'}
               </h3>
-              <span className="truncate text-[9px] font-medium leading-4 text-muted-foreground">
+              <span className="truncate text-sm font-medium leading-6 text-muted-foreground">
                 {formatSiteAddress(site)}
               </span>
             </div>
           </div>
 
-          <div className="mt-2 flex flex-wrap gap-x-8 gap-y-1 text-[10px] font-bold leading-4 text-foreground">
+          <div className="mt-4 flex flex-wrap gap-x-8 gap-y-2 text-sm font-bold leading-6 text-foreground">
             <span className="inline-flex items-center gap-1.5">
-              <User className="h-3 w-3" />
-              担当者: {formatPersonName(site.picLastName, site.picFirstName)}
+              <User className="h-4 w-4" />
+              <span className="text-muted-foreground">担当者</span>
+              <span>{formatPersonName(site.picLastName, site.picFirstName)}</span>
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <RefreshCw className="h-3 w-3" />
-              所在地: {site.postalCode || '-'}
+              <RefreshCw className="h-4 w-4" />
+              <span className="text-muted-foreground">所在地</span>
+              <span>{site.postalCode || '-'}</span>
             </span>
           </div>
         </div>
 
-        <div className="min-w-0 text-[10px] font-bold leading-4 text-foreground">
-          {visibleProjects.length > 0 ? (
-            <>
-              <div>
-                {visibleProjects.map((project, index) => (
-                  <p key={`${site.id}-${project}-${index}`} className="truncate">
-                    {index === 0 ? 'プロジェクト: ' : ''}
-                    {project}
-                  </p>
-                ))}
-              </div>
-              {projects.length > 2 && (
-                <span className="mt-0.5 inline-flex items-center gap-1 text-[9px] font-medium leading-4 text-muted-foreground">
-                  もっと見る
-                  <ChevronDown className="h-3 w-3" />
-                </span>
+        <div className="min-w-0 pt-1 text-sm font-bold leading-6 text-foreground md:pt-0">
+          <div className="flex min-w-0 items-start gap-2">
+            <span className="shrink-0 text-muted-foreground">プロジェクト</span>
+            <div className="min-w-0 flex-1">
+              {visibleProjects.length > 0 ? (
+                <>
+                  <div>
+                    {visibleProjects.map((project, index) => (
+                      <p
+                        key={`${site.id}-${project}-${index}`}
+                        className="truncate"
+                      >
+                        {project}
+                      </p>
+                    ))}
+                  </div>
+                  {projects.length > 2 && (
+                    <span className="mt-1 inline-flex items-center gap-2 text-sm font-medium leading-6 text-muted-foreground">
+                      もっと見る
+                      <ChevronDown className="h-4 w-4" />
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span>-</span>
               )}
-            </>
-          ) : (
-            <span className="text-muted-foreground">プロジェクト: -</span>
-          )}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="flex h-full min-h-[66px] items-center justify-center bg-primary text-primary-foreground transition group-hover:bg-primary/90">
-        <ChevronRight className="h-8 w-8" />
+      <div className="flex h-full min-h-[112px] items-center justify-center">
+        <button className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:bg-primary/90">
+          <ChevronRight className="h-6 w-6" />
+        </button>
       </div>
     </button>
   );
