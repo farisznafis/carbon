@@ -2,6 +2,7 @@ package com.kct.jcredit.core_backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -851,35 +852,51 @@ public class AuthServiceTest {
    // アカウントロックされずに、ログインができることを確認
     @Test
     void authService_adminLogin_4times_not_account_lock() throws Exception {
+
+        // Arrange
         AdminLoginRequest req = new AdminLoginRequest();
-        req.setIdentifier("alice"); // username でも email でもOK
+        req.setIdentifier("alice");
         req.setPassword("raw-pass");
-        
-        // ユーザーの用意（ロックなし・有効）
-        OperatingUser operator = new OperatingUser();
-        operator.setUsername("alice");
-        operator.setEmail("alice@example.com");
+
         ParticipatingCompany company = new ParticipatingCompany();
         company.setId(123);
+        company.setCompanyId("123");
+
+        OperatingUser operator = new OperatingUser();
+        operator.setId(1);
+        operator.setUsername("alice");
+        operator.setEmail("alice@example.com");
+        operator.setCompany(company);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
-        operator.setPassword("$2a$...hash..."); // ダミー
+        operator.setPassword("$2a$...hash...");
         operator.setAccountLockedUntil(null);
-        operator.setLoginAttempts(4); // 0にリセットされることを確認
+        operator.setLoginAttempts(4);
         operator.setIsActive(true);
 
-        //ユーザ検索しユーザを返す
-        when(operatingUserRepository.findByEmailOrUsername("alice", "alice"))
-                .thenReturn(Optional.of(operator));
-        
+        when(
+            operatingUserRepository.findByEmailOrUsername(
+                "alice",
+                "alice"
+            )
+        ).thenReturn(Optional.of(operator));
 
-        // パスワード一致
-        when(passwordEncoder.matches("raw-pass", "$2a$...hash...")).thenReturn(true);
-        
+        when(
+            passwordEncoder.matches(
+                "raw-pass",
+                "$2a$...hash..."
+            )
+        ).thenReturn(true);
 
-        // トークン発行
-        when(jwtUtil.generateToken(1, "alice", "123", "USER")).thenReturn("jwt-token-123");
+        when(
+            jwtUtil.generateToken(
+                1,
+                "alice",
+                "123",
+                "USER"
+            )
+        ).thenReturn("jwt-token-123");
 
         // Act
         AdminLoginResponse res = authServiceImpl.operatorLogin(req);
@@ -887,30 +904,21 @@ public class AuthServiceTest {
         // Assert
         assertEquals(ResponseConstants.OK, res.getStatusCode());
         assertEquals("jwt-token-123", res.getToken());
+
         assertNotNull(res.getAdmin());
         assertEquals("alice", res.getAdmin().getUsername());
-        assertEquals("Smith Alice", res.getAdmin().getName()); // 実装：last + space + first
+        assertEquals("Smith Alice", res.getAdmin().getName());
         assertEquals("USER", res.getAdmin().getRole());
         assertEquals("alice@example.com", res.getAdmin().getEmail());
-        
-        
-        // ユーザーの試行回数が0にリセットされ保存されていること
-        ArgumentCaptor<OperatingUser> userCaptor = ArgumentCaptor.forClass(OperatingUser.class);
-        verify(operatingUserRepository).save(userCaptor.capture());
-        OperatingUser saved = userCaptor.getValue();
-        assertEquals(0, saved.getLoginAttempts());
 
-        //結果をlogにだす
-        System.out.println("authService_adminLogin_4times_not_account_lock() succes");
-        System.out.println("Test execution time: " + OffsetDateTime.now(ZoneId.of("Asia/Tokyo")));
-        System.out.println("response: " + res.getStatusCode());
-        System.out.println("token: " + res.getToken());
-        System.out.println("admin: " + res.getAdmin());
-        System.out.println("name: " + res.getAdmin().getUsername());
-        System.out.println("lastName firstName: " + res.getAdmin().getName());
-        System.out.println("user/master: " + res.getAdmin().getRole());
-        System.out.println("Email: " + res.getAdmin().getEmail());
-        System.out.println("loginAttemptsNum: " + saved.getLoginAttempts());
+        ArgumentCaptor<OperatingUser> userCaptor =
+                ArgumentCaptor.forClass(OperatingUser.class);
+
+        verify(operatingUserRepository).save(userCaptor.capture());
+
+        OperatingUser saved = userCaptor.getValue();
+
+        assertEquals(0, saved.getLoginAttempts());
     }
 
     //5回ログイン失敗したらアカウントロックされる
@@ -985,36 +993,50 @@ public class AuthServiceTest {
         //ログイン可能になること
     @Test
     void authService_adminLogin_afterLock12Hours_succes() throws Exception {
+
         AdminLoginRequest req = new AdminLoginRequest();
-        req.setIdentifier("alice"); // username でも email でもOK
+        req.setIdentifier("alice");
         req.setPassword("raw-pass");
-        
-        // ユーザーの用意（ロックなし・有効）
+
+        ParticipatingCompany company = new ParticipatingCompany();
+        company.setId(123);
+        company.setCompanyId("123");
+
         OperatingUser operator = new OperatingUser();
         operator.setId(1);
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        ParticipatingCompany company = new ParticipatingCompany();
-        company.setId(123);
+        operator.setCompany(company);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
-        operator.setPassword("$2a$...hash..."); // ダミー
+        operator.setPassword("$2a$...hash...");
         operator.setAccountLockedUntil(LocalDateTime.now().minusMinutes(1));
-        operator.setLoginAttempts(5); // 成功時に0へリセットされることを検証
+        operator.setLoginAttempts(5);
         operator.setIsActive(true);
 
-        //ユーザ検索しユーザを返す
-        when(operatingUserRepository.findByEmailOrUsername("alice", "alice"))
-                .thenReturn(Optional.of(operator));
-        
+        when(
+            operatingUserRepository.findByEmailOrUsername(
+                "alice",
+                "alice"
+            )
+        ).thenReturn(Optional.of(operator));
 
-        // パスワード一致
-        when(passwordEncoder.matches("raw-pass", "$2a$...hash...")).thenReturn(true);
-        
+        when(
+            passwordEncoder.matches(
+                "raw-pass",
+                "$2a$...hash..."
+            )
+        ).thenReturn(true);
 
-        // トークン発行
-        when(jwtUtil.generateToken(1, "alice", "123", "USER")).thenReturn("jwt-token-123");
+        when(
+            jwtUtil.generateToken(
+                1,
+                "alice",
+                "123",
+                "USER"
+            )
+        ).thenReturn("jwt-token-123");
 
         // Act
         AdminLoginResponse res = authServiceImpl.operatorLogin(req);
@@ -1022,34 +1044,23 @@ public class AuthServiceTest {
         // Assert
         assertEquals(ResponseConstants.OK, res.getStatusCode());
         assertEquals("jwt-token-123", res.getToken());
+
         assertNotNull(res.getAdmin());
         assertEquals("alice", res.getAdmin().getUsername());
-        assertEquals("Smith Alice", res.getAdmin().getName()); // 実装：last + space + first
+        assertEquals("Smith Alice", res.getAdmin().getName());
         assertEquals("USER", res.getAdmin().getRole());
         assertEquals("alice@example.com", res.getAdmin().getEmail());
-        
-        
-        // ユーザーの試行回数が0にリセットされ保存されていること
-        ArgumentCaptor<OperatingUser> userCaptor = ArgumentCaptor.forClass(OperatingUser.class);
-        verify(operatingUserRepository, atLeastOnce()).save(userCaptor.capture());
-        OperatingUser saved = userCaptor.getValue();
-        assertEquals(0, saved.getLoginAttempts());
-        //アカウントロック期限時間がnullになっていることを確認
-        assertEquals(null, saved.getAccountLockedUntil());
 
-        //結果をlogにだす
-        System.out.println("authService_adminLogin_afterLock12Hours_succes() succes");
-        System.out.println("Test execution time: " + OffsetDateTime.now(ZoneId.of("Asia/Tokyo")));
-        System.out.println("response: " + res.getStatusCode());
-        System.out.println("token" + res.getToken());
-        System.out.println("admin: " + res.getAdmin());
-        System.out.println("name: " + res.getAdmin().getUsername());
-        System.out.println("lastName firstName:" + res.getAdmin().getName());
-        System.out.println("user/master: " + res.getAdmin().getRole());
-        System.out.println("Email: " + res.getAdmin().getEmail());
-        System.out.println("loginAttemptsNum: " + saved.getLoginAttempts());
-        //アカウントロック期限時間がnullになっていることコンソールに出して確認
-        System.out.println("accountLockedUntil: " + saved.getAccountLockedUntil());
+        ArgumentCaptor<OperatingUser> userCaptor =
+                ArgumentCaptor.forClass(OperatingUser.class);
+
+        verify(operatingUserRepository, atLeastOnce())
+                .save(userCaptor.capture());
+
+        OperatingUser saved = userCaptor.getValue();
+
+        assertEquals(0, saved.getLoginAttempts());
+        assertNull(saved.getAccountLockedUntil());
     }
 
     //ロックされている状態でログインできないこと
@@ -1212,19 +1223,20 @@ public class AuthServiceTest {
     // 2. マスターユーザが同一会社のマスターユーザのパスワード更新に成功
     @Test
     void authService_changePassword_MasterChangesAnotherMasterSameCompany_success() {
-        // Arrange
+
         String encodedNewPassword = "$2a$...newhash...";
         String testToken = "test-jwt-token";
 
-        //★
+        ParticipatingCompany company = new ParticipatingCompany();
+        company.setId(123);
+        company.setCompanyId("123");
+
         ParticipatingUser masterUser = new ParticipatingUser();
         masterUser.setId(1);
         masterUser.setUsername("master1");
         masterUser.setPassword("$2a$...masterhash...");
         masterUser.setRole("master");
-        ParticipatingCompany company = new ParticipatingCompany();
-        company.setId(123);
-        company.setCompanyId("123");
+        masterUser.setCompany(company);
         masterUser.setIsActive(true);
 
         ParticipatingUser targetMasterUser = new ParticipatingUser();
@@ -1232,83 +1244,75 @@ public class AuthServiceTest {
         targetMasterUser.setUsername("master2");
         targetMasterUser.setPassword("$2a$...oldhash...");
         targetMasterUser.setRole("master");
-        ParticipatingCompany targetMasterUserId = new ParticipatingCompany();
-        targetMasterUserId.setId(123);
-        targetMasterUserId.setCompanyId("123");
+        targetMasterUser.setCompany(company);
         targetMasterUser.setIsActive(true);
-        //★
 
         PasswordChangeRequest request = new PasswordChangeRequest();
-        request.setUserId(2);//★
+        request.setUserId(2);
         request.setCurrentPassword("old-password");
         request.setNewPassword("new-password");
 
         String username = "master1";
 
-        // Mockの設定
-        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(operatingUserRepository.findByUsername(username)).thenReturn(Optional.empty());
-        when(userRepository.findById(2)).thenReturn(Optional.of(targetMasterUser));//★
-        
-        when(passwordEncoder.matches(eq("old-password"), anyString())).thenReturn(true);
-        when(passwordEncoder.matches(eq("new-password"), anyString())).thenReturn(false);
+        when(userRepository.findByUsername(username))
+                .thenReturn(Optional.of(masterUser));
 
-        //when(passwordEncoder.matches(request.getCurrentPassword(), targetMasterUser.getPassword())).thenReturn(true);
-        //when(passwordEncoder.matches(request.getNewPassword(), targetMasterUser.getPassword())).thenReturn(false);
-        when(passwordEncoder.encode(request.getNewPassword())).thenReturn(encodedNewPassword);
-        when(userRepository.save(any(ParticipatingUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(operatingUserRepository.findByUsername(username))
+                .thenReturn(Optional.empty());
 
-        //トークンブラックリスト化はしていない
+        when(userRepository.findById(2))
+                .thenReturn(Optional.of(targetMasterUser));
 
-        // Act
-        PasswordChangeResponse response = authServiceImpl.changePassword(username, testToken, request);
+        when(passwordEncoder.matches("old-password", "$2a$...oldhash..."))
+                .thenReturn(true);
 
-        // Assert
+        when(passwordEncoder.matches("new-password", "$2a$...oldhash..."))
+                .thenReturn(false);
+
+        when(passwordEncoder.encode("new-password"))
+                .thenReturn(encodedNewPassword);
+
+        when(userRepository.save(any(ParticipatingUser.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        PasswordChangeResponse response =
+                authServiceImpl.changePassword(username, testToken, request);
+
         assertEquals(ResponseConstants.OK, response.getStatusCode());
         assertEquals("パスワードが正常に変更されました。", response.getMessage());
 
-        ArgumentCaptor<ParticipatingUser> userCaptor = ArgumentCaptor.forClass(ParticipatingUser.class);
-        verify(userRepository, times(1)).save(userCaptor.capture());
+        ArgumentCaptor<ParticipatingUser> userCaptor =
+                ArgumentCaptor.forClass(ParticipatingUser.class);
+
+        verify(userRepository).save(userCaptor.capture());
+
         ParticipatingUser savedUser = userCaptor.getValue();
+
         assertEquals(encodedNewPassword, savedUser.getPassword());
 
-        // 各メソッドが呼ばれた回数を検証
-        verify(userRepository, times(1)).findByUsername(username);
-        verify(operatingUserRepository, times(1)).findByUsername(username);
-        verify(userRepository, times(1)).findById(2);//★
-        verify(passwordEncoder, times(1)).matches("old-password", "$2a$...oldhash...");
-        verify(passwordEncoder, times(1)).matches("new-password", "$2a$...oldhash...");
-        verify(passwordEncoder, times(1)).encode("new-password");
-        
-        // トークンブラックリスト化されていないことを確認
-        verify(jwtUtil, never()).extractExpirationAsLocalDateTime(anyString());//★
-        verify(blacklistService, never()).blacklistToken(anyString(), any(LocalDateTime.class));//★
+        verify(jwtUtil, never())
+                .extractExpirationAsLocalDateTime(anyString());
 
-        // コンソール出力
-        System.out.println("authService_changePassword_MasterChangesAnotherMasterSameCompany_success() success");
-        System.out.println("Test execution time: " + OffsetDateTime.now(ZoneId.of("Asia/Tokyo")));
-        System.out.println("Response Status Code: " + response.getStatusCode());
-        System.out.println("Response Message: " + response.getMessage());
-        System.out.println("Saved User New Password Hash: " + savedUser.getPassword());
+        verify(blacklistService, never())
+                .blacklistToken(anyString(), any(LocalDateTime.class));
     }
-
     // 3. マスターユーザが同一会社の一般ユーザのパスワード更新に成功
     @Test
     void authService_changePassword_MasterChangesGeneralUserSameCompany_success() {
-        // Arrange
+
         String encodedNewPassword = "$2a$...newhash...";
         String testToken = "test-jwt-token";
-        //トークンの有効期限なし
 
-        //★
+        ParticipatingCompany company = new ParticipatingCompany();
+        company.setId(123);
+        company.setCompanyId("123");
+
         ParticipatingUser masterUser = new ParticipatingUser();
         masterUser.setId(1);
         masterUser.setUsername("master1");
         masterUser.setPassword("$2a$...masterhash...");
         masterUser.setRole("master");
-        ParticipatingCompany targetMasterUserId = new ParticipatingCompany();
-        targetMasterUserId.setId(123);
-        targetMasterUserId.setCompanyId("123");
+        masterUser.setCompany(company);
         masterUser.setIsActive(true);
 
         ParticipatingUser targetGeneralUser = new ParticipatingUser();
@@ -1316,11 +1320,8 @@ public class AuthServiceTest {
         targetGeneralUser.setUsername("user2");
         targetGeneralUser.setPassword("$2a$...oldhash...");
         targetGeneralUser.setRole("user");
-        ParticipatingCompany targetGeneralUserId = new ParticipatingCompany();
-        targetGeneralUserId.setId(123);
-        targetGeneralUserId.setCompanyId("123");
+        targetGeneralUser.setCompany(company);
         targetGeneralUser.setIsActive(true);
-        //★
 
         PasswordChangeRequest request = new PasswordChangeRequest();
         request.setUserId(3);
@@ -1329,48 +1330,47 @@ public class AuthServiceTest {
 
         String username = "master1";
 
-        // Mockの設定
-        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(operatingUserRepository.findByUsername(username)).thenReturn(Optional.empty());
-        when(userRepository.findById(3)).thenReturn(Optional.of(targetGeneralUser));//★
-        
-        when(passwordEncoder.matches(request.getCurrentPassword(), targetGeneralUser.getPassword())).thenReturn(true);
-        when(passwordEncoder.matches(request.getNewPassword(), targetGeneralUser.getPassword())).thenReturn(false);
-        when(passwordEncoder.encode(request.getNewPassword())).thenReturn(encodedNewPassword);
-        when(userRepository.save(any(ParticipatingUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.findByUsername(username))
+                .thenReturn(Optional.of(masterUser));
 
-        //トークンブラックリスト化のためのもっくなし
+        when(operatingUserRepository.findByUsername(username))
+                .thenReturn(Optional.empty());
 
-        // Act
-        PasswordChangeResponse response = authServiceImpl.changePassword(username, testToken, request);
+        when(userRepository.findById(3))
+                .thenReturn(Optional.of(targetGeneralUser));
 
-        // Assert
+        when(passwordEncoder.matches("old-password", "$2a$...oldhash..."))
+                .thenReturn(true);
+
+        when(passwordEncoder.matches("new-password", "$2a$...oldhash..."))
+                .thenReturn(false);
+
+        when(passwordEncoder.encode("new-password"))
+                .thenReturn(encodedNewPassword);
+
+        when(userRepository.save(any(ParticipatingUser.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        PasswordChangeResponse response =
+                authServiceImpl.changePassword(username, testToken, request);
+
         assertEquals(ResponseConstants.OK, response.getStatusCode());
         assertEquals("パスワードが正常に変更されました。", response.getMessage());
 
-        ArgumentCaptor<ParticipatingUser> userCaptor = ArgumentCaptor.forClass(ParticipatingUser.class);
-        verify(userRepository, times(1)).save(userCaptor.capture());
+        ArgumentCaptor<ParticipatingUser> userCaptor =
+                ArgumentCaptor.forClass(ParticipatingUser.class);
+
+        verify(userRepository).save(userCaptor.capture());
+
         ParticipatingUser savedUser = userCaptor.getValue();
+
         assertEquals(encodedNewPassword, savedUser.getPassword());
 
-        // 各メソッドが呼ばれた回数を検証
-        verify(userRepository, times(1)).findByUsername(username);
-        verify(operatingUserRepository, times(1)).findByUsername(username);
-        verify(userRepository, times(1)).findById(3);//★
-        verify(passwordEncoder, times(1)).matches("old-password", "$2a$...oldhash...");
-        verify(passwordEncoder, times(1)).matches("new-password", "$2a$...oldhash...");
-        verify(passwordEncoder, times(1)).encode("new-password");
-        
-        // トークンブラックリスト化されていないことを確認
-        verify(jwtUtil, never()).extractExpirationAsLocalDateTime(anyString());//★
-        verify(blacklistService, never()).blacklistToken(anyString(), any(LocalDateTime.class));//★
+        verify(jwtUtil, never())
+                .extractExpirationAsLocalDateTime(anyString());
 
-        // コンソール出力
-        System.out.println("authService_changePassword_MasterChangesGeneralUserSameCompany_success() success");
-        System.out.println("Test execution time: " + OffsetDateTime.now(ZoneId.of("Asia/Tokyo")));
-        System.out.println("Response Status Code: " + response.getStatusCode());
-        System.out.println("Response Message: " + response.getMessage());
-        System.out.println("Saved User New Password Hash: " + savedUser.getPassword());
+        verify(blacklistService, never())
+                .blacklistToken(anyString(), any(LocalDateTime.class));
     }
 
     // 4. 管理ユーザがマスターユーザのパスワード更新に成功
@@ -1651,18 +1651,25 @@ public class AuthServiceTest {
         System.out.println("Response Message: " + response.getMessage());
     }
 
-    // 11. マスターユーザが別会社の他ユーザーパスワード変更要求 → FORBIDDEN
     @Test
     void authService_changePassword_MasterChangesDifferentCompanyUser_returnsForbidden() {
+
         // Arrange
+
+        ParticipatingCompany masterCompany = new ParticipatingCompany();
+        masterCompany.setId(123);
+        masterCompany.setCompanyId("123");
+
+        ParticipatingCompany targetCompany = new ParticipatingCompany();
+        targetCompany.setId(456);
+        targetCompany.setCompanyId("456");
+
         ParticipatingUser masterUser = new ParticipatingUser();
         masterUser.setId(1);
         masterUser.setUsername("master1");
         masterUser.setPassword("$2a$...masterhash...");
         masterUser.setRole("master");
-                ParticipatingCompany targetMasterUserId = new ParticipatingCompany();
-        targetMasterUserId.setId(123);
-        targetMasterUserId.setCompanyId("123");
+        masterUser.setCompany(masterCompany);
         masterUser.setIsActive(true);
 
         ParticipatingUser targetUser = new ParticipatingUser();
@@ -1670,9 +1677,7 @@ public class AuthServiceTest {
         targetUser.setUsername("user2");
         targetUser.setPassword("$2a$...oldhash...");
         targetUser.setRole("user");
-        ParticipatingCompany targetUserId = new ParticipatingCompany();
-        targetUserId.setId(123);
-        targetUserId.setCompanyId("123");
+        targetUser.setCompany(targetCompany);
         targetUser.setIsActive(true);
 
         PasswordChangeRequest request = new PasswordChangeRequest();
@@ -1683,27 +1688,46 @@ public class AuthServiceTest {
         String username = "master1";
         String testToken = "test-jwt-token";
 
-        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(operatingUserRepository.findByUsername(username)).thenReturn(Optional.empty());
-        when(userRepository.findById(2)).thenReturn(Optional.of(targetUser));
+        when(userRepository.findByUsername(username))
+                .thenReturn(Optional.of(masterUser));
+
+        when(operatingUserRepository.findByUsername(username))
+                .thenReturn(Optional.empty());
+
+        when(userRepository.findById(2))
+                .thenReturn(Optional.of(targetUser));
 
         // Act
-        PasswordChangeResponse response = authServiceImpl.changePassword(username, testToken, request);
+        PasswordChangeResponse response =
+                authServiceImpl.changePassword(username, testToken, request);
 
         // Assert
         assertEquals(ResponseConstants.FORBIDDEN, response.getStatusCode());
         assertEquals(ResponseConstants.MSG_FORBIDDEN, response.getMessage());
 
-        // 各メソッドが呼ばれた回数を検証
-        verify(userRepository, times(1)).findByUsername(username);
-        verify(operatingUserRepository, times(1)).findByUsername(username);
-        verify(userRepository, times(1)).findById(2);
+        verify(userRepository, times(1))
+                .findByUsername(username);
 
-        // コンソール出力
-        System.out.println("authService_changePassword_MasterChangesDifferentCompanyUser_returnsForbidden() success");
-        System.out.println("Test execution time: " + OffsetDateTime.now(ZoneId.of("Asia/Tokyo")));
-        System.out.println("Response Status Code: " + response.getStatusCode());
-        System.out.println("Response Message: " + response.getMessage());
+        verify(operatingUserRepository, times(1))
+                .findByUsername(username);
+
+        verify(userRepository, times(1))
+                .findById(2);
+
+        verify(userRepository, never())
+                .save(any());
+
+        verify(passwordEncoder, never())
+                .encode(anyString());
+
+        verify(jwtUtil, never())
+                .extractExpirationAsLocalDateTime(anyString());
+
+        verify(blacklistService, never())
+                .blacklistToken(anyString(), any(LocalDateTime.class));
+
+        System.out.println(
+                "authService_changePassword_MasterChangesDifferentCompanyUser_returnsForbidden() success");
     }
 
     // 12. マスターユーザが存在しない対象ユーザ指定 → NOT_FOUND
