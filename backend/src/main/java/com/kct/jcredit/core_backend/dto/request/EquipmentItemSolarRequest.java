@@ -50,6 +50,8 @@ public class EquipmentItemSolarRequest {
     //additionalEquipment = true
     @NotNull   private Boolean additionalEquipment;
 
+    @NotNull   @DecimalMin("0.0") private BigDecimal ictEquipmentPowerConsumption;
+    
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate additionalEquipmentDate;
     private String additionalEquipmentType;
@@ -65,7 +67,6 @@ public class EquipmentItemSolarRequest {
     private BigDecimal subsidyAmount;
  
     @NotNull   @DecimalMin("0.0") private BigDecimal preProjectUnitPrice;
-    @NotNull   @DecimalMin("0.0") private BigDecimal ictEquipmentPowerConsumption;
  
     @NotEmpty  @Valid
     private List<FileItemSolarRequest> files;

@@ -13,6 +13,7 @@ import com.kct.jcredit.core_backend.entity.Site;
 public interface SiteRepository extends JpaRepository<Site, Integer> {
     public List<Site> findByCompany(ParticipatingCompany company);
     public List<Site> findByCompanyIdAndPicEmail(Integer companyId, String picEmail);
+    long countByCompany_Id(Integer companyId);
 
     @Modifying
     @Query("UPDATE Site s SET s.deletedAt = CURRENT_TIMESTAMP, s.deletedBy = :deletedBy WHERE s.company.companyId = :companyId")

@@ -4,7 +4,7 @@
 
 ## Folders
 
-- `ui`: shadcn/design-system primitives. Keep imports as `@/components/ui/...`.
+- `ui`: shadcn/design-system primitives. Keep imports as `@/components/ui/...`. See `src/components/ui/README.md` for token and component customization notes.
 - `layout`: app and page layout helpers such as navigation, scroll behavior, form page shells, and table cards.
 - `feedback`: dialogs, confirmations, inline help, and user feedback components.
 - `data-display`: reusable tables, graph-like display components, pagination, and timelines.

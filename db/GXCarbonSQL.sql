@@ -122,7 +122,7 @@ CREATE TABLE project (
 -- Participating_company
 CREATE TABLE participating_company (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE, -- Tambah DEFAULT TRUE
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(100),
@@ -144,14 +144,15 @@ CREATE TABLE participating_company (
     rep_first_name_kana VARCHAR(50) NOT NULL,
     rep_last_name VARCHAR(50) NOT NULL,
     rep_last_name_kana VARCHAR(50) NOT NULL,
-    rep_email VARCHAR(254) NOT NULL,
     rep_phone_number VARCHAR(20) NOT NULL,
     rep_position VARCHAR(100) NOT NULL,
+    requested_methodologies TEXT,
+    activity_information TEXT,
     contract_end_date DATE,
     payment_method VARCHAR(50),
-    last_renewal_date DATE,
-    suspension_reason TEXT,
-    suspension_date DATE,
+    last_renewal_date TIMESTAMP,
+    suspension_reason VARCHAR(500),
+    suspension_date TIMESTAMP,
     subscription_status VARCHAR(20),
     reg_status VARCHAR(20),
     deleted_at TIMESTAMP,

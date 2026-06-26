@@ -398,21 +398,22 @@ public class SiteProjectServiceImpl implements SiteProjectService {
                     && item.getAdditionalEquipmentDate().isBefore(item.getEquipmentOpDate())) {
                 errors.add(err(item.getTempId(), "additionalEquipmentDate",
                         "追加設備日は設備稼働日以降である必要があります。"));
-                if (item.getAdditionalEquipmentType() == null || item.getAdditionalEquipmentType().isBlank()) {
-                    errors.add(err(item.getTempId(), "additionalEquipmentType",
-                            "additionalEquipmentがtrueの場合、additionalEquipmentTypeは必須です。"));
-                }
-                if (item.getAdditionalUnitCount() == null || item.getAdditionalUnitCount() < 1) {
-                    errors.add(err(item.getTempId(), "additionalUnitCount",
-                            "additionalEquipmentがtrueの場合、additionalUnitCountは1以上必須です。"));
-                }
-                if (item.getAdditionalDeviceUniqueNo() == null || item.getAdditionalDeviceUniqueNo().isBlank()) {
-                    errors.add(err(item.getTempId(), "additionalDeviceUniqueNo",
-                            "additionalEquipmentがtrueの場合、additionalDeviceUniqueNoは必須です。"));
+            }
+
+            if (item.getAdditionalEquipmentType() == null || item.getAdditionalEquipmentType().isBlank()) {
+                errors.add(err(item.getTempId(), "additionalEquipmentType",
+                        "additionalEquipmentがtrueの場合、additionalEquipmentTypeは必須です。"));
+            }
+            if (item.getAdditionalUnitCount() == null || item.getAdditionalUnitCount() < 1) {
+                errors.add(err(item.getTempId(), "additionalUnitCount",
+                        "additionalEquipmentがtrueの場合、additionalUnitCountは1以上必須です。"));
+            }
+            if (item.getAdditionalDeviceUniqueNo() == null || item.getAdditionalDeviceUniqueNo().isBlank()) {
+                errors.add(err(item.getTempId(), "additionalDeviceUniqueNo",
+                        "additionalEquipmentがtrueの場合、additionalDeviceUniqueNoは必須です。"));
                 }
             }
         }
-    }
 
     private void validateRequiredNonFileFields(
             EquipmentItemSolarRequest item,
@@ -729,7 +730,7 @@ public class SiteProjectServiceImpl implements SiteProjectService {
                 .sk(sk)
                 .projectId(projectId)
                 .siteId(siteId)
-                .companyId(String.valueOf(siteId))
+                .companyId(String.valueOf(companyId))
                 .participationId(participationId)
                 .isAgreeDataUse(request.getIsAgreeDataUse())
                 .isAgreeExtraData(request.getIsAgreeExtraData())

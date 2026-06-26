@@ -23,7 +23,6 @@ public class TncAgreementEquip {
     private Integer siteId;
     private String companyId;
     private Integer participationId;
-
     private Boolean isAgreeDataUse;
     private Boolean isAgreeExtraData;
     private Boolean isAgreeTransfer;
@@ -37,6 +36,7 @@ public class TncAgreementEquip {
     private String energyReport;
     private String energyBusinessCode;
     private String factoryCode;
+    
     private String repName;
     private String repRole;
     private String companyName;
@@ -92,6 +92,9 @@ public class TncAgreementEquip {
 
     @DynamoDbAttribute("is_subject_to_periodic_report")
     public Boolean getIsSubjectToPeriodicReport() { return isSubjectToPeriodicReport; }
+
+    @DynamoDbAttribute("is_subject_to_periodic_report")
+    public Boolean getIsPeriodicReportTypeOne() { return isPeriodicReportTypeOne; }
 
     @DynamoDbAttribute("energy_report")
     public String getEnergyReport() { return energyReport; }

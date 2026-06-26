@@ -37,6 +37,7 @@ public class ResponseConstants {
     public static final String MSG_INTERNAL_ERROR = "サイト情報の取得中にエラーが発生しました。";
     public static final String MSG_BAD_REQUEST = "入力値に誤りがあります。";
     public static final String MSG_VALIDATION_ERROR = "入力内容に誤りがあります。";
+    public static final String MSG_VALIDATION_SUCCESS = "入力内容に問題ありません。";
     public static final String MSG_ELPV_EVIDENCE_REQUIRED = "ELpv（電力使用量）の証憑ファイルURLが必須です。";
     public static final String MSG_ELPVR_EVIDENCE_REQUIRED = "ELpvr（電力供給量）の証憑ファイルURLが必須です。";
     public static final String MSG_ELPJ_BATTERY_EVIDENCE_REQUIRED = "ELPJ（バッテリー仕様書）の証憑ファイルURLが必須です。";
@@ -53,6 +54,8 @@ public class ResponseConstants {
     public static final String MSG_MONITORING_RECORD_NOT_FOUND = "監視レコードが見つかりませんでした。";
     public static final String MSG_MONITORING_RECORD_REGISTERED = "監視レコードが正常に登録されました。";
     public static final String MSG_LOGIN_FAILED = "ユーザー名またはパスワードまたは企業IDが正しくありません。";
+    public static final String MSG_USER_LOGIN_FAILED = "企業IDまたはメールアドレスまたはユーザー名またはパスワードが正しくありません。";
+    public static final String MSG_OPERATOR_LOGIN_FAILED = "メールアドレスまたはユーザー名またはパスワードが正しくありません。";
     public static final String MSG_UNEXPEXTED_ERROR = "想定外エラーがあります。";
     public static final String MSG_FORBIDDEN = "このリソースにアクセスすることができません。";
     public static final String MSG_INVALID_CURRENT_PASSWORD = "現在のパスワードが正しくありません。";

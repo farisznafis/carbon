@@ -22,6 +22,11 @@ import com.kct.jcredit.core_backend.dto.request.ReactivationRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectDeletionRequest;
 import com.kct.jcredit.core_backend.dto.request.SuspendCompanyRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdatePartiCompanyRequest;
+import com.kct.jcredit.core_backend.dto.request.PartiCompanyInfoValidateRequest;
+import com.kct.jcredit.core_backend.dto.request.PartiCompanyMethodologyValidateRequest;
+import com.kct.jcredit.core_backend.dto.request.PartiCompanyRegisterRequest;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+import com.kct.jcredit.core_backend.dto.response.DeleteCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.DeletionRequestResponse;
 import com.kct.jcredit.core_backend.dto.response.ReactivationResponse;
 import com.kct.jcredit.core_backend.dto.response.SuspendCompanyResponse;
@@ -73,6 +78,19 @@ public class PartiCompanyController {
     }
 
     //運用・管理者のみ機能
+    @PostMapping("/signup/company-info/validate")
+    public ResponseEntity<BaseResponse> validateSignupCompanyInfo(
+            @Valid @RequestBody PartiCompanyInfoValidateRequest request) {
+        registerService.validateCompanyInfo(request);
+        return ResponseEntity.ok(BaseResponse.success(ResponseConstants.MSG_VALIDATION_SUCCESS));
+    }
+
+    @PostMapping("/signup/methodology/validate")
+    public ResponseEntity<BaseResponse> validateSignupMethodology(
+            @Valid @RequestBody PartiCompanyMethodologyValidateRequest request) {
+        return ResponseEntity.ok(BaseResponse.success(ResponseConstants.MSG_VALIDATION_SUCCESS));
+    }
+
     @PostMapping("/suspend")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
