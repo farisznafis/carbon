@@ -53,6 +53,7 @@ public class SiteServiceImpl implements SiteService {
     private final SiteR002EquipmentFileRepository siteR002EquipmentFileRepository;
     private final SiteProjectRelationRepository siteProjectRelationRepository;
     private final ParticipatingUserRepository participatingUserRepository;
+    private static final Integer MAX_SITES_PER_COMPANY = 20; // Maximum number of sites allowed per company
 
     @Override
     public SiteListResponse getSitesByCompanyId(String companyId) {
@@ -67,7 +68,9 @@ public class SiteServiceImpl implements SiteService {
             return response;
         }
 
+        
         List<Site> sites = siteRepository.findByCompany(company);
+        
 
         if (sites.isEmpty()) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -153,14 +156,36 @@ public class SiteServiceImpl implements SiteService {
     @Transactional
     public CreateSiteResponse createSite(CreateSiteRequest request, String companyId) {
         CreateSiteResponse response = new CreateSiteResponse();
-        ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(companyId)
-                .orElseGet(() -> {
-                    response.setStatusCode(ResponseConstants.NOT_FOUND);
-                    response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
-                    return null;
-                });
-
+        ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(companyId).orElse(null);
         if (Objects.isNull(company)) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_NOT_FOUND);
+            return response;
+        }
+        
+        if(siteRepository.countByCompany_Id(company.getId()) >= MAX_SITES_PER_COMPANY){
+            response.setStatusCode(ResponseConstants.LIMIT_EXCEEDED);
+            response.setMessage(ResponseConstants.MSG_LIMIT_EXCEEDED);
+            return response;
+        }
+
+        ParticipatingUser user = participatingUserRepository.findById(request.getUserId()).orElse(null);
+            
+        if (Objects.isNull(user)) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_USER_NOT_FOUND);
+            return response;
+        }
+
+        if(!user.getCompany().getId().equals(company.getId())){
+            response.setStatusCode(ResponseConstants.FORBIDDEN);
+            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+            return response;
+        }
+        //check that user's site is not null
+        if(!RoleConstants.MASTER.equals(user.getRole()) && !Objects.isNull(user.getSite())){
+            response.setStatusCode(ResponseConstants.BAD_REQUEST);
+            response.setMessage(ResponseConstants.MSG_BAD_REQUEST);
             return response;
         }
 
@@ -172,18 +197,20 @@ public class SiteServiceImpl implements SiteService {
                 .blocknum(request.getBlocknum())
                 .buildingName(request.getBuildingName())
                 .company(company)
-                .picFirstName(request.getPicFirstName())
-                .picFirstNameKana(request.getPicFirstNameKana())
-                .picLastName(request.getPicLastName())
-                .picLastNameKana(request.getPicLastNameKana())
-                .picEmail(request.getPicEmail())
-                .picPhoneNumber(request.getPicPhoneNumber())
-                .picPosition(request.getPicPosition())
-
+                .picFirstName(user.getFirstName())
+                .picFirstNameKana(user.getFirstNameKana())
+                .picLastName(user.getLastName())
+                .picLastNameKana(user.getLastNameKana())
+                .picEmail(user.getEmail())
+                .picPhoneNumber(user.getPhoneNumber())
+                .picPosition(user.getUserPosition())
                 .build();
         site.setCreatedBy(company.getNameJa());
         try {
-            response.setId(siteRepository.save(site).getId());
+            Site savedSite = siteRepository.save(site);
+            response.setSiteId(savedSite.getId());
+            user.setSite(site);
+            participatingUserRepository.save(user);
             response.setStatusCode(ResponseConstants.OK);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -215,9 +242,25 @@ public class SiteServiceImpl implements SiteService {
             response.setMessage(ResponseConstants.MSG_FORBIDDEN);
             return response;
         }
-        
+        //check if PIC can change to selected user
+        ParticipatingUser user = participatingUserRepository.findById(request.getPICUserId()).orElse(null);
+
+            
+        if (!Objects.isNull(user)) {
+            if(!user.getCompany().getCompanyId().equals(companyId)){
+            response.setStatusCode(ResponseConstants.FORBIDDEN);
+            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+            return response;
+            }
+            //check that user's site is the current site being updated or is master
+            if(!RoleConstants.MASTER.equals(user.getRole()) && !Objects.isNull(user.getSite()) && !user.getSite().getId().equals(site.getId())){
+                response.setStatusCode(ResponseConstants.BAD_REQUEST);
+                response.setMessage(ResponseConstants.MSG_BAD_REQUEST);
+                return response;
+            }
+        }
         // Update site adress with request data
-        Site updatedSite = updateSite(site, request);
+        Site updatedSite = updateSite(site, request, user);
         
         // Build response using SiteResponse
         SiteResponse siteResponse = SiteResponse.builder()
@@ -372,8 +415,11 @@ public class SiteServiceImpl implements SiteService {
         return baseName;
     }
 
-    //TODO: Fix for in accordance with Site user relationships
-    private Site updateSite(Site site, UpdateSiteRequest request) {
+
+    private Site updateSite(Site site, UpdateSiteRequest request, ParticipatingUser user) {
+        if (StringUtils.isNotBlank(request.getSiteName())) {
+            site.setSiteName(request.getSiteName());
+        }
         if (StringUtils.isNotBlank(request.getPostalCode())) {
             site.setPostalCode(request.getPostalCode());
         }
@@ -388,6 +434,15 @@ public class SiteServiceImpl implements SiteService {
         }
         if (StringUtils.isNotBlank(request.getBuildingName())) {
             site.setBuildingName(request.getBuildingName());
+        }
+        if(!Objects.isNull(user)){
+            site.setPicEmail(user.getEmail());
+            site.setPicFirstName(user.getFirstName());
+            site.setPicFirstNameKana(user.getFirstNameKana());
+            site.setPicLastName(user.getLastName());
+            site.setPicLastNameKana(user.getLastNameKana());
+            site.setPicPhoneNumber(user.getPhoneNumber());
+            site.setPicPosition(user.getUserPosition());
         }
         site.setUpdatedAt(LocalDateTime.now());
 

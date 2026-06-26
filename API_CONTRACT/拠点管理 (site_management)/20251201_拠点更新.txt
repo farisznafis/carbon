@@ -5,11 +5,13 @@ Content-Type: application/json
 Request Body (JSON): 
 {
   
-  "postalCode": "100-0001",
-  "blockName": "千代田1-1-1",
-  "addressDetail": "○○マンション101号室",
-  "SiteName": "拠点例",
-  "PICUserID": "124",
+  "siteName": "ABC工場";
+  "postalCode": "1234567",
+  "prefecture": "東京",
+  "municipality": "渋谷区桜丘町",
+  "blocknum": "1-1"
+  "buildingName": "サンプルビル 3F",
+  "PICUserId": "1234" //担当者id
 
 }
 
@@ -17,13 +19,13 @@ Response - Success (HTTP 200)
 {
   "statusCode": "OK",
   "site": {
-    "siteId": "123",
-    "siteName": "ABC工場",
-    "postalCode": "100-0001",
-    "prefName": "東京都",   
-    "cityName": "千代田区",
-    "blockName": "千代田1-1-1",
-    "addressDetail": "○○マンション101号室",
+    "siteName": "ABC工場";
+    "postalCode": "1234567",
+    "prefecture": "東京",
+    "municipality": "渋谷区桜丘町",
+    "blocknum": "1-1"
+    "buildingName": "サンプルビル 3F",
+    "userId": "1234" //担当者id
     "picFirstName": "山田",
     "picLastName": "太郎",
   }
