@@ -56,9 +56,9 @@ export function AdminLoginForm({ onSubmit }: AdminLoginFormProps) {
             name='identifier'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>識別子</FormLabel>
+                <FormLabel>ユーザー名またはメールアドレス</FormLabel>
                 <FormControl>
-                  <Input type='text' placeholder='識別子を入力' {...field} />
+                  <Input type='text' placeholder='ユーザー名またはメールアドレスを入力' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
