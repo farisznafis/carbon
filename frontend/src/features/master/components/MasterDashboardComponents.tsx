@@ -12,7 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Building2, CalendarDays, Mail, Plus, User } from 'lucide-react';
 
-const dashboardContainer = 'mx-auto w-full max-w-[840px] px-4 sm:px-6 lg:px-0';
+const dashboardContainer = 'mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-0';
 
 export function MasterDashboardHero({
   companyName,
@@ -23,13 +23,6 @@ export function MasterDashboardHero({
 }) {
   return (
     <header className="relative overflow-hidden border-b border-border bg-background">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -left-3 top-5 select-none text-[112px] font-bold leading-none tracking-normal text-card/70 sm:text-[150px] lg:text-[180px]"
-      >
-        Dashboard
-      </div>
-
       <div className="relative flex min-h-[122px] flex-col items-center justify-center px-6 pt-8 text-center">
         <p className="text-xs font-medium leading-5 text-muted-foreground">
           マスターダッシュボード
@@ -66,8 +59,8 @@ export function MasterDashboardTabs() {
   );
 
   return (
-    <div className="border-b border-border bg-card">
-      <TabsList className="mx-auto flex h-10 w-fit gap-5 rounded-none bg-transparent p-0 text-primary">
+    <div className="bg-card pt-4">
+      <TabsList className="mx-auto flex h-10 w-fit gap-2 rounded-none bg-transparent p-0 text-primary">
         <TabsTrigger value="sites" className={triggerClassName}>
           拠点管理
         </TabsTrigger>
@@ -95,8 +88,8 @@ export function DashboardSection({
   children: ReactNode;
 }) {
   return (
-    <section className={cn('py-4 sm:py-5', dashboardContainer)}>
-      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <section className={cn('py-3 sm:py-4', dashboardContainer)}>
+      <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-[26px] font-bold leading-8 tracking-normal text-foreground">
             <span className="text-primary">{title.slice(0, 1)}</span>
@@ -111,7 +104,7 @@ export function DashboardSection({
           size="sm"
           onClick={onAdd}
           disabled={addDisabled}
-          className="h-7 min-w-[78px] self-start px-4 text-[10px] shadow-none sm:self-auto"
+          // className="h-7 min-w-[78px] self-start px-4 text-[10px] shadow-none sm:self-auto"
         >
           <Plus className="h-3 w-3" />
           {addLabel}
@@ -153,7 +146,7 @@ export function UserDashboardCard({
 
   return (
     <article className="flex flex-col overflow-hidden rounded-[8px] border border-border bg-card shadow-app-sm transition hover:border-primary/60 md:min-h-[72px] md:flex-row">
-      <div className="min-w-0 flex-1 px-4 py-4 md:px-5">
+      <div className="min-w-0 flex-1 px-4 py-3 md:px-4">
         <div className="flex flex-wrap items-center gap-3">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
             <User className="h-4 w-4" />
@@ -168,7 +161,7 @@ export function UserDashboardCard({
           )}
         </div>
 
-        <div className="mt-3 grid gap-2 text-[11px] font-bold leading-5 text-foreground lg:grid-cols-3">
+        <div className="mt-3 grid gap-2 text-[11px] font-bold leading-5 text-foreground sm:grid-cols-3">
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <Mail className="h-3.5 w-3.5 shrink-0" />
             <span className="shrink-0 text-muted-foreground">
