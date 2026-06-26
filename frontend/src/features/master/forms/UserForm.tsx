@@ -1,18 +1,27 @@
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { X } from 'lucide-react';
 import { PasswordInput } from '@/components/inputs';
+import { DeleteAlertDialog } from '@/components/feedback/DeleteAlertDialog/DeleteAlertDialog';
+import {
+  FormActions,
+  FormCard,
+  FormGrid,
+  FormSection,
+  FormSectionStack,
+} from '@/components/forms/form-layout';
+import { RequiredLabel } from '@/components/forms/shared';
+import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Form,
+  FormControl,
+  FormDescription,
   FormField,
   FormItem,
-  FormControl,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form';
-import { RequiredLabel } from '@/components/forms/shared';
-import { useMemo, useState } from 'react';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -20,14 +29,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { userSchema } from '@/lib/validations';
-import { useDashboardStore } from '@/stores/dashboardStore';
-import { Separator } from '@/components/ui/separator';
-import { DeleteAlertDialog } from '@/components/feedback/DeleteAlertDialog/DeleteAlertDialog';
-import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
-import type { UserFormData } from '@/api/users';
 import type { Site } from '@/api/site';
-import { X } from 'lucide-react';
+import type { UserFormData } from '@/api/users';
+import { useDashboardStore } from '@/stores/dashboardStore';
 
 export type { UserFormData } from '@/api/users';
 
@@ -39,10 +43,10 @@ interface UserFormProps {
   onNext: () => void;
   onBack: () => void;
   onDelete?: () => void;
-  schema: typeof userSchema;
   siteOptions?: Site[];
   isSiteOptionsLoading?: boolean;
   siteOptionsError?: string | null;
+  embedded?: boolean;
 }
 
 export function UserForm({
@@ -53,10 +57,10 @@ export function UserForm({
   onNext,
   onBack,
   onDelete,
-  schema,
   siteOptions,
   isSiteOptionsLoading = false,
   siteOptionsError = null,
+  embedded = false,
 }: Readonly<UserFormProps>) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { joinableSites, getSiteById } = useDashboardStore();
@@ -64,7 +68,6 @@ export function UserForm({
   const originalSite = originalData?.siteId
     ? getSiteById(originalData.siteId)
     : undefined;
-
   const selectedSite = defaultValues?.siteId
     ? getSiteById(defaultValues.siteId)
     : originalSite;
@@ -75,21 +78,18 @@ export function UserForm({
       ? [...baseSites, selectedSite]
       : baseSites;
 
-  const shouldShowSiteSelect = () => mode === 'create' || mode === 'edit';
+  const shouldShowSiteSelect = mode === 'create' || mode === 'edit';
 
   const form = useForm<UserFormData>({
-    // resolver: zodResolver(schema),
     defaultValues: {
       ...defaultValues,
-      password: undefined, //password field will be empty
+      password: undefined,
       passwordConfirmation: undefined,
     },
   });
 
-  const { formState, watch } = form;
-  const values = watch();
+  const values = form.watch();
 
-  //Checks to see if form is dirty
   const isTrulyDirty = useMemo(() => {
     const normalize = (obj?: Partial<UserFormData>) => {
       if (!obj) return obj;
@@ -98,7 +98,6 @@ export function UserForm({
 
       return {
         ...rest,
-        // normalize siteId: treat "", null, undefined as the same
         siteId: siteId || undefined,
       };
     };
@@ -109,306 +108,269 @@ export function UserForm({
     );
   }, [values, originalData]);
 
-  return (
-    <FormPageWrapper
-      pageName={mode === 'create' ? 'ユーザ登録' : 'ユーザ更新'}
-      title=''
-      onBack={() => onBack()}
-      backText={
-        // mode === 'profile' ? 'プロファイルに戻る' : 'ダッシュボードに戻る'
-        mode === 'profile' ? '戻る' : '戻る'
-      }
-    >
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit((values) => {
-            onChange(values as UserFormData); // update parent state
-            onNext(); // go to confirmation
-          })}
-          className='space-y-4'
-        >
-          <div className='text-2xl pb-2'>個人情報</div>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            <FormField
-              control={form.control}
-              name='lastName'
-              render={({ field }) => (
-                <FormItem>
-                  <RequiredLabel>姓</RequiredLabel>
-                  <FormControl>
-                    <Input
-                      placeholder='山田'
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='firstName'
-              render={({ field }) => (
-                <FormItem>
-                  <RequiredLabel>名</RequiredLabel>
-                  <FormControl>
-                    <Input
-                      placeholder='太郎'
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+  const submitLabel = mode === 'create' ? '登録' : '更新';
 
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            <FormField
-              control={form.control}
-              name='lastNameKana'
-              render={({ field }) => (
-                <FormItem>
-                  <RequiredLabel>セイ</RequiredLabel>
-                  <FormControl>
-                    <Input
-                      placeholder='ヤマダ'
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='firstNameKana'
-              render={({ field }) => (
-                <FormItem>
-                  <RequiredLabel>メイ</RequiredLabel>
-                  <FormControl>
-                    <Input
-                      placeholder='タロウ'
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+  const formContent = (
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit((formValues) => {
+          onChange(formValues);
+          onNext();
+        })}
+      >
+        <FormCard>
+          <FormSectionStack spacing="relaxed">
+            <FormSection number={1} title="個人情報">
+              <FormGrid>
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <RequiredLabel>姓</RequiredLabel>
+                      <FormControl>
+                        <Input inputSize="sm" placeholder="山田" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          <FormField
-            control={form.control}
-            name='phoneNumber'
-            render={({ field }) => (
-              <FormItem>
-                <RequiredLabel>電話番号（ハイフン無し）</RequiredLabel>
-                <FormControl>
-                  <Input
-                    placeholder='0312345678'
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <RequiredLabel>名</RequiredLabel>
+                      <FormControl>
+                        <Input inputSize="sm" placeholder="太郎" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          <FormField
-            control={form.control}
-            name='userPosition'
-            render={({ field }) => (
-              <FormItem>
-                <RequiredLabel>役職</RequiredLabel>
-                <FormControl>
-                  <Input
-                    placeholder='営業部部長'
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                <FormField
+                  control={form.control}
+                  name="lastNameKana"
+                  render={({ field }) => (
+                    <FormItem>
+                      <RequiredLabel>姓（カナ）</RequiredLabel>
+                      <FormControl>
+                        <Input inputSize="sm" placeholder="ヤマダ" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          <Separator />
-          <br></br>
-          <div className='text-2xl pb-2'>アカウント情報</div>
-          <FormField
-            control={form.control}
-            name='username'
-            render={({ field }) => (
-              <FormItem>
-                <RequiredLabel>ユーザー名</RequiredLabel>
-                <FormControl>
-                  <Input
-                    placeholder='tanaka_taro'
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name='email'
-            render={({ field }) => (
-              <FormItem>
-                <RequiredLabel>メールアドレス</RequiredLabel>
-                <FormControl>
-                  <Input
-                    type='email'
-                    placeholder='example@company.com'
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                <FormField
+                  control={form.control}
+                  name="firstNameKana"
+                  render={({ field }) => (
+                    <FormItem>
+                      <RequiredLabel>名（カナ）</RequiredLabel>
+                      <FormControl>
+                        <Input inputSize="sm" placeholder="タロウ" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </FormGrid>
 
-          {/* <FormField control={form.control} name="emailConfirmation" render={({ field }) => (
-                                    <FormItem>
-                                        <RequiredLabel>メールアドレス（確認）</RequiredLabel>
-                                        <FormControl><Input type="email" placeholder="example@company.com" {...field} /></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )} /> */}
-
-          {mode === 'create' && (
-            <>
               <FormField
                 control={form.control}
-                name='password'
+                name="phoneNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <RequiredLabel>パスワード</RequiredLabel>
+                    <RequiredLabel>電話番号（ハイフン無し）</RequiredLabel>
                     <FormControl>
-                      <PasswordInput
-                        placeholder='••••••••'
-                        {...field}
-                      />
+                      <Input inputSize="sm" placeholder="0312345678" {...field} />
                     </FormControl>
-
-                    <FormDescription>
-                      8文字以上のパスワードを設定してください
-                    </FormDescription>
-
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* <FormField
+              <FormField
                 control={form.control}
-                name='passwordConfirmation'
+                name="userPosition"
                 render={({ field }) => (
                   <FormItem>
-                    <RequiredLabel>パスワード（確認）</RequiredLabel>
+                    <RequiredLabel>役職</RequiredLabel>
+                    <FormControl>
+                      <Input inputSize="sm" placeholder="営業部部長" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </FormSection>
+
+            <FormSection number={2} title="アカウント情報">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <RequiredLabel>ユーザー名</RequiredLabel>
+                    <FormControl>
+                      <Input inputSize="sm" placeholder="yamada_taro" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <RequiredLabel>メールアドレス</RequiredLabel>
                     <FormControl>
                       <Input
-                        type='password'
-                        placeholder='••••••••'
+                        inputSize="sm"
+                        type="email"
+                        placeholder="yamada.taro@example.com"
                         {...field}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
-              /> */}
-            </>
-          )}
-          <Separator />
-          <br />
-          {shouldShowSiteSelect() && (
-            <div className='text-2xl pb-2'>拠点</div>
-          )}
-          {shouldShowSiteSelect() && (
-          <FormField
-            control={form.control}
-            name='siteId'
-            render={({ field }) => (
-              <FormItem>
-                <RequiredLabel required={false}>担当する拠点</RequiredLabel>
-                <div className='flex items-center gap-2'>
-                  <Select
-                    value={field.value ?? ''}
-                    onValueChange={(val) => field.onChange(val)}
-                    disabled={
-                      isSiteOptionsLoading ||
-                      Boolean(siteOptionsError) ||
-                      sites.length === 0
-                    }
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder='拠点を選択してください' />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {sites?.map((site) => (
-                        <SelectItem
-                          key={site.id}
-                          value={site.id}
-                        >
-                          {site.siteName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  {/* ✅ Clear button — only visible when a site is selected */}
-                  {field.value && (
-                    <Button
-                      type='button'
-                      variant='ghost'
-                      size='icon'
-                      aria-label='拠点をクリア'
-                      onClick={() => field.onChange(null)}
-                    >
-                      <X className='h-4 w-4 text-muted-foreground' />
-                    </Button>
-                  )}
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-
-          <div className='flex justify-between items-center gap-4 w-full py-8'>
-            {onDelete && defaultValues?.siteId !== null ? (
-              <DeleteAlertDialog
-                label='ユーザ'
-                open={isDeleteDialogOpen}
-                onOpenChange={setIsDeleteDialogOpen}
-                onDelete={onDelete}
               />
-            ) : (
-              <div className='w-[72px]'></div>
+
+              {mode === 'create' && (
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <RequiredLabel>パスワード</RequiredLabel>
+                      <FormControl>
+                        <PasswordInput
+                          inputSize="sm"
+                          placeholder="パスワードを入力"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        8文字以上のパスワードを設定してください。
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </FormSection>
+
+            {shouldShowSiteSelect && (
+              <FormSection number={3} title="拠点">
+                <FormField
+                  control={form.control}
+                  name="siteId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <RequiredLabel required={false}>担当する拠点</RequiredLabel>
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={field.value ?? ''}
+                          onValueChange={(value) => field.onChange(value)}
+                          disabled={
+                            isSiteOptionsLoading ||
+                            Boolean(siteOptionsError) ||
+                            sites.length === 0
+                          }
+                        >
+                          <FormControl>
+                            <SelectTrigger selectSize="sm">
+                              <SelectValue placeholder="拠点を選択してください" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {sites.map((site) => (
+                              <SelectItem key={site.id} value={site.id}>
+                                {site.siteName}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        {field.value && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label="拠点をクリア"
+                            onClick={() => field.onChange('')}
+                          >
+                            <X className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                        )}
+                      </div>
+                      {siteOptionsError && (
+                        <FormDescription className="text-destructive">
+                          {siteOptionsError}
+                        </FormDescription>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </FormSection>
             )}
 
-            <div className='flex gap-4 justify-end'>
+            <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {onDelete ? (
+                <DeleteAlertDialog
+                  label="ユーザー"
+                  open={isDeleteDialogOpen}
+                  onOpenChange={setIsDeleteDialogOpen}
+                  onDelete={onDelete}
+                />
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={onBack}
+                >
+                  キャンセル
+                </Button>
+              )}
+
               <Button
-                type='button'
-                variant='outline'
-                onClick={onBack}
-              >
-                キャンセル
-              </Button>
-              <Button
-                type='submit'
+                type="submit"
+                size="sm"
+                className="w-full"
                 disabled={!isTrulyDirty}
               >
-                {mode === 'create' ? '登録' : '更新'}
+                {submitLabel}
               </Button>
-            </div>
-          </div>
-          <Separator />
-        </form>
-      </Form>
+            </FormActions>
+          </FormSectionStack>
+        </FormCard>
+      </form>
+    </Form>
+  );
+
+  if (embedded) {
+    return formContent;
+  }
+
+  return (
+    <FormPageWrapper
+      pageName={mode === 'create' ? 'ユーザー追加' : 'ユーザー更新'}
+      title=""
+      onBack={onBack}
+      backText="戻る"
+      contentMaxWidth="max-w-[768px]"
+      wrapInCard={false}
+    >
+      {formContent}
     </FormPageWrapper>
   );
 }

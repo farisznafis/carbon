@@ -79,10 +79,10 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
             name='companyId'
             render={({ field }) => (
               <FormItem>
-                {/* <RequiredLabel>会員ID</RequiredLabel> */}
-                <FormLabel>会員ID</FormLabel>
+                {/* <RequiredLabel>企業ID</RequiredLabel> */}
+                <FormLabel>企業ID</FormLabel>
                 <FormControl>
-                  <Input type='text' placeholder='会員IDを入力' {...field} />
+                  <Input type='text' placeholder='企業IDを入力' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

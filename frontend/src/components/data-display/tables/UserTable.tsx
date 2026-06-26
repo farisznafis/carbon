@@ -98,7 +98,7 @@ export function UserTable({
       render: (_value, row) => {
         if (row.role === 'master' && masterSiteLabel) {
           return (
-            <Badge className="bg-blue-600 hover:bg-blue-600 text-white font-medium px-4 py-0.5 text-base rounded-full">
+            <Badge className="bg-blue-600 hover:bg-blue-600 text-white font-medium px-4 py-0.5 text-sm rounded-full">
               {masterSiteLabel}
             </Badge>
           );

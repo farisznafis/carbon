@@ -20,7 +20,7 @@ export function PendingCompanyTable({
   const [selected, setSelected] = useState<PendingCompanyItem | null>(null);
 
   const columns: Column<PendingCompanyItem>[] = [
-    { key: 'companyId', label: '会員ID', sortable: true, truncate: true, maxWidth: 'max-w-[140px]' },
+    { key: 'companyId', label: '企業ID', sortable: true, truncate: true, maxWidth: 'max-w-[140px]' },
     { key: 'nameJA', label: '企業名', sortable: true, truncate: true, maxWidth: 'max-w-[180px]' },
     { key: 'email', label: 'メールアドレス', sortable: true, truncate: true, maxWidth: 'max-w-[220px]' },
     { key: 'phoneNumber', label: '電話番号', sortable: true, truncate: true, maxWidth: 'max-w-[160px]' },

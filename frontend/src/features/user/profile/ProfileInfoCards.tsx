@@ -49,7 +49,7 @@ export function ProfileInfoCards({
 
         <CardContent className='grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2'>
           <InfoItem
-            label='会員ID'
+            label='企業ID'
             value={profile?.companyId}
           />
           <InfoItem

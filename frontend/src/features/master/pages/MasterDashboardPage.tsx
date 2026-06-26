@@ -101,7 +101,7 @@ const MasterDashboard = () => {
             <UserTable
               users={users}
               onEdit={handleEditUser}
-              masterSiteLabel="全て"
+              masterSiteLabel="全ての拠点"
               onRowClick={(user) =>
                 navigate(paths.masterUserProfile(user.id), { state: { user } })
               }

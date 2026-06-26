@@ -1,23 +1,52 @@
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { UserForm, UserFormData } from '@/features/master/forms/UserForm';
-import { deleteUser, updateUser } from '@/api/users/mutations';
-import { toast } from '@/hooks/use-toast';
-import { useDashboardStore } from '@/stores/dashboardStore';
 import { useEffect, useState } from 'react';
-import { userSchema } from '@/lib/validations';
-import UserConfirmation from './UserConfirmation';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import type { Site } from '@/api/site';
-import { logger } from '@/lib/logger';
+import type { UserList } from '@/api/users';
+import { deleteUser, updateUser } from '@/api/users/mutations';
+import {
+  FormPageContent,
+  FormPageTitle,
+  FormStandalonePage,
+} from '@/components/forms/form-layout';
+import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { UserForm, UserFormData } from '@/features/master/forms/UserForm';
+import UserConfirmation from '@/features/master/pages/UserConfirmation';
+import { toast } from '@/hooks/use-toast';
 import { useSitesQuery } from '@/hooks/sites/useSitesQuery';
+import { logger } from '@/lib/logger';
+import { useDashboardStore } from '@/stores/dashboardStore';
+
+const mapUserToForm = (user: UserList | undefined): UserFormData => {
+  const userWithPosition = user as (UserList & { userPosition?: string }) | undefined;
+
+  return {
+    username: user?.username ?? '',
+    lastName: user?.lastName ?? '',
+    firstName: user?.firstName ?? '',
+    lastNameKana: user?.lastNameKana ?? '',
+    firstNameKana: user?.firstNameKana ?? '',
+    phoneNumber: user?.phoneNumber ?? '',
+    userPosition: user?.position ?? userWithPosition?.userPosition ?? '',
+    email: user?.email ?? '',
+    password: '',
+    passwordConfirmation: '',
+    siteId: user?.siteId ?? '',
+  };
+};
 
 export default function UserEdit() {
-  const [step, setStep] = useState<"form" | "confirm">("form");
+  const [step, setStep] = useState<'form' | 'confirm'>('form');
   const navigate = useNavigate();
-  const location = useLocation(); 
+  const location = useLocation();
   const { id } = useParams();
-  const initialUser = useDashboardStore(s => s.getUser(id));
+  const initialUser = useDashboardStore((state) => state.getUser(id));
   const { editUser, editSite, deleteUserStore, setSites } = useDashboardStore();
   const sitesQuery = useSitesQuery();
+  const [formData, setFormData] = useState<UserFormData>(() =>
+    mapUserToForm(initialUser),
+  );
+  const mode: 'edit' | 'profile' =
+    location.state?.mode === 'profile' ? 'profile' : 'edit';
 
   useEffect(() => {
     if (sitesQuery.data?.sites) {
@@ -25,29 +54,12 @@ export default function UserEdit() {
     }
   }, [setSites, sitesQuery.data?.sites]);
 
-  const mapUserToForm = (user: typeof initialUser): UserFormData => ({
-    username: user?.username ?? '',
-    lastName: user?.lastName ?? '',
-    firstName: user?.firstName ?? '',
-    lastNameKana: user?.lastNameKana ?? '',
-    firstNameKana: user?.firstNameKana ?? '',
-    phoneNumber: user?.phoneNumber ?? '',
-    userPosition: user?.position ?? (user as any)?.userPosition ?? '',
-    email: user?.email ?? '',
-    password: '',
-    passwordConfirmation: '',
-    siteId: user?.siteId ?? '',
-  });
-  const [formData, setFormData] = useState<UserFormData>(() => mapUserToForm(initialUser));
-  const mode = location.state?.mode ?? 'edit';
-  // Called when the form is submitted
   const handleDraftSubmit = () => {
-    setStep("confirm");
+    setStep('confirm');
   };
 
-  // Called when the user confirms
   const handleFinalSubmit = async () => {
-    if (!formData || !initialUser) return;
+    if (!id || !formData || !initialUser) return;
 
     const {
       password: _password,
@@ -57,25 +69,23 @@ export default function UserEdit() {
 
     try {
       const { user: updatedUser, updatedSites } = await updateUser(id, payload);
-
-      //update user in store
       editUser(id, updatedUser);
 
-      //update any affected sites
       if (updatedSites?.length) {
-        updatedSites.forEach(site => editSite(site.id, site));
+        updatedSites.forEach((site) => editSite(site.id, site));
       }
 
       toast({
         title: '成功',
-        description: 'ユーザを編集しました',
+        description: 'ユーザーを更新しました',
       });
 
       navigate('/master/dashboard');
-    } catch {
+    } catch (error) {
+      logger.error('Error updating user:', error);
       toast({
         title: 'エラー',
-        description: 'ユーザ編集に失敗しました',
+        description: 'ユーザー更新に失敗しました',
         variant: 'destructive',
       });
     }
@@ -83,18 +93,22 @@ export default function UserEdit() {
 
   const handleDelete = async () => {
     if (!id) return;
+
     try {
-      await deleteUser(id, initialUser?.siteId ? ({ id: initialUser.siteId } as Site) : undefined)
-        .then((res) => {
-          deleteUserStore(id); //update dashboard store
-          if (res.site) {
-            editSite(res.site.id, res.site);
-          }
-        })
+      const result = await deleteUser(
+        id,
+        initialUser?.siteId ? ({ id: initialUser.siteId } as Site) : undefined,
+      );
+
+      deleteUserStore(id);
+
+      if (result.site) {
+        editSite(result.site.id, result.site);
+      }
 
       toast({
         title: '成功',
-        description: 'ユーザを削除しました',
+        description: 'ユーザーを削除しました',
       });
 
       navigate('/master/dashboard');
@@ -109,20 +123,42 @@ export default function UserEdit() {
   };
 
   const handleConfirmBack = () => {
-    setStep("form");
+    setStep('form');
   };
 
   const handleFormBack = () => {
     navigate(-1);
-  }
+  };
 
-  if (!initialUser) {
+  if (!id || !initialUser) {
     return <div>読み込み中...</div>;
   }
 
+  if (step === 'confirm') {
+    return (
+      <UserConfirmation
+        mode="edit"
+        data={formData}
+        originalData={mapUserToForm(initialUser)}
+        onBack={handleConfirmBack}
+        onSubmit={handleFinalSubmit}
+      />
+    );
+  }
+
   return (
-    <>
-      {step === "form" && (
+    <FormStandalonePage>
+      <PageBackButton
+        onClick={handleFormBack}
+        label=""
+        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
+      />
+
+      <FormPageContent>
+        <FormPageTitle>
+          {mode === 'profile' ? 'プロフィール編集' : 'ユーザー更新'}
+        </FormPageTitle>
+
         <UserForm
           mode={mode}
           defaultValues={formData}
@@ -131,22 +167,12 @@ export default function UserEdit() {
           onNext={handleDraftSubmit}
           onBack={handleFormBack}
           onDelete={handleDelete}
-          schema={userSchema}
           siteOptions={sitesQuery.data?.sites ?? []}
           isSiteOptionsLoading={sitesQuery.isLoading}
           siteOptionsError={sitesQuery.isError ? '拠点を取得できませんでした' : null}
+          embedded
         />
-      )}
-
-      {step === "confirm" && (
-        <UserConfirmation
-          data={formData}
-          originalData={mapUserToForm(initialUser)}
-          onBack={handleConfirmBack}
-          onSubmit={handleFinalSubmit}
-        />
-      )}
-
-    </>
+      </FormPageContent>
+    </FormStandalonePage>
   );
 }
