@@ -118,7 +118,7 @@ export default function ProjectDetailAdmin() {
       pageName='プロジェクト詳細'
       title=''
       onBack={() => navigate(paths.adminDashboard)}
-      backText='戻る'
+      // backText='戻る'
       contentMaxWidth='max-w-5xl'
       wrapInCard={false}
     >

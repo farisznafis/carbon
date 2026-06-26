@@ -63,7 +63,7 @@ export default function MasterUserProfilePage() {
       pageName='ユーザープロフィール'
       title=''
       onBack={() => navigate(paths.masterDashboard)}
-      backText='戻る'
+      // backText='戻る'
       contentMaxWidth='max-w-xl'
       wrapInCard={false}
     >

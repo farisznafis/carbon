@@ -43,7 +43,7 @@ const Profile = () => {
       pageName='プロフィール情報'
       title=''
       onBack={() => navigate(getHomePath(user))}
-      backText='戻る'
+      // backText='戻る'
       contentMaxWidth='max-w-3xl'
       wrapInCard={false}
     >
