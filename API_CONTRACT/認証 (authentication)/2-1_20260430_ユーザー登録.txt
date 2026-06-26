@@ -1,4 +1,4 @@
-﻿20260430_ユーザー登録
+20260430_ユーザー登録
 # company_signup
 
 URL: POST /company/signup
@@ -11,7 +11,6 @@ Request Body (JSON):
   "corporateName": "株式会社サンプル", # 企業名（日本語）
   "corporateNameKana": "カブシキガイシャサンプル", # 企業名（フリガナ）
   "companyNameEnglish": "Sample Corporation", # 会社名（英語）
-  "corporateEmail": "corporate@company.com", # NEW: メールアドレス
   "corporatePhoneNumber": "03-1234-5678", # NEW: 電話番号
 
   "postalCode": "1234567",
@@ -28,7 +27,7 @@ Request Body (JSON):
   "phoneNumber": "03-1234-5678",        # 法人代表者電話番号
   "faxNumber": "03-1234-5679",          # 法人代表者FAX番号
   "email": "yamada@company.com",         # 法人代表者メールアドレス
-  //email information
+
   "methodology": "太陽後発電気",        
   "activityInformation": "lorem ipsum dolor sir amet"       
 
