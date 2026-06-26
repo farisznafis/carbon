@@ -59,7 +59,6 @@ public class PartiCompanyInfoValidateRequest {
     @Size(max = 100, message = "番地は100文字以内で入力してください。")
     private String blocknum;
 
-    @NotBlank(message = "建物名を入力してください。")
     @Size(max = 255, message = "建物名は255文字以内で入力してください。")
     private String buildingName;
 
