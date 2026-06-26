@@ -15,8 +15,8 @@ export interface SignUpData {
   corporatePhoneNumber: string;
   postalCode: string;
   prefecture: string;
-  city: string;
-  address: string;
+  municipality: string;
+  buildingName: string;
   town: string;
   blocknum: string;
   lastName: string;

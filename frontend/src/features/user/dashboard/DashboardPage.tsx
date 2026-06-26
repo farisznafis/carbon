@@ -110,7 +110,7 @@ const Dashboard = () => {
           </Button>
         )}
 
-        <div className='mb-8 animate-slide-up'>
+        <div className='mb-8 mx-8 animate-slide-up'>
           <div className='space-y-1'>
             <h2 className='mb-2'>{site?.siteName || '拠点ダッシュボード'}</h2>
             <div className='space-y-1 text-sm text-muted-foreground'>

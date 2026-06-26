@@ -609,7 +609,7 @@ class SiteControllerTest {
         // Arrange
         CreateSiteRequest request = new CreateSiteRequest();
         request.setSiteName("New Site");
-        request.setAddress("Tokyo");
+        // request.setAddress("Tokyo");
         
         try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
             // Setup authentication mock
@@ -663,7 +663,7 @@ class SiteControllerTest {
         // Arrange
         CreateSiteRequest request = new CreateSiteRequest();
         request.setSiteName("Duplicate Site");
-        request.setAddress("Osaka");
+        // request.setAddress("Osaka");
         
         try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
             // Setup authentication mock
@@ -716,7 +716,7 @@ class SiteControllerTest {
         // Arrange
         CreateSiteRequest request = new CreateSiteRequest();
         request.setSiteName("Error Site");
-        request.setAddress("Nagoya");
+        // request.setAddress("Nagoya");
         
         CustomException expectedException = new CustomException("E003", "拠点の作成に失敗しました");
         
@@ -762,7 +762,7 @@ class SiteControllerTest {
         // Arrange
         CreateSiteRequest request = new CreateSiteRequest();
         request.setSiteName("Test Site");
-        request.setAddress("Fukuoka");
+        // request.setAddress("Fukuoka");
         
         CustomException expectedException = new CustomException("E004", "トークンが無効です");
         
@@ -815,7 +815,7 @@ class SiteControllerTest {
         String siteId = "SITE001";
         UpdateSiteRequest request = new UpdateSiteRequest();
         // request.setSiteName("Updated Site");
-        request.setAddress("Tokyo Tower");
+        // request.setAddress("Tokyo Tower");
         
         try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
             // Setup authentication mock
@@ -870,7 +870,7 @@ class SiteControllerTest {
         String siteId = "SITE999";
         UpdateSiteRequest request = new UpdateSiteRequest();
         // request.setSiteName("Non-existent Site");
-        request.setAddress("Unknown Location");
+        // request.setAddress("Unknown Location");
         
         try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
             // Setup authentication mock
@@ -924,7 +924,7 @@ class SiteControllerTest {
         String siteId = "SITE001";
         UpdateSiteRequest request = new UpdateSiteRequest();
         // request.setSiteName("Error Site");
-        request.setAddress("Error Location");
+        // request.setAddress("Error Location");
         
         CustomException expectedException = new CustomException("E005", "拠点情報の更新に失敗しました");
         
@@ -971,7 +971,7 @@ class SiteControllerTest {
         String siteId = "SITE001";
         UpdateSiteRequest request = new UpdateSiteRequest();
         // request.setSiteName("Test Site");
-        request.setAddress("Test Location");
+        // request.setAddress("Test Location");
         
         CustomException expectedException = new CustomException("E004", "トークンが無効です");
         
@@ -1016,7 +1016,7 @@ class SiteControllerTest {
         String siteId = null;
         UpdateSiteRequest request = new UpdateSiteRequest();
         // request.setSiteName("Null Site");
-        request.setAddress("Null Location");
+        // request.setAddress("Null Location");
         
         try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
             // Setup authentication mock

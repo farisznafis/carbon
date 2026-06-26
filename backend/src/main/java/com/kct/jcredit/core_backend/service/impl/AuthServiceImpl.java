@@ -51,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
         ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(request.getCompanyId()).orElse(null);
         if (company == null) {
             response.setStatusCode("INVALID_CREDENTIALS");
-            response.setMessage(ResponseConstants.MSG_LOGIN_FAILED);
+            response.setMessage(ResponseConstants.MSG_USER_LOGIN_FAILED);
             return response;
         }
 
@@ -72,7 +72,7 @@ public class AuthServiceImpl implements AuthService {
         //userを、企業ID＆ユーザID/メールアドレスで検索して存在しない場合
         if(user == null) {
             response.setStatusCode("INVALID_CREDENTIALS");
-            response.setMessage(ResponseConstants.MSG_LOGIN_FAILED);
+            response.setMessage(ResponseConstants.MSG_USER_LOGIN_FAILED);
             return response;
         }
 
@@ -109,7 +109,7 @@ public class AuthServiceImpl implements AuthService {
                 return response;
             }
             response.setStatusCode(ResponseConstants.INVALID_CREDENTIALS);
-            response.setMessage(ResponseConstants.MSG_LOGIN_FAILED);
+            response.setMessage(ResponseConstants.MSG_USER_LOGIN_FAILED);
             //attemptsが4になったらロック
             user.setLoginAttempts(attempts + 1);
             userRepository.save(user);
@@ -165,7 +165,7 @@ public class AuthServiceImpl implements AuthService {
             .orElse(null);
         if(operator == null) {
             response.setStatusCode("INVALID_CREDENTIALS");
-            response.setMessage(ResponseConstants.MSG_LOGIN_FAILED);
+            response.setMessage(ResponseConstants.MSG_OPERATOR_LOGIN_FAILED);
             return response;
         }
 
@@ -194,7 +194,7 @@ public class AuthServiceImpl implements AuthService {
                 return response;
             }
             response.setStatusCode(ResponseConstants.INVALID_CREDENTIALS);
-            response.setMessage(ResponseConstants.MSG_LOGIN_FAILED);
+            response.setMessage(ResponseConstants.MSG_OPERATOR_LOGIN_FAILED);
             operator.setLoginAttempts(attempts + 1);
             operatingUserRepository.save(operator);
             return response;

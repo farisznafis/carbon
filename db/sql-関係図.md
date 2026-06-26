@@ -242,7 +242,7 @@ erDiagram
         int id PK "auto-increment SERIAL"
         int project_id FK "(nn)"
         int site_id FK "(nn)"
-        varchar company_id FK "(nn)"
+        int participating_company_id FK "(nn) references participating_company.id"
         varchar methodology_number "(nn) CHAR(3)"
         boolean is_eligible "(nn)"
         date equipment_op_date "(nn)"
@@ -450,13 +450,20 @@ erDiagram
     EN_R002_reduction_result }o--|| batch_process_history : "batch_id (logical)"
     EN_R002_reduction_result_total }o--|| project : "project_id (logical)"
     EN_R002_reduction_result_total }o--|| batch_process_history : "batch_id (logical)"
-    site_r002_member_data }o--|| site : "site_id (logical)"
-    site_r002_member_data }o--|| project : "project_id (logical)"
+    site_r002_member_data }o--|| site : "site_id FK"
+    site_r002_member_data }o--|| project : "project_id FK"
+    site_r002_member_data }o--|| participating_company : "participating_company_id FK"
 
     notification }o--o| operating_user : "sender (opt)"
     notification }o--|| participating_user : "recipient"
 ```
 
 ---
+
+補足:
+
+- `site_project_relation` は `site_id + project_id + participating_company_id` を持つ参加関係テーブルで、現在のバックエンドでは `solar/register` 実行時に対象行が未作成なら自動作成される
+- `site_r002_member_data` の会社参照列は `company_id` ではなく `participating_company_id`
+- `site_r002_member_data` は `site`, `project`, `participating_company` に対して実DB上の外部キーを持つ
 
 ---

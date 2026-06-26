@@ -5,12 +5,13 @@ Content-Type: application/json
 Request Body (JSON): 
 {
   
-  "siteName": "ABC工場";
+ "siteName": "ABC工場";
   "postalCode": "1234567",
   "prefecture": "東京",
   "municipality": "渋谷区桜丘町",
   "blocknum": "1-1"
   "buildingName": "サンプルビル 3F",
+  "SiteName": "拠点例",
   "PICUserId": "1234" //担当者id
 
 }
@@ -19,13 +20,12 @@ Response - Success (HTTP 200)
 {
   "statusCode": "OK",
   "site": {
-    "siteName": "ABC工場";
+    "siteName": "ABC工場",
     "postalCode": "1234567",
     "prefecture": "東京",
     "municipality": "渋谷区桜丘町",
     "blocknum": "1-1"
     "buildingName": "サンプルビル 3F",
-    "userId": "1234" //担当者id
     "picFirstName": "山田",
     "picLastName": "太郎",
   }

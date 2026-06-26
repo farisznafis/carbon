@@ -138,7 +138,14 @@ class MonitoringServiceImplTest {
         masterUser = new ParticipatingUser();
         masterUser.setId(13);
         masterUser.setUsername("multi_site_master");
-        masterUser.setCompanyId("COMP00000002");
+
+        ParticipatingCompany masterCompany = new ParticipatingCompany();
+        masterCompany.setId(2);
+        masterCompany.setCompanyId("COMP00000002");
+        masterCompany.setIsActive(true);
+
+        masterUser.setCompany(masterCompany);
+
         masterUser.setRole("master");
         masterUser.setIsActive(true);
         masterUser.setPassword("$2a$10$Gz/GpXFrN/J6zWwGQxfhbuxtZfYL1vFIfa1FNsdpnRD5zkPfI0IuO");
@@ -148,10 +155,15 @@ class MonitoringServiceImplTest {
         regularUser = new ParticipatingUser();
         regularUser.setId(14);
         regularUser.setUsername("tokyo_operator");
-        regularUser.setCompanyId("COMP00000002");
+
+        ParticipatingCompany regularCompany = new ParticipatingCompany();
+        regularCompany.setId(2);
+        regularCompany.setCompanyId("COMP00000002");
+
+        regularUser.setCompany(regularCompany);
         regularUser.setRole("user");
         regularUser.setIsActive(true);
-        regularUser.setSite(tokyoSite); // Only Tokyo site
+        regularUser.setSite(tokyoSite);
     }
 
     private void setupSiteMocks() {
@@ -272,7 +284,12 @@ class MonitoringServiceImplTest {
         ParticipatingUser otherCompanyUser = new ParticipatingUser();
         otherCompanyUser.setId(1);
         otherCompanyUser.setUsername(username);
-        otherCompanyUser.setCompanyId("COMP00000001"); // Different!
+
+        ParticipatingCompany otherCompany = new ParticipatingCompany();
+        otherCompany.setId(1);
+        otherCompany.setCompanyId("COMP00000001");
+
+        otherCompanyUser.setCompany(otherCompany);
         otherCompanyUser.setRole("master");
         otherCompanyUser.setIsActive(true);
 
@@ -288,32 +305,53 @@ class MonitoringServiceImplTest {
     }
 
     @Test
-    //必須の証拠URLが欠落している場合は拒否する必要があります〇
     @DisplayName("Should reject when mandatory evidence URLs are missing")
     void testRegisterMonitoringRecord_MissingEvidenceURLs_BadRequest() {
-        // Arrange
+
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
         Integer siteId = 21;
 
-        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
-        // Clear one of the mandatory URL
-        //必須のURLのいずれかをクリアしてください
+        RegisterMonitoringRecordSolarRequest request =
+                buildValidMonitoringRequest(projectId, siteId);
+
         request.setElPvEvidenceUrl(null);
 
-        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
-        when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
+        when(userRepository.findByUsername(username))
+                .thenReturn(Optional.of(masterUser));
 
-        // Act
-        MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(username, companyId, request);
+        when(siteRepository.findById(siteId))
+                .thenReturn(Optional.of(tokyoSite));
 
-        // Assert
+        when(projectRepository.findById(projectId))
+                .thenReturn(Optional.of(project));
+
+        when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite))
+                .thenReturn(true);
+
+        MonitoringRecordSolarResponse response =
+                monitoringService.registerMonitoringRecordSolar(
+                        username,
+                        companyId,
+                        request
+                );
+
         assertNotNull(response);
-        assertEquals(ResponseConstants.BAD_REQUEST, response.getStatusCode());
-        assertTrue(response.getMessage().contains("必須"));
+
+        assertEquals(
+                ResponseConstants.VALIDATION_ERROR,
+                response.getStatusCode()
+        );
+
+        assertEquals(
+                ResponseConstants.MSG_VALIDATION_ERROR,
+                response.getMessage()
+        );
+
+        assertNotNull(response.getErrors());
+        assertFalse(response.getErrors().isEmpty());
+
         verify(monitoringRecordSolarRepository, never()).save(any());
     }
 
@@ -789,13 +827,16 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "unknown_role_user";
         String companyId = "COMP00000002";
+        Integer Id = 123;
         Integer projectId = 1;
         Integer siteId = 21;
 
         ParticipatingUser unknownRoleUser = new ParticipatingUser();
         unknownRoleUser.setId(99);
         unknownRoleUser.setUsername(username);
-        unknownRoleUser.setCompanyId(companyId);
+        ParticipatingCompany unknownRoleCompany = new ParticipatingCompany(); // ✅ Fix: was unknownRoleUser.setCompanyId(companyId)
+        unknownRoleCompany.setId(Id);
+        unknownRoleUser.setCompany(unknownRoleCompany);
         unknownRoleUser.setRole("admin"); // Unknown role
         unknownRoleUser.setIsActive(true);
 

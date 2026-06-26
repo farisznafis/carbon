@@ -1,35 +1,29 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 //import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning";
 import type { Equipment, EquipmentFormType } from "@/features/user/project-registration/components/types";
 import { SolarPowerEquipmentForm } from "@/features/user/project-registration/components/equipment-forms/SolarPowerEquipmentForm";
-import { OtherEquipmentForm } from "@/features/user/project-registration/components/equipment-forms/OtherEquipmentForm";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { solarPowerSchema, otherEquipmentSchema, type SolarPowerFormData, type OtherEquipmentFormData } from "@/lib/equipmentValidations";
+import type { SolarPowerFormData, OtherEquipmentFormData } from "@/lib/equipmentValidations";
 import { Form } from "@/components/ui/form";
-import { PageBackButton } from "@/components/navigation/PageBackButton";
+import { FormPageWrapper } from "@/components/layout/FormPageWrapper/FormPageWrapper";
 
 /**
  * HOW TO SWITCH BETWEEN FORM TYPES:
- * 
- * 1. Change the DEFAULT_FORM_TYPE constant below to switch the default form:
+ *
+ * 1. Change the default type logic below to switch the default form:
  *    - "solar" for solar power equipment form
  *    - "other" for other equipment form
- * 
+ *
  * 2. To add a new form type in the future:
  *    - Add the new type to EquipmentFormType in types.ts (e.g., "wind" | "battery")
  *    - Create a new form component in equipment-forms/ folder (e.g., WindEquipmentForm.tsx)
  *    - Add the component import above
- *    - Add a new case in the renderForm() function below
+ *    - Add a new case in the render section below
  *    - Update the form type selection logic if needed
  */
-
-const DEFAULT_FORM_TYPE: EquipmentFormType = "other";
 
 const EquipmentForm = () => {
   const navigate = useNavigate();
@@ -38,7 +32,7 @@ const EquipmentForm = () => {
   const equipmentId = searchParams.get("equipmentId");
   const { toast } = useToast();
 
-  const [formType, setFormType] = useState<EquipmentFormType>(() => {
+  const [formType] = useState<EquipmentFormType>(() => {
     const type = searchParams.get("type");
     return type === "other" ? "other" : "solar";
   });
@@ -86,9 +80,6 @@ const EquipmentForm = () => {
       newEquipmentType: "",
     },
   });
-
-  const currentForm = formType === "solar" ? solarForm : otherForm;
-  const hasUnsavedChanges = currentForm.formState.isDirty;
 
   //useUnsavedChangesWarning({ hasUnsavedChanges });
 
@@ -153,70 +144,53 @@ const EquipmentForm = () => {
     navigate(`/projects/${projectId}/register`);
   };
 
-  return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-3xl mx-auto">
-        <PageBackButton
-          onClick={() => navigate(`/projects/${projectId}/register`)}
-          label='戻る'
-          className='mb-4 rounded-full'
-        />
-        <Button
-          variant="ghost"
-          onClick={() => navigate(`/projects/${projectId}/register`)}
-          className="hidden"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          戻る
-        </Button>
+  const pageTitle = equipmentId ? "設備編集" : "設備追加";
+  const equipmentTypeLabel = formType === "solar" ? "太陽光発電設備" : "その他設備";
 
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {equipmentId ? "設備編集" : "設備追加"} - {
-                formType === "solar" ? "太陽光発電設備" : "その他設備"
-              }
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* other forms; use this if already created */}
-            {/* <div className="flex gap-4 pt-4 border-t">
-              <Button onClick={() => setFormType("solar")}>Solar</Button>
-              <Button onClick={() => setFormType("other")}>Other</Button>
-            </div> */}
-            {formType === "solar" ? (
-              <Form {...solarForm}>
-                <form onSubmit={solarForm.handleSubmit(onSubmit)} className="space-y-6">
-                  <SolarPowerEquipmentForm form={solarForm} />
-                  <div className="flex gap-4 pt-4 border-t">
-                    <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">
-                      キャンセル
-                    </Button>
-                    <Button type="submit" className="flex-1">
-                      保存
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            ) : (
-              <Form {...otherForm}>
-                <form onSubmit={otherForm.handleSubmit(onSubmit)} className="space-y-6">
-                  {/* <OtherEquipmentForm form={otherForm} /> */}
-                  <div className="flex gap-4 pt-4 border-t">
-                    <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">
-                      キャンセル
-                    </Button>
-                    <Button type="submit" className="flex-1">
-                      保存
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            )}
-          </CardContent>
-        </Card>
+  return (
+    <FormPageWrapper
+      pageName={pageTitle}
+      title={pageTitle}
+      onBack={handleCancel}
+      backText="戻る"
+      contentMaxWidth="max-w-3xl"
+    >
+      <div className="space-y-6">
+        <h3 className="text-xl font-semibold">
+          {pageTitle} - {equipmentTypeLabel}
+        </h3>
+
+        {formType === "solar" ? (
+          <Form {...solarForm}>
+            <form onSubmit={solarForm.handleSubmit(onSubmit)} className="space-y-6">
+              <SolarPowerEquipmentForm form={solarForm} />
+              <div className="flex gap-4 border-t pt-4">
+                <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">
+                  キャンセル
+                </Button>
+                <Button type="submit" className="flex-1">
+                  保存
+                </Button>
+              </div>
+            </form>
+          </Form>
+        ) : (
+          <Form {...otherForm}>
+            <form onSubmit={otherForm.handleSubmit(onSubmit)} className="space-y-6">
+              {/* <OtherEquipmentForm form={otherForm} /> */}
+              <div className="flex gap-4 border-t pt-4">
+                <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">
+                  キャンセル
+                </Button>
+                <Button type="submit" className="flex-1">
+                  保存
+                </Button>
+              </div>
+            </form>
+          </Form>
+        )}
       </div>
-    </div>
+    </FormPageWrapper>
   );
 };
 

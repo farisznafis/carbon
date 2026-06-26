@@ -296,10 +296,10 @@ const AdminDashboard = () => {
                 onClick={() => setCancelRequestDialogOpen(true)}
                 className='bg-slate-950 hover:bg-slate-800 text-white w-auto whitespace-nowrap'
               >
-                取り消し一覧
+                取消一覧
                 <span className='hidden'>
                 {/* <Plus className='h-4 w-4 mr-2' /> */}
-                取り消し一覧
+                取消一覧
                 </span>
               </Button>
             </div>
