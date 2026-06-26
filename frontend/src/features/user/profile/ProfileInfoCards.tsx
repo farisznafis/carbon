@@ -49,6 +49,14 @@ export function ProfileInfoCards({
 
         <CardContent className='grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2'>
           <InfoItem
+            label='会員ID'
+            value={profile?.companyId}
+          />
+          <InfoItem
+            label='ユーザ名'
+            value={profile?.username}
+          />
+          <InfoItem
             label='氏名'
             value={profile ? `${profile.lastName} ${profile.firstName}` : '-'}
           />

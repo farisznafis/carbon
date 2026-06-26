@@ -12,6 +12,8 @@ export type ProfileCompanyViewModel = {
 };
 
 export type ProfileViewModel = {
+  companyId?: number;
+  username?: string;
   firstName: string;
   lastName: string;
   firstNameKana: string;
@@ -40,6 +42,7 @@ function mapCompany(profile: ProfileApiProfile): ProfileCompanyViewModel | null 
     corpNumber: normalizeText(profile.company.corpNumber),
     fax: profile.company.fax?.trim() || null,
     email: normalizeText(profile.company.email),
+    // username: normalizeText(profile.company.username),
   };
 }
 
@@ -49,6 +52,8 @@ export function mapProfileApiResponseToProfileViewModel(
   const profile = response.profile;
 
   return {
+    companyId: profile.companyId,
+    username: normalizeText(profile.username),
     firstName: normalizeText(profile.firstName),
     lastName: normalizeText(profile.lastName),
     firstNameKana: normalizeText(profile.firstNameKana),

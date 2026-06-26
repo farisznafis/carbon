@@ -14,17 +14,36 @@ import java.util.List;
 
 @Repository
 public interface ParticipatingUserRepository extends JpaRepository<ParticipatingUser, Integer> {
-    Optional<ParticipatingUser> findByUsername(String username);
+   Optional<ParticipatingUser> findByUsername(String username);
+
     Optional<ParticipatingUser> findByEmail(String email);
-    @Query("SELECT u FROM ParticipatingUser u WHERE (u.username = :username OR u.email = :email) AND u.companyId = :companyId")
-    Optional<ParticipatingUser> findByUsernameOrEmailAndCompanyId(String username, String email, String companyId);
-    List<ParticipatingUser> findByCompanyId(String companyId);
-    Optional<ParticipatingUser> findByCompanyIdAndRole(String companyId, String role);
-    Optional<ParticipatingUser> findByUsernameAndCompanyId(String username, String companyId);
+
+    @Query("""
+        SELECT u FROM ParticipatingUser u
+        WHERE (u.username = :username OR u.email = :email)
+        AND u.company.id = :companyId
+    """)
+    Optional<ParticipatingUser> findByUsernameOrEmailAndCompanyId(
+            String username,
+            String email,
+            Integer companyId
+    );
+
+    List<ParticipatingUser> findByCompany_Id(Integer companyId);
+
+    Optional<ParticipatingUser> findByCompany_IdAndRole(Integer companyId, String role);
+
+    Optional<ParticipatingUser> findByUsernameAndCompany_Id(String username, Integer companyId);
+
     boolean existsByUsername(String username);
+
     boolean existsByEmail(String email);
 
+    long countByCompany_IdAndSite_Id(Integer companyId, Integer siteId);
+    
+    long countByCompany_Id(Integer companyId);
+
     @Modifying
-    @Query("UPDATE ParticipatingUser u SET u.deletedAt = CURRENT_TIMESTAMP, u.deletedBy = :deletedBy WHERE u.companyId = :companyId")
-    void softDeleteByCompanyId(@Param("companyId") String companyId, @Param("deletedBy") String deletedBy);
+    @Query("UPDATE ParticipatingUser u SET u.deletedAt = CURRENT_TIMESTAMP, u.deletedBy = :deletedBy WHERE u.company.id = :companyId")
+    void softDeleteByCompanyId(@Param("companyId") Integer companyId, @Param("deletedBy") String deletedBy);
 }

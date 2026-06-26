@@ -6,6 +6,7 @@ import com.kct.jcredit.core_backend.dto.request.ProjectApplicationRequest;
 import com.kct.jcredit.core_backend.dto.response.CorporationMasterResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectApplicationResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectMasterResponse;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.response.details.CorporationMasterData;
 import com.kct.jcredit.core_backend.dto.response.details.ProjectMasterData;
 import com.kct.jcredit.core_backend.entity.OperatorCompany;
@@ -14,16 +15,22 @@ import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.repository.dynamodb.ProjectApplicationRepository;
 import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
-import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.service.projectplan.ProjectApplicationService;
+import com.kct.jcredit.core_backend.service.impl.projectplan.ProjectPlanContextService.ProjectContext;
+import com.kct.jcredit.core_backend.service.impl.projectplan.ProjectPlanContextService.ProjectContextStatus;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
+/**
+ * Handles the main project-application form and its autofill data.
+ *
+ * Operator-company and project master data are read from PostgreSQL. The
+ * editable application form is stored in the shared project-plan DynamoDB table
+ * under a form-specific static SK.
+ */
 @Service
 @RequiredArgsConstructor
 public class ProjectApplicationServiceImpl implements ProjectApplicationService {
@@ -32,9 +39,12 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
 
     private final OperatorCompanyRepository operatorCompanyRepository;
     private final OperatingUserRepository operatorUserRepository;
-    private final ProjectRepository projectRepository;
+    private final ProjectPlanContextService projectPlanContextService;
     private final ProjectApplicationRepository projectApplicationRepository;
 
+    /**
+     * Returns operator-company master data used to prefill a project application.
+     */
     @Override
     @Transactional(readOnly = true)
     public CorporationMasterResponse getCorporationMaster(String requesterCompanyId, String role, String username) {
@@ -47,14 +57,14 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
             return response;
         }
 
-        if (!hasAccessToCompany(role, username, requesterCompanyId)) {
+        if (!hasAccessToCompany(role, username, company)) {
             response.setStatusCode(ResponseConstants.FORBIDDEN);
             response.setMessage(ResponseConstants.MSG_FORBIDDEN);
             return response;
         }
 
         OperatingUser operatorUser = operatorUserRepository
-            .findByCompanyIdAndRole(requesterCompanyId, RoleConstants.MASTER)
+            .findByCompany_IdAndRole(company.getId(), RoleConstants.MASTER)
             .orElse(null);
 
         String picName = operatorUser == null ? null : buildFullName(operatorUser.getLastName(), operatorUser.getFirstName());
@@ -64,8 +74,9 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
                 .corpName(company.getNameJa())
                 .corpPosition(company.getRepPosition())
                 .prefecture(company.getPrefecture())
-                .city(company.getCity())
-                .address(company.getAddress())
+                .municipality(company.getMunicipality())
+                .blocknum(company.getBlocknum())
+                .buildingName(company.getBuildingName())
                 .representativePosition(company.getRepPosition())
                 .representativeName(buildFullName(company.getRepLastName(), company.getRepFirstName()))
                 .picPosition(company.getRepPosition())
@@ -79,24 +90,21 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
         return response;
     }
 
+    /**
+     * Returns project master data after checking operator ownership and user access.
+     */
     @Override
     @Transactional(readOnly = true)
     public ProjectMasterResponse getProjectMaster(Integer projectId, String companyId, String role, String username) {
         ProjectMasterResponse response = new ProjectMasterResponse();
 
-        Project project = projectRepository.findById(projectId).orElse(null);
-        if (project == null) {
-            response.setStatusCode(ResponseConstants.NOT_FOUND);
-            response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
+        ProjectContext context = projectPlanContextService.resolveProject(projectId, companyId, role, username);
+        if (!context.isAuthorized()) {
+            applyContextError(response, context);
             return response;
         }
 
-        if (!hasAccessToProject(project, companyId, role, username)) {
-            response.setStatusCode(ResponseConstants.FORBIDDEN);
-            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
-            return response;
-        }
-
+        Project project = context.project();
         ProjectMasterData data = ProjectMasterData.builder()
             .projectId(project.getId())
                 .projectName(project.getProjectName())
@@ -112,6 +120,9 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
         return response;
     }
 
+    /**
+     * Creates or replaces the project-application form for a project.
+     */
     @Override
     @Transactional
     public ProjectApplicationResponse submitProjectApplication(
@@ -120,24 +131,12 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
             String companyId,
             String role,
             String username) {
-        ProjectApplicationResponse response = new ProjectApplicationResponse();
-
-        Project project = projectRepository.findById(projectId).orElse(null);
-        if (project == null) {
-            response.setStatusCode(ResponseConstants.NOT_FOUND);
-            response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
-            return response;
-        }
-
-        if (!hasAccessToProject(project, companyId, role, username)) {
-            response.setStatusCode(ResponseConstants.FORBIDDEN);
-            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
-            return response;
-        }
-
-        return saveProjectApplication(projectId, request);
+        return validateAndSave(projectId, request, companyId, role, username);
     }
 
+    /**
+     * Replaces the existing project-application form for a project.
+     */
     @Override
     @Transactional
     public ProjectApplicationResponse updateProjectApplication(
@@ -146,24 +145,12 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
             String companyId,
             String role,
             String username) {
-        ProjectApplicationResponse response = new ProjectApplicationResponse();
-
-        Project project = projectRepository.findById(projectId).orElse(null);
-        if (project == null) {
-            response.setStatusCode(ResponseConstants.NOT_FOUND);
-            response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
-            return response;
-        }
-
-        if (!hasAccessToProject(project, companyId, role, username)) {
-            response.setStatusCode(ResponseConstants.FORBIDDEN);
-            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
-            return response;
-        }
-
-        return saveProjectApplication(projectId, request);
+        return validateAndSave(projectId, request, companyId, role, username);
     }
 
+    /**
+     * Returns the stored application with current PostgreSQL master fields overlaid.
+     */
     @Override
     @Transactional(readOnly = true)
     public ProjectApplicationResponse getProjectApplication(
@@ -173,16 +160,9 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
             String username) {
         ProjectApplicationResponse response = new ProjectApplicationResponse();
 
-        Project project = projectRepository.findById(projectId).orElse(null);
-        if (project == null) {
-            response.setStatusCode(ResponseConstants.NOT_FOUND);
-            response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
-            return response;
-        }
-
-        if (!hasAccessToProject(project, companyId, role, username)) {
-            response.setStatusCode(ResponseConstants.FORBIDDEN);
-            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+        ProjectContext context = projectPlanContextService.resolveProject(projectId, companyId, role, username);
+        if (!context.isAuthorized()) {
+            applyContextError(response, context);
             return response;
         }
 
@@ -191,7 +171,8 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
                 .findByPkAndSk(pk, PROJECT_APPLICATION_SK)
                 .orElseGet(ProjectApplicationRequest::new);
 
-        applySqlMasterFields(data, project, companyId);
+        // PostgreSQL remains authoritative for master fields shown in this form.
+        applySqlMasterFields(data, context.project());
         data.setPk(pk);
         data.setSk(PROJECT_APPLICATION_SK);
 
@@ -200,36 +181,35 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
         return response;
     }
 
-    private boolean hasAccessToCompany(String role, String username, String companyId) {
+    private boolean hasAccessToCompany(String role, String username, OperatorCompany company) {
         if (!RoleConstants.OPERATOR.equals(role)) {
             return false;
         }
         OperatingUser user = operatorUserRepository
-                .findByUsernameAndCompanyId(username, companyId)
+                .findByUsernameAndCompany_Id(username, company.getId())
                 .orElse(null);
         return user != null;
     }
 
-    private boolean hasAccessToProject(Project project, String companyId, String role, String username) {
-        if (project == null) {
-            return false;
+    private ProjectApplicationResponse validateAndSave(
+            Integer projectId,
+            ProjectApplicationRequest request,
+            String companyId,
+            String role,
+            String username) {
+        ProjectApplicationResponse response = new ProjectApplicationResponse();
+        ProjectContext context = projectPlanContextService.resolveProject(projectId, companyId, role, username);
+        if (!context.isAuthorized()) {
+            applyContextError(response, context);
+            return response;
         }
-        if (!RoleConstants.OPERATOR.equals(role)) {
-            return false;
-        }
-        OperatingUser user = operatorUserRepository
-                .findByUsernameAndCompanyId(username, companyId)
-                .orElse(null);
-        if (user == null) {
-            return false;
-        }
-        OperatorCompany operatorCompany = project.getOperatorCompany();
-        return operatorCompany != null && companyId.equals(operatorCompany.getCompanyId());
+        return saveProjectApplication(projectId, request);
     }
 
     private ProjectApplicationResponse saveProjectApplication(Integer projectId, ProjectApplicationRequest request) {
         String pk = buildPk(projectId);
 
+        // DynamoDB keys are server-managed and cannot be supplied by clients.
         request.setPk(pk);
         request.setSk(PROJECT_APPLICATION_SK);
 
@@ -241,30 +221,26 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
         return response;
     }
 
-    private void applySqlMasterFields(ProjectApplicationRequest request, Project project, String companyId) {
+    private void applySqlMasterFields(ProjectApplicationRequest request, Project project) {
         OperatorCompany company = project.getOperatorCompany();
-        if (company == null) {
-            company = operatorCompanyRepository.findByCompanyId(companyId).orElse(null);
-        }
 
         OperatingUser masterUser = operatorUserRepository
-                .findByCompanyIdAndRole(companyId, RoleConstants.MASTER)
+                .findByCompany_IdAndRole(company.getId(), RoleConstants.MASTER)
                 .orElse(null);
 
-        if (company != null) {
-            request.setProjectOperatorKana(company.getNameFurigana());
-            request.setProjectOperatorNameJa(company.getNameJa());
-            request.setProjectOperatorNameEn(company.getNameEn());
-            request.setCorpNumber(company.getCorpNumber());
-            request.setCorpPosition(company.getRepPosition());
-            request.setCorpName(company.getNameJa());
-            request.setPrefecture(company.getPrefecture());
-            request.setCity(company.getCity());
-            request.setAddress(company.getAddress());
-            request.setRepresentativePosition(company.getRepPosition());
-            request.setRepresentativeName(buildFullName(company.getRepLastName(), company.getRepFirstName()));
-            request.setPicPosition(company.getRepPosition());
-        }
+        request.setProjectOperatorKana(company.getNameFurigana());
+        request.setProjectOperatorNameJa(company.getNameJa());
+        request.setProjectOperatorNameEn(company.getNameEn());
+        request.setCorpNumber(company.getCorpNumber());
+        request.setCorpPosition(company.getRepPosition());
+        request.setCorpName(company.getNameJa());
+        request.setPrefecture(company.getPrefecture());
+        request.setMunicipality(company.getMunicipality());
+        request.setBlocknum(company.getBlocknum());
+        request.setBuildingName(company.getBuildingName());
+        request.setRepresentativePosition(company.getRepPosition());
+        request.setRepresentativeName(buildFullName(company.getRepLastName(), company.getRepFirstName()));
+        request.setPicPosition(company.getRepPosition());
 
         if (masterUser != null) {
             request.setPicName(buildFullName(masterUser.getLastName(), masterUser.getFirstName()));
@@ -278,6 +254,16 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
         request.setMethodologyNumber(project.getMethodNumber());
         request.setMethodology(project.getMethodName());
         request.setRegionalCategory(project.getRegionalCategory());
+    }
+
+    private void applyContextError(BaseResponse response, ProjectContext context) {
+        if (context.status() == ProjectContextStatus.NOT_FOUND) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
+            return;
+        }
+        response.setStatusCode(ResponseConstants.FORBIDDEN);
+        response.setMessage(ResponseConstants.MSG_FORBIDDEN);
     }
 
     private String buildPk(Integer projectId) {

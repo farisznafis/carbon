@@ -7,6 +7,12 @@ import { registerSite } from '@/api/site';
 import { SiteForm, SiteFormData } from '@/features/master/forms/SiteForm';
 import { SiteConfirmation } from './SiteConfirmation';
 import { logger } from '@/lib/logger';
+import { PageBackButton } from '@/components/navigation/PageBackButton';
+import {
+  FormPageContent,
+  FormPageTitle,
+  FormStandalonePage,
+} from '@/components/forms/form-layout';
 
 const emptySiteValues: SiteFormData = {
   siteName: '',
@@ -122,9 +128,29 @@ function SiteRegister() {
     setStep('form');
   };
 
+  if (step === 'confirm') {
+    return (
+      <SiteConfirmation
+        mode='create'
+        data={formData}
+        originalData={originalData}
+        onBack={handleBack}
+        onSubmit={handleFinalSubmit}
+      />
+    );
+  }
+
   return (
-    <div>
-      {step === 'form' && (
+    <FormStandalonePage watermark='Site Add'>
+      <PageBackButton
+        onClick={() => navigate(-1)}
+        label=''
+        className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
+      />
+
+      <FormPageContent>
+        <FormPageTitle>拠点追加</FormPageTitle>
+
         <SiteForm
           mode='create'
           onChange={setFormData}
@@ -133,19 +159,10 @@ function SiteRegister() {
           originalData={originalData}
           disablePicFields
           disableSubmit={isProfileLoading}
+          embedded
         />
-      )}
-
-      {step === 'confirm' && (
-        <SiteConfirmation
-          mode='create'
-          data={formData}
-          originalData={originalData}
-          onBack={handleBack}
-          onSubmit={handleFinalSubmit}
-        />
-      )}
-    </div>
+      </FormPageContent>
+    </FormStandalonePage>
   );
 }
 

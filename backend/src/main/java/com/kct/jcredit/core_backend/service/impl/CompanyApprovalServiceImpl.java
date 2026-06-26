@@ -58,7 +58,7 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
             return response;
         }
 
-        if (userRepository.findByCompanyIdAndRole(companyId, RoleConstants.MASTER).isPresent()) {
+        if (userRepository.findByCompany_IdAndRole(company.getId(), RoleConstants.MASTER).isPresent()) {
             response.setStatusCode(ResponseConstants.BAD_REQUEST);
             response.setMessage(ResponseConstants.MSG_MASTER_USER_EXISTS);
             return response;
@@ -93,7 +93,7 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
                 .loginAttempts(0)
                 .accountLockedUntil(null)
                 .site(null)
-                .companyId(companyId)
+                .company(company)
                 .build();
 
         try {
@@ -169,7 +169,12 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
                 .phoneNumber(company.getPhoneNumber())
                 .fax(company.getFax())
                 .corpNumber(company.getCorpNumber())
-                .address(company.getAddress())
+                .address(String.format("%s %s %s %s %s",
+                    company.getPostalCode() != null ? company.getPostalCode() : "",
+                    company.getPrefecture() != null ? company.getPrefecture() : "",
+                    company.getMunicipality() != null ? company.getMunicipality() : "",
+                    company.getBlocknum() != null ? company.getBlocknum() : "",
+                    company.getBuildingName() != null ? company.getBuildingName() : "").trim())
                 .isSuspended(company.isSuspended())
                 .build())
             .collect(Collectors.toList());

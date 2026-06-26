@@ -26,13 +26,9 @@ public interface NotificationService {
     void createNotificationForParticipatingCompany(
             String title, 
             String message, 
-            String companyId,
+            Integer companyId,
             Integer operatingUserId);
 
-    void createNotificationForOperatingCompany(
-            String title,
-            String message,
-            String operatorCompanyId);
 
     void createNotificationForAllOperatingUsers(
             String title,
