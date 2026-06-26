@@ -8,6 +8,7 @@ import com.kct.jcredit.core_backend.dto.response.RejectCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.details.CompanyInfoResponse;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
+import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRegistrationDetailRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.service.CompanyApprovalService;
@@ -49,6 +50,9 @@ class CompanyApprovalServiceImplTest {
     private ParticipatingCompanyRepository companyRepository;
 
     @Mock
+    private ParticipatingCompanyRegistrationDetailRepository registrationDetailRepository;
+
+    @Mock
     private ParticipatingUserRepository userRepository;
 
     @Mock
@@ -70,8 +74,9 @@ class CompanyApprovalServiceImplTest {
         String repEmail = "rep@example.com";
 
         ParticipatingCompany company = mock(ParticipatingCompany.class);
+        when(company.getId()).thenReturn(Id);
         when(company.getRegStatus()).thenReturn(REG_STATUS_PENDING);
-        when(company.getRepEmail()).thenReturn(repEmail);
+        when(company.getEmail()).thenReturn(repEmail);
         when(company.getRepFirstName()).thenReturn("Taro");
         when(company.getRepFirstNameKana()).thenReturn("タロウ");
         when(company.getRepLastName()).thenReturn("Yamada");
@@ -102,7 +107,7 @@ class CompanyApprovalServiceImplTest {
         assertThat(savedUser.getUsername()).isEqualTo(repEmail);
         assertThat(savedUser.getEmail()).isEqualTo(repEmail);
         assertThat(savedUser.getRole()).isEqualTo(RoleConstants.MASTER);
-        assertThat(savedUser.getCompany().getId()).isEqualTo(companyId);
+        assertThat(savedUser.getCompany().getId()).isEqualTo(Id);
         assertThat(savedUser.getPassword()).isEqualTo("ENCODED_PASSWORD");
 
         verify(notificationService).sendMasterAccountCredentials(eq(company), eq(repEmail), anyString());
@@ -118,8 +123,9 @@ class CompanyApprovalServiceImplTest {
         String repEmail = "rep2@example.com";
 
         ParticipatingCompany company = mock(ParticipatingCompany.class);
+        when(company.getId()).thenReturn(Id);
         when(company.getRegStatus()).thenReturn("pending"); //verifikasi equalsIgnoreCase
-        when(company.getRepEmail()).thenReturn(repEmail);
+        when(company.getEmail()).thenReturn(repEmail);
 
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
         when(userRepository.findByCompany_IdAndRole(Id, role))
@@ -204,6 +210,7 @@ class CompanyApprovalServiceImplTest {
         Integer Id = 123;
         String role = "master";
         ParticipatingCompany company = mock(ParticipatingCompany.class);
+        when(company.getId()).thenReturn(Id);
         when(company.getRegStatus()).thenReturn(REG_STATUS_PENDING);
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
         when(userRepository.findByCompany_IdAndRole(Id, role))
@@ -231,8 +238,9 @@ class CompanyApprovalServiceImplTest {
         String role = "master";
         String repEmail = "rep@example.com";
         ParticipatingCompany company = mock(ParticipatingCompany.class);
+        when(company.getId()).thenReturn(Id);
         when(company.getRegStatus()).thenReturn(REG_STATUS_PENDING);
-        when(company.getRepEmail()).thenReturn(repEmail);
+        when(company.getEmail()).thenReturn(repEmail);
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
         when(userRepository.findByCompany_IdAndRole(Id, role))
                 .thenReturn(Optional.empty());
@@ -259,8 +267,9 @@ class CompanyApprovalServiceImplTest {
         String role = "master";
         String repEmail = "rep@example.com";
         ParticipatingCompany company = mock(ParticipatingCompany.class);
+        when(company.getId()).thenReturn(Id);
         when(company.getRegStatus()).thenReturn(REG_STATUS_PENDING);
-        when(company.getRepEmail()).thenReturn(repEmail);
+        when(company.getEmail()).thenReturn(repEmail);
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
         when(userRepository.findByCompany_IdAndRole(Id, role))
                 .thenReturn(Optional.empty());
@@ -287,8 +296,9 @@ class CompanyApprovalServiceImplTest {
         String role = "master";
         String repEmail = "rep@example.com";
         ParticipatingCompany company = mock(ParticipatingCompany.class);
+        when(company.getId()).thenReturn(Id);
         when(company.getRegStatus()).thenReturn(REG_STATUS_PENDING);
-        when(company.getRepEmail()).thenReturn(repEmail);
+        when(company.getEmail()).thenReturn(repEmail);
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
         when(userRepository.findByCompany_IdAndRole(Id, role))
                 .thenReturn(Optional.empty());
@@ -325,8 +335,9 @@ class CompanyApprovalServiceImplTest {
         String role = "master";
         String repEmail = "rep@example.com";
         ParticipatingCompany company = mock(ParticipatingCompany.class);
+        when(company.getId()).thenReturn(Id);
         when(company.getRegStatus()).thenReturn(REG_STATUS_PENDING);
-        when(company.getRepEmail()).thenReturn(repEmail);
+        when(company.getEmail()).thenReturn(repEmail);
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
         when(userRepository.findByCompany_IdAndRole(Id, role))
                 .thenReturn(Optional.empty());
@@ -483,6 +494,8 @@ class CompanyApprovalServiceImplTest {
 
         when(companyRepository.findByRegStatus(REG_STATUS_PENDING))
                 .thenReturn(Arrays.asList(companyWithId, companyWithNullId));
+        when(registrationDetailRepository.findByCompanyIn(Arrays.asList(companyWithId, companyWithNullId)))
+                .thenReturn(List.of());
 
         // Act
         PendingCompanyListResponse response = companyApprovalService.getPendingCompanies();
@@ -514,6 +527,7 @@ class CompanyApprovalServiceImplTest {
     void getPendingCompanies_noData_returnsEmptyList() {
         // Arrange
         when(companyRepository.findByRegStatus(REG_STATUS_PENDING)).thenReturn(List.of());
+        when(registrationDetailRepository.findByCompanyIn(List.of())).thenReturn(List.of());
 
         // Act
         PendingCompanyListResponse response = companyApprovalService.getPendingCompanies();

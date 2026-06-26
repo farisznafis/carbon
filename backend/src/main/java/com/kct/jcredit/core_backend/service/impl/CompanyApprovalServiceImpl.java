@@ -69,7 +69,7 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
             return response;
         }
 
-        String masterUsername = company.getRepEmail();
+        String masterUsername = company.getEmail();
         if (userRepository.existsByUsername(masterUsername)) {
             response.setStatusCode(ResponseConstants.USED_USERNAME);
             response.setMessage(ResponseConstants.MSG_USED_USERNAME);
@@ -90,7 +90,7 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
                 .firstNameKana(company.getRepFirstNameKana())
                 .lastName(company.getRepLastName())
                 .lastNameKana(company.getRepLastNameKana())
-                .email(company.getRepEmail())
+                .email(company.getEmail())
                 .phoneNumber(company.getRepPhoneNumber())
                 .password(passwordEncoder.encode(plainPassword))
                 .role(RoleConstants.MASTER)

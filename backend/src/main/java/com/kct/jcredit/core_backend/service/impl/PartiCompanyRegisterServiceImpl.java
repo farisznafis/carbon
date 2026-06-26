@@ -1,6 +1,5 @@
 package com.kct.jcredit.core_backend.service.impl;
 
-import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyInfoValidateRequest;
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyRegisterRequest;
 import com.kct.jcredit.core_backend.dto.response.details.PartiCompanyResponseDetails;
@@ -8,9 +7,9 @@ import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompanyRegistrationDetail;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRegistrationDetailRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRegisterRepository;
+import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.service.PartiCompanyRegisterService;
 import com.kct.jcredit.core_backend.service.PartiCompanySignupValidator;
-import com.kct.jcredit.core_backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,10 +41,8 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
 
         signupValidator.validateCompanyInfo(request);
 
-        // Find REJECTED record for reactivation (corpNumber is authoritative, email as fallback)
         ParticipatingCompany entity = repository.findByCorpNumberAndRegStatus(request.getCorporateNumber(), "REJECTED")
-                .or(() -> repository.findByEmailAndRegStatus(request.getCorporateEmail(), "REJECTED"))
-                .or(() -> repository.findByRepEmailAndRegStatus(request.getEmail(), "REJECTED"))
+                .or(() -> repository.findByEmailAndRegStatus(request.getEmail(), "REJECTED"))
                 .orElse(null);
 
         boolean isReactivation = entity != null;
@@ -53,12 +50,11 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
             entity = new ParticipatingCompany();
         }
 
-        // 4. dto -> entity
         entity.setCorpNumber(request.getCorporateNumber());
         entity.setNameJa(request.getCorporateName());
         entity.setNameFurigana(request.getCorporateNameKana());
         entity.setNameEn(request.getCompanyNameEnglish());
-        entity.setEmail(request.getCorporateEmail());
+        entity.setEmail(request.getEmail());
         entity.setPhoneNumber(request.getCorporatePhoneNumber());
 
         entity.setPostalCode(request.getPostalCode());
@@ -72,28 +68,23 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
         entity.setRepFirstNameKana(request.getFirstNameKana());
         entity.setRepLastNameKana(request.getLastNameKana());
         entity.setRepPosition(request.getPosition());
-        entity.setRepEmail(request.getEmail());
         entity.setRepPhoneNumber(request.getPhoneNumber());
         entity.setFax(request.getFaxNumber());
 
-        // 5. Generate new company ID (fresh ID for reactivations too)
         String newCompanyId = generateUniqueCompanyId();
         entity.setCompanyId(newCompanyId);
         entity.setRegStatus("PENDING");
         entity.setIsActive(true);
         entity.setContractEndDate(LocalDate.now().plusYears(1));
 
-        // 6. save to database
         ParticipatingCompany savedCompany = repository.save(entity);
         saveRegistrationDetail(savedCompany, request);
 
-        // Notify all operating users regardless of company (simple)
         notificationService.createNotificationForAllOperatingUsers(
                 "新規登録申請のお知らせ",
                 "新しい参加企業の登録申請がありました。企業ID: " + newCompanyId
         );
 
-        // Build detailed email body with all registration info
         String signupTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"));
         String methodologiesStr = Optional.ofNullable(request.getMethodology())
                 .map(list -> String.join(", ", list))
@@ -107,7 +98,6 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
                 + "法人名: " + request.getCorporateName() + "\n"
                 + "法人名カナ: " + request.getCorporateNameKana() + "\n"
                 + "会社名（英語）: " + request.getCompanyNameEnglish() + "\n"
-                + "メールアドレス: " + request.getCorporateEmail() + "\n"
                 + "電話番号: " + request.getCorporatePhoneNumber() + "\n\n"
                 + "■ 住所\n"
                 + "郵便番号: " + request.getPostalCode() + "\n"
@@ -115,7 +105,7 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
                 + "市区町村: " + request.getMunicipality() + "\n"
                 + "番地: " + request.getBlocknum() + "\n"
                 + "建物名: " + request.getBuildingName() + "\n\n"
-                + "■ 代表者情報\n"
+                + "■ 担当者情報\n"
                 + "氏名: " + request.getLastName() + " " + request.getFirstName() + "\n"
                 + "氏名（カナ）: " + request.getLastNameKana() + " " + request.getFirstNameKana() + "\n"
                 + "役職: " + request.getPosition() + "\n"
@@ -126,14 +116,11 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
                 + "選択方法論: " + methodologiesStr + "\n"
                 + "補足説明: " + Optional.ofNullable(request.getActivityInformation()).orElse("なし");
 
-        // Send email to operator company contacts (detailed)
         notificationService.sendEmailToAllOperatorCompanies(
                 "新規登録申請のお知らせ",
                 emailBody
         );
 
-
-        // 7. Return Response
         return new PartiCompanyResponseDetails(
                 "CREATED",
                 "登録申請が完了しました。",

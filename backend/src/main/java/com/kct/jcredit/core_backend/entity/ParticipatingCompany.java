@@ -77,9 +77,6 @@ public class ParticipatingCompany extends BaseEntity {
     @Column(name = "rep_last_name_kana", nullable = false, length = 50)
     private String repLastNameKana;
 
-    @Column(name = "rep_email", nullable = false, length = 254)
-    private String repEmail;
-
     @Column(name = "rep_phone_number", nullable = false, length = 20)
     private String repPhoneNumber;
 
