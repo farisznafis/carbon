@@ -1,4 +1,4 @@
-import { validateSignupCompanyInfo } from '@/api/company';
+﻿import { validateSignupCompanyInfo } from '@/api/company';
 import { ApiError } from '@/api/_shared/errors';
 import {
   FormActions,
@@ -48,7 +48,6 @@ type SignupCompanyValidationPayload = {
   corporateName: string;
   corporateNameKana: string;
   companyNameEnglish: string;
-  corporateEmail: string;
   corporatePhoneNumber: string;
   postalCode: string;
   prefecture: string;
@@ -218,7 +217,6 @@ export const SignupStep1 = () => {
       corporateName: data.companyName,
       corporateNameKana: data.companyNameKana,
       companyNameEnglish: data.companyNameEnglish || '',
-      corporateEmail: data.corporateEmail,
       corporatePhoneNumber: data.corporatePhoneNumber,
       postalCode: data.postalCode,
       prefecture: data.prefecture,
@@ -239,7 +237,7 @@ export const SignupStep1 = () => {
     setIsValidatingCompanyInfo(true);
 
     try {
-      // await validateSignupCompanyInfo(payload);
+      await validateSignupCompanyInfo(payload);
 
       updateSignupData({
         ...data,
@@ -316,20 +314,6 @@ export const SignupStep1 = () => {
                     <RequiredLabel required={false}>会社名（英語）</RequiredLabel>
                     <FormControl>
                       <Input inputSize="sm" placeholder="Sample Corporation" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="corporateEmail"
-                render={({ field }) => (
-                  <FormItem>
-                    <RequiredLabel>法人メールアドレス</RequiredLabel>
-                    <FormControl>
-                      <Input inputSize="sm" type="email" placeholder="name@company.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
