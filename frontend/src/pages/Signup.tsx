@@ -9,7 +9,6 @@ import { SignupStep1 } from './signup/SignupStep1';
 import { SignupStep2 } from './signup/SignupStep2';
 import { SignupStep3 } from './signup/SignupStep3';
 import { SignupStep4 } from './signup/SignupStep4';
-import { cn } from '@/lib/utils';
 
 const steps = [
   { number: 1, title: '法人・個人情報' },

@@ -1,7 +1,9 @@
-// import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
+import type { ReactNode } from 'react';
+import { PasswordInput } from '@/components/inputs';
+import { LoginForm } from '@/components/forms/shared/LoginForm';
 import {
   Form,
   FormControl,
@@ -10,24 +12,19 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { RequiredLabel } from '@/components/forms/shared/RequiredLabel';
-import { PasswordInput } from '@/components/inputs';
 import { Input } from '@/components/ui/input';
-import { LoginForm } from '@/components/forms/shared/LoginForm';
-import {
-  UserLoginFormData,
-  // userLoginSchema,
-} from '@/lib/schemas/loginSchemas';
+import type { UserLoginFormData } from '@/lib/schemas/loginSchemas';
+import { paths } from '@/routes/paths';
 
 type UserLoginFormProps = {
   onSubmit: (values: UserLoginFormData) => Promise<void> | void;
+  header?: ReactNode;
 };
 
-export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
+export function UserLoginForm({ onSubmit, header }: UserLoginFormProps) {
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<UserLoginFormData>({
-    // resolver: zodResolver(userLoginSchema),
     defaultValues: {
       companyId: '',
       email: '',
@@ -41,7 +38,7 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
     try {
       await onSubmit(values);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'エラーが発生しました');
+      setError(err instanceof Error ? err.message : 'ログインに失敗しました');
     }
   };
 
@@ -49,40 +46,24 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} noValidate>
         <LoginForm
-          title='ログイン'
-          submitLabel='ログイン'
+          submitLabel="ログイン"
           error={error}
           isSubmitting={form.formState.isSubmitting}
+          header={header}
           footer={
-            <>
-              <div className='text-center py-6'>
-                <Link
-                  to='/forgot-password'
-                  className='text-sm text-primary hover:underline'
-                >
-                  企業IDまたはパスワードをお忘れの方
-                </Link>
-              </div>
-              <div className='mt-8 border-t border-gray-300 pt-4 text-center'>
-                <a
-                  href='/contact'
-                  className='text-sm text-primary hover:underline'
-                >
-                  ログインに関するお問い合わせはこちら
-                </a>
-              </div>
-            </>
+            <a href="/contact" className="text-sm font-medium text-foreground hover:text-primary">
+              ログインに関するお問い合わせはこちら
+            </a>
           }
         >
           <FormField
             control={form.control}
-            name='companyId'
+            name="companyId"
             render={({ field }) => (
               <FormItem>
-                {/* <RequiredLabel>企業ID</RequiredLabel> */}
-                <FormLabel>企業ID</FormLabel>
+                <FormLabel>会員ID</FormLabel>
                 <FormControl>
-                  <Input type='text' placeholder='企業IDを入力' {...field} />
+                  <Input type="text" placeholder="1234567890111" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -91,13 +72,12 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
 
           <FormField
             control={form.control}
-            name='email'
+            name="email"
             render={({ field }) => (
               <FormItem>
-                {/* <RequiredLabel>メールアドレス</RequiredLabel> */}
                 <FormLabel>メールアドレス</FormLabel>
                 <FormControl>
-                  <Input type='email' placeholder='you@company.com' {...field} />
+                  <Input type="email" placeholder="name@company.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -106,21 +86,26 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
 
           <FormField
             control={form.control}
-            name='password'
+            name="password"
             render={({ field }) => (
               <FormItem>
-                {/* <RequiredLabel>パスワード</RequiredLabel> */}
                 <FormLabel>パスワード</FormLabel>
                 <FormControl>
-                  <PasswordInput
-                    placeholder='パスワードを入力'
-                    {...field}
-                  />
+                  <PasswordInput placeholder="パスワードを入力" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+
+          <div className="text-center">
+            <Link
+              to={paths.forgotPassword}
+              className="text-sm font-medium text-foreground hover:text-primary"
+            >
+              企業IDまたはパスワードをお忘れの方
+            </Link>
+          </div>
         </LoginForm>
       </form>
     </Form>
