@@ -1,4 +1,4 @@
-import { signUp, type SignUpData } from '@/api/auth';
+﻿import { signUp, type SignUpData } from '@/api/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSignup, type SignupData } from '@/contexts/SignupContext';
@@ -30,7 +30,6 @@ function buildSignUpPayload(signupData: SignupData): SignUpData {
     prefecture: signupData.prefecture,
     municipality: signupData.municipality,
     buildingName: signupData.buildingName,
-    town: signupData.town,
     blocknum: signupData.blocknum,
     lastName: signupData.lastName,
     firstName: signupData.firstName,
@@ -64,7 +63,6 @@ export const SignupStep3 = () => {
   const { signupData, setCurrentStep } = useSignup();
   const { toast } = useToast();
   const selectedMethodologies = getSelectedMethodologies(signupData);
-  const activityInformation = signupData.activityInformation || '';
 
   const handleConfirm = async () => {
     try {
@@ -102,9 +100,9 @@ export const SignupStep3 = () => {
   return (
     <div className="space-y-6 animate-slide-up">
       <div className="text-center">
-        <h3 className="text-2xl font-semibold mb-2">入力内容の確認</h3>
+        <h3 className="mb-2 text-2xl font-semibold">登録内容の確認</h3>
         <p className="text-muted-foreground">
-          登録を完了する前に、入力内容を確認してください。
+          入力内容を確認して、問題なければ登録を完了してください。
         </p>
       </div>
 
@@ -114,24 +112,19 @@ export const SignupStep3 = () => {
         </CardHeader>
         <CardContent className="space-y-2">
           <DetailRow label="法人番号" value={signupData.corporateNumber} />
-          <DetailRow label="企業名" value={signupData.companyName} />
-          <DetailRow label="企業名（カナ）" value={signupData.companyNameKana} />
+          <DetailRow label="法人名" value={signupData.companyName} />
+          <DetailRow label="法人名カナ" value={signupData.companyNameKana} />
           {signupData.companyNameEnglish && (
-            <DetailRow
-              label="企業名（英語）"
-              value={signupData.companyNameEnglish}
-            />
+            <DetailRow label="会社名（英語）" value={signupData.companyNameEnglish} />
           )}
-          <DetailRow label="メールアドレス" value={signupData.corporateEmail} />
-          <DetailRow label="電話番号" value={signupData.corporatePhoneNumber} />
+          <DetailRow label="法人メールアドレス" value={signupData.corporateEmail} />
+          <DetailRow label="法人電話番号" value={signupData.corporatePhoneNumber} />
           <DetailRow
             label="所在地"
-            value={`〒${signupData.postalCode} ${signupData.prefecture}${signupData.municipality}${signupData.town}`}
+            value={`〒${signupData.postalCode} ${signupData.prefecture}${signupData.municipality}`}
           />
           <DetailRow label="番地" value={signupData.blocknum} />
-          {signupData.buildingName && (
-            <DetailRow label="建物名" value={signupData.buildingName} />
-          )}
+          {signupData.buildingName && <DetailRow label="建物名" value={signupData.buildingName} />}
         </CardContent>
       </Card>
 
@@ -140,26 +133,21 @@ export const SignupStep3 = () => {
           <CardTitle>担当者情報</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
+          <DetailRow label="氏名" value={`${signupData.lastName} ${signupData.firstName}`} />
           <DetailRow
-            label="氏名"
-            value={`${signupData.lastName} ${signupData.firstName}`}
-          />
-          <DetailRow
-            label="氏名（カナ）"
+            label="氏名カナ"
             value={`${signupData.lastNameKana} ${signupData.firstNameKana}`}
           />
           <DetailRow label="役職" value={signupData.position} />
           <DetailRow label="電話番号" value={signupData.phoneNumber} />
-          {signupData.faxNumber && (
-            <DetailRow label="FAX番号" value={signupData.faxNumber} />
-          )}
-          <DetailRow label="メール" value={signupData.email} />
+          {signupData.faxNumber && <DetailRow label="FAX番号" value={signupData.faxNumber} />}
+          <DetailRow label="メールアドレス" value={signupData.email} />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>参加したいプロジェクト</CardTitle>
+          <CardTitle>参加予定のプロジェクト</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -178,26 +166,20 @@ export const SignupStep3 = () => {
           </div>
 
           <div className="space-y-2 border-l-2 border-muted pl-3">
-            <p className="text-xs font-medium text-muted-foreground">
-              現在の活動情報
-            </p>
-            <p className="whitespace-pre-wrap text-sm">
-              {activityInformation || missingValue}
+            <h4 className="font-medium">活動内容</h4>
+            <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+              {signupData.activityInformation || missingValue}
             </p>
           </div>
         </CardContent>
       </Card>
 
-      <div className="flex gap-4">
-        <Button
-          variant="outline"
-          onClick={() => setCurrentStep(2)}
-          className="w-full"
-        >
+      <div className="flex gap-4 pt-4">
+        <Button type="button" variant="outline" onClick={() => setCurrentStep(2)} className="flex-1">
           戻る
         </Button>
-        <Button onClick={handleConfirm} className="w-full">
-          確認して登録
+        <Button type="button" onClick={handleConfirm} className="flex-1">
+          登録する
         </Button>
       </div>
     </div>

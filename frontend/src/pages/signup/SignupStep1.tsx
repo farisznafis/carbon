@@ -31,7 +31,6 @@ type SignupStep1FormData = {
   postalCode: string;
   prefecture: string;
   municipality: string;
-  town: string;
   blocknum: string;
   buildingName: string;
   lastName: string;
@@ -55,7 +54,6 @@ type SignupCompanyValidationPayload = {
   prefecture: string;
   municipality: string;
   buildingName: string;
-  town: string;
   blocknum: string;
   lastName: string;
   firstName: string;
@@ -77,7 +75,6 @@ const backendFieldToFormField: Partial<Record<string, keyof SignupStep1FormData>
   postalCode: 'postalCode',
   prefecture: 'prefecture',
   municipality: 'municipality',
-  town: 'town',
   blocknum: 'blocknum',
   buildingName: 'buildingName',
   lastName: 'lastName',
@@ -161,7 +158,6 @@ export const SignupStep1 = () => {
       postalCode: signupData.postalCode || '',
       prefecture: signupData.prefecture || '',
       municipality: signupData.municipality || '',
-      town: signupData.town || '',
       blocknum: signupData.blocknum || '',
       buildingName: signupData.buildingName || '',
       lastName: signupData.lastName || '',
@@ -203,7 +199,6 @@ export const SignupStep1 = () => {
         const result = data.results[0];
         form.setValue('prefecture', result.address1, { shouldDirty: true });
         form.setValue('municipality', result.address2, { shouldDirty: true });
-        form.setValue('town', result.address3, { shouldDirty: true });
       }
     } catch (error) {
       if (!(error instanceof DOMException && error.name === 'AbortError')) {
@@ -229,7 +224,6 @@ export const SignupStep1 = () => {
       prefecture: data.prefecture,
       municipality: data.municipality,
       buildingName: data.buildingName || '',
-      town: data.town,
       blocknum: data.blocknum,
       lastName: data.lastName,
       firstName: data.firstName,

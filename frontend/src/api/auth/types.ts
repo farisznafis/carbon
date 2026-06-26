@@ -17,7 +17,6 @@ export interface SignUpData {
   prefecture: string;
   municipality: string;
   buildingName: string;
-  town: string;
   blocknum: string;
   lastName: string;
   firstName: string;

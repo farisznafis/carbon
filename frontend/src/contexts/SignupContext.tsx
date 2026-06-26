@@ -11,7 +11,6 @@ export interface SignupData {
   prefecture: string;
   municipality: string;
   buildingName: string;
-  town: string;
   blocknum: string;
   lastName: string;
   firstName: string;
@@ -44,7 +43,6 @@ const initialData: SignupData = {
   prefecture: '',
   municipality: '',
   buildingName: '',
-  town: '',
   blocknum: '',
   lastName: '',
   firstName: '',
