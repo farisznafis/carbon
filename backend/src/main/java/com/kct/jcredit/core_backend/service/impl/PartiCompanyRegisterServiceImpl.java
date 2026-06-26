@@ -1,12 +1,15 @@
 package com.kct.jcredit.core_backend.service.impl;
 
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
+import com.kct.jcredit.core_backend.dto.request.PartiCompanyInfoValidateRequest;
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyRegisterRequest;
 import com.kct.jcredit.core_backend.dto.response.details.PartiCompanyResponseDetails;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
-import com.kct.jcredit.core_backend.exception.DuplicateResourceException;
+import com.kct.jcredit.core_backend.entity.ParticipatingCompanyRegistrationDetail;
+import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRegistrationDetailRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRegisterRepository;
 import com.kct.jcredit.core_backend.service.PartiCompanyRegisterService;
+import com.kct.jcredit.core_backend.service.PartiCompanySignupValidator;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,30 +27,22 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
 
     private final NotificationService notificationService;
     private final ParticipatingCompanyRegisterRepository repository;
+    private final ParticipatingCompanyRegistrationDetailRepository registrationDetailRepository;
+    private final PartiCompanySignupValidator signupValidator;
+
+    @Override
+    @Transactional(readOnly = true)
+    public void validateCompanyInfo(PartiCompanyInfoValidateRequest request) {
+        signupValidator.validateCompanyInfo(request);
+    }
 
     @Override
     @Transactional
     public PartiCompanyResponseDetails register(PartiCompanyRegisterRequest request) {
 
-        // 1. Tiered duplicate validation — corpNumber is the authoritative unique key
-        //    corpNumber + PENDING → same company already submitted
-        if (repository.findByCorpNumberAndRegStatus(request.getCorporateNumber(), "PENDING").isPresent()) {
-            throw new DuplicateResourceException(ResponseConstants.ALREADY_SUBMITTED, ResponseConstants.MSG_ALREADY_SUBMITTED);
-        }
-        //    corpNumber + APPROVED/other (not PENDING, not REJECTED) → already registered to another party
-        if (repository.existsByCorpNumberAndRegStatusNot(request.getCorporateNumber(), "REJECTED")) {
-            throw new DuplicateResourceException(ResponseConstants.CORP_NUMBER_ALREADY_USED, ResponseConstants.MSG_CORP_NUMBER_ALREADY_USED);
-        }
+        signupValidator.validateCompanyInfo(request);
 
-        // 2. Secondary email checks (different corpNumber → different company, so allow if email+PENDING)
-        if (repository.findByEmailAndRegStatus(request.getCorporateEmail(), "APPROVED").isPresent()) {
-            throw new DuplicateResourceException(ResponseConstants.EMAIL_ALREADY_USED, ResponseConstants.MSG_EMAIL_ALREADY_USED);
-        }
-        if (repository.findByRepEmailAndRegStatus(request.getEmail(), "APPROVED").isPresent()) {
-            throw new DuplicateResourceException(ResponseConstants.EMAIL_ALREADY_USED, ResponseConstants.MSG_EMAIL_ALREADY_USED);
-        }
-
-        // 3. Find REJECTED record for reactivation (corpNumber is authoritative, email as fallback)
+        // Find REJECTED record for reactivation (corpNumber is authoritative, email as fallback)
         ParticipatingCompany entity = repository.findByCorpNumberAndRegStatus(request.getCorporateNumber(), "REJECTED")
                 .or(() -> repository.findByEmailAndRegStatus(request.getCorporateEmail(), "REJECTED"))
                 .or(() -> repository.findByRepEmailAndRegStatus(request.getEmail(), "REJECTED"))
@@ -89,7 +84,8 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
         entity.setContractEndDate(LocalDate.now().plusYears(1));
 
         // 6. save to database
-        repository.save(entity);
+        ParticipatingCompany savedCompany = repository.save(entity);
+        saveRegistrationDetail(savedCompany, request);
 
         // Notify all operating users regardless of company (simple)
         notificationService.createNotificationForAllOperatingUsers(
@@ -154,5 +150,18 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
             companyId = "COMP" + randomNumber;
         } while (repository.existsByCompanyId(companyId));
         return companyId;
+    }
+
+    private void saveRegistrationDetail(ParticipatingCompany company, PartiCompanyRegisterRequest request) {
+        ParticipatingCompanyRegistrationDetail detail = registrationDetailRepository.findByCompany(company)
+                .orElseGet(() -> ParticipatingCompanyRegistrationDetail.builder()
+                        .company(company)
+                        .build());
+
+        detail.setRequestedMethodologies(request.getMethodology());
+        detail.setActivityInformation(request.getActivityInformation());
+        detail.setIsActive(true);
+
+        registrationDetailRepository.save(detail);
     }
 }

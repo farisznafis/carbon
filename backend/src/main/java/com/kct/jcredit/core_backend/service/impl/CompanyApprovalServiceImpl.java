@@ -7,7 +7,9 @@ import com.kct.jcredit.core_backend.dto.response.PendingCompanyListResponse;
 import com.kct.jcredit.core_backend.dto.response.RejectCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.details.CompanyInfoResponse;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
+import com.kct.jcredit.core_backend.entity.ParticipatingCompanyRegistrationDetail;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
+import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRegistrationDetailRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.service.CompanyApprovalService;
@@ -23,6 +25,8 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +40,7 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
     private static final String REG_STATUS_REJECTED = "REJECTED";
 
     private final ParticipatingCompanyRepository companyRepository;
+    private final ParticipatingCompanyRegistrationDetailRepository registrationDetailRepository;
     private final ParticipatingUserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final NotificationService notificationService;
@@ -157,26 +162,42 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
         PendingCompanyListResponse response = new PendingCompanyListResponse();
 
         List<ParticipatingCompany> companies = companyRepository.findByRegStatus(REG_STATUS_PENDING);
+        Map<Integer, ParticipatingCompanyRegistrationDetail> detailByCompanyId = registrationDetailRepository
+            .findByCompanyIn(companies)
+            .stream()
+            .collect(Collectors.toMap(
+                detail -> detail.getCompany().getId(),
+                Function.identity()
+            ));
 
         List<CompanyInfoResponse> details = companies.stream()
-            .map(company -> CompanyInfoResponse.builder()
-                .id(company.getId() != null ? company.getId().toString() : null)
-                .companyId(company.getCompanyId())
-                .nameJA(company.getNameJa())
-                .nameFurigana(company.getNameFurigana())
-                .nameEN(company.getNameEn())
-                .email(company.getEmail())
-                .phoneNumber(company.getPhoneNumber())
-                .fax(company.getFax())
-                .corpNumber(company.getCorpNumber())
-                .address(String.format("%s %s %s %s %s",
-                    company.getPostalCode() != null ? company.getPostalCode() : "",
-                    company.getPrefecture() != null ? company.getPrefecture() : "",
-                    company.getMunicipality() != null ? company.getMunicipality() : "",
-                    company.getBlocknum() != null ? company.getBlocknum() : "",
-                    company.getBuildingName() != null ? company.getBuildingName() : "").trim())
-                .isSuspended(company.isSuspended())
-                .build())
+            .map(company -> {
+                ParticipatingCompanyRegistrationDetail registrationDetail = detailByCompanyId.get(company.getId());
+                return CompanyInfoResponse.builder()
+                    .id(company.getId() != null ? company.getId().toString() : null)
+                    .companyId(company.getCompanyId())
+                    .nameJA(company.getNameJa())
+                    .nameFurigana(company.getNameFurigana())
+                    .nameEN(company.getNameEn())
+                    .email(company.getEmail())
+                    .phoneNumber(company.getPhoneNumber())
+                    .fax(company.getFax())
+                    .corpNumber(company.getCorpNumber())
+                    .address(String.format("%s %s %s %s %s",
+                        company.getPostalCode() != null ? company.getPostalCode() : "",
+                        company.getPrefecture() != null ? company.getPrefecture() : "",
+                        company.getMunicipality() != null ? company.getMunicipality() : "",
+                        company.getBlocknum() != null ? company.getBlocknum() : "",
+                        company.getBuildingName() != null ? company.getBuildingName() : "").trim())
+                    .isSuspended(company.isSuspended())
+                    .requestedMethodologies(registrationDetail != null
+                        ? registrationDetail.getRequestedMethodologies()
+                        : Collections.emptyList())
+                    .activityInformation(registrationDetail != null
+                        ? registrationDetail.getActivityInformation()
+                        : null)
+                    .build();
+            })
             .collect(Collectors.toList());
 
         response.setCompanies(details);

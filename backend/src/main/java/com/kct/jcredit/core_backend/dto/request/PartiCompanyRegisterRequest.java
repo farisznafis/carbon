@@ -8,8 +8,6 @@ import com.kct.jcredit.core_backend.validation.PostalCode;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
 import com.kct.jcredit.core_backend.validation.ZenkakuWithSymbols;
 import com.kct.jcredit.core_backend.validation.Hankaku;
-import com.kct.jcredit.core_backend.validation.HankakuWithSymbols;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -20,7 +18,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -99,7 +96,6 @@ public class PartiCompanyRegisterRequest {
     @PhoneNumber
     private String phoneNumber;
 
-    @NotBlank(message = "FAX番号の形式が正しくありません。（例: 03-1234-5679）")
     @PhoneNumber
     private String faxNumber;
 
@@ -107,6 +103,7 @@ public class PartiCompanyRegisterRequest {
     @Email(message = "メールアドレスの形式が正しくありません。")
     private String email;
 
+    @NotEmpty(message = "方法論を1つ以上選択してください。")
     private List<String> methodology;
 
     private String activityInformation;

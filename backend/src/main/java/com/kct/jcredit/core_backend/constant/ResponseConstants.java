@@ -37,6 +37,7 @@ public class ResponseConstants {
     public static final String MSG_INTERNAL_ERROR = "サイト情報の取得中にエラーが発生しました。";
     public static final String MSG_BAD_REQUEST = "入力値に誤りがあります。";
     public static final String MSG_VALIDATION_ERROR = "入力内容に誤りがあります。";
+    public static final String MSG_VALIDATION_SUCCESS = "入力内容に問題ありません。";
     public static final String MSG_ELPV_EVIDENCE_REQUIRED = "ELpv（電力使用量）の証憑ファイルURLが必須です。";
     public static final String MSG_ELPVR_EVIDENCE_REQUIRED = "ELpvr（電力供給量）の証憑ファイルURLが必須です。";
     public static final String MSG_ELPJ_BATTERY_EVIDENCE_REQUIRED = "ELPJ（バッテリー仕様書）の証憑ファイルURLが必須です。";
