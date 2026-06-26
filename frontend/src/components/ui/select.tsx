@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
+import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
@@ -10,14 +11,34 @@ const SelectGroup = SelectPrimitive.Group;
 
 const SelectValue = SelectPrimitive.Value;
 
+const selectTriggerVariants = cva(
+  "flex w-full items-center justify-between rounded-lg border border-input bg-card text-base text-foreground shadow-app-sm ring-offset-background transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 data-[placeholder]:text-placeholder disabled:cursor-not-allowed disabled:border-transparent disabled:bg-disabled disabled:text-disabled-foreground disabled:shadow-none md:text-sm [&>span]:line-clamp-1",
+  {
+    variants: {
+      selectSize: {
+        sm: "h-10 px-3 py-2",
+        default: "h-12 px-4 py-3",
+        lg: "h-[58px] px-5 py-4",
+      },
+    },
+    defaultVariants: {
+      selectSize: "default",
+    },
+  },
+);
+
+interface SelectTriggerProps
+  extends React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>,
+    VariantProps<typeof selectTriggerVariants> {}
+
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
+  SelectTriggerProps
+>(({ className, children, selectSize, ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-12 w-full items-center justify-between rounded-lg border border-input bg-card px-4 py-3 text-base text-foreground shadow-app-sm ring-offset-background transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 data-[placeholder]:text-placeholder disabled:cursor-not-allowed disabled:border-transparent disabled:bg-disabled disabled:text-disabled-foreground disabled:shadow-none md:text-sm [&>span]:line-clamp-1",
+      selectTriggerVariants({ selectSize }),
       className,
     )}
     {...props}

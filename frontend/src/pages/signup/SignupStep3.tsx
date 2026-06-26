@@ -28,8 +28,8 @@ function buildSignUpPayload(signupData: SignupData): SignUpData {
     corporatePhoneNumber: signupData.corporatePhoneNumber,
     postalCode: signupData.postalCode,
     prefecture: signupData.prefecture,
-    city: signupData.city,
-    address: signupData.address,
+    municipality: signupData.municipality,
+    buildingName: signupData.buildingName,
     town: signupData.town,
     blocknum: signupData.blocknum,
     lastName: signupData.lastName,
@@ -126,11 +126,12 @@ export const SignupStep3 = () => {
           <DetailRow label="電話番号" value={signupData.corporatePhoneNumber} />
           <DetailRow
             label="所在地"
-            value={`〒${signupData.postalCode} ${signupData.prefecture}${signupData.city}`}
+            value={`〒${signupData.postalCode} ${signupData.prefecture}${signupData.municipality}${signupData.town}`}
           />
-          <DetailRow label="住所" value={signupData.address} />
-          <DetailRow label="町名" value={signupData.town} />
           <DetailRow label="番地" value={signupData.blocknum} />
+          {signupData.buildingName && (
+            <DetailRow label="建物名" value={signupData.buildingName} />
+          )}
         </CardContent>
       </Card>
 

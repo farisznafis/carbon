@@ -1,6 +1,23 @@
-import { useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import {
+  FormActions,
+  FormCard,
+  FormSection,
+  FormSectionStack,
+} from '@/components/forms/form-layout';
+import { RequiredLabel } from '@/components/forms/shared';
+import { DeleteAlertDialog } from '@/components/feedback/DeleteAlertDialog/DeleteAlertDialog';
+import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
 import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -9,34 +26,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Resolver, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import type { SiteFormData } from '@/api/site';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from '@/components/ui/form';
-import { RequiredLabel } from '@/components/forms/shared';
-import { SiteSchema } from '@/lib/validations';
 import { prefectures } from '@/lib/constants/prefectures';
-import { Separator } from '@/components/ui/separator';
-import { DeleteAlertDialog } from '@/components/feedback/DeleteAlertDialog/DeleteAlertDialog';
-import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
 
 export type { SiteFormData } from '@/api/site';
-
-const editSiteSchema = SiteSchema.pick({
-  postalCode: true,
-  prefectureName: true,
-  cityName: true,
-  townName: true,
-  blockName: true,
-  addressDetail: true,
-});
 
 interface SiteFormProps {
   mode: 'create' | 'edit';
@@ -47,6 +40,7 @@ interface SiteFormProps {
   defaultValues?: Partial<SiteFormData>;
   disablePicFields?: boolean;
   disableSubmit?: boolean;
+  embedded?: boolean;
 }
 
 export function SiteForm({
@@ -56,12 +50,11 @@ export function SiteForm({
   onNext,
   onDelete,
   defaultValues,
-  disablePicFields = false,
   disableSubmit = false,
+  embedded = false,
 }: Readonly<SiteFormProps>) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const navigate = useNavigate();
-
   const isCreateMode = mode === 'create';
 
   const defaultData = useMemo(() => ({
@@ -100,14 +93,7 @@ export function SiteForm({
     picPosition: originalData?.picPosition ?? '',
   }), [originalData]);
 
-  const formSchema = isCreateMode ? SiteSchema : editSiteSchema;
-  const shouldDisablePicFields = isCreateMode && disablePicFields;
-  const picInputClassName = shouldDisablePicFields
-    ? 'disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100'
-    : undefined;
-
   const form = useForm<SiteFormData>({
-    // resolver: zodResolver(formSchema) as Resolver<SiteFormData>,
     defaultValues: defaultData,
   });
 
@@ -115,8 +101,7 @@ export function SiteForm({
     form.reset(defaultData);
   }, [defaultData, form]);
 
-  const { watch } = form;
-  const values = watch();
+  const values = form.watch();
 
   const isDirty = useMemo(() => {
     const currentValues = isCreateMode
@@ -144,36 +129,59 @@ export function SiteForm({
     return JSON.stringify(currentValues) !== JSON.stringify(initialValues);
   }, [values, initialFormData, isCreateMode]);
 
-  return (
-    <FormPageWrapper
-      pageName={mode === 'create' ? '拠点登録' : '拠点編集'}
-      title=''
-      onBack={() => navigate(-1)}
-      backText='戻る'
-    >
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit((formValues) => {
-            onChange(formValues);
-            onNext();
-          })}
-          className='space-y-4'
-        >
-          {isCreateMode && (
-            <>
-              <div className='text-2xl pb-2'>拠点情報</div>
+  const submitLabel = isCreateMode ? '確認' : '更新';
 
+  const formContent = (
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit((formValues) => {
+          onChange(formValues);
+          onNext();
+        })}
+      >
+        <FormCard>
+          <FormSectionStack spacing="relaxed">
+            {isCreateMode && (
+              <FormSection number={1} title="拠点情報">
+                <FormField
+                  control={form.control}
+                  name="siteName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <RequiredLabel>拠点名</RequiredLabel>
+                      <FormControl>
+                        <Input inputSize="sm" placeholder="東京本社" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="siteNameKana"
+                  render={({ field }) => (
+                    <FormItem>
+                      <RequiredLabel>拠点名（カナ）</RequiredLabel>
+                      <FormControl>
+                        <Input inputSize="sm" placeholder="トウキョウホンシャ" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </FormSection>
+            )}
+
+            <FormSection number={isCreateMode ? 2 : 1} title="所在地">
               <FormField
                 control={form.control}
-                name='siteName'
+                name="postalCode"
                 render={({ field }) => (
                   <FormItem>
-                    <RequiredLabel>拠点名</RequiredLabel>
+                    <RequiredLabel>郵便番号（ハイフン無し）</RequiredLabel>
                     <FormControl>
-                      <Input
-                        placeholder='東京本社'
-                        {...field}
-                      />
+                      <Input inputSize="sm" placeholder="1000001" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -182,206 +190,147 @@ export function SiteForm({
 
               <FormField
                 control={form.control}
-                name='siteNameKana'
+                name="prefectureName"
                 render={({ field }) => (
                   <FormItem>
-                    <RequiredLabel>拠点名（カナ）</RequiredLabel>
+                    <RequiredLabel>都道府県</RequiredLabel>
+                    <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                      <FormControl>
+                        <SelectTrigger selectSize="sm">
+                          <SelectValue placeholder="都道府県を選択" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="z-50 bg-background">
+                        {prefectures.map((prefecture) => (
+                          <SelectItem key={prefecture} value={prefecture}>
+                            {prefecture}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="cityName"
+                render={({ field }) => (
+                  <FormItem>
+                    <RequiredLabel>市区町村</RequiredLabel>
                     <FormControl>
-                      <Input
-                        placeholder='トウキョウホンシャ'
-                        {...field}
-                      />
+                      <Input inputSize="sm" placeholder="千代田区" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <Separator />
-              <br />
-
-              <div className='text-2xl pb-2'>所在地</div>
-            </>
-          )}
-
-          {!isCreateMode && (
-            <>
-              <div className='text-2xl pb-2'>所在地</div>
-            </>
-          )}
-
-          <div className='flex items-end gap-2'>
-            <FormField
-              control={form.control}
-              name='postalCode'
-              render={({ field }) => (
-                <FormItem className='flex-1'>
-                  <RequiredLabel>郵便番号（ハイフン無し）</RequiredLabel>
-                  <FormControl>
-                    <Input
-                      placeholder='1000001'
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* <Button
-              type='button'
-              variant='outline'
-            >
-              検索
-            </Button> */}
-          </div>
-
-          <FormField
-            control={form.control}
-            name='prefectureName'
-            render={({ field }) => (
-              <FormItem>
-                <RequiredLabel>都道府県</RequiredLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value ?? ''}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder='都道府県を選択' />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {prefectures.map((pref) => (
-                      <SelectItem
-                        key={pref}
-                        value={pref}
-                      >
-                        {pref}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name='cityName'
-            render={({ field }) => (
-              <FormItem>
-                <RequiredLabel>市区町村</RequiredLabel>
-                <FormControl>
-                  <Input
-                    placeholder='千代田区'
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name='townName'
-            render={({ field }) => (
-              <FormItem>
-                <RequiredLabel>町域</RequiredLabel>
-                <FormControl>
-                  <Input
-                    placeholder='千代田'
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name='blockName'
-            render={({ field }) => (
-              <FormItem>
-                <RequiredLabel>番地</RequiredLabel>
-                <FormControl>
-                  <Input
-                    placeholder='1-1-1'
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {isCreateMode && (
-            <>
               <FormField
                 control={form.control}
-                name='addressDetail'
+                name="townName"
+                render={({ field }) => (
+                  <FormItem>
+                    <RequiredLabel>町域</RequiredLabel>
+                    <FormControl>
+                      <Input inputSize="sm" placeholder="千代田" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="blockName"
+                render={({ field }) => (
+                  <FormItem>
+                    <RequiredLabel>番地</RequiredLabel>
+                    <FormControl>
+                      <Input inputSize="sm" placeholder="1-1-1" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="addressDetail"
                 render={({ field }) => (
                   <FormItem>
                     <RequiredLabel required={false}>建物名・部屋番号</RequiredLabel>
                     <FormControl>
-                      <Input
-                        placeholder='東京ビル3F305室'
-                        {...field}
-                      />
+                      <Input inputSize="sm" placeholder="東京ビル3F305室" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            </FormSection>
 
-              <input type="hidden" {...form.register('picLastName')} />
-              <input type="hidden" {...form.register('picLastNameKana')} />
-              <input type="hidden" {...form.register('picFirstName')} />
-              <input type="hidden" {...form.register('picFirstNameKana')} />
-              <input type="hidden" {...form.register('picEmail')} />
-              <input type="hidden" {...form.register('picPhoneNumber')} />
-              <input type="hidden" {...form.register('picPosition')} />
-              
-            </>
-          )}
+            {isCreateMode && (
+              <>
+                <input type="hidden" {...form.register('picLastName')} />
+                <input type="hidden" {...form.register('picLastNameKana')} />
+                <input type="hidden" {...form.register('picFirstName')} />
+                <input type="hidden" {...form.register('picFirstNameKana')} />
+                <input type="hidden" {...form.register('picEmail')} />
+                <input type="hidden" {...form.register('picPhoneNumber')} />
+                <input type="hidden" {...form.register('picPosition')} />
+              </>
+            )}
 
-          <div className='flex justify-between items-center gap-4 w-full py-8'>
-            {isCreateMode ? <div className='w-[72px]' /> : (
-              onDelete ? (
+            <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {!isCreateMode && onDelete ? (
                 <DeleteAlertDialog
-                  label='拠点'
+                  label="拠点"
                   open={isDeleteDialogOpen}
                   onOpenChange={setIsDeleteDialogOpen}
                   onDelete={onDelete}
                 />
               ) : (
-                <div className='w-[72px]' />
-              )
-            )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => navigate(-1)}
+                >
+                  キャンセル
+                </Button>
+              )}
 
-            <div className='flex gap-4'>
               <Button
-                type='button'
-                variant='outline'
-                onClick={() => navigate(-1)}
-              >
-                キャンセル
-              </Button>
-              <Button
-                type='submit'
+                type="submit"
+                size="sm"
+                className="w-full"
                 disabled={!isDirty || disableSubmit}
               >
-                {mode === 'create' ? '登録' : '更新'}
+                {submitLabel}
               </Button>
-            </div>
-          </div>
+            </FormActions>
+          </FormSectionStack>
+        </FormCard>
+      </form>
+    </Form>
+  );
 
-          <Separator />
-        </form>
-      </Form>
+  if (embedded) {
+    return formContent;
+  }
+
+  return (
+    <FormPageWrapper
+      pageName={mode === 'create' ? '拠点登録' : '拠点編集'}
+      title=""
+      onBack={() => navigate(-1)}
+      backText="戻る"
+      contentMaxWidth="max-w-[768px]"
+      wrapInCard={false}
+    >
+      {formContent}
     </FormPageWrapper>
   );
 }

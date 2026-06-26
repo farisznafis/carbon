@@ -9,8 +9,8 @@ export interface SignupData {
   corporatePhoneNumber: string;
   postalCode: string;
   prefecture: string;
-  city: string;
-  address: string;
+  municipality: string;
+  buildingName: string;
   town: string;
   blocknum: string;
   lastName: string;
@@ -42,8 +42,8 @@ const initialData: SignupData = {
   corporatePhoneNumber: '',
   postalCode: '',
   prefecture: '',
-  city: '',
-  address: '',
+  municipality: '',
+  buildingName: '',
   town: '',
   blocknum: '',
   lastName: '',

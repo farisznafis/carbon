@@ -113,7 +113,7 @@ export function CancelRequestHistoryTable({
       title={
         showTitle ? (
           <p className='text-2xl font-bold flex items-center gap-2'>
-            取り消し一覧
+            取消一覧
           </p>
         ) : undefined
       }
@@ -122,7 +122,7 @@ export function CancelRequestHistoryTable({
       actions={actions}
       height='max-h-[420px]'
       emptyState={
-        <p className='text-muted-foreground'>取り消し一覧はありません</p>
+        <p className='text-muted-foreground'>取消一覧はありません</p>
       }
       />
       <PaginationControls
