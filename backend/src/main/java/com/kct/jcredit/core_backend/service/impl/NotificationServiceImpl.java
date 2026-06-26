@@ -52,18 +52,18 @@ public class NotificationServiceImpl implements NotificationService {
         String subject = "アカウント停止のお知らせ";
         String body = "お客様のアカウントは現在停止されています。\n" +
             "お支払い方法: " + company.getPaymentMethod();
-        sendMail(company.getRepEmail(), subject, body);
+        sendMail(company.getEmail(), subject, body);
         log.info("[NOTIFICATION] Account Suspension - Company: {}, Email: {}",
-            company.getCompanyId(), company.getRepEmail());
+            company.getCompanyId(), company.getEmail());
     }
 
     @Override
     public void sendReactivationNotification(ParticipatingCompany company) {
         String subject = "アカウント再開のお知らせ";
         String body = "企業 ID: " + company.getCompanyId() + " のアカウントが再開されました。";
-        sendMail(company.getRepEmail(), subject, body);
+        sendMail(company.getEmail(), subject, body);
         log.info("[NOTIFICATION] Account Reactivation - Company: {}, Email: {}",
-            company.getCompanyId(), company.getRepEmail());
+            company.getCompanyId(), company.getEmail());
     }
 
     @Override
@@ -79,9 +79,9 @@ public class NotificationServiceImpl implements NotificationService {
     public void sendMasterAccountCredentials(ParticipatingCompany company, String username, String plainPassword) {
         String subject = "マスターアカウント発行のお知らせ";
         String body = "企業 ID: " + company.getCompanyId() + "\nUsername: " + username + "\nPassword: " + plainPassword;
-        sendMail(company.getRepEmail(), subject, body);
+        sendMail(company.getEmail(), subject, body);
         log.info("[NOTIFICATION] Master Account Created - Company: {}, Email: {}",
-                company.getCompanyId(), company.getRepEmail());
+                company.getCompanyId(), company.getEmail());
     }
 
     @Override
@@ -94,9 +94,9 @@ public class NotificationServiceImpl implements NotificationService {
             + "却下理由:\n"
             + rejectionReason + "\n\n"
             + "ご不明点がございましたら、お問い合わせください。";
-        sendMail(company.getRepEmail(), subject, body);
+        sendMail(company.getEmail(), subject, body);
         log.info("[NOTIFICATION] Company Rejected - Company: {}, Email: {}",
-            company.getCompanyId(), company.getRepEmail());
+            company.getCompanyId(), company.getEmail());
     }
 
 

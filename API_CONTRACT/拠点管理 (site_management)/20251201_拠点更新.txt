@@ -5,13 +5,14 @@ Content-Type: application/json
 Request Body (JSON): 
 {
   
+ "siteName": "ABC工場";
   "postalCode": "1234567",
   "prefecture": "東京",
   "municipality": "渋谷区桜丘町",
   "blocknum": "1-1"
   "buildingName": "サンプルビル 3F",
   "SiteName": "拠点例",
-  "PICUserID": "124",
+  "PICUserId": "1234" //担当者id
 
 }
 

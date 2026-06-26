@@ -64,7 +64,7 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
             return response;
         }
 
-        String masterUsername = company.getRepEmail();
+        String masterUsername = company.getEmail();
         if (userRepository.existsByUsername(masterUsername)) {
             response.setStatusCode(ResponseConstants.USED_USERNAME);
             response.setMessage(ResponseConstants.MSG_USED_USERNAME);
@@ -85,7 +85,7 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
                 .firstNameKana(company.getRepFirstNameKana())
                 .lastName(company.getRepLastName())
                 .lastNameKana(company.getRepLastNameKana())
-                .email(company.getRepEmail())
+                .email(company.getEmail())
                 .phoneNumber(company.getRepPhoneNumber())
                 .password(passwordEncoder.encode(plainPassword))
                 .role(RoleConstants.MASTER)
@@ -160,23 +160,27 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
 
         List<CompanyInfoResponse> details = companies.stream()
             .map(company -> CompanyInfoResponse.builder()
-                .id(company.getId() != null ? company.getId().toString() : null)
-                .companyId(company.getCompanyId())
-                .nameJA(company.getNameJa())
-                .nameFurigana(company.getNameFurigana())
-                .nameEN(company.getNameEn())
-                .email(company.getEmail())
-                .phoneNumber(company.getPhoneNumber())
-                .fax(company.getFax())
-                .corpNumber(company.getCorpNumber())
-                .address(String.format("%s %s %s %s %s",
-                    company.getPostalCode() != null ? company.getPostalCode() : "",
-                    company.getPrefecture() != null ? company.getPrefecture() : "",
-                    company.getMunicipality() != null ? company.getMunicipality() : "",
-                    company.getBlocknum() != null ? company.getBlocknum() : "",
-                    company.getBuildingName() != null ? company.getBuildingName() : "").trim())
-                .isSuspended(company.isSuspended())
-                .build())
+                    .id(company.getId() != null ? company.getId().toString() : null)
+                    .companyId(company.getCompanyId())
+                    .nameJA(company.getNameJa())
+                    .nameFurigana(company.getNameFurigana())
+                    .nameEN(company.getNameEn())
+                    .email(company.getEmail())
+                    .phoneNumber(company.getPhoneNumber())
+                    .fax(company.getFax())
+                    .corpNumber(company.getCorpNumber())
+                    .address(String.format("%s %s %s %s %s",
+                        company.getPostalCode() != null ? company.getPostalCode() : "",
+                        company.getPrefecture() != null ? company.getPrefecture() : "",
+                        company.getMunicipality() != null ? company.getMunicipality() : "",
+                        company.getBlocknum() != null ? company.getBlocknum() : "",
+                        company.getBuildingName() != null ? company.getBuildingName() : "").trim())
+                    .isSuspended(company.isSuspended())
+                    .requestedMethodologies(company.getRequestedMethodologies() != null
+                        ? company.getRequestedMethodologies()
+                        : Collections.emptyList())
+                    .activityInformation(company.getActivityInformation())
+                    .build())
             .collect(Collectors.toList());
 
         response.setCompanies(details);

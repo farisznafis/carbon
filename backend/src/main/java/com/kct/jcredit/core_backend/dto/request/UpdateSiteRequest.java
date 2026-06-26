@@ -18,9 +18,6 @@ public class UpdateSiteRequest {
     @Size(max = 255, message = "サイト名は255文字以内で入力してください。")
     private String siteName;
 
-    @Size(max = 255, message = "サイト名カナは255文字以内で入力してください。")
-    private String siteNameKana; // optional
-
     @PostalCode
     private String postalCode;
 
@@ -38,6 +35,9 @@ public class UpdateSiteRequest {
 
     @Size(max = 255, message = "建物名は255文字以内で入力してください。")
     private String buildingName;
+
+    @Min(value = 1, message = "ユーザIDは1以上の数値を指定してください。")
+    private Integer PICUserId;  
 
     // サイトID 
     @Min(value = 1, message = "サイトIDは1以上の数値を指定してください。")
