@@ -17,7 +17,9 @@ import { logger } from '@/lib/logger';
 import { useDashboardStore } from '@/stores/dashboardStore';
 
 const mapUserToForm = (user: UserList | undefined): UserFormData => {
-  const userWithPosition = user as (UserList & { userPosition?: string }) | undefined;
+  const userWithPosition = user as
+    | (UserList & { userPosition?: string })
+    | undefined;
 
   return {
     username: user?.username ?? '',
@@ -76,7 +78,7 @@ export default function UserEdit() {
       }
 
       toast({
-        title: '成功',
+        title: '更新完了',
         description: 'ユーザーを更新しました',
       });
 
@@ -107,7 +109,7 @@ export default function UserEdit() {
       }
 
       toast({
-        title: '成功',
+        title: '削除完了',
         description: 'ユーザーを削除しました',
       });
 
@@ -169,7 +171,9 @@ export default function UserEdit() {
           onDelete={handleDelete}
           siteOptions={sitesQuery.data?.sites ?? []}
           isSiteOptionsLoading={sitesQuery.isLoading}
-          siteOptionsError={sitesQuery.isError ? '拠点を取得できませんでした' : null}
+          siteOptionsError={
+            sitesQuery.isError ? '拠点を取得できませんでした' : null
+          }
           embedded
         />
       </FormPageContent>

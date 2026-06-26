@@ -1,12 +1,12 @@
-﻿import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import type { Site } from '@/api/site';
+import { deleteSite, updateSite } from '@/api/site';
 import { SiteForm, SiteFormData } from '@/features/master/forms/SiteForm';
 import { SiteConfirmation } from './SiteConfirmation';
 import { toast } from '@/hooks/use-toast';
-import { useDashboardStore } from '@/stores/dashboardStore';
-import { updateSite, deleteSite } from '@/api/site';
-import type { Site } from '@/api/site';
 import { logger } from '@/lib/logger';
+import { useDashboardStore } from '@/stores/dashboardStore';
 
 function SiteEdit() {
   const navigate = useNavigate();
@@ -16,7 +16,9 @@ function SiteEdit() {
   const sites = useDashboardStore((state) => state.sites) ?? [];
   const initialSite = sites.find((site) => site.id === id);
 
-  const [formData, setFormData] = useState<SiteFormData | undefined>(undefined);
+  const [formData, setFormData] = useState<SiteFormData | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     if (initialSite) {
@@ -29,15 +31,14 @@ function SiteEdit() {
   const { joinableSites } = useDashboardStore();
 
   if (!id) {
-    return <div>隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ...</div>;
+    return <div>読み込み中...</div>;
   }
 
   if (!initialSite) {
-    return <div>隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ...</div>;
+    return <div>読み込み中...</div>;
   }
 
   const handleFormSubmit = () => {
-    // if (!formData) return;
     setStep('confirm');
   };
 
@@ -69,16 +70,16 @@ function SiteEdit() {
       editSite(id, updatedSite);
 
       toast({
-        title: '謌仙粥',
-        description: '諡轤ｹ繧堤ｷｨ髮・＠縺ｾ縺励◆',
+        title: '更新完了',
+        description: '拠点を更新しました',
       });
 
       navigate('/master/dashboard');
     } catch (error) {
       logger.error('SiteEdit handleSubmit error:', error);
       toast({
-        title: '繧ｨ繝ｩ繝ｼ',
-        description: '諡轤ｹ邱ｨ髮・↓螟ｱ謨励＠縺ｾ縺励◆',
+        title: 'エラー',
+        description: '拠点更新に失敗しました',
         variant: 'destructive',
       });
     }
@@ -93,8 +94,9 @@ function SiteEdit() {
 
     if (!joinableSites().some((site) => site.id === id)) {
       toast({
-        title: '繧ｨ繝ｩ繝ｼ',
-        description: 'この拠点には削除できない利用データがあるため、削除できません。',
+        title: 'エラー',
+        description:
+          'この拠点には削除できない利用データがあるため、削除できません。',
         variant: 'destructive',
       });
       return;
@@ -105,16 +107,16 @@ function SiteEdit() {
       deleteSiteStore(id);
 
       toast({
-        title: '謌仙粥',
-        description: '諡轤ｹ繧貞炎髯､縺励∪縺励◆',
+        title: '削除完了',
+        description: '拠点を削除しました',
       });
 
       navigate('/master/dashboard');
     } catch (error) {
       logger.error(error);
       toast({
-        title: '繧ｨ繝ｩ繝ｼ',
-        description: '蜑企勁荳ｭ縺ｫ繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆',
+        title: 'エラー',
+        description: '削除中にエラーが発生しました',
         variant: 'destructive',
       });
     }

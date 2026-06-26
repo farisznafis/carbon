@@ -47,8 +47,8 @@ export function AdminLoginForm({ onSubmit }: AdminLoginFormProps) {
           isSubmitting={form.formState.isSubmitting}
           header={
             <header className="text-center">
-              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-xl bg-secondary text-primary">
-                <LogIn className="h-8 w-8" />
+              <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-primary">
+                <LogIn className="h-6 w-6" />
               </div>
               <h1>管理者ログイン</h1>
               <p className="mt-4 text-[20px] font-medium leading-[28px] text-foreground">
