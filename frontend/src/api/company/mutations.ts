@@ -1,5 +1,10 @@
-import { apiVoidRequest } from '../_shared/httpClient';
-import type { Company, UpdateCompanyResponse } from './types';
+import { apiRequest, apiVoidRequest } from '../_shared/httpClient';
+import type {
+  Company,
+  UpdateCompanyResponse,
+  ValidateSignupCompanyInfoPayload,
+  ValidateSignupCompanyInfoResponse,
+} from './types';
 
 export const updateCompany = async (
   company: Partial<Company>,
@@ -12,4 +17,15 @@ export const updateCompany = async (
   });
 
   return { statusCode: 'OK', company: mergedData ?? (company as Company) };
+};
+
+export const validateSignupCompanyInfo = async (
+  payload: ValidateSignupCompanyInfoPayload,
+): Promise<ValidateSignupCompanyInfoResponse> => {
+  return apiRequest<ValidateSignupCompanyInfoResponse>('/company/signup/company-info/validate', {
+    method: 'POST',
+    auth: false,
+    body: payload,
+    fallbackErrorMessage: 'Failed to validate signup company info',
+  });
 };

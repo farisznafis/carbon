@@ -347,7 +347,7 @@ const ProjectDetail = () => {
           <div className='flex items-start justify-between mb-4'>
             <div>
               <h1 className='mb-2'>{project.name}</h1>
-              <p className='text-muted-foreground text-lg'>
+              <p className='text-mutged-foreground text-lg'>
                 {project.description}
               </p>
             </div>

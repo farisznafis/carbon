@@ -1,2 +1,7 @@
-export { updateCompany } from './mutations';
-export type { Company, UpdateCompanyResponse } from './types';
+export { updateCompany, validateSignupCompanyInfo } from './mutations';
+export type {
+  Company,
+  UpdateCompanyResponse,
+  ValidateSignupCompanyInfoPayload,
+  ValidateSignupCompanyInfoResponse,
+} from './types';

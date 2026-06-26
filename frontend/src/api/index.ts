@@ -56,8 +56,12 @@ export type {
   UserProfileResponse,
 } from "./users";
 
-export { updateCompany } from "./company";
-export type { UpdateCompanyResponse } from "./company";
+export { updateCompany, validateSignupCompanyInfo } from "./company";
+export type {
+  UpdateCompanyResponse,
+  ValidateSignupCompanyInfoPayload,
+  ValidateSignupCompanyInfoResponse,
+} from "./company";
 
 export {
   approvePendingCompany,
