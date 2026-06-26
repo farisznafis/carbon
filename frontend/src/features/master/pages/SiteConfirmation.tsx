@@ -1,7 +1,17 @@
 import { useState } from 'react';
-import { SiteFormData } from '@/features/master/forms/SiteForm';
+import {
+  FormActions,
+  FormCard,
+  FormPageContent,
+  FormPageTitle,
+  FormSection,
+  FormSectionStack,
+  FormStandalonePage,
+} from '@/components/forms/form-layout';
 import { ConfirmationItem } from '@/components/feedback/Confirmation/ConfirmationItem';
-import { ConfirmationLayout } from '@/components/feedback/Confirmation/ConfirmationLayout';
+import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { Button } from '@/components/ui/button';
+import { SiteFormData } from '@/features/master/forms/SiteForm';
 
 interface SiteConfirmationProps {
   mode: 'create' | 'edit';
@@ -10,6 +20,16 @@ interface SiteConfirmationProps {
   onBack: () => void;
   onSubmit: () => void;
 }
+
+const displayValue = (value?: string | null) => {
+  const trimmedValue = value?.trim();
+  return trimmedValue ? trimmedValue : 'なし';
+};
+
+const originalValue = (
+  value: string | undefined,
+  isCreateMode: boolean,
+) => (isCreateMode ? undefined : displayValue(value));
 
 export function SiteConfirmation({
   mode,
@@ -23,117 +43,106 @@ export function SiteConfirmation({
   if (!data) return <div>読み込み中...</div>;
 
   const isCreateMode = mode === 'create';
+  const pageTitle = isCreateMode ? '拠点情報の確認' : '拠点編集の確認';
+  const confirmLabel = isCreateMode ? '登録' : '更新';
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    await onSubmit();
-    setIsSubmitting(false);
+
+    try {
+      await onSubmit();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <ConfirmationLayout
-      pageName={isCreateMode ? '拠点情報の確認' : '拠点編集の確認'}
-      title={isCreateMode ? '登録内容' : '更新内容'}
-      description='以下の内容をご確認ください。'
-      onBack={onBack}
-      // backText={isCreateMode ? '拠点登録に戻る' : '拠点編集に戻る'}
-      backText={isCreateMode ? '戻る' : '戻る'}
-      onConfirm={handleSubmit}
-      isSubmitting={isSubmitting}
-    >
-      <ConfirmationItem
-        label='郵便番号'
-        value={data.postalCode}
-        originalValue={originalData.postalCode}
+    <FormStandalonePage watermark={isCreateMode ? 'Site Add' : 'Site Edit'}>
+      <PageBackButton
+        onClick={onBack}
+        label=""
+        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
       />
 
-      <ConfirmationItem
-        label='都道府県'
-        value={data.prefectureName}
-        originalValue={originalData.prefectureName}
-      />
+      <FormPageContent>
+        <div className="space-y-3">
+          <FormPageTitle>{pageTitle}</FormPageTitle>
+          <p className="text-small text-muted-foreground">
+            内容をご確認ください。
+          </p>
+        </div>
 
-      <ConfirmationItem
-        label='市区町村'
-        value={data.cityName}
-        originalValue={originalData.cityName}
-      />
+        <FormCard>
+          <FormSectionStack spacing="relaxed">
+            <FormSection number={1} title="拠点情報">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <ConfirmationItem
+                  label="拠点名"
+                  value={displayValue(data.siteName)}
+                  originalValue={originalValue(originalData.siteName, isCreateMode)}
+                />
+                <ConfirmationItem
+                  label="拠点名カナ"
+                  value={displayValue(data.siteNameKana)}
+                  originalValue={originalValue(originalData.siteNameKana, isCreateMode)}
+                />
+              </div>
+            </FormSection>
 
-      <ConfirmationItem
-        label='町域'
-        value={data.townName}
-        originalValue={originalData.townName}
-      />
+            <FormSection number={2} title="所在地">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <ConfirmationItem
+                  label="郵便番号"
+                  value={displayValue(data.postalCode)}
+                  originalValue={originalValue(originalData.postalCode, isCreateMode)}
+                />
+                <ConfirmationItem
+                  label="都道府県"
+                  value={displayValue(data.prefectureName)}
+                  originalValue={originalValue(originalData.prefectureName, isCreateMode)}
+                />
+                <ConfirmationItem
+                  label="市区町村"
+                  value={displayValue(data.cityName)}
+                  originalValue={originalValue(originalData.cityName, isCreateMode)}
+                />
+                <ConfirmationItem
+                  label="番地"
+                  value={displayValue(data.blockName)}
+                  originalValue={originalValue(originalData.blockName, isCreateMode)}
+                />
+                <ConfirmationItem
+                  label="建物名・部屋番号"
+                  value={displayValue(data.addressDetail)}
+                  originalValue={originalValue(originalData.addressDetail, isCreateMode)}
+                />
+              </div>
+            </FormSection>
 
-      <ConfirmationItem
-        label='番地'
-        value={data.blockName || 'なし'}
-        originalValue={originalData.blockName}
-      />
-
-      <ConfirmationItem
-        label='建物名・部屋番号'
-        value={data.addressDetail || 'なし'}
-        originalValue={originalData.addressDetail}
-      />
-
-      {isCreateMode && (
-        <>
-          <ConfirmationItem
-            label='拠点名'
-            value={data.siteName}
-            originalValue={originalData.siteName}
-          />
-
-          <ConfirmationItem
-            label='拠点名（カナ）'
-            value={data.siteNameKana}
-            originalValue={originalData.siteNameKana}
-          />
-
-          <ConfirmationItem
-            label='担当者（姓）'
-            value={data.picLastName}
-            originalValue={originalData.picLastName}
-          />
-
-          <ConfirmationItem
-            label='担当者（姓カナ）'
-            value={data.picLastNameKana}
-            originalValue={originalData.picLastNameKana}
-          />
-
-          <ConfirmationItem
-            label='担当者（名）'
-            value={data.picFirstName}
-            originalValue={originalData.picFirstName}
-          />
-
-          <ConfirmationItem
-            label='担当者（名カナ）'
-            value={data.picFirstNameKana}
-            originalValue={originalData.picFirstNameKana}
-          />
-
-          <ConfirmationItem
-            label='担当者メールアドレス'
-            value={data.picEmail}
-            originalValue={originalData.picEmail}
-          />
-
-          <ConfirmationItem
-            label='担当者電話番号'
-            value={data.picPhoneNumber}
-            originalValue={originalData.picPhoneNumber}
-          />
-
-          <ConfirmationItem
-            label='担当者役職'
-            value={data.picPosition}
-            originalValue={originalData.picPosition}
-          />
-        </>
-      )}
-    </ConfirmationLayout>
+            <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={onBack}
+                disabled={isSubmitting}
+              >
+                戻る
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                className="w-full"
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? '送信中...' : confirmLabel}
+              </Button>
+            </FormActions>
+          </FormSectionStack>
+        </FormCard>
+      </FormPageContent>
+    </FormStandalonePage>
   );
 }

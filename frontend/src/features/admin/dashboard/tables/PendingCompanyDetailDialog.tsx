@@ -1,7 +1,7 @@
 ﻿import { useState } from 'react';
+import type { PendingCompanyItem } from '@/api/admin/pendingCompanies';
 import { ChevronDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import type { PendingCompanyItem } from '@/api/admin/pendingCompanies';
 
 function FieldRow({
   label,
@@ -80,11 +80,11 @@ export function PendingCompanyDetailDialog({
             <h3 className="mb-4 text-sm font-bold">申請内容</h3>
             <div className="space-y-4">
               <div>
-                <div className="mb-2 text-xs text-muted-foreground">参加したいプロジェクト</div>
+                <div className="mb-2 text-xs text-muted-foreground">requestedMethodologies</div>
                 <ListValue items={item?.requestedMethodologies ?? []} />
               </div>
               <FieldRow
-                label="現在の活動情報"
+                label="activityInformation"
                 value={item?.activityInformation}
                 className="whitespace-pre-wrap"
               />
@@ -98,6 +98,7 @@ export function PendingCompanyDetailDialog({
                 {item.methodologies.map((methodology, idx) => (
                   <div key={idx} className="overflow-hidden rounded-lg border bg-white">
                     <button
+                      type="button"
                       onClick={() => toggleAccordion(idx)}
                       className="flex w-full items-center justify-between p-3 transition-colors hover:bg-slate-100"
                     >
@@ -118,11 +119,7 @@ export function PendingCompanyDetailDialog({
 
                     {expandedIndex === idx && (
                       <div className="space-y-4 border-t bg-slate-50 p-3">
-                        {methodology.remarks && (
-                          <div>
-                            <FieldRow label="備考" value={methodology.remarks} />
-                          </div>
-                        )}
+                        {methodology.remarks && <FieldRow label="備考" value={methodology.remarks} />}
 
                         {methodology.equipmentItems && methodology.equipmentItems.length > 0 && (
                           <div className="border-t pt-3">

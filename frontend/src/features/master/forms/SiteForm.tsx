@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -54,44 +54,51 @@ export function SiteForm({
   embedded = false,
 }: Readonly<SiteFormProps>) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const postalCodeLookupAbortRef = useRef<AbortController | null>(null);
   const navigate = useNavigate();
   const isCreateMode = mode === 'create';
 
-  const defaultData = useMemo(() => ({
-    siteName: defaultValues?.siteName ?? '',
-    siteNameKana: defaultValues?.siteNameKana ?? '',
-    postalCode: defaultValues?.postalCode ?? '',
-    prefectureName: defaultValues?.prefectureName ?? '',
-    cityName: defaultValues?.cityName ?? '',
-    townName: defaultValues?.townName ?? '',
-    blockName: defaultValues?.blockName ?? '',
-    addressDetail: defaultValues?.addressDetail ?? '',
-    picFirstName: defaultValues?.picFirstName ?? '',
-    picFirstNameKana: defaultValues?.picFirstNameKana ?? '',
-    picLastName: defaultValues?.picLastName ?? '',
-    picLastNameKana: defaultValues?.picLastNameKana ?? '',
-    picEmail: defaultValues?.picEmail ?? '',
-    picPhoneNumber: defaultValues?.picPhoneNumber ?? '',
-    picPosition: defaultValues?.picPosition ?? '',
-  }), [defaultValues]);
+  const defaultData = useMemo(
+    () => ({
+      siteName: defaultValues?.siteName ?? '',
+      siteNameKana: defaultValues?.siteNameKana ?? '',
+      postalCode: defaultValues?.postalCode ?? '',
+      prefectureName: defaultValues?.prefectureName ?? '',
+      cityName: defaultValues?.cityName ?? '',
+      townName: defaultValues?.townName ?? '',
+      blockName: defaultValues?.blockName ?? '',
+      addressDetail: defaultValues?.addressDetail ?? '',
+      picFirstName: defaultValues?.picFirstName ?? '',
+      picFirstNameKana: defaultValues?.picFirstNameKana ?? '',
+      picLastName: defaultValues?.picLastName ?? '',
+      picLastNameKana: defaultValues?.picLastNameKana ?? '',
+      picEmail: defaultValues?.picEmail ?? '',
+      picPhoneNumber: defaultValues?.picPhoneNumber ?? '',
+      picPosition: defaultValues?.picPosition ?? '',
+    }),
+    [defaultValues],
+  );
 
-  const initialFormData = useMemo(() => ({
-    siteName: originalData?.siteName ?? '',
-    siteNameKana: originalData?.siteNameKana ?? '',
-    postalCode: originalData?.postalCode ?? '',
-    prefectureName: originalData?.prefectureName ?? '',
-    cityName: originalData?.cityName ?? '',
-    townName: originalData?.townName ?? '',
-    blockName: originalData?.blockName ?? '',
-    addressDetail: originalData?.addressDetail ?? '',
-    picFirstName: originalData?.picFirstName ?? '',
-    picFirstNameKana: originalData?.picFirstNameKana ?? '',
-    picLastName: originalData?.picLastName ?? '',
-    picLastNameKana: originalData?.picLastNameKana ?? '',
-    picEmail: originalData?.picEmail ?? '',
-    picPhoneNumber: originalData?.picPhoneNumber ?? '',
-    picPosition: originalData?.picPosition ?? '',
-  }), [originalData]);
+  const initialFormData = useMemo(
+    () => ({
+      siteName: originalData?.siteName ?? '',
+      siteNameKana: originalData?.siteNameKana ?? '',
+      postalCode: originalData?.postalCode ?? '',
+      prefectureName: originalData?.prefectureName ?? '',
+      cityName: originalData?.cityName ?? '',
+      townName: originalData?.townName ?? '',
+      blockName: originalData?.blockName ?? '',
+      addressDetail: originalData?.addressDetail ?? '',
+      picFirstName: originalData?.picFirstName ?? '',
+      picFirstNameKana: originalData?.picFirstNameKana ?? '',
+      picLastName: originalData?.picLastName ?? '',
+      picLastNameKana: originalData?.picLastNameKana ?? '',
+      picEmail: originalData?.picEmail ?? '',
+      picPhoneNumber: originalData?.picPhoneNumber ?? '',
+      picPosition: originalData?.picPosition ?? '',
+    }),
+    [originalData],
+  );
 
   const form = useForm<SiteFormData>({
     defaultValues: defaultData,
@@ -100,6 +107,40 @@ export function SiteForm({
   useEffect(() => {
     form.reset(defaultData);
   }, [defaultData, form]);
+
+  const handlePostalCodeChange = async (
+    postalCode: string,
+    onChange: (value: string) => void,
+  ) => {
+    onChange(postalCode);
+
+    const cleanedCode = postalCode.replace(/[^0-9]/g, '');
+
+    if (cleanedCode.length !== 7) {
+      return;
+    }
+
+    postalCodeLookupAbortRef.current?.abort();
+    const controller = new AbortController();
+    postalCodeLookupAbortRef.current = controller;
+
+    try {
+      const response = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${cleanedCode}`, {
+        signal: controller.signal,
+      });
+      const data = await response.json();
+
+      if (data.results && data.results.length > 0) {
+        const result = data.results[0];
+        form.setValue('prefectureName', result.address1, { shouldDirty: true });
+        form.setValue('cityName', result.address2, { shouldDirty: true });
+      }
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        console.error('Failed to fetch address:', error);
+      }
+    }
+  };
 
   const values = form.watch();
 
@@ -110,7 +151,6 @@ export function SiteForm({
           postalCode: values.postalCode,
           prefectureName: values.prefectureName,
           cityName: values.cityName,
-          townName: values.townName,
           blockName: values.blockName,
           addressDetail: values.addressDetail,
         };
@@ -121,7 +161,6 @@ export function SiteForm({
           postalCode: initialFormData.postalCode,
           prefectureName: initialFormData.prefectureName,
           cityName: initialFormData.cityName,
-          townName: initialFormData.townName,
           blockName: initialFormData.blockName,
           addressDetail: initialFormData.addressDetail,
         };
@@ -129,7 +168,7 @@ export function SiteForm({
     return JSON.stringify(currentValues) !== JSON.stringify(initialValues);
   }, [values, initialFormData, isCreateMode]);
 
-  const submitLabel = isCreateMode ? '確認' : '更新';
+  const submitLabel = isCreateMode ? '登録' : '更新';
 
   const formContent = (
     <Form {...form}>
@@ -162,7 +201,7 @@ export function SiteForm({
                   name="siteNameKana"
                   render={({ field }) => (
                     <FormItem>
-                      <RequiredLabel>拠点名（カナ）</RequiredLabel>
+                      <RequiredLabel>拠点名カナ</RequiredLabel>
                       <FormControl>
                         <Input inputSize="sm" placeholder="トウキョウホンシャ" {...field} />
                       </FormControl>
@@ -181,7 +220,12 @@ export function SiteForm({
                   <FormItem>
                     <RequiredLabel>郵便番号（ハイフン無し）</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="1000001" {...field} />
+                      <Input
+                        inputSize="sm"
+                        placeholder="1000001"
+                        {...field}
+                        onChange={(e) => handlePostalCodeChange(e.target.value, field.onChange)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -229,20 +273,6 @@ export function SiteForm({
 
               <FormField
                 control={form.control}
-                name="townName"
-                render={({ field }) => (
-                  <FormItem>
-                    <RequiredLabel>町域</RequiredLabel>
-                    <FormControl>
-                      <Input inputSize="sm" placeholder="千代田" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
                 name="blockName"
                 render={({ field }) => (
                   <FormItem>
@@ -262,7 +292,7 @@ export function SiteForm({
                   <FormItem>
                     <RequiredLabel required={false}>建物名・部屋番号</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="東京ビル3F305室" {...field} />
+                      <Input inputSize="sm" placeholder="東京ビル3F 305号" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

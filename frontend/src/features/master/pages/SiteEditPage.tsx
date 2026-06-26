@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+﻿import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { SiteForm, SiteFormData } from '@/features/master/forms/SiteForm';
 import { SiteConfirmation } from './SiteConfirmation';
@@ -29,11 +29,11 @@ function SiteEdit() {
   const { joinableSites } = useDashboardStore();
 
   if (!id) {
-    return <div>読み込み中...</div>;
+    return <div>隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ...</div>;
   }
 
   if (!initialSite) {
-    return <div>読み込み中...</div>;
+    return <div>隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ...</div>;
   }
 
   const handleFormSubmit = () => {
@@ -59,7 +59,6 @@ function SiteEdit() {
           [
             formData.prefectureName,
             formData.cityName,
-            formData.townName,
             formData.blockName,
             formData.addressDetail,
           ]
@@ -70,16 +69,16 @@ function SiteEdit() {
       editSite(id, updatedSite);
 
       toast({
-        title: '成功',
-        description: '拠点を編集しました',
+        title: '謌仙粥',
+        description: '諡轤ｹ繧堤ｷｨ髮・＠縺ｾ縺励◆',
       });
 
       navigate('/master/dashboard');
     } catch (error) {
       logger.error('SiteEdit handleSubmit error:', error);
       toast({
-        title: 'エラー',
-        description: '拠点編集に失敗しました',
+        title: '繧ｨ繝ｩ繝ｼ',
+        description: '諡轤ｹ邱ｨ髮・↓螟ｱ謨励＠縺ｾ縺励◆',
         variant: 'destructive',
       });
     }
@@ -94,8 +93,8 @@ function SiteEdit() {
 
     if (!joinableSites().some((site) => site.id === id)) {
       toast({
-        title: 'エラー',
-        description: 'この拠点には割り当てられたユーザが存在するため、削除できません。',
+        title: '繧ｨ繝ｩ繝ｼ',
+        description: 'この拠点には削除できない利用データがあるため、削除できません。',
         variant: 'destructive',
       });
       return;
@@ -106,16 +105,16 @@ function SiteEdit() {
       deleteSiteStore(id);
 
       toast({
-        title: '成功',
-        description: '拠点を削除しました',
+        title: '謌仙粥',
+        description: '諡轤ｹ繧貞炎髯､縺励∪縺励◆',
       });
 
       navigate('/master/dashboard');
     } catch (error) {
       logger.error(error);
       toast({
-        title: 'エラー',
-        description: '削除中にエラーが発生しました',
+        title: '繧ｨ繝ｩ繝ｼ',
+        description: '蜑企勁荳ｭ縺ｫ繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆',
         variant: 'destructive',
       });
     }
