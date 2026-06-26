@@ -4,8 +4,6 @@ import com.kct.jcredit.core_backend.dto.request.PartiCompanyInfoValidateRequest;
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyRegisterRequest;
 import com.kct.jcredit.core_backend.dto.response.details.PartiCompanyResponseDetails;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
-import com.kct.jcredit.core_backend.entity.ParticipatingCompanyRegistrationDetail;
-import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRegistrationDetailRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRegisterRepository;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.service.PartiCompanyRegisterService;
@@ -26,7 +24,6 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
 
     private final NotificationService notificationService;
     private final ParticipatingCompanyRegisterRepository repository;
-    private final ParticipatingCompanyRegistrationDetailRepository registrationDetailRepository;
     private final PartiCompanySignupValidator signupValidator;
 
     @Override
@@ -70,6 +67,8 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
         entity.setRepPosition(request.getPosition());
         entity.setRepPhoneNumber(request.getPhoneNumber());
         entity.setFax(request.getFaxNumber());
+        entity.setRequestedMethodologies(request.getMethodology());
+        entity.setActivityInformation(request.getActivityInformation());
 
         String newCompanyId = generateUniqueCompanyId();
         entity.setCompanyId(newCompanyId);
@@ -77,8 +76,7 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
         entity.setIsActive(true);
         entity.setContractEndDate(LocalDate.now().plusYears(1));
 
-        ParticipatingCompany savedCompany = repository.save(entity);
-        saveRegistrationDetail(savedCompany, request);
+        repository.save(entity);
 
         notificationService.createNotificationForAllOperatingUsers(
                 "新規登録申請のお知らせ",
@@ -137,18 +135,5 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
             companyId = "COMP" + randomNumber;
         } while (repository.existsByCompanyId(companyId));
         return companyId;
-    }
-
-    private void saveRegistrationDetail(ParticipatingCompany company, PartiCompanyRegisterRequest request) {
-        ParticipatingCompanyRegistrationDetail detail = registrationDetailRepository.findByCompany(company)
-                .orElseGet(() -> ParticipatingCompanyRegistrationDetail.builder()
-                        .company(company)
-                        .build());
-
-        detail.setRequestedMethodologies(request.getMethodology());
-        detail.setActivityInformation(request.getActivityInformation());
-        detail.setIsActive(true);
-
-        registrationDetailRepository.save(detail);
     }
 }

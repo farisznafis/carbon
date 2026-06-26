@@ -8,7 +8,6 @@ import com.kct.jcredit.core_backend.dto.response.RejectCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.details.CompanyInfoResponse;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
-import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRegistrationDetailRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.service.CompanyApprovalService;
@@ -28,7 +27,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.transaction.TransactionStatus;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,9 +46,6 @@ class CompanyApprovalServiceImplTest {
 
     @Mock
     private ParticipatingCompanyRepository companyRepository;
-
-    @Mock
-    private ParticipatingCompanyRegistrationDetailRepository registrationDetailRepository;
 
     @Mock
     private ParticipatingUserRepository userRepository;
@@ -485,6 +480,8 @@ class CompanyApprovalServiceImplTest {
         when(companyWithId.getPhoneNumber()).thenReturn("0123456789");
         when(companyWithId.getFax()).thenReturn("0123456780");
         when(companyWithId.getCorpNumber()).thenReturn("1234567890123");
+        when(companyWithId.getRequestedMethodologies()).thenReturn(List.of("method-1", "method-2"));
+        when(companyWithId.getActivityInformation()).thenReturn("activity info");
         when(companyWithId.getBuildingName()).thenReturn("熊本県熊本市");
         when(companyWithId.isSuspended()).thenReturn(false);
 
@@ -493,9 +490,7 @@ class CompanyApprovalServiceImplTest {
         when(companyWithNullId.getCompanyId()).thenReturn("COMP002");
 
         when(companyRepository.findByRegStatus(REG_STATUS_PENDING))
-                .thenReturn(Arrays.asList(companyWithId, companyWithNullId));
-        when(registrationDetailRepository.findByCompanyIn(Arrays.asList(companyWithId, companyWithNullId)))
-                .thenReturn(List.of());
+                .thenReturn(List.of(companyWithId, companyWithNullId));
 
         // Act
         PendingCompanyListResponse response = companyApprovalService.getPendingCompanies();
@@ -514,6 +509,8 @@ class CompanyApprovalServiceImplTest {
         assertThat(first.getPhoneNumber()).isEqualTo("0123456789");
         assertThat(first.getFax()).isEqualTo("0123456780");
         assertThat(first.getCorpNumber()).isEqualTo("1234567890123");
+        assertThat(first.getRequestedMethodologies()).containsExactly("method-1", "method-2");
+        assertThat(first.getActivityInformation()).isEqualTo("activity info");
         assertThat(first.getAddress()).isEqualTo("熊本県熊本市");
         assertThat(first.getIsSuspended()).isFalse();
 
@@ -527,8 +524,6 @@ class CompanyApprovalServiceImplTest {
     void getPendingCompanies_noData_returnsEmptyList() {
         // Arrange
         when(companyRepository.findByRegStatus(REG_STATUS_PENDING)).thenReturn(List.of());
-        when(registrationDetailRepository.findByCompanyIn(List.of())).thenReturn(List.of());
-
         // Act
         PendingCompanyListResponse response = companyApprovalService.getPendingCompanies();
 

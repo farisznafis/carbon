@@ -3,6 +3,7 @@ package com.kct.jcredit.core_backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.kct.jcredit.core_backend.converter.StringListJsonConverter;
 import com.kct.jcredit.core_backend.entity.base.BaseEntity;
 import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
 
@@ -82,6 +83,13 @@ public class ParticipatingCompany extends BaseEntity {
 
     @Column(name = "rep_position", nullable = false, length = 100)
     private String repPosition;
+
+    @Convert(converter = StringListJsonConverter.class)
+    @Column(name = "requested_methodologies", columnDefinition = "TEXT")
+    private List<String> requestedMethodologies;
+
+    @Column(name = "activity_information", columnDefinition = "TEXT")
+    private String activityInformation;
 
     @Column(name = "reg_status", length = 20)
     private String regStatus;
