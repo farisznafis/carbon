@@ -19,14 +19,9 @@ public interface ParticipatingCompanyRegisterRepository extends JpaRepository<Pa
     boolean existsByEmailAndRegStatusNot(@Param("email") String email, @Param("regStatus") String regStatus);
 
     @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END " +
-           "FROM ParticipatingCompany c WHERE c.repEmail = :repEmail AND c.regStatus <> :regStatus")
-    boolean existsByRepEmailAndRegStatusNot(@Param("repEmail") String repEmail, @Param("regStatus") String regStatus);
-
-    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END " +
            "FROM ParticipatingCompany c WHERE c.corpNumber = :corpNumber AND c.regStatus <> :regStatus")
     boolean existsByCorpNumberAndRegStatusNot(@Param("corpNumber") String corpNumber, @Param("regStatus") String regStatus);
 
     Optional<ParticipatingCompany> findByEmailAndRegStatus(String email, String regStatus);
-    Optional<ParticipatingCompany> findByRepEmailAndRegStatus(String repEmail, String regStatus);
     Optional<ParticipatingCompany> findByCorpNumberAndRegStatus(String corpNumber, String regStatus);
 }

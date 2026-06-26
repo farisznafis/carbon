@@ -23,5 +23,7 @@ public class CompanyInfoResponse {
     private String corpNumber;
     private String address;
     private Boolean isSuspended;
+    private List<String> requestedMethodologies;
+    private String activityInformation;
     private List<MethodologyInfoResponse> methodologies;
 }

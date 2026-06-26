@@ -27,7 +27,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.transaction.TransactionStatus;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,8 +69,9 @@ class CompanyApprovalServiceImplTest {
         String repEmail = "rep@example.com";
 
         ParticipatingCompany company = mock(ParticipatingCompany.class);
+        when(company.getId()).thenReturn(Id);
         when(company.getRegStatus()).thenReturn(REG_STATUS_PENDING);
-        when(company.getRepEmail()).thenReturn(repEmail);
+        when(company.getEmail()).thenReturn(repEmail);
         when(company.getRepFirstName()).thenReturn("Taro");
         when(company.getRepFirstNameKana()).thenReturn("タロウ");
         when(company.getRepLastName()).thenReturn("Yamada");
@@ -102,7 +102,7 @@ class CompanyApprovalServiceImplTest {
         assertThat(savedUser.getUsername()).isEqualTo(repEmail);
         assertThat(savedUser.getEmail()).isEqualTo(repEmail);
         assertThat(savedUser.getRole()).isEqualTo(RoleConstants.MASTER);
-        assertThat(savedUser.getCompany().getId()).isEqualTo(companyId);
+        assertThat(savedUser.getCompany().getId()).isEqualTo(Id);
         assertThat(savedUser.getPassword()).isEqualTo("ENCODED_PASSWORD");
 
         verify(notificationService).sendMasterAccountCredentials(eq(company), eq(repEmail), anyString());
@@ -118,8 +118,9 @@ class CompanyApprovalServiceImplTest {
         String repEmail = "rep2@example.com";
 
         ParticipatingCompany company = mock(ParticipatingCompany.class);
+        when(company.getId()).thenReturn(Id);
         when(company.getRegStatus()).thenReturn("pending"); //verifikasi equalsIgnoreCase
-        when(company.getRepEmail()).thenReturn(repEmail);
+        when(company.getEmail()).thenReturn(repEmail);
 
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
         when(userRepository.findByCompany_IdAndRole(Id, role))
@@ -204,6 +205,7 @@ class CompanyApprovalServiceImplTest {
         Integer Id = 123;
         String role = "master";
         ParticipatingCompany company = mock(ParticipatingCompany.class);
+        when(company.getId()).thenReturn(Id);
         when(company.getRegStatus()).thenReturn(REG_STATUS_PENDING);
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
         when(userRepository.findByCompany_IdAndRole(Id, role))
@@ -231,8 +233,9 @@ class CompanyApprovalServiceImplTest {
         String role = "master";
         String repEmail = "rep@example.com";
         ParticipatingCompany company = mock(ParticipatingCompany.class);
+        when(company.getId()).thenReturn(Id);
         when(company.getRegStatus()).thenReturn(REG_STATUS_PENDING);
-        when(company.getRepEmail()).thenReturn(repEmail);
+        when(company.getEmail()).thenReturn(repEmail);
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
         when(userRepository.findByCompany_IdAndRole(Id, role))
                 .thenReturn(Optional.empty());
@@ -259,8 +262,9 @@ class CompanyApprovalServiceImplTest {
         String role = "master";
         String repEmail = "rep@example.com";
         ParticipatingCompany company = mock(ParticipatingCompany.class);
+        when(company.getId()).thenReturn(Id);
         when(company.getRegStatus()).thenReturn(REG_STATUS_PENDING);
-        when(company.getRepEmail()).thenReturn(repEmail);
+        when(company.getEmail()).thenReturn(repEmail);
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
         when(userRepository.findByCompany_IdAndRole(Id, role))
                 .thenReturn(Optional.empty());
@@ -287,8 +291,9 @@ class CompanyApprovalServiceImplTest {
         String role = "master";
         String repEmail = "rep@example.com";
         ParticipatingCompany company = mock(ParticipatingCompany.class);
+        when(company.getId()).thenReturn(Id);
         when(company.getRegStatus()).thenReturn(REG_STATUS_PENDING);
-        when(company.getRepEmail()).thenReturn(repEmail);
+        when(company.getEmail()).thenReturn(repEmail);
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
         when(userRepository.findByCompany_IdAndRole(Id, role))
                 .thenReturn(Optional.empty());
@@ -325,8 +330,9 @@ class CompanyApprovalServiceImplTest {
         String role = "master";
         String repEmail = "rep@example.com";
         ParticipatingCompany company = mock(ParticipatingCompany.class);
+        when(company.getId()).thenReturn(Id);
         when(company.getRegStatus()).thenReturn(REG_STATUS_PENDING);
-        when(company.getRepEmail()).thenReturn(repEmail);
+        when(company.getEmail()).thenReturn(repEmail);
         when(companyRepository.findByCompanyId(companyId)).thenReturn(Optional.of(company));
         when(userRepository.findByCompany_IdAndRole(Id, role))
                 .thenReturn(Optional.empty());
@@ -474,6 +480,8 @@ class CompanyApprovalServiceImplTest {
         when(companyWithId.getPhoneNumber()).thenReturn("0123456789");
         when(companyWithId.getFax()).thenReturn("0123456780");
         when(companyWithId.getCorpNumber()).thenReturn("1234567890123");
+        when(companyWithId.getRequestedMethodologies()).thenReturn(List.of("method-1", "method-2"));
+        when(companyWithId.getActivityInformation()).thenReturn("activity info");
         when(companyWithId.getBuildingName()).thenReturn("熊本県熊本市");
         when(companyWithId.isSuspended()).thenReturn(false);
 
@@ -482,7 +490,7 @@ class CompanyApprovalServiceImplTest {
         when(companyWithNullId.getCompanyId()).thenReturn("COMP002");
 
         when(companyRepository.findByRegStatus(REG_STATUS_PENDING))
-                .thenReturn(Arrays.asList(companyWithId, companyWithNullId));
+                .thenReturn(List.of(companyWithId, companyWithNullId));
 
         // Act
         PendingCompanyListResponse response = companyApprovalService.getPendingCompanies();
@@ -501,6 +509,8 @@ class CompanyApprovalServiceImplTest {
         assertThat(first.getPhoneNumber()).isEqualTo("0123456789");
         assertThat(first.getFax()).isEqualTo("0123456780");
         assertThat(first.getCorpNumber()).isEqualTo("1234567890123");
+        assertThat(first.getRequestedMethodologies()).containsExactly("method-1", "method-2");
+        assertThat(first.getActivityInformation()).isEqualTo("activity info");
         assertThat(first.getAddress()).isEqualTo("熊本県熊本市");
         assertThat(first.getIsSuspended()).isFalse();
 
@@ -514,7 +524,6 @@ class CompanyApprovalServiceImplTest {
     void getPendingCompanies_noData_returnsEmptyList() {
         // Arrange
         when(companyRepository.findByRegStatus(REG_STATUS_PENDING)).thenReturn(List.of());
-
         // Act
         PendingCompanyListResponse response = companyApprovalService.getPendingCompanies();
 
