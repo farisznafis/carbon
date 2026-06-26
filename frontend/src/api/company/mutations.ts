@@ -4,6 +4,8 @@ import type {
   UpdateCompanyResponse,
   ValidateSignupCompanyInfoPayload,
   ValidateSignupCompanyInfoResponse,
+  ValidateSignupMethodologyPayload,
+  ValidateSignupMethodologyResponse,
 } from './types';
 
 export const updateCompany = async (
@@ -27,5 +29,16 @@ export const validateSignupCompanyInfo = async (
     auth: false,
     body: payload,
     fallbackErrorMessage: 'Failed to validate signup company info',
+  });
+};
+
+export const validateSignupMethodology = async (
+  payload: ValidateSignupMethodologyPayload,
+): Promise<ValidateSignupMethodologyResponse> => {
+  return apiRequest<ValidateSignupMethodologyResponse>('/company/signup/methodology/validate', {
+    method: 'POST',
+    auth: false,
+    body: payload,
+    fallbackErrorMessage: 'Failed to validate signup methodology',
   });
 };

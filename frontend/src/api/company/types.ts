@@ -37,3 +37,16 @@ export type ValidateSignupCompanyInfoResponse = {
   success?: boolean;
   valid?: boolean;
 };
+
+export type ValidateSignupMethodologyPayload = {
+  methodology: string[];
+  activityInformation: string;
+};
+
+export type ValidateSignupMethodologyResponse = {
+  statusCode?: string;
+  message?: string;
+  errors?: Record<string, string>;
+  success?: boolean;
+  valid?: boolean;
+};

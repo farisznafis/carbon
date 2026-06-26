@@ -1,5 +1,4 @@
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm, type UseFormReturn } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -13,6 +12,9 @@ import {
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { useSignup } from '@/contexts/SignupContext';
+import { validateSignupMethodology } from '@/api/company';
+import { ApiError } from '@/api/_shared/errors';
+import { useToast } from '@/hooks/use-toast';
 import {
   defaultMethodologyValues,
   MethodologyFormData,
@@ -20,12 +22,13 @@ import {
   participationMethodologies,
 } from './signupStep2Model';
 import { RequiredLabel } from '@/components/forms/shared/RequiredLabel';
+import { logger } from '@/lib/logger';
 
 export const SignupStep2 = () => {
   const { signupData, updateSignupData, setCurrentStep } = useSignup();
+  const { toast } = useToast();
 
   const form = useForm<MethodologyFormData>({
-    // resolver: zodResolver(methodologyFormSchema),
     mode: 'onChange',
     defaultValues: {
       methodology:
@@ -38,15 +41,83 @@ export const SignupStep2 = () => {
     },
   });
 
-  const handleNext = (data: MethodologyFormData) => {
+  function toMessage(value: unknown): string {
+    if (typeof value === 'string') {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      return value.map(toMessage).filter(Boolean).join('\n');
+    }
+
+    if (value && typeof value === 'object' && 'message' in value) {
+      return toMessage((value as { message?: unknown }).message);
+    }
+
+    return '';
+  }
+
+  function applyBackendValidationErrors(
+    formInstance: UseFormReturn<MethodologyFormData>,
+    error: unknown,
+  ): string | null {
+    if (!(error instanceof ApiError)) {
+      return error instanceof Error ? error.message : null;
+    }
+
+    const errors = error.payload?.errors;
+    let applied = false;
+
+    if (errors && typeof errors === 'object' && !Array.isArray(errors)) {
+      Object.entries(errors).forEach(([field, value]) => {
+        const message = toMessage(value);
+
+        if (!message || !(field in formInstance.getValues())) {
+          return;
+        }
+
+        formInstance.setError(field as keyof MethodologyFormData, {
+          type: 'server',
+          message,
+        });
+        applied = true;
+      });
+    }
+
+    if (applied) {
+      return null;
+    }
+
+    return error.payload?.message || error.message;
+  }
+
+  const handleNext = async (data: MethodologyFormData) => {
     const activityInformation = data.activityInformation.trim();
 
-    updateSignupData({
-      methodology: data.methodology,
-      activityInformation,
-    });
+    form.clearErrors();
 
-    setCurrentStep(3);
+    try {
+      await validateSignupMethodology({
+        methodology: data.methodology,
+        activityInformation,
+      });
+
+      updateSignupData({
+        methodology: data.methodology,
+        activityInformation,
+      });
+
+      setCurrentStep(3);
+    } catch (error) {
+      const message = applyBackendValidationErrors(form, error);
+
+      toast({
+        title: '入力内容を確認してください',
+        description: message || '入力内容に誤りがあります。',
+        variant: 'destructive',
+      });
+      logger.error('Signup step 2 validation failed:', error);
+    }
   };
 
   return (
