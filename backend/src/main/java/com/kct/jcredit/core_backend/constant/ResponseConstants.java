@@ -53,6 +53,8 @@ public class ResponseConstants {
     public static final String MSG_MONITORING_RECORD_NOT_FOUND = "監視レコードが見つかりませんでした。";
     public static final String MSG_MONITORING_RECORD_REGISTERED = "監視レコードが正常に登録されました。";
     public static final String MSG_LOGIN_FAILED = "ユーザー名またはパスワードまたは企業IDが正しくありません。";
+    public static final String MSG_USER_LOGIN_FAILED = "企業IDまたはメールアドレスまたはユーザー名またはパスワードが正しくありません。";
+    public static final String MSG_OPERATOR_LOGIN_FAILED = "メールアドレスまたはユーザー名またはパスワードが正しくありません。";
     public static final String MSG_UNEXPEXTED_ERROR = "想定外エラーがあります。";
     public static final String MSG_FORBIDDEN = "このリソースにアクセスすることができません。";
     public static final String MSG_INVALID_CURRENT_PASSWORD = "現在のパスワードが正しくありません。";
