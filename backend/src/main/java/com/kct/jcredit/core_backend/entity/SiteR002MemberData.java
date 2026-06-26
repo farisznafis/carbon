@@ -44,7 +44,7 @@ public class SiteR002MemberData extends BaseEntity {
     @Column(name = "methodology_number", length = 3, unique = true, columnDefinition = "CHAR(3)")
     private String methodologyNumber;
 
-    @Column(name = "is_eligible", nullable = false)
+    @Column(name = "is_eligible")
     private Boolean isEligible;
 
     @Column(name = "equipment_op_date", nullable = false)

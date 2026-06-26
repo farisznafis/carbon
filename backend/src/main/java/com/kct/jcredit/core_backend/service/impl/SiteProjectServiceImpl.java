@@ -162,7 +162,6 @@ public class SiteProjectServiceImpl implements SiteProjectService {
                             .tempId(item.getTempId())
                             .equipmentId(saved.getId())
                             .methodologyNumber(saved.getMethodologyNumber())
-                            .isEligible(saved.getIsEligible())
                             .equipmentOpDate(saved.getEquipmentOpDate())
                             .nominalMaxOutput(saved.getNominalMaxOutput())
                             .pcsManufacturer(saved.getPcsManufacturer())
@@ -189,7 +188,7 @@ public class SiteProjectServiceImpl implements SiteProjectService {
                 })
                 .collect(Collectors.toList());
 
-        // TnC insert DynamoDB after commit
+        // TnC and files insert DynamoDB and s3 after commit
         final Integer participationId = relation.getId();
 
         TransactionSynchronizationManager.registerSynchronization(
@@ -316,6 +315,39 @@ public class SiteProjectServiceImpl implements SiteProjectService {
     }
 
     // ─────────────────────────────────────────────────────────────
+    // QUERY — Jigyousha default auto
+    // ─────────────────────────────────────────────────────────────
+
+    @Override
+    public JigyoushaDefaultResponse getJigyoushaDefault(Integer siteId, Integer projectId) {
+
+        Site site = siteRepository.findById(siteId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND,
+                        ResponseConstants.MSG_SITE_NOT_FOUND));
+
+        projectRepository.findById(projectId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND,
+                        ResponseConstants.MSG_PROJECT_NOT_FOUND));
+
+        siteProjectRelationRepository
+                .findBySiteIdAndProjectId(siteId, projectId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND,
+                        ResponseConstants.MSG_SITE_PROJECT_RELATION_NOT_FOUND));
+
+        ParticipatingCompany company = site.getCompany();
+        String repName = company.getRepLastName() + company.getRepFirstName();
+
+        return JigyoushaDefaultResponse.builder()
+                .companyName(company.getNameJa())
+                .repName(repName)
+                .repRole(company.getRepPosition())
+                .build();
+    }
+
+    // ─────────────────────────────────────────────────────────────
     // VALIDATION — Final agreement
     // ─────────────────────────────────────────────────────────────
 
@@ -327,26 +359,6 @@ public class SiteProjectServiceImpl implements SiteProjectService {
     @Override
     public void validateFinalAgreement(EquipmentRegisterSolarRequest request) {
         validateFinalAgreementCore(request.getIsAgreeTerms());
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // QUERY — Jigyousha default auto
-    // ─────────────────────────────────────────────────────────────
-
-    @Override
-    public JigyoushaDefaultResponse getJigyoushaDefault(Integer siteId, Integer projectId) {
-        Site site = siteRepository.findById(siteId)
-                .orElseThrow(() -> new CustomException(
-                        ResponseConstants.NOT_FOUND, ResponseConstants.MSG_SITE_NOT_FOUND));
-
-        ParticipatingCompany company = site.getCompany();
-        String repName = company.getRepFirstName() + company.getRepLastName();
-
-        return JigyoushaDefaultResponse.builder()
-                .companyName(company.getNameJa())
-                .repName(repName)
-                .repRole(company.getRepPosition())
-                .build();
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -672,7 +684,6 @@ public class SiteProjectServiceImpl implements SiteProjectService {
                 .site(relation.getSite())
                 .company(relation.getSite().getCompany())
                 .methodologyNumber(item.getMethodologyNumber())
-                .isEligible(item.getIsEligible())
                 .equipmentOpDate(item.getEquipmentOpDate())
                 .pcsManufacturer(item.getPcsManufacturer())
                 .pcsModel(item.getPcsModel())

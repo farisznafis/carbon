@@ -28,7 +28,7 @@ public class EquipmentItemSolarRequest {
     private String tempId;
  
     @NotBlank  private String methodologyNumber;
-    @NotNull   private Boolean isEligible;
+    // @NotNull   private Boolean isEligible;
  
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd")
