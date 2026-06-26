@@ -218,6 +218,8 @@ export type PendingCompanyItem = {
   fax: string;
   corpNumber: string;
   address: string;
+  requestedMethodologies?: string[];
+  activityInformation?: string;
   methodologies?: Methodology[];
 };
 
@@ -240,6 +242,8 @@ export type PendingCompanyApiItem = {
   fax?: string | null;
   corpNumber?: string;
   address?: string;
+  requestedMethodologies?: string[];
+  activityInformation?: string;
   methodologies?: Array<{
     methodology?: string;
     hasSubsidy?: boolean;

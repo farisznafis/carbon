@@ -114,6 +114,8 @@ export async function getPendingCompanies(): Promise<PendingCompanyItem[]> {
     fax: resolveFax(item),
     corpNumber: resolveCorpNumber(item),
     address: resolveAddress(item),
+    requestedMethodologies: item.requestedMethodologies ?? [],
+    activityInformation: item.activityInformation ?? '',
     methodologies: resolveMethodologies(item),
   }));
 }

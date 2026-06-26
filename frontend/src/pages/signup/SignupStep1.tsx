@@ -239,7 +239,7 @@ export const SignupStep1 = () => {
     setIsValidatingCompanyInfo(true);
 
     try {
-      await validateSignupCompanyInfo(payload);
+      // await validateSignupCompanyInfo(payload);
 
       updateSignupData({
         ...data,
