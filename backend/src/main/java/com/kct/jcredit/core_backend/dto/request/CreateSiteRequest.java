@@ -41,6 +41,6 @@ public class CreateSiteRequest {
     @Size(max = 255, message = "建物名は255文字以内で入力してください。")
     private String buildingName;
 
-    @NotBlank(message = "ユーザIDを入力してください。")
+    @NotNull(message = "ユーザIDを入力してください。")
     private Integer userId;
 }
