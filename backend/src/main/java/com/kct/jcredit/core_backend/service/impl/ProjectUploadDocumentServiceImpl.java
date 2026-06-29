@@ -1,6 +1,7 @@
 package com.kct.jcredit.core_backend.service.impl;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -17,6 +18,10 @@ import com.kct.jcredit.core_backend.repository.dynamodb.ProjectDocumentStatusRep
 import com.kct.jcredit.core_backend.repository.postgres.ProjectFilesRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.service.ProjectUploadDocumentService;
+
+import com.kct.jcredit.core_backend.exception.BusinessRuleViolationException;
+import com.kct.jcredit.core_backend.exception.FileTooLargeException;
+import com.kct.jcredit.core_backend.exception.UnsupportedFileTypeException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +55,8 @@ public class ProjectUploadDocumentServiceImpl implements ProjectUploadDocumentSe
         
         projectRepository.findById(projIdInt)
                 .orElseThrow(() -> new RuntimeException("エラー: プロジェクトが見つかりません (Project Not Found)"));
+
+        validateUploadFiles(fileRegistrationCert, fileValidationReport, fileVerificationReport);
 
         ProjectFiles projectFiles = projectFilesRepository.findById(projIdInt)
                 .orElseGet(() -> {
@@ -90,6 +97,25 @@ public class ProjectUploadDocumentServiceImpl implements ProjectUploadDocumentSe
         response.setStatusCode("200");
         response.setMessage("ファイルのアップロードが完了しました (Upload File Selesai)");
         return response;
+    }
+
+    private void validateUploadFiles(MultipartFile... files) {
+        List<String> allowedTypes = List.of("application/pdf");
+        int maxSizeMB = 10;
+
+        for (MultipartFile file : files) {
+            if (file == null || file.isEmpty()) {
+                throw new BusinessRuleViolationException("アップロードするファイルが空です。");
+            }
+            if (file.getSize() > (long) maxSizeMB * 1024 * 1024) {
+                double actualSizeMB = file.getSize() / (1024.0 * 1024.0);
+                throw new FileTooLargeException(maxSizeMB, actualSizeMB);
+            }
+            String contentType = file.getContentType();
+            if (contentType == null || !allowedTypes.contains(contentType)) {
+                throw new UnsupportedFileTypeException(allowedTypes, contentType);
+            }
+        }
     }
 
     private String uploadToS3(Integer projectId, String fileType, MultipartFile file, String username) throws IOException {
