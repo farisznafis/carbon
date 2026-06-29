@@ -58,8 +58,12 @@ export async function registerSite(
   };
 }
 
-export async function updateSite(siteId: string, formData: SiteFormData): Promise<{ statusCode: string; site?: Site }> {
-  const payload = mapUpdateSitePayload(formData);
+export async function updateSite(
+  siteId: string,
+  formData: SiteFormData,
+  picuserId: number | null = null,
+): Promise<{ statusCode: string; site?: Site }> {
+  const payload = mapUpdateSitePayload(formData, Number(siteId), picuserId);
 
   const response = await apiFetch(`/site/${siteId}`, {
     method: 'PATCH',

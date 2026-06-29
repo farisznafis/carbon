@@ -80,7 +80,7 @@ export function SiteConfirmation({
   };
 
   return (
-    <FormStandalonePage watermark={isCreateMode ? 'Site Add' : 'Site Edit'}>
+    <FormStandalonePage watermark={isCreateMode ? '' : ''}>
       <PageBackButton
         onClick={onBack}
         label=""
@@ -142,14 +142,12 @@ export function SiteConfirmation({
               </div>
             </FormSection>
 
-            {isCreateMode && (
-              <FormSection number={3} title="担当者">
+              <FormSection number={isCreateMode ? 3 : 2} title="担当者">
                 <ConfirmationItem
                   label="担当者"
                   value={selectedUserName ?? 'マスター'}
                 />
               </FormSection>
-            )}
 
             <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Button

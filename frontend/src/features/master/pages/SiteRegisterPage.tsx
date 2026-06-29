@@ -43,9 +43,8 @@ function SiteRegister() {
   const users = usersQuery.data?.users ?? [];
   const selectableUsers = users.filter(
     (user) =>
-      user.role !== 'master' &&
       user.role !== 'admin' &&
-      user.siteId === null,
+      (user.role === 'master' || user.siteId === null),
   );
 
   useEffect(() => {

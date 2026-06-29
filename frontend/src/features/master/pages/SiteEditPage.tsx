@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { Site } from '@/api/site';
 import { deleteSite, updateSite } from '@/api/site';
@@ -7,6 +7,26 @@ import { SiteConfirmation } from './SiteConfirmation';
 import { toast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
 import { useDashboardStore } from '@/stores/dashboardStore';
+import { useUsersQuery } from '@/hooks/users/useUsersQuery';
+
+const mapSiteToFormData = (site: Site): SiteFormData => ({
+  siteName: site.siteName,
+  siteNameKana: '',
+  postalCode: site.postalCode,
+  prefectureName: site.prefectureName,
+  cityName: site.cityName,
+  townName: '',
+  blockName: site.blockName,
+  addressDetail: site.addressDetail ?? '',
+  picFirstName: site.picFirstName,
+  picFirstNameKana: '',
+  picLastName: site.picLastName,
+  picLastNameKana: '',
+  picEmail: site.picEmail,
+  picPhoneNumber: site.picPhoneNumber ?? '',
+  picPosition: site.picPosition,
+  userId: site.picId ?? '',
+});
 
 function SiteEdit() {
   const navigate = useNavigate();
@@ -15,6 +35,7 @@ function SiteEdit() {
   const { id } = useParams<{ id: string }>();
   const sites = useDashboardStore((state) => state.sites) ?? [];
   const initialSite = sites.find((site) => site.id === id);
+  const initialFormData = initialSite ? mapSiteToFormData(initialSite) : undefined;
 
   const [formData, setFormData] = useState<SiteFormData | undefined>(
     undefined,
@@ -22,13 +43,24 @@ function SiteEdit() {
 
   useEffect(() => {
     if (initialSite) {
-      setFormData(initialSite);
+      setFormData(mapSiteToFormData(initialSite));
     }
   }, [initialSite]);
 
   const editSite = useDashboardStore((state) => state.editSite);
   const deleteSiteStore = useDashboardStore((state) => state.deleteSiteStore);
   const { joinableSites } = useDashboardStore();
+  const usersQuery = useUsersQuery();
+  const users = usersQuery.data?.users ?? [];
+  const selectableUsers = useMemo(
+    () =>
+      users.filter(
+        (user) =>
+          user.role !== 'admin' &&
+          (user.role === 'master' || user.siteId === null || user.id === formData?.userId),
+      ),
+    [users, formData?.userId],
+  );
 
   if (!id) {
     return <div>読み込み中...</div>;
@@ -45,8 +77,10 @@ function SiteEdit() {
   const handleFinalSubmit = async () => {
     if (!id || !formData) return;
 
+    const picuserId = formData.userId ? Number(formData.userId) : null;
+
     try {
-      const result = await updateSite(id, formData);
+      const result = await updateSite(id, formData, picuserId);
 
       const updatedSite: Site = {
         ...initialSite,
@@ -55,6 +89,7 @@ function SiteEdit() {
         cityName: formData.cityName,
         blockName: formData.blockName,
         addressDetail: formData.addressDetail,
+        picId: formData.userId ?? initialSite.picId,
         address:
           result.site?.address ??
           [
@@ -127,11 +162,16 @@ function SiteEdit() {
       {step === 'form' && (
         <SiteForm
           mode="edit"
-          originalData={initialSite}
+          originalData={initialFormData}
           onChange={setFormData}
           onNext={handleFormSubmit}
-          defaultValues={formData || initialSite}
+          defaultValues={formData || initialFormData}
           onDelete={handleDelete}
+          userOptions={selectableUsers}
+          isUserOptionsLoading={usersQuery.isLoading}
+          userOptionsError={
+            usersQuery.isError ? '担当者候補を取得できませんでした' : null
+          }
         />
       )}
 
@@ -139,7 +179,7 @@ function SiteEdit() {
         <SiteConfirmation
           mode="edit"
           data={formData}
-          originalData={initialSite}
+          originalData={initialFormData}
           onBack={handleBack}
           onSubmit={handleFinalSubmit}
         />

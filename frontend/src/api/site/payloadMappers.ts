@@ -31,13 +31,19 @@ export function mapCreateSitePayload(formData: SiteFormData): CreateSitePayload 
   return payload;
 }
 
-export function mapUpdateSitePayload(formData: SiteFormData): UpdateSitePayload {
+export function mapUpdateSitePayload(
+  formData: SiteFormData,
+  siteId: number,
+  picuserId: number | null,
+): UpdateSitePayload {
   return {
+    siteName: formData.siteName,
     postalCode: formData.postalCode,
-    prefName: formData.prefectureName,
-    cityName: formData.cityName,
-    townName: formData.townName,
-    blockName: formData.blockName,
-    address: buildAddress(formData),
+    prefecture: formData.prefectureName,
+    municipality: formData.cityName,
+    blocknum: formData.blockName,
+    buildingName: formData.addressDetail,
+    siteId,
+    picuserId,
   };
 }

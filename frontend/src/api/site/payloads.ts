@@ -10,10 +10,12 @@ export type CreateSitePayload = {
 };
 
 export type UpdateSitePayload = {
+  siteName: string;
   postalCode: string;
-  prefName: string;
-  cityName: string;
-  townName: string;
-  blockName: string;
-  address: string;
+  prefecture: string;
+  municipality: string;
+  blocknum: string;
+  buildingName: string;
+  siteId: number;
+  picuserId: number | null;
 };

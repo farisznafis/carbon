@@ -2,6 +2,7 @@
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import {
   FormActions,
   FormCard,
@@ -320,8 +321,7 @@ export function SiteForm({
               />
             </FormSection>
 
-            {isCreateMode && (
-              <FormSection number={3} title="担当者">
+              <FormSection number={isCreateMode ? 3 : 2} title="担当者">
                 <FormField
                   control={form.control}
                   name="userId"
@@ -352,7 +352,14 @@ export function SiteForm({
                             <SelectContent>
                               {userOptions.map((user) => (
                                 <SelectItem key={user.id} value={user.id}>
-                                  {formatUserOptionLabel(user)}
+                                  <span className="flex items-center gap-2">
+                                    {formatUserOptionLabel(user)}
+                                    {user.role === 'master' && (
+                                      <Badge variant="default" className="bg-blue-500 text-white text-[10px] px-1.5 py-0 leading-none">
+                                        マスター
+                                      </Badge>
+                                    )}
+                                  </span>
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -391,16 +398,26 @@ export function SiteForm({
                   }}
                 />
               </FormSection>
-            )}
 
             <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {!isCreateMode && onDelete ? (
-                <DeleteAlertDialog
-                  label="拠点"
-                  open={isDeleteDialogOpen}
-                  onOpenChange={setIsDeleteDialogOpen}
-                  onDelete={onDelete}
-                />
+                <div className="flex gap-3">
+                  <DeleteAlertDialog
+                    label="拠点"
+                    open={isDeleteDialogOpen}
+                    onOpenChange={setIsDeleteDialogOpen}
+                    onDelete={onDelete}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => navigate(-1)}
+                  >
+                    キャンセル
+                  </Button>
+                </div>
               ) : (
                 <Button
                   type="button"
