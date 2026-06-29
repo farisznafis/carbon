@@ -1,4 +1,4 @@
-package com.example.service;
+package com.kct.jcredit.core_backend.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
