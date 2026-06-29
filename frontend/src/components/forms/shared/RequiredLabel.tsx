@@ -40,7 +40,7 @@ export function RequiredLabel({
 }: Readonly<RequiredLabelProps>) {
   return (
     <FormLabel
-      className={cn('flex w-full items-center justify-between gap-2', className)}
+      className={cn('inline-flex max-w-full flex-wrap items-center gap-2', className)}
       {...props}
     >
       <span>{children}</span>
