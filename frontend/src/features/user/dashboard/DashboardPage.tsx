@@ -111,18 +111,30 @@ const Dashboard = () => {
         )}
 
         <div className='mb-8 mx-8 animate-slide-up'>
-          <div className='space-y-1'>
-            <h2 className='mb-2'>{site?.siteName || '拠点ダッシュボード'}</h2>
-            <div className='space-y-1 text-sm text-muted-foreground'>
-              <p>
-                    担当者:{' '}
-              {`${site?.picLastName ?? ''} ${site?.picFirstName ?? ''}`.trim() ||
-                '-'}
-              </p>
-                  <p>住所: {site?.address || '-'}</p>
+          <div className='flex items-start justify-between gap-4'>
+            <div className='space-y-1'>
+              <h2 className='mb-2'>{site?.siteName || '拠点ダッシュボード'}</h2>
+              <div className='space-y-1 text-sm text-muted-foreground'>
+                <p>
+                      担当者:{' '}
+                {`${site?.picLastName ?? ''} ${site?.picFirstName ?? ''}`.trim() ||
+                  '-'}
+                </p>
+                    <p>住所: {site?.address || '-'}</p>
+            </div>
           </div>
-        </div>
 
+            {user?.role === 'master' && siteId && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={() => navigate(`/master/site-edit/${siteId}`)}
+              >
+                拠点更新
+              </Button>
+            )}
+          </div>
         </div>
         <div className='gap-6'>
           <div className='space-y-6'>

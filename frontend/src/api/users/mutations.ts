@@ -89,11 +89,7 @@ export const updateUser = async (
   prevSite?: Site,
   masterUser?: UserList,
 ): Promise<UpdateUserResponse> => {
-  const resolvedSiteId = userData.siteId ?? mergedData?.siteId;
-
-  if (!resolvedSiteId) {
-    throw new Error("siteId is required to update user");
-  }
+  const resolvedSiteId = userData.siteId || mergedData?.siteId || null;
 
   const payload: UpdateUserPayload = {
     userId: Number(userId),
@@ -104,7 +100,7 @@ export const updateUser = async (
     email: userData.email ?? mergedData?.email ?? "",
     phoneNumber: String(userData.phoneNumber ?? mergedData?.phoneNumber ?? "").replace(/-/g, ""),
     userPosition: userData.userPosition ?? userData.position ?? mergedData?.position ?? "",
-    siteId: Number(resolvedSiteId),
+    siteId: resolvedSiteId !== null ? Number(resolvedSiteId) : null,
   };
 
   const response = await apiFetch("/user", {

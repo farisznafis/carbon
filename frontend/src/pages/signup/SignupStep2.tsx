@@ -222,7 +222,7 @@ export const SignupStep2 = () => {
             render={({ field }) => (
               <FormItem>
                 <p className="text-sm text-muted-foreground">
-                  {/* ※排出量削減活動の概要をご記入ください。 */}
+                  ※排出量削減活動の概要をご記入ください。
                 </p>
                 <FormControl>
                   <Textarea
