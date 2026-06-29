@@ -57,10 +57,15 @@ export function mapSiteListItem(item: SiteListItem): Site {
     id: item.id,
     siteName: item.siteName,
     postalCode: item.postalCode ?? "",
-    prefectureName: item.prefName ?? "",
-    cityName: item.cityName ?? "",
-    blockName: item.townName ? `${item.townName}${item.blockName ?? ""}` : (item.blockName ?? ""),
+    prefectureName: item.prefecture ?? item.prefName ?? "",
+    cityName: item.municipality ?? item.cityName ?? "",
+    blockName:
+      item.blocknum ??
+      (item.townName
+        ? `${item.townName}${item.blockName ?? ""}`
+        : (item.blockName ?? "")),
     address: item.address ?? "",
+    buildingName: item.buildingName ?? "",
     picId: "",
     picFirstName: item.picFirstName ?? "",
     picLastName: item.picLastName ?? "",
@@ -79,10 +84,13 @@ export function mapSiteDashboard(apiSite: SiteDashboardApiResponse['site']): Sit
     id: apiSite.id,
     siteName: apiSite.siteName ?? "",
     postalCode: apiSite.postalCode ?? "",
-    prefectureName: apiSite.prefecture ?? "",
-    cityName: apiSite.city ?? "",
-    blockName: [apiSite.town, apiSite.block].filter(Boolean).join(""),
+    prefectureName: apiSite.prefecture ?? apiSite.prefName ?? "",
+    cityName: apiSite.municipality ?? apiSite.city ?? apiSite.cityName ?? "",
+    blockName:
+      apiSite.blocknum ??
+      [apiSite.town, apiSite.block ?? apiSite.blockName].filter(Boolean).join(""),
     address: apiSite.address ?? "",
+    buildingName: apiSite.buildingName ?? "",
     picId: "",
     picFirstName: apiSite.picFirstName ?? "",
     picLastName: apiSite.picLastName ?? "",

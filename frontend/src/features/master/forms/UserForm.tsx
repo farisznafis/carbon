@@ -273,7 +273,7 @@ export function UserForm({
                   name="siteId"
                   render={({ field }) => (
                     <FormItem>
-                      <RequiredLabel required={false}>担当する拠点</RequiredLabel>
+                      <RequiredLabel required={false}>対象する拠点</RequiredLabel>
                       <div className="flex items-center gap-2">
                         <Select
                           value={field.value ?? ''}

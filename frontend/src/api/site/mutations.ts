@@ -44,6 +44,7 @@ export async function registerSite(
       cityName: formData.cityName,
       blockName: [formData.townName, formData.blockName].filter(Boolean).join(''),
       address: buildAddress(formData),
+      buildingName: formData.addressDetail,
       picFirstName: assignee?.firstName ?? '',
       picLastName: assignee?.lastName ?? (formData.userId ? '' : 'マスター'),
       picEmail: assignee?.email ?? '',

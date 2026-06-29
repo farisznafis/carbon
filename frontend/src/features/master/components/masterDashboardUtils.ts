@@ -27,12 +27,15 @@ export const formatSiteAddress = (site: Site) => {
     site.prefectureName,
     site.cityName,
     site.blockName,
-    site.addressDetail,
+    site.buildingName,
   ]
     .filter(Boolean)
     .join('');
 
-  return site.address || composedAddress || '-';
+  const postal = site.postalCode ? `〒${site.postalCode}` : '';
+  const address = composedAddress || site.address || '';
+
+  return [postal, address].filter(Boolean).join(' ') || '-';
 };
 
 export const formatPersonName = (
