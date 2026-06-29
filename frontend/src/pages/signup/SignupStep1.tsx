@@ -271,7 +271,7 @@ export const SignupStep1 = () => {
                   <FormItem>
                     <RequiredLabel>法人番号</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="1234567890123" {...field} />
+                      <Input inputSize="sm" placeholder="13桁の半角数字" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -327,7 +327,7 @@ export const SignupStep1 = () => {
                   <FormItem>
                     <RequiredLabel>法人電話番号</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" type="tel" placeholder="0312345678" {...field} />
+                      <Input inputSize="sm" type="tel" placeholder="半角数字ハイフン不要" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -347,7 +347,7 @@ export const SignupStep1 = () => {
                         <Input
                           inputSize="sm"
                           maxLength={8}
-                          placeholder="1000001"
+                          placeholder="半角数字ハイフン不要"
                           {...field}
                           onChange={(e) => handlePostalCodeChange(e.target.value, field.onChange)}
                         />
@@ -513,7 +513,7 @@ export const SignupStep1 = () => {
                   <FormItem>
                     <RequiredLabel>電話番号</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" type="tel" placeholder="0312345678" {...field} />
+                      <Input inputSize="sm" type="tel" placeholder="半角数字ハイフン不要" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -527,7 +527,7 @@ export const SignupStep1 = () => {
                   <FormItem>
                     <RequiredLabel required={false}>FAX番号</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" type="tel" placeholder="0312345678" {...field} />
+                      <Input inputSize="sm" type="tel" placeholder="半角数字ハイフン不要" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

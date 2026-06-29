@@ -21,6 +21,7 @@ export interface SignupData {
   faxNumber: string;
   email: string;
   methodology: string[];
+  activityHas: 'yes' | 'no';
   activityInformation: string;
 }
 
@@ -53,6 +54,7 @@ const initialData: SignupData = {
   faxNumber: '',
   email: '',
   methodology: [],
+  activityHas: 'yes',
   activityInformation: '',
 };
 
