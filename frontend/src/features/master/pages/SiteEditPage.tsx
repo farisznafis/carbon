@@ -49,17 +49,30 @@ function SiteEdit() {
 
   const editSite = useDashboardStore((state) => state.editSite);
   const deleteSiteStore = useDashboardStore((state) => state.deleteSiteStore);
+  const setUsers = useDashboardStore((state) => state.setUsers);
   const { joinableSites } = useDashboardStore();
   const usersQuery = useUsersQuery();
-  const users = usersQuery.data?.users ?? [];
+  const users = useMemo(
+    () => usersQuery.data?.users ?? [],
+    [usersQuery.data?.users],
+  );
+
+  useEffect(() => {
+    if (usersQuery.data?.users) {
+      setUsers(usersQuery.data.users);
+    }
+  }, [setUsers, usersQuery.data?.users]);
+
   const selectableUsers = useMemo(
     () =>
       users.filter(
         (user) =>
           user.role !== 'admin' &&
-          (user.role === 'master' || user.siteId === null || user.id === formData?.userId),
+          (user.role === 'master' ||
+            user.siteId === id ||
+            user.id === formData?.userId),
       ),
-    [users, formData?.userId],
+    [users, id, formData?.userId],
   );
 
   if (!id) {
@@ -78,18 +91,28 @@ function SiteEdit() {
     if (!id || !formData) return;
 
     const picuserId = formData.userId ? Number(formData.userId) : null;
+    const selectedUser = formData.userId
+      ? users.find((user) => user.id === formData.userId)
+      : null;
 
     try {
       const result = await updateSite(id, formData, picuserId);
 
       const updatedSite: Site = {
         ...initialSite,
+        siteName: formData.siteName,
         postalCode: formData.postalCode,
         prefectureName: formData.prefectureName,
         cityName: formData.cityName,
         blockName: formData.blockName,
         addressDetail: formData.addressDetail,
+        buildingName: formData.addressDetail,
         picId: formData.userId ?? initialSite.picId,
+        picFirstName: selectedUser?.firstName ?? initialSite.picFirstName,
+        picLastName: selectedUser?.lastName ?? initialSite.picLastName,
+        picEmail: selectedUser?.email ?? initialSite.picEmail,
+        picPosition: selectedUser?.position ?? initialSite.picPosition,
+        picPhoneNumber: selectedUser?.phoneNumber ?? initialSite.picPhoneNumber,
         address:
           result.site?.address ??
           [

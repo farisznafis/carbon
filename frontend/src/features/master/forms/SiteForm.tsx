@@ -169,21 +169,25 @@ export function SiteForm({
     const currentValues = isCreateMode
       ? values
       : {
+          siteName: values.siteName,
           postalCode: values.postalCode,
           prefectureName: values.prefectureName,
           cityName: values.cityName,
           blockName: values.blockName,
           addressDetail: values.addressDetail,
+          userId: values.userId || '',
         };
 
     const initialValues = isCreateMode
       ? initialFormData
       : {
+          siteName: initialFormData.siteName,
           postalCode: initialFormData.postalCode,
           prefectureName: initialFormData.prefectureName,
           cityName: initialFormData.cityName,
           blockName: initialFormData.blockName,
           addressDetail: initialFormData.addressDetail,
+          userId: initialFormData.userId || '',
         };
 
     return JSON.stringify(currentValues) !== JSON.stringify(initialValues);
@@ -201,22 +205,22 @@ export function SiteForm({
       >
         <FormCard>
           <FormSectionStack spacing="relaxed">
-            {isCreateMode && (
-              <FormSection number={1} title="拠点情報">
-                <FormField
-                  control={form.control}
-                  name="siteName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <RequiredLabel>拠点名</RequiredLabel>
-                      <FormControl>
-                        <Input inputSize="sm" placeholder="東京本社" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <FormSection number={1} title="拠点情報">
+              <FormField
+                control={form.control}
+                name="siteName"
+                render={({ field }) => (
+                  <FormItem>
+                    <RequiredLabel>拠点名</RequiredLabel>
+                    <FormControl>
+                      <Input inputSize="sm" placeholder="東京本社" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
+              {isCreateMode && (
                 <FormField
                   control={form.control}
                   name="siteNameKana"
@@ -230,10 +234,10 @@ export function SiteForm({
                     </FormItem>
                   )}
                 />
-              </FormSection>
-            )}
+              )}
+            </FormSection>
 
-            <FormSection number={isCreateMode ? 2 : 1} title="所在地">
+            <FormSection number={2} title="所在地">
               <FormField
                 control={form.control}
                 name="postalCode"
@@ -311,7 +315,7 @@ export function SiteForm({
                 name="addressDetail"
                 render={({ field }) => (
                   <FormItem>
-                    <RequiredLabel required={false}>建物名・部屋番号</RequiredLabel>
+                    <RequiredLabel required={true}>建物名・部屋番号</RequiredLabel>
                     <FormControl>
                       <Input inputSize="sm" placeholder="東京ビル3F 305号" {...field} />
                     </FormControl>
@@ -321,7 +325,7 @@ export function SiteForm({
               />
             </FormSection>
 
-              <FormSection number={isCreateMode ? 3 : 2} title="担当者">
+              <FormSection number={3} title="担当者">
                 <FormField
                   control={form.control}
                   name="userId"

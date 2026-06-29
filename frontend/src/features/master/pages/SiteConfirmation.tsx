@@ -68,6 +68,9 @@ export function SiteConfirmation({
   const selectedUserName = data.userId
     ? formatUserName(getUser(data.userId)) ?? data.userId
     : null;
+  const originalUserName = originalData.userId
+    ? formatUserName(getUser(originalData.userId)) ?? originalData.userId
+    : null;
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -142,10 +145,13 @@ export function SiteConfirmation({
               </div>
             </FormSection>
 
-              <FormSection number={isCreateMode ? 3 : 2} title="担当者">
+              <FormSection number={3} title="担当者">
                 <ConfirmationItem
                   label="担当者"
                   value={selectedUserName ?? 'マスター'}
+                  originalValue={
+                    isCreateMode ? undefined : (originalUserName ?? 'マスター')
+                  }
                 />
               </FormSection>
 
