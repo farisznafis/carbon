@@ -53,8 +53,9 @@ export function MasterDashboardHero({
 
 export function MasterDashboardTabs() {
   const triggerClassName = cn(
-    'relative h-14 rounded-none border-0 bg-transparent px-8 text-sm font-bold text-primary shadow-none transition-none',
+    'relative h-14 rounded-none border-0 bg-transparent px-8 text-sm font-bold text-primary shadow-none transition-colors',
     'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent',
+    'hover:bg-secondary/50 hover:text-primary/90 hover:after:bg-primary/40',
     'data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:after:bg-primary',
   );
 
@@ -161,22 +162,22 @@ export function UserDashboardCard({
           )}
         </div>
 
-        <div className="mt-4 grid gap-3 text-sm font-bold leading-6 text-foreground sm:grid-cols-3">
-          <span className="inline-flex min-w-0 items-center gap-1.5">
+        <div className="mt-4 grid gap-x-8 gap-y-3 text-sm font-bold leading-6 text-foreground xl:grid-cols-[minmax(360px,1.7fr)_minmax(220px,1fr)_minmax(220px,1fr)]">
+          <span className="inline-flex min-w-0 items-start gap-1.5">
             <Mail className="h-4 w-4 shrink-0" />
             <span className="shrink-0 text-muted-foreground">
               メールアドレス:
             </span>
-            <span className="truncate">{user.email || '-'}</span>
+            <span className="min-w-0 break-all">{user.email || '-'}</span>
           </span>
-          <span className="inline-flex min-w-0 items-center gap-1.5">
+          <span className="inline-flex min-w-0 items-start gap-1.5">
             <CalendarDays className="h-4 w-4 shrink-0" />
             <span className="shrink-0 text-muted-foreground">
               ユーザ名:
             </span>
             <span className="truncate">{user.username || '-'}</span>
           </span>
-          <span className="inline-flex min-w-0 items-center gap-1.5">
+          <span className="inline-flex min-w-0 items-start gap-1.5">
             <Building2 className="h-4 w-4 shrink-0" />
             <span className="shrink-0 text-muted-foreground">
               拠点:
