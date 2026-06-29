@@ -25,11 +25,11 @@ const Login = () => {
       onSubmit={handleUserLogin}
       header={
         <header className="text-center">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-xl bg-secondary text-primary">
-            <LogIn className="h-8 w-8" />
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-primary">
+            <LogIn className="h-6 w-6" />
           </div>
-          <h1>ログイン</h1>
-          <p className="mt-4 text-[20px] font-medium leading-[28px] text-foreground">
+          <h2>ログイン</h2>
+          <p className="mt-3 text-sm font-medium leading-6 text-muted-foreground">
             GXデータの登録・管理を続けるにはログインしてください。
           </p>
         </header>

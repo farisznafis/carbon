@@ -11,6 +11,7 @@ export type LoginFormProps = {
   isSubmitting?: boolean;
   children: ReactNode;
   footer?: ReactNode;
+  header?: ReactNode;
 };
 
 export function LoginForm({
@@ -22,21 +23,24 @@ export function LoginForm({
   isSubmitting = false,
   children,
   footer,
+  header,
 }: LoginFormProps) {
   useRedirectIfLoggedIn();
 
   return (
     <main className="min-h-screen bg-background px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-[768px] flex-col items-center">
-        <header className="text-center">
-          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-primary">
-            <LogIn className="h-6 w-6" />
-          </div>
-          <h2>{title}</h2>
-          <p className="mt-3 text-sm font-medium leading-6 text-muted-foreground">
-            {description}
-          </p>
-        </header>
+        {header ?? (
+          <header className="text-center">
+            <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-primary">
+              <LogIn className="h-6 w-6" />
+            </div>
+            <h2>{title}</h2>
+            <p className="mt-3 text-sm font-medium leading-6 text-muted-foreground">
+              {description}
+            </p>
+          </header>
+        )}
 
         <div className="mt-10 w-full rounded-xl border border-border bg-card p-8 shadow-app-sm sm:p-12">
           {error && (
