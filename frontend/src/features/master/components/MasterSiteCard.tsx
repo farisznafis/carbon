@@ -82,7 +82,7 @@ export function MasterSiteCard({ site, onOpen }: MasterSiteCardProps) {
       </div>
 
       <div className="flex h-full min-h-[112px] items-center justify-center">
-        <button className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:bg-primary/90">
+        <button className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:bg-[#EEF2CE] hover:text-primary">
           <ChevronRight className="h-6 w-6" />
         </button>
       </div>

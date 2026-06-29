@@ -80,11 +80,11 @@ export function PendingCompanyDetailDialog({
             <h3 className="mb-4 text-sm font-bold">申請内容</h3>
             <div className="space-y-4">
               <div>
-                <div className="mb-2 text-xs text-muted-foreground">requestedMethodologies</div>
+                <div className="mb-2 text-xs text-muted-foreground">参加したいプロジェクト</div>
                 <ListValue items={item?.requestedMethodologies ?? []} />
               </div>
               <FieldRow
-                label="activityInformation"
+                label="現在の活動情報"
                 value={item?.activityInformation}
                 className="whitespace-pre-wrap"
               />
