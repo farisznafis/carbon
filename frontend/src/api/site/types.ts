@@ -45,6 +45,7 @@ export type SiteFormData = {
   picEmail: string;
   picPhoneNumber: string;
   picPosition: string;
+  userId?: string;
 };
 
 export type SiteDashboardMetrics = {

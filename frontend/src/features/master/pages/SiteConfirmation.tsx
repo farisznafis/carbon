@@ -12,6 +12,7 @@ import { ConfirmationItem } from '@/components/feedback/Confirmation/Confirmatio
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
 import { SiteFormData } from '@/features/master/forms/SiteForm';
+import { useDashboardStore } from '@/stores/dashboardStore';
 
 interface SiteConfirmationProps {
   mode: 'create' | 'edit';
@@ -31,6 +32,24 @@ const originalValue = (
   isCreateMode: boolean,
 ) => (isCreateMode ? undefined : displayValue(value));
 
+const formatUserName = (user?: {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  email?: string;
+}) => {
+  if (!user) return undefined;
+
+  const fullName = `${user.lastName ?? ''} ${user.firstName ?? ''}`.trim();
+
+  if (fullName && user.username) {
+    return `${fullName}（${user.username}）`;
+  }
+
+  return fullName || user.username || user.email || user.id;
+};
+
 export function SiteConfirmation({
   mode,
   data,
@@ -39,12 +58,16 @@ export function SiteConfirmation({
   onSubmit,
 }: Readonly<SiteConfirmationProps>) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const getUser = useDashboardStore((state) => state.getUser);
 
   if (!data) return <div>読み込み中...</div>;
 
   const isCreateMode = mode === 'create';
   const pageTitle = isCreateMode ? '拠点情報の確認' : '拠点編集の確認';
   const confirmLabel = isCreateMode ? '登録' : '更新';
+  const selectedUserName = data.userId
+    ? formatUserName(getUser(data.userId)) ?? data.userId
+    : null;
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -118,6 +141,15 @@ export function SiteConfirmation({
                 />
               </div>
             </FormSection>
+
+            {isCreateMode && (
+              <FormSection number={3} title="担当者">
+                <ConfirmationItem
+                  label="担当者"
+                  value={selectedUserName ?? 'マスター'}
+                />
+              </FormSection>
+            )}
 
             <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Button

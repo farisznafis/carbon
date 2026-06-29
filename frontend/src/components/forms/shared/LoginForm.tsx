@@ -14,9 +14,10 @@ export type LoginFormProps = {
 };
 
 export function LoginForm({
-  title = 'ログイン',
-  description = 'GXデータの登録・管理を続けるにはログインしてください。',
-  submitLabel = 'ログイン',
+  title = '管理者ログイン',
+  // description = 'GXデータの登録・管理を続けるにはログインしてください。',
+  description = '',
+  submitLabel = '管理者ログイン',
   error = null,
   isSubmitting = false,
   children,

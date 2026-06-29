@@ -62,7 +62,7 @@ export function AdminLoginForm({ onSubmit }: AdminLoginFormProps) {
             name="identifier"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>ユーザー名またはメールアドレス</FormLabel>
+                <FormLabel>管理者ID</FormLabel>
                 <FormControl>
                   <Input
                     type="text"

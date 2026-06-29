@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { X } from 'lucide-react';
 import {
   FormActions,
   FormCard,
@@ -14,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormMessage,
@@ -27,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { SiteFormData } from '@/api/site';
+import type { UserList } from '@/api/users';
 import { prefectures } from '@/lib/constants/prefectures';
 
 export type { SiteFormData } from '@/api/site';
@@ -38,10 +41,22 @@ interface SiteFormProps {
   onNext: () => void;
   onDelete?: () => void;
   defaultValues?: Partial<SiteFormData>;
-  disablePicFields?: boolean;
   disableSubmit?: boolean;
+  userOptions?: UserList[];
+  isUserOptionsLoading?: boolean;
+  userOptionsError?: string | null;
   embedded?: boolean;
 }
+
+const formatUserOptionLabel = (user: UserList) => {
+  const fullName = `${user.lastName ?? ''} ${user.firstName ?? ''}`.trim();
+
+  if (fullName && user.username) {
+    return `${fullName}（${user.username}）`;
+  }
+
+  return fullName || user.username || user.email || user.id;
+};
 
 export function SiteForm({
   mode,
@@ -51,6 +66,9 @@ export function SiteForm({
   onDelete,
   defaultValues,
   disableSubmit = false,
+  userOptions = [],
+  isUserOptionsLoading = false,
+  userOptionsError = null,
   embedded = false,
 }: Readonly<SiteFormProps>) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -75,6 +93,7 @@ export function SiteForm({
       picEmail: defaultValues?.picEmail ?? '',
       picPhoneNumber: defaultValues?.picPhoneNumber ?? '',
       picPosition: defaultValues?.picPosition ?? '',
+      userId: defaultValues?.userId ?? '',
     }),
     [defaultValues],
   );
@@ -96,6 +115,7 @@ export function SiteForm({
       picEmail: originalData?.picEmail ?? '',
       picPhoneNumber: originalData?.picPhoneNumber ?? '',
       picPosition: originalData?.picPosition ?? '',
+      userId: originalData?.userId ?? '',
     }),
     [originalData],
   );
@@ -301,15 +321,76 @@ export function SiteForm({
             </FormSection>
 
             {isCreateMode && (
-              <>
-                <input type="hidden" {...form.register('picLastName')} />
-                <input type="hidden" {...form.register('picLastNameKana')} />
-                <input type="hidden" {...form.register('picFirstName')} />
-                <input type="hidden" {...form.register('picFirstNameKana')} />
-                <input type="hidden" {...form.register('picEmail')} />
-                <input type="hidden" {...form.register('picPhoneNumber')} />
-                <input type="hidden" {...form.register('picPosition')} />
-              </>
+              <FormSection number={3} title="担当者">
+                <FormField
+                  control={form.control}
+                  name="userId"
+                  render={({ field }) => {
+                    const hasNoSelectableUsers =
+                      !isUserOptionsLoading &&
+                      !userOptionsError &&
+                      userOptions.length === 0;
+
+                    return (
+                      <FormItem>
+                        <RequiredLabel required={false}>担当者</RequiredLabel>
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={field.value ?? ''}
+                            onValueChange={(value) => field.onChange(value)}
+                            disabled={
+                              isUserOptionsLoading ||
+                              Boolean(userOptionsError) ||
+                              userOptions.length === 0
+                            }
+                          >
+                            <FormControl>
+                              <SelectTrigger selectSize="sm">
+                                <SelectValue placeholder="担当者を選択してください" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {userOptions.map((user) => (
+                                <SelectItem key={user.id} value={user.id}>
+                                  {formatUserOptionLabel(user)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+
+                          {field.value && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              aria-label="担当者をクリア"
+                              onClick={() => field.onChange('')}
+                            >
+                              <X className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          )}
+                        </div>
+                        {isUserOptionsLoading && (
+                          <FormDescription>
+                            担当者候補を読み込み中です。
+                          </FormDescription>
+                        )}
+                        {hasNoSelectableUsers && (
+                          <FormDescription>
+                            選択可能なユーザーがいません。未選択の場合はマスターが担当者になります。
+                          </FormDescription>
+                        )}
+                        {userOptionsError && (
+                          <FormDescription className="text-destructive">
+                            {userOptionsError}
+                          </FormDescription>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+              </FormSection>
             )}
 
             <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">

@@ -1,6 +1,7 @@
 import { apiFetch, apiVoidRequest, parseJsonResponse } from '../_shared/httpClient';
 import type { Site, SiteFormData } from './types';
 import { buildAddress, mapCreateSitePayload, mapUpdateSitePayload } from './payloadMappers';
+import type { UserList } from '../users';
 
 type CreateSiteResponse = {
   statusCode: string;
@@ -16,7 +17,10 @@ type UpdateSiteResponse = {
   site?: Site;
 };
 
-export async function registerSite(formData: SiteFormData): Promise<{ statusCode: string; site: Site }> {
+export async function registerSite(
+  formData: SiteFormData,
+  assignee?: UserList | null,
+): Promise<{ statusCode: string; site: Site }> {
   const payload = mapCreateSitePayload(formData);
 
   const response = await apiFetch('/site', {
@@ -40,14 +44,14 @@ export async function registerSite(formData: SiteFormData): Promise<{ statusCode
       cityName: formData.cityName,
       blockName: [formData.townName, formData.blockName].filter(Boolean).join(''),
       address: buildAddress(formData),
-      picFirstName: formData.picFirstName,
-      picLastName: formData.picLastName,
-      picEmail: formData.picEmail,
-      picPosition: formData.picPosition,
-      picPhoneNumber: formData.picPhoneNumber,
+      picFirstName: assignee?.firstName ?? '',
+      picLastName: assignee?.lastName ?? (formData.userId ? '' : 'マスター'),
+      picEmail: assignee?.email ?? '',
+      picPosition: assignee?.position ?? '',
+      picPhoneNumber: assignee?.phoneNumber ?? '',
       companyId: '',
       project: [],
-      picId: '',
+      picId: formData.userId ?? '',
       addressDetail: formData.addressDetail,
     },
   };
