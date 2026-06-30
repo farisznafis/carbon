@@ -10,7 +10,10 @@ import {
   SiteDashboardCard,
   UserDashboardCard,
 } from '@/features/master/components/MasterDashboardComponents';
-import { sortMasterUsersFirst } from '@/features/master/components/masterDashboardUtils';
+import {
+  sortMasterUsersFirst,
+  sortSitesById,
+} from '@/features/master/components/masterDashboardUtils';
 import { paths } from '@/routes/paths';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useDashboardStore } from '@/stores/dashboardStore';
@@ -70,6 +73,7 @@ const MasterDashboard = () => {
   }, [fetchDashboardData, loadNotifications]);
 
   const sortedUsers = useMemo(() => sortMasterUsersFirst(users), [users]);
+  const sortedSites = useMemo(() => sortSitesById(sites), [sites]);
 
   if (loading || loadingStore) {
     return (
@@ -101,9 +105,9 @@ const MasterDashboard = () => {
             >
               {errorMessage ? (
                 <DashboardEmptyState>{errorMessage}</DashboardEmptyState>
-              ) : sites.length > 0 ? (
+              ) : sortedSites.length > 0 ? (
                 <div className="space-y-3">
-                  {sites.map((site) => (
+                  {sortedSites.map((site) => (
                     <SiteDashboardCard
                       key={site.id}
                       site={site}

@@ -22,6 +22,19 @@ export const sortMasterUsersFirst = (users: UserList[]) => {
   });
 };
 
+export const sortSitesById = (sites: Site[]) => {
+  return [...sites].sort((a, b) => {
+    const aId = Number(a.id);
+    const bId = Number(b.id);
+
+    if (Number.isFinite(aId) && Number.isFinite(bId)) {
+      return aId - bId;
+    }
+
+    return a.id.localeCompare(b.id, 'ja');
+  });
+};
+
 export const formatSiteAddress = (site: Site) => {
   const composedAddress = [
     site.prefectureName,
