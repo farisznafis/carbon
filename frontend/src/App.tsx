@@ -100,6 +100,7 @@ const App = () => (
             <Route path={paths.masterUserRegister} element={<UserRegister />} />
             <Route path={paths.masterUserProfileRoute} element={<MasterUserProfile />} />
             <Route path={paths.userEditRoute} element={<UserEdit />} />
+            <Route path={paths.userDashboard} element={<Dashboard />} />
             <Route path={paths.siteDashboardRoute} element={<Dashboard />} />
             <Route path={paths.legacyDashboardRoute} element={<LegacyDashboardRedirect />} />
             <Route path={paths.projectRegisterRoute} element={<ProjectRegister />} />

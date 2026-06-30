@@ -17,7 +17,12 @@ const Login = () => {
       return;
     }
 
-    navigate(paths.siteDashboard(response.siteId ?? ''));
+    if (response.siteId) {
+      navigate(paths.siteDashboard(response.siteId));
+      return;
+    }
+
+    navigate(paths.userDashboard);
   };
 
   return (

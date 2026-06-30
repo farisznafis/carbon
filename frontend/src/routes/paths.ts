@@ -17,6 +17,7 @@ export const paths = {
   userEdit: (id: string | number) => `/user-edit/${id}`,
 
   siteDashboardRoute: '/sites/:siteId/dashboard',
+  userDashboard: '/dashboard',
   siteDashboard: (siteId: string | number) => `/sites/${siteId}/dashboard`,
   siteDetailRoute: '/sites/:id',
   siteDetail: (id: string | number) => `/sites/${id}`,

@@ -22,6 +22,10 @@ const Dashboard = () => {
   );
   const { user } = useAuth();
   const { toast } = useToast();
+  const userSiteId = user?.siteId ? String(user.siteId).trim() : '';
+  const activeSiteId = siteId || userSiteId;
+  const isUserWithoutSite =
+    user?.role !== 'master' && user?.role !== 'admin' && !userSiteId;
 
   const [isLoading, setIsLoading] = useState(true);
   const [site, setSite] = useState<{
@@ -39,7 +43,13 @@ const Dashboard = () => {
       return;
     }
 
-    if (!siteId) {
+    if (isUserWithoutSite) {
+      setIsLoading(false);
+      return;
+    }
+
+    if (!activeSiteId) {
+      setIsLoading(false);
       toast({
         title: 'エラー',
         description: 'siteId が見つかりません',
@@ -56,8 +66,8 @@ const Dashboard = () => {
         setIsLoading(true);
 
         const [siteResponse, projectData] = await Promise.all([
-          getSiteData(siteId),
-          getSiteProjects(siteId),
+          getSiteData(activeSiteId),
+          getSiteProjects(activeSiteId),
         ]);
 
         if (!isMounted) return;
@@ -85,7 +95,7 @@ const Dashboard = () => {
     return () => {
       isMounted = false;
     };
-  }, [toast, user, siteId, navigate, loadNotifications]);
+  }, [toast, user, activeSiteId, navigate, loadNotifications, isUserWithoutSite]);
 
   useEffect(() => {
     setCurrentProject(null);
@@ -93,8 +103,22 @@ const Dashboard = () => {
 
   const handleClick = (project: SiteProject) => {
     setCurrentProject(project);
-    navigate(`/projects/${project.id}/register`, { state: { siteId } });
+    navigate(`/projects/${project.id}/register`, { state: { siteId: activeSiteId } });
   };
+
+  if (isUserWithoutSite) {
+    return (
+      <div className='min-h-screen bg-slate-50 py-8'>
+        <div className='container mx-auto px-4'>
+          <Card className='mx-auto mt-16 max-w-2xl'>
+            <CardContent className='p-8 text-center text-muted-foreground'>
+              所属している拠点がありません。マスターにお問い合わせください。
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen py-8 bg-slate-50'>
@@ -124,12 +148,12 @@ const Dashboard = () => {
             </div>
           </div>
 
-            {user?.role === 'master' && siteId && (
+            {user?.role === 'master' && activeSiteId && (
               <Button
                 variant="outline"
                 size="sm"
                 className="shrink-0"
-                onClick={() => navigate(`/master/site-edit/${siteId}`)}
+                onClick={() => navigate(`/master/site-edit/${activeSiteId}`)}
               >
                 拠点更新
               </Button>
@@ -190,7 +214,7 @@ const Dashboard = () => {
                                 <Button
                                   onClick={() =>
                                     navigate(
-                                      `/sites/${encodeURIComponent(siteId)}/projects/${project.id}`,
+                                      `/sites/${encodeURIComponent(activeSiteId)}/projects/${project.id}`,
                                     )
                                   }
                                   className='w-full h-10 bg-muted text-foreground hover:bg-muted/80'
