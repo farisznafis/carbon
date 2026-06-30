@@ -329,14 +329,32 @@ export function UserForm({
               </FormSection>
             )}
 
-            <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <FormActions
+              className={
+                onDelete
+                  ? 'grid grid-cols-[40px_minmax(0,1fr)_minmax(0,1fr)] gap-3'
+                  : 'grid grid-cols-1 gap-3 sm:grid-cols-2'
+              }
+            >
               {onDelete ? (
-                <DeleteAlertDialog
-                  label="ユーザー"
-                  open={isDeleteDialogOpen}
-                  onOpenChange={setIsDeleteDialogOpen}
-                  onDelete={onDelete}
-                />
+                <>
+                  <DeleteAlertDialog
+                    label="ユーザー"
+                    open={isDeleteDialogOpen}
+                    onOpenChange={setIsDeleteDialogOpen}
+                    onDelete={onDelete}
+                    iconOnly
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={onBack}
+                  >
+                    キャンセル
+                  </Button>
+                </>
               ) : (
                 <Button
                   type="button"

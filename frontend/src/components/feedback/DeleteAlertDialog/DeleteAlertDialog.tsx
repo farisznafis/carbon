@@ -11,6 +11,7 @@ import {
     AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Trash2 } from 'lucide-react';
 
 type Props = {
@@ -18,6 +19,8 @@ type Props = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onDelete: () => void;
+    iconOnly?: boolean;
+    className?: string;
 };
 
 export function DeleteAlertDialog({
@@ -25,6 +28,8 @@ export function DeleteAlertDialog({
     open,
     onOpenChange,
     onDelete,
+    iconOnly = false,
+    className,
 }: Readonly<Props>) {
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -32,10 +37,12 @@ export function DeleteAlertDialog({
                 <Button
                     type="button"
                     variant="destructive"
-                    size="sm"
-                    className="w-full"
+                    size={iconOnly ? "icon" : "sm"}
+                    className={cn(iconOnly ? "h-10 w-10 rounded-full" : "w-full", className)}
+                    aria-label={`${label}を削除`}
                 >
-                    <Trash2 className="h-4 w-4" /> 削除
+                    <Trash2 className="h-4 w-4" />
+                    {!iconOnly && ' 削除'}
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>

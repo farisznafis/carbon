@@ -403,25 +403,32 @@ export function SiteForm({
                 />
               </FormSection>
 
-            <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <FormActions
+              className={
+                !isCreateMode && onDelete
+                  ? 'grid grid-cols-[40px_minmax(0,1fr)_minmax(0,1fr)] gap-3'
+                  : 'grid grid-cols-1 gap-3 sm:grid-cols-2'
+              }
+            >
               {!isCreateMode && onDelete ? (
-                <div className="flex gap-3">
+                <>
                   <DeleteAlertDialog
                     label="拠点"
                     open={isDeleteDialogOpen}
                     onOpenChange={setIsDeleteDialogOpen}
                     onDelete={onDelete}
+                    iconOnly
                   />
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="flex-1"
+                    className="w-full"
                     onClick={() => navigate(-1)}
                   >
                     キャンセル
                   </Button>
-                </div>
+                </>
               ) : (
                 <Button
                   type="button"
