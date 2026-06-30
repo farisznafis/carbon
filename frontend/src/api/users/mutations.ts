@@ -55,7 +55,7 @@ function formatMutationError(
 
 export const registerUser = async (
   userData: UserFormData,
-): Promise<{ statusCode: string; user: UserList; site: Partial<Site> }> => {
+): Promise<{ statusCode: string; user: UserList; site?: Partial<Site> }> => {
   const payload: RegisterUserPayload = {
     username: userData.username,
     firstName: userData.firstName,
@@ -79,7 +79,7 @@ export const registerUser = async (
     throw new Error(formatMutationError(json, "Failed to register user"));
   }
 
-  return json as { statusCode: string; user: UserList; site: Partial<Site> };
+  return json as { statusCode: string; user: UserList; site?: Partial<Site> };
 };
 
 export const updateUser = async (
