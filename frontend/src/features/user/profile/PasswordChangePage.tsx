@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { ApiError } from '@/api/_shared/errors';
 import { changePassword } from '@/api/auth';
 import { PasswordInput } from '@/components/inputs';
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
@@ -75,6 +76,14 @@ const PasswordChange = () => {
       await logout();
       navigate('/login', { replace: true });
     } catch (error) {
+      if (error instanceof ApiError && error.payload?.errors) {
+        const errors = error.payload.errors as Record<string, string>;
+        if (errors.newPassword) {
+          passwordForm.setError('new', { message: errors.newPassword });
+          return;
+        }
+        return;
+      }
       toast({
         title: 'エラー',
         description:
