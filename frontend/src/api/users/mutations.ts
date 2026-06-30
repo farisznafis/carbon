@@ -92,6 +92,8 @@ export const updateUser = async (
 ): Promise<UpdateUserResponse> => {
   const resolvedSiteId =
     userData.siteId !== undefined ? userData.siteId : mergedData?.siteId ?? null;
+  const normalizedSiteId =
+    resolvedSiteId === '' || resolvedSiteId === null ? null : Number(resolvedSiteId);
 
   const payload: UpdateUserPayload = {
     userId: Number(userId),
@@ -102,7 +104,7 @@ export const updateUser = async (
     email: userData.email ?? mergedData?.email ?? "",
     phoneNumber: String(userData.phoneNumber ?? mergedData?.phoneNumber ?? "").replace(/-/g, ""),
     userPosition: userData.userPosition ?? userData.position ?? mergedData?.position ?? "",
-    siteId: resolvedSiteId !== null ? Number(resolvedSiteId) : null,
+    siteId: normalizedSiteId,
   };
 
   const response = await apiFetch("/user", {
