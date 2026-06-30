@@ -20,6 +20,8 @@ export interface ProfileApiProfile {
   email: string | null;
   userPosition: string | null;
   phoneNumber: string | null;
+  siteId?: string | number | null;
+  siteName?: string | null;
   company: ProfileApiCompany | null;
 }
 

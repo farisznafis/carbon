@@ -7,9 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getSiteData, getSiteProjects, type SiteProject } from '@/api/site';
+import { getProfile } from '@/api/profile';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { storage, storageKeys } from '@/lib/storage';
 
 const Dashboard = () => {
   const { siteId } = useParams();
@@ -22,10 +24,15 @@ const Dashboard = () => {
   );
   const { user } = useAuth();
   const { toast } = useToast();
+  const [refreshedSiteId, setRefreshedSiteId] = useState('');
+  const [isRefreshingUserSite, setIsRefreshingUserSite] = useState(false);
   const userSiteId = user?.siteId ? String(user.siteId).trim() : '';
-  const activeSiteId = siteId || userSiteId;
+  const activeSiteId = siteId || userSiteId || refreshedSiteId;
   const isUserWithoutSite =
-    user?.role !== 'master' && user?.role !== 'admin' && !userSiteId;
+    user?.role !== 'master' &&
+    user?.role !== 'admin' &&
+    !userSiteId &&
+    !refreshedSiteId;
 
   const [isLoading, setIsLoading] = useState(true);
   const [site, setSite] = useState<{
@@ -36,6 +43,47 @@ const Dashboard = () => {
     address?: string;
   } | null>(null);
   const [projects, setProjects] = useState<SiteProject[]>([]);
+
+  useEffect(() => {
+    if (!user || user.role === 'master' || user.role === 'admin' || userSiteId) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const refreshUserSite = async () => {
+      setIsRefreshingUserSite(true);
+
+      try {
+        const profile = await getProfile();
+        const latestSiteId = profile.siteId?.trim() ?? '';
+
+        if (!isMounted || !latestSiteId) return;
+
+        const nextUser = {
+          ...user,
+          siteId: latestSiteId,
+          siteName: profile.siteName ?? user.siteName,
+        };
+
+        storage.setJson(storageKeys.user, nextUser);
+        storage.set(storageKeys.siteId, latestSiteId);
+        setRefreshedSiteId(latestSiteId);
+      } catch {
+        // Keep the existing no-site message when the profile refresh cannot resolve a site.
+      } finally {
+        if (isMounted) {
+          setIsRefreshingUserSite(false);
+        }
+      }
+    };
+
+    void refreshUserSite();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user, userSiteId]);
 
   useEffect(() => {
     if (!user) {
@@ -105,6 +153,18 @@ const Dashboard = () => {
     setCurrentProject(project);
     navigate(`/projects/${project.id}/register`, { state: { siteId: activeSiteId } });
   };
+
+  if (isRefreshingUserSite) {
+    return (
+      <div className='min-h-screen bg-slate-50 py-8'>
+        <div className='container mx-auto px-4'>
+          <div className='py-16 text-center text-muted-foreground'>
+            読み込み中...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isUserWithoutSite) {
     return (
