@@ -49,6 +49,7 @@ export default function UserEdit() {
   );
   const mode: 'edit' | 'profile' =
     location.state?.mode === 'profile' ? 'profile' : 'edit';
+  const isMasterUser = initialUser?.role === 'master';
 
   useEffect(() => {
     if (sitesQuery.data?.sites) {
@@ -66,11 +67,21 @@ export default function UserEdit() {
     const {
       password: _password,
       passwordConfirmation: _passwordConfirmation,
+      username: _username,
       ...payload
     } = formData;
+    const payloadWithMasterSiteRule = isMasterUser
+      ? {
+          ...payload,
+          siteId: null,
+        }
+      : payload;
 
     try {
-      const { user: updatedUser, updatedSites } = await updateUser(id, payload);
+      const { user: updatedUser, updatedSites } = await updateUser(
+        id,
+        payloadWithMasterSiteRule,
+      );
       editUser(id, updatedUser);
 
       if (updatedSites?.length) {
@@ -144,6 +155,8 @@ export default function UserEdit() {
         originalData={mapUserToForm(initialUser)}
         onBack={handleConfirmBack}
         onSubmit={handleFinalSubmit}
+        hideSiteSection={isMasterUser}
+        hideUsernameField
       />
     );
   }
@@ -174,6 +187,8 @@ export default function UserEdit() {
           siteOptionsError={
             sitesQuery.isError ? '拠点を取得できませんでした' : null
           }
+          hideSiteSection={isMasterUser}
+          hideUsernameField
           embedded
         />
       </FormPageContent>

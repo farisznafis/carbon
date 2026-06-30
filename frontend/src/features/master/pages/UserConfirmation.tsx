@@ -21,6 +21,8 @@ interface UserConfirmationProps {
   originalData: UserFormData;
   onBack: () => void;
   onSubmit: () => void;
+  hideSiteSection?: boolean;
+  hideUsernameField?: boolean;
 }
 
 const displayValue = (value?: string | null) => {
@@ -39,6 +41,8 @@ export function UserConfirmation({
   originalData,
   onBack,
   onSubmit,
+  hideSiteSection = false,
+  hideUsernameField = false,
 }: Readonly<UserConfirmationProps>) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const getSiteById = useDashboardStore((state) => state.getSiteById);
@@ -121,11 +125,13 @@ export function UserConfirmation({
 
             <FormSection number={2} title="アカウント情報">
               <FormGrid>
-                <ConfirmationItem
-                  label="ユーザー名"
-                  value={displayValue(data.username)}
-                  originalValue={originalValue(originalData.username, isCreateMode)}
-                />
+                {!hideUsernameField && (
+                  <ConfirmationItem
+                    label="ユーザー名"
+                    value={displayValue(data.username)}
+                    originalValue={originalValue(originalData.username, isCreateMode)}
+                  />
+                )}
                 <ConfirmationItem
                   label="メールアドレス"
                   value={displayValue(data.email)}
@@ -134,13 +140,15 @@ export function UserConfirmation({
               </FormGrid>
             </FormSection>
 
-            <FormSection number={3} title="拠点">
-              <ConfirmationItem
-                label="担当する拠点"
-                value={displayValue(siteName)}
-                originalValue={isCreateMode ? undefined : displayValue(originalSiteName)}
-              />
-            </FormSection>
+            {!hideSiteSection && (
+              <FormSection number={3} title="拠点">
+                <ConfirmationItem
+                  label="担当する拠点"
+                  value={displayValue(siteName)}
+                  originalValue={isCreateMode ? undefined : displayValue(originalSiteName)}
+                />
+              </FormSection>
+            )}
 
             <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Button

@@ -15,7 +15,8 @@ type RegisterUserPayload = {
   siteId: number | null;
 };
 
-type UpdateUserInput = Partial<UserFormData> & {
+type UpdateUserInput = Omit<Partial<UserFormData>, "siteId"> & {
+  siteId?: string | null;
   position?: string;
 };
 
@@ -89,7 +90,8 @@ export const updateUser = async (
   prevSite?: Site,
   masterUser?: UserList,
 ): Promise<UpdateUserResponse> => {
-  const resolvedSiteId = userData.siteId || mergedData?.siteId || null;
+  const resolvedSiteId =
+    userData.siteId !== undefined ? userData.siteId : mergedData?.siteId ?? null;
 
   const payload: UpdateUserPayload = {
     userId: Number(userId),
@@ -128,7 +130,7 @@ export const updateUser = async (
           email: payload.email,
           phoneNumber: payload.phoneNumber,
           role: mergedData?.role ?? "user",
-          siteId: String(payload.siteId),
+          siteId: payload.siteId !== null ? String(payload.siteId) : null,
           position: payload.userPosition,
         };
 

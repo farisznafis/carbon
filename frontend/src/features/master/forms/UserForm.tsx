@@ -47,6 +47,8 @@ interface UserFormProps {
   isSiteOptionsLoading?: boolean;
   siteOptionsError?: string | null;
   embedded?: boolean;
+  hideSiteSection?: boolean;
+  hideUsernameField?: boolean;
 }
 
 export function UserForm({
@@ -61,6 +63,8 @@ export function UserForm({
   isSiteOptionsLoading = false,
   siteOptionsError = null,
   embedded = false,
+  hideSiteSection = false,
+  hideUsernameField = false,
 }: Readonly<UserFormProps>) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { joinableSites, getSiteById } = useDashboardStore();
@@ -78,7 +82,8 @@ export function UserForm({
       ? [...baseSites, selectedSite]
       : baseSites;
 
-  const shouldShowSiteSelect = mode === 'create' || mode === 'edit';
+  const shouldShowSiteSelect =
+    (mode === 'create' || mode === 'edit') && !hideSiteSection;
 
   const form = useForm<UserFormData>({
     defaultValues: {
@@ -209,19 +214,21 @@ export function UserForm({
             </FormSection>
 
             <FormSection number={2} title="アカウント情報">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <RequiredLabel>ユーザー名</RequiredLabel>
-                    <FormControl>
-                      <Input inputSize="sm" placeholder="yamada_taro" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!hideUsernameField && (
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <RequiredLabel>ユーザー名</RequiredLabel>
+                      <FormControl>
+                        <Input inputSize="sm" placeholder="yamada_taro" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}
