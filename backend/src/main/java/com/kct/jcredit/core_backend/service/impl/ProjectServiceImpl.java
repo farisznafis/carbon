@@ -546,6 +546,13 @@ public class ProjectServiceImpl implements ProjectService {
             response.setMessage("プロジェクトはすでにこのステータスです。");
             return response;
         }
+
+        if ("終了".equals(project.getProjectStatus())) {
+            response.setStatusCode(ResponseConstants.BAD_REQUEST);
+            response.setMessage("終了したプロジェクトのステータスは変更できません。");
+            return response;
+        }
+
         String previousStatus = project.getProjectStatus();
         
 

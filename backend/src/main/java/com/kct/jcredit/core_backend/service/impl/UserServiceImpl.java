@@ -197,10 +197,11 @@ public class UserServiceImpl implements UserService {
             return response;
         }
 
-        Site site = siteRepository.findById(request.getSiteId())
-                .orElse(null);
+        Site site = null;
         // 1. サイトが指定されている場合は存在確認
         if(request.getSiteId() != null) {
+            site = siteRepository.findById(request.getSiteId())
+                .orElse(null);
             if (site == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_NOT_FOUND);
