@@ -52,7 +52,7 @@ export function MasterSiteCard({ site, onOpen }: MasterSiteCardProps) {
               <span className="text-muted-foreground">担当者</span>
               <span>{formatPersonName(site.picLastName, site.picFirstName)}</span>
             </span>
-            <span className="inline-flex min-w-0 items-start gap-1.5">
+            <span className="inline-flex min-w-0 items-center gap-1.5">
               <MapPin className="h-4 w-4 shrink-0" />
               <span className="text-muted-foreground">所在地</span>
               <span className="min-w-0 break-words">{formatSiteAddress(site)}</span>
