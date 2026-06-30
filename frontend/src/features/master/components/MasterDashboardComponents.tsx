@@ -144,6 +144,8 @@ export function UserDashboardCard({
   onEdit: (user: UserList) => void;
 }) {
   const fullName = formatPersonName(user.lastName, user.firstName);
+  const isDisconnectedFromSite =
+    user.role !== 'master' && !user.siteId && !user.siteName;
 
   return (
     <article className="flex flex-col overflow-hidden rounded-[8px] border border-border bg-card shadow-app-sm transition hover:border-primary/60 md:min-h-[112px] md:flex-row">
@@ -185,6 +187,10 @@ export function UserDashboardCard({
             {user.role === 'master' ? (
               <Badge className="border-transparent bg-blue-600 px-3 py-0.5 text-sm font-medium text-white hover:bg-blue-600">
                 全て
+              </Badge>
+            ) : isDisconnectedFromSite ? (
+              <Badge className="border-transparent bg-destructive px-3 py-0.5 text-sm font-medium text-destructive-foreground hover:bg-destructive">
+                拠点に未接続
               </Badge>
             ) : (
               <span className="truncate">
