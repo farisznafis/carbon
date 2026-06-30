@@ -25,7 +25,7 @@ export function MasterDashboardHero({
     <header className="relative overflow-hidden border-b border-border bg-background">
       <div className="relative flex min-h-[180px] flex-col items-center justify-center px-6 pt-10 text-center">
         <p className="text-small text-muted-foreground">
-          マスターダッシュボード
+          {/* マスターダッシュボード */}
         </p>
         <h1 className="mt-2 max-w-5xl text-foreground">
           {companyName}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import type { Site } from '@/api/site';
 import type { UserList } from '@/api/users';
@@ -39,6 +40,7 @@ const mapUserToForm = (user: UserList | undefined): UserFormData => {
 export default function UserEdit() {
   const [step, setStep] = useState<'form' | 'confirm'>('form');
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const { id } = useParams();
   const initialUser = useDashboardStore((state) => state.getUser(id));
@@ -81,8 +83,32 @@ export default function UserEdit() {
       const { user: updatedUser, updatedSites } = await updateUser(
         id,
         payloadWithMasterSiteRule,
+        initialUser,
       );
-      editUser(id, updatedUser);
+      const updatedSiteId = payloadWithMasterSiteRule.siteId || null;
+      const updatedSite = updatedSiteId
+        ? sitesQuery.data?.sites.find((site) => site.id === updatedSiteId)
+        : undefined;
+      const mergedUpdatedUser: UserList = {
+        ...initialUser,
+        ...updatedUser,
+        siteId: updatedSiteId,
+        siteName: updatedSiteId ? (updatedUser.siteName ?? updatedSite?.siteName) : undefined,
+      };
+
+      editUser(id, mergedUpdatedUser);
+      queryClient.setQueryData<{ statusCode: string; users: UserList[] }>(
+        ['users'],
+        (current) =>
+          current
+            ? {
+                ...current,
+                users: current.users.map((user) =>
+                  user.id === id ? { ...user, ...mergedUpdatedUser } : user,
+                ),
+              }
+            : current,
+      );
 
       if (updatedSites?.length) {
         updatedSites.forEach((site) => editSite(site.id, site));

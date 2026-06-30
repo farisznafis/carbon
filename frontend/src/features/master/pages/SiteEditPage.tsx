@@ -50,11 +50,12 @@ function SiteEdit() {
   const editSite = useDashboardStore((state) => state.editSite);
   const deleteSiteStore = useDashboardStore((state) => state.deleteSiteStore);
   const setUsers = useDashboardStore((state) => state.setUsers);
+  const storedUsers = useDashboardStore((state) => state.users);
   const { joinableSites } = useDashboardStore();
   const usersQuery = useUsersQuery();
   const users = useMemo(
-    () => usersQuery.data?.users ?? [],
-    [usersQuery.data?.users],
+    () => (storedUsers.length > 0 ? storedUsers : usersQuery.data?.users ?? []),
+    [storedUsers, usersQuery.data?.users],
   );
 
   useEffect(() => {
