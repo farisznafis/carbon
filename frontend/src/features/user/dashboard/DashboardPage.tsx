@@ -227,7 +227,7 @@ const Dashboard = () => {
                 <CardTitle className='text-3xl font-bold'>
                   プロジェクト
                 </CardTitle>
-                <InlineHelp />
+                {/* <InlineHelp /> */}
               </CardHeader>
               <CardContent>
                 <ScrollArea className='max-h-[600px] pr-4 overflow-auto'>

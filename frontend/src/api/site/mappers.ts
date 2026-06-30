@@ -80,17 +80,31 @@ export function mapSiteListItem(item: SiteListItem): Site {
 // For GET /site/{siteId} response (dashboard.ts)
 // using apiSite from SiteDashboardApiResponse to map to Site, because the fields are more complete than SiteListItem 
 export function mapSiteDashboard(apiSite: SiteDashboardApiResponse['site']): Site { 
+  const prefectureName = apiSite.prefecture ?? apiSite.prefName ?? "";
+  const cityName = apiSite.municipality ?? apiSite.city ?? apiSite.cityName ?? "";
+  const blockName =
+    apiSite.blocknum ??
+    [apiSite.town, apiSite.block ?? apiSite.blockName].filter(Boolean).join("");
+  const buildingName = apiSite.buildingName ?? "";
+  const composedAddress = [
+    apiSite.postalCode ? `〒${apiSite.postalCode}` : "",
+    prefectureName,
+    cityName,
+    blockName,
+    buildingName,
+  ]
+    .filter(Boolean)
+    .join("");
+
   return {
     id: apiSite.id,
     siteName: apiSite.siteName ?? "",
     postalCode: apiSite.postalCode ?? "",
-    prefectureName: apiSite.prefecture ?? apiSite.prefName ?? "",
-    cityName: apiSite.municipality ?? apiSite.city ?? apiSite.cityName ?? "",
-    blockName:
-      apiSite.blocknum ??
-      [apiSite.town, apiSite.block ?? apiSite.blockName].filter(Boolean).join(""),
-    address: apiSite.address ?? "",
-    buildingName: apiSite.buildingName ?? "",
+    prefectureName,
+    cityName,
+    blockName,
+    address: apiSite.address ?? composedAddress,
+    buildingName,
     picId: "",
     picFirstName: apiSite.picFirstName ?? "",
     picLastName: apiSite.picLastName ?? "",
