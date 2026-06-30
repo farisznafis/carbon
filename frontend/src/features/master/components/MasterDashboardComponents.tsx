@@ -30,13 +30,13 @@ export function MasterDashboardHero({
         <h1 className="mt-2 max-w-5xl text-foreground">
           {companyName}
         </h1>
-        <p className="text-small mt-2 inline-flex items-center gap-2 text-muted-foreground">
-          サービスステータス:
+        {/* <p className="text-small mt-2 inline-flex items-center gap-2 text-muted-foreground">
+          サービスステータス
           <span className="inline-flex items-center gap-1.5 text-foreground">
             <span className="h-3 w-3 rounded-full bg-green-500" />
             利用中
           </span>
-        </p>
+        </p> */}
       </div>
 
       <div
@@ -102,7 +102,7 @@ export function DashboardSection({
         </div>
         <Button
           type="button"
-          size="sm"
+          size="md"
           onClick={onAdd}
           disabled={addDisabled}
           className="self-start sm:self-auto"

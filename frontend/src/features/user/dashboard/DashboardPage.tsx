@@ -211,7 +211,7 @@ const Dashboard = () => {
             {user?.role === 'master' && activeSiteId && (
               <Button
                 variant="outline"
-                size="sm"
+                size="md"
                 className="shrink-0"
                 onClick={() => navigate(`/master/site-edit/${activeSiteId}`)}
               >
