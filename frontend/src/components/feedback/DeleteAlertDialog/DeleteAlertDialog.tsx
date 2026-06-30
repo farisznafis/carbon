@@ -32,7 +32,8 @@ export function DeleteAlertDialog({
                 <Button
                     type="button"
                     variant="destructive"
-                    className="px-2 py-2 text-sm h-8"
+                    size="sm"
+                    className="w-full"
                 >
                     <Trash2 className="h-4 w-4" /> 削除
                 </Button>
