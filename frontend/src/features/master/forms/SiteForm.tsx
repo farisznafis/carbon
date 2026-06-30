@@ -1,7 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { X } from 'lucide-react';
 import { ApiError } from '@/api/_shared/errors';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -10,7 +9,7 @@ import {
   FormSection,
   FormSectionStack,
 } from '@/components/forms/form-layout';
-import { RequiredLabel } from '@/components/forms/shared';
+import { RequiredBadge, RequiredLabel } from '@/components/forms/shared';
 import { DeleteAlertDialog } from '@/components/feedback/DeleteAlertDialog/DeleteAlertDialog';
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
 import { Button } from '@/components/ui/button';
@@ -379,7 +378,7 @@ export function SiteForm({
               />
             </FormSection>
 
-              <FormSection number={3} title="担当者">
+              <FormSection number={3} title={<>担当者 <RequiredBadge /></>}>
                 <FormField
                   control={form.control}
                   name="userId"
@@ -391,7 +390,6 @@ export function SiteForm({
 
                     return (
                       <FormItem>
-                        <RequiredLabel required={false}>担当者</RequiredLabel>
                         <div className="flex items-center gap-2">
                           <Select
                             value={field.value ?? ''}
@@ -423,17 +421,6 @@ export function SiteForm({
                             </SelectContent>
                           </Select>
 
-                          {field.value && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              aria-label="担当者をクリア"
-                              onClick={() => field.onChange('')}
-                            >
-                              <X className="h-4 w-4 text-muted-foreground" />
-                            </Button>
-                          )}
                         </div>
                         {isUserOptionsLoading && (
                           <FormDescription>

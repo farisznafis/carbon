@@ -199,9 +199,9 @@ export function FormCard({
   );
 }
 
-type FormSectionProps = React.HTMLAttributes<HTMLElement> & {
+type FormSectionProps = Omit<React.HTMLAttributes<HTMLElement>, 'title'> & {
   number: number;
-  title: string;
+  title: React.ReactNode;
 };
 
 export function FormSection({
