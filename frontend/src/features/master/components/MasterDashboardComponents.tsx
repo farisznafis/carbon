@@ -190,7 +190,7 @@ export function UserDashboardCard({
               </Badge>
             ) : isDisconnectedFromSite ? (
               <Badge className="border-transparent bg-destructive px-3 py-0.5 text-sm font-medium text-destructive-foreground hover:bg-destructive">
-                拠点に未接続
+                未設定
               </Badge>
             ) : (
               <span className="truncate">

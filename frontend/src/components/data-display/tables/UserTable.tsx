@@ -105,7 +105,7 @@ export function UserTable({
         }
 
         if (row.siteId == null || row.siteId === '') {
-          return <Badge variant='destructive'>拠点に未接続</Badge>;
+          return <Badge variant='destructive'>未接続</Badge>;
         }
 
         return row.siteName ?? row.siteId;

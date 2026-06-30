@@ -1,4 +1,5 @@
 import type { Site } from '@/api/site';
+import { Badge } from '@/components/ui/badge';
 import {
   formatPersonName,
   formatSiteAddress,
@@ -76,7 +77,9 @@ export function MasterSiteCard({ site, onOpen }: MasterSiteCardProps) {
                   )}
                 </>
               ) : (
-                <span>-</span>
+                <Badge className="border-transparent bg-muted px-3 py-0.5 text-sm font-medium text-muted-foreground hover:bg-muted">
+                  未参加
+                </Badge>
               )}
             </div>
           </div>

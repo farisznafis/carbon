@@ -421,7 +421,7 @@ export const SignupStep1 = () => {
                 name="buildingName"
                 render={({ field }) => (
                   <FormItem>
-                    <RequiredLabel required={false}>建物名</RequiredLabel>
+                    <RequiredLabel required={true}>建物名</RequiredLabel>
                     <FormControl>
                       <Input inputSize="sm" placeholder="サンプルビル 3F" {...field} />
                     </FormControl>
