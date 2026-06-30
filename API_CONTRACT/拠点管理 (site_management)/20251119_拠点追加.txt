@@ -5,12 +5,11 @@ Content-Type: application/json
 Request Body (JSON): 
 {
   "siteName": "ABC工場";
-  "postalCode": "100-0001",
-  "prefName": "東京都",   
-  "cityName": "千代田区",
-  "townName": "千代田",
-  "blockName": "1-1-1",
-  "addressDetail": "○○マンション101号室",
+  "postalCode": "1234567",
+  "prefecture": "東京",
+  "municipality": "渋谷区桜丘町",
+  "blocknum": "1-1"
+  "buildingName": "サンプルビル 3F",
   "userId": "1234" //担当者id
 }
 
@@ -34,11 +33,11 @@ ERROR RESPONSES
   "message": "該当する拠点が見つかりませんでした。"
 },
 {
-  "errorCode": "SERVER_ERROR",
+  "statusCode": "SERVER_ERROR",
   "message": "サーバー内部でエラーが発生しました。"
 },
 {
-  "errorCode": "LIMIT_ERROR",
+  "statusCode": "LIMIT_EXCEEDED",
   "message": "上限に達しています。"
 }
 

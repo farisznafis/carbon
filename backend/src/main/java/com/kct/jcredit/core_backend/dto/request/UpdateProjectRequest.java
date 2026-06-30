@@ -75,6 +75,7 @@ public class UpdateProjectRequest extends BaseRequest{
     @Size(max = 5)
     private String methodCategory;
     @Hankaku
+    @Pattern(regexp = "^[0-9]{3}$", message = "方法論番号は3桁の数字で入力してください。")
     private String methodNumber;
     @ZenkakuWithSymbols
     private String methodName;
@@ -83,6 +84,6 @@ public class UpdateProjectRequest extends BaseRequest{
 
     private Boolean methodCombiFeasibility;
 
-    @Size(max = 255)
+    @Size(max = 1000, message = "方法論詳細は1000文字以内で入力してください。")
     private String methodDetails;
 }

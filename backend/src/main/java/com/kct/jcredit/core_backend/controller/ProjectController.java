@@ -42,7 +42,10 @@ import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
@@ -50,6 +53,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 @RestController
 @RequestMapping("/project")
 @RequiredArgsConstructor
+@Validated
 public class ProjectController {
 
     private final ProjectService projectService;
@@ -141,7 +145,7 @@ public class ProjectController {
     @SecurityRequirement(name = "bearerAuth")
     public ProjectUploadDocumentResponse updateDocumentStatus(
             @PathVariable String projectId,
-            @RequestBody ProjectUploadDocumentRequest request
+            @Valid @RequestBody ProjectUploadDocumentRequest request
     ) {
         return projectUploadDocumentService.updateStatus(projectId, request);
     }
@@ -151,8 +155,8 @@ public class ProjectController {
     @PreAuthorize("hasRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ProjectListInfoResponse> listProjects(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "ページは1以上で入力してください。") int page,
+            @RequestParam(defaultValue = "20") @Min(value = 1, message = "表示件数は1以上で入力してください。") int limit,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String methodology,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdFrom,
@@ -161,7 +165,7 @@ public class ProjectController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate updatedTo,
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "updatedAt") String sort,
-            @RequestParam(defaultValue = "desc") String sortOrder
+            @RequestParam(defaultValue = "desc") @Pattern(regexp = "^(asc|desc)$", message = "ソート順はascまたはdescで入力してください。") String sortOrder
     ) {
         ProjectListInfoResponse response = projectService.findByFilter(
                 page,

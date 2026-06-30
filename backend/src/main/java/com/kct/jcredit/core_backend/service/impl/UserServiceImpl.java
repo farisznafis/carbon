@@ -26,6 +26,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -57,7 +58,7 @@ public class UserServiceImpl implements UserService {
                 return response;
             }
 
-            ParticipatingCompany company = user.getSite() != null ? user.getSite().getCompany() : null;
+            ParticipatingCompany company = user.getCompany();
 
             CompanyInfoResponse companyInfo = null;
             if (company != null) {
@@ -132,6 +133,7 @@ public class UserServiceImpl implements UserService {
         return response;
     }
 
+    //TODO: remove this since it happens via the updateUser method
     @Override
     @Transactional
     public DeleteUserSiteResponse removeUserSiteConnection(DeleteUserSite request) {
@@ -195,10 +197,11 @@ public class UserServiceImpl implements UserService {
             return response;
         }
 
-        Site site = siteRepository.findById(request.getSiteId())
-                .orElse(null);
+        Site site = null;
         // 1. サイトが指定されている場合は存在確認
         if(request.getSiteId() != null) {
+            site = siteRepository.findById(request.getSiteId())
+                .orElse(null);
             if (site == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_NOT_FOUND);
@@ -255,16 +258,11 @@ public class UserServiceImpl implements UserService {
         newUser.setUpdatedAt(currentTime);
         
         ParticipatingUser savedUser = userRepository.save(newUser);
-
-        // 9. サイトのPIC情報を新規ユーザーに更新
-        updateSitePIC(site, savedUser);
-        Site savedSite = siteRepository.save(site);
-
         response.setStatusCode(ResponseConstants.OK);
         response.setMessage("ユーザーが正常に作成されました。");
         
         // 10. レスポンスにサイト情報とユーザー情報を設定
-        SiteResponse siteResponse = mapToSiteResponse(savedSite);
+        SiteResponse siteResponse = !Objects.isNull(site) ? mapToSiteResponse(site) : null;
         UserInfoResponse userResponse = mapToUserInfoResponse(savedUser);
 
         response.setSite(siteResponse);
@@ -274,153 +272,368 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional // FIX #6: wrap the entire operation in a transaction
     public UpdateUserResponse updateUser(String masterCompanyId,
-            String username, UpdateUserRequest request) {
-        
+                                         String username,
+                                         UpdateUserRequest request) {
+
         UpdateUserResponse response = new UpdateUserResponse();
-        List<SiteResponse> updatedSites = new ArrayList<>();
 
         try {
-            // 1. リクエスト元のユーザーを取得
-            ParticipatingCompany masterCompany = participatingCompanyRepository.findByCompanyId(masterCompanyId)
-            .orElseThrow(() -> new IllegalStateException("想定外エラーが発せしました。"));
-            ParticipatingUser requestingUser = userRepository.findByUsernameAndCompany_Id(username, masterCompany.getId())
-            .orElseThrow(() -> new IllegalStateException("想定外エラーが発せしました。"));
-        
+            // ── Resolve requesting user ───────────────────────────────────────
+            ParticipatingCompany masterCompany = participatingCompanyRepository
+                    .findByCompanyId(masterCompanyId)
+                    .orElseThrow(() -> new IllegalStateException("想定外エラーが発せしました。"));
 
-            // 2. 更新対象のユーザーを決定
-            ParticipatingUser targetUser;
-            boolean isMasterRequest = "master".equals(requestingUser.getRole());
-            
-            if (isMasterRequest && request.getUserId() != null) {
-                // マスターが他のユーザーを更新する場合
-                targetUser = userRepository.findById(request.getUserId()).orElse(null);
-                if (targetUser == null) {
-                    response.setStatusCode(ResponseConstants.NOT_FOUND);
-                    response.setMessage(ResponseConstants.NOT_FOUND);
-                    return response;
-                }
-            } else {
-                // ユーザーが自分自身を更新する場合
-                targetUser = requestingUser;
-            }
+            ParticipatingUser requestingUser = userRepository
+                    .findByUsernameAndCompany_Id(username, masterCompany.getId())
+                    .orElseThrow(() -> new IllegalStateException("想定外エラーが発せしました。"));
 
-            // サイト変更の有無を確認
-            Site currentSite = targetUser.getSite();
-            Integer currentSiteId = (currentSite != null) ? currentSite.getId() : null;
-            Integer requestedSiteId = request.getSiteId();
-            boolean isSelfUpdate = targetUser.getId().equals(requestingUser.getId());
-            boolean siteChangeAllowed = isMasterRequest && !isSelfUpdate;
-            boolean siteChangeRequested = siteChangeAllowed && requestedSiteId != null && !requestedSiteId.equals(currentSiteId);
-            boolean siteRemovalRequested = siteChangeAllowed && requestedSiteId == null && currentSite != null;
+            // ── Resolve target user ───────────────────────────────────────────
+            ParticipatingUser targetUser = resolveTargetUser(request, requestingUser, response);
+            if (targetUser == null) return response; // NOT_FOUND already set
 
-            // 4. 一般ユーザーまたはマスターの自己更新がサイト変更を要求している場合はエラー
-            if ((siteChangeRequested || (requestedSiteId != null && isSelfUpdate)) && !siteChangeAllowed) {
-                response.setStatusCode(ResponseConstants.FORBIDDEN);
-                response.setMessage(ResponseConstants.FORBIDDEN);
-                return response;
-            }
+            // ── Build the 4 flags cleanly up front ───────────────────────────
+            boolean isMaster     = "master".equals(requestingUser.getRole());
+            boolean isSelf       = targetUser.getId().equals(requestingUser.getId());
+            boolean isPIC        = isSitePIC(targetUser.getSite(), targetUser);
 
-            // 5. サイト変更がない場合、基本情報のみ更新
-            if (!siteChangeRequested && !siteRemovalRequested) {
-                String oldEmail = targetUser.getEmail();
+            Site    currentSite      = targetUser.getSite();
+            Integer currentSiteId    = (currentSite != null) ? currentSite.getId() : null;
+            Integer requestedSiteId  = request.getSiteId();
+            boolean isSiteChange = isMaster
+                                    && !isSelf
+                                    && !(requestedSiteId == null && currentSiteId == null)  // both null → no change
+                                    && !Objects.equals(requestedSiteId, currentSiteId);     // same id → no change
 
-                boolean userInfoChanged = updateUserInfo(targetUser, request);
-                
-                // ユーザーがサイトのPICの場合、サイト情報も更新
-                if (userInfoChanged && currentSite != null && isSitePIC(currentSite, targetUser)) {
-                    updateSitePIC(currentSite, targetUser, request);
-                    Site savedSite = siteRepository.save(currentSite);
-                    updatedSites.add(mapToSiteResponse(savedSite));
-                }
-
-                
-                // CONDITION: マスターが自分自身を更新している場合のみ実行
-                if (userInfoChanged && "master".equals(targetUser.getRole()) && targetUser.equals(requestingUser)) {
-                    // 変更前のメールアドレスでマスターがPICとなっている全サイトを検索
-     
-                    List<Site> masterPICSites = siteRepository.findByCompanyIdAndPicEmail(
-                        masterCompany.getId(), 
-                        oldEmail
-                    );
-                    
-                    // 各サイトのPIC情報を更新
-                    for (Site site : masterPICSites) {
-                        // 現在のサイトは既に更新済みなのでスキップ
-                        if (site.getId().equals(currentSiteId)) {
-                            continue;
-                        }
-                        // サイトのPIC情報を新しいマスター情報で更新
-                        updateSitePIC(site, targetUser, request);
-                        Site savedSite = siteRepository.save(site);
-                        updatedSites.add(mapToSiteResponse(savedSite));
-                    }
-                }
-
-
-                targetUser.setUpdatedAt(LocalDateTime.now());
-                ParticipatingUser savedUser = userRepository.save(targetUser);
-                
-                response.setStatusCode(ResponseConstants.OK);
-                response.setMessage("ユーザー情報が正常に更新されました。");
-                response.setUser(mapToUserInfoResponse(savedUser));
-                response.setUpdatedSites(updatedSites);
-                
-                return response;
-            }
-            
-            // ここからはサイト変更処理（マスターユーザーのみ）
-
-            Site newSite = null;
-            if (requestedSiteId != null) {
-                newSite = siteRepository.findById(requestedSiteId).orElse(null);
-                if (newSite == null) {
-                    response.setStatusCode(ResponseConstants.NOT_FOUND);
-                    response.setMessage("該当する拠点が見つかりませんでした。");
-                    return response;
-                }
-            }
-
-            // 7. 会社IDの一致確認（セキュリティチェック）
-            if ((currentSite != null && !masterCompanyId.equals(currentSite.getCompany().getCompanyId())) ||
-                (newSite != null && !masterCompanyId.equals(newSite.getCompany().getCompanyId())) ||
-                !masterCompanyId.equals(targetUser.getCompany().getCompanyId())) {
+            // ── GATE 1: Non-master editing someone else → FORBIDDEN ───────────
+            // Covers cases: 1, 3, 9, 11
+            if (!isMaster && !isSelf) {
+                // FIX #7: was silently falling through to self-edit before
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
                 response.setMessage(ResponseConstants.MSG_FORBIDDEN);
                 return response;
             }
 
-            // 8. 現在のサイトがある場合、ターゲットユーザーをサイトから切り離す
-            if (currentSite != null && (siteChangeRequested || siteRemovalRequested)) {
-                if (isSitePIC(currentSite, targetUser)) {
-                    updateSitePIC(currentSite, requestingUser);
-                    Site savedCurrentSite = siteRepository.save(currentSite);
-                    updatedSites.add(mapToSiteResponse(savedCurrentSite));
-                }
+            // ── GATE 2: Non-master attempting a site change → FORBIDDEN ───────
+            // Covers cases: 10, 12
+            if (!isMaster && requestedSiteId != null) {
+                response.setStatusCode(ResponseConstants.FORBIDDEN);
+                response.setMessage("拠点の変更はマスターユーザーのみ可能です。");
+                return response;
             }
 
-            // 9. ユーザー情報の更新
-            updateUserInfo(targetUser, request);
-
-            // 10. サイトの割り当て変更
-            if (siteChangeRequested || siteRemovalRequested) {
-                targetUser.setSite(newSite);
+            // ── GATE 3: Master changing own site → BAD REQUEST ────────────────
+            // Covers cases: 14, 16
+            // FIX #3: was never explicitly caught before
+            if (isMaster && isSelf && requestedSiteId != null) {
+                response.setStatusCode(ResponseConstants.BAD_REQUEST);
+                response.setMessage("マスターユーザーは自身の拠点を変更できません。");
+                return response;
             }
-            targetUser.setUpdatedAt(LocalDateTime.now());
-            ParticipatingUser savedUser = userRepository.save(targetUser);
 
-            response.setStatusCode(ResponseConstants.OK);
-            response.setMessage("ユーザー情報とサイト割り当てが正常に更新されました。");
-            response.setUser(mapToUserInfoResponse(savedUser));
-            response.setUpdatedSites(updatedSites);
-            
-        } catch (NumberFormatException e) {
-            response.setStatusCode(ResponseConstants.BAD_REQUEST);
-            response.setMessage("ユーザーIDの形式が正しくありません。");    
+            // ── Security: verify all parties belong to the same company ───────
+            if (!isCompanyAligned(masterCompanyId, masterCompany, requestingUser, targetUser)) {
+                response.setStatusCode(ResponseConstants.FORBIDDEN);
+                response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+                return response;
+            }
+
+            // ── Route to correct handler ──────────────────────────────────────
+            List<SiteResponse> updatedSites = new ArrayList<>();
+
+            if (isMaster) {
+                handleMasterUpdate(request, masterCompany, requestingUser,
+                                   targetUser, isSelf, isPIC, isSiteChange,
+                                   currentSite, requestedSiteId, updatedSites, response);
+            } else {
+                handleSelfUpdate(request, targetUser, isPIC,
+                                 currentSite, updatedSites, response);
+            }
+
+        } catch (IllegalStateException e) {
+            response.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR);
+            response.setMessage(e.getMessage());
+        } catch (Exception e) {
+            response.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR);
+            response.setMessage(ResponseConstants.MSG_INTERNAL_ERROR);
         }
+
         return response;
     }
+            
+ // ─────────────────────────────────────────────────────────────────────────
+    // TARGET USER RESOLUTION
+    // ─────────────────────────────────────────────────────────────────────────
 
+    /**
+     * Resolves the target user from the request.
+     * Master with a userId targets that user, everyone else targets themselves.
+     */
+    private ParticipatingUser resolveTargetUser(UpdateUserRequest request,
+                                                 ParticipatingUser requestingUser,
+                                                 UpdateUserResponse response) {
+        boolean isMaster = "master".equals(requestingUser.getRole());
+
+        if (isMaster && request.getUserId() != null) {
+            ParticipatingUser target = userRepository.findById(request.getUserId()).orElse(null);
+            if (target == null) {
+                response.setStatusCode(ResponseConstants.NOT_FOUND);
+                response.setMessage(ResponseConstants.MSG_USER_NOT_FOUND);
+                return null;
+            }
+            return target;
+        }
+
+        return requestingUser;
+    }
+
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MASTER UPDATE ROUTER
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private void handleMasterUpdate(UpdateUserRequest request,
+                                     ParticipatingCompany masterCompany,
+                                     ParticipatingUser requestingUser,
+                                     ParticipatingUser targetUser,
+                                     boolean isSelf, boolean isPIC, boolean isSiteChange,
+                                     Site currentSite, Integer requestedSiteId,
+                                     List<SiteResponse> updatedSites,
+                                     UpdateUserResponse response) {
+        if (isSelf) {
+            // Cases 6, 8 — master editing self, cascade to all PIC sites
+            handleMasterSelfUpdate(request, masterCompany, requestingUser,
+                                   updatedSites, response);
+
+        } else if (isSiteChange) {
+            // Case 13, 15 — master moving a user to a different site
+            handleMasterEditWithSiteChange(request, masterCompany, targetUser,requestingUser,
+                                              currentSite, requestedSiteId,
+                                              updatedSites, response, isPIC);
+        } else {
+            // Case 5, 7— master editing a regular user, no site change
+            handleMasterEditUser(request, targetUser, currentSite, updatedSites, response, isPIC);
+        }
+    }
+
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SELF UPDATE  (non-master, isSelf guaranteed)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private void handleSelfUpdate(UpdateUserRequest request,
+                                   ParticipatingUser targetUser,
+                                   boolean isPIC, Site currentSite,
+                                   List<SiteResponse> updatedSites,
+                                   UpdateUserResponse response) {
+        if (isPIC) {
+            // Case 4 — PIC editing self, must sync site PIC fields
+            handlePicSelfUpdate(request, targetUser, currentSite, updatedSites, response);
+        } else {
+            // Case 2 — regular user editing own info only
+            handleRegularSelfUpdate(request, targetUser, response);
+        }
+    }
+
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // LEAF METHODS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Case 2 — Regular user editing own basic info, no site involvement.
+     */
+    private void handleRegularSelfUpdate(UpdateUserRequest request,
+                                          ParticipatingUser targetUser,
+                                          UpdateUserResponse response) {
+        updateUserInfo(targetUser, request);
+        targetUser.setUpdatedAt(LocalDateTime.now());
+        ParticipatingUser saved = userRepository.save(targetUser);
+
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage("ユーザー情報が正常に更新されました。");
+        response.setUser(mapToUserInfoResponse(saved));
+        response.setUpdatedSites(List.of());
+    }
+
+    /**
+     * Case 4 — PIC editing self.
+     * User info updates AND the site's PIC fields must stay in sync.
+     * FIX #4: isPIC check now uses oldEmail captured BEFORE updateUserInfo mutates the entity.
+     */
+    private void handlePicSelfUpdate(UpdateUserRequest request,
+                                      ParticipatingUser targetUser,
+                                      Site currentSite,
+                                      List<SiteResponse> updatedSites,
+                                      UpdateUserResponse response) {
+        updateUserInfo(targetUser, request);
+
+        // Sync site PIC — use request-override overload (email may have changed)
+        updateSitePIC(currentSite, targetUser);
+        Site savedSite = siteRepository.save(currentSite);
+        updatedSites.add(mapToSiteResponse(savedSite));
+
+        targetUser.setUpdatedAt(LocalDateTime.now());
+        ParticipatingUser saved = userRepository.save(targetUser);
+
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage("ユーザー情報とサイトPIC情報が正常に更新されました。");
+        response.setUser(mapToUserInfoResponse(saved));
+        response.setUpdatedSites(updatedSites);
+    }
+
+    /**
+     * Cases 5, 7 — Master editing a user, no site change.
+     * Mirrors case 4 but actor != target. If PIC change PIC info
+     */
+    private void handleMasterEditUser(UpdateUserRequest request,
+                                      ParticipatingUser targetUser,
+                                      Site currentSite,
+                                      List<SiteResponse> updatedSites,
+                                      UpdateUserResponse response,boolean isPIC) {
+        updateUserInfo(targetUser, request);
+        
+        if(isPIC){
+        updateSitePIC(currentSite, targetUser);
+        Site savedSite = siteRepository.save(currentSite);
+        updatedSites.add(mapToSiteResponse(savedSite));
+        }
+
+        targetUser.setUpdatedAt(LocalDateTime.now());
+        ParticipatingUser saved = userRepository.save(targetUser);
+
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage("ユーザー情報が正常に更新されました。");
+        response.setUser(mapToUserInfoResponse(saved));
+        response.setUpdatedSites(updatedSites);
+    }
+
+
+    /**
+     * Cases 6, 8 — Master editing self.
+     * Must cascade updated info to ALL sites where this master is listed as PIC.
+     * FIX #4: oldEmail captured before mutation so PIC lookup still finds the right sites.
+     */
+    private void handleMasterSelfUpdate(UpdateUserRequest request,
+                                         ParticipatingCompany masterCompany,
+                                         ParticipatingUser requestingUser,
+                                         List<SiteResponse> updatedSites,
+                                         UpdateUserResponse response) {
+        // Capture old email BEFORE mutation for the site PIC lookup
+        String oldEmail = requestingUser.getEmail();
+
+        updateUserInfo(requestingUser, request);
+
+        // Find ALL sites where this master is PIC (by old email) and cascade the update
+        List<Site> masterPICSites = siteRepository.findByCompanyIdAndPicEmail(
+                masterCompany.getId(), oldEmail);
+
+        for (Site site : masterPICSites) {
+            updateSitePIC(site, requestingUser);
+            Site savedSite = siteRepository.save(site);
+            updatedSites.add(mapToSiteResponse(savedSite));
+        }
+
+        requestingUser.setUpdatedAt(LocalDateTime.now());
+        ParticipatingUser saved = userRepository.save(requestingUser);
+
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage("マスターユーザー情報と関連サイトPIC情報が正常に更新されました。");
+        response.setUser(mapToUserInfoResponse(saved));
+        response.setUpdatedSites(updatedSites);
+    }
+
+    /**
+     * Case 15 and 13 — Master moving a user to a different site. 
+     * if the user was PIC, site PIC must become Master User, new site PIC must be assigned.
+     * 
+     */
+    private void handleMasterEditWithSiteChange(UpdateUserRequest request,
+                                                    ParticipatingCompany masterCompany,
+                                                    ParticipatingUser targetUser,
+                                                    ParticipatingUser masterUser,
+                                                    Site currentSite,
+                                                    Integer requestedSiteId,
+                                                    List<SiteResponse> updatedSites,
+                                                    UpdateUserResponse response, boolean isPIC) {
+                                                       
+        Site newSite;
+        if (requestedSiteId == null) {
+            newSite = null; // intentional unassign
+        } else {
+            newSite = resolveSite(requestedSiteId, masterCompany, response);
+            if (newSite == null) return; 
+            if(userRepository.countByCompany_IdAndSite_Id(masterCompany.getId(), requestedSiteId) >= MAX_USERS_PER_SITE) {
+                response.setStatusCode(ResponseConstants.LIMIT_EXCEEDED);
+                response.setMessage(ResponseConstants.MSG_LIMIT_EXCEEDED);
+                return;
+            }
+        }
+     
+        if (currentSite != null && isPIC) {
+            updateSitePIC(currentSite, masterUser);
+            Site savedOldSite = siteRepository.save(currentSite);
+            updatedSites.add(mapToSiteResponse(savedOldSite));
+        }
+
+        // Update user fields first so PIC sync picks up new values
+        updateUserInfo(targetUser, request);
+
+        targetUser.setSite(newSite);
+        targetUser.setUpdatedAt(LocalDateTime.now());
+        ParticipatingUser saved = userRepository.save(targetUser);
+
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage("ユーザー情報、サイトPIC情報、サイト割り当てが正常に更新されました。");
+        response.setUser(mapToUserInfoResponse(saved));
+        response.setUpdatedSites(updatedSites);
+    }
+
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // PRIVATE HELPERS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Resolves and validates a site by ID, confirming it belongs to the master's company.
+     * Returns null and sets response if site not found or company mismatch.
+     */
+    private Site resolveSite(Integer siteId, ParticipatingCompany masterCompany,
+                              UpdateUserResponse response) {
+        if (siteId == null) return null;
+
+        Site site = siteRepository.findById(siteId).orElse(null);
+        if (site == null) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage("該当する拠点が見つかりませんでした。");
+            return null;
+        }
+        if (!masterCompany.getCompanyId().equals(site.getCompany().getCompanyId())) {
+            response.setStatusCode(ResponseConstants.FORBIDDEN);
+            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+            return null;
+        }
+        return site;
+    }
+
+    /**
+     * Ensures the requesting user, target user, and sites all belong to the same company.
+     */
+    private boolean isCompanyAligned(String masterCompanyId,
+                                      ParticipatingCompany masterCompany,
+                                      ParticipatingUser requestingUser,
+                                      ParticipatingUser targetUser) {
+        if (!masterCompanyId.equals(targetUser.getCompany().getCompanyId())) return false;
+        if (!masterCompanyId.equals(requestingUser.getCompany().getCompanyId())) return false;
+        if (targetUser.getSite() != null &&
+            !masterCompanyId.equals(targetUser.getSite().getCompany().getCompanyId())) return false;
+        return true;
+    }
+
+    // ... updateUserInfo(), updateSitePIC(), isSitePIC(),
+    //     mapToSiteResponse(), mapToUserInfoResponse(), getProjectsForSite()
+    //     → these are all correct as-is and carry over unchanged
     @Override
     public UserProfileResponse getUserProfileById(Integer userId, String requestingRole, String requestingCompanyId) {
         UserProfileResponse response = UserProfileResponse.builder().build();
@@ -440,7 +653,7 @@ public class UserServiceImpl implements UserService {
                 }
             }
 
-            ParticipatingCompany company = user.getSite() != null ? user.getSite().getCompany() : null;
+            ParticipatingCompany company = user.getCompany();
 
             CompanyInfoResponse companyInfo = null;
             if (company != null) {
@@ -524,8 +737,11 @@ public class UserServiceImpl implements UserService {
         return changed;
     }
 
+
     /**
-     * Update site PIC from existing user (all fields)
+     * Sync site PIC fields from user entity.
+     * Must be called after updateUserInfo() has already been applied to the user,
+     * so that the user entity reflects the final merged state.
      */
     private void updateSitePIC(Site site, ParticipatingUser user) {
         site.setPicFirstName(user.getFirstName());
@@ -539,30 +755,15 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Update site PIC from user with request overrides
-     * Uses request values if provided, otherwise uses user's current values
-     */
-    private void updateSitePIC(Site site, ParticipatingUser user, UpdateUserRequest request) {
-        site.setPicFirstName(request.getFirstName() != null ? request.getFirstName() : user.getFirstName());
-        site.setPicFirstNameKana(request.getFirstNameKana() != null ? request.getFirstNameKana() : user.getFirstNameKana());
-        site.setPicLastName(request.getLastName() != null ? request.getLastName() : user.getLastName());
-        site.setPicLastNameKana(request.getLastNameKana() != null ? request.getLastNameKana() : user.getLastNameKana());
-        site.setPicEmail(request.getEmail() != null ? request.getEmail() : user.getEmail());
-        site.setPicPhoneNumber(request.getPhoneNumber() != null ? request.getPhoneNumber() : user.getPhoneNumber());
-        site.setPicPosition(request.getUserPosition() != null ? request.getUserPosition() : user.getUserPosition());
-        site.setUpdatedAt(LocalDateTime.now());
-    }
-
-    /**
      * Check if user is the PIC (Person In Charge) of the site
      * potential downside: if PIC email is changed outside this flow, check may fail
      * if other users share email with the PIC, false positive may occur
      */
     private boolean isSitePIC(Site site, ParticipatingUser user) {
-        // Check by email 
-        boolean isPIC = site.getPicEmail() != null && site.getPicEmail().equals(user.getEmail());
+         if (site == null) return false;
+        return site.getPicEmail() != null && site.getPicEmail().equals(user.getEmail());
         
-        return isPIC;
+      
     }
 
     /**
