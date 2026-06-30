@@ -10,7 +10,7 @@ import {
   formatPersonName,
 } from '@/features/master/components/masterDashboardUtils';
 import { cn } from '@/lib/utils';
-import { Building2, CalendarDays, Mail, Plus, User } from 'lucide-react';
+import { Building2, Mail, Plus, User } from 'lucide-react';
 
 const dashboardContainer = 'mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-0';
 
@@ -173,7 +173,7 @@ export function UserDashboardCard({
             <span className="min-w-0 break-all">{user.email || '-'}</span>
           </span>
           <span className="inline-flex min-w-0 items-start gap-1.5">
-            <CalendarDays className="h-4 w-4 shrink-0" />
+            <User className="h-4 w-4 shrink-0" />
             <span className="shrink-0 text-muted-foreground">
               ユーザ名:
             </span>

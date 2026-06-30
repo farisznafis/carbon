@@ -1,7 +1,7 @@
 import { usePagination } from "@/hooks/usePagination";
 import { Action, Column, ProTable } from "@/components/data-display/ProTable/ProTable";
 import { InlineHelp } from "@/components/feedback/InlineHelp/InlineHelp";
-import { MapPin } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Site } from "@/api/site";
 import { PaginationControls } from "@/components/data-display/Pagination/PaginationControls";
@@ -74,7 +74,7 @@ export function SiteTable({ sites, onEdit, onRowClick }: SiteTableProps) {
       <ProTable
         title={
           <p className="text-2xl font-bold flex items-center gap-2">
-            <MapPin className="h-6 w-6" />
+            <Building2 className="h-6 w-6" />
             拠点
             <InlineHelp
               content={

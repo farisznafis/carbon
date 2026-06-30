@@ -146,10 +146,12 @@ const AdminDashboard = () => {
     setUpdatingProjectStatusId(project.id);
     try {
       const numericProjectId = Number(project.id);
+      const companyId =
+        project.companyId ?? project.operatorCompanyId ?? user?.companyId ?? '';
       const projectStatusPayload = {
         id: Number.isFinite(numericProjectId) ? numericProjectId : project.id,
         processedBy: user?.id ? String(user.id) : 'admin',
-        companyId: project.companyId ?? project.operatorCompanyId ?? user?.companyId ?? '',
+        companyId: String(companyId),
         projectStatus: status,
       };
 

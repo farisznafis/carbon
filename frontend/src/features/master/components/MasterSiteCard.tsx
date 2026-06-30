@@ -4,7 +4,14 @@ import {
   formatPersonName,
   formatSiteAddress,
 } from '@/features/master/components/masterDashboardUtils';
-import { ChevronDown, ChevronRight, Factory, RefreshCw, User } from 'lucide-react';
+import {
+  Building2,
+  ChevronDown,
+  ChevronRight,
+  FolderKanban,
+  MapPin,
+  User,
+} from 'lucide-react';
 
 type MasterSiteCardProps = {
   site: Site;
@@ -25,7 +32,7 @@ export function MasterSiteCard({ site, onOpen }: MasterSiteCardProps) {
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
-              <Factory className="h-5 w-5" />
+              <Building2 className="h-5 w-5" />
             </span>
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
               <h3 className="truncate text-foreground">
@@ -46,7 +53,7 @@ export function MasterSiteCard({ site, onOpen }: MasterSiteCardProps) {
               <span>{formatPersonName(site.picLastName, site.picFirstName)}</span>
             </span>
             <span className="inline-flex min-w-0 items-start gap-1.5">
-              <RefreshCw className="h-4 w-4" />
+              <MapPin className="h-4 w-4 shrink-0" />
               <span className="text-muted-foreground">所在地</span>
               <span className="min-w-0 break-words">{formatSiteAddress(site)}</span>
             </span>
@@ -55,6 +62,7 @@ export function MasterSiteCard({ site, onOpen }: MasterSiteCardProps) {
 
         <div className="min-w-0 pt-1 text-sm font-bold leading-6 text-foreground md:pt-0">
           <div className="flex min-w-0 items-start gap-2">
+            <FolderKanban className="mt-1 h-4 w-4 shrink-0" />
             <span className="shrink-0 text-muted-foreground">プロジェクト</span>
             <div className="min-w-0 flex-1">
               {visibleProjects.length > 0 ? (
