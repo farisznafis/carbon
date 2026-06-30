@@ -66,6 +66,7 @@ function SiteRegister() {
           error instanceof Error ? error.message : '拠点登録内容の検証に失敗しました',
         variant: 'destructive',
       });
+      throw error;
     }
   };
 

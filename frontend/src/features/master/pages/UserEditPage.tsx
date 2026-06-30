@@ -98,6 +98,7 @@ export default function UserEdit() {
           error instanceof Error ? error.message : 'ユーザー更新内容の検証に失敗しました',
         variant: 'destructive',
       });
+      throw error;
     }
   };
 

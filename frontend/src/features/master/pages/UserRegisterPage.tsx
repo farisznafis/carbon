@@ -53,6 +53,7 @@ export default function UserRegister() {
           error instanceof Error ? error.message : 'ユーザー登録内容の検証に失敗しました',
         variant: 'destructive',
       });
+      throw error;
     }
   };
 

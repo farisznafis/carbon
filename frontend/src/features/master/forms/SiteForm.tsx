@@ -2,6 +2,7 @@
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
+import { ApiError } from '@/api/_shared/errors';
 import { Badge } from '@/components/ui/badge';
 import {
   FormActions,
@@ -34,6 +35,27 @@ import type { UserList } from '@/api/users';
 import { prefectures } from '@/lib/constants/prefectures';
 
 export type { SiteFormData } from '@/api/site';
+
+const siteBackendFieldMap: Partial<Record<string, keyof SiteFormData>> = {
+  siteName: 'siteName',
+  siteNameKana: 'siteNameKana',
+  postalCode: 'postalCode',
+  prefecture: 'prefectureName',
+  municipality: 'cityName',
+  blocknum: 'blockName',
+  buildingName: 'addressDetail',
+  userId: 'userId',
+  picuserId: 'userId',
+};
+
+function toValidationMessage(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value)) return value.map(toValidationMessage).filter(Boolean).join('\n');
+  if (value && typeof value === 'object' && 'message' in value) {
+    return toValidationMessage((value as { message?: unknown }).message);
+  }
+  return '';
+}
 
 interface SiteFormProps {
   mode: 'create' | 'edit';
@@ -125,6 +147,32 @@ export function SiteForm({
     defaultValues: defaultData,
   });
 
+  const applyBackendValidationErrors = (error: unknown) => {
+    if (!(error instanceof ApiError)) return false;
+
+    const errors = error.payload?.errors;
+    if (!errors || typeof errors !== 'object' || Array.isArray(errors)) {
+      return false;
+    }
+
+    let applied = false;
+
+    Object.entries(errors).forEach(([backendField, value]) => {
+      const formField = siteBackendFieldMap[backendField];
+      const message = toValidationMessage(value);
+
+      if (!formField || !message) return;
+
+      form.setError(formField, {
+        type: 'server',
+        message,
+      });
+      applied = true;
+    });
+
+    return applied;
+  };
+
   useEffect(() => {
     form.reset(defaultData);
   }, [defaultData, form]);
@@ -199,8 +247,14 @@ export function SiteForm({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(async (formValues) => {
+          form.clearErrors();
           onChange(formValues);
-          await onNext(formValues);
+
+          try {
+            await onNext(formValues);
+          } catch (error) {
+            applyBackendValidationErrors(error);
+          }
         })}
       >
         <FormCard>

@@ -132,6 +132,7 @@ function SiteEdit() {
           error instanceof Error ? error.message : '拠点更新内容の検証に失敗しました',
         variant: 'destructive',
       });
+      throw error;
     }
   };
 

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { X } from 'lucide-react';
+import { ApiError } from '@/api/_shared/errors';
 import { PasswordInput } from '@/components/inputs';
 import { DeleteAlertDialog } from '@/components/feedback/DeleteAlertDialog/DeleteAlertDialog';
 import {
@@ -34,6 +35,29 @@ import type { UserFormData } from '@/api/users';
 import { useDashboardStore } from '@/stores/dashboardStore';
 
 export type { UserFormData } from '@/api/users';
+
+const userBackendFieldMap: Partial<Record<string, keyof UserFormData>> = {
+  username: 'username',
+  lastName: 'lastName',
+  firstName: 'firstName',
+  lastNameKana: 'lastNameKana',
+  firstNameKana: 'firstNameKana',
+  phoneNumber: 'phoneNumber',
+  userPosition: 'userPosition',
+  position: 'userPosition',
+  email: 'email',
+  password: 'password',
+  siteId: 'siteId',
+};
+
+function toValidationMessage(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value)) return value.map(toValidationMessage).filter(Boolean).join('\n');
+  if (value && typeof value === 'object' && 'message' in value) {
+    return toValidationMessage((value as { message?: unknown }).message);
+  }
+  return '';
+}
 
 interface UserFormProps {
   mode: 'create' | 'edit' | 'profile';
@@ -93,6 +117,32 @@ export function UserForm({
     },
   });
 
+  const applyBackendValidationErrors = (error: unknown) => {
+    if (!(error instanceof ApiError)) return false;
+
+    const errors = error.payload?.errors;
+    if (!errors || typeof errors !== 'object' || Array.isArray(errors)) {
+      return false;
+    }
+
+    let applied = false;
+
+    Object.entries(errors).forEach(([backendField, value]) => {
+      const formField = userBackendFieldMap[backendField];
+      const message = toValidationMessage(value);
+
+      if (!formField || !message) return;
+
+      form.setError(formField, {
+        type: 'server',
+        message,
+      });
+      applied = true;
+    });
+
+    return applied;
+  };
+
   const values = form.watch();
 
   const isTrulyDirty = useMemo(() => {
@@ -119,8 +169,14 @@ export function UserForm({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(async (formValues) => {
+          form.clearErrors();
           onChange(formValues);
-          await onNext(formValues);
+
+          try {
+            await onNext(formValues);
+          } catch (error) {
+            applyBackendValidationErrors(error);
+          }
         })}
       >
         <FormCard>
