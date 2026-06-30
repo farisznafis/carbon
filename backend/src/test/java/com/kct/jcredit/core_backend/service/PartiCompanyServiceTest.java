@@ -22,6 +22,7 @@ import com.kct.jcredit.core_backend.dto.request.UpdatePartiCompanyRequest;
 import com.kct.jcredit.core_backend.dto.response.UpdatePartiCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.details.CompanyInfoResponse;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
+import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.service.impl.PartiCompanyServiceImpl;
 
@@ -55,7 +56,7 @@ class PartiCompanyServiceTest {
         testCompany.setMunicipality("渋谷区");
         testCompany.setBlocknum("1-1-1");
         testCompany.setBuildingName("テストビル");
-        testCompany.setSuspended(false);
+        testCompany.setSubscriptionStatus(SubscriptionStatus.ACTIVE);
 
         updateRequest = new UpdatePartiCompanyRequest();
     }
@@ -253,7 +254,7 @@ class PartiCompanyServiceTest {
     @DisplayName("正常系: isSuspendedがtrueの企業の更新")
     void updateCompany_Success_SuspendedCompany() {
         // Given
-        testCompany.setSuspended(true);
+        testCompany.setSubscriptionStatus(SubscriptionStatus.SUSPENDED);;
         updateRequest.setPhoneNumber("03-9999-9999");
 
         when(participatingCompanyRepository.findByCompanyId(TEST_COMPANY_ID))
@@ -266,7 +267,7 @@ class PartiCompanyServiceTest {
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(ResponseConstants.OK);
-        assertThat(response.getCompany().isSuspended()).isTrue();
+        assertThat(response.getCompany().getIsSuspended()).isTrue();
     }
 
     @Test
@@ -293,6 +294,6 @@ class PartiCompanyServiceTest {
         assertThat(companyInfo.getNameFurigana()).isEqualTo("テストカブシキガイシャ");
         assertThat(companyInfo.getNameEN()).isEqualTo("Test Corporation");
         assertThat(companyInfo.getCorpNumber()).isEqualTo("1234567890123");
-        assertThat(companyInfo.isSuspended()).isFalse();
+        assertThat(companyInfo.getIsSuspended()).isFalse();
     }
 }
