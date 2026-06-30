@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -128,6 +129,9 @@ const PasswordChange = () => {
                     {...field}
                   />
                 </FormControl>
+                <FormDescription>
+                  8文字以上で、大文字・小文字・数字をそれぞれ1文字以上含むパスワードを設定してください。
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
