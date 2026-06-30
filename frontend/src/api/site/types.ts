@@ -168,7 +168,7 @@ export type SiteProject = Project & {
   cumulativeMembers?: number;
   membersTotal?: number;
   methodDetails?: string;
-  operatorCompanyId?: number;
+  operatorCompanyId?: string | number;
   updatedAt?: string;
   createdAt?: string;
 };
