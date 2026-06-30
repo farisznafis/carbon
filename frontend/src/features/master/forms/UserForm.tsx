@@ -40,7 +40,7 @@ interface UserFormProps {
   defaultValues?: Partial<UserFormData>;
   originalData: UserFormData;
   onChange: (data: UserFormData) => void;
-  onNext: () => void;
+  onNext: (data: UserFormData) => void | Promise<void>;
   onBack: () => void;
   onDelete?: () => void;
   siteOptions?: Site[];
@@ -113,14 +113,14 @@ export function UserForm({
     );
   }, [values, originalData]);
 
-  const submitLabel = mode === 'create' ? '登録' : '更新';
+  const submitLabel = '確認';
 
   const formContent = (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit((formValues) => {
+        onSubmit={form.handleSubmit(async (formValues) => {
           onChange(formValues);
-          onNext();
+          await onNext(formValues);
         })}
       >
         <FormCard>

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { Site } from '@/api/site';
 import type { UserList } from '@/api/users';
-import { deleteSite, updateSite } from '@/api/site';
+import { deleteSite, updateSite, validateUpdateSite } from '@/api/site';
 import { SiteForm, SiteFormData } from '@/features/master/forms/SiteForm';
 import { SiteConfirmation } from './SiteConfirmation';
 import { toast } from '@/hooks/use-toast';
@@ -115,8 +115,24 @@ function SiteEdit() {
     return <div>読み込み中...</div>;
   }
 
-  const handleFormSubmit = () => {
-    setStep('confirm');
+  const handleFormSubmit = async (values: SiteFormData) => {
+    if (!id) return;
+
+    const picuserId = values.userId ? Number(values.userId) : null;
+
+    try {
+      await validateUpdateSite(id, values, picuserId);
+      setFormData(values);
+      setStep('confirm');
+    } catch (error) {
+      logger.error('Site update validation error:', error);
+      toast({
+        title: 'エラー',
+        description:
+          error instanceof Error ? error.message : '拠点更新内容の検証に失敗しました',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleFinalSubmit = async () => {
@@ -169,7 +185,8 @@ function SiteEdit() {
       logger.error('SiteEdit handleSubmit error:', error);
       toast({
         title: 'エラー',
-        description: '拠点更新に失敗しました',
+        description:
+          error instanceof Error ? error.message : '拠点更新に失敗しました',
         variant: 'destructive',
       });
     }

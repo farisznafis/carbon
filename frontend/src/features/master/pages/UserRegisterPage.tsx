@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { registerUser } from '@/api/users/mutations';
+import { registerUser, validateCreateUser } from '@/api/users/mutations';
 import {
   FormPageContent,
   FormPageTitle,
@@ -40,8 +40,20 @@ export default function UserRegister() {
     }
   }, [setSites, sitesQuery.data?.sites]);
 
-  const handleDraftSubmit = () => {
-    setStep('confirm');
+  const handleDraftSubmit = async (values: UserFormData) => {
+    try {
+      await validateCreateUser(values);
+      setFormData(values);
+      setStep('confirm');
+    } catch (error) {
+      logger.error('User create validation error:', error);
+      toast({
+        title: 'エラー',
+        description:
+          error instanceof Error ? error.message : 'ユーザー登録内容の検証に失敗しました',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleFinalSubmit = async () => {
@@ -64,7 +76,8 @@ export default function UserRegister() {
       logger.error('Error creating user:', error);
       toast({
         title: 'エラー',
-        description: 'ユーザー登録に失敗しました',
+        description:
+          error instanceof Error ? error.message : 'ユーザー登録に失敗しました',
         variant: 'destructive',
       });
     }

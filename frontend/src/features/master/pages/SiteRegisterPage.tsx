@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { useDashboardStore } from '@/stores/dashboardStore';
-import { registerSite } from '@/api/site';
+import { registerSite, validateCreateSite } from '@/api/site';
 import { SiteForm, SiteFormData } from '@/features/master/forms/SiteForm';
 import { SiteConfirmation } from './SiteConfirmation';
 import { logger } from '@/lib/logger';
@@ -53,8 +53,20 @@ function SiteRegister() {
     }
   }, [setUsers, usersQuery.data?.users]);
 
-  const handleDraftSubmit = () => {
-    setStep('confirm');
+  const handleDraftSubmit = async (values: SiteFormData) => {
+    try {
+      await validateCreateSite(values);
+      setFormData(values);
+      setStep('confirm');
+    } catch (error) {
+      logger.error('Site create validation error:', error);
+      toast({
+        title: 'エラー',
+        description:
+          error instanceof Error ? error.message : '拠点登録内容の検証に失敗しました',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleFinalSubmit = async () => {
@@ -75,7 +87,8 @@ function SiteRegister() {
       logger.error('Error creating site:', error);
       toast({
         title: 'エラー',
-        description: '拠点登録に失敗しました',
+        description:
+          error instanceof Error ? error.message : '拠点登録に失敗しました',
         variant: 'destructive',
       });
     }

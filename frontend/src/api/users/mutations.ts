@@ -53,10 +53,8 @@ function formatMutationError(
     : json?.message || fallbackMessage;
 }
 
-export const registerUser = async (
-  userData: UserFormData,
-): Promise<{ statusCode: string; user: UserList; site?: Partial<Site> }> => {
-  const payload: RegisterUserPayload = {
+function mapRegisterUserPayload(userData: UserFormData): RegisterUserPayload {
+  return {
     username: userData.username,
     firstName: userData.firstName,
     firstNameKana: userData.firstNameKana,
@@ -68,6 +66,55 @@ export const registerUser = async (
     password: userData.password ?? "",
     siteId: userData.siteId ? Number(userData.siteId) : null,
   };
+}
+
+function mapUpdateUserPayload(
+  userId: string,
+  userData: UpdateUserInput,
+  mergedData?: UserList,
+): UpdateUserPayload {
+  const resolvedSiteId =
+    userData.siteId !== undefined ? userData.siteId : mergedData?.siteId ?? null;
+  const normalizedSiteId =
+    resolvedSiteId === '' || resolvedSiteId === null ? null : Number(resolvedSiteId);
+
+  return {
+    userId: Number(userId),
+    firstName: userData.firstName ?? mergedData?.firstName ?? "",
+    firstNameKana: userData.firstNameKana ?? mergedData?.firstNameKana ?? "",
+    lastName: userData.lastName ?? mergedData?.lastName ?? "",
+    lastNameKana: userData.lastNameKana ?? mergedData?.lastNameKana ?? "",
+    email: userData.email ?? mergedData?.email ?? "",
+    phoneNumber: String(userData.phoneNumber ?? mergedData?.phoneNumber ?? "").replace(/-/g, ""),
+    userPosition: userData.userPosition ?? userData.position ?? mergedData?.position ?? "",
+    siteId: normalizedSiteId,
+  };
+}
+
+export const validateCreateUser = async (userData: UserFormData) => {
+  await apiVoidRequest("/user/validate-create", {
+    method: "POST",
+    body: mapRegisterUserPayload(userData),
+    fallbackErrorMessage: "ユーザー登録内容の検証に失敗しました",
+  });
+};
+
+export const validateUpdateUser = async (
+  userId: string,
+  userData: UpdateUserInput,
+  mergedData?: UserList,
+) => {
+  await apiVoidRequest("/user/validate-update", {
+    method: "POST",
+    body: mapUpdateUserPayload(userId, userData, mergedData),
+    fallbackErrorMessage: "ユーザー更新内容の検証に失敗しました",
+  });
+};
+
+export const registerUser = async (
+  userData: UserFormData,
+): Promise<{ statusCode: string; user: UserList; site?: Partial<Site> }> => {
+  const payload = mapRegisterUserPayload(userData);
 
   const response = await apiFetch("/user", {
     method: "POST",
@@ -90,22 +137,7 @@ export const updateUser = async (
   prevSite?: Site,
   masterUser?: UserList,
 ): Promise<UpdateUserResponse> => {
-  const resolvedSiteId =
-    userData.siteId !== undefined ? userData.siteId : mergedData?.siteId ?? null;
-  const normalizedSiteId =
-    resolvedSiteId === '' || resolvedSiteId === null ? null : Number(resolvedSiteId);
-
-  const payload: UpdateUserPayload = {
-    userId: Number(userId),
-    firstName: userData.firstName ?? mergedData?.firstName ?? "",
-    firstNameKana: userData.firstNameKana ?? mergedData?.firstNameKana ?? "",
-    lastName: userData.lastName ?? mergedData?.lastName ?? "",
-    lastNameKana: userData.lastNameKana ?? mergedData?.lastNameKana ?? "",
-    email: userData.email ?? mergedData?.email ?? "",
-    phoneNumber: String(userData.phoneNumber ?? mergedData?.phoneNumber ?? "").replace(/-/g, ""),
-    userPosition: userData.userPosition ?? userData.position ?? mergedData?.position ?? "",
-    siteId: normalizedSiteId,
-  };
+  const payload = mapUpdateUserPayload(userId, userData, mergedData);
 
   const response = await apiFetch("/user", {
     method: "PATCH",

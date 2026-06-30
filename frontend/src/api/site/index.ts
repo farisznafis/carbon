@@ -1,6 +1,12 @@
 export { getSiteData } from './dashboard';
 export { getSites } from './list';
-export { deleteSite, registerSite, updateSite } from './mutations';
+export {
+  deleteSite,
+  registerSite,
+  updateSite,
+  validateCreateSite,
+  validateUpdateSite,
+} from './mutations';
 export { getSiteProjects } from './projects';
 export type {
   CreateSiteData,

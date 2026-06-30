@@ -39,7 +39,7 @@ interface SiteFormProps {
   mode: 'create' | 'edit';
   originalData: SiteFormData;
   onChange: (data: SiteFormData) => void;
-  onNext: () => void;
+  onNext: (data: SiteFormData) => void | Promise<void>;
   onDelete?: () => void;
   defaultValues?: Partial<SiteFormData>;
   disableSubmit?: boolean;
@@ -193,14 +193,14 @@ export function SiteForm({
     return JSON.stringify(currentValues) !== JSON.stringify(initialValues);
   }, [values, initialFormData, isCreateMode]);
 
-  const submitLabel = isCreateMode ? '登録' : '更新';
+  const submitLabel = '確認';
 
   const formContent = (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit((formValues) => {
+        onSubmit={form.handleSubmit(async (formValues) => {
           onChange(formValues);
-          onNext();
+          await onNext(formValues);
         })}
       >
         <FormCard>

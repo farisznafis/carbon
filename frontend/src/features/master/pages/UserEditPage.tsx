@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import type { Site } from '@/api/site';
 import type { UserList } from '@/api/users';
-import { deleteUser, updateUser } from '@/api/users/mutations';
+import { deleteUser, updateUser, validateUpdateUser } from '@/api/users/mutations';
 import {
   FormPageContent,
   FormPageTitle,
@@ -37,6 +37,25 @@ const mapUserToForm = (user: UserList | undefined): UserFormData => {
   };
 };
 
+const mapUserEditPayload = (
+  formValues: UserFormData,
+  isMasterUser: boolean,
+) => {
+  const {
+    password: _password,
+    passwordConfirmation: _passwordConfirmation,
+    username: _username,
+    ...payload
+  } = formValues;
+
+  return isMasterUser
+    ? {
+        ...payload,
+        siteId: null,
+      }
+    : payload;
+};
+
 export default function UserEdit() {
   const [step, setStep] = useState<'form' | 'confirm'>('form');
   const navigate = useNavigate();
@@ -59,25 +78,36 @@ export default function UserEdit() {
     }
   }, [setSites, sitesQuery.data?.sites]);
 
-  const handleDraftSubmit = () => {
-    setStep('confirm');
+  const handleDraftSubmit = async (values: UserFormData) => {
+    if (!id || !initialUser) return;
+
+    const payloadWithMasterSiteRule = mapUserEditPayload(
+      values,
+      Boolean(isMasterUser),
+    );
+
+    try {
+      await validateUpdateUser(id, payloadWithMasterSiteRule, initialUser);
+      setFormData(values);
+      setStep('confirm');
+    } catch (error) {
+      logger.error('User update validation error:', error);
+      toast({
+        title: 'エラー',
+        description:
+          error instanceof Error ? error.message : 'ユーザー更新内容の検証に失敗しました',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleFinalSubmit = async () => {
     if (!id || !formData || !initialUser) return;
 
-    const {
-      password: _password,
-      passwordConfirmation: _passwordConfirmation,
-      username: _username,
-      ...payload
-    } = formData;
-    const payloadWithMasterSiteRule = isMasterUser
-      ? {
-          ...payload,
-          siteId: null,
-        }
-      : payload;
+    const payloadWithMasterSiteRule = mapUserEditPayload(
+      formData,
+      Boolean(isMasterUser),
+    );
 
     try {
       const { user: updatedUser, updatedSites } = await updateUser(
@@ -124,7 +154,8 @@ export default function UserEdit() {
       logger.error('Error updating user:', error);
       toast({
         title: 'エラー',
-        description: 'ユーザー更新に失敗しました',
+        description:
+          error instanceof Error ? error.message : 'ユーザー更新に失敗しました',
         variant: 'destructive',
       });
     }

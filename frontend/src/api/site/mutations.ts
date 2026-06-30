@@ -17,6 +17,26 @@ type UpdateSiteResponse = {
   site?: Site;
 };
 
+export async function validateCreateSite(formData: SiteFormData): Promise<void> {
+  await apiVoidRequest('/site/validate-create', {
+    method: 'POST',
+    body: mapCreateSitePayload(formData),
+    fallbackErrorMessage: '拠点登録内容の検証に失敗しました',
+  });
+}
+
+export async function validateUpdateSite(
+  siteId: string,
+  formData: SiteFormData,
+  picuserId: number | null = null,
+): Promise<void> {
+  await apiVoidRequest(`/site/validate-update/${encodeURIComponent(siteId)}`, {
+    method: 'POST',
+    body: mapUpdateSitePayload(formData, Number(siteId), picuserId),
+    fallbackErrorMessage: '拠点更新内容の検証に失敗しました',
+  });
+}
+
 export async function registerSite(
   formData: SiteFormData,
   assignee?: UserList | null,
