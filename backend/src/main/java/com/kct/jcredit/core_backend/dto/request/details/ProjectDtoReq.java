@@ -1,12 +1,12 @@
 package com.kct.jcredit.core_backend.dto.request.details;
 
+import com.kct.jcredit.core_backend.validation.ValidEmail;
 import com.kct.jcredit.core_backend.validation.AnyCharacter;
 import com.kct.jcredit.core_backend.validation.Katakana;
 import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
 import com.kct.jcredit.core_backend.validation.ZenkakuWithSymbols;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -66,7 +66,7 @@ public class ProjectDtoReq {
     @Katakana(message = "代表者名カナ（姓）は全角カタカナで入力してください。")
     private String repLastNameKana;
 
-    @Email(message = "代表者メールアドレスの形式が正しくありません。")
+    @ValidEmail(message = "代表者メールアドレスの形式が正しくありません。")
     @NotBlank(message = "代表者メールアドレスは必須です。")
     @Size(max = 254, message = "代表者メールアドレスは254文字以内で入力してください。")
     private String repEmail;
@@ -101,7 +101,7 @@ public class ProjectDtoReq {
     @Katakana(message = "担当者名カナ（姓）は全角カタカナで入力してください。")
     private String picLastNameKana;
 
-    @Email(message = "担当者メールアドレスの形式が正しくありません。")
+    @ValidEmail(message = "担当者メールアドレスの形式が正しくありません。")
     @NotBlank(message = "担当者メールアドレスは必須です。")
     @Size(max = 254, message = "担当者メールアドレスは254文字以内で入力してください。")
     private String picEmail;

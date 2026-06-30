@@ -1,5 +1,6 @@
 package com.kct.jcredit.core_backend.dto.request;
 
+import com.kct.jcredit.core_backend.validation.ValidEmail;
 import com.kct.jcredit.core_backend.validation.Katakana;
 import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.ZenkakuWithSymbols;
@@ -43,7 +44,7 @@ public class UpdateUserRequest {
    
     // メールアドレス
    
-    @Email(message = "正しいメールアドレス形式で入力してください。")
+    @ValidEmail(message = "正しいメールアドレス形式で入力してください。")
     @Size(max = 254, message = "メールアドレスは254文字以内で入力してください。")
     private String email;
     

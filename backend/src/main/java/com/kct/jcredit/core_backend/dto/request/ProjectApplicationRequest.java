@@ -1,5 +1,6 @@
 package com.kct.jcredit.core_backend.dto.request;
 
+import com.kct.jcredit.core_backend.validation.ValidEmail;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kct.jcredit.core_backend.validation.CorpNumber;
@@ -13,7 +14,6 @@ import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
 import com.kct.jcredit.core_backend.validation.ZenkakuWithSymbols;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -175,7 +175,7 @@ public class ProjectApplicationRequest {
 
     @NotBlank(message = "担当者メールアドレスは必須です。")
     @Size(max = 254, message = "担当者メールアドレスは254文字以内で入力してください。")
-    @Email(message = "担当者メールアドレスの形式が正しくありません。")
+    @ValidEmail(message = "担当者メールアドレスの形式が正しくありません。")
     @HankakuWithSymbols(allowedSymbols = "@._+-", message = "担当者メールアドレスは半角英数字と許可された記号で入力してください。")
     @JsonProperty("picEmail")
     private String picEmail;
@@ -217,7 +217,7 @@ public class ProjectApplicationRequest {
     private Boolean isChangeOtherContactsPicName;
 
     @Size(max = 254)
-    @Email
+    @ValidEmail
     @HankakuWithSymbols(allowedSymbols = "@._+-")
     @JsonProperty("otherContactsPicEmail")
     private String otherContactsPicEmail;

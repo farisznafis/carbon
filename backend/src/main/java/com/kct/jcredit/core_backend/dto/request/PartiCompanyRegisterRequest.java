@@ -1,5 +1,6 @@
 package com.kct.jcredit.core_backend.dto.request;
 
+import com.kct.jcredit.core_backend.validation.ValidEmail;
 import com.kct.jcredit.core_backend.validation.CorpNumber;
 import com.kct.jcredit.core_backend.validation.Hankaku;
 import com.kct.jcredit.core_backend.validation.JapaneseText;
@@ -8,7 +9,6 @@ import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.PostalCode;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
 import com.kct.jcredit.core_backend.validation.ZenkakuWithSymbols;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
@@ -94,7 +94,7 @@ public class PartiCompanyRegisterRequest {
     private String faxNumber;
 
     @NotBlank(message = "メールアドレスの形式が正しくありません。")
-    @Email(message = "メールアドレスの形式が正しくありません。")
+    @ValidEmail(message = "メールアドレスの形式が正しくありません。")
     private String email;
 
     @NotEmpty(message = "方法論を1つ以上選択してください。")
