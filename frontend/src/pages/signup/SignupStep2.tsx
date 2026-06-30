@@ -3,6 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
+  FormActions,
+  FormCard,
+  FormSection,
+  FormSectionStack,
+} from '@/components/forms/form-layout';
+import { RequiredBadge } from '@/components/forms/shared';
+import {
   Form,
   FormControl,
   FormField,
@@ -23,8 +30,16 @@ import {
   methodologyFormSchema,
   participationMethodologies,
 } from './signupStep2Model';
-import { RequiredLabel } from '@/components/forms/shared/RequiredLabel';
 import { logger } from '@/lib/logger';
+
+function RequiredSectionTitle({ children }: Readonly<{ children: string }>) {
+  return (
+    <span className="inline-flex flex-wrap items-center gap-2">
+      <span>{children}</span>
+      <RequiredBadge />
+    </span>
+  );
+}
 
 export const SignupStep2 = () => {
   const { signupData, updateSignupData, setCurrentStep } = useSignup();
@@ -133,135 +148,148 @@ export const SignupStep2 = () => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleNext)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="methodology"
-          render={({ field }) => (
-            <FormItem>
-              <div className="space-y-4">
-                <RequiredLabel>参加したいプロジェクト</RequiredLabel>
-                <Card className="overflow-hidden rounded-md">
-                  {participationMethodologies.map((methodology) => {
-                    const checked = field.value.includes(methodology.value);
+      <form onSubmit={form.handleSubmit(handleNext)}>
+        <FormCard>
+          <FormSectionStack>
+            <FormSection
+              number={1}
+              title={<RequiredSectionTitle>参加したいプロジェクト</RequiredSectionTitle>}
+            >
+              <FormField
+                control={form.control}
+                name="methodology"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="space-y-4">
+                      <Card className="overflow-hidden rounded-md">
+                        {participationMethodologies.map((methodology) => {
+                          const checked = field.value.includes(methodology.value);
 
-                    return (
-                      <label
-                        key={methodology.value}
-                        className="flex min-h-14 cursor-pointer items-center gap-3 border-b px-4 py-3 transition-colors hover:bg-muted/40 last:border-b-0"
-                      >
-                        <Checkbox
-                          checked={checked}
-                          onCheckedChange={(isChecked) => {
-                            const nextValue = isChecked
-                              ? [...field.value, methodology.value]
-                              : field.value.filter(
-                                  (value) => value !== methodology.value,
-                                );
+                          return (
+                            <label
+                              key={methodology.value}
+                              className="flex min-h-14 cursor-pointer items-center gap-3 border-b px-4 py-3 transition-colors hover:bg-muted/40 last:border-b-0"
+                            >
+                              <Checkbox
+                                checked={checked}
+                                onCheckedChange={(isChecked) => {
+                                  const nextValue = isChecked
+                                    ? [...field.value, methodology.value]
+                                    : field.value.filter(
+                                        (value) => value !== methodology.value,
+                                      );
 
-                            field.onChange(nextValue);
-                          }}
-                          aria-label={methodology.label}
-                          className="h-4 w-4 shrink-0"
-                        />
-                        <span className="min-w-0 flex-1 text-sm font-medium leading-relaxed">
-                          {methodology.label}
-                        </span>
-                      </label>
-                    );
-                  })}
-                </Card>
-                <FormMessage />
-              </div>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="activityHas"
-          render={({ field }) => (
-            <FormItem>
-              <RequiredLabel>現在の活動情報</RequiredLabel>
-              <FormControl>
-                <RadioGroup
-                  value={field.value}
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    if (value === 'no' || form.getValues('activityInformation') === '-') {
-                      form.setValue('activityInformation', '');
-                    }
-                  }}
-                  className="flex gap-6"
-                >
-                  {activityHasOptions.map((option) => (
-                    <div key={option.value} className="flex items-center gap-2">
-                      <RadioGroupItem
-                        value={option.value}
-                        id={`activity-${option.value}`}
-                      />
-                      <FormLabel
-                        htmlFor={`activity-${option.value}`}
-                        className="text-sm font-normal cursor-pointer"
-                      >
-                        {option.label}
-                      </FormLabel>
+                                  field.onChange(nextValue);
+                                }}
+                                aria-label={methodology.label}
+                                className="h-4 w-4 shrink-0"
+                              />
+                              <span className="min-w-0 flex-1 text-sm font-medium leading-relaxed">
+                                {methodology.label}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </Card>
+                      <FormMessage />
                     </div>
-                  ))}
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                  </FormItem>
+                )}
+              />
+            </FormSection>
 
-        {activityHas === 'yes' && (
-          <FormField
-            control={form.control}
-            name="activityInformation"
-            render={({ field }) => (
-              <FormItem>
-                <p className="text-sm text-muted-foreground">
-                  ※排出量削減活動の概要をご記入ください。
-                </p>
-                <FormControl>
+            <FormSection
+              number={2}
+              title={<RequiredSectionTitle>現在の活動情報</RequiredSectionTitle>}
+            >
+              <FormField
+                control={form.control}
+                name="activityHas"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <RadioGroup
+                        value={field.value}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          if (value === 'no' || form.getValues('activityInformation') === '-') {
+                            form.setValue('activityInformation', '');
+                          }
+                        }}
+                        className="flex gap-6"
+                      >
+                        {activityHasOptions.map((option) => (
+                          <div key={option.value} className="flex items-center gap-2">
+                            <RadioGroupItem
+                              value={option.value}
+                              id={`activity-${option.value}`}
+                            />
+                            <FormLabel
+                              htmlFor={`activity-${option.value}`}
+                              className="text-sm font-normal cursor-pointer"
+                            >
+                              {option.label}
+                            </FormLabel>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {activityHas === 'yes' && (
+                <FormField
+                  control={form.control}
+                  name="activityInformation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <p className="text-sm text-muted-foreground">
+                        ※排出量削減活動の概要をご記入ください。
+                      </p>
+                      <FormControl>
+                        <Textarea
+                          rows={4}
+                          placeholder="例）工場内の老朽化した蛍光灯をLED照明へ順次更新中"
+                          className="min-h-24 resize-y"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {activityHas === 'no' && (
+                <div className="pointer-events-none">
                   <Textarea
                     rows={4}
-                    placeholder="例）工場内の老朽化した蛍光灯をLED照明へ順次更新中"
-                    className="min-h-24 resize-y"
-                    {...field}
+                    className="min-h-24 resize-y border-border bg-[#B1B5BB]/20 disabled:border-border disabled:bg-[#B1B5BB]/20 disabled:opacity-100"
+                    disabled
+                    value=""
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+                </div>
+              )}
+            </FormSection>
 
-        {activityHas === 'no' && (
-          <div className="pointer-events-none">
-            <Textarea
-              rows={4}
-              className="min-h-24 resize-y border-border bg-[#B1B5BB]/20 disabled:border-border disabled:bg-[#B1B5BB]/20 disabled:opacity-100"
-              disabled
-              value=""
-            />
-          </div>
-        )}
-
-        <div className="flex gap-4 pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setCurrentStep(1)}
-            className="flex-1"
-          >
-            戻る
-          </Button>
-          <Button type="submit" className="flex-1">
-            次へ
-          </Button>
-        </div>
+            <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => setCurrentStep(1)}
+              >
+                戻る
+              </Button>
+              <Button type="submit" size="sm" className="w-full">
+                次へ
+              </Button>
+            </FormActions>
+          </FormSectionStack>
+        </FormCard>
       </form>
     </Form>
   );

@@ -1,6 +1,11 @@
 ﻿import { signUp, type SignUpData } from '@/api/auth';
+import {
+  FormActions,
+  FormCard,
+  FormSection,
+  FormSectionStack,
+} from '@/components/forms/form-layout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSignup, type SignupData } from '@/contexts/SignupContext';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorToastContent, parseError } from '@/lib/errors';
@@ -98,19 +103,17 @@ export const SignupStep3 = () => {
   };
 
   return (
-    <div className="space-y-6 animate-slide-up">
+    <FormCard>
+      <FormSectionStack>
       <div className="text-center">
-        <h3 className="mb-2 text-2xl font-semibold">登録内容の確認</h3>
+        <h3 className="mb-2 text-2xl font-semibold">入力内容の確認</h3>
         <p className="text-muted-foreground">
-          入力内容を確認して、問題なければ登録を完了してください。
+          登録を完了する前に、入力内容を確認してください。
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>法人情報</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
+      <FormSection number={1} title="法人情報">
+        <div className="space-y-2 rounded-md border p-4">
           <DetailRow label="法人番号" value={signupData.corporateNumber} />
           <DetailRow label="法人名" value={signupData.companyName} />
           <DetailRow label="法人名カナ" value={signupData.companyNameKana} />
@@ -125,14 +128,11 @@ export const SignupStep3 = () => {
           />
           <DetailRow label="番地" value={signupData.blocknum} />
           {signupData.buildingName && <DetailRow label="建物名" value={signupData.buildingName} />}
-        </CardContent>
-      </Card>
+        </div>
+      </FormSection>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>担当者情報</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
+      <FormSection number={2} title="担当者情報">
+        <div className="space-y-2 rounded-md border p-4">
           <DetailRow label="氏名" value={`${signupData.lastName} ${signupData.firstName}`} />
           <DetailRow
             label="氏名カナ"
@@ -142,14 +142,11 @@ export const SignupStep3 = () => {
           <DetailRow label="電話番号" value={signupData.phoneNumber} />
           {signupData.faxNumber && <DetailRow label="FAX番号" value={signupData.faxNumber} />}
           <DetailRow label="メールアドレス" value={signupData.email} />
-        </CardContent>
-      </Card>
+        </div>
+      </FormSection>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>参加予定のプロジェクト</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <FormSection number={3} title="参加予定のプロジェクト">
+        <div className="space-y-4 rounded-md border p-4">
           <div className="space-y-2">
             {selectedMethodologies.length > 0 ? (
               selectedMethodologies.map((methodology) => (
@@ -171,17 +168,18 @@ export const SignupStep3 = () => {
               {signupData.activityInformation || missingValue}
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </FormSection>
 
-      <div className="flex gap-4 pt-4">
-        <Button type="button" variant="outline" onClick={() => setCurrentStep(2)} className="flex-1">
+      <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Button type="button" variant="outline" size="sm" onClick={() => setCurrentStep(2)} className="w-full">
           戻る
         </Button>
-        <Button type="button" onClick={handleConfirm} className="flex-1">
-          登録する
+        <Button type="button" size="sm" onClick={handleConfirm} className="w-full">
+          確認して登録
         </Button>
-      </div>
-    </div>
+      </FormActions>
+      </FormSectionStack>
+    </FormCard>
   );
 };
