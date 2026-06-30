@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { Site } from '@/api/site';
+import type { UserList } from '@/api/users';
 import { deleteSite, updateSite } from '@/api/site';
 import { SiteForm, SiteFormData } from '@/features/master/forms/SiteForm';
 import { SiteConfirmation } from './SiteConfirmation';
@@ -9,7 +10,24 @@ import { logger } from '@/lib/logger';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useUsersQuery } from '@/hooks/users/useUsersQuery';
 
-const mapSiteToFormData = (site: Site): SiteFormData => ({
+const resolveSiteAssigneeId = (site: Site, users: UserList[] = []) => {
+  if (site.picId) return site.picId;
+
+  const siteAssignee = users.find(
+    (user) =>
+      user.role !== 'admin' &&
+      (user.siteId === site.id || user.role === 'master') &&
+      user.firstName === site.picFirstName &&
+      user.lastName === site.picLastName,
+  );
+
+  return siteAssignee?.id ?? '';
+};
+
+const mapSiteToFormData = (
+  site: Site,
+  users?: UserList[],
+): SiteFormData => ({
   siteName: site.siteName,
   siteNameKana: '',
   postalCode: site.postalCode,
@@ -17,7 +35,7 @@ const mapSiteToFormData = (site: Site): SiteFormData => ({
   cityName: site.cityName,
   townName: '',
   blockName: site.blockName,
-  addressDetail: site.addressDetail ?? '',
+  addressDetail: site.addressDetail ?? site.buildingName ?? '',
   picFirstName: site.picFirstName,
   picFirstNameKana: '',
   picLastName: site.picLastName,
@@ -25,7 +43,7 @@ const mapSiteToFormData = (site: Site): SiteFormData => ({
   picEmail: site.picEmail,
   picPhoneNumber: site.picPhoneNumber ?? '',
   picPosition: site.picPosition,
-  userId: site.picId ?? '',
+  userId: resolveSiteAssigneeId(site, users),
 });
 
 function SiteEdit() {
@@ -35,18 +53,6 @@ function SiteEdit() {
   const { id } = useParams<{ id: string }>();
   const sites = useDashboardStore((state) => state.sites) ?? [];
   const initialSite = sites.find((site) => site.id === id);
-  const initialFormData = initialSite ? mapSiteToFormData(initialSite) : undefined;
-
-  const [formData, setFormData] = useState<SiteFormData | undefined>(
-    undefined,
-  );
-
-  useEffect(() => {
-    if (initialSite) {
-      setFormData(mapSiteToFormData(initialSite));
-    }
-  }, [initialSite]);
-
   const editSite = useDashboardStore((state) => state.editSite);
   const deleteSiteStore = useDashboardStore((state) => state.deleteSiteStore);
   const setUsers = useDashboardStore((state) => state.setUsers);
@@ -57,6 +63,31 @@ function SiteEdit() {
     () => (storedUsers.length > 0 ? storedUsers : usersQuery.data?.users ?? []),
     [storedUsers, usersQuery.data?.users],
   );
+  const initialFormData = useMemo(
+    () => (initialSite ? mapSiteToFormData(initialSite, users) : undefined),
+    [initialSite, users],
+  );
+
+  const [formData, setFormData] = useState<SiteFormData | undefined>(
+    undefined,
+  );
+
+  useEffect(() => {
+    if (initialFormData) {
+      setFormData((current) => {
+        if (!current) return initialFormData;
+
+        if (!current.userId && initialFormData.userId) {
+          return {
+            ...current,
+            userId: initialFormData.userId,
+          };
+        }
+
+        return current;
+      });
+    }
+  }, [initialFormData]);
 
   useEffect(() => {
     if (usersQuery.data?.users) {
