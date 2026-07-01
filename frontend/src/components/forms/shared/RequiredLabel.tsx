@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+﻿import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import { FormLabel } from '@/components/ui/form';
 import { cn } from '@/lib/utils';
 
@@ -15,13 +15,13 @@ type RequiredBadgeProps = {
 };
 
 export function RequiredBadge({
-  children = '必須',
+  children = '*',
   className,
 }: Readonly<RequiredBadgeProps>) {
   return (
     <span
       className={cn(
-        'inline-flex shrink-0 items-center rounded bg-destructive px-2 py-1 text-xs font-semibold leading-none text-destructive-foreground',
+        'inline-flex shrink-0 items-center text-base font-semibold leading-none text-destructive',
         className,
       )}
     >
@@ -33,14 +33,14 @@ export function RequiredBadge({
 export function RequiredLabel({
   children,
   required = true,
-  requiredText = '必須',
+  requiredText = '*',
   className,
   badgeClassName,
   ...props
 }: Readonly<RequiredLabelProps>) {
   return (
     <FormLabel
-      className={cn('inline-flex max-w-full flex-wrap items-center gap-2', className)}
+      className={cn('inline-flex max-w-full flex-wrap items-center gap-1', className)}
       {...props}
     >
       <span>{children}</span>

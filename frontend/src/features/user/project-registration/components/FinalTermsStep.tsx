@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+﻿import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Form, FormItem, FormField, FormLabel, FormControl, FormMessage } from "
 import { Checkbox } from "@/components/ui/checkbox";
 
 const FinalTermsSchema = z.object({
-  finalTermsAgreed: z.boolean().refine(val => val === true, "同意してください"),
+  finalTermsAgreed: z.boolean().refine(val => val === true, "蜷梧э縺励※縺上□縺輔＞"),
 })
 
 type FinalTermsData = z.infer<typeof FinalTermsSchema>;
@@ -67,7 +67,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2">「プログラム名」入会規約 <span className="text-red-500 text-sm ml-1">必須</span></h2>
+        <h2 className="text-2xl font-bold mb-2">「プログラム名」入会規約 <span className="ml-1 text-destructive">*</span></h2>
         <p className="text-muted-foreground">入会規約をご確認の上、同意してください</p>
       </div>
 
@@ -76,154 +76,154 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
           <div className="max-h-[600px] overflow-y-auto p-6 border rounded-lg bg-muted/30">
             <div className="text-sm leading-relaxed space-y-6">
               <section>
-                <h3 className="font-semibold mb-2">(名称)</h3>
-                <h4 className="font-semibold mb-2">第1条</h4>
-                <p>本会の名称は、プログラム名 (以下「本会」という) とする。</p>
+                <h3 className="font-semibold mb-2">(蜷咲ｧｰ)</h3>
+                <h4 className="font-semibold mb-2">隨ｬ1譚｡</h4>
+                <p>譛ｬ莨壹・蜷咲ｧｰ縺ｯ縲√・繝ｭ繧ｰ繝ｩ繝蜷・(莉･荳九梧悽莨壹阪→縺・≧) 縺ｨ縺吶ｋ縲・</p>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(目的)</h3>
-                <h4 className="font-semibold mb-2">第2条</h4>
-                <p>本会は、プログラム型運営・管理者名が実施する「プロジェクト概要」の一環として、会員が太陽光発電設備を使用することで削減された温室効果ガス排出量を、国内における地球温暖化対策のための排出削減・吸収量認証制度 (以下「Ｊ－クレジット制度」という) 実施要綱 (平成25年4月17日経済産業省、環境省、農林水産省策定) に基づきＪ－クレジットとしてＪ－クレジット制度認証委員会 (Ｊ－クレジット制度を管理する経済産業省、環境省、農林水産省が共同で設置した、Ｊ－クレジットの認証を行う委員会) より認証を受けることで、環境価値の「見える化」を図るとともに、創出されたＪ－クレジットをプログラム型運営・管理者名における利用目的に利用することを目的とする。</p>
+                <h3 className="font-semibold mb-2">(逶ｮ逧・</h3>
+                <h4 className="font-semibold mb-2">隨ｬ2譚｡</h4>
+                <p>譛ｬ莨壹・縲√・繝ｭ繧ｰ繝ｩ繝蝙矩°蝟ｶ繝ｻ邂｡逅・・錐縺悟ｮ滓命縺吶ｋ縲後・繝ｭ繧ｸ繧ｧ繧ｯ繝域ｦりｦ√阪・荳迺ｰ縺ｨ縺励※縲∽ｼ壼藤縺悟､ｪ髯ｽ蜈臥匱髮ｻ險ｭ蛯吶ｒ菴ｿ逕ｨ縺吶ｋ縺薙→縺ｧ蜑頑ｸ帙＆繧後◆貂ｩ螳､蜉ｹ譫懊ぎ繧ｹ謗貞・驥上ｒ縲∝嵜蜀・↓縺翫￠繧句慍逅・ｸｩ證門喧蟇ｾ遲悶・縺溘ａ縺ｮ謗貞・蜑頑ｸ帙・蜷ｸ蜿朱㍼隱崎ｨｼ蛻ｶ蠎ｦ (莉･荳九鯉ｼｪ・阪け繝ｬ繧ｸ繝・ヨ蛻ｶ蠎ｦ縲阪→縺・≧) 螳滓命隕∫ｶｱ (蟷ｳ謌・5蟷ｴ4譛・7譌･邨梧ｸ育肇讌ｭ逵√∫腸蠅・怐縲∬ｾｲ譫玲ｰｴ逕｣逵∫ｭ門ｮ・ 縺ｫ蝓ｺ縺･縺搾ｼｪ・阪け繝ｬ繧ｸ繝・ヨ縺ｨ縺励※・ｪ・阪け繝ｬ繧ｸ繝・ヨ蛻ｶ蠎ｦ隱崎ｨｼ蟋泌藤莨・(・ｪ・阪け繝ｬ繧ｸ繝・ヨ蛻ｶ蠎ｦ繧堤ｮ｡逅・☆繧狗ｵ梧ｸ育肇讌ｭ逵√∫腸蠅・怐縲∬ｾｲ譫玲ｰｴ逕｣逵√′蜈ｱ蜷後〒險ｭ鄂ｮ縺励◆縲・ｼｪ・阪け繝ｬ繧ｸ繝・ヨ縺ｮ隱崎ｨｼ繧定｡後≧蟋泌藤莨・ 繧医ｊ隱崎ｨｼ繧貞女縺代ｋ縺薙→縺ｧ縲∫腸蠅・ｾ｡蛟､縺ｮ縲瑚ｦ九∴繧句喧縲阪ｒ蝗ｳ繧九→縺ｨ繧ゅ↓縲∝卸蜃ｺ縺輔ｌ縺滂ｼｪ・阪け繝ｬ繧ｸ繝・ヨ繧偵・繝ｭ繧ｰ繝ｩ繝蝙矩°蝟ｶ繝ｻ邂｡逅・・錐縺ｫ縺翫￠繧句茜逕ｨ逶ｮ逧・↓蛻ｩ逕ｨ縺吶ｋ縺薙→繧堤岼逧・→縺吶ｋ縲・</p>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(運営・管理)</h3>
-                <h4 className="font-semibold mb-2">第3条</h4>
-                <p>本会の運営・管理はプログラム型運営・管理者名 (以下「運営・管理者」という) が行う。</p>
+                <h3 className="font-semibold mb-2">(驕句霧繝ｻ邂｡逅・</h3>
+                <h4 className="font-semibold mb-2">隨ｬ3譚｡</h4>
+                <p>譛ｬ莨壹・驕句霧繝ｻ邂｡逅・・繝励Ο繧ｰ繝ｩ繝蝙矩°蝟ｶ繝ｻ邂｡逅・・錐 (莉･荳九碁°蝟ｶ繝ｻ邂｡逅・・阪→縺・≧) 縺瑚｡後≧縲・</p>
               </section>
 
               <section>
-                <h4 className="font-semibold mb-2">第3条の2</h4>
-                <p className="mb-2">運営・管理者はＪ－クレジット制度に関し、次に掲げる業務を行う。</p>
+                <h4 className="font-semibold mb-2">隨ｬ3譚｡縺ｮ2</h4>
+                <p className="mb-2">驕句霧繝ｻ邂｡逅・・・・ｪ・阪け繝ｬ繧ｸ繝・ヨ蛻ｶ蠎ｦ縺ｫ髢｢縺励∵ｬ｡縺ｫ謗ｲ縺偵ｋ讌ｭ蜍吶ｒ陦後≧縲・</p>
                 <ul className="list-disc pl-6 space-y-1">
-                  <li>会員情報の管理・記録</li>
-                  <li>会員入会時の内容確認(対象設備の導入時期、他のプログラム型プロジェクトとの会員の重複登録等)</li>
-                  <li>排出削減活動リストの作成</li>
-                  <li>モニタリングの実施 (モニタリングデータの収集)</li>
-                  <li>モニタリング報告値 (排出削減量等) の算定</li>
-                  <li>モニタリング報告書の作成と対応 (審査対応等)</li>
-                  <li>Ｊ－クレジット制度事務局への各種申請</li>
-                  <li>クレジット売買</li>
-                  <li>クレジット売却益の活用</li>
-                  <li>会員の退会手続（補助金受給者を対象としたプロジェクト等で退会を禁ずる場合など適宜ご修正ください）</li>
+                  <li>莨壼藤諠・ｱ縺ｮ邂｡逅・・險倬鹸</li>
+                  <li>莨壼藤蜈･莨壽凾縺ｮ蜀・ｮｹ遒ｺ隱・蟇ｾ雎｡險ｭ蛯吶・蟆主・譎よ悄縲∽ｻ悶・繝励Ο繧ｰ繝ｩ繝蝙九・繝ｭ繧ｸ繧ｧ繧ｯ繝医→縺ｮ莨壼藤縺ｮ驥崎､・匳骭ｲ遲・</li>
+                  <li>謗貞・蜑頑ｸ帶ｴｻ蜍輔Μ繧ｹ繝医・菴懈・</li>
+                  <li>繝｢繝九ち繝ｪ繝ｳ繧ｰ縺ｮ螳滓命 (繝｢繝九ち繝ｪ繝ｳ繧ｰ繝・・繧ｿ縺ｮ蜿朱寔)</li>
+                  <li>繝｢繝九ち繝ｪ繝ｳ繧ｰ蝣ｱ蜻雁､ (謗貞・蜑頑ｸ幃㍼遲・ 縺ｮ邂怜ｮ・</li>
+                  <li>繝｢繝九ち繝ｪ繝ｳ繧ｰ蝣ｱ蜻頑嶌縺ｮ菴懈・縺ｨ蟇ｾ蠢・(蟇ｩ譟ｻ蟇ｾ蠢懃ｭ・</li>
+                  <li>・ｪ・阪け繝ｬ繧ｸ繝・ヨ蛻ｶ蠎ｦ莠句漁螻縺ｸ縺ｮ蜷・ｨｮ逕ｳ隲・</li>
+                  <li>繧ｯ繝ｬ繧ｸ繝・ヨ螢ｲ雋ｷ</li>
+                  <li>繧ｯ繝ｬ繧ｸ繝・ヨ螢ｲ蜊ｴ逶翫・豢ｻ逕ｨ</li>
+                  <li>莨壼藤縺ｮ騾莨壽焔邯夲ｼ郁｣懷勧驥大女邨ｦ閠・ｒ蟇ｾ雎｡縺ｨ縺励◆繝励Ο繧ｸ繧ｧ繧ｯ繝育ｭ峨〒騾莨壹ｒ遖√★繧句ｴ蜷医↑縺ｩ驕ｩ螳懊＃菫ｮ豁｣縺上□縺輔＞・・</li>
                 </ul>
               </section>
 
               <section>
-                <h4 className="font-semibold mb-2">第3条の3</h4>
-                <p>運営・管理者として必要な事務はプログラム型運営・管理者名において行う。</p>
+                <h4 className="font-semibold mb-2">隨ｬ3譚｡縺ｮ3</h4>
+                <p>驕句霧繝ｻ邂｡逅・・→縺励※蠢・ｦ√↑莠句漁縺ｯ繝励Ο繧ｰ繝ｩ繝蝙矩°蝟ｶ繝ｻ邂｡逅・・錐縺ｫ縺翫＞縺ｦ陦後≧縲・</p>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(会員)</h3>
-                <h4 className="font-semibold mb-2">第4条</h4>
-                <p>本規約において、会員とは、本規約に同意の上、運営・管理者に入会を申し込んだ者をいう。</p>
+                <h3 className="font-semibold mb-2">(莨壼藤)</h3>
+                <h4 className="font-semibold mb-2">隨ｬ4譚｡</h4>
+                <p>譛ｬ隕冗ｴ・↓縺翫＞縺ｦ縲∽ｼ壼藤縺ｨ縺ｯ縲∵悽隕冗ｴ・↓蜷梧э縺ｮ荳翫・°蝟ｶ繝ｻ邂｡逅・・↓蜈･莨壹ｒ逕ｳ縺苓ｾｼ繧薙□閠・ｒ縺・≧縲・</p>
               </section>
 
               <section>
-                <h4 className="font-semibold mb-2">第4条の2</h4>
-                <p className="mb-2">会員は次に掲げる全ての要件を満たすものとする。</p>
+                <h4 className="font-semibold mb-2">隨ｬ4譚｡縺ｮ2</h4>
+                <p className="mb-2">莨壼藤縺ｯ谺｡縺ｫ謗ｲ縺偵ｋ蜈ｨ縺ｦ縺ｮ隕∽ｻｶ繧呈ｺ縺溘☆繧ゅ・縺ｨ縺吶ｋ縲・</p>
                 <ul className="list-decimal pl-6 space-y-1">
-                  <li>事業所等であること（家庭でないこと）。</li>
-                  <li>太陽光発電設備を設置し、発電された電力の全部又は一部を自家消費していること。</li>
-                  <li>太陽光発電設備の稼働開始日（不明な場合は設置日）が、会員規約合意日 (入会届提出日) の2年前の日以降であること。</li>
-                  <li>Ｊ－クレジット制度における各種申請に際し、本入会届に記載された情報を、運営・管理者が使用することに同意すること。</li>
-                  <li>Ｊ－クレジット制度における各種申請に際し、本入会届に記載された以外の情報について、運営・管理者が必要とする場合は提供することに同意すること。</li>
-                  <li>太陽光発電設備を使用することによる自家消費分についての環境価値 (温室効果ガス排出量の削減効果=Ｊ－クレジット) を運営・管理者へ譲渡すること、その結果として「太陽光発電設備を使用することで温室効果ガス排出量を削減」したことを会員が主張できなくなることに同意すること。</li>
-                  <li>本会に登録する太陽光発電設備が、他の類似制度及びＪ－クレジット制度における他のプロジェクトのいずれにおいても登録されていないこと。</li>
-                  <li>太陽光発電設備を利用する事業所等において、常用の自家発電設備を利用していないこと。</li>
+                  <li>莠区･ｭ謇遲峨〒縺ゅｋ縺薙→・亥ｮｶ蠎ｭ縺ｧ縺ｪ縺・％縺ｨ・峨・</li>
+                  <li>螟ｪ髯ｽ蜈臥匱髮ｻ險ｭ蛯吶ｒ險ｭ鄂ｮ縺励∫匱髮ｻ縺輔ｌ縺滄崕蜉帙・蜈ｨ驛ｨ蜿医・荳驛ｨ繧定・螳ｶ豸郁ｲｻ縺励※縺・ｋ縺薙→縲・</li>
+                  <li>螟ｪ髯ｽ蜈臥匱髮ｻ險ｭ蛯吶・遞ｼ蜒埼幕蟋区律・井ｸ肴・縺ｪ蝣ｴ蜷医・險ｭ鄂ｮ譌･・峨′縲∽ｼ壼藤隕冗ｴ・粋諢乗律 (蜈･莨壼ｱ頑署蜃ｺ譌･) 縺ｮ2蟷ｴ蜑阪・譌･莉･髯阪〒縺ゅｋ縺薙→縲・</li>
+                  <li>・ｪ・阪け繝ｬ繧ｸ繝・ヨ蛻ｶ蠎ｦ縺ｫ縺翫￠繧句推遞ｮ逕ｳ隲九↓髫帙＠縲∵悽蜈･莨壼ｱ翫↓險倩ｼ峨＆繧後◆諠・ｱ繧偵・°蝟ｶ繝ｻ邂｡逅・・′菴ｿ逕ｨ縺吶ｋ縺薙→縺ｫ蜷梧э縺吶ｋ縺薙→縲・</li>
+                  <li>・ｪ・阪け繝ｬ繧ｸ繝・ヨ蛻ｶ蠎ｦ縺ｫ縺翫￠繧句推遞ｮ逕ｳ隲九↓髫帙＠縲∵悽蜈･莨壼ｱ翫↓險倩ｼ峨＆繧後◆莉･螟悶・諠・ｱ縺ｫ縺､縺・※縲・°蝟ｶ繝ｻ邂｡逅・・′蠢・ｦ√→縺吶ｋ蝣ｴ蜷医・謠蝉ｾ帙☆繧九％縺ｨ縺ｫ蜷梧э縺吶ｋ縺薙→縲・</li>
+                  <li>螟ｪ髯ｽ蜈臥匱髮ｻ險ｭ蛯吶ｒ菴ｿ逕ｨ縺吶ｋ縺薙→縺ｫ繧医ｋ閾ｪ螳ｶ豸郁ｲｻ蛻・↓縺､縺・※縺ｮ迺ｰ蠅・ｾ｡蛟､ (貂ｩ螳､蜉ｹ譫懊ぎ繧ｹ謗貞・驥上・蜑頑ｸ帛柑譫・・ｪ・阪け繝ｬ繧ｸ繝・ヨ) 繧帝°蝟ｶ繝ｻ邂｡逅・・∈隴ｲ貂｡縺吶ｋ縺薙→縲√◎縺ｮ邨先棡縺ｨ縺励※縲悟､ｪ髯ｽ蜈臥匱髮ｻ險ｭ蛯吶ｒ菴ｿ逕ｨ縺吶ｋ縺薙→縺ｧ貂ｩ螳､蜉ｹ譫懊ぎ繧ｹ謗貞・驥上ｒ蜑頑ｸ帙阪＠縺溘％縺ｨ繧剃ｼ壼藤縺御ｸｻ蠑ｵ縺ｧ縺阪↑縺上↑繧九％縺ｨ縺ｫ蜷梧э縺吶ｋ縺薙→縲・</li>
+                  <li>譛ｬ莨壹↓逋ｻ骭ｲ縺吶ｋ螟ｪ髯ｽ蜈臥匱髮ｻ險ｭ蛯吶′縲∽ｻ悶・鬘樔ｼｼ蛻ｶ蠎ｦ蜿翫・・ｪ・阪け繝ｬ繧ｸ繝・ヨ蛻ｶ蠎ｦ縺ｫ縺翫￠繧倶ｻ悶・繝励Ο繧ｸ繧ｧ繧ｯ繝医・縺・★繧後↓縺翫＞縺ｦ繧ら匳骭ｲ縺輔ｌ縺ｦ縺・↑縺・％縺ｨ縲・</li>
+                  <li>螟ｪ髯ｽ蜈臥匱髮ｻ險ｭ蛯吶ｒ蛻ｩ逕ｨ縺吶ｋ莠区･ｭ謇遲峨↓縺翫＞縺ｦ縲∝ｸｸ逕ｨ縺ｮ閾ｪ螳ｶ逋ｺ髮ｻ險ｭ蛯吶ｒ蛻ｩ逕ｨ縺励※縺・↑縺・％縺ｨ縲・</li>
                 </ul>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(Ｊ－クレジット売却益の取り扱い)</h3>
-                <h4 className="font-semibold mb-2">第5条</h4>
-                <p>Ｊ－クレジットの売買による売却益は、利用目的に活用することとする。</p>
-                <p className="text-xs text-muted-foreground mt-1">※利用目的は、プロジェクトにおける活用予定・実際の活用方法に応じてご修正ください。</p>
+                <h3 className="font-semibold mb-2">(・ｪ・阪け繝ｬ繧ｸ繝・ヨ螢ｲ蜊ｴ逶翫・蜿悶ｊ謇ｱ縺・</h3>
+                <h4 className="font-semibold mb-2">隨ｬ5譚｡</h4>
+                <p>・ｪ・阪け繝ｬ繧ｸ繝・ヨ縺ｮ螢ｲ雋ｷ縺ｫ繧医ｋ螢ｲ蜊ｴ逶翫・縲∝茜逕ｨ逶ｮ逧・↓豢ｻ逕ｨ縺吶ｋ縺薙→縺ｨ縺吶ｋ縲・</p>
+                <p className="text-xs text-muted-foreground mt-1">窶ｻ蛻ｩ逕ｨ逶ｮ逧・・縲√・繝ｭ繧ｸ繧ｧ繧ｯ繝医↓縺翫￠繧区ｴｻ逕ｨ莠亥ｮ壹・螳滄圀縺ｮ豢ｻ逕ｨ譁ｹ豕輔↓蠢懊§縺ｦ縺比ｿｮ豁｣縺上□縺輔＞縲・</p>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(運営・管理者への協力)</h3>
-                <h4 className="font-semibold mb-2">第6条</h4>
-                <p className="mb-2">会員は、運営・管理者が求めるときは、次に掲げる全ての事項について同意し、協力しなければならない。</p>
+                <h3 className="font-semibold mb-2">(驕句霧繝ｻ邂｡逅・・∈縺ｮ蜊泌鴨)</h3>
+                <h4 className="font-semibold mb-2">隨ｬ6譚｡</h4>
+                <p className="mb-2">莨壼藤縺ｯ縲・°蝟ｶ繝ｻ邂｡逅・・′豎ゅａ繧九→縺阪・縲∵ｬ｡縺ｫ謗ｲ縺偵ｋ蜈ｨ縺ｦ縺ｮ莠矩・↓縺､縺・※蜷梧э縺励∝鵠蜉帙＠縺ｪ縺代ｌ縺ｰ縺ｪ繧峨↑縺・・</p>
                 <ul className="list-decimal pl-6 space-y-1">
-                  <li>Ｊ－クレジット制度における各種申請に際し、運営・管理者が必要とする情報を提供すること。</li>
-                  <li>Ｊ－クレジットの認証に際し、審査機関が必要に応じて実施する現地調査 (太陽光発電設備に関する現地確認等をいう) を受けること。</li>
-                  <li>その他、本会の運営及び管理に関して必要なこと。</li>
+                  <li>・ｪ・阪け繝ｬ繧ｸ繝・ヨ蛻ｶ蠎ｦ縺ｫ縺翫￠繧句推遞ｮ逕ｳ隲九↓髫帙＠縲・°蝟ｶ繝ｻ邂｡逅・・′蠢・ｦ√→縺吶ｋ諠・ｱ繧呈署萓帙☆繧九％縺ｨ縲・</li>
+                  <li>・ｪ・阪け繝ｬ繧ｸ繝・ヨ縺ｮ隱崎ｨｼ縺ｫ髫帙＠縲∝ｯｩ譟ｻ讖滄未縺悟ｿ・ｦ√↓蠢懊§縺ｦ螳滓命縺吶ｋ迴ｾ蝨ｰ隱ｿ譟ｻ (螟ｪ髯ｽ蜈臥匱髮ｻ險ｭ蛯吶↓髢｢縺吶ｋ迴ｾ蝨ｰ遒ｺ隱咲ｭ峨ｒ縺・≧) 繧貞女縺代ｋ縺薙→縲・</li>
+                  <li>縺昴・莉悶∵悽莨壹・驕句霧蜿翫・邂｡逅・↓髢｢縺励※蠢・ｦ√↑縺薙→縲・</li>
                 </ul>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(報告)</h3>
-                <h4 className="font-semibold mb-2">第7条</h4>
-                <p className="mb-2">運営・管理者は、次に掲げる事項について、会員に対して年1回報告することとする。</p>
+                <h3 className="font-semibold mb-2">(蝣ｱ蜻・</h3>
+                <h4 className="font-semibold mb-2">隨ｬ7譚｡</h4>
+                <p className="mb-2">驕句霧繝ｻ邂｡逅・・・縲∵ｬ｡縺ｫ謗ｲ縺偵ｋ莠矩・↓縺､縺・※縲∽ｼ壼藤縺ｫ蟇ｾ縺励※蟷ｴ1蝗槫ｱ蜻翫☆繧九％縺ｨ縺ｨ縺吶ｋ縲・</p>
                 <ul className="list-decimal pl-6 space-y-1">
-                  <li>Ｊ－クレジット制度認証委員会への実績報告及び認証申請の結果について</li>
-                  <li>Ｊ－クレジットの活用用途について</li>
+                  <li>・ｪ・阪け繝ｬ繧ｸ繝・ヨ蛻ｶ蠎ｦ隱崎ｨｼ蟋泌藤莨壹∈縺ｮ螳溽ｸｾ蝣ｱ蜻雁所縺ｳ隱崎ｨｼ逕ｳ隲九・邨先棡縺ｫ縺､縺・※</li>
+                  <li>・ｪ・阪け繝ｬ繧ｸ繝・ヨ縺ｮ豢ｻ逕ｨ逕ｨ騾斐↓縺､縺・※</li>
                 </ul>
               </section>
 
               <section>
-                <h4 className="font-semibold mb-2">第7条の2</h4>
-                <p>前項の報告は、運営・管理者がウェブサイト上に結果概要を掲載することを以て行うこととする。</p>
+                <h4 className="font-semibold mb-2">隨ｬ7譚｡縺ｮ2</h4>
+                <p>蜑埼・・蝣ｱ蜻翫・縲・°蝟ｶ繝ｻ邂｡逅・・′繧ｦ繧ｧ繝悶し繧､繝井ｸ翫↓邨先棡讎りｦ√ｒ謗ｲ霈峨☆繧九％縺ｨ繧剃ｻ･縺ｦ陦後≧縺薙→縺ｨ縺吶ｋ縲・</p>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(設備の処分等)</h3>
-                <h4 className="font-semibold mb-2">第8条</h4>
-                <p className="mb-2">会員は、第11条に規定する会員資格の有効期間内において、次の各号の一に該当するときは、その旨を運営・管理者に届け出なければならない。</p>
+                <h3 className="font-semibold mb-2">(險ｭ蛯吶・蜃ｦ蛻・ｭ・</h3>
+                <h4 className="font-semibold mb-2">隨ｬ8譚｡</h4>
+                <p className="mb-2">莨壼藤縺ｯ縲∫ｬｬ11譚｡縺ｫ隕丞ｮ壹☆繧倶ｼ壼藤雉・ｼ縺ｮ譛牙柑譛滄俣蜀・↓縺翫＞縺ｦ縲∵ｬ｡縺ｮ蜷・捷縺ｮ荳縺ｫ隧ｲ蠖薙☆繧九→縺阪・縲√◎縺ｮ譌ｨ繧帝°蝟ｶ繝ｻ邂｡逅・・↓螻翫￠蜃ｺ縺ｪ縺代ｌ縺ｰ縺ｪ繧峨↑縺・・</p>
                 <ul className="list-decimal pl-6 space-y-1">
-                  <li>太陽光発電設備が毀損され、又は滅失したとき。</li>
-                  <li>太陽光発電設備を処分 (売却、譲渡、交換、貸付又は担保に供すること) しようとするとき。</li>
+                  <li>螟ｪ髯ｽ蜈臥匱髮ｻ險ｭ蛯吶′豈謳阪＆繧後∝処縺ｯ貊・､ｱ縺励◆縺ｨ縺阪・</li>
+                  <li>螟ｪ髯ｽ蜈臥匱髮ｻ險ｭ蛯吶ｒ蜃ｦ蛻・(螢ｲ蜊ｴ縲∬ｭｲ貂｡縲∽ｺ､謠帙∬ｲｸ莉伜処縺ｯ諡・ｿ昴↓萓帙☆繧九％縺ｨ) 縺励ｈ縺・→縺吶ｋ縺ｨ縺阪・</li>
                 </ul>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(退会)</h3>
-                <p className="text-xs text-muted-foreground mb-2">※補助金受給者を対象としたプロジェクト等で退会を禁ずる場合や、その他プロジェクトの実際に応じて適宜ご修正ください。</p>
-                <h4 className="font-semibold mb-2">第9条</h4>
-                <p>会員は、本会を退会しようとするときは、運営・管理者にその旨を届け出、その承認を得なければならない。</p>
+                <h3 className="font-semibold mb-2">(騾莨・</h3>
+                <p className="text-xs text-muted-foreground mb-2">窶ｻ陬懷勧驥大女邨ｦ閠・ｒ蟇ｾ雎｡縺ｨ縺励◆繝励Ο繧ｸ繧ｧ繧ｯ繝育ｭ峨〒騾莨壹ｒ遖√★繧句ｴ蜷医ｄ縲√◎縺ｮ莉悶・繝ｭ繧ｸ繧ｧ繧ｯ繝医・螳滄圀縺ｫ蠢懊§縺ｦ驕ｩ螳懊＃菫ｮ豁｣縺上□縺輔＞縲・</p>
+                <h4 className="font-semibold mb-2">隨ｬ9譚｡</h4>
+                <p>莨壼藤縺ｯ縲∵悽莨壹ｒ騾莨壹＠繧医≧縺ｨ縺吶ｋ縺ｨ縺阪・縲・°蝟ｶ繝ｻ邂｡逅・・↓縺昴・譌ｨ繧貞ｱ翫￠蜃ｺ縲√◎縺ｮ謇ｿ隱阪ｒ蠕励↑縺代ｌ縺ｰ縺ｪ繧峨↑縺・・</p>
               </section>
 
               <section>
-                <h4 className="font-semibold mb-2">第9条の2</h4>
-                <p className="mb-2">運営・管理者は、会員が次の各号の一に該当するときは、当該会員を退会させることができる。</p>
+                <h4 className="font-semibold mb-2">隨ｬ9譚｡縺ｮ2</h4>
+                <p className="mb-2">驕句霧繝ｻ邂｡逅・・・縲∽ｼ壼藤縺梧ｬ｡縺ｮ蜷・捷縺ｮ荳縺ｫ隧ｲ蠖薙☆繧九→縺阪・縲∝ｽ楢ｩｲ莨壼藤繧帝莨壹＆縺帙ｋ縺薙→縺後〒縺阪ｋ縲・</p>
                 <ul className="list-decimal pl-6 space-y-1">
-                  <li>第4条第2項に掲げる要件を満たしていないとき。</li>
-                  <li>前条の届出があったとき。</li>
-                  <li>会員の行為が本会の目的に著しく相応しくないと認めるとき。</li>
+                  <li>隨ｬ4譚｡隨ｬ2鬆・↓謗ｲ縺偵ｋ隕∽ｻｶ繧呈ｺ縺溘＠縺ｦ縺・↑縺・→縺阪・</li>
+                  <li>蜑肴擅縺ｮ螻雁・縺後≠縺｣縺溘→縺阪・</li>
+                  <li>莨壼藤縺ｮ陦檎ぜ縺梧悽莨壹・逶ｮ逧・↓闡励＠縺冗嶌蠢懊＠縺上↑縺・→隱阪ａ繧九→縺阪・</li>
                 </ul>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(会費)</h3>
-                <h4 className="font-semibold mb-2">第10条</h4>
-                <p>本会の会費は無料とする。</p>
+                <h3 className="font-semibold mb-2">(莨夊ｲｻ)</h3>
+                <h4 className="font-semibold mb-2">隨ｬ10譚｡</h4>
+                <p>譛ｬ莨壹・莨夊ｲｻ縺ｯ辟｡譁吶→縺吶ｋ縲・</p>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(会員資格の有効期間)</h3>
-                <h4 className="font-semibold mb-2">第11条</h4>
-                <p>会員資格の有効期間は入会申込日若しくはプロジェクトが実施された日（※）のいずれか遅い日から8年間とする。ただし、運営・管理者が提出し、Ｊ－クレジット制度管理者が承認した、認証対象期間の延長に係るプロジェクト計画変更届に記載された手続きに沿って延長を行う場合、会員資格は8年間延長されるものとする。</p>
-                <p className="text-xs text-muted-foreground mt-1">※プロジェクトが実施された日は、温室効果ガス排出量の削減又は温室効果ガスの除去をもたらす活動が実質的に開始された日とする。</p>
+                <h3 className="font-semibold mb-2">(莨壼藤雉・ｼ縺ｮ譛牙柑譛滄俣)</h3>
+                <h4 className="font-semibold mb-2">隨ｬ11譚｡</h4>
+                <p>莨壼藤雉・ｼ縺ｮ譛牙柑譛滄俣縺ｯ蜈･莨夂筏霎ｼ譌･闍･縺励￥縺ｯ繝励Ο繧ｸ繧ｧ繧ｯ繝医′螳滓命縺輔ｌ縺滓律・遺ｻ・峨・縺・★繧後°驕・＞譌･縺九ｉ8蟷ｴ髢薙→縺吶ｋ縲ゅ◆縺縺励・°蝟ｶ繝ｻ邂｡逅・・′謠仙・縺励・ｼｪ・阪け繝ｬ繧ｸ繝・ヨ蛻ｶ蠎ｦ邂｡逅・・′謇ｿ隱阪＠縺溘∬ｪ崎ｨｼ蟇ｾ雎｡譛滄俣縺ｮ蟒ｶ髟ｷ縺ｫ菫ゅｋ繝励Ο繧ｸ繧ｧ繧ｯ繝郁ｨ育判螟画峩螻翫↓險倩ｼ峨＆繧後◆謇狗ｶ壹″縺ｫ豐ｿ縺｣縺ｦ蟒ｶ髟ｷ繧定｡後≧蝣ｴ蜷医∽ｼ壼藤雉・ｼ縺ｯ8蟷ｴ髢灘ｻｶ髟ｷ縺輔ｌ繧九ｂ縺ｮ縺ｨ縺吶ｋ縲・</p>
+                <p className="text-xs text-muted-foreground mt-1">窶ｻ繝励Ο繧ｸ繧ｧ繧ｯ繝医′螳滓命縺輔ｌ縺滓律縺ｯ縲∵ｸｩ螳､蜉ｹ譫懊ぎ繧ｹ謗貞・驥上・蜑頑ｸ帛処縺ｯ貂ｩ螳､蜉ｹ譫懊ぎ繧ｹ縺ｮ髯､蜴ｻ繧偵ｂ縺溘ｉ縺呎ｴｻ蜍輔′螳溯ｳｪ逧・↓髢句ｧ九＆繧後◆譌･縺ｨ縺吶ｋ縲・</p>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(個人情報・重要情報等の取扱い)</h3>
-                <h4 className="font-semibold mb-2">第12条</h4>
-                <p>運営・管理者は、あらかじめ会員の同意がある場合、本規約に規定する場合又は法令等に基づく要請がある場合を除き、会員から得られた個人情報、重要情報及びこれらに類する情報を第三者に提供又は開示しないこととする。</p>
+                <h3 className="font-semibold mb-2">(蛟倶ｺｺ諠・ｱ繝ｻ驥崎ｦ∵ュ蝣ｱ遲峨・蜿匁桶縺・</h3>
+                <h4 className="font-semibold mb-2">隨ｬ12譚｡</h4>
+                <p>驕句霧繝ｻ邂｡逅・・・縲√≠繧峨°縺倥ａ莨壼藤縺ｮ蜷梧э縺後≠繧句ｴ蜷医∵悽隕冗ｴ・↓隕丞ｮ壹☆繧句ｴ蜷亥処縺ｯ豕穂ｻ､遲峨↓蝓ｺ縺･縺剰ｦ∬ｫ九′縺ゅｋ蝣ｴ蜷医ｒ髯､縺阪∽ｼ壼藤縺九ｉ蠕励ｉ繧後◆蛟倶ｺｺ諠・ｱ縲・㍾隕∵ュ蝣ｱ蜿翫・縺薙ｌ繧峨↓鬘槭☆繧区ュ蝣ｱ繧堤ｬｬ荳芽・↓謠蝉ｾ帛処縺ｯ髢狗､ｺ縺励↑縺・％縺ｨ縺ｨ縺吶ｋ縲・</p>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(委任)</h3>
-                <h4 className="font-semibold mb-2">第13条</h4>
-                <p>本規約に定めるもののほか、本会の入会に関し必要な事項は運営・管理者が定める。</p>
+                <h3 className="font-semibold mb-2">(蟋比ｻｻ)</h3>
+                <h4 className="font-semibold mb-2">隨ｬ13譚｡</h4>
+                <p>譛ｬ隕冗ｴ・↓螳壹ａ繧九ｂ縺ｮ縺ｮ縺ｻ縺九∵悽莨壹・蜈･莨壹↓髢｢縺怜ｿ・ｦ√↑莠矩・・驕句霧繝ｻ邂｡逅・・′螳壹ａ繧九・</p>
               </section>
 
               <section className="mt-8">
-                <h3 className="font-semibold mb-2">附　則</h3>
-                <p>本規約は、YYYY年MM月DD (プロジェクト登録申請日) から施行する。</p>
+                <h3 className="font-semibold mb-2">髯・蜑・</h3>
+                <p>譛ｬ隕冗ｴ・・縲〆YYY蟷ｴMM譛・D (繝励Ο繧ｸ繧ｧ繧ｯ繝育匳骭ｲ逕ｳ隲区律) 縺九ｉ譁ｽ陦後☆繧九・</p>
               </section>
             </div>
           </div>
@@ -251,8 +251,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
                           </FormControl>
                           <div className="flex flex-col">
                             <FormLabel htmlFor="finalTermsAgreed" className="text-sm font-medium leading-none">
-                              同意します
-                            </FormLabel>
+                              蜷梧э縺励∪縺・                            </FormLabel>
                             <FormMessage className="text-xs text-red-500 mt-1" /> {/* displays validation error */}
                           </div>
                         </FormItem>
@@ -270,5 +269,6 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
 });
 
 FinalTermsStep.displayName = "FinalTermsStep";
+
 
 

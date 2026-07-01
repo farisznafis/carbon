@@ -813,7 +813,9 @@ const ProjectDetail = () => {
             </AlertDialogHeader>
 
             <div className='space-y-2'>
-              <p className='text-sm font-medium'>理由（必須）</p>
+              <p className='text-sm font-medium'>
+                理由 <span className='text-destructive'>*</span>
+              </p>
               <Textarea
                 value={cancelReasonInput}
                 onChange={(e) => setCancelReasonInput(e.target.value)}
