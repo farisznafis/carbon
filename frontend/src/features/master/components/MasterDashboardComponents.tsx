@@ -92,10 +92,7 @@ export function DashboardSection({
     <section className={cn('py-8', dashboardContainer)}>
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-foreground">
-            <span className="text-primary">{title.slice(0, 1)}</span>
-            {title.slice(1)}
-          </h2>
+          <h2 className="text-foreground">{title}</h2>
           <p className="text-small mt-2 text-muted-foreground">
             {description}
           </p>

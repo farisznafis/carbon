@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { getProjectDetails, type ProjectDetail as ProjectDetailApi } from '@/api/projects';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -311,7 +311,7 @@ const ProjectDetail = () => {
               }
             >
               <ArrowLeft className='h-4 w-4 mr-2' />
-              ダッシュボードに戻る
+              ダッシュボードへ戻る
             </Button>
             <Button
               onClick={() =>
@@ -321,7 +321,7 @@ const ProjectDetail = () => {
               }
             >
               <ArrowRight className='h-4 w-4 mr-2' />
-              モニタリング登録テスト（太陽光）
+              モニタリング登録へ
             </Button>
           </CardContent>
         </Card>
@@ -330,7 +330,7 @@ const ProjectDetail = () => {
   }
 
   return (
-    <div className='min-h-screen py-8'>
+    <div className='relative min-h-screen py-8'>
       <div className='container mx-auto px-4'>
         <PageBackButton
           onClick={() => {
@@ -340,14 +340,14 @@ const ProjectDetail = () => {
               navigate(-1);
             }
           }}
-          label='戻る'
-          className='mb-4 rounded-full'
+          label=''
+          className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
         />
         <div className='mb-6 animate-slide-up'>
           <div className='flex items-start justify-between mb-4'>
             <div>
               <h1 className='mb-2'>{project.name}</h1>
-              <p className='text-mutged-foreground text-lg'>
+              <p className='text-muted-foreground text-lg'>
                 {project.description}
               </p>
             </div>
@@ -378,7 +378,7 @@ const ProjectDetail = () => {
                 value='registration-history'
                 className='min-w-[140px] rounded-md px-6 py-2.5 text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow'
               >
-                登録履歴
+                モニタリング一覧
               </TabsTrigger>
             </TabsList>
           </div>
@@ -448,11 +448,11 @@ const ProjectDetail = () => {
                       </span>
                       <div>
                         <dt className='text-xs text-muted-foreground tracking-wide'>
-                          認証期間
+                          作成日
                         </dt>
                         <dd className='font-medium'>
                           {project.createdDate ? project.createdDate : '-'}
-                          {/* <span className="text-muted-foreground"> ~（後で調整）</span> */}
+                          {/* <span className="text-muted-foreground"> 後で調整 </span> */}
                         </dd>
                       </div>
                     </div>
@@ -513,19 +513,19 @@ const ProjectDetail = () => {
                           </div>
                           <div className='flex flex-wrap gap-4 text-sm'>
                             <span>
-                              発電量:{' '}
+                              発電量{' '}
                               <strong>
                                 {formatNumber(row.ELpv_value)} kWh
                               </strong>
                             </span>
                             <span>
-                              自家消費量:{' '}
+                              自家消費量{' '}
                               <strong>
                                 {formatNumber(row.ELpvr_value)} kWh
                               </strong>
                             </span>
                             <span>
-                              蓄電池放電量:{' '}
+                              蓄電池放電量{' '}
                               <strong>
                                 {formatNumber(row.ELPJ_battery_value)} kWh
                               </strong>
@@ -540,16 +540,16 @@ const ProjectDetail = () => {
                         </div>
                         <div className='mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground md:grid-cols-4'>
                           <div>
-                            制御機器稼働時間:{' '}
+                            制御機器稼働時間{' '}
                             {formatNumber(row.ELPJ_control_value)} 時間
                           </div>
                           <div>
-                            蓄電池交換:{' '}
+                            蓄電池交換{' '}
                             {row.changedBattery == null
                               ? '-'
                               : row.changedBattery
-                                ? '有'
-                                : '無'}
+                                ? 'あり'
+                                : 'なし'}
                           </div>
                           {row.ELpv_evidence && (
                             <div className='truncate'>
@@ -592,7 +592,7 @@ const ProjectDetail = () => {
                   </div>
                   {/* <Card>
                     <CardHeader>
-                      <CardTitle>排出削減量</CardTitle>
+                      <CardTitle>推定削減量</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className='h-[280px] rounded-lg border bg-muted/30 flex items-center justify-center'>
@@ -603,7 +603,7 @@ const ProjectDetail = () => {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>見積</CardTitle>
+                      <CardTitle>見積り</CardTitle>
                     </CardHeader>
                     <CardContent className='space-y-4'>
                       <div className='h-[180px] rounded-lg border bg-muted/30 flex items-center justify-center'>
@@ -611,8 +611,8 @@ const ProjectDetail = () => {
                       </div>
 
                       <div className='space-y-1'>
-                        <div>排出量削減： 1,000 tCO2</div>
-                        <div>取得クレジット（再エネ）</div>
+                        <div>推定排出削減量: 1,000 tCO2</div>
+                        <div>取得クレジット（CO2換算）</div>
                         <div className='text-4xl font-bold text-cyan-500'>
                           ~100
                         </div>
@@ -711,7 +711,7 @@ const ProjectDetail = () => {
           <TabsContent value='documents'>
             <Card>
               <CardHeader>
-                <CardTitle>関係書類</CardTitle>
+                <CardTitle>関連書類</CardTitle>
                 <CardDescription>
                   このプロジェクトに紐づく関連書類です。
                 </CardDescription>
@@ -724,7 +724,7 @@ const ProjectDetail = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value='registration-history'>
+          {/* <TabsContent value='registration-history'>
             <Card>
               <CardHeader>
                 <CardTitle>登録履歴</CardTitle>
@@ -740,7 +740,7 @@ const ProjectDetail = () => {
                         <th className='text-left p-3 w-[18%]'>拠点名</th>
                         <th className='text-left p-3 w-[14%]'>申請日時</th>
                         <th className='text-left p-3 w-[10%]'>ステータス</th>
-                        <th className='text-left p-3 w-[48%]'>取り消す理由</th>
+                        <th className='text-left p-3 w-[48%]'>取り消し理由</th>
                         <th className='text-left p-3 w-[10%]'>操作</th>
                       </tr>
                     </thead>
@@ -767,7 +767,7 @@ const ProjectDetail = () => {
                                 size='sm'
                                 onClick={() => openCancelDialog(item.id)}
                               >
-                                取り消す依頼
+                                取り消し依頼
                               </Button>
                             ) : (
                               <Button
@@ -796,7 +796,7 @@ const ProjectDetail = () => {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
 
         <AlertDialog
@@ -816,7 +816,7 @@ const ProjectDetail = () => {
               <Textarea
                 value={cancelReasonInput}
                 onChange={(e) => setCancelReasonInput(e.target.value)}
-                placeholder='例）誤った値で登録したため、再登録したい。'
+                placeholder='理由を入力してください'
                 rows={4}
               />
             </div>
