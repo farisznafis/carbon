@@ -724,6 +724,7 @@ const ProjectDetail = () => {
             </Card>
           </TabsContent>
 
+          {/* 登録履歴 content */}
           {/* <TabsContent value='registration-history'>
             <Card>
               <CardHeader>

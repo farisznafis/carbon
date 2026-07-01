@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { InlineHelp } from '@/components/feedback/InlineHelp/InlineHelp';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { getSiteData, getSiteProjects, type SiteProject } from '@/api/site';
 import { getProfile } from '@/api/profile';
 import { useToast } from '@/hooks/use-toast';
@@ -99,8 +99,8 @@ const Dashboard = () => {
     if (!activeSiteId) {
       setIsLoading(false);
       toast({
-        title: 'エラー',
-        description: 'siteId が見つかりません',
+          title: 'エラー',
+          description: 'siteId が見つかりません',
         variant: 'destructive',
       });
       return;
@@ -181,17 +181,14 @@ const Dashboard = () => {
   }
 
   return (
-    <div className='min-h-screen py-8 bg-slate-50'>
+    <div className='relative min-h-screen py-8 bg-slate-50'>
       <div className='container mx-auto px-4'>
         {user?.role === 'master' && (
-          <Button
-            variant='ghost'
+          <PageBackButton
             onClick={() => navigate('/master/dashboard')}
-            className='mb-4'
-          >
-            <ArrowLeft className='h-4 w-4 mr-2' />
-            マスターダッシュボードに戻る
-          </Button>
+            label=''
+            className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
+          />
         )}
 
         <div className='mb-8 mx-8 animate-slide-up'>
@@ -200,11 +197,11 @@ const Dashboard = () => {
               <h2 className='mb-2'>{site?.siteName || '拠点ダッシュボード'}</h2>
               <div className='space-y-1 text-sm text-muted-foreground'>
                 <p>
-                      担当者:{' '}
+                  担当者{' '}
                 {`${site?.picLastName ?? ''} ${site?.picFirstName ?? ''}`.trim() ||
                   '-'}
                 </p>
-                    <p>住所: {site?.address || '-'}</p>
+                <p>住所: {site?.address || '-'}</p>
             </div>
           </div>
 
@@ -259,7 +256,7 @@ const Dashboard = () => {
                             </div>
 
                             <div className='p-3 border rounded-md grid grid-cols-2 gap-y-1 gap-x-0 text-sm'>
-                              <span className='text-muted-foreground'>方法論</span>
+                              <span className='text-muted-foreground'>方法論:</span>
                               <span>{project.methodName}</span>
                               <span className='text-muted-foreground'>方法論番号:</span>
                               <span>
