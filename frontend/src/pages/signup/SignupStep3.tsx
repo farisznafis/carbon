@@ -2,6 +2,7 @@
 import {
   FormActions,
   FormCard,
+  FormGrid,
   FormSection,
   FormSectionStack,
 } from '@/components/forms/form-layout';
@@ -57,9 +58,11 @@ function DetailRow({
   value?: string;
 }) {
   return (
-    <div className="flex justify-between gap-4">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-right font-medium">{value || missingValue}</span>
+    <div>
+      <div className="mb-1 text-sm font-medium text-muted-foreground">
+        {label}
+      </div>
+      <div className="text-foreground">{value || missingValue}</div>
     </div>
   );
 }
@@ -105,80 +108,83 @@ export const SignupStep3 = () => {
   return (
     <FormCard>
       <FormSectionStack>
-      <div className="text-center">
-        <h3 className="mb-2 text-2xl font-semibold">入力内容の確認</h3>
-        <p className="text-muted-foreground">
-          登録を完了する前に、入力内容を確認してください。
-        </p>
-      </div>
+        <div className="text-center">
+          <h3 className="mb-2 text-2xl font-semibold">入力内容の確認</h3>
+          <p className="text-muted-foreground">
+            登録を完了する前に、入力内容を確認してください。
+          </p>
+        </div>
 
-      <FormSection number={1} title="法人情報">
-        <div className="space-y-2 rounded-md border p-4">
-          <DetailRow label="法人番号" value={signupData.corporateNumber} />
-          <DetailRow label="法人名" value={signupData.companyName} />
-          <DetailRow label="法人名カナ" value={signupData.companyNameKana} />
-          {signupData.companyNameEnglish && (
+        <FormSection number={1} title="法人情報">
+          <FormGrid>
+            <DetailRow label="法人番号" value={signupData.corporateNumber} />
+            <DetailRow label="法人名" value={signupData.companyName} />
+            <DetailRow label="法人名カナ" value={signupData.companyNameKana} />
             <DetailRow label="会社名（英語）" value={signupData.companyNameEnglish} />
-          )}
-          <DetailRow label="法人メールアドレス" value={signupData.corporateEmail} />
-          <DetailRow label="法人電話番号" value={signupData.corporatePhoneNumber} />
-          <DetailRow
-            label="所在地"
-            value={`〒${signupData.postalCode} ${signupData.prefecture}${signupData.municipality}`}
-          />
-          <DetailRow label="番地" value={signupData.blocknum} />
-          {signupData.buildingName && <DetailRow label="建物名" value={signupData.buildingName} />}
-        </div>
-      </FormSection>
+            <DetailRow label="法人電話番号" value={signupData.corporatePhoneNumber} />
+          </FormGrid>
+        </FormSection>
 
-      <FormSection number={2} title="担当者情報">
-        <div className="space-y-2 rounded-md border p-4">
-          <DetailRow label="氏名" value={`${signupData.lastName} ${signupData.firstName}`} />
-          <DetailRow
-            label="氏名カナ"
-            value={`${signupData.lastNameKana} ${signupData.firstNameKana}`}
-          />
-          <DetailRow label="役職" value={signupData.position} />
-          <DetailRow label="電話番号" value={signupData.phoneNumber} />
-          {signupData.faxNumber && <DetailRow label="FAX番号" value={signupData.faxNumber} />}
-          <DetailRow label="メールアドレス" value={signupData.email} />
-        </div>
-      </FormSection>
+        <FormSection number={2} title="所在地">
+          <FormGrid>
+            <DetailRow label="郵便番号" value={signupData.postalCode} />
+            <DetailRow label="都道府県" value={signupData.prefecture} />
+            <DetailRow label="市区町村" value={signupData.municipality} />
+            <DetailRow label="番地" value={signupData.blocknum} />
+            <DetailRow label="建物名" value={signupData.buildingName} />
+          </FormGrid>
+        </FormSection>
 
-      <FormSection number={3} title="参加予定のプロジェクト">
-        <div className="space-y-4 rounded-md border p-4">
-          <div className="space-y-2">
-            {selectedMethodologies.length > 0 ? (
-              selectedMethodologies.map((methodology) => (
-                <div
-                  key={methodology}
-                  className="rounded-md border bg-muted/20 px-4 py-3 font-medium"
-                >
-                  {methodologyLabels[methodology] ?? methodology}
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">{missingValue}</p>
-            )}
+        <FormSection number={3} title="担当者情報">
+          <FormGrid>
+            <DetailRow label="姓" value={signupData.lastName} />
+            <DetailRow label="名" value={signupData.firstName} />
+            <DetailRow label="姓（カナ）" value={signupData.lastNameKana} />
+            <DetailRow label="名（カナ）" value={signupData.firstNameKana} />
+            <DetailRow label="役職" value={signupData.position} />
+            <DetailRow label="電話番号" value={signupData.phoneNumber} />
+            <DetailRow label="FAX番号" value={signupData.faxNumber} />
+            <DetailRow label="メールアドレス" value={signupData.email} />
+          </FormGrid>
+        </FormSection>
+
+        <FormSection number={4} title="方法論・活動情報">
+          <div className="space-y-5">
+            <div>
+              <div className="mb-2 text-sm font-medium text-muted-foreground">
+                参加したいプロジェクト
+              </div>
+              <div className="space-y-2">
+                {selectedMethodologies.length > 0 ? (
+                  selectedMethodologies.map((methodology) => (
+                    <div
+                      key={methodology}
+                      className="rounded-md border bg-muted/20 px-4 py-3 font-medium"
+                    >
+                      {methodologyLabels[methodology] ?? methodology}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">{missingValue}</p>
+                )}
+              </div>
+            </div>
+
+            <DetailRow
+              label="現在の活動情報"
+              value={signupData.activityInformation}
+            />
           </div>
+        </FormSection>
 
-          <div className="space-y-2 border-l-2 border-muted pl-3">
-            <h4 className="font-medium">活動内容</h4>
-            <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-              {signupData.activityInformation || missingValue}
-            </p>
-          </div>
-        </div>
-      </FormSection>
-
-      <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Button type="button" variant="outline" size="sm" onClick={() => setCurrentStep(2)} className="w-full">
-          戻る
-        </Button>
-        <Button type="button" size="sm" onClick={handleConfirm} className="w-full">
-          確認して登録
-        </Button>
-      </FormActions>
+        <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Button type="button" variant="outline" size="sm" onClick={() => setCurrentStep(2)} className="w-full">
+            戻る
+          </Button>
+          <Button type="button" size="sm" onClick={handleConfirm} className="w-full">
+            確認して登録
+          </Button>
+        </FormActions>
       </FormSectionStack>
     </FormCard>
   );
