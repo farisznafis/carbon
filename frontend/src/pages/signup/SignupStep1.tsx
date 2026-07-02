@@ -196,8 +196,10 @@ export const SignupStep1 = () => {
 
       if (data.results && data.results.length > 0) {
         const result = data.results[0];
+        const municipalityWithTown = `${result.address2 ?? ''}${result.address3 ?? ''}`;
+
         form.setValue('prefecture', result.address1, { shouldDirty: true });
-        form.setValue('municipality', result.address2, { shouldDirty: true });
+        form.setValue('municipality', municipalityWithTown, { shouldDirty: true });
       }
     } catch (error) {
       if (!(error instanceof DOMException && error.name === 'AbortError')) {
