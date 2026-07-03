@@ -218,6 +218,18 @@ export type PendingCompanyItem = {
   fax: string;
   corpNumber: string;
   address: string;
+  postalCode?: string;
+  prefecture?: string;
+  municipality?: string;
+  blocknum?: string;
+  buildingName?: string;
+  representativeFirstName?: string;
+  representativeLastName?: string;
+  representativeFirstNameKana?: string;
+  representativeLastNameKana?: string;
+  representativePosition?: string;
+  representativePhoneNumber?: string;
+  faxNumber?: string;
   requestedMethodologies?: string[];
   activityInformation?: string;
   methodologies?: Methodology[];
@@ -242,6 +254,18 @@ export type PendingCompanyApiItem = {
   fax?: string | null;
   corpNumber?: string;
   address?: string;
+  postalCode?: string | null;
+  prefecture?: string | null;
+  municipality?: string | null;
+  blocknum?: string | null;
+  buildingName?: string | null;
+  representativeFirstName?: string | null;
+  representativeLastName?: string | null;
+  representativeFirstNameKana?: string | null;
+  representativeLastNameKana?: string | null;
+  representativePosition?: string | null;
+  representativePhoneNumber?: string | null;
+  faxNumber?: string | null;
   requestedMethodologies?: string[];
   activityInformation?: string;
   methodologies?: Array<{
