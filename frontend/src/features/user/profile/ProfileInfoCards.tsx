@@ -32,6 +32,16 @@ function InfoItem({ label, value }: InfoItemProps) {
   );
 }
 
+function formatRole(role?: string) {
+  const normalizedRole = role?.toLowerCase();
+
+  if (normalizedRole === 'user') return 'ユーザ';
+  if (normalizedRole === 'master') return 'マスター';
+  if (normalizedRole === 'admin') return '管理者';
+
+  return role || '-';
+}
+
 export function ProfileInfoCards({
   profile,
   company,
@@ -50,7 +60,6 @@ export function ProfileInfoCards({
         <CardContent className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
           <InfoItem label="企業ID" value={profile?.companyId} />
           <InfoItem label="ユーザ名" value={profile?.username} />
-          <InfoItem label="拠点名" value={profile?.siteName} />
           <InfoItem
             label="氏名"
             value={profile ? `${profile.lastName} ${profile.firstName}` : '-'}
@@ -66,6 +75,8 @@ export function ProfileInfoCards({
           <InfoItem label="メールアドレス" value={profile?.email} />
           <InfoItem label="役職" value={profile?.userPosition} />
           <InfoItem label="電話番号" value={profile?.phoneNumber} />
+          <InfoItem label="拠点名" value={profile?.siteName} />
+          <InfoItem label="権限" value={formatRole(profile?.role)} />
         </CardContent>
 
         <CardFooter className="pt-2" />

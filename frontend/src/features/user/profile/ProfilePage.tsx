@@ -1,7 +1,12 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getProfile, type ProfileViewModel } from '@/api/profile';
-import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
+import {
+  FormPageContent,
+  FormPageTitle,
+  FormStandalonePage,
+} from '@/components/forms/form-layout';
+import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { handleError } from '@/lib/errors';
 import { useProfileStore } from '@/stores/ProfileStore';
@@ -39,20 +44,22 @@ const Profile = () => {
   }, [setProfile, clearProfile]);
 
   return (
-    <FormPageWrapper
-      pageName='プロフィール情報'
-      title=''
-      onBack={() => navigate(getHomePath(user))}
-      // backText='戻る'
-      contentMaxWidth='max-w-3xl'
-      wrapInCard={false}
-    >
-      <ProfileInfoCards
-        profile={profile}
-        company={company}
-        onPasswordChange={() => navigate('/password-change')}
+    <FormStandalonePage>
+      <PageBackButton
+        onClick={() => navigate(getHomePath(user))}
+        label=""
+        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
       />
-    </FormPageWrapper>
+
+      <FormPageContent>
+        <FormPageTitle>プロファイル</FormPageTitle>
+        <ProfileInfoCards
+          profile={profile}
+          company={company}
+          onPasswordChange={() => navigate('/password-change')}
+        />
+      </FormPageContent>
+    </FormStandalonePage>
   );
 };
 

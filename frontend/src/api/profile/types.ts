@@ -14,6 +14,7 @@ export interface ProfileApiCompany {
 export interface ProfileApiProfile {
   companyId: number | null;
   username: string | null;
+  role?: string | null;
   firstName: string | null; lastName: string | null;
   firstNameKana: string | null;
   lastNameKana: string | null;

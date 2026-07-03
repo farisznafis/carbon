@@ -1,14 +1,19 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   getUserProfileById,
   type ProfileCompanyViewModel,
   type ProfileViewModel,
 } from '@/api/profile';
-import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
+import {
+  FormPageContent,
+  FormPageTitle,
+  FormStandalonePage,
+} from '@/components/forms/form-layout';
+import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { ProfileInfoCards } from '@/features/user/profile/ProfileInfoCards';
 import { handleError } from '@/lib/errors';
 import { paths } from '@/routes/paths';
-import { ProfileInfoCards } from '@/features/user/profile/ProfileInfoCards';
 
 export default function MasterUserProfilePage() {
   const { userId } = useParams();
@@ -59,24 +64,23 @@ export default function MasterUserProfilePage() {
   }, [userId]);
 
   return (
-    <FormPageWrapper
-      pageName='ユーザープロフィール'
-      title=''
-      onBack={() => navigate(paths.masterDashboard)}
-      // backText='戻る'
-      contentMaxWidth='max-w-xl'
-      wrapInCard={false}
-    >
-      {loading ? (
-        <div className='py-12 text-center text-sm text-muted-foreground'>
-          読み込み中...
-        </div>
-      ) : (
-        <ProfileInfoCards
-          profile={profile}
-          company={company}
-        />
-      )}
-    </FormPageWrapper>
+    <FormStandalonePage>
+      <PageBackButton
+        onClick={() => navigate(paths.masterDashboard)}
+        label=""
+        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
+      />
+
+      <FormPageContent>
+        <FormPageTitle>プロファイル</FormPageTitle>
+        {loading ? (
+          <div className="py-12 text-center text-sm text-muted-foreground">
+            読み込み中...
+          </div>
+        ) : (
+          <ProfileInfoCards profile={profile} company={company} />
+        )}
+      </FormPageContent>
+    </FormStandalonePage>
   );
 }
