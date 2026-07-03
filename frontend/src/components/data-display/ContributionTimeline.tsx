@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, GitCommit, HelpCircle, Leaf, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ContributionData {
   timestamp: string;
@@ -11,10 +12,12 @@ interface ContributionData {
 
 interface ContributionTimelineProps {
   data?: ContributionData[];
+  className?: string;
 }
 
 export default function ContributionTimeline({
   data,
+  className,
 }: ContributionTimelineProps) {
   const [hoveredIdx, setHoveredIndex] = useState<number | null>(null);
 
@@ -103,7 +106,12 @@ export default function ContributionTimeline({
   const fullPath = `M ${linePath}`;
 
   return (
-    <div className='bg-white border border-emerald-200 rounded-2xl p-5 shadow-sm relative overflow-hidden group'>
+    <div
+      className={cn(
+        'group relative flex h-full flex-col overflow-hidden rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm',
+        className,
+      )}
+    >
       {/* Subtle Background Glow */}
       <div className='absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none' />
 
@@ -130,7 +138,7 @@ export default function ContributionTimeline({
 
       {/* SVG Canvas */}
       <div
-        className='relative w-full overflow-hidden'
+        className='relative w-full flex-1 overflow-hidden'
         style={{ height: `${height}px` }}
       >
         <svg

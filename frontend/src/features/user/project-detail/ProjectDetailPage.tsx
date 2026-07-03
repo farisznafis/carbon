@@ -585,10 +585,10 @@ const ProjectDetail = () => {
 
               {/* Dummy Graph */}
               <CardHeader>
-                <section className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+                <section className='grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2'>
                   {/* Contribution Timeline Graph */}
-                  <div className='mb-12 animate-slide-up'>
-                    <ContributionTimeline />
+                  <div className='animate-slide-up h-full'>
+                    <ContributionTimeline className='min-h-[360px]' />
                   </div>
                   {/* <Card>
                     <CardHeader>
@@ -601,12 +601,12 @@ const ProjectDetail = () => {
                     </CardContent>
                   </Card> */}
 
-                  <Card>
+                  <Card className='flex h-full min-h-[360px] flex-col'>
                     <CardHeader>
                       <CardTitle>見積り</CardTitle>
                     </CardHeader>
-                    <CardContent className='space-y-4'>
-                      <div className='h-[180px] rounded-lg border bg-muted/30 flex items-center justify-center'>
+                    <CardContent className='flex flex-1 flex-col space-y-4'>
+                      <div className='flex min-h-[180px] flex-1 items-center justify-center rounded-lg border bg-muted/30'>
                         Estimation Graphic (推定グラフ)
                       </div>
 
