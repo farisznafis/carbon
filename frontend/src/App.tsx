@@ -7,6 +7,7 @@ import {
   Navigate,
   useParams,
   useSearchParams,
+  useLocation,
 } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { ScrollToTop } from "./components/layout/ScrollToTop";
@@ -56,34 +57,21 @@ const AdminMonitoringReport = lazy(() =>
   import("./features/admin/project-detail/AdminMonitoringReportPage"),
 );
 
-function RequireAdmin({ children }: { children: JSX.Element }) {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? children : <Navigate to={paths.adminLogin} replace />;
-}
+function AppContent() {
+  const location = useLocation();
+  const isSignupPage = location.pathname === paths.signup;
 
-function LegacyDashboardRedirect() {
-  const { siteId } = useParams();
-  return <Navigate to={paths.siteDashboard(siteId ?? "")} replace />;
-}
-
-function LegacyProjectRedirect() {
-  const { id } = useParams();
-  const [searchParams] = useSearchParams();
-  const siteId = searchParams.get("siteId");
-
-  if (siteId) {
-    return <Navigate to={paths.siteProjectDetail(siteId, id ?? "")} replace />;
-  }
-
-  return <ProjectDetail />;
-}
-
-const App = () => (
-  <ErrorBoundary>
+  return (
     <div className="min-h-screen bg-background text-foreground">
       <Toaster />
       <Sonner />
-      <Navbar />
+      {isSignupPage ? (
+        <div className="hidden sm:block">
+          <Navbar />
+        </div>
+      ) : (
+        <Navbar />
+      )}
       <ScrollToTop />
       <SessionExpiryGuard />
       <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading...</div>}>
@@ -99,9 +87,9 @@ const App = () => (
             <Route path={paths.masterSiteEditRoute} element={<SiteEdit />} />
             <Route path={paths.masterUserRegister} element={<UserRegister />} />
             <Route path={paths.masterUserProfileRoute} element={<MasterUserProfile />} />
+            <Route path={paths.siteDashboardRoute} element={<Dashboard />} />
             <Route path={paths.userEditRoute} element={<UserEdit />} />
             <Route path={paths.userDashboard} element={<Dashboard />} />
-            <Route path={paths.siteDashboardRoute} element={<Dashboard />} />
             <Route path={paths.legacyDashboardRoute} element={<LegacyDashboardRedirect />} />
             <Route path={paths.projectRegisterRoute} element={<ProjectRegister />} />
             <Route path={paths.projectEquipmentRoute} element={<EquipmentForm />} />
@@ -169,6 +157,34 @@ const App = () => (
         </Routes>
       </Suspense>
     </div>
+  );
+}
+
+function RequireAdmin({ children }: { children: JSX.Element }) {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? children : <Navigate to={paths.adminLogin} replace />;
+}
+
+function LegacyDashboardRedirect() {
+  const { siteId } = useParams();
+  return <Navigate to={paths.siteDashboard(siteId ?? "")} replace />;
+}
+
+function LegacyProjectRedirect() {
+  const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const siteId = searchParams.get("siteId");
+
+  if (siteId) {
+    return <Navigate to={paths.siteProjectDetail(siteId, id ?? "")} replace />;
+  }
+
+  return <ProjectDetail />;
+}
+
+const App = () => (
+  <ErrorBoundary>
+    <AppContent />
   </ErrorBoundary>
 
 );

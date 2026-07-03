@@ -12,6 +12,7 @@ export type ValidateSignupCompanyInfoPayload = {
   corporateName: string;
   corporateNameKana: string;
   companyNameEnglish: string;
+  corporateEmail: string;
   corporatePhoneNumber: string;
   postalCode: string;
   prefecture: string;

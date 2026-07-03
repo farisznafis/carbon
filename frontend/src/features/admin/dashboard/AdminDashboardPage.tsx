@@ -292,7 +292,7 @@ const AdminDashboard = () => {
       <div className='container mx-auto p-6 space-y-6 w-full'>
         <div className='flex px-4 py-8'>
           <div className='flex w-full items-center justify-between'>
-            <h3 className='font-bold'>運営者・管理者ツールページ</h3>
+            <h3 className='font-bold'>運用管理ダッシュボード</h3>
             <div className='mb-0 flex justify-end'>
               <Button
                 onClick={() => setCancelRequestDialogOpen(true)}

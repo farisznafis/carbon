@@ -72,7 +72,7 @@ const Hero = () => {
               </div>
               <h3 className="mb-3">チームコラボレーション</h3>
               <p className="text-muted-foreground">
-                ロールベースのアクセスとプロジェクト管理ツールでシームレスに協働。
+                ロールベースのアクセスとプロジェクト管理ダッシュボードでシームレスに協働。
               </p>
             </div>
           </div>
