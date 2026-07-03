@@ -53,15 +53,15 @@ export function MasterDashboardHero({
 
 export function MasterDashboardTabs() {
   const triggerClassName = cn(
-    'relative h-14 rounded-none border-0 bg-transparent px-8 text-sm font-bold text-primary shadow-none transition-colors',
-    'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent',
-    'hover:bg-secondary/50 hover:text-primary/90 hover:after:bg-primary/40',
-    'data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:after:bg-primary',
+    'h-10 min-w-0 flex-1 rounded-md border-0 bg-transparent px-6 py-2',
+    'text-sm font-bold leading-6 text-white shadow-none transition-colors',
+    'hover:bg-white/10 hover:text-white',
+    'data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-none',
   );
 
   return (
     <div className="bg-card pt-4">
-      <TabsList className="mx-auto flex h-14 w-fit gap-4 rounded-none bg-transparent p-0 text-primary">
+      <TabsList className="mx-auto flex h-auto w-fit min-w-[288px] items-start rounded-lg bg-[#699267] p-1.5 text-white">
         <TabsTrigger value="sites" className={triggerClassName}>
           拠点管理
         </TabsTrigger>
