@@ -73,7 +73,7 @@ public class ProjectDtoReq {
 
     @NotBlank(message = "代表者電話番号は必須です。")
     @Size(max = 20, message = "代表者電話番号は20文字以内で入力してください。")
-    @PhoneNumber(message = "代表者電話番号の形式が正しくありません。（例: 03-1234-5678）")
+    @PhoneNumber(message = "代表者電話番号の形式が正しくありません。（例: 0312345678）")
     private String repPhoneNumber;
 
     @NotBlank(message = "代表者役職は必須です。")
@@ -108,7 +108,7 @@ public class ProjectDtoReq {
 
     @NotBlank(message = "担当者電話番号は必須です。")
     @Size(max = 20, message = "担当者電話番号は20文字以内で入力してください。")
-    @PhoneNumber(message = "担当者電話番号の形式が正しくありません。（例: 03-1234-5678）")
+    @PhoneNumber(message = "担当者電話番号の形式が正しくありません。（例: 0312345678）")
     private String picPhoneNumber;
 
     @NotBlank(message = "担当者役職は必須です。")

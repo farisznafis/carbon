@@ -175,6 +175,18 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
                         company.getMunicipality() != null ? company.getMunicipality() : "",
                         company.getBlocknum() != null ? company.getBlocknum() : "",
                         company.getBuildingName() != null ? company.getBuildingName() : "").trim())
+                    .postalCode(company.getPostalCode())
+                    .prefecture(company.getPrefecture())
+                    .municipality(company.getMunicipality())
+                    .blocknum(company.getBlocknum())
+                    .buildingName(company.getBuildingName())
+                    .representativeFirstName(company.getRepFirstName())
+                    .representativeLastName(company.getRepLastName())
+                    .representativeFirstNameKana(company.getRepFirstNameKana())
+                    .representativeLastNameKana(company.getRepLastNameKana())
+                    .representativePosition(company.getRepPosition())
+                    .representativePhoneNumber(company.getRepPhoneNumber())
+                    .faxNumber(company.getFax())
                     .isSuspended(company.isSuspended())
                     .requestedMethodologies(company.getRequestedMethodologies() != null
                         ? company.getRequestedMethodologies()

@@ -8,6 +8,7 @@ import com.kct.jcredit.core_backend.dto.response.CreateSiteResponse;
 import com.kct.jcredit.core_backend.dto.response.EquipmentSolarRegisterResponse;
 import com.kct.jcredit.core_backend.dto.response.SiteInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.SiteListResponse;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.response.details.EquipmentItemSolarResponse;
 import com.kct.jcredit.core_backend.dto.response.details.SiteDataResponse;
 import com.kct.jcredit.core_backend.dto.response.details.SiteResponse;
@@ -36,7 +37,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -153,6 +156,39 @@ public class SiteServiceImpl implements SiteService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public BaseResponse validateCreateSite(CreateSiteRequest request, String companyId) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(companyId).orElse(null);
+        if (Objects.isNull(company)) {
+            errors.put("companyId", ResponseConstants.MSG_NOT_FOUND);
+            return validationError(errors);
+        }
+
+        if (siteRepository.countByCompany_Id(company.getId()) >= MAX_SITES_PER_COMPANY) {
+            errors.put("companyId", ResponseConstants.MSG_LIMIT_EXCEEDED);
+        }
+
+        ParticipatingUser user = participatingUserRepository.findById(request.getUserId()).orElse(null);
+        if (Objects.isNull(user)) {
+            errors.put("userId", ResponseConstants.MSG_USER_NOT_FOUND);
+            return validationError(errors);
+        }
+
+        if (user.getCompany() == null || !user.getCompany().getId().equals(company.getId())) {
+            errors.put("userId", ResponseConstants.MSG_FORBIDDEN);
+        }
+        if (!RoleConstants.MASTER.equals(user.getRole()) && !Objects.isNull(user.getSite())) {
+            errors.put("userId", ResponseConstants.MSG_BAD_REQUEST);
+        }
+
+        return errors.isEmpty()
+                ? BaseResponse.success(ResponseConstants.MSG_VALIDATION_SUCCESS)
+                : validationError(errors);
+    }
+
+    @Override
     @Transactional
     public CreateSiteResponse createSite(CreateSiteRequest request, String companyId) {
         CreateSiteResponse response = new CreateSiteResponse();
@@ -218,6 +254,47 @@ public class SiteServiceImpl implements SiteService {
             response.setMessage(ResponseConstants.MSG_INTERNAL_ERROR);
         }
         return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BaseResponse validateUpdateSite(String siteId, String companyId, UpdateSiteRequest request) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        Integer parsedSiteId = parseSiteId(siteId, errors);
+        if (parsedSiteId == null) {
+            return validationError(errors);
+        }
+
+        Site site = siteRepository.findById(parsedSiteId).orElse(null);
+        if (Objects.isNull(site)) {
+            errors.put("siteId", ResponseConstants.MSG_NOT_FOUND);
+            return validationError(errors);
+        }
+
+        if (site.getCompany() == null || !site.getCompany().getCompanyId().equals(companyId)) {
+            errors.put("siteId", ResponseConstants.MSG_FORBIDDEN);
+        }
+
+        if (request.getPICUserId() != null) {
+            ParticipatingUser user = participatingUserRepository.findById(request.getPICUserId()).orElse(null);
+            if (Objects.isNull(user)) {
+                errors.put("PICUserId", ResponseConstants.MSG_USER_NOT_FOUND);
+            } else {
+                if (user.getCompany() == null || !user.getCompany().getCompanyId().equals(companyId)) {
+                    errors.put("PICUserId", ResponseConstants.MSG_FORBIDDEN);
+                }
+                if (!RoleConstants.MASTER.equals(user.getRole())
+                        && !Objects.isNull(user.getSite())
+                        && !user.getSite().getId().equals(site.getId())) {
+                    errors.put("PICUserId", ResponseConstants.MSG_BAD_REQUEST);
+                }
+            }
+        }
+
+        return errors.isEmpty()
+                ? BaseResponse.success(ResponseConstants.MSG_VALIDATION_SUCCESS)
+                : validationError(errors);
     }
 
     @Override
@@ -447,5 +524,20 @@ public class SiteServiceImpl implements SiteService {
         site.setUpdatedAt(LocalDateTime.now());
 
         return siteRepository.save(site);
+    }
+
+    private Integer parseSiteId(String siteId, Map<String, String> errors) {
+        try {
+            return Integer.parseInt(siteId);
+        } catch (NumberFormatException e) {
+            errors.put("siteId", ResponseConstants.MSG_BAD_REQUEST);
+            return null;
+        }
+    }
+
+    private BaseResponse validationError(Map<String, String> errors) {
+        BaseResponse response = BaseResponse.validationError(errors);
+        response.setMessage(ResponseConstants.MSG_VALIDATION_ERROR);
+        return response;
     }
 }

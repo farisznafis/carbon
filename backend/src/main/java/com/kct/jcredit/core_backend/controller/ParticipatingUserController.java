@@ -9,6 +9,7 @@ import com.kct.jcredit.core_backend.dto.response.NotificationListResponse;
 import com.kct.jcredit.core_backend.dto.response.UpdateUserResponse;
 import com.kct.jcredit.core_backend.dto.response.UserListResponse;
 import com.kct.jcredit.core_backend.dto.response.UserProfileResponse;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.service.UserService;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
@@ -70,6 +71,19 @@ public class ParticipatingUserController {
         );
     }
 
+    @PostMapping("/validate-create")
+    @PreAuthorize("hasAnyRole('master')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<BaseResponse> validateCreateUser(
+            Authentication authentication,
+            @RequestBody @Valid CreateUserRequest request) {
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+        String username = jwtUtil.extractUsername(authentication.getCredentials().toString());
+
+        BaseResponse response = userService.validateCreateUser(companyId, username, request);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
     @PatchMapping
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<UpdateUserResponse> updateUser(
@@ -80,6 +94,18 @@ public class ParticipatingUserController {
         UpdateUserResponse response = userService.updateUser(companyId, username, request);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }  
+
+    @PostMapping("/validate-update")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<BaseResponse> validateUpdateUser(
+            Authentication authentication,
+            @RequestBody @Valid UpdateUserRequest request) {
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+        String username = jwtUtil.extractUsername(authentication.getCredentials().toString());
+
+        BaseResponse response = userService.validateUpdateUser(companyId, username, request);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
 
     @GetMapping("/profile/{userId}")
     @PreAuthorize("hasAnyRole('master', 'operator')")
