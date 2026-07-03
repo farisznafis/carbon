@@ -54,7 +54,7 @@ export function MasterDashboardHero({
 export function MasterDashboardTabs() {
   const triggerClassName = cn(
     'h-10 min-w-0 flex-1 rounded-md border-0 bg-transparent px-6 py-2',
-    'text-sm font-bold leading-6 text-white shadow-none transition-colors',
+    'text-sm leading-6 text-white shadow-none transition-colors',
     'hover:bg-white/10 hover:text-white',
     'data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-none',
   );
