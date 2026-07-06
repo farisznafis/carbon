@@ -69,6 +69,9 @@ export type MonitoringSolarFormData = {
   description?: string;
 };
 
+const MAX_UPLOAD_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_UPLOAD_FILE_SIZE_MESSAGE = 'ファイルサイズは10MB以下にしてください。';
+
 interface MonitoringSolarFormProps {
   mode: 'create' | 'edit';
   value: MonitoringSolarFormData;
@@ -93,6 +96,24 @@ export function MonitoringSolarForm({
     reValidateMode: 'onSubmit',
   });
   const isBatteryChanged = form.watch('changedBattery');
+
+  const handleFileChange = (
+    fieldName: FieldPath<MonitoringSolarFormData>,
+    onChange: (file: File | null) => void,
+    file: File | null,
+  ) => {
+    if (file && file.size > MAX_UPLOAD_FILE_SIZE_BYTES) {
+      onChange(null);
+      form.setError(fieldName, {
+        type: 'validate',
+        message: MAX_UPLOAD_FILE_SIZE_MESSAGE,
+      });
+      return;
+    }
+
+    form.clearErrors(fieldName);
+    onChange(file);
+  };
 
   useEffect(() => {
     if (!isBatteryChanged) {
@@ -284,6 +305,9 @@ export function MonitoringSolarForm({
                 </FormSection>
 
                 <FormSection number={2} title="資料アップロード">
+                  <p className="text-sm text-muted-foreground -mt-4 mb-4">
+                    アップロード可能なファイルサイズは最大10MBです。
+                  </p>
                   <FormField
                     control={form.control}
                     name="ELpv_evidence"
@@ -296,7 +320,9 @@ export function MonitoringSolarForm({
                             variant="design-system-pro"
                             supportedFormats="(.pdf, .csv)"
                             value={(field.value as File) ?? null}
-                            onChange={field.onChange}
+                            onChange={(file) =>
+                              handleFileChange('ELpv_evidence', field.onChange, file)
+                            }
                           />
                         </FormControl>
                         <FormMessage />
@@ -316,7 +342,9 @@ export function MonitoringSolarForm({
                             variant="design-system-pro"
                             supportedFormats="(.pdf, .jpg, .jpeg, .png)"
                             value={(field.value as File) ?? null}
-                            onChange={field.onChange}
+                            onChange={(file) =>
+                              handleFileChange('ELpvr_evidence', field.onChange, file)
+                            }
                           />
                         </FormControl>
                         <FormMessage />
@@ -336,7 +364,13 @@ export function MonitoringSolarForm({
                             variant="design-system-pro"
                             supportedFormats="(.pdf, .jpg, .jpeg, .png)"
                             value={(field.value as File) ?? null}
-                            onChange={field.onChange}
+                            onChange={(file) =>
+                              handleFileChange(
+                                'ELPJ_battery_evidence',
+                                field.onChange,
+                                file,
+                              )
+                            }
                           />
                         </FormControl>
                         <FormMessage />
@@ -356,7 +390,13 @@ export function MonitoringSolarForm({
                             variant="design-system-pro"
                             supportedFormats="(.pdf, .jpg, .jpeg, .png)"
                             value={(field.value as File) ?? null}
-                            onChange={field.onChange}
+                            onChange={(file) =>
+                              handleFileChange(
+                                'ELPJ_control_equipment_spec_files',
+                                field.onChange,
+                                file,
+                              )
+                            }
                           />
                         </FormControl>
                         <FormMessage />
