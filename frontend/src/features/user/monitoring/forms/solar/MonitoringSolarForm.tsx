@@ -1,5 +1,4 @@
 ﻿import { useEffect } from 'react';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type FieldPath } from 'react-hook-form';
 import { z } from 'zod';
 import { FileSelectButton } from '@/components/inputs/FileSelectButton/FileSelectButton';
@@ -30,43 +29,45 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { requiredFileSchema, requiredNumberSchema } from '@/lib/validations';
 import { emptyFormData } from './emptyFormData';
 
 const base = {
   projectId: z.string().optional(),
   siteId: z.string().optional(),
-  dateRecorded: z.string().min(1, '記録日を入力してください'),
-  ELpv_value: requiredNumberSchema('発電量 (ELPV)'),
-  ELpvr_value: requiredNumberSchema('自家消費量 (ELPVR)'),
-  ELPJ_control_value: requiredNumberSchema('制御機器稼働時間 (ELPJ)'),
-  ELPJ_accuracy: requiredNumberSchema('測定精度'),
-  ELpv_evidence: requiredFileSchema('発電量 (ELPV) エビデンス'),
-  ELpvr_evidence: requiredFileSchema('自家消費量 (ELPVR) エビデンス'),
-  ELPJ_battery_evidence: requiredFileSchema('蓄電池エビデンス'),
-  ELPJ_control_equipment_spec_files: requiredFileSchema(
-    '制御機器仕様 (ELPJ) エビデンス',
-  ),
+  dateRecorded: z.string().optional(),
+  ELpv_value: z.union([z.string(), z.number(), z.null()]).optional(),
+  ELpvr_value: z.union([z.string(), z.number(), z.null()]).optional(),
+  ELPJ_control_value: z.union([z.string(), z.number(), z.null()]).optional(),
+  ELPJ_accuracy: z.union([z.string(), z.number(), z.null()]).optional(),
+  ELpv_evidence: z.any().optional(),
+  ELpvr_evidence: z.any().optional(),
+  ELPJ_battery_evidence: z.any().optional(),
+  ELPJ_control_equipment_spec_files: z.any().optional(),
   description: z.string().optional(),
 };
 
-export const MonitoringSolarFormSchema = z.discriminatedUnion('changedBattery', [
-  z.object({
-    ...base,
-    changedBattery: z.literal(true),
-    ELPJ_battery_value: requiredNumberSchema('蓄電池放電量 (ELPJ)'),
-  }),
-  z.object({
-    ...base,
-    changedBattery: z.literal(false),
-    ELPJ_battery_value: z.preprocess(
-      (value) => (value === '' || value == null ? null : Number(value)),
-      z.number().nullable(),
-    ),
-  }),
-]);
+export const MonitoringSolarFormSchema = z.object({
+  ...base,
+  changedBattery: z.boolean(),
+  ELPJ_battery_value: z.union([z.string(), z.number(), z.null()]).optional(),
+});
 
-export type MonitoringSolarFormData = z.infer<typeof MonitoringSolarFormSchema>;
+export type MonitoringSolarFormData = {
+  projectId?: string;
+  siteId?: string;
+  dateRecorded?: string;
+  ELpv_value?: string | number | null;
+  ELpvr_value?: string | number | null;
+  changedBattery: boolean;
+  ELPJ_battery_value?: string | number | null;
+  ELPJ_control_value?: string | number | null;
+  ELPJ_accuracy?: string | number | null;
+  ELpv_evidence?: File | string | null;
+  ELpvr_evidence?: File | string | null;
+  ELPJ_battery_evidence?: File | string | null;
+  ELPJ_control_equipment_spec_files?: File | string | null;
+  description?: string;
+};
 
 interface MonitoringSolarFormProps {
   mode: 'create' | 'edit';
@@ -87,7 +88,6 @@ export function MonitoringSolarForm({
   onBack,
 }: Readonly<MonitoringSolarFormProps>) {
   const form = useForm<MonitoringSolarFormData>({
-    resolver: zodResolver(MonitoringSolarFormSchema),
     defaultValues: value ?? emptyFormData,
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
@@ -367,10 +367,10 @@ export function MonitoringSolarForm({
               </FormSectionStack>
 
               <div className="flex justify-end gap-4 pt-6">
-                <Button type="button" variant="outline" onClick={onBack}>
+                <Button type="button" variant="outline" onClick={onBack} size="md">
                   キャンセル
                 </Button>
-                <Button type="submit" disabled={form.formState.isSubmitting}>
+                <Button type="submit" disabled={form.formState.isSubmitting} size="md">
                   確認
                 </Button>
               </div>

@@ -15,7 +15,6 @@ import {
   uploadElpvrFile,
 } from '@/api/monitoring';
 import { ApiError } from '@/api/_shared/errors';
-import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import type { MonitoringData } from '@/api/monitoring';
 import { logger } from '@/lib/logger';
@@ -24,7 +23,6 @@ type MonitoringFormData = typeof formDefinitions[ProjectType]['emptyData'];
 type RouteState = {
   projectId?: string | number;
   siteId?: string | number;
-  userId?: string | number;
 };
 
 function isProjectType(value: string | undefined): value is ProjectType {
@@ -70,7 +68,6 @@ const MonitoringRegister = () => {
   const location = useLocation();
   const { projectType } = useParams<{ projectType: string }>();
   const { toast } = useToast();
-  const { user } = useAuth();
   const definition = isProjectType(projectType)
     ? formDefinitions[projectType]
     : null;
@@ -118,8 +115,10 @@ const MonitoringRegister = () => {
       state.siteId ?? search.get('siteId') ?? currentData.siteId ?? '';
     const descriptionValue = String(currentData.description ?? '');
 
-    const uploadKeys: string[] = [];
-    const uploadPromises: Array<Promise<string | null>> = [];
+    const uploadTasks: Array<{
+      key: string;
+      upload: () => Promise<string | null>;
+    }> = [];
 
     const addUpload = (
       key: string,
@@ -128,25 +127,26 @@ const MonitoringRegister = () => {
     ) => {
       if (!(value instanceof File)) return;
 
-      uploadKeys.push(key);
-      uploadPromises.push(
-        upload(value)
-          .then((url) => {
-            setUploadProgress((progress) => ({
-              ...progress,
-              done: progress.done + 1,
-            }));
-            return url;
-          })
-          .catch((error: unknown) => {
-            logger.error(`${key} upload failed`, error);
-            setUploadProgress((progress) => ({
-              ...progress,
-              done: progress.done + 1,
-            }));
-            return null;
-          }),
-      );
+      uploadTasks.push({
+        key,
+        upload: () =>
+          upload(value)
+            .then((url) => {
+              setUploadProgress((progress) => ({
+                ...progress,
+                done: progress.done + 1,
+              }));
+              return url;
+            })
+            .catch((error: unknown) => {
+              logger.error(`${key} upload failed`, error);
+              setUploadProgress((progress) => ({
+                ...progress,
+                done: progress.done + 1,
+              }));
+              return null;
+            }),
+      });
     };
 
     // Ensure projectId/siteId are passed as strings to satisfy upload API typings
@@ -169,7 +169,7 @@ const MonitoringRegister = () => {
         uploadElpjControlFile(file, projectIdStr, siteIdStr, descriptionValue),
     );
 
-    if (uploadPromises.length > 0 && (!projectIdValue || !siteIdValue)) {
+    if (uploadTasks.length > 0 && (!projectIdValue || !siteIdValue)) {
       setSubmitError(
         'アップロードには projectId と siteId が必要です。プロジェクトまたはサイトを選択してください。',
       );
@@ -178,15 +178,15 @@ const MonitoringRegister = () => {
 
     setSubmitError(null);
     setServerFieldErrors({});
-    setUploadProgress({ done: 0, total: uploadPromises.length });
+    setUploadProgress({ done: 0, total: uploadTasks.length });
     setIsSubmitting(true);
 
-    const uploadResults = uploadPromises.length > 0
-      ? await Promise.all(uploadPromises)
+    const uploadResults = uploadTasks.length > 0
+      ? await Promise.all(uploadTasks.map((task) => task.upload()))
       : [];
     const uploadedMap: Record<string, string | null> = {};
     uploadResults.forEach((result, index) => {
-      uploadedMap[uploadKeys[index]] = result;
+      uploadedMap[uploadTasks[index].key] = result;
     });
 
     const anyUploadFailed = Object.values(uploadedMap).some(
@@ -203,9 +203,8 @@ const MonitoringRegister = () => {
 
     const payload: MonitoringData = {
       projectType,
-      projectId: Number(state.projectId ?? currentData.projectId ?? 0),
-      siteId: Number(state.siteId ?? currentData.siteId ?? 0) || null,
-      userId: Number(state.userId ?? user?.id ?? 0) || null,
+      projectId: Number(projectIdValue) || 0,
+      siteId: Number(siteIdValue) || null,
       dateRecorded: String(currentData.dateRecorded ?? new Date().toISOString()),
       ELpv_value: Number(currentData.ELpv_value) || 0,
       ELpvr_value: Number(currentData.ELpvr_value) || 0,

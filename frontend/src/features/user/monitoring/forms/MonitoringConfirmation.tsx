@@ -58,11 +58,11 @@ export function MonitoringConfirmationLayout({
             </div>
 
             <div className="flex justify-end gap-4 pt-4">
-              <Button variant="outline" onClick={onBack} disabled={isSubmitting}>
+              <Button variant="outline" onClick={onBack} disabled={isSubmitting} size="md">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 戻る
               </Button>
-              <Button onClick={onConfirm} disabled={isSubmitting} size="lg">
+              <Button onClick={onConfirm} disabled={isSubmitting} size="md">
                 {isSubmitting ? '送信中...' : '確定'}
               </Button>
             </div>

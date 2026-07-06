@@ -6,6 +6,11 @@ import type { MonitoringEvidenceKind } from "./types";
 
 type UploadResponse = {
   file?: {
+    id?: string;
+    fileType?: string;
+    fileName?: string;
+    contentType?: string;
+    fileSize?: number;
     url?: string;
     s3Key?: string;
   };

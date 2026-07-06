@@ -2,6 +2,14 @@ export interface LoginResponse {
   statusCode: string;
   role: 'master' | 'user' | 'admin';
   token: string;
+  id?: string | number | null;
+  userId?: string | number | null;
+  user?: {
+    id?: string | number | null;
+    userId?: string | number | null;
+    email?: string | null;
+    username?: string | null;
+  } | null;
   companyName: string;
   siteId?: string | number | null;
 }

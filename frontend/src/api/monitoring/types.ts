@@ -1,7 +1,6 @@
 export type MonitoringData = {
   projectId: number;
   siteId?: number | null;
-  userId?: number | null;
   projectType: string;
   dateRecorded: string;
   ELpv_value: number;

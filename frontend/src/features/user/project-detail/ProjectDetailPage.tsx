@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect, useState, type ReactNode } from 'react';
 import { getProjectDetails, type ProjectDetail as ProjectDetailApi } from '@/api/projects';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -12,12 +12,17 @@ import { Button } from '@/components/ui/button';
 import {
   ArrowLeft,
   ArrowRight,
+  BatteryCharging,
   Calendar,
+  ChartNoAxesColumn,
+  Cpu,
   Hash,
+  HousePlug,
   Info,
   Layers,
   MapPin,
   Users,
+  Zap,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -73,6 +78,117 @@ const fallbackMonitoringRow: MonitoringDisplayRow = {
   ELPJ_control_value: null,
   changedBattery: null,
 };
+
+function formatMonitoringDate(value: string | null | undefined) {
+  if (!value || value === '-') return '-';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月${String(date.getDate()).padStart(2, '0')}日`;
+}
+
+type RecentMetricCardProps = {
+  icon?: ReactNode;
+  label: string;
+  value: string;
+  unit?: string;
+};
+
+function RecentMetricCard({
+  icon,
+  label,
+  value,
+  unit,
+}: RecentMetricCardProps) {
+  return (
+    <div className='flex h-32 min-w-0 flex-col items-center justify-center gap-2 rounded-2xl border-[1.5px] border-[#B1B5BB] bg-white px-4 py-5 text-center'>
+      <div className='flex min-w-0 items-center justify-center gap-1.5 text-sm font-bold leading-5 tracking-normal text-[#434841] xl:text-base'>
+        {icon}
+        <span className='min-w-0 truncate'>{label}</span>
+      </div>
+      <div className='flex items-end justify-center gap-1'>
+        <span className='text-2xl font-bold leading-none tracking-normal text-[#434841] xl:text-3xl'>
+          {value}
+        </span>
+        {unit ? (
+          <span className='pb-0.5 text-sm font-normal leading-5 tracking-normal text-[rgba(31,38,40,0.7)]'>
+            {unit}
+          </span>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+type RecentDataBarProps = {
+  row: MonitoringDisplayRow;
+  onRegister: () => void;
+};
+
+function RecentDataBar({ row, onRegister }: RecentDataBarProps) {
+  return (
+    <section className='rounded-[18px] border-[1.5px] border-[#C3C8BE] bg-white p-4 shadow-sm backdrop-blur-[7.5px] sm:p-6'>
+      <div className='mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+        <div className='inline-flex w-fit items-center gap-2 rounded-full border-[1.5px] border-[#B1B5BB] px-[18px] py-3'>
+          <span className='text-sm font-medium leading-5 tracking-normal text-[rgba(31,38,40,0.7)]'>
+            記録日
+          </span>
+          <span className='text-lg font-bold leading-6 tracking-normal text-[#191C1C]'>
+            {formatMonitoringDate(row.dateRecorded)}
+          </span>
+        </div>
+        <Button
+          type='button'
+          onClick={onRegister}
+          className='h-10 rounded-full bg-primary px-4 py-2 text-sm font-medium leading-6 text-primary-foreground hover:bg-primary/90'
+        >
+          モニタリングデータを登録
+        </Button>
+      </div>
+
+      <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6'>
+        <RecentMetricCard
+          icon={<Cpu className='h-5 w-5 shrink-0 text-[#699267]' />}
+          label='制御機器稼働時間'
+          value={formatNumber(row.ELPJ_control_value)}
+          unit='時間'
+        />
+        <RecentMetricCard
+          icon={<BatteryCharging className='h-5 w-5 shrink-0 text-[#699267]' />}
+          label='蓄電池交換'
+          value={
+            row.changedBattery == null ? '-' : row.changedBattery ? 'あり' : 'なし'
+          }
+        />
+        <RecentMetricCard
+          icon={<Zap className='h-5 w-5 shrink-0 text-[#699267]' />}
+          label='発電量'
+          value={formatNumber(row.ELpv_value)}
+          unit='kWh'
+        />
+        <RecentMetricCard
+          icon={<HousePlug className='h-5 w-5 shrink-0 text-[#699267]' />}
+          label='自家消費量'
+          value={formatNumber(row.ELpvr_value)}
+          unit='kWh'
+        />
+        <RecentMetricCard
+          icon={<BatteryCharging className='h-5 w-5 shrink-0 text-[#699267]' />}
+          label='蓄電池放電量'
+          value={formatNumber(row.ELPJ_battery_value)}
+          unit='kWh'
+        />
+        <RecentMetricCard
+          icon={<ChartNoAxesColumn className='h-5 w-5 shrink-0 text-[#699267]' />}
+          label='測定精度'
+          value={formatNumber(row.ELPJ_accuracy)}
+          unit='%'
+        />
+      </div>
+    </section>
+  );
+}
 
 const ProjectDetail = () => {
   const { id, projectId: routeProjectId, siteId: routeSiteId } = useParams();
@@ -501,86 +617,15 @@ const ProjectDetail = () => {
                     読み込み中...
                   </div>
                 ) : (
-                  <ul className='divide-y rounded-lg border'>
-                    {monitoringRows.map((row, index) => (
-                      <li
-                        key={`${row.projectId}-${row.siteId ?? 'na'}-${row.dateRecorded}-${index}`}
-                        className='p-4'
-                      >
-                        <div className='flex flex-wrap items-center justify-between gap-3'>
-                          <div className='text-sm text-muted-foreground'>
-                            {row.dateRecorded}
-                          </div>
-                          <div className='flex flex-wrap gap-4 text-sm'>
-                            <span>
-                              発電量{' '}
-                              <strong>
-                                {formatNumber(row.ELpv_value)} kWh
-                              </strong>
-                            </span>
-                            <span>
-                              自家消費量{' '}
-                              <strong>
-                                {formatNumber(row.ELpvr_value)} kWh
-                              </strong>
-                            </span>
-                            <span>
-                              蓄電池放電量{' '}
-                              <strong>
-                                {formatNumber(row.ELPJ_battery_value)} kWh
-                              </strong>
-                            </span>
-                            <span>
-                              測定精度:{' '}
-                              <strong>
-                                {formatNumber(row.ELPJ_accuracy)} %
-                              </strong>
-                            </span>
-                          </div>
-                        </div>
-                        <div className='mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground md:grid-cols-4'>
-                          <div>
-                            制御機器稼働時間{' '}
-                            {formatNumber(row.ELPJ_control_value)} 時間
-                          </div>
-                          <div>
-                            蓄電池交換{' '}
-                            {row.changedBattery == null
-                              ? '-'
-                              : row.changedBattery
-                                ? 'あり'
-                                : 'なし'}
-                          </div>
-                          {row.ELpv_evidence && (
-                            <div className='truncate'>
-                              発電量エビデンス: {row.ELpv_evidence}
-                            </div>
-                          )}
-                          {row.ELPJ_battery_evidence && (
-                            <div className='truncate'>
-                              蓄電池エビデンス: {row.ELPJ_battery_evidence}
-                            </div>
-                          )}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-
-              {/* Monitoring Data Registration Button */}
-              <CardContent>
-                <div className='flex justify-center'>
-                  <Button
-                    onClick={() =>
+                  <RecentDataBar
+                    row={monitoringRows[0]}
+                    onRegister={() =>
                       navigate('/monitoring/register/solar', {
                         state: { projectId, siteId },
                       })
                     }
-                  >
-                    モニタリングデータを登録
-                  </Button>
-                </div>
+                  />
+                )}
               </CardContent>
 
               {/* Dummy Graph */}
@@ -841,3 +886,4 @@ const ProjectDetail = () => {
 };
 
 export default ProjectDetail;
+
