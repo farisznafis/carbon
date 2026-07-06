@@ -1,4 +1,4 @@
-import { apiFetch, parseJsonResponse } from "../_shared/httpClient";
+import { apiFetch, apiVoidRequest, parseJsonResponse } from "../_shared/httpClient";
 import { ApiError, getApiErrorMessage } from "../_shared/errors";
 import type { ApiErrorPayload } from "../_shared/types";
 import type { MonitoringData, SubmitDataResponse } from "./types";
@@ -88,6 +88,14 @@ export async function submitMonitoringData(
   }
 
   return json as SubmitDataResponse;
+}
+
+export async function validateMonitoringData(data: MonitoringData): Promise<void> {
+  await apiVoidRequest('/monitoring/validate', {
+    method: 'POST',
+    body: data,
+    fallbackErrorMessage: 'Failed to validate monitoring data',
+  });
 }
 
 export async function uploadElpvFile(

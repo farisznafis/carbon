@@ -75,7 +75,7 @@ interface MonitoringSolarFormProps {
   previousData?: Partial<MonitoringSolarFormData>;
   serverErrors?: Record<string, string>;
   onChange: (data: MonitoringSolarFormData) => void;
-  onNext: () => void;
+  onNext: (data: MonitoringSolarFormData) => void | Promise<void>;
   onBack: () => void;
   onDelete?: () => void;
 }
@@ -124,10 +124,10 @@ export function MonitoringSolarForm({
 
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((values) => {
+            onSubmit={form.handleSubmit(async (values) => {
               form.clearErrors();
               onChange(values);
-              onNext();
+              await onNext(values);
             })}
           >
             <FormCard>

@@ -2,6 +2,7 @@ export { normalizeRecentMonitoringItem } from './mappers';
 export { getMonitoringRecent } from './queries';
 export {
   submitMonitoringData,
+  validateMonitoringData,
   uploadElpvFile,
   uploadElpvrFile,
   uploadElpjBatteryFile,

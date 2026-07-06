@@ -9,6 +9,7 @@ import {
 } from '@/features/user/monitoring/forms/formDefinitions';
 import {
   submitMonitoringData,
+  validateMonitoringData,
   uploadElpjBatteryFile,
   uploadElpjControlFile,
   uploadElpvFile,
@@ -23,6 +24,13 @@ type MonitoringFormData = typeof formDefinitions[ProjectType]['emptyData'];
 type RouteState = {
   projectId?: string | number;
   siteId?: string | number;
+};
+
+type MonitoringPayloadContext = {
+  projectType: string;
+  projectIdValue: unknown;
+  siteIdValue: unknown;
+  evidenceUrls?: Partial<Record<keyof MonitoringData, string | null>>;
 };
 
 function isProjectType(value: string | undefined): value is ProjectType {
@@ -61,6 +69,44 @@ function toServerFieldErrors(errors: unknown): Record<string, string> {
 
     return fieldErrors;
   }, {});
+}
+
+function fileValueToString(value: unknown): string {
+  if (value instanceof File) return value.name;
+  return typeof value === 'string' ? value : '';
+}
+
+function buildMonitoringPayload(
+  data: MonitoringFormData,
+  context: MonitoringPayloadContext,
+): MonitoringData {
+  const currentData = asRecord(data);
+  const evidenceUrls = context.evidenceUrls ?? {};
+
+  return {
+    projectType: context.projectType,
+    projectId: Number(context.projectIdValue) || 0,
+    siteId: Number(context.siteIdValue) || null,
+    dateRecorded: String(currentData.dateRecorded ?? new Date().toISOString()),
+    ELpv_value: Number(currentData.ELpv_value) || 0,
+    ELpvr_value: Number(currentData.ELpvr_value) || 0,
+    changedBattery: Boolean(currentData.changedBattery),
+    ELPJ_battery_value: currentData.changedBattery
+      ? Number(currentData.ELPJ_battery_value) || 0
+      : null,
+    ELPJ_control_value: Number(currentData.ELPJ_control_value) || 0,
+    ELPJ_accuracy: Number(currentData.ELPJ_accuracy) || 0,
+    ELpv_evidence:
+      evidenceUrls.ELpv_evidence ?? fileValueToString(currentData.ELpv_evidence),
+    ELpvr_evidence:
+      evidenceUrls.ELpvr_evidence ?? fileValueToString(currentData.ELpvr_evidence),
+    ELPJ_battery_evidence:
+      evidenceUrls.ELPJ_battery_evidence ??
+      fileValueToString(currentData.ELPJ_battery_evidence),
+    ELPJ_control_equipment_spec_files:
+      evidenceUrls.ELPJ_control_equipment_spec_files ??
+      fileValueToString(currentData.ELPJ_control_equipment_spec_files),
+  };
 }
 
 const MonitoringRegister = () => {
@@ -104,15 +150,69 @@ const MonitoringRegister = () => {
     getConfirmationItems,
   } = definition;
 
-  const handleConfirm = async () => {
+  const getRouteValues = (data: MonitoringFormData) => {
     const state = (location.state || {}) as RouteState;
     const search = new URLSearchParams(location.search);
-    const currentData = asRecord(formData);
+    const currentData = asRecord(data);
 
-    const projectIdValue =
-      state.projectId ?? search.get('projectId') ?? currentData.projectId ?? '';
-    const siteIdValue =
-      state.siteId ?? search.get('siteId') ?? currentData.siteId ?? '';
+    return {
+      projectIdValue:
+        state.projectId ?? search.get('projectId') ?? currentData.projectId ?? '',
+      siteIdValue:
+        state.siteId ?? search.get('siteId') ?? currentData.siteId ?? '',
+    };
+  };
+
+  const handleValidateAndNext = async (values: MonitoringFormData) => {
+    const { projectIdValue, siteIdValue } = getRouteValues(values);
+    const payload = buildMonitoringPayload(values, {
+      projectType,
+      projectIdValue,
+      siteIdValue,
+    });
+
+    try {
+      setServerFieldErrors({});
+      setSubmitError(null);
+      await validateMonitoringData(payload);
+      setFormData(values);
+      setStep('confirm');
+    } catch (error) {
+      logger.error('Monitoring validation error:', error);
+
+      const fieldErrors =
+        error instanceof ApiError
+          ? toServerFieldErrors(error.payload?.errors)
+          : {};
+
+      if (Object.keys(fieldErrors).length > 0) {
+        const message =
+          error instanceof ApiError
+            ? error.payload?.message || error.message
+            : '入力内容に誤りがあります。';
+        const description = Object.values(fieldErrors).slice(0, 3).join('\n');
+
+        setServerFieldErrors(fieldErrors);
+        setSubmitError(null);
+        toast({
+          title: message || '入力内容に誤りがあります。',
+          description,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : '入力内容の確認に失敗しました。',
+      );
+    }
+  };
+
+  const handleConfirm = async () => {
+    const currentData = asRecord(formData);
+    const { projectIdValue, siteIdValue } = getRouteValues(formData);
     const descriptionValue = String(currentData.description ?? '');
 
     const uploadTasks: Array<{
@@ -201,25 +301,12 @@ const MonitoringRegister = () => {
       return;
     }
 
-    const payload: MonitoringData = {
+    const payload = buildMonitoringPayload(formData, {
       projectType,
-      projectId: Number(projectIdValue) || 0,
-      siteId: Number(siteIdValue) || null,
-      dateRecorded: String(currentData.dateRecorded ?? new Date().toISOString()),
-      ELpv_value: Number(currentData.ELpv_value) || 0,
-      ELpvr_value: Number(currentData.ELpvr_value) || 0,
-      changedBattery: Boolean(currentData.changedBattery),
-      ELPJ_battery_value: currentData.changedBattery
-        ? Number(currentData.ELPJ_battery_value) || 0
-        : null,
-      ELPJ_control_value: Number(currentData.ELPJ_control_value) || 0,
-      ELPJ_accuracy: Number(currentData.ELPJ_accuracy) || 0,
-      ELpv_evidence: uploadedMap.ELpv_evidence ?? '',
-      ELpvr_evidence: uploadedMap.ELpvr_evidence ?? '',
-      ELPJ_battery_evidence: uploadedMap.ELPJ_battery_evidence ?? '',
-      ELPJ_control_equipment_spec_files:
-        uploadedMap.ELPJ_control_equipment_spec_files ?? '',
-    };
+      projectIdValue,
+      siteIdValue,
+      evidenceUrls: uploadedMap,
+    });
 
     try {
       await submitMonitoringData(payload);
@@ -270,11 +357,7 @@ const MonitoringRegister = () => {
       value={formData}
       onChange={setFormData}
       serverErrors={serverFieldErrors}
-      onNext={() => {
-        setServerFieldErrors({});
-        setSubmitError(null);
-        setStep('confirm');
-      }}
+      onNext={handleValidateAndNext}
       onBack={() => navigate(-1)}
     />
   ) : (
