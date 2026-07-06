@@ -74,12 +74,12 @@ public class ResponseConstants {
     public static final String MSG_UNSUPPORTED_FILE_TYPE = "このファイル形式はアップロードできません。";
     public static final String MSG_ALREADY_SUBMITTED = "こちらのフォームはすでに提出済みのため、内容の変更はできません。";
     public static final String MSG_SUSPENDED = "アカウントは現在停止されています。利用を再開するにはお支払いを確認してください。";
-    public static final String MSG_COMPANY_NOT_SUSPENDED = "社は停止されていません。";
+    public static final String MSG_COMPANY_NOT_SUSPENDED = "会社は停止されていません。";
     public static final String MSG_REACTIVATION_SUCCESS = "アカウントが再開されました。";
     public static final String MSG_PAYMENT_FAILED = "支払いに失敗しました。";
     public static final String MSG_PAYMENT_DECLINED = "カード情報が無効です。";
     public static final String MSG_SUSPEND_SUCCESS = "会社が停止されました。";
-    public static final String MSG_COMPANY_ALREADY_SUSPENDED = "社はすでに停止されています。";
+    public static final String MSG_COMPANY_ALREADY_SUSPENDED = "会社はすでに停止されています。";
     public static final String MSG_COMPANY_NOT_PENDING = "会社は承認待ちではありません。";
     public static final String MSG_MASTER_USER_EXISTS = "この会社のマスターユーザーは既に存在します。";
     public static final String MSG_APPROVAL_EMAIL_FAILED = "マスターアカウントのメール送信に失敗しました。";
