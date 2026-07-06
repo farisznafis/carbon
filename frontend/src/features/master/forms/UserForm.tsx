@@ -247,7 +247,7 @@ export function UserForm({
                   <FormItem>
                     <RequiredLabel>電話番号（ハイフン無し）</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="0312345678" {...field} />
+                      <Input inputSize="sm" placeholder="半角数字ハイフン不要" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -261,7 +261,7 @@ export function UserForm({
                   <FormItem>
                     <RequiredLabel>役職</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="営業部部長" {...field} />
+                      <Input inputSize="sm" placeholder="部長" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

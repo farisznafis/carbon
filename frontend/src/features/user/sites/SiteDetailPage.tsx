@@ -117,7 +117,7 @@ const SiteDetail = () => {
         postalCode: '100-0001',
         prefecture: '東京都',
         city: '千代田区',
-        address: '丸の内1-1-1',
+        address: '丸の内1-1',
         building: '〇〇ビル 5階',
         personInChargeId: user?.id || '1',
         personInChargeName: user?.username || 'デモユーザー',
