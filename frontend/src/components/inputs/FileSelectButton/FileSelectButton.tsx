@@ -1,5 +1,6 @@
-// FileSelectButton.tsx
-import { Upload } from 'lucide-react';
+﻿// FileSelectButton.tsx
+import { IconCloudUpload } from '@tabler/icons-react';
+import { cn } from '@/lib/utils';
 
 type Props = {
   id: string;
@@ -7,6 +8,9 @@ type Props = {
   onChange: (file: File | null) => void;
   label?: string;
   className?: string;
+  supportedFormats?: string;
+  helperText?: string;
+  variant?: 'default' | 'design-system-pro';
 };
 
 export function FileSelectButton({
@@ -15,14 +19,55 @@ export function FileSelectButton({
   onChange,
   label = 'ファイルを選択',
   className = '',
+  supportedFormats = '(.pdf, .csv, .jpg, .jpeg, .png)',
+  helperText,
+  variant = 'default',
 }: Readonly<Props>) {
+  if (variant === 'design-system-pro') {
+    return (
+      <div className={cn('flex w-full flex-col items-start gap-2', className)}>
+        <p className="text-small text-foreground">{label}</p>
+        <label
+          htmlFor={id}
+          className="flex min-h-[66px] w-full cursor-pointer items-center gap-2 rounded-[6px] border border-dashed border-[#B1B5BB] bg-[#F6F6F6] py-3 pl-4 pr-4 transition-colors hover:border-primary hover:bg-secondary/40"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border border-[#B1B5BB] bg-secondary text-primary">
+            <IconCloudUpload className="h-6 w-6" />
+          </span>
+          <span className="flex min-w-0 flex-col gap-0.5 xl:flex-row xl:items-center xl:gap-1">
+            <span className="truncate text-base font-normal leading-7 text-[#1F2628]">
+              {value?.name || 'ファイルを選択'}
+            </span>
+            <span className="text-sm font-normal leading-5 text-black/70">
+              {supportedFormats}
+            </span>
+          </span>
+        </label>
+        <input
+          id={id}
+          type="file"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0] ?? null;
+            onChange(file);
+          }}
+        />
+        {helperText && (
+          <p className="text-sm font-normal leading-5 text-slate-500">
+            {helperText}
+          </p>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={cn('space-y-2', className)}>
       <label
         htmlFor={id}
-        className="cursor-pointer text-sm text-gray-800 bg-gray-200 hover:bg-gray-300 py-1 px-3 rounded-md shadow-sm flex items-center w-fit"
+        className="flex w-fit cursor-pointer items-center rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-800 shadow-sm hover:bg-gray-300"
       >
-        <Upload className="mr-2 h-4 w-4" />
+        <IconCloudUpload className="mr-2 h-4 w-4" />
         {label}
       </label>
       <input
@@ -34,9 +79,7 @@ export function FileSelectButton({
           onChange(file);
         }}
       />
-      {value && (
-        <span className="text-sm text-gray-700">{value.name}</span>
-      )}
+      {value && <span className="text-sm text-gray-700">{value.name}</span>}
     </div>
   );
 }

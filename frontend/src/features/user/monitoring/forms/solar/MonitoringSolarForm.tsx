@@ -290,10 +290,12 @@ export function MonitoringSolarForm({
                     name="ELpv_evidence"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>発電量 (ELPV) エビデンス</FormLabel>
                         <FormControl>
                           <FileSelectButton
                             id="elpv-file"
+                            label="発電量 (ELPV) エビデンス"
+                            variant="design-system-pro"
+                            supportedFormats="(.pdf, .csv)"
                             value={(field.value as File) ?? null}
                             onChange={field.onChange}
                           />
@@ -308,10 +310,12 @@ export function MonitoringSolarForm({
                     name="ELpvr_evidence"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>自家消費量 (ELPVR) エビデンス</FormLabel>
                         <FormControl>
                           <FileSelectButton
                             id="elpvr-file"
+                            label="自家消費量 (ELPVR) エビデンス"
+                            variant="design-system-pro"
+                            supportedFormats="(.pdf, .jpg, .jpeg, .png)"
                             value={(field.value as File) ?? null}
                             onChange={field.onChange}
                           />
@@ -326,10 +330,12 @@ export function MonitoringSolarForm({
                     name="ELPJ_battery_evidence"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>蓄電池エビデンス</FormLabel>
                         <FormControl>
                           <FileSelectButton
                             id="elpj-battery-file"
+                            label="蓄電池エビデンス"
+                            variant="design-system-pro"
+                            supportedFormats="(.pdf, .jpg, .jpeg, .png)"
                             value={(field.value as File) ?? null}
                             onChange={field.onChange}
                           />
@@ -344,10 +350,12 @@ export function MonitoringSolarForm({
                     name="ELPJ_control_equipment_spec_files"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>制御機器仕様 (ELPJ) エビデンス</FormLabel>
                         <FormControl>
                           <FileSelectButton
                             id="elpj-control-file"
+                            label="制御機器仕様 (ELPJ) エビデンス"
+                            variant="design-system-pro"
+                            supportedFormats="(.pdf, .jpg, .jpeg, .png)"
                             value={(field.value as File) ?? null}
                             onChange={field.onChange}
                           />
