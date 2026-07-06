@@ -15,6 +15,7 @@ import lombok.*;
 @Table(name = "operator_company")
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})

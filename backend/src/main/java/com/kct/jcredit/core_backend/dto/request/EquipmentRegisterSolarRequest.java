@@ -24,8 +24,8 @@ public class EquipmentRegisterSolarRequest extends BaseRequest {
     @NotNull
     private Integer siteId;
  
-    @NotNull
-    private Integer projectId;
+    // @NotNull
+    // private Integer projectId;
  
     @NotEmpty
     @Valid

@@ -132,14 +132,14 @@
 //         request.setBlocknum("1-1");
 //         request.setBuildingName("オフィスビルA10階");
         
-//         // 担当者情報（PIC: Person In Charge）
-//         request.setPicFirstName("太郎");
-//         request.setPicFirstNameKana("タロウ");
-//         request.setPicLastName("山田");
-//         request.setPicLastNameKana("ヤマダ");
-//         request.setPicEmail("yamada.taro@example.com");
-//         request.setPicPhoneNumber("03-1234-5678");
-//         request.setPicPosition("営業部長");
+//         // // 担当者情報（PIC: Person In Charge）
+//         // request.setPicFirstName("太郎");
+//         // request.setPicFirstNameKana("タロウ");
+//         // request.setPicLastName("山田");
+//         // request.setPicLastNameKana("ヤマダ");
+//         // request.setPicEmail("yamada.taro@example.com");
+//         // request.setPicPhoneNumber("03-1234-5678");
+//         // request.setPicPosition("営業部長");
         
 //         return request;
 //     }
