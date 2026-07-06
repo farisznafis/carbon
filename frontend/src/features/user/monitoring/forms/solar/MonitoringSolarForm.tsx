@@ -7,6 +7,8 @@ import {
   FormCard,
   FormPageContent,
   FormPageTitle,
+  FormSection,
+  FormSectionStack,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
@@ -120,17 +122,18 @@ export function MonitoringSolarForm({
       <FormPageContent>
         <FormPageTitle>モニタリング登録</FormPageTitle>
 
-        <FormCard>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit((values) => {
-                form.clearErrors();
-                onChange(values);
-                onNext();
-              })}
-              className="space-y-8"
-            >
-              <FormField
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit((values) => {
+              form.clearErrors();
+              onChange(values);
+              onNext();
+            })}
+          >
+            <FormCard>
+              <FormSectionStack spacing="relaxed">
+                <FormSection number={1} title="モニタリング情報">
+                  <FormField
                 control={form.control}
                 name="dateRecorded"
                 render={({ field }) => (
@@ -260,31 +263,27 @@ export function MonitoringSolarForm({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="ELPJ_accuracy"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>測定精度</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        value={String(field.value ?? '')}
-                        onChange={(event) => field.onChange(event.target.value)}
-                        placeholder="精度を入力"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="ELPJ_accuracy"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>測定精度</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            value={String(field.value ?? '')}
+                            onChange={(event) => field.onChange(event.target.value)}
+                            placeholder="精度を入力"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </FormSection>
 
-              <Separator />
-
-              <div className="space-y-6">
-                <FormLabel className="text-xl">資料アップロード</FormLabel>
-
-                <div className="grid grid-cols-1 gap-6">
+                <FormSection number={2} title="資料アップロード">
                   <FormField
                     control={form.control}
                     name="ELpv_evidence"
@@ -364,10 +363,10 @@ export function MonitoringSolarForm({
                       </FormItem>
                     )}
                   />
-                </div>
-              </div>
+                </FormSection>
+              </FormSectionStack>
 
-              <div className="flex justify-end gap-4">
+              <div className="flex justify-end gap-4 pt-6">
                 <Button type="button" variant="outline" onClick={onBack}>
                   キャンセル
                 </Button>
@@ -375,9 +374,9 @@ export function MonitoringSolarForm({
                   確認
                 </Button>
               </div>
-            </form>
-          </Form>
-        </FormCard>
+            </FormCard>
+          </form>
+        </Form>
       </FormPageContent>
     </FormStandalonePage>
   );
