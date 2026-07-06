@@ -58,13 +58,26 @@ function toServerFieldErrors(errors: unknown): Record<string, string> {
     return {};
   }
 
+  const fieldNameMap: Record<string, string> = {
+    date_recorded: 'dateRecorded',
+    elpv_value: 'ELpv_value',
+    elpvr_value: 'ELpvr_value',
+    elpj_battery_value: 'ELPJ_battery_value',
+    elpj_control_value: 'ELPJ_control_value',
+    elpj_accuracy: 'ELPJ_accuracy',
+    elpv_evidence: 'ELpv_evidence',
+    elpvr_evidence: 'ELpvr_evidence',
+    elpj_battery_evidence: 'ELPJ_battery_evidence',
+    elpj_control_equipment_spec_files: 'ELPJ_control_equipment_spec_files',
+  };
+
   return Object.entries(errors as Record<string, unknown>).reduce<
     Record<string, string>
   >((fieldErrors, [field, value]) => {
     const message = toErrorMessage(value);
 
     if (message) {
-      fieldErrors[field] = message;
+      fieldErrors[fieldNameMap[field] ?? field] = message;
     }
 
     return fieldErrors;
@@ -74,6 +87,13 @@ function toServerFieldErrors(errors: unknown): Record<string, string> {
 function fileValueToString(value: unknown): string {
   if (value instanceof File) return value.name;
   return typeof value === 'string' ? value : '';
+}
+
+function toNumberOrNull(value: unknown): number | null {
+  if (value === '' || value == null) return null;
+
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : null;
 }
 
 function buildMonitoringPayload(
@@ -88,14 +108,14 @@ function buildMonitoringPayload(
     projectId: Number(context.projectIdValue) || 0,
     siteId: Number(context.siteIdValue) || null,
     dateRecorded: String(currentData.dateRecorded ?? new Date().toISOString()),
-    ELpv_value: Number(currentData.ELpv_value) || 0,
-    ELpvr_value: Number(currentData.ELpvr_value) || 0,
+    ELpv_value: toNumberOrNull(currentData.ELpv_value),
+    ELpvr_value: toNumberOrNull(currentData.ELpvr_value),
     changedBattery: Boolean(currentData.changedBattery),
     ELPJ_battery_value: currentData.changedBattery
-      ? Number(currentData.ELPJ_battery_value) || 0
+      ? toNumberOrNull(currentData.ELPJ_battery_value)
       : null,
-    ELPJ_control_value: Number(currentData.ELPJ_control_value) || 0,
-    ELPJ_accuracy: Number(currentData.ELPJ_accuracy) || 0,
+    ELPJ_control_value: toNumberOrNull(currentData.ELPJ_control_value),
+    ELPJ_accuracy: toNumberOrNull(currentData.ELPJ_accuracy),
     ELpv_evidence:
       evidenceUrls.ELpv_evidence ?? fileValueToString(currentData.ELpv_evidence),
     ELpvr_evidence:

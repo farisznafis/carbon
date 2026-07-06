@@ -146,7 +146,6 @@ export function MonitoringSolarForm({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(async (values) => {
-              form.clearErrors();
               onChange(values);
               await onNext(values);
             })}
@@ -164,7 +163,7 @@ export function MonitoringSolarForm({
                       <Input
                         type="date"
                         value={field.value ?? ''}
-                        onChange={(event) => field.onChange(event.target.value)}
+                        onChange={(event) => field.onChange(event.target.value === '' ? null : event.target.value)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -182,7 +181,10 @@ export function MonitoringSolarForm({
                       <Input
                         type="number"
                         value={String(field.value ?? '')}
-                        onChange={(event) => field.onChange(event.target.value)}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          field.onChange(value === '' || value === '0' ? null : value);
+                        }}
                         placeholder="数値を入力"
                       />
                     </FormControl>
@@ -201,7 +203,10 @@ export function MonitoringSolarForm({
                       <Input
                         type="number"
                         value={String(field.value ?? '')}
-                        onChange={(event) => field.onChange(event.target.value)}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          field.onChange(value === '' || value === '0' ? null : value);
+                        }}
                         placeholder="数値を入力"
                       />
                     </FormControl>
@@ -254,7 +259,10 @@ export function MonitoringSolarForm({
                         <Input
                           type="number"
                           value={field.value == null ? '' : String(field.value)}
-                          onChange={(event) => field.onChange(event.target.value)}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            field.onChange(value === '' || value === '0' ? null : value);
+                          }}
                           placeholder="数値を入力"
                           disabled={!isBatteryChanged}
                         />
@@ -275,7 +283,10 @@ export function MonitoringSolarForm({
                       <Input
                         type="number"
                         value={String(field.value ?? '')}
-                        onChange={(event) => field.onChange(event.target.value)}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          field.onChange(value === '' || value === '0' ? null : value);
+                        }}
                         placeholder="数値を入力"
                       />
                     </FormControl>
@@ -294,7 +305,10 @@ export function MonitoringSolarForm({
                           <Input
                             type="number"
                             value={String(field.value ?? '')}
-                            onChange={(event) => field.onChange(event.target.value)}
+                            onChange={(event) => {
+                              const value = event.target.value;
+                              field.onChange(value === '' || value === '0' ? null : value);
+                            }}
                             placeholder="精度を入力"
                           />
                         </FormControl>

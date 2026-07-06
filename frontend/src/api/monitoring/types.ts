@@ -3,12 +3,12 @@ export type MonitoringData = {
   siteId?: number | null;
   projectType: string;
   dateRecorded: string;
-  ELpv_value: number;
-  ELpvr_value: number;
+  ELpv_value: number | null;
+  ELpvr_value: number | null;
   changedBattery: boolean;
   ELPJ_battery_value: number | null;
-  ELPJ_control_value: number;
-  ELPJ_accuracy: number;
+  ELPJ_control_value: number | null;
+  ELPJ_accuracy: number | null;
   ELpv_evidence?: string | null;
   ELpvr_evidence?: string | null;
   ELPJ_battery_evidence?: string | null;
