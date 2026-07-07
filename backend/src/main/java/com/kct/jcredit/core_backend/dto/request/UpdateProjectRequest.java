@@ -1,5 +1,6 @@
 package com.kct.jcredit.core_backend.dto.request;
 
+import com.kct.jcredit.core_backend.validation.ValidEmail;
 import com.kct.jcredit.core_backend.dto.request.base.BaseRequest;
 import com.kct.jcredit.core_backend.validation.Hankaku;
 import com.kct.jcredit.core_backend.validation.Katakana;
@@ -7,7 +8,6 @@ import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
 import com.kct.jcredit.core_backend.validation.ZenkakuWithSymbols;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -38,7 +38,7 @@ public class UpdateProjectRequest extends BaseRequest{
     private String repLastName;
     @Katakana
     private String repLastNameKana;
-    @Email 
+    @ValidEmail
     private String repEmail;
     @PhoneNumber
     private String repPhoneNumber;
@@ -54,7 +54,7 @@ public class UpdateProjectRequest extends BaseRequest{
     private String picLastName;
     @Katakana
     private String picLastNameKana;
-    @Email 
+    @ValidEmail
     private String picEmail;
     @PhoneNumber
     private String picPhoneNumber;

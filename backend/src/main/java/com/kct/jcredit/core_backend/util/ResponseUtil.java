@@ -17,6 +17,8 @@ public class ResponseUtil {
             case ResponseConstants.BAD_REQUEST:
                 return HttpStatus.BAD_REQUEST;
             case ResponseConstants.VALIDATION_ERROR:
+            case ResponseConstants.FILE_TOO_LARGE:
+            case ResponseConstants.UNSUPPORTED_FILE_TYPE:
                 return HttpStatus.BAD_REQUEST;
             case ResponseConstants.CONFLICT:
             case ResponseConstants.PROJECT_NUMBER_ALREADY_USED:
@@ -25,6 +27,8 @@ public class ResponseUtil {
             case ResponseConstants.UNAUTHORIZED:
             case ResponseConstants.INVALID_CREDENTIALS:
                 return HttpStatus.UNAUTHORIZED;
+            case ResponseConstants.FORBIDDEN:
+                return HttpStatus.FORBIDDEN;
             default:
                 return HttpStatus.INTERNAL_SERVER_ERROR;
         }

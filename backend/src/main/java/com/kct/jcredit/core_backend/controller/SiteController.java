@@ -7,6 +7,7 @@ import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.EquipmentSolarRegisterResponse;
 import com.kct.jcredit.core_backend.dto.response.SiteInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.SiteListResponse;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.service.ProjectService;
 import com.kct.jcredit.core_backend.service.SiteService;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
@@ -78,6 +79,20 @@ public class SiteController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
+    @PostMapping("/validate-create")
+    @PreAuthorize("hasAnyRole('master')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Validate site creation", description = "Validate site creation request without saving data.")
+    public ResponseEntity<BaseResponse> validateCreateSite(
+            Authentication authentication,
+            @RequestBody @Valid CreateSiteRequest request) {
+        BaseResponse response = siteService.validateCreateSite(
+                request,
+                jwtUtil.extractCompanyId(authentication.getCredentials().toString()));
+
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
      @PatchMapping("/{siteId}")
     @PreAuthorize("hasAnyRole('master')")
     @SecurityRequirement(name = "bearerAuth")
@@ -96,9 +111,24 @@ public class SiteController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
+    @PostMapping("/validate-update/{siteId}")
+    @PreAuthorize("hasAnyRole('master')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Validate site update", description = "Validate site update request without saving data.")
+    public ResponseEntity<BaseResponse> validateUpdateSite(
+            Authentication authentication,
+            @PathVariable String siteId,
+            @RequestBody @Valid UpdateSiteRequest request) {
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+
+        BaseResponse response = siteService.validateUpdateSite(siteId, companyId, request);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
     @GetMapping("/{siteId}/{projectId}/equipment")
     @PreAuthorize("hasAnyRole('master','user')")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "拠点プロジェクト設備情報取得", description = "指定された拠点とプロジェクトに登録された設備情報を取得します。")
     public ResponseEntity<EquipmentSolarRegisterResponse> getSiteProjectEquipment(
             Authentication authentication,
             @PathVariable Integer siteId,

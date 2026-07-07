@@ -6,6 +6,7 @@ import com.kct.jcredit.core_backend.dto.request.CreateUserRequest;
 import com.kct.jcredit.core_backend.dto.request.DeleteUserSite;
 import com.kct.jcredit.core_backend.dto.request.UpdateUserRequest;
 import com.kct.jcredit.core_backend.dto.response.*;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.response.details.CompanyInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.details.SiteResponse;
 import com.kct.jcredit.core_backend.dto.response.details.UserInfoResponse;
@@ -25,7 +26,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -179,6 +182,47 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public BaseResponse validateCreateUser(String masterCompanyId, String username, CreateUserRequest request) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(masterCompanyId)
+                .orElse(null);
+        if (company == null) {
+            errors.put("companyId", ResponseConstants.MSG_NOT_FOUND);
+            return validationError(errors);
+        }
+
+        if (userRepository.countByCompany_Id(company.getId()) >= MAX_USERS_PER_COMPANY) {
+            errors.put("companyId", ResponseConstants.MSG_LIMIT_EXCEEDED);
+        }
+
+        if (request.getSiteId() != null) {
+            Site site = siteRepository.findById(request.getSiteId()).orElse(null);
+            if (site == null) {
+                errors.put("siteId", ResponseConstants.MSG_NOT_FOUND);
+            } else {
+                if (!masterCompanyId.equals(site.getCompany().getCompanyId())) {
+                    errors.put("siteId", ResponseConstants.MSG_FORBIDDEN);
+                } else if (userRepository.countByCompany_IdAndSite_Id(company.getId(), request.getSiteId()) >= MAX_USERS_PER_SITE) {
+                    errors.put("siteId", ResponseConstants.MSG_LIMIT_EXCEEDED);
+                }
+            }
+        }
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            errors.put("email", ResponseConstants.MSG_USED_EMAIL);
+        }
+        if (userRepository.existsByUsername(request.getUsername())) {
+            errors.put("username", ResponseConstants.MSG_USED_USERNAME);
+        }
+
+        return errors.isEmpty()
+                ? BaseResponse.success(ResponseConstants.MSG_VALIDATION_SUCCESS)
+                : validationError(errors);
+    }
+
+    @Override
     public CreateUserResponse createUser(String masterCompanyId, String username, CreateUserRequest request) {
         CreateUserResponse response = new CreateUserResponse();
         ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(masterCompanyId)
@@ -269,6 +313,77 @@ public class UserServiceImpl implements UserService {
         response.setUser(userResponse);
         
         return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BaseResponse validateUpdateUser(String masterCompanyId,
+                                           String username,
+                                           UpdateUserRequest request) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        ParticipatingCompany masterCompany = participatingCompanyRepository
+                .findByCompanyId(masterCompanyId)
+                .orElse(null);
+        if (masterCompany == null) {
+            errors.put("companyId", ResponseConstants.MSG_NOT_FOUND);
+            return validationError(errors);
+        }
+
+        ParticipatingUser requestingUser = userRepository
+                .findByUsernameAndCompany_Id(username, masterCompany.getId())
+                .orElse(null);
+        if (requestingUser == null) {
+            errors.put("username", ResponseConstants.MSG_USER_NOT_FOUND);
+            return validationError(errors);
+        }
+
+        boolean isMaster = RoleConstants.MASTER.equals(requestingUser.getRole());
+        ParticipatingUser targetUser = requestingUser;
+        if (isMaster && request.getUserId() != null) {
+            targetUser = userRepository.findById(request.getUserId()).orElse(null);
+            if (targetUser == null) {
+                errors.put("UserId", ResponseConstants.MSG_USER_NOT_FOUND);
+                return validationError(errors);
+            }
+        }
+
+        boolean isSelf = targetUser.getId().equals(requestingUser.getId());
+        Site currentSite = targetUser.getSite();
+        Integer currentSiteId = currentSite != null ? currentSite.getId() : null;
+        Integer requestedSiteId = request.getSiteId();
+        boolean isSiteChange = isMaster
+                && !isSelf
+                && !(requestedSiteId == null && currentSiteId == null)
+                && !Objects.equals(requestedSiteId, currentSiteId);
+
+        if (!isMaster && request.getUserId() != null && !request.getUserId().equals(requestingUser.getId())) {
+            errors.put("UserId", ResponseConstants.MSG_FORBIDDEN);
+        }
+        if (!isMaster && requestedSiteId != null) {
+            errors.put("siteId", ResponseConstants.MSG_FORBIDDEN);
+        }
+        if (isMaster && isSelf && requestedSiteId != null) {
+            errors.put("siteId", ResponseConstants.MSG_BAD_REQUEST);
+        }
+        if (!isCompanyAligned(masterCompanyId, masterCompany, requestingUser, targetUser)) {
+            errors.put("UserId", ResponseConstants.MSG_FORBIDDEN);
+        }
+
+        if (isSiteChange && requestedSiteId != null) {
+            Site requestedSite = siteRepository.findById(requestedSiteId).orElse(null);
+            if (requestedSite == null) {
+                errors.put("siteId", ResponseConstants.MSG_SITE_NOT_FOUND);
+            } else if (!masterCompanyId.equals(requestedSite.getCompany().getCompanyId())) {
+                errors.put("siteId", ResponseConstants.MSG_FORBIDDEN);
+            } else if (userRepository.countByCompany_IdAndSite_Id(masterCompany.getId(), requestedSiteId) >= MAX_USERS_PER_SITE) {
+                errors.put("siteId", ResponseConstants.MSG_LIMIT_EXCEEDED);
+            }
+        }
+
+        return errors.isEmpty()
+                ? BaseResponse.success(ResponseConstants.MSG_VALIDATION_SUCCESS)
+                : validationError(errors);
     }
 
     @Override
@@ -817,5 +932,11 @@ public class UserServiceImpl implements UserService {
                                 .map(SiteProjectRelation::getProject)
                                 .map(Project::getProjectName)
                                 .collect(Collectors.toList());
+    }
+
+    private BaseResponse validationError(Map<String, String> errors) {
+        BaseResponse response = BaseResponse.validationError(errors);
+        response.setMessage(ResponseConstants.MSG_VALIDATION_ERROR);
+        return response;
     }
 }

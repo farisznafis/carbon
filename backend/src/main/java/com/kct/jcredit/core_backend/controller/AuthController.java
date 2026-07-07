@@ -24,6 +24,7 @@ import com.kct.jcredit.core_backend.service.UserService;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
@@ -37,6 +38,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
 
     @PostMapping("/user/login")
+    @Operation(summary = "参加ユーザーログイン", description = "参加ユーザーの認証を行い、ログイン情報を返します。")
     public ResponseEntity<LoginResponse> userLogin(@RequestBody LoginRequest request) {     
         LoginResponse response = authService.userLogin(request);
         
@@ -44,6 +46,7 @@ public class AuthController {
     }
 
     @PostMapping("/admin/login")
+    @Operation(summary = "管理者ログイン", description = "運営ユーザーの認証を行い、ログイン情報を返します。")
     public ResponseEntity<AdminLoginResponse> adminLogin(@RequestBody AdminLoginRequest request) {
         AdminLoginResponse response = authService.operatorLogin(request);
 
@@ -54,6 +57,7 @@ public class AuthController {
     @GetMapping("/user/profile")
     @PreAuthorize("hasRole('user')")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "ログインユーザー情報取得", description = "ログイン中の参加ユーザーのプロフィール情報を取得します。")
     public ResponseEntity<UserProfileResponse> getUserProfile(Authentication authentication) {
         UserProfileResponse response = new UserProfileResponse();
 
@@ -64,6 +68,7 @@ public class AuthController {
 
     @PostMapping("/user/change-password")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "パスワード変更", description = "ログイン中のユーザーのパスワードを変更します。")
     public ResponseEntity<PasswordChangeResponse> changePassword(Authentication authentication, @RequestHeader("Authorization") String authHeader,
                                                                 @Valid @RequestBody PasswordChangeRequest request) {
         String username = authentication.getName();
@@ -74,12 +79,14 @@ public class AuthController {
 
 
     @PostMapping("/dummyUser")
+    @Operation(summary = "ダミー参加ユーザー作成", description = "検証用の参加ユーザーを作成します。")
     public ResponseEntity<ParticipatingUser> createDummyUser(@RequestBody CreateDummyUserRequest req) {
         ParticipatingUser user = authService.createDummyUser(req);
         return ResponseEntity.ok(user);
     }
 
     @PostMapping("/dummyOperator")
+    @Operation(summary = "ダミー運営ユーザー作成", description = "検証用の運営ユーザーを作成します。")
     public ResponseEntity<OperatingUser> createDummyOperator(@RequestBody CreateDummyUserRequest req) {
         OperatingUser user = authService.createDummyOperatorUser(req);
         return ResponseEntity.ok(user);

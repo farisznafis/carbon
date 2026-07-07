@@ -18,6 +18,7 @@ import com.kct.jcredit.core_backend.dto.request.RegisterMonitoringRecordSolarReq
 import com.kct.jcredit.core_backend.dto.response.FileUploadResponse;
 import com.kct.jcredit.core_backend.dto.response.MonitoringRecordSolarListResponse;
 import com.kct.jcredit.core_backend.dto.response.MonitoringRecordSolarResponse;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.response.details.FileErrorDetailsResponse;
 import com.kct.jcredit.core_backend.dto.response.details.FileInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.details.MonitoringDataSolarResponse;
@@ -56,6 +57,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
     private static final long MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
     private static final int MAX_FILE_SIZE_MB = 10;
+    private static final BigDecimal MAX_PERCENT_VALUE = new BigDecimal("100.0");
     
     //太陽光発電の毎日のデータをs3に保存
     @Override
@@ -67,6 +69,12 @@ public class MonitoringServiceImpl implements MonitoringService {
         MonitoringRecordSolarResponse response = new MonitoringRecordSolarResponse();
 
         try {
+            MonitoringValidationResult validation = validateMonitoringRecordRequest(username, companyId, request);
+            if (!validation.isValid()) {
+                copyBaseResponse(response, validation.getResponse());
+                return response;
+            }
+
             // 1) Fetch user, site, and project
             //ユーザの取得
             ParticipatingUser user = userRepository.findByUsername(username)
@@ -200,6 +208,20 @@ public class MonitoringServiceImpl implements MonitoringService {
             response.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR);
             response.setMessage(ResponseConstants.MSG_INTERNAL_ERROR);
             return response;
+        }
+    }
+
+    @Override
+    public BaseResponse validateMonitoringRecordSolar(
+            String username,
+            String companyId,
+            RegisterMonitoringRecordSolarRequest request
+    ) {
+        try {
+            MonitoringValidationResult validation = validateMonitoringRecordRequest(username, companyId, request);
+            return validation.getResponse();
+        } catch (Exception e) {
+            return BaseResponse.error(ResponseConstants.INTERNAL_SERVER_ERROR, ResponseConstants.MSG_INTERNAL_ERROR);
         }
     }
 
@@ -561,6 +583,103 @@ public class MonitoringServiceImpl implements MonitoringService {
 
     // ===== PRIVATE HELPER METHODS =====
 
+    private MonitoringValidationResult validateMonitoringRecordRequest(
+            String username,
+            String companyId,
+            RegisterMonitoringRecordSolarRequest request
+    ) {
+        Map<String, String> fieldErrors = collectMonitoringFieldErrors(request);
+        if (!fieldErrors.isEmpty()) {
+            return MonitoringValidationResult.invalid(validationError(fieldErrors));
+        }
+
+        ParticipatingUser user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException(ResponseConstants.MSG_UNEXPEXTED_ERROR));
+
+        if (!user.getCompany().getCompanyId().equals(companyId)) {
+            return MonitoringValidationResult.invalid(
+                    BaseResponse.error(ResponseConstants.FORBIDDEN, ResponseConstants.MSG_USER_NOT_IN_COMPANY)
+            );
+        }
+
+        Site site = siteRepository.findById(request.getSiteId()).orElse(null);
+        if (site == null) {
+            return MonitoringValidationResult.invalid(
+                    BaseResponse.error(ResponseConstants.NOT_FOUND, ResponseConstants.MSG_SITE_NOT_FOUND)
+            );
+        }
+
+        if (site.getCompany() == null || !site.getCompany().getCompanyId().equals(companyId)) {
+            return MonitoringValidationResult.invalid(
+                    BaseResponse.error(ResponseConstants.FORBIDDEN, ResponseConstants.MSG_SITE_NOT_IN_COMPANY)
+            );
+        }
+
+        Project project = projectRepository.findById(request.getProjectId()).orElse(null);
+        if (project == null) {
+            return MonitoringValidationResult.invalid(
+                    BaseResponse.error(ResponseConstants.NOT_FOUND, ResponseConstants.MSG_PROJECT_NOT_FOUND)
+            );
+        }
+
+        if (!validateResourceOwnership(user, site, project)) {
+            return MonitoringValidationResult.invalid(
+                    BaseResponse.error(ResponseConstants.FORBIDDEN, ResponseConstants.MSG_FORBIDDEN)
+            );
+        }
+
+        if (!siteProjectRelationRepository.existsByProjectAndSite(project, site)) {
+            return MonitoringValidationResult.invalid(
+                    BaseResponse.error(ResponseConstants.NOT_FOUND, ResponseConstants.MSG_NOT_FOUND)
+            );
+        }
+
+        return MonitoringValidationResult.valid(user, site, project);
+    }
+
+    private BaseResponse validationError(Map<String, String> errors) {
+        BaseResponse response = BaseResponse.validationError(errors);
+        response.setMessage(ResponseConstants.MSG_VALIDATION_ERROR);
+        return response;
+    }
+
+    private void copyBaseResponse(MonitoringRecordSolarResponse target, BaseResponse source) {
+        target.setStatusCode(source.getStatusCode());
+        target.setMessage(source.getMessage());
+        target.setErrors(source.getErrors());
+        target.setTimestamp(source.getTimestamp());
+    }
+
+    private Map<String, String> collectMonitoringFieldErrors(RegisterMonitoringRecordSolarRequest request) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        if (request == null) {
+            errors.put("request", ResponseConstants.MSG_BAD_REQUEST);
+            return errors;
+        }
+
+        if (request.getProjectId() == null) {
+            errors.put("projectId", ResponseConstants.MSG_PROJECT_ID_REQUIRED);
+        }
+        if (request.getSiteId() == null) {
+            errors.put("siteId", ResponseConstants.MSG_SITE_ID_REQUIRED);
+        }
+        if (isBlank(request.getProjectType())) {
+            errors.put("projectType", ResponseConstants.MSG_PROJECT_TYPE_REQUIRED);
+        }
+        if (isBlank(request.getDateRecorded())) {
+            errors.put("dateRecorded", ResponseConstants.MSG_DATE_RECORDED_REQUIRED);
+        }
+        if (request.getChangedBattery() == null) {
+            errors.put("changedBattery", ResponseConstants.MSG_CHANGED_BATTERY_REQUIRED);
+        }
+
+        errors.putAll(collectMandatoryEvidenceErrors(request));
+        errors.putAll(collectMonitoringDataErrors(request));
+
+        return errors;
+    }
+
     /**
      * Requirement 6.2 & Update 1: Validate that all 4 mandatory evidence URLs are provided
      */
@@ -600,6 +719,15 @@ public class MonitoringServiceImpl implements MonitoringService {
         }
         if (Boolean.TRUE.equals(request.getChangedBattery()) && request.getElpjBatteryValue() == null) {
             errors.put("ELPJ_battery_value", ResponseConstants.MSG_ELPJ_BATTERY_VALUE_REQUIRED_WHEN_CHANGED);
+        }
+        if (request.getElpjBatteryValue() != null && request.getElpjBatteryValue().compareTo(BigDecimal.ZERO) < 0) {
+            errors.put("ELPJ_battery_value", ResponseConstants.MSG_ELPJ_BATTERY_VALUE_MIN);
+        }
+        if (request.getElpjAccuracy() != null && request.getElpjAccuracy().compareTo(BigDecimal.ZERO) < 0) {
+            errors.put("ELPJ_accuracy", ResponseConstants.MSG_ELPJ_ACCURACY_MIN);
+        }
+        if (request.getElpjAccuracy() != null && request.getElpjAccuracy().compareTo(MAX_PERCENT_VALUE) > 0) {
+            errors.put("ELPJ_accuracy", ResponseConstants.MSG_ELPJ_ACCURACY_MAX);
         }
 
         return errors;
@@ -784,6 +912,62 @@ public class MonitoringServiceImpl implements MonitoringService {
                 .elpjControl(entity.getElpjControlValue())
                 .elpjAccuracy(entity.getElpjAccuracy())
                 .build();
+    }
+
+    private static final class MonitoringValidationResult {
+        private final boolean valid;
+        private final BaseResponse response;
+        private final ParticipatingUser user;
+        private final Site site;
+        private final Project project;
+
+        private MonitoringValidationResult(
+                boolean valid,
+                BaseResponse response,
+                ParticipatingUser user,
+                Site site,
+                Project project
+        ) {
+            this.valid = valid;
+            this.response = response;
+            this.user = user;
+            this.site = site;
+            this.project = project;
+        }
+
+        private static MonitoringValidationResult valid(ParticipatingUser user, Site site, Project project) {
+            return new MonitoringValidationResult(
+                    true,
+                    BaseResponse.success(ResponseConstants.MSG_VALIDATION_SUCCESS),
+                    user,
+                    site,
+                    project
+            );
+        }
+
+        private static MonitoringValidationResult invalid(BaseResponse response) {
+            return new MonitoringValidationResult(false, response, null, null, null);
+        }
+
+        private boolean isValid() {
+            return valid;
+        }
+
+        private BaseResponse getResponse() {
+            return response;
+        }
+
+        private ParticipatingUser getUser() {
+            return user;
+        }
+
+        private Site getSite() {
+            return site;
+        }
+
+        private Project getProject() {
+            return project;
+        }
     }
 
     

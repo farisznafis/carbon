@@ -42,9 +42,17 @@ public class ResponseConstants {
     public static final String MSG_ELPVR_EVIDENCE_REQUIRED = "ELpvr（電力供給量）の証憑ファイルURLが必須です。";
     public static final String MSG_ELPJ_BATTERY_EVIDENCE_REQUIRED = "ELPJ（バッテリー仕様書）の証憑ファイルURLが必須です。";
     public static final String MSG_ELPJ_CONTROL_EVIDENCE_REQUIRED = "ELPJ制御値の証憑ファイルURLが必須です。";
+    public static final String MSG_PROJECT_ID_REQUIRED = "プロジェクトIDを入力してください。";
+    public static final String MSG_SITE_ID_REQUIRED = "拠点IDを入力してください。";
+    public static final String MSG_PROJECT_TYPE_REQUIRED = "プロジェクトタイプを入力してください。";
+    public static final String MSG_DATE_RECORDED_REQUIRED = "記録日を入力してください。";
+    public static final String MSG_CHANGED_BATTERY_REQUIRED = "バッテリー交換フラグを入力してください。";
     public static final String MSG_ELPV_VALUE_MIN = "ELpv（電力使用量）は0以上で入力してください。";
     public static final String MSG_ELPVR_VALUE_MIN = "ELpvr（電力供給量）は0以上で入力してください。";
     public static final String MSG_ELPJ_CONTROL_VALUE_MIN = "ELPJ制御値は0以上で入力してください。";
+    public static final String MSG_ELPJ_BATTERY_VALUE_MIN = "ELPJバッテリー値は0以上で入力してください。";
+    public static final String MSG_ELPJ_ACCURACY_MIN = "ELPJ計測精度は0以上で入力してください。";
+    public static final String MSG_ELPJ_ACCURACY_MAX = "ELPJ計測精度は100以下で入力してください。";
     public static final String MSG_ELPJ_BATTERY_VALUE_REQUIRED_WHEN_CHANGED =
             "バッテリー交換がある場合、ELPJバッテリー値を入力してください。";
     public static final String MSG_USER_NOT_IN_COMPANY = "ユーザーはこの企業に所属していません。";

@@ -1,5 +1,6 @@
 package com.kct.jcredit.core_backend.dto.request;
 
+import com.kct.jcredit.core_backend.validation.ValidEmail;
 import com.kct.jcredit.core_backend.validation.CorpNumber;
 import com.kct.jcredit.core_backend.validation.Hankaku;
 import com.kct.jcredit.core_backend.validation.JapaneseText;
@@ -8,7 +9,6 @@ import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.PostalCode;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
 import com.kct.jcredit.core_backend.validation.ZenkakuWithSymbols;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -91,6 +91,6 @@ public class PartiCompanyInfoValidateRequest {
     private String faxNumber;
 
     @NotBlank(message = "メールアドレスの形式が正しくありません。")
-    @Email(message = "メールアドレスの形式が正しくありません。")
+    @ValidEmail(message = "メールアドレスの形式が正しくありません。")
     private String email;
 }
