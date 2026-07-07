@@ -128,6 +128,7 @@ public class SiteController {
     @GetMapping("/{siteId}/{projectId}/equipment")
     @PreAuthorize("hasAnyRole('master','user')")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "拠点プロジェクト設備情報取得", description = "指定された拠点とプロジェクトに登録された設備情報を取得します。")
     public ResponseEntity<EquipmentSolarRegisterResponse> getSiteProjectEquipment(
             Authentication authentication,
             @PathVariable Integer siteId,

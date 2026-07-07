@@ -47,6 +47,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 
@@ -64,6 +65,7 @@ public class ProjectController {
     @PostMapping
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "プロジェクト作成", description = "新しいプロジェクトを作成します。")
     public ResponseEntity<CreateProjectResponse> createProject(Authentication authentication,
             @Valid @RequestBody CreateProjectRequest request) {
             
@@ -77,6 +79,7 @@ public class ProjectController {
     @PatchMapping("/{projectId}")
     @PreAuthorize("hasAnyRole('operator','master','user')") // allow both operator and master to update project details
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "プロジェクト情報更新", description = "指定されたプロジェクトの詳細情報を更新します。")
     public ResponseEntity<ProjectResponse> updateProject(Authentication authentication,
             @PathVariable Integer projectId,
             @Valid @RequestBody UpdateProjectRequest request) {
@@ -92,6 +95,7 @@ public class ProjectController {
     @PatchMapping("/{projectId}/status")
     @PreAuthorize("hasAnyRole('operator','master')") // allow both operator and master to update project details
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "プロジェクトステータス更新", description = "指定されたプロジェクトのステータスを更新します。")
     public ResponseEntity<UpdateProjectStatusResponse> updateProjectStatus(Authentication authentication,
             @PathVariable Integer projectId,
             @Valid @RequestBody UpdateProjectStatusRequest request) {
@@ -104,6 +108,7 @@ public class ProjectController {
     @GetMapping("/{projectId}")
     @PreAuthorize("hasAnyRole('operator','master','user')") 
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "プロジェクト情報取得", description = "指定されたプロジェクトの詳細情報を取得します。")
     public ResponseEntity<ProjectResponse> getProject(Authentication authentication,
             @PathVariable Integer projectId) {
         
@@ -115,6 +120,7 @@ public class ProjectController {
     @PostMapping(value="/{projectId}/document/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "プロジェクト書類アップロード", description = "指定されたプロジェクトの承認関連書類をアップロードします。")
     public ProjectUploadDocumentResponse uploadApprovalDocuments(
             Authentication authentication, 
             @PathVariable String projectId,
@@ -136,6 +142,7 @@ public class ProjectController {
     @GetMapping("/{projectId}/document/list")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "プロジェクト書類一覧取得", description = "指定されたプロジェクトに登録された書類一覧を取得します。")
     public ProjectUploadDocumentResponse getDocumentList(@PathVariable String projectId) {
         return projectUploadDocumentService.getDocumentsByProjectId(projectId);
     }
@@ -143,6 +150,7 @@ public class ProjectController {
     @PatchMapping("/{projectId}/document/status")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "プロジェクト書類ステータス更新", description = "指定されたプロジェクト書類のステータスを更新します。")
     public ProjectUploadDocumentResponse updateDocumentStatus(
             @PathVariable String projectId,
             @Valid @RequestBody ProjectUploadDocumentRequest request
@@ -154,6 +162,7 @@ public class ProjectController {
     @GetMapping
     @PreAuthorize("hasRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "プロジェクト一覧取得", description = "条件に一致するプロジェクト一覧をページング付きで取得します。")
     public ResponseEntity<ProjectListInfoResponse> listProjects(
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "ページは1以上で入力してください。") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "表示件数は1以上で入力してください。") int limit,
@@ -187,6 +196,7 @@ public class ProjectController {
     @GetMapping("/{projectId}/monitoring")
     @PreAuthorize("hasRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "プロジェクトモニタリング情報取得", description = "指定されたプロジェクトのモニタリング詳細情報を取得します。")
     public ResponseEntity<ProjectMonitoringResponse> getProjectMonitoringDetails(
             @PathVariable String projectId) {
         ProjectMonitoringResponse response = projectMonitoringService.getProjectDetail(projectId);

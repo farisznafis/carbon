@@ -7,6 +7,7 @@ import com.kct.jcredit.core_backend.service.MonitoringApplicationService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
@@ -32,6 +33,7 @@ public class MonitoringReportController {
     @GetMapping("/autofill/company/{companyId}")
     @PreAuthorize("hasAnyRole('master','user')")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "モニタリング報告会社情報取得", description = "モニタリング報告書入力用の会社マスタ情報を取得します。")
     public ResponseEntity<CorporationMasterResponse> getCompanyMaster(
             Authentication authentication,
             @PathVariable String companyId) {
@@ -51,6 +53,7 @@ public class MonitoringReportController {
     @GetMapping("/autofill/projects/{projectId}")
     @PreAuthorize("hasAnyRole('master','user')")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "モニタリング報告プロジェクト情報取得", description = "モニタリング報告書入力用のプロジェクトマスタ情報を取得します。")
     public ResponseEntity<ProjectMasterResponse> getProjectMaster(
             Authentication authentication,
             @PathVariable Integer projectId) {
@@ -70,6 +73,7 @@ public class MonitoringReportController {
     @PostMapping("/project/{projectId}/monitoring-report")
     @PreAuthorize("hasAnyRole('master','user')")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "モニタリング報告書登録", description = "指定されたプロジェクトと拠点のモニタリング報告書を登録します。")
     public ResponseEntity<MonitoringReportResponse> submitMonitoringReport(
             Authentication authentication,
             @PathVariable Integer projectId,
@@ -93,6 +97,7 @@ public class MonitoringReportController {
     @GetMapping("/project/{projectId}/monitoring-report")
     @PreAuthorize("hasAnyRole('master','user')")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "モニタリング報告書取得", description = "指定されたプロジェクトと拠点の最新モニタリング報告書を取得します。")
     public ResponseEntity<MonitoringReportResponse> getMonitoringReport(
             Authentication authentication,
             @PathVariable Integer projectId,
