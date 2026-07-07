@@ -221,7 +221,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.picPosition',
-    label: '申請担当者の役職',
+    label: '申請責任者の役職',
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
@@ -230,7 +230,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.isChangePicPosition',
-    label: '申請担当者の役職に変更があるか',
+    label: '申請責任者の役職に変更があるか',
     type: 'select',
     options: SELECTS_REQUIRED,
     hideWhen: {
@@ -240,7 +240,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.picName',
-    label: '申請担当者の氏名',
+    label: '申請責任者の氏名',
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
@@ -249,7 +249,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.isChangePicName',
-    label: '申請担当者の氏名に変更があるか',
+    label: '申請責任者の氏名に変更があるか',
     type: 'select',
     options: SELECTS_REQUIRED,
     hideWhen: {
@@ -259,7 +259,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.picEmail',
-    label: '申請担当者のメールアドレス',
+    label: '申請責任者のメールアドレス',
     type: 'email',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
@@ -268,7 +268,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.isChangePicEmail',
-    label: '申請担当者のメールアドレスに変更があるか',
+    label: '申請責任者のメールアドレスに変更があるか',
     type: 'select',
     options: SELECTS_REQUIRED,
     hideWhen: {
@@ -278,7 +278,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.picPhone',
-    label: '申請担当者の電話番号',
+    label: '申請責任者の電話番号',
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
@@ -287,7 +287,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.isChangePicPhone',
-    label: '申請担当者の電話番号に変更があるか',
+    label: '申請責任者の電話番号に変更があるか',
     type: 'select',
     options: SELECTS_REQUIRED,
     hideWhen: {
@@ -316,7 +316,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.otherContactPicPosition',
-    label: '（その他連絡先）担当者役職',
+    label: '（その他連絡先）責任者役職',
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
@@ -325,7 +325,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.isChangeOtherContactPicPosition',
-    label: '（その他連絡先）担当者役職に変更があるか',
+    label: '（その他連絡先）責任者役職に変更があるか',
     type: 'select',
     options: SELECTS_REQUIRED,
     hideWhen: {
@@ -335,7 +335,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.otherContactPicName',
-    label: '（その他連絡先）担当者氏名',
+    label: '（その他連絡先）責任者氏名',
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
@@ -344,7 +344,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.isChangeOtherContactPicName',
-    label: '（その他連絡先）担当者氏名に変更があるか',
+    label: '（その他連絡先）責任者氏名に変更があるか',
     type: 'select',
     options: SELECTS_REQUIRED,
     hideWhen: {
@@ -354,7 +354,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.otherContactPicEmail',
-    label: '（その他連絡先）担当者メールアドレス',
+    label: '（その他連絡先）責任者メールアドレス',
     type: 'email',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
@@ -363,7 +363,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.isChangeOtherContactPicEmail',
-    label: '（その他連絡先）担当者メールアドレスに変更があるか',
+    label: '（その他連絡先）責任者メールアドレスに変更があるか',
     type: 'select',
     options: SELECTS_REQUIRED,
     hideWhen: {
@@ -373,7 +373,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.otherContactPicPhone',
-    label: '（その他連絡先）担当者電話番号',
+    label: '（その他連絡先）責任者電話番号',
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
@@ -382,7 +382,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.isChangeOtherContactPicPhone',
-    label: '（その他連絡先）担当者電話番号に変更があるか',
+    label: '（その他連絡先）責任者電話番号に変更があるか',
     type: 'select',
     options: SELECTS_REQUIRED,
     hideWhen: {

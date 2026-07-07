@@ -1,7 +1,7 @@
 export interface Project {
   id: string;
   companyId?: string;
-  operatorCompanyId?: string;
+  operatorCompanyId?: string | number;
   projectName: string;
   projectStatus: string;
   emissionReduction?: number;

@@ -11,7 +11,6 @@ export interface SignupData {
   prefecture: string;
   municipality: string;
   buildingName: string;
-  town: string;
   blocknum: string;
   lastName: string;
   firstName: string;
@@ -22,6 +21,7 @@ export interface SignupData {
   faxNumber: string;
   email: string;
   methodology: string[];
+  activityHas: 'yes' | 'no';
   activityInformation: string;
 }
 
@@ -44,7 +44,6 @@ const initialData: SignupData = {
   prefecture: '',
   municipality: '',
   buildingName: '',
-  town: '',
   blocknum: '',
   lastName: '',
   firstName: '',
@@ -55,6 +54,7 @@ const initialData: SignupData = {
   faxNumber: '',
   email: '',
   methodology: [],
+  activityHas: 'yes',
   activityInformation: '',
 };
 

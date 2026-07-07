@@ -79,14 +79,14 @@ const ProjectRegister = () => {
 
   // ── Navigation ────────────────────────────────────────────────────────────
   const navigateToDashboard = useCallback(() => {
-    if (user?.role === 'master') {
+    if (resolvedSiteId) {
+      navigate(`/sites/${resolvedSiteId}/dashboard`);
+    } else if (user?.role === 'master') {
       navigate("/master/dashboard");
-    } else if (user?.siteId) {
-      navigate(`/sites/${user.siteId}/dashboard`);
     } else {
       navigate("/");
     }
-  }, [navigate, user?.role, user?.siteId]);
+  }, [navigate, user?.role, resolvedSiteId]);
 
   const handleBack = useCallback(() => {
     if (currentStep === 1) {

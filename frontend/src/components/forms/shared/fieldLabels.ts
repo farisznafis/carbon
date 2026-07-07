@@ -6,7 +6,7 @@ export const userFieldLabels: Record<string, string> = {
   firstNameKana: "メイ",
   position: "役職",
   phoneNumber: "電話番号",
-  siteId: "担当する拠点",
+  siteId: "拠点",
   email: "メールアドレス",
   emailConfirmation: "メールアドレス（確認）",
 };

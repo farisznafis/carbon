@@ -1,41 +1,67 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import { useDashboardStore } from '@/stores/dashboardStore';
-import type { Site } from '@/api/site';
-import type { UserList } from '@/api/users';
-import { Card, CardContent } from '@/components/ui/card';
-import { SiteTable } from '@/components/data-display/tables/SiteTable';
-import { UserTable } from '@/components/data-display/tables/UserTable';
-import { useNotificationStore } from '@/stores/notificationStore';
-import { paths } from '@/routes/paths';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  DashboardEmptyState,
+  DashboardSection,
+  MasterDashboardHero,
+  MasterDashboardTabs,
+  SiteDashboardCard,
+  UserDashboardCard,
+} from '@/features/master/components/MasterDashboardComponents';
+import {
+  sortMasterUsersFirst,
+  sortSitesById,
+} from '@/features/master/components/masterDashboardUtils';
+import { paths } from '@/routes/paths';
+import { useNotificationStore } from '@/stores/notificationStore';
+import { useDashboardStore } from '@/stores/dashboardStore';
 
 const MasterDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const sites = useDashboardStore((state) => state.sites) ?? [];
-  const users = useDashboardStore((state) => state.users) ?? [];
+  const sites = useDashboardStore((state) => state.sites);
+  const users = useDashboardStore((state) => state.users);
   const loadingStore = useDashboardStore((state) => state.loading);
   const fetchDashboardData = useDashboardStore(
     (state) => state.fetchDashboardData,
   );
-  const loadNotifications = useNotificationStore((state) => state.loadNotifications);
+  const loadNotifications = useNotificationStore(
+    (state) => state.loadNotifications,
+  );
 
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadData() {
       setLoading(true);
+      setErrorMessage(null);
       void loadNotifications();
-      await fetchDashboardData(true);
 
-      if (isMounted) {
-        setLoading(false);
+      try {
+        await fetchDashboardData(true);
+
+        if (isMounted) {
+          setLastUpdated(new Date());
+        }
+      } catch (error) {
+        if (isMounted) {
+          setErrorMessage(
+            error instanceof Error
+              ? error.message
+              : 'ダッシュボードデータの取得に失敗しました',
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
 
@@ -46,78 +72,97 @@ const MasterDashboard = () => {
     };
   }, [fetchDashboardData, loadNotifications]);
 
+  const sortedUsers = useMemo(() => sortMasterUsersFirst(users), [users]);
+  const sortedSites = useMemo(() => sortSitesById(sites), [sites]);
+
   if (loading || loadingStore) {
     return (
-      <div className='container mx-auto p-6 text-center'>
+      <div className="text-small flex min-h-screen items-center justify-center bg-background px-6 text-center text-muted-foreground">
         読み込み中...
       </div>
     );
   }
 
-  const handleRegisterSite = () => {
-    navigate('/master/site-register');
-  };
-
-  const handleEditSite = (site: Site) => {
-    navigate(`/master/site-edit/${site.id}`, { state: { site } });
-  };
-
-  const handleEditUser = (user: UserList) => {
-    navigate(`/user-edit/${user.id}`, { state: { user } });
-  };
-
-  const companyName = user?.companyName ?? user?.siteName ?? '';
+  const companyName = user?.companyName ?? user?.siteName ?? '-';
 
   return (
-    <div className='min-h-screen bg-slate-50'>
-      <div className='container mx-auto p-6 space-y-6 w-full'>
-        <div className='flex'>
-          <div className='flex flex-col py-8 px-8'>
-            <h3 className='font-bold'>{companyName}</h3>
-          </div>
-        </div>
+    <div className="flex min-h-screen flex-col bg-card">
+      <MasterDashboardHero
+        companyName={companyName}
+        lastUpdated={lastUpdated}
+      />
 
-        <Card>
-          <CardContent className='p-8'>
-            <SiteTable
-              sites={sites}
-              onEdit={handleEditSite}
-              onRowClick={(site) => navigate(`/sites/${site.id}/dashboard`)}
-            />
-            <div className='mt-6 flex justify-center'>
-              <Button
-                onClick={handleRegisterSite}
-                className='w-full max-w-lg bg-primary/100 hover:bg-primary/60'
-              >
-                <Plus className='h-4 w-4 mr-2' />
-                拠点を追加
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="sites" className="flex flex-1 flex-col bg-card">
+        <MasterDashboardTabs />
 
-        <Card>
-          <CardContent className='p-8'>
-            <UserTable
-              users={users}
-              onEdit={handleEditUser}
-              onRowClick={(user) =>
-                navigate(paths.masterUserProfile(user.id), { state: { user } })
-              }
-            />
-            <div className='mt-6 flex justify-center'>
-              <Button
-                onClick={() => navigate('/master/user-register')}
-                disabled={49 < users.length}
-                className='w-full max-w-lg bg-primary/100 hover:bg-primary/60'
-              >
-                <Plus className='h-4 w-4 mr-2' />
-                ユーザーを追加
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        <main className="flex-1 bg-card">
+          <TabsContent value="sites" className="m-0">
+            <DashboardSection
+              title="拠点"
+              description="各店舗のカーボンクレジット、削減活動、レポート進捗を一か所で確認できます。"
+              addLabel="拠点を追加"
+              onAdd={() => navigate(paths.masterSiteRegister)}
+            >
+              {errorMessage ? (
+                <DashboardEmptyState>{errorMessage}</DashboardEmptyState>
+              ) : sortedSites.length > 0 ? (
+                <div className="space-y-3">
+                  {sortedSites.map((site) => (
+                    <SiteDashboardCard
+                      key={site.id}
+                      site={site}
+                      onOpen={(selectedSite) =>
+                        navigate(paths.siteDashboard(selectedSite.id))
+                      }
+                    />
+                  ))}
+                </div>
+              ) : (
+                <DashboardEmptyState>
+                  まだ拠点が登録されていません
+                </DashboardEmptyState>
+              )}
+            </DashboardSection>
+          </TabsContent>
+
+          <TabsContent value="users" className="m-0">
+            <DashboardSection
+              title="社員"
+              description="行をクリックすると、プロフィール詳細へ移動できます。"
+              addLabel="社員を追加"
+              onAdd={() => navigate(paths.masterUserRegister)}
+              addDisabled={users.length > 49}
+            >
+              {errorMessage ? (
+                <DashboardEmptyState>{errorMessage}</DashboardEmptyState>
+              ) : sortedUsers.length > 0 ? (
+                <div className="space-y-3">
+                  {sortedUsers.map((dashboardUser) => (
+                    <UserDashboardCard
+                      key={dashboardUser.id}
+                      user={dashboardUser}
+                      onProfile={(selectedUser) =>
+                        navigate(paths.masterUserProfile(selectedUser.id), {
+                          state: { user: selectedUser },
+                        })
+                      }
+                      onEdit={(selectedUser) =>
+                        navigate(paths.userEdit(selectedUser.id), {
+                          state: { user: selectedUser },
+                        })
+                      }
+                    />
+                  ))}
+                </div>
+              ) : (
+                <DashboardEmptyState>
+                  まだ社員が登録されていません
+                </DashboardEmptyState>
+              )}
+            </DashboardSection>
+          </TabsContent>
+        </main>
+      </Tabs>
     </div>
   );
 };

@@ -21,5 +21,5 @@ export function getHomePath(user?: HomePathUser | null) {
     return paths.siteDashboard(user.siteId);
   }
 
-  return paths.home;
+  return paths.userDashboard;
 }

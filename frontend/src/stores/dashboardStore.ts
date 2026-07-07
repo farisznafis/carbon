@@ -48,14 +48,14 @@ export const useDashboardStore = create<DashboardState>()(
 
       setCurrentProject: (project) => set({ currentProject: project }),
 
-      // Fetch only if empty
+      // Fetch only if both dashboard lists are already available.
       fetchDashboardData: async (force = false) => {
         const { sites, users } = get();
 
         const hasUsers = Array.isArray(users) && users.length > 0;
         const hasSites = Array.isArray(sites) && sites.length > 0;
 
-        if (!force && (hasSites || hasUsers)) return;
+        if (!force && hasSites && hasUsers) return;
 
         set({ loading: true });
 
@@ -69,11 +69,15 @@ export const useDashboardStore = create<DashboardState>()(
             sites:
               siteResult.status === "fulfilled"
                 ? siteResult.value.sites
-                : state.sites,
+                : force
+                  ? []
+                  : state.sites,
             users:
               userResult.status === "fulfilled"
                 ? userResult.value.users
-                : state.users,
+                : force
+                  ? []
+                  : state.users,
           }));
 
           if (siteResult.status === "rejected") {
@@ -82,8 +86,18 @@ export const useDashboardStore = create<DashboardState>()(
           if (userResult.status === "rejected") {
             logger.error("Failed to fetch users:", userResult.reason);
           }
+          if (
+            siteResult.status === "rejected" &&
+            userResult.status === "rejected"
+          ) {
+            throw new Error("ダッシュボードデータの取得に失敗しました");
+          }
         } catch (error) {
           logger.error("Failed to fetch dashboard data:", error);
+          if (force) {
+            set({ sites: [], users: [] });
+          }
+          throw error;
         } finally {
           set({ loading: false });
         }

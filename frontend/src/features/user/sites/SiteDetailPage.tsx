@@ -70,7 +70,7 @@ const SiteDetail = () => {
   // }
   // ======================================================
   const companyUsers: CompanyUser[] = [
-    { id: '1', name: user?.name || 'デモユーザー', email: user?.email || 'demo@example.com', role: 'master' },
+    { id: '1', name: user?.name || 'デモ社員', email: user?.email || 'demo@example.com', role: 'master' },
     { id: '2', name: '山田太郎', email: 'yamada@example.com', role: 'regular' },
     { id: '3', name: '佐藤花子', email: 'sato@example.com', role: 'regular' },
     { id: '4', name: '鈴木一郎', email: 'suzuki@example.com', role: 'regular' }
@@ -117,10 +117,10 @@ const SiteDetail = () => {
         postalCode: '100-0001',
         prefecture: '東京都',
         city: '千代田区',
-        address: '丸の内1-1-1',
+        address: '丸の内1-1',
         building: '〇〇ビル 5階',
         personInChargeId: user?.id || '1',
-        personInChargeName: user?.username || 'デモユーザー',
+        personInChargeName: user?.username || 'デモ社員',
         personInChargeEmail: user?.email || 'demo@example.com',
         joinedProjects: [
           { id: 'PROJ001', name: '環境モニタリングプロジェクトA', status: 'active', joinedDate: '2024-01-15' },
@@ -322,7 +322,7 @@ const SiteDetail = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>担当者</Label>
+                    <Label>責任者</Label>
                     <Select
                       value={editedData.personInChargeId || ''}
                       onValueChange={(value) => setEditedData({ ...editedData, personInChargeId: value })}

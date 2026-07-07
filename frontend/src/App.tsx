@@ -1,6 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import {
   Routes,
   Route,
@@ -15,6 +15,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "./contexts/ProtectedRoute";
 import { ErrorBoundary } from "@/components/feedback/ErrorBoundary";
 import { paths } from "@/routes/paths";
+import Lenis from "lenis";
+import "lenis/dist/lenis.css";
 
 const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
@@ -78,16 +80,32 @@ function LegacyProjectRedirect() {
   return <ProjectDetail />;
 }
 
-const App = () => (
-  <ErrorBoundary>
-    <div className="min-h-screen bg-background text-foreground">
-      <Toaster />
-      <Sonner />
-      <Navbar />
-      <ScrollToTop />
-      <SessionExpiryGuard />
-      <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading...</div>}>
-        <Routes>
+const App = () => {
+  useEffect(() => {
+    const lenis = new Lenis({
+      autoRaf: true,
+      autoToggle: true,
+      anchors: true,
+      allowNestedScroll: true,
+      naiveDimensions: true,
+      stopInertiaOnNavigate: true,
+    });
+
+    return () => {
+      lenis.destroy();
+    };
+  }, []);
+
+  return (
+    <ErrorBoundary>
+      <div className="min-h-screen bg-background text-foreground">
+        <Toaster />
+        <Sonner />
+        <Navbar />
+        <ScrollToTop />
+        <SessionExpiryGuard />
+        <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading...</div>}>
+          <Routes>
           <Route path={paths.home} element={<Index />} />
           <Route path={paths.login} element={<Login />} />
           <Route path={paths.adminLogin} element={<AdminLogin />} />
@@ -100,6 +118,7 @@ const App = () => (
             <Route path={paths.masterUserRegister} element={<UserRegister />} />
             <Route path={paths.masterUserProfileRoute} element={<MasterUserProfile />} />
             <Route path={paths.userEditRoute} element={<UserEdit />} />
+            <Route path={paths.userDashboard} element={<Dashboard />} />
             <Route path={paths.siteDashboardRoute} element={<Dashboard />} />
             <Route path={paths.legacyDashboardRoute} element={<LegacyDashboardRedirect />} />
             <Route path={paths.projectRegisterRoute} element={<ProjectRegister />} />
@@ -165,11 +184,11 @@ const App = () => (
           />
           <Route path={paths.passwordChange} element={<PasswordChange />} />
           <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
-    </div>
-  </ErrorBoundary>
-
-);
+          </Routes>
+        </Suspense>
+      </div>
+    </ErrorBoundary>
+  );
+};
 
 export default App;

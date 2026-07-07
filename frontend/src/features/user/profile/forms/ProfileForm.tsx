@@ -273,7 +273,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
                 <FormItem>
                   <RequiredLabel className="text-sm" required={false}>建物名</RequiredLabel>
                   <FormControl>
-                    <Input placeholder="サンプルビル 3F" {...field} />
+                    <Input placeholder="東京ビル3F" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

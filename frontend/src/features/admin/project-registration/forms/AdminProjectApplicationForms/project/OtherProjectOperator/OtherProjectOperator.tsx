@@ -65,43 +65,43 @@ export const otherProjectOperator: FieldConfig<FormValues>[] = [
   },
   {
     name: field('picPosition'),
-    label: '担当者部署・役職',
+    label: '責任者部署・役職',
     type: 'text',
   },
 
   {
     name: field('isChangePicPosition'),
-    label: '担当者部署・役職 変更有無',
+    label: '責任者部署・役職 変更有無',
     type: 'select',
     options: SELECTS_REQUIRED,
   },
 
-  { name: field('picName'), label: '担当者氏名', type: 'text' },
+  { name: field('picName'), label: '責任者氏名', type: 'text' },
 
   {
     name: field('isChangePicName'),
-    label: '担当者氏名 変更有無',
+    label: '責任者氏名 変更有無',
     type: 'select',
     options: SELECTS_REQUIRED,
   },
-  { name: field('picEmail'), label: '担当者E-mail', type: 'text' },
+  { name: field('picEmail'), label: '責任者E-mail', type: 'text' },
 
   {
     name: field('isChangePicEmail'),
-    label: '担当者E-mail 変更有無',
+    label: '責任者E-mail 変更有無',
     type: 'select',
     options: SELECTS_REQUIRED,
   },
 
   {
     name: field('picPhoneNumber'),
-    label: '担当者電話番号',
+    label: '責任者電話番号',
     type: 'text',
   },
 
   {
     name: field('isChangePicPhoneNumber'),
-    label: '担当者電話番号 変更有無',
+    label: '責任者電話番号 変更有無',
     type: 'select',
     options: SELECTS_REQUIRED,
   },

@@ -1,12 +1,50 @@
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import type { Site } from '@/api/site';
+import type { UserList } from '@/api/users';
+import { deleteSite, updateSite, validateUpdateSite } from '@/api/site';
 import { SiteForm, SiteFormData } from '@/features/master/forms/SiteForm';
 import { SiteConfirmation } from './SiteConfirmation';
 import { toast } from '@/hooks/use-toast';
-import { useDashboardStore } from '@/stores/dashboardStore';
-import { updateSite, deleteSite } from '@/api/site';
-import type { Site } from '@/api/site';
 import { logger } from '@/lib/logger';
+import { useDashboardStore } from '@/stores/dashboardStore';
+import { useUsersQuery } from '@/hooks/users/useUsersQuery';
+
+const resolveSiteAssigneeId = (site: Site, users: UserList[] = []) => {
+  if (site.picId) return site.picId;
+
+  const siteAssignee = users.find(
+    (user) =>
+      user.role !== 'admin' &&
+      (user.siteId === site.id || user.role === 'master') &&
+      user.firstName === site.picFirstName &&
+      user.lastName === site.picLastName,
+  );
+
+  return siteAssignee?.id ?? '';
+};
+
+const mapSiteToFormData = (
+  site: Site,
+  users?: UserList[],
+): SiteFormData => ({
+  siteName: site.siteName,
+  siteNameKana: '',
+  postalCode: site.postalCode,
+  prefectureName: site.prefectureName,
+  cityName: site.cityName,
+  townName: '',
+  blockName: site.blockName,
+  addressDetail: site.addressDetail ?? site.buildingName ?? '',
+  picFirstName: site.picFirstName,
+  picFirstNameKana: '',
+  picLastName: site.picLastName,
+  picLastNameKana: '',
+  picEmail: site.picEmail,
+  picPhoneNumber: site.picPhoneNumber ?? '',
+  picPosition: site.picPosition,
+  userId: resolveSiteAssigneeId(site, users),
+});
 
 function SiteEdit() {
   const navigate = useNavigate();
@@ -15,18 +53,59 @@ function SiteEdit() {
   const { id } = useParams<{ id: string }>();
   const sites = useDashboardStore((state) => state.sites) ?? [];
   const initialSite = sites.find((site) => site.id === id);
-
-  const [formData, setFormData] = useState<SiteFormData | undefined>(undefined);
-
-  useEffect(() => {
-    if (initialSite) {
-      setFormData(initialSite);
-    }
-  }, [initialSite]);
-
   const editSite = useDashboardStore((state) => state.editSite);
   const deleteSiteStore = useDashboardStore((state) => state.deleteSiteStore);
+  const setUsers = useDashboardStore((state) => state.setUsers);
+  const storedUsers = useDashboardStore((state) => state.users);
   const { joinableSites } = useDashboardStore();
+  const usersQuery = useUsersQuery();
+  const users = useMemo(
+    () => (storedUsers.length > 0 ? storedUsers : usersQuery.data?.users ?? []),
+    [storedUsers, usersQuery.data?.users],
+  );
+  const initialFormData = useMemo(
+    () => (initialSite ? mapSiteToFormData(initialSite, users) : undefined),
+    [initialSite, users],
+  );
+
+  const [formData, setFormData] = useState<SiteFormData | undefined>(
+    undefined,
+  );
+
+  useEffect(() => {
+    if (initialFormData) {
+      setFormData((current) => {
+        if (!current) return initialFormData;
+
+        if (!current.userId && initialFormData.userId) {
+          return {
+            ...current,
+            userId: initialFormData.userId,
+          };
+        }
+
+        return current;
+      });
+    }
+  }, [initialFormData]);
+
+  useEffect(() => {
+    if (usersQuery.data?.users) {
+      setUsers(usersQuery.data.users);
+    }
+  }, [setUsers, usersQuery.data?.users]);
+
+  const selectableUsers = useMemo(
+    () =>
+      users.filter(
+        (user) =>
+          user.role !== 'admin' &&
+          (user.role === 'master' ||
+            user.siteId === id ||
+            user.id === formData?.userId),
+      ),
+    [users, id, formData?.userId],
+  );
 
   if (!id) {
     return <div>読み込み中...</div>;
@@ -36,30 +115,58 @@ function SiteEdit() {
     return <div>読み込み中...</div>;
   }
 
-  const handleFormSubmit = () => {
-    // if (!formData) return;
-    setStep('confirm');
+  const handleFormSubmit = async (values: SiteFormData) => {
+    if (!id) return;
+
+    const picuserId = values.userId ? Number(values.userId) : null;
+
+    try {
+      await validateUpdateSite(id, values, picuserId);
+      setFormData(values);
+      setStep('confirm');
+    } catch (error) {
+      logger.error('Site update validation error:', error);
+      toast({
+        title: 'エラー',
+        description:
+          error instanceof Error ? error.message : '拠点更新内容の検証に失敗しました',
+        variant: 'destructive',
+      });
+      throw error;
+    }
   };
 
   const handleFinalSubmit = async () => {
     if (!id || !formData) return;
 
+    const picuserId = formData.userId ? Number(formData.userId) : null;
+    const selectedUser = formData.userId
+      ? users.find((user) => user.id === formData.userId)
+      : null;
+
     try {
-      const result = await updateSite(id, formData);
+      const result = await updateSite(id, formData, picuserId);
 
       const updatedSite: Site = {
         ...initialSite,
+        siteName: formData.siteName,
         postalCode: formData.postalCode,
         prefectureName: formData.prefectureName,
         cityName: formData.cityName,
         blockName: formData.blockName,
         addressDetail: formData.addressDetail,
+        buildingName: formData.addressDetail,
+        picId: formData.userId ?? initialSite.picId,
+        picFirstName: selectedUser?.firstName ?? initialSite.picFirstName,
+        picLastName: selectedUser?.lastName ?? initialSite.picLastName,
+        picEmail: selectedUser?.email ?? initialSite.picEmail,
+        picPosition: selectedUser?.position ?? initialSite.picPosition,
+        picPhoneNumber: selectedUser?.phoneNumber ?? initialSite.picPhoneNumber,
         address:
           result.site?.address ??
           [
             formData.prefectureName,
             formData.cityName,
-            formData.townName,
             formData.blockName,
             formData.addressDetail,
           ]
@@ -70,8 +177,8 @@ function SiteEdit() {
       editSite(id, updatedSite);
 
       toast({
-        title: '成功',
-        description: '拠点を編集しました',
+        title: '更新完了',
+        description: '拠点を更新しました',
       });
 
       navigate('/master/dashboard');
@@ -79,7 +186,8 @@ function SiteEdit() {
       logger.error('SiteEdit handleSubmit error:', error);
       toast({
         title: 'エラー',
-        description: '拠点編集に失敗しました',
+        description:
+          error instanceof Error ? error.message : '拠点更新に失敗しました',
         variant: 'destructive',
       });
     }
@@ -95,7 +203,8 @@ function SiteEdit() {
     if (!joinableSites().some((site) => site.id === id)) {
       toast({
         title: 'エラー',
-        description: 'この拠点には割り当てられたユーザが存在するため、削除できません。',
+        description:
+          'この拠点には削除できない利用データがあるため、削除できません。',
         variant: 'destructive',
       });
       return;
@@ -106,7 +215,7 @@ function SiteEdit() {
       deleteSiteStore(id);
 
       toast({
-        title: '成功',
+        title: '削除完了',
         description: '拠点を削除しました',
       });
 
@@ -126,11 +235,16 @@ function SiteEdit() {
       {step === 'form' && (
         <SiteForm
           mode="edit"
-          originalData={initialSite}
+          originalData={initialFormData}
           onChange={setFormData}
           onNext={handleFormSubmit}
-          defaultValues={formData || initialSite}
+          defaultValues={formData || initialFormData}
           onDelete={handleDelete}
+          userOptions={selectableUsers}
+          isUserOptionsLoading={usersQuery.isLoading}
+          userOptionsError={
+            usersQuery.isError ? '責任者候補を取得できませんでした' : null
+          }
         />
       )}
 
@@ -138,7 +252,7 @@ function SiteEdit() {
         <SiteConfirmation
           mode="edit"
           data={formData}
-          originalData={initialSite}
+          originalData={initialFormData}
           onBack={handleBack}
           onSubmit={handleFinalSubmit}
         />

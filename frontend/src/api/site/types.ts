@@ -9,6 +9,7 @@ export interface Site {
   blockName: string;
   addressDetail?: string;
   address?: string;
+  buildingName?: string;
   picId?: string;
   picFirstName: string;
   picLastName: string;
@@ -45,6 +46,7 @@ export type SiteFormData = {
   picEmail: string;
   picPhoneNumber: string;
   picPosition: string;
+  userId?: string;
 };
 
 export type SiteDashboardMetrics = {
@@ -62,10 +64,16 @@ export type SiteDashboardApiResponse = {
     siteName: string;
     postalCode?: string | null;
     prefecture?: string | null;
+    prefName?: string | null;
     city?: string | null;
+    cityName?: string | null;
+    municipality?: string | null;
     town?: string | null;
     block?: string | null;
+    blockName?: string | null;
+    blocknum?: string | null;
     address?: string | null;
+    buildingName?: string | null;
     picFirstName?: string | null;
     picLastName?: string | null;
     projects?: string[] | null;
@@ -160,7 +168,7 @@ export type SiteProject = Project & {
   cumulativeMembers?: number;
   membersTotal?: number;
   methodDetails?: string;
-  operatorCompanyId?: number;
+  operatorCompanyId?: string | number;
   updatedAt?: string;
   createdAt?: string;
 };
@@ -170,11 +178,15 @@ export interface SiteListItem {
   id: string;
   siteName: string;
   postalCode?: string;
+  prefecture?: string;
   prefName?: string;
+  municipality?: string;
   cityName?: string;
   townName?: string;
+  blocknum?: string;
   blockName?: string;
   address?: string;
+  buildingName?: string;
   picFirstName?: string;
   picLastName?: string;
   projects?: string[];

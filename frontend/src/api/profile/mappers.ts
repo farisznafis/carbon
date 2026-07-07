@@ -14,6 +14,9 @@ export type ProfileCompanyViewModel = {
 export type ProfileViewModel = {
   companyId?: number;
   username?: string;
+  role?: string;
+  siteId?: string;
+  siteName?: string;
   firstName: string;
   lastName: string;
   firstNameKana: string;
@@ -54,6 +57,9 @@ export function mapProfileApiResponseToProfileViewModel(
   return {
     companyId: profile.companyId,
     username: normalizeText(profile.username),
+    role: profile.role?.trim() || undefined,
+    siteId: profile.siteId != null ? String(profile.siteId) : '',
+    siteName: profile.siteName?.trim() || undefined,
     firstName: normalizeText(profile.firstName),
     lastName: normalizeText(profile.lastName),
     firstNameKana: normalizeText(profile.firstNameKana),

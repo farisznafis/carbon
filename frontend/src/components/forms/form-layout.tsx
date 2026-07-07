@@ -152,13 +152,20 @@ export function WizardProgress({
               <div className="mt-2 flex min-w-0 flex-col items-center gap-1 text-center">
                 <span
                   className={cn(
-                    "flex h-3 w-3 items-center justify-center rounded-full text-[9px] font-bold",
-                    isActive && "bg-primary text-primary-foreground",
-                    isComplete && "bg-primary text-primary-foreground",
-                    !isReached && "bg-muted text-muted-foreground",
+                    "relative flex h-4 w-4 items-center justify-center rounded-full",
+                    isActive && "bg-primary/20",
+                    isComplete && "bg-primary/20",
+                    !isReached && "bg-muted",
                   )}
                 >
-                  {isActive ? step.number : isComplete ? "" : ""}
+                  <span
+                    className={cn(
+                      "h-2 w-2 rounded-full",
+                      isActive && "bg-primary",
+                      isComplete && "bg-primary",
+                      !isReached && "bg-muted-foreground/40",
+                    )}
+                  />
                 </span>
                 <span
                   className={cn(
@@ -192,9 +199,9 @@ export function FormCard({
   );
 }
 
-type FormSectionProps = React.HTMLAttributes<HTMLElement> & {
+type FormSectionProps = Omit<React.HTMLAttributes<HTMLElement>, 'title'> & {
   number: number;
-  title: string;
+  title: React.ReactNode;
 };
 
 export function FormSection({

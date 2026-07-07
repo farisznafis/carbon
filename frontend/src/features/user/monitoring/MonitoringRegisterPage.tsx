@@ -9,13 +9,13 @@ import {
 } from '@/features/user/monitoring/forms/formDefinitions';
 import {
   submitMonitoringData,
+  validateMonitoringData,
   uploadElpjBatteryFile,
   uploadElpjControlFile,
   uploadElpvFile,
   uploadElpvrFile,
 } from '@/api/monitoring';
 import { ApiError } from '@/api/_shared/errors';
-import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import type { MonitoringData } from '@/api/monitoring';
 import { logger } from '@/lib/logger';
@@ -24,7 +24,13 @@ type MonitoringFormData = typeof formDefinitions[ProjectType]['emptyData'];
 type RouteState = {
   projectId?: string | number;
   siteId?: string | number;
-  userId?: string | number;
+};
+
+type MonitoringPayloadContext = {
+  projectType: string;
+  projectIdValue: unknown;
+  siteIdValue: unknown;
+  evidenceUrls?: Partial<Record<keyof MonitoringData, string | null>>;
 };
 
 function isProjectType(value: string | undefined): value is ProjectType {
@@ -52,17 +58,75 @@ function toServerFieldErrors(errors: unknown): Record<string, string> {
     return {};
   }
 
+  const fieldNameMap: Record<string, string> = {
+    date_recorded: 'dateRecorded',
+    elpv_value: 'ELpv_value',
+    elpvr_value: 'ELpvr_value',
+    elpj_battery_value: 'ELPJ_battery_value',
+    elpj_control_value: 'ELPJ_control_value',
+    elpj_accuracy: 'ELPJ_accuracy',
+    elpv_evidence: 'ELpv_evidence',
+    elpvr_evidence: 'ELpvr_evidence',
+    elpj_battery_evidence: 'ELPJ_battery_evidence',
+    elpj_control_equipment_spec_files: 'ELPJ_control_equipment_spec_files',
+  };
+
   return Object.entries(errors as Record<string, unknown>).reduce<
     Record<string, string>
   >((fieldErrors, [field, value]) => {
     const message = toErrorMessage(value);
 
     if (message) {
-      fieldErrors[field] = message;
+      fieldErrors[fieldNameMap[field] ?? field] = message;
     }
 
     return fieldErrors;
   }, {});
+}
+
+function fileValueToString(value: unknown): string {
+  if (value instanceof File) return value.name;
+  return typeof value === 'string' ? value : '';
+}
+
+function toNumberOrNull(value: unknown): number | null {
+  if (value === '' || value == null) return null;
+
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : null;
+}
+
+function buildMonitoringPayload(
+  data: MonitoringFormData,
+  context: MonitoringPayloadContext,
+): MonitoringData {
+  const currentData = asRecord(data);
+  const evidenceUrls = context.evidenceUrls ?? {};
+
+  return {
+    projectType: context.projectType,
+    projectId: Number(context.projectIdValue) || 0,
+    siteId: Number(context.siteIdValue) || null,
+    dateRecorded: String(currentData.dateRecorded ?? new Date().toISOString()),
+    ELpv_value: toNumberOrNull(currentData.ELpv_value),
+    ELpvr_value: toNumberOrNull(currentData.ELpvr_value),
+    changedBattery: Boolean(currentData.changedBattery),
+    ELPJ_battery_value: currentData.changedBattery
+      ? toNumberOrNull(currentData.ELPJ_battery_value)
+      : null,
+    ELPJ_control_value: toNumberOrNull(currentData.ELPJ_control_value),
+    ELPJ_accuracy: toNumberOrNull(currentData.ELPJ_accuracy),
+    ELpv_evidence:
+      evidenceUrls.ELpv_evidence ?? fileValueToString(currentData.ELpv_evidence),
+    ELpvr_evidence:
+      evidenceUrls.ELpvr_evidence ?? fileValueToString(currentData.ELpvr_evidence),
+    ELPJ_battery_evidence:
+      evidenceUrls.ELPJ_battery_evidence ??
+      fileValueToString(currentData.ELPJ_battery_evidence),
+    ELPJ_control_equipment_spec_files:
+      evidenceUrls.ELPJ_control_equipment_spec_files ??
+      fileValueToString(currentData.ELPJ_control_equipment_spec_files),
+  };
 }
 
 const MonitoringRegister = () => {
@@ -70,7 +134,6 @@ const MonitoringRegister = () => {
   const location = useLocation();
   const { projectType } = useParams<{ projectType: string }>();
   const { toast } = useToast();
-  const { user } = useAuth();
   const definition = isProjectType(projectType)
     ? formDefinitions[projectType]
     : null;
@@ -107,19 +170,75 @@ const MonitoringRegister = () => {
     getConfirmationItems,
   } = definition;
 
-  const handleConfirm = async () => {
+  const getRouteValues = (data: MonitoringFormData) => {
     const state = (location.state || {}) as RouteState;
     const search = new URLSearchParams(location.search);
-    const currentData = asRecord(formData);
+    const currentData = asRecord(data);
 
-    const projectIdValue =
-      state.projectId ?? search.get('projectId') ?? currentData.projectId ?? '';
-    const siteIdValue =
-      state.siteId ?? search.get('siteId') ?? currentData.siteId ?? '';
+    return {
+      projectIdValue:
+        state.projectId ?? search.get('projectId') ?? currentData.projectId ?? '',
+      siteIdValue:
+        state.siteId ?? search.get('siteId') ?? currentData.siteId ?? '',
+    };
+  };
+
+  const handleValidateAndNext = async (values: MonitoringFormData) => {
+    const { projectIdValue, siteIdValue } = getRouteValues(values);
+    const payload = buildMonitoringPayload(values, {
+      projectType,
+      projectIdValue,
+      siteIdValue,
+    });
+
+    try {
+      setServerFieldErrors({});
+      setSubmitError(null);
+      await validateMonitoringData(payload);
+      setFormData(values);
+      setStep('confirm');
+    } catch (error) {
+      logger.error('Monitoring validation error:', error);
+
+      const fieldErrors =
+        error instanceof ApiError
+          ? toServerFieldErrors(error.payload?.errors)
+          : {};
+
+      if (Object.keys(fieldErrors).length > 0) {
+        const message =
+          error instanceof ApiError
+            ? error.payload?.message || error.message
+            : '入力内容に誤りがあります。';
+        const description = Object.values(fieldErrors).slice(0, 3).join('\n');
+
+        setServerFieldErrors(fieldErrors);
+        setSubmitError(null);
+        toast({
+          title: message || '入力内容に誤りがあります。',
+          description,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : '入力内容の確認に失敗しました。',
+      );
+    }
+  };
+
+  const handleConfirm = async () => {
+    const currentData = asRecord(formData);
+    const { projectIdValue, siteIdValue } = getRouteValues(formData);
     const descriptionValue = String(currentData.description ?? '');
 
-    const uploadKeys: string[] = [];
-    const uploadPromises: Array<Promise<string | null>> = [];
+    const uploadTasks: Array<{
+      key: string;
+      upload: () => Promise<string | null>;
+    }> = [];
 
     const addUpload = (
       key: string,
@@ -128,25 +247,26 @@ const MonitoringRegister = () => {
     ) => {
       if (!(value instanceof File)) return;
 
-      uploadKeys.push(key);
-      uploadPromises.push(
-        upload(value)
-          .then((url) => {
-            setUploadProgress((progress) => ({
-              ...progress,
-              done: progress.done + 1,
-            }));
-            return url;
-          })
-          .catch((error: unknown) => {
-            logger.error(`${key} upload failed`, error);
-            setUploadProgress((progress) => ({
-              ...progress,
-              done: progress.done + 1,
-            }));
-            return null;
-          }),
-      );
+      uploadTasks.push({
+        key,
+        upload: () =>
+          upload(value)
+            .then((url) => {
+              setUploadProgress((progress) => ({
+                ...progress,
+                done: progress.done + 1,
+              }));
+              return url;
+            })
+            .catch((error: unknown) => {
+              logger.error(`${key} upload failed`, error);
+              setUploadProgress((progress) => ({
+                ...progress,
+                done: progress.done + 1,
+              }));
+              return null;
+            }),
+      });
     };
 
     // Ensure projectId/siteId are passed as strings to satisfy upload API typings
@@ -169,7 +289,7 @@ const MonitoringRegister = () => {
         uploadElpjControlFile(file, projectIdStr, siteIdStr, descriptionValue),
     );
 
-    if (uploadPromises.length > 0 && (!projectIdValue || !siteIdValue)) {
+    if (uploadTasks.length > 0 && (!projectIdValue || !siteIdValue)) {
       setSubmitError(
         'アップロードには projectId と siteId が必要です。プロジェクトまたはサイトを選択してください。',
       );
@@ -178,15 +298,15 @@ const MonitoringRegister = () => {
 
     setSubmitError(null);
     setServerFieldErrors({});
-    setUploadProgress({ done: 0, total: uploadPromises.length });
+    setUploadProgress({ done: 0, total: uploadTasks.length });
     setIsSubmitting(true);
 
-    const uploadResults = uploadPromises.length > 0
-      ? await Promise.all(uploadPromises)
+    const uploadResults = uploadTasks.length > 0
+      ? await Promise.all(uploadTasks.map((task) => task.upload()))
       : [];
     const uploadedMap: Record<string, string | null> = {};
     uploadResults.forEach((result, index) => {
-      uploadedMap[uploadKeys[index]] = result;
+      uploadedMap[uploadTasks[index].key] = result;
     });
 
     const anyUploadFailed = Object.values(uploadedMap).some(
@@ -201,26 +321,12 @@ const MonitoringRegister = () => {
       return;
     }
 
-    const payload: MonitoringData = {
+    const payload = buildMonitoringPayload(formData, {
       projectType,
-      projectId: Number(state.projectId ?? currentData.projectId ?? 0),
-      siteId: Number(state.siteId ?? currentData.siteId ?? 0) || null,
-      userId: Number(state.userId ?? user?.id ?? 0) || null,
-      dateRecorded: String(currentData.dateRecorded ?? new Date().toISOString()),
-      ELpv_value: Number(currentData.ELpv_value) || 0,
-      ELpvr_value: Number(currentData.ELpvr_value) || 0,
-      changedBattery: Boolean(currentData.changedBattery),
-      ELPJ_battery_value: currentData.changedBattery
-        ? Number(currentData.ELPJ_battery_value) || 0
-        : null,
-      ELPJ_control_value: Number(currentData.ELPJ_control_value) || 0,
-      ELPJ_accuracy: Number(currentData.ELPJ_accuracy) || 0,
-      ELpv_evidence: uploadedMap.ELpv_evidence ?? '',
-      ELpvr_evidence: uploadedMap.ELpvr_evidence ?? '',
-      ELPJ_battery_evidence: uploadedMap.ELPJ_battery_evidence ?? '',
-      ELPJ_control_equipment_spec_files:
-        uploadedMap.ELPJ_control_equipment_spec_files ?? '',
-    };
+      projectIdValue,
+      siteIdValue,
+      evidenceUrls: uploadedMap,
+    });
 
     try {
       await submitMonitoringData(payload);
@@ -271,11 +377,7 @@ const MonitoringRegister = () => {
       value={formData}
       onChange={setFormData}
       serverErrors={serverFieldErrors}
-      onNext={() => {
-        setServerFieldErrors({});
-        setSubmitError(null);
-        setStep('confirm');
-      }}
+      onNext={handleValidateAndNext}
       onBack={() => navigate(-1)}
     />
   ) : (

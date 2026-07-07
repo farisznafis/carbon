@@ -2,12 +2,12 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { useDashboardStore } from '@/stores/dashboardStore';
-import { getProfile, type ProfileViewModel } from '@/api/profile';
-import { registerSite } from '@/api/site';
+import { registerSite, validateCreateSite } from '@/api/site';
 import { SiteForm, SiteFormData } from '@/features/master/forms/SiteForm';
 import { SiteConfirmation } from './SiteConfirmation';
 import { logger } from '@/lib/logger';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { useUsersQuery } from '@/hooks/users/useUsersQuery';
 import {
   FormPageContent,
   FormPageTitle,
@@ -30,82 +30,52 @@ const emptySiteValues: SiteFormData = {
   picEmail: '',
   picPhoneNumber: '',
   picPosition: '',
+  userId: '',
 };
-
-const mapProfileToSitePicValues = (profile: ProfileViewModel): Pick<
-  SiteFormData,
-  | 'picFirstName'
-  | 'picFirstNameKana'
-  | 'picLastName'
-  | 'picLastNameKana'
-  | 'picEmail'
-  | 'picPhoneNumber'
-  | 'picPosition'
-> => ({
-  picFirstName: profile.firstName,
-  picFirstNameKana: profile.firstNameKana,
-  picLastName: profile.lastName,
-  picLastNameKana: profile.lastNameKana,
-  picEmail: profile.email,
-  picPhoneNumber: profile.phoneNumber,
-  picPosition: profile.userPosition,
-});
 
 function SiteRegister() {
   const [step, setStep] = useState<'form' | 'confirm'>('form');
   const navigate = useNavigate();
   const addSite = useDashboardStore((state) => state.addSite);
+  const setUsers = useDashboardStore((state) => state.setUsers);
   const [formData, setFormData] = useState<SiteFormData>(emptySiteValues);
-  const [originalData, setOriginalData] = useState<SiteFormData>(emptySiteValues);
-  const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const usersQuery = useUsersQuery();
+  const users = usersQuery.data?.users ?? [];
+  const selectableUsers = users.filter(
+    (user) =>
+      user.role !== 'admin' &&
+      (user.role === 'master' || user.siteId === null),
+  );
 
   useEffect(() => {
-    let isMounted = true;
+    if (usersQuery.data?.users) {
+      setUsers(usersQuery.data.users);
+    }
+  }, [setUsers, usersQuery.data?.users]);
 
-    const loadProfile = async () => {
-      try {
-        setIsProfileLoading(true);
-        const profile = await getProfile();
-        if (!isMounted) return;
-
-        const picValues = mapProfileToSitePicValues(profile);
-        const nextValues = {
-          ...emptySiteValues,
-          ...picValues,
-        };
-
-        setFormData(nextValues);
-        setOriginalData(nextValues);
-      } catch (error) {
-        logger.error('Error loading profile for site register:', error);
-        if (!isMounted) return;
-
-        toast({
-          title: 'エラー',
-          description: '担当者情報の取得に失敗しました',
-          variant: 'destructive',
-        });
-      } finally {
-        if (isMounted) {
-          setIsProfileLoading(false);
-        }
-      }
-    };
-
-    loadProfile();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const handleDraftSubmit = () => {
-    setStep('confirm');
+  const handleDraftSubmit = async (values: SiteFormData) => {
+    try {
+      await validateCreateSite(values);
+      setFormData(values);
+      setStep('confirm');
+    } catch (error) {
+      logger.error('Site create validation error:', error);
+      toast({
+        title: 'エラー',
+        description:
+          error instanceof Error ? error.message : '拠点登録内容の検証に失敗しました',
+        variant: 'destructive',
+      });
+      throw error;
+    }
   };
 
   const handleFinalSubmit = async () => {
     try {
-      const result = await registerSite(formData);
+      const assignee = formData.userId
+        ? selectableUsers.find((user) => user.id === formData.userId)
+        : null;
+      const result = await registerSite(formData, assignee);
       addSite(result.site);
 
       toast({
@@ -118,7 +88,8 @@ function SiteRegister() {
       logger.error('Error creating site:', error);
       toast({
         title: 'エラー',
-        description: '拠点登録に失敗しました',
+        description:
+          error instanceof Error ? error.message : '拠点登録に失敗しました',
         variant: 'destructive',
       });
     }
@@ -133,7 +104,7 @@ function SiteRegister() {
       <SiteConfirmation
         mode='create'
         data={formData}
-        originalData={originalData}
+        originalData={emptySiteValues}
         onBack={handleBack}
         onSubmit={handleFinalSubmit}
       />
@@ -141,7 +112,7 @@ function SiteRegister() {
   }
 
   return (
-    <FormStandalonePage watermark='Site Add'>
+    <FormStandalonePage>
       <PageBackButton
         onClick={() => navigate(-1)}
         label=''
@@ -156,9 +127,12 @@ function SiteRegister() {
           onChange={setFormData}
           onNext={handleDraftSubmit}
           defaultValues={formData}
-          originalData={originalData}
-          disablePicFields
-          disableSubmit={isProfileLoading}
+          originalData={emptySiteValues}
+          userOptions={selectableUsers}
+          isUserOptionsLoading={usersQuery.isLoading}
+          userOptionsError={
+            usersQuery.isError ? '責任者候補を取得できませんでした' : null
+          }
           embedded
         />
       </FormPageContent>

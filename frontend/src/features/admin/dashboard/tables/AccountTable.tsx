@@ -19,7 +19,7 @@ export function AccountTable({ accounts, onEdit, onRowClick }: Readonly<AccountT
         { key: "lastName", label: "名前", sortable: true, truncate: true, maxWidth: "max-w-[150px]" },
         // { key: "address", label: "所在地", sortable: true, truncate: true, maxWidth: "max-w-[150px]", className: "whitespace-normal text-xs leading-snug" },
         // {
-        //   key: "picLastName", label: "担当者", render: (value, row) => `${row.picLastName} ${row.picFirstName}`,
+        //   key: "picLastName", label: "責任者", render: (value, row) => `${row.picLastName} ${row.picFirstName}`,
         //   sortable: true, truncate: true, maxWidth: "max-w-[200px]"
         // },
         // { key: "account", label: "プロジェクト", sortable: true, truncate: true },

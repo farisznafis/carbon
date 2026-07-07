@@ -10,6 +10,7 @@ import tseslint from "typescript-eslint";
 export default tseslint.config({
   ignores: [
     "dist",
+    "storybook-static",
     "archive",
     "public/mockServiceWorker.js",
     "cypress",

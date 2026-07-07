@@ -1,6 +1,7 @@
 import { apiFetch, apiVoidRequest, parseJsonResponse } from '../_shared/httpClient';
 import type { Site, SiteFormData } from './types';
 import { buildAddress, mapCreateSitePayload, mapUpdateSitePayload } from './payloadMappers';
+import type { UserList } from '../users';
 
 type CreateSiteResponse = {
   statusCode: string;
@@ -16,7 +17,30 @@ type UpdateSiteResponse = {
   site?: Site;
 };
 
-export async function registerSite(formData: SiteFormData): Promise<{ statusCode: string; site: Site }> {
+export async function validateCreateSite(formData: SiteFormData): Promise<void> {
+  await apiVoidRequest('/site/validate-create', {
+    method: 'POST',
+    body: mapCreateSitePayload(formData),
+    fallbackErrorMessage: '拠点登録内容の検証に失敗しました',
+  });
+}
+
+export async function validateUpdateSite(
+  siteId: string,
+  formData: SiteFormData,
+  picuserId: number | null = null,
+): Promise<void> {
+  await apiVoidRequest(`/site/validate-update/${encodeURIComponent(siteId)}`, {
+    method: 'POST',
+    body: mapUpdateSitePayload(formData, Number(siteId), picuserId),
+    fallbackErrorMessage: '拠点更新内容の検証に失敗しました',
+  });
+}
+
+export async function registerSite(
+  formData: SiteFormData,
+  assignee?: UserList | null,
+): Promise<{ statusCode: string; site: Site }> {
   const payload = mapCreateSitePayload(formData);
 
   const response = await apiFetch('/site', {
@@ -40,21 +64,26 @@ export async function registerSite(formData: SiteFormData): Promise<{ statusCode
       cityName: formData.cityName,
       blockName: [formData.townName, formData.blockName].filter(Boolean).join(''),
       address: buildAddress(formData),
-      picFirstName: formData.picFirstName,
-      picLastName: formData.picLastName,
-      picEmail: formData.picEmail,
-      picPosition: formData.picPosition,
-      picPhoneNumber: formData.picPhoneNumber,
+      buildingName: formData.addressDetail,
+      picFirstName: assignee?.firstName ?? '',
+      picLastName: assignee?.lastName ?? (formData.userId ? '' : 'マスター'),
+      picEmail: assignee?.email ?? '',
+      picPosition: assignee?.position ?? '',
+      picPhoneNumber: assignee?.phoneNumber ?? '',
       companyId: '',
       project: [],
-      picId: '',
+      picId: formData.userId ?? '',
       addressDetail: formData.addressDetail,
     },
   };
 }
 
-export async function updateSite(siteId: string, formData: SiteFormData): Promise<{ statusCode: string; site?: Site }> {
-  const payload = mapUpdateSitePayload(formData);
+export async function updateSite(
+  siteId: string,
+  formData: SiteFormData,
+  picuserId: number | null = null,
+): Promise<{ statusCode: string; site?: Site }> {
+  const payload = mapUpdateSitePayload(formData, Number(siteId), picuserId);
 
   const response = await apiFetch(`/site/${siteId}`, {
     method: 'PATCH',

@@ -76,7 +76,7 @@ const AUTOFILL_VALUES = {
     corpName: '山田 太郎',
     prefecture: PREFECTURE_OPTIONS[12],
     city: '千代田区',
-    address: '丸の内1-1-1',
+    address: '丸の内1-1',
     isDesignatedEmitter: IS_DESIGNATED_EMITTER_OPTIONS[1],
     emitterCode: '123456789',
     hasEnergyActPeriodReport: false,

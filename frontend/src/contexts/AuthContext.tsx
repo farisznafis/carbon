@@ -108,10 +108,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       try {
         const data = await authApi.login(companyId, email, password);
+        const accountId =
+          data.user?.userId ?? data.user?.id ?? data.userId ?? data.id ?? companyId;
 
         const loginUser: User = {
-          id: companyId,
-          email,
+          id: String(accountId),
+          email: data.user?.email ?? email,
+          username: data.user?.username ?? undefined,
           role: data.role,
           companyId,
           companyName: data.companyName,

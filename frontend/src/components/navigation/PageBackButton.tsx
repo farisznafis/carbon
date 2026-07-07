@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react';
+﻿import { ArrowLeft } from 'lucide-react';
 import { Button, type ButtonProps } from '@/components/ui/button';
 
 type PageBackButtonProps = {
@@ -10,7 +10,6 @@ type PageBackButtonProps = {
 
 export function PageBackButton({
   label = '戻る',
-  // label = '戻る',
   onClick,
   className,
   variant = 'default',

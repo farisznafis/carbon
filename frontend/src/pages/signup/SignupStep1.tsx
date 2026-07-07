@@ -1,3 +1,5 @@
+﻿import { validateSignupCompanyInfo } from '@/api/company';
+import { ApiError } from '@/api/_shared/errors';
 import {
   FormActions,
   FormCard,
@@ -11,45 +13,138 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSignup } from '@/contexts/SignupContext';
+import { useToast } from '@/hooks/use-toast';
 import { useRedirectIfLoggedIn } from '@/hooks/useRedirectIfLoggedIn';
 import { PREFECTURE_OPTIONS } from '@/lib/constants/prefectures';
-import { corporateNumberSchema, emailSchema, katakanaSchema, phoneNumberSchema, postalCodeSchema } from '@/lib/validations';
 import { logger } from '@/lib/logger';
 import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import { useRef, useState } from 'react';
+import { useForm, type UseFormReturn } from 'react-hook-form';
 
-const signupStep1Schema = z.object({
-  corporateNumber: corporateNumberSchema,
-  companyName: z.string().min(1, '企業名を入力してください').max(100, '企業名は100文字以内で入力してください'),
-  companyNameKana: katakanaSchema.min(1, '企業名（カナ）を入力してください').max(100, '企業名（カナ）は100文字以内で入力してください'),
-  companyNameEnglish: z.string().max(100, '企業名（英語）は100文字以内で入力してください'),
-  corporateEmail: emailSchema,
-  corporatePhoneNumber: phoneNumberSchema,
-  postalCode: postalCodeSchema,
-  prefecture: z.string().min(1, '都道府県を選択してください'),
-  municipality: z.string().min(1, '市区町村を入力してください').max(50, '市区町村は50文字以内で入力してください'),
-  town: z.string().max(100, '町名は100文字以内で入力してください'),
-  blocknum: z.string().min(1, '番地を入力してください').max(100, '番地は100文字以内で入力してください'),
-  buildingName: z.string().max(100, '建物名は100文字以内で入力してください'),
-  lastName: z.string().min(1, '名前（姓）を入力してください').max(50, '名前（姓）は50文字以内で入力してください'),
-  firstName: z.string().min(1, '名前（名）を入力してください').max(50, '名前（名）は50文字以内で入力してください'),
-  lastNameKana: katakanaSchema.min(1, '名前（姓）（カナ）を入力してください').max(50, '名前（姓）（カナ）は50文字以内で入力してください'),
-  firstNameKana: katakanaSchema.min(1, '名前（名）（カナ）を入力してください').max(50, '名前（名）（カナ）は50文字以内で入力してください'),
-  position: z.string().min(1, '役職を入力してください').max(50, '役職は50文字以内で入力してください'),
-  phoneNumber: phoneNumberSchema,
-  faxNumber: z.string().max(20, 'FAX番号は20文字以内で入力してください'),
-  email: emailSchema,
-});
+type SignupStep1FormData = {
+  corporateNumber: string;
+  companyName: string;
+  companyNameKana: string;
+  companyNameEnglish: string;
+  corporateEmail: string;
+  corporatePhoneNumber: string;
+  postalCode: string;
+  prefecture: string;
+  municipality: string;
+  blocknum: string;
+  buildingName: string;
+  lastName: string;
+  firstName: string;
+  lastNameKana: string;
+  firstNameKana: string;
+  position: string;
+  phoneNumber: string;
+  faxNumber: string;
+  email: string;
+};
 
-type SignupStep1FormData = z.infer<typeof signupStep1Schema>;
+type SignupCompanyValidationPayload = {
+  corporateNumber: string;
+  corporateName: string;
+  corporateNameKana: string;
+  companyNameEnglish: string;
+  corporatePhoneNumber: string;
+  postalCode: string;
+  prefecture: string;
+  municipality: string;
+  buildingName: string;
+  blocknum: string;
+  lastName: string;
+  firstName: string;
+  lastNameKana: string;
+  firstNameKana: string;
+  position: string;
+  phoneNumber: string;
+  faxNumber: string;
+  email: string;
+};
+
+const backendFieldToFormField: Partial<Record<string, keyof SignupStep1FormData>> = {
+  corporateNumber: 'corporateNumber',
+  corporateName: 'companyName',
+  corporateNameKana: 'companyNameKana',
+  companyNameEnglish: 'companyNameEnglish',
+  corporateEmail: 'corporateEmail',
+  corporatePhoneNumber: 'corporatePhoneNumber',
+  postalCode: 'postalCode',
+  prefecture: 'prefecture',
+  municipality: 'municipality',
+  blocknum: 'blocknum',
+  buildingName: 'buildingName',
+  lastName: 'lastName',
+  firstName: 'firstName',
+  lastNameKana: 'lastNameKana',
+  firstNameKana: 'firstNameKana',
+  position: 'position',
+  phoneNumber: 'phoneNumber',
+  faxNumber: 'faxNumber',
+  email: 'email',
+};
+
+function toMessage(value: unknown): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(toMessage).filter(Boolean).join('\n');
+  }
+
+  if (value && typeof value === 'object' && 'message' in value) {
+    return toMessage((value as { message?: unknown }).message);
+  }
+
+  return '';
+}
+
+function applyBackendValidationErrors(
+  form: UseFormReturn<SignupStep1FormData>,
+  error: unknown,
+): string | null {
+  if (!(error instanceof ApiError)) {
+    return error instanceof Error ? error.message : null;
+  }
+
+  const errors = error.payload?.errors;
+  let applied = false;
+
+  if (errors && typeof errors === 'object' && !Array.isArray(errors)) {
+    Object.entries(errors).forEach(([backendField, value]) => {
+      const formField = backendFieldToFormField[backendField];
+      const message = toMessage(value);
+
+      if (!formField || !message) {
+        return;
+      }
+
+      form.setError(formField, {
+        type: 'server',
+        message,
+      });
+      applied = true;
+    });
+  }
+
+  if (applied) {
+    return null;
+  }
+
+  return error.payload?.message || error.message;
+}
 
 export const SignupStep1 = () => {
   useRedirectIfLoggedIn();
 
   const { signupData, updateSignupData, setCurrentStep } = useSignup();
+  const { toast } = useToast();
   const [isLoadingAddress, setIsLoadingAddress] = useState(false);
+  const [isValidatingCompanyInfo, setIsValidatingCompanyInfo] = useState(false);
+  const postalCodeLookupAbortRef = useRef<AbortController | null>(null);
 
   const form = useForm<SignupStep1FormData>({
     defaultValues: {
@@ -62,7 +157,6 @@ export const SignupStep1 = () => {
       postalCode: signupData.postalCode || '',
       prefecture: signupData.prefecture || '',
       municipality: signupData.municipality || '',
-      town: signupData.town || '',
       blocknum: signupData.blocknum || '',
       buildingName: signupData.buildingName || '',
       lastName: signupData.lastName || '',
@@ -88,33 +182,87 @@ export const SignupStep1 = () => {
       return;
     }
 
+    postalCodeLookupAbortRef.current?.abort();
+    const controller = new AbortController();
+    postalCodeLookupAbortRef.current = controller;
+
     setIsLoadingAddress(true);
 
     try {
-      const response = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${cleanedCode}`);
+      const response = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${cleanedCode}`, {
+        signal: controller.signal,
+      });
       const data = await response.json();
 
       if (data.results && data.results.length > 0) {
         const result = data.results[0];
-        form.setValue('prefecture', result.address1);
-        form.setValue('municipality', result.address2);
-        form.setValue('town', result.address3);
+        const municipalityWithTown = `${result.address2 ?? ''}${result.address3 ?? ''}`;
+
+        form.setValue('prefecture', result.address1, { shouldDirty: true });
+        form.setValue('municipality', municipalityWithTown, { shouldDirty: true });
       }
     } catch (error) {
-      logger.error('Failed to fetch address:', error);
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        logger.error('Failed to fetch address:', error);
+      }
     } finally {
-      setIsLoadingAddress(false);
+      if (postalCodeLookupAbortRef.current === controller) {
+        postalCodeLookupAbortRef.current = null;
+        setIsLoadingAddress(false);
+      }
     }
   };
 
   const onSubmit = async (data: SignupStep1FormData) => {
-    updateSignupData(data);
-    setCurrentStep(2);
+    const payload: SignupCompanyValidationPayload = {
+      corporateNumber: data.corporateNumber,
+      corporateName: data.companyName,
+      corporateNameKana: data.companyNameKana,
+      companyNameEnglish: data.companyNameEnglish || '',
+      corporatePhoneNumber: data.corporatePhoneNumber,
+      postalCode: data.postalCode,
+      prefecture: data.prefecture,
+      municipality: data.municipality,
+      buildingName: data.buildingName || '',
+      blocknum: data.blocknum,
+      lastName: data.lastName,
+      firstName: data.firstName,
+      lastNameKana: data.lastNameKana,
+      firstNameKana: data.firstNameKana,
+      position: data.position,
+      phoneNumber: data.phoneNumber,
+      faxNumber: data.faxNumber || '',
+      email: data.email,
+    };
+
+    form.clearErrors();
+    setIsValidatingCompanyInfo(true);
+
+    try {
+      await validateSignupCompanyInfo(payload);
+
+      updateSignupData({
+        ...data,
+        companyNameEnglish: data.companyNameEnglish || '',
+        faxNumber: data.faxNumber || '',
+      });
+      setCurrentStep(2);
+    } catch (error) {
+      const message = applyBackendValidationErrors(form, error);
+
+      toast({
+        title: '入力内容を確認してください',
+        description: message || '入力内容に誤りがあります。',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsValidatingCompanyInfo(false);
+    }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form noValidate onSubmit={form.handleSubmit(onSubmit)}>
         <FormCard>
           <FormSectionStack>
             <FormSection number={1} title="法人情報">
@@ -125,7 +273,7 @@ export const SignupStep1 = () => {
                   <FormItem>
                     <RequiredLabel>法人番号</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="1234567890111" {...field} />
+                      <Input inputSize="sm" placeholder="13桁の半角数字" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -137,7 +285,7 @@ export const SignupStep1 = () => {
                 name="companyName"
                 render={({ field }) => (
                   <FormItem>
-                    <RequiredLabel>企業名</RequiredLabel>
+                    <RequiredLabel>法人名</RequiredLabel>
                     <FormControl>
                       <Input inputSize="sm" placeholder="株式会社サンプル" {...field} />
                     </FormControl>
@@ -151,7 +299,7 @@ export const SignupStep1 = () => {
                 name="companyNameKana"
                 render={({ field }) => (
                   <FormItem>
-                    <RequiredLabel>企業名（カナ）</RequiredLabel>
+                    <RequiredLabel>法人名カナ</RequiredLabel>
                     <FormControl>
                       <Input inputSize="sm" placeholder="カブシキガイシャサンプル" {...field} />
                     </FormControl>
@@ -165,23 +313,9 @@ export const SignupStep1 = () => {
                 name="companyNameEnglish"
                 render={({ field }) => (
                   <FormItem>
-                    <RequiredLabel required={false}>企業名（英語）</RequiredLabel>
+                    <RequiredLabel required={false}>会社名（英語）</RequiredLabel>
                     <FormControl>
                       <Input inputSize="sm" placeholder="Sample Corporation" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="corporateEmail"
-                render={({ field }) => (
-                  <FormItem>
-                    <RequiredLabel>法人メールアドレス</RequiredLabel>
-                    <FormControl>
-                      <Input inputSize="sm" type="email" placeholder="name@company.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -195,7 +329,7 @@ export const SignupStep1 = () => {
                   <FormItem>
                     <RequiredLabel>法人電話番号</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" type="tel" placeholder="1234567890111" {...field} />
+                      <Input inputSize="sm" type="tel" placeholder="半角数字ハイフン不要" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -215,7 +349,7 @@ export const SignupStep1 = () => {
                         <Input
                           inputSize="sm"
                           maxLength={8}
-                          placeholder="1234567890111"
+                          placeholder="半角数字ハイフン不要"
                           {...field}
                           onChange={(e) => handlePostalCodeChange(e.target.value, field.onChange)}
                         />
@@ -239,7 +373,7 @@ export const SignupStep1 = () => {
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger selectSize="sm">
-                            <SelectValue placeholder="岩手県" />
+                            <SelectValue placeholder="都道府県を選択" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="z-50 bg-background">
@@ -262,7 +396,7 @@ export const SignupStep1 = () => {
                     <FormItem>
                       <RequiredLabel>市区町村</RequiredLabel>
                       <FormControl>
-                        <Input inputSize="sm" placeholder="桜丘町" {...field} />
+                        <Input inputSize="sm" placeholder="千代田区" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -277,7 +411,7 @@ export const SignupStep1 = () => {
                   <FormItem>
                     <RequiredLabel>番地</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="桜丘町1-1" {...field} />
+                      <Input inputSize="sm" placeholder="1-1" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -299,14 +433,14 @@ export const SignupStep1 = () => {
               />
             </FormSection>
 
-            <FormSection number={3} title="個人情報">
+            <FormSection number={3} title="責任者情報">
               <FormGrid>
                 <FormField
                   control={form.control}
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <RequiredLabel>名前（姓）</RequiredLabel>
+                      <RequiredLabel>姓</RequiredLabel>
                       <FormControl>
                         <Input inputSize="sm" placeholder="山田" {...field} />
                       </FormControl>
@@ -320,7 +454,7 @@ export const SignupStep1 = () => {
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <RequiredLabel>名前（名）</RequiredLabel>
+                      <RequiredLabel>名</RequiredLabel>
                       <FormControl>
                         <Input inputSize="sm" placeholder="太郎" {...field} />
                       </FormControl>
@@ -336,7 +470,7 @@ export const SignupStep1 = () => {
                   name="lastNameKana"
                   render={({ field }) => (
                     <FormItem>
-                      <RequiredLabel>名前（姓）（カナ）</RequiredLabel>
+                      <RequiredLabel>姓（カナ）</RequiredLabel>
                       <FormControl>
                         <Input inputSize="sm" placeholder="ヤマダ" {...field} />
                       </FormControl>
@@ -350,7 +484,7 @@ export const SignupStep1 = () => {
                   name="firstNameKana"
                   render={({ field }) => (
                     <FormItem>
-                      <RequiredLabel>名前（名）（カナ）</RequiredLabel>
+                      <RequiredLabel>名（カナ）</RequiredLabel>
                       <FormControl>
                         <Input inputSize="sm" placeholder="タロウ" {...field} />
                       </FormControl>
@@ -367,7 +501,7 @@ export const SignupStep1 = () => {
                   <FormItem>
                     <RequiredLabel>役職</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="会長" {...field} />
+                      <Input inputSize="sm" placeholder="部長" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -381,7 +515,7 @@ export const SignupStep1 = () => {
                   <FormItem>
                     <RequiredLabel>電話番号</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" type="tel" placeholder="03-1234-5678" {...field} />
+                      <Input inputSize="sm" type="tel" placeholder="半角数字ハイフン不要" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -395,7 +529,7 @@ export const SignupStep1 = () => {
                   <FormItem>
                     <RequiredLabel required={false}>FAX番号</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" type="tel" placeholder="03-1234-5678" {...field} />
+                      <Input inputSize="sm" type="tel" placeholder="半角数字ハイフン不要" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -409,7 +543,7 @@ export const SignupStep1 = () => {
                   <FormItem>
                     <RequiredLabel>メールアドレス</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" type="email" placeholder="1109yamada.taro@tokyo-energy.co.jp" {...field} />
+                      <Input inputSize="sm" type="email" placeholder="yamada.taro@tokyo-energy.co.jp" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -420,10 +554,11 @@ export const SignupStep1 = () => {
             <FormActions>
               <Button
                 type="submit"
-                size="lg"
+                size="sm"
                 className="w-full"
-                disabled={form.formState.isSubmitting}
+                disabled={form.formState.isSubmitting || isValidatingCompanyInfo}
               >
+                {isValidatingCompanyInfo && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 方法論へ続く
               </Button>
             </FormActions>

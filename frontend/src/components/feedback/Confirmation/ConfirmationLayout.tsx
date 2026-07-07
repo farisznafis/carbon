@@ -36,7 +36,7 @@
  * Example:
  *
  * <ConfirmationLayout
- *   pageName="ユーザ情報の確認"
+ *   pageName="社員情報の確認"
  *   title="入力内容"
  *   description="以下の内容をご確認ください。"
  *   onBack={handleBack}

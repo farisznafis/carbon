@@ -68,26 +68,26 @@ export const representativeFields: FieldConfig<FormValues>[] = [
 ];
 
 export const picFields: FieldConfig<FormValues>[] = [
-  { name: 'projectBase.picFirstName', label: '担当者名', type: 'text' },
-  { name: 'projectBase.picLastName', label: '担当者姓', type: 'text' },
+  { name: 'projectBase.picFirstName', label: '責任者名', type: 'text' },
+  { name: 'projectBase.picLastName', label: '責任者姓', type: 'text' },
   {
     name: 'projectBase.picFirstNameKana',
-    label: '担当者名（フリガナ）',
+    label: '責任者名（フリガナ）',
     type: 'text',
   },
   {
     name: 'projectBase.picLastNameKana',
-    label: '担当者姓（フリガナ）',
+    label: '責任者姓（フリガナ）',
     type: 'text',
   },
   {
     name: 'projectBase.picEmail',
-    label: '担当者メールアドレス',
+    label: '責任者メールアドレス',
     type: 'email',
   },
   {
     name: 'projectBase.picPhoneNumber',
-    label: '担当者電話番号',
+    label: '責任者電話番号',
     type: 'text',
   },
   { name: 'projectBase.picPosition', label: '担当役職', type: 'text' },

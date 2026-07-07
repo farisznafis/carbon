@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext"; // your auth context
+import { paths } from "@/routes/paths";
 
 export function useRedirectIfLoggedIn() {
   const navigate = useNavigate();
@@ -9,11 +10,11 @@ export function useRedirectIfLoggedIn() {
   useEffect(() => {
     if(user?.id) {
       if(user?.role == "master") {
-        navigate("/master/dashboard", {replace: true}); 
+        navigate(paths.masterDashboard, {replace: true}); 
       } else if (user.siteId) {
-        navigate(`/sites/${user.siteId}/dashboard`, {replace: true});
+        navigate(paths.siteDashboard(user.siteId), {replace: true});
       } else {
-        navigate("/", {replace: true});
+        navigate(paths.userDashboard, {replace: true});
       }
     }
   }, [user, navigate]); 

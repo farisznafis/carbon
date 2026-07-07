@@ -42,7 +42,7 @@ function resolvePhoneNumber(item: PendingCompanyApiItem): string {
 }
 
 function resolveFax(item: PendingCompanyApiItem): string {
-  return item.fax ?? '-';
+  return item.fax ?? item.faxNumber ?? '-';
 }
 
 function resolveCorpNumber(item: PendingCompanyApiItem): string {
@@ -51,6 +51,10 @@ function resolveCorpNumber(item: PendingCompanyApiItem): string {
 
 function resolveAddress(item: PendingCompanyApiItem): string {
   return item.address ?? '-';
+}
+
+function normalizeOptionalString(value?: string | null): string | undefined {
+  return value ?? undefined;
 }
 
 function resolveIsSuspended(item: PendingCompanyApiItem): boolean {
@@ -114,6 +118,20 @@ export async function getPendingCompanies(): Promise<PendingCompanyItem[]> {
     fax: resolveFax(item),
     corpNumber: resolveCorpNumber(item),
     address: resolveAddress(item),
+    postalCode: normalizeOptionalString(item.postalCode),
+    prefecture: normalizeOptionalString(item.prefecture),
+    municipality: normalizeOptionalString(item.municipality),
+    blocknum: normalizeOptionalString(item.blocknum),
+    buildingName: normalizeOptionalString(item.buildingName),
+    representativeFirstName: normalizeOptionalString(item.representativeFirstName),
+    representativeLastName: normalizeOptionalString(item.representativeLastName),
+    representativeFirstNameKana: normalizeOptionalString(item.representativeFirstNameKana),
+    representativeLastNameKana: normalizeOptionalString(item.representativeLastNameKana),
+    representativePosition: normalizeOptionalString(item.representativePosition),
+    representativePhoneNumber: normalizeOptionalString(item.representativePhoneNumber),
+    faxNumber: normalizeOptionalString(item.faxNumber ?? item.fax),
+    requestedMethodologies: item.requestedMethodologies ?? [],
+    activityInformation: item.activityInformation ?? '',
     methodologies: resolveMethodologies(item),
   }));
 }

@@ -217,6 +217,10 @@ All colors MUST be HSL.
     animation: fade-in 0.3s ease-out;
   }
 
+  .animate-pop-up {
+    animation: pop-up 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
   @keyframes slide-up {
     from {
       opacity: 0;
@@ -236,6 +240,23 @@ All colors MUST be HSL.
 
     to {
       opacity: 1;
+    }
+  }
+
+  @keyframes pop-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.92);
+    }
+
+    70% {
+      opacity: 1;
+      transform: translateY(-2px) scale(1.02);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
   }
 

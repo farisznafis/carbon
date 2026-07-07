@@ -146,10 +146,12 @@ const AdminDashboard = () => {
     setUpdatingProjectStatusId(project.id);
     try {
       const numericProjectId = Number(project.id);
+      const companyId =
+        project.companyId ?? project.operatorCompanyId ?? user?.companyId ?? '';
       const projectStatusPayload = {
         id: Number.isFinite(numericProjectId) ? numericProjectId : project.id,
         processedBy: user?.id ? String(user.id) : 'admin',
-        companyId: project.companyId ?? project.operatorCompanyId ?? user?.companyId ?? '',
+        companyId: String(companyId),
         projectStatus: status,
       };
 
@@ -190,7 +192,7 @@ const AdminDashboard = () => {
       id: 'REG-123457',
       userName: '佐藤 花子',
       siteName: 'DEF支店',
-      reason: '担当者変更のため、一度解除したいです。',
+      reason: '責任者変更のため、一度解除したいです。',
       requestedAt: '2026/04/26 14:40',
       status: 'PENDING',
     },
@@ -198,7 +200,7 @@ const AdminDashboard = () => {
       id: 'REG-123458',
       userName: '鈴木 一郎',
       siteName: 'GHI工場',
-      reason: 'サイト利用を終了したいため。',
+      reason: 'サイト利用を終了',
       requestedAt: '2026/04/25 09:05',
       status: 'APPROVED',
     },
@@ -206,7 +208,7 @@ const AdminDashboard = () => {
       id: 'REG-123459',
       userName: '鈴木 一郎',
       siteName: 'GHI工場',
-      reason: 'サイト利用を終了したいため。',
+      reason: 'サイト利用を終了',
       requestedAt: '2026/04/25 09:05',
       status: 'APPROVED',
     },
@@ -214,7 +216,7 @@ const AdminDashboard = () => {
       id: 'REG-123460',
       userName: '鈴木 一郎',
       siteName: 'GHI工場',
-      reason: 'サイト利用を終了したいため。',
+      reason: 'サイト利用を終了',
       requestedAt: '2026/04/25 09:05',
       status: 'APPROVED',
     },
@@ -222,7 +224,7 @@ const AdminDashboard = () => {
       id: 'REG-123461',
       userName: '鈴木 一郎',
       siteName: 'GHI工場',
-      reason: 'サイト利用を終了したいため。',
+      reason: 'サイト利用を終了',
       requestedAt: '2026/04/25 09:05',
       status: 'APPROVED',
     },
@@ -290,7 +292,7 @@ const AdminDashboard = () => {
       <div className='container mx-auto p-6 space-y-6 w-full'>
         <div className='flex px-4 py-8'>
           <div className='flex w-full items-center justify-between'>
-            <h3 className='font-bold'>運営者・管理者ツールページ</h3>
+            <h3 className='font-bold'>運用管理ダッシュボード</h3>
             <div className='mb-0 flex justify-end'>
               <Button
                 onClick={() => setCancelRequestDialogOpen(true)}

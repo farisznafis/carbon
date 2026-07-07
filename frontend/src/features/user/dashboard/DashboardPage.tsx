@@ -1,15 +1,17 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { InlineHelp } from '@/components/feedback/InlineHelp/InlineHelp';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { getSiteData, getSiteProjects, type SiteProject } from '@/api/site';
+import { getProfile } from '@/api/profile';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { storage, storageKeys } from '@/lib/storage';
 
 const Dashboard = () => {
   const { siteId } = useParams();
@@ -22,6 +24,15 @@ const Dashboard = () => {
   );
   const { user } = useAuth();
   const { toast } = useToast();
+  const [refreshedSiteId, setRefreshedSiteId] = useState('');
+  const [isRefreshingUserSite, setIsRefreshingUserSite] = useState(false);
+  const userSiteId = user?.siteId ? String(user.siteId).trim() : '';
+  const activeSiteId = siteId || userSiteId || refreshedSiteId;
+  const isUserWithoutSite =
+    user?.role !== 'master' &&
+    user?.role !== 'admin' &&
+    !userSiteId &&
+    !refreshedSiteId;
 
   const [isLoading, setIsLoading] = useState(true);
   const [site, setSite] = useState<{
@@ -34,15 +45,62 @@ const Dashboard = () => {
   const [projects, setProjects] = useState<SiteProject[]>([]);
 
   useEffect(() => {
+    if (!user || user.role === 'master' || user.role === 'admin' || userSiteId) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const refreshUserSite = async () => {
+      setIsRefreshingUserSite(true);
+
+      try {
+        const profile = await getProfile();
+        const latestSiteId = profile.siteId?.trim() ?? '';
+
+        if (!isMounted || !latestSiteId) return;
+
+        const nextUser = {
+          ...user,
+          siteId: latestSiteId,
+          siteName: profile.siteName ?? user.siteName,
+        };
+
+        storage.setJson(storageKeys.user, nextUser);
+        storage.set(storageKeys.siteId, latestSiteId);
+        setRefreshedSiteId(latestSiteId);
+      } catch {
+        // Keep the existing no-site message when the profile refresh cannot resolve a site.
+      } finally {
+        if (isMounted) {
+          setIsRefreshingUserSite(false);
+        }
+      }
+    };
+
+    void refreshUserSite();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user, userSiteId]);
+
+  useEffect(() => {
     if (!user) {
       navigate('/login');
       return;
     }
 
-    if (!siteId) {
+    if (isUserWithoutSite) {
+      setIsLoading(false);
+      return;
+    }
+
+    if (!activeSiteId) {
+      setIsLoading(false);
       toast({
-        title: 'エラー',
-        description: 'siteId が見つかりません',
+          title: 'エラー',
+          description: 'siteId が見つかりません',
         variant: 'destructive',
       });
       return;
@@ -56,8 +114,8 @@ const Dashboard = () => {
         setIsLoading(true);
 
         const [siteResponse, projectData] = await Promise.all([
-          getSiteData(siteId),
-          getSiteProjects(siteId),
+          getSiteData(activeSiteId),
+          getSiteProjects(activeSiteId),
         ]);
 
         if (!isMounted) return;
@@ -85,7 +143,7 @@ const Dashboard = () => {
     return () => {
       isMounted = false;
     };
-  }, [toast, user, siteId, navigate, loadNotifications]);
+  }, [toast, user, activeSiteId, navigate, loadNotifications, isUserWithoutSite]);
 
   useEffect(() => {
     setCurrentProject(null);
@@ -93,36 +151,71 @@ const Dashboard = () => {
 
   const handleClick = (project: SiteProject) => {
     setCurrentProject(project);
-    navigate(`/projects/${project.id}/register`, { state: { siteId } });
+    navigate(`/projects/${project.id}/register`, { state: { siteId: activeSiteId } });
   };
 
+  if (isRefreshingUserSite) {
+    return (
+      <div className='min-h-screen bg-slate-50 py-8'>
+        <div className='container mx-auto px-4'>
+          <div className='py-16 text-center text-muted-foreground'>
+            読み込み中...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isUserWithoutSite) {
+    return (
+      <div className='min-h-screen bg-slate-50 py-8'>
+        <div className='container mx-auto px-4'>
+          <Card className='mx-auto mt-16 max-w-2xl'>
+            <CardContent className='p-8 text-center text-muted-foreground'>
+              所属している拠点がありません。マスターにお問い合わせください。
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className='min-h-screen py-8 bg-slate-50'>
+    <div className='relative min-h-screen py-8 bg-slate-50'>
       <div className='container mx-auto px-4'>
         {user?.role === 'master' && (
-          <Button
-            variant='ghost'
+          <PageBackButton
             onClick={() => navigate('/master/dashboard')}
-            className='mb-4'
-          >
-            <ArrowLeft className='h-4 w-4 mr-2' />
-            マスターダッシュボードに戻る
-          </Button>
+            label=''
+            className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
+          />
         )}
 
         <div className='mb-8 mx-8 animate-slide-up'>
-          <div className='space-y-1'>
-            <h2 className='mb-2'>{site?.siteName || '拠点ダッシュボード'}</h2>
-            <div className='space-y-1 text-sm text-muted-foreground'>
-              <p>
-                    担当者:{' '}
-              {`${site?.picLastName ?? ''} ${site?.picFirstName ?? ''}`.trim() ||
-                '-'}
-              </p>
-                  <p>住所: {site?.address || '-'}</p>
+          <div className='flex items-start justify-between gap-4'>
+            <div className='space-y-1'>
+              <h2 className='mb-2'>{site?.siteName || '拠点ダッシュボード'}</h2>
+              <div className='space-y-1 text-sm text-muted-foreground'>
+                <p>
+                  責任者{' '}
+                {`${site?.picLastName ?? ''} ${site?.picFirstName ?? ''}`.trim() ||
+                  '-'}
+                </p>
+                <p>住所: {site?.address || '-'}</p>
+            </div>
           </div>
-        </div>
 
+            {user?.role === 'master' && activeSiteId && (
+              <Button
+                variant="outline"
+                size="md"
+                className="shrink-0"
+                onClick={() => navigate(`/master/site-edit/${activeSiteId}`)}
+              >
+                拠点更新
+              </Button>
+            )}
+          </div>
         </div>
         <div className='gap-6'>
           <div className='space-y-6'>
@@ -131,7 +224,7 @@ const Dashboard = () => {
                 <CardTitle className='text-3xl font-bold'>
                   プロジェクト
                 </CardTitle>
-                <InlineHelp />
+                {/* <InlineHelp /> */}
               </CardHeader>
               <CardContent>
                 <ScrollArea className='max-h-[600px] pr-4 overflow-auto'>
@@ -163,7 +256,7 @@ const Dashboard = () => {
                             </div>
 
                             <div className='p-3 border rounded-md grid grid-cols-2 gap-y-1 gap-x-0 text-sm'>
-                              <span className='text-muted-foreground'>方法論</span>
+                              <span className='text-muted-foreground'>方法論:</span>
                               <span>{project.methodName}</span>
                               <span className='text-muted-foreground'>方法論番号:</span>
                               <span>
@@ -178,7 +271,7 @@ const Dashboard = () => {
                                 <Button
                                   onClick={() =>
                                     navigate(
-                                      `/sites/${encodeURIComponent(siteId)}/projects/${project.id}`,
+                                      `/sites/${encodeURIComponent(activeSiteId)}/projects/${project.id}`,
                                     )
                                   }
                                   className='w-full h-10 bg-muted text-foreground hover:bg-muted/80'
