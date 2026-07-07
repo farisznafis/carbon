@@ -15,6 +15,7 @@ public class CreateSiteRequest {
     @Size(max = 255, message = "サイト名は255文字以内で入力してください。")
     private String siteName;
 
+    @NotBlank(message = "サイト名カナを入力してください。")
     @Size(max = 255, message = "サイト名カナは255文字以内で入力してください。")
     private String siteNameKana; // optional
 
@@ -22,17 +23,17 @@ public class CreateSiteRequest {
     @PostalCode
     private String postalCode;
 
-    @NotNull(message = "都道府県を選択してください。")
+    @NotBlank(message = "都道府県を選択してください。")
     @Zenkaku
     @Size(max = 10, message = "都道府県名は100文字以内で入力してください。")
     private String prefecture;
 
-    @NotNull(message = "市区町村を選択してください。")
+    @NotBlank(message = "市区町村を選択してください。")
     @Zenkaku
     @Size(max = 150, message = "市区町村名は150文字以内で入力してください。")
     private String municipality;
 
-    @NotNull(message = "番地を入力してください。")
+    @NotBlank(message = "番地を入力してください。")
     @JapaneseText(allowAlphanumeric = true)
     @Size(max = 100, message = "番地は100文字以内で入力してください。")
     private String blocknum;

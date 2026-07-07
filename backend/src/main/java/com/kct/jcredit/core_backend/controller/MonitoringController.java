@@ -10,6 +10,7 @@ import com.kct.jcredit.core_backend.dto.response.MonitoringRecordSolarResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
 import com.kct.jcredit.core_backend.dto.response.CancelRequestDecisionResponse;
 import com.kct.jcredit.core_backend.dto.response.CancelRequestListResponse;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.service.MonitoringService;
 import com.kct.jcredit.core_backend.service.CancelRequestService;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
@@ -40,6 +41,7 @@ public class MonitoringController {
 
     @PostMapping
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "モニタリング記録登録", description = "太陽光プロジェクトのモニタリング記録を登録します。")
     public ResponseEntity<MonitoringRecordSolarResponse> RegisterMonitoringRecordSolar(
             Authentication authentication,
             @RequestBody @Valid RegisterMonitoringRecordSolarRequest request) {
@@ -53,8 +55,23 @@ public class MonitoringController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
+    @PostMapping("/validate")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "モニタリング記録検証", description = "モニタリング記録リクエストを保存せずに検証します。")
+    public ResponseEntity<BaseResponse> validateMonitoringRecordSolar(
+            Authentication authentication,
+            @RequestBody @Valid RegisterMonitoringRecordSolarRequest request) {
+        String username = jwtUtil.extractUsername(authentication.getCredentials().toString());
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+
+        BaseResponse response = monitoringService.validateMonitoringRecordSolar(username, companyId, request);
+
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
     @GetMapping
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "最新モニタリング記録取得", description = "指定されたプロジェクトと拠点の最新モニタリング記録を取得します。")
     public ResponseEntity<MonitoringRecordSolarResponse> ReadLastMonitoringRecordSolar(
             Authentication authentication,
             @RequestParam Integer projectId,
@@ -76,6 +93,7 @@ public class MonitoringController {
      */
     @GetMapping(value = "/list")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "モニタリング記録一覧取得", description = "指定されたプロジェクトと拠点のモニタリング記録一覧を取得します。")
     public ResponseEntity<MonitoringRecordSolarListResponse> listMonitoringRecords(
             @RequestParam Integer siteId,
             @RequestParam Integer projectId,
@@ -105,6 +123,7 @@ public class MonitoringController {
 
     @PostMapping(value = "/upload-elpv-evidence", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "ELPV証跡アップロード", description = "ELPVの証跡ファイルをアップロードします。")
     public ResponseEntity<FileUploadResponse> uploadElpvEvidence(
             Authentication authentication,
             @RequestParam Integer projectId,
@@ -123,6 +142,7 @@ public class MonitoringController {
 
     @PostMapping(value = "/upload-elpvr-evidence", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "ELPVR証跡アップロード", description = "ELPVRの証跡ファイルをアップロードします。")
     public ResponseEntity<FileUploadResponse> uploadElpvrEvidence(
             Authentication authentication,
             @RequestParam Integer projectId,
@@ -141,6 +161,7 @@ public class MonitoringController {
 
     @PostMapping(value = "/upload-elpj-battery-specification-evidence", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "ELPJ蓄電池仕様証跡アップロード", description = "ELPJ蓄電池仕様の証跡ファイルをアップロードします。")
     public ResponseEntity<FileUploadResponse> uploadElpjBatterySpecificationEvidence(
             Authentication authentication,
             @RequestParam Integer projectId,
@@ -159,6 +180,7 @@ public class MonitoringController {
 
     @PostMapping(value = "/upload-elpj-control-evidence", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "ELPJ制御証跡アップロード", description = "ELPJ制御の証跡ファイルをアップロードします。")
     public ResponseEntity<FileUploadResponse> uploadElpjControlEvidence(
             Authentication authentication,
             @RequestParam Integer projectId,
@@ -202,6 +224,7 @@ public class MonitoringController {
     @GetMapping("/cancel-requests")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "取消申請一覧取得", description = "モニタリング記録の取消申請一覧を取得します。")
     public ResponseEntity<CancelRequestListResponse> getCancelRequests(Authentication authentication) {
         
         CancelRequestListResponse response = cancelRequestService.listCancelRequests();

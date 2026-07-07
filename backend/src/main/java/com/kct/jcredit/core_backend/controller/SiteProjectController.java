@@ -15,6 +15,7 @@ import com.kct.jcredit.core_backend.service.FileUploadSolarService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.MediaType;
 
@@ -49,6 +50,7 @@ public class SiteProjectController {
              consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         @PreAuthorize("hasAnyRole('master','user')")
         @SecurityRequirement(name = "bearerAuth")
+        @Operation(summary = "設備ファイルアップロード", description = "指定された拠点とプロジェクトに設備関連ファイルを一時アップロードします。")
         public ResponseEntity<FileSolarUploadResponse> uploadFile(
                 Authentication authentication,
                 @PathVariable Integer siteId,
@@ -69,6 +71,7 @@ public class SiteProjectController {
         @PostMapping("/{siteId}/{projectId}/solar/register")
         @PreAuthorize("hasAnyRole('master','user')")
         @SecurityRequirement(name = "bearerAuth")
+        @Operation(summary = "太陽光設備登録", description = "指定された拠点とプロジェクトに太陽光設備情報を登録します。")
         public ResponseEntity<EquipmentSolarRegisterResponse> registerEquipments(
                 Authentication authentication,
                 @PathVariable Integer siteId,
@@ -89,6 +92,7 @@ public class SiteProjectController {
         @PostMapping("/equipments/validate")
         @PreAuthorize("hasAnyRole('master','user')")
         @SecurityRequirement(name = "bearerAuth")
+        @Operation(summary = "設備情報入力検証", description = "太陽光設備情報を保存せずに検証します。")
         public ResponseEntity<BaseResponse> validateEquipments(
                 @RequestBody @Valid List<EquipmentItemSolarRequest> equipments) {
         siteProjectService.validateEquipmentsNotEmpty(equipments);
@@ -100,6 +104,7 @@ public class SiteProjectController {
         @PostMapping("/tnc/validate")
         @PreAuthorize("hasAnyRole('master','user')")
         @SecurityRequirement(name = "bearerAuth")
+        @Operation(summary = "利用条件入力検証", description = "利用条件の同意情報を保存せずに検証します。")
         public ResponseEntity<BaseResponse> validateTnc(
                 @RequestBody @Valid TncValidateRequest request) {
         siteProjectService.validateTnc(request);
@@ -110,6 +115,7 @@ public class SiteProjectController {
         @GetMapping("/{siteId}/{projectId}/jigyousha/default")
         @PreAuthorize("hasAnyRole('master','user')")
         @SecurityRequirement(name = "bearerAuth")
+        @Operation(summary = "事業者初期値取得", description = "指定された拠点とプロジェクトの事業者入力初期値を取得します。")
         public ResponseEntity<JigyoushaDefaultResponse> getJigyoushaDefault(
                 @PathVariable Integer siteId,
                 @PathVariable Integer projectId) {
@@ -120,6 +126,7 @@ public class SiteProjectController {
         @PostMapping("/jigyousha/validate")
         @PreAuthorize("hasAnyRole('master','user')")
         @SecurityRequirement(name = "bearerAuth")
+        @Operation(summary = "事業者情報入力検証", description = "事業者情報を保存せずに検証します。")
         public ResponseEntity<BaseResponse> validateJigyousha(
                 @RequestBody @Valid JigyoushaValidateRequest request) {
         siteProjectService.validateJigyousha(request);
@@ -130,6 +137,7 @@ public class SiteProjectController {
         @PostMapping("/final/validate")
         @PreAuthorize("hasAnyRole('master','user')")
         @SecurityRequirement(name = "bearerAuth")
+        @Operation(summary = "最終同意入力検証", description = "最終確認の同意情報を保存せずに検証します。")
         public ResponseEntity<BaseResponse> validateFinalAgreement(
                 @RequestBody @Valid FinalAgreementValidateRequest request) {
         siteProjectService.validateFinalAgreement(request);
