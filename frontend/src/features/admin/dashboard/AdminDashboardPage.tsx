@@ -192,7 +192,7 @@ const AdminDashboard = () => {
       id: 'REG-123457',
       userName: '佐藤 花子',
       siteName: 'DEF支店',
-      reason: '担当者変更のため、一度解除したいです。',
+      reason: '責任者変更のため、一度解除したいです。',
       requestedAt: '2026/04/26 14:40',
       status: 'PENDING',
     },

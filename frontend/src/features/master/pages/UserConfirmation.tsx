@@ -76,7 +76,7 @@ export function UserConfirmation({
       <FormPageContent>
         <div className="space-y-3">
           <FormPageTitle>
-            {isCreateMode ? 'ユーザー情報の確認' : 'ユーザー更新の確認'}
+            {isCreateMode ? '社員情報の確認' : '社員更新の確認'}
           </FormPageTitle>
           <p className="text-small text-muted-foreground">
             内容をご確認ください。
@@ -127,7 +127,7 @@ export function UserConfirmation({
               <FormGrid>
                 {!hideUsernameField && (
                   <ConfirmationItem
-                    label="ユーザー名"
+                    label="社員名"
                     value={displayValue(data.username)}
                     originalValue={originalValue(originalData.username, isCreateMode)}
                   />

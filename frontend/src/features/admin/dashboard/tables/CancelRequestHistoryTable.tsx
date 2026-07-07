@@ -46,7 +46,7 @@ export function CancelRequestHistoryTable({
     },
     {
       key: 'userName',
-      label: 'ユーザ名',
+      label: '社員名',
       sortable: true,
       truncate: true,
       maxWidth: 'max-w-[180px]',

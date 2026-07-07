@@ -23,7 +23,7 @@ export function SiteTable({ sites, onEdit, onRowClick }: SiteTableProps) {
     },
     {
       key: "picFirstName",
-      label: "担当者",
+      label: "責任者",
       sortable: true,
       truncate: true,
       maxWidth: "max-w-[180px]",

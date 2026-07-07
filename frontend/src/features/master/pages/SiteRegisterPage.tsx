@@ -131,7 +131,7 @@ function SiteRegister() {
           userOptions={selectableUsers}
           isUserOptionsLoading={usersQuery.isLoading}
           userOptionsError={
-            usersQuery.isError ? '担当者候補を取得できませんでした' : null
+            usersQuery.isError ? '責任者候補を取得できませんでした' : null
           }
           embedded
         />

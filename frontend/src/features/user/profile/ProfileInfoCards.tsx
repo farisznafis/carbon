@@ -35,7 +35,7 @@ function InfoItem({ label, value }: InfoItemProps) {
 function formatRole(role?: string) {
   const normalizedRole = role?.toLowerCase();
 
-  if (normalizedRole === 'user') return 'ユーザ';
+  if (normalizedRole === 'user') return '社員';
   if (normalizedRole === 'master') return 'マスター';
   if (normalizedRole === 'admin') return '管理者';
 
@@ -59,7 +59,7 @@ export function ProfileInfoCards({
 
         <CardContent className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
           <InfoItem label="企業ID" value={profile?.companyId} />
-          <InfoItem label="ユーザ名" value={profile?.username} />
+          <InfoItem label="社員名" value={profile?.username} />
           <InfoItem
             label="氏名"
             value={profile ? `${profile.lastName} ${profile.firstName}` : '-'}

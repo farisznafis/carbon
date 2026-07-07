@@ -95,7 +95,7 @@ export default function UserEdit() {
       toast({
         title: 'エラー',
         description:
-          error instanceof Error ? error.message : 'ユーザー更新内容の検証に失敗しました',
+          error instanceof Error ? error.message : '社員更新内容の検証に失敗しました',
         variant: 'destructive',
       });
       throw error;
@@ -147,7 +147,7 @@ export default function UserEdit() {
 
       toast({
         title: '更新完了',
-        description: 'ユーザーを更新しました',
+        description: '社員を更新しました',
       });
 
       navigate('/master/dashboard');
@@ -156,7 +156,7 @@ export default function UserEdit() {
       toast({
         title: 'エラー',
         description:
-          error instanceof Error ? error.message : 'ユーザー更新に失敗しました',
+          error instanceof Error ? error.message : '社員更新に失敗しました',
         variant: 'destructive',
       });
     }
@@ -179,7 +179,7 @@ export default function UserEdit() {
 
       toast({
         title: '削除完了',
-        description: 'ユーザーを削除しました',
+        description: '社員を削除しました',
       });
 
       navigate('/master/dashboard');
@@ -229,7 +229,7 @@ export default function UserEdit() {
 
       <FormPageContent>
         <FormPageTitle>
-          {mode === 'profile' ? 'プロフィール編集' : 'ユーザー更新'}
+          {mode === 'profile' ? 'プロフィール編集' : '社員更新'}
         </FormPageTitle>
 
         <UserForm

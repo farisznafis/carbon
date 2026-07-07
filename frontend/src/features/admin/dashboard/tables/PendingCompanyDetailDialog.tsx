@@ -101,7 +101,7 @@ export function PendingCompanyDetailDialog({
             </div>
           </DetailSection>
 
-          <DetailSection title="担当者情報">
+          <DetailSection title="責任者情報">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FieldRow
                 label="氏名"

@@ -85,7 +85,7 @@ export function UserTable({
     {
       id: 'username',
       key: 'username',
-      label: 'ユーザ名',
+      label: '社員名',
       render: (_value, row) => row.username ?? '—',
       sortable: true,
       truncate: true,
@@ -141,11 +141,11 @@ export function UserTable({
         title={
           <p className='flex items-center gap-2 text-2xl font-bold'>
             <Users className='h-6 w-6' />
-            ユーザー
+            社員
             <InlineHelp
               content={
                 <div className='text-sm'>
-                  ユーザーの行をクリックすると、プロフィール詳細へ移動します。
+                  社員の行をクリックすると、プロフィール詳細へ移動します。
                 </div>
               }
             />
@@ -158,7 +158,7 @@ export function UserTable({
         height='max-h-[300px]'
         emptyState={
           <p className='text-muted-foreground'>
-            まだユーザーが登録されていません
+            まだ社員が登録されていません
           </p>
         }
         clickable={Boolean(onRowClick)}

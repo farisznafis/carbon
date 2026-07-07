@@ -27,7 +27,7 @@ export default function MasterUserProfilePage() {
 
     const loadProfile = async () => {
       if (!userId) {
-        handleError('ユーザーIDが見つかりません。');
+        handleError('社員IDが見つかりません。');
         setLoading(false);
         return;
       }

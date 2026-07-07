@@ -192,8 +192,8 @@ export default function ProjectDetailAdmin() {
       </DetailSection>
 
       <DetailSection
-        title='担当者情報'
-        description='担当者の連絡先と所属情報を確認できます。'
+        title='責任者情報'
+        description='責任者の連絡先と所属情報を確認できます。'
       >
         <ProjectDetailItem
           label='氏名'

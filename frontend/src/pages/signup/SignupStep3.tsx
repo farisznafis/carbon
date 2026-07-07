@@ -135,7 +135,7 @@ export const SignupStep3 = () => {
           </FormGrid>
         </FormSection>
 
-        <FormSection number={3} title="担当者情報">
+        <FormSection number={3} title="責任者情報">
           <FormGrid>
             <DetailRow label="姓" value={signupData.lastName} />
             <DetailRow label="名" value={signupData.firstName} />

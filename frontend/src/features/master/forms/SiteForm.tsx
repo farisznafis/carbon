@@ -378,7 +378,7 @@ export function SiteForm({
               />
             </FormSection>
 
-              <FormSection number={3} title={<>担当者 <RequiredBadge /></>}>
+              <FormSection number={3} title={<>責任者 <RequiredBadge /></>}>
                 <FormField
                   control={form.control}
                   name="userId"
@@ -429,7 +429,7 @@ export function SiteForm({
                         )}
                         {hasNoSelectableUsers && (
                           <FormDescription>
-                            選択可能なユーザーがいません。未選択の場合はマスターが担当者になります。
+                            選択可能な社員がいません。未選択の場合はマスターが担当者になります。
                           </FormDescription>
                         )}
                         {userOptionsError && (

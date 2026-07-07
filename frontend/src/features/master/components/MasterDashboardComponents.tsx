@@ -66,7 +66,7 @@ export function MasterDashboardTabs() {
           拠点管理
         </TabsTrigger>
         <TabsTrigger value="users" className={triggerClassName}>
-          ユーザ管理
+          社員管理
         </TabsTrigger>
       </TabsList>
     </div>
@@ -172,7 +172,7 @@ export function UserDashboardCard({
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <User className="h-4 w-4 shrink-0" />
             <span className="shrink-0 text-muted-foreground">
-              ユーザ名
+              社員名
             </span>
             <span className="truncate">{user.username || '-'}</span>
           </span>

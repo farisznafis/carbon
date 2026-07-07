@@ -539,7 +539,7 @@ export default function AdminProjectEditPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>担当者情報</CardTitle>
+            <CardTitle>責任者情報</CardTitle>
           </CardHeader>
           <CardContent>
             <FieldGrid fields={adminProjectEditPicFields} form={form} />

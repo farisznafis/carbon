@@ -50,7 +50,7 @@ export default function UserRegister() {
       toast({
         title: 'エラー',
         description:
-          error instanceof Error ? error.message : 'ユーザー登録内容の検証に失敗しました',
+          error instanceof Error ? error.message : '社員登録内容の検証に失敗しました',
         variant: 'destructive',
       });
       throw error;
@@ -69,7 +69,7 @@ export default function UserRegister() {
 
       toast({
         title: '成功',
-        description: 'ユーザーを登録しました',
+        description: '社員を登録しました',
       });
 
       navigate('/master/dashboard');
@@ -78,7 +78,7 @@ export default function UserRegister() {
       toast({
         title: 'エラー',
         description:
-          error instanceof Error ? error.message : 'ユーザー登録に失敗しました',
+          error instanceof Error ? error.message : '社員登録に失敗しました',
         variant: 'destructive',
       });
     }
@@ -113,7 +113,7 @@ export default function UserRegister() {
       />
 
       <FormPageContent>
-        <FormPageTitle>ユーザー追加</FormPageTitle>
+        <FormPageTitle>社員追加</FormPageTitle>
 
         <UserForm
           mode="create"

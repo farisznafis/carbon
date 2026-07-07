@@ -433,7 +433,7 @@ export const SignupStep1 = () => {
               />
             </FormSection>
 
-            <FormSection number={3} title="担当者情報">
+            <FormSection number={3} title="責任者情報">
               <FormGrid>
                 <FormField
                   control={form.control}

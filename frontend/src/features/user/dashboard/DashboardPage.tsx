@@ -197,7 +197,7 @@ const Dashboard = () => {
               <h2 className='mb-2'>{site?.siteName || '拠点ダッシュボード'}</h2>
               <div className='space-y-1 text-sm text-muted-foreground'>
                 <p>
-                  担当者{' '}
+                  責任者{' '}
                 {`${site?.picLastName ?? ''} ${site?.picFirstName ?? ''}`.trim() ||
                   '-'}
                 </p>

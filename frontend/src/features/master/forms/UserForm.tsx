@@ -276,7 +276,7 @@ export function UserForm({
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <RequiredLabel>ユーザー名</RequiredLabel>
+                      <RequiredLabel>社員名</RequiredLabel>
                       <FormControl>
                         <Input inputSize="sm" placeholder="yamada_taro" {...field} />
                       </FormControl>
@@ -395,7 +395,7 @@ export function UserForm({
               {onDelete ? (
                 <>
                   <DeleteAlertDialog
-                    label="ユーザー"
+                    label="社員"
                     open={isDeleteDialogOpen}
                     onOpenChange={setIsDeleteDialogOpen}
                     onDelete={onDelete}
@@ -444,7 +444,7 @@ export function UserForm({
 
   return (
     <FormPageWrapper
-      pageName={mode === 'create' ? 'ユーザー追加' : 'ユーザー更新'}
+      pageName={mode === 'create' ? '社員追加' : '社員更新'}
       title=""
       onBack={onBack}
       backText="戻る"

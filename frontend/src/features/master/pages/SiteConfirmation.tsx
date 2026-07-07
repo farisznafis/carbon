@@ -145,9 +145,9 @@ export function SiteConfirmation({
               </div>
             </FormSection>
 
-              <FormSection number={3} title="担当者">
+              <FormSection number={3} title="責任者">
                 <ConfirmationItem
-                  label="担当者"
+                  label="責任者"
                   value={selectedUserName ?? 'マスター'}
                   originalValue={
                     isCreateMode ? undefined : (originalUserName ?? 'マスター')
