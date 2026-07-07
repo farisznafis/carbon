@@ -14,9 +14,13 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
+import com.kct.jcredit.core_backend.dto.response.FileUploadResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+import com.kct.jcredit.core_backend.dto.response.details.FileErrorDetailsResponse;
 import com.kct.jcredit.core_backend.exception.AuthenticationException;
 import com.kct.jcredit.core_backend.exception.BusinessRuleViolationException;
 import com.kct.jcredit.core_backend.exception.CustomException;
@@ -36,6 +40,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestControllerAdvice
 public class GlobalErrorHandler {
+
+    private static final int MAX_UPLOAD_SIZE_MB = 10;
 
     // ---- Most specific custom exceptions first ----
 
@@ -76,6 +82,26 @@ public class GlobalErrorHandler {
         log.warn("File too large: maxSizeMB={}, actualSizeMB={}", ex.getMaxSizeMB(), ex.getActualSizeMB());
 
         BaseResponse response = BaseResponse.error(ResponseConstants.FILE_TOO_LARGE, ResponseConstants.MSG_FILE_TOO_LARGE);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<FileUploadResponse> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
+        log.warn("Multipart upload exceeded max size: maxUploadSize={}", ex.getMaxUploadSize());
+
+        return new ResponseEntity<>(fileTooLargeUploadResponse(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<BaseResponse> handleMultipartException(MultipartException ex) {
+        log.warn("Multipart request failed: {}", ex.getMessage());
+
+        if (containsCause(ex, MaxUploadSizeExceededException.class)) {
+            BaseResponse response = fileTooLargeUploadResponse();
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        BaseResponse response = BaseResponse.error(ResponseConstants.BAD_REQUEST, ResponseConstants.MSG_BAD_REQUEST);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
@@ -238,6 +264,27 @@ public class GlobalErrorHandler {
             }
         }
         return null;
+    }
+
+    private FileUploadResponse fileTooLargeUploadResponse() {
+        FileUploadResponse response = new FileUploadResponse();
+        response.setStatusCode(ResponseConstants.FILE_TOO_LARGE);
+        response.setMessage(ResponseConstants.MSG_FILE_TOO_LARGE);
+        response.setDetails(FileErrorDetailsResponse.builder()
+                .maxSizeMB(MAX_UPLOAD_SIZE_MB)
+                .build());
+        return response;
+    }
+
+    private boolean containsCause(Throwable throwable, Class<? extends Throwable> targetClass) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (targetClass.isInstance(current)) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     private Map<String, String> resolveJsonParseErrors(HttpMessageNotReadableException ex) {
