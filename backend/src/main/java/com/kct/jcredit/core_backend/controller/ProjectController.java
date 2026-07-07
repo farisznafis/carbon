@@ -49,10 +49,12 @@ import org.springframework.validation.annotation.Validated;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 
 @RestController
 @RequestMapping("/project")
+@Tag(name = "プロジェクト", description = "プロジェクトの作成、更新、一覧、書類、モニタリング情報を管理するAPIです。")
 @RequiredArgsConstructor
 @Validated
 public class ProjectController {

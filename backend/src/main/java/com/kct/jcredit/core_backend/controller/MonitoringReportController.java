@@ -9,6 +9,7 @@ import com.kct.jcredit.core_backend.util.ResponseUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/monitoringreport")
+@Tag(name = "モニタリング報告書", description = "モニタリング報告書の自動入力情報、登録、取得を管理するAPIです。")
 @RequiredArgsConstructor
 public class MonitoringReportController {
     private final MonitoringApplicationService monitoringApplicationService;
@@ -33,7 +35,7 @@ public class MonitoringReportController {
     @GetMapping("/autofill/company/{companyId}")
     @PreAuthorize("hasAnyRole('master','user')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "モニタリング報告会社情報取得", description = "モニタリング報告書入力用の会社マスタ情報を取得します。")
+    @Operation(summary = "モニタリング報告参加企業情報取得", description = "モニタリング報告書入力用の参加企業マスタ情報を取得します。")
     public ResponseEntity<CorporationMasterResponse> getCompanyMaster(
             Authentication authentication,
             @PathVariable String companyId) {

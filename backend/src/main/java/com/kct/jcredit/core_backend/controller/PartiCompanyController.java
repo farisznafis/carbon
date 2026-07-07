@@ -43,11 +43,13 @@ import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/company")
+@Tag(name = "参加企業", description = "参加企業の登録、更新、停止、再有効化、削除申請を管理するAPIです。")
 @RequiredArgsConstructor
 public class PartiCompanyController {
 
@@ -62,7 +64,7 @@ public class PartiCompanyController {
     @PatchMapping
     @PreAuthorize("hasAnyRole('master')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "参加会社情報更新", description = "ログイン会社の参加会社情報を更新します。")
+    @Operation(summary = "参加企業情報更新", description = "ログイン中の参加企業情報を更新します。")
     public ResponseEntity<UpdatePartiCompanyResponse> updateCompany(
             @RequestBody @Valid UpdatePartiCompanyRequest request) {
 
@@ -71,7 +73,7 @@ public class PartiCompanyController {
     }
 
     @PostMapping("/signup")
-    @Operation(summary = "参加会社サインアップ", description = "新しい参加会社の登録申請を作成します。")
+    @Operation(summary = "参加企業サインアップ", description = "新しい参加企業の登録申請を作成します。")
     public ResponseEntity<PartiCompanyResponseDetails> signup(
             @Valid @RequestBody PartiCompanyRegisterRequest request) {
         PartiCompanyResponseDetails response = registerService.register(request);
@@ -80,7 +82,7 @@ public class PartiCompanyController {
 
     //運用・管理者のみ機能
     @PostMapping("/signup/company-info/validate")
-    @Operation(summary = "会社情報入力検証", description = "サインアップ時の会社情報を保存せずに検証します。")
+    @Operation(summary = "参加企業情報入力検証", description = "サインアップ時の参加企業情報を保存せずに検証します。")
     public ResponseEntity<BaseResponse> validateSignupCompanyInfo(
             @Valid @RequestBody PartiCompanyInfoValidateRequest request) {
         registerService.validateCompanyInfo(request);
@@ -97,7 +99,7 @@ public class PartiCompanyController {
     @PostMapping("/suspend")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "参加会社停止", description = "指定された参加会社の利用を停止します。")
+    @Operation(summary = "参加企業停止", description = "指定された参加企業の利用を停止します。")
     public ResponseEntity<SuspendCompanyResponse> suspendCompany(
             @RequestBody @Valid SuspendCompanyRequest request) {
 
@@ -136,7 +138,7 @@ public class PartiCompanyController {
     @PostMapping("/reactivate")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "参加会社再有効化", description = "停止中の参加会社を再有効化します。")
+    @Operation(summary = "参加企業再有効化", description = "停止中の参加企業を再有効化します。")
     public ResponseEntity<ReactivationResponse> reactivateCompany(
             @RequestBody @Valid ReactivationRequest request) {
 
@@ -194,7 +196,7 @@ public class PartiCompanyController {
     @PostMapping("/{companyId}/deletion-request")
     @PreAuthorize("hasAnyRole('master')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "会社削除申請作成", description = "指定された参加会社の削除申請を作成します。")
+    @Operation(summary = "参加企業削除申請作成", description = "指定された参加企業の削除申請を作成します。")
     public ResponseEntity<DeletionRequestResponse> createDeletionRequest(
             Authentication authentication,
             @PathVariable String companyId,
@@ -209,7 +211,7 @@ public class PartiCompanyController {
     @PostMapping("/{companyId}/deletion-approve")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "会社削除申請承認", description = "指定された参加会社の削除申請を承認します。")
+    @Operation(summary = "参加企業削除申請承認", description = "指定された参加企業の削除申請を承認します。")
     public ResponseEntity<DeletionRequestResponse> approveDeletionRequest(
             Authentication authentication,
             @PathVariable String companyId,
@@ -224,7 +226,7 @@ public class PartiCompanyController {
     @PostMapping("/{companyId}/deletion-reject")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "会社削除申請却下", description = "指定された参加会社の削除申請を却下します。")
+    @Operation(summary = "参加企業削除申請却下", description = "指定された参加企業の削除申請を却下します。")
     public ResponseEntity<DeletionRequestResponse> rejectDeletionRequest(
             Authentication authentication,
             @PathVariable String companyId,

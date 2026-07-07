@@ -8,6 +8,7 @@ import com.kct.jcredit.core_backend.service.CompanyApprovalService;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/admin/companies")
+@Tag(name = "管理者", description = "管理者による参加企業の承認、却下、承認待ち一覧を管理するAPIです。")
 @RequiredArgsConstructor
 public class AdminCompanyController {
 
@@ -29,7 +31,7 @@ public class AdminCompanyController {
     @PostMapping("/{companyId}/approve")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "会社登録承認", description = "指定された参加会社の登録申請を承認します。")
+    @Operation(summary = "参加企業登録承認", description = "指定された参加企業の登録申請を承認します。")
     public ResponseEntity<ApproveCompanyResponse> approveCompany(@PathVariable String companyId) {
         ApproveCompanyResponse response = companyApprovalService.approveCompany(companyId);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
@@ -38,7 +40,7 @@ public class AdminCompanyController {
     @PostMapping("/{companyId}/reject")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "会社登録却下", description = "指定された参加会社の登録申請を却下します。")
+    @Operation(summary = "参加企業登録却下", description = "指定された参加企業の登録申請を却下します。")
     public ResponseEntity<RejectCompanyResponse> rejectCompany(
             @PathVariable String companyId,
             @RequestBody @Valid RejectCompanyRequest request) {
@@ -49,7 +51,7 @@ public class AdminCompanyController {
     @GetMapping("/pending")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "承認待ち会社一覧取得", description = "承認待ちの参加会社一覧を取得します。")
+    @Operation(summary = "承認待ち参加企業一覧取得", description = "承認待ちの参加企業一覧を取得します。")
     public ResponseEntity<PendingCompanyListResponse> getPendingCompanies() {
         PendingCompanyListResponse response = companyApprovalService.getPendingCompanies();
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));

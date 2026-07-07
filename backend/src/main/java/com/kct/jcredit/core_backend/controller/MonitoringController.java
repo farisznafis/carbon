@@ -18,6 +18,7 @@ import com.kct.jcredit.core_backend.util.JwtUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -30,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/monitoring")
+@Tag(name = "モニタリング", description = "モニタリング記録、証跡ファイル、取消申請を管理するAPIです。")
 @RequiredArgsConstructor
 public class MonitoringController {
 

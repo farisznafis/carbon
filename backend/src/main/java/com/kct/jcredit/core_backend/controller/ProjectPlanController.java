@@ -31,10 +31,12 @@ import lombok.RequiredArgsConstructor;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 
 @RestController
 @RequestMapping("/projectplan")
+@Tag(name = "プロジェクト計画書", description = "プロジェクト計画書の自動入力情報、申請情報、適用条件を管理するAPIです。")
 @RequiredArgsConstructor
 public class ProjectPlanController {
     private final ProjectApplicationService projectApplicationService;

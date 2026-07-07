@@ -17,6 +17,7 @@ import com.kct.jcredit.core_backend.util.ResponseUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
 
 import java.io.IOException;
@@ -31,6 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/site/project")
+@Tag(name = "拠点プロジェクト設備", description = "拠点プロジェクトの設備登録、ファイルアップロード、入力検証を管理するAPIです。")
 public class SiteProjectController {
 
     private final JwtUtil jwtUtil;

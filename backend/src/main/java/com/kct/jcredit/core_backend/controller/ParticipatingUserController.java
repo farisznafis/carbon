@@ -17,6 +17,7 @@ import com.kct.jcredit.core_backend.util.ResponseUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/user")
+@Tag(name = "参加企業ユーザー", description = "参加企業ユーザーの作成、更新、一覧、プロフィール、通知を管理するAPIです。")
 @RequiredArgsConstructor
 public class ParticipatingUserController {
 
@@ -37,7 +39,7 @@ public class ParticipatingUserController {
     @GetMapping
     @PreAuthorize("hasAnyRole('master')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "ユーザー一覧取得", description = "ログイン会社に所属する参加ユーザー一覧を取得します。")
+    @Operation(summary = "参加企業ユーザー一覧取得", description = "ログイン中の参加企業に所属する参加企業ユーザー一覧を取得します。")
     public ResponseEntity<UserListResponse> getUsers(Authentication authentication) {
 
         UserListResponse response = userService.getUsersByCompany(jwtUtil.extractCompanyId(authentication.getCredentials().toString()));
@@ -47,7 +49,7 @@ public class ParticipatingUserController {
     @DeleteMapping("/site")
     @PreAuthorize("hasAnyRole('master')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "ユーザー拠点紐付け削除", description = "指定されたユーザーと拠点の紐付けを削除します。")
+    @Operation(summary = "参加企業ユーザー拠点紐付け削除", description = "指定された参加企業ユーザーと拠点の紐付けを削除します。")
     public ResponseEntity<DeleteUserSiteResponse> deleteUserSite(DeleteUserSite request) {
 
         DeleteUserSiteResponse response = userService.removeUserSiteConnection(request);
@@ -57,7 +59,7 @@ public class ParticipatingUserController {
     @PostMapping
     @PreAuthorize("hasAnyRole('master')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "ユーザー作成", description = "ログイン会社に新しい参加ユーザーを作成します。")
+    @Operation(summary = "参加企業ユーザー作成", description = "ログイン中の参加企業に新しい参加企業ユーザーを作成します。")
     public ResponseEntity<CreateUserResponse> createUser(
             Authentication authentication,
             @RequestBody @Valid CreateUserRequest request) {
@@ -78,7 +80,7 @@ public class ParticipatingUserController {
     @PostMapping("/validate-create")
     @PreAuthorize("hasAnyRole('master')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "ユーザー作成検証", description = "ユーザー作成リクエストを保存せずに検証します。")
+    @Operation(summary = "参加企業ユーザー作成検証", description = "参加企業ユーザー作成リクエストを保存せずに検証します。")
     public ResponseEntity<BaseResponse> validateCreateUser(
             Authentication authentication,
             @RequestBody @Valid CreateUserRequest request) {
@@ -91,7 +93,7 @@ public class ParticipatingUserController {
 
     @PatchMapping
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "ユーザー情報更新", description = "指定された参加ユーザーの情報を更新します。")
+    @Operation(summary = "参加企業ユーザー情報更新", description = "指定された参加企業ユーザーの情報を更新します。")
     public ResponseEntity<UpdateUserResponse> updateUser(
             Authentication authentication,
             @RequestBody @Valid UpdateUserRequest request) {
@@ -103,7 +105,7 @@ public class ParticipatingUserController {
 
     @PostMapping("/validate-update")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "ユーザー更新検証", description = "ユーザー更新リクエストを保存せずに検証します。")
+    @Operation(summary = "参加企業ユーザー更新検証", description = "参加企業ユーザー更新リクエストを保存せずに検証します。")
     public ResponseEntity<BaseResponse> validateUpdateUser(
             Authentication authentication,
             @RequestBody @Valid UpdateUserRequest request) {
@@ -117,7 +119,7 @@ public class ParticipatingUserController {
     @GetMapping("/profile/{userId}")
     @PreAuthorize("hasAnyRole('master', 'operator')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "ユーザープロフィール取得", description = "指定されたユーザーIDのプロフィール情報を取得します。")
+    @Operation(summary = "参加企業ユーザープロフィール取得", description = "指定された参加企業ユーザーIDのプロフィール情報を取得します。")
     public ResponseEntity<UserProfileResponse> getUserProfileById(
             @PathVariable Integer userId,
             Authentication authentication) {
@@ -130,7 +132,7 @@ public class ParticipatingUserController {
 
     @GetMapping("/notifications")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "通知一覧取得", description = "ログインユーザーの通知一覧を取得します。")
+    @Operation(summary = "参加企業ユーザー通知一覧取得", description = "ログイン中の参加企業ユーザーの通知一覧を取得します。")
     public ResponseEntity<NotificationListResponse> getNotifications(
             Authentication authentication,
             @RequestParam(required = false, defaultValue = "false") Boolean unreadOnly,

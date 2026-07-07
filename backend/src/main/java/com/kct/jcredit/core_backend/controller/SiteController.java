@@ -15,6 +15,7 @@ import com.kct.jcredit.core_backend.util.JwtUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/site")
+@Tag(name = "拠点", description = "拠点の作成、更新、取得、関連プロジェクトと設備情報を管理するAPIです。")
 @RequiredArgsConstructor
 public class SiteController {
 
