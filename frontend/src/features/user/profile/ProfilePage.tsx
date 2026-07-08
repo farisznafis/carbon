@@ -34,7 +34,7 @@ const Profile = () => {
         if (!isMounted) return;
         clearProfile();
         handleError(
-          err.message || 'プロフィールの読み込み中にエラーが発生しました',
+          err.message || 'プロファイルの読み込み中にエラーが発生しました',
         );
       });
 

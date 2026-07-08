@@ -95,7 +95,7 @@ export const Navbar = () => {
                     className="flex items-center space-x-1"
                   >
                     <User className="h-4 w-4" />
-                    <span>プロフィール</span>
+                    <span>プロファイル</span>
                   </Button>
                   <Button
                     variant="ghost"

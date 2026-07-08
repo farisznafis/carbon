@@ -128,7 +128,7 @@ const MasterDashboard = () => {
           <TabsContent value="users" className="m-0">
             <DashboardSection
               title="社員"
-              description="行をクリックすると、プロフィール詳細へ移動できます。"
+              description="行をクリックすると、プロファイル詳細へ移動できます。"
               addLabel="社員を追加"
               onAdd={() => navigate(paths.masterUserRegister)}
               addDisabled={users.length > 49}

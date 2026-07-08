@@ -101,7 +101,7 @@ const PasswordChange = () => {
       title=''
       description='8文字以上のパスワードを設定してください'
       onBack={() => navigate('/profile')}
-      // backText='プロフィールに戻る'
+      // backText='プロファイルに戻る'
       backText='戻る'
     >
       <Form {...passwordForm}>

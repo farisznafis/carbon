@@ -226,7 +226,7 @@ const SiteDetail = () => {
     <div className="container mx-auto p-6 space-y-6">
       <PageBackButton
         onClick={() => navigate('/profile')}
-        label='プロフィールに戻る'
+        label='プロファイルに戻る'
         className='mb-4 rounded-full'
       />
       <Button 
