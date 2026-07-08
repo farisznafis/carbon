@@ -128,7 +128,7 @@ function RecentMetricCard({
 }: RecentMetricCardProps) {
   return (
     <div className='flex h-24 min-w-0 flex-col items-center justify-center gap-1 rounded-lg border border-border bg-card px-3 py-3 text-center shadow-app-sm'>
-      <div className='flex min-w-0 items-center justify-center gap-1 text-sm font-bold leading-6 text-muted-foreground'>
+      <div className='text-table flex min-w-0 items-center justify-center gap-1 font-bold text-muted-foreground'>
         {icon}
         <span className='min-w-0 truncate'>{label}</span>
       </div>
@@ -137,7 +137,7 @@ function RecentMetricCard({
           {value}
         </span>
         {unit ? (
-          <span className='pb-0.5 text-sm leading-6 text-muted-foreground'>
+          <span className='text-table pb-0.5 text-muted-foreground'>
             {unit}
           </span>
         ) : null}
@@ -158,7 +158,7 @@ function RecentDataBar({ row, onRegister }: RecentDataBarProps) {
   return (
     <section className={`${projectDetailCardClassName} p-5`}>
       <div className='mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='inline-flex w-fit items-center rounded-full border border-border px-4 py-1.5 text-sm font-bold leading-6 text-foreground'>
+        <div className='text-table inline-flex w-fit items-center rounded-full border border-border px-4 py-1.5 font-bold text-foreground'>
           {formatMonitoringDate(row.dateRecorded)}
         </div>
         <Button
@@ -479,7 +479,7 @@ const ProjectDetail = () => {
         <div className='mx-auto w-full max-w-[1280px] space-y-7'>
           <header className='min-h-[66px] animate-slide-up'>
             <h1 className='text-foreground'>{project.name}</h1>
-            <p className='mt-2 text-muted-foreground'>{project.description}</p>
+            <p className='text-body mt-2 text-muted-foreground'>{project.description}</p>
           </header>
 
           <Tabs
@@ -562,7 +562,7 @@ const ProjectDetail = () => {
               </Card>
 
               {recentLoading ? (
-                <div className={`${projectDetailCardClassName} p-5 text-sm text-muted-foreground`}>
+                <div className={`${projectDetailCardClassName} text-subtle p-5 text-muted-foreground`}>
                   読み込み中...
                 </div>
               ) : (
@@ -591,7 +591,7 @@ const ProjectDetail = () => {
                     <div className='flex min-h-[210px] flex-1 flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted text-center'>
                       <ChartNoAxesColumn className='mb-3 h-8 w-8 text-primary' />
                       <p className='font-semibold'>Estimation Graphic (推定グラフ)</p>
-                      <p className='text-sm text-muted-foreground'>
+                      <p className='text-subtle text-muted-foreground'>
                         機械学習モデルによる今後の削減予測
                       </p>
                     </div>
@@ -604,7 +604,7 @@ const ProjectDetail = () => {
                       <div className='h-2 rounded-full bg-muted'>
                         <div className='h-2 w-5/6 rounded-full bg-primary' />
                       </div>
-                      <p className='text-right text-sm font-bold text-primary'>達成率 83%</p>
+                      <p className='text-subtle text-right font-bold text-primary'>達成率 83%</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -622,7 +622,7 @@ const ProjectDetail = () => {
               </CardHeader>
               <CardContent>
                 {recentLoading ? (
-                  <div className='text-sm text-muted-foreground'>
+                  <div className='text-table text-muted-foreground'>
                     Loading...
                   </div>
                 ) : (
@@ -633,10 +633,10 @@ const ProjectDetail = () => {
                         className='p-4'
                       >
                         <div className='flex flex-wrap items-center justify-between gap-3'>
-                          <div className='text-sm text-muted-foreground'>
+                          <div className='text-table text-muted-foreground'>
                             {row.dateRecorded}
                           </div>
-                          <div className='flex flex-wrap gap-4 text-sm'>
+                          <div className='text-table flex flex-wrap gap-4'>
                             <span>
                               PV Gen:{' '}
                               <strong>
@@ -663,7 +663,7 @@ const ProjectDetail = () => {
                             </span>
                           </div>
                         </div>
-                        <div className='mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground md:grid-cols-4'>
+                        <div className='text-subtle mt-2 grid grid-cols-2 gap-2 text-muted-foreground md:grid-cols-4'>
                           <div>
                             Control Runtime:{' '}
                             {formatNumber(row.ELPJ_control_value)} hours
@@ -704,7 +704,7 @@ const ProjectDetail = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className='text-sm text-muted-foreground'>
+                <div className='text-table text-muted-foreground'>
                   資料はまだありません。
                 </div>
               </CardContent>
@@ -722,7 +722,7 @@ const ProjectDetail = () => {
               </CardHeader>
               <CardContent>
                 <div className='overflow-x-auto'>
-                  <table className='w-full table-fixed border-collapse text-sm'>
+                  <table className='text-table w-full table-fixed border-collapse'>
                     <thead>
                       <tr className='border-b'>
                         <th className='text-left p-3 w-[18%]'>拠点名</th>
