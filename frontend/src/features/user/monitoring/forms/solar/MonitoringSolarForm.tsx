@@ -71,6 +71,9 @@ export type MonitoringSolarFormData = {
 
 const MAX_UPLOAD_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 const MAX_UPLOAD_FILE_SIZE_MESSAGE = 'ファイルサイズは10MB以下にしてください。';
+const FILE_TYPE_ERROR_MESSAGE = '対応していないファイル形式です。';
+const ELPV_FILE_EXTENSIONS = ['.pdf', '.csv'];
+const DEFAULT_EVIDENCE_FILE_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png'];
 
 interface MonitoringSolarFormProps {
   mode: 'create' | 'edit';
@@ -101,7 +104,24 @@ export function MonitoringSolarForm({
     fieldName: FieldPath<MonitoringSolarFormData>,
     onChange: (file: File | null) => void,
     file: File | null,
+    allowedExtensions: string[],
   ) => {
+    if (file) {
+      const lowerFileName = file.name.toLowerCase();
+      const isAllowedFileType = allowedExtensions.some((extension) =>
+        lowerFileName.endsWith(extension),
+      );
+
+      if (!isAllowedFileType) {
+        onChange(null);
+        form.setError(fieldName, {
+          type: 'validate',
+          message: `${FILE_TYPE_ERROR_MESSAGE}（${allowedExtensions.join(', ')}）`,
+        });
+        return;
+      }
+    }
+
     if (file && file.size > MAX_UPLOAD_FILE_SIZE_BYTES) {
       onChange(null);
       form.setError(fieldName, {
@@ -335,7 +355,12 @@ export function MonitoringSolarForm({
                             supportedFormats="(.pdf, .csv)"
                             value={(field.value as File) ?? null}
                             onChange={(file) =>
-                              handleFileChange('ELpv_evidence', field.onChange, file)
+                              handleFileChange(
+                                'ELpv_evidence',
+                                field.onChange,
+                                file,
+                                ELPV_FILE_EXTENSIONS,
+                              )
                             }
                           />
                         </FormControl>
@@ -357,7 +382,12 @@ export function MonitoringSolarForm({
                             supportedFormats="(.pdf, .jpg, .jpeg, .png)"
                             value={(field.value as File) ?? null}
                             onChange={(file) =>
-                              handleFileChange('ELpvr_evidence', field.onChange, file)
+                              handleFileChange(
+                                'ELpvr_evidence',
+                                field.onChange,
+                                file,
+                                DEFAULT_EVIDENCE_FILE_EXTENSIONS,
+                              )
                             }
                           />
                         </FormControl>
@@ -383,6 +413,7 @@ export function MonitoringSolarForm({
                                 'ELPJ_battery_evidence',
                                 field.onChange,
                                 file,
+                                DEFAULT_EVIDENCE_FILE_EXTENSIONS,
                               )
                             }
                           />
@@ -409,6 +440,7 @@ export function MonitoringSolarForm({
                                 'ELPJ_control_equipment_spec_files',
                                 field.onChange,
                                 file,
+                                DEFAULT_EVIDENCE_FILE_EXTENSIONS,
                               )
                             }
                           />
