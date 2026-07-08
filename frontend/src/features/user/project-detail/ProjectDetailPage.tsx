@@ -130,6 +130,9 @@ type RecentDataBarProps = {
 };
 
 function RecentDataBar({ row, onRegister }: RecentDataBarProps) {
+  // If battery was not replaced (false), show 0 for battery discharge value
+  const batteryDischargeValue = row.changedBattery === false ? 0 : row.ELPJ_battery_value;
+  
   return (
     <section className={`${projectDetailCardClassName} p-5 backdrop-blur-[7.5px]`}>
       <div className='mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
@@ -145,19 +148,12 @@ function RecentDataBar({ row, onRegister }: RecentDataBarProps) {
         </Button>
       </div>
 
-      <div className='grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6'>
+      <div className='grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5'>
         <RecentMetricCard
           icon={<Cpu className='h-5 w-5 shrink-0 text-[#699267]' />}
           label='制御機器稼働時間'
           value={formatNumber(row.ELPJ_control_value)}
           unit='時間'
-        />
-        <RecentMetricCard
-          icon={<BatteryCharging className='h-5 w-5 shrink-0 text-[#699267]' />}
-          label='蓄電池交換'
-          value={
-            row.changedBattery == null ? '-' : row.changedBattery ? 'あり' : 'なし'
-          }
         />
         <RecentMetricCard
           icon={<Zap className='h-5 w-5 shrink-0 text-[#699267]' />}
@@ -174,7 +170,7 @@ function RecentDataBar({ row, onRegister }: RecentDataBarProps) {
         <RecentMetricCard
           icon={<BatteryCharging className='h-5 w-5 shrink-0 text-[#699267]' />}
           label='蓄電池放電量'
-          value={formatNumber(row.ELPJ_battery_value)}
+          value={formatNumber(batteryDischargeValue)}
           unit='kWh'
         />
         <RecentMetricCard
@@ -444,28 +440,28 @@ const ProjectDetail = () => {
   }
 
   return (
-    <main className='min-h-screen bg-background px-5 py-10 sm:px-8 lg:px-12'>
-      <div className='mx-auto w-full max-w-[1280px] space-y-7'>
-        <header className='relative min-h-[66px] animate-slide-up'>
-          <PageBackButton
-            onClick={() => {
-              if (siteId) {
-                navigate(`/sites/${siteId}/dashboard`);
-              } else {
-                navigate(-1);
-              }
-            }}
-            label=''
-            className='absolute left-0 top-0 h-12 w-12 rounded-full bg-primary p-0 text-primary-foreground hover:bg-primary/90'
-          />
-          <div className='pl-16'>
-            <h1 className='text-[34px] font-bold leading-[40px] text-[#191C1C] sm:text-[40px] sm:leading-[44px]'>
-              {project.name}
-            </h1>
-            <p className='mt-1 text-base leading-7 text-[#434841]'>
-              {project.description}
-            </p>
-          </div>
+    <div className='relative min-h-screen bg-background py-8'>
+      <div className='container mx-auto px-4'>
+        <PageBackButton
+          onClick={() => {
+            if (siteId) {
+              navigate(`/sites/${siteId}/dashboard`);
+            } else {
+              navigate(-1);
+            }
+          }}
+          label=''
+          className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
+        />
+        
+        <div className='mx-auto w-full max-w-[1280px] space-y-7'>
+        <header className='min-h-[66px] animate-slide-up'>
+          <h1 className='text-[34px] font-bold leading-[40px] text-[#191C1C] sm:text-[40px] sm:leading-[44px]'>
+            {project.name}
+          </h1>
+          <p className='mt-1 text-base leading-7 text-[#434841]'>
+            {project.description}
+          </p>
         </header>
 
         <Tabs
@@ -825,8 +821,9 @@ const ProjectDetail = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        </div>
       </div>
-    </main>
+    </div>
   );
 };
 
