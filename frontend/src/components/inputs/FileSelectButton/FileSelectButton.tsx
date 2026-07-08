@@ -24,17 +24,31 @@ export function FileSelectButton({
   variant = 'default',
 }: Readonly<Props>) {
   if (variant === 'design-system-pro') {
+    const hasFile = Boolean(value);
+
     return (
       <div className={cn('flex w-full flex-col items-start gap-2', className)}>
         <p className="text-small text-foreground">{label}</p>
         <label
           htmlFor={id}
-          className="flex min-h-[66px] w-full cursor-pointer items-center gap-2 rounded-[6px] border border-dashed border-[#B1B5BB] bg-[#F6F6F6] py-3 pl-4 pr-4 transition-colors hover:border-primary hover:bg-secondary/40"
+          className={cn(
+            'flex min-h-[66px] w-full cursor-pointer items-center gap-2 rounded-[6px] border border-dashed py-3 pl-4 pr-4 transition-colors',
+            hasFile
+              ? 'border-primary bg-[#EFF6EF] hover:bg-[#E8F1E8]'
+              : 'border-[#B1B5BB] bg-[#F6F6F6] hover:border-primary hover:bg-secondary/40',
+          )}
         >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border border-[#B1B5BB] bg-secondary text-primary">
+          <span
+            className={cn(
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border text-primary',
+              hasFile
+                ? 'border-primary bg-white'
+                : 'border-[#B1B5BB] bg-secondary',
+            )}
+          >
             <IconCloudUpload className="h-6 w-6" />
           </span>
-          <span className="flex min-w-0 flex-col gap-0.5 xl:flex-row xl:items-center xl:gap-1">
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5 xl:flex-row xl:items-center xl:gap-1">
             <span className="truncate text-base font-normal leading-7 text-[#1F2628]">
               {value?.name || 'ファイルを選択'}
             </span>
@@ -42,6 +56,11 @@ export function FileSelectButton({
               {supportedFormats}
             </span>
           </span>
+          {hasFile && (
+            <span className="ml-auto inline-flex shrink-0 items-center rounded-full bg-primary px-3 py-1 text-xs font-medium leading-4 text-primary-foreground">
+              アップロード済み
+            </span>
+          )}
         </label>
         <input
           id={id}
