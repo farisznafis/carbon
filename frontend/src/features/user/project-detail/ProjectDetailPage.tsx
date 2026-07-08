@@ -79,6 +79,9 @@ const fallbackMonitoringRow: MonitoringDisplayRow = {
   changedBattery: null,
 };
 
+const projectDetailCardClassName =
+  'rounded-[18px] border-[1.5px] border-[#C3C8BE] bg-white shadow-[0_6px_15px_rgba(0,0,0,0.04)]';
+
 function formatMonitoringDate(value: string | null | undefined) {
   if (!value || value === '-') return '-';
 
@@ -102,17 +105,17 @@ function RecentMetricCard({
   unit,
 }: RecentMetricCardProps) {
   return (
-    <div className='flex h-32 min-w-0 flex-col items-center justify-center gap-2 rounded-2xl border-[1.5px] border-[#B1B5BB] bg-white px-4 py-5 text-center'>
-      <div className='flex min-w-0 items-center justify-center gap-1.5 text-sm font-bold leading-5 tracking-normal text-[#434841] xl:text-base'>
+    <div className='flex h-[86px] min-w-0 flex-col items-center justify-center gap-1 rounded-[10px] border-[1.5px] border-[#B1B5BB] bg-white px-3 py-3 text-center'>
+      <div className='flex min-w-0 items-center justify-center gap-1 text-xs font-bold leading-5 tracking-normal text-[#434841]'>
         {icon}
         <span className='min-w-0 truncate'>{label}</span>
       </div>
       <div className='flex items-end justify-center gap-1'>
-        <span className='text-2xl font-bold leading-none tracking-normal text-[#434841] xl:text-3xl'>
+        <span className='text-2xl font-bold leading-none tracking-normal text-[#434841]'>
           {value}
         </span>
         {unit ? (
-          <span className='pb-0.5 text-sm font-normal leading-5 tracking-normal text-[rgba(31,38,40,0.7)]'>
+          <span className='pb-0.5 text-xs font-normal leading-5 tracking-normal text-[rgba(31,38,40,0.7)]'>
             {unit}
           </span>
         ) : null}
@@ -128,26 +131,21 @@ type RecentDataBarProps = {
 
 function RecentDataBar({ row, onRegister }: RecentDataBarProps) {
   return (
-    <section className='rounded-[18px] border-[1.5px] border-[#C3C8BE] bg-white p-4 shadow-sm backdrop-blur-[7.5px] sm:p-6'>
-      <div className='mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='inline-flex w-fit items-center gap-2 rounded-full border-[1.5px] border-[#B1B5BB] px-[18px] py-3'>
-          <span className='text-sm font-medium leading-5 tracking-normal text-[rgba(31,38,40,0.7)]'>
-            記録日
-          </span>
-          <span className='text-lg font-bold leading-6 tracking-normal text-[#191C1C]'>
-            {formatMonitoringDate(row.dateRecorded)}
-          </span>
+    <section className={`${projectDetailCardClassName} p-5 backdrop-blur-[7.5px]`}>
+      <div className='mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+        <div className='inline-flex w-fit items-center rounded-full border-[1.5px] border-[#B1B5BB] px-4 py-1.5 text-xs font-bold leading-5 tracking-normal text-[#191C1C]'>
+          {formatMonitoringDate(row.dateRecorded)}
         </div>
         <Button
           type='button'
           onClick={onRegister}
-          className='h-10 rounded-full bg-primary px-4 py-2 text-sm font-medium leading-6 text-primary-foreground hover:bg-primary/90'
+          className='h-8 rounded-full bg-primary px-4 text-xs font-medium text-primary-foreground hover:bg-primary/90'
         >
           モニタリングデータを登録
         </Button>
       </div>
 
-      <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6'>
+      <div className='grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6'>
         <RecentMetricCard
           icon={<Cpu className='h-5 w-5 shrink-0 text-[#699267]' />}
           label='制御機器稼働時間'
@@ -446,228 +444,174 @@ const ProjectDetail = () => {
   }
 
   return (
-    <div className='relative min-h-screen py-8'>
-      <div className='container mx-auto px-4'>
-        <PageBackButton
-          onClick={() => {
-            if (siteId) {
-              navigate(`/sites/${siteId}/dashboard`);
-            } else {
-              navigate(-1);
-            }
-          }}
-          label=''
-          className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
-        />
-        <div className='mb-6 animate-slide-up'>
-          <div className='flex items-start justify-between mb-4'>
-            <div>
-              <h1 className='mb-2'>{project.name}</h1>
-              <p className='text-muted-foreground text-lg'>
-                {project.description}
-              </p>
-            </div>
+    <main className='min-h-screen bg-background px-5 py-10 sm:px-8 lg:px-12'>
+      <div className='mx-auto w-full max-w-[1280px] space-y-7'>
+        <header className='relative min-h-[66px] animate-slide-up'>
+          <PageBackButton
+            onClick={() => {
+              if (siteId) {
+                navigate(`/sites/${siteId}/dashboard`);
+              } else {
+                navigate(-1);
+              }
+            }}
+            label=''
+            className='absolute left-0 top-0 h-12 w-12 rounded-full bg-primary p-0 text-primary-foreground hover:bg-primary/90'
+          />
+          <div className='pl-16'>
+            <h1 className='text-[34px] font-bold leading-[40px] text-[#191C1C] sm:text-[40px] sm:leading-[44px]'>
+              {project.name}
+            </h1>
+            <p className='mt-1 text-base leading-7 text-[#434841]'>
+              {project.description}
+            </p>
           </div>
-        </div>
-
-        {/* Contribution Timeline Graph */}
-        {/* <div className='mb-12 animate-slide-up'>
-          <ContributionTimeline />
-        </div> */}
+        </header>
 
         <Tabs
           defaultValue='overview'
-          className='flex flex-1 flex-col bg-card'
+          className='space-y-6'
           value={tab}
           onValueChange={(v) => setTab(v as typeof tab)}
         >
-          <div className='bg-card pt-4'>
-            <TabsList className='mx-auto flex h-auto w-fit min-w-[240px] items-start rounded-lg bg-[#699267] p-1.5 text-white'>
+          <div className='flex justify-center'>
+            <TabsList className='h-12 rounded-[6px] bg-primary p-1.5 text-primary-foreground'>
               <TabsTrigger
                 value='overview'
-                className='h-10 min-w-0 flex-1 rounded-md border-0 bg-transparent px-4 py-2 text-sm leading-6 text-white shadow-none transition-colors hover:bg-white/10 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-none'
+                className='h-9 rounded-[3px] px-5 text-sm font-medium text-primary-foreground data-[state=active]:bg-white data-[state=active]:text-primary'
               >
                 概要
               </TabsTrigger>
 
               <TabsTrigger
                 value='registration-history'
-                className='h-10 min-w-0 flex-1 rounded-md border-0 bg-transparent px-4 py-2 text-sm leading-6 text-white shadow-none transition-colors hover:bg-white/10 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-none'
+                className='h-9 rounded-[3px] px-5 text-sm font-medium text-primary-foreground data-[state=active]:bg-white data-[state=active]:text-primary'
               >
-                モニタリング一覧
+                モニタリングデータ
               </TabsTrigger>
             </TabsList>
           </div>
 
-          <main className='flex-1 bg-card'>
             <TabsContent
               value='overview'
-              className='m-0 space-y-6 py-8'
+              className='m-0 space-y-6'
             >
-            <Card>
-              <CardHeader className='space-y-2'>
-                <div className='flex items-start justify-between gap-4'>
-                  <div>
-                    <CardTitle className='text-xl'>プロジェクト概要</CardTitle>
-                    <CardDescription>
-                      プロジェクトの基本情報と詳細を確認できます。
-                    </CardDescription>
-                  </div>
-                </div>
-
-                <div className='mt-2 border rounded-lg p-4 bg-muted/30'>
-                  <dl className='grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4'>
+              <Card className={projectDetailCardClassName}>
+                <CardHeader className='px-7 pb-3 pt-7'>
+                  <CardTitle className='text-2xl leading-8 text-[#1F2628]'>
+                    プロジェクト概要
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className='px-7 pb-7'>
+                  <dl className='grid grid-cols-1 gap-x-16 gap-y-5 md:grid-cols-2'>
                     <div className='flex items-start gap-3'>
-                      <span className='mt-1 inline-flex h-7 w-7 items-center justify-center rounded bg-muted'>
-                        <MapPin className='h-4 w-4 text-muted-foreground' />
+                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#1F2628]'>
+                        <MapPin className='h-5 w-5' />
                       </span>
                       <div>
-                        <dt className='text-xs text-muted-foreground tracking-wide'>
+                        <dt className='text-sm font-bold leading-6 text-[#434841]'>
                           拠点
                         </dt>
-                        <dd className='font-medium'>
+                        <dd className='text-base font-bold leading-7 text-[#191C1C]'>
                           {project.location || '-'}
                         </dd>
                       </div>
                     </div>
 
                     <div className='flex items-start gap-3'>
-                      <span className='mt-1 inline-flex h-7 w-7 items-center justify-center rounded bg-muted'>
-                        <Layers className='h-4 w-4 text-muted-foreground' />
+                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#1F2628]'>
+                        <Layers className='h-5 w-5' />
                       </span>
                       <div>
-                        <dt className='text-xs text-muted-foreground tracking-wide'>
+                        <dt className='text-sm font-bold leading-6 text-[#434841]'>
                           方法論
                         </dt>
-                        <dd className='font-medium break-words'>
+                        <dd className='break-words text-base font-bold leading-7 text-[#191C1C]'>
                           {project.methodology || '-'}
                         </dd>
                       </div>
                     </div>
 
                     <div className='flex items-start gap-3'>
-                      <span className='mt-1 inline-flex h-7 w-7 items-center justify-center rounded bg-muted'>
-                        <Hash className='h-4 w-4 text-muted-foreground' />
+                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#1F2628]'>
+                        <Hash className='h-5 w-5' />
                       </span>
                       <div>
-                        <dt className='text-xs text-muted-foreground tracking-wide'>
+                        <dt className='text-sm font-bold leading-6 text-[#434841]'>
                           プロジェクト番号
                         </dt>
-                        <dd className='font-medium'>
+                        <dd className='text-base font-bold leading-7 text-[#191C1C]'>
                           {project.projectNumber || '-'}
                         </dd>
                       </div>
                     </div>
 
                     <div className='flex items-start gap-3'>
-                      <span className='mt-1 inline-flex h-7 w-7 items-center justify-center rounded bg-muted'>
-                        <Calendar className='h-4 w-4 text-muted-foreground' />
+                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#1F2628]'>
+                        <Calendar className='h-5 w-5' />
                       </span>
                       <div>
-                        <dt className='text-xs text-muted-foreground tracking-wide'>
-                          作成日
+                        <dt className='text-sm font-bold leading-6 text-[#434841]'>
+                          認証期間
                         </dt>
-                        <dd className='font-medium'>
+                        <dd className='text-base font-bold leading-7 text-[#191C1C]'>
                           {project.createdDate ? project.createdDate : '-'}
-                          {/* <span className="text-muted-foreground"> 後で調整 </span> */}
                         </dd>
                       </div>
                     </div>
-
-                    <div className='md:col-span-2'>
-                      <div className='flex items-start gap-3'>
-                        <span className='mt-1 inline-flex h-7 w-7 items-center justify-center rounded bg-muted'>
-                          <Info className='h-4 w-4 text-muted-foreground' />
-                        </span>
-                        <div className='w-full'>
-                          <dt className='text-xs text-muted-foreground tracking-wide'>
-                            概要（削減方法）
-                          </dt>
-                          <dd className='font-medium text-sm leading-6 mt-1 line-clamp-3'>
-                            {project.description || '-'}
-                          </dd>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* <div className='flex items-start gap-3'>
-                      <span className='mt-1 inline-flex h-7 w-7 items-center justify-center rounded bg-muted'>
-                        <Users className='h-4 w-4 text-muted-foreground' />
-                      </span>
-                      <div>
-                        <dt className='text-xs text-muted-foreground tracking-wide'>
-                          会員数
-                        </dt>
-                        <dd className='font-medium'>
-                          {project.membersTotal ?? '-'}
-                        </dd>
-                      </div>
-                    </div> */}
                   </dl>
+                </CardContent>
+              </Card>
+
+              {recentLoading ? (
+                <div className={`${projectDetailCardClassName} p-5 text-sm text-muted-foreground`}>
+                  読み込み中...
                 </div>
-              </CardHeader>
+              ) : (
+                <RecentDataBar
+                  row={monitoringRows[0]}
+                  onRegister={() =>
+                    navigate('/monitoring/register/solar', {
+                      state: { projectId, siteId },
+                    })
+                  }
+                />
+              )}
 
-              {/* Recent Monitoring Data */}
-              <CardHeader>
-                <CardTitle>最近のモニタリングデータ</CardTitle>
-                <CardDescription>直近の記録を表示します。</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {recentLoading ? (
-                  <div className='text-sm text-muted-foreground'>
-                    読み込み中...
-                  </div>
-                ) : (
-                  <RecentDataBar
-                    row={monitoringRows[0]}
-                    onRegister={() =>
-                      navigate('/monitoring/register/solar', {
-                        state: { projectId, siteId },
-                      })
-                    }
-                  />
-                )}
-              </CardContent>
-
-              {/* Dummy Graph */}
-              <CardHeader>
-                <section className='grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2'>
+              <section className='grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[1.35fr_0.95fr]'>
                   {/* Contribution Timeline Graph */}
                   <div className='animate-slide-up h-full'>
-                    <ContributionTimeline className='min-h-[360px]' />
+                    <ContributionTimeline className={`${projectDetailCardClassName} min-h-[360px]`} />
                   </div>
-                  {/* <Card>
-                    <CardHeader>
-                      <CardTitle>推定削減量</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className='h-[280px] rounded-lg border bg-muted/30 flex items-center justify-center'>
-                        Chart Area (チャートエリア)
-                      </div>
-                    </CardContent>
-                  </Card> */}
 
-                  <Card className='flex h-full min-h-[360px] flex-col'>
-                    <CardHeader>
-                      <CardTitle>見積り</CardTitle>
+                  <Card className={`${projectDetailCardClassName} flex h-full min-h-[360px] flex-col`}>
+                    <CardHeader className='px-7 pb-1 pt-7'>
+                      <CardTitle className='text-2xl leading-8 text-[#191C1C]'>
+                        見積 (Estimation Trend)
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent className='flex flex-1 flex-col space-y-4'>
-                      <div className='flex min-h-[180px] flex-1 items-center justify-center rounded-lg border bg-muted/30'>
-                        Estimation Graphic (推定グラフ)
+                    <CardContent className='flex flex-1 flex-col space-y-4 px-7 pb-7'>
+                      <div className='flex min-h-[210px] flex-1 flex-col items-center justify-center rounded-[12px] border-[2px] border-dashed border-[#C3C8BE] bg-[#F3F4F3] text-center'>
+                        <ChartNoAxesColumn className='mb-3 h-8 w-8 text-primary' />
+                        <p className='text-sm font-semibold'>Estimation Graphic (推定グラフ)</p>
+                        <p className='text-xs text-muted-foreground'>
+                          機械学習モデルによる今後の削減予測
+                        </p>
                       </div>
 
-                      <div className='space-y-1'>
-                        <div>推定排出削減量: 1,000 tCO2</div>
-                        <div>取得クレジット（CO2換算）</div>
-                        <div className='text-4xl font-bold text-cyan-500'>
-                          ~100
+                      <div className='space-y-3 text-sm'>
+                        <div className='flex items-center justify-between'>
+                          <span className='text-[#434841]'>排出量削減目標</span>
+                          <span className='font-bold text-[#191C1C]'>1,000 tCO2</span>
                         </div>
+                        <div className='h-2 rounded-full bg-[#E7E8E7]'>
+                          <div className='h-2 w-5/6 rounded-full bg-[#466343]' />
+                        </div>
+                        <p className='text-right text-xs font-bold text-[#466343]'>達成率 83%</p>
                       </div>
                     </CardContent>
                   </Card>
                 </section>
-              </CardHeader>
-            </Card>
             </TabsContent>
 
             <TabsContent
@@ -844,7 +788,6 @@ const ProjectDetail = () => {
               </CardContent>
             </Card>
             </TabsContent> */}
-          </main>
         </Tabs>
 
         <AlertDialog
@@ -883,7 +826,7 @@ const ProjectDetail = () => {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </div>
+    </main>
   );
 };
 
