@@ -113,6 +113,21 @@ function formatMonitoringDate(value: string | null | undefined) {
   return `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月${String(date.getDate()).padStart(2, '0')}日`;
 }
 
+function formatCreatedDate(value: string | null | undefined) {
+  if (!value || value === '-') return '-';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  return `${year}年${month}月${day}日 ${hours}:${minutes}`;
+}
+
 type RecentMetricCardProps = {
   icon?: ReactNode;
   label: string;
@@ -553,7 +568,7 @@ const ProjectDetail = () => {
                           認証期間
                         </dt>
                         <dd className='font-bold text-foreground'>
-                          {project.createdDate ? project.createdDate : '-'}
+                          {formatCreatedDate(project.createdDate)}
                         </dd>
                       </div>
                     </div>
