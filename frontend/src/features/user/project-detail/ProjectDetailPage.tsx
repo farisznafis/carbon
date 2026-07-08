@@ -477,32 +477,33 @@ const ProjectDetail = () => {
 
         <Tabs
           defaultValue='overview'
-          className='space-y-6'
+          className='flex flex-1 flex-col bg-card'
           value={tab}
           onValueChange={(v) => setTab(v as typeof tab)}
         >
-          <div className='flex w-full justify-center'>
-            <TabsList className='flex items-center justify-center gap-2 rounded-lg bg-muted p-1.5 shadow-sm'>
+          <div className='bg-card pt-4'>
+            <TabsList className='mx-auto flex h-auto w-fit min-w-[240px] items-start rounded-lg bg-[#699267] p-1.5 text-white'>
               <TabsTrigger
                 value='overview'
-                className='min-w-[140px] rounded-md px-6 py-2.5 text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow'
+                className='h-10 min-w-0 flex-1 rounded-md border-0 bg-transparent px-4 py-2 text-sm leading-6 text-white shadow-none transition-colors hover:bg-white/10 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-none'
               >
                 概要
               </TabsTrigger>
 
               <TabsTrigger
                 value='registration-history'
-                className='min-w-[140px] rounded-md px-6 py-2.5 text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow'
+                className='h-10 min-w-0 flex-1 rounded-md border-0 bg-transparent px-4 py-2 text-sm leading-6 text-white shadow-none transition-colors hover:bg-white/10 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-none'
               >
                 モニタリング一覧
               </TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent
-            value='overview'
-            className='space-y-6'
-          >
+          <main className='flex-1 bg-card'>
+            <TabsContent
+              value='overview'
+              className='m-0 space-y-6 py-8'
+            >
             <Card>
               <CardHeader className='space-y-2'>
                 <div className='flex items-start justify-between gap-4'>
@@ -667,12 +668,12 @@ const ProjectDetail = () => {
                 </section>
               </CardHeader>
             </Card>
-          </TabsContent>
+            </TabsContent>
 
-          <TabsContent
-            value='data'
-            className='space-y-6'
-          >
+            <TabsContent
+              value='data'
+              className='m-0 space-y-6 py-8'
+            >
             <Card>
               <CardHeader>
                 <CardTitle>最近のモニタリングデータ</CardTitle>
@@ -751,9 +752,9 @@ const ProjectDetail = () => {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+            </TabsContent>
 
-          <TabsContent value='documents'>
+            <TabsContent value='documents' className='m-0 py-8'>
             <Card>
               <CardHeader>
                 <CardTitle>関連書類</CardTitle>
@@ -769,8 +770,8 @@ const ProjectDetail = () => {
             </Card>
           </TabsContent>
 
-          {/* 登録履歴 content */}
-          {/* <TabsContent value='registration-history'>
+            {/* 登録履歴 content */}
+            {/* <TabsContent value='registration-history' className='m-0 py-8'>
             <Card>
               <CardHeader>
                 <CardTitle>登録履歴</CardTitle>
@@ -842,7 +843,8 @@ const ProjectDetail = () => {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent> */}
+            </TabsContent> */}
+          </main>
         </Tabs>
 
         <AlertDialog
