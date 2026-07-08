@@ -185,7 +185,7 @@ const Dashboard = () => {
       <div className='container mx-auto px-4'>
         {user?.role === 'master' && (
           <PageBackButton
-            onClick={() => navigate('/master/dashboard')}
+            onClick={() => navigate('/master/dashboard?tab=sites')}
             label=''
             className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
           />

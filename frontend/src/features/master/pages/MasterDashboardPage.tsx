@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -20,7 +20,10 @@ import { useDashboardStore } from '@/stores/dashboardStore';
 
 const MasterDashboard = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
+  
+  const activeTab = searchParams.get('tab') || 'users';
 
   const sites = useDashboardStore((state) => state.sites);
   const users = useDashboardStore((state) => state.users);
@@ -92,39 +95,14 @@ const MasterDashboard = () => {
         lastUpdated={lastUpdated}
       />
 
-      <Tabs defaultValue="sites" className="flex flex-1 flex-col bg-card">
+      <Tabs 
+        value={activeTab} 
+        onValueChange={(value) => setSearchParams({ tab: value })}
+        className="flex flex-1 flex-col bg-card"
+      >
         <MasterDashboardTabs />
 
         <main className="flex-1 bg-card">
-          <TabsContent value="sites" className="m-0">
-            <DashboardSection
-              title="拠点"
-              description="各店舗のカーボンクレジット、削減活動、レポート進捗を一か所で確認できます。"
-              addLabel="拠点を追加"
-              onAdd={() => navigate(paths.masterSiteRegister)}
-            >
-              {errorMessage ? (
-                <DashboardEmptyState>{errorMessage}</DashboardEmptyState>
-              ) : sortedSites.length > 0 ? (
-                <div className="space-y-3">
-                  {sortedSites.map((site) => (
-                    <SiteDashboardCard
-                      key={site.id}
-                      site={site}
-                      onOpen={(selectedSite) =>
-                        navigate(paths.siteDashboard(selectedSite.id))
-                      }
-                    />
-                  ))}
-                </div>
-              ) : (
-                <DashboardEmptyState>
-                  まだ拠点が登録されていません
-                </DashboardEmptyState>
-              )}
-            </DashboardSection>
-          </TabsContent>
-
           <TabsContent value="users" className="m-0">
             <DashboardSection
               title="社員"
@@ -157,6 +135,35 @@ const MasterDashboard = () => {
               ) : (
                 <DashboardEmptyState>
                   まだ社員が登録されていません
+                </DashboardEmptyState>
+              )}
+            </DashboardSection>
+          </TabsContent>
+
+          <TabsContent value="sites" className="m-0">
+            <DashboardSection
+              title="拠点"
+              description="各店舗のカーボンクレジット、削減活動、レポート進捗を一か所で確認できます。"
+              addLabel="拠点を追加"
+              onAdd={() => navigate(paths.masterSiteRegister)}
+            >
+              {errorMessage ? (
+                <DashboardEmptyState>{errorMessage}</DashboardEmptyState>
+              ) : sortedSites.length > 0 ? (
+                <div className="space-y-3">
+                  {sortedSites.map((site) => (
+                    <SiteDashboardCard
+                      key={site.id}
+                      site={site}
+                      onOpen={(selectedSite) =>
+                        navigate(paths.siteDashboard(selectedSite.id))
+                      }
+                    />
+                  ))}
+                </div>
+              ) : (
+                <DashboardEmptyState>
+                  まだ拠点が登録されていません
                 </DashboardEmptyState>
               )}
             </DashboardSection>

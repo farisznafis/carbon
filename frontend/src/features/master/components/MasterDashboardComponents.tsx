@@ -62,11 +62,11 @@ export function MasterDashboardTabs() {
   return (
     <div className="bg-card pt-4">
       <TabsList className="mx-auto flex h-auto w-fit min-w-[288px] items-start rounded-lg bg-[#699267] p-1.5 text-white">
-        <TabsTrigger value="sites" className={triggerClassName}>
-          拠点管理
-        </TabsTrigger>
         <TabsTrigger value="users" className={triggerClassName}>
           社員管理
+        </TabsTrigger>
+        <TabsTrigger value="sites" className={triggerClassName}>
+          拠点管理
         </TabsTrigger>
       </TabsList>
     </div>
