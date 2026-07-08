@@ -2,7 +2,7 @@ export type MonitoringData = {
   projectId: number;
   siteId?: number | null;
   projectType: string;
-  dateRecorded: string;
+  dateRecorded: string | null;
   ELpv_value: number | null;
   ELpvr_value: number | null;
   changedBattery: boolean;

@@ -107,7 +107,7 @@ function buildMonitoringPayload(
     projectType: context.projectType,
     projectId: Number(context.projectIdValue) || 0,
     siteId: Number(context.siteIdValue) || null,
-    dateRecorded: String(currentData.dateRecorded ?? new Date().toISOString()),
+    dateRecorded: currentData.dateRecorded ? String(currentData.dateRecorded) : null,
     ELpv_value: toNumberOrNull(currentData.ELpv_value),
     ELpvr_value: toNumberOrNull(currentData.ELpvr_value),
     changedBattery: Boolean(currentData.changedBattery),
