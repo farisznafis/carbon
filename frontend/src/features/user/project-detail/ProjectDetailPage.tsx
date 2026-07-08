@@ -18,10 +18,8 @@ import {
   Cpu,
   Hash,
   HousePlug,
-  Info,
   Layers,
   MapPin,
-  Users,
   Zap,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -45,6 +43,7 @@ import ContributionTimeline from '@/components/data-display/ContributionTimeline
 import { logger } from '@/lib/logger';
 import { usePagination } from '@/hooks/usePagination';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { cn } from '@/lib/utils';
 
 function formatNumber(n: number | null | undefined) {
   if (n == null || Number.isNaN(n)) return '-';
@@ -80,7 +79,30 @@ const fallbackMonitoringRow: MonitoringDisplayRow = {
 };
 
 const projectDetailCardClassName =
-  'rounded-[18px] border-[1.5px] border-[#C3C8BE] bg-white shadow-[0_6px_15px_rgba(0,0,0,0.04)]';
+  'rounded-2xl border border-border bg-card shadow-app-sm';
+
+type ProjectDetailTabValue = 'overview' | 'data' | 'documents' | 'registration-history';
+
+function ProjectDetailTabs() {
+  const triggerClassName = cn(
+    'h-9 rounded px-5 text-sm font-medium text-primary-foreground shadow-none transition-colors',
+    'hover:bg-white/10 hover:text-white',
+    'data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-app-sm',
+  );
+
+  return (
+    <div className='flex justify-center'>
+      <TabsList className='h-12 rounded-lg bg-primary p-1.5 text-primary-foreground'>
+        <TabsTrigger value='overview' className={triggerClassName}>
+          概要
+        </TabsTrigger>
+        <TabsTrigger value='data' className={triggerClassName}>
+          モニタリングデータ
+        </TabsTrigger>
+      </TabsList>
+    </div>
+  );
+}
 
 function formatMonitoringDate(value: string | null | undefined) {
   if (!value || value === '-') return '-';
@@ -105,17 +127,17 @@ function RecentMetricCard({
   unit,
 }: RecentMetricCardProps) {
   return (
-    <div className='flex h-[86px] min-w-0 flex-col items-center justify-center gap-1 rounded-[10px] border-[1.5px] border-[#B1B5BB] bg-white px-3 py-3 text-center'>
-      <div className='flex min-w-0 items-center justify-center gap-1 text-xs font-bold leading-5 tracking-normal text-[#434841]'>
+    <div className='flex h-24 min-w-0 flex-col items-center justify-center gap-1 rounded-lg border border-border bg-card px-3 py-3 text-center shadow-app-sm'>
+      <div className='flex min-w-0 items-center justify-center gap-1 text-sm font-bold leading-6 text-muted-foreground'>
         {icon}
         <span className='min-w-0 truncate'>{label}</span>
       </div>
       <div className='flex items-end justify-center gap-1'>
-        <span className='text-2xl font-bold leading-none tracking-normal text-[#434841]'>
+        <span className='text-2xl font-bold leading-none text-foreground'>
           {value}
         </span>
         {unit ? (
-          <span className='pb-0.5 text-xs font-normal leading-5 tracking-normal text-[rgba(31,38,40,0.7)]'>
+          <span className='pb-0.5 text-sm leading-6 text-muted-foreground'>
             {unit}
           </span>
         ) : null}
@@ -134,15 +156,15 @@ function RecentDataBar({ row, onRegister }: RecentDataBarProps) {
   const batteryDischargeValue = row.changedBattery === false ? 0 : row.ELPJ_battery_value;
   
   return (
-    <section className={`${projectDetailCardClassName} p-5 backdrop-blur-[7.5px]`}>
+    <section className={`${projectDetailCardClassName} p-5`}>
       <div className='mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='inline-flex w-fit items-center rounded-full border-[1.5px] border-[#B1B5BB] px-4 py-1.5 text-xs font-bold leading-5 tracking-normal text-[#191C1C]'>
+        <div className='inline-flex w-fit items-center rounded-full border border-border px-4 py-1.5 text-sm font-bold leading-6 text-foreground'>
           {formatMonitoringDate(row.dateRecorded)}
         </div>
         <Button
           type='button'
           onClick={onRegister}
-          className='h-8 rounded-full bg-primary px-4 text-xs font-medium text-primary-foreground hover:bg-primary/90'
+          size='sm'
         >
           モニタリングデータを登録
         </Button>
@@ -226,7 +248,7 @@ const ProjectDetail = () => {
   const [loading, setLoading] = useState(true);
 
   const [tab, setTab] = useState<
-    'overview' | 'data' | 'documents' | 'registration-history'
+    ProjectDetailTabValue
   >('overview');
   const [recentMonitoring, setRecentMonitoring] = useState<MonitoringData[]>(
     [],
@@ -455,38 +477,18 @@ const ProjectDetail = () => {
         />
         
         <div className='mx-auto w-full max-w-[1280px] space-y-7'>
-        <header className='min-h-[66px] animate-slide-up'>
-          <h1 className='text-[34px] font-bold leading-[40px] text-[#191C1C] sm:text-[40px] sm:leading-[44px]'>
-            {project.name}
-          </h1>
-          <p className='mt-1 text-base leading-7 text-[#434841]'>
-            {project.description}
-          </p>
-        </header>
+          <header className='min-h-[66px] animate-slide-up'>
+            <h1 className='text-foreground'>{project.name}</h1>
+            <p className='mt-2 text-muted-foreground'>{project.description}</p>
+          </header>
 
-        <Tabs
-          defaultValue='overview'
-          className='space-y-6'
-          value={tab}
-          onValueChange={(v) => setTab(v as typeof tab)}
-        >
-          <div className='flex justify-center'>
-            <TabsList className='h-12 rounded-[6px] bg-primary p-1.5 text-primary-foreground'>
-              <TabsTrigger
-                value='overview'
-                className='h-9 rounded-[3px] px-5 text-sm font-medium text-primary-foreground data-[state=active]:bg-white data-[state=active]:text-primary'
-              >
-                概要
-              </TabsTrigger>
-
-              <TabsTrigger
-                value='registration-history'
-                className='h-9 rounded-[3px] px-5 text-sm font-medium text-primary-foreground data-[state=active]:bg-white data-[state=active]:text-primary'
-              >
-                モニタリングデータ
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          <Tabs
+            defaultValue='overview'
+            className='space-y-6'
+            value={tab}
+            onValueChange={(v) => setTab(v as ProjectDetailTabValue)}
+          >
+            <ProjectDetailTabs />
 
             <TabsContent
               value='overview'
@@ -494,7 +496,7 @@ const ProjectDetail = () => {
             >
               <Card className={projectDetailCardClassName}>
                 <CardHeader className='px-7 pb-3 pt-7'>
-                  <CardTitle className='text-2xl leading-8 text-[#1F2628]'>
+                  <CardTitle className='leading-8 text-foreground'>
                     プロジェクト概要
                   </CardTitle>
                 </CardHeader>
@@ -505,10 +507,10 @@ const ProjectDetail = () => {
                         <MapPin className='h-5 w-5' />
                       </span>
                       <div>
-                        <dt className='text-sm font-bold leading-6 text-[#434841]'>
+                        <dt className='text-small text-muted-foreground'>
                           拠点
                         </dt>
-                        <dd className='text-base font-bold leading-7 text-[#191C1C]'>
+                        <dd className='font-bold text-foreground'>
                           {project.location || '-'}
                         </dd>
                       </div>
@@ -519,10 +521,10 @@ const ProjectDetail = () => {
                         <Layers className='h-5 w-5' />
                       </span>
                       <div>
-                        <dt className='text-sm font-bold leading-6 text-[#434841]'>
+                        <dt className='text-small text-muted-foreground'>
                           方法論
                         </dt>
-                        <dd className='break-words text-base font-bold leading-7 text-[#191C1C]'>
+                        <dd className='break-words font-bold text-foreground'>
                           {project.methodology || '-'}
                         </dd>
                       </div>
@@ -533,10 +535,10 @@ const ProjectDetail = () => {
                         <Hash className='h-5 w-5' />
                       </span>
                       <div>
-                        <dt className='text-sm font-bold leading-6 text-[#434841]'>
+                        <dt className='text-small text-muted-foreground'>
                           プロジェクト番号
                         </dt>
-                        <dd className='text-base font-bold leading-7 text-[#191C1C]'>
+                        <dd className='font-bold text-foreground'>
                           {project.projectNumber || '-'}
                         </dd>
                       </div>
@@ -547,10 +549,10 @@ const ProjectDetail = () => {
                         <Calendar className='h-5 w-5' />
                       </span>
                       <div>
-                        <dt className='text-sm font-bold leading-6 text-[#434841]'>
+                        <dt className='text-small text-muted-foreground'>
                           認証期間
                         </dt>
-                        <dd className='text-base font-bold leading-7 text-[#191C1C]'>
+                        <dd className='font-bold text-foreground'>
                           {project.createdDate ? project.createdDate : '-'}
                         </dd>
                       </div>
@@ -575,46 +577,45 @@ const ProjectDetail = () => {
               )}
 
               <section className='grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[1.35fr_0.95fr]'>
-                  {/* Contribution Timeline Graph */}
-                  <div className='animate-slide-up h-full'>
-                    <ContributionTimeline className={`${projectDetailCardClassName} min-h-[360px]`} />
-                  </div>
+                <div className='h-full animate-slide-up'>
+                  <ContributionTimeline className={`${projectDetailCardClassName} min-h-[360px]`} />
+                </div>
 
-                  <Card className={`${projectDetailCardClassName} flex h-full min-h-[360px] flex-col`}>
-                    <CardHeader className='px-7 pb-1 pt-7'>
-                      <CardTitle className='text-2xl leading-8 text-[#191C1C]'>
-                        見積 (Estimation Trend)
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className='flex flex-1 flex-col space-y-4 px-7 pb-7'>
-                      <div className='flex min-h-[210px] flex-1 flex-col items-center justify-center rounded-[12px] border-[2px] border-dashed border-[#C3C8BE] bg-[#F3F4F3] text-center'>
-                        <ChartNoAxesColumn className='mb-3 h-8 w-8 text-primary' />
-                        <p className='text-sm font-semibold'>Estimation Graphic (推定グラフ)</p>
-                        <p className='text-xs text-muted-foreground'>
-                          機械学習モデルによる今後の削減予測
-                        </p>
-                      </div>
+                <Card className={`${projectDetailCardClassName} flex h-full min-h-[360px] flex-col`}>
+                  <CardHeader className='px-7 pb-1 pt-7'>
+                    <CardTitle className='leading-8 text-foreground'>
+                      見積 (Estimation Trend)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className='flex flex-1 flex-col space-y-4 px-7 pb-7'>
+                    <div className='flex min-h-[210px] flex-1 flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted text-center'>
+                      <ChartNoAxesColumn className='mb-3 h-8 w-8 text-primary' />
+                      <p className='font-semibold'>Estimation Graphic (推定グラフ)</p>
+                      <p className='text-sm text-muted-foreground'>
+                        機械学習モデルによる今後の削減予測
+                      </p>
+                    </div>
 
-                      <div className='space-y-3 text-sm'>
-                        <div className='flex items-center justify-between'>
-                          <span className='text-[#434841]'>排出量削減目標</span>
-                          <span className='font-bold text-[#191C1C]'>1,000 tCO2</span>
-                        </div>
-                        <div className='h-2 rounded-full bg-[#E7E8E7]'>
-                          <div className='h-2 w-5/6 rounded-full bg-[#466343]' />
-                        </div>
-                        <p className='text-right text-xs font-bold text-[#466343]'>達成率 83%</p>
+                    <div className='space-y-3'>
+                      <div className='flex items-center justify-between gap-4'>
+                        <span className='text-muted-foreground'>排出量削減目標</span>
+                        <span className='font-bold text-foreground'>1,000 tCO2</span>
                       </div>
-                    </CardContent>
-                  </Card>
-                </section>
+                      <div className='h-2 rounded-full bg-muted'>
+                        <div className='h-2 w-5/6 rounded-full bg-primary' />
+                      </div>
+                      <p className='text-right text-sm font-bold text-primary'>達成率 83%</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </section>
             </TabsContent>
 
             <TabsContent
               value='data'
-              className='m-0 space-y-6 py-8'
+              className='m-0 space-y-6'
             >
-            <Card>
+            <Card className={projectDetailCardClassName}>
               <CardHeader>
                 <CardTitle>最近のモニタリングデータ</CardTitle>
                 <CardDescription>直近の記録を表示します。</CardDescription>
