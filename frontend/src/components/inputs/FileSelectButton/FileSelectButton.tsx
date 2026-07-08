@@ -1,4 +1,5 @@
 ﻿// FileSelectButton.tsx
+import { useState } from 'react';
 import { IconCloudUpload } from '@tabler/icons-react';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +24,45 @@ export function FileSelectButton({
   helperText,
   variant = 'default',
 }: Readonly<Props>) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragCounter, setDragCounter] = useState(0);
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragCounter((prev) => prev + 1);
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragCounter((prev) => {
+      const newCount = prev - 1;
+      if (newCount === 0) {
+        setIsDragging(false);
+      }
+      return newCount;
+    });
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragCounter(0);
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      onChange(files[0]);
+    }
+  };
+
   if (variant === 'design-system-pro') {
     const hasFile = Boolean(value);
 
@@ -31,22 +71,30 @@ export function FileSelectButton({
         <p className="text-small text-foreground">{label}</p>
         <label
           htmlFor={id}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
           className={cn(
-            'flex min-h-[66px] w-full cursor-pointer items-center gap-2 rounded-[6px] border border-dashed py-3 pl-4 pr-4 transition-colors',
-            hasFile
-              ? 'border-primary bg-[#EFF6EF] hover:bg-[#E8F1E8]'
-              : 'border-[#B1B5BB] bg-[#F6F6F6] hover:border-primary hover:bg-secondary/40',
+            'flex min-h-[66px] w-full cursor-pointer items-center gap-2 rounded-[6px] border-2 border-dashed py-3 pl-4 pr-4 transition-all duration-200',
+            isDragging
+              ? 'border-primary bg-primary/20 scale-[1.02]'
+              : hasFile
+                ? 'border-primary bg-[#EFF6EF] hover:bg-[#E8F1E8]'
+                : 'border-[#B1B5BB] bg-[#F6F6F6] hover:border-primary hover:bg-secondary/40',
           )}
         >
           <span
             className={cn(
-              'flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border text-primary',
-              hasFile
-                ? 'border-primary bg-white'
-                : 'border-[#B1B5BB] bg-secondary',
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border text-primary transition-all duration-200',
+              isDragging
+                ? 'border-primary bg-white scale-110'
+                : hasFile
+                  ? 'border-primary bg-white'
+                  : 'border-[#B1B5BB] bg-secondary',
             )}
           >
-            <IconCloudUpload className="h-6 w-6" />
+            <IconCloudUpload className={cn('h-6 w-6 transition-transform duration-200', isDragging && 'scale-110')} />
           </span>
           <span className="flex min-w-0 flex-1 flex-col gap-0.5 xl:flex-row xl:items-center xl:gap-1">
             <span className="truncate text-base font-normal leading-7 text-[#1F2628]">
