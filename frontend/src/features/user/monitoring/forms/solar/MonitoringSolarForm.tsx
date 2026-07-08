@@ -173,12 +173,15 @@ export function MonitoringSolarForm({
             <FormCard>
               <FormSectionStack spacing="relaxed">
                 <FormSection number={1} title="モニタリング情報">
-                  <FormField
+              <FormField
                 control={form.control}
                 name="dateRecorded"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>記録日</FormLabel>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      モニタリングを実施した日を入力してください。申請日ではありません。
+                    </p>
                     <FormControl>
                       <Input
                         type="date"
