@@ -229,7 +229,7 @@ export default function UserEdit() {
 
       <FormPageContent>
         <FormPageTitle>
-          {mode === 'profile' ? 'プロフィール編集' : '社員更新'}
+          {mode === 'profile' ? 'プロファイル編集' : '社員更新'}
         </FormPageTitle>
 
         <UserForm

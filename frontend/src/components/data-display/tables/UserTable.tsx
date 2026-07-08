@@ -145,7 +145,7 @@ export function UserTable({
             <InlineHelp
               content={
                 <div className='text-sm'>
-                  社員の行をクリックすると、プロフィール詳細へ移動します。
+                  社員の行をクリックすると、プロファイル詳細へ移動します。
                 </div>
               }
             />

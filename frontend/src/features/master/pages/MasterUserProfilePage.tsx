@@ -45,7 +45,7 @@ export default function MasterUserProfilePage() {
         handleError(
           error instanceof Error
             ? error.message
-            : 'プロフィールを取得できませんでした。',
+            : 'プロファイルを取得できませんでした。',
         );
         setProfile(null);
         setCompany(null);
