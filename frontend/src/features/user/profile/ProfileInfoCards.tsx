@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { InlineHelp } from '@/components/feedback/InlineHelp/InlineHelp';
 
 type InfoItemProps = {
   label: string;
@@ -21,10 +22,13 @@ type ProfileInfoCardsProps = {
   onPasswordChange?: () => void;
 };
 
-function InfoItem({ label, value }: InfoItemProps) {
+function InfoItem({ label, value, helpText }: InfoItemProps & { helpText?: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-sm font-medium text-muted-foreground">{label}</p>
+      <p className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+        {label}
+        {helpText && <InlineHelp content={helpText} />}
+      </p>
       <p className="break-words text-base font-semibold">
         {value == null || value === '' ? '-' : value}
       </p>
@@ -47,6 +51,12 @@ export function ProfileInfoCards({
   company,
   onPasswordChange,
 }: ProfileInfoCardsProps) {
+  const isMaster = profile?.role?.toLowerCase() === 'master';
+  
+  const roleHelpText = isMaster 
+    ? 'すべての機能を利用・管理できる権限です。'
+    : '基本機能を利用できる権限です。';
+
   return (
     <div className="space-y-6">
       <Card className="animate-slide-up rounded-2xl">
@@ -75,8 +85,12 @@ export function ProfileInfoCards({
           <InfoItem label="メールアドレス" value={profile?.email} />
           <InfoItem label="役職" value={profile?.userPosition} />
           <InfoItem label="電話番号" value={profile?.phoneNumber} />
-          <InfoItem label="拠点名" value={profile?.siteName} />
-          <InfoItem label="権限" value={formatRole(profile?.role)} />
+          {!isMaster && <InfoItem label="拠点名" value={profile?.siteName} />}
+          <InfoItem 
+            label="権限" 
+            value={formatRole(profile?.role)} 
+            helpText={roleHelpText}
+          />
         </CardContent>
 
         <CardFooter className="pt-2" />
