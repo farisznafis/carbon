@@ -40,7 +40,7 @@ public class ProjectUploadDocumentServiceImpl implements ProjectUploadDocumentSe
     private final ProjectDocumentStatusRepository projectDocumentStatusRepository; 
     private final S3Client s3Client;
 
-    @Value("${app.s3.bucket:gx-monitoring-files}") 
+    @Value("${app.S3_BUCKET:}") 
     private String BUCKET_NAME;
 
     @Override

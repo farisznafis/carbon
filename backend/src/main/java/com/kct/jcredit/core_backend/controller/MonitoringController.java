@@ -31,7 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/monitoring")
-@Tag(name = "モニタリング", description = "モニタリング記録、証跡ファイル、取消申請を管理するAPIです。")
+@Tag(name = "モニタリング", description = "モニタリング登録、証跡ファイル、取消申請を管理するAPIです。")
 @RequiredArgsConstructor
 public class MonitoringController {
 

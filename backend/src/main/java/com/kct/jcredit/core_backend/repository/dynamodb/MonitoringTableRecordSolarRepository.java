@@ -89,6 +89,22 @@ public class MonitoringTableRecordSolarRepository {
         return pages.items().stream().findFirst();
     }
 
+    public boolean existsActiveByRecordIdAndDateRecorded(String recordId, String dateRecorded) {
+        QueryConditional queryConditional = QueryConditional.keyEqualTo(
+            Key.builder().partitionValue(recordId).build()
+        );
+
+        PageIterable<EnR002MonitoringRecord> pages = table.query(r -> r
+            .queryConditional(queryConditional)
+            .scanIndexForward(false)
+        );
+
+        return pages.items().stream()
+            .anyMatch(record -> Boolean.TRUE.equals(record.getIsActive())
+                && dateRecorded != null
+                && dateRecorded.equals(record.getDateRecorded()));
+    }
+
 public List<EnR002MonitoringRecord> findAllByRecordIdPaginated(
         String recordId, 
         PaginationDetailResponse pagination) {

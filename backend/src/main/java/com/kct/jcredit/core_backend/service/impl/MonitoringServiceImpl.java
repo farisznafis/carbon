@@ -3,6 +3,8 @@ package com.kct.jcredit.core_backend.service.impl;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,6 +28,7 @@ import com.kct.jcredit.core_backend.entity.EnR002MonitoringRecord;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.entity.Site;
+import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.entity.base.PaginationDetailResponse;
 import com.kct.jcredit.core_backend.exception.FileTooLargeException;
 import com.kct.jcredit.core_backend.exception.UnsupportedFileTypeException;
@@ -52,12 +55,13 @@ public class MonitoringServiceImpl implements MonitoringService {
     private final SiteProjectRelationRepository siteProjectRelationRepository;
     private final S3Client s3Client;
     
-    @Value("${app.s3.bucket}")
+    @Value("${app.s3.bucket:}")
     private String bucketName;
 
     private static final long MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
     private static final int MAX_FILE_SIZE_MB = 10;
     private static final BigDecimal MAX_PERCENT_VALUE = new BigDecimal("100.0");
+    private static final ZoneId JAPAN_ZONE = ZoneId.of("Asia/Tokyo");
     
     //太陽光発電の毎日のデータをs3に保存
     @Override
@@ -82,7 +86,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // Validate user belongs to the company
             // ユーザが企業に所属していない場合
-            if (!user.getCompany().getCompanyId().equals(companyId)) {
+            if (user.getCompany() == null || !companyId.equals(user.getCompany().getCompanyId())) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
                 response.setMessage(ResponseConstants.MSG_USER_NOT_IN_COMPANY);
                 return response;
@@ -130,8 +134,8 @@ public class MonitoringServiceImpl implements MonitoringService {
                 return response;
             }
 
-            // 5) Validate all 4 mandatory evidence URLs are provided
-            //4つの証憑ファイルURLがnulか空文字の場合
+            // 5) Validate all 4 mandatory evidence files are provided
+            //4つの証憑ファイルがnullか空文字の場合
             Map<String, String> evidenceErrors = collectMandatoryEvidenceErrors(request);
             if (!evidenceErrors.isEmpty()) {
                 response.setStatusCode(ResponseConstants.VALIDATION_ERROR);
@@ -242,7 +246,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // Validate user belongs to the company
             // ユーザが指定した会社に所属していない場合
-            if (!user.getCompany().getCompanyId().equals(companyId)) {
+            if (user.getCompany() == null || !companyId.equals(user.getCompany().getCompanyId())) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
                 response.setMessage(ResponseConstants.MSG_USER_NOT_IN_COMPANY);
                 return response;
@@ -355,7 +359,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // Validate user belongs to the company
             //ユーザが指定した会社に所属していない場合
-            if (!user.getCompany().getCompanyId().equals(companyId)) {
+            if (user.getCompany() == null || !companyId.equals(user.getCompany().getCompanyId())) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
                 response.setMessage(ResponseConstants.MSG_USER_NOT_IN_COMPANY);
                 return response;
@@ -464,7 +468,7 @@ public class MonitoringServiceImpl implements MonitoringService {
                     .orElseThrow(() -> new RuntimeException(ResponseConstants.MSG_UNEXPEXTED_ERROR));
 
             // Validate user belongs to the company
-            if (!user.getCompany().getCompanyId().equals(companyId)) {
+            if (user.getCompany() == null || !companyId.equals(user.getCompany().getCompanyId())) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
                 response.setMessage(ResponseConstants.MSG_USER_NOT_IN_COMPANY);
                 return response;
@@ -588,15 +592,20 @@ public class MonitoringServiceImpl implements MonitoringService {
             String companyId,
             RegisterMonitoringRecordSolarRequest request
     ) {
-        Map<String, String> fieldErrors = collectMonitoringFieldErrors(request);
-        if (!fieldErrors.isEmpty()) {
-            return MonitoringValidationResult.invalid(validationError(fieldErrors));
+        Map<String, String> errors = collectMonitoringFieldErrors(request);
+        if (request == null) {
+            return MonitoringValidationResult.invalid(validationError(errors));
+        }
+
+        mergeErrors(errors, collectMonitoringPayloadDateErrors(request));
+        if (request.getProjectId() == null || request.getSiteId() == null) {
+            return MonitoringValidationResult.invalid(validationError(errors));
         }
 
         ParticipatingUser user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException(ResponseConstants.MSG_UNEXPEXTED_ERROR));
 
-        if (!user.getCompany().getCompanyId().equals(companyId)) {
+        if (user.getCompany() == null || !companyId.equals(user.getCompany().getCompanyId())) {
             return MonitoringValidationResult.invalid(
                     BaseResponse.error(ResponseConstants.FORBIDDEN, ResponseConstants.MSG_USER_NOT_IN_COMPANY)
             );
@@ -632,6 +641,17 @@ public class MonitoringServiceImpl implements MonitoringService {
             return MonitoringValidationResult.invalid(
                     BaseResponse.error(ResponseConstants.NOT_FOUND, ResponseConstants.MSG_NOT_FOUND)
             );
+        }
+
+        SiteProjectRelation relation = siteProjectRelationRepository.findByProjectIdAndSiteId(
+                project.getId(),
+                site.getId()
+        );
+        Map<String, String> businessErrors = collectMonitoringBusinessErrors(request, relation);
+        mergeErrors(errors, businessErrors);
+
+        if (!errors.isEmpty()) {
+            return MonitoringValidationResult.invalid(validationError(errors));
         }
 
         return MonitoringValidationResult.valid(user, site, project);
@@ -681,7 +701,7 @@ public class MonitoringServiceImpl implements MonitoringService {
     }
 
     /**
-     * Requirement 6.2 & Update 1: Validate that all 4 mandatory evidence URLs are provided
+     * Requirement 6.2 & Update 1: Validate that all 4 mandatory evidence files are provided.
      */
     private Map<String, String> collectMandatoryEvidenceErrors(RegisterMonitoringRecordSolarRequest request) {
         Map<String, String> errors = new LinkedHashMap<>();
@@ -714,6 +734,13 @@ public class MonitoringServiceImpl implements MonitoringService {
         if (request.getElPvr() == null || request.getElPvr().compareTo(BigDecimal.ZERO) < 0) {
             errors.put("ELpvr_value", ResponseConstants.MSG_ELPVR_VALUE_MIN);
         }
+        if (request.getElPv() != null
+                && request.getElPvr() != null
+                && request.getElPv().compareTo(BigDecimal.ZERO) >= 0
+                && request.getElPvr().compareTo(BigDecimal.ZERO) >= 0
+                && request.getElPvr().compareTo(request.getElPv()) > 0) {
+            errors.put("ELpvr_value", ResponseConstants.MSG_ELPVR_EXCEEDS_ELPV);
+        }
         if (request.getElpjControl() == null || request.getElpjControl().compareTo(BigDecimal.ZERO) < 0) {
             errors.put("ELPJ_control_value", ResponseConstants.MSG_ELPJ_CONTROL_VALUE_MIN);
         }
@@ -723,6 +750,9 @@ public class MonitoringServiceImpl implements MonitoringService {
         if (request.getElpjBatteryValue() != null && request.getElpjBatteryValue().compareTo(BigDecimal.ZERO) < 0) {
             errors.put("ELPJ_battery_value", ResponseConstants.MSG_ELPJ_BATTERY_VALUE_MIN);
         }
+        if (request.getElpjAccuracy() == null) {
+            errors.put("ELPJ_accuracy", ResponseConstants.MSG_ELPJ_ACCURACY_REQUIRED);
+        }
         if (request.getElpjAccuracy() != null && request.getElpjAccuracy().compareTo(BigDecimal.ZERO) < 0) {
             errors.put("ELPJ_accuracy", ResponseConstants.MSG_ELPJ_ACCURACY_MIN);
         }
@@ -731,6 +761,64 @@ public class MonitoringServiceImpl implements MonitoringService {
         }
 
         return errors;
+    }
+
+    private Map<String, String> collectMonitoringBusinessErrors(
+            RegisterMonitoringRecordSolarRequest request,
+            SiteProjectRelation relation
+    ) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        LocalDate dateRecorded = parseDateRecorded(request.getDateRecorded());
+        if (dateRecorded == null) {
+            errors.put("dateRecorded", ResponseConstants.MSG_DATE_RECORDED_RANGE);
+            return errors;
+        }
+
+        LocalDate todayInJapan = LocalDate.now(JAPAN_ZONE);
+        LocalDate activityStartDate = relation != null ? relation.getActivityStartDate() : null;
+        if (dateRecorded.isAfter(todayInJapan)
+                || (activityStartDate != null && dateRecorded.isBefore(activityStartDate))) {
+            errors.put("dateRecorded", ResponseConstants.MSG_DATE_RECORDED_RANGE);
+            return errors;
+        }
+
+        String recordId = request.getSiteId() + "#" + request.getProjectId();
+        if (monitoringRecordSolarRepository.existsActiveByRecordIdAndDateRecorded(
+                recordId,
+                request.getDateRecorded()
+        )) {
+            errors.put("dateRecorded", ResponseConstants.MSG_DATE_RECORDED_DUPLICATE);
+        }
+
+        return errors;
+    }
+
+    private Map<String, String> collectMonitoringPayloadDateErrors(RegisterMonitoringRecordSolarRequest request) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        if (isBlank(request.getDateRecorded())) {
+            return errors;
+        }
+
+        LocalDate dateRecorded = parseDateRecorded(request.getDateRecorded());
+        if (dateRecorded == null || dateRecorded.isAfter(LocalDate.now(JAPAN_ZONE))) {
+            errors.put("dateRecorded", ResponseConstants.MSG_DATE_RECORDED_RANGE);
+        }
+
+        return errors;
+    }
+
+    private void mergeErrors(Map<String, String> target, Map<String, String> source) {
+        source.forEach(target::putIfAbsent);
+    }
+
+    private LocalDate parseDateRecorded(String dateRecorded) {
+        try {
+            return LocalDate.parse(dateRecorded);
+        } catch (DateTimeParseException | NullPointerException e) {
+            return null;
+        }
     }
 
     private boolean isBlank(String value) {
