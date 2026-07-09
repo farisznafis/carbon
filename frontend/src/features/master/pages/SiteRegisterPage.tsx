@@ -133,6 +133,7 @@ function SiteRegister() {
           userOptionsError={
             usersQuery.isError ? '責任者候補を取得できませんでした' : null
           }
+          userOptionsHelperText="マスターおよび拠点に紐づいていない社員のみ表示されます。"
           embedded
         />
       </FormPageContent>

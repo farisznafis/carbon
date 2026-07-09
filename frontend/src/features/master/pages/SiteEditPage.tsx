@@ -245,6 +245,7 @@ function SiteEdit() {
           userOptionsError={
             usersQuery.isError ? '責任者候補を取得できませんでした' : null
           }
+          userOptionsHelperText="この拠点に紐づいている社員のみ表示されます。"
         />
       )}
 

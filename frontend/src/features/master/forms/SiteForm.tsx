@@ -67,6 +67,7 @@ interface SiteFormProps {
   userOptions?: UserList[];
   isUserOptionsLoading?: boolean;
   userOptionsError?: string | null;
+  userOptionsHelperText?: string;
   embedded?: boolean;
 }
 
@@ -91,6 +92,7 @@ export function SiteForm({
   userOptions = [],
   isUserOptionsLoading = false,
   userOptionsError = null,
+  userOptionsHelperText,
   embedded = false,
 }: Readonly<SiteFormProps>) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -200,8 +202,9 @@ export function SiteForm({
 
       if (data.results && data.results.length > 0) {
         const result = data.results[0];
+        const cityNameWithTown = `${result.address2 ?? ''}${result.address3 ?? ''}`;
         form.setValue('prefectureName', result.address1, { shouldDirty: true });
-        form.setValue('cityName', result.address2, { shouldDirty: true });
+        form.setValue('cityName', cityNameWithTown, { shouldDirty: true });
       }
     } catch (error) {
       if (!(error instanceof DOMException && error.name === 'AbortError')) {
@@ -356,7 +359,7 @@ export function SiteForm({
                   <FormItem>
                     <RequiredLabel>番地</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="1-1" {...field} />
+                      <Input inputSize="sm" placeholder="1-1-1" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -379,6 +382,11 @@ export function SiteForm({
             </FormSection>
 
               <FormSection number={3} title={<>責任者 <RequiredBadge /></>}>
+                {userOptionsHelperText && (
+                  <p className="-mt-2 mb-1 text-sm text-muted-foreground">
+                    {userOptionsHelperText}
+                  </p>
+                )}
                 <FormField
                   control={form.control}
                   name="userId"
