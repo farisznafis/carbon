@@ -46,7 +46,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 @RequiredArgsConstructor
 public class FileUploadSolarServiceImpl implements FileUploadSolarService {
 
-    @Value("${app.s3.bucket:gx-monitoring-files}")
+    @Value("${app.s3.bucket:}")
     private String bucketName;
 
     private final S3Client s3Client;

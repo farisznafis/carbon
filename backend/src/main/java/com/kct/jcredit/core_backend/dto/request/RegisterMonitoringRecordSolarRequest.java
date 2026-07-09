@@ -67,23 +67,24 @@ public class RegisterMonitoringRecordSolarRequest {
     @DecimalMin(value = "0.0", message = "ELPJ計測精度は0以上である必要があります。")
     @DecimalMax(value = "100.0", message = "ELPJ計測精度は100以下である必要があります。")
     @Digits(integer = 3, fraction = 2, message = "ELPJ計測精度は整数部3桁、小数部2桁以内で入力してください。")
+    @NotNull(message = "測定精度を入力してください。")
     @JsonProperty("ELPJ_accuracy")
     private BigDecimal elpjAccuracy;
 
-     // Mandatory Evidence URLs (Update 1: 4 Evidence URLs Integration)
-    @NotBlank(message = "ELpv（電力使用量）の証憑ファイルURLが必須です。")
+     // Mandatory evidence files
+    @NotBlank(message = "発電量（ELPV）の証憑ファイルをアップロードしてください。")
     @JsonProperty("ELpv_evidence")
     private String elPvEvidenceUrl;
     
-    @NotBlank(message = "ELpvr（電力供給量）の証憑ファイルURLが必須です。")
+    @NotBlank(message = "自家消費量（ELPVR）の証憑ファイルをアップロードしてください。")
     @JsonProperty("ELpvr_evidence")
     private String elPvrEvidenceUrl;
     
-    @NotBlank(message = "ELPJ（バッテリー仕様書）の証憑ファイルURLが必須です。")
+    @NotBlank(message = "蓄電池仕様書の証憑ファイルをアップロードしてください。")
     @JsonProperty("ELPJ_battery_evidence")
     private String elpjBatterySpecificationUrl;
     
-    @NotBlank(message = "ELPJ制御値の証憑ファイルURLが必須です。")
+    @NotBlank(message = "制御機器稼働時間（ELPJ）の証憑ファイルをアップロードしてください。")
     @JsonProperty("ELPJ_control_equipment_spec_files")
     private String elpjControlEvidenceUrl;
 }

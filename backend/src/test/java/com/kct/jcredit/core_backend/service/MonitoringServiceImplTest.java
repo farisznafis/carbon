@@ -32,6 +32,7 @@ import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.RegisterMonitoringRecordSolarRequest;
 import com.kct.jcredit.core_backend.dto.response.FileUploadResponse;
 import com.kct.jcredit.core_backend.dto.response.MonitoringRecordSolarResponse;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.entity.EnR002MonitoringRecord;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
@@ -381,7 +382,7 @@ class MonitoringServiceImplTest {
         // Assert
         assertNotNull(response);
         assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
-        assertTrue(response.getMessage().contains("無効"));
+        assertEquals(ResponseConstants.MSG_VALIDATION_ERROR, response.getMessage());
         verify(monitoringRecordSolarRepository, never()).save(any());
     }
 
@@ -449,7 +450,7 @@ class MonitoringServiceImplTest {
         // Assert
         assertNotNull(response);
         assertEquals(ResponseConstants.FORBIDDEN, response.getStatusCode());
-        assertTrue(response.getMessage().contains("not in this company"));
+        assertEquals(ResponseConstants.MSG_SITE_NOT_IN_COMPANY, response.getMessage());
         verify(monitoringRecordSolarRepository, never()).save(any());
     }
 
@@ -816,7 +817,7 @@ class MonitoringServiceImplTest {
         // Assert
         assertNotNull(response);
         assertEquals(ResponseConstants.FORBIDDEN, response.getStatusCode());
-        assertTrue(response.getMessage().contains("no company assigned"));
+        assertEquals(ResponseConstants.MSG_SITE_HAS_NO_COMPANY, response.getMessage());
         verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
 
@@ -836,6 +837,7 @@ class MonitoringServiceImplTest {
         unknownRoleUser.setUsername(username);
         ParticipatingCompany unknownRoleCompany = new ParticipatingCompany(); // ✅ Fix: was unknownRoleUser.setCompanyId(companyId)
         unknownRoleCompany.setId(Id);
+        unknownRoleCompany.setCompanyId(companyId);
         unknownRoleUser.setCompany(unknownRoleCompany);
         unknownRoleUser.setRole("admin"); // Unknown role
         unknownRoleUser.setIsActive(true);
@@ -852,6 +854,328 @@ class MonitoringServiceImplTest {
         // Assert
         assertNotNull(response);
         assertEquals(ResponseConstants.FORBIDDEN, response.getStatusCode());
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should reject when dateRecorded is after today in Japan")
+    void testRegisterMonitoringRecord_FutureDateRecorded_ValidationError() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        Integer projectId = 1;
+        Integer siteId = 21;
+
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setDateRecorded(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).plusDays(1).toString());
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
+        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+                .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
+
+        MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
+                username,
+                companyId,
+                request
+        );
+
+        assertNotNull(response);
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_DATE_RECORDED_RANGE, response.getErrors().get("dateRecorded"));
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should reject when dateRecorded is before activity start date")
+    void testRegisterMonitoringRecord_DateRecordedBeforeActivityStart_ValidationError() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        Integer projectId = 1;
+        Integer siteId = 21;
+        LocalDate todayInJapan = LocalDate.now(java.time.ZoneId.of("Asia/Tokyo"));
+
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setDateRecorded(todayInJapan.minusDays(1).toString());
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
+        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+                .thenReturn(buildRelation(todayInJapan));
+
+        MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
+                username,
+                companyId,
+                request
+        );
+
+        assertNotNull(response);
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_DATE_RECORDED_RANGE, response.getErrors().get("dateRecorded"));
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should reject when ELPVR is greater than ELPV")
+    void testRegisterMonitoringRecord_ElpvrExceedsElpv_ValidationError() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+
+        Integer projectId = 1;
+        Integer siteId = 21;
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setElPv(new BigDecimal("100.000"));
+        request.setElPvr(new BigDecimal("100.001"));
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
+        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+                .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
+
+        MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
+                username,
+                companyId,
+                request
+        );
+
+        assertNotNull(response);
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_ELPVR_EXCEEDS_ELPV, response.getErrors().get("ELpvr_value"));
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should reject duplicate monitoring record for same project, site, and dateRecorded")
+    void testRegisterMonitoringRecord_DuplicateDateRecorded_ValidationError() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        Integer projectId = 1;
+        Integer siteId = 21;
+
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
+        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+                .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
+        when(monitoringRecordSolarRepository.existsActiveByRecordIdAndDateRecorded(
+                siteId + "#" + projectId,
+                request.getDateRecorded()
+        )).thenReturn(true);
+
+        MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
+                username,
+                companyId,
+                request
+        );
+
+        assertNotNull(response);
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_DATE_RECORDED_DUPLICATE, response.getErrors().get("dateRecorded"));
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Validate endpoint should reject ELPVR greater than ELPV before confirmation page")
+    void testValidateMonitoringRecord_ElpvrExceedsElpv_ValidationError() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        Integer projectId = 1;
+        Integer siteId = 21;
+
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setElPv(new BigDecimal("10.000"));
+        request.setElPvr(new BigDecimal("10.001"));
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
+        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+                .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
+
+        BaseResponse response = monitoringService.validateMonitoringRecordSolar(
+                username,
+                companyId,
+                request
+        );
+
+        assertNotNull(response);
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_ELPVR_EXCEEDS_ELPV, response.getErrors().get("ELpvr_value"));
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Validate endpoint should aggregate required field errors with future date")
+    void testValidateMonitoringRecord_EmptyValuesAndFutureDate_AggregatesErrors() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        Integer projectId = 1;
+        Integer siteId = 21;
+
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setDateRecorded(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).plusDays(1).toString());
+        request.setElPv(null);
+        request.setElPvr(null);
+        request.setElpjControl(null);
+        request.setElpjAccuracy(null);
+        request.setElPvEvidenceUrl(null);
+        request.setElPvrEvidenceUrl(null);
+        request.setElpjBatterySpecificationUrl(null);
+        request.setElpjControlEvidenceUrl(null);
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
+        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+                .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
+
+        BaseResponse response = monitoringService.validateMonitoringRecordSolar(
+                username,
+                companyId,
+                request
+        );
+
+        assertNotNull(response);
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_DATE_RECORDED_RANGE, response.getErrors().get("dateRecorded"));
+        assertEquals(ResponseConstants.MSG_ELPV_VALUE_MIN, response.getErrors().get("ELpv_value"));
+        assertEquals(ResponseConstants.MSG_ELPVR_VALUE_MIN, response.getErrors().get("ELpvr_value"));
+        assertEquals(ResponseConstants.MSG_ELPJ_ACCURACY_REQUIRED, response.getErrors().get("ELPJ_accuracy"));
+        assertEquals(ResponseConstants.MSG_ELPV_EVIDENCE_REQUIRED, response.getErrors().get("ELpv_evidence"));
+        assertEquals(ResponseConstants.MSG_ELPVR_EVIDENCE_REQUIRED, response.getErrors().get("ELpvr_evidence"));
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Validate endpoint should reject missing ELPJ accuracy")
+    void testValidateMonitoringRecord_MissingAccuracy_ValidationError() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        Integer projectId = 1;
+        Integer siteId = 21;
+
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setElpjAccuracy(null);
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
+        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+                .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
+
+        BaseResponse response = monitoringService.validateMonitoringRecordSolar(
+                username,
+                companyId,
+                request
+        );
+
+        assertNotNull(response);
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_ELPJ_ACCURACY_REQUIRED, response.getErrors().get("ELPJ_accuracy"));
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Validate endpoint should reject ELPJ accuracy below zero")
+    void testValidateMonitoringRecord_AccuracyBelowZero_ValidationError() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        Integer projectId = 1;
+        Integer siteId = 21;
+
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setElpjAccuracy(new BigDecimal("-0.01"));
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
+        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+                .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
+
+        BaseResponse response = monitoringService.validateMonitoringRecordSolar(
+                username,
+                companyId,
+                request
+        );
+
+        assertNotNull(response);
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_ELPJ_ACCURACY_MIN, response.getErrors().get("ELPJ_accuracy"));
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Validate endpoint should reject ELPJ accuracy above 100")
+    void testValidateMonitoringRecord_AccuracyAboveMax_ValidationError() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        Integer projectId = 1;
+        Integer siteId = 21;
+
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setElpjAccuracy(new BigDecimal("100.01"));
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
+        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+                .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
+
+        BaseResponse response = monitoringService.validateMonitoringRecordSolar(
+                username,
+                companyId,
+                request
+        );
+
+        assertNotNull(response);
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_ELPJ_ACCURACY_MAX, response.getErrors().get("ELPJ_accuracy"));
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Validate endpoint should reject duplicate date before confirmation page")
+    void testValidateMonitoringRecord_DuplicateDateRecorded_ValidationError() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        Integer projectId = 1;
+        Integer siteId = 21;
+
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
+        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+                .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
+        when(monitoringRecordSolarRepository.existsActiveByRecordIdAndDateRecorded(
+                siteId + "#" + projectId,
+                request.getDateRecorded()
+        )).thenReturn(true);
+
+        BaseResponse response = monitoringService.validateMonitoringRecordSolar(
+                username,
+                companyId,
+                request
+        );
+
+        assertNotNull(response);
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_DATE_RECORDED_DUPLICATE, response.getErrors().get("dateRecorded"));
         verify(monitoringRecordSolarRepository, never()).save(any());
     }
 
@@ -874,6 +1198,14 @@ class MonitoringServiceImplTest {
         request.setDateRecorded(LocalDate.now().toString()); // Convert to String
         request.setProjectType("ENR002");
         return request;
+    }
+
+    private SiteProjectRelation buildRelation(LocalDate activityStartDate) {
+        SiteProjectRelation relation = new SiteProjectRelation();
+        relation.setProject(project);
+        relation.setSite(tokyoSite);
+        relation.setActivityStartDate(activityStartDate);
+        return relation;
     }
 
     private MultipartFile createMockFile(String filename, String extension, long sizeInBytes) throws IOException {
