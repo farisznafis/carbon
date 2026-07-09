@@ -30,5 +30,5 @@ export const ScrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  return isVisible ? <ScrollToTopButton onClick={handleClick} /> : null;
+  return <ScrollToTopButton onClick={handleClick} isVisible={isVisible} />;
 };
