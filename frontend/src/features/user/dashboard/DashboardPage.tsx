@@ -1,12 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  ArrowRight,
-  Building2,
-  Factory,
-  Leaf,
-  LineChart,
-} from 'lucide-react';
+import { Building2, Factory, Leaf } from 'lucide-react';
 import { getProfile } from '@/api/profile';
 import {
   getSiteData,
@@ -175,7 +169,7 @@ function KpiCard({
   return (
     <Card
       className={cn(
-        'relative h-[180px] overflow-hidden rounded-2xl border-border shadow-app-sm',
+        'relative h-full min-h-[250px] overflow-hidden rounded-2xl border-border shadow-app-sm',
         variant === 'primary'
           ? 'border-primary bg-primary text-primary-foreground'
           : 'bg-card text-foreground',
@@ -185,7 +179,7 @@ function KpiCard({
         <p className={cn('text-small', variant === 'primary' ? 'text-white/85' : 'text-muted-foreground')}>
           {title}
         </p>
-        <p className="mt-1 text-[30px] font-normal leading-10 tracking-normal">
+        <p className="mt-2 text-[34px] font-normal leading-10 tracking-normal">
           {value}
         </p>
         <p className={cn('text-subtle', variant === 'primary' ? 'text-white/80' : 'text-muted-foreground')}>
@@ -195,11 +189,11 @@ function KpiCard({
 
       {variant === 'primary' ? (
         <>
-          <Leaf className="absolute right-8 top-5 h-24 w-24 text-white/20" strokeWidth={1.5} />
+          <Leaf className="absolute right-7 top-5 h-24 w-24 text-white/20" strokeWidth={1.5} />
           <div className="absolute -bottom-8 left-0 h-20 w-full bg-secondary/45 [clip-path:polygon(0_70%,38%_65%,74%_0,100%_35%,100%_100%,0_100%)]" />
         </>
       ) : variant === 'line' ? (
-        <svg viewBox="0 0 320 132" className="absolute bottom-0 left-0 h-24 w-full" aria-hidden="true">
+        <svg viewBox="0 0 320 132" className="absolute bottom-0 left-0 h-28 w-full" aria-hidden="true">
           <defs>
             <linearGradient id="kpi-line-fill" x1="0" x2="0" y1="0" y2="1">
               <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.22" />
@@ -252,15 +246,15 @@ function JoinedProjectCard({
             <div className="rounded-2xl bg-muted/30 p-5">
               <dl className="space-y-4">
                 <div>
-                  <dt className="text-small text-muted-foreground">方法論：</dt>
+                  <dt className="text-small text-muted-foreground">方法論</dt>
                   <dd className="mt-1 font-bold">{getMethodologyLabel(project)}</dd>
                 </div>
                 <div>
-                  <dt className="text-small text-muted-foreground">最新更新日：</dt>
+                  <dt className="text-small text-muted-foreground">最新更新日</dt>
                   <dd className="mt-1 font-bold">{formatProjectDate(project)}</dd>
                 </div>
                 <div>
-                  <dt className="text-small text-muted-foreground">ステータス：</dt>
+                  <dt className="text-small text-muted-foreground">ステータス</dt>
                   <dd className="mt-1">
                     <ProjectStatus joined />
                   </dd>
@@ -273,13 +267,8 @@ function JoinedProjectCard({
             </Button>
           </div>
 
-          <div className="grid min-h-[220px] gap-6 lg:grid-cols-2">
-            <div className="min-h-[210px]">
-              <DummyAreaChart />
-            </div>
-            <div className="min-h-[210px]">
-              <DummyBarChart />
-            </div>
+          <div className="flex min-h-[220px] items-center justify-center rounded-2xl bg-muted/20 text-muted-foreground">
+            グラフデータ準備中
           </div>
         </div>
       </CardContent>
@@ -301,15 +290,15 @@ function AvailableProjectCard({
 
         <dl className="mt-6 space-y-4">
           <div>
-            <dt className="text-small text-muted-foreground">方法論：</dt>
+            <dt className="text-small text-muted-foreground">方法論</dt>
             <dd className="mt-1 font-bold">{getMethodologyLabel(project)}</dd>
           </div>
           <div>
-            <dt className="text-small text-muted-foreground">最新更新日：</dt>
+            <dt className="text-small text-muted-foreground">最新更新日</dt>
             <dd className="mt-1 font-bold">{formatProjectDate(project)}</dd>
           </div>
           <div>
-            <dt className="text-small text-muted-foreground">ステータス：</dt>
+            <dt className="text-small text-muted-foreground">ステータス</dt>
             <dd className="mt-1">
               <ProjectStatus joined={false} />
             </dd>
@@ -528,36 +517,51 @@ const Dashboard = () => {
         />
       )}
 
-      <section className={cn('pb-12 pt-14', pageContainer)}>
-        <div className="grid gap-6 lg:grid-cols-[330px_minmax(0,1fr)]">
-          <div className="flex items-center gap-5 lg:min-h-[220px]">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
-              <Factory className="h-6 w-6" />
-            </span>
+      <section className={cn('relative pb-12 pt-14', pageContainer)}>
+        <div className="grid items-stretch gap-6 ">
+          <div className="relative">
             <div>
-              <p className="text-small text-muted-foreground">
+              <p className="text-small pl-[60px] text-muted-foreground">
                 {user?.companyName || '株式会社ABC'}
               </p>
-              <h1 className="mt-1 text-[36px] leading-10 text-foreground">{site?.siteName || '拠点ダッシュボード'}</h1>
-              <div className="mt-5 space-y-1 text-sm font-bold leading-6">
-                <p>プロジェクト数: {joinedProjects.length}</p>
-                <p>担当者: {picName}</p>
-                <p>所在地: {address}</p>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
+                    <Factory className="h-6 w-6" />
+                  </span>
+                  <h1 className="mt-1 text-[36px] leading-10 text-foreground">{site?.siteName || '拠点ダッシュボード'}</h1>
+                </div>
+                {user?.role === 'master' && activeSiteId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="md"
+                    onClick={() => navigate(`/master/site-edit/${activeSiteId}`)}
+                  >
+                    拠点情報を編集
+                  </Button>
+                )}
               </div>
-              {user?.role === 'master' && activeSiteId && (
-                <button
-                  type="button"
-                  className="mt-5 inline-flex items-center gap-1 text-small text-muted-foreground transition hover:text-primary"
-                  onClick={() => navigate(`/master/site-edit/${activeSiteId}`)}
-                >
-                  拠点更新
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              )}
+              <div className="ml-[60px] mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-1">
+              {/* <dl className="space-y-4 rounded-2xl bg-card/70 p-5 shadow-app-sm"> */}
+                {/* <div>
+                  <dt className="text-small text-muted-foreground">プロジェクト数：</dt>
+                  <dd className="mt-1 font-bold">{joinedProjects.length}</dd>
+                </div> */}
+              <div>
+                <dt className="text-small text-muted-foreground">担当者</dt>
+                <dd className="mt-1 font-bold">{picName}</dd>
+              </div>
+              <div>
+                <dt className="text-small text-muted-foreground">所在地</dt>
+                <dd className="mt-1 font-bold">{address}</dd>
+              </div>
+              {/* </dl> */}
+              </div>
             </div>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-3">
+          {/* <div className="grid h-full gap-3 md:grid-cols-2">
             <KpiCard
               title="排出総量"
               value={formatNumber(metrics?.sumEmission)}
@@ -567,12 +571,7 @@ const Dashboard = () => {
               title="排出削減総量"
               value={formatNumber(metrics?.sumEmissionReduction)}
             />
-            <KpiCard
-              title="排出総量"
-              value={formatNumber(metrics?.jcredit)}
-              variant="line"
-            />
-          </div>
+          </div> */}
         </div>
       </section>
 
