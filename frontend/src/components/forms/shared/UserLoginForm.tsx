@@ -50,11 +50,11 @@ export function UserLoginForm({ onSubmit, header }: UserLoginFormProps) {
           error={error}
           isSubmitting={form.formState.isSubmitting}
           header={header}
-          footer={
-            <a href="/contact" className="text-sm font-medium text-foreground hover:text-primary">
-              ログインに関するお問い合わせはこちら
-            </a>
-          }
+          // footer={
+          //   <a href="/contact" className="text-sm font-medium text-foreground hover:text-primary">
+          //     ログインに関するお問い合わせはこちら
+          //   </a>
+          // }
         >
           <FormField
             control={form.control}
