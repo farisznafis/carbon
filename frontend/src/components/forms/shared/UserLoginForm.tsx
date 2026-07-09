@@ -61,7 +61,7 @@ export function UserLoginForm({ onSubmit, header }: UserLoginFormProps) {
             name="companyId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>会員ID</FormLabel>
+                <FormLabel>社員ID</FormLabel>
                 <FormControl>
                   <Input type="text" placeholder="1234567890111" {...field} />
                 </FormControl>

@@ -101,22 +101,22 @@ export const picFields: FieldConfig<FormValues>[] = [
 export const membersFields: FieldConfig<FormValues>[] = [
   {
     name: 'projectBase.newMembersTotal',
-    label: '新規会員数（件）',
+    label: '新規社員数（件）',
     type: 'number',
   },
   {
     name: 'projectBase.withdrawnMembers',
-    label: '退会会員数（件）',
+    label: '退会社員数（件）',
     type: 'number',
   },
   {
     name: 'projectBase.cumulativeMembers',
-    label: '認証対象となる累計会員数（件）',
+    label: '認証対象となる累計社員数（件）',
     type: 'number',
   },
   {
     name: 'projectBase.membersTotal',
-    label: '延べ会員数（件）',
+    label: '延べ社員数（件）',
     type: 'number',
   },
 ];

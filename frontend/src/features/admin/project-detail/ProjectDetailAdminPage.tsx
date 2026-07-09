@@ -209,13 +209,13 @@ export default function ProjectDetailAdmin() {
       </DetailSection>
 
       <DetailSection
-        title='会員数'
-        description='登録・脱退・累計会員数を確認できます。'
+        title='社員数'
+        description='登録・脱退・累計社員数を確認できます。'
       >
-        <ProjectDetailItem label='新規会員数' value={formatNumber(project.newMembersTotal)} />
+        <ProjectDetailItem label='新規社員数' value={formatNumber(project.newMembersTotal)} />
         <ProjectDetailItem label='脱退数' value={formatNumber(project.withdrawnMembers)} />
-        <ProjectDetailItem label='累計会員数' value={formatNumber(project.cumulativeMembers)} />
-        <ProjectDetailItem label='会員数合計' value={formatNumber(project.membersTotal)} />
+        <ProjectDetailItem label='累計社員数' value={formatNumber(project.cumulativeMembers)} />
+        <ProjectDetailItem label='社員数合計' value={formatNumber(project.membersTotal)} />
       </DetailSection>
 
       <DetailSection title='方法論' description='適用方法論の詳細です。'>

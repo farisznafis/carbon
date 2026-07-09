@@ -53,19 +53,20 @@ export function MasterDashboardHero({
 
 export function MasterDashboardTabs() {
   const triggerClassName = cn(
-    'h-10 min-w-0 flex-1 rounded-md border-0 bg-transparent px-6 py-2',
-    'text-sm leading-6 text-white shadow-none transition-colors',
-    'hover:bg-white/10 hover:text-white',
-    'data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-none',
+    'group relative h-14 justify-center rounded-xl border py-3',
+    'text-lg font-bold leading-7 shadow-app-sm transition-all duration-300 ease-in-out',
+    'border-border bg-card text-black hover:border-primary/60 hover:bg-secondary/50',
+    'data-[state=active]:border-[#0d9488] data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-app-sm data-[state=active]:hover:bg-primary/90',
+    'data-[state=active]:scale-105',
   );
 
   return (
-    <div className="bg-card pt-4">
-      <TabsList className="mx-auto flex h-auto w-fit min-w-[288px] items-start rounded-lg bg-[#699267] p-1.5 text-white">
-        <TabsTrigger value="users" className={triggerClassName}>
+    <div className="bg-card pt-8">
+      <TabsList className="mx-auto flex h-14 w-full items-start gap-4 rounded-none bg-transparent p-0 text-muted-foreground">
+        <TabsTrigger value="users" className={cn(triggerClassName, 'w-[130px] px-5')}>
           社員管理
         </TabsTrigger>
-        <TabsTrigger value="sites" className={triggerClassName}>
+        <TabsTrigger value="sites" className={cn(triggerClassName, 'w-[130px] px-5')}>
           拠点管理
         </TabsTrigger>
       </TabsList>
