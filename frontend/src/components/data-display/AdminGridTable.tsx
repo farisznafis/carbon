@@ -71,7 +71,11 @@ export function AdminGridTable<T>({
     if (!column?.sortValue) return rows;
 
     return [...rows].sort((a, b) =>
-      compareSortValues(column.sortValue?.(a), column.sortValue?.(b), sortDirection),
+      compareSortValues(
+        column.sortValue?.(a),
+        column.sortValue?.(b),
+        sortDirection,
+      ),
     );
   }, [columns, rows, sortColumnId, sortDirection]);
 

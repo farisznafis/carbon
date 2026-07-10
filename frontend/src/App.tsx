@@ -143,6 +143,14 @@ const App = () => {
             }
           />
           <Route
+            path={paths.adminApplicationDetailRoute}
+            element={
+              <RequireAdmin>
+                <AdminDashboard />
+              </RequireAdmin>
+            }
+          />
+          <Route
             path={paths.adminProjectRegister}
             element={
               <RequireAdmin>

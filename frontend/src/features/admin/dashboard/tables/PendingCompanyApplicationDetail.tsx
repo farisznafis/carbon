@@ -13,8 +13,6 @@ import type { ReactNode } from 'react';
 type PendingCompanyApplicationDetailProps = {
   item: AdminCompanyListItem;
   reviewMode: boolean;
-  isLoading?: boolean;
-  error?: string | null;
   onBack: () => void;
   onApprove: (item: AdminCompanyListItem) => void;
   onReject: (item: AdminCompanyListItem) => void;
@@ -101,8 +99,6 @@ function formatRequestedProjects(item: AdminCompanyListItem) {
 export function PendingCompanyApplicationDetail({
   item,
   reviewMode,
-  isLoading,
-  error,
   onBack,
   onApprove,
   onReject,
@@ -174,16 +170,6 @@ export function PendingCompanyApplicationDetail({
           <h1 className="text-foreground">申請情報の詳細</h1>
 
           <div className="rounded-xl border border-border bg-card p-8 shadow-app-sm md:p-12">
-            {isLoading && (
-              <div className="mb-8 rounded-lg border border-dashed border-border px-4 py-3 text-small text-muted-foreground">
-                読み込み中...
-              </div>
-            )}
-            {error && (
-              <div className="mb-8 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-small font-medium text-destructive">
-                {error}
-              </div>
-            )}
             <div className="grid grid-cols-1 gap-x-16 gap-y-12 lg:grid-cols-2">
               <DetailSection
                 title="法人情報"

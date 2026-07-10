@@ -1,5 +1,9 @@
 import type { ProjectStatus } from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
+import {
+  AdminGridTable,
+  type AdminGridTableColumn,
+} from '@/components/data-display/AdminGridTable';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -8,10 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  AdminGridTable,
-  type AdminGridTableColumn,
-} from '@/features/admin/dashboard/tables/AdminGridTable';
 
 type ProjectTableProps = {
   projects: Project[];

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '@/api/_shared/errors';
 import type {
   AdminCompanyListItem,
@@ -9,7 +9,6 @@ import type {
 } from '@/api/admin';
 import {
   approveAdminCompany,
-  getAdminApplicationDetail,
   getAdminCompanies,
   getCompanySuspensions,
   rejectAdminCompany,
@@ -184,6 +183,8 @@ function AdminDashboardEmptyState({ children }: { children: ReactNode }) {
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { applicationId } = useParams();
   const { toast } = useToast();
   const { user } = useAuth();
   const projectsQuery = useProjectsQuery();
@@ -239,10 +240,16 @@ const AdminDashboard = () => {
   const [selectedCompany, setSelectedCompany] =
     useState<AdminCompanyListItem | null>(null);
   const [detailCompany, setDetailCompany] =
-    useState<AdminCompanyListItem | null>(null);
-  const [detailReviewMode, setDetailReviewMode] = useState(false);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState<string | null>(null);
+    useState<AdminCompanyListItem | null>(
+      (location.state as { company?: AdminCompanyListItem } | null)?.company ??
+        null,
+    );
+  const [detailReviewMode, setDetailReviewMode] = useState(
+    Boolean(
+      (location.state as { reviewMode?: boolean } | null)?.reviewMode ??
+        applicationId,
+    ),
+  );
   const [cancelRequestDialogOpen, setCancelRequestDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
@@ -418,51 +425,43 @@ const AdminDashboard = () => {
     setCompanyListError(null);
   };
 
-  const loadApplicationDetail = async (
-    item: AdminCompanyListItem,
-    reviewMode: boolean,
-  ) => {
-    const applicationId = item.id;
+  const routeApplicationCompany = useMemo(() => {
+    if (!applicationId) return null;
+    return (
+      applicationCompanies.find((company) => company.id === applicationId) ??
+      null
+    );
+  }, [applicationCompanies, applicationId]);
 
-    setDetailCompany(item);
-    setDetailReviewMode(reviewMode);
-    setDetailError(null);
-
-    if (!applicationId) {
-      setDetailError('申請IDを取得できませんでした。');
-      return;
+  useEffect(() => {
+    if (!applicationId || detailCompany) return;
+    if (routeApplicationCompany) {
+      setDetailCompany(routeApplicationCompany);
+      setDetailReviewMode(true);
     }
-
-    setDetailLoading(true);
-    try {
-      const detail = await getAdminApplicationDetail(applicationId);
-      setDetailCompany(detail);
-    } catch (error) {
-      setDetailError(
-        getApiMessage(error, '申請情報の詳細取得に失敗しました。'),
-      );
-    } finally {
-      setDetailLoading(false);
-    }
-  };
+  }, [applicationId, detailCompany, routeApplicationCompany]);
 
   const openCompanyDetails = (item: AdminCompanyListItem) => {
     setDetailCompany(item);
     setDetailReviewMode(false);
-    void loadApplicationDetail(item, false);
   };
 
   const openCompanyReview = (item: AdminCompanyListItem) => {
+    if (item.id) {
+      navigate(paths.adminApplicationDetail(item.id), {
+        state: { company: item, reviewMode: true },
+      });
+    }
     setDetailCompany(item);
     setDetailReviewMode(true);
-    void loadApplicationDetail(item, true);
   };
 
   const closeCompanyDetail = () => {
     setDetailCompany(null);
     setDetailReviewMode(false);
-    setDetailLoading(false);
-    setDetailError(null);
+    if (applicationId) {
+      navigate(paths.adminDashboard);
+    }
   };
 
   const openApproveCompany = (item: AdminCompanyListItem) => {
@@ -619,18 +618,24 @@ const AdminDashboard = () => {
     );
   }
 
-  if (detailCompany) {
+  if (detailCompany || applicationId) {
     return (
       <>
-        <PendingCompanyApplicationDetail
-          item={detailCompany}
-          reviewMode={detailReviewMode}
-          isLoading={detailLoading}
-          error={detailError}
-          onBack={closeCompanyDetail}
-          onApprove={openApproveCompany}
-          onReject={openRejectCompany}
-        />
+        {detailCompany ? (
+          <PendingCompanyApplicationDetail
+            item={detailCompany}
+            reviewMode={detailReviewMode}
+            onBack={closeCompanyDetail}
+            onApprove={openApproveCompany}
+            onReject={openRejectCompany}
+          />
+        ) : (
+          <div className="flex min-h-screen items-center justify-center bg-background px-6 text-small text-muted-foreground">
+            {companyListLoading
+              ? '読み込み中...'
+              : '申請情報を取得できませんでした。'}
+          </div>
+        )}
         <PendingCompanyActionDialog
           open={pendingDialogOpen}
           mode={pendingDialogMode}

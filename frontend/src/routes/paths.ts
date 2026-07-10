@@ -43,6 +43,9 @@ export const paths = {
   passwordChange: '/password-change',
 
   adminDashboard: '/admin/dashboard',
+  adminApplicationDetailRoute: '/admin/applications/:applicationId',
+  adminApplicationDetail: (applicationId: string | number) =>
+    `/admin/applications/${applicationId}`,
   adminProjectRegister: '/admin/project-register',
   adminProjectDetailRoute: '/admin/projects/:projectId',
   adminProjectDetail: (projectId: string | number) => `/admin/projects/${projectId}`,

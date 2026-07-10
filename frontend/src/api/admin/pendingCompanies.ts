@@ -1,6 +1,5 @@
 import { apiRequest } from '../_shared/httpClient';
 import type {
-  AdminApplicationDetailResponse,
   AdminCompanyListItem,
   AdminCompanyListResponse,
   CompanyMutationResponse,
@@ -17,7 +16,6 @@ import type {
 } from './types';
 
 export type {
-  AdminApplicationDetailResponse,
   AdminCompanyListItem,
   AdminCompanyListResponse,
   CompanySort,
@@ -123,27 +121,6 @@ export async function getAdminCompanies(
 
   inflightCompanyListRequests.set(path, request);
   return request;
-}
-
-export async function getAdminApplicationDetail(
-  applicationId: string,
-): Promise<AdminCompanyListItem> {
-  const response = await apiRequest<
-    AdminApplicationDetailResponse | AdminCompanyListItem
-  >(`/admin/applications/${applicationId}`, {
-    method: 'GET',
-    fallbackErrorMessage: 'Failed to fetch application detail',
-  });
-
-  if ('application' in response && response.application) {
-    return response.application;
-  }
-
-  if ('company' in response && response.company) {
-    return response.company;
-  }
-
-  return response as AdminCompanyListItem;
 }
 
 type RawCompanySuspensionListResponse = Partial<CompanySuspensionListResponse> & {
