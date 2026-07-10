@@ -96,9 +96,9 @@ function ProjectDetailTabs() {
         <TabsTrigger value='overview' className={triggerClassName}>
           概要
         </TabsTrigger>
-        <TabsTrigger value='data' className={triggerClassName}>
+        {/* <TabsTrigger value='data' className={triggerClassName}>
           モニタリングデータ
-        </TabsTrigger>
+        </TabsTrigger> */}
       </TabsList>
     </div>
   );
@@ -173,7 +173,8 @@ function RecentDataBar({ row, onRegister }: RecentDataBarProps) {
   return (
     <section className={`${projectDetailCardClassName} p-5`}>
       <div className='mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='text-table inline-flex w-fit items-center rounded-full border border-border px-4 py-1.5 font-bold text-foreground'>
+        <div className='text-table inline-flex w-fit items-center gap-1.5 rounded-full border border-border px-4 py-1.5 font-bold text-foreground'>
+          <span className='text-muted-foreground'>記録日</span>
           {formatMonitoringDate(row.dateRecorded)}
         </div>
         <Button
@@ -599,7 +600,7 @@ const ProjectDetail = () => {
                 <Card className={`${projectDetailCardClassName} flex h-full min-h-[360px] flex-col`}>
                   <CardHeader className='px-7 pb-1 pt-7'>
                     <CardTitle className='leading-8 text-foreground'>
-                      見積 (Estimation Trend)
+                      見積
                     </CardTitle>
                   </CardHeader>
                   <CardContent className='flex flex-1 flex-col space-y-4 px-7 pb-7'>
