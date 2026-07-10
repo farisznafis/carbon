@@ -1,5 +1,9 @@
 ﻿import { useEffect, useState, type ReactNode } from 'react';
 import { getProjectDetails, type ProjectDetail as ProjectDetailApi } from '@/api/projects';
+import {
+  getSiteProjectEquipment,
+  type SiteProjectEquipment,
+} from '@/api/site';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Card,
@@ -20,6 +24,8 @@ import {
   HousePlug,
   Layers,
   MapPin,
+  PackageCheck,
+  Wrench,
   Zap,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -48,6 +54,182 @@ import { cn } from '@/lib/utils';
 function formatNumber(n: number | null | undefined) {
   if (n == null || Number.isNaN(n)) return '-';
   return new Intl.NumberFormat().format(n);
+}
+
+function formatNullable(value: string | number | boolean | null | undefined) {
+  if (value === null || value === undefined || value === '') return '-';
+  if (typeof value === 'boolean') return value ? 'あり' : 'なし';
+  return String(value);
+}
+
+function formatCurrency(value: number | null | undefined) {
+  if (value === null || value === undefined || Number.isNaN(value)) return '-';
+  return `${new Intl.NumberFormat('ja-JP').format(value)} 円`;
+}
+
+function formatEquipmentDate(value: string | null | undefined) {
+  if (!value) return '-';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
+}
+
+type EquipmentInfoItemProps = {
+  label: string;
+  value: ReactNode;
+};
+
+function EquipmentInfoItem({ label, value }: EquipmentInfoItemProps) {
+  return (
+    <div>
+      <dt className='text-small text-muted-foreground'>{label}</dt>
+      <dd className='mt-1 font-bold text-foreground'>{value}</dd>
+    </div>
+  );
+}
+
+function EquipmentCard({
+  equipment,
+  index,
+}: {
+  equipment: SiteProjectEquipment;
+  index: number;
+}) {
+  const equipmentTitle =
+    equipment.equipmentType ||
+    equipment.deviceNo ||
+    equipment.deviceUniqueNo ||
+    `設備 ${index + 1}`;
+
+  return (
+    <Card className={projectDetailCardClassName}>
+      <CardHeader className='px-6 pb-3 pt-6'>
+        <div className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
+          <div className='flex min-w-0 items-start gap-3'>
+            <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary'>
+              <Wrench className='h-5 w-5' />
+            </span>
+            <div className='min-w-0'>
+              <CardTitle className='break-words leading-8 text-foreground'>
+                {equipmentTitle}
+              </CardTitle>
+              <CardDescription className='text-table mt-1'>
+                方法論番号: {formatNullable(equipment.methodologyNumber)}
+              </CardDescription>
+            </div>
+          </div>
+          <Badge
+            className={cn(
+              'w-fit border-transparent px-3 py-1 text-sm font-bold',
+              equipment.isEligible
+                ? 'bg-primary text-primary-foreground hover:bg-primary'
+                : 'bg-muted text-muted-foreground hover:bg-muted',
+            )}
+          >
+            {equipment.isEligible ? '適格' : '対象外'}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className='space-y-6 px-6 pb-6'>
+        <dl className='grid gap-5 md:grid-cols-2 xl:grid-cols-4'>
+          <EquipmentInfoItem
+            label='運転開始日'
+            value={formatEquipmentDate(equipment.equipmentOpDate)}
+          />
+          <EquipmentInfoItem
+            label='設備番号'
+            value={formatNullable(equipment.equipmentId ?? equipment.tempId)}
+          />
+          <EquipmentInfoItem
+            label='定格最大出力'
+            value={`${formatNumber(equipment.nominalMaxOutput)} kW`}
+          />
+          <EquipmentInfoItem
+            label='台数'
+            value={`${formatNumber(equipment.unitCount)} 台`}
+          />
+          <EquipmentInfoItem
+            label='機器番号'
+            value={formatNullable(equipment.deviceNo ?? equipment.deviceUniqueNo)}
+          />
+          <EquipmentInfoItem
+            label='PCSメーカー'
+            value={formatNullable(equipment.pcsManufacturer)}
+          />
+          <EquipmentInfoItem
+            label='PCS型式'
+            value={formatNullable(equipment.pcsModel)}
+          />
+          <EquipmentInfoItem
+            label='PCS台数'
+            value={`${formatNumber(equipment.powerCondUnitCount)} 台`}
+          />
+        </dl>
+
+        <div className='grid gap-4 lg:grid-cols-3'>
+          <div className='rounded-xl bg-muted/40 p-4'>
+            <h4 className='text-large text-foreground'>蓄電池</h4>
+            <dl className='mt-3 space-y-3'>
+              <EquipmentInfoItem
+                label='有無'
+                value={formatNullable(equipment.hasBattery)}
+              />
+              <EquipmentInfoItem
+                label='メーカー / 型式'
+                value={`${formatNullable(equipment.batteryMaker)} / ${formatNullable(equipment.batteryModel)}`}
+              />
+              <EquipmentInfoItem
+                label='容量'
+                value={`${formatNumber(equipment.batteryCapacity)} kWh`}
+              />
+            </dl>
+          </div>
+
+          <div className='rounded-xl bg-muted/40 p-4'>
+            <h4 className='text-large text-foreground'>追加設備</h4>
+            <dl className='mt-3 space-y-3'>
+              <EquipmentInfoItem
+                label='有無'
+                value={formatNullable(equipment.additionalEquipment)}
+              />
+              <EquipmentInfoItem
+                label='追加日 / 種別'
+                value={`${formatEquipmentDate(equipment.additionalEquipmentDate)} / ${formatNullable(equipment.additionalEquipmentType)}`}
+              />
+              <EquipmentInfoItem
+                label='台数 / 固有番号'
+                value={`${formatNumber(equipment.additionalUnitCount)} 台 / ${formatNullable(equipment.additionalDeviceUniqueNo)}`}
+              />
+            </dl>
+          </div>
+
+          <div className='rounded-xl bg-muted/40 p-4'>
+            <h4 className='text-large text-foreground'>費用・補助金</h4>
+            <dl className='mt-3 space-y-3'>
+              <EquipmentInfoItem
+                label='総投資額'
+                value={formatCurrency(equipment.totalInvestment)}
+              />
+              <EquipmentInfoItem
+                label='補助金'
+                value={
+                  equipment.hasSubsidy
+                    ? `${formatNullable(equipment.subsidyName)} / ${formatCurrency(equipment.subsidyAmount)}`
+                    : 'なし'
+                }
+              />
+              <EquipmentInfoItem
+                label='事業前単価'
+                value={formatCurrency(equipment.preProjectUnitPrice)}
+              />
+            </dl>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 type MonitoringDisplayRow = Pick<
@@ -81,24 +263,25 @@ const fallbackMonitoringRow: MonitoringDisplayRow = {
 const projectDetailCardClassName =
   'rounded-2xl border border-border bg-card shadow-app-sm';
 
-type ProjectDetailTabValue = 'overview' | 'data' | 'documents' | 'registration-history';
+type ProjectDetailTabValue = 'overview' | 'equipment';
 
 function ProjectDetailTabs() {
   const triggerClassName = cn(
-    'h-9 rounded px-5 text-sm font-medium text-primary-foreground shadow-none transition-colors',
-    'hover:bg-white/10 hover:text-white',
-    'data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-app-sm',
+    'group relative h-14 justify-center rounded-xl border px-5 py-3',
+    'text-lg font-bold leading-7 shadow-app-sm transition-all duration-300 ease-in-out',
+    'border-border bg-card text-black hover:border-primary/60 hover:bg-secondary/50',
+    'data-[state=active]:scale-105 data-[state=active]:border-[#0d9488] data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-app-sm data-[state=active]:hover:bg-primary/90',
   );
 
   return (
     <div className='flex justify-center'>
-      <TabsList className='h-12 rounded-lg bg-primary p-1.5 text-primary-foreground'>
-        <TabsTrigger value='overview' className={triggerClassName}>
+      <TabsList className='flex h-14 w-full items-start justify-center gap-4 rounded-none bg-transparent p-0 text-muted-foreground'>
+        <TabsTrigger value='overview' className={cn(triggerClassName, 'w-[130px]')}>
           概要
         </TabsTrigger>
-        {/* <TabsTrigger value='data' className={triggerClassName}>
-          モニタリングデータ
-        </TabsTrigger> */}
+        <TabsTrigger value='equipment' className={cn(triggerClassName, 'w-[130px]')}>
+          設備一覧
+        </TabsTrigger>
       </TabsList>
     </div>
   );
@@ -271,10 +454,15 @@ const ProjectDetail = () => {
   );
   const [recentLoading, setRecentLoading] = useState(false);
   const [recentHasFetched, setRecentHasFetched] = useState(false);
+  const [equipmentList, setEquipmentList] = useState<SiteProjectEquipment[]>([]);
+  const [equipmentLoading, setEquipmentLoading] = useState(false);
+  const [equipmentHasFetched, setEquipmentHasFetched] = useState(false);
 
   useEffect(() => {
     setRecentHasFetched(false);
     setRecentMonitoring([]);
+    setEquipmentHasFetched(false);
+    setEquipmentList([]);
   }, [projectId, siteId]);
 
   useEffect(() => {
@@ -340,6 +528,29 @@ const ProjectDetail = () => {
 
     fetchRecent();
   }, [projectId, siteId, recentHasFetched]);
+
+  useEffect(() => {
+    const fetchEquipment = async () => {
+      if (tab !== 'equipment') return;
+      if (!projectId || !siteId) return;
+      if (equipmentHasFetched) return;
+
+      try {
+        setEquipmentLoading(true);
+        const rows = await getSiteProjectEquipment(siteId, projectId);
+        setEquipmentList(rows);
+        setEquipmentHasFetched(true);
+      } catch (error) {
+        logger.error('Error loading site project equipment:', error);
+        setEquipmentList([]);
+        setEquipmentHasFetched(true);
+      } finally {
+        setEquipmentLoading(false);
+      }
+    };
+
+    void fetchEquipment();
+  }, [equipmentHasFetched, projectId, siteId, tab]);
 
   type RegistrationStatus = 'ACTIVE' | 'APPROVED' | 'REJECTED' | 'PENDING';
 
@@ -492,7 +703,7 @@ const ProjectDetail = () => {
           className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
         />
         
-        <div className='mx-auto w-full max-w-[1280px] space-y-7'>
+        <div className='mx-auto w-full max-w-[1200px] space-y-7'>
           <header className='min-h-[66px] animate-slide-up'>
             <h1 className='text-foreground'>{project.name}</h1>
             <p className='text-body mt-2 text-muted-foreground'>{project.description}</p>
@@ -625,6 +836,46 @@ const ProjectDetail = () => {
                   </CardContent>
                 </Card>
               </section>
+            </TabsContent>
+
+            <TabsContent value='equipment' className='m-0 space-y-6'>
+              <Card className={projectDetailCardClassName}>
+                <CardHeader>
+                  <div className='flex items-start gap-3'>
+                    <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary'>
+                      <PackageCheck className='h-5 w-5' />
+                    </span>
+                    <div>
+                      <CardTitle>設備一覧</CardTitle>
+                      <CardDescription className='text-body mt-2'>
+                        このプロジェクトに紐づく設備情報です。運用確認で必要になりやすい仕様、稼働日、蓄電池、補助金情報をまとめています。
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+
+              {equipmentLoading ? (
+                <div className={`${projectDetailCardClassName} text-subtle p-5 text-muted-foreground`}>
+                  読み込み中...
+                </div>
+              ) : equipmentList.length > 0 ? (
+                <div className='space-y-4'>
+                  {equipmentList.map((equipment, index) => (
+                    <EquipmentCard
+                      key={`${equipment.equipmentId ?? equipment.tempId ?? index}`}
+                      equipment={equipment}
+                      index={index}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <Card className={projectDetailCardClassName}>
+                  <CardContent className='p-8 text-center text-muted-foreground'>
+                    設備情報がありません。
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent

@@ -173,6 +173,45 @@ export type SiteProject = Project & {
   createdAt?: string;
 };
 
+export type SiteProjectEquipment = {
+  tempId?: string | null;
+  equipmentId?: number | null;
+  methodologyNumber?: string | null;
+  isEligible?: boolean | null;
+  equipmentOpDate?: string | null;
+  nominalMaxOutput?: number | null;
+  pcsManufacturer?: string | null;
+  pcsModel?: string | null;
+  powerCondUnitCount?: number | null;
+  deviceNo?: string | null;
+  powerCondStandby?: number | null;
+  hasBattery?: boolean | null;
+  batteryMaker?: string | null;
+  batteryModel?: string | null;
+  batteryCapacity?: number | null;
+  ictEquipmentPowerConsumption?: number | null;
+  additionalEquipment?: boolean | null;
+  additionalEquipmentDate?: string | null;
+  additionalEquipmentType?: string | null;
+  additionalUnitCount?: number | null;
+  additionalDeviceUniqueNo?: string | null;
+  equipmentType?: string | null;
+  unitCount?: number | null;
+  deviceUniqueNo?: string | null;
+  totalInvestment?: number | null;
+  hasSubsidy?: boolean | null;
+  subsidyName?: string | null;
+  subsidyAmount?: number | null;
+  preProjectUnitPrice?: number | null;
+};
+
+export type SiteProjectEquipmentResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: unknown;
+  equipments?: SiteProjectEquipment[] | null;
+};
+
 // For GET /site list response
 export interface SiteListItem {
   id: string;
