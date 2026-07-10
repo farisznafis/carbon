@@ -169,17 +169,17 @@ function KpiCard({
   return (
     <Card
       className={cn(
-        'relative h-full min-h-[250px] overflow-hidden rounded-2xl border-border shadow-app-sm',
+        'relative h-full min-h-[200px] overflow-hidden rounded-2xl border-border shadow-app-sm',
         variant === 'primary'
           ? 'border-primary bg-primary text-primary-foreground'
           : 'bg-card text-foreground',
       )}
     >
-      <CardContent className="relative z-10 p-5">
+      <CardContent className="relative z-10 p-4">
         <p className={cn('text-small', variant === 'primary' ? 'text-white/85' : 'text-muted-foreground')}>
           {title}
         </p>
-        <p className="mt-2 text-[34px] font-normal leading-10 tracking-normal">
+        <p className="mt-2 text-[28px] font-normal leading-9 tracking-normal">
           {value}
         </p>
         <p className={cn('text-subtle', variant === 'primary' ? 'text-white/80' : 'text-muted-foreground')}>

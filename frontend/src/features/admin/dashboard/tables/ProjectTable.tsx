@@ -171,11 +171,6 @@ export function ProjectTable({
 
   return (
     <ProTable
-      title={
-        <p className="flex items-center gap-2 text-2xl font-bold">
-          プロジェクト管理
-        </p>
-      }
       data={projects}
       columns={columns}
       actions={actions}
