@@ -9,6 +9,7 @@ import type {
 } from '@/api/admin';
 import {
   approveAdminCompany,
+  getAdminApplicationDetail,
   getAdminCompanies,
   getCompanySuspensions,
   rejectAdminCompany,
@@ -240,6 +241,8 @@ const AdminDashboard = () => {
   const [detailCompany, setDetailCompany] =
     useState<AdminCompanyListItem | null>(null);
   const [detailReviewMode, setDetailReviewMode] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
   const [cancelRequestDialogOpen, setCancelRequestDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
@@ -415,19 +418,51 @@ const AdminDashboard = () => {
     setCompanyListError(null);
   };
 
+  const loadApplicationDetail = async (
+    item: AdminCompanyListItem,
+    reviewMode: boolean,
+  ) => {
+    const applicationId = item.id;
+
+    setDetailCompany(item);
+    setDetailReviewMode(reviewMode);
+    setDetailError(null);
+
+    if (!applicationId) {
+      setDetailError('申請IDを取得できませんでした。');
+      return;
+    }
+
+    setDetailLoading(true);
+    try {
+      const detail = await getAdminApplicationDetail(applicationId);
+      setDetailCompany(detail);
+    } catch (error) {
+      setDetailError(
+        getApiMessage(error, '申請情報の詳細取得に失敗しました。'),
+      );
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
   const openCompanyDetails = (item: AdminCompanyListItem) => {
     setDetailCompany(item);
     setDetailReviewMode(false);
+    void loadApplicationDetail(item, false);
   };
 
   const openCompanyReview = (item: AdminCompanyListItem) => {
     setDetailCompany(item);
     setDetailReviewMode(true);
+    void loadApplicationDetail(item, true);
   };
 
   const closeCompanyDetail = () => {
     setDetailCompany(null);
     setDetailReviewMode(false);
+    setDetailLoading(false);
+    setDetailError(null);
   };
 
   const openApproveCompany = (item: AdminCompanyListItem) => {
@@ -590,6 +625,8 @@ const AdminDashboard = () => {
         <PendingCompanyApplicationDetail
           item={detailCompany}
           reviewMode={detailReviewMode}
+          isLoading={detailLoading}
+          error={detailError}
           onBack={closeCompanyDetail}
           onApprove={openApproveCompany}
           onReject={openRejectCompany}

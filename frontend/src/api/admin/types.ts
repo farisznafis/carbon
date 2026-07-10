@@ -267,6 +267,13 @@ export type AdminCompanyListResponse = {
   pagination: Pagination;
 };
 
+export type AdminApplicationDetailResponse = {
+  statusCode?: string;
+  message?: string | null;
+  application?: AdminCompanyListItem;
+  company?: AdminCompanyListItem;
+};
+
 export type GetAdminCompaniesParams = {
   status?: CompanyStatus | CompanyStatus[];
   search?: string;

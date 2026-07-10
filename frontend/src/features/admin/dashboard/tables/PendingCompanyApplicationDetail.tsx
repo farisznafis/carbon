@@ -1,8 +1,8 @@
 import type { AdminCompanyListItem } from '@/api/admin/pendingCompanies';
+import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
-  ArrowLeft,
   BriefcaseBusiness,
   Building2,
   MapPin,
@@ -13,6 +13,8 @@ import type { ReactNode } from 'react';
 type PendingCompanyApplicationDetailProps = {
   item: AdminCompanyListItem;
   reviewMode: boolean;
+  isLoading?: boolean;
+  error?: string | null;
   onBack: () => void;
   onApprove: (item: AdminCompanyListItem) => void;
   onReject: (item: AdminCompanyListItem) => void;
@@ -22,6 +24,7 @@ type DetailField = {
   label: string;
   value?: string | number | null;
   className?: string;
+  valueClassName?: string;
 };
 
 function displayValue(value?: string | number | null) {
@@ -36,11 +39,21 @@ function joinName(
   return [lastName, firstName].filter(Boolean).join(' ').trim() || undefined;
 }
 
-function DetailFieldItem({ label, value, className }: DetailField) {
+function DetailFieldItem({
+  label,
+  value,
+  className,
+  valueClassName,
+}: DetailField) {
   return (
     <div className={cn('min-w-0 space-y-1', className)}>
       <p className="text-small font-bold text-muted-foreground">{label}</p>
-      <p className="break-words text-body font-bold text-foreground">
+      <p
+        className={cn(
+          'break-words text-body font-bold text-foreground',
+          valueClassName,
+        )}
+      >
         {displayValue(value)}
       </p>
     </div>
@@ -64,13 +77,14 @@ function DetailSection({
         </span>
         <h2 className="text-foreground">{title}</h2>
       </div>
-      <div className="grid grid-cols-1 gap-x-10 gap-y-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-x-10 gap-y-6 md:grid-cols-2">
         {fields.map((field) => (
           <DetailFieldItem
             key={`${title}-${field.label}`}
             label={field.label}
             value={field.value}
             className={field.className}
+            valueClassName={field.valueClassName}
           />
         ))}
       </div>
@@ -87,6 +101,8 @@ function formatRequestedProjects(item: AdminCompanyListItem) {
 export function PendingCompanyApplicationDetail({
   item,
   reviewMode,
+  isLoading,
+  error,
   onBack,
   onApprove,
   onReject,
@@ -132,31 +148,42 @@ export function PendingCompanyApplicationDetail({
   ];
 
   const projectFields: DetailField[] = [
-    { label: 'プロジェクト名', value: formatRequestedProjects(item) },
+    {
+      label: 'プロジェクト名',
+      value: formatRequestedProjects(item),
+      className: 'md:col-span-2',
+      valueClassName: 'overflow-x-auto whitespace-nowrap',
+    },
     {
       label: '活動情報',
       value: item.activityInformation,
-      className: 'xl:col-span-3',
+      className: 'md:col-span-2',
     },
   ];
 
   return (
-    <main className="min-h-screen bg-background px-4 py-10 sm:px-6">
-      <div className="mx-auto grid w-full max-w-[1200px] grid-cols-[56px_minmax(0,1fr)] gap-8">
-        <Button
-          type="button"
-          size="icon"
-          onClick={onBack}
-          className="mt-1 h-14 w-14 rounded-full"
-          aria-label="戻る"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-
+    <main className="relative min-h-screen bg-background px-4 py-10 sm:px-6">
+      <PageBackButton
+        onClick={onBack}
+        label=""
+        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
+        aria-label="戻る"
+      />
+      <div className="mx-auto w-full max-w-[1120px] space-y-10">
         <div className="space-y-10">
           <h1 className="text-foreground">申請情報の詳細</h1>
 
           <div className="rounded-xl border border-border bg-card p-8 shadow-app-sm md:p-12">
+            {isLoading && (
+              <div className="mb-8 rounded-lg border border-dashed border-border px-4 py-3 text-small text-muted-foreground">
+                読み込み中...
+              </div>
+            )}
+            {error && (
+              <div className="mb-8 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-small font-medium text-destructive">
+                {error}
+              </div>
+            )}
             <div className="grid grid-cols-1 gap-x-16 gap-y-12 lg:grid-cols-2">
               <DetailSection
                 title="法人情報"
