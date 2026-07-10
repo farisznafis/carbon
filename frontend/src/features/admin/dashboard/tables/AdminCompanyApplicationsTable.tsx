@@ -1,30 +1,46 @@
 import type {
-  PendingCompanyItem,
-  PendingCompanyStatus,
+  AdminCompanyListItem,
+  CompanyStatus,
 } from '@/api/admin/pendingCompanies';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 type AdminCompanyApplicationsTableProps = {
-  items: PendingCompanyItem[];
+  items: AdminCompanyListItem[];
   emptyMessage: string;
-  onDetails: (item: PendingCompanyItem) => void;
-  onReview: (item: PendingCompanyItem) => void;
-  onDeleteRejected?: (item: PendingCompanyItem) => void;
+  onDetails: (item: AdminCompanyListItem) => void;
+  onReview: (item: AdminCompanyListItem) => void;
+  onSuspend?: (item: AdminCompanyListItem) => void;
+  onResolveSuspension?: (item: AdminCompanyListItem) => void;
 };
 
-const statusClassName: Record<PendingCompanyStatus, string> = {
-  申請受付: 'bg-amber-100 text-amber-800',
-  却下: 'bg-red-100 text-red-800',
-  承認済み: 'bg-emerald-100 text-emerald-800',
-  停止: 'bg-slate-100 text-slate-700',
+const statusMeta: Record<
+  CompanyStatus,
+  {
+    label: string;
+    className: string;
+  }
+> = {
+  PENDING: {
+    label: '承認待ち',
+    className: 'bg-amber-100 text-amber-800',
+  },
+  REJECTED: {
+    label: '却下',
+    className: 'bg-red-100 text-red-800',
+  },
+  ACTIVE: {
+    label: '利用中',
+    className: 'bg-emerald-100 text-emerald-800',
+  },
+  SUSPENDED: {
+    label: '利用停止',
+    className: 'bg-slate-100 text-slate-700',
+  },
 };
 
-function formatRepresentativeName(item: PendingCompanyItem) {
-  const name = [
-    item.representativeLastName,
-    item.representativeFirstName,
-  ]
+function formatRepresentativeName(item: AdminCompanyListItem) {
+  const name = [item.representativeLastName, item.representativeFirstName]
     .filter(Boolean)
     .join(' ')
     .trim();
@@ -32,15 +48,17 @@ function formatRepresentativeName(item: PendingCompanyItem) {
   return name || '-';
 }
 
-function StatusBadge({ status }: { status: PendingCompanyStatus }) {
+function StatusBadge({ status }: { status: CompanyStatus }) {
+  const meta = statusMeta[status];
+
   return (
     <span
       className={cn(
         'inline-flex rounded-md px-2 py-0.5 text-table font-bold',
-        statusClassName[status],
+        meta.className,
       )}
     >
-      {status}
+      {meta.label}
     </span>
   );
 }
@@ -49,14 +67,16 @@ function ActionButtons({
   item,
   onDetails,
   onReview,
-  onDeleteRejected,
+  onSuspend,
+  onResolveSuspension,
 }: {
-  item: PendingCompanyItem;
-  onDetails: (item: PendingCompanyItem) => void;
-  onReview: (item: PendingCompanyItem) => void;
-  onDeleteRejected?: (item: PendingCompanyItem) => void;
+  item: AdminCompanyListItem;
+  onDetails: (item: AdminCompanyListItem) => void;
+  onReview: (item: AdminCompanyListItem) => void;
+  onSuspend?: (item: AdminCompanyListItem) => void;
+  onResolveSuspension?: (item: AdminCompanyListItem) => void;
 }) {
-  if (item.status === '申請受付') {
+  if (item.status === 'PENDING') {
     return (
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={() => onDetails(item)}>
@@ -69,15 +89,31 @@ function ActionButtons({
     );
   }
 
-  if (item.status === '却下') {
+  if (item.status === 'ACTIVE') {
     return (
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={() => onDetails(item)}>
+          詳細
+        </Button>
         <Button
           type="button"
           variant="destructive"
-          onClick={() => onDeleteRejected?.(item)}
+          onClick={() => onSuspend?.(item)}
         >
-          削除
+          停止
+        </Button>
+      </div>
+    );
+  }
+
+  if (item.status === 'SUSPENDED') {
+    return (
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={() => onDetails(item)}>
+          詳細
+        </Button>
+        <Button type="button" onClick={() => onResolveSuspension?.(item)}>
+          停止解除
         </Button>
       </div>
     );
@@ -97,11 +133,12 @@ export function AdminCompanyApplicationsTable({
   emptyMessage,
   onDetails,
   onReview,
-  onDeleteRejected,
+  onSuspend,
+  onResolveSuspension,
 }: AdminCompanyApplicationsTableProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="grid grid-cols-[minmax(220px,1.6fr)_minmax(110px,0.9fr)_minmax(260px,1.55fr)_minmax(110px,0.65fr)_minmax(210px,1fr)] gap-4 border-b border-border bg-muted/40 px-5 py-3 text-table font-bold text-foreground">
+      <div className="grid grid-cols-[minmax(180px,1.4fr)_minmax(100px,0.8fr)_minmax(240px,1.45fr)_minmax(100px,0.6fr)_minmax(220px,1fr)] gap-4 border-b border-border bg-muted/40 px-5 py-3 text-table font-bold text-foreground">
         <span>企業名</span>
         <span>代表者</span>
         <span>メールアドレス</span>
@@ -116,8 +153,8 @@ export function AdminCompanyApplicationsTable({
       ) : (
         items.map((item) => (
           <div
-            key={item.id}
-            className="grid grid-cols-[minmax(220px,1.6fr)_minmax(110px,0.9fr)_minmax(260px,1.55fr)_minmax(110px,0.65fr)_minmax(210px,1fr)] items-center gap-4 border-b border-border px-5 py-4 last:border-b-0"
+            key={item.companyId}
+            className="grid grid-cols-[minmax(180px,1.4fr)_minmax(100px,0.8fr)_minmax(240px,1.45fr)_minmax(100px,0.6fr)_minmax(220px,1fr)] items-center gap-4 border-b border-border px-5 py-4 last:border-b-0"
           >
             <span className="text-body font-bold text-slate-800">
               {item.nameJA || '-'}
@@ -135,7 +172,8 @@ export function AdminCompanyApplicationsTable({
               item={item}
               onDetails={onDetails}
               onReview={onReview}
-              onDeleteRejected={onDeleteRejected}
+              onSuspend={onSuspend}
+              onResolveSuspension={onResolveSuspension}
             />
           </div>
         ))

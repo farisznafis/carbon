@@ -1,193 +1,262 @@
-import { apiFetch, apiVoidRequest, parseJsonResponse } from '../_shared/httpClient';
+import { apiRequest } from '../_shared/httpClient';
 import type {
-  AdminMutationResponse,
+  AdminCompanyListItem,
+  AdminCompanyListResponse,
+  CompanyMutationResponse,
+  CompanyStatus,
+  CompanySuspension,
+  CompanySuspensionListResponse,
+  GetAdminCompaniesParams,
   Methodology,
-  PendingCompaniesResponse,
-  PendingCompanyApiItem,
+  Pagination,
   PendingCompanyItem,
   PendingCompanyStatus,
+  ResolveCompanySuspensionPayload,
+  SuspendCompanyPayload,
 } from './types';
 
 export type {
+  AdminCompanyListItem,
+  AdminCompanyListResponse,
+  CompanySort,
+  CompanyStatus,
+  CompanySuspension,
+  GetAdminCompaniesParams,
   Methodology,
+  Pagination,
   PendingCompanyEquipmentItem,
   PendingCompanyItem,
   PendingCompanyStatus,
+  ResolveCompanySuspensionPayload,
+  SortOrder,
+  SuspendCompanyPayload,
+  SuspensionReasonCode,
 } from './types';
 
-function resolvePendingCompanyId(item: PendingCompanyApiItem, index: number): string {
-  return item.companyId ?? item.id ?? `pending-company-${index}`;
+const DEFAULT_PAGINATION: Pagination = {
+  page: 1,
+  limit: 20,
+  totalItems: 0,
+  totalPages: 1,
+  nextPageToken: null,
+  hasMore: false,
+};
+
+function appendParam(
+  params: URLSearchParams,
+  key: string,
+  value: string | number | undefined,
+) {
+  if (value === undefined || value === '') return;
+  params.set(key, String(value));
 }
 
-function resolveCompanyId(item: PendingCompanyApiItem, index: number): string {
-  return item.companyId ?? item.requestId ?? `company-${index}`;
+function buildCompanyListQuery(params: GetAdminCompaniesParams) {
+  const searchParams = new URLSearchParams();
+  const status = Array.isArray(params.status)
+    ? params.status.join(',')
+    : params.status;
+
+  appendParam(searchParams, 'status', status);
+  appendParam(searchParams, 'search', params.search?.slice(0, 100));
+  appendParam(searchParams, 'prefecture', params.prefecture);
+  appendParam(searchParams, 'createdFrom', params.createdFrom);
+  appendParam(searchParams, 'createdTo', params.createdTo);
+  appendParam(searchParams, 'page', params.page);
+  appendParam(searchParams, 'limit', params.limit);
+  appendParam(searchParams, 'sort', params.sort);
+  appendParam(searchParams, 'sortOrder', params.sortOrder);
+
+  const query = searchParams.toString();
+  return query ? `?${query}` : '';
 }
 
-function resolveCompanyName(item: PendingCompanyApiItem): string {
-  return item.nameJA ?? item.companyName ?? '-';
+function normalizePagination(pagination?: Partial<Pagination>): Pagination {
+  return {
+    ...DEFAULT_PAGINATION,
+    ...pagination,
+    page: pagination?.page ?? DEFAULT_PAGINATION.page,
+    limit: pagination?.limit ?? DEFAULT_PAGINATION.limit,
+    totalItems: pagination?.totalItems ?? DEFAULT_PAGINATION.totalItems,
+    totalPages: Math.max(pagination?.totalPages ?? DEFAULT_PAGINATION.totalPages, 1),
+    nextPageToken: pagination?.nextPageToken ?? null,
+    hasMore: pagination?.hasMore ?? false,
+  };
 }
 
-function resolveNameFurigana(item: PendingCompanyApiItem): string {
-  return item.nameFurigana ?? item.nameKana ?? item.companyNameKana ?? '-';
+function normalizeCompanyListResponse(
+  response: AdminCompanyListResponse,
+): AdminCompanyListResponse {
+  return {
+    statusCode: response.statusCode,
+    message: response.message,
+    companies: Array.isArray(response.companies) ? response.companies : [],
+    pagination: normalizePagination(response.pagination),
+  };
 }
 
-function resolveNameEN(item: PendingCompanyApiItem): string {
-  return item.nameEN ?? item.companyNameEnglish ?? '-';
+export async function getAdminCompanies(
+  params: GetAdminCompaniesParams = {},
+): Promise<AdminCompanyListResponse> {
+  const response = await apiRequest<AdminCompanyListResponse>(
+    `/admin/companies${buildCompanyListQuery(params)}`,
+    {
+      method: 'GET',
+      fallbackErrorMessage: 'Failed to fetch companies',
+    },
+  );
+
+  return normalizeCompanyListResponse(response);
 }
 
-function resolveEmail(item: PendingCompanyApiItem): string {
-  return item.email ?? item.corporateEmail ?? '-';
+type RawCompanySuspensionListResponse = Partial<CompanySuspensionListResponse> & {
+  items?: CompanySuspension[];
+  data?: CompanySuspension[];
+};
+
+export async function getCompanySuspensions(
+  companyId: string,
+  params: { activeOnly?: boolean; page?: number; limit?: number } = {},
+): Promise<CompanySuspensionListResponse> {
+  const searchParams = new URLSearchParams();
+  appendParam(
+    searchParams,
+    'activeOnly',
+    params.activeOnly === undefined ? undefined : String(params.activeOnly),
+  );
+  appendParam(searchParams, 'page', params.page);
+  appendParam(searchParams, 'limit', params.limit);
+
+  const query = searchParams.toString();
+  const response = await apiRequest<RawCompanySuspensionListResponse>(
+    `/admin/companies/${companyId}/suspensions${query ? `?${query}` : ''}`,
+    {
+      method: 'GET',
+      fallbackErrorMessage: 'Failed to fetch company suspensions',
+    },
+  );
+
+  return {
+    statusCode: response.statusCode,
+    message: response.message,
+    suspensions: response.suspensions ?? response.items ?? response.data ?? [],
+    pagination: normalizePagination(response.pagination),
+  };
 }
 
-function resolvePhoneNumber(item: PendingCompanyApiItem): string {
-  return item.phoneNumber ?? '-';
+export async function approveAdminCompany(
+  companyId: string,
+): Promise<CompanyMutationResponse> {
+  return apiRequest<CompanyMutationResponse>(
+    `/admin/companies/${companyId}/approve`,
+    {
+      method: 'POST',
+      fallbackErrorMessage: 'Failed to approve company',
+    },
+  );
 }
 
-function resolveFax(item: PendingCompanyApiItem): string {
-  return item.fax ?? item.faxNumber ?? '-';
+export async function rejectAdminCompany(
+  companyId: string,
+  rejectionReason: string,
+): Promise<CompanyMutationResponse> {
+  return apiRequest<CompanyMutationResponse>(
+    `/admin/companies/${companyId}/reject`,
+    {
+      method: 'POST',
+      body: { rejectionReason },
+      fallbackErrorMessage: 'Failed to reject company',
+    },
+  );
 }
 
-function resolveCorpNumber(item: PendingCompanyApiItem): string {
-  return item.corpNumber ?? '-';
+export async function suspendAdminCompany(
+  companyId: string,
+  payload: SuspendCompanyPayload,
+): Promise<CompanyMutationResponse> {
+  return apiRequest<CompanyMutationResponse>(
+    `/admin/companies/${companyId}/suspensions`,
+    {
+      method: 'POST',
+      body: payload,
+      fallbackErrorMessage: 'Failed to suspend company',
+    },
+  );
 }
 
-function resolveAddress(item: PendingCompanyApiItem): string {
-  return item.address ?? '-';
+export async function resolveCompanySuspension(
+  companyId: string,
+  suspensionId: number,
+  payload: ResolveCompanySuspensionPayload,
+): Promise<CompanyMutationResponse> {
+  return apiRequest<CompanyMutationResponse>(
+    `/admin/companies/${companyId}/suspensions/${suspensionId}/resolve`,
+    {
+      method: 'POST',
+      body: payload,
+      fallbackErrorMessage: 'Failed to resolve company suspension',
+    },
+  );
 }
 
-function normalizeOptionalString(value?: string | null): string | undefined {
-  return value ?? undefined;
-}
-
-function resolvePendingCompanyStatus(
-  item: PendingCompanyApiItem,
-): PendingCompanyStatus {
-  const rawStatus = (
-    item.status ??
-    item.applicationStatus ??
-    item.statusLabel ??
-    ''
-  ).toLowerCase();
-
-  if (rawStatus.includes('却下') || rawStatus.includes('reject')) {
-    return '却下';
-  }
-
-  if (rawStatus.includes('承認') || rawStatus.includes('approve')) {
-    return '承認済み';
-  }
-
-  if (
-    rawStatus.includes('停止') ||
-    rawStatus.includes('suspend') ||
-    resolveIsSuspended(item)
-  ) {
-    return '停止';
-  }
-
+function toLegacyPendingStatus(status: CompanyStatus): PendingCompanyStatus {
+  if (status === 'REJECTED') return '却下';
+  if (status === 'ACTIVE') return '承認済み';
+  if (status === 'SUSPENDED') return '停止';
   return '申請受付';
 }
 
-function resolveIsSuspended(item: PendingCompanyApiItem): boolean {
-  return item.isSuspended ?? item.suspended ?? false;
-}
-
-function resolveMethodologies(
-  item: PendingCompanyApiItem,
-): Methodology[] {
-  if (!item.methodologies || !Array.isArray(item.methodologies)) {
-    return [];
-  }
-
-  return item.methodologies
-    .filter((m) => m.methodology) // Filter out invalid entries
-    .map((m) => ({
-      methodology: m.methodology || '',
-      hasSubsidy: m.hasSubsidy ?? false,
-      subsidyName: m.subsidyName,
-      remarks: m.remarks,
-      equipmentItems: (m.equipmentItems || []).map((eq) => ({
-        installationDate: eq.installationDate || '',
-        manufacturer: eq.manufacturer || '',
-        modelNo: eq.modelNo || '',
-        installationAddress: eq.installationAddress || '',
-      })),
-    }));
+function toLegacyPendingCompany(item: AdminCompanyListItem): PendingCompanyItem {
+  return {
+    id: item.id ?? item.companyId,
+    companyId: item.companyId,
+    status: toLegacyPendingStatus(item.status),
+    nameJA: item.nameJA,
+    nameFurigana: item.nameFurigana,
+    nameEN: item.nameEN,
+    isSuspended: item.status === 'SUSPENDED',
+    email: item.email,
+    phoneNumber: item.phoneNumber,
+    fax: item.fax ?? '',
+    corpNumber: item.corpNumber,
+    address: item.address,
+    postalCode: item.postalCode,
+    prefecture: item.prefecture,
+    municipality: item.municipality,
+    blocknum: item.blocknum,
+    buildingName: item.buildingName ?? undefined,
+    representativeFirstName: item.representativeFirstName,
+    representativeLastName: item.representativeLastName,
+    representativeFirstNameKana: item.representativeFirstNameKana,
+    representativeLastNameKana: item.representativeLastNameKana,
+    representativePosition: item.representativePosition,
+    representativePhoneNumber: item.representativePhoneNumber,
+    faxNumber: item.fax ?? undefined,
+    requestedMethodologies: item.requestedMethodologies,
+    activityInformation: item.activityInformation ?? '',
+    methodologies: [],
+  };
 }
 
 export async function getPendingCompanies(): Promise<PendingCompanyItem[]> {
-  const response = await apiFetch('/admin/companies/pending', {
-    method: 'GET',
+  const response = await getAdminCompanies({
+    status: ['PENDING', 'REJECTED'],
+    page: 1,
+    limit: 100,
+    sort: 'createdAt',
+    sortOrder: 'desc',
   });
-  const { data: json, rawBody } = await parseJsonResponse<PendingCompaniesResponse>(response);
 
-  if (!response.ok) {
-    throw new Error(
-      json?.message || rawBody || `Failed to fetch pending companies: HTTP ${response.status}`,
-    );
-  }
-
-  const items =
-    json?.companies ??
-    json?.companyList ??
-    json?.items ??
-    json?.data ??
-    [];
-
-  if (!Array.isArray(items)) {
-    throw new Error(json?.message || 'Invalid pending companies response');
-  }
-
-  return items.map((item, index) => ({
-    id: resolvePendingCompanyId(item, index),
-    companyId: resolveCompanyId(item, index),
-    status: resolvePendingCompanyStatus(item),
-    nameJA: resolveCompanyName(item),
-    nameFurigana: resolveNameFurigana(item),
-    nameEN: resolveNameEN(item),
-    email: resolveEmail(item),
-    phoneNumber: resolvePhoneNumber(item),
-    fax: resolveFax(item),
-    corpNumber: resolveCorpNumber(item),
-    address: resolveAddress(item),
-    postalCode: normalizeOptionalString(item.postalCode),
-    prefecture: normalizeOptionalString(item.prefecture),
-    municipality: normalizeOptionalString(item.municipality),
-    blocknum: normalizeOptionalString(item.blocknum),
-    buildingName: normalizeOptionalString(item.buildingName),
-    representativeFirstName: normalizeOptionalString(item.representativeFirstName),
-    representativeLastName: normalizeOptionalString(item.representativeLastName),
-    representativeFirstNameKana: normalizeOptionalString(item.representativeFirstNameKana),
-    representativeLastNameKana: normalizeOptionalString(item.representativeLastNameKana),
-    representativePosition: normalizeOptionalString(item.representativePosition),
-    representativePhoneNumber: normalizeOptionalString(item.representativePhoneNumber),
-    faxNumber: normalizeOptionalString(item.faxNumber ?? item.fax),
-    requestedMethodologies: item.requestedMethodologies ?? [],
-    activityInformation: item.activityInformation ?? '',
-    methodologies: resolveMethodologies(item),
-  }));
+  return response.companies.map(toLegacyPendingCompany);
 }
 
-/**
- * Approve a pending company request.
- * Adjust the endpoint/path if your backend differs.
- */
 export async function approvePendingCompany(companyId: string): Promise<void> {
-  await apiVoidRequest(`/admin/companies/${companyId}/approve`, {
-    method: 'POST',
-    body: { companyId },
-    fallbackErrorMessage: 'Failed to approve company',
-  });
+  await approveAdminCompany(companyId);
 }
 
-/**
- * Reject a pending company request with a reason.
- * Adjust the endpoint/path/body if your backend differs.
- */
-export async function rejectPendingCompany(companyId: string, rejectionReason: string): Promise<void> {
-  await apiVoidRequest(`/admin/companies/${companyId}/reject`, {
-    method: 'POST',
-    body: { rejectionReason },
-    fallbackErrorMessage: 'Failed to reject company',
-  });
+export async function rejectPendingCompany(
+  companyId: string,
+  rejectionReason: string,
+): Promise<void> {
+  await rejectAdminCompany(companyId, rejectionReason);
 }

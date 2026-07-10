@@ -1,17 +1,31 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Project } from '@/api/projects';
-import type { UserList } from '@/api/users';
+import { ApiError } from '@/api/_shared/errors';
+import type {
+  AdminCompanyListItem,
+  CompanySort,
+  CompanyStatus,
+  CompanySuspension,
+  Pagination,
+  SortOrder,
+  SuspendCompanyPayload,
+} from '@/api/admin';
 import {
-  approvePendingCompany,
-  getPendingCompanies,
-  rejectPendingCompany,
-  type PendingCompanyItem,
-} from '@/api/admin/pendingCompanies';
+  approveAdminCompany,
+  getAdminCompanies,
+  getCompanySuspensions,
+  rejectAdminCompany,
+  resolveCompanySuspension,
+  suspendAdminCompany,
+} from '@/api/admin';
 import {
   updateAdminProjectStatus,
   type ProjectStatus,
 } from '@/api/admin/projects';
+import type { Project } from '@/api/projects';
+import type { UserList } from '@/api/users';
+import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
+import { UserTable } from '@/components/data-display/tables/UserTable';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -20,34 +34,22 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
-import { UserTable } from '@/components/data-display/tables/UserTable';
-import { ProjectTable } from '@/features/admin/dashboard/tables/ProjectTable';
-import {
-  CancelRequestHistoryTable,
-  type CancelRequestItem,
-} from '@/features/admin/dashboard/tables/CancelRequestHistoryTable';
+import { useAuth } from '@/contexts/AuthContext';
+import { CancelRequestHistoryTable, type CancelRequestItem } from '@/features/admin/dashboard/tables/CancelRequestHistoryTable';
 import { AdminCompanyApplicationsTable } from '@/features/admin/dashboard/tables/AdminCompanyApplicationsTable';
+import { CompanySuspendDialog } from '@/features/admin/dashboard/tables/CompanySuspendDialog';
+import { CompanySuspensionResolveDialog } from '@/features/admin/dashboard/tables/CompanySuspensionResolveDialog';
 import { PendingCompanyActionDialog } from '@/features/admin/dashboard/tables/PendingCompanyActionDialog';
 import { PendingCompanyApplicationDetail } from '@/features/admin/dashboard/tables/PendingCompanyApplicationDetail';
-import { useAuth } from '@/contexts/AuthContext';
+import { ProjectTable } from '@/features/admin/dashboard/tables/ProjectTable';
+import { useProjectsQuery } from '@/hooks/projects/useProjectsQuery';
 import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
-import { useProjectsQuery } from '@/hooks/projects/useProjectsQuery';
 import { cn } from '@/lib/utils';
 import { paths } from '@/routes/paths';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { Plus } from 'lucide-react';
-
-type ErrorWithApiMessage = {
-  message?: string;
-  response?: {
-    data?: {
-      message?: string;
-    };
-  };
-};
 
 type AdminDashboardTabValue =
   | 'companies'
@@ -56,7 +58,26 @@ type AdminDashboardTabValue =
   | 'methodologies'
   | 'monitoring';
 
+type PendingCompanyActionMode = 'approve' | 'reject';
+
 const dashboardContainer = 'mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-0';
+
+const APPLICATION_STATUSES: CompanyStatus[] = ['PENDING', 'REJECTED'];
+const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
+
+const DEFAULT_PAGINATION: Pagination = {
+  page: 1,
+  limit: 20,
+  totalItems: 0,
+  totalPages: 1,
+  nextPageToken: null,
+  hasMore: false,
+};
+
+const DEFAULT_SUSPEND_PAYLOAD: SuspendCompanyPayload = {
+  reasonCode: 'ADMINISTRATIVE',
+  reasonDetail: '',
+};
 
 const adminDashboardTabs: Array<{
   value: AdminDashboardTabValue;
@@ -68,6 +89,31 @@ const adminDashboardTabs: Array<{
   { value: 'methodologies', label: '方法論一覧' },
   { value: 'monitoring', label: 'モニタリングデータ管理' },
 ];
+
+function isStringRecord(value: unknown): value is Record<string, string> {
+  return (
+    Boolean(value) &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    Object.values(value as Record<string, unknown>).every(
+      (entry) => typeof entry === 'string',
+    )
+  );
+}
+
+function getApiMessage(error: unknown, fallback: string) {
+  if (error instanceof ApiError) return error.message || fallback;
+  if (error instanceof Error) return error.message || fallback;
+  return fallback;
+}
+
+function getApiFieldErrors(error: unknown) {
+  if (error instanceof ApiError && isStringRecord(error.payload?.errors)) {
+    return error.payload.errors;
+  }
+
+  return {};
+}
 
 function AdminDashboardHero() {
   return (
@@ -145,6 +191,68 @@ function AdminDashboardEmptyState({ children }: { children: ReactNode }) {
   );
 }
 
+function CompanyListFilters({
+  search,
+  sort,
+  sortOrder,
+  onSearchChange,
+  onSortChange,
+  onSortOrderChange,
+}: {
+  search: string;
+  sort: CompanySort;
+  sortOrder: SortOrder;
+  onSearchChange: (value: string) => void;
+  onSortChange: (value: CompanySort) => void;
+  onSortOrderChange: (value: SortOrder) => void;
+}) {
+  return (
+    <div className="grid gap-3 rounded-xl border border-border bg-card p-4 md:grid-cols-[minmax(0,1fr)_180px_140px]">
+      <label className="space-y-1">
+        <span className="text-small font-bold text-muted-foreground">検索</span>
+        <input
+          type="search"
+          maxLength={100}
+          value={search}
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder="企業名・メールアドレスで検索"
+          className="h-11 w-full rounded-md border border-input bg-background px-4 text-body outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        />
+      </label>
+
+      <label className="space-y-1">
+        <span className="text-small font-bold text-muted-foreground">
+          並び替え
+        </span>
+        <select
+          value={sort}
+          onChange={(event) => onSortChange(event.target.value as CompanySort)}
+          className="h-11 w-full rounded-md border border-input bg-background px-3 text-body outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <option value="createdAt">作成日</option>
+          <option value="updatedAt">更新日</option>
+          <option value="nameJa">企業名</option>
+          <option value="companyId">企業ID</option>
+        </select>
+      </label>
+
+      <label className="space-y-1">
+        <span className="text-small font-bold text-muted-foreground">順序</span>
+        <select
+          value={sortOrder}
+          onChange={(event) =>
+            onSortOrderChange(event.target.value as SortOrder)
+          }
+          className="h-11 w-full rounded-md border border-input bg-background px-3 text-body outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <option value="desc">降順</option>
+          <option value="asc">昇順</option>
+        </select>
+      </label>
+    </div>
+  );
+}
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -173,46 +281,102 @@ const AdminDashboard = () => {
 
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
-  const [pendingCompanies, setPendingCompanies] = useState<
-    PendingCompanyItem[]
+  const [companyListLoading, setCompanyListLoading] = useState(true);
+  const [companyListError, setCompanyListError] = useState<string | null>(null);
+  const [applicationCompanies, setApplicationCompanies] = useState<
+    AdminCompanyListItem[]
   >([]);
-  const [pendingLoading, setPendingLoading] = useState(true);
-  const [pendingError, setPendingError] = useState<string | null>(null);
+  const [participatingCompanies, setParticipatingCompanies] = useState<
+    AdminCompanyListItem[]
+  >([]);
+  const [applicationPagination, setApplicationPagination] =
+    useState<Pagination>(DEFAULT_PAGINATION);
+  const [participatingPagination, setParticipatingPagination] =
+    useState<Pagination>(DEFAULT_PAGINATION);
+  const [applicationPage, setApplicationPage] = useState(1);
+  const [participatingPage, setParticipatingPage] = useState(1);
+  const [companyLimit, setCompanyLimit] = useState(20);
+  const [companySearch, setCompanySearch] = useState('');
+  const [companySort, setCompanySort] = useState<CompanySort>('createdAt');
+  const [companySortOrder, setCompanySortOrder] = useState<SortOrder>('desc');
   const [submitting, setSubmitting] = useState(false);
+  const [actionFieldErrors, setActionFieldErrors] = useState<
+    Record<string, string>
+  >({});
   const [updatingProjectStatusId, setUpdatingProjectStatusId] = useState<
     string | null
   >(null);
 
   const [pendingDialogOpen, setPendingDialogOpen] = useState(false);
-  const [pendingDialogMode, setPendingDialogMode] = useState<
-    'approve' | 'reject' | null
-  >(null);
-  const [selectedPendingCompany, setSelectedPendingCompany] =
-    useState<PendingCompanyItem | null>(null);
-  const [detailCompany, setDetailCompany] = useState<PendingCompanyItem | null>(
-    null,
-  );
+  const [pendingDialogMode, setPendingDialogMode] =
+    useState<PendingCompanyActionMode | null>(null);
+  const [selectedCompany, setSelectedCompany] =
+    useState<AdminCompanyListItem | null>(null);
+  const [detailCompany, setDetailCompany] =
+    useState<AdminCompanyListItem | null>(null);
   const [detailReviewMode, setDetailReviewMode] = useState(false);
   const [cancelRequestDialogOpen, setCancelRequestDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
-  const reloadPendingCompanies = async () => {
-    setPendingLoading(true);
-    setPendingError(null);
+  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
+  const [suspendPayload, setSuspendPayload] = useState<SuspendCompanyPayload>(
+    DEFAULT_SUSPEND_PAYLOAD,
+  );
+
+  const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
+  const [resolveLoading, setResolveLoading] = useState(false);
+  const [activeSuspensions, setActiveSuspensions] = useState<
+    CompanySuspension[]
+  >([]);
+  const [selectedSuspensionId, setSelectedSuspensionId] = useState<
+    number | null
+  >(null);
+  const [resolutionNote, setResolutionNote] = useState('');
+
+  const reloadCompanyLists = useCallback(async () => {
+    setCompanyListLoading(true);
+    setCompanyListError(null);
 
     try {
-      const items = await getPendingCompanies();
-      setPendingCompanies(items);
+      const commonParams = {
+        search: companySearch.trim() || undefined,
+        limit: companyLimit,
+        sort: companySort,
+        sortOrder: companySortOrder,
+      };
+
+      const [applications, participating] = await Promise.all([
+        getAdminCompanies({
+          ...commonParams,
+          status: APPLICATION_STATUSES,
+          page: applicationPage,
+        }),
+        getAdminCompanies({
+          ...commonParams,
+          status: PARTICIPATING_STATUSES,
+          page: participatingPage,
+        }),
+      ]);
+
+      setApplicationCompanies(applications.companies);
+      setApplicationPagination(applications.pagination);
+      setParticipatingCompanies(participating.companies);
+      setParticipatingPagination(participating.pagination);
     } catch (error) {
-      setPendingError(
-        error instanceof Error
-          ? error.message
-          : '申請中アカウントの取得に失敗しました。',
+      setCompanyListError(
+        getApiMessage(error, '企業一覧の取得に失敗しました。'),
       );
     } finally {
-      setPendingLoading(false);
+      setCompanyListLoading(false);
     }
-  };
+  }, [
+    applicationPage,
+    companyLimit,
+    companySearch,
+    companySort,
+    companySortOrder,
+    participatingPage,
+  ]);
 
   useEffect(() => {
     let isMounted = true;
@@ -223,13 +387,11 @@ const AdminDashboard = () => {
       void loadNotifications();
 
       try {
-        await Promise.all([fetchDashboardData(true), reloadPendingCompanies()]);
+        await fetchDashboardData(true);
       } catch (error) {
         if (isMounted) {
           setDashboardError(
-            error instanceof Error
-              ? error.message
-              : 'ダッシュボードデータの取得に失敗しました。',
+            getApiMessage(error, 'ダッシュボードデータの取得に失敗しました。'),
           );
         }
       } finally {
@@ -245,6 +407,35 @@ const AdminDashboard = () => {
       isMounted = false;
     };
   }, [fetchDashboardData, loadNotifications]);
+
+  useEffect(() => {
+    void reloadCompanyLists();
+  }, [reloadCompanyLists]);
+
+  const resetCompanyPages = () => {
+    setApplicationPage(1);
+    setParticipatingPage(1);
+  };
+
+  const handleCompanySearchChange = (value: string) => {
+    setCompanySearch(value.slice(0, 100));
+    resetCompanyPages();
+  };
+
+  const handleCompanySortChange = (value: CompanySort) => {
+    setCompanySort(value);
+    resetCompanyPages();
+  };
+
+  const handleCompanySortOrderChange = (value: SortOrder) => {
+    setCompanySortOrder(value);
+    resetCompanyPages();
+  };
+
+  const handleCompanyLimitChange = (value: number) => {
+    setCompanyLimit(value);
+    resetCompanyPages();
+  };
 
   const handleEditProject = (project: Project) => {
     navigate(paths.adminProjectDetail(project.id));
@@ -281,10 +472,10 @@ const AdminDashboard = () => {
     } catch (error) {
       toast({
         title: 'ステータス更新に失敗しました',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'プロジェクトステータスを更新できませんでした。',
+        description: getApiMessage(
+          error,
+          'プロジェクトステータスを更新できませんでした。',
+        ),
         variant: 'destructive',
       });
     } finally {
@@ -293,7 +484,9 @@ const AdminDashboard = () => {
   };
 
   const handleEditUser = (dashboardUser: UserList) => {
-    navigate(`/user-edit/${dashboardUser.id}`, { state: { user: dashboardUser } });
+    navigate(`/user-edit/${dashboardUser.id}`, {
+      state: { user: dashboardUser },
+    });
   };
 
   const cancelRequestHistory: CancelRequestItem[] = [
@@ -313,60 +506,44 @@ const AdminDashboard = () => {
       requestedAt: '2026/04/26 14:40',
       status: 'PENDING',
     },
-    {
-      id: 'REG-123458',
-      userName: '鈴木 一郎',
-      siteName: 'GHI工場',
-      reason: 'サイト利用を終了しました。',
-      requestedAt: '2026/04/25 09:05',
-      status: 'APPROVED',
-    },
   ];
 
   const handleApproveCancelRequest = (_id: string) => {
-    setPendingError(null);
+    setCompanyListError(null);
   };
 
   const handleRejectCancelRequest = (_id: string) => {
-    setPendingError(null);
+    setCompanyListError(null);
   };
 
-  const openPendingCompanyDetails = (item: PendingCompanyItem) => {
+  const openCompanyDetails = (item: AdminCompanyListItem) => {
     setDetailCompany(item);
     setDetailReviewMode(false);
   };
 
-  const openPendingCompanyReview = (item: PendingCompanyItem) => {
+  const openCompanyReview = (item: AdminCompanyListItem) => {
     setDetailCompany(item);
     setDetailReviewMode(true);
   };
 
-  const closePendingCompanyDetail = () => {
+  const closeCompanyDetail = () => {
     setDetailCompany(null);
     setDetailReviewMode(false);
   };
 
-  const handleDeleteRejectedCompany = (item: PendingCompanyItem) => {
-    setPendingCompanies((currentItems) =>
-      currentItems.filter((company) => company.id !== item.id),
-    );
-    toast({
-      title: '削除しました',
-      description: `${item.nameJA} を一覧から削除しました。`,
-    });
-  };
-
-  const openApprovePendingCompany = (item: PendingCompanyItem) => {
-    setSelectedPendingCompany(item);
+  const openApproveCompany = (item: AdminCompanyListItem) => {
+    setSelectedCompany(item);
     setPendingDialogMode('approve');
     setRejectReason('');
+    setActionFieldErrors({});
     setPendingDialogOpen(true);
   };
 
-  const openRejectPendingCompany = (item: PendingCompanyItem) => {
-    setSelectedPendingCompany(item);
+  const openRejectCompany = (item: AdminCompanyListItem) => {
+    setSelectedCompany(item);
     setPendingDialogMode('reject');
     setRejectReason('');
+    setActionFieldErrors({});
     setPendingDialogOpen(true);
   };
 
@@ -374,34 +551,155 @@ const AdminDashboard = () => {
     setPendingDialogOpen(open);
 
     if (!open) {
-      setSelectedPendingCompany(null);
+      setSelectedCompany(null);
       setPendingDialogMode(null);
       setRejectReason('');
+      setActionFieldErrors({});
     }
   };
 
   const handleConfirmPendingCompany = async () => {
-    if (!selectedPendingCompany || !pendingDialogMode) return;
+    if (!selectedCompany || !pendingDialogMode) return;
 
     setSubmitting(true);
+    setActionFieldErrors({});
     try {
-      const id = selectedPendingCompany.id;
       if (pendingDialogMode === 'approve') {
-        await approvePendingCompany(id);
+        await approveAdminCompany(selectedCompany.companyId);
       } else {
-        await rejectPendingCompany(id, rejectReason);
+        await rejectAdminCompany(selectedCompany.companyId, rejectReason);
       }
-      await reloadPendingCompanies();
+      await reloadCompanyLists();
       handlePendingDialogOpenChange(false);
-      closePendingCompanyDetail();
+      closeCompanyDetail();
+      toast({
+        title:
+          pendingDialogMode === 'approve'
+            ? '申請を承認しました'
+            : '申請を却下しました',
+      });
     } catch (error) {
-      const apiError = error as ErrorWithApiMessage;
-      setPendingError(
-        apiError.response?.data?.message ||
-          apiError.message ||
-          (pendingDialogMode === 'approve'
+      setActionFieldErrors(getApiFieldErrors(error));
+      setCompanyListError(
+        getApiMessage(
+          error,
+          pendingDialogMode === 'approve'
             ? '承認に失敗しました。'
-            : '却下に失敗しました。'),
+            : '却下に失敗しました。',
+        ),
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openSuspendCompany = (item: AdminCompanyListItem) => {
+    setSelectedCompany(item);
+    setSuspendPayload(DEFAULT_SUSPEND_PAYLOAD);
+    setActionFieldErrors({});
+    setSuspendDialogOpen(true);
+  };
+
+  const handleSuspendDialogOpenChange = (open: boolean) => {
+    setSuspendDialogOpen(open);
+
+    if (!open) {
+      setSelectedCompany(null);
+      setSuspendPayload(DEFAULT_SUSPEND_PAYLOAD);
+      setActionFieldErrors({});
+    }
+  };
+
+  const handleConfirmSuspendCompany = async () => {
+    if (!selectedCompany) return;
+
+    setSubmitting(true);
+    setActionFieldErrors({});
+    try {
+      await suspendAdminCompany(selectedCompany.companyId, suspendPayload);
+      await reloadCompanyLists();
+      handleSuspendDialogOpenChange(false);
+      toast({ title: '企業アカウントを停止しました' });
+    } catch (error) {
+      setActionFieldErrors(getApiFieldErrors(error));
+      setCompanyListError(
+        getApiMessage(error, '企業アカウントの停止に失敗しました。'),
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const loadActiveSuspensions = async (companyId: string) => {
+    setResolveLoading(true);
+    setActionFieldErrors({});
+    try {
+      const response = await getCompanySuspensions(companyId, {
+        activeOnly: true,
+        page: 1,
+        limit: 20,
+      });
+      setActiveSuspensions(response.suspensions);
+      setSelectedSuspensionId(response.suspensions[0]?.id ?? null);
+    } catch (error) {
+      setCompanyListError(
+        getApiMessage(error, '停止理由の取得に失敗しました。'),
+      );
+    } finally {
+      setResolveLoading(false);
+    }
+  };
+
+  const openResolveSuspension = (item: AdminCompanyListItem) => {
+    setSelectedCompany(item);
+    setActiveSuspensions([]);
+    setSelectedSuspensionId(null);
+    setResolutionNote('');
+    setActionFieldErrors({});
+    setResolveDialogOpen(true);
+    void loadActiveSuspensions(item.companyId);
+  };
+
+  const handleResolveDialogOpenChange = (open: boolean) => {
+    setResolveDialogOpen(open);
+
+    if (!open) {
+      setSelectedCompany(null);
+      setActiveSuspensions([]);
+      setSelectedSuspensionId(null);
+      setResolutionNote('');
+      setActionFieldErrors({});
+    }
+  };
+
+  const handleConfirmResolveSuspension = async () => {
+    if (!selectedCompany || selectedSuspensionId === null) return;
+
+    const suspension = activeSuspensions.find(
+      (item) => item.id === selectedSuspensionId,
+    );
+    if (!suspension) return;
+
+    setSubmitting(true);
+    setActionFieldErrors({});
+    try {
+      await resolveCompanySuspension(
+        selectedCompany.companyId,
+        selectedSuspensionId,
+        {
+          resolutionNote,
+          ...(suspension.reasonCode === 'BILLING'
+            ? { paymentMethod: 'CREDIT_CARD' as const }
+            : {}),
+        },
+      );
+      await reloadCompanyLists();
+      handleResolveDialogOpenChange(false);
+      toast({ title: '停止を解除しました' });
+    } catch (error) {
+      setActionFieldErrors(getApiFieldErrors(error));
+      setCompanyListError(
+        getApiMessage(error, '停止解除に失敗しました。'),
       );
     } finally {
       setSubmitting(false);
@@ -430,15 +728,16 @@ const AdminDashboard = () => {
         <PendingCompanyApplicationDetail
           item={detailCompany}
           reviewMode={detailReviewMode}
-          onBack={closePendingCompanyDetail}
-          onApprove={openApprovePendingCompany}
-          onReject={openRejectPendingCompany}
+          onBack={closeCompanyDetail}
+          onApprove={openApproveCompany}
+          onReject={openRejectCompany}
         />
         <PendingCompanyActionDialog
           open={pendingDialogOpen}
           mode={pendingDialogMode}
-          item={selectedPendingCompany}
+          item={selectedCompany}
           rejectReason={rejectReason}
+          fieldErrors={actionFieldErrors}
           onOpenChange={handlePendingDialogOpenChange}
           onRejectReasonChange={setRejectReason}
           onConfirm={handleConfirmPendingCompany}
@@ -447,13 +746,6 @@ const AdminDashboard = () => {
       </>
     );
   }
-
-  const applicationCompanies = pendingCompanies.filter(
-    (company) => company.status === '申請受付' || company.status === '却下',
-  );
-  const participatingCompanies = pendingCompanies.filter(
-    (company) => company.status === '承認済み' || company.status === '停止',
-  );
 
   return (
     <div className="flex min-h-screen flex-col bg-card">
@@ -467,6 +759,15 @@ const AdminDashboard = () => {
             value="companies"
             className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
+            <CompanyListFilters
+              search={companySearch}
+              sort={companySort}
+              sortOrder={companySortOrder}
+              onSearchChange={handleCompanySearchChange}
+              onSortChange={handleCompanySortChange}
+              onSortOrderChange={handleCompanySortOrderChange}
+            />
+
             <AdminDashboardSection
               title="参加申請中の企業"
               description="参加申請を受け付けた企業です。内容を確認し、承認または差し戻しを行ってください。"
@@ -481,18 +782,31 @@ const AdminDashboard = () => {
               //   </Button>
               // }
             >
-              {pendingLoading ? (
+              {companyListLoading ? (
                 <AdminDashboardEmptyState>読み込み中...</AdminDashboardEmptyState>
-              ) : pendingError ? (
-                <AdminDashboardEmptyState>{pendingError}</AdminDashboardEmptyState>
+              ) : companyListError ? (
+                <AdminDashboardEmptyState>
+                  {companyListError}
+                </AdminDashboardEmptyState>
               ) : (
-                <AdminCompanyApplicationsTable
-                  items={applicationCompanies}
-                  emptyMessage="参加申請中の企業はありません。"
-                  onDetails={openPendingCompanyDetails}
-                  onReview={openPendingCompanyReview}
-                  onDeleteRejected={handleDeleteRejectedCompany}
-                />
+                <>
+                  <AdminCompanyApplicationsTable
+                    items={applicationCompanies}
+                    emptyMessage="参加申請中の企業はありません。"
+                    onDetails={openCompanyDetails}
+                    onReview={openCompanyReview}
+                  />
+                  <PaginationControls
+                    currentPage={applicationPagination.page}
+                    totalPages={applicationPagination.totalPages}
+                    totalItems={applicationPagination.totalItems}
+                    itemsPerPage={companyLimit}
+                    rowsPerPageOptions={[10, 20, 50, 100]}
+                    onPageChange={setApplicationPage}
+                    onItemsPerPageChange={handleCompanyLimitChange}
+                    className="mt-4"
+                  />
+                </>
               )}
             </AdminDashboardSection>
 
@@ -500,12 +814,34 @@ const AdminDashboard = () => {
               title="参加企業"
               description="承認済みの参加企業です。企業情報と運用状況を確認できます。"
             >
-              <AdminCompanyApplicationsTable
-                items={participatingCompanies}
-                emptyMessage="参加企業はありません。"
-                onDetails={openPendingCompanyDetails}
-                onReview={openPendingCompanyReview}
-              />
+              {companyListLoading ? (
+                <AdminDashboardEmptyState>読み込み中...</AdminDashboardEmptyState>
+              ) : companyListError ? (
+                <AdminDashboardEmptyState>
+                  {companyListError}
+                </AdminDashboardEmptyState>
+              ) : (
+                <>
+                  <AdminCompanyApplicationsTable
+                    items={participatingCompanies}
+                    emptyMessage="参加企業はありません。"
+                    onDetails={openCompanyDetails}
+                    onReview={openCompanyReview}
+                    onSuspend={openSuspendCompany}
+                    onResolveSuspension={openResolveSuspension}
+                  />
+                  <PaginationControls
+                    currentPage={participatingPagination.page}
+                    totalPages={participatingPagination.totalPages}
+                    totalItems={participatingPagination.totalItems}
+                    itemsPerPage={companyLimit}
+                    rowsPerPageOptions={[10, 20, 50, 100]}
+                    onPageChange={setParticipatingPage}
+                    onItemsPerPageChange={handleCompanyLimitChange}
+                    className="mt-4"
+                  />
+                </>
+              )}
             </AdminDashboardSection>
           </TabsContent>
 
@@ -535,16 +871,15 @@ const AdminDashboard = () => {
                 onStatusChange={handleChangeProjectStatus}
                 updatingProjectStatusId={updatingProjectStatusId}
               />
-              <div className="mt-4">
-                <PaginationControls
-                  currentPage={projectPage}
-                  totalPages={projectTotalPages}
-                  totalItems={projectTotalItems}
-                  itemsPerPage={projectItemsPerPage}
-                  onPageChange={goToProjectPage}
-                  onItemsPerPageChange={setProjectItemsPerPage}
-                />
-              </div>
+              <PaginationControls
+                currentPage={projectPage}
+                totalPages={projectTotalPages}
+                totalItems={projectTotalItems}
+                itemsPerPage={projectItemsPerPage}
+                onPageChange={goToProjectPage}
+                onItemsPerPageChange={setProjectItemsPerPage}
+                className="mt-4"
+              />
             </AdminDashboardSection>
           </TabsContent>
 
@@ -597,12 +932,39 @@ const AdminDashboard = () => {
       <PendingCompanyActionDialog
         open={pendingDialogOpen}
         mode={pendingDialogMode}
-        item={selectedPendingCompany}
+        item={selectedCompany}
         rejectReason={rejectReason}
+        fieldErrors={actionFieldErrors}
         onOpenChange={handlePendingDialogOpenChange}
         onRejectReasonChange={setRejectReason}
         onConfirm={handleConfirmPendingCompany}
         isSubmitting={submitting}
+      />
+
+      <CompanySuspendDialog
+        open={suspendDialogOpen}
+        item={selectedCompany}
+        payload={suspendPayload}
+        fieldErrors={actionFieldErrors}
+        isSubmitting={submitting}
+        onOpenChange={handleSuspendDialogOpenChange}
+        onPayloadChange={setSuspendPayload}
+        onConfirm={handleConfirmSuspendCompany}
+      />
+
+      <CompanySuspensionResolveDialog
+        open={resolveDialogOpen}
+        item={selectedCompany}
+        suspensions={activeSuspensions}
+        selectedSuspensionId={selectedSuspensionId}
+        resolutionNote={resolutionNote}
+        fieldErrors={actionFieldErrors}
+        isLoading={resolveLoading}
+        isSubmitting={submitting}
+        onOpenChange={handleResolveDialogOpenChange}
+        onSelectedSuspensionIdChange={setSelectedSuspensionId}
+        onResolutionNoteChange={setResolutionNote}
+        onConfirm={handleConfirmResolveSuspension}
       />
 
       <Dialog

@@ -206,6 +206,116 @@ export type Methodology = {
   equipmentItems?: PendingCompanyEquipmentItem[];
 };
 
+export type CompanyStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'REJECTED';
+
+export type CompanySort = 'createdAt' | 'updatedAt' | 'nameJa' | 'companyId';
+
+export type SortOrder = 'asc' | 'desc';
+
+export type SuspensionReasonCode =
+  | 'BILLING'
+  | 'POLICY_VIOLATION'
+  | 'SECURITY'
+  | 'ADMINISTRATIVE'
+  | 'OTHER';
+
+export type PaymentMethod = 'CREDIT_CARD';
+
+export type AdminCompanyListItem = {
+  id: string | null;
+  companyId: string;
+  nameJA: string;
+  nameFurigana: string;
+  nameEN: string;
+  email: string;
+  phoneNumber: string;
+  fax: string | null;
+  corpNumber: string;
+  address: string;
+  postalCode: string;
+  prefecture: string;
+  municipality: string;
+  blocknum: string;
+  buildingName: string | null;
+  representativeFirstName: string;
+  representativeLastName: string;
+  representativeFirstNameKana: string;
+  representativeLastNameKana: string;
+  representativePosition: string;
+  representativePhoneNumber: string;
+  requestedMethodologies: string[];
+  activityInformation: string | null;
+  status: CompanyStatus;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+};
+
+export type Pagination = {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  nextPageToken: string | null;
+  hasMore: boolean;
+};
+
+export type AdminCompanyListResponse = {
+  statusCode: string;
+  message: string;
+  companies: AdminCompanyListItem[];
+  pagination: Pagination;
+};
+
+export type GetAdminCompaniesParams = {
+  status?: CompanyStatus | CompanyStatus[];
+  search?: string;
+  prefecture?: string;
+  createdFrom?: string;
+  createdTo?: string;
+  page?: number;
+  limit?: number;
+  sort?: CompanySort;
+  sortOrder?: SortOrder;
+};
+
+export type CompanySuspension = {
+  id: number;
+  reasonCode: SuspensionReasonCode;
+  reasonDetail: string;
+  createdAt: string;
+  createdBy: string;
+  resolvedAt: string | null;
+  resolvedBy: string | null;
+  resolutionNote: string | null;
+  active: boolean;
+};
+
+export type CompanySuspensionListResponse = {
+  statusCode?: string;
+  message?: string | null;
+  suspensions: CompanySuspension[];
+  pagination: Pagination;
+};
+
+export type SuspendCompanyPayload = {
+  reasonCode: SuspensionReasonCode;
+  reasonDetail: string;
+};
+
+export type ResolveCompanySuspensionPayload = {
+  resolutionNote: string;
+  paymentMethod?: PaymentMethod;
+};
+
+export type CompanyMutationResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: unknown;
+  companyStatus?: CompanyStatus;
+  activeSuspensionCount?: number;
+};
+
 export type PendingCompanyItem = {
   id: string;
   companyId: string;

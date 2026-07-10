@@ -1,3 +1,4 @@
+import type { AdminCompanyListItem } from '@/api/admin/pendingCompanies';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -6,15 +7,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import type { PendingCompanyItem } from '@/api/admin/pendingCompanies';
 
 type PendingCompanyActionMode = 'approve' | 'reject';
 
 type PendingCompanyActionDialogProps = {
   open: boolean;
   mode: PendingCompanyActionMode | null;
-  item: PendingCompanyItem | null;
+  item: AdminCompanyListItem | null;
   rejectReason: string;
+  fieldErrors?: Record<string, string>;
   onOpenChange: (open: boolean) => void;
   onRejectReasonChange: (value: string) => void;
   onConfirm: () => void;
@@ -26,6 +27,7 @@ export function PendingCompanyActionDialog({
   mode,
   item,
   rejectReason,
+  fieldErrors,
   onOpenChange,
   onRejectReasonChange,
   onConfirm,
@@ -82,6 +84,11 @@ export function PendingCompanyActionDialog({
                 placeholder="例：登録情報に不備があるため、内容を修正して再申請してください。"
                 className="min-h-[120px] w-full rounded-md border border-input bg-background px-4 py-3 text-body outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               />
+              {fieldErrors?.rejectionReason && (
+                <p className="text-small font-medium text-destructive">
+                  {fieldErrors.rejectionReason}
+                </p>
+              )}
             </div>
           )}
         </div>

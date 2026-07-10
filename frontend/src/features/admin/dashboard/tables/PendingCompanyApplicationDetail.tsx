@@ -1,4 +1,4 @@
-import type { PendingCompanyItem } from '@/api/admin/pendingCompanies';
+import type { AdminCompanyListItem } from '@/api/admin/pendingCompanies';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
@@ -11,11 +11,11 @@ import {
 import type { ReactNode } from 'react';
 
 type PendingCompanyApplicationDetailProps = {
-  item: PendingCompanyItem;
+  item: AdminCompanyListItem;
   reviewMode: boolean;
   onBack: () => void;
-  onApprove: (item: PendingCompanyItem) => void;
-  onReject: (item: PendingCompanyItem) => void;
+  onApprove: (item: AdminCompanyListItem) => void;
+  onReject: (item: AdminCompanyListItem) => void;
 };
 
 type DetailField = {
@@ -78,11 +78,10 @@ function DetailSection({
   );
 }
 
-function formatRequestedProjects(item: PendingCompanyItem) {
-  const projects = item.requestedMethodologies ?? [];
-  if (projects.length > 0) return projects.join('、');
-
-  return item.methodologies?.map((methodology) => methodology.methodology).join('、');
+function formatRequestedProjects(item: AdminCompanyListItem) {
+  return item.requestedMethodologies.length > 0
+    ? item.requestedMethodologies.join('、')
+    : '-';
 }
 
 export function PendingCompanyApplicationDetail({
@@ -129,7 +128,7 @@ export function PendingCompanyApplicationDetail({
     { label: '役職', value: item.representativePosition },
     { label: 'メールアドレス', value: item.email },
     { label: '電話番号', value: item.representativePhoneNumber },
-    { label: 'FAX番号', value: item.faxNumber },
+    { label: 'FAX番号', value: item.fax },
   ];
 
   const projectFields: DetailField[] = [
