@@ -115,7 +115,7 @@ function AdminDashboardHero() {
           dashboardContainer,
         )}
       >
-        <h1 className="text-[40px] leading-[48px] text-foreground">
+        <h1 className="leading-[48px] text-foreground">
           運営者・管理者ダッシュボード
         </h1>
       </div>

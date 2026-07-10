@@ -1,8 +1,6 @@
-import {
-  Action,
-  Column,
-  ProTable,
-} from '@/components/data-display/ProTable/ProTable';
+import type { ProjectStatus } from '@/api/admin/projects';
+import type { Project } from '@/api/projects';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -10,8 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { ProjectStatus } from '@/api/admin/projects';
-import type { Project } from '@/api/projects';
+import {
+  AdminGridTable,
+  type AdminGridTableColumn,
+} from '@/features/admin/dashboard/tables/AdminGridTable';
 
 type ProjectTableProps = {
   projects: Project[];
@@ -33,6 +33,9 @@ const projectStatusOptions: ProjectStatus[] = [
   'クレジット申請中',
   '終了',
 ];
+
+const projectTableGridColumns =
+  'minmax(180px, 1.4fr) minmax(130px, 0.9fr) minmax(120px, 0.8fr) minmax(170px, 1.1fr) minmax(130px, 0.8fr) minmax(180px, 1fr)';
 
 function getProjectStatusClassName(status: Project['projectStatus']) {
   const normalized = String(status).toLowerCase();
@@ -67,6 +70,11 @@ function getStatusOptions(currentStatus: string): string[] {
   return [currentStatus, ...projectStatusOptions];
 }
 
+function displayValue(value: unknown) {
+  if (value === null || value === undefined || value === '') return '-';
+  return String(value);
+}
+
 export function ProjectTable({
   projects,
   onEdit,
@@ -75,111 +83,122 @@ export function ProjectTable({
   onStatusChange,
   updatingProjectStatusId,
 }: ProjectTableProps) {
-  const columns: Column<Project>[] = [
+  const columns: AdminGridTableColumn<Project>[] = [
     {
-      key: 'projectName',
-      label: 'プロジェクト名称',
+      id: 'projectName',
+      label: 'プロジェクト名',
       sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[180px]',
+      sortValue: (project) => project.projectName,
+      render: (project) => (
+        <span className="block truncate text-body font-bold text-slate-800">
+          {displayValue(project.projectName)}
+        </span>
+      ),
     },
     {
-      key: 'methodCategory',
+      id: 'methodCategory',
       label: '方法論区分',
       sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[140px]',
+      sortValue: (project) => project.methodCategory,
+      render: (project) => (
+        <span className="block truncate text-body text-foreground">
+          {displayValue(project.methodCategory)}
+        </span>
+      ),
     },
     {
-      key: 'methodNumber',
+      id: 'methodNumber',
       label: '方法論番号',
       sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[140px]',
+      sortValue: (project) => project.methodNumber,
+      render: (project) => (
+        <span className="block truncate text-body text-foreground">
+          {displayValue(project.methodNumber)}
+        </span>
+      ),
     },
     {
-      key: 'methodName',
-      label: '方法論名称',
+      id: 'methodName',
+      label: '方法論名',
       sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[180px]',
+      sortValue: (project) => project.methodName,
+      render: (project) => (
+        <span className="block truncate text-body text-foreground">
+          {displayValue(project.methodName)}
+        </span>
+      ),
     },
     {
-      key: 'methodMainEmission',
-      label: '排出削減活動',
-      sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[160px]',
-    },
-    {
-      key: 'methodologyVersion',
-      label: 'Version',
-      sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[120px]',
-    },
-    {
-      key: 'projectStatus',
+      id: 'projectStatus',
       label: 'ステータス',
       sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[180px]',
-      render: (_, row) => (
-        <div
-          className="w-36 flex items-center justify-center "
+      sortValue: (project) => project.projectStatus,
+      render: (project) => (
+        <span
+          className="block min-w-0"
           onClick={(event) => event.stopPropagation()}
           onPointerDown={(event) => event.stopPropagation()}
         >
           <Select
-            value={row.projectStatus}
-            disabled={updatingProjectStatusId === row.id}
+            value={project.projectStatus}
+            disabled={updatingProjectStatusId === project.id}
             onValueChange={(value) =>
-              onStatusChange?.(row, value as ProjectStatus)
+              onStatusChange?.(project, value as ProjectStatus)
             }
           >
             <SelectTrigger
-              className={`h-8 rounded-full border-0 px-3 text-xs font-medium shadow-none focus:ring-1 ${getProjectStatusClassName(row.projectStatus)}`}
+              className={`h-8 w-full rounded-full border-0 px-3 text-table font-bold shadow-none focus:ring-1 ${getProjectStatusClassName(project.projectStatus)}`}
               title="ステータスを変更"
             >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {getStatusOptions(row.projectStatus).map((status) => (
+              {getStatusOptions(project.projectStatus).map((status) => (
                 <SelectItem key={status} value={status}>
                   {status}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+        </span>
+      ),
+    },
+    {
+      id: 'actions',
+      label: 'アクション',
+      render: (project) => (
+        <div
+          className="flex justify-start gap-2"
+          onClick={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => onEdit?.(project)}
+          >
+            詳細
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onUpdate?.(project)}
+          >
+            更新
+          </Button>
         </div>
       ),
     },
   ];
 
-  const actions: Action<Project>[] = [
-    {
-      label: '詳細',
-      onClick: (row) => onEdit?.(row),
-      colorClass: 'text-white',
-    },
-    {
-      label: '更新',
-      onClick: (row) => onUpdate?.(row),
-      colorClass: 'text-white',
-    },
-  ];
-
   return (
-    <ProTable
-      data={projects}
+    <AdminGridTable
+      rows={projects}
       columns={columns}
-      actions={actions}
-      height="max-h-[320px]"
-      emptyState={
-        <p className="text-muted-foreground">
-          まだプロジェクトが登録されていません
-        </p>
-      }
+      gridTemplateColumns={projectTableGridColumns}
+      minWidth={980}
+      getRowKey={(project) => project.id}
+      emptyMessage="まだプロジェクトが登録されていません。"
       onRowClick={onRowClick}
     />
   );
