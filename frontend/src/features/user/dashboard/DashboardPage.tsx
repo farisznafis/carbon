@@ -219,7 +219,7 @@ function ProjectStatus({ joined }: { joined: boolean }) {
           joined ? 'bg-green-500' : 'bg-amber-500',
         )}
       />
-      {joined ? '実施中' : '未参加'}
+      {joined ? '実施中' : '非参加'}
     </span>
   );
 }
@@ -241,7 +241,7 @@ function JoinedProjectCard({
           <h3 className="text-foreground">{project.projectName}</h3>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+        <div className="grid gap-6 xl:grid-cols-[400px_minmax(0,1fr)]">
           <div className="space-y-4">
             <div className="rounded-2xl bg-muted/30 p-5">
               <dl className="space-y-4">
@@ -250,8 +250,8 @@ function JoinedProjectCard({
                   <dd className="mt-1 font-bold">{getMethodologyLabel(project)}</dd>
                 </div>
                 <div>
-                  <dt className="text-small text-muted-foreground">最新更新日</dt>
-                  <dd className="mt-1 font-bold">{formatProjectDate(project)}</dd>
+                  <dt className="text-small text-muted-foreground">方法論番号</dt>
+                  <dd className="mt-1 font-bold">{project.methodNumber} {project.methodologyVersion}</dd>
                 </div>
                 <div>
                   <dt className="text-small text-muted-foreground">ステータス</dt>
@@ -613,7 +613,7 @@ const Dashboard = () => {
       <section className="bg-background py-12">
         <div className={pageContainer}>
           <div className="mb-6">
-            <h2 className="text-foreground">未参加プロジェクト</h2>
+            <h2 className="text-foreground">非参加プロジェクト</h2>
             <p className="text-small mt-2 text-foreground">
               この拠点は以下のプロジェクトにまだ参加していません。参加するには参加手続きを行ってください。
             </p>
@@ -638,7 +638,7 @@ const Dashboard = () => {
           ) : (
             <Card className="rounded-2xl border-border">
               <CardContent className="p-10 text-center text-muted-foreground">
-                未参加のプロジェクトがありません
+                非参加のプロジェクトがありません
               </CardContent>
             </Card>
           )}

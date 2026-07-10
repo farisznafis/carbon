@@ -242,7 +242,7 @@ export default function ProjectDetailAdmin() {
         <ProjectDetailItem label='運営会社ID' value={formatValue(project.operatorCompanyId)} />
         <ProjectDetailItem
           label='参加状態'
-          value={project.isJoined == null ? '-' : project.isJoined ? '参加中' : '未参加'}
+          value={project.isJoined == null ? '-' : project.isJoined ? '参加中' : '非参加'}
         />
         <ProjectDetailItem label='作成日' value={formatValue(project.createdAt)} />
         <ProjectDetailItem label='更新日' value={formatValue(project.updatedAt)} />
