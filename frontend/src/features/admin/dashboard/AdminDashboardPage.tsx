@@ -74,11 +74,13 @@ function AdminDashboardHero() {
     <header className="border-b border-border bg-background">
       <div
         className={cn(
-          'flex min-h-[180px] items-center justify-center text-center',
+          'flex min-h-[140px] items-center justify-center text-center',
           dashboardContainer,
         )}
       >
-        <h1 className="text-foreground">運営者・管理者ダッシュボード</h1>
+        <h1 className="text-[40px] leading-[48px] text-foreground">
+          運営者・管理者ダッシュボード
+        </h1>
       </div>
     </header>
   );
@@ -86,16 +88,16 @@ function AdminDashboardHero() {
 
 function AdminDashboardTabs() {
   const triggerClassName = cn(
-    'h-14 rounded-xl border border-border bg-card px-5 py-3',
-    'text-large font-bold text-foreground shadow-app-sm transition-all duration-200',
+    'h-12 rounded-xl border border-border bg-card px-4 py-2',
+    'text-body font-bold text-foreground shadow-app-sm transition-all duration-200',
     'hover:border-primary/60 hover:bg-secondary/50',
     'data-[state=active]:border-[#0d9488] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground',
     'data-[state=active]:hover:bg-primary/90',
   );
 
   return (
-    <div className="bg-card pt-8">
-      <TabsList className="mx-auto flex h-auto w-fit max-w-full flex-wrap items-center justify-center gap-3 rounded-none bg-transparent p-0">
+    <div className="bg-card pt-6">
+      <TabsList className="mx-auto flex h-auto w-fit max-w-full flex-wrap items-center justify-center gap-2 rounded-none bg-transparent p-0">
         {adminDashboardTabs.map((tab) => (
           <TabsTrigger
             key={tab.value}
@@ -122,7 +124,7 @@ function AdminDashboardSection({
   children: ReactNode;
 }) {
   return (
-    <section className="space-y-5">
+    <section className="space-y-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2">
           <h2 className="text-foreground">{title}</h2>
@@ -130,9 +132,7 @@ function AdminDashboardSection({
         </div>
         {action}
       </div>
-      <div className="rounded-xl border border-border bg-card p-4 shadow-app-sm sm:p-6">
-        {children}
-      </div>
+      {children}
     </section>
   );
 }
@@ -462,25 +462,24 @@ const AdminDashboard = () => {
       <Tabs defaultValue="companies" className="flex flex-1 flex-col bg-card">
         <AdminDashboardTabs />
 
-        <main className={cn('flex-1 space-y-10 py-8', dashboardContainer)}>
+        <main className={cn('flex-1 space-y-10 py-6', dashboardContainer)}>
           <TabsContent
             value="companies"
-            className="m-0 space-y-12 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
+            className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
             <AdminDashboardSection
               title="参加申請中の企業"
               description="参加申請を受け付けた企業です。内容を確認し、承認または差し戻しを行ってください。"
-              action={
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="md"
-                  onClick={() => setCancelRequestDialogOpen(true)}
-                  className="self-start sm:self-auto"
-                >
-                  取消申請一覧
-                </Button>
-              }
+              // action={
+              //   <Button
+              //     type="button"
+              //     variant="outline"
+              //     onClick={() => setCancelRequestDialogOpen(true)}
+              //     className="self-start sm:self-auto"
+              //   >
+              //     取消申請一覧
+              //   </Button>
+              // }
             >
               {pendingLoading ? (
                 <AdminDashboardEmptyState>読み込み中...</AdminDashboardEmptyState>
