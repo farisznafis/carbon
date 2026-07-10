@@ -24,6 +24,8 @@ public class ResponseUtil {
             case ResponseConstants.PROJECT_NUMBER_ALREADY_USED:
             case ResponseConstants.METHOD_NUMBER_ALREADY_USED:
                 return HttpStatus.CONFLICT;
+            case ResponseConstants.PAYMENT_REQUIRED:
+                return HttpStatus.PAYMENT_REQUIRED;
             case ResponseConstants.UNAUTHORIZED:
             case ResponseConstants.INVALID_CREDENTIALS:
                 return HttpStatus.UNAUTHORIZED;

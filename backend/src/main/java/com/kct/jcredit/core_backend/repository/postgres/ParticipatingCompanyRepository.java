@@ -2,6 +2,9 @@ package com.kct.jcredit.core_backend.repository.postgres;
 
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,9 +16,17 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ParticipatingCompanyRepository extends JpaRepository<ParticipatingCompany, Integer> {
+public interface ParticipatingCompanyRepository extends JpaRepository<ParticipatingCompany, Integer>,
+        JpaSpecificationExecutor<ParticipatingCompany> {
     
     Optional<ParticipatingCompany> findByCompanyId(String companyId);
+
+    /**
+     * Locks the company row while lifecycle transitions are evaluated and persisted.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT pc FROM ParticipatingCompany pc WHERE pc.companyId = :companyId")
+    Optional<ParticipatingCompany> findByCompanyIdForUpdate(@Param("companyId") String companyId);
 
     Optional<ParticipatingCompany> findByCorpNumber(String corpNumber);
     
@@ -26,8 +37,6 @@ public interface ParticipatingCompanyRepository extends JpaRepository<Participat
     
     @Query("SELECT pc FROM ParticipatingCompany pc WHERE pc.subscriptionStatus = :status")
     List<ParticipatingCompany> findBySubscriptionStatus(@Param("status") SubscriptionStatus status);
-
-    List<ParticipatingCompany> findByRegStatus(String regStatus);
 
     @Modifying
     @Query("UPDATE ParticipatingCompany pc SET pc.deletedAt = CURRENT_TIMESTAMP, pc.deletedBy = :deletedBy WHERE pc.companyId = :companyId")

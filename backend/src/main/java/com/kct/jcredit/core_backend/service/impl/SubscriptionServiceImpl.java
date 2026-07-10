@@ -1,264 +1,189 @@
 package com.kct.jcredit.core_backend.service.impl;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.SubscriptionLog;
 import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SubscriptionLogRepository;
+import com.kct.jcredit.core_backend.service.CompanyLifecycleService;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.service.PaymentGatewayService;
 import com.kct.jcredit.core_backend.service.SubscriptionService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * Handles contract renewal while delegating operational blocking to the lifecycle service.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class SubscriptionServiceImpl implements SubscriptionService {
 
-    private final ParticipatingCompanyRepository companyRepository;
-    private final SubscriptionLogRepository subscriptionLogRepository;
-    private final PaymentGatewayService paymentGatewayService;
-    private final NotificationService notificationService;
-
     private static final BigDecimal RENEWAL_AMOUNT = new BigDecimal("50000.00");
     private static final int CONTRACT_EXTENSION_DAYS = 365;
 
+    private final ParticipatingCompanyRepository companyRepository;
+    private final SubscriptionLogRepository subscriptionLogRepository;
+    private final PaymentGatewayService paymentGatewayService;
+    private final CompanyLifecycleService companyLifecycleService;
+    private final NotificationService notificationService;
+    private final PlatformTransactionManager transactionManager;
+
+    /**
+     * Attempts renewal for every active subscription whose contract has expired.
+     */
     @Override
-    @Transactional
     public void processExpiredContracts() {
         LocalDate today = LocalDate.now();
-        List<ParticipatingCompany> expiringCompanies = companyRepository
+        List<ParticipatingCompany> companies = companyRepository
                 .findByContractEndDateBeforeAndSubscriptionStatus(today, SubscriptionStatus.ACTIVE);
 
-        log.info("Processing {} expired contracts", expiringCompanies.size());
-
-        for (ParticipatingCompany company : expiringCompanies) {
-            try {
-                renewContract(company);
-            } catch (Exception e) {
-                log.error("Failed to renew contract for company: {}", company.getCompanyId(), e);
-                String reason = "Auto-renewal failed: " + e.getMessage();
-                suspendCompany(company, reason);
-            }
-        }
+        log.info("Processing {} expired participating-company contracts", companies.size());
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+        companies.forEach(company -> transactionTemplate.executeWithoutResult(
+                status -> renewContract(company)
+        ));
     }
 
+    /**
+     * Updates only billing state and creates a BILLING blocker when renewal cannot complete.
+     */
     @Override
     @Transactional
     public void renewContract(ParticipatingCompany company) {
-        log.info("Processing renewal for company: {}", company.getCompanyId());
-
         String paymentMethod = company.getPaymentMethod();
-        if (paymentMethod == null || paymentMethod.isEmpty()) {
-            paymentMethod = "CREDIT_CARD";
+        if (!StringUtils.hasText(paymentMethod)) {
+            handleRenewalFailure(company, "支払方法が登録されていません。", null);
+            return;
         }
+
+        company.setSubscriptionStatus(SubscriptionStatus.PENDING_RENEWAL);
+        companyRepository.save(company);
 
         PaymentGatewayService.PaymentResult result = paymentGatewayService.processPayment(
-                company.getCompanyId(), paymentMethod, RENEWAL_AMOUNT);
+                company.getCompanyId(),
+                paymentMethod,
+                RENEWAL_AMOUNT,
+                "AUTO-RENEWAL-" + company.getCompanyId() + "-" + company.getContractEndDate()
+        );
+        if (!result.success()) {
+            handleRenewalFailure(company, "契約更新の支払いに失敗しました。", result.failureReason());
+            return;
+        }
 
         LocalDate previousEndDate = company.getContractEndDate();
+        LocalDate extensionBase = previousEndDate == null || previousEndDate.isBefore(LocalDate.now())
+                ? LocalDate.now()
+                : previousEndDate;
+        LocalDate newEndDate = extensionBase.plusDays(CONTRACT_EXTENSION_DAYS);
 
-        if (result.success()) {
-            LocalDate newEndDate = previousEndDate.plusDays(CONTRACT_EXTENSION_DAYS);
-            company.setContractEndDate(newEndDate);
-            company.setLastRenewalDate(LocalDateTime.now());
-            company.setSubscriptionStatus(SubscriptionStatus.ACTIVE);
-            company.setIsActive(true);
-            companyRepository.save(company);
-
-            SubscriptionLog subscriptionLog = SubscriptionLog.builder()
-                    .company(company)
-                    .actionType("AUTO_RENEWAL")
-                    .actionDate(LocalDateTime.now())
-                    .amount(RENEWAL_AMOUNT)
-                    .paymentMethod(paymentMethod)
-                    .transactionId(result.transactionId())
-                    .status("SUCCESS")
-                    .previousEndDate(previousEndDate)
-                    .newEndDate(newEndDate)
-                    .build();
-            subscriptionLogRepository.save(subscriptionLog);
-
-            log.info("Renewal successful for company: {}, new end date: {}", company.getCompanyId(), newEndDate);
-        } else {
-            company.setSubscriptionStatus(SubscriptionStatus.SUSPENDED);
-            company.setSuspensionReason(result.failureReason());
-            company.setSuspensionDate(LocalDateTime.now());
-            company.setIsActive(false);
-            companyRepository.save(company);
-
-            SubscriptionLog subscriptionLog = SubscriptionLog.builder()
-                    .company(company)
-                    .actionType("AUTO_RENEWAL")
-                    .actionDate(LocalDateTime.now())
-                    .amount(RENEWAL_AMOUNT)
-                    .paymentMethod(paymentMethod)
-                    .transactionId(result.transactionId())
-                    .status("FAILED")
-                    .failureReason(result.failureReason())
-                    .previousEndDate(previousEndDate)
-                    .build();
-            subscriptionLogRepository.save(subscriptionLog);
-
-            notificationService.sendFailureNotification(company, result.failureReason());
-            notificationService.sendSuspensionNotification(company);
-
-            log.warn("Renewal failed for company: {}, suspended", company.getCompanyId());
-        }
-    }
-
-    @Override
-    @Transactional
-    public void suspendCompany(ParticipatingCompany company, String reason) {
-        log.info("Suspending company: {}", company.getCompanyId());
-
-        company.setSubscriptionStatus(SubscriptionStatus.SUSPENDED);
-        company.setSuspensionReason(reason);
-        company.setSuspensionDate(LocalDateTime.now());
-        company.setIsActive(false);
-        companyRepository.save(company);
-
-        SubscriptionLog subscriptionLog = SubscriptionLog.builder()
-                .company(company)
-                .actionType("SUSPENSION")
-                .actionDate(LocalDateTime.now())
-                .status("SUSPENDED")
-                .failureReason(reason)
-                .build();
-        subscriptionLogRepository.save(subscriptionLog);
-
-        notificationService.sendSuspensionNotification(company);
-        notificationService.createNotificationForParticipatingCompany(
-                "一時利用停止のお知らせ",
-                "停止されている理由: " + reason,
-                company.getId(),
-                null
-        );
-    }
-
-    @Override
-    @Transactional
-    public void reactivateCompany(ParticipatingCompany company) {
-        log.info("Reactivating company: {}", company.getCompanyId());
-
+        company.setContractEndDate(newEndDate);
+        company.setLastRenewalDate(LocalDateTime.now());
         company.setSubscriptionStatus(SubscriptionStatus.ACTIVE);
-        company.setSuspensionReason(null);
-        company.setSuspensionDate(null);
-        company.setIsActive(true);
         companyRepository.save(company);
-
-        SubscriptionLog subscriptionLog = SubscriptionLog.builder()
-                .company(company)
-                .actionType("REACTIVATION")
-                .actionDate(LocalDateTime.now())
-                .status("ACTIVE")
-                .build();
-        subscriptionLogRepository.save(subscriptionLog);
-
-        notificationService.sendReactivationNotification(company);
-                notificationService.createNotificationForParticipatingCompany(
-                "ご利用再開のお知らせ",
-                "利用再開されました。ご利用ありがとうございます。",
-                company.getId(),
-                null
-        );
+        subscriptionLogRepository.save(buildRenewalLog(
+                company,
+                paymentMethod,
+                result,
+                previousEndDate,
+                newEndDate
+        ));
     }
 
+    /**
+     * Returns billing history ordered by the most recent action first.
+     */
     @Override
+    @Transactional(readOnly = true)
     public List<SubscriptionLog> getSubscriptionLogs(String companyId) {
         return subscriptionLogRepository.findByCompanyCompanyIdOrderByActionDateDesc(companyId);
     }
 
-    @Override
-    @Transactional
-    public void suspendCompanyManually(String companyId, String reason) {
-        log.info("Manually suspending company: {}", companyId);
-        
-        //企業IDで企業を検索し、nullの場合は"Company not found: " + companyIdを返す
-        ParticipatingCompany company = companyRepository.findByCompanyId(companyId)
-                .orElseThrow(() -> new RuntimeException("Company not found: " + companyId));
-        //企業を停止状態にする
-        company.setSubscriptionStatus(SubscriptionStatus.SUSPENDED);
-        company.setSuspensionReason(reason != null ? reason : "Manual suspension");
-        company.setSuspensionDate(LocalDateTime.now());
-        company.setIsActive(false);
+    /**
+     * Persists a recoverable billing failure and delegates access suspension.
+     */
+    private void handleRenewalFailure(
+            ParticipatingCompany company,
+            String blockerReason,
+            String gatewayReason) {
+        company.setSubscriptionStatus(SubscriptionStatus.PAST_DUE);
         companyRepository.save(company);
 
-        //
-        SubscriptionLog subscriptionLog = SubscriptionLog.builder()
+        SubscriptionLog failureLog = SubscriptionLog.builder()
                 .company(company)
-                .actionType("MANUAL_SUSPENSION")
+                .actionType("AUTO_RENEWAL")
                 .actionDate(LocalDateTime.now())
-                .status("SUSPENDED")
-                .failureReason(reason)
+                .amount(RENEWAL_AMOUNT)
+                .paymentMethod(company.getPaymentMethod())
+                .status("FAILED")
+                .failureReason(gatewayReason)
+                .previousEndDate(company.getContractEndDate())
                 .build();
-        subscriptionLogRepository.save(subscriptionLog);
+        subscriptionLogRepository.save(failureLog);
+        companyLifecycleService.createBillingSuspension(company.getCompanyId(), blockerReason);
 
-        //
-        notificationService.sendSuspensionNotification(company);
-        
-        log.info("Company suspended manually: {}", companyId);
+        registerAfterCommit(() -> sendFailureNotification(company, blockerReason));
     }
 
-    @Override
-    @Transactional
-    public void reactivateCompanyWithPayment(ParticipatingCompany company, String paymentMethod, PaymentGatewayService.PaymentResult paymentResult) {
-        log.info("Reactivating company with payment: {}", company.getCompanyId());
+    /**
+     * Builds the immutable audit row for a successful automatic renewal.
+     */
+    private SubscriptionLog buildRenewalLog(
+            ParticipatingCompany company,
+            String paymentMethod,
+            PaymentGatewayService.PaymentResult result,
+            LocalDate previousEndDate,
+            LocalDate newEndDate) {
+        return SubscriptionLog.builder()
+                .company(company)
+                .actionType("AUTO_RENEWAL")
+                .actionDate(LocalDateTime.now())
+                .amount(RENEWAL_AMOUNT)
+                .paymentMethod(paymentMethod)
+                .transactionId(result.transactionId())
+                .status("SUCCESS")
+                .previousEndDate(previousEndDate)
+                .newEndDate(newEndDate)
+                .build();
+    }
 
-        LocalDate previousEndDate = company.getContractEndDate();
+    /**
+     * Defers the billing notification until its database changes are committed.
+     */
+    private void registerAfterCommit(Runnable notificationTask) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            notificationTask.run();
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                notificationTask.run();
+            }
+        });
+    }
 
-        if (paymentResult.success()) {
-            LocalDate newEndDate = previousEndDate.plusDays(CONTRACT_EXTENSION_DAYS);
-            company.setContractEndDate(newEndDate);
-            company.setPaymentMethod(paymentMethod);
-            company.setLastRenewalDate(LocalDateTime.now());
-            company.setSubscriptionStatus(SubscriptionStatus.ACTIVE);
-            company.setSuspensionReason(null);
-            company.setSuspensionDate(null);
-            company.setIsActive(true);
-            companyRepository.save(company);
-
-            SubscriptionLog subscriptionLog = SubscriptionLog.builder()
-                    .company(company)
-                    .actionType("MANUAL_REACTIVATION")
-                    .actionDate(LocalDateTime.now())
-                    .amount(RENEWAL_AMOUNT)
-                    .paymentMethod(paymentMethod)
-                    .transactionId(paymentResult.transactionId())
-                    .status("SUCCESS")
-                    .previousEndDate(previousEndDate)
-                    .newEndDate(newEndDate)
-                    .build();
-            subscriptionLogRepository.save(subscriptionLog);
-
-            notificationService.sendReactivationNotification(company);
-
-            log.info("Reactivation with payment successful for company: {}", company.getCompanyId());
-        } else {
-            SubscriptionLog subscriptionLog = SubscriptionLog.builder()
-                    .company(company)
-                    .actionType("MANUAL_REACTIVATION")
-                    .actionDate(LocalDateTime.now())
-                    .amount(RENEWAL_AMOUNT)
-                    .paymentMethod(paymentMethod)
-                    .transactionId(paymentResult.transactionId())
-                    .status("FAILED")
-                    .failureReason(paymentResult.failureReason())
-                    .build();
-            subscriptionLogRepository.save(subscriptionLog);
-
-            log.warn("Reactivation payment failed for company: {}", company.getCompanyId());
-            throw new RuntimeException("Payment failed: " + paymentResult.failureReason());
+    /**
+     * Sends a renewal failure notification without exposing gateway details in logs.
+     */
+    private void sendFailureNotification(ParticipatingCompany company, String blockerReason) {
+        try {
+            notificationService.sendFailureNotification(company, blockerReason);
+        } catch (Exception exception) {
+            log.error("Failed to send renewal failure notification. companyId={}", company.getCompanyId(), exception);
         }
     }
 }

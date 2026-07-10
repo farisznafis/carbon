@@ -4,7 +4,7 @@ import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.constant.RoleConstants;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
-import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
+import com.kct.jcredit.core_backend.enums.CompanyStatus;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.util.JwtUtil;
@@ -34,9 +34,9 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
     private final ParticipatingUserRepository userRepository;
     private final JwtUtil jwtUtil;
 
-    private static final String MONITORING_API = "/api/monitoring";
-    private static final String PROJECT_API = "/api/project";
-
+    /**
+     * Enforces canonical company access status before protected business endpoints run.
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -66,22 +66,21 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
         }
 
         ParticipatingCompany company = companyOpt.get();
-        if (!company.getIsActive()) {
-            log.warn("Company inactive or suspended, blocking request: {}", request.getRequestURI());
-            sendErrorResponse(response, ResponseConstants.FORBIDDEN, ResponseConstants.MSG_FORBIDDEN);
+        if (company.getCompanyStatus() != CompanyStatus.ACTIVE) {
+            log.warn(
+                    "Company access blocked. companyId={}, status={}, uri={}",
+                    company.getCompanyId(),
+                    company.getCompanyStatus(),
+                    request.getRequestURI()
+            );
+            String statusCode = company.getCompanyStatus() == CompanyStatus.SUSPENDED
+                    ? ResponseConstants.SUSPENDED
+                    : ResponseConstants.FORBIDDEN;
+            String message = company.getCompanyStatus() == CompanyStatus.SUSPENDED
+                    ? ResponseConstants.MSG_COMPANY_ACCESS_SUSPENDED
+                    : ResponseConstants.MSG_FORBIDDEN;
+            sendErrorResponse(response, statusCode, message);
             return;
-        }
-
-        if (company.getSubscriptionStatus() == SubscriptionStatus.SUSPENDED) {
-            String requestUri = request.getRequestURI();
-            boolean isMonitoringPost = request.getMethod().equals("POST") && requestUri.startsWith(MONITORING_API);
-            boolean isProjectGet = request.getMethod().equals("GET") && requestUri.startsWith(PROJECT_API);
-
-            if (isMonitoringPost || isProjectGet) {
-                log.warn("Company inactive or suspended, blocking request: {}", request.getRequestURI());
-                sendErrorResponse(response, ResponseConstants.SUSPENDED, ResponseConstants.MSG_SUSPENDED);
-                return;
-            }
         }
 
         if (RoleConstants.USER.equals(role)) {
@@ -98,12 +97,18 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Skips public authentication documentation and login routes.
+     */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
         return path.startsWith("/auth/") || path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui");
     }
 
+    /**
+     * Writes the existing compact security error contract.
+     */
     private void sendErrorResponse(HttpServletResponse response, String statusCode, String message) throws IOException {
         response.setStatus(mapStatusCodeToHttpStatus(statusCode));
         response.setContentType("application/json;charset=UTF-8");
@@ -113,6 +118,9 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
         );
     }
 
+    /**
+     * Maps internal security status codes to HTTP status codes.
+     */
     private int mapStatusCodeToHttpStatus(String statusCode) {
         switch (statusCode) {
             case "NOT_FOUND":

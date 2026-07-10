@@ -19,6 +19,7 @@ import com.kct.jcredit.core_backend.entity.OperatingUser;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
+import com.kct.jcredit.core_backend.enums.CompanyStatus;
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
@@ -56,9 +57,11 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 企業がサスペンドされているかどうか
-        if (company.isSuspended()) {
+        if (company.getCompanyStatus() != CompanyStatus.ACTIVE) {
             response.setStatusCode(ResponseConstants.FORBIDDEN);
-            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+            response.setMessage(company.getCompanyStatus() == CompanyStatus.SUSPENDED
+                    ? ResponseConstants.MSG_COMPANY_ACCESS_SUSPENDED
+                    : ResponseConstants.MSG_FORBIDDEN);
             return response;
         }
 

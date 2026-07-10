@@ -9,8 +9,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -160,6 +163,61 @@ public class GlobalErrorHandler {
         response.setErrors(errors);
 
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    /**
+     * Converts validated query-object binding failures into the standard field error contract.
+     */
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<BaseResponse> handleBindException(BindException ex) {
+        Map<String, String> errors = ex.getBindingResult().getFieldErrors().stream()
+                .collect(Collectors.toMap(
+                        FieldError::getField,
+                        fieldError -> fieldError.getDefaultMessage() == null
+                                ? "入力値が正しくありません。"
+                                : fieldError.getDefaultMessage(),
+                        (first, second) -> first,
+                        LinkedHashMap::new
+                ));
+        BaseResponse response = BaseResponse.error(
+                ResponseConstants.VALIDATION_ERROR,
+                ResponseConstants.MSG_VALIDATION_ERROR
+        );
+        response.setErrors(errors);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Handles invalid enum and scalar query parameter formats without leaking conversion details.
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<BaseResponse> handleMethodArgumentTypeMismatchException(
+            MethodArgumentTypeMismatchException ex) {
+        BaseResponse response = BaseResponse.error(
+                ResponseConstants.VALIDATION_ERROR,
+                ResponseConstants.MSG_VALIDATION_ERROR
+        );
+        response.setErrors(Map.of(ex.getName(), "入力値が正しくありません。"));
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Handles method-level parameter constraints used by paginated endpoints.
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<BaseResponse> handleConstraintViolationException(ConstraintViolationException ex) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        ex.getConstraintViolations().forEach(violation -> {
+            String path = violation.getPropertyPath().toString();
+            String field = path.substring(path.lastIndexOf('.') + 1);
+            errors.putIfAbsent(field, violation.getMessage());
+        });
+        BaseResponse response = BaseResponse.error(
+                ResponseConstants.VALIDATION_ERROR,
+                ResponseConstants.MSG_VALIDATION_ERROR
+        );
+        response.setErrors(errors);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)

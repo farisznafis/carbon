@@ -4,6 +4,8 @@ import com.kct.jcredit.core_backend.dto.request.PartiCompanyInfoValidateRequest;
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyRegisterRequest;
 import com.kct.jcredit.core_backend.dto.response.details.PartiCompanyResponseDetails;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
+import com.kct.jcredit.core_backend.enums.CompanyStatus;
+import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRegisterRepository;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.service.PartiCompanyRegisterService;
@@ -38,8 +40,10 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
 
         signupValidator.validateCompanyInfo(request);
 
-        ParticipatingCompany entity = repository.findByCorpNumberAndRegStatus(request.getCorporateNumber(), "REJECTED")
-                .or(() -> repository.findByEmailAndRegStatus(request.getEmail(), "REJECTED"))
+        ParticipatingCompany entity = repository.findByCorpNumberAndCompanyStatus(
+                        request.getCorporateNumber(), CompanyStatus.REJECTED)
+                .or(() -> repository.findByEmailAndCompanyStatus(
+                        request.getEmail(), CompanyStatus.REJECTED))
                 .orElse(null);
 
         boolean isReactivation = entity != null;
@@ -72,8 +76,9 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
 
         String newCompanyId = generateUniqueCompanyId();
         entity.setCompanyId(newCompanyId);
-        entity.setRegStatus("PENDING");
-        entity.setIsActive(true);
+        entity.setCompanyStatus(CompanyStatus.PENDING);
+        entity.setSubscriptionStatus(SubscriptionStatus.ACTIVE);
+        entity.setIsActive(false);
         entity.setContractEndDate(LocalDate.now().plusYears(1));
 
         repository.save(entity);

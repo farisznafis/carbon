@@ -3,14 +3,14 @@ package com.kct.jcredit.core_backend.service.impl;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.constant.RoleConstants;
 import com.kct.jcredit.core_backend.dto.response.ApproveCompanyResponse;
-import com.kct.jcredit.core_backend.dto.response.PendingCompanyListResponse;
 import com.kct.jcredit.core_backend.dto.response.RejectCompanyResponse;
-import com.kct.jcredit.core_backend.dto.response.details.CompanyInfoResponse;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
+import com.kct.jcredit.core_backend.enums.CompanyStatus;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.service.CompanyApprovalService;
+import com.kct.jcredit.core_backend.service.CompanyLifecycleService;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,6 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,15 +30,15 @@ import java.util.stream.Collectors;
 public class CompanyApprovalServiceImpl implements CompanyApprovalService {
 
     private static final int DEFAULT_PASSWORD_LENGTH = 12;
-    private static final String REG_STATUS_PENDING = "PENDING";
-    private static final String REG_STATUS_APPROVED = "APPROVED";
-    private static final String REG_STATUS_REJECTED = "REJECTED";
-
     private final ParticipatingCompanyRepository companyRepository;
     private final ParticipatingUserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final NotificationService notificationService;
+    private final CompanyLifecycleService companyLifecycleService;
 
+    /**
+     * Validates approval preconditions, creates the master user, and activates the company.
+     */
     @Override
     @Transactional
     public ApproveCompanyResponse approveCompany(String companyId) {
@@ -52,7 +51,7 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
             return response;
         }
 
-        if (company.getRegStatus() == null || !REG_STATUS_PENDING.equalsIgnoreCase(company.getRegStatus())) {
+        if (company.getCompanyStatus() != CompanyStatus.PENDING) {
             response.setStatusCode(ResponseConstants.BAD_REQUEST);
             response.setMessage(ResponseConstants.MSG_COMPANY_NOT_PENDING);
             return response;
@@ -97,8 +96,7 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
                 .build();
 
         try {
-            company.setRegStatus(REG_STATUS_APPROVED);
-            companyRepository.save(company);
+            companyLifecycleService.activatePendingCompany(company);
             userRepository.save(masterUser);
             notificationService.sendMasterAccountCredentials(company, masterUsername, plainPassword);
         } catch (Exception ex) {
@@ -116,6 +114,9 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
         return response;
     }
 
+    /**
+     * Validates rejection preconditions and moves the company to the rejected state.
+     */
     @Override
     @Transactional
     public RejectCompanyResponse rejectCompany(String companyId, String rejectionReason) {
@@ -128,15 +129,14 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
             return response;
         }
 
-        if (company.getRegStatus() == null || !REG_STATUS_PENDING.equalsIgnoreCase(company.getRegStatus())) {
+        if (company.getCompanyStatus() != CompanyStatus.PENDING) {
             response.setStatusCode(ResponseConstants.BAD_REQUEST);
             response.setMessage(ResponseConstants.MSG_COMPANY_NOT_PENDING);
             return response;
         }
 
         try {
-            company.setRegStatus(REG_STATUS_REJECTED);
-            companyRepository.save(company);
+            companyLifecycleService.rejectPendingCompany(company);
             notificationService.sendCompanyRejectionNotification(company, rejectionReason);
         } catch (Exception ex) {
             log.error("Failed to reject company {}", companyId, ex);
@@ -152,55 +152,9 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
         return response;
     }
 
-    @Override
-    public PendingCompanyListResponse getPendingCompanies() {
-        PendingCompanyListResponse response = new PendingCompanyListResponse();
-
-        List<ParticipatingCompany> companies = companyRepository.findByRegStatus(REG_STATUS_PENDING);
-
-        List<CompanyInfoResponse> details = companies.stream()
-            .map(company -> CompanyInfoResponse.builder()
-                    .id(company.getId() != null ? company.getId().toString() : null)
-                    .companyId(company.getCompanyId())
-                    .nameJA(company.getNameJa())
-                    .nameFurigana(company.getNameFurigana())
-                    .nameEN(company.getNameEn())
-                    .email(company.getEmail())
-                    .phoneNumber(company.getPhoneNumber())
-                    .fax(company.getFax())
-                    .corpNumber(company.getCorpNumber())
-                    .address(String.format("%s %s %s %s %s",
-                        company.getPostalCode() != null ? company.getPostalCode() : "",
-                        company.getPrefecture() != null ? company.getPrefecture() : "",
-                        company.getMunicipality() != null ? company.getMunicipality() : "",
-                        company.getBlocknum() != null ? company.getBlocknum() : "",
-                        company.getBuildingName() != null ? company.getBuildingName() : "").trim())
-                    .postalCode(company.getPostalCode())
-                    .prefecture(company.getPrefecture())
-                    .municipality(company.getMunicipality())
-                    .blocknum(company.getBlocknum())
-                    .buildingName(company.getBuildingName())
-                    .representativeFirstName(company.getRepFirstName())
-                    .representativeLastName(company.getRepLastName())
-                    .representativeFirstNameKana(company.getRepFirstNameKana())
-                    .representativeLastNameKana(company.getRepLastNameKana())
-                    .representativePosition(company.getRepPosition())
-                    .representativePhoneNumber(company.getRepPhoneNumber())
-                    .faxNumber(company.getFax())
-                    .isSuspended(company.isSuspended())
-                    .requestedMethodologies(company.getRequestedMethodologies() != null
-                        ? company.getRequestedMethodologies()
-                        : Collections.emptyList())
-                    .activityInformation(company.getActivityInformation())
-                    .build())
-            .collect(Collectors.toList());
-
-        response.setCompanies(details);
-        response.setStatusCode(ResponseConstants.OK);
-        response.setMessage(ResponseConstants.OK);
-        return response;
-    }
-
+    /**
+     * Generates a policy-compliant random password for the first master account.
+     */
     private String generateSecurePassword(int length) {
         int safeLength = Math.max(length, 8);
         SecureRandom random = new SecureRandom();

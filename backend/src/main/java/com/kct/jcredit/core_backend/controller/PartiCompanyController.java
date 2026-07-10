@@ -1,8 +1,27 @@
 package com.kct.jcredit.core_backend.controller;
 
-import java.math.BigDecimal;
-import java.util.Optional;
-
+import com.kct.jcredit.core_backend.constant.ResponseConstants;
+import com.kct.jcredit.core_backend.dto.request.ApproveDeletionRequest;
+import com.kct.jcredit.core_backend.dto.request.CreateDeletionRequest;
+import com.kct.jcredit.core_backend.dto.request.PartiCompanyInfoValidateRequest;
+import com.kct.jcredit.core_backend.dto.request.PartiCompanyMethodologyValidateRequest;
+import com.kct.jcredit.core_backend.dto.request.PartiCompanyRegisterRequest;
+import com.kct.jcredit.core_backend.dto.request.RejectDeletionRequest;
+import com.kct.jcredit.core_backend.dto.request.UpdatePartiCompanyRequest;
+import com.kct.jcredit.core_backend.dto.response.DeletionRequestResponse;
+import com.kct.jcredit.core_backend.dto.response.UpdatePartiCompanyResponse;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+import com.kct.jcredit.core_backend.dto.response.details.PartiCompanyResponseDetails;
+import com.kct.jcredit.core_backend.service.CompanyDeletionService;
+import com.kct.jcredit.core_backend.service.PartiCompanyRegisterService;
+import com.kct.jcredit.core_backend.service.PartiCompanyService;
+import com.kct.jcredit.core_backend.util.JwtUtil;
+import com.kct.jcredit.core_backend.util.ResponseUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,226 +33,118 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kct.jcredit.core_backend.constant.ResponseConstants;
-import com.kct.jcredit.core_backend.dto.request.ApproveDeletionRequest;
-import com.kct.jcredit.core_backend.dto.request.CreateDeletionRequest;
-import com.kct.jcredit.core_backend.dto.request.PartiCompanyRegisterRequest;
-import com.kct.jcredit.core_backend.dto.request.ReactivationRequest;
-import com.kct.jcredit.core_backend.dto.request.RejectDeletionRequest;
-import com.kct.jcredit.core_backend.dto.request.SuspendCompanyRequest;
-import com.kct.jcredit.core_backend.dto.request.UpdatePartiCompanyRequest;
-import com.kct.jcredit.core_backend.dto.request.PartiCompanyInfoValidateRequest;
-import com.kct.jcredit.core_backend.dto.request.PartiCompanyMethodologyValidateRequest;
-import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
-import com.kct.jcredit.core_backend.dto.response.DeleteCompanyResponse;
-import com.kct.jcredit.core_backend.dto.response.DeletionRequestResponse;
-import com.kct.jcredit.core_backend.dto.response.ReactivationResponse;
-import com.kct.jcredit.core_backend.dto.response.SuspendCompanyResponse;
-import com.kct.jcredit.core_backend.dto.response.UpdatePartiCompanyResponse;
-import com.kct.jcredit.core_backend.dto.response.details.PartiCompanyResponseDetails;
-import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
-import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
-import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
-import com.kct.jcredit.core_backend.service.CompanyDeletionService;
-import com.kct.jcredit.core_backend.service.PartiCompanyRegisterService;
-import com.kct.jcredit.core_backend.service.PartiCompanyService;
-import com.kct.jcredit.core_backend.service.PaymentGatewayService;
-import com.kct.jcredit.core_backend.service.SubscriptionService;
-import com.kct.jcredit.core_backend.util.JwtUtil;
-import com.kct.jcredit.core_backend.util.ResponseUtil;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-
+/**
+ * Exposes participating-company self-service and signup operations.
+ */
 @RestController
 @RequestMapping("/company")
-@Tag(name = "参加企業", description = "参加企業の登録、更新、停止、再有効化、削除申請を管理するAPIです。")
+@Tag(name = "参加企業", description = "参加企業の登録、更新、削除申請を管理するAPIです。")
 @RequiredArgsConstructor
 public class PartiCompanyController {
 
     private final PartiCompanyService companyService;
-    private final ParticipatingCompanyRepository companyRepository;
-    private final SubscriptionService subscriptionService;
-    private final PaymentGatewayService paymentGatewayService;
     private final PartiCompanyRegisterService registerService;
     private final JwtUtil jwtUtil;
     private final CompanyDeletionService companyDeletionService;
 
+    /**
+     * Updates the authenticated master user's company information.
+     */
     @PatchMapping
     @PreAuthorize("hasAnyRole('master')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "参加企業情報更新", description = "ログイン中の参加企業情報を更新します。")
     public ResponseEntity<UpdatePartiCompanyResponse> updateCompany(
             @RequestBody @Valid UpdatePartiCompanyRequest request) {
-
         UpdatePartiCompanyResponse response = companyService.updateCompany(request.getCompanyId(), request);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
+    /**
+     * Registers a new company application or resubmits a rejected application.
+     */
     @PostMapping("/signup")
-    @Operation(summary = "参加企業サインアップ", description = "新しい参加企業の登録申請を作成します。")
+    @Operation(summary = "参加企業登録申請", description = "新しい参加企業の登録申請を作成します。")
     public ResponseEntity<PartiCompanyResponseDetails> signup(
             @Valid @RequestBody PartiCompanyRegisterRequest request) {
         PartiCompanyResponseDetails response = registerService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    //運用・管理者のみ機能
+    /**
+     * Validates company identity fields before the final signup request.
+     */
     @PostMapping("/signup/company-info/validate")
-    @Operation(summary = "参加企業情報入力検証", description = "サインアップ時の参加企業情報を保存せずに検証します。")
+    @Operation(summary = "企業情報事前検証", description = "企業情報を保存せずに検証します。")
     public ResponseEntity<BaseResponse> validateSignupCompanyInfo(
             @Valid @RequestBody PartiCompanyInfoValidateRequest request) {
         registerService.validateCompanyInfo(request);
         return ResponseEntity.ok(BaseResponse.success(ResponseConstants.MSG_VALIDATION_SUCCESS));
     }
 
+    /**
+     * Validates methodology fields before the final signup request.
+     */
     @PostMapping("/signup/methodology/validate")
-    @Operation(summary = "方法論入力検証", description = "サインアップ時の方法論情報を保存せずに検証します。")
+    @Operation(summary = "方法論事前検証", description = "方法論情報を保存せずに検証します。")
     public ResponseEntity<BaseResponse> validateSignupMethodology(
             @Valid @RequestBody PartiCompanyMethodologyValidateRequest request) {
         return ResponseEntity.ok(BaseResponse.success(ResponseConstants.MSG_VALIDATION_SUCCESS));
     }
 
-    @PostMapping("/suspend")
-    @PreAuthorize("hasAnyRole('operator')")
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "参加企業停止", description = "指定された参加企業の利用を停止します。")
-    public ResponseEntity<SuspendCompanyResponse> suspendCompany(
-            @RequestBody @Valid SuspendCompanyRequest request) {
-
-        //企業IDがあるかどうか確認
-        Optional<ParticipatingCompany> companyOpt = companyRepository.findByCompanyId(request.getCompanyId());
-        if (companyOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(SuspendCompanyResponse.builder()
-                    .statusCode(ResponseConstants.NOT_FOUND)
-                    .message(ResponseConstants.MSG_NOT_FOUND)//MSG_NOT_FOUND(該当するリソースが見つかりませんでした。)
-                    .build());
-        }
-
-        //企業情報取得
-        ParticipatingCompany company = companyOpt.get();
-        //会社が停止されているかどうか確認
-        if (company.getSubscriptionStatus() == SubscriptionStatus.SUSPENDED) {
-            return ResponseEntity.badRequest().body(SuspendCompanyResponse.builder()
-                    .statusCode(ResponseConstants.BAD_REQUEST)
-                    //MSG_COMPANY_ALREADY_SUSPENDED("会社はすでに停止されています。)"
-                    .message(ResponseConstants.MSG_COMPANY_ALREADY_SUSPENDED)
-                    .build());
-        }
-
-        //Service実施
-        subscriptionService.suspendCompanyManually(request.getCompanyId(), request.getReason());
-        
-        return ResponseEntity.ok(SuspendCompanyResponse.builder()
-                .statusCode(ResponseConstants.OK)
-                .message(ResponseConstants.MSG_SUSPEND_SUCCESS)
-                .companyId(company.getCompanyId())
-                .companyName(company.getNameJa())
-                .build());
-    }
-
-    //運用・管理者のみ機能
-    @PostMapping("/reactivate")
-    @PreAuthorize("hasAnyRole('operator')")
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "参加企業再有効化", description = "停止中の参加企業を再有効化します。")
-    public ResponseEntity<ReactivationResponse> reactivateCompany(
-            @RequestBody @Valid ReactivationRequest request) {
-
-        Optional<ParticipatingCompany> companyOpt = companyRepository.findByCompanyId(request.getCompanyId());
-        if (companyOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(ReactivationResponse.builder()
-                    .statusCode(ResponseConstants.NOT_FOUND)
-                    .message(ResponseConstants.MSG_NOT_FOUND)
-                    .build());
-        }
-
-        ParticipatingCompany company = companyOpt.get();
-        if (company.getSubscriptionStatus() != SubscriptionStatus.SUSPENDED) {
-            return ResponseEntity.badRequest().body(ReactivationResponse.builder()
-                    .statusCode(ResponseConstants.BAD_REQUEST)
-                    .message(ResponseConstants.MSG_COMPANY_NOT_SUSPENDED)
-                    .build());
-        }
-
-        String paymentMethod = request.getPaymentMethod();
-        if (paymentMethod == null || paymentMethod.isEmpty()) {
-            paymentMethod = company.getPaymentMethod();
-            if (paymentMethod == null || paymentMethod.isEmpty()) {
-                paymentMethod = "CREDIT_CARD";
-            }
-        }
-
-        BigDecimal amount = new BigDecimal("50000.00");
-        PaymentGatewayService.PaymentResult paymentResult = paymentGatewayService.processPayment(
-                company.getCompanyId(), paymentMethod, amount);
-
-        if (paymentResult.success()) {
-            subscriptionService.reactivateCompanyWithPayment(company, paymentMethod, paymentResult);
-            return ResponseEntity.ok(ReactivationResponse.builder()
-                    .statusCode(ResponseConstants.OK)
-                    .message(ResponseConstants.MSG_REACTIVATION_SUCCESS)
-                    .companyId(company.getCompanyId())
-                    .companyName(company.getNameJa())
-                    .isActive(true)
-                    .isSuspended(false)
-                    .build());
-        } else {
-            return ResponseEntity.status(402).body(ReactivationResponse.builder()
-                    .statusCode(ResponseConstants.BAD_REQUEST)
-                    .message(ResponseConstants.MSG_PAYMENT_FAILED + paymentResult.failureReason())
-                    .companyId(company.getCompanyId())
-                    .companyName(company.getNameJa())
-                    .isActive(false)
-                    .isSuspended(true)
-                    .build());
-        }
-    }
-
-    //マスターのみ機能
+    /**
+     * Creates a deletion request for the authenticated master user's company.
+     */
     @PostMapping("/{companyId}/deletion-request")
     @PreAuthorize("hasAnyRole('master')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "参加企業削除申請作成", description = "指定された参加企業の削除申請を作成します。")
+    @Operation(summary = "企業削除申請", description = "参加企業の削除申請を作成します。")
     public ResponseEntity<DeletionRequestResponse> createDeletionRequest(
             Authentication authentication,
             @PathVariable String companyId,
             @RequestBody @Valid CreateDeletionRequest request) {
         String operatorId = jwtUtil.extractUsername(authentication.getCredentials().toString());
         DeletionRequestResponse response = companyDeletionService.createDeletionRequest(
-                companyId, operatorId, request.getReason());
+                companyId,
+                operatorId,
+                request.getReason()
+        );
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
-    //運用・管理者のみ機能
+    /**
+     * Approves a pending company deletion request.
+     */
     @PostMapping("/{companyId}/deletion-approve")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "参加企業削除申請承認", description = "指定された参加企業の削除申請を承認します。")
+    @Operation(summary = "企業削除申請承認", description = "指定した企業の削除申請を承認します。")
     public ResponseEntity<DeletionRequestResponse> approveDeletionRequest(
             Authentication authentication,
             @PathVariable String companyId,
             @RequestBody @Valid ApproveDeletionRequest request) {
         String operatorId = jwtUtil.extractUsername(authentication.getCredentials().toString());
-        DeletionRequestResponse response = companyDeletionService.approveDeletionRequest(
-                companyId, operatorId);
+        DeletionRequestResponse response = companyDeletionService.approveDeletionRequest(companyId, operatorId);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
-    //運用・管理者のみ機能
+    /**
+     * Rejects a pending company deletion request.
+     */
     @PostMapping("/{companyId}/deletion-reject")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "参加企業削除申請却下", description = "指定された参加企業の削除申請を却下します。")
+    @Operation(summary = "企業削除申請却下", description = "指定した企業の削除申請を却下します。")
     public ResponseEntity<DeletionRequestResponse> rejectDeletionRequest(
             Authentication authentication,
             @PathVariable String companyId,
             @RequestBody @Valid RejectDeletionRequest request) {
         String operatorId = jwtUtil.extractUsername(authentication.getCredentials().toString());
         DeletionRequestResponse response = companyDeletionService.rejectDeletionRequest(
-                companyId, operatorId, request.getRejectionReason());
+                companyId,
+                operatorId,
+                request.getRejectionReason()
+        );
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 }

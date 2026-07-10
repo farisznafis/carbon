@@ -23,6 +23,7 @@ import com.kct.jcredit.core_backend.dto.response.UpdatePartiCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.details.CompanyInfoResponse;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
+import com.kct.jcredit.core_backend.enums.CompanyStatus;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.service.impl.PartiCompanyServiceImpl;
 
@@ -254,7 +255,7 @@ class PartiCompanyServiceTest {
     @DisplayName("正常系: isSuspendedがtrueの企業の更新")
     void updateCompany_Success_SuspendedCompany() {
         // Given
-        testCompany.setSubscriptionStatus(SubscriptionStatus.SUSPENDED);;
+        testCompany.setCompanyStatus(CompanyStatus.SUSPENDED);
         updateRequest.setPhoneNumber("03-9999-9999");
 
         when(participatingCompanyRepository.findByCompanyId(TEST_COMPANY_ID))

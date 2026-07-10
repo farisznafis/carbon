@@ -2,7 +2,8 @@ package com.kct.jcredit.core_backend.enums;
 
 public enum SubscriptionStatus {
     ACTIVE,
-    SUSPENDED,
+    PENDING_RENEWAL,
+    PAST_DUE,
     EXPIRED,
-    PENDING_RENEWAL
+    CANCELLED
 }

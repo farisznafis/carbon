@@ -5,6 +5,7 @@ import lombok.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.kct.jcredit.core_backend.converter.StringListJsonConverter;
 import com.kct.jcredit.core_backend.entity.base.BaseEntity;
+import com.kct.jcredit.core_backend.enums.CompanyStatus;
 import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
 
 import java.time.LocalDate;
@@ -91,8 +92,10 @@ public class ParticipatingCompany extends BaseEntity {
     @Column(name = "activity_information", columnDefinition = "TEXT")
     private String activityInformation;
 
-    @Column(name = "reg_status", length = 20)
-    private String regStatus;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "company_status", nullable = false, length = 20)
+    @Builder.Default
+    private CompanyStatus companyStatus = CompanyStatus.PENDING;
 
     @Column(name = "contract_end_date", nullable = false)
     private LocalDate contractEndDate;
@@ -105,13 +108,8 @@ public class ParticipatingCompany extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "subscription_status", length = 20)
+    @Builder.Default
     private SubscriptionStatus subscriptionStatus = SubscriptionStatus.ACTIVE;
-
-    @Column(name = "suspension_reason", length = 500)
-    private String suspensionReason;
-
-    @Column(name = "suspension_date")
-    private LocalDateTime suspensionDate;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
@@ -119,12 +117,21 @@ public class ParticipatingCompany extends BaseEntity {
     @Column(name = "deleted_by", length = 100)
     private String deletedBy;
 
+    /**
+     * Returns whether the company is blocked from operational access.
+     */
     public boolean isSuspended() {
-        return subscriptionStatus == SubscriptionStatus.SUSPENDED;
+        return companyStatus == CompanyStatus.SUSPENDED;
     }
 
+    /**
+     * Returns whether both the company lifecycle and its contract allow service usage.
+     */
     public boolean isActiveSubscription() {
-        return subscriptionStatus == SubscriptionStatus.ACTIVE && contractEndDate != null && !contractEndDate.isBefore(LocalDate.now());
+        return companyStatus == CompanyStatus.ACTIVE
+                && subscriptionStatus == SubscriptionStatus.ACTIVE
+                && contractEndDate != null
+                && !contractEndDate.isBefore(LocalDate.now());
     }
 
     

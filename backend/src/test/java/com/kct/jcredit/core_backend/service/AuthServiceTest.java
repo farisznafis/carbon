@@ -42,6 +42,7 @@ import com.kct.jcredit.core_backend.entity.OperatingUser;
 import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
+import com.kct.jcredit.core_backend.enums.CompanyStatus;
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
@@ -126,6 +127,7 @@ public class AuthServiceTest {
         ParticipatingCompany existingCompany = new ParticipatingCompany();
         existingCompany.setId(123);
         existingCompany.setCompanyId("123");
+        existingCompany.setCompanyStatus(CompanyStatus.ACTIVE);
         when(participatingCompanyRepository.findByCompanyId("123"))
                 .thenReturn(Optional.of(existingCompany));
         
@@ -205,6 +207,7 @@ public class AuthServiceTest {
         ParticipatingCompany existingCompany = new ParticipatingCompany();
         existingCompany.setId(123);
         existingCompany.setCompanyId("123");
+        existingCompany.setCompanyStatus(CompanyStatus.ACTIVE);
         when(participatingCompanyRepository.findByCompanyId("123"))
                 .thenReturn(Optional.of(existingCompany));
         
@@ -284,6 +287,7 @@ public class AuthServiceTest {
         ParticipatingCompany existingCompany = new ParticipatingCompany();
         existingCompany.setId(123);
         existingCompany.setCompanyId("123");
+        existingCompany.setCompanyStatus(CompanyStatus.ACTIVE);
         when(participatingCompanyRepository.findByCompanyId("123"))
                 .thenReturn(Optional.of(existingCompany));
         
@@ -346,6 +350,7 @@ public class AuthServiceTest {
         ParticipatingCompany existingCompany = new ParticipatingCompany();
         existingCompany.setId(123);
         existingCompany.setCompanyId("123");
+        existingCompany.setCompanyStatus(CompanyStatus.ACTIVE);
         when(participatingCompanyRepository.findByCompanyId("123"))
                 .thenReturn(Optional.of(existingCompany));
         
@@ -420,6 +425,7 @@ public class AuthServiceTest {
         ParticipatingCompany existingCompany = new ParticipatingCompany();
         existingCompany.setId(123);
         existingCompany.setCompanyId("123");
+        existingCompany.setCompanyStatus(CompanyStatus.ACTIVE);
         when(participatingCompanyRepository.findByCompanyId("123"))
                 .thenReturn(Optional.of(existingCompany));
         
@@ -501,6 +507,7 @@ public class AuthServiceTest {
         ParticipatingCompany existingCompany = new ParticipatingCompany();
         existingCompany.setId(123);
         existingCompany.setCompanyId("123");
+        existingCompany.setCompanyStatus(CompanyStatus.ACTIVE);
         when(participatingCompanyRepository.findByCompanyId("123"))
                 .thenReturn(Optional.of(existingCompany));
         
@@ -583,6 +590,7 @@ public class AuthServiceTest {
         ParticipatingCompany existingCompany = new ParticipatingCompany();
         existingCompany.setId(123);
         existingCompany.setCompanyId("123");
+        existingCompany.setCompanyStatus(CompanyStatus.ACTIVE);
         when(participatingCompanyRepository.findByCompanyId("123"))
                 .thenReturn(Optional.of(existingCompany));
         

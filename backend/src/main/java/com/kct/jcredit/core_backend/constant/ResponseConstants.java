@@ -110,5 +110,22 @@ public class ResponseConstants {
     public static final String MSG_DELETION_ALREADY_PROCESSED = "この削除申請は既に処理されています。";
     public static final String MSG_LIMIT_EXCEEDED = "上限に達しています。";
     
+    // Company lifecycle messages
+    public static final String MSG_COMPANY_LIST_RETRIEVED = "企業一覧を取得しました。";
+    public static final String MSG_COMPANY_NOT_FOUND = "対象の企業が見つかりませんでした。";
+    public static final String MSG_COMPANY_STATUS_CONFLICT = "現在の企業ステータスではこの操作を実行できません。";
+    public static final String MSG_SUSPENSION_ALREADY_ACTIVE = "同じ理由の停止がすでに有効です。";
+    public static final String MSG_SUSPENSION_CREATED = "企業の利用停止を登録しました。";
+    public static final String MSG_SUSPENSION_NOT_FOUND = "対象の停止情報が見つかりませんでした。";
+    public static final String MSG_SUSPENSION_ALREADY_RESOLVED = "この停止情報はすでに解除されています。";
+    public static final String MSG_SUSPENSION_LIST_RETRIEVED = "企業の停止履歴を取得しました。";
+    public static final String MSG_SUSPENSION_RESOLVED = "企業の停止理由を解除しました。";
+    public static final String MSG_SUSPENSION_RESOLVED_COMPANY_STILL_SUSPENDED =
+            "停止理由を解除しましたが、他の停止理由が残っているため企業は停止中です。";
+    public static final String MSG_PAYMENT_METHOD_REQUIRED = "請求理由の停止解除には支払方法が必要です。";
+    public static final String MSG_PAYMENT_METHOD_NOT_ALLOWED = "請求以外の停止解除に支払方法は指定できません。";
+    public static final String MSG_BILLING_PAYMENT_FAILED = "支払いに失敗したため、請求理由の停止を解除できませんでした。";
+    public static final String MSG_COMPANY_ACCESS_SUSPENDED = "企業は現在利用停止中です。";
+
     private ResponseConstants() {}
 }
