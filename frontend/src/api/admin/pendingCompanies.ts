@@ -5,12 +5,14 @@ import type {
   PendingCompaniesResponse,
   PendingCompanyApiItem,
   PendingCompanyItem,
+  PendingCompanyStatus,
 } from './types';
 
 export type {
   Methodology,
   PendingCompanyEquipmentItem,
   PendingCompanyItem,
+  PendingCompanyStatus,
 } from './types';
 
 function resolvePendingCompanyId(item: PendingCompanyApiItem, index: number): string {
@@ -55,6 +57,35 @@ function resolveAddress(item: PendingCompanyApiItem): string {
 
 function normalizeOptionalString(value?: string | null): string | undefined {
   return value ?? undefined;
+}
+
+function resolvePendingCompanyStatus(
+  item: PendingCompanyApiItem,
+): PendingCompanyStatus {
+  const rawStatus = (
+    item.status ??
+    item.applicationStatus ??
+    item.statusLabel ??
+    ''
+  ).toLowerCase();
+
+  if (rawStatus.includes('却下') || rawStatus.includes('reject')) {
+    return '却下';
+  }
+
+  if (rawStatus.includes('承認') || rawStatus.includes('approve')) {
+    return '承認済み';
+  }
+
+  if (
+    rawStatus.includes('停止') ||
+    rawStatus.includes('suspend') ||
+    resolveIsSuspended(item)
+  ) {
+    return '停止';
+  }
+
+  return '申請受付';
 }
 
 function resolveIsSuspended(item: PendingCompanyApiItem): boolean {
@@ -110,6 +141,7 @@ export async function getPendingCompanies(): Promise<PendingCompanyItem[]> {
   return items.map((item, index) => ({
     id: resolvePendingCompanyId(item, index),
     companyId: resolveCompanyId(item, index),
+    status: resolvePendingCompanyStatus(item),
     nameJA: resolveCompanyName(item),
     nameFurigana: resolveNameFurigana(item),
     nameEN: resolveNameEN(item),

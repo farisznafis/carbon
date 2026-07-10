@@ -209,6 +209,7 @@ export type Methodology = {
 export type PendingCompanyItem = {
   id: string;
   companyId: string;
+  status: PendingCompanyStatus;
   nameJA: string;
   nameFurigana?: string;
   nameEN?: string;
@@ -235,10 +236,15 @@ export type PendingCompanyItem = {
   methodologies?: Methodology[];
 };
 
+export type PendingCompanyStatus = '申請受付' | '却下' | '承認済み' | '停止';
+
 export type PendingCompanyApiItem = {
   id?: string;
   requestId?: string;
   companyId?: string;
+  status?: string | null;
+  applicationStatus?: string | null;
+  statusLabel?: string | null;
   nameJA?: string;
   nameFurigana?: string;
   nameKana?: string;
