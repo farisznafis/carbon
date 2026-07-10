@@ -10,7 +10,6 @@ type AdminCompanyApplicationsTableProps = {
   emptyMessage: string;
   onDetails: (item: AdminCompanyListItem) => void;
   onReview: (item: AdminCompanyListItem) => void;
-  onSuspend?: (item: AdminCompanyListItem) => void;
   onResolveSuspension?: (item: AdminCompanyListItem) => void;
 };
 
@@ -30,7 +29,7 @@ const statusMeta: Record<
     className: 'bg-red-100 text-red-800',
   },
   ACTIVE: {
-    label: '利用中',
+    label: '承認済み',
     className: 'bg-emerald-100 text-emerald-800',
   },
   SUSPENDED: {
@@ -67,18 +66,16 @@ function ActionButtons({
   item,
   onDetails,
   onReview,
-  onSuspend,
   onResolveSuspension,
 }: {
   item: AdminCompanyListItem;
   onDetails: (item: AdminCompanyListItem) => void;
   onReview: (item: AdminCompanyListItem) => void;
-  onSuspend?: (item: AdminCompanyListItem) => void;
   onResolveSuspension?: (item: AdminCompanyListItem) => void;
 }) {
   if (item.status === 'PENDING') {
     return (
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-start gap-2">
         <Button type="button" variant="outline" onClick={() => onDetails(item)}>
           詳細
         </Button>
@@ -91,16 +88,9 @@ function ActionButtons({
 
   if (item.status === 'ACTIVE') {
     return (
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-start">
         <Button type="button" variant="outline" onClick={() => onDetails(item)}>
           詳細
-        </Button>
-        <Button
-          type="button"
-          variant="destructive"
-          onClick={() => onSuspend?.(item)}
-        >
-          停止
         </Button>
       </div>
     );
@@ -108,7 +98,7 @@ function ActionButtons({
 
   if (item.status === 'SUSPENDED') {
     return (
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-start gap-2">
         <Button type="button" variant="outline" onClick={() => onDetails(item)}>
           詳細
         </Button>
@@ -120,7 +110,7 @@ function ActionButtons({
   }
 
   return (
-    <div className="flex justify-end">
+    <div className="flex justify-start gap-2">
       <Button type="button" variant="outline" onClick={() => onDetails(item)}>
         詳細
       </Button>
@@ -133,7 +123,6 @@ export function AdminCompanyApplicationsTable({
   emptyMessage,
   onDetails,
   onReview,
-  onSuspend,
   onResolveSuspension,
 }: AdminCompanyApplicationsTableProps) {
   return (
@@ -172,7 +161,6 @@ export function AdminCompanyApplicationsTable({
               item={item}
               onDetails={onDetails}
               onReview={onReview}
-              onSuspend={onSuspend}
               onResolveSuspension={onResolveSuspension}
             />
           </div>

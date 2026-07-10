@@ -3,12 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { ApiError } from '@/api/_shared/errors';
 import type {
   AdminCompanyListItem,
-  CompanySort,
   CompanyStatus,
   CompanySuspension,
   Pagination,
-  SortOrder,
-  SuspendCompanyPayload,
 } from '@/api/admin';
 import {
   approveAdminCompany,
@@ -16,7 +13,6 @@ import {
   getCompanySuspensions,
   rejectAdminCompany,
   resolveCompanySuspension,
-  suspendAdminCompany,
 } from '@/api/admin';
 import {
   updateAdminProjectStatus,
@@ -37,7 +33,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { CancelRequestHistoryTable, type CancelRequestItem } from '@/features/admin/dashboard/tables/CancelRequestHistoryTable';
 import { AdminCompanyApplicationsTable } from '@/features/admin/dashboard/tables/AdminCompanyApplicationsTable';
-import { CompanySuspendDialog } from '@/features/admin/dashboard/tables/CompanySuspendDialog';
 import { CompanySuspensionResolveDialog } from '@/features/admin/dashboard/tables/CompanySuspensionResolveDialog';
 import { PendingCompanyActionDialog } from '@/features/admin/dashboard/tables/PendingCompanyActionDialog';
 import { PendingCompanyApplicationDetail } from '@/features/admin/dashboard/tables/PendingCompanyApplicationDetail';
@@ -72,11 +67,6 @@ const DEFAULT_PAGINATION: Pagination = {
   totalPages: 1,
   nextPageToken: null,
   hasMore: false,
-};
-
-const DEFAULT_SUSPEND_PAYLOAD: SuspendCompanyPayload = {
-  reasonCode: 'ADMINISTRATIVE',
-  reasonDetail: '',
 };
 
 const adminDashboardTabs: Array<{
@@ -191,68 +181,6 @@ function AdminDashboardEmptyState({ children }: { children: ReactNode }) {
   );
 }
 
-function CompanyListFilters({
-  search,
-  sort,
-  sortOrder,
-  onSearchChange,
-  onSortChange,
-  onSortOrderChange,
-}: {
-  search: string;
-  sort: CompanySort;
-  sortOrder: SortOrder;
-  onSearchChange: (value: string) => void;
-  onSortChange: (value: CompanySort) => void;
-  onSortOrderChange: (value: SortOrder) => void;
-}) {
-  return (
-    <div className="grid gap-3 rounded-xl border border-border bg-card p-4 md:grid-cols-[minmax(0,1fr)_180px_140px]">
-      <label className="space-y-1">
-        <span className="text-small font-bold text-muted-foreground">検索</span>
-        <input
-          type="search"
-          maxLength={100}
-          value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="企業名・メールアドレスで検索"
-          className="h-11 w-full rounded-md border border-input bg-background px-4 text-body outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        />
-      </label>
-
-      <label className="space-y-1">
-        <span className="text-small font-bold text-muted-foreground">
-          並び替え
-        </span>
-        <select
-          value={sort}
-          onChange={(event) => onSortChange(event.target.value as CompanySort)}
-          className="h-11 w-full rounded-md border border-input bg-background px-3 text-body outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        >
-          <option value="createdAt">作成日</option>
-          <option value="updatedAt">更新日</option>
-          <option value="nameJa">企業名</option>
-          <option value="companyId">企業ID</option>
-        </select>
-      </label>
-
-      <label className="space-y-1">
-        <span className="text-small font-bold text-muted-foreground">順序</span>
-        <select
-          value={sortOrder}
-          onChange={(event) =>
-            onSortOrderChange(event.target.value as SortOrder)
-          }
-          className="h-11 w-full rounded-md border border-input bg-background px-3 text-body outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        >
-          <option value="desc">降順</option>
-          <option value="asc">昇順</option>
-        </select>
-      </label>
-    </div>
-  );
-}
-
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -296,9 +224,6 @@ const AdminDashboard = () => {
   const [applicationPage, setApplicationPage] = useState(1);
   const [participatingPage, setParticipatingPage] = useState(1);
   const [companyLimit, setCompanyLimit] = useState(20);
-  const [companySearch, setCompanySearch] = useState('');
-  const [companySort, setCompanySort] = useState<CompanySort>('createdAt');
-  const [companySortOrder, setCompanySortOrder] = useState<SortOrder>('desc');
   const [submitting, setSubmitting] = useState(false);
   const [actionFieldErrors, setActionFieldErrors] = useState<
     Record<string, string>
@@ -318,11 +243,6 @@ const AdminDashboard = () => {
   const [cancelRequestDialogOpen, setCancelRequestDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
-  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
-  const [suspendPayload, setSuspendPayload] = useState<SuspendCompanyPayload>(
-    DEFAULT_SUSPEND_PAYLOAD,
-  );
-
   const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
   const [resolveLoading, setResolveLoading] = useState(false);
   const [activeSuspensions, setActiveSuspensions] = useState<
@@ -339,10 +259,7 @@ const AdminDashboard = () => {
 
     try {
       const commonParams = {
-        search: companySearch.trim() || undefined,
         limit: companyLimit,
-        sort: companySort,
-        sortOrder: companySortOrder,
       };
 
       const [applications, participating] = await Promise.all([
@@ -372,9 +289,6 @@ const AdminDashboard = () => {
   }, [
     applicationPage,
     companyLimit,
-    companySearch,
-    companySort,
-    companySortOrder,
     participatingPage,
   ]);
 
@@ -415,21 +329,6 @@ const AdminDashboard = () => {
   const resetCompanyPages = () => {
     setApplicationPage(1);
     setParticipatingPage(1);
-  };
-
-  const handleCompanySearchChange = (value: string) => {
-    setCompanySearch(value.slice(0, 100));
-    resetCompanyPages();
-  };
-
-  const handleCompanySortChange = (value: CompanySort) => {
-    setCompanySort(value);
-    resetCompanyPages();
-  };
-
-  const handleCompanySortOrderChange = (value: SortOrder) => {
-    setCompanySortOrder(value);
-    resetCompanyPages();
   };
 
   const handleCompanyLimitChange = (value: number) => {
@@ -593,43 +492,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const openSuspendCompany = (item: AdminCompanyListItem) => {
-    setSelectedCompany(item);
-    setSuspendPayload(DEFAULT_SUSPEND_PAYLOAD);
-    setActionFieldErrors({});
-    setSuspendDialogOpen(true);
-  };
-
-  const handleSuspendDialogOpenChange = (open: boolean) => {
-    setSuspendDialogOpen(open);
-
-    if (!open) {
-      setSelectedCompany(null);
-      setSuspendPayload(DEFAULT_SUSPEND_PAYLOAD);
-      setActionFieldErrors({});
-    }
-  };
-
-  const handleConfirmSuspendCompany = async () => {
-    if (!selectedCompany) return;
-
-    setSubmitting(true);
-    setActionFieldErrors({});
-    try {
-      await suspendAdminCompany(selectedCompany.companyId, suspendPayload);
-      await reloadCompanyLists();
-      handleSuspendDialogOpenChange(false);
-      toast({ title: '企業アカウントを停止しました' });
-    } catch (error) {
-      setActionFieldErrors(getApiFieldErrors(error));
-      setCompanyListError(
-        getApiMessage(error, '企業アカウントの停止に失敗しました。'),
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const loadActiveSuspensions = async (companyId: string) => {
     setResolveLoading(true);
     setActionFieldErrors({});
@@ -747,6 +609,14 @@ const AdminDashboard = () => {
     );
   }
 
+  const showApplicationSection =
+    companyListLoading || Boolean(companyListError) || applicationCompanies.length > 0;
+  const showParticipatingSection =
+    !companyListError &&
+    (companyListLoading ||
+      participatingCompanies.length > 0 ||
+      !showApplicationSection);
+
   return (
     <div className="flex min-h-screen flex-col bg-card">
       <AdminDashboardHero />
@@ -759,90 +629,70 @@ const AdminDashboard = () => {
             value="companies"
             className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
-            <CompanyListFilters
-              search={companySearch}
-              sort={companySort}
-              sortOrder={companySortOrder}
-              onSearchChange={handleCompanySearchChange}
-              onSortChange={handleCompanySortChange}
-              onSortOrderChange={handleCompanySortOrderChange}
-            />
+            {showApplicationSection && (
+              <AdminDashboardSection
+                title="参加申請中の企業"
+                description="参加申請を受け付けた企業です。内容を確認し、承認または差し戻しを行ってください。"
+              >
+                {companyListLoading ? (
+                  <AdminDashboardEmptyState>読み込み中...</AdminDashboardEmptyState>
+                ) : companyListError ? (
+                  <AdminDashboardEmptyState>
+                    {companyListError}
+                  </AdminDashboardEmptyState>
+                ) : (
+                  <>
+                    <AdminCompanyApplicationsTable
+                      items={applicationCompanies}
+                      emptyMessage="参加申請中の企業はありません。"
+                      onDetails={openCompanyDetails}
+                      onReview={openCompanyReview}
+                    />
+                    <PaginationControls
+                      currentPage={applicationPagination.page}
+                      totalPages={applicationPagination.totalPages}
+                      totalItems={applicationPagination.totalItems}
+                      itemsPerPage={companyLimit}
+                      rowsPerPageOptions={[10, 20, 50, 100]}
+                      onPageChange={setApplicationPage}
+                      onItemsPerPageChange={handleCompanyLimitChange}
+                      className="mt-4"
+                    />
+                  </>
+                )}
+              </AdminDashboardSection>
+            )}
 
-            <AdminDashboardSection
-              title="参加申請中の企業"
-              description="参加申請を受け付けた企業です。内容を確認し、承認または差し戻しを行ってください。"
-              // action={
-              //   <Button
-              //     type="button"
-              //     variant="outline"
-              //     onClick={() => setCancelRequestDialogOpen(true)}
-              //     className="self-start sm:self-auto"
-              //   >
-              //     取消申請一覧
-              //   </Button>
-              // }
-            >
-              {companyListLoading ? (
-                <AdminDashboardEmptyState>読み込み中...</AdminDashboardEmptyState>
-              ) : companyListError ? (
-                <AdminDashboardEmptyState>
-                  {companyListError}
-                </AdminDashboardEmptyState>
-              ) : (
-                <>
-                  <AdminCompanyApplicationsTable
-                    items={applicationCompanies}
-                    emptyMessage="参加申請中の企業はありません。"
-                    onDetails={openCompanyDetails}
-                    onReview={openCompanyReview}
-                  />
-                  <PaginationControls
-                    currentPage={applicationPagination.page}
-                    totalPages={applicationPagination.totalPages}
-                    totalItems={applicationPagination.totalItems}
-                    itemsPerPage={companyLimit}
-                    rowsPerPageOptions={[10, 20, 50, 100]}
-                    onPageChange={setApplicationPage}
-                    onItemsPerPageChange={handleCompanyLimitChange}
-                    className="mt-4"
-                  />
-                </>
-              )}
-            </AdminDashboardSection>
-
-            <AdminDashboardSection
-              title="参加企業"
-              description="承認済みの参加企業です。企業情報と運用状況を確認できます。"
-            >
-              {companyListLoading ? (
-                <AdminDashboardEmptyState>読み込み中...</AdminDashboardEmptyState>
-              ) : companyListError ? (
-                <AdminDashboardEmptyState>
-                  {companyListError}
-                </AdminDashboardEmptyState>
-              ) : (
-                <>
-                  <AdminCompanyApplicationsTable
-                    items={participatingCompanies}
-                    emptyMessage="参加企業はありません。"
-                    onDetails={openCompanyDetails}
-                    onReview={openCompanyReview}
-                    onSuspend={openSuspendCompany}
-                    onResolveSuspension={openResolveSuspension}
-                  />
-                  <PaginationControls
-                    currentPage={participatingPagination.page}
-                    totalPages={participatingPagination.totalPages}
-                    totalItems={participatingPagination.totalItems}
-                    itemsPerPage={companyLimit}
-                    rowsPerPageOptions={[10, 20, 50, 100]}
-                    onPageChange={setParticipatingPage}
-                    onItemsPerPageChange={handleCompanyLimitChange}
-                    className="mt-4"
-                  />
-                </>
-              )}
-            </AdminDashboardSection>
+            {showParticipatingSection && (
+              <AdminDashboardSection
+                title="参加企業"
+                description="承認済みの参加企業です。企業情報と運用状況を確認できます。"
+              >
+                {companyListLoading ? (
+                  <AdminDashboardEmptyState>読み込み中...</AdminDashboardEmptyState>
+                ) : (
+                  <>
+                    <AdminCompanyApplicationsTable
+                      items={participatingCompanies}
+                      emptyMessage="参加企業はありません。"
+                      onDetails={openCompanyDetails}
+                      onReview={openCompanyReview}
+                      onResolveSuspension={openResolveSuspension}
+                    />
+                    <PaginationControls
+                      currentPage={participatingPagination.page}
+                      totalPages={participatingPagination.totalPages}
+                      totalItems={participatingPagination.totalItems}
+                      itemsPerPage={companyLimit}
+                      rowsPerPageOptions={[10, 20, 50, 100]}
+                      onPageChange={setParticipatingPage}
+                      onItemsPerPageChange={handleCompanyLimitChange}
+                      className="mt-4"
+                    />
+                  </>
+                )}
+              </AdminDashboardSection>
+            )}
           </TabsContent>
 
           <TabsContent
@@ -939,17 +789,6 @@ const AdminDashboard = () => {
         onRejectReasonChange={setRejectReason}
         onConfirm={handleConfirmPendingCompany}
         isSubmitting={submitting}
-      />
-
-      <CompanySuspendDialog
-        open={suspendDialogOpen}
-        item={selectedCompany}
-        payload={suspendPayload}
-        fieldErrors={actionFieldErrors}
-        isSubmitting={submitting}
-        onOpenChange={handleSuspendDialogOpenChange}
-        onPayloadChange={setSuspendPayload}
-        onConfirm={handleConfirmSuspendCompany}
       />
 
       <CompanySuspensionResolveDialog

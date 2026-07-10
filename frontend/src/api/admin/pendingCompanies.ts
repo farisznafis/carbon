@@ -42,6 +42,11 @@ const DEFAULT_PAGINATION: Pagination = {
   hasMore: false,
 };
 
+const inflightCompanyListRequests = new Map<
+  string,
+  Promise<AdminCompanyListResponse>
+>();
+
 function appendParam(
   params: URLSearchParams,
   key: string,
@@ -98,15 +103,24 @@ function normalizeCompanyListResponse(
 export async function getAdminCompanies(
   params: GetAdminCompaniesParams = {},
 ): Promise<AdminCompanyListResponse> {
-  const response = await apiRequest<AdminCompanyListResponse>(
-    `/admin/companies${buildCompanyListQuery(params)}`,
-    {
-      method: 'GET',
-      fallbackErrorMessage: 'Failed to fetch companies',
-    },
-  );
+  const path = `/admin/companies${buildCompanyListQuery(params)}`;
+  const inflightRequest = inflightCompanyListRequests.get(path);
 
-  return normalizeCompanyListResponse(response);
+  if (inflightRequest) {
+    return inflightRequest;
+  }
+
+  const request = apiRequest<AdminCompanyListResponse>(path, {
+    method: 'GET',
+    fallbackErrorMessage: 'Failed to fetch companies',
+  })
+    .then(normalizeCompanyListResponse)
+    .finally(() => {
+      inflightCompanyListRequests.delete(path);
+    });
+
+  inflightCompanyListRequests.set(path, request);
+  return request;
 }
 
 type RawCompanySuspensionListResponse = Partial<CompanySuspensionListResponse> & {
@@ -243,8 +257,6 @@ export async function getPendingCompanies(): Promise<PendingCompanyItem[]> {
     status: ['PENDING', 'REJECTED'],
     page: 1,
     limit: 100,
-    sort: 'createdAt',
-    sortOrder: 'desc',
   });
 
   return response.companies.map(toLegacyPendingCompany);
