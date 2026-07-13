@@ -204,13 +204,13 @@ formValues,
                               {...rest}
                               checked={value}
                               onChange={(e) => field.onChange(e.target.checked)}
-                              className="w-5 h-5 rounded-sm border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-400 align-middle"
+                              className="h-5 w-5 rounded-sm border-input align-middle text-primary focus:ring-2 focus:ring-ring"
                             />
                           </FormControl>
                           <div className="flex flex-col">
                             <FormLabel htmlFor="contractAgreed" className="text-sm font-medium leading-none">
                               蜷梧э縺励∪縺・                            </FormLabel>
-                            <FormMessage className="text-xs text-red-500 mt-1" /> {/* displays validation error */}
+                            <FormMessage className="mt-1 text-xs text-destructive" /> {/* displays validation error */}
                           </div>
                         </FormItem>
                       );

@@ -95,7 +95,7 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                     <FormControl>
                       <Checkbox checked={field.value} onCheckedChange={field.onChange} 
-                      className='w-5 h-5 rounded-none border-gray-300'/>
+                      className='h-5 w-5 rounded-none border-input'/>
                     </FormControl>
                     <div className="flex-1 leading-none">
                       <FormLabel className="text-sm font-semibold cursor-pointer leading-relaxed">
@@ -119,7 +119,7 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                     <FormControl>
                       <Checkbox checked={field.value} onCheckedChange={field.onChange} 
-                      className='w-5 h-5 rounded-none border-gray-300'/>
+                      className='h-5 w-5 rounded-none border-input'/>
                     </FormControl>
                     <div className="flex-1 leading-none">
                       <FormLabel className="text-sm font-semibold cursor-pointer leading-relaxed">
@@ -143,7 +143,7 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                     <FormControl>
                       <Checkbox checked={field.value} onCheckedChange={field.onChange} 
-                      className='w-5 h-5 rounded-none border-gray-300'/>
+                      className='h-5 w-5 rounded-none border-input'/>
                     </FormControl>
                     <div className="flex-1 leading-none">
                       <FormLabel className="text-sm font-semibold cursor-pointer leading-relaxed">
@@ -167,7 +167,7 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                     <FormControl>
                       <Checkbox checked={field.value} onCheckedChange={field.onChange} 
-                      className='w-5 h-5 rounded-none border-gray-300'/>
+                      className='h-5 w-5 rounded-none border-input'/>
                     </FormControl>
                     <div className="flex-1 leading-none">
                       <FormLabel className="text-sm font-semibold cursor-pointer leading-relaxed">
@@ -260,7 +260,7 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                       <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                         <FormControl>
                           <Checkbox checked={field.value} onCheckedChange={field.onChange} 
-                          className='w-5 h-5 rounded-none border-gray-300'/>
+                          className='h-5 w-5 rounded-none border-input'/>
                         </FormControl>
                         <div className="flex-1 leading-none">
                           <FormLabel className="text-sm font-normal cursor-pointer leading-relaxed">
@@ -295,7 +295,7 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                             href="https://policies.env.go.jp/earth/ghg-santeikohyo/search.html"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
+                            className="text-primary hover:underline"
                           >
                             https://policies.env.go.jp/earth/ghg-santeikohyo/search.html
                           </a>

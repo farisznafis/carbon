@@ -76,31 +76,31 @@ export function FileSelectButton({
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           className={cn(
-            'flex min-h-[66px] w-full cursor-pointer items-center gap-2 rounded-[6px] border-2 border-dashed py-3 pl-4 pr-4 transition-all duration-200',
+            'flex min-h-16 w-full cursor-pointer items-center gap-2 rounded-md border-2 border-dashed px-4 py-3 transition-all duration-200',
             isDragging
-              ? 'border-primary bg-primary/20 scale-[1.02]'
+              ? 'scale-[1.02] border-primary bg-primary/20'
               : hasFile
-                ? 'border-primary bg-[#EFF6EF] hover:bg-[#E8F1E8]'
-                : 'border-[#B1B5BB] bg-[#F6F6F6] hover:border-primary hover:bg-secondary/40',
+                ? 'border-primary bg-primary/10 hover:bg-primary/15'
+                : 'border-input bg-background hover:border-primary hover:bg-secondary/40',
           )}
         >
           <span
             className={cn(
-              'flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border text-primary transition-all duration-200',
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-primary transition-all duration-200',
               isDragging
-                ? 'border-primary bg-white scale-110'
+                ? 'scale-110 border-primary bg-card'
                 : hasFile
-                  ? 'border-primary bg-white'
-                  : 'border-[#B1B5BB] bg-secondary',
+                  ? 'border-primary bg-card'
+                  : 'border-input bg-secondary',
             )}
           >
             <IconCloudUpload className={cn('h-6 w-6 transition-transform duration-200', isDragging && 'scale-110')} />
           </span>
           <span className="flex min-w-0 flex-1 flex-col gap-0.5 xl:flex-row xl:items-center xl:gap-1">
-            <span className="truncate text-base font-normal leading-7 text-[#1F2628]">
+            <span className="truncate text-base font-normal leading-7 text-foreground">
               {value?.name || 'ファイルを選択'}
             </span>
-            <span className="text-sm font-normal leading-5 text-black/70">
+            <span className="text-sm font-normal leading-5 text-muted-foreground">
               {supportedFormats}
             </span>
           </span>
@@ -120,7 +120,7 @@ export function FileSelectButton({
           }}
         />
         {helperText && (
-          <p className="text-sm font-normal leading-5 text-slate-500">
+          <p className="text-sm font-normal leading-5 text-muted-foreground">
             {helperText}
           </p>
         )}
@@ -132,7 +132,7 @@ export function FileSelectButton({
     <div className={cn('space-y-2', className)}>
       <label
         htmlFor={id}
-        className="flex w-fit cursor-pointer items-center rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-800 shadow-sm hover:bg-gray-300"
+        className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
       >
         <IconCloudUpload className="mr-2 h-4 w-4" />
         {label}
@@ -146,7 +146,7 @@ export function FileSelectButton({
           onChange(file);
         }}
       />
-      {value && <span className="text-sm text-gray-700">{value.name}</span>}
+      {value && <span className="text-sm text-muted-foreground">{value.name}</span>}
     </div>
   );
 }

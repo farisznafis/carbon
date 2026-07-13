@@ -44,7 +44,7 @@ export function SolarPowerEquipmentForm({ form }: Readonly<SolarPowerEquipmentFo
                 <div className="space-y-2">
                   <label
                     htmlFor="equipment-op-date-file"
-                    className="cursor-pointer text-sm text-gray-800 bg-gray-200 hover:bg-gray-300 py-1 px-3 rounded-md shadow-sm flex items-center w-fit"
+                    className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
                   >
                     <Upload className="mr-2 h-4 w-4" />
                     ファイルを選択
@@ -60,7 +60,7 @@ export function SolarPowerEquipmentForm({ form }: Readonly<SolarPowerEquipmentFo
                     {...field}
                   />
                   {value && (
-                    <span className="text-sm text-gray-700">{value.name}</span>
+                    <span className="text-sm text-muted-foreground">{value.name}</span>
                   )}
                 </div>
               </FormControl>
@@ -98,7 +98,7 @@ export function SolarPowerEquipmentForm({ form }: Readonly<SolarPowerEquipmentFo
                 <div className="space-y-2">
                   <label
                     htmlFor="nominal-max-output-file"
-                    className="cursor-pointer text-sm text-gray-800 bg-gray-200 hover:bg-gray-300 py-1 px-3 rounded-md shadow-sm flex items-center w-fit"
+                    className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
                   >
                     <Upload className="mr-2 h-4 w-4" />
                     ファイルを選択
@@ -114,7 +114,7 @@ export function SolarPowerEquipmentForm({ form }: Readonly<SolarPowerEquipmentFo
                     {...field}
                   />
                   {value && (
-                    <span className="text-sm text-gray-700">{value.name}</span>
+                    <span className="text-sm text-muted-foreground">{value.name}</span>
                   )}
                 </div>
               </FormControl>
@@ -209,7 +209,7 @@ export function SolarPowerEquipmentForm({ form }: Readonly<SolarPowerEquipmentFo
                 <div className="space-y-2">
                   <label
                     htmlFor="pc-file"
-                    className="cursor-pointer text-sm text-gray-800 bg-gray-200 hover:bg-gray-300 py-1 px-3 rounded-md shadow-sm flex items-center w-fit"
+                    className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
                   >
                     <Upload className="mr-2 h-4 w-4" />
                     ファイルを選択
@@ -225,7 +225,7 @@ export function SolarPowerEquipmentForm({ form }: Readonly<SolarPowerEquipmentFo
                     {...field}
                   />
                   {value && (
-                    <span className="text-sm text-gray-700">{value.name}</span>
+                    <span className="text-sm text-muted-foreground">{value.name}</span>
                   )}
                 </div>
               </FormControl>
@@ -322,7 +322,7 @@ export function SolarPowerEquipmentForm({ form }: Readonly<SolarPowerEquipmentFo
                     <div className="space-y-2">
                       <label
                         htmlFor="battery-file"
-                        className="cursor-pointer text-sm text-gray-800 bg-gray-200 hover:bg-gray-300 py-1 px-3 rounded-md shadow-sm flex items-center w-fit"
+                        className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
                       >
                         <Upload className="mr-2 h-4 w-4" />
                         ファイルを選択
@@ -338,7 +338,7 @@ export function SolarPowerEquipmentForm({ form }: Readonly<SolarPowerEquipmentFo
                         {...field}
                       />
                       {value && (
-                        <span className="text-sm text-gray-700">{value.name}</span>
+                        <span className="text-sm text-muted-foreground">{value.name}</span>
                       )}
                     </div>
                   </FormControl>
@@ -380,7 +380,7 @@ export function SolarPowerEquipmentForm({ form }: Readonly<SolarPowerEquipmentFo
                 <div className="space-y-2">
                   <label
                     htmlFor="total-investment-file"
-                    className="cursor-pointer text-sm text-gray-800 bg-gray-200 hover:bg-gray-300 py-1 px-3 rounded-md shadow-sm flex items-center w-fit"
+                    className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
                   >
                     <Upload className="mr-2 h-4 w-4" />
                     ファイルを選択
@@ -396,7 +396,7 @@ export function SolarPowerEquipmentForm({ form }: Readonly<SolarPowerEquipmentFo
                     {...field}
                   />
                   {value && (
-                    <span className="text-sm text-gray-700">{value.name}</span>
+                    <span className="text-sm text-muted-foreground">{value.name}</span>
                   )}
                 </div>
               </FormControl>
@@ -477,7 +477,7 @@ export function SolarPowerEquipmentForm({ form }: Readonly<SolarPowerEquipmentFo
                 <div className="space-y-2">
                   <label
                     htmlFor="subsidy-name-file"
-                    className="cursor-pointer text-sm text-gray-800 bg-gray-200 hover:bg-gray-300 py-1 px-3 rounded-md shadow-sm flex items-center w-fit"
+                    className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
                   >
                     <Upload className="mr-2 h-4 w-4" />
                     ファイルを選択
@@ -493,7 +493,7 @@ export function SolarPowerEquipmentForm({ form }: Readonly<SolarPowerEquipmentFo
                     {...field}
                   />
                   {value && (
-                    <span className="text-sm text-gray-700">{value.name}</span>
+                    <span className="text-sm text-muted-foreground">{value.name}</span>
                   )}
                 </div>
               </FormControl>
@@ -544,7 +544,7 @@ export function SolarPowerEquipmentForm({ form }: Readonly<SolarPowerEquipmentFo
                 <div className="space-y-2">
                   <label
                     htmlFor="pre-purchase-unit-price-file"
-                    className="cursor-pointer text-sm text-gray-800 bg-gray-200 hover:bg-gray-300 py-1 px-3 rounded-md shadow-sm flex items-center w-fit"
+                    className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
                   >
                     <Upload className="mr-2 h-4 w-4" />
                     ファイルを選択
@@ -560,7 +560,7 @@ export function SolarPowerEquipmentForm({ form }: Readonly<SolarPowerEquipmentFo
                     {...field}
                   />
                   {value && (
-                    <span className="text-sm text-gray-700">{value.name}</span>
+                    <span className="text-sm text-muted-foreground">{value.name}</span>
                   )}
                 </div>
               </FormControl>

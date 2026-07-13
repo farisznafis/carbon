@@ -28,7 +28,7 @@ const statusMeta: Record<
   }
 > = {
   PENDING: {
-    label: '承認待ち',
+    label: '申請受付',
     className: 'bg-amber-100 text-amber-800',
   },
   REJECTED: {

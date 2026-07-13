@@ -371,31 +371,31 @@ function RecentDataBar({ row, onRegister }: RecentDataBarProps) {
 
       <div className='grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5'>
         <RecentMetricCard
-          icon={<Cpu className='h-5 w-5 shrink-0 text-[#699267]' />}
+          icon={<Cpu className='h-5 w-5 shrink-0 text-primary' />}
           label='制御機器稼働時間'
           value={formatNumber(row.ELPJ_control_value)}
           unit='時間'
         />
         <RecentMetricCard
-          icon={<Zap className='h-5 w-5 shrink-0 text-[#699267]' />}
+          icon={<Zap className='h-5 w-5 shrink-0 text-primary' />}
           label='発電量'
           value={formatNumber(row.ELpv_value)}
           unit='kWh'
         />
         <RecentMetricCard
-          icon={<HousePlug className='h-5 w-5 shrink-0 text-[#699267]' />}
+          icon={<HousePlug className='h-5 w-5 shrink-0 text-primary' />}
           label='自家消費量'
           value={formatNumber(row.ELpvr_value)}
           unit='kWh'
         />
         <RecentMetricCard
-          icon={<BatteryCharging className='h-5 w-5 shrink-0 text-[#699267]' />}
+          icon={<BatteryCharging className='h-5 w-5 shrink-0 text-primary' />}
           label='蓄電池放電量'
           value={formatNumber(batteryDischargeValue)}
           unit='kWh'
         />
         <RecentMetricCard
-          icon={<ChartNoAxesColumn className='h-5 w-5 shrink-0 text-[#699267]' />}
+          icon={<ChartNoAxesColumn className='h-5 w-5 shrink-0 text-primary' />}
           label='測定精度'
           value={formatNumber(row.ELPJ_accuracy)}
           unit='%'
@@ -730,7 +730,7 @@ const ProjectDetail = () => {
                 <CardContent className='px-7 pb-7'>
                   <dl className='grid grid-cols-1 gap-x-16 gap-y-5 md:grid-cols-2'>
                     <div className='flex items-start gap-3'>
-                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#1F2628]'>
+                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-foreground'>
                         <MapPin className='h-5 w-5' />
                       </span>
                       <div>
@@ -744,7 +744,7 @@ const ProjectDetail = () => {
                     </div>
 
                     <div className='flex items-start gap-3'>
-                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#1F2628]'>
+                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-foreground'>
                         <Layers className='h-5 w-5' />
                       </span>
                       <div>
@@ -758,7 +758,7 @@ const ProjectDetail = () => {
                     </div>
 
                     <div className='flex items-start gap-3'>
-                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#1F2628]'>
+                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-foreground'>
                         <Hash className='h-5 w-5' />
                       </span>
                       <div>
@@ -772,7 +772,7 @@ const ProjectDetail = () => {
                     </div>
 
                     <div className='flex items-start gap-3'>
-                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#1F2628]'>
+                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-foreground'>
                         <Calendar className='h-5 w-5' />
                       </span>
                       <div>

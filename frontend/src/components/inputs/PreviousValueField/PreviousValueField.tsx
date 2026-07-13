@@ -71,7 +71,7 @@ export const PreviousValueField: React.FC<PreviousValueFieldProps> = ({
         disabled={disabled}
       />
       {previousValue && (
-        <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+        <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
           <span>
             以前の値：{previousValue}
             {unit ? ` ${unit}` : ""}

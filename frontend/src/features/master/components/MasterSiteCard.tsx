@@ -26,7 +26,7 @@ export function MasterSiteCard({ site, onOpen }: MasterSiteCardProps) {
     <button
       type="button"
       onClick={() => onOpen(site)}
-      className="group grid min-h-[112px] w-full grid-cols-[minmax(0,1fr)_80px] overflow-hidden rounded-[8px] border border-border bg-card text-left shadow-app-sm transition hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:grid-cols-[minmax(0,1fr)_96px]"
+      className="group grid min-h-28 w-full grid-cols-[minmax(0,1fr)_80px] overflow-hidden rounded-lg border border-border bg-card text-left shadow-app-sm transition hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:grid-cols-[minmax(0,1fr)_96px]"
     >
       <div className="grid min-w-0 gap-5 px-5 py-5 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)] md:items-start md:px-7 xl:grid-cols-[minmax(0,1fr)_minmax(430px,0.75fr)]">
         <div className="min-w-0">
@@ -94,7 +94,7 @@ export function MasterSiteCard({ site, onOpen }: MasterSiteCardProps) {
         </div>
       </div>
 
-      <div className="flex h-full min-h-[112px] items-center justify-center">
+      <div className="flex h-full min-h-28 items-center justify-center">
         <button className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:bg-[#EEF2CE] hover:text-primary">
           <ChevronRight className="h-6 w-6" />
         </button>

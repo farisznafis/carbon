@@ -13,10 +13,10 @@ const buttonVariants = cva(
         primary: "bg-primary text-primary-foreground shadow-app-sm hover:bg-primary/90",
         destructive: "bg-destructive text-destructive-foreground shadow-app-sm hover:bg-destructive/90",
         secondary: "bg-secondary text-secondary-foreground shadow-app-sm hover:bg-secondary/80",
-        outline: "border border-border bg-card text-foreground shadow-app-sm hover:bg-slate-100",
-        subtle: "border border-border bg-card text-foreground shadow-app-sm hover:bg-slate-100",
+        outline: "border border-border bg-card text-foreground shadow-app-sm hover:bg-muted",
+        subtle: "border border-border bg-card text-foreground shadow-app-sm hover:bg-muted",
         cancel: "border border-border bg-card text-foreground shadow-app-sm hover:bg-muted",
-        ghost: "bg-transparent text-foreground hover:bg-slate-100",
+        ghost: "bg-transparent text-foreground hover:bg-muted",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

@@ -9,6 +9,7 @@ import {
   type SiteProject,
 } from '@/api/site';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { dashboardPageContainerClassName } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,7 +19,7 @@ import { cn } from '@/lib/utils';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 
-const pageContainer = 'mx-auto w-full max-w-[1200px] px-5 lg:px-8 xl:px-0';
+const pageContainer = dashboardPageContainerClassName;
 
 function formatNumber(value?: string | number | null) {
   if (value === null || value === undefined || value === '') return '-';
@@ -216,7 +217,7 @@ function ProjectStatus({ joined }: { joined: boolean }) {
       <span
         className={cn(
           'h-3 w-3 rounded-full',
-          joined ? 'bg-green-500' : 'bg-amber-500',
+          joined ? 'bg-success' : 'bg-warning',
         )}
       />
       {joined ? '実施中' : '非参加'}
@@ -529,7 +530,7 @@ const Dashboard = () => {
                   <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
                     <Factory className="h-6 w-6" />
                   </span>
-                  <h1 className="mt-1 text-[36px] leading-10 text-foreground">{site?.siteName || '拠点ダッシュボード'}</h1>
+                  <h1 className="mt-1 text-4xl leading-10 text-foreground">{site?.siteName || '拠点ダッシュボード'}</h1>
                 </div>
                 {user?.role === 'master' && activeSiteId && (
                   <Button

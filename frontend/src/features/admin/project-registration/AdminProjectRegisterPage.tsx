@@ -323,7 +323,7 @@ export const AdminProjectRegister: React.FC = () => {
               />
             );
           })}
-        {submitError && <p className='text-sm text-red-600'>{submitError}</p>}
+        {submitError && <p className='text-sm text-destructive'>{submitError}</p>}
       </ConfirmationLayout>
     );
   }
@@ -390,7 +390,7 @@ export const AdminProjectRegister: React.FC = () => {
               : '次へ'}
         </Button>
       </div>
-      {submitError && <p className='text-sm text-red-600'>{submitError}</p>}
+      {submitError && <p className='text-sm text-destructive'>{submitError}</p>}
     </FormPageWrapper>
   );
 };

@@ -104,7 +104,7 @@ export interface Column<T> {
 export interface Action<T> {
   label: string;
   onClick: (row: T) => void;
-  colorClass?: string; // Tailwind color e.g., "text-blue-500"
+  colorClass?: string; // Tailwind color utility, preferably a semantic design token.
 }
 
 interface ProTableProps<T> {
@@ -194,17 +194,16 @@ export function ProTable<T extends { id: string }>({
       )}
 
       {/* Table with fixed height */}
-      <div className={`overflow-y-auto ${height} border rounded`}>
+      <div className={`overflow-y-auto ${height} rounded-lg border border-border`}>
         <table className="w-full table-auto border-collapse">
-          <thead className="bg-gray-50 sticky top-0 z-10">
+          <thead className="sticky top-0 z-10 bg-muted/50">
             <tr>
               {columns.map((col) => (
                 <th
                   key={col.id ?? String(col.key)}
                   onClick={() => handleSort(col.key, col.sortable)}
-                  className={`text-left text-sm font-medium text-gray-600 px-4 py-2 cursor-pointer select-none ${col.truncate ? "truncate" : ""
-                    }`}
-                  style={{ maxWidth: col.maxWidth }}
+                  className={`cursor-pointer select-none px-4 py-2 text-left text-sm font-medium text-muted-foreground ${col.truncate ? "truncate" : ""
+                    } ${col.maxWidth ?? ""}`}
                 >
                   <div className="flex items-center gap-1">
                     {col.label}
@@ -215,7 +214,7 @@ export function ProTable<T extends { id: string }>({
                 </th>
               ))}
               {actions.length > 0 && (
-                <th className="text-right text-sm font-medium text-gray-600 px-4 py-2">
+                <th className="px-4 py-2 text-right text-sm font-medium text-muted-foreground">
 
                 </th>
               )}
@@ -236,8 +235,8 @@ export function ProTable<T extends { id: string }>({
                 <tr
                   key={row.id}
                   className={`
-                    ${i % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                    ${clickable ? "hover:bg-gray-100 cursor-pointer" : ""}
+                    ${i % 2 === 0 ? "bg-card" : "bg-muted/30"}
+                    ${clickable ? "cursor-pointer hover:bg-muted/60" : ""}
                   `}
                   onClick={clickable ? () => onRowClick?.(row) : undefined}
                 >
@@ -258,7 +257,7 @@ export function ProTable<T extends { id: string }>({
                         {actions.map((action) => (
                           <Button
                             key={action.label}
-                            className={action.colorClass || 'text-blue-500'}
+                            className={action.colorClass || 'text-primary'}
                             onClick={(e) => {
                               e.stopPropagation();
                               action.onClick(row);

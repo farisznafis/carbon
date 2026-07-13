@@ -20,6 +20,13 @@ import {
 } from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
+import {
+  dashboardEmptyStateClassName,
+  dashboardPageContainerClassName,
+  dashboardPageHeaderClassName,
+  dashboardTabsListClassName,
+  dashboardTabTriggerClassName,
+} from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -52,7 +59,7 @@ type AdminDashboardTabValue =
 
 type PendingCompanyActionMode = 'approve' | 'reject';
 
-const dashboardContainer = 'mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-0';
+const dashboardContainer = dashboardPageContainerClassName;
 
 const APPLICATION_STATUSES: CompanyStatus[] = ['PENDING', 'REJECTED'];
 const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
@@ -106,12 +113,9 @@ function AdminDashboardHero() {
   return (
     <header className="border-b border-border bg-background">
       <div
-        className={cn(
-          'flex min-h-[140px] items-center justify-center text-center',
-          dashboardContainer,
-        )}
+        className={dashboardPageHeaderClassName}
       >
-        <h1 className="leading-[48px] text-foreground">
+        <h1 className="text-foreground">
           運営者・管理者ダッシュボード
         </h1>
       </div>
@@ -120,17 +124,11 @@ function AdminDashboardHero() {
 }
 
 function AdminDashboardTabs() {
-  const triggerClassName = cn(
-    'h-12 rounded-xl border border-border bg-card px-4 py-2',
-    'text-body font-bold text-foreground shadow-app-sm transition-all duration-200',
-    'hover:border-primary/60 hover:bg-secondary/50',
-    'data-[state=active]:border-[#0d9488] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground',
-    'data-[state=active]:hover:bg-primary/90',
-  );
+  const triggerClassName = dashboardTabTriggerClassName;
 
   return (
     <div className="bg-card pt-6">
-      <TabsList className="mx-auto flex h-auto w-fit max-w-full flex-wrap items-center justify-center gap-2 rounded-none bg-transparent p-0">
+      <TabsList className={dashboardTabsListClassName}>
         {adminDashboardTabs.map((tab) => (
           <TabsTrigger
             key={tab.value}
@@ -172,7 +170,7 @@ function AdminDashboardSection({
 
 function AdminDashboardEmptyState({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-xl border border-dashed border-border bg-card px-6 py-10 text-center text-small text-muted-foreground">
+    <div className={dashboardEmptyStateClassName}>
       {children}
     </div>
   );
@@ -623,7 +621,7 @@ const AdminDashboard = () => {
       <Tabs defaultValue="companies" className="flex flex-1 flex-col bg-card">
         <AdminDashboardTabs />
 
-        <main className={cn('flex-1 space-y-10 py-6', dashboardContainer)}>
+        <main className={cn('flex-1 space-y-10 py-8', dashboardContainer)}>
           <TabsContent
             value="companies"
             className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"

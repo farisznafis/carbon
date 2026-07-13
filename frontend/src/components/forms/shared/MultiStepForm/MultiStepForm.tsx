@@ -54,7 +54,7 @@ export default function MultiStepForm() {
         {step > 1 && (
           <button
             onClick={prevStep}
-            className="px-4 py-2 border rounded hover:bg-gray-100"
+            className="rounded-md border border-border px-4 py-2 hover:bg-muted"
           >
             Back
           </button>
@@ -64,7 +64,7 @@ export default function MultiStepForm() {
             onClick={nextStep}
             disabled={!isStepValid()}
             className={`px-4 py-2 rounded text-white ${
-              isStepValid() ? "bg-blue-500 hover:bg-blue-600" : "bg-gray-300 cursor-not-allowed"
+              isStepValid() ? "bg-primary hover:bg-primary/90" : "cursor-not-allowed bg-disabled"
             }`}
           >
             Next
@@ -72,7 +72,7 @@ export default function MultiStepForm() {
         ) : (
           <button
             onClick={() => alert("Form submitted!")}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            className="rounded-md bg-success px-4 py-2 text-success-foreground hover:bg-success/90"
           >
             Confirm & Submit
           </button>

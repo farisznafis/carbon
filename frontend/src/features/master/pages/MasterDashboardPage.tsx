@@ -36,7 +36,6 @@ const MasterDashboard = () => {
   );
 
   const [loading, setLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -49,10 +48,6 @@ const MasterDashboard = () => {
 
       try {
         await fetchDashboardData(true);
-
-        if (isMounted) {
-          setLastUpdated(new Date());
-        }
       } catch (error) {
         if (isMounted) {
           setErrorMessage(
@@ -90,10 +85,7 @@ const MasterDashboard = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-card">
-      <MasterDashboardHero
-        companyName={companyName}
-        lastUpdated={lastUpdated}
-      />
+      <MasterDashboardHero companyName={companyName} />
 
       <Tabs 
         value={activeTab} 

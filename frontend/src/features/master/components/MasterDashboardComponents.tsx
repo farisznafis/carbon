@@ -4,69 +4,46 @@ import type { UserList } from '@/api/users';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MasterSiteCard } from '@/features/master/components/MasterSiteCard';
 import {
-  formatDashboardDateTime,
-  formatPersonName,
-} from '@/features/master/components/masterDashboardUtils';
+  dashboardEmptyStateClassName,
+  dashboardPageContainerClassName,
+  dashboardPageHeaderClassName,
+  dashboardTabsListClassName,
+  dashboardTabTriggerClassName,
+} from '@/components/layout/DashboardLayout';
+import { MasterSiteCard } from '@/features/master/components/MasterSiteCard';
+import { formatPersonName } from '@/features/master/components/masterDashboardUtils';
 import { cn } from '@/lib/utils';
 import { Building2, Mail, Plus, User } from 'lucide-react';
 
-const dashboardContainer = 'mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-0';
+const dashboardContainer = dashboardPageContainerClassName;
 
 export function MasterDashboardHero({
   companyName,
-  lastUpdated,
 }: {
   companyName: string;
-  lastUpdated: Date | null;
 }) {
   return (
     <header className="relative overflow-hidden border-b border-border bg-background">
-      <div className="relative flex min-h-[180px] flex-col items-center justify-center px-6 pt-10 text-center">
-        <p className="text-small text-muted-foreground">
-          {/* マスターダッシュボード */}
-        </p>
-        <h1 className="mt-2 max-w-5xl text-foreground">
+      <div className={cn('relative flex-col', dashboardPageHeaderClassName)}>
+        <h1 className="max-w-5xl text-foreground">
           {companyName}
         </h1>
-        {/* <p className="text-small mt-2 inline-flex items-center gap-2 text-muted-foreground">
-          サービスステータス
-          <span className="inline-flex items-center gap-1.5 text-foreground">
-            <span className="h-3 w-3 rounded-full bg-green-500" />
-            利用中
-          </span>
-        </p> */}
-      </div>
-
-      <div
-        className={cn(
-          'relative flex justify-end pb-8 text-sm font-medium leading-6 text-muted-foreground',
-          dashboardContainer,
-        )}
-      >
-        {/* 最終更新: {formatDashboardDateTime(lastUpdated)} */}
       </div>
     </header>
   );
 }
 
 export function MasterDashboardTabs() {
-  const triggerClassName = cn(
-    'group relative h-14 justify-center rounded-xl border py-3',
-    'text-lg font-bold leading-7 shadow-app-sm transition-all duration-300 ease-in-out',
-    'border-border bg-card text-black hover:border-primary/60 hover:bg-secondary/50',
-    'data-[state=active]:border-[#0d9488] data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-app-sm data-[state=active]:hover:bg-primary/90',
-    'data-[state=active]:scale-105',
-  );
+  const triggerClassName = dashboardTabTriggerClassName;
 
   return (
-    <div className="bg-card pt-8">
-      <TabsList className="mx-auto flex h-14 w-full items-start gap-4 rounded-none bg-transparent p-0 text-muted-foreground">
-        <TabsTrigger value="users" className={cn(triggerClassName, 'w-[130px] px-5')}>
+    <div className="bg-card pt-6">
+      <TabsList className={dashboardTabsListClassName}>
+        <TabsTrigger value="users" className={triggerClassName}>
           社員管理
         </TabsTrigger>
-        <TabsTrigger value="sites" className={cn(triggerClassName, 'w-[130px] px-5')}>
+        <TabsTrigger value="sites" className={triggerClassName}>
           拠点管理
         </TabsTrigger>
       </TabsList>
@@ -116,7 +93,7 @@ export function DashboardSection({
 
 export function DashboardEmptyState({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-[8px] border border-dashed border-border bg-card px-6 py-8 text-center text-sm font-medium text-muted-foreground">
+    <div className={dashboardEmptyStateClassName}>
       {children}
     </div>
   );
@@ -146,7 +123,7 @@ export function UserDashboardCard({
     user.role !== 'master' && !user.siteId && !user.siteName;
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-[8px] border border-border bg-card shadow-app-sm transition hover:border-primary/60 md:min-h-[112px] md:flex-row">
+    <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-app-sm transition hover:border-primary/60 md:min-h-28 md:flex-row">
       <div className="min-w-0 flex-1 px-5 py-5 md:px-7">
         <div className="flex flex-wrap items-center gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
