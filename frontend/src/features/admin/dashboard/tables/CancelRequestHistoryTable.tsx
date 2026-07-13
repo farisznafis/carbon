@@ -113,7 +113,7 @@ export function CancelRequestHistoryTable({
       title={
         showTitle ? (
           <p className='text-2xl font-bold flex items-center gap-2'>
-            取消一覧
+            responnya ini, tolong 
           </p>
         ) : undefined
       }

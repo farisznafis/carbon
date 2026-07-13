@@ -28,24 +28,10 @@ import {
   Zap,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
-import { mockRegistrationHistory } from './mockProjectDetailData';
 import { getMonitoringRecent } from '@/api/monitoring';
 import type { MonitoringData } from '@/api/monitoring';
 import ContributionTimeline from '@/components/data-display/ContributionTimeline';
 import { logger } from '@/lib/logger';
-import { usePagination } from '@/hooks/usePagination';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import {
   dashboardPageContainerClassName,
@@ -53,6 +39,7 @@ import {
   dashboardTabTriggerClassName,
 } from '@/components/layout/DashboardLayout';
 import { EquipmentList } from './components/EquipmentList';
+import { MonitoringCancellationDialog } from './components/MonitoringCancellationDialog';
 import { projectDetailCardClassName } from './projectDetailStyles';
 import { cn } from '@/lib/utils';
 
@@ -163,10 +150,17 @@ function RecentMetricCard({
 
 type RecentDataBarProps = {
   row: MonitoringDisplayRow;
+  cancellationListDisabled: boolean;
+  onOpenCancellationList: () => void;
   onRegister: () => void;
 };
 
-function RecentDataBar({ row, onRegister }: RecentDataBarProps) {
+function RecentDataBar({
+  row,
+  cancellationListDisabled,
+  onOpenCancellationList,
+  onRegister,
+}: RecentDataBarProps) {
   // If battery was not replaced (false), show 0 for battery discharge value
   const batteryDischargeValue = row.changedBattery === false ? 0 : row.ELPJ_battery_value;
   
@@ -177,13 +171,20 @@ function RecentDataBar({ row, onRegister }: RecentDataBarProps) {
           <span className='text-muted-foreground'>記録日</span>
           {formatMonitoringDate(row.dateRecorded)}
         </div>
-        <Button
-          type='button'
-          onClick={onRegister}
-          size='md'
-        >
-          モニタリングデータを登録
-        </Button>
+        <div className='flex flex-wrap items-center gap-2'>
+          <Button
+            type='button'
+            variant='outline'
+            onClick={onOpenCancellationList}
+            size='md'
+            disabled={cancellationListDisabled}
+          >
+            取消一覧
+          </Button>
+          <Button type='button' onClick={onRegister} size='md'>
+            モニタリングデータを登録
+          </Button>
+        </div>
       </div>
 
       <div className='grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5'>
@@ -275,6 +276,8 @@ const ProjectDetail = () => {
   const [equipmentLoading, setEquipmentLoading] = useState(false);
   const [equipmentHasFetched, setEquipmentHasFetched] = useState(false);
   const [equipmentError, setEquipmentError] = useState<string | null>(null);
+  const [monitoringCancellationOpen, setMonitoringCancellationOpen] =
+    useState(false);
 
   useEffect(() => {
     setRecentHasFetched(false);
@@ -372,96 +375,6 @@ const ProjectDetail = () => {
 
     void fetchEquipment();
   }, [equipmentHasFetched, projectId, siteId, tab]);
-
-  type RegistrationStatus = 'ACTIVE' | 'APPROVED' | 'REJECTED' | 'PENDING';
-
-  type RegistrationHistoryItem = {
-    id: string;
-    projectName: string;
-    siteName: string;
-    dateTime: string;
-    status: RegistrationStatus;
-    cancelReason?: string;
-  };
-
-  const [registrationHistory, setRegistrationHistory] = useState(
-    mockRegistrationHistory,
-  );
-
-  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-  const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(
-    null,
-  );
-  const [cancelReasonInput, setCancelReasonInput] = useState('');
-
-  const openCancelDialog = (historyId: string) => {
-    setSelectedHistoryId(historyId);
-    setCancelReasonInput('');
-    setCancelDialogOpen(true);
-  };
-
-  const submitCancelRequest = () => {
-    if (!selectedHistoryId || !cancelReasonInput.trim()) return;
-
-    setRegistrationHistory((prev) =>
-      prev.map((item) =>
-        item.id === selectedHistoryId
-          ? {
-              ...item,
-              status: 'PENDING',
-              cancelReason: cancelReasonInput.trim(),
-            }
-          : item,
-      ),
-    );
-
-    setCancelDialogOpen(false);
-    setSelectedHistoryId(null);
-    setCancelReasonInput('');
-  };
-
-  const getStatusClassName = (status: RegistrationStatus) => {
-    switch (status) {
-      case 'APPROVED':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-300';
-      case 'REJECTED':
-        return 'bg-red-100 text-red-800 border-red-300';
-      case 'ACTIVE':
-        return 'bg-sky-100 text-sky-800 border-sky-300';
-      case 'PENDING':
-      default:
-        return 'bg-amber-100 text-amber-800 border-amber-300';
-    }
-  };
-
-  const getStatusLabel = (status: RegistrationStatus) => {
-    switch (status) {
-      case 'APPROVED':
-        return 'APPROVED';
-      case 'REJECTED':
-        return 'REJECTED';
-      case 'ACTIVE':
-        return 'ACTIVE';
-      case 'PENDING':
-      default:
-        return 'PENDING';
-    }
-  };
-
-  const getReasonDisplay = (item: RegistrationHistoryItem) => {
-    if (item.status === 'ACTIVE') return '-';
-    return item.cancelReason || '-';
-  };
-
-  const {
-    currentPage,
-    totalPages,
-    totalItems,
-    itemsPerPage,
-    paginatedItems: paginatedHistory,
-    goToPage,
-    setItemsPerPage,
-  } = usePagination(registrationHistory);
 
   const monitoringRows: MonitoringDisplayRow[] =
     recentMonitoring.length > 0 ? recentMonitoring : [fallbackMonitoringRow];
@@ -616,6 +529,10 @@ const ProjectDetail = () => {
               ) : (
                 <RecentDataBar
                   row={monitoringRows[0]}
+                  cancellationListDisabled={!siteId || !projectId}
+                  onOpenCancellationList={() =>
+                    setMonitoringCancellationOpen(true)
+                  }
                   onRegister={() =>
                     navigate('/monitoring/register/solar', {
                       state: { projectId, siteId },
@@ -798,117 +715,14 @@ const ProjectDetail = () => {
             </Card>
           </TabsContent>
 
-            {/* 登録履歴 content */}
-            {/* <TabsContent value='registration-history' className='m-0 py-8'>
-            <Card>
-              <CardHeader>
-                <CardTitle>登録履歴</CardTitle>
-                <CardDescription>
-                  このプロジェクトに紐づく拠点登録の履歴です。
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className='overflow-x-auto'>
-                  <table className='text-table w-full table-fixed border-collapse'>
-                    <thead>
-                      <tr className='border-b'>
-                        <th className='text-left p-3 w-[18%]'>拠点名</th>
-                        <th className='text-left p-3 w-[14%]'>申請日時</th>
-                        <th className='text-left p-3 w-[10%]'>ステータス</th>
-                        <th className='text-left p-3 w-[48%]'>取り消し理由</th>
-                        <th className='text-left p-3 w-[10%]'>操作</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedHistory.map((item) => (
-                        <tr
-                          key={item.id}
-                          className='border-b align-top'
-                        >
-                          <td className='p-3'>{item.siteName}</td>
-                          <td className='p-3'>{item.dateTime}</td>
-                          <td className='p-3'>
-                            <Badge className={getStatusClassName(item.status)}>
-                              {getStatusLabel(item.status)}
-                            </Badge>
-                          </td>
-                          <td className='p-3 text-muted-foreground'>
-                            {getReasonDisplay(item)}
-                          </td>
-                          <td className='p-3'>
-                            {item.status === 'ACTIVE' ? (
-                              <Button
-                                variant='outline'
-                                size='sm'
-                                onClick={() => openCancelDialog(item.id)}
-                              >
-                                取り消し依頼
-                              </Button>
-                            ) : (
-                              <Button
-                                variant='outline'
-                                size='sm'
-                                disabled
-                              >
-                                申請中
-                              </Button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className='mt-4'>
-                  <PaginationControls
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    totalItems={totalItems}
-                    itemsPerPage={itemsPerPage}
-                    onPageChange={goToPage}
-                    onItemsPerPageChange={setItemsPerPage}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-            </TabsContent> */}
         </Tabs>
 
-        <AlertDialog
-          open={cancelDialogOpen}
-          onOpenChange={setCancelDialogOpen}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>取り消し依頼を送信しますか？</AlertDialogTitle>
-              <AlertDialogDescription>
-                このプロジェクト参加の取り消し依頼を送信します。理由を入力してください。
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-
-            <div className='space-y-2'>
-              <p className='text-sm font-medium'>
-                理由 <span className='text-destructive'>*</span>
-              </p>
-              <Textarea
-                value={cancelReasonInput}
-                onChange={(e) => setCancelReasonInput(e.target.value)}
-                placeholder='理由を入力してください'
-                rows={4}
-              />
-            </div>
-
-            <AlertDialogFooter>
-              <AlertDialogCancel>キャンセル</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={submitCancelRequest}
-                disabled={!cancelReasonInput.trim()}
-              >
-                依頼を送信
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <MonitoringCancellationDialog
+          open={monitoringCancellationOpen}
+          siteId={siteId}
+          projectId={projectId}
+          onOpenChange={setMonitoringCancellationOpen}
+        />
         </div>
       </div>
     </div>

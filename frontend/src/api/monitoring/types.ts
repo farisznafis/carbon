@@ -1,3 +1,5 @@
+import type { ApiPagination } from '../_shared/types';
+
 export type MonitoringData = {
   projectId: number;
   siteId?: number | null;
@@ -84,4 +86,66 @@ export type MonitoringRecentResponse = {
   statusCode?: string;
   message?: string | null;
   data?: unknown;
+};
+
+export type MonitoringRecordListItem = {
+  id: string;
+  projectID: number;
+  siteID: number;
+  participatingUserID: number;
+  timeUpdated: string;
+  dateRecorded: string;
+  elpjControlValue: number | null;
+  elpjControlEquipmentSpecFiles: string | null;
+  elpjBatteryValue: number | null;
+  elpjAccuracy: number | null;
+  elpjBatteryEvidence: string | null;
+  elPv: number | null;
+  elPvEvidence: string | null;
+  elPvr: number | null;
+  elPvrEvidence: string | null;
+  elPvEvidenceUrl: string | null;
+  elPvrEvidenceUrl: string | null;
+  elpjBatterySpecificationUrl: string | null;
+  elpjControlEvidenceUrl: string | null;
+  changedBattery: boolean;
+  isActive: boolean;
+  processedAt: string | null;
+  methodologyType: string | null;
+};
+
+export type MonitoringRecordListResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+  items?: MonitoringRecordListItem[] | null;
+  pagination?: Partial<ApiPagination> | null;
+};
+
+export type MonitoringRecordListResult = {
+  items: MonitoringRecordListItem[];
+  pagination: ApiPagination;
+};
+
+export type MonitoringCancelRequestPayload = {
+  siteId: number;
+  recordPK: string;
+  recordSK: string;
+  reasonText: string;
+};
+
+export type MonitoringCancelRequestResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+  cancelRequestId?: number;
+  recordPk?: string;
+  recordSk?: string;
+  status?: string;
+  requestedBy?: string;
+  requestedAt?: string;
+  siteId?: number;
+  reason?: string;
 };

@@ -6,10 +6,15 @@
 import { apiFetch, parseJsonResponse } from "../_shared/httpClient";
 import { normalizeRecentMonitoringItem } from "./mappers";
 import type {
+  MonitoringRecordListResponse,
+  MonitoringRecordListResult,
   MonitoringRecentApiItem,
   MonitoringRecentItem,
   MonitoringRecentResponse,
 } from "./types";
+
+const DEFAULT_MONITORING_LIST_PAGE = 1;
+const DEFAULT_MONITORING_LIST_LIMIT = 10;
 
 export async function getMonitoringRecent(params: {
   projectId: string | number;
@@ -47,4 +52,48 @@ export async function getMonitoringRecent(params: {
       : [];
 
   return items.map(normalizeRecentMonitoringItem);
+}
+
+export async function getMonitoringRecords(params: {
+  siteId: string | number;
+  projectId: string | number;
+  page?: number;
+  limit?: number;
+}): Promise<MonitoringRecordListResult> {
+  const page = params.page ?? DEFAULT_MONITORING_LIST_PAGE;
+  const limit = params.limit ?? DEFAULT_MONITORING_LIST_LIMIT;
+  const query = new URLSearchParams({
+    siteId: String(params.siteId),
+    projectId: String(params.projectId),
+    page: String(page),
+    limit: String(limit),
+  });
+
+  const response = await apiFetch(`/monitoring/list?${query.toString()}`, {
+    method: "GET",
+  });
+  const { data: json, rawBody } =
+    await parseJsonResponse<MonitoringRecordListResponse>(response);
+
+  if (!response.ok) {
+    throw new Error(
+      json?.message ||
+        rawBody ||
+        `Failed to fetch monitoring records: HTTP ${response.status}`,
+    );
+  }
+
+  const responsePagination = json?.pagination;
+
+  return {
+    items: Array.isArray(json?.items) ? json.items : [],
+    pagination: {
+      page: responsePagination?.page ?? page,
+      limit: responsePagination?.limit ?? limit,
+      totalItems: responsePagination?.totalItems ?? json?.items?.length ?? 0,
+      totalPages: Math.max(responsePagination?.totalPages ?? 1, 1),
+      nextPageToken: responsePagination?.nextPageToken ?? null,
+      hasMore: responsePagination?.hasMore ?? false,
+    },
+  };
 }

@@ -1,7 +1,12 @@
-import { apiFetch, apiVoidRequest, parseJsonResponse } from "../_shared/httpClient";
+import { apiFetch, apiRequest, apiVoidRequest, parseJsonResponse } from "../_shared/httpClient";
 import { ApiError, getApiErrorMessage } from "../_shared/errors";
 import type { ApiErrorPayload } from "../_shared/types";
-import type { MonitoringData, SubmitDataResponse } from "./types";
+import type {
+  MonitoringCancelRequestPayload,
+  MonitoringCancelRequestResponse,
+  MonitoringData,
+  SubmitDataResponse,
+} from "./types";
 import type { MonitoringEvidenceKind } from "./types";
 
 type UploadResponse = {
@@ -96,6 +101,19 @@ export async function validateMonitoringData(data: MonitoringData): Promise<void
     body: data,
     fallbackErrorMessage: 'Failed to validate monitoring data',
   });
+}
+
+export async function createMonitoringCancelRequest(
+  payload: MonitoringCancelRequestPayload,
+): Promise<MonitoringCancelRequestResponse> {
+  return apiRequest<MonitoringCancelRequestResponse>(
+    '/monitoring/cancel-request',
+    {
+      method: 'POST',
+      body: payload,
+      fallbackErrorMessage: 'Failed to create monitoring cancel request',
+    },
+  );
 }
 
 export async function uploadElpvFile(
