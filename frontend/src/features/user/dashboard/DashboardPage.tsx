@@ -41,9 +41,9 @@ function formatProjectDate(project: SiteProject) {
 
 function getMethodologyLabel(project: SiteProject) {
   const parts = [
-    project.methodNumber,
-    project.methodologyVersion,
-    project.methodName ? `(${project.methodName})` : '',
+    // project.methodNumber,
+    // project.methodologyVersion,
+    project.methodName ? `${project.methodName}` : '',
   ].filter(Boolean);
 
   return parts.join(' ') || '-';
@@ -288,7 +288,7 @@ function AvailableProjectCard({
       <CardContent className="flex h-full min-h-[300px] flex-col p-6">
         <h3 className="text-foreground">{project.projectName || 'PROJECT ABC'}</h3>
 
-        <dl className="mt-6 space-y-4">
+        <dl className="mt-6 space-y-4 mb-4">
           <div>
             <dt className="text-small text-muted-foreground">方法論</dt>
             <dd className="mt-1 font-bold">{getMethodologyLabel(project)}</dd>

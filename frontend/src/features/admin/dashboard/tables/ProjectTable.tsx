@@ -35,25 +35,76 @@ const projectStatusOptions: ProjectStatus[] = [
 ];
 
 const projectTableGridColumns =
-  'minmax(180px, 1.4fr) minmax(130px, 0.9fr) minmax(120px, 0.8fr) minmax(170px, 1.1fr) minmax(130px, 0.8fr) minmax(180px, 1fr)';
+  'minmax(180px, 1.2fr) minmax(86px, 0.55fr) minmax(86px, 0.55fr) minmax(260px, 1.8fr) minmax(130px, 0.8fr) minmax(180px, 1fr)';
 
 function getProjectStatusClassName(status: Project['projectStatus']) {
   const normalized = String(status).toLowerCase();
 
-  if (normalized.includes('実施中') || normalized === 'active') {
-    return 'bg-emerald-100 text-emerald-800';
-  }
-
-  if (normalized.includes('却下') || normalized === 'rejected') {
+  if (
+    normalized.includes('却下') ||
+    normalized.includes('蜊ｴ荳') ||
+    normalized === 'rejected'
+  ) {
     return 'bg-red-100 text-red-800';
   }
 
-  if (normalized.includes('終了') || normalized === 'inactive') {
+  if (
+    normalized.includes('終了') ||
+    normalized.includes('邨ゆｺ') ||
+    normalized === 'inactive' ||
+    normalized === 'ended'
+  ) {
     return 'bg-slate-100 text-slate-800';
   }
 
-  if (normalized.includes('検証') || normalized.includes('妥当性確認')) {
+  if (
+    normalized.includes('実施中') ||
+    normalized.includes('螳滓命荳ｭ') ||
+    normalized === 'active' ||
+    normalized === 'running'
+  ) {
+    return 'bg-emerald-100 text-emerald-800';
+  }
+
+  if (
+    normalized.includes('クレジット申請') ||
+    normalized.includes('繧ｯ繝ｬ繧ｸ繝') ||
+    normalized.includes('credit')
+  ) {
+    return 'bg-violet-100 text-violet-800';
+  }
+
+  if (
+    normalized.includes('変更') ||
+    normalized.includes('螟画峩') ||
+    normalized.includes('change')
+  ) {
+    return 'bg-orange-100 text-orange-800';
+  }
+
+  if (
+    normalized.includes('検証') ||
+    normalized.includes('讀懆ｨｼ') ||
+    normalized.includes('verify') ||
+    normalized.includes('verification')
+  ) {
+    return 'bg-blue-100 text-blue-800';
+  }
+
+  if (
+    normalized.includes('妥当性確認') ||
+    normalized.includes('螯･蠖捺') ||
+    normalized.includes('validation')
+  ) {
     return 'bg-sky-100 text-sky-800';
+  }
+
+  if (
+    normalized.includes('作成') ||
+    normalized.includes('菴懈') ||
+    normalized.includes('created')
+  ) {
+    return 'bg-stone-100 text-stone-800';
   }
 
   return 'bg-amber-100 text-amber-800';

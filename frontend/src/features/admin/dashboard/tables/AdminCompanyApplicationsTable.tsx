@@ -2,6 +2,10 @@ import type {
   AdminCompanyListItem,
   CompanyStatus,
 } from '@/api/admin/pendingCompanies';
+import {
+  AdminGridTable,
+  type AdminGridTableColumn,
+} from '@/components/data-display/AdminGridTable';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +16,9 @@ type AdminCompanyApplicationsTableProps = {
   onReview: (item: AdminCompanyListItem) => void;
   onResolveSuspension?: (item: AdminCompanyListItem) => void;
 };
+
+const companyTableGridColumns =
+  'minmax(180px, 1.35fr) minmax(110px, 0.75fr) minmax(240px, 1.45fr) minmax(110px, 0.65fr) minmax(220px, 1fr)';
 
 const statusMeta: Record<
   CompanyStatus,
@@ -75,33 +82,12 @@ function ActionButtons({
 }) {
   if (item.status === 'PENDING') {
     return (
-      <div className='flex justify-start gap-2'>
-        <Button
-          type='button'
-          variant='outline'
-          onClick={() => onDetails(item)}
-        >
+      <div className="flex justify-start gap-2">
+        <Button type="button" variant="outline" onClick={() => onDetails(item)}>
           詳細
         </Button>
-        <Button
-          type='button'
-          onClick={() => onReview(item)}
-        >
+        <Button type="button" onClick={() => onReview(item)}>
           申請内容を確認
-        </Button>
-      </div>
-    );
-  }
-
-  if (item.status === 'ACTIVE') {
-    return (
-      <div className='flex justify-start'>
-        <Button
-          type='button'
-          variant='outline'
-          onClick={() => onDetails(item)}
-        >
-          詳細
         </Button>
       </div>
     );
@@ -109,18 +95,11 @@ function ActionButtons({
 
   if (item.status === 'SUSPENDED') {
     return (
-      <div className='flex justify-start gap-2'>
-        <Button
-          type='button'
-          variant='outline'
-          onClick={() => onDetails(item)}
-        >
+      <div className="flex justify-start gap-2">
+        <Button type="button" variant="outline" onClick={() => onDetails(item)}>
           詳細
         </Button>
-        <Button
-          type='button'
-          onClick={() => onResolveSuspension?.(item)}
-        >
+        <Button type="button" onClick={() => onResolveSuspension?.(item)}>
           停止解除
         </Button>
       </div>
@@ -128,12 +107,8 @@ function ActionButtons({
   }
 
   return (
-    <div className='flex justify-start gap-2'>
-      <Button
-        type='button'
-        variant='outline'
-        onClick={() => onDetails(item)}
-      >
+    <div className="flex justify-start">
+      <Button type="button" variant="outline" onClick={() => onDetails(item)}>
         詳細
       </Button>
     </div>
@@ -147,47 +122,74 @@ export function AdminCompanyApplicationsTable({
   onReview,
   onResolveSuspension,
 }: AdminCompanyApplicationsTableProps) {
-  return (
-    <div className='overflow-hidden rounded-xl border border-border bg-card'>
-      <div className='grid grid-cols-[minmax(180px,1.4fr)_minmax(100px,0.8fr)_minmax(240px,1.45fr)_minmax(100px,0.6fr)_minmax(220px,1fr)] gap-4 border-b border-border bg-muted/40 px-5 py-3 text-table font-bold text-foreground'>
-        <span>企業名</span>
-        <span>代表者</span>
-        <span>メールアドレス</span>
-        <span>ステータス</span>
-        <span>アクション</span>
-      </div>
-
-      {items.length === 0 ? (
-        <div className='px-5 py-8 text-center text-small text-muted-foreground'>
-          {emptyMessage}
+  const columns: AdminGridTableColumn<AdminCompanyListItem>[] = [
+    {
+      id: 'nameJA',
+      label: '企業名',
+      sortable: true,
+      sortValue: (item) => item.nameJA,
+      render: (item) => (
+        <span className="block truncate text-body font-bold text-slate-800">
+          {item.nameJA || '-'}
+        </span>
+      ),
+    },
+    {
+      id: 'representative',
+      label: '代表者',
+      sortable: true,
+      sortValue: formatRepresentativeName,
+      render: (item) => (
+        <span className="block truncate text-body text-foreground">
+          {formatRepresentativeName(item)}
+        </span>
+      ),
+    },
+    {
+      id: 'email',
+      label: 'メールアドレス',
+      sortable: true,
+      sortValue: (item) => item.email,
+      render: (item) => (
+        <span className="block break-all text-body text-foreground">
+          {item.email || '-'}
+        </span>
+      ),
+    },
+    {
+      id: 'status',
+      label: 'ステータス',
+      sortable: true,
+      sortValue: (item) => statusMeta[item.status].label,
+      render: (item) => <StatusBadge status={item.status} />,
+    },
+    {
+      id: 'actions',
+      label: 'アクション',
+      render: (item) => (
+        <div
+          onClick={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <ActionButtons
+            item={item}
+            onDetails={onDetails}
+            onReview={onReview}
+            onResolveSuspension={onResolveSuspension}
+          />
         </div>
-      ) : (
-        items.map((item) => (
-          <div
-            key={item.companyId}
-            className='grid grid-cols-[minmax(180px,1.4fr)_minmax(100px,0.8fr)_minmax(240px,1.45fr)_minmax(100px,0.6fr)_minmax(220px,1fr)] items-center gap-4 border-b border-border px-5 py-4 last:border-b-0'
-          >
-            <span className='text-body font-bold text-slate-800'>
-              {item.nameJA || '-'}
-            </span>
-            <span className='text-body text-foreground'>
-              {formatRepresentativeName(item)}
-            </span>
-            <span className='break-all text-body text-foreground'>
-              {item.email || '-'}
-            </span>
-            <span>
-              <StatusBadge status={item.status} />
-            </span>
-            <ActionButtons
-              item={item}
-              onDetails={onDetails}
-              onReview={onReview}
-              onResolveSuspension={onResolveSuspension}
-            />
-          </div>
-        ))
-      )}
-    </div>
+      ),
+    },
+  ];
+
+  return (
+    <AdminGridTable
+      rows={items}
+      columns={columns}
+      gridTemplateColumns={companyTableGridColumns}
+      minWidth={980}
+      getRowKey={(item) => item.id ?? item.companyId}
+      emptyMessage={emptyMessage}
+    />
   );
 }

@@ -19,9 +19,7 @@ import {
   type ProjectStatus,
 } from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
-import type { UserList } from '@/api/users';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
-import { UserTable } from '@/components/data-display/tables/UserTable';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -42,7 +40,6 @@ import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
 import { cn } from '@/lib/utils';
 import { paths } from '@/routes/paths';
-import { useDashboardStore } from '@/stores/dashboardStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { Plus } from 'lucide-react';
 
@@ -193,12 +190,6 @@ const AdminDashboard = () => {
     (state) => state.loadNotifications,
   );
 
-  const users = useDashboardStore((state) => state.users) ?? [];
-  const loadingStore = useDashboardStore((state) => state.loading);
-  const fetchDashboardData = useDashboardStore(
-    (state) => state.fetchDashboardData,
-  );
-
   const {
     currentPage: projectPage,
     totalPages: projectTotalPages,
@@ -209,8 +200,6 @@ const AdminDashboard = () => {
     setItemsPerPage: setProjectItemsPerPage,
   } = usePagination(projects);
 
-  const [dashboardLoading, setDashboardLoading] = useState(true);
-  const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [companyListLoading, setCompanyListLoading] = useState(true);
   const [companyListError, setCompanyListError] = useState<string | null>(null);
   const [applicationCompanies, setApplicationCompanies] = useState<
@@ -303,34 +292,8 @@ const AdminDashboard = () => {
   ]);
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function loadDashboardData() {
-      setDashboardLoading(true);
-      setDashboardError(null);
-      void loadNotifications();
-
-      try {
-        await fetchDashboardData(true);
-      } catch (error) {
-        if (isMounted) {
-          setDashboardError(
-            getApiMessage(error, 'ダッシュボードデータの取得に失敗しました。'),
-          );
-        }
-      } finally {
-        if (isMounted) {
-          setDashboardLoading(false);
-        }
-      }
-    }
-
-    void loadDashboardData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [fetchDashboardData, loadNotifications]);
+    void loadNotifications();
+  }, [loadNotifications]);
 
   useEffect(() => {
     void reloadCompanyLists();
@@ -390,12 +353,6 @@ const AdminDashboard = () => {
     } finally {
       setUpdatingProjectStatusId(null);
     }
-  };
-
-  const handleEditUser = (dashboardUser: UserList) => {
-    navigate(`/user-edit/${dashboardUser.id}`, {
-      state: { user: dashboardUser },
-    });
   };
 
   const cancelRequestHistory: CancelRequestItem[] = [
@@ -602,7 +559,7 @@ const AdminDashboard = () => {
     }
   };
 
-  if (projectsQuery.isLoading || dashboardLoading || loadingStore) {
+  if (projectsQuery.isLoading) {
     return (
       <div className="text-small flex min-h-screen items-center justify-center bg-background px-6 text-center text-muted-foreground">
         読み込み中...
@@ -783,11 +740,9 @@ const AdminDashboard = () => {
               title="運用者一覧"
               description="登録済み運用者のアカウント情報と所属拠点を確認できます。"
             >
-              {dashboardError ? (
-                <AdminDashboardEmptyState>{dashboardError}</AdminDashboardEmptyState>
-              ) : (
-                <UserTable users={users} onEdit={handleEditUser} />
-              )}
+              <AdminDashboardEmptyState>
+                表示できる運用者データがありません。
+              </AdminDashboardEmptyState>
             </AdminDashboardSection>
           </TabsContent>
 
