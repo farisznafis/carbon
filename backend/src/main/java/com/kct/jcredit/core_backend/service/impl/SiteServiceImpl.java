@@ -17,7 +17,6 @@ import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
-import com.kct.jcredit.core_backend.entity.SiteR002EquipmentFile;
 import com.kct.jcredit.core_backend.entity.SiteR002MemberData;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
@@ -405,35 +404,41 @@ public class SiteServiceImpl implements SiteService {
                 return response;
             }
 
-            List<SiteR002EquipmentFile> equipmentFiles = siteR002EquipmentFileRepository
-                    .findByMemberData_Id(memberData.getId());
-            if (equipmentFiles.isEmpty() && !memberData.getId().equals(siteId)) {
-                equipmentFiles = siteR002EquipmentFileRepository.findByMemberData_Id(siteId);
-            }
-
-            List<String> evidenceDocuments = equipmentFiles.stream()
-                    .map(SiteR002EquipmentFile::getS3Key)
-                    .map(this::extractFileNameFroms3Key)
+            List<String> evidenceDocuments = siteR002EquipmentFileRepository
+                    .findOriginalNamesByMemberDataId(memberData.getId())
+                    .stream()
                     .filter(Objects::nonNull)
                     .filter(name -> !name.isBlank())
                     .collect(Collectors.toList());
 
             EquipmentItemSolarResponse item = EquipmentItemSolarResponse.builder()
                     .equipmentId(memberData.getId())
+                    .evidenceDocuments(evidenceDocuments)
+                    .methodologyNumber(memberData.getMethodologyNumber())
+                    .isEligible(memberData.getIsEligible())
+                    .equipmentOpDate(memberData.getEquipmentOpDate())
+                    .nominalMaxOutput(memberData.getNominalMaxOutput())
                     .pcsManufacturer(memberData.getPcsManufacturer())
                     .pcsModel(memberData.getPcsModel())
                     .powerCondUnitCount(memberData.getPowerCondUnitCount())
                     .deviceNo(memberData.getDeviceNo())
                     .powerCondStandby(memberData.getPowerCondStandby())
+                    .hasBattery(memberData.getHasBattery())
+                    .batteryMaker(memberData.getBatteryMaker())
+                    .batteryModel(memberData.getBatteryModel())
+                    .batteryCapacity(memberData.getBatteryCapacity())
                     // .categoryBc(memberData.getCategoryBc()) category bc in other table/take it from dynamo
-                    .nominalMaxOutput(memberData.getNominalMaxOutput())
                     .ictEquipmentPowerConsumption(memberData.getIctEquipmentPowerConsumption())
                     .additionalEquipment(memberData.getAdditionalEquipment())
                     .additionalEquipmentDate(memberData.getAdditionalEquipmentDate())
                     .additionalEquipmentType(memberData.getAdditionalEquipmentType())
                     .additionalUnitCount(memberData.getAdditionalUnitCount())
                     .additionalDeviceUniqueNo(memberData.getAdditionalDeviceUniqueNo())
-                    // .equipmentId(evidenceDocuments)
+                    .totalInvestment(memberData.getTotalInvestment())
+                    .hasSubsidy(memberData.getHasSubsidy())
+                    .subsidyName(memberData.getSubsidyName())
+                    .subsidyAmount(memberData.getSubsidyAmount())
+                    .preProjectUnitPrice(memberData.getPreProjectUnitPrice())
                     .build();
 
             response.setEquipments(List.of(item));
@@ -472,26 +477,6 @@ public class SiteServiceImpl implements SiteService {
 
         return false;
     }
-
-    private String extractFileNameFroms3Key(String s3Key) {
-        if (s3Key == null || s3Key.isBlank()) {
-            return null;
-        }
-
-        String key = s3Key.startsWith("/") ? s3Key.substring(1) : s3Key;
-        int lastSlash = key.lastIndexOf('/');
-        String baseName = lastSlash >= 0 ? key.substring(lastSlash + 1) : key;
-
-        if (baseName.startsWith("file_")) {
-            int secondUnderscore = baseName.indexOf('_', "file_".length());
-            if (secondUnderscore > 0 && secondUnderscore + 1 < baseName.length()) {
-                return baseName.substring(secondUnderscore + 1);
-            }
-        }
-
-        return baseName;
-    }
-
 
     private Site updateSite(Site site, UpdateSiteRequest request, ParticipatingUser user) {
         if (StringUtils.isNotBlank(request.getSiteName())) {

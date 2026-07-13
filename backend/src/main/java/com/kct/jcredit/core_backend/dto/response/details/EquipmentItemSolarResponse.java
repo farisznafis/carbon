@@ -19,6 +19,7 @@ public class EquipmentItemSolarResponse {
     
     private String tempId;
     private Integer equipmentId;
+    private List<String> evidenceDocuments;
     private String methodologyNumber;
     private Boolean isEligible;
     
