@@ -363,7 +363,7 @@ function RecentDataBar({ row, onRegister }: RecentDataBarProps) {
         <Button
           type='button'
           onClick={onRegister}
-          size='sm'
+          size='md'
         >
           モニタリングデータを登録
         </Button>

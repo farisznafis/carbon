@@ -242,9 +242,9 @@ function JoinedProjectCard({
           <h3 className="text-foreground">{project.projectName}</h3>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[400px_minmax(0,1fr)]">
-          <div className="space-y-4">
-            <div className="rounded-2xl bg-muted/30 p-5">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
+          <div className="space-y-4 xl:order-2">
+            <div className="rounded-2xl border border-border bg-transparent p-5">
               <dl className="space-y-4">
                 <div>
                   <dt className="text-small text-muted-foreground">方法論</dt>
@@ -268,7 +268,7 @@ function JoinedProjectCard({
             </Button>
           </div>
 
-          <div className="flex min-h-[220px] items-center justify-center rounded-2xl bg-muted/20 text-muted-foreground">
+          <div className="flex min-h-[220px] items-center justify-center rounded-2xl bg-muted/20 text-muted-foreground xl:order-1">
             グラフデータ準備中
           </div>
         </div>
