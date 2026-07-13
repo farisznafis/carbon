@@ -34,80 +34,88 @@ const projectStatusOptions: ProjectStatus[] = [
   '終了',
 ];
 
+const statusColors: Record<
+  ProjectStatus,
+  { bg: string; text: string; border: string }
+> = {
+  作成済み: {
+    bg: '#F1F5F9',
+    text: '#475569',
+    border: '#CBD5E1',
+  },
+  準備中: {
+    bg: '#FEF3C7',
+    text: '#92400E',
+    border: '#FCD34D',
+  },
+  変更中: {
+    bg: '#DBEAFE',
+    text: '#1D4ED8',
+    border: '#93C5FD',
+  },
+  妥当性確認処理: {
+    bg: '#E0E7FF',
+    text: '#4338CA',
+    border: '#A5B4FC',
+  },
+  却下: {
+    bg: '#FEE2E2',
+    text: '#B91C1C',
+    border: '#FCA5A5',
+  },
+  実施中: {
+    bg: '#DCFCE7',
+    text: '#15803D',
+    border: '#86EFAC',
+  },
+  検証中: {
+    bg: '#CCFBF1',
+    text: '#0F766E',
+    border: '#5EEAD4',
+  },
+  クレジット申請中: {
+    bg: '#F3E8FF',
+    text: '#7E22CE',
+    border: '#D8B4FE',
+  },
+  終了: {
+    bg: '#E5E7EB',
+    text: '#374151',
+    border: '#D1D5DB',
+  },
+};
+
+const projectStatusAliases: Partial<Record<string, ProjectStatus>> = {
+  CREATED: '作成済み',
+  PREPARING: '準備中',
+  CHANGING: '変更中',
+  VALIDATING: '妥当性確認処理',
+  REJECTED: '却下',
+  ACTIVE: '実施中',
+  RUNNING: '実施中',
+  VERIFYING: '検証中',
+  VERIFICATION: '検証中',
+  CREDIT_APPLICATION: 'クレジット申請中',
+  ENDED: '終了',
+  INACTIVE: '終了',
+};
+
 const projectTableGridColumns =
   'minmax(180px, 1.2fr) minmax(86px, 0.55fr) minmax(86px, 0.55fr) minmax(260px, 1.8fr) minmax(130px, 0.8fr) minmax(180px, 1fr)';
 
-function getProjectStatusClassName(status: Project['projectStatus']) {
-  const normalized = String(status).toLowerCase();
+function isProjectStatus(status: string): status is ProjectStatus {
+  return projectStatusOptions.includes(status as ProjectStatus);
+}
 
-  if (
-    normalized.includes('却下') ||
-    normalized.includes('蜊ｴ荳') ||
-    normalized === 'rejected'
-  ) {
-    return 'bg-red-100 text-red-800';
+function getProjectStatusColors(status: Project['projectStatus']) {
+  const normalizedStatus = String(status).trim();
+
+  if (isProjectStatus(normalizedStatus)) {
+    return statusColors[normalizedStatus];
   }
 
-  if (
-    normalized.includes('終了') ||
-    normalized.includes('邨ゆｺ') ||
-    normalized === 'inactive' ||
-    normalized === 'ended'
-  ) {
-    return 'bg-slate-100 text-slate-800';
-  }
-
-  if (
-    normalized.includes('実施中') ||
-    normalized.includes('螳滓命荳ｭ') ||
-    normalized === 'active' ||
-    normalized === 'running'
-  ) {
-    return 'bg-emerald-100 text-emerald-800';
-  }
-
-  if (
-    normalized.includes('クレジット申請') ||
-    normalized.includes('繧ｯ繝ｬ繧ｸ繝') ||
-    normalized.includes('credit')
-  ) {
-    return 'bg-violet-100 text-violet-800';
-  }
-
-  if (
-    normalized.includes('変更') ||
-    normalized.includes('螟画峩') ||
-    normalized.includes('change')
-  ) {
-    return 'bg-orange-100 text-orange-800';
-  }
-
-  if (
-    normalized.includes('検証') ||
-    normalized.includes('讀懆ｨｼ') ||
-    normalized.includes('verify') ||
-    normalized.includes('verification')
-  ) {
-    return 'bg-blue-100 text-blue-800';
-  }
-
-  if (
-    normalized.includes('妥当性確認') ||
-    normalized.includes('螯･蠖捺') ||
-    normalized.includes('validation')
-  ) {
-    return 'bg-sky-100 text-sky-800';
-  }
-
-  if (
-    normalized.includes('作成') ||
-    normalized.includes('菴懈') ||
-    normalized.includes('created')
-  ) {
-    return 'bg-stone-100 text-stone-800';
-  }
-
-  return 'bg-amber-100 text-amber-800';
+  const aliasedStatus = projectStatusAliases[normalizedStatus.toUpperCase()];
+  return statusColors[aliasedStatus ?? '作成済み'];
 }
 
 function getStatusOptions(currentStatus: string): string[] {
@@ -184,35 +192,44 @@ export function ProjectTable({
       label: 'ステータス',
       sortable: true,
       sortValue: (project) => project.projectStatus,
-      render: (project) => (
-        <span
-          className="block min-w-0"
-          onClick={(event) => event.stopPropagation()}
-          onPointerDown={(event) => event.stopPropagation()}
-        >
-          <Select
-            value={project.projectStatus}
-            disabled={updatingProjectStatusId === project.id}
-            onValueChange={(value) =>
-              onStatusChange?.(project, value as ProjectStatus)
-            }
+      render: (project) => {
+        const statusColor = getProjectStatusColors(project.projectStatus);
+
+        return (
+          <span
+            className="block min-w-0"
+            onClick={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
           >
-            <SelectTrigger
-              className={`h-8 w-full rounded-full border-0 px-3 text-table font-bold shadow-none focus:ring-1 ${getProjectStatusClassName(project.projectStatus)}`}
-              title="ステータスを変更"
+            <Select
+              value={project.projectStatus}
+              disabled={updatingProjectStatusId === project.id}
+              onValueChange={(value) =>
+                onStatusChange?.(project, value as ProjectStatus)
+              }
             >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {getStatusOptions(project.projectStatus).map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </span>
-      ),
+              <SelectTrigger
+                className="h-8 w-full rounded-full border px-3 text-table font-bold shadow-none focus:ring-1"
+                style={{
+                  backgroundColor: statusColor.bg,
+                  color: statusColor.text,
+                  borderColor: statusColor.border,
+                }}
+                title="ステータスを変更"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {getStatusOptions(project.projectStatus).map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {status}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </span>
+        );
+      },
     },
     {
       id: 'actions',

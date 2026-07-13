@@ -295,8 +295,8 @@ function AvailableProjectCard({
             <dd className="mt-1 font-bold">{getMethodologyLabel(project)}</dd>
           </div>
           <div>
-            <dt className="text-small text-muted-foreground">最新更新日</dt>
-            <dd className="mt-1 font-bold">{formatProjectDate(project)}</dd>
+            <dt className="text-small text-muted-foreground">方法論番号</dt>
+            <dd className="mt-1 font-bold">{project.methodNumber} {project.methodologyVersion}</dd>
           </div>
           <div>
             <dt className="text-small text-muted-foreground">ステータス</dt>
