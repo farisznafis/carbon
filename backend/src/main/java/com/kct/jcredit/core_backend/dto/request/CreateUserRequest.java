@@ -65,7 +65,7 @@ public class CreateUserRequest {
    
     @NotBlank(message = "電話番号を入力してください。")
     @PhoneNumber
-    @Size(max = 20, message = "電話番号は20文字以内で入力してください。")
+    @Size(min = 7, max = 16, message = "電話番号は7文字以上16文字以内で入力してください。")
     private String phoneNumber;
     
     @NotBlank(message = "担当者の役職を入力してください。")
