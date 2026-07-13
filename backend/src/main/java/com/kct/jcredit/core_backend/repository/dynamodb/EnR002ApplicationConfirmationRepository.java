@@ -1,6 +1,6 @@
 package com.kct.jcredit.core_backend.repository.dynamodb;
 
-import com.kct.jcredit.core_backend.entity.TncAgreementEquip; 
+import com.kct.jcredit.core_backend.entity.EnR002ConfirmationItems; 
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -17,26 +17,27 @@ import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
-public class ApplicationConfirmationRepository {
+public class EnR002ApplicationConfirmationRepository {
 
     private final DynamoDbEnhancedClient enhancedClient;
-    private static final String TABLE_NAME = "TnC_Agreement_Table";
+    private static final String TABLE_NAME = "en_r002_confirmation_items";
+
 
     // TABLE REF 
 
-    private DynamoDbTable<TncAgreementEquip> table() {
-        return enhancedClient.table(TABLE_NAME, TableSchema.fromBean(TncAgreementEquip.class));
+    private DynamoDbTable<EnR002ConfirmationItems> table() {
+        return enhancedClient.table(TABLE_NAME, TableSchema.fromBean(EnR002ConfirmationItems.class));
     }
 
     // WRITE
 
-    public void save(TncAgreementEquip tncAgreement) {
-        table().putItem(tncAgreement);
+    public void save(EnR002ConfirmationItems EnR002confirmationItems) {
+        table().putItem(EnR002confirmationItems);
     }
 
     // READ
 
-    public Optional<TncAgreementEquip> findByPkAndSk(String pk, String sk) {
+    public Optional<EnR002ConfirmationItems> findByPkAndSk(String pk, String sk) {
         Key key = Key.builder()
                 .partitionValue(pk)
                 .sortValue(sk)
@@ -45,13 +46,13 @@ public class ApplicationConfirmationRepository {
     }
 
     // pk format: projectId#siteId
-    public List<TncAgreementEquip> findAllByProjectAndSite(Integer projectId, Integer siteId) {
+    public List<EnR002ConfirmationItems> findAllByProjectAndSite(Integer projectId, Integer siteId) {
         String pk = projectId + "#" + siteId;
 
         QueryConditional queryConditional = QueryConditional
                 .keyEqualTo(Key.builder().partitionValue(pk).build());
 
-        PageIterable<TncAgreementEquip> pages = table().query(r -> r
+        PageIterable<EnR002ConfirmationItems> pages = table().query(r -> r
                 .queryConditional(queryConditional)
                 .scanIndexForward(false) // DESC — terbaru dulu
         );
@@ -59,13 +60,13 @@ public class ApplicationConfirmationRepository {
         return pages.items().stream().collect(Collectors.toList());
     }
 
-    public Optional<TncAgreementEquip> findLatestByProjectAndSite(Integer projectId, Integer siteId) {
+    public Optional<EnR002ConfirmationItems> findLatestByProjectAndSite(Integer projectId, Integer siteId) {
         String pk = projectId + "#" + siteId;
 
         QueryConditional queryConditional = QueryConditional
                 .keyEqualTo(Key.builder().partitionValue(pk).build());
 
-        PageIterable<TncAgreementEquip> pages = table().query(r -> r
+        PageIterable<EnR002ConfirmationItems> pages = table().query(r -> r
                 .queryConditional(queryConditional)
                 .scanIndexForward(false)
                 .limit(1)

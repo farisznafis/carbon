@@ -14,7 +14,7 @@ import jakarta.validation.constraints.NotBlank;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FileItemSolarRequest {
+public class EnR002FileItemRequest {
  
     // Enum — Spring otomatis reject nilai yang tidak ada di EquipmentFileType
     // via @JsonCreator, tidak perlu @NotBlank String lagi

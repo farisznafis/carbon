@@ -1,4 +1,4 @@
-package com.kct.jcredit.core_backend.dto.response.details;
+package com.kct.jcredit.core_backend.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,14 +15,10 @@ import jakarta.persistence.Column;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EquipmentItemSolarResponse {
+public class EnR002EquipmentResponse {
     
-    private String tempId;
-    private Integer equipmentId;
-    private String methodologyNumber;
-    private Boolean isEligible;
-    
-    // (Opsional)
+     private Integer id;
+    private Integer siteId;
 
     private LocalDate equipmentOpDate;
     private BigDecimal nominalMaxOutput;
@@ -31,19 +27,20 @@ public class EquipmentItemSolarResponse {
     private Integer powerCondUnitCount;
     private String deviceNo;
     private BigDecimal powerCondStandby;
+
     private Boolean hasBattery;
     private String batteryMaker;
     private String batteryModel;
     private BigDecimal batteryCapacity;
+
     private BigDecimal ictEquipmentPowerConsumption;
+
     private Boolean additionalEquipment;
     private LocalDate additionalEquipmentDate;
-    private String additionalEquipmentType;
-    private Integer additionalUnitCount;
-    private String additionalDeviceUniqueNo;
     private String equipmentType;
     private Integer unitCount;
     private String deviceUniqueNo;
+
     private Integer totalInvestment;
     private Boolean hasSubsidy;
     private String subsidyName;

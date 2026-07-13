@@ -1,13 +1,13 @@
 package com.kct.jcredit.core_backend.controller;
 
 import com.kct.jcredit.core_backend.dto.response.EquipmentSolarRegisterResponse;
-import com.kct.jcredit.core_backend.dto.request.EquipmentItemSolarRequest;
-import com.kct.jcredit.core_backend.dto.request.EquipmentRegisterSolarRequest;
+import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
+import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.request.FinalAgreementValidateRequest;
 import com.kct.jcredit.core_backend.dto.request.JigyoushaValidateRequest;
 import com.kct.jcredit.core_backend.dto.request.TncValidateRequest;
 import com.kct.jcredit.core_backend.dto.response.FileSolarUploadResponse;
-import com.kct.jcredit.core_backend.dto.response.JigyoushaDefaultResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.enums.EquipmentFileType;
 import com.kct.jcredit.core_backend.service.SiteProjectService;
@@ -78,7 +78,7 @@ public class SiteProjectController {
                 Authentication authentication,
                 @PathVariable Integer siteId,
                 @PathVariable Integer projectId,
-                @RequestBody @Valid EquipmentRegisterSolarRequest request) {
+                @RequestBody @Valid EnR002ConfirmationItemRequest request) {
 
             String token = authentication.getCredentials().toString();
             request.setProcessedBy(jwtUtil.extractUsername(token));
@@ -96,7 +96,7 @@ public class SiteProjectController {
         @SecurityRequirement(name = "bearerAuth")
         @Operation(summary = "設備情報入力検証", description = "太陽光設備情報を保存せずに検証します。")
         public ResponseEntity<BaseResponse> validateEquipments(
-                @RequestBody @Valid List<EquipmentItemSolarRequest> equipments) {
+                @RequestBody @Valid List<EnR002EquipmentRequest> equipments) {
         siteProjectService.validateEquipmentsNotEmpty(equipments);
         siteProjectService.validateAllEquipments(equipments);
         return ResponseEntity.ok(BaseResponse.success("入力内容に問題ありません。"));
@@ -118,7 +118,7 @@ public class SiteProjectController {
         @PreAuthorize("hasAnyRole('master','user')")
         @SecurityRequirement(name = "bearerAuth")
         @Operation(summary = "事業者初期値取得", description = "指定された拠点とプロジェクトの事業者入力初期値を取得します。")
-        public ResponseEntity<JigyoushaDefaultResponse> getJigyoushaDefault(
+        public ResponseEntity<EnR002SustainabilityCommitmentResponse> getJigyoushaDefault(
                 @PathVariable Integer siteId,
                 @PathVariable Integer projectId) {
         return ResponseEntity.ok(siteProjectService.getJigyoushaDefault(siteId, projectId));

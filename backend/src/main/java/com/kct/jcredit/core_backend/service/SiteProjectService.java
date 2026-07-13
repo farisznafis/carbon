@@ -1,27 +1,27 @@
 package com.kct.jcredit.core_backend.service;
 
-import com.kct.jcredit.core_backend.dto.request.EquipmentItemSolarRequest;
+import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
 import com.kct.jcredit.core_backend.dto.request.TncValidateRequest;
 import com.kct.jcredit.core_backend.dto.request.JigyoushaValidateRequest;
 import com.kct.jcredit.core_backend.dto.request.FinalAgreementValidateRequest;
-import com.kct.jcredit.core_backend.dto.request.EquipmentRegisterSolarRequest;
+import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.response.EquipmentSolarRegisterResponse;
-import com.kct.jcredit.core_backend.dto.response.JigyoushaDefaultResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
 
 import java.util.List;
 public interface SiteProjectService {
     EquipmentSolarRegisterResponse registerEquipments(
             Integer siteId, Integer projectId, String companyId,
-            EquipmentRegisterSolarRequest request);
+            EnR002ConfirmationItemRequest request);
 
-    JigyoushaDefaultResponse getJigyoushaDefault(Integer siteId, Integer projectId);
+    EnR002SustainabilityCommitmentResponse getJigyoushaDefault(Integer siteId, Integer projectId);
 
-    void validateEquipmentsNotEmpty(List<EquipmentItemSolarRequest> equipments);
-    void validateAllEquipments(List<EquipmentItemSolarRequest> equipments);
-    void validateTncConsent(EquipmentRegisterSolarRequest request);
-    void validateTncFields(EquipmentRegisterSolarRequest request);
-    void validateJigyousha(EquipmentRegisterSolarRequest request);
-    void validateFinalAgreement(EquipmentRegisterSolarRequest request);
+    void validateEquipmentsNotEmpty(List<EnR002EquipmentRequest> equipments);
+    void validateAllEquipments(List<EnR002EquipmentRequest> equipments);
+    void validateTncConsent(EnR002ConfirmationItemRequest request);
+    void validateTncFields(EnR002ConfirmationItemRequest request);
+    void validateJigyousha(EnR002ConfirmationItemRequest request);
+    void validateFinalAgreement(EnR002ConfirmationItemRequest request);
 
     void validateTnc(TncValidateRequest request);
     void validateJigyousha(JigyoushaValidateRequest request);
