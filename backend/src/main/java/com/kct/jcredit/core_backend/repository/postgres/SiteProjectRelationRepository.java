@@ -14,6 +14,16 @@ import java.util.Optional;
 public interface SiteProjectRelationRepository extends JpaRepository<SiteProjectRelation, Integer> {
     boolean existsByProjectAndSite(Project project, Site site);
 
+    Optional<SiteProjectRelation> findBySite_IdAndProject_Id(
+            Integer siteId, Integer projectId);
+
+    boolean existsBySite_IdAndProject_Id(
+            Integer siteId, Integer projectId);
+
+    List<SiteProjectRelation> findBySite_Id(Integer siteId);
+
+    List<SiteProjectRelation> findByProject_Id(Integer projectId);
+
     List<SiteProjectRelation> findBySite(Site site);
 
     List<SiteProjectRelation> findByProject(Project project);

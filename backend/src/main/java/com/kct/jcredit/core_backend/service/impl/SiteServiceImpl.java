@@ -17,13 +17,13 @@ import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
-import com.kct.jcredit.core_backend.entity.SiteR002EquipmentFile;
+import com.kct.jcredit.core_backend.entity.EnR002EquipmentFile;
 import com.kct.jcredit.core_backend.entity.SiteR002MemberData;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
-import com.kct.jcredit.core_backend.repository.postgres.SiteR002EquipmentFileRepository;
+import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentFileRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteR002MemberDataRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.service.SiteService;
@@ -53,7 +53,7 @@ public class SiteServiceImpl implements SiteService {
     private final ParticipatingCompanyRepository participatingCompanyRepository;
     private final ProjectRepository projectRepository;
     private final SiteR002MemberDataRepository siteR002MemberDataRepository;
-    private final SiteR002EquipmentFileRepository siteR002EquipmentFileRepository;
+    private final EnR002EquipmentFileRepository siteR002EquipmentFileRepository;
     private final SiteProjectRelationRepository siteProjectRelationRepository;
     private final ParticipatingUserRepository participatingUserRepository;
     private static final Integer MAX_SITES_PER_COMPANY = 20; // Maximum number of sites allowed per company
@@ -405,14 +405,14 @@ public class SiteServiceImpl implements SiteService {
                 return response;
             }
 
-            List<SiteR002EquipmentFile> equipmentFiles = siteR002EquipmentFileRepository
+            List<EnR002EquipmentFile> equipmentFiles = siteR002EquipmentFileRepository
                     .findByMemberData_Id(memberData.getId());
             if (equipmentFiles.isEmpty() && !memberData.getId().equals(siteId)) {
                 equipmentFiles = siteR002EquipmentFileRepository.findByMemberData_Id(siteId);
             }
 
             List<String> evidenceDocuments = equipmentFiles.stream()
-                    .map(SiteR002EquipmentFile::getS3Key)
+                    .map(EnR002EquipmentFile::getS3Key)
                     .map(this::extractFileNameFroms3Key)
                     .filter(Objects::nonNull)
                     .filter(name -> !name.isBlank())

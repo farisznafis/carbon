@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
-public class TncAgreementRepository {
+public class ApplicationConfirmationRepository {
 
     private final DynamoDbEnhancedClient enhancedClient;
     private static final String TABLE_NAME = "TnC_Agreement_Table";

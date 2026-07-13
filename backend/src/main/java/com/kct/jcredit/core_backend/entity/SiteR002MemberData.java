@@ -114,7 +114,7 @@ public class SiteR002MemberData extends BaseEntity {
     private BigDecimal preProjectUnitPrice;
 
     @OneToMany(mappedBy = "memberData", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SiteR002EquipmentFile> files = new ArrayList<>();
+    private List<EnR002EquipmentFile> files = new ArrayList<>();
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;

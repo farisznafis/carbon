@@ -15,7 +15,7 @@ import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
-import com.kct.jcredit.core_backend.entity.SiteR002EquipmentFile;
+import com.kct.jcredit.core_backend.entity.EnR002EquipmentFile;
 import com.kct.jcredit.core_backend.entity.SiteR002MemberData;
 import com.kct.jcredit.core_backend.entity.TncAgreementEquip;
 import com.kct.jcredit.core_backend.exception.BulkValidationException;
@@ -23,9 +23,9 @@ import com.kct.jcredit.core_backend.exception.CustomException;
 import com.kct.jcredit.core_backend.enums.EquipmentFileType;
 import com.kct.jcredit.core_backend.service.SiteProjectService;
 import com.kct.jcredit.core_backend.service.FileUploadSolarService;
-import com.kct.jcredit.core_backend.repository.dynamodb.TncAgreementRepository;
+import com.kct.jcredit.core_backend.repository.dynamodb.ApplicationConfirmationRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
-import com.kct.jcredit.core_backend.repository.postgres.SiteR002EquipmentFileRepository;
+import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentFileRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteR002MemberDataRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
@@ -56,8 +56,8 @@ public class SiteProjectServiceImpl implements SiteProjectService {
 
     private final SiteProjectRelationRepository siteProjectRelationRepository;
     private final SiteR002MemberDataRepository memberDataRepository;
-    private final SiteR002EquipmentFileRepository equipmentFileRepository;
-    private final TncAgreementRepository tncAgreementRepository;
+    private final EnR002EquipmentFileRepository equipmentFileRepository;
+    private final ApplicationConfirmationRepository tncAgreementRepository;
     private final SiteRepository siteRepository;
     private final ProjectRepository projectRepository;
     private final FileUploadSolarService fileUploadSolarService;
@@ -144,17 +144,17 @@ public class SiteProjectServiceImpl implements SiteProjectService {
         validateFinalAgreement(request);
 
         // Batch insert equipment + files
-        final List<SiteR002EquipmentFile> savedFiles = new ArrayList<>();
+        final List<EnR002EquipmentFile> savedFiles = new ArrayList<>();
 
         List<EquipmentItemSolarResponse> equipmentResponses = request.getEquipments().stream()
                 .map(item -> {
                     SiteR002MemberData entity = buildMemberDataEntity(item, relation);
                     SiteR002MemberData saved = memberDataRepository.save(entity);
 
-                    List<SiteR002EquipmentFile> fileEntities = item.getFiles().stream()
+                    List<EnR002EquipmentFile> fileEntities = item.getFiles().stream()
                             .map(f -> buildFileEntity(f, saved))
                             .collect(Collectors.toList());
-                    List<SiteR002EquipmentFile> savedFileList =
+                    List<EnR002EquipmentFile> savedFileList =
                             equipmentFileRepository.saveAll(fileEntities);
                     savedFiles.addAll(savedFileList);
 
@@ -199,7 +199,7 @@ public class SiteProjectServiceImpl implements SiteProjectService {
                             try {
                                 String permanentKey = fileUploadSolarService.moveTempToPermanent(
                                         fileEntity.getS3Key(),
-                                        fileEntity.getMemberData().getId()
+                                        fileEntity.getId()
                                 );
                                 equipmentFileRepository.updates3Key(fileEntity.getId(), permanentKey);
                             } catch (Exception e) {
@@ -709,15 +709,15 @@ public class SiteProjectServiceImpl implements SiteProjectService {
                 .build();
     }
 
-    private SiteR002EquipmentFile buildFileEntity(
+    private EnR002EquipmentFile buildFileEntity(
             FileItemSolarRequest fileReq,
             SiteR002MemberData savedMemberData) {
-        return SiteR002EquipmentFile.builder()
-                .memberData(savedMemberData)
+        return EnR002EquipmentFile.builder()
+                // .memberData(savedMemberData)
                 .fileType(fileReq.getFileType())
                 .fileId(fileReq.getFileId())
                 .s3Key(fileReq.getS3Key())
-                .originalName(fileReq.getFileName())
+                // .originalName(fileReq.getFileName())
                 .build();
     }
 

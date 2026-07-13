@@ -17,36 +17,28 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 @Entity
-@Table(name = "site_r002_equipment_file")
-@SQLDelete(sql = "UPDATE site_r002_equipment_file SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
-@SQLRestriction("deleted_at IS NULL")
+@Table(name = "en_r002_equipment_file")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SiteR002EquipmentFile extends BaseEntity {
+public class EnR002EquipmentFile extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_data_id", nullable = false)
-    private SiteR002MemberData memberData;
-
-    @Column(name = "file_id", length = 100)
-    private String fileId;
+    @JoinColumn(name = "equipment_id", nullable = false)
+    private EnR002Equipment equipment;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "file_type", length = 50, nullable = false)
     private EquipmentFileType fileType;
 
-    // @Column(name = "field_reference", length = 255)
-    // private String fieldReference;
+    @Column(name = "file_id", length = 100, nullable = false)
+    private String fileId;
 
-    @Column(name = "s3_key", length = 1000, nullable = false)
+    @Column(name = "s3_key", length = 500, nullable = false)
     private String s3Key;
-
-    @Column(name = "original_name", length = 255)
-    private String originalName;
-
+    
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
