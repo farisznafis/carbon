@@ -28,15 +28,9 @@ import {
   dashboardTabTriggerClassName,
 } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { CancelRequestHistoryTable, type CancelRequestItem } from '@/features/admin/dashboard/tables/CancelRequestHistoryTable';
+import { CancelRequestHistoryTable } from '@/features/admin/dashboard/tables/CancelRequestHistoryTable';
 import { AdminCompanyApplicationsTable } from '@/features/admin/dashboard/tables/AdminCompanyApplicationsTable';
 import { CompanySuspensionResolveDialog } from '@/features/admin/dashboard/tables/CompanySuspensionResolveDialog';
 import { PendingCompanyActionDialog } from '@/features/admin/dashboard/tables/PendingCompanyActionDialog';
@@ -237,7 +231,6 @@ const AdminDashboard = () => {
         applicationId,
     ),
   );
-  const [cancelRequestDialogOpen, setCancelRequestDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
   const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
@@ -351,33 +344,6 @@ const AdminDashboard = () => {
     } finally {
       setUpdatingProjectStatusId(null);
     }
-  };
-
-  const cancelRequestHistory: CancelRequestItem[] = [
-    {
-      id: 'REG-123456',
-      userName: '山田 太郎',
-      siteName: 'ABC工場',
-      reason: '誤って登録したため、解除を希望します。',
-      requestedAt: '2026/04/27 10:15',
-      status: 'PENDING',
-    },
-    {
-      id: 'REG-123457',
-      userName: '佐藤 花子',
-      siteName: 'DEF支店',
-      reason: '責任者変更のため、一度解除したいです。',
-      requestedAt: '2026/04/26 14:40',
-      status: 'PENDING',
-    },
-  ];
-
-  const handleApproveCancelRequest = (_id: string) => {
-    setCompanyListError(null);
-  };
-
-  const handleRejectCancelRequest = (_id: string) => {
-    setCompanyListError(null);
   };
 
   const routeApplicationCompany = useMemo(() => {
@@ -766,9 +732,7 @@ const AdminDashboard = () => {
               title="モニタリングデータ管理"
               description="提出されたモニタリングデータの確認と管理を行います。"
             >
-              <AdminDashboardEmptyState>
-                表示できるモニタリングデータがありません。
-              </AdminDashboardEmptyState>
+              <CancelRequestHistoryTable />
             </AdminDashboardSection>
           </TabsContent>
         </main>
@@ -801,22 +765,6 @@ const AdminDashboard = () => {
         onConfirm={handleConfirmResolveSuspension}
       />
 
-      <Dialog
-        open={cancelRequestDialogOpen}
-        onOpenChange={setCancelRequestDialogOpen}
-      >
-        <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-6xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>取り消し一覧</DialogTitle>
-          </DialogHeader>
-          <CancelRequestHistoryTable
-            items={cancelRequestHistory}
-            onApprove={handleApproveCancelRequest}
-            onReject={handleRejectCancelRequest}
-            showTitle={false}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

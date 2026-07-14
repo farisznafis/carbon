@@ -3,9 +3,11 @@
  * ===========================
  * Fetch recent monitoring data for a project (and optional site)
  */
-import { apiFetch, parseJsonResponse } from "../_shared/httpClient";
+import { apiFetch, apiRequest, parseJsonResponse } from '../_shared/httpClient';
 import { normalizeRecentMonitoringItem } from "./mappers";
 import type {
+  MonitoringCancelRequestListItem,
+  MonitoringCancelRequestListResponse,
   MonitoringRecordListResponse,
   MonitoringRecordListResult,
   MonitoringRecentApiItem,
@@ -96,4 +98,18 @@ export async function getMonitoringRecords(params: {
       hasMore: responsePagination?.hasMore ?? false,
     },
   };
+}
+
+export async function getMonitoringCancelRequests(): Promise<
+  MonitoringCancelRequestListItem[]
+> {
+  const response = await apiRequest<MonitoringCancelRequestListResponse>(
+    '/monitoring/cancel-requests',
+    {
+      method: 'GET',
+      fallbackErrorMessage: 'Failed to fetch monitoring cancel requests',
+    },
+  );
+
+  return Array.isArray(response?.items) ? response.items : [];
 }

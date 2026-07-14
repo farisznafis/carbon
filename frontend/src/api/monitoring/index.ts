@@ -1,7 +1,12 @@
 export { normalizeRecentMonitoringItem } from './mappers';
-export { getMonitoringRecent, getMonitoringRecords } from './queries';
+export {
+  getMonitoringCancelRequests,
+  getMonitoringRecent,
+  getMonitoringRecords,
+} from './queries';
 export {
   createMonitoringCancelRequest,
+  decideMonitoringCancelRequest,
   submitMonitoringData,
   validateMonitoringData,
   uploadElpvFile,
@@ -13,6 +18,11 @@ export {
 export type { MonitoringData, SubmitDataResponse } from './types';
 
 export type {
+  MonitoringCancelDecision,
+  MonitoringCancelDecisionPayload,
+  MonitoringCancelDecisionResponse,
+  MonitoringCancelRequestListItem,
+  MonitoringCancelRequestListResponse,
   MonitoringEvidenceKind,
   MonitoringCancelRequestPayload,
   MonitoringCancelRequestResponse,

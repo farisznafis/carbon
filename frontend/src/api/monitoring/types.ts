@@ -149,3 +149,46 @@ export type MonitoringCancelRequestResponse = {
   siteId?: number;
   reason?: string;
 };
+
+export type MonitoringCancelRequestListItem = {
+  id: number;
+  requestedAt: string;
+  reason: string;
+  recordPk: string;
+  status: string;
+  requestedBy: string;
+  siteName: string;
+  decidedAt: string | null;
+  decidedBy: string | null;
+};
+
+export type MonitoringCancelRequestListResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+  items?: MonitoringCancelRequestListItem[] | null;
+};
+
+export type MonitoringCancelDecision = 'APPROVE' | 'REJECTED';
+
+export type MonitoringCancelDecisionPayload = {
+  decision: MonitoringCancelDecision;
+  managerRemarks?: string;
+};
+
+export type MonitoringCancelDecisionResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+  cancelRequestId?: number;
+  status?: string;
+  decidedBy?: string;
+  decidedAt?: string;
+  originalRecordPk?: string;
+  originalRecordSk?: string;
+  offsetRecordPk?: string;
+  offsetRecordSk?: string;
+  managerRemarks?: string;
+};

@@ -2,6 +2,8 @@ import { apiFetch, apiRequest, apiVoidRequest, parseJsonResponse } from "../_sha
 import { ApiError, getApiErrorMessage } from "../_shared/errors";
 import type { ApiErrorPayload } from "../_shared/types";
 import type {
+  MonitoringCancelDecisionPayload,
+  MonitoringCancelDecisionResponse,
   MonitoringCancelRequestPayload,
   MonitoringCancelRequestResponse,
   MonitoringData,
@@ -112,6 +114,20 @@ export async function createMonitoringCancelRequest(
       method: 'POST',
       body: payload,
       fallbackErrorMessage: 'Failed to create monitoring cancel request',
+    },
+  );
+}
+
+export async function decideMonitoringCancelRequest(
+  cancelRequestId: number,
+  payload: MonitoringCancelDecisionPayload,
+): Promise<MonitoringCancelDecisionResponse> {
+  return apiRequest<MonitoringCancelDecisionResponse>(
+    `/monitoring/${cancelRequestId}/cancel-decision`,
+    {
+      method: 'POST',
+      body: payload,
+      fallbackErrorMessage: 'Failed to decide monitoring cancel request',
     },
   );
 }

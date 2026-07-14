@@ -539,7 +539,7 @@ const Dashboard = () => {
                     size="md"
                     onClick={() => navigate(`/master/site-edit/${activeSiteId}`)}
                   >
-                    拠点情報を編集
+                    拠点情報を更新
                   </Button>
                 )}
               </div>
