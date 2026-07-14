@@ -10,10 +10,13 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.util.List;
 
 @Repository
 public interface EnR002ReductionResultRepository extends JpaRepository<EnR002ReductionResult, Integer> {
     
+
+    List<EnR002ReductionResult> findByProjectIdAndSiteIdAndIsActiveTrueOrderByStartTimeDesc(Integer projectId, Integer siteId);
 
     EnR002ReductionResult findTopByProjectIdAndSiteIdAndIsActiveTrueOrderByStartTimeDesc(Integer projectId, Integer siteId);
 
