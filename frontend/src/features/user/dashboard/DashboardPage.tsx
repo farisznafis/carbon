@@ -277,19 +277,13 @@ function JoinedProjectCard({
   );
 }
 
-function AvailableProjectCard({
-  project,
-  onJoin,
-}: {
-  project: SiteProject;
-  onJoin: () => void;
-}) {
+function AvailableProjectCard({ project }: { project: SiteProject }) {
   return (
     <Card className="rounded-2xl border-border bg-card shadow-none">
-      <CardContent className="flex h-full min-h-[300px] flex-col p-6">
+      <CardContent className="h-full p-6">
         <h3 className="text-foreground">{project.projectName || 'PROJECT ABC'}</h3>
 
-        <dl className="mt-6 space-y-4 mb-4">
+        <dl className="mt-6 space-y-4">
           <div>
             <dt className="text-small text-muted-foreground">方法論</dt>
             <dd className="mt-1 font-bold">{getMethodologyLabel(project)}</dd>
@@ -305,16 +299,6 @@ function AvailableProjectCard({
             </dd>
           </div>
         </dl>
-
-        <Button
-          type="button"
-          variant="outline"
-          size="md"
-          className="mt-auto w-full border-primary text-primary hover:bg-secondary/60"
-          onClick={onJoin}
-        >
-          参加する
-        </Button>
       </CardContent>
     </Card>
   );
@@ -467,13 +451,6 @@ const Dashboard = () => {
     setCurrentProject(null);
   }, [setCurrentProject]);
 
-  const handleJoinProject = (project: SiteProject) => {
-    setCurrentProject(project);
-    navigate(`/projects/${project.id}/register`, {
-      state: { siteId: activeSiteId },
-    });
-  };
-
   const handleOpenProject = (project: SiteProject) => {
     navigate(`/sites/${encodeURIComponent(activeSiteId)}/projects/${project.id}`);
   };
@@ -613,11 +590,20 @@ const Dashboard = () => {
 
       <section className="bg-background py-12">
         <div className={pageContainer}>
-          <div className="mb-6">
-            <h2 className="text-foreground">非参加プロジェクト</h2>
-            <p className="text-small mt-2 text-foreground">
-              この拠点は以下のプロジェクトにまだ参加していません。参加するには参加手続きを行ってください。
-            </p>
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-foreground">非参加プロジェクト</h2>
+              <p className="text-small mt-2 whitespace-pre-line text-foreground">
+                {user?.role === 'master'
+                  ? 'プロジェクトへの参加をご希望の場合は、「プロジェクト入会届」ボタンを押下し、参加するプロジェクトを選択してください。'
+                  : 'この拠点は、以下のプロジェクトにまだ参加していません。\n参加をご希望の場合は、マスター権限を持つ担当者へお問い合わせください。'}
+              </p>
+            </div>
+            {user?.role === 'master' && (
+              <Button type="button" size="md" className="shrink-0">
+                プロジェクト入会届
+              </Button>
+            )}
           </div>
 
           {isLoading ? (
@@ -632,7 +618,6 @@ const Dashboard = () => {
                 <AvailableProjectCard
                   key={project.id}
                   project={project}
-                  onJoin={() => handleJoinProject(project)}
                 />
               ))}
             </div>

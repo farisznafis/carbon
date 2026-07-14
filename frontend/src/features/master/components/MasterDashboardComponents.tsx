@@ -139,7 +139,7 @@ export function UserDashboardCard({
           )}
         </div>
 
-        <div className="mt-4 grid gap-x-8 gap-y-3 text-sm font-bold leading-6 text-foreground xl:grid-cols-[minmax(360px,1.7fr)_minmax(220px,1fr)_minmax(220px,1fr)]">
+        <div className="pl-3 mt-3 grid gap-x-8 gap-y-3 text-sm font-bold leading-6 text-foreground xl:grid-cols-[minmax(360px,1.7fr)_minmax(220px,1fr)_minmax(220px,1fr)]">
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <Mail className="h-4 w-4 shrink-0" />
             <span className="shrink-0 text-muted-foreground">

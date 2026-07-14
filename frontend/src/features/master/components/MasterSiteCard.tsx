@@ -46,7 +46,7 @@ export function MasterSiteCard({ site, onOpen }: MasterSiteCardProps) {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-col gap-2 text-sm font-bold leading-6 text-foreground">
+          <div className="pl-3 mt-3 flex flex-col gap-2 text-sm font-bold leading-6 text-foreground">
             <span className="inline-flex items-center gap-1.5">
               <User className="h-4 w-4" />
               <span className="text-muted-foreground">責任者</span>
