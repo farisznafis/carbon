@@ -331,6 +331,7 @@ const AdminDashboard = () => {
       toast({
         title: 'ステータスを更新しました',
         description: `${project.projectName}: ${status}`,
+        variant: 'success',
       });
     } catch (error) {
       toast({
@@ -431,6 +432,7 @@ const AdminDashboard = () => {
           pendingDialogMode === 'approve'
             ? '申請を承認しました'
             : '申請を却下しました',
+        variant: pendingDialogMode === 'approve' ? 'success' : 'warning',
       });
     } catch (error) {
       setActionFieldErrors(getApiFieldErrors(error));
@@ -512,7 +514,7 @@ const AdminDashboard = () => {
       );
       await reloadCompanyLists();
       handleResolveDialogOpenChange(false);
-      toast({ title: '停止を解除しました' });
+      toast({ title: '停止を解除しました', variant: 'success' });
     } catch (error) {
       setActionFieldErrors(getApiFieldErrors(error));
       setCompanyListError(

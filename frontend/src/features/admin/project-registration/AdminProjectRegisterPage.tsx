@@ -237,6 +237,7 @@ export const AdminProjectRegister: React.FC = () => {
       toast({
         title: '保存しました',
         description: 'プロジェクト申請情報を保存しました。',
+        variant: 'success',
       });
     } catch (e) {
       const message = applyBackendValidationErrors(form, e);
@@ -273,6 +274,7 @@ export const AdminProjectRegister: React.FC = () => {
       toast({
         title: '保存しました',
         description: 'プロジェクト基本情報を保存しました。',
+        variant: 'success',
       });
     } catch (e) {
       setCreatedProjectId(null);

@@ -183,6 +183,7 @@ export function CancelRequestHistoryTable() {
       setManagerRemarks('');
       toast({
         title: isApproval ? '取消申請を承認しました' : '取消申請を却下しました',
+        variant: isApproval ? 'success' : 'warning',
       });
       await reloadRequests();
     } catch (error) {
