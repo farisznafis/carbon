@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeEmissionTrendResponse } from './queries';
+import {
+  normalizeEmissionTrendResponse,
+  normalizeProjectEmissionBreakdownResponse,
+} from './queries';
 
 const expectedTrendPoint = {
   x: '2026-01-31',
@@ -71,5 +74,75 @@ describe('normalizeEmissionTrendResponse', () => {
         ],
       }),
     ).toEqual([]);
+  });
+});
+
+describe('normalizeProjectEmissionBreakdownResponse', () => {
+  it('maps only the three breakdown fields from a wrapped response', () => {
+    expect(
+      normalizeProjectEmissionBreakdownResponse({
+        data: {
+          result: {
+            empj_m: 12.345,
+            empj_s_control: '8.123',
+            empj_s_battery: 4.222,
+          },
+        },
+      }),
+    ).toEqual({
+      mainEmission: 12.345,
+      controlDeviceEmission: 8.123,
+      batteryEmission: 4.222,
+    });
+  });
+
+  it('preserves zero as a valid emission value', () => {
+    expect(
+      normalizeProjectEmissionBreakdownResponse({
+        items: [{ empj_m: 0 }],
+      }),
+    ).toEqual({
+      mainEmission: 0,
+      controlDeviceEmission: null,
+      batteryEmission: null,
+    });
+  });
+
+  it('aggregates every item returned by the total endpoint', () => {
+    expect(
+      normalizeProjectEmissionBreakdownResponse({
+        items: [
+          {
+            empj_m: 0,
+            empj_s_control: 0.033,
+            empj_s_battery: 0,
+          },
+          {
+            empj_m: 80,
+            empj_s_control: 0,
+            empj_s_battery: 0,
+          },
+          {
+            empj_m: 70.3,
+            empj_s_control: '0.017',
+            empj_s_battery: null,
+          },
+        ],
+      }),
+    ).toEqual({
+      mainEmission: 150.3,
+      controlDeviceEmission: 0.05,
+      batteryEmission: 0,
+    });
+  });
+
+  it('returns null when no breakdown field can be displayed', () => {
+    expect(
+      normalizeProjectEmissionBreakdownResponse({
+        empj_m: null,
+        empj_s_control: '',
+        empj_s_battery: undefined,
+      }),
+    ).toBeNull();
   });
 });

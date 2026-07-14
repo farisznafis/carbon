@@ -30,7 +30,11 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getMonitoringRecent } from '@/api/monitoring';
 import type { MonitoringData } from '@/api/monitoring';
-import { getEmissionTrend, type EmissionTrendPoint } from '@/api/batch';
+import {
+  getProjectEmissionCharts,
+  type EmissionTrendPoint,
+  type ProjectEmissionBreakdown,
+} from '@/api/batch';
 import { logger } from '@/lib/logger';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import {
@@ -41,6 +45,7 @@ import {
 import { EquipmentList } from './components/EquipmentList';
 import { MonitoringCancellationDialog } from './components/MonitoringCancellationDialog';
 import { EmissionTrendChart } from './components/EmissionTrendChart';
+import { EmissionBreakdownChart } from './components/EmissionBreakdownChart';
 import { projectDetailCardClassName } from './projectDetailStyles';
 import { cn } from '@/lib/utils';
 
@@ -282,6 +287,13 @@ const ProjectDetail = () => {
   const [emissionTrendError, setEmissionTrendError] = useState<string | null>(
     null,
   );
+  const [emissionBreakdown, setEmissionBreakdown] =
+    useState<ProjectEmissionBreakdown | null>(null);
+  const [emissionBreakdownLoading, setEmissionBreakdownLoading] =
+    useState(false);
+  const [emissionBreakdownError, setEmissionBreakdownError] = useState<
+    string | null
+  >(null);
   const [monitoringCancellationOpen, setMonitoringCancellationOpen] =
     useState(false);
 
@@ -291,6 +303,56 @@ const ProjectDetail = () => {
     setEquipmentHasFetched(false);
     setEquipmentList([]);
     setEquipmentError(null);
+  }, [projectId, siteId]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const fetchEmissionCharts = async () => {
+      if (!projectId || !siteId) {
+        setEmissionTrend([]);
+        setEmissionTrendError(null);
+        setEmissionTrendLoading(false);
+        setEmissionBreakdown(null);
+        setEmissionBreakdownError(null);
+        setEmissionBreakdownLoading(false);
+        return;
+      }
+
+      try {
+        setEmissionTrendLoading(true);
+        setEmissionTrendError(null);
+        setEmissionBreakdownLoading(true);
+        setEmissionBreakdownError(null);
+
+        const charts = await getProjectEmissionCharts(siteId, projectId);
+
+        if (!isCancelled) {
+          setEmissionTrend(charts.trend);
+          setEmissionBreakdown(charts.breakdown);
+        }
+      } catch (error) {
+        logger.error('Error loading project emission charts:', error);
+
+        if (!isCancelled) {
+          setEmissionTrend([]);
+          setEmissionTrendError('排出量データの取得に失敗しました。');
+          setEmissionBreakdown(null);
+          setEmissionBreakdownError('排出量内訳データの取得に失敗しました。');
+        }
+      } finally {
+        if (!isCancelled) {
+          setEmissionTrendLoading(false);
+          setEmissionBreakdownLoading(false);
+        }
+      }
+    };
+
+    void fetchEmissionCharts();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [projectId, siteId]);
 
   useEffect(() => {
@@ -381,47 +443,6 @@ const ProjectDetail = () => {
 
     void fetchEquipment();
   }, [equipmentHasFetched, projectId, siteId, tab]);
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    const fetchEmissionTrend = async () => {
-      if (!projectId || !siteId) {
-        setEmissionTrend([]);
-        setEmissionTrendError(null);
-        setEmissionTrendLoading(false);
-        return;
-      }
-
-      try {
-        setEmissionTrendLoading(true);
-        setEmissionTrendError(null);
-
-        const trend = await getEmissionTrend(siteId, projectId);
-
-        if (!isCancelled) {
-          setEmissionTrend(trend);
-        }
-      } catch (error) {
-        logger.error('Error loading project emission trend:', error);
-
-        if (!isCancelled) {
-          setEmissionTrend([]);
-          setEmissionTrendError('排出量データの取得に失敗しました。');
-        }
-      } finally {
-        if (!isCancelled) {
-          setEmissionTrendLoading(false);
-        }
-      }
-    };
-
-    void fetchEmissionTrend();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [projectId, siteId]);
 
   const monitoringRows: MonitoringDisplayRow[] =
     recentMonitoring.length > 0 ? recentMonitoring : [fallbackMonitoringRow];
@@ -598,33 +619,14 @@ const ProjectDetail = () => {
                   />
                 </div>
 
-                <Card className={`${projectDetailCardClassName} flex h-full min-h-[360px] flex-col`}>
-                  <CardHeader className='px-7 pb-1 pt-7'>
-                    <CardTitle className='leading-8 text-foreground'>
-                      見積
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className='flex flex-1 flex-col space-y-4 px-7 pb-7'>
-                    <div className='flex min-h-[210px] flex-1 flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted text-center'>
-                      <ChartNoAxesColumn className='mb-3 h-8 w-8 text-primary' />
-                      <p className='font-semibold'>Estimation Graphic (推定グラフ)</p>
-                      <p className='text-subtle text-muted-foreground'>
-                        機械学習モデルによる今後の削減予測
-                      </p>
-                    </div>
-
-                    <div className='space-y-3'>
-                      <div className='flex items-center justify-between gap-4'>
-                        <span className='text-muted-foreground'>排出量削減目標</span>
-                        <span className='font-bold text-foreground'>1,000 tCO2</span>
-                      </div>
-                      <div className='h-2 rounded-full bg-muted'>
-                        <div className='h-2 w-5/6 rounded-full bg-primary' />
-                      </div>
-                      <p className='text-subtle text-right font-bold text-primary'>達成率 83%</p>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className='h-full animate-slide-up'>
+                  <EmissionBreakdownChart
+                    data={emissionBreakdown}
+                    isLoading={emissionBreakdownLoading}
+                    error={emissionBreakdownError}
+                    className={projectDetailCardClassName}
+                  />
+                </div>
               </section>
             </TabsContent>
 
