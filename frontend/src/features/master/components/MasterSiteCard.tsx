@@ -28,10 +28,11 @@ export function MasterSiteCard({
 
   return (
     <article className="grid min-h-28 w-full overflow-hidden rounded-lg border border-border bg-card shadow-app-sm transition hover:border-primary/60 md:grid-cols-[minmax(0,1fr)_96px]">
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={() => onOpen(site)}
-        className="grid min-w-0 gap-5 px-5 py-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring md:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)] md:items-start md:px-7 xl:grid-cols-[minmax(0,1fr)_minmax(430px,0.75fr)]"
+        className="grid h-auto min-w-0 justify-normal gap-5 whitespace-normal rounded-none px-5 py-5 text-left shadow-none hover:bg-transparent md:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)] md:items-start md:px-7 xl:grid-cols-[minmax(0,1fr)_minmax(430px,0.75fr)]"
       >
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-3">
@@ -96,7 +97,7 @@ export function MasterSiteCard({
             </div>
           </div>
         </div>
-      </button>
+      </Button>
 
       <div className="flex min-h-28 items-center justify-center border-t border-border px-4 py-4 md:border-l md:border-t-0">
         <Button

@@ -24,7 +24,7 @@ const MasterDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   
-  const activeTab = searchParams.get('tab') || 'users';
+  const activeTab = searchParams.get('tab') === 'users' ? 'users' : 'sites';
 
   const sites = useDashboardStore((state) => state.sites);
   const users = useDashboardStore((state) => state.users);

@@ -47,11 +47,11 @@ export function MasterDashboardTabs() {
   return (
     <div className="bg-card pt-6">
       <TabsList className={dashboardTabsListClassName}>
-        <TabsTrigger value="users" className={triggerClassName}>
-          社員管理
-        </TabsTrigger>
         <TabsTrigger value="sites" className={triggerClassName}>
           拠点管理
+        </TabsTrigger>
+        <TabsTrigger value="users" className={triggerClassName}>
+          社員管理
         </TabsTrigger>
       </TabsList>
     </div>
@@ -184,20 +184,23 @@ export function UserDashboardCard({
       </div>
 
       <div className="grid grid-cols-2 border-t border-border md:w-[128px] md:shrink-0 md:grid-cols-1 md:border-l md:border-t-0">
-        <button
+        <Button
           type="button"
+          size="sm"
           onClick={() => onProfile(user)}
-          className="bg-primary px-4 py-4 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="h-full w-full rounded-none px-4 py-4 shadow-none"
         >
           プロファイル
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => onEdit(user)}
-          className="bg-card px-4 py-4 text-sm font-medium text-primary transition hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="h-full w-full rounded-none bg-card px-4 py-4 text-primary shadow-none hover:bg-secondary/60 hover:text-primary"
         >
           更新
-        </button>
+        </Button>
       </div>
     </article>
   );

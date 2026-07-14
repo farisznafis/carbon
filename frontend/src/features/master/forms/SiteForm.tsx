@@ -32,6 +32,7 @@ import {
 import type { SiteFormData } from '@/api/site';
 import type { UserList } from '@/api/users';
 import { prefectures } from '@/lib/constants/prefectures';
+import { UserPlus } from 'lucide-react';
 
 export type { SiteFormData } from '@/api/site';
 
@@ -68,6 +69,7 @@ interface SiteFormProps {
   isUserOptionsLoading?: boolean;
   userOptionsError?: string | null;
   userOptionsHelperText?: string;
+  onAddUser?: (draft: SiteFormData) => void;
   embedded?: boolean;
 }
 
@@ -93,6 +95,7 @@ export function SiteForm({
   isUserOptionsLoading = false,
   userOptionsError = null,
   userOptionsHelperText,
+  onAddUser,
   embedded = false,
 }: Readonly<SiteFormProps>) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -450,6 +453,19 @@ export function SiteForm({
                     );
                   }}
                 />
+                {onAddUser && (
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="md"
+                      onClick={() => onAddUser(form.getValues())}
+                    >
+                      <UserPlus />
+                      社員を追加
+                    </Button>
+                  </div>
+                )}
               </FormSection>
 
             <FormActions
@@ -482,7 +498,7 @@ export function SiteForm({
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
+                  size="md"
                   className="w-full"
                   onClick={() => navigate(-1)}
                 >
@@ -492,7 +508,7 @@ export function SiteForm({
 
               <Button
                 type="submit"
-                size="sm"
+                size="md"
                 className="w-full"
                 disabled={!isDirty || disableSubmit}
               >

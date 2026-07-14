@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { registerUser, validateCreateUser } from '@/api/users/mutations';
 import {
   FormPageContent,
@@ -9,10 +9,15 @@ import {
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { UserForm, UserFormData } from '@/features/master/forms/UserForm';
 import UserConfirmation from '@/features/master/pages/UserConfirmation';
+import {
+  createSiteRegistrationFlowState,
+  getSiteRegistrationFlowState,
+} from '@/features/master/navigation/siteRegistrationFlow';
 import { toast } from '@/hooks/use-toast';
 import { useSitesQuery } from '@/hooks/sites/useSitesQuery';
 import { logger } from '@/lib/logger';
 import { useDashboardStore } from '@/stores/dashboardStore';
+import { paths } from '@/routes/paths';
 
 const emptyUserValues: UserFormData = {
   username: '',
@@ -29,10 +34,13 @@ const emptyUserValues: UserFormData = {
 
 export default function UserRegister() {
   const [step, setStep] = useState<'form' | 'confirm'>('form');
+  const location = useLocation();
   const navigate = useNavigate();
   const { addUser, editSite, setSites } = useDashboardStore();
   const [formData, setFormData] = useState<UserFormData>();
   const sitesQuery = useSitesQuery();
+  const registrationFlowState = getSiteRegistrationFlowState(location.state);
+  const isSiteRegistrationFlow = Boolean(registrationFlowState);
 
   useEffect(() => {
     if (sitesQuery.data?.sites) {
@@ -72,7 +80,18 @@ export default function UserRegister() {
         description: '社員を登録しました',
       });
 
-      navigate('/master/dashboard');
+      if (registrationFlowState) {
+        navigate(paths.masterSiteRegister, {
+          replace: true,
+          state: createSiteRegistrationFlowState(
+            registrationFlowState.siteDraft,
+            res.user,
+          ),
+        });
+        return;
+      }
+
+      navigate(paths.masterDashboard);
     } catch (error) {
       logger.error('Error creating user:', error);
       toast({
@@ -89,6 +108,16 @@ export default function UserRegister() {
   };
 
   const handleFormBack = () => {
+    if (registrationFlowState) {
+      navigate(paths.masterSiteRegister, {
+        replace: true,
+        state: createSiteRegistrationFlowState(
+          registrationFlowState.siteDraft,
+        ),
+      });
+      return;
+    }
+
     navigate(-1);
   };
 
@@ -100,6 +129,7 @@ export default function UserRegister() {
         originalData={emptyUserValues}
         onBack={handleConfirmBack}
         onSubmit={handleFinalSubmit}
+        hideSiteSection={isSiteRegistrationFlow}
       />
     );
   }
@@ -125,6 +155,7 @@ export default function UserRegister() {
           siteOptions={sitesQuery.data?.sites ?? []}
           isSiteOptionsLoading={sitesQuery.isLoading}
           siteOptionsError={sitesQuery.isError ? '拠点を取得できませんでした' : null}
+          hideSiteSection={isSiteRegistrationFlow}
           embedded
         />
       </FormPageContent>
