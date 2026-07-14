@@ -37,6 +37,18 @@ public interface MonitoringService {
 
     MonitoringRecordSolarListResponse readAllMonitoringRecordsSolar(
         String username,
+        Integer page,
+        Integer limit,
+        Integer projectId,
+        String nextPageToken
+    );
+    
+
+    /**
+     * Read monitoring record by ID for a company-specific site/project
+     */   
+     MonitoringRecordSolarListResponse readSiteMonitoringRecordsSolar(
+        String username,
         String companyId,
         Integer projectId,
         Integer siteId,
@@ -44,6 +56,7 @@ public interface MonitoringService {
         Integer limit,
         String nextPageToken
     );
+    
 
     /**
      * 4 Evidence Upload APIs - company-scoped

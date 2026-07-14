@@ -1,640 +1,469 @@
-# Dummy Seed Data 
+SQLの関係図
 
----
-こちらのダミーデータはGXCarbon.sqlのベースです。
+```mermaid
+erDiagram
+    %% <master / operator entities>
+    operator_company {
+        int id PK "auto-increment"
+        varchar company_id UK "(nn) KCT operator ID"
+        varchar name_ja "(nn)"
+        varchar name_furigana "(nn)"
+        varchar name_en "(nn)"
+        varchar email "(nn)"
+        varchar phone_number "(nn)"
+        varchar corp_number UK "(nn) 13 digits"
+        varchar postal_code "(nn) 000-0000"
+        varchar prefecture "(nn)"
+        varchar city "(nn)"
+        varchar town "(nn)"
+        varchar blocknum "(nn)"
+        varchar address "(nn)"
+        varchar rep_first_name "(nn)"
+        varchar rep_first_name_kana "(nn)"
+        varchar rep_last_name "(nn)"
+        varchar rep_last_name_kana "(nn)"
+        varchar rep_email "(nn)"
+        varchar rep_phone_number "(nn)"
+        varchar rep_position "(nn)"
+        boolean is_active "(nn)"
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+    }
 
-## 1. `operator_company`
+    operating_user {
+        int id PK "auto-increment"
+        varchar username UK "(nn)"
+        varchar first_name "(nn)"
+        varchar first_name_kana "(nn)"
+        varchar last_name "(nn)"
+        varchar last_name_kana "(nn)"
+        varchar email "(nn)"
+        varchar phone_number "(nn)"
+        varchar password "(nn) bcrypt hash"
+        varchar role "(nn) operator, user"
+        boolean is_active "(nn)"
+        int login_attempts "(nn)"
+        timestamp account_locked_until
+        varchar company_id "(nn) FK to operator_company.company_id"
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+    }
 
-```sql
-INSERT INTO operator_company (
-    is_active, created_by, updated_by,
-    company_id, name_ja, name_furigana, name_en,
-    email, phone_number, corp_number,
-    postal_code, prefecture, municipality, blocknum, building_name,
-    rep_first_name, rep_first_name_kana, rep_last_name, rep_last_name_kana,
-    rep_email, rep_phone_number, rep_position
-) VALUES
-(
-    TRUE, 'seed_script', 'seed_script',
-    'OP000000001', '株式会社グリーンエナジー', 'グリーンエナジー', 'Green Energy Co., Ltd.',
-    'contact@greenenergy.co.jp', '0312345678', '1234567890123',
-    '100-0001', '東京都', '千代田区千代田', '1-1', '千代田ビル',
-    '太郎', 'タロウ', '山田', 'ヤマダ',
-    'yamada.taro@greenenergy.co.jp', '0312345679', '代表取締役'
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    'OP000000002', '株式会社カーボンテック', 'カーボンテック', 'Carbon Tech Co., Ltd.',
-    'info@carbontech.co.jp', '0661234567', '9876543210987',
-    '530-0001', '大阪府', '大阪市北区梅田', '2-3', '梅田タワー',
-    '花子', 'ハナコ', '鈴木', 'スズキ',
-    'suzuki.hanako@carbontech.co.jp', '0661234568', '取締役社長'
-);
+    account {
+        int id PK "auto-increment"
+        boolean is_active "(nn)"
+        varchar acct_no UK "(nn) J-Credit account number"
+        varchar holder_account_name_kana "(nn)"
+        varchar holder_account_name "(nn)"
+        varchar holder_corp_number UK "13 digits"
+        varchar holder_prefecture "(nn)"
+        varchar holder_city "(nn)"
+        varchar holder_address "(nn)"
+        boolean is_holder_undecided "(nn)"
+        int operator_company_id FK "(nn)"
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+    }
+
+    project {
+        int id PK "auto-increment"
+        varchar project_name "(nn)"
+        varchar project_number UK "(nn) P[digits]"
+        varchar project_status "(nn)"
+        varchar rep_first_name "(nn)"
+        varchar rep_first_name_kana "(nn)"
+        varchar rep_last_name "(nn)"
+        varchar rep_last_name_kana "(nn)"
+        varchar rep_email "(nn)"
+        varchar rep_phone_number "(nn)"
+        varchar rep_position "(nn)"
+        varchar pic_first_name "(nn)"
+        varchar pic_first_name_kana "(nn)"
+        varchar pic_last_name "(nn)"
+        varchar pic_last_name_kana "(nn)"
+        varchar pic_email "(nn)"
+        varchar pic_phone_number "(nn)"
+        varchar pic_position "(nn)"
+        varchar data_management_pic "(nn)"
+        decimal emission_reduction
+        decimal baseline_emission
+        decimal post_project_emission
+        varchar regional_category "(nn) 北海道,東北,関東..."
+        int new_members_total "(nn)"
+        int withdrawn_members "(nn)"
+        int cumulative_members_total "(nn)"
+        int members_total
+        varchar methodology_version "(nn) Ver.X"
+        varchar method_category "(nn) EN-S,EN-R,IN,AG,WA"
+        varchar method_number UK "(nn) 002"
+        varchar method_name "(nn)"
+        varchar method_main_emission "(nn)"
+        boolean method_combi_feasibility "(nn)"
+        varchar method_details "(nn)"
+        int operator_company_id FK "(nn)"
+        boolean is_active "(nn)"
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+    }
+
+    %% <participating company & its users/sites>
+    participating_company {
+        int id PK "auto-increment"
+        varchar company_id UK "(nn)"
+        varchar name_ja "(nn)"
+        varchar name_furigana "(nn)"
+        varchar name_en "(nn)"
+        varchar email "(nn)"
+        varchar phone_number "(nn)"
+        varchar corp_number UK "(nn) 13 digits"
+        varchar postal_code "(nn) 000-0000"
+        varchar prefecture "(nn)"
+        varchar city "(nn)"
+        varchar town "(nn)"
+        varchar blocknum "(nn)"
+        varchar address "(nn)"
+        varchar fax
+        varchar rep_first_name "(nn)"
+        varchar rep_first_name_kana "(nn)"
+        varchar rep_last_name "(nn)"
+        varchar rep_last_name_kana "(nn)"
+        varchar rep_email "(nn)"
+        varchar rep_phone_number "(nn)"
+        varchar rep_position "(nn)"
+        date contract_end_date
+        varchar payment_method
+        date last_renewal_date
+        text suspension_reason
+        date suspension_date
+        varchar subscription_status
+        varchar reg_status
+        boolean is_active "(nn) default true"
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+        timestamp deleted_at "soft-delete"
+        varchar deleted_by "soft-delete"
+    }
+
+    site {
+        int id PK "auto-increment"
+        varchar site_name "(nn)"
+        varchar postal_code "(nn) 000-0000"
+        varchar prefecture "(nn)"
+        varchar city "(nn)"
+        varchar town "(nn)"
+        varchar blocknum "(nn)"
+        varchar address "(nn)"
+        varchar pic_first_name "(nn)"
+        varchar pic_first_name_kana "(nn)"
+        varchar pic_last_name "(nn)"
+        varchar pic_last_name_kana "(nn)"
+        varchar pic_email "(nn)"
+        varchar pic_phone_number "(nn)"
+        varchar pic_position "(nn)"
+        int participating_company_id FK "(nn)"
+        boolean is_active "(nn)"
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+        timestamp deleted_at "soft-delete"
+        varchar deleted_by "soft-delete"
+    }
+
+    site_project_relation {
+        int id PK "auto-increment"
+        int project_id FK "(nn) UK with site_id"
+        int site_id FK "(nn) UK with project_id"
+        date application_date "(nn)"
+        date activity_start_date "(nn)"
+        int participating_company_id FK "(nn)"
+        varchar status "(nn)"
+        boolean is_active "(nn)"
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+        timestamp deleted_at "soft-delete"
+        varchar deleted_by "soft-delete"
+    }
+
+    %% <users>
+    participating_user {
+        int id PK "auto-increment"
+        varchar username UK "(nn)"
+        varchar first_name "(nn)"
+        varchar first_name_kana "(nn)"
+        varchar last_name "(nn)"
+        varchar last_name_kana "(nn)"
+        varchar email "(nn)"
+        varchar phone_number "(nn)"
+        varchar user_position "(nn)"
+        varchar password "(nn) bcrypt hash"
+        varchar role "(nn) master, user"
+        int login_attempts "(nn)"
+        timestamp account_locked_until
+        int site_id FK "nullable"
+        varchar company_id "(nn) FK to participating_company.company_id"
+        boolean is_active "(nn)"
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+        timestamp deleted_at "soft-delete"
+        varchar deleted_by "soft-delete"
+    }
+
+    %% <project files>
+    project_files {
+        int id PK "auto-increment"
+        boolean is_active "(nn) default true"
+        int project_id FK "(nn) UNIQUE"
+        text certificate_registration
+        text report_validation
+        text report_verification
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+    }
+
+    %% <solar equipment registration>
+    site_r002_member_data {
+        int id PK "auto-increment SERIAL"
+        int project_id FK "(nn)"
+        int site_id FK "(nn)"
+        int participating_company_id FK "(nn) references participating_company.id"
+        varchar methodology_number "(nn) CHAR(3)"
+        boolean is_eligible "(nn)"
+        date equipment_op_date "(nn)"
+        decimal nominal_max_output "(nn)"
+        varchar pcs_manufacturer "(nn)"
+        varchar pcs_model "(nn)"
+        int power_cond_unit_count "(nn)"
+        varchar device_no "(nn)"
+        decimal power_cond_standby "(nn)"
+        boolean has_battery "(nn)"
+        varchar battery_maker
+        varchar battery_model
+        decimal battery_capacity
+        decimal ict_equipment_power_consumption "(nn)"
+        boolean additional_equipment
+        date additional_equipment_date
+        varchar equipment_type
+        int unit_count
+        varchar device_unique_no
+        int total_investment
+        boolean has_subsidy "(nn)"
+        varchar subsidy_name
+        decimal subsidy_amount
+        decimal pre_project_unit_price
+        boolean is_active "(nn) default true"
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+        timestamp deleted_at "soft-delete"
+        varchar deleted_by "soft-delete"
+    }
+
+    site_r002_equipment_file {
+        int id PK "auto-increment SERIAL"
+        int member_data_id FK "(nn)"
+        varchar file_id
+        varchar file_type "(nn)"
+        varchar s3_key "(nn)"
+        varchar original_name
+        boolean is_active "(nn) default true"
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+        timestamp deleted_at "soft-delete"
+        varchar deleted_by "soft-delete"
+    }
+
+    %% <batch computation results>
+    EN_R002_reduction_result {
+        int id PK "auto-increment"
+        int batch_id
+        date processing_date
+        int project_id
+        timestamp start_time
+        timestamp end_time
+        int site_id
+        decimal empj
+        decimal empj_m
+        decimal empj_s
+        decimal empj_s_control
+        decimal empj_s_battery
+        boolean is_active "(nn)"
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+        timestamp deleted_at "soft-delete"
+        varchar deleted_by "soft-delete"
+    }
+
+    EN_R002_reduction_result_total {
+        int id PK "auto-increment"
+        int batch_id
+        date processing_date
+        int project_id
+        timestamp start_time
+        timestamp end_time
+        decimal empj
+        decimal empj_m
+        decimal empj_s
+        decimal empj_s_control
+        decimal empj_s_battery
+        boolean is_active "(nn)"
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+        timestamp deleted_at "soft-delete"
+        varchar deleted_by "soft-delete"
+    }
+
+    batch_process_history {
+        int id PK "auto-increment"
+        boolean is_active "(nn)"
+        timestamp start_time
+        timestamp end_time
+        varchar status
+        varchar claimed_by
+        timestamp claimed_at
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+    }
+
+    %% <cancel / audit>
+    record_cancel_request {
+        int id PK "auto-increment"
+        varchar record_pk "(nn)"
+        varchar record_sk "(nn)"
+        varchar status
+        varchar requested_by
+        timestamp requested_at
+        text reason
+        varchar decided_by
+        timestamp decided_at
+        varchar offset_record_pk
+        varchar offset_record_sk
+        int site_id FK "(nn)"
+        boolean is_active "(nn)"
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+        timestamp deleted_at "soft-delete"
+        varchar deleted_by "soft-delete"
+    }
+
+    %% <deletion request — company>
+    company_deletion_request {
+        int id PK "auto-increment"
+        varchar company_id FK "(nn) UK with status"
+        varchar requested_by "(nn)"
+        timestamp requested_at "(nn)"
+        text reason "(nn)"
+        varchar status "(nn) PENDING, APPROVED, REJECTED"
+        varchar decided_by
+        timestamp decided_at
+        text rejection_reason
+        boolean is_active "(nn) default true"
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+    }
+
+    %% <notifications & subscription>
+    notification {
+        int id PK "auto-increment"
+        varchar title "(nn)"
+        text message "(nn)"
+        boolean read "(nn) default false"
+        int operating_user_id FK "nullable; sender"
+        int participating_user_id FK "(nn) recipient"
+        boolean is_active "(nn) default true"
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+    }
+
+    subscription_log {
+        int id PK "auto-increment SERIAL"
+        int company_id FK "references participating_company.id"
+        varchar action_type "(nn)"
+        timestamp action_date "(nn)"
+        numeric amount
+        varchar payment_method
+        varchar transaction_id
+        varchar status "(nn)"
+        varchar failure_reason
+        date previous_end_date
+        date new_end_date
+        boolean is_active "(nn) default true"
+        timestamp created_at
+        timestamp updated_at
+        varchar created_by
+        varchar updated_by
+    }
+
+    %% <relationships>
+    operator_company ||--o{ operating_user : "employs"
+    operator_company ||--o{ account : "manages"
+    operator_company ||--o{ project : "owns"
+
+    participating_company ||--o{ site : "has"
+    participating_company ||--o{ site_r002_member_data : "registers equipment"
+    participating_company ||--o{ subscription_log : "audit"
+    participating_company ||--o{ company_deletion_request : "deletion requests"
+
+    site ||--o{ participating_user : "assigned to"
+    site ||--o{ site_project_relation : "linked from"
+    site ||--o{ record_cancel_request : "cancel requests"
+
+    project ||--o{ site_project_relation : "linked from"
+    project_files |o--|| project : "has"
+
+    site_r002_member_data ||--o{ site_r002_equipment_file : "evidence files"
+
+    %% <logical references (no JPA FK, but columns exist)>
+    EN_R002_reduction_result }o--|| project : "project_id (logical)"
+    EN_R002_reduction_result }o--|| site : "site_id (logical)"
+    EN_R002_reduction_result }o--|| batch_process_history : "batch_id (logical)"
+    EN_R002_reduction_result_total }o--|| project : "project_id (logical)"
+    EN_R002_reduction_result_total }o--|| batch_process_history : "batch_id (logical)"
+    site_r002_member_data }o--|| site : "site_id FK"
+    site_r002_member_data }o--|| project : "project_id FK"
+    site_r002_member_data }o--|| participating_company : "participating_company_id FK"
+
+    notification }o--o| operating_user : "sender (opt)"
+    notification }o--|| participating_user : "recipient"
 ```
 
 ---
 
-## 2. `account`
+補足:
 
-```sql
-INSERT INTO account (
-    is_active, created_by, updated_by,
-    acct_no, holder_account_name_kana, holder_account_name,
-    holder_corp_number, holder_prefecture, holder_city, holder_address,
-    is_holder_undecided, operator_company_id
-) VALUES
-(
-    TRUE, 'seed_script', 'seed_script',
-    'ACCT0000000001', 'グリーンエナジー', '株式会社グリーンエナジー',
-    '1234567890123', '東京都', '千代田区', '千代田1-1 千代田ビル',
-    FALSE, 1
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    'ACCT0000000002', 'カーボンテック', '株式会社カーボンテック',
-    NULL, '大阪府', '大阪市北区', '梅田2-3 梅田タワー',
-    TRUE, 2
-);
-```
+- `site_project_relation` は `site_id + project_id + participating_company_id` を持つ参加関係テーブルで、現在のバックエンドでは `solar/register` 実行時に対象行が未作成なら自動作成される
+- `site_r002_member_data` の会社参照列は `company_id` ではなく `participating_company_id`
+- `site_r002_member_data` は `site`, `project`, `participating_company` に対して実DB上の外部キーを持つ
 
 ---
-
-## 3. `project`
-
-```sql
-INSERT INTO project (
-    is_active, created_by, updated_by,
-    project_name, project_number, project_status,
-    rep_first_name, rep_first_name_kana, rep_last_name, rep_last_name_kana,
-    rep_email, rep_phone_number, rep_position,
-    pic_first_name, pic_first_name_kana, pic_last_name, pic_last_name_kana,
-    pic_email, pic_phone_number, pic_position,
-    data_management_pic,
-    emission_reduction, baseline_emission, post_project_emission,
-    regional_category,
-    new_members_total, withdrawn_members, cumulative_members_total, members_total,
-    methodology_version, method_category, method_number,
-    method_name, method_main_emission, method_combi_feasibility, method_details,
-    operator_company_id
-) VALUES
-(
-    TRUE, 'seed_script', 'seed_script',
-    '太陽光発電導入プロジェクト東京', 'P0001', 'active',
-    '太郎', 'タロウ', '山田', 'ヤマダ',
-    'yamada.taro@greenenergy.co.jp', '0312345678', '代表取締役',
-    '一郎', 'イチロウ', '田中', 'タナカ',
-    'tanaka.ichiro@greenenergy.co.jp', '0312345680', 'プロジェクト担当',
-    '田中一郎',
-    120.5, 500.0, 379.5,
-    '関東',
-    10, 1, 25, 24,
-    'Ver.1.0', 'EN-R', '002',
-    '太陽光発電設備導入による排出削減', 'CO2', TRUE,
-    '需要家側に太陽光発電設備を導入し、系統電力の使用量を削減することでCO2排出量を低減する方法論。',
-    1
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    '省エネ設備導入プロジェクト大阪', 'P0002', 'pending',
-    '花子', 'ハナコ', '鈴木', 'スズキ',
-    'suzuki.hanako@carbontech.co.jp', '0661234567', '取締役社長',
-    '二郎', 'ジロウ', '佐藤', 'サトウ',
-    'sato.jiro@carbontech.co.jp', '0661234569', 'PM担当者',
-    '佐藤二郎',
-    80.0, 320.0, 240.0,
-    '近畿',
-    5, 0, 10, 10,
-    'Ver.2.1', 'EN-S', '003',
-    '省エネ設備導入による排出削減', 'CO2', FALSE,
-    '需要家側に高効率省エネ設備を導入し、エネルギー消費量を削減することでCO2排出量を低減する方法論。',
-    2
-);
-```
-
----
-
-## 4. `participating_company`
-
-```sql
-INSERT INTO participating_company (
-    is_active, created_by, updated_by,
-    company_id, name_ja, name_furigana, name_en,
-    email, phone_number, corp_number,
-    postal_code, prefecture, municipality, blocknum, building_name,
-    fax,
-    rep_first_name, rep_first_name_kana, rep_last_name, rep_last_name_kana,
-    rep_phone_number, rep_position,
-    requested_methodologies, activity_information,
-    contract_end_date, payment_method,
-    subscription_status, reg_status
-) VALUES
-(
-    TRUE, 'seed_script', 'seed_script',
-    'PC000000001', '株式会社ソーラーファーム', 'ソーラーファーム', 'Solar Farm Co., Ltd.',
-    'info@solarfarm.co.jp', '0354321234', '1111111111111',
-    '150-0001', '東京都', '渋谷区神宮前', '1-2-3', '神宮前ビル',
-    '0354321235',
-    '健一', 'ケンイチ', '伊藤', 'イトウ',
-    '0354321234', '代表取締役',
-    'EN-R002', '太陽光発電設備の設置・運用',
-    '2026-03-31', 'credit_card',
-    'active', 'approved'
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    'PC000000002', '有限会社エコライフ', 'エコライフ', 'Eco Life Ltd.',
-    'contact@ecolife.co.jp', '0452345678', '2222222222222',
-    '220-0001', '神奈川県', '横浜市西区みなとみらい', '3-4-5', NULL,
-    NULL,
-    '幸子', 'サチコ', '中村', 'ナカムラ',
-    '0452345678', '代表取締役',
-    'EN-S003', '省エネ機器の導入',
-    '2025-12-31', 'bank_transfer',
-    'active', 'approved'
-);
-```
-
----
-
-## 5. `site`
-
-```sql
-INSERT INTO site (
-    is_active, created_by, updated_by,
-    site_name, postal_code, prefecture, municipality, blocknum, building_name,
-    pic_first_name, pic_first_name_kana, pic_last_name, pic_last_name_kana,
-    pic_email, pic_phone_number, pic_position,
-    participating_company_id
-) VALUES
-(
-    TRUE, 'seed_script', 'seed_script',
-    '渋谷区オフィス拠点A', '150-0001', '東京都', '渋谷区神宮前', '1-2-3', '神宮前ビル',
-    '健一', 'ケンイチ', '伊藤', 'イトウ',
-    'ito.kenichi@solarfarm.co.jp', '0354321234', '施設担当',
-    1
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    'みなとみらい倉庫拠点B', '220-0001', '神奈川県', '横浜市西区みなとみらい', '3-4-5', NULL,
-    '幸子', 'サチコ', '中村', 'ナカムラ',
-    'nakamura.sachiko@ecolife.co.jp', '0452345678', '施設責任者',
-    2
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    '品川区工場拠点C', '140-0001', '東京都', '品川区北品川', '5-6-7', '品川産業ビル',
-    '健一', 'ケンイチ', '伊藤', 'イトウ',
-    'ito.kenichi@solarfarm.co.jp', '0354321236', '工場担当',
-    1
-);
-```
-
----
-
-## 6. `site_project_relation`
-
-```sql
-INSERT INTO site_project_relation (
-    is_active, created_by, updated_by,
-    project_id, site_id, application_date, activity_start_date,
-    participating_company_id, status
-) VALUES
-(
-    TRUE, 'seed_script', 'seed_script',
-    1, 1, '2024-04-01', '2024-05-01',
-    1, 'approved'
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    1, 3, '2024-04-15', '2024-06-01',
-    1, 'pending'
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    2, 2, '2024-06-01', '2024-07-01',
-    2, 'approved'
-);
-```
-
----
-
-## 7. `project_files`
-
-```sql
-INSERT INTO project_files (
-    is_active, created_by, updated_by,
-    project_id,
-    certificate_registration, report_validation, report_verification
-) VALUES
-(
-    TRUE, 'seed_script', 'seed_script',
-    1,
-    's3://gx-bucket/project1/certificate_registration.pdf',
-    's3://gx-bucket/project1/report_validation.pdf',
-    's3://gx-bucket/project1/report_verification.pdf'
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    2,
-    's3://gx-bucket/project2/certificate_registration.pdf',
-    NULL,
-    NULL
-);
-```
-
----
-
-## 8. `operating_user`
-
-```sql
-INSERT INTO operating_user (
-    is_active, created_by, updated_by,
-    username, first_name, first_name_kana, last_name, last_name_kana,
-    email, phone_number, password, role,
-    login_attempts, account_locked_until,
-    company_id
-) VALUES
-(
-    TRUE, 'seed_script', 'seed_script',
-    'op_admin01', '太郎', 'タロウ', '山田', 'ヤマダ',
-    'yamada.taro@greenenergy.co.jp', '0312345678',
-    '$2b$12$examplehashedpasswordAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-    'operator',
-    0, NULL,
-    1
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    'op_user01', '一郎', 'イチロウ', '田中', 'タナカ',
-    'tanaka.ichiro@greenenergy.co.jp', '0312345680',
-    '$2b$12$examplehashedpasswordBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
-    'user',
-    0, NULL,
-    1
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    'op_admin02', '花子', 'ハナコ', '鈴木', 'スズキ',
-    'suzuki.hanako@carbontech.co.jp', '0661234567',
-    '$2b$12$examplehashedpasswordCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
-    'operator',
-    0, NULL,
-    2
-);
-```
-
----
-
-## 9. `participating_user`
-
-```sql
-INSERT INTO participating_user (
-    is_active, created_by, updated_by,
-    username, first_name, first_name_kana, last_name, last_name_kana,
-    email, phone_number, user_position, password, role,
-    login_attempts, account_locked_until,
-    site_id, company_id
-) VALUES
-(
-    TRUE, 'seed_script', 'seed_script',
-    'pc_master01', '健一', 'ケンイチ', '伊藤', 'イトウ',
-    'ito.kenichi@solarfarm.co.jp', '0354321234', '代表担当者',
-    '$2b$12$examplehashedpasswordDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
-    'master',
-    0, NULL,
-    1, 1
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    'pc_user01', '明子', 'アキコ', '伊藤', 'イトウ',
-    'ito.akiko@solarfarm.co.jp', '0354321237', '現場担当者',
-    '$2b$12$examplehashedpasswordEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE',
-    'user',
-    0, NULL,
-    1, 1
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    'pc_master02', '幸子', 'サチコ', '中村', 'ナカムラ',
-    'nakamura.sachiko@ecolife.co.jp', '0452345678', '代表担当者',
-    '$2b$12$examplehashedpasswordFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',
-    'master',
-    0, NULL,
-    2, 2
-);
-```
-
----
-
-## 10. `site_r002_member_data`
-
-```sql
-INSERT INTO site_r002_member_data (
-    is_active, created_by, updated_by,
-    project_id, site_id, participating_company_id,
-    methodology_number, is_eligible,
-    equipment_op_date, nominal_max_output,
-    pcs_manufacturer, pcs_model, power_cond_unit_count,
-    device_no, power_cond_standby,
-    has_battery, battery_maker, battery_model, battery_capacity,
-    ict_equipment_power_consumption,
-    additional_equipment, additional_equipment_date,
-    equipment_type, unit_count, device_unique_no,
-    total_investment, has_subsidy, subsidy_name, subsidy_amount,
-    pre_project_unit_price
-) VALUES
-(
-    TRUE, 'seed_script', 'seed_script',
-    1, 1, 1,
-    '002', TRUE,
-    '2024-05-01', 50.0,
-    'パナソニック', 'VBK-030', 2,
-    'DEV-001-A', 3.50,
-    TRUE, 'テスラ', 'Powerwall-2', 13.5,
-    0.500,
-    FALSE, NULL,
-    NULL, NULL, NULL,
-    5000000, TRUE, '環境省補助金', 1000000.00,
-    28.50
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    1, 3, 1,
-    '002', TRUE,
-    '2024-06-01', 30.0,
-    'シャープ', 'JH-55B', 1,
-    'DEV-002-B', 2.80,
-    FALSE, NULL, NULL, NULL,
-    0.300,
-    TRUE, '2024-09-01',
-    'パワーコンディショナ追加', 1, 'DEV-002-B-EXT',
-    2000000, FALSE, NULL, NULL,
-    27.00
-);
-```
-
----
-
-## 11. `site_r002_equipment_file`
-
-```sql
-INSERT INTO site_r002_equipment_file (
-    is_active, created_by, updated_by,
-    member_data_id, file_id, file_type,
-    s3_key, original_name
-) VALUES
-(
-    TRUE, 'seed_script', 'seed_script',
-    1, 'FILE-001', 'specification_sheet',
-    'r002/site1/member1/spec_sheet.pdf', 'パナソニックVBK-030仕様書.pdf'
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    1, 'FILE-002', 'installation_photo',
-    'r002/site1/member1/installation_photo.jpg', '設置写真_渋谷A.jpg'
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    2, 'FILE-003', 'specification_sheet',
-    'r002/site3/member2/spec_sheet.pdf', 'シャープJH-55B仕様書.pdf'
-);
-```
-
----
-
-## 12. `EN_R002_reduction_result_total`
-
-```sql
-INSERT INTO EN_R002_reduction_result_total (
-    is_active, created_by, updated_by,
-    batch_id, processing_date, project_id,
-    start_time, end_time,
-    empj, empj_m, empj_s, empj_s_control, empj_s_battery
-) VALUES
-(
-    TRUE, 'seed_script', 'seed_script',
-    1, '2024-06-30', 1,
-    '2024-06-30 00:00:00', '2024-06-30 23:59:59',
-    120.500, 90.250, 30.250, 15.125, 15.125
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    2, '2024-07-31', 1,
-    '2024-07-31 00:00:00', '2024-07-31 23:59:59',
-    135.750, 100.000, 35.750, 18.000, 17.750
-);
-```
-
----
-
-## 13. `EN_R002_reduction_result`
-
-```sql
-INSERT INTO EN_R002_reduction_result (
-    is_active, created_by, updated_by,
-    batch_id, processing_date, project_id,
-    start_time, end_time, site_id,
-    empj, empj_m, empj_s, empj_s_control, empj_s_battery
-) VALUES
-(
-    TRUE, 'seed_script', 'seed_script',
-    1, '2024-06-30', 1,
-    '2024-06-30 00:00:00', '2024-06-30 23:59:59', 1,
-    70.300, 55.100, 15.200, 8.000, 7.200
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    1, '2024-06-30', 1,
-    '2024-06-30 00:00:00', '2024-06-30 23:59:59', 3,
-    50.200, 35.150, 15.050, 7.125, 7.925
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    2, '2024-07-31', 1,
-    '2024-07-31 00:00:00', '2024-07-31 23:59:59', 1,
-    80.000, 60.000, 20.000, 10.000, 10.000
-);
-```
-
----
-
-## 14. `batch_process_history`
-
-```sql
-INSERT INTO batch_process_history (
-    is_active, created_by, updated_by,
-    start_time, end_time,
-    status, claimed_by, claimed_at
-) VALUES
-(
-    TRUE, 'seed_script', 'seed_script',
-    '2024-06-30 01:00:00', '2024-06-30 01:45:00',
-    'SUCCESS', 'batch_worker_01', '2024-06-30 01:00:00'
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    '2024-07-31 01:00:00', '2024-07-31 01:50:00',
-    'SUCCESS', 'batch_worker_01', '2024-07-31 01:00:00'
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    '2024-08-31 01:00:00', NULL,
-    'FAILED', 'batch_worker_02', '2024-08-31 01:00:00'
-);
-```
-
----
-
-## 15. `record_cancel_request`
-
-```sql
-INSERT INTO record_cancel_request (
-    is_active, created_by, updated_by,
-    record_pk, record_sk,
-    status, requested_by, requested_at,
-    reason, decided_by, decided_at,
-    offset_record_pk, offset_record_sk,
-    site_id
-) VALUES
-(
-    TRUE, 'seed_script', 'seed_script',
-    'REC001', 'SK-2024-06-30-001',
-    'APPROVED', 'pc_master01', '2024-07-05 10:00:00',
-    '入力ミスによるデータ修正依頼',
-    'op_admin01', '2024-07-07 09:00:00',
-    'OFF001', 'OFFSK-2024-07-07-001',
-    1
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    'REC002', 'SK-2024-07-31-002',
-    'PENDING', 'pc_user01', '2024-08-03 15:30:00',
-    '計測機器の不具合により再計測が必要',
-    NULL, NULL,
-    NULL, NULL,
-    3
-);
-```
-
----
-
-## 16. `subscription_log`
-
-```sql
-INSERT INTO subscription_log (
-    company_id, action_type, action_date,
-    amount, payment_method, transaction_id,
-    status, failure_reason,
-    previous_end_date, new_end_date,
-    is_active, created_by, updated_by
-) VALUES
-(
-    1, 'NEW_SUBSCRIPTION', '2024-04-01 09:00:00',
-    50000.00, 'credit_card', 'TXN-20240401-0001',
-    'SUCCESS', NULL,
-    NULL, '2025-03-31',
-    TRUE, 'seed_script', 'seed_script'
-),
-(
-    1, 'RENEWAL', '2025-03-31 09:00:00',
-    50000.00, 'credit_card', 'TXN-20250331-0001',
-    'SUCCESS', NULL,
-    '2025-03-31', '2026-03-31',
-    TRUE, 'seed_script', 'seed_script'
-),
-(
-    2, 'NEW_SUBSCRIPTION', '2024-01-15 10:00:00',
-    30000.00, 'bank_transfer', 'TXN-20240115-0002',
-    'SUCCESS', NULL,
-    NULL, '2024-12-31',
-    TRUE, 'seed_script', 'seed_script'
-),
-(
-    2, 'RENEWAL', '2024-12-31 09:00:00',
-    30000.00, 'bank_transfer', 'TXN-20241231-0002',
-    'FAILED', '銀行振込の確認が取れませんでした',
-    '2024-12-31', NULL,
-    TRUE, 'seed_script', 'seed_script'
-);
-```
-
----
-
-## 17. `notification`
-
-```sql
-INSERT INTO notification (
-    is_active, created_by, updated_by,
-    title, message, read,
-    operating_user_id, participating_user_id
-) VALUES
-(
-    TRUE, 'seed_script', 'seed_script',
-    '新規申請通知', '拠点Aからの新規参加申請が届いています。確認してください。',
-    FALSE,
-    1, NULL
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    '申請承認完了', 'プロジェクトP0001への参加申請が承認されました。',
-    TRUE,
-    NULL, 1
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    'バッチ処理エラー', '2024年8月のバッチ処理が失敗しました。ログを確認してください。',
-    FALSE,
-    2, NULL
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    'サブスクリプション更新失敗', 'エコライフ社のサブスクリプション更新に失敗しました。対応が必要です。',
-    FALSE,
-    3, NULL
-);
-```
-
----
-
-## 18. `company_deletion_request`
-
-```sql
-INSERT INTO company_deletion_request (
-    is_active, created_by, updated_by,
-    company_id, requested_by, requested_at,
-    reason, status, decided_by, decided_at,
-    rejection_reason
-) VALUES
-(
-    TRUE, 'seed_script', 'seed_script',
-    2, 'pc_master02', '2024-11-01 10:00:00',
-    '事業撤退に伴い退会を希望します。',
-    'PENDING', NULL, NULL,
-    NULL
-);
-```
-
----
-
-## Execution order, by dependency
-
-```
-1. operator_company
-2. account
-3. project
-4. participating_company
-5. site
-6. site_project_relation
-7. project_files
-8. operating_user
-9. participating_user
-10. site_r002_member_data
-11. site_r002_equipment_file
-12. EN_R002_reduction_result_total
-13. EN_R002_reduction_result
-14. batch_process_history
-15. record_cancel_request
-16. subscription_log
-17. notification
-18. company_deletion_request
-```

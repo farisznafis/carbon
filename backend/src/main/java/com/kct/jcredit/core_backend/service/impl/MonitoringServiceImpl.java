@@ -321,11 +321,80 @@ public class MonitoringServiceImpl implements MonitoringService {
         }
     }
 
+ //太陽光の日ごとのモニタリングデータをページ分取得する
+    @Override
+    public MonitoringRecordSolarListResponse readAllMonitoringRecordsSolar(
+            String username,
+            Integer page,
+            Integer limit,
+            Integer projectId,
+            String nextPageToken
+    ) {
+        MonitoringRecordSolarListResponse response = new MonitoringRecordSolarListResponse();
 
+        try {
+            // Set defaults
+            // page がnull or pageが0以下の場合
+            if (page == null || page < 1) {
+                page = 1;
+            }
+            // limit がnull or limitが0以下の場合
+            if (limit == null || limit <= 0) {
+                limit = 50;
+            }
+            // limit が 101以上の場合
+            if (limit > 100) {
+                limit = 100; // Max limit
+            }
+
+            // Get list of site ids related to the project through site-project relation
+            List<Integer> siteIds = siteProjectRelationRepository.findSiteIdsByProjectId(projectId);
+
+            // Create pagination object
+            //ページネーション作成
+            PaginationDetailResponse pagination = new PaginationDetailResponse();
+            pagination.setPage(page);
+            pagination.setLimit(limit);
+            pagination.setNextPageToken(nextPageToken);
+
+            // Fetch data - pagination object is updated by repository
+            //データ取得 - ページネーションオブジェクトはリポジトリによって更新されます
+            List<EnR002MonitoringRecord> entities = 
+                monitoringRecordSolarRepository.findAllByProjectIdPaginated(projectId, siteIds, pagination);
+
+            //entitiesが空文字の場合
+            if (entities.isEmpty()) {
+                response.setStatusCode(ResponseConstants.NOT_FOUND);
+                response.setMessage(ResponseConstants.MSG_MONITORING_RECORD_NOT_FOUND);
+                return response;
+            }
+
+            // // Map to DTOs
+            // List<EnR002MonitoringRecord> items = entities.stream()
+            //         .map(entity -> mapEntityToResponse(entity, null))
+            //         .collect(Collectors.toList());
+
+            //レスポンスの作成
+            response.setItems(entities);
+            response.setPagination(pagination);  // Already updated by repository
+            response.setStatusCode(ResponseConstants.OK);
+            response.setMessage(ResponseConstants.OK);
+            return response;
+            
+
+         
+
+
+        } catch (Exception e) {
+            response.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR);
+            response.setMessage(ResponseConstants.MSG_INTERNAL_ERROR);
+            return response;
+        }
+    }
 
     //太陽光の日ごとのモニタリングデータをページ分取得する
     @Override
-    public MonitoringRecordSolarListResponse readAllMonitoringRecordsSolar(
+    public MonitoringRecordSolarListResponse readSiteMonitoringRecordsSolar(
             String username,
             String companyId,
             Integer projectId,
