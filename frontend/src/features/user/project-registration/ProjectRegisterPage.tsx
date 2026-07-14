@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useDashboardStore } from "@/stores/dashboardStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { CompletionStep } from "@/features/user/project-registration/components/
 import { FormPageWrapper } from "@/components/layout/FormPageWrapper/FormPageWrapper";
 import type { Equipment } from "@/features/user/project-registration/components/types";
 import type { AgreementFormValues } from "@/features/user/project-registration/components/agreementsConfig";
+import { paths } from "@/routes/paths";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -24,13 +25,13 @@ const TOTAL_STEPS = 5;
 // ─── Component ───────────────────────────────────────────────────────────────
 
 const ProjectRegister = () => {
-  const { id: projectId } = useParams();
+  const { siteId = "", projectId = "" } = useParams<{
+    siteId: string;
+    projectId: string;
+  }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const location = useLocation();
-
-  const siteId = location.state?.siteId;
   const currentProject = useDashboardStore((state) => state.currentProject);
   const setCurrentProject = useDashboardStore((state) => state.setCurrentProject);
 
@@ -74,7 +75,7 @@ const ProjectRegister = () => {
   // ── Derived ───────────────────────────────────────────────────────────────
   const progress = (currentStep / TOTAL_STEPS) * 100;
   const selectedProject = projectId && currentProject?.id === projectId ? currentProject : null;
-  const resolvedSiteId = siteId || user?.siteId || "";
+  const resolvedSiteId = siteId;
   const isCompletionStep = currentStep === TOTAL_STEPS;
 
   // ── Navigation ────────────────────────────────────────────────────────────
@@ -88,13 +89,21 @@ const ProjectRegister = () => {
     }
   }, [navigate, user?.role, resolvedSiteId]);
 
+  const navigateToMembership = useCallback(() => {
+    if (resolvedSiteId) {
+      navigate(paths.projectMembership(resolvedSiteId));
+    } else {
+      navigateToDashboard();
+    }
+  }, [navigate, navigateToDashboard, resolvedSiteId]);
+
   const handleBack = useCallback(() => {
     if (currentStep === 1) {
-      navigateToDashboard();
+      navigateToMembership();
     } else {
       setCurrentStep((prev) => prev - 1);
     }
-  }, [currentStep, navigateToDashboard]);
+  }, [currentStep, navigateToMembership]);
 
   // ── Effects ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -316,7 +325,7 @@ const ProjectRegister = () => {
             <p className="text-muted-foreground">
               {projectLoadError || "プロジェクト情報が見つかりません"}
             </p>
-            <Button onClick={navigateToDashboard}>ダッシュボードに戻る</Button>
+            <Button onClick={navigateToMembership}>入会届に戻る</Button>
           </CardContent>
         </Card>
       </div>
@@ -329,7 +338,7 @@ const ProjectRegister = () => {
       pageName="プロジェクト参加申請"
       title=""
       onBack={!isCompletionStep ? handleBack : undefined}
-      backText={currentStep === 1 ? "ダッシュボードに戻る" : "前へ"}
+      backText={currentStep === 1 ? "入会届に戻る" : "前へ"}
       contentMaxWidth="max-w-4xl"
       wrapInCard={false}
     >

@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import type { SolarPowerFormData, OtherEquipmentFormData } from "@/lib/equipmentValidations";
 import { Form } from "@/components/ui/form";
 import { FormPageWrapper } from "@/components/layout/FormPageWrapper/FormPageWrapper";
+import { paths } from "@/routes/paths";
 
 /**
  * HOW TO SWITCH BETWEEN FORM TYPES:
@@ -27,7 +28,10 @@ import { FormPageWrapper } from "@/components/layout/FormPageWrapper/FormPageWra
 
 const EquipmentForm = () => {
   const navigate = useNavigate();
-  const { id: projectId } = useParams();
+  const { siteId = "", projectId = "" } = useParams<{
+    siteId: string;
+    projectId: string;
+  }>();
   const [searchParams] = useSearchParams();
   const equipmentId = searchParams.get("equipmentId");
   const { toast } = useToast();
@@ -137,11 +141,11 @@ const EquipmentForm = () => {
       description: "設備の登録が完了しました。",
     });
 
-    navigate(`/projects/${projectId}/register`);
+    navigate(paths.projectRegister(siteId, projectId));
   };
 
   const handleCancel = () => {
-    navigate(`/projects/${projectId}/register`);
+    navigate(paths.projectRegister(siteId, projectId));
   };
 
   const pageTitle = equipmentId ? "設備編集" : "設備追加";

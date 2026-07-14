@@ -31,6 +31,7 @@ const UserRegister = lazy(() => import("./features/master/pages/UserRegisterPage
 const UserEdit = lazy(() => import("./features/master/pages/UserEditPage"));
 const MasterUserProfile = lazy(() => import("./features/master/pages/MasterUserProfilePage"));
 const SiteDetail = lazy(() => import("./features/user/sites/SiteDetailPage"));
+const ProjectMembership = lazy(() => import("./features/user/project-registration/ProjectMembershipPage"));
 const ProjectRegister = lazy(() => import("./features/user/project-registration/ProjectRegisterPage"));
 const EquipmentForm = lazy(() => import("./features/user/project-registration/EquipmentFormPage"));
 const MasterDashboard = lazy(() => import("./features/master/pages/MasterDashboardPage"));
@@ -61,6 +62,23 @@ const AdminMonitoringReport = lazy(() =>
 function RequireAdmin({ children }: { children: JSX.Element }) {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? children : <Navigate to={paths.adminLogin} replace />;
+}
+
+function RequireMaster({ children }: { children: JSX.Element }) {
+  const { user } = useAuth();
+
+  if (user?.role === 'master') {
+    return children;
+  }
+
+  const fallbackPath =
+    user?.role === 'admin'
+      ? paths.adminDashboard
+      : user?.siteId
+        ? paths.siteDashboard(user.siteId)
+        : paths.userDashboard;
+
+  return <Navigate to={fallbackPath} replace />;
 }
 
 function LegacyDashboardRedirect() {
@@ -121,8 +139,30 @@ const App = () => {
             <Route path={paths.userDashboard} element={<Dashboard />} />
             <Route path={paths.siteDashboardRoute} element={<Dashboard />} />
             <Route path={paths.legacyDashboardRoute} element={<LegacyDashboardRedirect />} />
-            <Route path={paths.projectRegisterRoute} element={<ProjectRegister />} />
-            <Route path={paths.projectEquipmentRoute} element={<EquipmentForm />} />
+            <Route
+              path={paths.projectMembershipRoute}
+              element={
+                <RequireMaster>
+                  <ProjectMembership />
+                </RequireMaster>
+              }
+            />
+            <Route
+              path={paths.projectRegisterRoute}
+              element={
+                <RequireMaster>
+                  <ProjectRegister />
+                </RequireMaster>
+              }
+            />
+            <Route
+              path={paths.projectEquipmentRoute}
+              element={
+                <RequireMaster>
+                  <EquipmentForm />
+                </RequireMaster>
+              }
+            />
             <Route path={paths.equipmentAddRoute} element={<EquipmentPage />} />
             <Route path={paths.siteProjectDetailRoute} element={<ProjectDetail />} />
             <Route path={paths.legacyProjectRoute} element={<LegacyProjectRedirect />} />

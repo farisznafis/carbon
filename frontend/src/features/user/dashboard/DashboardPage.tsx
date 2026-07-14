@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { storage, storageKeys } from '@/lib/storage';
 import { cn } from '@/lib/utils';
+import { paths } from '@/routes/paths';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 
@@ -52,50 +53,75 @@ function getMethodologyLabel(project: SiteProject) {
 
 function DummyAreaChart({ muted = false }: { muted?: boolean }) {
   return (
-    <svg viewBox="0 0 420 190" className="h-full w-full" aria-hidden="true">
+    <svg
+      viewBox='0 0 420 190'
+      className='h-full w-full'
+      aria-hidden='true'
+    >
       <defs>
-        <linearGradient id={muted ? 'area-muted' : 'area-primary'} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={muted ? 0.18 : 0.32} />
-          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.04} />
+        <linearGradient
+          id={muted ? 'area-muted' : 'area-primary'}
+          x1='0'
+          x2='0'
+          y1='0'
+          y2='1'
+        >
+          <stop
+            offset='0%'
+            stopColor='hsl(var(--primary))'
+            stopOpacity={muted ? 0.18 : 0.32}
+          />
+          <stop
+            offset='100%'
+            stopColor='hsl(var(--primary))'
+            stopOpacity={0.04}
+          />
         </linearGradient>
       </defs>
       {[40, 90, 140].map((y) => (
         <line
           key={y}
-          x1="20"
-          x2="400"
+          x1='20'
+          x2='400'
           y1={y}
           y2={y}
-          stroke="hsl(var(--border))"
-          strokeDasharray="8 8"
+          stroke='hsl(var(--border))'
+          strokeDasharray='8 8'
         />
       ))}
       <path
-        d="M20 150 L120 142 L210 80 L300 132 L400 92 L400 170 L20 170 Z"
+        d='M20 150 L120 142 L210 80 L300 132 L400 92 L400 170 L20 170 Z'
         fill={`url(#${muted ? 'area-muted' : 'area-primary'})`}
       />
       <path
-        d="M20 150 L120 142 L210 80 L300 132 L400 92"
-        fill="none"
-        stroke="hsl(var(--primary))"
-        strokeWidth="2"
+        d='M20 150 L120 142 L210 80 L300 132 L400 92'
+        fill='none'
+        stroke='hsl(var(--primary))'
+        strokeWidth='2'
       />
       <path
-        d="M20 82 L150 56 L240 138 L400 82"
-        fill="none"
-        stroke="hsl(var(--foreground))"
-        strokeOpacity="0.35"
-        strokeWidth="2"
+        d='M20 82 L150 56 L240 138 L400 82'
+        fill='none'
+        stroke='hsl(var(--foreground))'
+        strokeOpacity='0.35'
+        strokeWidth='2'
       />
-      <line x1="20" x2="400" y1="170" y2="170" stroke="hsl(var(--border))" strokeWidth="2" />
+      <line
+        x1='20'
+        x2='400'
+        y1='170'
+        y2='170'
+        stroke='hsl(var(--border))'
+        strokeWidth='2'
+      />
       {['2013', '2014', '2015', '2016'].map((label, index) => (
         <text
           key={label}
           x={55 + index * 105}
-          y="188"
-          fill="hsl(var(--muted-foreground))"
-          fontSize="14"
-          textAnchor="middle"
+          y='188'
+          fill='hsl(var(--muted-foreground))'
+          fontSize='14'
+          textAnchor='middle'
         >
           {label}
         </text>
@@ -108,16 +134,20 @@ function DummyBarChart() {
   const bars = [44, 64, 86, 54, 118, 150, 122, 82, 116, 116, 78];
 
   return (
-    <svg viewBox="0 0 420 190" className="h-full w-full" aria-hidden="true">
+    <svg
+      viewBox='0 0 420 190'
+      className='h-full w-full'
+      aria-hidden='true'
+    >
       {[45, 105].map((y) => (
         <line
           key={y}
-          x1="18"
-          x2="392"
+          x1='18'
+          x2='392'
           y1={y}
           y2={y}
-          stroke="hsl(var(--border))"
-          strokeDasharray="8 8"
+          stroke='hsl(var(--border))'
+          strokeDasharray='8 8'
         />
       ))}
       {bars.map((height, index) => {
@@ -130,9 +160,9 @@ function DummyBarChart() {
             key={`${height}-${index}`}
             x={x}
             y={y}
-            width="28"
+            width='28'
             height={height}
-            rx="14"
+            rx='14'
             fill={isCurrent ? 'hsl(var(--primary))' : 'hsl(var(--secondary))'}
           />
         );
@@ -141,15 +171,20 @@ function DummyBarChart() {
         <text
           key={label}
           x={34 + index * 86}
-          y="188"
-          fill="hsl(var(--muted-foreground))"
-          fontSize="14"
-          textAnchor="middle"
+          y='188'
+          fill='hsl(var(--muted-foreground))'
+          fontSize='14'
+          textAnchor='middle'
         >
           {label}
         </text>
       ))}
-      <text x="386" y="30" fill="hsl(var(--muted-foreground))" fontSize="13">
+      <text
+        x='386'
+        y='30'
+        fill='hsl(var(--muted-foreground))'
+        fontSize='13'
+      >
         ベース
       </text>
     </svg>
@@ -176,36 +211,75 @@ function KpiCard({
           : 'bg-card text-foreground',
       )}
     >
-      <CardContent className="relative z-10 p-4">
-        <p className={cn('text-small', variant === 'primary' ? 'text-white/85' : 'text-muted-foreground')}>
+      <CardContent className='relative z-10 p-4'>
+        <p
+          className={cn(
+            'text-small',
+            variant === 'primary' ? 'text-white/85' : 'text-muted-foreground',
+          )}
+        >
           {title}
         </p>
-        <p className="mt-2 text-[28px] font-normal leading-9 tracking-normal">
+        <p className='mt-2 text-[28px] font-normal leading-9 tracking-normal'>
           {value}
         </p>
-        <p className={cn('text-subtle', variant === 'primary' ? 'text-white/80' : 'text-muted-foreground')}>
+        <p
+          className={cn(
+            'text-subtle',
+            variant === 'primary' ? 'text-white/80' : 'text-muted-foreground',
+          )}
+        >
           {unit}
         </p>
       </CardContent>
 
       {variant === 'primary' ? (
         <>
-          <Leaf className="absolute right-7 top-5 h-24 w-24 text-white/20" strokeWidth={1.5} />
-          <div className="absolute -bottom-8 left-0 h-20 w-full bg-secondary/45 [clip-path:polygon(0_70%,38%_65%,74%_0,100%_35%,100%_100%,0_100%)]" />
+          <Leaf
+            className='absolute right-7 top-5 h-24 w-24 text-white/20'
+            strokeWidth={1.5}
+          />
+          <div className='absolute -bottom-8 left-0 h-20 w-full bg-secondary/45 [clip-path:polygon(0_70%,38%_65%,74%_0,100%_35%,100%_100%,0_100%)]' />
         </>
       ) : variant === 'line' ? (
-        <svg viewBox="0 0 320 132" className="absolute bottom-0 left-0 h-28 w-full" aria-hidden="true">
+        <svg
+          viewBox='0 0 320 132'
+          className='absolute bottom-0 left-0 h-28 w-full'
+          aria-hidden='true'
+        >
           <defs>
-            <linearGradient id="kpi-line-fill" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.22" />
-              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.04" />
+            <linearGradient
+              id='kpi-line-fill'
+              x1='0'
+              x2='0'
+              y1='0'
+              y2='1'
+            >
+              <stop
+                offset='0%'
+                stopColor='hsl(var(--primary))'
+                stopOpacity='0.22'
+              />
+              <stop
+                offset='100%'
+                stopColor='hsl(var(--primary))'
+                stopOpacity='0.04'
+              />
             </linearGradient>
           </defs>
-          <path d="M0 98 L120 90 L205 28 L320 78 L320 132 L0 132 Z" fill="url(#kpi-line-fill)" />
-          <path d="M0 98 L120 90 L205 28 L320 78" fill="none" stroke="hsl(var(--primary))" strokeWidth="2" />
+          <path
+            d='M0 98 L120 90 L205 28 L320 78 L320 132 L0 132 Z'
+            fill='url(#kpi-line-fill)'
+          />
+          <path
+            d='M0 98 L120 90 L205 28 L320 78'
+            fill='none'
+            stroke='hsl(var(--primary))'
+            strokeWidth='2'
+          />
         </svg>
       ) : (
-        <div className="absolute -bottom-8 left-0 h-28 w-full bg-muted/45 [clip-path:polygon(0_70%,36%_52%,72%_90%,100%_62%,100%_100%,0_100%)]" />
+        <div className='absolute -bottom-8 left-0 h-28 w-full bg-muted/45 [clip-path:polygon(0_70%,36%_52%,72%_90%,100%_62%,100%_100%,0_100%)]' />
       )}
     </Card>
   );
@@ -213,14 +287,14 @@ function KpiCard({
 
 function ProjectStatus({ joined }: { joined: boolean }) {
   return (
-    <span className="inline-flex items-center gap-2 font-bold">
+    <span className='inline-flex items-center gap-2 font-bold'>
       <span
         className={cn(
           'h-3 w-3 rounded-full',
           joined ? 'bg-success' : 'bg-warning',
         )}
       />
-      {joined ? '実施中' : '非参加'}
+      {joined ? '参加中' : '非参加'}
     </span>
   );
 }
@@ -233,42 +307,55 @@ function JoinedProjectCard({
   onDetail: () => void;
 }) {
   return (
-    <Card className="rounded-2xl border-border bg-card shadow-none">
-      <CardContent className="p-5 md:p-6">
-        <div className="mb-5 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-primary">
-            <Building2 className="h-5 w-5" />
+    <Card className='rounded-2xl border-border bg-card shadow-none'>
+      <CardContent className='p-5 md:p-6'>
+        <div className='mb-5 flex items-center gap-3'>
+          <span className='flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-primary'>
+            <Building2 className='h-5 w-5' />
           </span>
-          <h3 className="text-foreground">{project.projectName}</h3>
+          <h3 className='text-foreground'>{project.projectName}</h3>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
-          <div className="space-y-4 xl:order-2">
-            <div className="rounded-2xl border border-border bg-transparent p-5">
-              <dl className="space-y-4">
+        <div className='grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]'>
+          <div className='space-y-4 xl:order-2'>
+            <div className='rounded-2xl border border-border bg-transparent p-5'>
+              <dl className='space-y-4'>
                 <div>
-                  <dt className="text-small text-muted-foreground">方法論</dt>
-                  <dd className="mt-1 font-bold">{getMethodologyLabel(project)}</dd>
+                  <dt className='text-small text-muted-foreground'>方法論</dt>
+                  <dd className='mt-1 font-bold'>
+                    {getMethodologyLabel(project)}
+                  </dd>
                 </div>
                 <div>
-                  <dt className="text-small text-muted-foreground">方法論番号</dt>
-                  <dd className="mt-1 font-bold">{project.methodNumber} {project.methodologyVersion}</dd>
+                  <dt className='text-small text-muted-foreground'>
+                    方法論番号
+                  </dt>
+                  <dd className='mt-1 font-bold'>
+                    {project.methodNumber} {project.methodologyVersion}
+                  </dd>
                 </div>
                 <div>
-                  <dt className="text-small text-muted-foreground">ステータス</dt>
-                  <dd className="mt-1">
+                  <dt className='text-small text-muted-foreground'>
+                    ステータス
+                  </dt>
+                  <dd className='mt-1'>
                     <ProjectStatus joined />
                   </dd>
                 </div>
               </dl>
             </div>
 
-            <Button type="button" size="md" className="w-full text-base" onClick={onDetail}>
+            <Button
+              type='button'
+              size='md'
+              className='w-full text-base'
+              onClick={onDetail}
+            >
               プロジェクト詳細
             </Button>
           </div>
 
-          <div className="flex min-h-[220px] items-center justify-center rounded-2xl bg-muted/20 text-muted-foreground xl:order-1">
+          <div className='flex min-h-[220px] items-center justify-center rounded-2xl bg-muted/20 text-muted-foreground xl:order-1'>
             グラフデータ準備中
           </div>
         </div>
@@ -279,22 +366,26 @@ function JoinedProjectCard({
 
 function AvailableProjectCard({ project }: { project: SiteProject }) {
   return (
-    <Card className="rounded-2xl border-border bg-card shadow-none">
-      <CardContent className="h-full p-6">
-        <h3 className="text-foreground">{project.projectName || 'PROJECT ABC'}</h3>
+    <Card className='rounded-2xl border-border bg-card shadow-none'>
+      <CardContent className='h-full p-6'>
+        <h3 className='text-foreground'>
+          {project.projectName || 'PROJECT ABC'}
+        </h3>
 
-        <dl className="mt-6 space-y-4">
+        <dl className='mt-6 space-y-4'>
           <div>
-            <dt className="text-small text-muted-foreground">方法論</dt>
-            <dd className="mt-1 font-bold">{getMethodologyLabel(project)}</dd>
+            <dt className='text-small text-muted-foreground'>方法論</dt>
+            <dd className='mt-1 font-bold'>{getMethodologyLabel(project)}</dd>
           </div>
           <div>
-            <dt className="text-small text-muted-foreground">方法論番号</dt>
-            <dd className="mt-1 font-bold">{project.methodNumber} {project.methodologyVersion}</dd>
+            <dt className='text-small text-muted-foreground'>方法論番号</dt>
+            <dd className='mt-1 font-bold'>
+              {project.methodNumber} {project.methodologyVersion}
+            </dd>
           </div>
           <div>
-            <dt className="text-small text-muted-foreground">ステータス</dt>
-            <dd className="mt-1">
+            <dt className='text-small text-muted-foreground'>ステータス</dt>
+            <dd className='mt-1'>
               <ProjectStatus joined={false} />
             </dd>
           </div>
@@ -346,7 +437,12 @@ const Dashboard = () => {
   );
 
   useEffect(() => {
-    if (!user || user.role === 'master' || user.role === 'admin' || userSiteId) {
+    if (
+      !user ||
+      user.role === 'master' ||
+      user.role === 'admin' ||
+      userSiteId
+    ) {
       return;
     }
 
@@ -445,14 +541,23 @@ const Dashboard = () => {
     return () => {
       isMounted = false;
     };
-  }, [toast, user, activeSiteId, navigate, loadNotifications, isUserWithoutSite]);
+  }, [
+    toast,
+    user,
+    activeSiteId,
+    navigate,
+    loadNotifications,
+    isUserWithoutSite,
+  ]);
 
   useEffect(() => {
     setCurrentProject(null);
   }, [setCurrentProject]);
 
   const handleOpenProject = (project: SiteProject) => {
-    navigate(`/sites/${encodeURIComponent(activeSiteId)}/projects/${project.id}`);
+    navigate(
+      `/sites/${encodeURIComponent(activeSiteId)}/projects/${project.id}`,
+    );
   };
 
   const picName =
@@ -461,9 +566,9 @@ const Dashboard = () => {
 
   if (isRefreshingUserSite) {
     return (
-      <div className="min-h-screen bg-background py-8">
+      <div className='min-h-screen bg-background py-8'>
         <div className={pageContainer}>
-          <div className="py-16 text-center text-muted-foreground">
+          <div className='py-16 text-center text-muted-foreground'>
             読み込み中...
           </div>
         </div>
@@ -473,10 +578,10 @@ const Dashboard = () => {
 
   if (isUserWithoutSite) {
     return (
-      <div className="min-h-screen bg-background py-8">
+      <div className='min-h-screen bg-background py-8'>
         <div className={pageContainer}>
-          <Card className="mx-auto mt-16 max-w-2xl">
-            <CardContent className="p-8 text-center text-muted-foreground">
+          <Card className='mx-auto mt-16 max-w-2xl'>
+            <CardContent className='p-8 text-center text-muted-foreground'>
               所属している拠点がありません。マスターにお問い合わせください。
             </CardContent>
           </Card>
@@ -486,55 +591,59 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className='relative min-h-screen bg-background'>
       {user?.role === 'master' && (
         <PageBackButton
           onClick={() => navigate('/master/dashboard?tab=sites')}
-          label=""
-          className="absolute left-4 top-10 z-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
+          label=''
+          className='absolute left-4 top-10 z-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
         />
       )}
 
       <section className={cn('relative pb-12 pt-14', pageContainer)}>
-        <div className="grid items-stretch gap-6 ">
-          <div className="relative">
+        <div className='grid items-stretch gap-6 '>
+          <div className='relative'>
             <div>
-              <p className="text-small pl-[60px] text-muted-foreground">
+              <p className='text-small pl-[60px] text-muted-foreground'>
                 {user?.companyName || '株式会社ABC'}
               </p>
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
-                    <Factory className="h-6 w-6" />
+              <div className='flex items-center justify-between gap-3'>
+                <div className='flex items-center gap-3'>
+                  <span className='flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-primary'>
+                    <Factory className='h-6 w-6' />
                   </span>
-                  <h1 className="mt-1 text-4xl leading-10 text-foreground">{site?.siteName || '拠点ダッシュボード'}</h1>
+                  <h1 className='mt-1 text-4xl leading-10 text-foreground'>
+                    {site?.siteName || '拠点ダッシュボード'}
+                  </h1>
                 </div>
                 {user?.role === 'master' && activeSiteId && (
                   <Button
-                    type="button"
-                    variant="outline"
-                    size="md"
-                    onClick={() => navigate(`/master/site-edit/${activeSiteId}`)}
+                    type='button'
+                    variant='outline'
+                    size='md'
+                    onClick={() =>
+                      navigate(`/master/site-edit/${activeSiteId}`)
+                    }
                   >
                     拠点情報を更新
                   </Button>
                 )}
               </div>
-              <div className="ml-[60px] mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-1">
-              {/* <dl className="space-y-4 rounded-2xl bg-card/70 p-5 shadow-app-sm"> */}
+              <div className='ml-[60px] mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-1'>
+                {/* <dl className="space-y-4 rounded-2xl bg-card/70 p-5 shadow-app-sm"> */}
                 {/* <div>
                   <dt className="text-small text-muted-foreground">プロジェクト数：</dt>
                   <dd className="mt-1 font-bold">{joinedProjects.length}</dd>
                 </div> */}
-              <div>
-                <dt className="text-small text-muted-foreground">担当者</dt>
-                <dd className="mt-1 font-bold">{picName}</dd>
-              </div>
-              <div>
-                <dt className="text-small text-muted-foreground">所在地</dt>
-                <dd className="mt-1 font-bold">{address}</dd>
-              </div>
-              {/* </dl> */}
+                <div>
+                  <dt className='text-small text-muted-foreground'>担当者</dt>
+                  <dd className='mt-1 font-bold'>{picName}</dd>
+                </div>
+                <div>
+                  <dt className='text-small text-muted-foreground'>所在地</dt>
+                  <dd className='mt-1 font-bold'>{address}</dd>
+                </div>
+                {/* </dl> */}
               </div>
             </div>
           </div>
@@ -553,23 +662,23 @@ const Dashboard = () => {
         </div>
       </section>
 
-      <section className="bg-card py-12">
+      <section className='bg-card py-12'>
         <div className={pageContainer}>
-          <div className="mb-6">
-            <h2 className="text-foreground">参加中のプロジェクト</h2>
-            <p className="text-small mt-2 text-foreground">
+          <div className='mb-6'>
+            <h2 className='text-foreground'>参加中のプロジェクト</h2>
+            <p className='text-small mt-2 text-foreground'>
               この拠点が現在参加しているプロジェクトです。進捗や排出量の詳細を確認できます。
             </p>
           </div>
 
           {isLoading ? (
-            <Card className="rounded-2xl border-border">
-              <CardContent className="p-10 text-center text-muted-foreground">
+            <Card className='rounded-2xl border-border'>
+              <CardContent className='p-10 text-center text-muted-foreground'>
                 読み込み中...
               </CardContent>
             </Card>
           ) : joinedProjects.length > 0 ? (
-            <div className="space-y-4">
+            <div className='space-y-4'>
               {joinedProjects.map((project) => (
                 <JoinedProjectCard
                   key={project.id}
@@ -579,8 +688,8 @@ const Dashboard = () => {
               ))}
             </div>
           ) : (
-            <Card className="rounded-2xl border-border">
-              <CardContent className="p-10 text-center text-muted-foreground">
+            <Card className='rounded-2xl border-border'>
+              <CardContent className='p-10 text-center text-muted-foreground'>
                 参加中のプロジェクトがありません
               </CardContent>
             </Card>
@@ -588,32 +697,37 @@ const Dashboard = () => {
         </div>
       </section>
 
-      <section className="bg-background py-12">
+      <section className='bg-background py-12'>
         <div className={pageContainer}>
-          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className='mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
             <div>
-              <h2 className="text-foreground">非参加プロジェクト</h2>
-              <p className="text-small mt-2 whitespace-pre-line text-foreground">
+              <h2 className='text-foreground'>非参加プロジェクト</h2>
+              <p className='text-small mt-2 whitespace-pre-line text-foreground'>
                 {user?.role === 'master'
                   ? 'プロジェクトへの参加をご希望の場合は、「プロジェクト入会届」ボタンを押下し、参加するプロジェクトを選択してください。'
                   : 'この拠点は、以下のプロジェクトにまだ参加していません。\n参加をご希望の場合は、マスター権限を持つ担当者へお問い合わせください。'}
               </p>
             </div>
-            {user?.role === 'master' && (
-              <Button type="button" size="md" className="shrink-0">
+            {user?.role === 'master' && activeSiteId && (
+              <Button
+                type='button'
+                size='md'
+                className='shrink-0'
+                onClick={() => navigate(paths.projectMembership(activeSiteId))}
+              >
                 プロジェクト入会届
               </Button>
             )}
           </div>
 
           {isLoading ? (
-            <Card className="rounded-2xl border-border">
-              <CardContent className="p-10 text-center text-muted-foreground">
+            <Card className='rounded-2xl border-border'>
+              <CardContent className='p-10 text-center text-muted-foreground'>
                 読み込み中...
               </CardContent>
             </Card>
           ) : availableProjects.length > 0 ? (
-            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            <div className='grid gap-5 md:grid-cols-2 xl:grid-cols-4'>
               {availableProjects.map((project) => (
                 <AvailableProjectCard
                   key={project.id}
@@ -622,8 +736,8 @@ const Dashboard = () => {
               ))}
             </div>
           ) : (
-            <Card className="rounded-2xl border-border">
-              <CardContent className="p-10 text-center text-muted-foreground">
+            <Card className='rounded-2xl border-border'>
+              <CardContent className='p-10 text-center text-muted-foreground'>
                 非参加のプロジェクトがありません
               </CardContent>
             </Card>

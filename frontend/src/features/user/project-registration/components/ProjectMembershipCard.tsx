@@ -1,0 +1,91 @@
+import type { SiteProject } from '@/api/site';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { Download } from 'lucide-react';
+
+type ProjectMembershipStatus = 'available' | 'joined';
+
+type ProjectMembershipCardProps = Readonly<{
+  project: SiteProject;
+  status: ProjectMembershipStatus;
+  onJoin?: (project: SiteProject) => void;
+}>;
+
+export function ProjectMembershipCard({
+  project,
+  status,
+  onJoin,
+}: ProjectMembershipCardProps) {
+  const isJoined = status === 'joined';
+
+  return (
+    <Card className='h-full rounded-lg border-border bg-card shadow-none'>
+      <CardContent className='flex h-full flex-col p-6'>
+        <div className='flex items-start justify-between gap-4'>
+          <div className='min-w-0'>
+            <h3 className='break-words text-foreground'>
+              {project.projectName || '-'}
+            </h3>
+            <p className='text-small mt-2 whitespace-pre-wrap break-words text-muted-foreground'>
+              {project.methodDetails || '-'}
+            </p>
+          </div>
+          <Badge
+            className={cn(
+              'shrink-0 border-transparent',
+              isJoined
+                ? 'bg-success/15 text-success hover:bg-success/15'
+                : 'bg-warning/15 text-warning hover:bg-warning/15',
+            )}
+          >
+            {isJoined ? '参加中' : '未参加'}
+          </Badge>
+        </div>
+
+        <dl className='mt-6 grid gap-x-8 gap-y-5 md:grid-cols-6'>
+          <div className='md:col-span-2'>
+            <dt className='text-small text-muted-foreground'>方法論名称</dt>
+            <dd className='mt-1 break-words font-bold'>
+              {project.methodName || '-'}
+            </dd>
+          </div>
+          <div className='md:col-span-2'>
+            <dt className='text-small text-muted-foreground'>方法論番号</dt>
+            <dd className='mt-1 break-words font-bold'>
+              {project.methodNumber || '-'}
+            </dd>
+          </div>
+          <div className='md:col-span-2'>
+            <dt className='text-small text-muted-foreground'>排出削減活動</dt>
+            <dd className='mt-1 whitespace-pre-wrap break-words font-bold'>
+              {project.methodMainEmission || '-'}
+            </dd>
+          </div>
+        </dl>
+
+        {!isJoined && onJoin && (
+          <div className='mt-6 flex flex-row gap-3 sm:ml-auto sm:min-w-56'>
+            <Button
+              type='button'
+              variant='outline'
+              size='md'
+              disabled
+            >
+              <Download />
+              PDFをダウンロード
+            </Button>
+            <Button
+              type='button'
+              size='md'
+              onClick={() => onJoin(project)}
+            >
+              入会届を提出
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

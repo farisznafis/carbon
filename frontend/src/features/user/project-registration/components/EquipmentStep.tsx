@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { Equipment } from "./types";
+import { paths } from "@/routes/paths";
 
 interface EquipmentStepProps {
   equipment: Equipment[];
@@ -14,14 +15,17 @@ export function EquipmentStep({
   onRemoveEquipment,
 }: EquipmentStepProps) {
   const navigate = useNavigate();
-  const { id: projectId } = useParams();
+  const { siteId = "", projectId = "" } = useParams<{
+    siteId: string;
+    projectId: string;
+  }>();
 
   const handleAddEquipment = () => {
-    navigate(`/projects/${projectId}/equipment`);
+    navigate(paths.projectEquipment(siteId, projectId));
   };
 
   const handleEditEquipment = (equipmentId: string) => {
-    navigate(`/projects/${projectId}/equipment?equipmentId=${equipmentId}`);
+    navigate(`${paths.projectEquipment(siteId, projectId)}?equipmentId=${equipmentId}`);
   };
 
   return (

@@ -24,10 +24,19 @@ export const paths = {
 
   legacyDashboardRoute: '/dashboard/:siteId',
   legacyProjectRoute: '/project/:id',
-  projectRegisterRoute: '/projects/:id/register',
-  projectRegister: (id: string | number) => `/projects/${id}/register`,
-  projectEquipmentRoute: '/projects/:id/equipment',
-  projectEquipment: (id: string | number) => `/projects/${id}/equipment`,
+  projectMembershipRoute: '/projects/:siteId/register',
+  projectMembership: (siteId: string | number) =>
+    `/projects/${siteId}/register`,
+  projectRegisterRoute: '/projects/:siteId/:projectId/register',
+  projectRegister: (
+    siteId: string | number,
+    projectId: string | number,
+  ) => `/projects/${siteId}/${projectId}/register`,
+  projectEquipmentRoute: '/projects/:siteId/:projectId/equipment',
+  projectEquipment: (
+    siteId: string | number,
+    projectId: string | number,
+  ) => `/projects/${siteId}/${projectId}/equipment`,
   equipmentAddRoute: '/equipment/add/:type',
   equipmentAdd: (type: string) => `/equipment/add/${type}`,
   siteProjectDetailRoute: '/sites/:siteId/projects/:projectId',
