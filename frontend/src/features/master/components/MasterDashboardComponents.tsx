@@ -20,8 +20,10 @@ const dashboardContainer = dashboardPageContainerClassName;
 
 export function MasterDashboardHero({
   companyName,
+  action,
 }: {
   companyName: string;
+  action?: ReactNode;
 }) {
   return (
     <header className="relative overflow-hidden border-b border-border bg-background">
@@ -29,6 +31,11 @@ export function MasterDashboardHero({
         <h1 className="max-w-5xl text-foreground">
           {companyName}
         </h1>
+        {action && (
+          <div className="mt-5 flex w-full justify-end sm:absolute sm:bottom-4 sm:right-6 sm:mt-0 lg:right-0">
+            {action}
+          </div>
+        )}
       </div>
     </header>
   );

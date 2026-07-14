@@ -1,5 +1,6 @@
 import type { Site } from '@/api/site';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   formatPersonName,
   formatSiteAddress,
@@ -18,17 +19,20 @@ type MasterSiteCardProps = {
   onOpen: (site: Site) => void;
 };
 
-export function MasterSiteCard({ site, onOpen }: MasterSiteCardProps) {
+export function MasterSiteCard({
+  site,
+  onOpen,
+}: MasterSiteCardProps) {
   const projects = Array.isArray(site.project) ? site.project : [];
   const visibleProjects = projects.slice(0, 2);
 
   return (
-    <button
-      type="button"
-      onClick={() => onOpen(site)}
-      className="group grid min-h-28 w-full grid-cols-[minmax(0,1fr)_80px] overflow-hidden rounded-lg border border-border bg-card text-left shadow-app-sm transition hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:grid-cols-[minmax(0,1fr)_96px]"
-    >
-      <div className="grid min-w-0 gap-5 px-5 py-5 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)] md:items-start md:px-7 xl:grid-cols-[minmax(0,1fr)_minmax(430px,0.75fr)]">
+    <article className="grid min-h-28 w-full overflow-hidden rounded-lg border border-border bg-card shadow-app-sm transition hover:border-primary/60 md:grid-cols-[minmax(0,1fr)_96px]">
+      <button
+        type="button"
+        onClick={() => onOpen(site)}
+        className="grid min-w-0 gap-5 px-5 py-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring md:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)] md:items-start md:px-7 xl:grid-cols-[minmax(0,1fr)_minmax(430px,0.75fr)]"
+      >
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
@@ -92,13 +96,19 @@ export function MasterSiteCard({ site, onOpen }: MasterSiteCardProps) {
             </div>
           </div>
         </div>
-      </div>
+      </button>
 
-      <div className="flex h-full min-h-28 items-center justify-center">
-        <button className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:bg-[#EEF2CE] hover:text-primary">
+      <div className="flex min-h-28 items-center justify-center border-t border-border px-4 py-4 md:border-l md:border-t-0">
+        <Button
+          type="button"
+          size="icon"
+          aria-label={`${site.siteName || '拠点'}のダッシュボードを開く`}
+          onClick={() => onOpen(site)}
+          className="shrink-0"
+        >
           <ChevronRight className="h-6 w-6" />
-        </button>
+        </Button>
       </div>
-    </button>
+    </article>
   );
 }

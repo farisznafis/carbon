@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -85,7 +86,21 @@ const MasterDashboard = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-card">
-      <MasterDashboardHero companyName={companyName} />
+      <MasterDashboardHero
+        companyName={companyName}
+        action={
+          <Button
+            type="button"
+            size="md"
+            disabled={sortedSites.length === 0}
+            onClick={() =>
+              navigate(paths.projectMembership(sortedSites[0].id))
+            }
+          >
+            プロジェクト入会届
+          </Button>
+        }
+      />
 
       <Tabs 
         value={activeTab} 

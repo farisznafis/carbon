@@ -629,22 +629,16 @@ const Dashboard = () => {
                   </Button>
                 )}
               </div>
-              <div className='ml-[60px] mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-1'>
-                {/* <dl className="space-y-4 rounded-2xl bg-card/70 p-5 shadow-app-sm"> */}
-                {/* <div>
-                  <dt className="text-small text-muted-foreground">プロジェクト数：</dt>
-                  <dd className="mt-1 font-bold">{joinedProjects.length}</dd>
-                </div> */}
+              <dl className='ml-[60px] mt-5 grid gap-x-10 gap-y-4 sm:grid-cols-[max-content_minmax(0,1fr)]'>
                 <div>
                   <dt className='text-small text-muted-foreground'>担当者</dt>
                   <dd className='mt-1 font-bold'>{picName}</dd>
                 </div>
-                <div>
+                <div className='min-w-0'>
                   <dt className='text-small text-muted-foreground'>所在地</dt>
-                  <dd className='mt-1 font-bold'>{address}</dd>
+                  <dd className='mt-1 break-words font-bold'>{address}</dd>
                 </div>
-                {/* </dl> */}
-              </div>
+              </dl>
             </div>
           </div>
 
