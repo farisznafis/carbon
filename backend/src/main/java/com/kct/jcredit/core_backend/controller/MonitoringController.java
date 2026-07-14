@@ -88,17 +88,43 @@ public class MonitoringController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
-
-
-        /**
-     * Get all monitoring records (paginated)
+    /**
+     * Get all monitoring records(paginated)
      */
-    @GetMapping(value = "/list")
+    @GetMapping(value = "/{projectId}/list")
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasRole('operator')")
+    @Operation(summary = "モニタリング記録一覧取得", description = "管理者が参照できるためモニタリング記録一覧を取得します。")
+    public ResponseEntity<MonitoringRecordSolarListResponse> listMonitoringRecords(
+            @PathVariable Integer projectId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "50") Integer limit,
+            @RequestParam(required = false) String nextPageToken,
+            Authentication authentication
+    ) {
+        String username = jwtUtil.extractUsername(authentication.getCredentials().toString());
+        //String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+        MonitoringRecordSolarListResponse response = monitoringService
+            .readAllMonitoringRecordsSolar(
+                username, 
+                page, 
+                limit, 
+                projectId,
+                nextPageToken
+            );
+        
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    /**
+     * Get all monitoring records for a site(paginated)
+     */
+    @GetMapping(value = "{siteId}/{projectId}/list")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "モニタリング記録一覧取得", description = "指定されたプロジェクトと拠点のモニタリング記録一覧を取得します。")
-    public ResponseEntity<MonitoringRecordSolarListResponse> listMonitoringRecords(
-            @RequestParam Integer siteId,
-            @RequestParam Integer projectId,
+    public ResponseEntity<MonitoringRecordSolarListResponse> listMonitoringRecordsbySite(
+            @PathVariable Integer siteId,
+            @PathVariable Integer projectId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "50") Integer limit,
             @RequestParam(required = false) String nextPageToken,
@@ -108,7 +134,7 @@ public class MonitoringController {
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
          System.err.println("DEBUG listMonitoringRecords called with companyId: " + companyId + ", projectId: " + projectId + ", siteId: " + siteId);
         MonitoringRecordSolarListResponse response = monitoringService
-            .readAllMonitoringRecordsSolar(
+            .readSiteMonitoringRecordsSolar(
                 username, 
                 companyId, 
                 projectId, 

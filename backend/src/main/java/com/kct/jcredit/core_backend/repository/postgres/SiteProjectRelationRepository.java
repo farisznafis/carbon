@@ -24,6 +24,9 @@ public interface SiteProjectRelationRepository extends JpaRepository<SiteProject
     
     SiteProjectRelation findByProjectIdAndSiteId(Integer projectId, Integer siteId);
 
+    @Query("SELECT spr.site.id FROM SiteProjectRelation spr WHERE spr.project.id = :projectId")
+    List<Integer> findSiteIdsByProjectId(@Param("projectId") Integer projectId);
+
     @Modifying
     @Query(value = "UPDATE site_project_relation spr SET deleted_at = CURRENT_TIMESTAMP, deleted_by = :deletedBy "
          + "WHERE spr.site_id IN (SELECT s.id FROM site s JOIN participating_company pc ON pc.id = s.participating_company_id WHERE pc.company_id = :companyId)", nativeQuery = true)

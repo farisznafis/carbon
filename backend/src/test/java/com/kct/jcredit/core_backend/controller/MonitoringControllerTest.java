@@ -617,11 +617,11 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
     }
 
-     // ==================== listMonitoringRecords ====================
+     // ==================== listMonitoringRecordsbySite ====================
 
     @Test
     @DisplayName("デフォルトページネーションで一覧取得成功")
-    void testListMonitoringRecords_DefaultPagination_Success() {
+    void testlistMonitoringRecordsbySite_DefaultPagination_Success() {
         // Given
         MonitoringRecordSolarListResponse expectedResponse = new MonitoringRecordSolarListResponse();
         expectedResponse.setStatusCode(ResponseConstants.OK);
@@ -654,7 +654,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         }
         expectedResponse.setItems(items);  // ✅ setItems
 
-        when(monitoringService.readAllMonitoringRecordsSolar(
+        when(monitoringService.readSiteMonitoringRecordsSolar(
                 eq(USERNAME),
                 eq(COMPANY_ID),
                 eq(PROJECT_ID),
@@ -670,7 +670,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
                 // When
                 ResponseEntity<MonitoringRecordSolarListResponse> result = 
-                        monitoringController.listMonitoringRecords(
+                        monitoringController.listMonitoringRecordsbySite(
                                 SITE_ID,
                                 PROJECT_ID,
                                 1, // デフォルトpage
@@ -712,7 +712,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
                 // モック呼び出し検証
                 verify(jwtUtil, times(1)).extractUsername(TOKEN);
                 verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
-                verify(monitoringService, times(1)).readAllMonitoringRecordsSolar(
+                verify(monitoringService, times(1)).readSiteMonitoringRecordsSolar(
                         USERNAME,
                         COMPANY_ID,
                         PROJECT_ID,
@@ -725,7 +725,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         }
     @Test
     @DisplayName("カスタムページサイズで一覧取得成功〇")
-    void testListMonitoringRecords_CustomPageSize_Success() {
+    void testlistMonitoringRecordsbySite_CustomPageSize_Success() {
         // Given
         Integer customLimit = 20;
 
@@ -760,7 +760,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         }
         expectedResponse.setItems(items);  // ✅ setItems
 
-        when(monitoringService.readAllMonitoringRecordsSolar(
+        when(monitoringService.readSiteMonitoringRecordsSolar(
                 eq(USERNAME),
                 eq(COMPANY_ID),
                 eq(PROJECT_ID),
@@ -776,7 +776,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
                 // When
                 ResponseEntity<MonitoringRecordSolarListResponse> result = 
-                        monitoringController.listMonitoringRecords(
+                        monitoringController.listMonitoringRecordsbySite(
                                 SITE_ID,
                                 PROJECT_ID,
                                 1,
@@ -817,7 +817,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
                 verify(jwtUtil, times(1)).extractUsername(TOKEN);
                 verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
-                verify(monitoringService, times(1)).readAllMonitoringRecordsSolar(
+                verify(monitoringService, times(1)).readSiteMonitoringRecordsSolar(
                         USERNAME,
                         COMPANY_ID,
                         PROJECT_ID,
@@ -831,7 +831,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
     @Test
     @DisplayName("nextPageTokenで次ページ取得成功〇")
-    void testListMonitoringRecords_WithNextPageToken_Success() {
+    void testlistMonitoringRecordsbySite_WithNextPageToken_Success() {
         // Given
         String nextPageToken = "eyJwYWdlIjoyLCJsaW1pdCI6NTB9";
         Integer page = 2;
@@ -867,7 +867,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         }
         expectedResponse.setItems(items);  // ✅ setItems
 
-        when(monitoringService.readAllMonitoringRecordsSolar(
+        when(monitoringService.readSiteMonitoringRecordsSolar(
                 eq(USERNAME),
                 eq(COMPANY_ID),
                 eq(PROJECT_ID),
@@ -883,7 +883,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
                 // When
                 ResponseEntity<MonitoringRecordSolarListResponse> result = 
-                        monitoringController.listMonitoringRecords(SITE_ID,PROJECT_ID,
+                        monitoringController.listMonitoringRecordsbySite(SITE_ID,PROJECT_ID,
                                 page,
                                 50,
                                 nextPageToken,
@@ -919,7 +919,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
                 verify(authentication, times(2)).getCredentials();
                 verify(jwtUtil, times(1)).extractUsername(TOKEN);
                 verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
-                verify(monitoringService, times(1)).readAllMonitoringRecordsSolar(
+                verify(monitoringService, times(1)).readSiteMonitoringRecordsSolar(
                         USERNAME,
                         COMPANY_ID,
                         PROJECT_ID,
@@ -933,7 +933,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
     @Test
     @DisplayName("ページ3で一覧取得成功〇")
-        void testListMonitoringRecords_Page3_Success() {
+        void testlistMonitoringRecordsbySite_Page3_Success() {
         // Given
         Integer page = 3;
 
@@ -968,7 +968,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         }
         expectedResponse.setItems(items);  // ✅ setItems
 
-        when(monitoringService.readAllMonitoringRecordsSolar(
+        when(monitoringService.readSiteMonitoringRecordsSolar(
                 eq(USERNAME),
                 eq(COMPANY_ID),
                 eq(PROJECT_ID),
@@ -984,7 +984,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
                 // When
                 ResponseEntity<MonitoringRecordSolarListResponse> result = 
-                        monitoringController.listMonitoringRecords(
+                        monitoringController.listMonitoringRecordsbySite(
                                 SITE_ID,
                                 PROJECT_ID,
                                 page,
@@ -1035,7 +1035,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
                 // モック呼び出し検証
                 verify(jwtUtil, times(1)).extractUsername(TOKEN);
                 verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
-                verify(monitoringService, times(1)).readAllMonitoringRecordsSolar(
+                verify(monitoringService, times(1)).readSiteMonitoringRecordsSolar(
                         USERNAME,
                         COMPANY_ID,
                         PROJECT_ID,
@@ -1049,20 +1049,20 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
     @Test
     @DisplayName("デフォルト値（page=1, limit=50）が適用される → サービスに正しく渡される〇")
-    void testListMonitoringRecords_DefaultValues() {
+    void testlistMonitoringRecordsbySite_DefaultValues() {
         // Arrange
         MonitoringRecordSolarListResponse mockResponse = new MonitoringRecordSolarListResponse();
         mockResponse.setStatusCode(ResponseConstants.OK);
         mockResponse.setMessage("取得成功");
         mockResponse.setTimestamp(LocalDateTime.now());
 
-        when(monitoringService.readAllMonitoringRecordsSolar(
+        when(monitoringService.readSiteMonitoringRecordsSolar(
             USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, 1, 50, null
         )).thenReturn(mockResponse);
 
         // Act
         ResponseEntity<MonitoringRecordSolarListResponse> response = 
-            monitoringController.listMonitoringRecords(
+            monitoringController.listMonitoringRecordsbySite(
                 SITE_ID, PROJECT_ID, 1, 50, null, authentication
             );
 
@@ -1070,7 +1070,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         
-        verify(monitoringService, times(1)).readAllMonitoringRecordsSolar(
+        verify(monitoringService, times(1)).readSiteMonitoringRecordsSolar(
             USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, 1, 50, null
         );
     }
@@ -1078,20 +1078,20 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
     @Test
     @DisplayName("pageが負の数 → 400 Bad Request（バリデーション確認）〇")
-    void testListMonitoringRecords_NegativePage() {
+    void testlistMonitoringRecordsbySite_NegativePage() {
         // Arrange
         MonitoringRecordSolarListResponse mockResponse = new MonitoringRecordSolarListResponse();
         mockResponse.setStatusCode(ResponseConstants.BAD_REQUEST);
         mockResponse.setMessage("ページ番号は正の数である必要があります");
         mockResponse.setTimestamp(LocalDateTime.now());
 
-        when(monitoringService.readAllMonitoringRecordsSolar(
+        when(monitoringService.readSiteMonitoringRecordsSolar(
             anyString(), anyString(), anyInt(), anyInt(), eq(-1), anyInt(), any()
         )).thenReturn(mockResponse);
 
         // Act
         ResponseEntity<MonitoringRecordSolarListResponse> response = 
-            monitoringController.listMonitoringRecords(
+            monitoringController.listMonitoringRecordsbySite(
                 SITE_ID, PROJECT_ID, -1, 50, null, authentication
             );
 
@@ -1099,14 +1099,14 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         assertNotNull(response);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         
-        verify(monitoringService, times(1)).readAllMonitoringRecordsSolar(
+        verify(monitoringService, times(1)).readSiteMonitoringRecordsSolar(
             USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, -1, 50, null
         );
     }
 
     @Test
     @DisplayName("limitが0 → 400 Bad Request〇")
-    void testListMonitoringRecords_ZeroLimit() {
+    void testlistMonitoringRecordsbySite_ZeroLimit() {
 
         // Arrange
         MonitoringRecordSolarListResponse mockResponse = new MonitoringRecordSolarListResponse();
@@ -1114,13 +1114,13 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         mockResponse.setMessage("リミットは1以上である必要があります");
         mockResponse.setTimestamp(LocalDateTime.now());
 
-        when(monitoringService.readAllMonitoringRecordsSolar(
+        when(monitoringService.readSiteMonitoringRecordsSolar(
             anyString(), anyString(), anyInt(), anyInt(), anyInt(), eq(0), any()
         )).thenReturn(mockResponse);
 
         // Act
         ResponseEntity<MonitoringRecordSolarListResponse> response = 
-            monitoringController.listMonitoringRecords(
+            monitoringController.listMonitoringRecordsbySite(
                 SITE_ID, PROJECT_ID, 1, 0, null, authentication
             );
 
@@ -1128,7 +1128,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         assertNotNull(response);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         
-        verify(monitoringService, times(1)).readAllMonitoringRecordsSolar(
+        verify(monitoringService, times(1)).readSiteMonitoringRecordsSolar(
             USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, 1, 0, null
         );
 
@@ -1140,7 +1140,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
     @Test
     @DisplayName("nextPageToken が正しく渡される → サービスに伝達")
-    void testListMonitoringRecords_WithNextPageToken() {
+    void testlistMonitoringRecordsbySite_WithNextPageToken() {
 
         // Arrange
         String nextPageToken = "eyJwYWdlIjoyfQ==";
@@ -1148,13 +1148,13 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         mockResponse.setStatusCode(ResponseConstants.OK);
         mockResponse.setTimestamp(LocalDateTime.now());
 
-        when(monitoringService.readAllMonitoringRecordsSolar(
+        when(monitoringService.readSiteMonitoringRecordsSolar(
             USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, 2, 50, nextPageToken
         )).thenReturn(mockResponse);
 
         // Act
         ResponseEntity<MonitoringRecordSolarListResponse> response = 
-            monitoringController.listMonitoringRecords(
+            monitoringController.listMonitoringRecordsbySite(
                 SITE_ID, PROJECT_ID, 2, 50, nextPageToken, authentication
             );
 
@@ -1162,7 +1162,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         
-        verify(monitoringService, times(1)).readAllMonitoringRecordsSolar(
+        verify(monitoringService, times(1)).readSiteMonitoringRecordsSolar(
             USERNAME, COMPANY_ID, PROJECT_ID, SITE_ID, 2, 50, nextPageToken
         );
 
