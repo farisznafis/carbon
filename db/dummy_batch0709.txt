@@ -350,7 +350,6 @@ INSERT INTO site_r002_equipment_file (
 );
 
 -- 12. batch_process_history
--- Inserted before reduction results in case batch_id has FK dependency.
 INSERT INTO batch_process_history (
     is_active, created_by, updated_by,
     start_time, end_time,
@@ -358,21 +357,23 @@ INSERT INTO batch_process_history (
 ) VALUES
 (
     TRUE, 'seed_script', 'seed_script',
-    '2024-06-30 01:00:00', '2024-06-30 01:45:00',
-    'SUCCESS', 'batch_worker_01', '2024-06-30 01:00:00'
+    '2026-07-01 01:00:00', '2026-07-01 01:20:00',
+    'SUCCESS', 'batch_worker_01', '2026-07-01 01:00:00'
 ),
 (
     TRUE, 'seed_script', 'seed_script',
-    '2024-07-31 01:00:00', '2024-07-31 01:50:00',
-    'SUCCESS', 'batch_worker_01', '2024-07-31 01:00:00'
+    '2026-07-04 01:00:00', '2026-07-04 01:20:00',
+    'SUCCESS', 'batch_worker_01', '2026-07-04 01:00:00'
 ),
 (
     TRUE, 'seed_script', 'seed_script',
-    '2024-08-31 01:00:00', NULL,
-    'FAILED', 'batch_worker_02', '2024-08-31 01:00:00'
+    '2026-07-07 01:00:00', '2026-07-07 01:20:00',
+    'SUCCESS', 'batch_worker_01', '2026-07-07 01:00:00'
 );
 
 -- 13. EN_R002_reduction_result_total
+-- One row per project, reflects cumulative total after all 3 batches.
+-- batch_id and processing_date reflect the most recent batch (batch 3).
 INSERT INTO EN_R002_reduction_result_total (
     is_active, created_by, updated_by,
     batch_id, processing_date, project_id,
@@ -381,47 +382,39 @@ INSERT INTO EN_R002_reduction_result_total (
 ) VALUES
 (
     TRUE, 'seed_script', 'seed_script',
-    1, '2024-06-30', 1,
-    '2024-06-30 00:00:00', '2024-06-30 23:59:59',
-    120.500, 90.250, 30.250, 15.125, 15.125
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    2, '2024-07-31', 1,
-    '2024-07-31 00:00:00', '2024-07-31 23:59:59',
-    135.750, 100.000, 35.750, 18.000, 17.750
+    3, '2026-07-07', 1,
+    '2026-07-01 01:00:00', '2026-07-07 01:20:00',
+    0.100, 0.000, 0.100, 0.100, 0.000
 );
 
 -- 14. EN_R002_reduction_result
+-- One row per batch per site (site_id=1, project_id=1 throughout)
 INSERT INTO EN_R002_reduction_result (
     is_active, created_by, updated_by,
     batch_id, processing_date, project_id,
     start_time, end_time, site_id,
     empj, empj_m, empj_s, empj_s_control, empj_s_battery
 ) VALUES
+-- Batch 1
 (
     TRUE, 'seed_script', 'seed_script',
-    1, '2024-06-30', 1,
-    '2024-06-30 00:00:00', '2024-06-30 23:59:59', 1,
-    70.300, 55.100, 15.200, 8.000, 7.200
+    1, '2026-07-01', 1,
+    '2026-07-01 01:00:00', '2026-07-01 01:20:00', 1,
+    0.033, 0.000, 0.033, 0.033, 0.000
 ),
+-- Batch 2
 (
     TRUE, 'seed_script', 'seed_script',
-    1, '2024-06-30', 1,
-    '2024-06-30 00:00:00', '2024-06-30 23:59:59', 3,
-    50.200, 35.150, 15.050, 7.125, 7.925
+    2, '2026-07-04', 1,
+    '2026-07-04 01:00:00', '2026-07-04 01:20:00', 1,
+    0.033, 0.000, 0.033, 0.033, 0.000
 ),
+-- Batch 3
 (
     TRUE, 'seed_script', 'seed_script',
-    2, '2024-07-31', 1,
-    '2024-07-31 00:00:00', '2024-07-31 23:59:59', 1,
-    80.000, 60.000, 20.000, 10.000, 10.000
-),
-(
-    TRUE, 'seed_script', 'seed_script',
-    2, '2024-07-31', 1,
-    '2024-07-31 00:00:00', '2024-07-31 23:59:59', 3,
-    55.750, 40.000, 15.750, 8.000, 7.750
+    3, '2026-07-07', 1,
+    '2026-07-07 01:00:00', '2026-07-07 01:20:00', 1,
+    0.033, 0.000, 0.033, 0.033, 0.000
 );
 
 -- 15. record_cancel_request
