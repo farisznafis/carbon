@@ -30,7 +30,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getMonitoringRecent } from '@/api/monitoring';
 import type { MonitoringData } from '@/api/monitoring';
-import ContributionTimeline from '@/components/data-display/ContributionTimeline';
+import { getEmissionTrend, type EmissionTrendPoint } from '@/api/batch';
 import { logger } from '@/lib/logger';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import {
@@ -40,6 +40,7 @@ import {
 } from '@/components/layout/DashboardLayout';
 import { EquipmentList } from './components/EquipmentList';
 import { MonitoringCancellationDialog } from './components/MonitoringCancellationDialog';
+import { EmissionTrendChart } from './components/EmissionTrendChart';
 import { projectDetailCardClassName } from './projectDetailStyles';
 import { cn } from '@/lib/utils';
 
@@ -276,6 +277,11 @@ const ProjectDetail = () => {
   const [equipmentLoading, setEquipmentLoading] = useState(false);
   const [equipmentHasFetched, setEquipmentHasFetched] = useState(false);
   const [equipmentError, setEquipmentError] = useState<string | null>(null);
+  const [emissionTrend, setEmissionTrend] = useState<EmissionTrendPoint[]>([]);
+  const [emissionTrendLoading, setEmissionTrendLoading] = useState(false);
+  const [emissionTrendError, setEmissionTrendError] = useState<string | null>(
+    null,
+  );
   const [monitoringCancellationOpen, setMonitoringCancellationOpen] =
     useState(false);
 
@@ -375,6 +381,47 @@ const ProjectDetail = () => {
 
     void fetchEquipment();
   }, [equipmentHasFetched, projectId, siteId, tab]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const fetchEmissionTrend = async () => {
+      if (!projectId || !siteId) {
+        setEmissionTrend([]);
+        setEmissionTrendError(null);
+        setEmissionTrendLoading(false);
+        return;
+      }
+
+      try {
+        setEmissionTrendLoading(true);
+        setEmissionTrendError(null);
+
+        const trend = await getEmissionTrend(siteId, projectId);
+
+        if (!isCancelled) {
+          setEmissionTrend(trend);
+        }
+      } catch (error) {
+        logger.error('Error loading project emission trend:', error);
+
+        if (!isCancelled) {
+          setEmissionTrend([]);
+          setEmissionTrendError('排出量データの取得に失敗しました。');
+        }
+      } finally {
+        if (!isCancelled) {
+          setEmissionTrendLoading(false);
+        }
+      }
+    };
+
+    void fetchEmissionTrend();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [projectId, siteId]);
 
   const monitoringRows: MonitoringDisplayRow[] =
     recentMonitoring.length > 0 ? recentMonitoring : [fallbackMonitoringRow];
@@ -543,7 +590,12 @@ const ProjectDetail = () => {
 
               <section className='grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[1.35fr_0.95fr]'>
                 <div className='h-full animate-slide-up'>
-                  <ContributionTimeline className={`${projectDetailCardClassName} min-h-[360px]`} />
+                  <EmissionTrendChart
+                    data={emissionTrend}
+                    isLoading={emissionTrendLoading}
+                    error={emissionTrendError}
+                    className={projectDetailCardClassName}
+                  />
                 </div>
 
                 <Card className={`${projectDetailCardClassName} flex h-full min-h-[360px] flex-col`}>
