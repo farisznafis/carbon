@@ -6,6 +6,7 @@ import type {
   CompanyStatus,
   CompanySuspension,
   Pagination,
+  SuspendCompanyPayload,
 } from '@/api/admin';
 import {
   approveAdminCompany,
@@ -13,6 +14,7 @@ import {
   getCompanySuspensions,
   rejectAdminCompany,
   resolveCompanySuspension,
+  suspendAdminCompany,
 } from '@/api/admin';
 import {
   updateAdminProjectStatus,
@@ -32,6 +34,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { CancelRequestHistoryTable } from '@/features/admin/dashboard/tables/CancelRequestHistoryTable';
 import { AdminCompanyApplicationsTable } from '@/features/admin/dashboard/tables/AdminCompanyApplicationsTable';
+import { CompanySuspendDialog } from '@/features/admin/dashboard/tables/CompanySuspendDialog';
 import { CompanySuspensionResolveDialog } from '@/features/admin/dashboard/tables/CompanySuspensionResolveDialog';
 import { PendingCompanyActionDialog } from '@/features/admin/dashboard/tables/PendingCompanyActionDialog';
 import { PendingCompanyApplicationDetail } from '@/features/admin/dashboard/tables/PendingCompanyApplicationDetail';
@@ -65,6 +68,11 @@ const DEFAULT_PAGINATION: Pagination = {
   totalPages: 1,
   nextPageToken: null,
   hasMore: false,
+};
+
+const DEFAULT_SUSPEND_PAYLOAD: SuspendCompanyPayload = {
+  reasonCode: 'OTHER',
+  reasonDetail: '',
 };
 
 const adminDashboardTabs: Array<{
@@ -233,6 +241,10 @@ const AdminDashboard = () => {
   );
   const [rejectReason, setRejectReason] = useState('');
 
+  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
+  const [suspendPayload, setSuspendPayload] = useState<SuspendCompanyPayload>(
+    DEFAULT_SUSPEND_PAYLOAD,
+  );
   const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
   const [resolveLoading, setResolveLoading] = useState(false);
   const [activeSuspensions, setActiveSuspensions] = useState<
@@ -469,6 +481,55 @@ const AdminDashboard = () => {
     }
   };
 
+  const openSuspendCompany = (item: AdminCompanyListItem) => {
+    setSelectedCompany(item);
+    setSuspendPayload(DEFAULT_SUSPEND_PAYLOAD);
+    setActionFieldErrors({});
+    setSuspendDialogOpen(true);
+  };
+
+  const handleSuspendDialogOpenChange = (open: boolean) => {
+    setSuspendDialogOpen(open);
+
+    if (!open) {
+      setSelectedCompany(null);
+      setSuspendPayload(DEFAULT_SUSPEND_PAYLOAD);
+      setActionFieldErrors({});
+    }
+  };
+
+  const handleConfirmSuspendCompany = async () => {
+    if (!selectedCompany) return;
+
+    setSubmitting(true);
+    setActionFieldErrors({});
+    try {
+      await suspendAdminCompany(selectedCompany.companyId, suspendPayload);
+      await reloadCompanyLists();
+      setDetailCompany((currentCompany) =>
+        currentCompany?.companyId === selectedCompany.companyId
+          ? { ...currentCompany, status: 'SUSPENDED', isActive: false }
+          : currentCompany,
+      );
+      handleSuspendDialogOpenChange(false);
+      toast({ title: 'アカウントを停止しました', variant: 'success' });
+    } catch (error) {
+      setActionFieldErrors(getApiFieldErrors(error));
+      const message = getApiMessage(
+        error,
+        'アカウント停止に失敗しました。',
+      );
+      setCompanyListError(message);
+      toast({
+        title: 'アカウント停止に失敗しました',
+        description: message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const openResolveSuspension = (item: AdminCompanyListItem) => {
     setSelectedCompany(item);
     setActiveSuspensions([]);
@@ -513,13 +574,25 @@ const AdminDashboard = () => {
         },
       );
       await reloadCompanyLists();
+      setDetailCompany((currentCompany) =>
+        currentCompany?.companyId === selectedCompany.companyId
+          ? { ...currentCompany, status: 'ACTIVE', isActive: true }
+          : currentCompany,
+      );
       handleResolveDialogOpenChange(false);
-      toast({ title: '停止を解除しました', variant: 'success' });
+      toast({ title: 'アカウントを有効化しました', variant: 'success' });
     } catch (error) {
       setActionFieldErrors(getApiFieldErrors(error));
-      setCompanyListError(
-        getApiMessage(error, '停止解除に失敗しました。'),
+      const message = getApiMessage(
+        error,
+        'アカウントの有効化に失敗しました。',
       );
+      setCompanyListError(message);
+      toast({
+        title: 'アカウントの有効化に失敗しました',
+        description: message,
+        variant: 'destructive',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -551,6 +624,8 @@ const AdminDashboard = () => {
             onBack={closeCompanyDetail}
             onApprove={openApproveCompany}
             onReject={openRejectCompany}
+            onSuspend={openSuspendCompany}
+            onActivate={openResolveSuspension}
           />
         ) : (
           <div className="flex min-h-screen items-center justify-center bg-background px-6 text-small text-muted-foreground">
@@ -569,6 +644,30 @@ const AdminDashboard = () => {
           onRejectReasonChange={setRejectReason}
           onConfirm={handleConfirmPendingCompany}
           isSubmitting={submitting}
+        />
+        <CompanySuspendDialog
+          open={suspendDialogOpen}
+          item={selectedCompany}
+          payload={suspendPayload}
+          fieldErrors={actionFieldErrors}
+          isSubmitting={submitting}
+          onOpenChange={handleSuspendDialogOpenChange}
+          onPayloadChange={setSuspendPayload}
+          onConfirm={handleConfirmSuspendCompany}
+        />
+        <CompanySuspensionResolveDialog
+          open={resolveDialogOpen}
+          item={selectedCompany}
+          suspensions={activeSuspensions}
+          selectedSuspensionId={selectedSuspensionId}
+          resolutionNote={resolutionNote}
+          fieldErrors={actionFieldErrors}
+          isLoading={resolveLoading}
+          isSubmitting={submitting}
+          onOpenChange={handleResolveDialogOpenChange}
+          onSelectedSuspensionIdChange={setSelectedSuspensionId}
+          onResolutionNoteChange={setResolutionNote}
+          onConfirm={handleConfirmResolveSuspension}
         />
       </>
     );
@@ -642,7 +741,6 @@ const AdminDashboard = () => {
                       emptyMessage="参加企業はありません。"
                       onDetails={openCompanyDetails}
                       onReview={openCompanyReview}
-                      onResolveSuspension={openResolveSuspension}
                     />
                     <PaginationControls
                       currentPage={participatingPagination.page}
@@ -750,21 +848,6 @@ const AdminDashboard = () => {
         onRejectReasonChange={setRejectReason}
         onConfirm={handleConfirmPendingCompany}
         isSubmitting={submitting}
-      />
-
-      <CompanySuspensionResolveDialog
-        open={resolveDialogOpen}
-        item={selectedCompany}
-        suspensions={activeSuspensions}
-        selectedSuspensionId={selectedSuspensionId}
-        resolutionNote={resolutionNote}
-        fieldErrors={actionFieldErrors}
-        isLoading={resolveLoading}
-        isSubmitting={submitting}
-        onOpenChange={handleResolveDialogOpenChange}
-        onSelectedSuspensionIdChange={setSelectedSuspensionId}
-        onResolutionNoteChange={setResolutionNote}
-        onConfirm={handleConfirmResolveSuspension}
       />
 
     </div>

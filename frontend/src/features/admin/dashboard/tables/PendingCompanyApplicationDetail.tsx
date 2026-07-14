@@ -16,6 +16,8 @@ type PendingCompanyApplicationDetailProps = {
   onBack: () => void;
   onApprove: (item: AdminCompanyListItem) => void;
   onReject: (item: AdminCompanyListItem) => void;
+  onSuspend: (item: AdminCompanyListItem) => void;
+  onActivate: (item: AdminCompanyListItem) => void;
 };
 
 type DetailField = {
@@ -102,6 +104,8 @@ export function PendingCompanyApplicationDetail({
   onBack,
   onApprove,
   onReject,
+  onSuspend,
+  onActivate,
 }: PendingCompanyApplicationDetailProps) {
   const legalFields: DetailField[] = [
     { label: '法人名', value: item.nameJA },
@@ -205,6 +209,29 @@ export function PendingCompanyApplicationDetail({
                 </Button>
                 <Button type="button" size="md" onClick={() => onApprove(item)}>
                   承認
+                </Button>
+              </div>
+            )}
+            {!reviewMode && item.status === 'ACTIVE' && (
+              <div className="mt-14 flex justify-end">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="md"
+                  onClick={() => onSuspend(item)}
+                >
+                  アカウント停止
+                </Button>
+              </div>
+            )}
+            {!reviewMode && item.status === 'SUSPENDED' && (
+              <div className="mt-14 flex justify-end">
+                <Button
+                  type="button"
+                  size="md"
+                  onClick={() => onActivate(item)}
+                >
+                  アカウント有効化
                 </Button>
               </div>
             )}

@@ -14,7 +14,6 @@ type AdminCompanyApplicationsTableProps = {
   emptyMessage: string;
   onDetails: (item: AdminCompanyListItem) => void;
   onReview: (item: AdminCompanyListItem) => void;
-  onResolveSuspension?: (item: AdminCompanyListItem) => void;
 };
 
 const companyTableGridColumns =
@@ -73,12 +72,10 @@ function ActionButtons({
   item,
   onDetails,
   onReview,
-  onResolveSuspension,
 }: {
   item: AdminCompanyListItem;
   onDetails: (item: AdminCompanyListItem) => void;
   onReview: (item: AdminCompanyListItem) => void;
-  onResolveSuspension?: (item: AdminCompanyListItem) => void;
 }) {
   if (item.status === 'PENDING') {
     return (
@@ -88,19 +85,6 @@ function ActionButtons({
         </Button> */}
         <Button type="button" onClick={() => onReview(item)}>
           申請内容を確認
-        </Button>
-      </div>
-    );
-  }
-
-  if (item.status === 'SUSPENDED') {
-    return (
-      <div className="flex justify-start gap-2">
-        <Button type="button" variant="outline" onClick={() => onDetails(item)}>
-          詳細
-        </Button>
-        <Button type="button" onClick={() => onResolveSuspension?.(item)}>
-          停止解除
         </Button>
       </div>
     );
@@ -120,7 +104,6 @@ export function AdminCompanyApplicationsTable({
   emptyMessage,
   onDetails,
   onReview,
-  onResolveSuspension,
 }: AdminCompanyApplicationsTableProps) {
   const columns: AdminGridTableColumn<AdminCompanyListItem>[] = [
     {
@@ -175,7 +158,6 @@ export function AdminCompanyApplicationsTable({
             item={item}
             onDetails={onDetails}
             onReview={onReview}
-            onResolveSuspension={onResolveSuspension}
           />
         </div>
       ),

@@ -51,7 +51,7 @@ export function CompanySuspendDialog({
       <DialogContent className="w-[calc(100vw-2rem)] max-w-[640px] rounded-xl p-8">
         <DialogHeader>
           <DialogTitle className="text-foreground">
-            企業アカウントを停止しますか？
+            アカウントを停止しますか？
           </DialogTitle>
         </DialogHeader>
 
@@ -136,7 +136,7 @@ export function CompanySuspendDialog({
             onClick={onConfirm}
             disabled={!canConfirm || isSubmitting}
           >
-            停止する
+            アカウント停止
           </Button>
         </DialogFooter>
       </DialogContent>

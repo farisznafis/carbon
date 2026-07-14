@@ -60,7 +60,7 @@ export function CompanySuspensionResolveDialog({
       <DialogContent className="w-[calc(100vw-2rem)] max-w-[720px] rounded-xl p-8">
         <DialogHeader>
           <DialogTitle className="text-foreground">
-            停止中の企業アカウントを解除しますか？
+            アカウントを有効化しますか？
           </DialogTitle>
         </DialogHeader>
 
@@ -125,7 +125,7 @@ export function CompanySuspensionResolveDialog({
 
           {selectedSuspension?.reasonCode === 'BILLING' && (
             <div className="rounded-lg bg-muted/40 px-4 py-3 text-small text-muted-foreground">
-              支払い関連の停止解除では paymentMethod として CREDIT_CARD を送信します。
+              支払い関連のアカウント有効化では paymentMethod として CREDIT_CARD を送信します。
             </div>
           )}
 
@@ -163,7 +163,7 @@ export function CompanySuspensionResolveDialog({
             onClick={onConfirm}
             disabled={!canConfirm || isLoading || isSubmitting}
           >
-            停止解除
+            アカウント有効化
           </Button>
         </DialogFooter>
       </DialogContent>
