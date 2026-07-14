@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   getSiteData,
   getSiteProjects,
@@ -9,6 +9,10 @@ import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWra
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ProjectMembershipCard } from '@/features/user/project-registration/components/ProjectMembershipCard';
+import {
+  isFromMasterDashboard,
+  masterDashboardProjectMembershipState,
+} from '@/features/user/project-registration/projectMembershipNavigation';
 import { paths } from '@/routes/paths';
 import { useDashboardStore } from '@/stores/dashboardStore';
 
@@ -65,7 +69,9 @@ function MembershipSection({
 
 export default function ProjectMembershipPage() {
   const { siteId = '' } = useParams<{ siteId: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
+  const enteredFromMasterDashboard = isFromMasterDashboard(location.state);
   const setCurrentProject = useDashboardStore(
     (state) => state.setCurrentProject,
   );
@@ -118,14 +124,26 @@ export default function ProjectMembershipPage() {
 
   const handleJoin = (project: SiteProject) => {
     setCurrentProject(project);
-    navigate(paths.projectRegister(siteId, project.id));
+    navigate(paths.projectRegister(siteId, project.id), {
+      state: enteredFromMasterDashboard
+        ? masterDashboardProjectMembershipState
+        : undefined,
+    });
+  };
+
+  const handleBack = () => {
+    navigate(
+      enteredFromMasterDashboard
+        ? paths.masterDashboard
+        : paths.siteDashboard(siteId),
+    );
   };
 
   return (
     <FormPageWrapper
       pageName="プロジェクト入会届"
       title=""
-      onBack={() => navigate(paths.siteDashboard(siteId))}
+      onBack={handleBack}
       contentMaxWidth="max-w-[1200px]"
       wrapInCard={false}
     >

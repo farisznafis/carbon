@@ -15,6 +15,7 @@ import {
   sortMasterUsersFirst,
   sortSitesById,
 } from '@/features/master/components/masterDashboardUtils';
+import { masterDashboardProjectMembershipState } from '@/features/user/project-registration/projectMembershipNavigation';
 import { paths } from '@/routes/paths';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useDashboardStore } from '@/stores/dashboardStore';
@@ -94,7 +95,9 @@ const MasterDashboard = () => {
             size="md"
             disabled={sortedSites.length === 0}
             onClick={() =>
-              navigate(paths.projectMembership(sortedSites[0].id))
+              navigate(paths.projectMembership(sortedSites[0].id), {
+                state: masterDashboardProjectMembershipState,
+              })
             }
           >
             プロジェクト入会届

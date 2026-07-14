@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDashboardStore } from "@/stores/dashboardStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,10 @@ import { FormPageWrapper } from "@/components/layout/FormPageWrapper/FormPageWra
 import type { Equipment } from "@/features/user/project-registration/components/types";
 import type { AgreementFormValues } from "@/features/user/project-registration/components/agreementsConfig";
 import { paths } from "@/routes/paths";
+import {
+  isFromMasterDashboard,
+  masterDashboardProjectMembershipState,
+} from "@/features/user/project-registration/projectMembershipNavigation";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -29,7 +33,9 @@ const ProjectRegister = () => {
     siteId: string;
     projectId: string;
   }>();
+  const location = useLocation();
   const navigate = useNavigate();
+  const enteredFromMasterDashboard = isFromMasterDashboard(location.state);
   const { user } = useAuth();
   const { toast } = useToast();
   const currentProject = useDashboardStore((state) => state.currentProject);
@@ -91,11 +97,20 @@ const ProjectRegister = () => {
 
   const navigateToMembership = useCallback(() => {
     if (resolvedSiteId) {
-      navigate(paths.projectMembership(resolvedSiteId));
+      navigate(paths.projectMembership(resolvedSiteId), {
+        state: enteredFromMasterDashboard
+          ? masterDashboardProjectMembershipState
+          : undefined,
+      });
     } else {
       navigateToDashboard();
     }
-  }, [navigate, navigateToDashboard, resolvedSiteId]);
+  }, [
+    enteredFromMasterDashboard,
+    navigate,
+    navigateToDashboard,
+    resolvedSiteId,
+  ]);
 
   const handleBack = useCallback(() => {
     if (currentStep === 1) {
