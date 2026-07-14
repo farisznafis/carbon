@@ -121,6 +121,4 @@ public class Project extends BaseEntity {
 
     @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
     private List<SiteProjectRelation> siteRelations;
-
-    public Object status;
 }

@@ -15,7 +15,7 @@ import java.util.List;
 @Repository
 public interface EnR002EquipmentFileRepository extends JpaRepository<EnR002EquipmentFile, Integer> {
 
-    List<EnR002EquipmentFile> findByMemberData_Id(Integer memberDataId);
+    // List<EnR002EquipmentFile> findByMemberData_Id(Integer memberDataId);
 
     List<EnR002EquipmentFile> findByEquipment_Id(Integer equipmentId);
 
@@ -32,7 +32,7 @@ public interface EnR002EquipmentFileRepository extends JpaRepository<EnR002Equip
     @Modifying
     @Transactional
     @Query(value = "UPDATE en_r002_equipment_file f SET deleted_at = CURRENT_TIMESTAMP, deleted_by = :deletedBy "
-         + "WHERE f.member_data_id IN (SELECT md.id FROM en_r002_member_data md WHERE md.company_id = :companyId)",
+         + "WHERE f.equipment_id IN (SELECT md.id FROM en_r002_equipment md WHERE md.company_id = :companyId)",
          nativeQuery = true)
     void softDeleteByCompanyId(@Param("companyId") String companyId, @Param("deletedBy") String deletedBy);
 }

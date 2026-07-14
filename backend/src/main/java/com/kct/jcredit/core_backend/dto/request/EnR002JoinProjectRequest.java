@@ -27,11 +27,8 @@ public class EnR002JoinProjectRequest {
     private EnR002ConfirmationItemRequest confirmationItems;
 
     @NotNull @Valid
-    private EnR002SustainabilityComitmentRequest sustainabilityCommitment;
-
-    @NotNull @Valid
-    private EnR002FinalAgreementRequest finalAgreement;
+    private EnR002SustainabilityCommitmentRequest sustainabilityCommitment;
 
     @NotNull
-    private Boolean isAgreeTerms;
+    private EnR002FinalAgreementRequest finalAgreement;
 }

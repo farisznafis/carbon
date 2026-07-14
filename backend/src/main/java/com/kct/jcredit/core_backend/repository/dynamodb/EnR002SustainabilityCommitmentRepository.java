@@ -10,7 +10,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 
-import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityComitmentRequest;
+import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
 import com.kct.jcredit.core_backend.entity.EnR002SustainabilityCommitment;
 import lombok.RequiredArgsConstructor;
 

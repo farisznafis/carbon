@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EnR002SustainabilityComitmentRequest {
+public class EnR002SustainabilityCommitmentRequest {
     // auto-fill GET /sustainability-commitment/default
     @NotBlank
     private String companyName;

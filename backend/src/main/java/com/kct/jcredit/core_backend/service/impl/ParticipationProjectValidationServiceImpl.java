@@ -17,8 +17,7 @@ import com.kct.jcredit.core_backend.dto.request.EnR002FileItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002FinalAgreementRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
-import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityComitmentRequest;
-import com.kct.jcredit.core_backend.dto.request.FinalAgreementValidateRequest;
+import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
@@ -30,8 +29,7 @@ import com.kct.jcredit.core_backend.entity.EnR002ConfirmationItems;
 import com.kct.jcredit.core_backend.exception.BulkValidationException;
 import com.kct.jcredit.core_backend.exception.CustomException;
 import com.kct.jcredit.core_backend.enums.EquipmentFileType;
-import com.kct.jcredit.core_backend.service.ProjectParticipationService;
-import com.kct.jcredit.core_backend.service.FileUploadSolarService;
+import com.kct.jcredit.core_backend.service.ParticipationProjectService;
 import com.kct.jcredit.core_backend.service.ParticipationProjectValidationService;
 import com.kct.jcredit.core_backend.repository.dynamodb.EnR002ApplicationConfirmationRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
@@ -76,9 +74,6 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
 
         if (Boolean.TRUE.equals(equipment.getHasSubsidy()))
             validateSubsidy(equipment, errors);
-
-        if (Boolean.TRUE.equals(equipment.getAdditionalEquipment()))
-            validateAdditionalEquipment(equipment, errors);
 
         if (!errors.isEmpty()) throw new BulkValidationException(errors);
     }
@@ -135,7 +130,7 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
     }
 
     @Override
-    public void validateSustainabilityCommitment(EnR002SustainabilityComitmentRequest request) {
+    public void validateSustainabilityCommitment(EnR002SustainabilityCommitmentRequest request) {
         List<ValidationErrorDetail> errors = new ArrayList<>();
 
         if (request.getCompanyName() == null || request.getCompanyName().isBlank())
@@ -152,10 +147,12 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
 
     @Override
     public void validateFinalAgreement(EnR002FinalAgreementRequest request) {
+        List<ValidationErrorDetail> errors = new ArrayList<>();
+
         if (!Boolean.TRUE.equals(request.getIsAgreeTerms()))
-            throw new BulkValidationException(List.of(
-                    err("request", "isAgreeTerms", "利用規約への同意が必要です。")));
-        // TODO: captcha token validation — menunggu konfirmasi FE
+            errors.add(err("request", "isAgreeTerms", "利用規約への同意が必要です。"));
+
+        if (!errors.isEmpty()) throw new BulkValidationException(errors);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -174,17 +171,13 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
             errors.add(err(item.getTempId(), "pcsManufacturer", "必須項目です。"));
         if (item.getPcsModel() == null || item.getPcsModel().isBlank())
             errors.add(err(item.getTempId(), "pcsModel", "必須項目です。"));
-        if (item.getPowerCondUnitCount() == null || item.getPowerCondUnitCount() < 1)
-            errors.add(err(item.getTempId(), "powerCondUnitCount",
+        if (item.getPcsUnitCount() == null || item.getPcsUnitCount() < 1)
+            errors.add(err(item.getTempId(), "PcsUnitCount",
                     "1以上の数値を入力してください。"));
         if (item.getDeviceNo() == null || item.getDeviceNo().isBlank())
             errors.add(err(item.getTempId(), "deviceNo", "必須項目です。"));
-        if (item.getPowerCondStandby() == null)
-            errors.add(err(item.getTempId(), "powerCondStandby", "必須項目です。"));
-        if (item.getIctEquipmentPowerConsumption() != null
-                && item.getIctEquipmentPowerConsumption().compareTo(BigDecimal.ZERO) < 0)
-            errors.add(err(item.getTempId(), "ictEquipmentPowerConsumption",
-                    "ICT機器消費電力は0以上の値を入力してください。"));
+        if (item.getPcsStandby() == null)
+            errors.add(err(item.getTempId(), "PcsStandby", "必須項目です。"));
         if (item.getTotalInvestment() == null || item.getTotalInvestment() <= 0)
             errors.add(err(item.getTempId(), "totalInvestment",
                     "総投資額は0より大きい値を入力してください。"));
@@ -285,27 +278,6 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
                     "hasSubsidyがtrueの場合、subsidy_noticeファイルは必須です。"));
     }
 
-    private void validateAdditionalEquipment(EnR002EquipmentRequest item,
-                                              List<ValidationErrorDetail> errors) {
-        if (item.getAdditionalEquipmentDate() == null)
-            errors.add(err(item.getTempId(), "additionalEquipmentDate",
-                    "additionalEquipmentがtrueの場合、additionalEquipmentDateは必須です。"));
-        else if (item.getEquipmentOpDate() != null
-                && item.getAdditionalEquipmentDate().isBefore(item.getEquipmentOpDate()))
-            errors.add(err(item.getTempId(), "additionalEquipmentDate",
-                    "追加設備日は設備稼働日以降である必要があります。"));
-
-        if (item.getEquipmentType() == null || item.getEquipmentType().isBlank())
-            errors.add(err(item.getTempId(), "equipmentType",
-                    "additionalEquipmentがtrueの場合、equipmentTypeは必須です。"));
-        if (item.getUnitCount() == null || item.getUnitCount() < 1)
-            errors.add(err(item.getTempId(), "unitCount",
-                    "additionalEquipmentがtrueの場合、unitCountは1以上必須です。"));
-        if (item.getDeviceUniqueNo() == null || item.getDeviceUniqueNo().isBlank())
-            errors.add(err(item.getTempId(), "deviceUniqueNo",
-                    "additionalEquipmentがtrueの場合、deviceUniqueNoは必須です。"));
-    }
-
     private ValidationErrorDetail err(String tempId, String field, String message) {
         return ValidationErrorDetail.builder()
                 .tempId(tempId).field(field).message(message).build();
@@ -315,12 +287,6 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
     public void validateSustainabilityCommitment(EnR002SustainabilityCommitmentResponse request) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'validateSustainabilityCommitment'");
-    }
-
-    @Override
-    public void validateFinalAgreement(FinalAgreementValidateRequest request) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'validateFinalAgreement'");
     }
 }
 

@@ -17,7 +17,7 @@ import jakarta.persistence.Column;
 @Builder
 public class EnR002EquipmentResponse {
     
-     private Integer id;
+    private Integer id;
     private Integer siteId;
 
     private LocalDate equipmentOpDate;
@@ -46,4 +46,6 @@ public class EnR002EquipmentResponse {
     private String subsidyName;
     private BigDecimal subsidyAmount;
     private BigDecimal preProjectUnitPrice;
+
+    private List<String> evidenceDocuments;
 }

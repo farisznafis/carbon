@@ -4,7 +4,7 @@ import com.kct.jcredit.core_backend.dto.request.CreateSiteRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdateSiteRequest;
 import com.kct.jcredit.core_backend.dto.response.CreateSiteResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
-import com.kct.jcredit.core_backend.dto.response.EquipmentSolarRegisterResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentRegisterResponse;
 import com.kct.jcredit.core_backend.dto.response.SiteInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.SiteListResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
@@ -131,13 +131,13 @@ public class SiteController {
     @PreAuthorize("hasAnyRole('master','user')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "拠点プロジェクト設備情報取得", description = "指定された拠点とプロジェクトに登録された設備情報を取得します。")
-    public ResponseEntity<EquipmentSolarRegisterResponse> getSiteProjectEquipment(
+    public ResponseEntity<EnR002EquipmentRegisterResponse> getSiteProjectEquipment(
             Authentication authentication,
             @PathVariable Integer siteId,
             @PathVariable Integer projectId) {
         String token = (String) authentication.getCredentials();
 
-        EquipmentSolarRegisterResponse response = siteService.getSiteProjectEquipment(
+        EnR002EquipmentRegisterResponse response = siteService.getSiteProjectEquipment(
                 siteId,
                 projectId,
                 jwtUtil.extractCompanyId(token),

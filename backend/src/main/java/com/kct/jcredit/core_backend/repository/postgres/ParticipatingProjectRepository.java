@@ -1,6 +1,7 @@
 package com.kct.jcredit.core_backend.repository.postgres;
 
 import com.kct.jcredit.core_backend.entity.ParticipatingProject;
+import com.kct.jcredit.core_backend.entity.Project;
 
 import jakarta.transaction.Transactional;
 

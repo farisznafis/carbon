@@ -349,7 +349,7 @@ public class ProjectApplicationRequest {
         throw new UnsupportedOperationException("Unimplemented method 'getConfirmationItems'");
     }
 
-    public EnR002SustainabilityComitmentRequest getSustainabilityCommitment() {
+    public EnR002SustainabilityCommitmentRequest getSustainabilityCommitment() {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getSustainabilityCommitment'");
     }

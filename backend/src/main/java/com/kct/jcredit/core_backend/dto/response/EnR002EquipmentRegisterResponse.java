@@ -14,7 +14,7 @@ import lombok.Builder;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EquipmentSolarRegisterResponse extends BaseResponse {
+public class EnR002EquipmentRegisterResponse extends BaseResponse {
  
     // Mapping tempId → equipmentId permanent
     private List<EnR002EquipmentResponse> equipments;

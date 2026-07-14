@@ -1,5 +1,7 @@
 package com.kct.jcredit.core_backend.service.impl;
 
+import com.kct.jcredit.core_backend.dto.response.details.ProjectDetailResponse;
+import com.kct.jcredit.core_backend.dto.response.details.SiteResponse;
 import com.kct.jcredit.core_backend.dto.response.details.ValidationErrorDetail;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
@@ -7,7 +9,7 @@ import com.kct.jcredit.core_backend.dto.request.EnR002FileItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002FinalAgreementRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
-import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityComitmentRequest;
+import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectJoinResponse;
@@ -30,12 +32,12 @@ import com.kct.jcredit.core_backend.entity.EnR002Equipment;
 import com.kct.jcredit.core_backend.exception.BulkValidationException;
 import com.kct.jcredit.core_backend.exception.CustomException;
 import com.kct.jcredit.core_backend.enums.EquipmentFileType;
-import com.kct.jcredit.core_backend.service.ProjectParticipationService;
+import com.kct.jcredit.core_backend.service.ParticipationProjectService;
 import com.kct.jcredit.core_backend.service.ProjectService;
 import com.kct.jcredit.core_backend.service.SiteService;
-import com.kct.jcredit.core_backend.service.FileUploadSolarService;
 import com.kct.jcredit.core_backend.service.ParticipationProjectValidationService;
 import com.kct.jcredit.core_backend.service.ProjectParticipationPdfService;
+import com.kct.jcredit.core_backend.service.EnR002FileUploadService;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.dynamodb.EnR002ApplicationConfirmationRepository;
 import com.kct.jcredit.core_backend.repository.dynamodb.EnR002SustainabilityCommitmentRepository;
@@ -71,7 +73,7 @@ import java.util.Collections;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ProjectParticipationServiceImpl implements ProjectParticipationService {
+public class ParticipationProjectServiceImpl implements ParticipationProjectService {
 
     private final ProjectRepository                          projectRepository;
     private final SiteRepository                             siteRepository;
@@ -82,59 +84,81 @@ public class ProjectParticipationServiceImpl implements ProjectParticipationServ
     private final EnR002EquipmentFileRepository              equipmentFileRepository;
     private final EnR002ApplicationConfirmationRepository    confirmationRepository;
     private final EnR002SustainabilityCommitmentRepository   sustainabilityRepository;
-    private final ParticipatingProjectRepository             participatingProjectRepository; // ← Repository, bukan Entity
-    private final FileUploadSolarService                     fileUploadSolarService;
+    private final ParticipatingProjectRepository             participatingProjectRepository; 
+    private final EnR002FileUploadService                    fileUploadSolarService;
     private final ParticipationProjectValidationService      validationService;
-    private final ProjectParticipationPdfService             pdfService;
+    private final ProjectParticipationPdfService  pdfService;
 
     // ─────────────────────────────────────────────────────────────
     // BROWSE
     // ─────────────────────────────────────────────────────────────
 
-    @Override
-    public List<ProjectListInfoResponse> getActiveProjects(String companyId) {
-        List<Project> projects = projectRepository.findByStatus("ACTIVE"); // ← pakai finder, bukan findAll+filter
+        @Override
+        public ProjectListInfoResponse getActiveProjects(String companyId) {
 
-        return projects.stream()   // ← projects.stream() BUKAN Project.stream()
-                .map(project -> {
-                    boolean alreadyJoined = participatingProjectRepository
-                            .existsByCompany_CompanyIdAndSiteProjectRelation_Project_Id(
-                                    companyId, project.getId());
+        List<Project> projects = projectRepository.findByProjectStatus("ACTIVE");
 
-                    return ProjectListInfoResponse.builder()
-                            .id(project.getId())
-                            .projectName(project.getProjectName())
-                            .projectNumber(project.getProjectNumber())
-                            .methodologyVersion(project.getMethodologyVersion())
-                            .methodologyCategory(project.getMethodCategory())
-                            .methodologyNumber(project.getMethodNumber())
-                            .projectStatus(project.getStatus())
-                            .regionalCategory(project.getRegionalCategory())
-                            .isJoined(alreadyJoined)
-                            .build();
+        List<ProjectDetailResponse> projectDetails = projects.stream()
+        .map((Project project) -> {
+
+                boolean alreadyJoined =
+                        participatingProjectRepository
+                                .existsByCompany_CompanyIdAndSiteProjectRelation_Project_Id(
+                                        companyId,
+                                        project.getId());
+
+                return ProjectDetailResponse.builder()
+                        .id(String.valueOf(project.getId()))
+                        .projectName(project.getProjectName())
+                        .projectNumber(project.getProjectNumber())
+                        // .projectStatus(project.getStatus())
+                        .isJoined(alreadyJoined)
+                        .build();
+        })
+        .collect(Collectors.toList());
+
+        return ProjectListInfoResponse.builder()
+                .projects(projectDetails)
+                .pagination(null)
+                .build();
+        }
+
+       @Override
+        public SiteListResponse getSites(String companyId, Integer projectId) {
+
+        List<Site> sites =
+                siteRepository.findByCompany_CompanyId(companyId);
+
+        List<SiteResponse> siteResponses = sites.stream()
+                .map((Site site) -> {  
+
+                        boolean alreadyInProject =
+                                siteProjectRelationRepository
+                                        .existsBySite_IdAndProject_Id(
+                                                site.getId(),
+                                                projectId);
+
+                        return SiteResponse.builder()
+                                .id(String.valueOf(site.getId()))
+                                .siteName(site.getSiteName())
+                                .postalCode(site.getPostalCode())
+                                .prefecture(site.getPrefecture())
+                                .municipality(site.getMunicipality())
+                                .blocknum(site.getBlocknum())
+                                .buildingName(site.getBuildingName())
+                                .picFirstName(site.getPicFirstName())
+                                .picLastName(site.getPicLastName())
+                                .projects(Collections.emptyList())
+                                .data(null)
+                                // .alreadyInProject(alreadyInProject)
+                                .build();
                 })
                 .collect(Collectors.toList());
-    }
 
-    @Override
-    public List<SiteListResponse> getSites(String companyId, Integer projectId) {
-        List<Site> sites = siteRepository.findByParticipatingCompany_CompanyId(companyId); // ← cek nama field di Site entity
-
-        return sites.stream()
-                .map(site -> {
-                    boolean alreadyInProject = siteProjectRelationRepository
-                            .existsBySite_IdAndProject_Id(site.getId(), projectId);
-
-                    return SiteListResponse.builder()
-                            .id(site.getId())
-                            .siteName(site.getSiteName())
-                            .prefecture(site.getPrefecture())
-                            // ← sesuaikan dengan field yang ada di Site entity
-                            // kalau tidak ada city/town/address, hapus atau ganti nama field
-                            .build();
-                })
-                .collect(Collectors.toList());
-    }
+        return SiteListResponse.builder()
+                .siteList(siteResponses)
+                .build();
+        }
 
     @Override
     public EnR002SustainabilityCommitmentResponse getSustainabilityCommitmentDefault(
@@ -166,7 +190,7 @@ public class ProjectParticipationServiceImpl implements ProjectParticipationServ
                                                     EnR002JoinProjectRequest request) {
         // 1. Guard checks
         Site site = siteRepository
-                .findById(request.getEquipment().getSiteId()) // ← pakai siteId dari request.equipment
+                .findById(request.getEquipment().getSiteId()) 
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_SITE_NOT_FOUND));
@@ -191,8 +215,8 @@ public class ProjectParticipationServiceImpl implements ProjectParticipationServ
 
         // 2. Double submission check
         boolean alreadyJoined = participatingProjectRepository
-                .existsByCompany_CompanyIdAndSiteProjectRelation_Project_Id(
-                        companyId, projectId);
+        .existsByCompany_CompanyIdAndSiteProjectRelation_Project_Id(
+                companyId, projectId);
         if (alreadyJoined)
             throw new CustomException(
                     ResponseConstants.ALREADY_SUBMITTED,
@@ -251,7 +275,7 @@ public class ProjectParticipationServiceImpl implements ProjectParticipationServ
                         try {
                             saveSustainabilityCommitment(
                                     request.getSustainabilityCommitment(),
-                                    request.getIsAgreeTerms(),
+                                    request.getFinalAgreement().getIsAgreeTerms(),
                                     participationId, companyId);
                         } catch (Exception e) {
                             log.error("SustainabilityCommitment save failed. participationId={}, error={}",
@@ -314,8 +338,6 @@ public class ProjectParticipationServiceImpl implements ProjectParticipationServ
                 .batteryMaker(req.getBatteryMaker())
                 .batteryModel(req.getBatteryModel())
                 .batteryCapacity(req.getBatteryCapacity())
-                // ictEquipmentPowerConsumption — dihapus dari request
-                // additionalEquipment fields — dihapus dari request (diisi saat tambah unit)
                 .totalInvestment(req.getTotalInvestment())
                 .hasSubsidy(req.getHasSubsidy())
                 .subsidyName(req.getSubsidyName())
@@ -349,7 +371,7 @@ public class ProjectParticipationServiceImpl implements ProjectParticipationServ
                 .isEligible(false)
                 .applicantInkan(null) // TODO: digital inkan
                 .build();
-        return participatingProjectRepository.save(participation); // ← repository, bukan entity
+        return participatingProjectRepository.save(participation); 
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -378,7 +400,7 @@ public class ProjectParticipationServiceImpl implements ProjectParticipationServ
         confirmationRepository.save(items);
     }
 
-    private void saveSustainabilityCommitment(EnR002SustainabilityComitmentRequest req,
+    private void saveSustainabilityCommitment(EnR002SustainabilityCommitmentRequest req,
                                                Boolean isAgreeTerms,
                                                Integer participationId, String companyId) {
         EnR002SustainabilityCommitment commitment = EnR002SustainabilityCommitment.builder() // ← nama entity DynamoDB

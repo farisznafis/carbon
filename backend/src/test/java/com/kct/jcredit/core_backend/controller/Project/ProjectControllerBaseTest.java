@@ -20,8 +20,7 @@ import com.kct.jcredit.core_backend.dto.response.CreateProjectResponse;
 import com.kct.jcredit.core_backend.dto.response.details.ProjectDetailResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
 import com.kct.jcredit.core_backend.service.ProjectService;
-import com.kct.jcredit.core_backend.service.FileUploadSolarService;
-import com.kct.jcredit.core_backend.service.ProjectParticipationService;
+import com.kct.jcredit.core_backend.service.ParticipationProjectService;
 import com.kct.jcredit.core_backend.service.ProjectMonitoringService;
 import com.kct.jcredit.core_backend.service.ProjectUploadDocumentService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
@@ -47,10 +46,7 @@ public abstract class ProjectControllerBaseTest {
     protected ProjectService projectService;
     
     @Mock
-    protected FileUploadSolarService fileUploadSolarService;
-    
-    @Mock
-    protected ProjectParticipationService equipmentSolarService;
+    protected ParticipationProjectService equipmentSolarService;
     
     @Mock
     protected ProjectUploadDocumentService projectUploadDocumentService;

@@ -11,5 +11,7 @@ public interface ProjectRepository extends JpaRepository<Project, Integer>, JpaS
 	java.util.Optional<Project> findByProjectNumber(String projectNumber);
 	boolean existsByProjectNumber(String projectNumber);
 	boolean existsByMethodNumber(String methodNumber);
-	List<Project> findByStatus(String status);
+
+	List<Project> findByProjectStatus(String status);
+
 }
