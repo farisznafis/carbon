@@ -29,6 +29,9 @@ public class EnR002JoinProjectRequest {
     @NotNull @Valid
     private EnR002SustainabilityComitmentRequest sustainabilityCommitment;
 
+    @NotNull @Valid
+    private EnR002FinalAgreementRequest finalAgreement;
+
     @NotNull
     private Boolean isAgreeTerms;
 }

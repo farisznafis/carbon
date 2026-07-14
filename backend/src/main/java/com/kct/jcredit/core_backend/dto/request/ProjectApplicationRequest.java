@@ -338,4 +338,19 @@ public class ProjectApplicationRequest {
     public String getSk() {
         return sk;
     }
+
+    public EnR002EquipmentRequest getEquipment() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getEquipment'");
+    }
+
+    public EnR002ConfirmationItemRequest getConfirmationItems() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getConfirmationItems'");
+    }
+
+    public EnR002SustainabilityComitmentRequest getSustainabilityCommitment() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getSustainabilityCommitment'");
+    }
 }

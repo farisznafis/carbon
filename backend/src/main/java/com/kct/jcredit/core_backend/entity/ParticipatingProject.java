@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
@@ -66,5 +67,10 @@ public class ParticipatingProject extends BaseEntity{
     private LocalDateTime deletedAt;
 
     @Column(name = "deleted_by", length = 100)
-    private String deletedBy;  
+    private String deletedBy;
+
+    public Optional<Site> findById(Integer participationId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'findById'");
+    }  
 }

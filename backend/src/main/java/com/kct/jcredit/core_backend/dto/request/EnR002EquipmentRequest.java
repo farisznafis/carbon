@@ -26,14 +26,16 @@ public class EnR002EquipmentRequest {
  
     @NotBlank
     private String tempId;
-    
+     
+    @NotNull
+    private Integer siteId;
     // ── 設備稼働日 ──────────────────────────────────────────────
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate equipmentOpDate;
 
     // ── 太陽光パネルの情報 ────────────────────────────────────────
-    // 定格最大出力 (kW) — harus sama dengan katalog yang diupload
+    // 定格最大出力 (kW) 
     @NotNull
     @DecimalMin(value = "0.0", inclusive = false)
     private BigDecimal nominalMaxOutput;
@@ -48,7 +50,7 @@ public class EnR002EquipmentRequest {
     // 台数 — minimal 1
     @NotNull
     @Min(1)
-    private Integer powerCondUnitCount;
+    private Integer pcsUnitCount;
 
     // 機器固有番号（製造番号）
     @NotBlank
@@ -57,7 +59,7 @@ public class EnR002EquipmentRequest {
     // 夜間待機電力（W）— konfirmasi satuan W dari UI design
     @NotNull
     @DecimalMin("0.0")
-    private BigDecimal powerCondStandby;
+    private BigDecimal pcsStandby;
 
     // ── 蓄電池の情報 ──────────────────────────────────────────────
     @NotNull
@@ -70,10 +72,10 @@ public class EnR002EquipmentRequest {
     // 蓄電池容量 (kWh) — confirmed dari dokumen monitoring
     private BigDecimal batteryCapacity;
 
-    // ── ICT機器 (任意) ────────────────────────────────────────────
-    // HEMS等、クラウドに情報を送信する機器を使用している場合
-    @DecimalMin("0.0")
-    private BigDecimal ictEquipmentPowerConsumption;
+    // // ── ICT機器 (任意) ────────────────────────────────────────────
+    // // HEMS等、クラウドに情報を送信する機器を使用している場合
+    // @DecimalMin("0.0")
+    // private BigDecimal ictEquipmentPowerConsumption; //ini total jadi ga perlu
 
     // ── 追加性評価に必要な情報 ────────────────────────────────────
     @NotNull
@@ -92,20 +94,20 @@ public class EnR002EquipmentRequest {
     @DecimalMin(value = "0.0", inclusive = false)
     private BigDecimal preProjectUnitPrice;
 
-    // ── 追加設備 ──────────────────────────────────────────────────
-    @NotNull
-    private Boolean additionalEquipment;
+    // // ── 追加設備 ──────────────────────────────────────────────────
+    // @NotNull additional harusnya pas nambah unit 
+    // private Boolean additionalEquipment;
 
-    // conditional: wajib kalau additionalEquipment = true
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate additionalEquipmentDate;
+    // // conditional: wajib kalau additionalEquipment = true
+    // @JsonFormat(pattern = "yyyy-MM-dd")
+    // private LocalDate additionalEquipmentDate;
 
-    private String equipmentType;
+    // private String equipmentType;
 
-    @Min(1)
-    private Integer unitCount;
+    // @Min(1)
+    // private Integer unitCount;
 
-    private String deviceUniqueNo;
+    // private String deviceUniqueNo;
 
     // ── ファイル証憑 ──────────────────────────────────────────────
  

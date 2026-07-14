@@ -15,16 +15,13 @@ import org.springframework.data.repository.query.Param;
 
 import org.springframework.data.jpa.repository.Modifying;
 
-public interface ParticipatingProjectRepository extends JpaRepository<ParticipatingProject, Integer> {
+public interface ParticipatingProjectRepository
+        extends JpaRepository<ParticipatingProject, Integer> {
 
-    Optional<ParticipatingProject> findBySiteProjectRelation_Id(Integer siteProjectRelationId);
+    boolean existsByCompany_CompanyIdAndSiteProjectRelation_Project_Id(
+            String companyId, Integer projectId);
 
-    // Cek apakah site sudah pernah participation di project tertentu
-    boolean existsBySiteProjectRelation_Site_IdAndSiteProjectRelation_Project_Id(
-            Integer siteId, Integer projectId);
-
-    // Ambil participation by company — untuk list di dashboard
-    List<ParticipatingProject> findByCompany_CompanyId(String companyId);
+    Optional<ParticipatingProject> findByCompany_CompanyId(String companyId);
 
     @Modifying
     @Transactional

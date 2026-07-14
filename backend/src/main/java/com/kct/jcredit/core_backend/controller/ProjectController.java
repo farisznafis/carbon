@@ -35,7 +35,7 @@ import com.kct.jcredit.core_backend.dto.response.UpdateProjectStatusResponse;
 
 import com.kct.jcredit.core_backend.service.ProjectService;
 import com.kct.jcredit.core_backend.service.FileUploadSolarService;
-import com.kct.jcredit.core_backend.service.SiteProjectService;
+import com.kct.jcredit.core_backend.service.ProjectParticipationService;
 import com.kct.jcredit.core_backend.service.ProjectMonitoringService;
 import com.kct.jcredit.core_backend.service.ProjectUploadDocumentService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
