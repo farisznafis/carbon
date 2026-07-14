@@ -18,6 +18,7 @@ type PendingCompanyApplicationDetailProps = {
   onReject: (item: AdminCompanyListItem) => void;
   onSuspend: (item: AdminCompanyListItem) => void;
   onActivate: (item: AdminCompanyListItem) => void;
+  accountActionDisabled?: boolean;
 };
 
 type DetailField = {
@@ -106,6 +107,7 @@ export function PendingCompanyApplicationDetail({
   onReject,
   onSuspend,
   onActivate,
+  accountActionDisabled = false,
 }: PendingCompanyApplicationDetailProps) {
   const legalFields: DetailField[] = [
     { label: '法人名', value: item.nameJA },
@@ -219,6 +221,12 @@ export function PendingCompanyApplicationDetail({
                   variant="destructive"
                   size="md"
                   onClick={() => onSuspend(item)}
+                  disabled={accountActionDisabled}
+                  title={
+                    accountActionDisabled
+                      ? '管理者自身が所属する企業は停止できません。'
+                      : undefined
+                  }
                 >
                   アカウント停止
                 </Button>

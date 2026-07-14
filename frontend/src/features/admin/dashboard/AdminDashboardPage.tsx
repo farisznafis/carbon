@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '@/api/_shared/errors';
 import type {
@@ -71,7 +71,7 @@ const DEFAULT_PAGINATION: Pagination = {
 };
 
 const DEFAULT_SUSPEND_PAYLOAD: SuspendCompanyPayload = {
-  reasonCode: 'OTHER',
+  reasonCode: 'BILLING',
   reasonDetail: '',
 };
 
@@ -504,7 +504,10 @@ const AdminDashboard = () => {
     setSubmitting(true);
     setActionFieldErrors({});
     try {
-      await suspendAdminCompany(selectedCompany.companyId, suspendPayload);
+      await suspendAdminCompany(selectedCompany.companyId, {
+        reasonCode: 'BILLING',
+        reasonDetail: suspendPayload.reasonDetail,
+      });
       await reloadCompanyLists();
       setDetailCompany((currentCompany) =>
         currentCompany?.companyId === selectedCompany.companyId

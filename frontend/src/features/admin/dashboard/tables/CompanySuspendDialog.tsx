@@ -1,7 +1,6 @@
 import type {
   AdminCompanyListItem,
   SuspendCompanyPayload,
-  SuspensionReasonCode,
 } from '@/api/admin/pendingCompanies';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,17 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-
-const suspensionReasonOptions: Array<{
-  value: SuspensionReasonCode;
-  label: string;
-}> = [
-  { value: 'BILLING', label: '請求・支払い' },
-  { value: 'POLICY_VIOLATION', label: 'ポリシー違反' },
-  { value: 'SECURITY', label: 'セキュリティ' },
-  { value: 'ADMINISTRATIVE', label: '管理上の理由' },
-  { value: 'OTHER', label: 'その他' },
-];
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 type CompanySuspendDialogProps = {
   open: boolean;
@@ -72,45 +62,17 @@ export function CompanySuspendDialog({
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="suspensionReasonCode" className="text-small font-bold">
-              停止理由 <span className="text-destructive">*</span>
-            </label>
-            <select
-              id="suspensionReasonCode"
-              value={payload.reasonCode}
-              onChange={(event) =>
-                onPayloadChange({
-                  ...payload,
-                  reasonCode: event.target.value as SuspensionReasonCode,
-                })
-              }
-              className="h-12 w-full rounded-md border border-input bg-background px-4 text-body outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              {suspensionReasonOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            {fieldErrors?.reasonCode && (
-              <p className="text-small font-medium text-destructive">
-                {fieldErrors.reasonCode}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="suspensionReasonDetail" className="text-small font-bold">
+            <Label htmlFor="suspensionReasonDetail" className="text-small font-bold">
               詳細理由 <span className="text-destructive">*</span>
-            </label>
-            <textarea
+            </Label>
+            <Textarea
               id="suspensionReasonDetail"
               value={payload.reasonDetail}
               onChange={(event) =>
                 onPayloadChange({ ...payload, reasonDetail: event.target.value })
               }
               placeholder="停止理由の詳細を入力してください。"
-              className="min-h-[120px] w-full rounded-md border border-input bg-background px-4 py-3 text-body outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="min-h-[120px] resize-y"
             />
             {fieldErrors?.reasonDetail && (
               <p className="text-small font-medium text-destructive">
