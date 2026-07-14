@@ -83,9 +83,9 @@ function ActionButtons({
   if (item.status === 'PENDING') {
     return (
       <div className="flex justify-start gap-2">
-        <Button type="button" variant="outline" onClick={() => onDetails(item)}>
+        {/* <Button type="button" variant="outline" onClick={() => onDetails(item)}>
           詳細
-        </Button>
+        </Button> */}
         <Button type="button" onClick={() => onReview(item)}>
           申請内容を確認
         </Button>
