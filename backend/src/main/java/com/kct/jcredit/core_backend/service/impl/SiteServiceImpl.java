@@ -439,22 +439,14 @@ public class SiteServiceImpl implements SiteService {
                     .nominalMaxOutput(equipment.getNominalMaxOutput())
                     .pcsManufacturer(equipment.getPcsManufacturer())
                     .pcsModel(equipment.getPcsModel())
-                    .powerCondUnitCount(equipment.getPowerCondUnitCount())
+                    .pcsUnitCount(equipment.getPcsUnitCount())
                     .deviceNo(equipment.getDeviceNo())
-                    .powerCondStandby(equipment.getPowerCondStandby())
+                    .pcsStandby(equipment.getPcsStandby())
 
                     .hasBattery(equipment.getHasBattery())
                     .batteryMaker(equipment.getBatteryMaker())
                     .batteryModel(equipment.getBatteryModel())
                     .batteryCapacity(equipment.getBatteryCapacity())
-
-                    .ictEquipmentPowerConsumption(equipment.getIctEquipmentPowerConsumption())
-
-                    .additionalEquipment(equipment.getAdditionalEquipment())
-                    .additionalEquipmentDate(equipment.getAdditionalEquipmentDate())
-                    .equipmentType(equipment.getEquipmentType())
-                    .unitCount(equipment.getUnitCount())
-                    .deviceUniqueNo(equipment.getDeviceUniqueNo())
 
                     .totalInvestment(equipment.getTotalInvestment())
                     .hasSubsidy(equipment.getHasSubsidy())

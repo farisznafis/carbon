@@ -24,22 +24,14 @@ public class EnR002EquipmentResponse {
     private BigDecimal nominalMaxOutput;
     private String pcsManufacturer;
     private String pcsModel;
-    private Integer powerCondUnitCount;
+    private Integer pcsUnitCount;
     private String deviceNo;
-    private BigDecimal powerCondStandby;
+    private BigDecimal pcsStandby;
 
     private Boolean hasBattery;
     private String batteryMaker;
     private String batteryModel;
     private BigDecimal batteryCapacity;
-
-    private BigDecimal ictEquipmentPowerConsumption;
-
-    private Boolean additionalEquipment;
-    private LocalDate additionalEquipmentDate;
-    private String equipmentType;
-    private Integer unitCount;
-    private String deviceUniqueNo;
 
     private Integer totalInvestment;
     private Boolean hasSubsidy;

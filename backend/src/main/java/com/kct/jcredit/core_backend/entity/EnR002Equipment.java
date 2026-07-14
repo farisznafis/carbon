@@ -39,14 +39,14 @@ public class EnR002Equipment extends BaseEntity {
     @Column(name = "pcs_model", length = 50, nullable = false)
     private String pcsModel;
 
-    @Column(name = "power_cond_unit_count", nullable = false)
-    private Integer powerCondUnitCount;
+    @Column(name = "pcs_unit_count", nullable = false)
+    private Integer pcsUnitCount;
 
     @Column(name = "device_no", length = 100, nullable = false)
     private String deviceNo;
 
-    @Column(name = "power_cond_standby", precision = 8, scale = 2, nullable = false)
-    private BigDecimal powerCondStandby;
+    @Column(name = "pcs_standby", precision = 8, scale = 2, nullable = false)
+    private BigDecimal pcsStandby;
 
     @Column(name = "has_battery", nullable = false)
     private Boolean hasBattery;
@@ -59,24 +59,6 @@ public class EnR002Equipment extends BaseEntity {
 
     @Column(name = "battery_capacity", precision = 10, scale = 1)
     private BigDecimal batteryCapacity;
-
-    @Column(name = "ict_equipment_power_consumption", precision = 12, scale = 3)
-    private BigDecimal ictEquipmentPowerConsumption;
-
-    @Column(name = "additional_equipment")
-    private Boolean additionalEquipment;
-
-    @Column(name = "additional_equipment_date")
-    private LocalDate additionalEquipmentDate;
-
-    @Column(name = "equipment_type", length = 50)
-    private String equipmentType;
-
-    @Column(name = "unit_count")
-    private Integer unitCount;
-
-    @Column(name = "device_unique_no", length = 100)
-    private String deviceUniqueNo;
 
     @Column(name = "total_investment", nullable = false)
     private Integer totalInvestment;
