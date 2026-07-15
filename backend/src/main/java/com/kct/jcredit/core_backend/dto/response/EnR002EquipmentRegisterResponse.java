@@ -1,6 +1,5 @@
 package com.kct.jcredit.core_backend.dto.response;
 
-import com.kct.jcredit.core_backend.dto.response.details.EquipmentItemSolarResponse;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,9 +14,9 @@ import lombok.Builder;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EquipmentSolarRegisterResponse extends BaseResponse {
+public class EnR002EquipmentRegisterResponse extends BaseResponse {
  
     // Mapping tempId → equipmentId permanent
-    private List<EquipmentItemSolarResponse> equipments;
+    private List<EnR002EquipmentResponse> equipments;
 }
 

@@ -10,7 +10,7 @@ import lombok.Builder;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FileSolarUploadResponse {
+public class EnR002FileUploadResponse {
 
     private String statusCode;
     private String s3Key;

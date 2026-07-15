@@ -1,11 +1,7 @@
 package com.kct.jcredit.core_backend.service.impl;
 
-import com.kct.jcredit.core_backend.service.FileUploadSolarService;
-
-import java.io.IOException;
-
-import com.kct.jcredit.core_backend.dto.request.FilePreRegisSolarRequest;
-import com.kct.jcredit.core_backend.dto.response.FileSolarUploadResponse;
+import com.kct.jcredit.core_backend.service.EnR002FileUploadService;
+import com.kct.jcredit.core_backend.dto.response.EnR002FileUploadResponse;
 import com.kct.jcredit.core_backend.dto.response.details.ValidationErrorDetail;
 import com.kct.jcredit.core_backend.enums.EquipmentFileType;
 import com.kct.jcredit.core_backend.exception.UnsupportedFileTypeException;
@@ -44,7 +40,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FileUploadSolarServiceImpl implements FileUploadSolarService {
+public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
 
     @Value("${app.s3.bucket:}")
     private String bucketName;
@@ -64,11 +60,11 @@ public class FileUploadSolarServiceImpl implements FileUploadSolarService {
     // ─────────────────────────────────────────────────────────────
 
     @Override
-public FileSolarUploadResponse uploadFile(Integer siteId,
-                                          Integer projectId,
-                                          EquipmentFileType fileType,
-                                          String uploadedBy,
-                                          MultipartFile file) throws IOException {
+        public EnR002FileUploadResponse uploadFile(Integer siteId,
+                                       Integer projectId,
+                                       EquipmentFileType fileType,
+                                       String uploadedBy,
+                                       MultipartFile file) {
 
     // 1. Validasi mime type
     String mime = file.getContentType();
@@ -103,26 +99,30 @@ public FileSolarUploadResponse uploadFile(Integer siteId,
     );
 
     // 5. Upload ke S3
-    s3Client.putObject(
-            PutObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(s3Key)
-                    .contentType(mime)
-                    .metadata(Map.of(
-                            "fileId",     fileId,
-                            "uploadedBy", uploadedBy,
-                            "fileType",   fileType.getValue(),
-                            "siteId",     String.valueOf(siteId),
-                            "projectId",  String.valueOf(projectId)
-                    ))
-                    .build(),
-            RequestBody.fromInputStream(file.getInputStream(), file.getSize())
-    );
+    try (java.io.InputStream inputStream = file.getInputStream()) {
+        s3Client.putObject(
+                PutObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(s3Key)
+                        .contentType(mime)
+                        .metadata(Map.of(
+                                "fileId",     fileId,
+                                "uploadedBy", uploadedBy,
+                                "fileType",   fileType.getValue(),
+                                "siteId",     String.valueOf(siteId),
+                                "projectId",  String.valueOf(projectId)
+                        ))
+                        .build(),
+                RequestBody.fromInputStream(inputStream, file.getSize())
+        );
+    } catch (java.io.IOException e) {
+        throw new IllegalStateException("Unable to read uploaded file", e);
+    }
 
     log.info("File uploaded to S3 temp. projectId={}, siteId={}, fileType={}, s3Key={}",
             projectId, siteId, fileType.getValue(), s3Key);
 
-    return FileSolarUploadResponse.builder()
+    return EnR002FileUploadResponse.builder()
             .statusCode("OK")
             .s3Key(s3Key)
             .fileId(fileId)
