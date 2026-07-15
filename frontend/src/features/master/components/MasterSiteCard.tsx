@@ -91,7 +91,7 @@ export function MasterSiteCard({
                 </>
               ) : (
                 <Badge className="border-transparent bg-muted px-3 py-0.5 text-sm font-medium text-muted-foreground hover:bg-muted">
-                  非参加
+                  未参加
                 </Badge>
               )}
             </div>

@@ -295,7 +295,7 @@ function ProjectStatus({ joined }: { joined: boolean }) {
           joined ? 'bg-success' : 'bg-warning',
         )}
       />
-      {joined ? '参加中' : '非参加'}
+      {joined ? '参加中' : '未参加'}
     </span>
   );
 }
@@ -694,7 +694,7 @@ const Dashboard = () => {
         <div className={pageContainer}>
           <div className='mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
             <div>
-              <h2 className='text-foreground'>非参加プロジェクト</h2>
+              <h2 className='text-foreground'>未参加プロジェクト</h2>
               <p className='text-small mt-2 whitespace-pre-line text-foreground'>
                 {user?.role === 'master'
                   ? 'プロジェクトへの参加をご希望の場合は、「プロジェクト入会届」ボタンを押下し、参加するプロジェクトを選択してください。'
@@ -731,7 +731,7 @@ const Dashboard = () => {
           ) : (
             <Card className='rounded-2xl border-border'>
               <CardContent className='p-10 text-center text-muted-foreground'>
-                非参加のプロジェクトがありません
+                未参加のプロジェクトがありません
               </CardContent>
             </Card>
           )}

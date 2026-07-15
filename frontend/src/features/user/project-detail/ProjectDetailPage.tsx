@@ -656,7 +656,7 @@ const ProjectDetail = () => {
                 />
               )}
 
-              <section className='grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[1.35fr_0.95fr]'>
+              <section className='grid grid-cols-1 items-start gap-6 lg:grid-cols-[1.35fr_0.95fr]'>
                 <div className='h-full animate-slide-up'>
                   <EmissionTrendChart
                     data={emissionTrend}

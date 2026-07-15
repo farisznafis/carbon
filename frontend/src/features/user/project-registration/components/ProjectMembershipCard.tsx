@@ -65,8 +65,8 @@ export function ProjectMembershipCard({
           </div>
         </dl>
 
-        {!isJoined && onJoin && (
-          <div className='mt-6 flex flex-row gap-3 sm:ml-auto sm:min-w-56'>
+        {isJoined && (
+          <div className='mt-6 sm:ml-auto'>
             <Button
               type='button'
               variant='outline'
@@ -76,9 +76,15 @@ export function ProjectMembershipCard({
               <Download />
               PDFをダウンロード
             </Button>
+          </div>
+        )}
+
+        {!isJoined && onJoin && (
+          <div className='mt-6 sm:ml-auto sm:min-w-56'>
             <Button
               type='button'
               size='md'
+              className='w-full'
               onClick={() => onJoin(project)}
             >
               入会届を提出

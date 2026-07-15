@@ -404,7 +404,7 @@ export function UserForm({
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="md"
                     className="w-full"
                     onClick={onBack}
                   >
