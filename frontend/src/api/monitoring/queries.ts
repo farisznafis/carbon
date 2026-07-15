@@ -65,14 +65,15 @@ export async function getMonitoringRecords(params: {
   const page = params.page ?? DEFAULT_MONITORING_LIST_PAGE;
   const limit = params.limit ?? DEFAULT_MONITORING_LIST_LIMIT;
   const query = new URLSearchParams({
+    siteId: String(params.siteId),
+    projectId: String(params.projectId),
     page: String(page),
     limit: String(limit),
   });
 
-  const response = await apiFetch(
-    `/monitoring/${encodeURIComponent(params.siteId)}/${encodeURIComponent(params.projectId)}/list?${query.toString()}`,
-    { method: "GET" },
-  );
+  const response = await apiFetch(`/monitoring?${query.toString()}/list`, {
+    method: "GET",
+  });
   const { data: json, rawBody } =
     await parseJsonResponse<MonitoringRecordListResponse>(response);
 

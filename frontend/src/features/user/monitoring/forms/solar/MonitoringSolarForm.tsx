@@ -178,7 +178,7 @@ export function MonitoringSolarForm({
                 name="dateRecorded"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>記録日</FormLabel>
+                    <FormLabel>測定日</FormLabel>
                     <p className="text-sm text-muted-foreground mt-1">
                       モニタリングを実施した日を入力してください。申請日ではありません。
                     </p>
@@ -200,6 +200,9 @@ export function MonitoringSolarForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>発電量 (ELPV)</FormLabel>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      対象期間中に太陽光発電設備で発電した総電力量を入力してください。
+                    </p>
                     <FormControl>
                       <Input
                         type="number"
@@ -222,6 +225,9 @@ export function MonitoringSolarForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>自家消費量 (ELPVR)</FormLabel>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      対象期間中に発電した電力量のうち、売電または他者へ提供した電力量を入力してください。
+                    </p>
                     <FormControl>
                       <Input
                         type="number"
@@ -244,6 +250,10 @@ export function MonitoringSolarForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>蓄電池交換の有無</FormLabel>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      対象期間中に蓄電池を交換したかどうかを選択してください。
+交換した場合は、交換後の蓄電池に関する証憑資料をアップロードしてください。
+                    </p>
                     <FormControl>
                       <Select
                         onValueChange={(nextValue) => {
@@ -278,6 +288,9 @@ export function MonitoringSolarForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>蓄電池放電量 (ELPJ)</FormLabel>
+                      <p className="text-sm text-muted-foreground mt-1">
+                      対象期間中に蓄電池から放電された電力量を入力してください。
+                      </p>
                       <FormControl>
                         <Input
                           type="number"
@@ -302,6 +315,9 @@ export function MonitoringSolarForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>制御機器稼働時間 (ELPJ)</FormLabel>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      対象期間中に制御機器が稼働した合計時間を入力してください。
+                    </p>
                     <FormControl>
                       <Input
                         type="number"
@@ -324,6 +340,9 @@ export function MonitoringSolarForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>測定精度</FormLabel>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          モニタリングデータの測定に使用した機器の測定精度を入力してください。
+                        </p>
                         <FormControl>
                           <Input
                             type="number"
