@@ -27,7 +27,7 @@ export function calculateEmissionReductionProgress({
     !Number.isFinite(baselineEmission) ||
     !Number.isFinite(projectEmission) ||
     !Number.isFinite(targetReduction) ||
-    targetReduction <= 0
+    targetReduction <= 100
   ) {
     return null;
   }

@@ -204,15 +204,21 @@ export function MonitoringSolarForm({
                       対象期間中に太陽光発電設備で発電した総電力量を入力してください。
                     </p>
                     <FormControl>
-                      <Input
-                        type="number"
-                        value={String(field.value ?? '')}
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          field.onChange(value === '' || value === '0' ? null : value);
-                        }}
-                        placeholder="数値を入力"
-                      />
+                      <div className="flex items-center gap-2">
+                        <Input
+                          className="w-full"
+                          type="number"
+                          value={String(field.value ?? '')}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            field.onChange(value === '' || value === '0' ? null : value);
+                          }}
+                          placeholder="数値を入力"
+                        />
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">
+                          kWh
+                        </span>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -229,15 +235,21 @@ export function MonitoringSolarForm({
                       対象期間中に発電した電力量のうち、売電または他者へ提供した電力量を入力してください。
                     </p>
                     <FormControl>
-                      <Input
-                        type="number"
-                        value={String(field.value ?? '')}
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          field.onChange(value === '' || value === '0' ? null : value);
-                        }}
-                        placeholder="数値を入力"
-                      />
+                      <div className="flex items-center gap-2">
+                        <Input
+                          className="w-full"
+                          type="number"
+                          value={String(field.value ?? '')}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            field.onChange(value === '' || value === '0' ? null : value);
+                          }}
+                          placeholder="数値を入力"
+                        />
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">
+                          kWh
+                        </span>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -257,10 +269,19 @@ export function MonitoringSolarForm({
                     <FormControl>
                       <Select
                         onValueChange={(nextValue) => {
-                          form.setValue('changedBattery', nextValue === 'true', {
+                          const hasBatteryChanged = nextValue === 'true';
+
+                          form.setValue('changedBattery', hasBatteryChanged, {
                             shouldValidate: true,
                             shouldDirty: true,
                           });
+
+                          if (!hasBatteryChanged) {
+                            form.setValue('ELPJ_battery_evidence', null, {
+                              shouldDirty: true,
+                            });
+                            form.clearErrors('ELPJ_battery_evidence');
+                          }
                         }}
                         value={field.value ? 'true' : 'false'}
                       >
@@ -292,16 +313,22 @@ export function MonitoringSolarForm({
                       対象期間中に蓄電池から放電された電力量を入力してください。
                       </p>
                       <FormControl>
-                        <Input
-                          type="number"
-                          value={field.value == null ? '' : String(field.value)}
-                          onChange={(event) => {
-                            const value = event.target.value;
-                            field.onChange(value === '' || value === '0' ? null : value);
-                          }}
-                          placeholder="数値を入力"
-                          disabled={!isBatteryChanged}
-                        />
+                        <div className="flex items-center gap-2">
+                          <Input
+                            className="w-full"
+                            type="number"
+                            value={field.value == null ? '' : String(field.value)}
+                            onChange={(event) => {
+                              const value = event.target.value;
+                              field.onChange(value === '' || value === '0' ? null : value);
+                            }}
+                            placeholder="数値を入力"
+                            disabled={!isBatteryChanged}
+                          />
+                          <span className="text-sm text-muted-foreground whitespace-nowrap">
+                            kWh
+                          </span>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -319,15 +346,21 @@ export function MonitoringSolarForm({
                       対象期間中に制御機器が稼働した合計時間を入力してください。
                     </p>
                     <FormControl>
-                      <Input
-                        type="number"
-                        value={String(field.value ?? '')}
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          field.onChange(value === '' || value === '0' ? null : value);
-                        }}
-                        placeholder="数値を入力"
-                      />
+                      <div className="flex items-center gap-2">
+                        <Input
+                          className="w-full"
+                          type="number"
+                          value={String(field.value ?? '')}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            field.onChange(value === '' || value === '0' ? null : value);
+                          }}
+                          placeholder="数値を入力"
+                        />
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">
+                          時間
+                        </span>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -344,15 +377,21 @@ export function MonitoringSolarForm({
                           モニタリングデータの測定に使用した機器の測定精度を入力してください。
                         </p>
                         <FormControl>
-                          <Input
-                            type="number"
-                            value={String(field.value ?? '')}
-                            onChange={(event) => {
-                              const value = event.target.value;
-                              field.onChange(value === '' || value === '0' ? null : value);
-                            }}
-                            placeholder="精度を入力"
-                          />
+                          <div className="flex items-center gap-2">
+                            <Input
+                              className="w-full"
+                              type="number"
+                              value={String(field.value ?? '')}
+                              onChange={(event) => {
+                                const value = event.target.value;
+                                field.onChange(value === '' || value === '0' ? null : value);
+                              }}
+                              placeholder="精度を入力"
+                            />
+                            <span className="text-sm text-muted-foreground whitespace-nowrap">
+                              %
+                            </span>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -418,32 +457,34 @@ export function MonitoringSolarForm({
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="ELPJ_battery_evidence"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <FileSelectButton
-                            id="elpj-battery-file"
-                            label="蓄電池エビデンス"
-                            variant="design-system-pro"
-                            supportedFormats="(.pdf, .jpg, .jpeg, .png)"
-                            value={(field.value as File) ?? null}
-                            onChange={(file) =>
-                              handleFileChange(
-                                'ELPJ_battery_evidence',
-                                field.onChange,
-                                file,
-                                DEFAULT_EVIDENCE_FILE_EXTENSIONS,
-                              )
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {isBatteryChanged ? (
+                    <FormField
+                      control={form.control}
+                      name="ELPJ_battery_evidence"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <FileSelectButton
+                              id="elpj-battery-file"
+                              label="蓄電池エビデンス"
+                              variant="design-system-pro"
+                              supportedFormats="(.pdf, .jpg, .jpeg, .png)"
+                              value={(field.value as File) ?? null}
+                              onChange={(file) =>
+                                handleFileChange(
+                                  'ELPJ_battery_evidence',
+                                  field.onChange,
+                                  file,
+                                  DEFAULT_EVIDENCE_FILE_EXTENSIONS,
+                                )
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ) : null}
 
                   <FormField
                     control={form.control}

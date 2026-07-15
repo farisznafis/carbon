@@ -121,8 +121,10 @@ function buildMonitoringPayload(
     ELpvr_evidence:
       evidenceUrls.ELpvr_evidence ?? fileValueToString(currentData.ELpvr_evidence),
     ELPJ_battery_evidence:
-      evidenceUrls.ELPJ_battery_evidence ??
-      fileValueToString(currentData.ELPJ_battery_evidence),
+      currentData.changedBattery
+        ? evidenceUrls.ELPJ_battery_evidence ??
+          fileValueToString(currentData.ELPJ_battery_evidence)
+        : null,
     ELPJ_control_equipment_spec_files:
       evidenceUrls.ELPJ_control_equipment_spec_files ??
       fileValueToString(currentData.ELPJ_control_equipment_spec_files),
@@ -279,9 +281,19 @@ const MonitoringRegister = () => {
     addUpload('ELpvr_evidence', currentData.ELpvr_evidence, (file) =>
       uploadElpvrFile(file, projectIdStr, siteIdStr, descriptionValue),
     );
-    addUpload('ELPJ_battery_evidence', currentData.ELPJ_battery_evidence, (file) =>
-      uploadElpjBatteryFile(file, projectIdStr, siteIdStr, descriptionValue),
-    );
+    if (currentData.changedBattery) {
+      addUpload(
+        'ELPJ_battery_evidence',
+        currentData.ELPJ_battery_evidence,
+        (file) =>
+          uploadElpjBatteryFile(
+            file,
+            projectIdStr,
+            siteIdStr,
+            descriptionValue,
+          ),
+      );
+    }
     addUpload(
       'ELPJ_control_equipment_spec_files',
       currentData.ELPJ_control_equipment_spec_files,

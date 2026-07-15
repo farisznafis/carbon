@@ -26,7 +26,9 @@ export function getMonitoringSolarConfirmation(
     { label: '測定精度', value: String(data.ELPJ_accuracy ?? missingValue), isChanged: isChanged('ELPJ_accuracy') },
     { label: '発電量 (ELPV) エビデンス', value: formatOptionalFile(data.ELpv_evidence), isChanged: isChanged('ELpv_evidence') },
     { label: '自家消費量 (ELPVR) エビデンス', value: formatOptionalFile(data.ELpvr_evidence), isChanged: isChanged('ELpvr_evidence') },
-    { label: '蓄電池エビデンス', value: formatOptionalFile(data.ELPJ_battery_evidence), isChanged: isChanged('ELPJ_battery_evidence') },
+    ...(data.changedBattery
+      ? [{ label: '蓄電池エビデンス', value: formatOptionalFile(data.ELPJ_battery_evidence), isChanged: isChanged('ELPJ_battery_evidence') }]
+      : []),
     { label: '制御機器仕様 (ELPJ) エビデンス', value: formatOptionalFile(data.ELPJ_control_equipment_spec_files), isChanged: isChanged('ELPJ_control_equipment_spec_files') },
   ];
 }
