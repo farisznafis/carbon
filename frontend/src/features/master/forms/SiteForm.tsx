@@ -26,6 +26,7 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -35,6 +36,8 @@ import { prefectures } from '@/lib/constants/prefectures';
 import { UserPlus } from 'lucide-react';
 
 export type { SiteFormData } from '@/api/site';
+
+const ADD_USER_OPTION_VALUE = '__add_user__';
 
 const siteBackendFieldMap: Partial<Record<string, keyof SiteFormData>> = {
   siteName: 'siteName',
@@ -404,11 +407,19 @@ export function SiteForm({
                         <div className="flex items-center gap-2">
                           <Select
                             value={field.value ?? ''}
-                            onValueChange={(value) => field.onChange(value)}
+                            onValueChange={(value) => {
+                              if (value === ADD_USER_OPTION_VALUE) {
+                                onAddUser?.(form.getValues());
+                                return;
+                              }
+
+                              field.onChange(value);
+                            }}
                             disabled={
-                              isUserOptionsLoading ||
-                              Boolean(userOptionsError) ||
-                              userOptions.length === 0
+                              !onAddUser &&
+                              (isUserOptionsLoading ||
+                                Boolean(userOptionsError) ||
+                                userOptions.length === 0)
                             }
                           >
                             <FormControl>
@@ -429,6 +440,23 @@ export function SiteForm({
                                   </span>
                                 </SelectItem>
                               ))}
+                              {onAddUser && (
+                                <>
+                                  {userOptions.length > 0 && <SelectSeparator />}
+                                  <SelectItem
+                                    value={ADD_USER_OPTION_VALUE}
+                                    className="font-medium text-primary focus:text-primary"
+                                  >
+                                    <span className="flex items-center gap-2">
+                                      <UserPlus
+                                        className="h-4 w-4"
+                                        aria-hidden="true"
+                                      />
+                                      社員を追加
+                                    </span>
+                                  </SelectItem>
+                                </>
+                              )}
                             </SelectContent>
                           </Select>
 
@@ -453,19 +481,6 @@ export function SiteForm({
                     );
                   }}
                 />
-                {onAddUser && (
-                  <div className="flex justify-end">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="md"
-                      onClick={() => onAddUser(form.getValues())}
-                    >
-                      <UserPlus />
-                      社員を追加
-                    </Button>
-                  </div>
-                )}
               </FormSection>
 
             <FormActions

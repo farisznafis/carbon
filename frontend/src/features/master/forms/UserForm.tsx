@@ -415,7 +415,7 @@ export function UserForm({
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
+                  size="md"
                   className="w-full"
                   onClick={onBack}
                 >
@@ -425,7 +425,7 @@ export function UserForm({
 
               <Button
                 type="submit"
-                size="sm"
+                size="md"
                 className="w-full"
                 disabled={!isTrulyDirty}
               >
