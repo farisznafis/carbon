@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   normalizeEmissionTrendResponse,
   normalizeProjectEmissionBreakdownResponse,
+  normalizeProjectEmissionSummaryResponse,
 } from './queries';
 
 const expectedTrendPoint = {
@@ -144,5 +145,28 @@ describe('normalizeProjectEmissionBreakdownResponse', () => {
         empj_s_battery: undefined,
       }),
     ).toBeNull();
+  });
+});
+
+describe('normalizeProjectEmissionSummaryResponse', () => {
+  it('maps the project-level result returned in data', () => {
+    expect(
+      normalizeProjectEmissionSummaryResponse({
+        statusCode: '200',
+        data: {
+          empj: 31.6,
+          empj_m: 20,
+          empj_s_control: 8.1,
+          empj_s_battery: 3.5,
+        },
+      }),
+    ).toEqual({
+      projectEmission: 31.6,
+      breakdown: {
+        mainEmission: 20,
+        controlDeviceEmission: 8.1,
+        batteryEmission: 3.5,
+      },
+    });
   });
 });

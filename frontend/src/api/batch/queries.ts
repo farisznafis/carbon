@@ -1,8 +1,9 @@
 import { apiFetch, parseJsonResponse } from '@/api/_shared/httpClient';
 import type {
   EmissionTrendPoint,
-  ProjectEmissionChartData,
   ProjectEmissionBreakdown,
+  ProjectEmissionSummary,
+  ProjectReductionResultResponse,
   ReductionResultApiItem,
   ReductionResultPayload,
   ReductionResultResponse,
@@ -179,14 +180,39 @@ export function normalizeProjectEmissionBreakdownResponse(
     : null;
 }
 
-export async function getProjectEmissionCharts(
-  siteId: string,
-  projectId: string,
-): Promise<ProjectEmissionChartData> {
-  const json = await fetchReductionResults(siteId, projectId);
+export function normalizeProjectEmissionSummaryResponse(
+  response: ProjectReductionResultResponse | ReductionResultApiItem,
+): ProjectEmissionSummary | null {
+  const result = 'data' in response ? response.data : response;
+  if (!result) return null;
 
-  return {
-    trend: json ? normalizeEmissionTrendResponse(json) : [],
-    breakdown: json ? normalizeProjectEmissionBreakdownResponse(json) : null,
-  };
+  const projectEmission = toFiniteEmission(result.empj);
+  const breakdown = normalizeProjectEmissionBreakdownResponse(result);
+
+  return projectEmission !== null || breakdown !== null
+    ? { projectEmission, breakdown }
+    : null;
+}
+
+export async function getProjectEmissionSummary(
+  projectId: string,
+): Promise<ProjectEmissionSummary | null> {
+  if (!projectId) return null;
+
+  const response = await apiFetch(
+    `/batch/${encodeURIComponent(projectId)}/reduction-result-total`,
+    { method: 'GET' },
+  );
+  const { data: json, rawBody } =
+    await parseJsonResponse<ProjectReductionResultResponse>(response);
+
+  if (!response.ok) {
+    throw new Error(
+      json?.message ||
+        rawBody ||
+        `Failed to fetch project reduction result total: HTTP ${response.status}`,
+    );
+  }
+
+  return json ? normalizeProjectEmissionSummaryResponse(json) : null;
 }

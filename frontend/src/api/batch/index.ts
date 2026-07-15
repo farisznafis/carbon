@@ -1,8 +1,9 @@
-export { getEmissionTrend, getProjectEmissionCharts } from './queries';
+export { getEmissionTrend, getProjectEmissionSummary } from './queries';
 export type {
   EmissionTrendPoint,
-  ProjectEmissionChartData,
   ProjectEmissionBreakdown,
+  ProjectEmissionSummary,
+  ProjectReductionResultResponse,
   ReductionResultApiItem,
   ReductionResultPayload,
   ReductionResultResponse,

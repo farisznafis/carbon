@@ -7,6 +7,8 @@ import {
 } from '@/components/ui/chart';
 import type { ProjectEmissionBreakdown } from '@/api/batch';
 import { cn } from '@/lib/utils';
+import { EmissionReductionProgress } from './EmissionReductionProgress';
+import type { EmissionReductionProgressInput } from './emissionReductionProgressUtils';
 
 const EMISSION_VALUE_KEY = 'value';
 
@@ -55,6 +57,7 @@ type EmissionBreakdownChartProps = {
   data: ProjectEmissionBreakdown | null;
   isLoading: boolean;
   error: string | null;
+  reductionProgress: EmissionReductionProgressInput;
   className?: string;
 };
 
@@ -62,6 +65,7 @@ export function EmissionBreakdownChart({
   data,
   isLoading,
   error,
+  reductionProgress,
   className,
 }: EmissionBreakdownChartProps) {
   const chartData = createEmissionBreakdownData(data);
@@ -147,6 +151,10 @@ export function EmissionBreakdownChart({
           </div>
         )}
       </div>
+
+      {!isLoading && !error ? (
+        <EmissionReductionProgress {...reductionProgress} />
+      ) : null}
     </section>
   );
 }

@@ -37,7 +37,13 @@ export type ProjectEmissionBreakdown = {
   batteryEmission: number | null;
 };
 
-export type ProjectEmissionChartData = {
-  trend: EmissionTrendPoint[];
+export type ProjectReductionResultResponse = {
+  statusCode?: string;
+  message?: string | null;
+  data?: ReductionResultApiItem | null;
+};
+
+export type ProjectEmissionSummary = {
+  projectEmission: number | null;
   breakdown: ProjectEmissionBreakdown | null;
 };

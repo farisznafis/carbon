@@ -31,7 +31,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getMonitoringRecent } from '@/api/monitoring';
 import type { MonitoringData } from '@/api/monitoring';
 import {
-  getProjectEmissionCharts,
+  getEmissionTrend,
+  getProjectEmissionSummary,
   type EmissionTrendPoint,
   type ProjectEmissionBreakdown,
 } from '@/api/batch';
@@ -52,6 +53,13 @@ import { cn } from '@/lib/utils';
 function formatNumber(n: number | null | undefined) {
   if (n == null || Number.isNaN(n)) return '-';
   return new Intl.NumberFormat().format(n);
+}
+
+function toNullableNumber(value: number | string | null | undefined) {
+  if (value == null || value === '') return null;
+
+  const parsedValue = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsedValue) ? parsedValue : null;
 }
 
 type MonitoringDisplayRow = Pick<
@@ -242,6 +250,8 @@ const ProjectDetail = () => {
     description: string;
     methodology: string;
     projectNumber: string;
+    baselineEmission: number | null;
+    targetReduction: number | null;
     membersTotal: number | null;
     status: 'active' | 'inactive';
     createdDate: string;
@@ -294,6 +304,9 @@ const ProjectDetail = () => {
   const [emissionBreakdownError, setEmissionBreakdownError] = useState<
     string | null
   >(null);
+  const [projectTotalEmission, setProjectTotalEmission] = useState<
+    number | null
+  >(null);
   const [monitoringCancellationOpen, setMonitoringCancellationOpen] =
     useState(false);
 
@@ -308,52 +321,86 @@ const ProjectDetail = () => {
   useEffect(() => {
     let isCancelled = false;
 
-    const fetchEmissionCharts = async () => {
+    const fetchEmissionTrend = async () => {
       if (!projectId || !siteId) {
         setEmissionTrend([]);
         setEmissionTrendError(null);
         setEmissionTrendLoading(false);
-        setEmissionBreakdown(null);
-        setEmissionBreakdownError(null);
-        setEmissionBreakdownLoading(false);
         return;
       }
 
       try {
         setEmissionTrendLoading(true);
         setEmissionTrendError(null);
-        setEmissionBreakdownLoading(true);
-        setEmissionBreakdownError(null);
-
-        const charts = await getProjectEmissionCharts(siteId, projectId);
+        const trend = await getEmissionTrend(siteId, projectId);
 
         if (!isCancelled) {
-          setEmissionTrend(charts.trend);
-          setEmissionBreakdown(charts.breakdown);
+          setEmissionTrend(trend);
         }
       } catch (error) {
-        logger.error('Error loading project emission charts:', error);
+        logger.error('Error loading project emission trend:', error);
 
         if (!isCancelled) {
           setEmissionTrend([]);
           setEmissionTrendError('排出量データの取得に失敗しました。');
-          setEmissionBreakdown(null);
-          setEmissionBreakdownError('排出量内訳データの取得に失敗しました。');
         }
       } finally {
         if (!isCancelled) {
           setEmissionTrendLoading(false);
-          setEmissionBreakdownLoading(false);
         }
       }
     };
 
-    void fetchEmissionCharts();
+    void fetchEmissionTrend();
 
     return () => {
       isCancelled = true;
     };
   }, [projectId, siteId]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const fetchProjectEmissionSummary = async () => {
+      if (!projectId) {
+        setEmissionBreakdown(null);
+        setProjectTotalEmission(null);
+        setEmissionBreakdownError(null);
+        setEmissionBreakdownLoading(false);
+        return;
+      }
+
+      try {
+        setEmissionBreakdownLoading(true);
+        setEmissionBreakdownError(null);
+
+        const summary = await getProjectEmissionSummary(projectId);
+
+        if (!isCancelled) {
+          setEmissionBreakdown(summary?.breakdown ?? null);
+          setProjectTotalEmission(summary?.projectEmission ?? null);
+        }
+      } catch (error) {
+        logger.error('Error loading project emission summary:', error);
+
+        if (!isCancelled) {
+          setEmissionBreakdown(null);
+          setProjectTotalEmission(null);
+          setEmissionBreakdownError('排出量内訳データの取得に失敗しました。');
+        }
+      } finally {
+        if (!isCancelled) {
+          setEmissionBreakdownLoading(false);
+        }
+      }
+    };
+
+    void fetchProjectEmissionSummary();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [projectId]);
 
   useEffect(() => {
     const loadProject = async () => {
@@ -365,6 +412,8 @@ const ProjectDetail = () => {
 
         setProject({
           projectNumber: result.projectNumber,
+          baselineEmission: toNullableNumber(result.baselineEmission),
+          targetReduction: toNullableNumber(result.emissionReduction),
           name: result.projectName,
           description: result.methodDetails,
           methodology: `${result.methodologyCategory} ${result.methodologyNumber} ${result.methodologyVersion}`,
@@ -624,6 +673,11 @@ const ProjectDetail = () => {
                     data={emissionBreakdown}
                     isLoading={emissionBreakdownLoading}
                     error={emissionBreakdownError}
+                    reductionProgress={{
+                      baselineEmission: project.baselineEmission,
+                      projectEmission: projectTotalEmission,
+                      targetReduction: project.targetReduction,
+                    }}
                     className={projectDetailCardClassName}
                   />
                 </div>
