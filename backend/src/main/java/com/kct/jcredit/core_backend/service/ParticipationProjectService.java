@@ -22,7 +22,7 @@ import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.entity.EnR002EquipmentFile;
-import com.kct.jcredit.core_backend.entity.EnR002ConfirmationItems;
+import com.kct.jcredit.core_backend.entity.EnR002ApplicationConfirmation;
 import com.kct.jcredit.core_backend.exception.BulkValidationException;
 import com.kct.jcredit.core_backend.exception.CustomException;
 import com.kct.jcredit.core_backend.enums.EquipmentFileType;

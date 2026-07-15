@@ -1,6 +1,6 @@
 package com.kct.jcredit.core_backend.repository.dynamodb;
 
-import com.kct.jcredit.core_backend.entity.EnR002ConfirmationItems; 
+import com.kct.jcredit.core_backend.entity.EnR002ApplicationConfirmation; 
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -20,58 +20,20 @@ import java.util.stream.Collectors;
 public class EnR002ApplicationConfirmationRepository {
 
     private final DynamoDbEnhancedClient enhancedClient;
-    private static final String TABLE_NAME = "en_r002_confirmation_items";
+    private static final String TABLE_NAME = "en_r002_application_confirmation";
 
-
-    // TABLE REF 
-
-    private DynamoDbTable<EnR002ConfirmationItems> table() {
-        return enhancedClient.table(TABLE_NAME, TableSchema.fromBean(EnR002ConfirmationItems.class));
+    private DynamoDbTable<EnR002ApplicationConfirmation> table() {
+        return enhancedClient.table(TABLE_NAME,
+                TableSchema.fromBean(EnR002ApplicationConfirmation.class));
     }
 
-    // WRITE
-
-    public void save(EnR002ConfirmationItems EnR002confirmationItems) {
-        table().putItem(EnR002confirmationItems);
+    public void save(EnR002ApplicationConfirmation item) {
+        table().putItem(item);
     }
 
-    // READ
-
-    public Optional<EnR002ConfirmationItems> findByPkAndSk(String pk, String sk) {
-        Key key = Key.builder()
-                .partitionValue(pk)
-                .sortValue(sk)
-                .build();
-        return Optional.ofNullable(table().getItem(r -> r.key(key)));
-    }
-
-    // pk format: projectId#siteId
-    public List<EnR002ConfirmationItems> findAllByProjectAndSite(Integer projectId, Integer siteId) {
-        String pk = projectId + "#" + siteId;
-
-        QueryConditional queryConditional = QueryConditional
-                .keyEqualTo(Key.builder().partitionValue(pk).build());
-
-        PageIterable<EnR002ConfirmationItems> pages = table().query(r -> r
-                .queryConditional(queryConditional)
-                .scanIndexForward(false) // DESC — terbaru dulu
-        );
-
-        return pages.items().stream().collect(Collectors.toList());
-    }
-
-    public Optional<EnR002ConfirmationItems> findLatestByProjectAndSite(Integer projectId, Integer siteId) {
-        String pk = projectId + "#" + siteId;
-
-        QueryConditional queryConditional = QueryConditional
-                .keyEqualTo(Key.builder().partitionValue(pk).build());
-
-        PageIterable<EnR002ConfirmationItems> pages = table().query(r -> r
-                .queryConditional(queryConditional)
-                .scanIndexForward(false)
-                .limit(1)
-        );
-
-        return pages.items().stream().findFirst();
+    public Optional<EnR002ApplicationConfirmation> findByParticipationId(Integer participationId) {
+        String pk = "PART#" + participationId;
+        return Optional.ofNullable(table().getItem(r -> r.key(
+                Key.builder().partitionValue(pk).build())));
     }
 }

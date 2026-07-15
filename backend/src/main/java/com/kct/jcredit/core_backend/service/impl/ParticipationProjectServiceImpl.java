@@ -27,7 +27,7 @@ import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.entity.EnR002EquipmentFile;
 import com.kct.jcredit.core_backend.entity.EnR002SustainabilityCommitment;
 import com.kct.jcredit.core_backend.entity.ConfirmationItems;
-import com.kct.jcredit.core_backend.entity.EnR002ConfirmationItems;
+import com.kct.jcredit.core_backend.entity.EnR002ApplicationConfirmation;
 import com.kct.jcredit.core_backend.entity.EnR002Equipment;
 import com.kct.jcredit.core_backend.exception.BulkValidationException;
 import com.kct.jcredit.core_backend.exception.CustomException;
@@ -348,7 +348,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
     private void saveConfirmationItems(EnR002ConfirmationItemRequest req,
                                         Integer participationId, String companyId) {
-        EnR002ConfirmationItems items = EnR002ConfirmationItems.builder() // ← nama entity DynamoDB
+        EnR002ApplicationConfirmation items = EnR002ApplicationConfirmation.builder() // ← nama entity DynamoDB
                 .pk("PART#" + participationId)
                 .isAgreeDataUse(req.getIsAgreeDataUse())
                 .isAgreeExtraData(req.getIsAgreeExtraData())

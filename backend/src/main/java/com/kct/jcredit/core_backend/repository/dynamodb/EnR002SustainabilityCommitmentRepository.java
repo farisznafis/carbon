@@ -21,6 +21,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 public class EnR002SustainabilityCommitmentRepository {
+
     private final DynamoDbEnhancedClient enhancedClient;
     private static final String TABLE_NAME = "en_r002_sustainability_commitment";
 
@@ -29,17 +30,13 @@ public class EnR002SustainabilityCommitmentRepository {
                 TableSchema.fromBean(EnR002SustainabilityCommitment.class));
     }
 
-    public void save(EnR002SustainabilityCommitment commitment) {
-        table().putItem(commitment);
+    public void save(EnR002SustainabilityCommitment item) {
+        table().putItem(item);
     }
 
     public Optional<EnR002SustainabilityCommitment> findByParticipationId(Integer participationId) {
-        String pk = buildPk(participationId);
+        String pk = "PART#" + participationId;
         return Optional.ofNullable(table().getItem(r -> r.key(
                 Key.builder().partitionValue(pk).build())));
-    }
-
-    private String buildPk(Integer participationId) {
-        return "PART#" + participationId;
     }
 }

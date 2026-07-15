@@ -27,7 +27,7 @@ import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.entity.EnR002EquipmentFile;
 import com.kct.jcredit.core_backend.entity.EnR002SustainabilityCommitment;
 import com.kct.jcredit.core_backend.entity.ConfirmationItems;
-import com.kct.jcredit.core_backend.entity.EnR002ConfirmationItems;
+import com.kct.jcredit.core_backend.entity.EnR002ApplicationConfirmation;
 import com.kct.jcredit.core_backend.entity.EnR002Equipment;
 import com.kct.jcredit.core_backend.exception.BulkValidationException;
 import com.kct.jcredit.core_backend.exception.CustomException;
