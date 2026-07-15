@@ -213,4 +213,27 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 .preProjectUnitPrice(e.getPreProjectUnitPrice())
                 .build();
     }
+    @Override
+    public EnR002EquipmentResponse getEquipmentById(Integer siteId,
+                                                    Integer equipmentId,
+                                                    String companyId) {
+        Site site = siteRepository.findById(siteId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND,
+                        ResponseConstants.MSG_SITE_NOT_FOUND));
+
+        if (!site.getCompany().getCompanyId().equals(companyId))
+            throw new CustomException(ResponseConstants.FORBIDDEN,
+                    ResponseConstants.MSG_UNAUTHORIZED);
+
+        EnR002Equipment equipment = equipmentRepository.findById(equipmentId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND, "設備情報が見つかりません。"));
+
+        if (!equipment.getSite().getId().equals(siteId))
+            throw new CustomException(
+                    ResponseConstants.NOT_FOUND, "設備情報が見つかりません。");
+
+        return toResponse(equipment);
+    }
 }

@@ -8,11 +8,14 @@ import java.util.List;
 
 public interface EnR002EquipmentService {
 
-    // Tambah equipment baru ke site yang sudah ada (di luar flow join)
     EnR002EquipmentResponse addEquipment(Integer siteId,
                                          String companyId,
                                          EnR002EquipmentRequest request);
 
     // List semua equipment milik satu site — untuk dashboard
     List<EnR002EquipmentResponse> getEquipmentsBySite(Integer siteId, String companyId);
+
+    EnR002EquipmentResponse getEquipmentById(Integer siteId,
+                                             Integer equipmentId,
+                                             String companyId);
 }

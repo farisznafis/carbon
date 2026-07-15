@@ -174,4 +174,17 @@ public class SiteController {
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
         return ResponseEntity.ok(equipmentService.getEquipmentsBySite(siteId, companyId));
     }
+
+    @GetMapping("/{siteId}/equipment/{equipmentId}")
+    @PreAuthorize("hasAnyRole('master','user')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<EnR002EquipmentResponse> getEquipmentById(
+            Authentication authentication,
+            @PathVariable Integer siteId,
+            @PathVariable Integer equipmentId) {
+
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+        return ResponseEntity.ok(
+                equipmentService.getEquipmentById(siteId, equipmentId, companyId));
+    }
 }
