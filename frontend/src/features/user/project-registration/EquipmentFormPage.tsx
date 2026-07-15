@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 //import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning";
@@ -10,6 +10,17 @@ import type { SolarPowerFormData, OtherEquipmentFormData } from "@/lib/equipment
 import { Form } from "@/components/ui/form";
 import { FormPageWrapper } from "@/components/layout/FormPageWrapper/FormPageWrapper";
 import { paths } from "@/routes/paths";
+
+function getInternalReturnPath(state: unknown): string | null {
+  if (!state || typeof state !== "object" || !("returnTo" in state)) {
+    return null;
+  }
+
+  const returnTo = (state as { returnTo?: unknown }).returnTo;
+  return typeof returnTo === "string" && returnTo.startsWith("/")
+    ? returnTo
+    : null;
+}
 
 /**
  * HOW TO SWITCH BETWEEN FORM TYPES:
@@ -28,12 +39,14 @@ import { paths } from "@/routes/paths";
 
 const EquipmentForm = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { siteId = "", projectId = "" } = useParams<{
     siteId: string;
     projectId: string;
   }>();
   const [searchParams] = useSearchParams();
   const equipmentId = searchParams.get("equipmentId");
+  const returnPath = getInternalReturnPath(location.state);
   const { toast } = useToast();
 
   const [formType] = useState<EquipmentFormType>(() => {
@@ -145,7 +158,7 @@ const EquipmentForm = () => {
   };
 
   const handleCancel = () => {
-    navigate(paths.projectRegister(siteId, projectId));
+    navigate(returnPath ?? paths.projectRegister(siteId, projectId));
   };
 
   const pageTitle = equipmentId ? "設備編集" : "設備追加";

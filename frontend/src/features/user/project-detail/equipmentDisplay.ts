@@ -43,7 +43,7 @@ export const equipmentDetailSections: readonly EquipmentDetailSection[] = [
   {
     title: '基本情報',
     fields: [
-      { label: '一時ID', key: 'tempId' },
+      // { label: '一時ID', key: 'tempId' },
       { label: '設備ID', key: 'equipmentId' },
       { label: '方法論番号', key: 'methodologyNumber' },
       { label: '設備種別', key: 'equipmentType' },

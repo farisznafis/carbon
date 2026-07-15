@@ -25,6 +25,7 @@ import {
   Layers,
   MapPin,
   PackageCheck,
+  Plus,
   Zap,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -49,6 +50,7 @@ import { EmissionTrendChart } from './components/EmissionTrendChart';
 import { EmissionBreakdownChart } from './components/EmissionBreakdownChart';
 import { projectDetailCardClassName } from './projectDetailStyles';
 import { cn } from '@/lib/utils';
+import { paths } from '@/routes/paths';
 
 function formatNumber(n: number | null | undefined) {
   if (n == null || Number.isNaN(n)) return '-';
@@ -280,9 +282,9 @@ const ProjectDetail = () => {
   const [project, setProject] = useState<ProjectView | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [tab, setTab] = useState<
-    ProjectDetailTabValue
-  >('overview');
+  const [tab, setTab] = useState<ProjectDetailTabValue>(() =>
+    searchParams.get('tab') === 'equipment' ? 'equipment' : 'overview',
+  );
   const [recentMonitoring, setRecentMonitoring] = useState<MonitoringData[]>(
     [],
   );
@@ -687,16 +689,36 @@ const ProjectDetail = () => {
             <TabsContent value='equipment' className='m-0 space-y-6'>
               <Card className={projectDetailCardClassName}>
                 <CardHeader>
-                  <div className='flex items-start gap-3'>
-                    <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary'>
-                      <PackageCheck className='h-5 w-5' />
-                    </span>
-                    <div>
-                      <CardTitle>設備一覧</CardTitle>
-                      <CardDescription className='text-body mt-2'>
-                        このプロジェクトに紐づく設備情報です。運用確認で必要になりやすい仕様、稼働日、蓄電池、補助金情報をまとめています。
-                      </CardDescription>
+                  <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+                    <div className='flex items-start gap-3'>
+                      <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary'>
+                        <PackageCheck className='h-5 w-5' />
+                      </span>
+                      <div>
+                        <CardTitle>設備一覧</CardTitle>
+                        <CardDescription className='text-body mt-2'>
+                          このプロジェクトに紐づく設備情報です。運用確認で必要になりやすい仕様、稼働日、蓄電池、補助金情報をまとめています。
+                        </CardDescription>
+                      </div>
                     </div>
+                    <Button
+                      type='button'
+                      className='shrink-0 self-start sm:self-auto'
+                      disabled={!siteId || !projectId}
+                      onClick={() =>
+                        navigate(paths.projectEquipment(siteId, projectId), {
+                          state: {
+                            returnTo: `${paths.siteProjectDetail(
+                              siteId,
+                              projectId,
+                            )}?${new URLSearchParams({ tab: 'equipment' })}`,
+                          },
+                        })
+                      }
+                    >
+                      <Plus className='h-4 w-4' />
+                      設備追加
+                    </Button>
                   </div>
                 </CardHeader>
               </Card>
