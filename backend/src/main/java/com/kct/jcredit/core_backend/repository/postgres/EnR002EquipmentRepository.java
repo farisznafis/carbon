@@ -8,7 +8,6 @@ public interface EnR002EquipmentRepository extends JpaRepository<EnR002Equipment
 
     // List equipment site
     List<EnR002Equipment> findBySite_Id(Integer siteId);
-    
 
     boolean existsBySite_Id(Integer siteId);
 }

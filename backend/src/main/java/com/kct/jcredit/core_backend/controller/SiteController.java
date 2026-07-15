@@ -2,14 +2,17 @@ package com.kct.jcredit.core_backend.controller;
 
 import com.kct.jcredit.core_backend.dto.request.CreateSiteRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdateSiteRequest;
+import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
 import com.kct.jcredit.core_backend.dto.response.CreateSiteResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentRegisterResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 import com.kct.jcredit.core_backend.dto.response.SiteInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.SiteListResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.service.ProjectService;
 import com.kct.jcredit.core_backend.service.SiteService;
+import com.kct.jcredit.core_backend.service.EnR002EquipmentService;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 
@@ -19,6 +22,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,7 +37,7 @@ import org.springframework.web.bind.annotation.*;
 public class SiteController {
 
     private final SiteService siteService;
-
+    private final EnR002EquipmentService equipmentService;
     private final ProjectService projectService;
     private final JwtUtil jwtUtil;
 
@@ -145,5 +150,28 @@ public class SiteController {
                 jwtUtil.extractUsername(token));
 
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @PostMapping("/{siteId}/equipment")
+    @PreAuthorize("hasAnyRole('master','user')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<EnR002EquipmentResponse> addEquipment(
+            Authentication authentication,
+            @PathVariable Integer siteId,
+            @RequestBody @Valid EnR002EquipmentRequest request) {
+
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+        return ResponseEntity.ok(equipmentService.addEquipment(siteId, companyId, request));
+    }
+
+    @GetMapping("/{siteId}/equipment")
+    @PreAuthorize("hasAnyRole('master','user')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<List<EnR002EquipmentResponse>> getEquipments(
+            Authentication authentication,
+            @PathVariable Integer siteId) {
+
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+        return ResponseEntity.ok(equipmentService.getEquipmentsBySite(siteId, companyId));
     }
 }

@@ -22,6 +22,8 @@ public interface SiteProjectRelationRepository extends JpaRepository<SiteProject
 
         boolean existsBySite_Company_CompanyIdAndProject_Id(String companyId, Integer projectId);
 
+        boolean existsBySite_Id(Integer siteId); // ← tambah ini
+
     List<SiteProjectRelation> findBySite_Id(Integer siteId);
 
     List<SiteProjectRelation> findByProject_Id(Integer projectId);
