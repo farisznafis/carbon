@@ -186,11 +186,16 @@ export function normalizeProjectEmissionSummaryResponse(
   const result = 'data' in response ? response.data : response;
   if (!result) return null;
 
+  const baselineEmission = toFiniteEmission(result.embl);
   const projectEmission = toFiniteEmission(result.empj);
   const breakdown = normalizeProjectEmissionBreakdownResponse(result);
+  const hasSummary =
+    baselineEmission !== null ||
+    projectEmission !== null ||
+    breakdown !== null;
 
-  return projectEmission !== null || breakdown !== null
-    ? { projectEmission, breakdown }
+  return hasSummary
+    ? { baselineEmission, projectEmission, breakdown }
     : null;
 }
 

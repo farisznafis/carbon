@@ -41,4 +41,19 @@ describe('calculateEmissionReductionProgress', () => {
       }),
     ).toBeNull();
   });
+
+  it('uses API embl and empj values against the current target', () => {
+    expect(
+      calculateEmissionReductionProgress({
+        baselineEmission: 0.2,
+        projectEmission: 120.5,
+        targetReduction: 100,
+      }),
+    ).toEqual({
+      achievementRate: -120.3,
+      progressValue: 0,
+      reductionAmount: -120.3,
+      remainingReduction: 220.3,
+    });
+  });
 });

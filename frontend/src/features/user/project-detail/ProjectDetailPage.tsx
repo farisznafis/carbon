@@ -48,6 +48,7 @@ import { EquipmentList } from './components/EquipmentList';
 import { MonitoringCancellationDialog } from './components/MonitoringCancellationDialog';
 import { EmissionTrendChart } from './components/EmissionTrendChart';
 import { EmissionBreakdownChart } from './components/EmissionBreakdownChart';
+import { PROJECT_EMISSION_REDUCTION_TARGET } from './components/emissionReductionProgressUtils';
 import { projectDetailCardClassName } from './projectDetailStyles';
 import { cn } from '@/lib/utils';
 import { paths } from '@/routes/paths';
@@ -55,13 +56,6 @@ import { paths } from '@/routes/paths';
 function formatNumber(n: number | null | undefined) {
   if (n == null || Number.isNaN(n)) return '-';
   return new Intl.NumberFormat().format(n);
-}
-
-function toNullableNumber(value: number | string | null | undefined) {
-  if (value == null || value === '') return null;
-
-  const parsedValue = typeof value === 'number' ? value : Number(value);
-  return Number.isFinite(parsedValue) ? parsedValue : null;
 }
 
 type MonitoringDisplayRow = Pick<
@@ -252,8 +246,6 @@ const ProjectDetail = () => {
     description: string;
     methodology: string;
     projectNumber: string;
-    baselineEmission: number | null;
-    targetReduction: number | null;
     membersTotal: number | null;
     status: 'active' | 'inactive';
     createdDate: string;
@@ -307,6 +299,9 @@ const ProjectDetail = () => {
     string | null
   >(null);
   const [projectTotalEmission, setProjectTotalEmission] = useState<
+    number | null
+  >(null);
+  const [projectBaselineEmission, setProjectBaselineEmission] = useState<
     number | null
   >(null);
   const [monitoringCancellationOpen, setMonitoringCancellationOpen] =
@@ -367,6 +362,7 @@ const ProjectDetail = () => {
       if (!projectId) {
         setEmissionBreakdown(null);
         setProjectTotalEmission(null);
+        setProjectBaselineEmission(null);
         setEmissionBreakdownError(null);
         setEmissionBreakdownLoading(false);
         return;
@@ -381,6 +377,7 @@ const ProjectDetail = () => {
         if (!isCancelled) {
           setEmissionBreakdown(summary?.breakdown ?? null);
           setProjectTotalEmission(summary?.projectEmission ?? null);
+          setProjectBaselineEmission(summary?.baselineEmission ?? null);
         }
       } catch (error) {
         logger.error('Error loading project emission summary:', error);
@@ -388,6 +385,7 @@ const ProjectDetail = () => {
         if (!isCancelled) {
           setEmissionBreakdown(null);
           setProjectTotalEmission(null);
+          setProjectBaselineEmission(null);
           setEmissionBreakdownError('排出量内訳データの取得に失敗しました。');
         }
       } finally {
@@ -414,8 +412,6 @@ const ProjectDetail = () => {
 
         setProject({
           projectNumber: result.projectNumber,
-          baselineEmission: toNullableNumber(result.baselineEmission),
-          targetReduction: toNullableNumber(result.emissionReduction),
           name: result.projectName,
           description: result.methodDetails,
           methodology: `${result.methodologyCategory} ${result.methodologyNumber} ${result.methodologyVersion}`,
@@ -676,9 +672,9 @@ const ProjectDetail = () => {
                     isLoading={emissionBreakdownLoading}
                     error={emissionBreakdownError}
                     reductionProgress={{
-                      baselineEmission: project.baselineEmission,
+                      baselineEmission: projectBaselineEmission,
                       projectEmission: projectTotalEmission,
-                      targetReduction: project.targetReduction,
+                      targetReduction: PROJECT_EMISSION_REDUCTION_TARGET,
                     }}
                     className={projectDetailCardClassName}
                   />

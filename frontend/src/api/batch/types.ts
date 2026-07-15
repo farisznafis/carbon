@@ -1,6 +1,7 @@
 export type ReductionResultApiItem = {
   processing_date?: string | null;
   created_at?: string | null;
+  embl?: number | string | null;
   empj?: number | string | null;
   empj_m?: number | string | null;
   empj_s_control?: number | string | null;
@@ -44,6 +45,7 @@ export type ProjectReductionResultResponse = {
 };
 
 export type ProjectEmissionSummary = {
+  baselineEmission: number | null;
   projectEmission: number | null;
   breakdown: ProjectEmissionBreakdown | null;
 };

@@ -154,6 +154,7 @@ describe('normalizeProjectEmissionSummaryResponse', () => {
       normalizeProjectEmissionSummaryResponse({
         statusCode: '200',
         data: {
+          embl: 100,
           empj: 31.6,
           empj_m: 20,
           empj_s_control: 8.1,
@@ -161,6 +162,7 @@ describe('normalizeProjectEmissionSummaryResponse', () => {
         },
       }),
     ).toEqual({
+      baselineEmission: 100,
       projectEmission: 31.6,
       breakdown: {
         mainEmission: 20,
