@@ -219,16 +219,21 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
         // 8. afterCommit
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
-                        @Override
-                        public void afterCommit() {
-                        savedFiles.forEach(fileEntity -> {
-                                try {
-                                String permanentKey = fileUploadSolarService
-                                        .moveTempToPermanent(fileEntity.getS3Key(), savedEquipment.getId());
-                                equipmentFileRepository.updateS3Key(fileEntity.getId(), permanentKey);
-                                } catch (Exception e) {
-                                log.error("S3 move failed. fileId={}, error={}",
-                                        fileEntity.getFileId(), e.getMessage());
+            @Override
+            public void afterCommit() {
+                savedFiles.forEach(fileEntity -> {
+                    try {
+                        String permanentKey = fileUploadSolarService
+                                .moveTempToPermanent(
+                                        fileEntity.getS3Key(),
+                                        projectId,
+                                        savedEquipment.getSite().getId(),
+                                        savedEquipment.getId()
+                                );
+                        equipmentFileRepository.updateS3Key(fileEntity.getId(), permanentKey);
+                    } catch (Exception e) {
+                        log.error("S3 move failed. fileId={}, error={}",
+                                fileEntity.getFileId(), e.getMessage());
                                 }
                         });
 
@@ -259,7 +264,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                         } catch (Exception e) {
                                 log.error("PDF pipeline failed. participationId={}, error={}",
                                         participationId, e.getMessage());
-                        }
+                                }
                         }
                 }
         );
@@ -276,6 +281,19 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
     // ─────────────────────────────────────────────────────────────
     // PRIVATE — DB saves
     // ─────────────────────────────────────────────────────────────
+
+    private SiteProjectRelation saveSiteProjectRelation(Site site, Project project,
+                                                          String companyId) {
+        SiteProjectRelation relation = SiteProjectRelation.builder()
+                .site(site)
+                .project(project)
+                .activityStartDate(LocalDate.now())
+                .status("OPEN")
+                .build();
+        relation.setCreatedBy(companyId);
+        relation.setUpdatedBy(companyId);
+        return siteProjectRelationRepository.save(relation);
+    }
 
     private EnR002Equipment saveEquipment(EnR002EquipmentRequest req, Site site) {
         return equipmentRepository.save(EnR002Equipment.builder()

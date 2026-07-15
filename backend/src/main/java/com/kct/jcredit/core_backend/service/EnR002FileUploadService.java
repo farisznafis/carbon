@@ -24,5 +24,8 @@ public interface EnR002FileUploadService {
                                         MultipartFile file) throws IOException;
 
     // Move file dari temp ke permanent setelah participation berhasil
-    String moveTempToPermanent(String tempS3Key, Integer equipmentId);
+    String moveTempToPermanent(String tempS3Key,
+                                Integer projectId,
+                                Integer siteId,
+                                Integer equipmentId);
 }
