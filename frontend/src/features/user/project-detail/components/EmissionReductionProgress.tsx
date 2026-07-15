@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { Progress } from '@/components/ui/progress';
 import {
   Tooltip,
@@ -8,6 +9,7 @@ import {
   calculateEmissionReductionProgress,
   type EmissionReductionProgressInput,
 } from './emissionReductionProgressUtils';
+import { cn } from '@/lib/utils';
 
 const percentageFormatter = new Intl.NumberFormat('ja-JP', {
   minimumFractionDigits: 1,
@@ -19,13 +21,17 @@ const emissionNumberFormatter = new Intl.NumberFormat('ja-JP', {
   maximumFractionDigits: 1,
 });
 
-type EmissionReductionProgressProps = EmissionReductionProgressInput;
+type EmissionReductionProgressProps = EmissionReductionProgressInput & {
+  className?: string;
+};
 
 export function EmissionReductionProgress({
   baselineEmission,
   projectEmission,
   targetReduction,
+  className,
 }: EmissionReductionProgressProps) {
+  const titleId = useId();
   const metrics = calculateEmissionReductionProgress({
     baselineEmission,
     projectEmission,
@@ -34,11 +40,11 @@ export function EmissionReductionProgress({
 
   return (
     <section
-      className='mt-6 border-t border-border pt-6'
-      aria-labelledby='emission-reduction-progress-title'
+      className={cn('mt-6 border-t border-border pt-6', className)}
+      aria-labelledby={titleId}
     >
       <h3
-        id='emission-reduction-progress-title'
+        id={titleId}
         className='leading-8 text-foreground'
       >
         排出削減量

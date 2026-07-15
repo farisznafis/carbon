@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { paths } from '@/routes/paths';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { DashboardEmissionReductionProgress } from './components/DashboardEmissionReductionProgress';
 
 const pageContainer = dashboardPageContainerClassName;
 
@@ -355,9 +356,7 @@ function JoinedProjectCard({
             </Button>
           </div>
 
-          <div className='flex min-h-[220px] items-center justify-center rounded-2xl bg-muted/20 text-muted-foreground xl:order-1'>
-            グラフデータ準備中
-          </div>
+          <DashboardEmissionReductionProgress projectId={project.id} />
         </div>
       </CardContent>
     </Card>
