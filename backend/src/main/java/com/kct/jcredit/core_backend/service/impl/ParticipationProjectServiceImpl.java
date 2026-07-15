@@ -95,70 +95,56 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
         @Override
         public ProjectListInfoResponse getActiveProjects(String companyId) {
+                List<Project> projects = projectRepository.findByProjectStatus("ACTIVE");
 
-        List<Project> projects = projectRepository.findByProjectStatus("ACTIVE");
+                List<ProjectDetailResponse> projectDetails = projects.stream()
+                        .map(project -> {
+                                boolean alreadyJoined = siteProjectRelationRepository
+                                        .existsBySite_Company_CompanyIdAndProject_Id(
+                                                companyId, project.getId());
 
-        List<ProjectDetailResponse> projectDetails = projects.stream()
-        .map((Project project) -> {
+                                return ProjectDetailResponse.builder()
+                                        .id(String.valueOf(project.getId()))
+                                        .projectName(project.getProjectName())
+                                        .projectNumber(project.getProjectNumber())
+                                        .isJoined(alreadyJoined)
+                                        .build();
+                        })
+                        .collect(Collectors.toList());
 
-                boolean alreadyJoined =
-                        participatingProjectRepository
-                                .existsByCompany_CompanyIdAndSiteProjectRelation_Project_Id(
-                                        companyId,
-                                        project.getId());
-
-                return ProjectDetailResponse.builder()
-                        .id(String.valueOf(project.getId()))
-                        .projectName(project.getProjectName())
-                        .projectNumber(project.getProjectNumber())
-                        // .projectStatus(project.getStatus())
-                        .isJoined(alreadyJoined)
+                return ProjectListInfoResponse.builder()
+                        .projects(projectDetails)
+                        .pagination(null)
                         .build();
-        })
-        .collect(Collectors.toList());
-
-        return ProjectListInfoResponse.builder()
-                .projects(projectDetails)
-                .pagination(null)
-                .build();
-        }
-
+                }
        @Override
         public SiteListResponse getSites(String companyId, Integer projectId) {
+                List<Site> sites = siteRepository.findByCompany_CompanyId(companyId);
 
-        List<Site> sites =
-                siteRepository.findByCompany_CompanyId(companyId);
+                List<SiteResponse> siteResponses = sites.stream()
+                        .map(site -> {
+                                boolean alreadyInProject = siteProjectRelationRepository
+                                        .existsBySite_IdAndProject_Id(site.getId(), projectId);
 
-        List<SiteResponse> siteResponses = sites.stream()
-                .map((Site site) -> {  
+                                return SiteResponse.builder()
+                                        .id(String.valueOf(site.getId()))
+                                        .siteName(site.getSiteName())
+                                        .postalCode(site.getPostalCode())
+                                        .prefecture(site.getPrefecture())
+                                        .municipality(site.getMunicipality())
+                                        .blocknum(site.getBlocknum())
+                                        .buildingName(site.getBuildingName())
+                                        .picFirstName(site.getPicFirstName())
+                                        .picLastName(site.getPicLastName())
+                                        .alreadyInProject(alreadyInProject) // uncomment — field baru di SiteResponse
+                                        .build();
+                        })
+                        .collect(Collectors.toList());
 
-                        boolean alreadyInProject =
-                                siteProjectRelationRepository
-                                        .existsBySite_IdAndProject_Id(
-                                                site.getId(),
-                                                projectId);
-
-                        return SiteResponse.builder()
-                                .id(String.valueOf(site.getId()))
-                                .siteName(site.getSiteName())
-                                .postalCode(site.getPostalCode())
-                                .prefecture(site.getPrefecture())
-                                .municipality(site.getMunicipality())
-                                .blocknum(site.getBlocknum())
-                                .buildingName(site.getBuildingName())
-                                .picFirstName(site.getPicFirstName())
-                                .picLastName(site.getPicLastName())
-                                .projects(Collections.emptyList())
-                                .data(null)
-                                // .alreadyInProject(alreadyInProject)
-                                .build();
-                })
-                .collect(Collectors.toList());
-
-        return SiteListResponse.builder()
-                .siteList(siteResponses)
-                .build();
-        }
+                return SiteListResponse.builder()
+                        .siteList(siteResponses)
+                        .build();
+                }
 
     @Override
     public EnR002SustainabilityCommitmentResponse getSustainabilityCommitmentDefault(
@@ -185,116 +171,101 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
     @Override
     @Transactional
     public ProjectJoinResponse submitParticipation(Integer projectId,
-                                                    String companyId,
-                                                    Integer userId,
-                                                    EnR002JoinProjectRequest request) {
-        // 1. Guard checks
+                                                        String companyId,
+                                                        Integer userId,
+                                                        EnR002JoinProjectRequest request) {
         Site site = siteRepository
-                .findById(request.getEquipment().getSiteId()) 
+                .findById(request.getEquipment().getSiteId())
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_SITE_NOT_FOUND));
 
         if (!site.getCompany().getCompanyId().equals(companyId))
-            throw new CustomException(ResponseConstants.FORBIDDEN,
-                    ResponseConstants.MSG_UNAUTHORIZED);
+                throw new CustomException(ResponseConstants.FORBIDDEN,
+                        ResponseConstants.MSG_UNAUTHORIZED);
 
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_PROJECT_NOT_FOUND));
 
-        ParticipatingCompany company = companyRepository
-                .findByCompanyId(companyId)
-                .orElseThrow(() -> new CustomException(
-                        ResponseConstants.NOT_FOUND, "会社情報が見つかりません。"));
-
         ParticipatingUser user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND, "ユーザー情報が見つかりません。"));
 
-        // 2. Double submission check
-        boolean alreadyJoined = participatingProjectRepository
-        .existsByCompany_CompanyIdAndSiteProjectRelation_Project_Id(
-                companyId, projectId);
+        // Duplicate check — via SiteProjectRelation, BUKAN ParticipatingProject
+        boolean alreadyJoined = siteProjectRelationRepository
+                .existsBySite_IdAndProject_Id(site.getId(), projectId);
         if (alreadyJoined)
-            throw new CustomException(
-                    ResponseConstants.ALREADY_SUBMITTED,
-                    ResponseConstants.MSG_ALREADY_SUBMITTED);
+                throw new CustomException(
+                        ResponseConstants.ALREADY_SUBMITTED,
+                        ResponseConstants.MSG_ALREADY_SUBMITTED);
 
-        // 3. Validation — safety net
         validationService.validateEquipment(request.getEquipment());
         validationService.validateConfirmationItems(request.getConfirmationItems());
         validationService.validateSustainabilityCommitment(request.getSustainabilityCommitment());
         validationService.validateFinalAgreement(request.getFinalAgreement());
 
-        // 4. Save SiteProjectRelation
         SiteProjectRelation relation = saveSiteProjectRelation(site, project, companyId);
-
-        // 5. Save Equipment
         EnR002Equipment savedEquipment = saveEquipment(request.getEquipment(), site);
-
-        // 6. Save EquipmentFile
-        List<EnR002EquipmentFile> savedFiles = saveEquipmentFiles(
-                request.getEquipment(), savedEquipment);
+        List<EnR002EquipmentFile> savedFiles = saveEquipmentFiles(request.getEquipment(), savedEquipment);
 
         // 7. Save ParticipatingProject
         ParticipatingProject participation = saveParticipatingProject(
-                relation, savedEquipment, user, company);
+            project, user, savedEquipment);
 
         final Integer participationId = participation.getId();
 
         // 8. afterCommit
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-
-                        savedFiles.forEach(fileEntity -> {
-                            try {
-                                String permanentKey = fileUploadSolarService
-                                        .moveTempToPermanent(
-                                                fileEntity.getS3Key(),
-                                                savedEquipment.getId());
-                                equipmentFileRepository.updateS3Key(
-                                        fileEntity.getId(), permanentKey);
-                            } catch (Exception e) {
-                                log.error("S3 move failed. fileId={}, error={}",
-                                        fileEntity.getFileId(), e.getMessage());
-                            }
+            @Override
+            public void afterCommit() {
+                savedFiles.forEach(fileEntity -> {
+                    try {
+                        String permanentKey = fileUploadSolarService
+                                .moveTempToPermanent(
+                                        fileEntity.getS3Key(),
+                                        projectId,
+                                        savedEquipment.getSite().getId(),
+                                        savedEquipment.getId()
+                                );
+                        equipmentFileRepository.updateS3Key(fileEntity.getId(), permanentKey);
+                    } catch (Exception e) {
+                        log.error("S3 move failed. fileId={}, error={}",
+                                fileEntity.getFileId(), e.getMessage());
+                                }
                         });
 
                         try {
-                            saveConfirmationItems(request.getConfirmationItems(),
-                                    participationId, companyId);
+                                saveConfirmationItems(request.getConfirmationItems(), participationId, companyId);
                         } catch (Exception e) {
-                            log.error("ConfirmationItems save failed. participationId={}, error={}",
-                                    participationId, e.getMessage());
+                                log.error("ConfirmationItems save failed. participationId={}, error={}",
+                                        participationId, e.getMessage());
                         }
 
                         try {
-                            saveSustainabilityCommitment(
-                                    request.getSustainabilityCommitment(),
-                                    request.getFinalAgreement().getIsAgreeTerms(),
-                                    participationId, companyId);
+                                saveSustainabilityCommitment(
+                                        request.getSustainabilityCommitment(),
+                                        request.getFinalAgreement().getIsAgreeTerms(),
+                                        participationId, companyId);
                         } catch (Exception e) {
-                            log.error("SustainabilityCommitment save failed. participationId={}, error={}",
-                                    participationId, e.getMessage());
+                                log.error("SustainabilityCommitment save failed. participationId={}, error={}",
+                                        participationId, e.getMessage());
                         }
 
                         try {
-                            String pdfS3Key = pdfService.createAndUpload(
-                                    request.getEquipment(),
-                                    request.getConfirmationItems(),
-                                    request.getSustainabilityCommitment(),
-                                    participation);
-                            participatingProjectRepository.updatePdfS3Key(
-                                    participationId, pdfS3Key);
+                                String pdfS3Key = pdfService.createAndUpload(
+                                        request.getEquipment(),
+                                        request.getConfirmationItems(),
+                                        request.getSustainabilityCommitment(),
+                                        participation);
+                                participatingProjectRepository.updatePdfS3Key(participationId, pdfS3Key);
                         } catch (Exception e) {
-                            log.error("PDF pipeline failed. participationId={}, error={}",
-                                    participationId, e.getMessage());
+                                log.error("PDF pipeline failed. participationId={}, error={}",
+                                        participationId, e.getMessage());
+                                }
                         }
-                    }
                 }
         );
 
@@ -305,7 +276,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 .equipmentId(savedEquipment.getId())
                 .siteProjectRelationId(relation.getId())
                 .build();
-    }
+        }
 
     // ─────────────────────────────────────────────────────────────
     // PRIVATE — DB saves
@@ -359,20 +330,17 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                         .collect(Collectors.toList()));
     }
 
-    private ParticipatingProject saveParticipatingProject(SiteProjectRelation relation,
-                                                            EnR002Equipment equipment,
-                                                            ParticipatingUser user,
-                                                            ParticipatingCompany company) {
+    private ParticipatingProject saveParticipatingProject(Project project,
+                                                                ParticipatingUser user,
+                                                                EnR002Equipment equipment) {
         ParticipatingProject participation = ParticipatingProject.builder()
-                .siteProjectRelation(relation)
-                .equipment(equipment)
+                .project(project)
                 .user(user)
-                .company(company)
+                .equipment(equipment)
                 .isEligible(false)
-                .applicantInkan(null) // TODO: digital inkan
                 .build();
-        return participatingProjectRepository.save(participation); 
-    }
+        return participatingProjectRepository.save(participation);
+        }
 
     // ─────────────────────────────────────────────────────────────
     // PRIVATE — DynamoDB saves
@@ -415,4 +383,30 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 .build();
         sustainabilityRepository.save(commitment);
     }
+
+//     @Override
+//         public ProjectPdfDownloadResponse getPdfDownloadUrl(Integer participationId, String companyId) {
+//         ParticipatingProject participation = participatingProjectRepository
+//                 .findById(participationId)
+//                 .orElseThrow(() -> new CustomException(
+//                         ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
+
+//         // Auth check via Participation → User → Company
+//         if (!participation.getUser().getCompany().getCompanyId().equals(companyId))
+//                 throw new CustomException(ResponseConstants.FORBIDDEN,
+//                         ResponseConstants.MSG_UNAUTHORIZED);
+
+//         if (participation.getS3KeyPdfMembership() == null
+//                 || participation.getS3KeyPdfMembership().isBlank()) {
+//                 throw new CustomException("PDF_NOT_READY",
+//                         "PDFを生成中です。しばらくしてから再度お試しください。");
+//         }
+
+//         String presignedUrl = pdfService.generatePresignedUrl(participation.getS3KeyPdfMembership());
+
+//         return ProjectPdfDownloadResponse.builder()
+//                 .pdfUrl(presignedUrl)
+//                 .expiresIn(900)
+//                 .build();
+//         }
 }

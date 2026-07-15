@@ -15,14 +15,9 @@ import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "en_r002_equipment")
-@Getter
-@Setter 
-@NoArgsConstructor
-@AllArgsConstructor 
-@Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class EnR002Equipment extends BaseEntity {
 
-    // Equipment adalah child dari Site — bukan dari SiteProjectRelation
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "site_id", nullable = false)
     private Site site;
@@ -39,7 +34,7 @@ public class EnR002Equipment extends BaseEntity {
     @Column(name = "pcs_model", length = 50, nullable = false)
     private String pcsModel;
 
-    @Column(name = "pcs_unit_count", nullable = false)
+    @Column(name = "pcs_unit_count")
     private Integer pcsUnitCount;
 
     @Column(name = "device_no", length = 100, nullable = false)
@@ -60,7 +55,7 @@ public class EnR002Equipment extends BaseEntity {
     @Column(name = "battery_capacity", precision = 10, scale = 1)
     private BigDecimal batteryCapacity;
 
-    @Column(name = "total_investment", nullable = false)
+    @Column(name = "total_investment")
     private Integer totalInvestment;
 
     @Column(name = "has_subsidy", nullable = false)
@@ -72,14 +67,8 @@ public class EnR002Equipment extends BaseEntity {
     @Column(name = "subsidy_amount", precision = 15, scale = 0)
     private BigDecimal subsidyAmount;
 
-    @Column(name = "pre_project_unit_price", precision = 10, scale = 2, nullable = false)
+    @Column(name = "pre_project_unit_price", precision = 10, scale = 2)
     private BigDecimal preProjectUnitPrice;
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
-
-    @Column(name = "deleted_by", length = 100)
-    private String deletedBy;
 
     @OneToMany(mappedBy = "equipment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EnR002EquipmentFile> files = new ArrayList<>();

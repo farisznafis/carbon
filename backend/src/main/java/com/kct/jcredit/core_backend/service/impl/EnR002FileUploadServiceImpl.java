@@ -52,6 +52,7 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
     private static final Set<String> VALID_MIME_TYPES = Set.of(
             "application/pdf",
             "image/jpeg",
+            "image/jpg",
             "image/png"
     );
 
@@ -60,89 +61,100 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
     // ─────────────────────────────────────────────────────────────
 
     @Override
-        public EnR002FileUploadResponse uploadFile(Integer siteId,
-                                       Integer projectId,
-                                       EquipmentFileType fileType,
-                                       String uploadedBy,
-                                       MultipartFile file) {
+    public EnR002FileUploadResponse uploadFile(Integer siteId,
+                                                Integer projectId,
+                                                EquipmentFileType fileType,
+                                                String uploadedBy,
+                                                MultipartFile file) {
 
-    // 1. Validasi mime type
-    String mime = file.getContentType();
-    if (!VALID_MIME_TYPES.contains(mime)) {
-        throw new UnsupportedFileTypeException(
-                VALID_MIME_TYPES.stream().toList(), mime);
-    }
+        // 1. Validasi mime type
+        String mime = file.getContentType();
+        if (!VALID_MIME_TYPES.contains(mime)) {
+            throw new UnsupportedFileTypeException(
+                    VALID_MIME_TYPES.stream().toList(), mime);
+        }
 
-    // 2. Validasi ukuran file
-    if (file.getSize() > MAX_FILE_SIZE) {
-        throw new BulkValidationException(List.of(
-                ValidationErrorDetail.builder()
-                        .tempId("request")
-                        .field("file")
-                        .message("ファイルサイズは10MB以下である必要があります。")
-                        .build()
-        ));
-    }
+        // 2. Validasi ukuran file
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new BulkValidationException(List.of(
+                    ValidationErrorDetail.builder()
+                            .tempId("request")
+                            .field("file")
+                            .message("ファイルサイズは10MB以下である必要があります。")
+                            .build()
+            ));
+        }
 
-    // 3. Generate fileId
-    String fileId    = UUID.randomUUID().toString();
-    String sanitized = sanitizeFileName(file.getOriginalFilename());
+        // 3. Generate fileId
+        String fileId    = UUID.randomUUID().toString();
+        String sanitized = sanitizeFileName(file.getOriginalFilename());
 
-    // 4. S3 key dengan prefix temp/
-    String s3Key = String.format(
-            "projects/%d/sites/%d/equipments/temp/%s/%s_%s",
-            projectId,
-            siteId,
-            fileId,
-            fileType.getValue(),
-            sanitized
-    );
-
-    // 5. Upload ke S3
-    try (java.io.InputStream inputStream = file.getInputStream()) {
-        s3Client.putObject(
-                PutObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(s3Key)
-                        .contentType(mime)
-                        .metadata(Map.of(
-                                "fileId",     fileId,
-                                "uploadedBy", uploadedBy,
-                                "fileType",   fileType.getValue(),
-                                "siteId",     String.valueOf(siteId),
-                                "projectId",  String.valueOf(projectId)
-                        ))
-                        .build(),
-                RequestBody.fromInputStream(inputStream, file.getSize())
+        // 4. S3 key dengan prefix tmp/ di ROOT (bukan di tengah path)
+        //    Format: tmp/equipments/{uuid}/{fileType}_{sanitizedFileName}
+        String s3Key = String.format(
+                "tmp/equipments/%s/%s_%s",
+                fileId,
+                fileType.getValue(),
+                sanitized
         );
-    } catch (java.io.IOException e) {
-        throw new IllegalStateException("Unable to read uploaded file", e);
+
+        // 5. Upload ke S3
+        try (java.io.InputStream inputStream = file.getInputStream()) {
+            s3Client.putObject(
+                    PutObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(s3Key)
+                            .contentType(mime)
+                            .metadata(Map.of(
+                                    "fileId",     fileId,
+                                    "uploadedBy", uploadedBy,
+                                    "fileType",   fileType.getValue(),
+                                    "siteId",     String.valueOf(siteId),
+                                    "projectId",  String.valueOf(projectId)
+                            ))
+                            .build(),
+                    RequestBody.fromInputStream(inputStream, file.getSize())
+            );
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException("Unable to read uploaded file", e);
+        }
+
+        log.info("File uploaded to S3 tmp. projectId={}, siteId={}, fileType={}, s3Key={}",
+                projectId, siteId, fileType.getValue(), s3Key);
+
+        return EnR002FileUploadResponse.builder()
+                .statusCode("OK")
+                .s3Key(s3Key)
+                .fileId(fileId)
+                .originalName(sanitized)
+                .build();
     }
 
-    log.info("File uploaded to S3 temp. projectId={}, siteId={}, fileType={}, s3Key={}",
-            projectId, siteId, fileType.getValue(), s3Key);
-
-    return EnR002FileUploadResponse.builder()
-            .statusCode("OK")
-            .s3Key(s3Key)
-            .fileId(fileId)
-            .originalName(sanitized)
-            .build();
-}
-
-    // MOVE 
+    // ─────────────────────────────────────────────────────────────
+    // MOVE
+    // ─────────────────────────────────────────────────────────────
 
     @Override
-    public String moveTempToPermanent(String tempS3Key, Integer equipmentId) {
+    public String moveTempToPermanent(String tempS3Key,
+                                       Integer projectId,
+                                       Integer siteId,
+                                       Integer equipmentId) {
 
-        // dari: projects/1/sites/1/equipments/temp/{uuid}/solar_contract_file.pdf
-        // ke:   projects/1/sites/1/equipments/{equipmentId}/solar_contract_file.pdf
-        String permanentKey = tempS3Key.replaceAll(
-                "equipments/temp/[^/]+/",
-                "equipments/" + equipmentId + "/"
+        // dari: tmp/equipments/{uuid}/solar_contract_file.pdf
+        // ke:   projects/{projectId}/sites/{siteId}/equipments/{equipmentId}/solar_contract_file.pdf
+        String fileNamePart = tempS3Key.replaceAll(
+                "^tmp/equipments/[^/]+/", ""
         );
 
-        // Copy path permanent
+        String permanentKey = String.format(
+                "projects/%d/sites/%d/equipments/%d/%s",
+                projectId,
+                siteId,
+                equipmentId,
+                fileNamePart
+        );
+
+        // Copy ke path permanent
         s3Client.copyObject(CopyObjectRequest.builder()
                 .sourceBucket(bucketName)
                 .sourceKey(tempS3Key)
@@ -150,7 +162,7 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
                 .destinationKey(permanentKey)
                 .build());
 
-        // delate temp
+        // Delete file temp
         s3Client.deleteObject(DeleteObjectRequest.builder()
                 .bucket(bucketName)
                 .key(tempS3Key)
@@ -162,12 +174,10 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
 
     // ─────────────────────────────────────────────────────────────
     // HELPER
-    // ────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────
 
     private String sanitizeFileName(String fileName) {
         if (fileName == null) return "document";
         return fileName.replaceAll("[^a-zA-Z0-9._-]", "_");
     }
-
-    
 }
