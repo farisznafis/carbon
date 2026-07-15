@@ -71,7 +71,7 @@ export async function getMonitoringRecords(params: {
     limit: String(limit),
   });
 
-  const response = await apiFetch(`/monitoring/list?${query.toString()}`, {
+  const response = await apiFetch(`/monitoring?${query.toString()}/list`, {
     method: "GET",
   });
   const { data: json, rawBody } =

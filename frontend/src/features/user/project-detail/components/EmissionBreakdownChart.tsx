@@ -15,7 +15,8 @@ const EMISSION_VALUE_KEY = 'value';
 const emissionBreakdownChartConfig = {
   [EMISSION_VALUE_KEY]: {
     label: '排出量',
-    color: 'hsl(var(--chart-2))',
+    // color: 'hsl(var(--chart-2))',
+    color: 'hsl(var(--primary))',
   },
 } satisfies ChartConfig;
 

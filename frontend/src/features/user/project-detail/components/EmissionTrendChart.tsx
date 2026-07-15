@@ -20,7 +20,7 @@ const EMISSION_SERIES_LABEL = 'プロジェクト実施後排出量';
 const emissionTrendChartConfig = {
   [EMISSION_SERIES_KEY]: {
     label: EMISSION_SERIES_LABEL,
-    color: 'hsl(var(--chart-1))',
+    color: 'hsl(var(--primary))',
   },
 } satisfies ChartConfig;
 
@@ -146,7 +146,7 @@ export function EmissionTrendChart({
             >
               <span
                 className='h-2.5 w-2.5 shrink-0 rounded-sm'
-                style={{ backgroundColor: 'hsl(var(--chart-1))' }}
+                style={{ backgroundColor: 'hsl(var(--primary)' }}
                 aria-hidden='true'
               />
               <span>{EMISSION_SERIES_LABEL}</span>
