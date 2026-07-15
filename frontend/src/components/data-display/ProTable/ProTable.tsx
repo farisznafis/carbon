@@ -89,6 +89,7 @@
 
 import { useState, useMemo, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export interface Column<T> {
   key: keyof T;
@@ -99,6 +100,7 @@ export interface Column<T> {
   maxWidth?: string; // Tailwind max-width classes like "max-w-[150px]"
   render?: (value: T[keyof T], row: T) => ReactNode;
   className?: string;
+  headerClassName?: string;
 }
 
 export interface Action<T> {
@@ -117,6 +119,8 @@ interface ProTableProps<T> {
   clickable?: boolean;
   title?: string | ReactNode;
   description?: string | ReactNode;
+  containerClassName?: string;
+  tableClassName?: string;
 }
 
 export function ProTable<T extends { id: string }>({
@@ -129,6 +133,8 @@ export function ProTable<T extends { id: string }>({
   clickable = true,
   title,
   description,
+  containerClassName,
+  tableClassName,
 }: Readonly<ProTableProps<T>>) {
   const [search, setSearch] = useState("");
   const [sortColumn, setSortColumn] = useState<keyof T | null>(null);
@@ -194,16 +200,31 @@ export function ProTable<T extends { id: string }>({
       )}
 
       {/* Table with fixed height */}
-      <div className={`overflow-y-auto ${height} rounded-lg border border-border`}>
-        <table className="w-full table-auto border-collapse">
+      <div
+        className={cn(
+          "overflow-y-auto rounded-lg border border-border",
+          height,
+          containerClassName,
+        )}
+      >
+        <table
+          className={cn(
+            "w-full table-auto border-collapse",
+            tableClassName,
+          )}
+        >
           <thead className="sticky top-0 z-10 bg-muted/50">
             <tr>
               {columns.map((col) => (
                 <th
                   key={col.id ?? String(col.key)}
                   onClick={() => handleSort(col.key, col.sortable)}
-                  className={`cursor-pointer select-none px-4 py-2 text-left text-sm font-medium text-muted-foreground ${col.truncate ? "truncate" : ""
-                    } ${col.maxWidth ?? ""}`}
+                  className={cn(
+                    "cursor-pointer select-none px-4 py-2 text-left text-sm font-medium text-muted-foreground",
+                    col.truncate && "truncate",
+                    col.maxWidth,
+                    col.headerClassName,
+                  )}
                 >
                   <div className="flex items-center gap-1">
                     {col.label}

@@ -832,8 +832,8 @@ const AdminDashboard = () => {
             className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
             <AdminDashboardSection
-              title="モニタリングデータ管理"
-              description="提出されたモニタリングデータの確認と管理を行います。"
+              title="取消一覧"
+              description="取消対象のモニタリングデータを確認し、取消申請を送信できます。"
             >
               <CancelRequestHistoryTable />
             </AdminDashboardSection>

@@ -27,6 +27,7 @@ import { usePagination } from '@/hooks/usePagination';
 import { cn } from '@/lib/utils';
 
 const INITIAL_ITEMS_PER_PAGE = 10;
+const CANCEL_REASON_PREVIEW_CHARACTER_LIMIT = 24;
 
 const STATUS_PRESENTATION: Record<
   string,
@@ -100,6 +101,23 @@ export function CancelRequestHistoryTable() {
   const [remarksError, setRemarksError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [expandedReasonIds, setExpandedReasonIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+
+  const toggleReason = useCallback((requestId: string) => {
+    setExpandedReasonIds((currentIds) => {
+      const nextIds = new Set(currentIds);
+
+      if (nextIds.has(requestId)) {
+        nextIds.delete(requestId);
+      } else {
+        nextIds.add(requestId);
+      }
+
+      return nextIds;
+    });
+  }, []);
 
   const reloadRequests = useCallback(async () => {
     setIsLoading(true);
@@ -208,7 +226,8 @@ export function CancelRequestHistoryTable() {
         key: 'id',
         label: '申請ID',
         sortable: true,
-        className: 'whitespace-nowrap',
+        className: 'w-[60px] whitespace-nowrap',
+        headerClassName: 'w-[60px] whitespace-nowrap',
       },
       {
         key: 'siteName',
@@ -216,6 +235,8 @@ export function CancelRequestHistoryTable() {
         sortable: true,
         truncate: true,
         maxWidth: 'max-w-[180px]',
+        className: 'w-[160px]',
+        headerClassName: 'w-[160px] whitespace-nowrap',
       },
       {
         key: 'requestedBy',
@@ -223,32 +244,72 @@ export function CancelRequestHistoryTable() {
         sortable: true,
         truncate: true,
         maxWidth: 'max-w-[180px]',
+        className: 'w-[140px]',
+        headerClassName: 'w-[140px] whitespace-nowrap',
       },
       {
         key: 'requestedAt',
         label: '申請日時',
         sortable: true,
-        className: 'whitespace-nowrap',
+        className: 'w-[180px] whitespace-nowrap',
+        headerClassName: 'w-[180px] whitespace-nowrap',
         render: (value) => formatDateTime(String(value)),
       },
       {
         key: 'reason',
         label: '取消理由',
-        truncate: true,
-        maxWidth: 'max-w-[260px]',
+        className: 'w-[320px] align-top',
+        headerClassName: 'w-[320px] whitespace-nowrap',
+        render: (value, request) => {
+          const reason = value ? String(value) : '-';
+          const isExpandable =
+            reason.length > CANCEL_REASON_PREVIEW_CHARACTER_LIMIT;
+          const isExpanded = expandedReasonIds.has(request.id);
+
+          if (!isExpandable) {
+            return (
+              <span className="block whitespace-normal break-words">
+                {reason}
+              </span>
+            );
+          }
+
+          return (
+            <button
+              type="button"
+              className="block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              aria-expanded={isExpanded}
+              onClick={() => toggleReason(request.id)}
+            >
+              <span
+                className={cn(
+                  'block break-words',
+                  isExpanded ? 'whitespace-normal' : 'truncate',
+                )}
+              >
+                {reason}
+              </span>
+              <span className="mt-1 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline">
+                {isExpanded ? '閉じる' : '全文を表示'}
+              </span>
+            </button>
+          );
+        },
       },
       {
         key: 'status',
         label: 'ステータス',
         sortable: true,
-        className: 'whitespace-nowrap',
+        className: 'w-[130px] whitespace-nowrap',
+        headerClassName: 'w-[130px] whitespace-nowrap',
         render: (value) => <StatusBadge status={String(value)} />,
       },
       {
         key: 'decidedAt',
         label: '決定日時',
         sortable: true,
-        className: 'whitespace-nowrap',
+        className: 'w-[180px] whitespace-nowrap',
+        headerClassName: 'w-[180px] whitespace-nowrap',
         render: (value) => formatDateTime(value ? String(value) : null),
       },
       {
@@ -256,19 +317,22 @@ export function CancelRequestHistoryTable() {
         label: '決定者',
         truncate: true,
         maxWidth: 'max-w-[180px]',
+        className: 'w-[140px]',
+        headerClassName: 'w-[140px] whitespace-nowrap',
         render: (value) => (value ? String(value) : '-'),
       },
       {
         key: 'id',
         id: 'actions',
         label: '操作',
-        className: 'whitespace-nowrap text-right',
+        className: 'w-[180px] whitespace-nowrap text-left',
+        headerClassName: 'w-[180px] whitespace-nowrap text-left',
         render: (_, request) =>
           request.status.toUpperCase() === 'PENDING' ? (
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-start gap-2">
               <Button
                 type="button"
-                size="sm"
+                size="md"
                 variant="outline"
                 onClick={() => openDecisionDialog(request, 'APPROVE')}
               >
@@ -276,7 +340,7 @@ export function CancelRequestHistoryTable() {
               </Button>
               <Button
                 type="button"
-                size="sm"
+                size="md"
                 variant="destructive"
                 onClick={() => openDecisionDialog(request, 'REJECTED')}
               >
@@ -288,7 +352,7 @@ export function CancelRequestHistoryTable() {
           ),
       },
     ],
-    [openDecisionDialog],
+    [expandedReasonIds, openDecisionDialog, toggleReason],
   );
 
   if (isLoading) {
@@ -314,13 +378,15 @@ export function CancelRequestHistoryTable() {
 
   return (
     <>
-      <div className="space-y-4 overflow-x-auto">
-        <div className="min-w-[1100px]">
+      <div className="space-y-4">
+        <div className="w-full overflow-x-auto pb-2">
           <ProTable
             data={paginatedItems}
             columns={columns}
             clickable={false}
             height="max-h-[520px]"
+            containerClassName="min-w-[1570px] overflow-x-hidden"
+            tableClassName="table-fixed"
             emptyState={
               <p className="text-muted-foreground">取消申請はありません。</p>
             }
