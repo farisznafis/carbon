@@ -62,7 +62,6 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
 
     @Override
     public EnR002FileUploadResponse uploadFile(Integer siteId,
-                                                Integer projectId,
                                                 EquipmentFileType fileType,
                                                 String uploadedBy,
                                                 MultipartFile file) {
@@ -109,8 +108,7 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
                                     "fileId",     fileId,
                                     "uploadedBy", uploadedBy,
                                     "fileType",   fileType.getValue(),
-                                    "siteId",     String.valueOf(siteId),
-                                    "projectId",  String.valueOf(projectId)
+                                    "siteId",     String.valueOf(siteId)
                             ))
                             .build(),
                     RequestBody.fromInputStream(inputStream, file.getSize())
@@ -119,8 +117,8 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
             throw new IllegalStateException("Unable to read uploaded file", e);
         }
 
-        log.info("File uploaded to S3 tmp. projectId={}, siteId={}, fileType={}, s3Key={}",
-                projectId, siteId, fileType.getValue(), s3Key);
+        log.info("File uploaded to S3 tmp. siteId={}, fileType={}, s3Key={}",
+                 siteId, fileType.getValue(), s3Key);
 
         return EnR002FileUploadResponse.builder()
                 .statusCode("OK")
@@ -136,7 +134,6 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
 
     @Override
     public String moveTempToPermanent(String tempS3Key,
-                                       Integer projectId,
                                        Integer siteId,
                                        Integer equipmentId) {
 
@@ -147,8 +144,7 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
         );
 
         String permanentKey = String.format(
-                "projects/%d/sites/%d/equipments/%d/%s",
-                projectId,
+                "sites/%d/equipments/%d/%s",
                 siteId,
                 equipmentId,
                 fileNamePart

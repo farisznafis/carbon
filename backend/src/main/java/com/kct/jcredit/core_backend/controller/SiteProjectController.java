@@ -59,21 +59,20 @@ public class SiteProjectController {
     // ─────────────────────────────────────────────────────────────
 
     @PostMapping(value = "/sites/{siteId}/files/upload",
-                 consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('master')")
+             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('master','user')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<EnR002FileUploadResponse> uploadFile(
             Authentication authentication,
             @PathVariable Integer siteId,
-            @RequestParam Integer projectId,
             @RequestParam("fileType") String fileType,
-            @RequestParam("file") MultipartFile file) throws IOException {
+            @RequestParam("file") MultipartFile file) {
 
-        String uploadedBy = extractUsername(authentication);
+        String uploadedBy = jwtUtil.extractUsername(authentication.getCredentials().toString());
         EquipmentFileType fileTypeEnum = EquipmentFileType.fromValue(fileType);
 
         EnR002FileUploadResponse response = fileUploadSolarService
-                .uploadFile(siteId, projectId, fileTypeEnum, uploadedBy, file);
+                .uploadFile(siteId, fileTypeEnum, uploadedBy, file);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 

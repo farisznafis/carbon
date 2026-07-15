@@ -159,7 +159,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                         savedFiles.forEach(fileEntity -> {
                             try {
                                 String permanentKey = fileUploadService.moveTempToPermanent(
-                                        fileEntity.getS3Key(), projectId, siteId, saved.getId());
+                                        fileEntity.getS3Key(), siteId, saved.getId());
                                 equipmentFileRepository.updateS3Key(
                                         fileEntity.getId(), permanentKey);
                             } catch (Exception e) {

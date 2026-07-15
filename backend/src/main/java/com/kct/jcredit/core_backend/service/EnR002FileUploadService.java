@@ -18,14 +18,12 @@ public interface EnR002FileUploadService {
 
     // Upload file evidence equipment ke S3 temp
     EnR002FileUploadResponse uploadFile(Integer siteId,
-                                        Integer projectId,
                                         EquipmentFileType fileType,
                                         String uploadedBy,
-                                        MultipartFile file) throws IOException;
+                                        MultipartFile file);
 
-    // Move file dari temp ke permanent setelah participation berhasil
+    // projectId dihapus — equipment cuma butuh siteId + equipmentId
     String moveTempToPermanent(String tempS3Key,
-                                Integer projectId,
-                                Integer siteId,
-                                Integer equipmentId);
+                               Integer siteId,
+                               Integer equipmentId);
 }

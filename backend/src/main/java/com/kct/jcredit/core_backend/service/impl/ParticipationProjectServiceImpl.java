@@ -226,7 +226,6 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                         String permanentKey = fileUploadSolarService
                                 .moveTempToPermanent(
                                         fileEntity.getS3Key(),
-                                        projectId,
                                         savedEquipment.getSite().getId(),
                                         savedEquipment.getId()
                                 );
