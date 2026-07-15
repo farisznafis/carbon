@@ -18,12 +18,6 @@ import org.springframework.data.jpa.repository.Modifying;
 
 public interface ParticipatingProjectRepository
         extends JpaRepository<ParticipatingProject, Integer> {
-
-    boolean existsByCompany_CompanyIdAndSiteProjectRelation_Project_Id(
-            String companyId, Integer projectId);
-
-    Optional<ParticipatingProject> findByCompany_CompanyId(String companyId);
-
     @Modifying
     @Transactional
     @Query("UPDATE ParticipatingProject p SET p.s3KeyPdfMembership = :s3Key WHERE p.id = :id")

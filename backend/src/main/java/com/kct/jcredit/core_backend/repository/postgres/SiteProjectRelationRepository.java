@@ -20,6 +20,8 @@ public interface SiteProjectRelationRepository extends JpaRepository<SiteProject
     boolean existsBySite_IdAndProject_Id(
             Integer siteId, Integer projectId);
 
+        boolean existsBySite_Company_CompanyIdAndProject_Id(String companyId, Integer projectId);
+
     List<SiteProjectRelation> findBySite_Id(Integer siteId);
 
     List<SiteProjectRelation> findByProject_Id(Integer projectId);
@@ -33,6 +35,7 @@ public interface SiteProjectRelationRepository extends JpaRepository<SiteProject
     Optional<SiteProjectRelation> findBySiteIdAndProjectId(Integer siteId, Integer projectId);
     
     SiteProjectRelation findByProjectIdAndSiteId(Integer projectId, Integer siteId);
+    
 
     @Query("SELECT spr.site.id FROM SiteProjectRelation spr WHERE spr.project.id = :projectId")
     List<Integer> findSiteIdsByProjectId(@Param("projectId") Integer projectId);
