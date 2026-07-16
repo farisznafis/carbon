@@ -1,6 +1,7 @@
 package com.kct.jcredit.core_backend.repository.postgres;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,6 +31,10 @@ public interface ParticipatingUserRepository extends JpaRepository<Participating
     );
 
     List<ParticipatingUser> findByCompany_Id(Integer companyId);
+
+    @EntityGraph(attributePaths = "site")
+    @Query("SELECT u FROM ParticipatingUser u WHERE u.company.id = :companyId")
+    List<ParticipatingUser> findDetailsByCompanyId(@Param("companyId") Integer companyId);
 
     Optional<ParticipatingUser> findByCompany_IdAndRole(Integer companyId, String role);
 

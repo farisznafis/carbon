@@ -4,6 +4,7 @@ import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.CompanyListQuery;
 import com.kct.jcredit.core_backend.dto.request.CreateCompanySuspensionRequest;
 import com.kct.jcredit.core_backend.dto.request.ResolveCompanySuspensionRequest;
+import com.kct.jcredit.core_backend.dto.response.AdminCompanyDetailResponse;
 import com.kct.jcredit.core_backend.dto.response.AdminCompanyListResponse;
 import com.kct.jcredit.core_backend.dto.response.CompanySuspensionResponse;
 import com.kct.jcredit.core_backend.enums.SuspensionReasonCode;
@@ -17,6 +18,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+
+import java.lang.reflect.Method;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -49,6 +53,23 @@ class AdminCompanyControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isSameAs(serviceResponse);
         verify(adminCompanyQueryService).findCompanies(query);
+    }
+
+    @Test
+    void getCompanyDetailDelegatesToQueryService() throws NoSuchMethodException {
+        AdminCompanyDetailResponse serviceResponse = new AdminCompanyDetailResponse();
+        serviceResponse.setStatusCode(ResponseConstants.OK);
+        when(adminCompanyQueryService.findCompanyDetail("COMP00000001")).thenReturn(serviceResponse);
+
+        ResponseEntity<AdminCompanyDetailResponse> response = controller.getCompanyDetail("COMP00000001");
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isSameAs(serviceResponse);
+        verify(adminCompanyQueryService).findCompanyDetail("COMP00000001");
+
+        Method endpoint = AdminCompanyController.class.getMethod("getCompanyDetail", String.class);
+        assertThat(endpoint.getAnnotation(PreAuthorize.class).value())
+                .isEqualTo("hasAnyRole('operator')");
     }
 
     @Test

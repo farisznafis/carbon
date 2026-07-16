@@ -12,6 +12,16 @@ import com.kct.jcredit.core_backend.entity.Site;
 
 public interface SiteRepository extends JpaRepository<Site, Integer> {
     public List<Site> findByCompany(ParticipatingCompany company);
+
+    @Query("""
+            SELECT DISTINCT site
+            FROM Site site
+            LEFT JOIN FETCH site.siteProjectRelations relation
+            LEFT JOIN FETCH relation.project
+            WHERE site.company.id = :companyId
+            """)
+    List<Site> findDetailsByCompanyId(@Param("companyId") Integer companyId);
+
     public List<Site> findByCompanyIdAndPicEmail(Integer companyId, String picEmail);
     long countByCompany_Id(Integer companyId);
 

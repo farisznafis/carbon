@@ -2,9 +2,11 @@ package com.kct.jcredit.core_backend.security;
 
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.constant.RoleConstants;
+import com.kct.jcredit.core_backend.entity.OperatingUser;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.enums.CompanyStatus;
+import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.util.JwtUtil;
@@ -15,14 +17,13 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -32,6 +33,7 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
 
     private final ParticipatingCompanyRepository companyRepository;
     private final ParticipatingUserRepository userRepository;
+    private final OperatingUserRepository operatingUserRepository;
     private final JwtUtil jwtUtil;
 
     /**
@@ -55,6 +57,11 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
 
         if (companyId == null) {
             filterChain.doFilter(request, response);
+            return;
+        }
+
+        if (RoleConstants.OPERATOR.equals(role)) {
+            authorizeOperator(request, response, filterChain, token, companyId, role);
             return;
         }
 
@@ -92,6 +99,78 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
                     request.setAttribute("assignedSiteId", user.getSite().getId());
                 }
             }
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Validates an operator against the operator domain without consulting participating companies.
+     */
+    private void authorizeOperator(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain,
+            String token,
+            String companyId,
+            String tokenRole) throws IOException, ServletException {
+        Integer tokenUserId = jwtUtil.extractUserId(token);
+        String tokenUsername = jwtUtil.extractUsername(token);
+        if (tokenUserId == null || tokenUsername == null) {
+            log.warn(
+                    "Operator access blocked. tokenUserIdPresent={}, tokenUsernamePresent={}, uri={}",
+                    tokenUserId != null,
+                    tokenUsername != null,
+                    request.getRequestURI()
+            );
+            sendErrorResponse(response, ResponseConstants.FORBIDDEN, ResponseConstants.MSG_FORBIDDEN);
+            return;
+        }
+
+        Optional<OperatingUser> operatorOpt = operatingUserRepository.findForAuthorization(
+                tokenUsername,
+                companyId
+        );
+        if (operatorOpt.isEmpty()) {
+            log.warn(
+                    "Operator access blocked. operatorDomainMatch=false, uri={}",
+                    request.getRequestURI()
+            );
+            sendErrorResponse(response, ResponseConstants.FORBIDDEN, ResponseConstants.MSG_FORBIDDEN);
+            return;
+        }
+
+        OperatingUser operator = operatorOpt.get();
+        boolean userIdMatches = Objects.equals(tokenUserId, operator.getId());
+        boolean roleMatches = RoleConstants.OPERATOR.equals(tokenRole)
+                && RoleConstants.OPERATOR.equals(operator.getRole());
+        boolean usernameMatches = Objects.equals(tokenUsername, operator.getUsername());
+        boolean companyPresent = operator.getCompany() != null;
+        boolean userActive = Boolean.TRUE.equals(operator.getIsActive());
+        boolean companyActive = companyPresent && Boolean.TRUE.equals(operator.getCompany().getIsActive());
+        boolean companyIdMatches = companyPresent
+                && Objects.equals(companyId, operator.getCompany().getCompanyId());
+        boolean authorized = userIdMatches
+                && roleMatches
+                && usernameMatches
+                && userActive
+                && companyActive
+                && companyIdMatches;
+        if (!authorized) {
+            log.warn(
+                    "Operator access blocked. userIdMatches={}, roleMatches={}, usernameMatches={}, "
+                            + "userActive={}, companyPresent={}, companyActive={}, companyIdMatches={}, uri={}",
+                    userIdMatches,
+                    roleMatches,
+                    usernameMatches,
+                    userActive,
+                    companyPresent,
+                    companyActive,
+                    companyIdMatches,
+                    request.getRequestURI()
+            );
+            sendErrorResponse(response, ResponseConstants.FORBIDDEN, ResponseConstants.MSG_FORBIDDEN);
+            return;
         }
 
         filterChain.doFilter(request, response);

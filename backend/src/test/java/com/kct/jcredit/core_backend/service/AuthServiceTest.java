@@ -110,7 +110,11 @@ public class AuthServiceTest {
         operatingUser.setFirstName("Operating");
         operatingUser.setLastName("User");
         operatingUser.setIsActive(true);
-        operatingUser.setCompany(dummyCompany);
+        operatorCompany = new OperatorCompany();
+        operatorCompany.setId(123);
+        operatorCompany.setCompanyId("123");
+        operatorCompany.setIsActive(true);
+        operatingUser.setCompany(operatorCompany);
 }
 
     //正しい企業ID/正しいメールアドレス/パスワードでログイン成功
@@ -647,9 +651,10 @@ public class AuthServiceTest {
         operator.setId(1);
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        ParticipatingCompany company = new ParticipatingCompany();
+        OperatorCompany company = new OperatorCompany();
         company.setId(123);
         company.setCompanyId("123");
+        company.setIsActive(true);
         operator.setCompany(company);
         operator.setRole("USER");
         operator.setFirstName("Alice");
@@ -715,9 +720,10 @@ public class AuthServiceTest {
         operator.setId(1);
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        ParticipatingCompany company = new ParticipatingCompany();
+        OperatorCompany company = new OperatorCompany();
         company.setId(123);
         company.setCompanyId("123");
+        company.setIsActive(true);
         operator.setCompany(company);
         operator.setRole("USER");
         operator.setFirstName("Alice");
@@ -783,8 +789,11 @@ public class AuthServiceTest {
         operator.setId(1);
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        ParticipatingCompany company = new ParticipatingCompany();
+        OperatorCompany company = new OperatorCompany();
         company.setId(123);
+        company.setCompanyId("123");
+        company.setIsActive(true);
+        operator.setCompany(company);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
@@ -866,9 +875,10 @@ public class AuthServiceTest {
         req.setIdentifier("alice");
         req.setPassword("raw-pass");
 
-        ParticipatingCompany company = new ParticipatingCompany();
+        OperatorCompany company = new OperatorCompany();
         company.setId(123);
         company.setCompanyId("123");
+        company.setIsActive(true);
 
         OperatingUser operator = new OperatingUser();
         operator.setId(1);
@@ -940,8 +950,11 @@ public class AuthServiceTest {
         OperatingUser operator = new OperatingUser();
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        ParticipatingCompany company = new ParticipatingCompany();
+        OperatorCompany company = new OperatorCompany();
         company.setId(123);
+        company.setCompanyId("123");
+        company.setIsActive(true);
+        operator.setCompany(company);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
@@ -1006,9 +1019,10 @@ public class AuthServiceTest {
         req.setIdentifier("alice");
         req.setPassword("raw-pass");
 
-        ParticipatingCompany company = new ParticipatingCompany();
+        OperatorCompany company = new OperatorCompany();
         company.setId(123);
         company.setCompanyId("123");
+        company.setIsActive(true);
 
         OperatingUser operator = new OperatingUser();
         operator.setId(1);
@@ -1082,8 +1096,11 @@ public class AuthServiceTest {
         OperatingUser operator = new OperatingUser();
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        ParticipatingCompany company = new ParticipatingCompany();
+        OperatorCompany company = new OperatorCompany();
         company.setId(123);
+        company.setCompanyId("123");
+        company.setIsActive(true);
+        operator.setCompany(company);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -318,6 +319,8 @@ class MonitoringServiceImplTest {
                 buildValidMonitoringRequest(projectId, siteId);
 
         request.setElPvEvidenceUrl(null);
+        request.setElPvrEvidenceUrl(null);
+        request.setElpjControlEvidenceUrl(null);
 
         when(userRepository.findByUsername(username))
                 .thenReturn(Optional.of(masterUser));
@@ -352,7 +355,80 @@ class MonitoringServiceImplTest {
 
         assertNotNull(response.getErrors());
         assertFalse(response.getErrors().isEmpty());
+        assertEquals(ResponseConstants.MSG_ELPV_EVIDENCE_REQUIRED,
+                response.getErrors().get("ELpv_evidence"));
+        assertEquals(ResponseConstants.MSG_ELPVR_EVIDENCE_REQUIRED,
+                response.getErrors().get("ELpvr_evidence"));
+        assertEquals(ResponseConstants.MSG_ELPJ_CONTROL_EVIDENCE_REQUIRED,
+                response.getErrors().get("ELPJ_control_equipment_spec_files"));
 
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("POST should require battery evidence when changedBattery is true")
+    void testRegisterMonitoringRecord_ChangedBatteryWithoutEvidence_ValidationError() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        Integer projectId = 1;
+        Integer siteId = 21;
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setChangedBattery(true);
+        request.setElpjBatteryValue(new BigDecimal("10.00"));
+        request.setElpjBatterySpecificationUrl(null);
+
+        stubValidMonitoringContext(username, projectId, siteId);
+
+        MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
+                username, companyId, request);
+
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_ELPJ_BATTERY_EVIDENCE_REQUIRED,
+                response.getErrors().get("ELPJ_battery_evidence"));
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("POST should allow missing battery evidence when changedBattery is false")
+    void testRegisterMonitoringRecord_UnchangedBatteryWithoutEvidence_Success() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        Integer projectId = 1;
+        Integer siteId = 21;
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setChangedBattery(false);
+        request.setElpjBatterySpecificationUrl(null);
+
+        stubValidMonitoringContext(username, projectId, siteId);
+        when(monitoringRecordSolarRepository.save(any())).thenReturn(new EnR002MonitoringRecord());
+
+        MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
+                username, companyId, request);
+
+        assertEquals(ResponseConstants.OK, response.getStatusCode());
+        verify(monitoringRecordSolarRepository).save(argThat(
+                entity -> entity.getElpjBatterySpecificationUrl() == null));
+    }
+
+    @Test
+    @DisplayName("POST should still require changedBattery")
+    void testRegisterMonitoringRecord_MissingChangedBattery_ValidationError() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        Integer projectId = 1;
+        Integer siteId = 21;
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setChangedBattery(null);
+        request.setElpjBatterySpecificationUrl(null);
+
+        stubValidMonitoringContext(username, projectId, siteId);
+
+        MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
+                username, companyId, request);
+
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_CHANGED_BATTERY_REQUIRED,
+                response.getErrors().get("changedBattery"));
         verify(monitoringRecordSolarRepository, never()).save(any());
     }
 
@@ -1014,6 +1090,49 @@ class MonitoringServiceImplTest {
     }
 
     @Test
+    @DisplayName("Validate endpoint should require battery evidence when changedBattery is true")
+    void testValidateMonitoringRecord_ChangedBatteryWithoutEvidence_ValidationError() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        Integer projectId = 1;
+        Integer siteId = 21;
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setChangedBattery(true);
+        request.setElpjBatteryValue(new BigDecimal("10.00"));
+        request.setElpjBatterySpecificationUrl("   ");
+
+        stubValidMonitoringContext(username, projectId, siteId);
+
+        BaseResponse response = monitoringService.validateMonitoringRecordSolar(
+                username, companyId, request);
+
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_ELPJ_BATTERY_EVIDENCE_REQUIRED,
+                response.getErrors().get("ELPJ_battery_evidence"));
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Validate endpoint should allow missing battery evidence when changedBattery is false")
+    void testValidateMonitoringRecord_UnchangedBatteryWithoutEvidence_Success() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        Integer projectId = 1;
+        Integer siteId = 21;
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setChangedBattery(false);
+        request.setElpjBatterySpecificationUrl(null);
+
+        stubValidMonitoringContext(username, projectId, siteId);
+
+        BaseResponse response = monitoringService.validateMonitoringRecordSolar(
+                username, companyId, request);
+
+        assertEquals(ResponseConstants.OK, response.getStatusCode());
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("Validate endpoint should aggregate required field errors with future date")
     void testValidateMonitoringRecord_EmptyValuesAndFutureDate_AggregatesErrors() {
         String username = "multi_site_master";
@@ -1198,6 +1317,13 @@ class MonitoringServiceImplTest {
         request.setDateRecorded(LocalDate.now().toString()); // Convert to String
         request.setProjectType("ENR002");
         return request;
+    }
+
+    private void stubValidMonitoringContext(String username, Integer projectId, Integer siteId) {
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
+        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
     }
 
     private SiteProjectRelation buildRelation(LocalDate activityStartDate) {

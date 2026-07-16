@@ -112,6 +112,7 @@ public class ResponseConstants {
     
     // Company lifecycle messages
     public static final String MSG_COMPANY_LIST_RETRIEVED = "企業一覧を取得しました。";
+    public static final String MSG_COMPANY_DETAIL_RETRIEVED = "企業詳細を取得しました。";
     public static final String MSG_COMPANY_NOT_FOUND = "対象の企業が見つかりませんでした。";
     public static final String MSG_COMPANY_STATUS_CONFLICT = "現在の企業ステータスではこの操作を実行できません。";
     public static final String MSG_SUSPENSION_ALREADY_ACTIVE = "同じ理由の停止がすでに有効です。";

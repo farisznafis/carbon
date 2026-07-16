@@ -71,4 +71,7 @@ public class ProjectReductionResultDataDto {
     
     @JsonProperty("deleted_by")
     private String deletedBy;
+
+    @JsonProperty("embl")
+    private BigDecimal embl;
 }

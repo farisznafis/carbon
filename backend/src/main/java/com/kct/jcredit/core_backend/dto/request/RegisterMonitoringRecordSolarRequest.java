@@ -80,7 +80,6 @@ public class RegisterMonitoringRecordSolarRequest {
     @JsonProperty("ELpvr_evidence")
     private String elPvrEvidenceUrl;
     
-    @NotBlank(message = "蓄電池仕様書の証憑ファイルをアップロードしてください。")
     @JsonProperty("ELPJ_battery_evidence")
     private String elpjBatterySpecificationUrl;
     

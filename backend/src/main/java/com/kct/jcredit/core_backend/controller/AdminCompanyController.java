@@ -5,6 +5,7 @@ import com.kct.jcredit.core_backend.dto.request.CreateCompanySuspensionRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectCompanyRequest;
 import com.kct.jcredit.core_backend.dto.request.ResolveCompanySuspensionRequest;
 import com.kct.jcredit.core_backend.dto.response.AdminCompanyListResponse;
+import com.kct.jcredit.core_backend.dto.response.AdminCompanyDetailResponse;
 import com.kct.jcredit.core_backend.dto.response.ApproveCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.CompanySuspensionListResponse;
 import com.kct.jcredit.core_backend.dto.response.CompanySuspensionResponse;
@@ -85,6 +86,19 @@ public class AdminCompanyController {
     public ResponseEntity<AdminCompanyListResponse> getCompanies(
             @Valid @ModelAttribute CompanyListQuery query) {
         AdminCompanyListResponse response = adminCompanyQueryService.findCompanies(query);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    /**
+     * Returns master-account, company, user, and site details for one participating company.
+     */
+    @GetMapping("/{companyId}")
+    @PreAuthorize("hasAnyRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "企業詳細取得", description = "指定した企業のマスターアカウント、ユーザー、拠点情報を取得します。")
+    public ResponseEntity<AdminCompanyDetailResponse> getCompanyDetail(
+            @PathVariable String companyId) {
+        AdminCompanyDetailResponse response = adminCompanyQueryService.findCompanyDetail(companyId);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 

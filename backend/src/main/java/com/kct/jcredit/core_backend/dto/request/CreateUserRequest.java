@@ -1,7 +1,7 @@
 package com.kct.jcredit.core_backend.dto.request;
 
 import com.kct.jcredit.core_backend.validation.ValidEmail;
-import com.kct.jcredit.core_backend.validation.HankakuWithSymbols;
+import com.kct.jcredit.core_backend.validation.ValidUsername;
 import com.kct.jcredit.core_backend.validation.Katakana;
 import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
@@ -17,7 +17,7 @@ public class CreateUserRequest {
    
     @NotBlank(message = "ユーザー名を入力してください。")
     @Size(min = 3, max = 50, message = "ユーザー名は3文字以上50文字以内で入力してください。")
-    @HankakuWithSymbols
+    @ValidUsername
     private String username;
     
    

@@ -58,4 +58,7 @@ public class EnR002ReductionResultTotal extends BaseEntity {
 
     @Column(name = "deleted_by", length = 100)
     private String deletedBy;
+
+    @Column(name = "embl", precision = 12, scale = 3)
+    private BigDecimal embl;
 }

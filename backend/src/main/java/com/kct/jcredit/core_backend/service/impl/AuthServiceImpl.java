@@ -16,11 +16,13 @@ import com.kct.jcredit.core_backend.dto.response.PasswordChangeResponse;
 import com.kct.jcredit.core_backend.dto.response.details.AdminResponse;
 import com.kct.jcredit.core_backend.dto.response.details.UserInfoResponse;
 import com.kct.jcredit.core_backend.entity.OperatingUser;
+import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.enums.CompanyStatus;
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
+import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
@@ -40,6 +42,7 @@ public class AuthServiceImpl implements AuthService {
     private final ParticipatingUserRepository userRepository;
     private final SiteRepository siteRepository;
     private final OperatingUserRepository operatingUserRepository;
+    private final OperatorCompanyRepository operatorCompanyRepository;
     private final ParticipatingCompanyRepository participatingCompanyRepository;
 
     
@@ -169,6 +172,15 @@ public class AuthServiceImpl implements AuthService {
         if(operator == null) {
             response.setStatusCode("INVALID_CREDENTIALS");
             response.setMessage(ResponseConstants.MSG_OPERATOR_LOGIN_FAILED);
+            return response;
+        }
+
+        // Operator access is governed only by the operator account and operator company.
+        if (!Boolean.TRUE.equals(operator.getIsActive())
+                || operator.getCompany() == null
+                || !Boolean.TRUE.equals(operator.getCompany().getIsActive())) {
+            response.setStatusCode(ResponseConstants.FORBIDDEN);
+            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
             return response;
         }
 
@@ -516,9 +528,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public OperatingUser createDummyOperatorUser(CreateDummyUserRequest req) {
 
-         ParticipatingCompany company = participatingCompanyRepository
-            .findByCompanyId(req.getParticipatingCompanyId())
-            .orElseThrow(() -> new IllegalArgumentException("Participating company not found"));
+        OperatorCompany company = operatorCompanyRepository
+                .findByCompanyId(req.getParticipatingCompanyId())
+                .orElseThrow(() -> new IllegalArgumentException("Operator company not found"));
             
         OperatingUser user = OperatingUser.builder()
                 .username(req.getUsername())

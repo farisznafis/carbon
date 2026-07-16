@@ -155,6 +155,7 @@ public class GetBatchServiceImpl implements GetBatchService {
                 .empjS(total.getEmpjS())
                 .empjSControl(total.getEmpjSControl())
                 .empjSBattery(total.getEmpjSBattery())
+                .embl(total.getEmbl())
                 .deletedAt(total.getDeletedAt())
                 .deletedBy(total.getDeletedBy())
                 .build();

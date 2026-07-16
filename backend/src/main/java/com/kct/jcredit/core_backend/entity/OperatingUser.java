@@ -48,9 +48,6 @@ public class OperatingUser extends BaseEntity {
     @Column(nullable = false, length = 10)
     private String role; // "運用" or "ユーザ"
 
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive;
-
     @Column(name = "login_attempts", nullable = false)
     private Integer loginAttempts;
 
@@ -59,6 +56,6 @@ public class OperatingUser extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
-    private ParticipatingCompany company;
+    private OperatorCompany company;
 
 }
