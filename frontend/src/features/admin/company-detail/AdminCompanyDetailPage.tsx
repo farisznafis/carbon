@@ -5,8 +5,6 @@ import {
   ArrowLeft,
   Building2,
   Clock3,
-  MapPin,
-  Pencil,
   ShieldCheck,
 } from 'lucide-react';
 import type {
@@ -105,24 +103,6 @@ function DefinitionRow({
     <div className="grid grid-cols-1 gap-0.5 sm:grid-cols-[180px_1fr] sm:gap-2 sm:items-start py-2 border-b border-border/50 last:border-0">
       <dt className="text-sm text-muted-foreground">{label}</dt>
       <dd className="text-sm font-medium text-foreground break-words">{children}</dd>
-    </div>
-  );
-}
-
-/** Thin section heading inside a card */
-function SubSectionHeading({
-  icon,
-  label,
-}: {
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <div className="flex items-center gap-2 mb-3">
-      <span className="text-muted-foreground">{icon}</span>
-      <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-        {label}
-      </h3>
     </div>
   );
 }
@@ -436,35 +416,19 @@ export default function AdminCompanyDetailPage() {
               </div>
             </div>
 
-            {/* Primary action */}
-            <div className="shrink-0 pt-1">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gap-1.5"
-                onClick={() => navigate(`${paths.adminDashboard}/companies/${companyId}/edit`)}
-              >
-                <Pencil className="h-3.5 w-3.5" />
-                編集
-              </Button>
-            </div>
           </div>
         </div>
 
-        {/* ── 企業基本情報 ─────────────────────────────────────────────────── */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold">企業基本情報</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-
-            {/* 企業情報 subsection */}
-            <div>
-              <SubSectionHeading
-                icon={<Building2 className="h-4 w-4" />}
-                label="企業情報"
-              />
+        <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
+          {/* ── 企業情報 ─────────────────────────────────────────────────── */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-muted-foreground" />
+                <CardTitle className="text-lg font-semibold">企業情報</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
               <dl className="divide-y divide-border/50">
                  <DefinitionRow label="企業名">{company.nameJA || '―'}</DefinitionRow>
                  <DefinitionRow label="企業名（カナ）">{company.nameFurigana || '―'}</DefinitionRow>
@@ -473,65 +437,47 @@ export default function AdminCompanyDetailPage() {
                  <DefinitionRow label="メールアドレス">{company.email || '―'}</DefinitionRow>
                  <DefinitionRow label="電話番号">{company.phoneNumber || '―'}</DefinitionRow>
                  <DefinitionRow label="FAX番号">{company.faxNumber || '―'}</DefinitionRow>
+                 <DefinitionRow label="所在地">{formattedAddress || '―'}</DefinitionRow>
               </dl>
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Divider */}
-            <div className="border-t border-border" />
-
-            {/* 所在地 subsection */}
-            <div>
-              <SubSectionHeading
-                icon={<MapPin className="h-4 w-4" />}
-                label="所在地"
-              />
-              <dl className="divide-y divide-border/50">
-                 <DefinitionRow label="郵便番号">{company.postalCode || '―'}</DefinitionRow>
-                 <DefinitionRow label="都道府県">{company.prefecture || '―'}</DefinitionRow>
-                 <DefinitionRow label="市区町村">{company.municipality || '―'}</DefinitionRow>
-                 <DefinitionRow label="番地">{company.blocknum || '―'}</DefinitionRow>
-                 <DefinitionRow label="建物名">{company.buildingName || '―'}</DefinitionRow>
-                 <DefinitionRow label="住所">{formattedAddress || '―'}</DefinitionRow>
-              </dl>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* ── マスターアカウント ────────────────────────────────────────────── */}
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5 text-muted-foreground" />
-                <CardTitle className="text-lg font-semibold">
-                  マスターアカウント
-                </CardTitle>
-              </div>
-              {masterAccount.isActive !== undefined && (
-                <Badge variant={masterAccount.isActive ? 'default' : 'secondary'}>
-                  {masterAccount.isActive ? 'アカウント有効' : 'アカウント無効'}
-                </Badge>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <dl className="divide-y divide-border/50">
-               <DefinitionRow label="ユーザ名">{masterAccount.username || '―'}</DefinitionRow>
-               <DefinitionRow label="氏名">{masterFullName || '―'}</DefinitionRow>
-               <DefinitionRow label="氏名（カナ）">{masterFullNameKana || '―'}</DefinitionRow>
-               <DefinitionRow label="役職">{masterAccount.userPosition || '―'}</DefinitionRow>
-               <DefinitionRow label="メールアドレス">{masterAccount.email || '―'}</DefinitionRow>
-               <DefinitionRow label="電話番号">{masterAccount.phoneNumber || '―'}</DefinitionRow>
-              <DefinitionRow label="権限">
-                {masterAccount.role ? (
-                  <Badge variant="outline">{formatAdminRole(masterAccount.role)}</Badge>
-                ) : (
-                  '―'
+          {/* ── マスターアカウント ────────────────────────────────────────── */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-muted-foreground" />
+                  <CardTitle className="text-lg font-semibold">
+                    マスターアカウント
+                  </CardTitle>
+                </div>
+                {masterAccount.isActive !== undefined && (
+                  <Badge variant={masterAccount.isActive ? 'default' : 'secondary'}>
+                    {masterAccount.isActive ? 'アカウント有効' : 'アカウント無効'}
+                  </Badge>
                 )}
-              </DefinitionRow>
-            </dl>
-          </CardContent>
-        </Card>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <dl className="divide-y divide-border/50">
+                 <DefinitionRow label="ユーザ名">{masterAccount.username || '―'}</DefinitionRow>
+                 <DefinitionRow label="氏名">{masterFullName || '―'}</DefinitionRow>
+                 <DefinitionRow label="氏名（カナ）">{masterFullNameKana || '―'}</DefinitionRow>
+                 <DefinitionRow label="役職">{masterAccount.userPosition || '―'}</DefinitionRow>
+                 <DefinitionRow label="メールアドレス">{masterAccount.email || '―'}</DefinitionRow>
+                 <DefinitionRow label="電話番号">{masterAccount.phoneNumber || '―'}</DefinitionRow>
+                <DefinitionRow label="権限">
+                  {masterAccount.role ? (
+                    <Badge variant="outline">{formatAdminRole(masterAccount.role)}</Badge>
+                  ) : (
+                    '―'
+                  )}
+                </DefinitionRow>
+              </dl>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* ── 関連情報 (Tabs) ──────────────────────────────────────────────── */}
         <Card>
