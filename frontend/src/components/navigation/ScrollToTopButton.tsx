@@ -12,7 +12,7 @@ type ScrollToTopButtonProps = {
 export function ScrollToTopButton({
   onClick,
   isVisible,
-  label = 'トップへ戻る',
+  label = '',
   className,
 }: ScrollToTopButtonProps) {
   return (
@@ -25,17 +25,17 @@ export function ScrollToTopButton({
         className,
       )}
     >
-      <span className="text-xs font-medium text-foreground transition-opacity duration-100">
+      <span className='text-xs font-medium text-foreground transition-opacity duration-100'>
         {label}
       </span>
       <Button
-        type="button"
-        size="icon"
+        type='button'
+        size='icon'
         aria-label={label}
         onClick={onClick}
-        className="rounded-full bg-foreground text-background shadow-app-sm transition-all duration-100 ease-out hover:-translate-y-0.5 hover:bg-primary hover:text-primary-foreground hover:shadow-app-md active:translate-y-0 active:scale-95"
+        className='rounded-full bg-foreground text-background shadow-app-sm transition-all duration-100 ease-out hover:-translate-y-0.5 hover:bg-primary hover:text-primary-foreground hover:shadow-app-md active:translate-y-0 active:scale-95'
       >
-        <ArrowUp className="h-4 w-4" />
+        <ArrowUp className='h-4 w-4' />
       </Button>
     </div>
   );
