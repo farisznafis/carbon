@@ -1,0 +1,83 @@
+url: POST /sites/{siteId}/equipment
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+前提条件: 対象拠点（site）は、いずれかのプロジェクトに既に参加している 必要があります（site_project_relation が最低1件存在すること）。
+
+Request Body
+{
+  "tempId": "TEMP-002",
+  "siteId": 1,
+  "equipmentOpDate": "2024-08-01",
+  "nominalMaxOutput": 30.0,
+  "pcsManufacturer": "シャープ",
+  "pcsModel": "JH-55B",
+  "pcsUnitCount": 1,
+  "deviceNo": "DEV-002-B",
+  "pcsStandby": 2.80,
+  "hasBattery": false,
+  "totalInvestment": 2000000,
+  "hasSubsidy": false,
+  "preProjectUnitPrice": 27.00,
+  "files": [
+    {
+      "fileType": "solar_contract",
+      "s3Key": "tmp/equipments/661f9511.../solar_contract_doc.pdf",
+      "fileName": "doc.pdf",
+      "fileId": "661f9511-f3ac-52e5-b827-557766551111"
+    }
+  ]
+}
+
+Response - Success (HTTP 200)
+{
+  "id": 4,
+  "siteId": 1,
+  "equipmentOpDate": "2024-08-01",
+  "nominalMaxOutput": 30.0,
+  "pcsManufacturer": "シャープ",
+  "pcsModel": "JH-55B",
+  "pcsUnitCount": 1,
+  "deviceNo": "DEV-002-B",
+  "pcsStandby": 2.80,
+  "hasBattery": false,
+  "batteryMaker": null,
+  "batteryModel": null,
+  "batteryCapacity": null,
+  "totalInvestment": 2000000,
+  "hasSubsidy": false,
+  "subsidyName": null,
+  "subsidyAmount": null,
+  "preProjectUnitPrice": 27.00
+}
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+{
+  "statusCode": "SITE_NOT_JOINED",
+  "message": "このサイトはまだプロジェクトに参加していません。先に参加登録を行ってください。"
+},
+{
+  "statusCode": "VALIDATION_ERROR",
+  "message": "入力内容に不備があります。",
+  "errors": {
+    "TEMP-002::equipmentOpDate": "必須項目です。"
+  }
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+

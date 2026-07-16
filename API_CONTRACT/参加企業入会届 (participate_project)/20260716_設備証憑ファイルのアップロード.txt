@@ -1,0 +1,38 @@
+url: POST /sites/{siteId}/files/upload
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Form Fields: fileType-String :
+solar_contract / panel_catalog / pcs_spec / battery_catalog / construction_invoice / subsidy_notice / electricity_bill
+file: PDF / JPEG / JPG / PNG / 10MB
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "s3Key": "tmp/equipments/550e8400-e29b-41d4-a716-446655440000/solar_contract_spec_sheet.pdf",
+  "fileId": "550e8400-e29b-41d4-a716-446655440000",
+  "originalName": "spec_sheet.pdf"
+}
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "FILE_UPLOAD_ERROR",
+  "message": "対応していないファイル形式です。"
+},
+{
+  "statusCode": "FILE_TOO_LARGE",
+  "message": "アップロードされたファイルが上限サイズを超えています。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
