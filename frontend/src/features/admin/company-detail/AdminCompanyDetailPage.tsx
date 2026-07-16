@@ -12,6 +12,7 @@ import type {
   CompanyStatus,
   CompanySuspension,
   SuspendCompanyPayload,
+  SuspensionReasonCode,
 } from '@/api/admin';
 import {
   getCompanySuspensions,
@@ -51,8 +52,10 @@ import {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
+const SUSPEND_REASON_CODE: SuspensionReasonCode = 'POLICY_VIOLATION';
+
 const DEFAULT_SUSPEND_PAYLOAD: SuspendCompanyPayload = {
-  reasonCode: 'BILLING',
+  reasonCode: SUSPEND_REASON_CODE,
   reasonDetail: '',
 };
 
@@ -230,7 +233,7 @@ export default function AdminCompanyDetailPage() {
     setFieldErrors({});
     try {
       await suspendAdminCompany(actionTarget.companyId, {
-        reasonCode: 'BILLING',
+        reasonCode: SUSPEND_REASON_CODE,
         reasonDetail: suspendPayload.reasonDetail,
       });
       handleSuspendDialogOpenChange(false);
