@@ -251,6 +251,11 @@ export type AdminCompanyListItem = {
   updatedAt: string | null;
 };
 
+export type AdminCompanyAccountActionTarget = Pick<
+  AdminCompanyListItem,
+  'companyId' | 'nameJA' | 'email'
+>;
+
 export type Pagination = {
   page: number;
   limit: number;
@@ -265,6 +270,81 @@ export type AdminCompanyListResponse = {
   message: string;
   companies: AdminCompanyListItem[];
   pagination: Pagination;
+};
+
+export type AdminCompanyDetailMasterAccount = {
+  username: string;
+  fullName: string;
+  fullNameKana: string;
+  firstName: string;
+  lastName: string;
+  firstNameKana: string;
+  lastNameKana: string;
+  phoneNumber: string;
+  email: string;
+  userPosition: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
+};
+
+export type AdminCompanyDetailCompany = {
+  companyId: string;
+  corpNumber: string;
+  nameJA: string;
+  nameFurigana: string;
+  nameEN: string;
+  email: string;
+  phoneNumber: string;
+  faxNumber: string;
+  address: string;
+  postalCode: string;
+  prefecture: string;
+  municipality: string;
+  blocknum: string;
+  buildingName: string;
+  companyStatus: CompanyStatus;
+  subscriptionStatus: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
+};
+
+export type AdminCompanyDetailUser = {
+  username: string;
+  fullName: string;
+  email: string;
+  role: string;
+  siteName: string;
+};
+
+export type AdminCompanyDetailSite = {
+  siteName: string;
+  picEmail: string;
+  createdAt: string;
+  address: string;
+  postalCode: string;
+  prefecture: string;
+  municipality: string;
+  blocknum: string;
+  buildingName: string;
+  projectNames: string[];
+};
+
+export type AdminCompanyDetailResponse = {
+  statusCode: string;
+  message: string;
+  errors?: Record<string, string>;
+  timestamp: string;
+  masterAccount: AdminCompanyDetailMasterAccount;
+  company: AdminCompanyDetailCompany;
+  users: AdminCompanyDetailUser[];
+  sites: AdminCompanyDetailSite[];
 };
 
 export type GetAdminCompaniesParams = {

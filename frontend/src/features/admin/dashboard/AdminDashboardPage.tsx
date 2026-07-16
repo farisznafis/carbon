@@ -4,17 +4,12 @@ import { ApiError } from '@/api/_shared/errors';
 import type {
   AdminCompanyListItem,
   CompanyStatus,
-  CompanySuspension,
   Pagination,
-  SuspendCompanyPayload,
 } from '@/api/admin';
 import {
   approveAdminCompany,
   getAdminCompanies,
-  getCompanySuspensions,
   rejectAdminCompany,
-  resolveCompanySuspension,
-  suspendAdminCompany,
 } from '@/api/admin';
 import {
   updateAdminProjectStatus,
@@ -34,8 +29,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { CancelRequestHistoryTable } from '@/features/admin/dashboard/tables/CancelRequestHistoryTable';
 import { AdminCompanyApplicationsTable } from '@/features/admin/dashboard/tables/AdminCompanyApplicationsTable';
-import { CompanySuspendDialog } from '@/features/admin/dashboard/tables/CompanySuspendDialog';
-import { CompanySuspensionResolveDialog } from '@/features/admin/dashboard/tables/CompanySuspensionResolveDialog';
 import { PendingCompanyActionDialog } from '@/features/admin/dashboard/tables/PendingCompanyActionDialog';
 import { PendingCompanyApplicationDetail } from '@/features/admin/dashboard/tables/PendingCompanyApplicationDetail';
 import { ProjectTable } from '@/features/admin/dashboard/tables/ProjectTable';
@@ -68,11 +61,6 @@ const DEFAULT_PAGINATION: Pagination = {
   totalPages: 1,
   nextPageToken: null,
   hasMore: false,
-};
-
-const DEFAULT_SUSPEND_PAYLOAD: SuspendCompanyPayload = {
-  reasonCode: 'BILLING',
-  reasonDetail: '',
 };
 
 const adminDashboardTabs: Array<{
@@ -241,20 +229,6 @@ const AdminDashboard = () => {
   );
   const [rejectReason, setRejectReason] = useState('');
 
-  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
-  const [suspendPayload, setSuspendPayload] = useState<SuspendCompanyPayload>(
-    DEFAULT_SUSPEND_PAYLOAD,
-  );
-  const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
-  const [resolveLoading, setResolveLoading] = useState(false);
-  const [activeSuspensions, setActiveSuspensions] = useState<
-    CompanySuspension[]
-  >([]);
-  const [selectedSuspensionId, setSelectedSuspensionId] = useState<
-    number | null
-  >(null);
-  const [resolutionNote, setResolutionNote] = useState('');
-
   const reloadCompanyLists = useCallback(async () => {
     setCompanyListLoading(true);
     setCompanyListError(null);
@@ -376,6 +350,16 @@ const AdminDashboard = () => {
   }, [applicationId, detailCompany, routeApplicationCompany]);
 
   const openCompanyDetails = (item: AdminCompanyListItem) => {
+    if (item.status === 'ACTIVE' || item.status === 'SUSPENDED') {
+      navigate(paths.adminCompanyDetail(item.companyId));
+      return;
+    }
+
+    if (item.id) {
+      navigate(paths.adminApplicationDetail(item.id), {
+        state: { company: item, reviewMode: false },
+      });
+    }
     setDetailCompany(item);
     setDetailReviewMode(false);
   };
@@ -461,146 +445,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const loadActiveSuspensions = async (companyId: string) => {
-    setResolveLoading(true);
-    setActionFieldErrors({});
-    try {
-      const response = await getCompanySuspensions(companyId, {
-        activeOnly: true,
-        page: 1,
-        limit: 20,
-      });
-      setActiveSuspensions(response.suspensions);
-      setSelectedSuspensionId(response.suspensions[0]?.id ?? null);
-    } catch (error) {
-      setCompanyListError(
-        getApiMessage(error, '停止理由の取得に失敗しました。'),
-      );
-    } finally {
-      setResolveLoading(false);
-    }
-  };
-
-  const openSuspendCompany = (item: AdminCompanyListItem) => {
-    setSelectedCompany(item);
-    setSuspendPayload(DEFAULT_SUSPEND_PAYLOAD);
-    setActionFieldErrors({});
-    setSuspendDialogOpen(true);
-  };
-
-  const handleSuspendDialogOpenChange = (open: boolean) => {
-    setSuspendDialogOpen(open);
-
-    if (!open) {
-      setSelectedCompany(null);
-      setSuspendPayload(DEFAULT_SUSPEND_PAYLOAD);
-      setActionFieldErrors({});
-    }
-  };
-
-  const handleConfirmSuspendCompany = async () => {
-    if (!selectedCompany) return;
-
-    setSubmitting(true);
-    setActionFieldErrors({});
-    try {
-      await suspendAdminCompany(selectedCompany.companyId, {
-        reasonCode: 'BILLING',
-        reasonDetail: suspendPayload.reasonDetail,
-      });
-      await reloadCompanyLists();
-      setDetailCompany((currentCompany) =>
-        currentCompany?.companyId === selectedCompany.companyId
-          ? { ...currentCompany, status: 'SUSPENDED', isActive: false }
-          : currentCompany,
-      );
-      handleSuspendDialogOpenChange(false);
-      toast({ title: 'アカウントを停止しました', variant: 'success' });
-    } catch (error) {
-      setActionFieldErrors(getApiFieldErrors(error));
-      const message = getApiMessage(
-        error,
-        'アカウント停止に失敗しました。',
-      );
-      setCompanyListError(message);
-      toast({
-        title: 'アカウント停止に失敗しました',
-        description: message,
-        variant: 'destructive',
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const openResolveSuspension = (item: AdminCompanyListItem) => {
-    setSelectedCompany(item);
-    setActiveSuspensions([]);
-    setSelectedSuspensionId(null);
-    setResolutionNote('');
-    setActionFieldErrors({});
-    setResolveDialogOpen(true);
-    void loadActiveSuspensions(item.companyId);
-  };
-
-  const handleResolveDialogOpenChange = (open: boolean) => {
-    setResolveDialogOpen(open);
-
-    if (!open) {
-      setSelectedCompany(null);
-      setActiveSuspensions([]);
-      setSelectedSuspensionId(null);
-      setResolutionNote('');
-      setActionFieldErrors({});
-    }
-  };
-
-  const handleConfirmResolveSuspension = async () => {
-    if (!selectedCompany || selectedSuspensionId === null) return;
-
-    const suspension = activeSuspensions.find(
-      (item) => item.id === selectedSuspensionId,
-    );
-    if (!suspension) return;
-
-    setSubmitting(true);
-    setActionFieldErrors({});
-    try {
-      await resolveCompanySuspension(
-        selectedCompany.companyId,
-        selectedSuspensionId,
-        {
-          resolutionNote,
-          ...(suspension.reasonCode === 'BILLING'
-            ? { paymentMethod: 'CREDIT_CARD' as const }
-            : {}),
-        },
-      );
-      await reloadCompanyLists();
-      setDetailCompany((currentCompany) =>
-        currentCompany?.companyId === selectedCompany.companyId
-          ? { ...currentCompany, status: 'ACTIVE', isActive: true }
-          : currentCompany,
-      );
-      handleResolveDialogOpenChange(false);
-      toast({ title: 'アカウントを有効化しました', variant: 'success' });
-    } catch (error) {
-      setActionFieldErrors(getApiFieldErrors(error));
-      const message = getApiMessage(
-        error,
-        'アカウントの有効化に失敗しました。',
-      );
-      setCompanyListError(message);
-      toast({
-        title: 'アカウントの有効化に失敗しました',
-        description: message,
-        variant: 'destructive',
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   if (projectsQuery.isLoading) {
     return (
       <div className="text-small flex min-h-screen items-center justify-center bg-background px-6 text-center text-muted-foreground">
@@ -627,8 +471,6 @@ const AdminDashboard = () => {
             onBack={closeCompanyDetail}
             onApprove={openApproveCompany}
             onReject={openRejectCompany}
-            onSuspend={openSuspendCompany}
-            onActivate={openResolveSuspension}
           />
         ) : (
           <div className="flex min-h-screen items-center justify-center bg-background px-6 text-small text-muted-foreground">
@@ -647,30 +489,6 @@ const AdminDashboard = () => {
           onRejectReasonChange={setRejectReason}
           onConfirm={handleConfirmPendingCompany}
           isSubmitting={submitting}
-        />
-        <CompanySuspendDialog
-          open={suspendDialogOpen}
-          item={selectedCompany}
-          payload={suspendPayload}
-          fieldErrors={actionFieldErrors}
-          isSubmitting={submitting}
-          onOpenChange={handleSuspendDialogOpenChange}
-          onPayloadChange={setSuspendPayload}
-          onConfirm={handleConfirmSuspendCompany}
-        />
-        <CompanySuspensionResolveDialog
-          open={resolveDialogOpen}
-          item={selectedCompany}
-          suspensions={activeSuspensions}
-          selectedSuspensionId={selectedSuspensionId}
-          resolutionNote={resolutionNote}
-          fieldErrors={actionFieldErrors}
-          isLoading={resolveLoading}
-          isSubmitting={submitting}
-          onOpenChange={handleResolveDialogOpenChange}
-          onSelectedSuspensionIdChange={setSelectedSuspensionId}
-          onResolutionNoteChange={setResolutionNote}
-          onConfirm={handleConfirmResolveSuspension}
         />
       </>
     );

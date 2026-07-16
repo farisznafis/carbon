@@ -45,6 +45,9 @@ const EquipmentPage = lazy(() =>
 );
 const Profile = lazy(() => import("./features/user/profile/ProfilePage"));
 const AdminDashboard = lazy(() => import("./features/admin/dashboard/AdminDashboardPage"));
+const AdminCompanyDetail = lazy(() =>
+  import("./features/admin/company-detail/AdminCompanyDetailPage"),
+);
 const AdminProjectEdit = lazy(() => import("./features/admin/project-edit/AdminProjectEditPage"));
 const AdminProjectRegister = lazy(() =>
   import("./features/admin/project-registration/AdminProjectRegisterPage").then((module) => ({
@@ -187,6 +190,14 @@ const App = () => {
             element={
               <RequireAdmin>
                 <AdminDashboard />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminCompanyDetailRoute}
+            element={
+              <RequireAdmin>
+                <AdminCompanyDetail />
               </RequireAdmin>
             }
           />

@@ -1,5 +1,5 @@
 import type {
-  AdminCompanyListItem,
+  AdminCompanyAccountActionTarget,
   SuspendCompanyPayload,
 } from '@/api/admin/pendingCompanies';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 
 type CompanySuspendDialogProps = {
   open: boolean;
-  item: AdminCompanyListItem | null;
+  item: AdminCompanyAccountActionTarget | null;
   payload: SuspendCompanyPayload;
   fieldErrors?: Record<string, string>;
   isSubmitting?: boolean;

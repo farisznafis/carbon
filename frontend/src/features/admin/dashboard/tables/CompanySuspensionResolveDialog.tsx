@@ -1,5 +1,5 @@
 import type {
-  AdminCompanyListItem,
+  AdminCompanyAccountActionTarget,
   CompanySuspension,
 } from '@/api/admin/pendingCompanies';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ const reasonCodeLabels: Record<CompanySuspension['reasonCode'], string> = {
 
 type CompanySuspensionResolveDialogProps = {
   open: boolean;
-  item: AdminCompanyListItem | null;
+  item: AdminCompanyAccountActionTarget | null;
   suspensions: CompanySuspension[];
   selectedSuspensionId: number | null;
   resolutionNote: string;

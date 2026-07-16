@@ -16,9 +16,6 @@ type PendingCompanyApplicationDetailProps = {
   onBack: () => void;
   onApprove: (item: AdminCompanyListItem) => void;
   onReject: (item: AdminCompanyListItem) => void;
-  onSuspend: (item: AdminCompanyListItem) => void;
-  onActivate: (item: AdminCompanyListItem) => void;
-  accountActionDisabled?: boolean;
 };
 
 type DetailField = {
@@ -105,9 +102,6 @@ export function PendingCompanyApplicationDetail({
   onBack,
   onApprove,
   onReject,
-  onSuspend,
-  onActivate,
-  accountActionDisabled = false,
 }: PendingCompanyApplicationDetailProps) {
   const legalFields: DetailField[] = [
     { label: '法人名', value: item.nameJA },
@@ -211,35 +205,6 @@ export function PendingCompanyApplicationDetail({
                 </Button>
                 <Button type="button" size="md" onClick={() => onApprove(item)}>
                   承認
-                </Button>
-              </div>
-            )}
-            {!reviewMode && item.status === 'ACTIVE' && (
-              <div className="mt-14 flex justify-end">
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="md"
-                  onClick={() => onSuspend(item)}
-                  disabled={accountActionDisabled}
-                  title={
-                    accountActionDisabled
-                      ? '管理者自身が所属する企業は停止できません。'
-                      : undefined
-                  }
-                >
-                  アカウント停止
-                </Button>
-              </div>
-            )}
-            {!reviewMode && item.status === 'SUSPENDED' && (
-              <div className="mt-14 flex justify-end">
-                <Button
-                  type="button"
-                  size="md"
-                  onClick={() => onActivate(item)}
-                >
-                  アカウント有効化
                 </Button>
               </div>
             )}

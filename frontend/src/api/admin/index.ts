@@ -1,6 +1,7 @@
 export {
   approveAdminCompany,
   approvePendingCompany,
+  getAdminCompanyDetail,
   getAdminCompanies,
   getCompanySuspensions,
   getPendingCompanies,
@@ -20,6 +21,12 @@ export {
 } from './projects';
 export type {
   AdminMutationResponse,
+  AdminCompanyAccountActionTarget,
+  AdminCompanyDetailCompany,
+  AdminCompanyDetailMasterAccount,
+  AdminCompanyDetailResponse,
+  AdminCompanyDetailSite,
+  AdminCompanyDetailUser,
   AdminCompanyListItem,
   AdminCompanyListResponse,
   AdminProjectDetail,

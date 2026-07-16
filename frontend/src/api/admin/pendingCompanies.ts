@@ -2,6 +2,7 @@ import { apiRequest } from '../_shared/httpClient';
 import type {
   AdminCompanyListItem,
   AdminCompanyListResponse,
+  AdminCompanyDetailResponse,
   CompanyMutationResponse,
   CompanyStatus,
   CompanySuspension,
@@ -16,6 +17,12 @@ import type {
 } from './types';
 
 export type {
+  AdminCompanyAccountActionTarget,
+  AdminCompanyDetailCompany,
+  AdminCompanyDetailMasterAccount,
+  AdminCompanyDetailResponse,
+  AdminCompanyDetailSite,
+  AdminCompanyDetailUser,
   AdminCompanyListItem,
   AdminCompanyListResponse,
   CompanySort,
@@ -121,6 +128,31 @@ export async function getAdminCompanies(
 
   inflightCompanyListRequests.set(path, request);
   return request;
+}
+
+export async function getAdminCompanyDetail(
+  companyId: string,
+): Promise<AdminCompanyDetailResponse> {
+  const response = await apiRequest<AdminCompanyDetailResponse>(
+    `/admin/companies/${companyId}`,
+    {
+      method: 'GET',
+      fallbackErrorMessage: 'Failed to fetch company detail',
+    },
+  );
+
+  return {
+    ...response,
+    users: Array.isArray(response.users) ? response.users : [],
+    sites: Array.isArray(response.sites)
+      ? response.sites.map((site) => ({
+          ...site,
+          projectNames: Array.isArray(site.projectNames)
+            ? site.projectNames
+            : [],
+        }))
+      : [],
+  };
 }
 
 type RawCompanySuspensionListResponse = Partial<CompanySuspensionListResponse> & {
