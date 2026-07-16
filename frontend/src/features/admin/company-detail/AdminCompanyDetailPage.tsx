@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -360,6 +360,12 @@ export default function AdminCompanyDetailPage() {
       .join(' ');
 
   const formattedAddress = formatAdminCompanyAddress(company);
+  const isSuspended = company.companyStatus === 'SUSPENDED';
+  const dangerZoneTitle = isSuspended ? 'アカウント操作' : '危険な操作';
+  const dangerZoneActionLabel = isSuspended ? 'アカウント有効化' : 'アカウント停止';
+  const dangerZoneActionDescription = isSuspended
+    ? '停止中のアカウントを再び有効にします。'
+    : 'この企業のアカウントを停止すると、ログインできなくなります。';
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -555,12 +561,28 @@ export default function AdminCompanyDetailPage() {
 
         {/* ── Danger Zone ─────────────────────────────────────────────────── */}
         {(company.companyStatus === 'ACTIVE' || company.companyStatus === 'SUSPENDED') && (
-          <Card className="border-destructive/40">
+          <Card
+            className={
+              isSuspended
+                ? 'border-emerald-200 bg-emerald-50/40'
+                : 'border-destructive/40'
+            }
+          >
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-destructive" />
-                <CardTitle className="text-lg font-semibold text-destructive">
-                  危険な操作
+                {isSuspended ? (
+                  <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                ) : (
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                )}
+                <CardTitle
+                  className={
+                    isSuspended
+                      ? 'text-lg font-semibold text-emerald-700'
+                      : 'text-lg font-semibold text-destructive'
+                  }
+                >
+                  {dangerZoneTitle}
                 </CardTitle>
               </div>
             </CardHeader>
@@ -579,10 +601,10 @@ export default function AdminCompanyDetailPage() {
                   ) : (
                     <>
                       <p className="text-sm font-medium text-foreground">
-                        アカウント有効化
+                        {dangerZoneActionLabel}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        停止中のアカウントを再び有効にします。
+                        {dangerZoneActionDescription}
                       </p>
                     </>
                   )}
@@ -609,9 +631,10 @@ export default function AdminCompanyDetailPage() {
                     <Button
                       type="button"
                       size="sm"
+                      className="bg-emerald-600 text-white hover:bg-emerald-700"
                       onClick={() => void handleOpenResolveDialog()}
                     >
-                      アカウント有効化
+                      {dangerZoneActionLabel}
                     </Button>
                   )}
                 </div>
