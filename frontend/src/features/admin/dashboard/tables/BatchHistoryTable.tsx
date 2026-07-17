@@ -14,6 +14,12 @@ import { cn } from '@/lib/utils';
 
 const INITIAL_PAGE = 1;
 const INITIAL_ITEMS_PER_PAGE = 10;
+const BATCH_STATUS_LABELS: Record<string, string> = {
+  SUCCESS: '成功',
+  FAILED: '失敗',
+};
+const SUCCESS_BATCH_STATUSES = ['SUCCESS', 'SUCCEEDED', 'COMPLETED'];
+const FAILED_BATCH_STATUSES = ['FAILED', 'ERROR'];
 
 const DEFAULT_PAGINATION: BatchHistoryPagination = {
   page: INITIAL_PAGE,
@@ -43,10 +49,8 @@ function formatDateTime(value: string | null) {
 
 function BatchStatusBadge({ status }: { status: string }) {
   const normalizedStatus = status.toUpperCase();
-  const isSuccess = ['SUCCESS', 'SUCCEEDED', 'COMPLETED'].includes(
-    normalizedStatus,
-  );
-  const isFailed = ['FAILED', 'ERROR'].includes(normalizedStatus);
+  const isSuccess = SUCCESS_BATCH_STATUSES.includes(normalizedStatus);
+  const isFailed = FAILED_BATCH_STATUSES.includes(normalizedStatus);
 
   return (
     <span
@@ -59,7 +63,7 @@ function BatchStatusBadge({ status }: { status: string }) {
           'border-amber-200 bg-amber-50 text-amber-800',
       )}
     >
-      {status || '-'}
+      {(BATCH_STATUS_LABELS[normalizedStatus] ?? status) || '-'}
     </span>
   );
 }

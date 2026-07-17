@@ -58,6 +58,16 @@ function toReductionResultItems(
   return Array.isArray(payload) ? payload : [payload];
 }
 
+function isProjectReductionResultResponse(
+  response: ProjectReductionResultResponse | ReductionResultApiItem,
+): response is ProjectReductionResultResponse {
+  return (
+    'data' in response ||
+    'statusCode' in response ||
+    'message' in response
+  );
+}
+
 function extractReductionResults(
   response:
     | ReductionResultResponse
@@ -76,7 +86,7 @@ function extractReductionResults(
     return [response];
   }
 
-  const responseData = response.data;
+  const responseData = 'data' in response ? response.data : undefined;
 
   if (Array.isArray(responseData)) return responseData;
 
@@ -99,9 +109,11 @@ function extractReductionResults(
     return [responseData];
   }
 
-  return toReductionResultItems(
-    response.result ?? response.results ?? response.items,
-  );
+  const rootResult = 'result' in response ? response.result : undefined;
+  const rootResults = 'results' in response ? response.results : undefined;
+  const rootItems = 'items' in response ? response.items : undefined;
+
+  return toReductionResultItems(rootResult ?? rootResults ?? rootItems);
 }
 
 function mapEmissionTrendPoint(
@@ -224,7 +236,9 @@ export function normalizeProjectEmissionBreakdownResponse(
 export function normalizeProjectEmissionSummaryResponse(
   response: ProjectReductionResultResponse | ReductionResultApiItem,
 ): ProjectEmissionSummary | null {
-  const result = 'data' in response ? response.data : response;
+  const result = isProjectReductionResultResponse(response)
+    ? response.data
+    : response;
   if (!result) return null;
 
   const baselineEmission = toFiniteEmission(result.embl);
