@@ -49,3 +49,36 @@ export type ProjectEmissionSummary = {
   projectEmission: number | null;
   breakdown: ProjectEmissionBreakdown | null;
 };
+
+export type BatchHistoryItem = {
+  id: number;
+  status: string;
+  is_active: boolean;
+  created_at: string;
+  created_by: string;
+  updated_at: string;
+  updated_by: string;
+  start_time: string;
+  end_time: string | null;
+  claimed_by: string | null;
+  claimed_at: string | null;
+};
+
+export type BatchHistoryPagination = {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  nextPageToken: string | null;
+  hasMore: boolean;
+};
+
+export type BatchHistoryResponse = {
+  items?: BatchHistoryItem[] | null;
+  pagination?: Partial<BatchHistoryPagination> | null;
+};
+
+export type BatchHistoryResult = {
+  items: BatchHistoryItem[];
+  pagination: BatchHistoryPagination;
+};

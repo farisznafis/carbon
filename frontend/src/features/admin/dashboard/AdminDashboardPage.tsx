@@ -35,6 +35,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { CancelRequestHistoryTable } from '@/features/admin/dashboard/tables/CancelRequestHistoryTable';
+import { BatchHistoryTable } from '@/features/admin/dashboard/tables/BatchHistoryTable';
 import { AdminCompanyApplicationsTable } from '@/features/admin/dashboard/tables/AdminCompanyApplicationsTable';
 import { PendingCompanyActionDialog } from '@/features/admin/dashboard/tables/PendingCompanyActionDialog';
 import { PendingCompanyApplicationDetail } from '@/features/admin/dashboard/tables/PendingCompanyApplicationDetail';
@@ -707,7 +708,7 @@ const AdminDashboard = () => {
 
           <TabsContent
             value="monitoring"
-            className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
+            className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
             <AdminDashboardSection
               title="取消一覧"
@@ -748,6 +749,12 @@ const AdminDashboard = () => {
                   onViewRequest={openCancelRequestDetail}
                 />
               </ErrorBoundary>
+            </AdminDashboardSection>
+            <AdminDashboardSection
+              title="バッチ履歴"
+              description="バッチ処理の実行状況と処理履歴を確認できます。"
+            >
+              <BatchHistoryTable />
             </AdminDashboardSection>
           </TabsContent>
         </main>

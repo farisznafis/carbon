@@ -1,5 +1,7 @@
 import { apiFetch, parseJsonResponse } from '@/api/_shared/httpClient';
 import type {
+  BatchHistoryResponse,
+  BatchHistoryResult,
   EmissionTrendPoint,
   ProjectEmissionBreakdown,
   ProjectEmissionSummary,
@@ -8,6 +10,45 @@ import type {
   ReductionResultPayload,
   ReductionResultResponse,
 } from './types';
+
+const DEFAULT_BATCH_HISTORY_PAGE = 1;
+const DEFAULT_BATCH_HISTORY_LIMIT = 10;
+
+export async function getBatchHistory(
+  page = DEFAULT_BATCH_HISTORY_PAGE,
+  limit = DEFAULT_BATCH_HISTORY_LIMIT,
+): Promise<BatchHistoryResult> {
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+  const response = await apiFetch(`/batch/history?${query.toString()}`, {
+    method: 'GET',
+  });
+  const { data: json, rawBody } =
+    await parseJsonResponse<BatchHistoryResponse>(response);
+
+  if (!response.ok) {
+    throw new Error(
+      rawBody || `Failed to fetch batch history: HTTP ${response.status}`,
+    );
+  }
+
+  const items = Array.isArray(json?.items) ? json.items : [];
+  const pagination = json?.pagination;
+
+  return {
+    items,
+    pagination: {
+      page: pagination?.page ?? page,
+      limit: pagination?.limit ?? limit,
+      totalItems: pagination?.totalItems ?? items.length,
+      totalPages: Math.max(pagination?.totalPages ?? 1, 1),
+      nextPageToken: pagination?.nextPageToken ?? null,
+      hasMore: pagination?.hasMore ?? false,
+    },
+  };
+}
 
 function toReductionResultItems(
   payload: ReductionResultPayload | undefined,
