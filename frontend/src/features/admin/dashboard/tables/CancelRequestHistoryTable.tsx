@@ -12,10 +12,8 @@ import { Button } from '@/components/ui/button';
 import { CancelRequestStatusBadge } from '@/features/admin/monitoring/CancelRequestStatusBadge';
 import { formatCancelRequestDateTime } from '@/features/admin/monitoring/cancelRequestFormatters';
 import { usePagination } from '@/hooks/usePagination';
-import { cn } from '@/lib/utils';
 
 const INITIAL_ITEMS_PER_PAGE = 10;
-const CANCEL_REASON_PREVIEW_CHARACTER_LIMIT = 24;
 
 type CancelRequestTableRow = Omit<MonitoringCancelRequestListItem, 'id'> & {
   id: string;
@@ -48,24 +46,6 @@ export function CancelRequestHistoryTable({
   );
   const [isLoading, setIsLoading] = useState(initialLoading);
   const [loadError, setLoadError] = useState<string | null>(initialLoadError);
-  const [expandedReasonIds, setExpandedReasonIds] = useState<Set<string>>(
-    () => new Set(),
-  );
-
-  const toggleReason = useCallback((requestId: string) => {
-    setExpandedReasonIds((currentIds) => {
-      const nextIds = new Set(currentIds);
-
-      if (nextIds.has(requestId)) {
-        nextIds.delete(requestId);
-      } else {
-        nextIds.add(requestId);
-      }
-
-      return nextIds;
-    });
-  }, []);
-
   useEffect(() => {
     setRequests(
       initialRequests.map((request) => ({
@@ -119,20 +99,13 @@ export function CancelRequestHistoryTable({
   const columns = useMemo<Column<CancelRequestTableRow>[]>(
     () => [
       {
-        key: 'id',
-        label: '申請ID',
-        sortable: true,
-        className: 'w-[60px] whitespace-nowrap',
-        headerClassName: 'w-[60px] whitespace-nowrap',
-      },
-      {
         key: 'siteName',
-        label: '拠点名',
+        label: '地点名',
         sortable: true,
         truncate: true,
-        maxWidth: 'max-w-[180px]',
-        className: 'w-[160px]',
-        headerClassName: 'w-[160px] whitespace-nowrap',
+        maxWidth: 'max-w-[260px]',
+        className: 'w-[240px]',
+        headerClassName: 'w-[240px] whitespace-nowrap',
       },
       {
         key: 'requestedBy',
@@ -152,71 +125,12 @@ export function CancelRequestHistoryTable({
         render: (value) => formatCancelRequestDateTime(String(value)),
       },
       {
-        key: 'reason',
-        label: '取消理由',
-        className: 'w-[320px] align-top',
-        headerClassName: 'w-[320px] whitespace-nowrap',
-        render: (value, request) => {
-          const reason = value ? String(value) : '-';
-          const isExpandable =
-            reason.length > CANCEL_REASON_PREVIEW_CHARACTER_LIMIT;
-          const isExpanded = expandedReasonIds.has(request.id);
-
-          if (!isExpandable) {
-            return (
-              <span className="block whitespace-normal break-words">
-                {reason}
-              </span>
-            );
-          }
-
-          return (
-            <button
-              type="button"
-              className="block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              aria-expanded={isExpanded}
-              onClick={() => toggleReason(request.id)}
-            >
-              <span
-                className={cn(
-                  'block break-words',
-                  isExpanded ? 'whitespace-normal' : 'truncate',
-                )}
-              >
-                {reason}
-              </span>
-              <span className="mt-1 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline">
-                {isExpanded ? '閉じる' : '全文を表示'}
-              </span>
-            </button>
-          );
-        },
-      },
-      {
         key: 'status',
         label: 'ステータス',
         sortable: true,
         className: 'w-[130px] whitespace-nowrap',
         headerClassName: 'w-[130px] whitespace-nowrap',
         render: (value) => <CancelRequestStatusBadge status={String(value)} />,
-      },
-      {
-        key: 'decidedAt',
-        label: '決定日時',
-        sortable: true,
-        className: 'w-[180px] whitespace-nowrap',
-        headerClassName: 'w-[180px] whitespace-nowrap',
-        render: (value) =>
-          formatCancelRequestDateTime(value ? String(value) : null),
-      },
-      {
-        key: 'decidedBy',
-        label: '決定者',
-        truncate: true,
-        maxWidth: 'max-w-[180px]',
-        className: 'w-[140px]',
-        headerClassName: 'w-[140px] whitespace-nowrap',
-        render: (value) => (value ? String(value) : '-'),
       },
       {
         key: 'id',
@@ -244,7 +158,7 @@ export function CancelRequestHistoryTable({
         ),
       },
     ],
-    [expandedReasonIds, onViewRequest, toggleReason],
+    [onViewRequest],
   );
 
   if (isLoading) {
@@ -274,7 +188,7 @@ export function CancelRequestHistoryTable({
             columns={columns}
             clickable={false}
             height="max-h-[520px]"
-            containerClassName="min-w-[1570px] overflow-x-hidden"
+            containerClassName="min-w-[900px] overflow-x-hidden"
             tableClassName="table-fixed"
             emptyState={
               <p className="text-muted-foreground">取消申請はありません。</p>
