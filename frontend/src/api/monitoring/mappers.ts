@@ -37,7 +37,7 @@ export function normalizeRecentMonitoringItem(
     changedBattery: Boolean(item.changedBattery),
     projectType: item.projectType ?? "",
 
-    siteId: toNumberOrNull(item.siteId),
+    siteId: item.siteId == null ? null : String(item.siteId),
     userId: toNumberOrNull(item.userId),
 
     ELpv_value: toNumberOrZero(item.ELpv_value),

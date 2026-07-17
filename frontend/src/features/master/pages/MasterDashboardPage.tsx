@@ -95,7 +95,7 @@ const MasterDashboard = () => {
             size="md"
             disabled={sortedSites.length === 0}
             onClick={() =>
-              navigate(paths.projectMembership(sortedSites[0].id), {
+              navigate(paths.projectMembership(sortedSites[0].siteId), {
                 state: masterDashboardProjectMembershipState,
               })
             }
@@ -163,10 +163,10 @@ const MasterDashboard = () => {
                 <div className="space-y-3">
                   {sortedSites.map((site) => (
                     <SiteDashboardCard
-                      key={site.id}
+                      key={site.siteId}
                       site={site}
                       onOpen={(selectedSite) =>
-                        navigate(paths.siteDashboard(selectedSite.id))
+                        navigate(paths.siteDashboard(selectedSite.siteId))
                       }
                     />
                   ))}

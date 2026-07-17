@@ -71,8 +71,8 @@ export default function UserRegister() {
     try {
       const res = await registerUser(formData);
       addUser(res.user);
-      if (res.site?.id) {
-        editSite(res.site.id, res.site);
+      if (res.site?.siteId) {
+        editSite(res.site.siteId, res.site);
       }
 
       toast({

@@ -2,7 +2,7 @@ import type { ApiPagination } from '../_shared/types';
 
 export type MonitoringData = {
   projectId: number;
-  siteId?: number | null;
+  siteId?: string | null;
   projectType: string;
   dateRecorded: string | null;
   ELpv_value: number | null;
@@ -69,7 +69,7 @@ export type MonitoringRecentItem = MonitoringData & {
   dateRecorded: string;
   changedBattery: boolean;
   projectType: string;
-  siteId?: number | null;
+  siteId?: string | null;
   userId?: number | null;
   ELpv_value?: number | null;
   ELpvr_value?: number | null;
@@ -91,7 +91,7 @@ export type MonitoringRecentResponse = {
 export type MonitoringRecordListItem = {
   id: string;
   projectID: number;
-  siteID: number;
+  siteID: string;
   participatingUserID: number;
   timeUpdated: string;
   dateRecorded: string;
@@ -129,7 +129,7 @@ export type MonitoringRecordListResult = {
 };
 
 export type MonitoringCancelRequestPayload = {
-  siteId: number;
+  siteId: string;
   recordPK: string;
   recordSK: string;
   reasonText: string;
@@ -146,7 +146,7 @@ export type MonitoringCancelRequestResponse = {
   status?: string;
   requestedBy?: string;
   requestedAt?: string;
-  siteId?: number;
+  siteId?: string;
   reason?: string;
 };
 

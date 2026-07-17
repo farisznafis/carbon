@@ -23,7 +23,7 @@ import { logger } from '@/lib/logger';
 type MonitoringFormData = typeof formDefinitions[ProjectType]['emptyData'];
 type RouteState = {
   projectId?: string | number;
-  siteId?: string | number;
+  siteId?: string;
 };
 
 type MonitoringPayloadContext = {
@@ -106,7 +106,7 @@ function buildMonitoringPayload(
   return {
     projectType: context.projectType,
     projectId: Number(context.projectIdValue) || 0,
-    siteId: Number(context.siteIdValue) || null,
+    siteId: context.siteIdValue ? String(context.siteIdValue) : null,
     dateRecorded: currentData.dateRecorded ? String(currentData.dateRecorded) : null,
     ELpv_value: toNumberOrNull(currentData.ELpv_value),
     ELpvr_value: toNumberOrNull(currentData.ELpvr_value),

@@ -1,7 +1,7 @@
 import type { Project } from "../projects/types";
 
 export interface Site {
-  id: string;
+  siteId: string;
   siteName: string;
   postalCode: string;
   prefectureName: string;
@@ -22,7 +22,7 @@ export interface Site {
 
 export type CreateSiteData = Omit<
   Site,
-  'id' | 'picEmail' | 'picPosition' | 'companyId' | 'project'
+  'siteId' | 'picEmail' | 'picPosition' | 'companyId' | 'project'
 >;
 
 export interface SiteAddResponse extends Site {
@@ -60,7 +60,9 @@ export type SiteDashboardApiResponse = {
   message?: string | null;
   errors?: unknown;
   site?: {
-    id: string;
+    siteId: string;
+    /** @deprecated Use siteId. */
+    id?: string;
     siteName: string;
     postalCode?: string | null;
     prefecture?: string | null;
@@ -214,7 +216,9 @@ export type SiteProjectEquipmentResponse = {
 
 // For GET /site list response
 export interface SiteListItem {
-  id: string;
+  siteId: string;
+  /** @deprecated Use siteId. */
+  id?: string;
   siteName: string;
   postalCode?: string;
   prefecture?: string;

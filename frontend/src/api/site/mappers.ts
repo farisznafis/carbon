@@ -54,7 +54,7 @@ export function mapSiteProject(item: SiteProjectApiItem): SiteProject {
 // For GET /site list response
 export function mapSiteListItem(item: SiteListItem): Site {
   return {
-    id: item.id,
+    siteId: item.siteId,
     siteName: item.siteName,
     postalCode: item.postalCode ?? "",
     prefectureName: item.prefecture ?? item.prefName ?? "",
@@ -97,7 +97,7 @@ export function mapSiteDashboard(apiSite: SiteDashboardApiResponse['site']): Sit
     .join("");
 
   return {
-    id: apiSite.id,
+    siteId: apiSite.siteId,
     siteName: apiSite.siteName ?? "",
     postalCode: apiSite.postalCode ?? "",
     prefectureName,

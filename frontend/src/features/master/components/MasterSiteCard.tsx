@@ -75,7 +75,7 @@ export function MasterSiteCard({
                   <div>
                     {visibleProjects.map((project, index) => (
                       <p
-                        key={`${site.id}-${project}-${index}`}
+                        key={`${site.siteId}-${project}-${index}`}
                         className="truncate"
                       >
                         {project}

@@ -7,8 +7,8 @@ export const paths = {
 
   masterDashboard: '/master/dashboard',
   masterSiteRegister: '/master/site-register',
-  masterSiteEditRoute: '/master/site-edit/:id',
-  masterSiteEdit: (id: string | number) => `/master/site-edit/${id}`,
+  masterSiteEditRoute: '/master/site-edit/:siteId',
+  masterSiteEdit: (siteId: string) => `/master/site-edit/${siteId}`,
   masterUserRegister: '/master/user-register',
   masterUserProfileRoute: '/master/users/:userId/profile',
   masterUserProfile: (userId: string | number) =>
@@ -18,30 +18,30 @@ export const paths = {
 
   siteDashboardRoute: '/sites/:siteId/dashboard',
   userDashboard: '/dashboard',
-  siteDashboard: (siteId: string | number) => `/sites/${siteId}/dashboard`,
-  siteDetailRoute: '/sites/:id',
-  siteDetail: (id: string | number) => `/sites/${id}`,
+  siteDashboard: (siteId: string) => `/sites/${siteId}/dashboard`,
+  siteDetailRoute: '/sites/:siteId',
+  siteDetail: (siteId: string) => `/sites/${siteId}`,
 
   legacyDashboardRoute: '/dashboard/:siteId',
   legacyProjectRoute: '/project/:id',
   projectMembershipRoute: '/projects/:siteId/register',
-  projectMembership: (siteId: string | number) =>
+  projectMembership: (siteId: string) =>
     `/projects/${siteId}/register`,
   projectRegisterRoute: '/projects/:siteId/:projectId/register',
   projectRegister: (
-    siteId: string | number,
+    siteId: string,
     projectId: string | number,
   ) => `/projects/${siteId}/${projectId}/register`,
   projectEquipmentRoute: '/projects/:siteId/:projectId/equipment',
   projectEquipment: (
-    siteId: string | number,
+    siteId: string,
     projectId: string | number,
   ) => `/projects/${siteId}/${projectId}/equipment`,
   equipmentAddRoute: '/equipment/add/:type',
   equipmentAdd: (type: string) => `/equipment/add/${type}`,
   siteProjectDetailRoute: '/sites/:siteId/projects/:projectId',
   siteProjectDetail: (
-    siteId: string | number,
+    siteId: string,
     projectId: string | number,
   ) => `/sites/${siteId}/projects/${projectId}`,
 
