@@ -11,6 +11,7 @@ import {
   getAdminCompanies,
   rejectAdminCompany,
 } from '@/api/admin';
+import { getMonitoringCancelRequests } from '@/api/monitoring';
 import {
   updateAdminProjectStatus,
   type ProjectStatus,
@@ -190,6 +191,13 @@ const AdminDashboard = () => {
 
   const [companyListLoading, setCompanyListLoading] = useState(true);
   const [companyListError, setCompanyListError] = useState<string | null>(null);
+  const [cancelRequestItems, setCancelRequestItems] = useState<
+    Awaited<ReturnType<typeof getMonitoringCancelRequests>>
+  >([]);
+  const [cancelRequestLoading, setCancelRequestLoading] = useState(true);
+  const [cancelRequestError, setCancelRequestError] = useState<string | null>(
+    null,
+  );
   const [applicationCompanies, setApplicationCompanies] = useState<
     AdminCompanyListItem[]
   >([]);
@@ -271,6 +279,36 @@ const AdminDashboard = () => {
   useEffect(() => {
     void loadNotifications();
   }, [loadNotifications]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const preloadCancelRequests = async () => {
+      setCancelRequestLoading(true);
+      setCancelRequestError(null);
+
+      try {
+        const response = await getMonitoringCancelRequests();
+        if (!isActive) return;
+        setCancelRequestItems(response);
+      } catch (error) {
+        if (!isActive) return;
+        setCancelRequestError(
+          getApiMessage(error, '取消一覧の取得に失敗しました。'),
+        );
+      } finally {
+        if (isActive) {
+          setCancelRequestLoading(false);
+        }
+      }
+    };
+
+    void preloadCancelRequests();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   useEffect(() => {
     void reloadCompanyLists();
@@ -653,7 +691,11 @@ const AdminDashboard = () => {
               title="取消一覧"
               description="取消対象のモニタリングデータを確認し、取消申請を送信できます。"
             >
-              <CancelRequestHistoryTable />
+              <CancelRequestHistoryTable
+                initialRequests={cancelRequestItems}
+                initialLoading={cancelRequestLoading}
+                initialLoadError={cancelRequestError}
+              />
             </AdminDashboardSection>
           </TabsContent>
         </main>

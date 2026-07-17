@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   decideMonitoringCancelRequest,
   getMonitoringCancelRequests,
@@ -57,6 +57,12 @@ type DecisionContext = {
   decision: MonitoringCancelDecision;
 };
 
+type CancelRequestHistoryTableProps = {
+  initialRequests: MonitoringCancelRequestListItem[];
+  initialLoading: boolean;
+  initialLoadError: string | null;
+};
+
 function formatDateTime(value: string | null) {
   if (!value) return '-';
 
@@ -90,11 +96,21 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export function CancelRequestHistoryTable() {
+export function CancelRequestHistoryTable({
+  initialRequests,
+  initialLoading,
+  initialLoadError,
+}: CancelRequestHistoryTableProps) {
   const { toast } = useToast();
-  const [requests, setRequests] = useState<CancelRequestTableRow[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [requests, setRequests] = useState<CancelRequestTableRow[]>(
+    initialRequests.map((request) => ({
+      ...request,
+      id: String(request.id),
+      cancelRequestId: request.id,
+    })),
+  );
+  const [isLoading, setIsLoading] = useState(initialLoading);
+  const [loadError, setLoadError] = useState<string | null>(initialLoadError);
   const [decisionContext, setDecisionContext] =
     useState<DecisionContext | null>(null);
   const [managerRemarks, setManagerRemarks] = useState('');
@@ -119,6 +135,24 @@ export function CancelRequestHistoryTable() {
     });
   }, []);
 
+  useEffect(() => {
+    setRequests(
+      initialRequests.map((request) => ({
+        ...request,
+        id: String(request.id),
+        cancelRequestId: request.id,
+      })),
+    );
+  }, [initialRequests]);
+
+  useEffect(() => {
+    setIsLoading(initialLoading);
+  }, [initialLoading]);
+
+  useEffect(() => {
+    setLoadError(initialLoadError);
+  }, [initialLoadError]);
+
   const reloadRequests = useCallback(async () => {
     setIsLoading(true);
     setLoadError(null);
@@ -140,10 +174,6 @@ export function CancelRequestHistoryTable() {
       setIsLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    void reloadRequests();
-  }, [reloadRequests]);
 
   const {
     currentPage,
