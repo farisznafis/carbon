@@ -48,6 +48,9 @@ const AdminDashboard = lazy(() => import("./features/admin/dashboard/AdminDashbo
 const AdminCompanyDetail = lazy(() =>
   import("./features/admin/company-detail/AdminCompanyDetailPage"),
 );
+const AdminCancelRequestDetail = lazy(() =>
+  import("./features/admin/monitoring/CancelRequestDetailPage"),
+);
 const AdminProjectEdit = lazy(() => import("./features/admin/project-edit/AdminProjectEditPage"));
 const AdminProjectRegister = lazy(() =>
   import("./features/admin/project-registration/AdminProjectRegisterPage").then((module) => ({
@@ -198,6 +201,14 @@ const App = () => {
             element={
               <RequireAdmin>
                 <AdminCompanyDetail />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminCancelRequestDetailRoute}
+            element={
+              <RequireAdmin>
+                <AdminCancelRequestDetail />
               </RequireAdmin>
             }
           />

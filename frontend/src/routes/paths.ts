@@ -58,6 +58,10 @@ export const paths = {
   adminApplicationDetailRoute: '/admin/applications/:applicationId',
   adminApplicationDetail: (applicationId: string | number) =>
     `/admin/applications/${applicationId}`,
+  adminCancelRequestDetailRoute:
+    '/admin/monitoring/cancel-requests/:cancelRequestId',
+  adminCancelRequestDetail: (cancelRequestId: string | number) =>
+    `/admin/monitoring/cancel-requests/${cancelRequestId}`,
   adminProjectRegister: '/admin/project-register',
   adminProjectDetailRoute: '/admin/projects/:projectId',
   adminProjectDetail: (projectId: string | number) => `/admin/projects/${projectId}`,

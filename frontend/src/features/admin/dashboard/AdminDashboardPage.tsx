@@ -1,5 +1,10 @@
 ﻿import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import { ApiError } from '@/api/_shared/errors';
 import type {
   AdminCompanyListItem,
@@ -171,6 +176,7 @@ function AdminDashboardEmptyState({ children }: { children: ReactNode }) {
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { applicationId } = useParams();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -237,6 +243,13 @@ const AdminDashboard = () => {
     ),
   );
   const [rejectReason, setRejectReason] = useState('');
+
+  const requestedTab = searchParams.get('tab');
+  const initialTab: AdminDashboardTabValue = adminDashboardTabs.some(
+    (tab) => tab.value === requestedTab,
+  )
+    ? (requestedTab as AdminDashboardTabValue)
+    : 'companies';
 
   const reloadCompanyLists = useCallback(async () => {
     setCompanyListLoading(true);
@@ -437,6 +450,14 @@ const AdminDashboard = () => {
     setPendingDialogOpen(true);
   };
 
+  const openCancelRequestDetail = (
+    request: Awaited<ReturnType<typeof getMonitoringCancelRequests>>[number],
+  ) => {
+    navigate(paths.adminCancelRequestDetail(request.id), {
+      state: { cancelRequest: request },
+    });
+  };
+
   const handlePendingDialogOpenChange = (open: boolean) => {
     setPendingDialogOpen(open);
 
@@ -545,7 +566,7 @@ const AdminDashboard = () => {
     <div className="flex min-h-screen flex-col bg-card">
       <AdminDashboardHero />
 
-      <Tabs defaultValue="companies" className="flex flex-1 flex-col bg-card">
+      <Tabs defaultValue={initialTab} className="flex flex-1 flex-col bg-card">
         <AdminDashboardTabs />
 
         <main className={cn('flex-1 space-y-10 py-8', dashboardContainer)}>
@@ -724,6 +745,7 @@ const AdminDashboard = () => {
                   initialRequests={cancelRequestItems}
                   initialLoading={cancelRequestLoading}
                   initialLoadError={cancelRequestError}
+                  onViewRequest={openCancelRequestDetail}
                 />
               </ErrorBoundary>
             </AdminDashboardSection>

@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  decideMonitoringCancelRequest,
   getMonitoringCancelRequests,
-  type MonitoringCancelDecision,
   type MonitoringCancelRequestListItem,
 } from '@/api/monitoring';
 import {
@@ -10,98 +8,37 @@ import {
   ProTable,
 } from '@/components/data-display/ProTable/ProTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
+import { CancelRequestStatusBadge } from '@/features/admin/monitoring/CancelRequestStatusBadge';
+import { formatCancelRequestDateTime } from '@/features/admin/monitoring/cancelRequestFormatters';
 import { usePagination } from '@/hooks/usePagination';
 import { cn } from '@/lib/utils';
 
 const INITIAL_ITEMS_PER_PAGE = 10;
 const CANCEL_REASON_PREVIEW_CHARACTER_LIMIT = 24;
 
-const STATUS_PRESENTATION: Record<
-  string,
-  { label: string; className: string }
-> = {
-  PENDING: {
-    label: '承認待ち',
-    className: 'border-amber-200 bg-amber-50 text-amber-800',
-  },
-  APPROVED: {
-    label: '承認済み',
-    className: 'border-emerald-200 bg-emerald-50 text-emerald-800',
-  },
-  REJECTED: {
-    label: '却下',
-    className: 'border-red-200 bg-red-50 text-red-800',
-  },
-};
-
 type CancelRequestTableRow = Omit<MonitoringCancelRequestListItem, 'id'> & {
   id: string;
   cancelRequestId: number;
-};
-
-type DecisionContext = {
-  request: CancelRequestTableRow;
-  decision: MonitoringCancelDecision;
 };
 
 type CancelRequestHistoryTableProps = {
   initialRequests: MonitoringCancelRequestListItem[];
   initialLoading: boolean;
   initialLoadError: string | null;
+  onViewRequest: (request: MonitoringCancelRequestListItem) => void;
 };
-
-function formatDateTime(value: string | null) {
-  if (!value) return '-';
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return new Intl.DateTimeFormat('ja-JP', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date);
-}
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error && error.message ? error.message : fallback;
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const normalizedStatus = status.toUpperCase();
-  const presentation = STATUS_PRESENTATION[normalizedStatus];
-
-  return (
-    <span
-      className={cn(
-        'inline-flex rounded-full border px-2.5 py-1 text-xs font-medium',
-        presentation?.className ??
-          'border-border bg-muted text-muted-foreground',
-      )}
-    >
-      {presentation?.label ?? status}
-    </span>
-  );
 }
 
 export function CancelRequestHistoryTable({
   initialRequests,
   initialLoading,
   initialLoadError,
+  onViewRequest,
 }: CancelRequestHistoryTableProps) {
-  const { toast } = useToast();
   const [requests, setRequests] = useState<CancelRequestTableRow[]>(
     initialRequests.map((request) => ({
       ...request,
@@ -111,12 +48,6 @@ export function CancelRequestHistoryTable({
   );
   const [isLoading, setIsLoading] = useState(initialLoading);
   const [loadError, setLoadError] = useState<string | null>(initialLoadError);
-  const [decisionContext, setDecisionContext] =
-    useState<DecisionContext | null>(null);
-  const [managerRemarks, setManagerRemarks] = useState('');
-  const [remarksError, setRemarksError] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedReasonIds, setExpandedReasonIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -185,71 +116,6 @@ export function CancelRequestHistoryTable({
     setItemsPerPage,
   } = usePagination(requests, { itemsPerPage: INITIAL_ITEMS_PER_PAGE });
 
-  const openDecisionDialog = useCallback(
-    (request: CancelRequestTableRow, decision: MonitoringCancelDecision) => {
-      setDecisionContext({ request, decision });
-      setManagerRemarks('');
-      setRemarksError(null);
-      setSubmitError(null);
-    },
-    [],
-  );
-
-  const handleDialogOpenChange = (open: boolean) => {
-    if (open || isSubmitting) return;
-
-    setDecisionContext(null);
-    setManagerRemarks('');
-    setRemarksError(null);
-    setSubmitError(null);
-  };
-
-  const handleDecisionSubmit = async () => {
-    if (!decisionContext || isSubmitting) return;
-
-    const trimmedRemarks = managerRemarks.trim();
-    if (decisionContext.decision === 'REJECTED' && !trimmedRemarks) {
-      setRemarksError('却下理由を入力してください。');
-      return;
-    }
-
-    setRemarksError(null);
-    setSubmitError(null);
-    setIsSubmitting(true);
-
-    try {
-      await decideMonitoringCancelRequest(
-        decisionContext.request.cancelRequestId,
-        {
-          decision: decisionContext.decision,
-          ...(trimmedRemarks ? { managerRemarks: trimmedRemarks } : {}),
-        },
-      );
-
-      const isApproval = decisionContext.decision === 'APPROVE';
-      setDecisionContext(null);
-      setManagerRemarks('');
-      toast({
-        title: isApproval ? '取消申請を承認しました' : '取消申請を却下しました',
-        variant: isApproval ? 'success' : 'warning',
-      });
-      await reloadRequests();
-    } catch (error) {
-      const message = getErrorMessage(
-        error,
-        '取消申請の処理に失敗しました。',
-      );
-      setSubmitError(message);
-      toast({
-        title: '取消申請を処理できませんでした',
-        description: message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const columns = useMemo<Column<CancelRequestTableRow>[]>(
     () => [
       {
@@ -283,7 +149,7 @@ export function CancelRequestHistoryTable({
         sortable: true,
         className: 'w-[180px] whitespace-nowrap',
         headerClassName: 'w-[180px] whitespace-nowrap',
-        render: (value) => formatDateTime(String(value)),
+        render: (value) => formatCancelRequestDateTime(String(value)),
       },
       {
         key: 'reason',
@@ -332,7 +198,7 @@ export function CancelRequestHistoryTable({
         sortable: true,
         className: 'w-[130px] whitespace-nowrap',
         headerClassName: 'w-[130px] whitespace-nowrap',
-        render: (value) => <StatusBadge status={String(value)} />,
+        render: (value) => <CancelRequestStatusBadge status={String(value)} />,
       },
       {
         key: 'decidedAt',
@@ -340,7 +206,8 @@ export function CancelRequestHistoryTable({
         sortable: true,
         className: 'w-[180px] whitespace-nowrap',
         headerClassName: 'w-[180px] whitespace-nowrap',
-        render: (value) => formatDateTime(value ? String(value) : null),
+        render: (value) =>
+          formatCancelRequestDateTime(value ? String(value) : null),
       },
       {
         key: 'decidedBy',
@@ -357,32 +224,27 @@ export function CancelRequestHistoryTable({
         label: '操作',
         className: 'w-[180px] whitespace-nowrap text-left',
         headerClassName: 'w-[180px] whitespace-nowrap text-left',
-        render: (_, request) =>
-          request.status.toUpperCase() === 'PENDING' ? (
-            <div className="flex justify-start gap-2">
-              <Button
-                type="button"
-                size="md"
-                variant="outline"
-                onClick={() => openDecisionDialog(request, 'APPROVE')}
-              >
-                承認
-              </Button>
-              <Button
-                type="button"
-                size="md"
-                variant="destructive"
-                onClick={() => openDecisionDialog(request, 'REJECTED')}
-              >
-                却下
-              </Button>
-            </div>
-          ) : (
-            '-'
-          ),
+        render: (_, request) => (
+          <Button
+            type="button"
+            variant={
+              request.status.toUpperCase() === 'PENDING' ? 'default' : 'outline'
+            }
+            onClick={() =>
+              onViewRequest({
+                ...request,
+                id: request.cancelRequestId,
+              })
+            }
+          >
+            {request.status.toUpperCase() === 'PENDING'
+              ? '取消内容を確認'
+              : '詳細'}
+          </Button>
+        ),
       },
     ],
-    [expandedReasonIds, openDecisionDialog, toggleReason],
+    [expandedReasonIds, onViewRequest, toggleReason],
   );
 
   if (isLoading) {
@@ -404,11 +266,8 @@ export function CancelRequestHistoryTable({
     );
   }
 
-  const isRejection = decisionContext?.decision === 'REJECTED';
-
   return (
-    <>
-      <div className="space-y-4">
+    <div className="space-y-4">
         <div className="w-full overflow-x-auto pb-2">
           <ProTable
             data={paginatedItems}
@@ -430,71 +289,6 @@ export function CancelRequestHistoryTable({
           onPageChange={goToPage}
           onItemsPerPageChange={setItemsPerPage}
         />
-      </div>
-
-      <AlertDialog
-        open={Boolean(decisionContext)}
-        onOpenChange={handleDialogOpenChange}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              取消申請を{isRejection ? '却下' : '承認'}しますか？
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              申請ID: {decisionContext?.request.id ?? '-'}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <div className="space-y-2">
-            <Label htmlFor="manager-remarks">
-              管理者コメント{isRejection ? '（必須）' : '（任意）'}
-            </Label>
-            <Textarea
-              id="manager-remarks"
-              value={managerRemarks}
-              onChange={(event) => {
-                setManagerRemarks(event.target.value);
-                if (remarksError) setRemarksError(null);
-              }}
-              placeholder={
-                isRejection
-                  ? '却下理由を入力してください'
-                  : '必要に応じてコメントを入力してください'
-              }
-              disabled={isSubmitting}
-              aria-invalid={Boolean(remarksError)}
-              aria-describedby={remarksError ? 'manager-remarks-error' : undefined}
-            />
-            {remarksError && (
-              <p id="manager-remarks-error" className="text-sm text-destructive">
-                {remarksError}
-              </p>
-            )}
-            {submitError && (
-              <p className="text-sm text-destructive">{submitError}</p>
-            )}
-          </div>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSubmitting}>
-              キャンセル
-            </AlertDialogCancel>
-            <Button
-              type="button"
-              variant={isRejection ? 'destructive' : 'default'}
-              disabled={isSubmitting}
-              onClick={handleDecisionSubmit}
-            >
-              {isSubmitting
-                ? '処理中...'
-                : isRejection
-                  ? '却下する'
-                  : '承認する'}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+    </div>
   );
 }
