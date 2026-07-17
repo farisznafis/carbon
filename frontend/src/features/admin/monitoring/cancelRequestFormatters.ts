@@ -7,5 +7,6 @@ export function formatCancelRequestDateTime(value: string | null) {
   return new Intl.DateTimeFormat('ja-JP', {
     dateStyle: 'medium',
     timeStyle: 'short',
+    timeZone: 'UTC',
   }).format(date);
 }

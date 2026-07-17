@@ -250,7 +250,7 @@ export default function CancelRequestDetailPage() {
           </dl>
 
           {isPending && (
-            <div className="mt-12 flex justify-end gap-3 border-t border-border pt-8">
+            <div className="mt-12 flex justify-end gap-3">
               <Button
                 type="button"
                 variant="destructive"
