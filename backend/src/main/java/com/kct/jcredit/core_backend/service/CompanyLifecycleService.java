@@ -16,6 +16,8 @@ public interface CompanyLifecycleService {
      */
     void activatePendingCompany(ParticipatingCompany company);
 
+    void activateApprovedCompany(ParticipatingCompany company);
+
     /**
      * Changes a pending company to rejected.
      */
@@ -27,11 +29,6 @@ public interface CompanyLifecycleService {
     CompanySuspensionResponse createSuspension(
             String companyId,
             CreateCompanySuspensionRequest request);
-
-    /**
-     * Creates or preserves the billing blocker used by automated renewal processing.
-     */
-    void createBillingSuspension(String companyId, String reasonDetail);
 
     /**
      * Returns active or historical suspension records.

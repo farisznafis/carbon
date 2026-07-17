@@ -12,7 +12,6 @@ import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.enums.CompanyStatus;
-import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
@@ -124,7 +123,7 @@ class AdminCompanyQueryServiceImplTest {
 
         String json = new ObjectMapper().findAndRegisterModules().writeValueAsString(response);
         assertThat(json).doesNotContain("\"id\":");
-        assertThat(json).doesNotContain("lastLogin", "decisionMemo", "approvedAt");
+        assertThat(json).doesNotContain("lastLogin", "decisionMemo", "approvedAt", "subscriptionStatus");
     }
 
     @Test
@@ -169,7 +168,6 @@ class AdminCompanyQueryServiceImplTest {
                 .blocknum("1-1")
                 .buildingName("GX Building")
                 .companyStatus(status)
-                .subscriptionStatus(SubscriptionStatus.ACTIVE)
                 .build();
         company.setId(id);
         company.setIsActive(status == CompanyStatus.ACTIVE);

@@ -10,6 +10,8 @@ public interface CompanyApprovalService {
      */
     ApproveCompanyResponse approveCompany(String companyId);
 
+    ApproveCompanyResponse resendMasterSetupLink(String companyId);
+
     /**
      * Rejects a pending registration and records the supplied reason in its notification.
      */

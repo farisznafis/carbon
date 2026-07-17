@@ -1,7 +1,6 @@
 package com.kct.jcredit.core_backend.dto.response.details;
 
 import com.kct.jcredit.core_backend.enums.CompanyStatus;
-import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -25,7 +24,6 @@ public class AdminCompanyDetailCompanyResponse {
     private String blocknum;
     private String buildingName;
     private CompanyStatus companyStatus;
-    private SubscriptionStatus subscriptionStatus;
     private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

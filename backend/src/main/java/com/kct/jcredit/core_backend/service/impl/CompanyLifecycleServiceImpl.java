@@ -10,17 +10,12 @@ import com.kct.jcredit.core_backend.entity.CompanySuspension;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.base.PaginationDetailResponse;
 import com.kct.jcredit.core_backend.enums.CompanyStatus;
-import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
-import com.kct.jcredit.core_backend.enums.SuspensionReasonCode;
 import com.kct.jcredit.core_backend.exception.BusinessRuleViolationException;
-import com.kct.jcredit.core_backend.exception.CustomException;
 import com.kct.jcredit.core_backend.exception.ResourceNotFoundException;
 import com.kct.jcredit.core_backend.repository.postgres.CompanySuspensionRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.service.CompanyLifecycleService;
 import com.kct.jcredit.core_backend.service.NotificationService;
-import com.kct.jcredit.core_backend.service.PaymentGatewayService;
-import com.kct.jcredit.core_backend.service.SubscriptionBillingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -29,14 +24,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.util.StringUtils;
-
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -47,14 +37,9 @@ import java.time.LocalDateTime;
 @Slf4j
 public class CompanyLifecycleServiceImpl implements CompanyLifecycleService {
 
-    private static final BigDecimal RENEWAL_AMOUNT = new BigDecimal("50000.00");
-
     private final ParticipatingCompanyRepository companyRepository;
     private final CompanySuspensionRepository suspensionRepository;
-    private final PaymentGatewayService paymentGatewayService;
-    private final SubscriptionBillingService subscriptionBillingService;
     private final NotificationService notificationService;
-    private final PlatformTransactionManager transactionManager;
 
     /**
      * Activates a pending company and synchronizes the inherited active flag.
@@ -64,7 +49,14 @@ public class CompanyLifecycleServiceImpl implements CompanyLifecycleService {
         requireStatus(company, CompanyStatus.PENDING);
         company.setCompanyStatus(CompanyStatus.ACTIVE);
         company.setIsActive(true);
-        company.setSubscriptionStatus(SubscriptionStatus.ACTIVE);
+        companyRepository.save(company);
+    }
+
+    @Override
+    public void activateApprovedCompany(ParticipatingCompany company) {
+        requireStatus(company, CompanyStatus.APPROVED_PENDING_SETUP);
+        company.setCompanyStatus(CompanyStatus.ACTIVE);
+        company.setIsActive(true);
         companyRepository.save(company);
     }
 
@@ -115,33 +107,6 @@ public class CompanyLifecycleServiceImpl implements CompanyLifecycleService {
     }
 
     /**
-     * Creates the idempotent billing blocker used by renewal failures and expiry processing.
-     */
-    @Override
-    @Transactional
-    public void createBillingSuspension(String companyId, String reasonDetail) {
-        ParticipatingCompany company = getCompanyForUpdate(companyId);
-        if (company.getCompanyStatus() == CompanyStatus.PENDING
-                || company.getCompanyStatus() == CompanyStatus.REJECTED) {
-            return;
-        }
-        if (suspensionRepository.existsByCompany_IdAndReasonCodeAndResolvedAtIsNull(
-                company.getId(), SuspensionReasonCode.BILLING)) {
-            suspendCompany(company);
-            return;
-        }
-
-        CompanySuspension suspension = CompanySuspension.builder()
-                .company(company)
-                .reasonCode(SuspensionReasonCode.BILLING)
-                .reasonDetail(reasonDetail)
-                .build();
-        suspensionRepository.save(suspension);
-        suspendCompany(company);
-        registerAfterCommit(() -> sendSuspensionNotification(company));
-    }
-
-    /**
      * Returns deterministic suspension history with bounded pagination.
      */
     @Override
@@ -181,56 +146,14 @@ public class CompanyLifecycleServiceImpl implements CompanyLifecycleService {
     }
 
     /**
-     * Performs conditional billing before atomically resolving the selected blocker.
+     * Resolves one blocker and derives the resulting company status atomically.
      */
     @Override
+    @Transactional
     public CompanySuspensionResponse resolveSuspension(
             String companyId,
             Integer suspensionId,
             ResolveCompanySuspensionRequest request) {
-        CompanySuspension snapshot = suspensionRepository.findDetails(companyId, suspensionId)
-                .orElseThrow(() -> new ResourceNotFoundException(ResponseConstants.MSG_SUSPENSION_NOT_FOUND));
-        validateResolveRequest(snapshot, request);
-
-        PaymentGatewayService.PaymentResult paymentResult = null;
-        String paymentMethod = null;
-        if (snapshot.getReasonCode() == SuspensionReasonCode.BILLING) {
-            paymentMethod = resolvePaymentMethod(snapshot.getCompany(), request.getPaymentMethod());
-            paymentResult = paymentGatewayService.processPayment(
-                    companyId,
-                    paymentMethod,
-                    RENEWAL_AMOUNT,
-                    "SUSPENSION-" + suspensionId
-            );
-            if (!paymentResult.success()) {
-                throw new CustomException(
-                        ResponseConstants.PAYMENT_REQUIRED,
-                        ResponseConstants.MSG_BILLING_PAYMENT_FAILED
-                );
-            }
-        }
-
-        PaymentGatewayService.PaymentResult successfulPayment = paymentResult;
-        String selectedPaymentMethod = paymentMethod;
-        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
-        return transactionTemplate.execute(status -> finalizeResolution(
-                companyId,
-                suspensionId,
-                request,
-                selectedPaymentMethod,
-                successfulPayment
-        ));
-    }
-
-    /**
-     * Resolves a blocker inside a transaction and derives the resulting company status.
-     */
-    private CompanySuspensionResponse finalizeResolution(
-            String companyId,
-            Integer suspensionId,
-            ResolveCompanySuspensionRequest request,
-            String paymentMethod,
-            PaymentGatewayService.PaymentResult paymentResult) {
         ParticipatingCompany company = getCompanyForUpdate(companyId);
         CompanySuspension suspension = suspensionRepository.findForUpdate(companyId, suspensionId)
                 .orElseThrow(() -> new ResourceNotFoundException(ResponseConstants.MSG_SUSPENSION_NOT_FOUND));
@@ -239,10 +162,6 @@ public class CompanyLifecycleServiceImpl implements CompanyLifecycleService {
                     ResponseConstants.CONFLICT,
                     ResponseConstants.MSG_SUSPENSION_ALREADY_RESOLVED
             );
-        }
-
-        if (suspension.getReasonCode() == SuspensionReasonCode.BILLING) {
-            subscriptionBillingService.completeRecovery(company, paymentMethod, paymentResult);
         }
 
         suspension.setResolvedAt(LocalDateTime.now());
@@ -263,37 +182,6 @@ public class CompanyLifecycleServiceImpl implements CompanyLifecycleService {
         CompanySuspensionResponse response = buildMutationResponse(company, suspension, message);
         response.setActiveSuspensionCount(remainingCount);
         return response;
-    }
-
-    /**
-     * Validates payment-field usage against the blocker category.
-     */
-    private void validateResolveRequest(
-            CompanySuspension suspension,
-            ResolveCompanySuspensionRequest request) {
-        if (!suspension.isActive()) {
-            throw new BusinessRuleViolationException(
-                    ResponseConstants.CONFLICT,
-                    ResponseConstants.MSG_SUSPENSION_ALREADY_RESOLVED
-            );
-        }
-        if (suspension.getReasonCode() != SuspensionReasonCode.BILLING
-                && StringUtils.hasText(request.getPaymentMethod())) {
-            throw new BusinessRuleViolationException(ResponseConstants.MSG_PAYMENT_METHOD_NOT_ALLOWED);
-        }
-    }
-
-    /**
-     * Selects an explicit or stored payment method and rejects missing billing data.
-     */
-    private String resolvePaymentMethod(ParticipatingCompany company, String requestedPaymentMethod) {
-        String paymentMethod = StringUtils.hasText(requestedPaymentMethod)
-                ? requestedPaymentMethod.trim()
-                : company.getPaymentMethod();
-        if (!StringUtils.hasText(paymentMethod)) {
-            throw new BusinessRuleViolationException(ResponseConstants.MSG_PAYMENT_METHOD_REQUIRED);
-        }
-        return paymentMethod;
     }
 
     /**

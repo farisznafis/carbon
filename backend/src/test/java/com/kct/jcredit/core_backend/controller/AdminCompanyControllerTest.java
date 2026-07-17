@@ -92,6 +92,13 @@ class AdminCompanyControllerTest {
     }
 
     @Test
+    void billingIsNotAnAvailableSuspensionReason() {
+        assertThat(SuspensionReasonCode.values())
+                .extracting(Enum::name)
+                .doesNotContain("BILLING");
+    }
+
+    @Test
     void resolveSuspensionDelegatesToLifecycleService() {
         ResolveCompanySuspensionRequest request = new ResolveCompanySuspensionRequest();
         request.setResolutionNote("Resolved");

@@ -89,6 +89,14 @@ public class AdminCompanyController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
+    @PostMapping("/{companyId}/master-setup-link/resend")
+    @PreAuthorize("hasAnyRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApproveCompanyResponse> resendMasterSetupLink(@PathVariable String companyId) {
+        ApproveCompanyResponse response = companyApprovalService.resendMasterSetupLink(companyId);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
     /**
      * Returns master-account, company, user, and site details for one participating company.
      */

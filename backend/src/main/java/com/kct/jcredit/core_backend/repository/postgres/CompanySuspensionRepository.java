@@ -47,20 +47,6 @@ public interface CompanySuspensionRepository extends JpaRepository<CompanySuspen
             @Param("suspensionId") Integer suspensionId);
 
     /**
-     * Loads a suspension and its company for pre-payment validation.
-     */
-    @Query("""
-            SELECT suspension
-            FROM CompanySuspension suspension
-            JOIN FETCH suspension.company company
-            WHERE suspension.id = :suspensionId
-              AND company.companyId = :companyId
-            """)
-    Optional<CompanySuspension> findDetails(
-            @Param("companyId") String companyId,
-            @Param("suspensionId") Integer suspensionId);
-
-    /**
      * Returns only unresolved blockers when the active-only filter is selected.
      */
     Page<CompanySuspension> findByCompany_CompanyIdAndResolvedAtIsNull(

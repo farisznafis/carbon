@@ -177,7 +177,6 @@ public class AdminCompanyQueryServiceImpl implements AdminCompanyQueryService {
                 .blocknum(company.getBlocknum())
                 .buildingName(company.getBuildingName())
                 .companyStatus(company.getCompanyStatus())
-                .subscriptionStatus(company.getSubscriptionStatus())
                 .isActive(company.getIsActive())
                 .createdAt(company.getCreatedAt())
                 .updatedAt(company.getUpdatedAt())

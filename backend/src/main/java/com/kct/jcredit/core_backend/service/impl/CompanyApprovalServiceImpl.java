@@ -12,6 +12,8 @@ import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserReposit
 import com.kct.jcredit.core_backend.service.CompanyApprovalService;
 import com.kct.jcredit.core_backend.service.CompanyLifecycleService;
 import com.kct.jcredit.core_backend.service.NotificationService;
+import com.kct.jcredit.core_backend.service.CompanySecurityFlowService;
+import com.kct.jcredit.core_backend.config.SecurityFlowProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,6 +37,8 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
     private final PasswordEncoder passwordEncoder;
     private final NotificationService notificationService;
     private final CompanyLifecycleService companyLifecycleService;
+    private final CompanySecurityFlowService companySecurityFlowService;
+    private final SecurityFlowProperties securityFlowProperties;
 
     /**
      * Validates approval preconditions, creates the master user, and activates the company.
@@ -60,6 +64,19 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
         if (userRepository.findByCompany_IdAndRole(company.getId(), RoleConstants.MASTER).isPresent()) {
             response.setStatusCode(ResponseConstants.BAD_REQUEST);
             response.setMessage(ResponseConstants.MSG_MASTER_USER_EXISTS);
+            return response;
+        }
+
+        if (securityFlowProperties != null
+                && securityFlowProperties.getFeatures().isMasterSetupLink()) {
+            company.setCompanyStatus(CompanyStatus.APPROVED_PENDING_SETUP);
+            company.setIsActive(false);
+            companyRepository.save(company);
+            companySecurityFlowService.issueMasterSetupLink(company, "operator");
+            response.setStatusCode(ResponseConstants.OK);
+            response.setMessage("Company approved; master account setup is pending.");
+            response.setCompanyId(companyId);
+            response.setMasterUsername(null);
             return response;
         }
 
@@ -137,7 +154,12 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
 
         try {
             companyLifecycleService.rejectPendingCompany(company);
-            notificationService.sendCompanyRejectionNotification(company, rejectionReason);
+            if (securityFlowProperties != null
+                    && securityFlowProperties.getFeatures().isRejectedSignupRevision()) {
+                companySecurityFlowService.issueRevisionLink(company, rejectionReason, "operator");
+            } else {
+                notificationService.sendCompanyRejectionNotification(company, rejectionReason);
+            }
         } catch (Exception ex) {
             log.error("Failed to reject company {}", companyId, ex);
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
@@ -148,6 +170,34 @@ public class CompanyApprovalServiceImpl implements CompanyApprovalService {
 
         response.setStatusCode(ResponseConstants.OK);
         response.setMessage(ResponseConstants.MSG_COMPANY_REJECTED);
+        response.setCompanyId(companyId);
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public ApproveCompanyResponse resendMasterSetupLink(String companyId) {
+        ApproveCompanyResponse response = new ApproveCompanyResponse();
+        if (securityFlowProperties == null
+                || !securityFlowProperties.getFeatures().isMasterSetupLink()) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_NOT_FOUND);
+            return response;
+        }
+        ParticipatingCompany company = companyRepository.findByCompanyId(companyId).orElse(null);
+        if (company == null) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_NOT_FOUND);
+            return response;
+        }
+        if (company.getCompanyStatus() != CompanyStatus.APPROVED_PENDING_SETUP) {
+            response.setStatusCode(ResponseConstants.CONFLICT);
+            response.setMessage(ResponseConstants.MSG_COMPANY_STATUS_CONFLICT);
+            return response;
+        }
+        companySecurityFlowService.issueMasterSetupLink(company, "operator");
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage("Master account setup link resent.");
         response.setCompanyId(companyId);
         return response;
     }
