@@ -18,6 +18,7 @@ import {
 } from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
+import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 import {
   dashboardEmptyStateClassName,
   dashboardPageContainerClassName,
@@ -39,7 +40,7 @@ import { usePagination } from '@/hooks/usePagination';
 import { cn } from '@/lib/utils';
 import { paths } from '@/routes/paths';
 import { useNotificationStore } from '@/stores/notificationStore';
-import { Plus } from 'lucide-react';
+import { AlertTriangle, Plus } from 'lucide-react';
 
 type AdminDashboardTabValue =
   | 'companies'
@@ -691,11 +692,40 @@ const AdminDashboard = () => {
               title="取消一覧"
               description="取消対象のモニタリングデータを確認し、取消申請を送信できます。"
             >
-              <CancelRequestHistoryTable
-                initialRequests={cancelRequestItems}
-                initialLoading={cancelRequestLoading}
-                initialLoadError={cancelRequestError}
-              />
+              <ErrorBoundary
+                fallback={({ resetErrorBoundary }) => (
+                  <div
+                    role="alert"
+                    className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center"
+                  >
+                    <AlertTriangle
+                      className="h-5 w-5 text-destructive"
+                      aria-hidden="true"
+                    />
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-foreground">
+                        モニタリングデータを表示できませんでした。
+                      </p>
+                      <p className="text-subtle text-muted-foreground">
+                        もう一度お試しください。
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={resetErrorBoundary}
+                    >
+                      再試行
+                    </Button>
+                  </div>
+                )}
+              >
+                <CancelRequestHistoryTable
+                  initialRequests={cancelRequestItems}
+                  initialLoading={cancelRequestLoading}
+                  initialLoadError={cancelRequestError}
+                />
+              </ErrorBoundary>
             </AdminDashboardSection>
           </TabsContent>
         </main>

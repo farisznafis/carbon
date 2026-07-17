@@ -4,6 +4,11 @@ import { logger } from '@/lib/logger';
 
 type ErrorBoundaryProps = {
   children: ReactNode;
+  fallback?: ReactNode | ((controls: ErrorBoundaryControls) => ReactNode);
+};
+
+export type ErrorBoundaryControls = {
+  resetErrorBoundary: () => void;
 };
 
 type ErrorBoundaryState = {
@@ -26,8 +31,20 @@ export class ErrorBoundary extends Component<
     logger.error('Unhandled React error', error, errorInfo);
   }
 
+  private resetErrorBoundary = () => {
+    this.setState({ hasError: false });
+  };
+
   render() {
     if (this.state.hasError) {
+      const { fallback } = this.props;
+
+      if (fallback) {
+        return typeof fallback === 'function'
+          ? fallback({ resetErrorBoundary: this.resetErrorBoundary })
+          : fallback;
+      }
+
       return (
         <div className='min-h-screen bg-background text-foreground flex items-center justify-center p-6'>
           <div className='max-w-md text-center space-y-4'>
