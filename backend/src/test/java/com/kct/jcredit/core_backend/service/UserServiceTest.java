@@ -51,7 +51,6 @@ import com.kct.jcredit.core_backend.entity.OperatingUser;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.entity.Site;
-import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
@@ -107,7 +106,6 @@ public class UserServiceTest {
                 .fax("03-1234-5679")
                 .corpNumber("1234567890123")
                 .buildingName("東京都渋谷区")
-                .subscriptionStatus(SubscriptionStatus.ACTIVE)
                 .build();
         testCompany.setId(1);
 
@@ -1607,7 +1605,6 @@ public class UserServiceTest {
                 .nameEn("Other Company")
                 .email("other@test.com")
                 .phoneNumber("03-9999-8888")
-                .subscriptionStatus(SubscriptionStatus.ACTIVE)
                 .build();
         otherCompany.setId(2);
         

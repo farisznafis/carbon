@@ -6,9 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.kct.jcredit.core_backend.converter.StringListJsonConverter;
 import com.kct.jcredit.core_backend.entity.base.BaseEntity;
 import com.kct.jcredit.core_backend.enums.CompanyStatus;
-import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -93,23 +91,18 @@ public class ParticipatingCompany extends BaseEntity {
     private String activityInformation;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "company_status", nullable = false, length = 20)
+    @Column(name = "company_status", nullable = false, length = 30)
     @Builder.Default
     private CompanyStatus companyStatus = CompanyStatus.PENDING;
 
-    @Column(name = "contract_end_date", nullable = false)
-    private LocalDate contractEndDate;
+    @Column(name = "email_verified_at")
+    private LocalDateTime emailVerifiedAt;
 
-    @Column(name = "payment_method", length = 50)
-    private String paymentMethod;
+    @Column(name = "last_rejection_reason", length = 1000)
+    private String lastRejectionReason;
 
-    @Column(name = "last_renewal_date")
-    private LocalDateTime lastRenewalDate;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "subscription_status", length = 20)
-    @Builder.Default
-    private SubscriptionStatus subscriptionStatus = SubscriptionStatus.ACTIVE;
+    @Column(name = "rejected_at")
+    private LocalDateTime rejectedAt;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
@@ -124,17 +117,6 @@ public class ParticipatingCompany extends BaseEntity {
         return companyStatus == CompanyStatus.SUSPENDED;
     }
 
-    /**
-     * Returns whether both the company lifecycle and its contract allow service usage.
-     */
-    public boolean isActiveSubscription() {
-        return companyStatus == CompanyStatus.ACTIVE
-                && subscriptionStatus == SubscriptionStatus.ACTIVE
-                && contractEndDate != null
-                && !contractEndDate.isBefore(LocalDate.now());
-    }
-
-    
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<SiteR002MemberData> methodologies = new ArrayList<>();

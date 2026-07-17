@@ -5,6 +5,7 @@ package com.kct.jcredit.core_backend.enums;
  */
 public enum CompanyStatus {
     PENDING,
+    APPROVED_PENDING_SETUP,
     ACTIVE,
     SUSPENDED,
     REJECTED

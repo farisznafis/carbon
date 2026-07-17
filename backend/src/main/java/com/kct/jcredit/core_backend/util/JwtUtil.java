@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -12,29 +13,38 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.Map;
+import java.time.Duration;
 
 @Component
 public class JwtUtil {
 
     // 🔒 Use a strong key (at least 32 bytes)
-    private static final String SECRET = "my_super_secret_key_for_jwt_signing_12345";
-    private static final long EXPIRATION = 1000 * 60 * 60; // 1 hour
+    @Value("${app.jwt.secret}")
+    private String secret;
+
+    @Value("${app.jwt.expiration:}")
+    private Duration expiration;
 
     private SecretKey getSigningKey() {
         // Using raw bytes safely (no Base64 decoding)
-        return Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     // Generate token with username, companyId, and role
     public String generateToken(Integer userId, String username, String companyId, String role) {
+        return generateToken(userId, username, companyId, role, 0);
+    }
+
+    public String generateToken(Integer userId, String username, String companyId, String role, Integer authVersion) {
         return Jwts.builder()
             .setSubject(username)
             .setIssuedAt(new Date())
-            .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
+            .setExpiration(new Date(System.currentTimeMillis() + expiration.toMillis()))
             .addClaims(Map.of(
                 "userId", userId,
                 "companyId", companyId,
-                "role", role
+                "role", role,
+                "authVersion", authVersion == null ? 0 : authVersion
             ))
             .signWith(getSigningKey(), SignatureAlgorithm.HS256)
             .compact();
@@ -66,6 +76,11 @@ public class JwtUtil {
     // Extract user ID
     public Integer extractUserId(String token) {
         return extractAllClaims(token).get("userId", Integer.class);
+    }
+
+    public Integer extractAuthVersion(String token) {
+        Integer version = extractAllClaims(token).get("authVersion", Integer.class);
+        return version == null ? 0 : version;
     }
 
     // Validate token (optional helper)

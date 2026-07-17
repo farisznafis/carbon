@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import java.util.UUID;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -15,4 +16,7 @@ import lombok.NoArgsConstructor;
 public class AdminLoginResponse extends BaseResponse {
     private String token;
     private AdminResponse admin;
+    private UUID challengeId;
+    private String maskedEmail;
+    private Long expiresInSeconds;
 }

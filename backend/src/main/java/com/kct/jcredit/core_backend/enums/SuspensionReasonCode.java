@@ -1,10 +1,9 @@
 package com.kct.jcredit.core_backend.enums;
 
 /**
- * Categorizes an operational blocker without coupling it to billing state.
+ * Categorizes an operational blocker for a participating company.
  */
 public enum SuspensionReasonCode {
-    BILLING,
     POLICY_VIOLATION,
     SECURITY,
     ADMINISTRATIVE,

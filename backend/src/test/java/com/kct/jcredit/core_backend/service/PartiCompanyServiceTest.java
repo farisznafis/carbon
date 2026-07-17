@@ -22,7 +22,6 @@ import com.kct.jcredit.core_backend.dto.request.UpdatePartiCompanyRequest;
 import com.kct.jcredit.core_backend.dto.response.UpdatePartiCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.details.CompanyInfoResponse;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
-import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
 import com.kct.jcredit.core_backend.enums.CompanyStatus;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.service.impl.PartiCompanyServiceImpl;
@@ -57,8 +56,6 @@ class PartiCompanyServiceTest {
         testCompany.setMunicipality("渋谷区");
         testCompany.setBlocknum("1-1-1");
         testCompany.setBuildingName("テストビル");
-        testCompany.setSubscriptionStatus(SubscriptionStatus.ACTIVE);
-
         updateRequest = new UpdatePartiCompanyRequest();
     }
 

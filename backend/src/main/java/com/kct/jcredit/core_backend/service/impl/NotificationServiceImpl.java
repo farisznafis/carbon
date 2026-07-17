@@ -50,8 +50,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void sendSuspensionNotification(ParticipatingCompany company) {
         String subject = "アカウント停止のお知らせ";
-        String body = "お客様のアカウントは現在停止されています。\n" +
-            "お支払い方法: " + company.getPaymentMethod();
+        String body = "お客様のアカウントは現在停止されています。詳細は管理者へお問い合わせください。";
         sendMail(company.getEmail(), subject, body);
         log.info("[NOTIFICATION] Account Suspension - Company: {}, Email: {}",
             company.getCompanyId(), company.getEmail());
@@ -64,15 +63,6 @@ public class NotificationServiceImpl implements NotificationService {
         sendMail(company.getEmail(), subject, body);
         log.info("[NOTIFICATION] Account Reactivation - Company: {}, Email: {}",
             company.getCompanyId(), company.getEmail());
-    }
-
-    @Override
-    public void sendFailureNotification(ParticipatingCompany company, String failureReason) {
-        String subject = "支払い失敗の報告";
-        String body = "企業ID " + company.getCompanyId() + " での支払いに失敗しました。理由: " + failureReason;
-        sendMail("admin@gxcarbon.jp", subject, body);
-        log.warn("[NOTIFICATION] Payment Failure - Company: {}, Reason: {}",
-            company.getCompanyId(), failureReason);
     }
 
     @Override
@@ -97,6 +87,20 @@ public class NotificationServiceImpl implements NotificationService {
         sendMail(company.getEmail(), subject, body);
         log.info("[NOTIFICATION] Company Rejected - Company: {}, Email: {}",
             company.getCompanyId(), company.getEmail());
+    }
+
+    @Override
+    public void sendSecurityEmail(String email, String subject, String body) {
+        sendMail(email, subject, body);
+    }
+
+    @Override
+    public void sendOtpEmail(String email, String code, long expiresInMinutes) {
+        String subject = "Email verification code";
+        String body = "Your verification code is: " + code + "\n\n"
+                + "This code expires in " + expiresInMinutes + " minutes. "
+                + "Do not share this code with anyone.";
+        sendMail(email, subject, body);
     }
 
 

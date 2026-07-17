@@ -28,6 +28,7 @@ import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserReposit
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.service.AuthService;
 import com.kct.jcredit.core_backend.service.TokenBlacklistService;
+import com.kct.jcredit.core_backend.service.SecurityAccountService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthServiceImpl implements AuthService {
     private final JwtUtil jwtUtil;
     private final TokenBlacklistService blacklistService;
+    private final SecurityAccountService securityAccountService;
     private final PasswordEncoder passwordEncoder;
 
     private final ParticipatingUserRepository userRepository;
@@ -132,7 +134,12 @@ public class AuthServiceImpl implements AuthService {
             return response;
         }
             
-        String token = jwtUtil.generateToken(user.getId(),user.getUsername(), company.getCompanyId(), user.getRole());
+        if (securityAccountService != null && securityAccountService.requiresParticipatingOtp(user)) {
+            return securityAccountService.beginParticipatingLogin(user, company);
+        }
+
+        String token = generateVersionedToken(user.getId(), user.getUsername(), company.getCompanyId(),
+                user.getRole(), user.getAuthVersion());
 
         //もしユーザの情報は必要なら、レスポンスにユーザの情報も入れる
         // UserInfoResponse resData = UserInfoResponse.builder()
@@ -219,7 +226,12 @@ public class AuthServiceImpl implements AuthService {
         operatingUserRepository.save(operator); 
         
         // Generate JWT
-        String token = jwtUtil.generateToken(operator.getId(), operator.getUsername(), operator.getCompany().getCompanyId(), operator.getRole());
+        if (securityAccountService != null && securityAccountService.requiresOperatingOtp()) {
+            return securityAccountService.beginOperatingLogin(operator);
+        }
+
+        String token = generateVersionedToken(operator.getId(), operator.getUsername(),
+                operator.getCompany().getCompanyId(), operator.getRole(), operator.getAuthVersion());
 
         // Build response
         AdminResponse admin = AdminResponse.builder()
@@ -263,6 +275,14 @@ public class AuthServiceImpl implements AuthService {
         } else {
             return changePasswordForParticipatingUser(currentParticipating, request, token);
         }
+    }
+
+    private String generateVersionedToken(Integer userId, String username, String companyId,
+                                          String role, Integer authVersion) {
+        if (authVersion == null || authVersion == 0) {
+            return jwtUtil.generateToken(userId, username, companyId, role);
+        }
+        return jwtUtil.generateToken(userId, username, companyId, role, authVersion);
     }
 
      /**
@@ -427,6 +447,7 @@ public class AuthServiceImpl implements AuthService {
         // 3. パスワード更新
         String encodedPassword = passwordEncoder.encode(request.getNewPassword());
         targetUser.setPassword(encodedPassword);
+        targetUser.setAuthVersion(targetUser.getAuthVersion() == null ? 1 : targetUser.getAuthVersion() + 1);
         operatingUserRepository.save(targetUser);
         
        // 4. Refresh cache so old tokens are rejected by lazy validation
@@ -465,6 +486,7 @@ public class AuthServiceImpl implements AuthService {
         // 3. パスワード更新
         String encodedPassword = passwordEncoder.encode(request.getNewPassword());
         targetUser.setPassword(encodedPassword);
+        targetUser.setAuthVersion(targetUser.getAuthVersion() == null ? 1 : targetUser.getAuthVersion() + 1);
         userRepository.save(targetUser);
         
        // 4. Refresh cache so old tokens are rejected by lazy validation

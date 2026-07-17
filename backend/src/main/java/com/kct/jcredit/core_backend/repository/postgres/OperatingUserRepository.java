@@ -15,7 +15,12 @@ public interface OperatingUserRepository extends JpaRepository<OperatingUser, In
     // Used in login: find operator by username/email and company ID
     Optional<OperatingUser> findByUsernameOrEmailAndCompany_Id(String username, String email, Integer companyId);
     Optional<OperatingUser> findByUsername(String username);
-    Optional<OperatingUser> findByEmailOrUsername(String email, String username);
+    Optional<OperatingUser> findByUsernameIgnoreCase(String username);
+    @Query("SELECT u FROM OperatingUser u WHERE LOWER(u.email) = LOWER(:email) OR LOWER(u.username) = LOWER(:username)")
+    Optional<OperatingUser> findByEmailOrUsername(@Param("email") String email, @Param("username") String username);
+    Optional<OperatingUser> findByEmailIgnoreCase(String email);
+    boolean existsByUsernameIgnoreCase(String username);
+
     List<OperatingUser> findByCompany_Id(Integer companyId);
     Optional<OperatingUser> findByCompany_IdAndRole(Integer companyId, String role);
     Optional<OperatingUser> findByUsernameAndCompany_Id(String username, Integer companyId);

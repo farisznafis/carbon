@@ -7,9 +7,10 @@ import com.kct.jcredit.core_backend.entity.Notification;
 public interface NotificationService {
     void sendSuspensionNotification(ParticipatingCompany company);
     void sendReactivationNotification(ParticipatingCompany company);
-    void sendFailureNotification(ParticipatingCompany company, String failureReason);
     void sendMasterAccountCredentials(ParticipatingCompany company, String username, String plainPassword);
     void sendCompanyRejectionNotification(ParticipatingCompany company, String rejectionReason);
+    void sendSecurityEmail(String email, String subject, String body);
+    void sendOtpEmail(String email, String code, long expiresInMinutes);
     NotificationListResponse getNotifications(
         Integer userId,
         Boolean unreadOnly,

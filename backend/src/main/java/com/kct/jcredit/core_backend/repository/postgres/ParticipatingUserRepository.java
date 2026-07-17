@@ -17,11 +17,15 @@ import java.util.List;
 public interface ParticipatingUserRepository extends JpaRepository<ParticipatingUser, Integer> {
    Optional<ParticipatingUser> findByUsername(String username);
 
+    Optional<ParticipatingUser> findByUsernameIgnoreCase(String username);
+
     Optional<ParticipatingUser> findByEmail(String email);
+
+    Optional<ParticipatingUser> findByEmailIgnoreCase(String email);
 
     @Query("""
         SELECT u FROM ParticipatingUser u
-        WHERE (u.username = :username OR u.email = :email)
+        WHERE (LOWER(u.username) = LOWER(:username) OR LOWER(u.email) = LOWER(:email))
         AND u.company.id = :companyId
     """)
     Optional<ParticipatingUser> findByUsernameOrEmailAndCompanyId(
@@ -42,7 +46,11 @@ public interface ParticipatingUserRepository extends JpaRepository<Participating
 
     boolean existsByUsername(String username);
 
+    boolean existsByUsernameIgnoreCase(String username);
+
     boolean existsByEmail(String email);
+
+    boolean existsByEmailIgnoreCase(String email);
 
     long countByCompany_IdAndSite_Id(Integer companyId, Integer siteId);
     

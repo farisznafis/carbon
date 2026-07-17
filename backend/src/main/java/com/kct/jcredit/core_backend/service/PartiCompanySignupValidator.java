@@ -52,8 +52,7 @@ public class PartiCompanySignupValidator {
             errors.put("corporateNumber", ResponseConstants.MSG_CORP_NUMBER_ALREADY_USED);
         }
 
-        if (repository.findByEmailAndCompanyStatus(email, CompanyStatus.ACTIVE).isPresent()
-                || repository.findByEmailAndCompanyStatus(email, CompanyStatus.SUSPENDED).isPresent()) {
+        if (repository.existsByEmailAndCompanyStatusNot(email, CompanyStatus.REJECTED)) {
             errors.put("email", ResponseConstants.MSG_EMAIL_ALREADY_USED);
         }
 
