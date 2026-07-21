@@ -3,7 +3,7 @@ package com.kct.jcredit.core_backend.service;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002FinalAgreementRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
-import com.kct.jcredit.core_backend.dto.response.EnR002FileUploadResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002FileResponse;
 import com.kct.jcredit.core_backend.entity.ParticipatingProject;
 import com.kct.jcredit.core_backend.enums.EquipmentFileType;
 

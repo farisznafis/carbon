@@ -6,7 +6,7 @@ import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002FinalAgreementRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
-import com.kct.jcredit.core_backend.dto.response.EnR002FileUploadResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002FileResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 import com.kct.jcredit.core_backend.dto.response.ProjectJoinResponse;
@@ -62,7 +62,7 @@ public class SiteProjectController {
              consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('master','user')")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<EnR002FileUploadResponse> uploadFile(
+    public ResponseEntity<EnR002FileResponse> uploadFile(
             Authentication authentication,
             @PathVariable Integer siteId,
             @RequestParam("fileType") String fileType,
@@ -71,7 +71,7 @@ public class SiteProjectController {
         String uploadedBy = jwtUtil.extractUsername(authentication.getCredentials().toString());
         EquipmentFileType fileTypeEnum = EquipmentFileType.fromValue(fileType);
 
-        EnR002FileUploadResponse response = fileUploadSolarService
+        EnR002FileResponse response = fileUploadSolarService
                 .uploadFile(siteId, fileTypeEnum, uploadedBy, file);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }

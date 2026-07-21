@@ -19,7 +19,7 @@ public class ReviewRecordParticipation {
 
     private Integer reviewerId;
     private String  reviewerName;
-    private String  reviewerSeal;
+    private String  reviewerInkan;
     private String  decision;       
     private String  rejectReason;   
     private Map<String, Boolean> docChecks;      

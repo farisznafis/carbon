@@ -19,4 +19,5 @@ public class PendingReviewParticipationResponse extends BaseResponse {
     private String  siteName;
     private String  companyName;
     private String  submittedAt;
+    private String role; // "PRIMARY_REVIEWER" / "SECONDARY_REVIEWER"
 }

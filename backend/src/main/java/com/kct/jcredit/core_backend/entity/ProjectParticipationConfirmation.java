@@ -15,22 +15,24 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProjectParticipationReview {
+public class ProjectParticipationConfirmation {
     private String pk; // "PART#{participationId}"
 
     private ReviewRecordParticipation primaryReview;   
+    private Integer nominatedSecondaryReviewerId;
     private ReviewRecordParticipation secondaryReview; 
 
     @DynamoDbPartitionKey
     @DynamoDbAttribute("pk")
     public String getPk() { return pk; 
-
     }
 
     @DynamoDbAttribute("primary_review")
     public ReviewRecordParticipation getPrimaryReview() { 
         return primaryReview; 
     }
+     @DynamoDbAttribute("nominated_secondary_reviewer_id")
+    public Integer getNominatedSecondaryReviewerId() { return nominatedSecondaryReviewerId; }
 
     @DynamoDbAttribute("secondary_review")
     public ReviewRecordParticipation getSecondaryReview() { 

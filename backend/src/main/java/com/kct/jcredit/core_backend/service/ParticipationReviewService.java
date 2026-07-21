@@ -11,4 +11,6 @@ public interface ParticipationReviewService {
     ParticipationReviewDetailResponse getReviewDetail(Integer participationId);
     void submitReview(Integer participationId, Integer operatorUserId,
                       String operatorName, ReviewParticipationRequest request);
+
+    List<PendingReviewParticipationResponse> getPendingReviewsByUserId(Integer userId);
 }

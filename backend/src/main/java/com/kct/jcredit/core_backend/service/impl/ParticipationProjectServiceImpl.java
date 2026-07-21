@@ -347,7 +347,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
     private void saveConfirmationItems(EnR002ConfirmationItemRequest req,
                                         Integer participationId, String companyId) {
-        EnR002ApplicationConfirmation items = EnR002ApplicationConfirmation.builder() // ← nama entity DynamoDB
+        EnR002ApplicationConfirmation items = EnR002ApplicationConfirmation.builder() 
                 .pk("PART#" + participationId)
                 .isAgreeDataUse(req.getIsAgreeDataUse())
                 .isAgreeExtraData(req.getIsAgreeExtraData())

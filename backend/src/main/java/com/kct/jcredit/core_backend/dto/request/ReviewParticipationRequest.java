@@ -29,11 +29,13 @@ public class ReviewParticipationRequest extends BaseRequest {
     private String rejectReason; //REJECTED
 
     @NotBlank
-    private String reviewerSeal; // digital inkan
+    private String reviewerInkan; // digital inkan
 
     @NotNull
     private Map<String, Boolean> docChecks;      // doc_check_1..7
 
     @NotNull
     private Map<String, Boolean> dataMgmtChecks; // data_mgmt_check_1..5
+
+    private Integer nominatedSecondaryReviewerId; // optional, only for primary reviewer to nominate secondary reviewer
 }

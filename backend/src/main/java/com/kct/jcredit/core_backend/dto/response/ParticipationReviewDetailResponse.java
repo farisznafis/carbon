@@ -10,6 +10,8 @@ import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002ConfirmationItemResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
 
 
 
@@ -17,14 +19,15 @@ import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
+@Getter 
 public class ParticipationReviewDetailResponse extends BaseResponse {
     private Integer participationId;
     private String  projectName;
     private String  siteName;
-    private EnR002EquipmentResponse equipment;
-    private EnR002ConfirmationItemRequest confirmationItems;
-    private EnR002SustainabilityCommitmentRequest sustainabilityCommitment;
-    // private ReviewRecord primaryReview;   
-    // private ReviewRecord secondaryReview; 
+    private EnR002EquipmentResponse equipment; 
+    private EnR002ConfirmationItemResponse confirmationItems;
+    private EnR002SustainabilityCommitmentResponse sustainabilityCommitment;
+    // private ReviewRecord primaryReview;
+    private Integer nominatedSecondaryReviewerId;
+    // private ReviewRecord secondaryReview;
 }

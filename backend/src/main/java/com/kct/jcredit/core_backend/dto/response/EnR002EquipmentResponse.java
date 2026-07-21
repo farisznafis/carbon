@@ -39,5 +39,5 @@ public class EnR002EquipmentResponse {
     private BigDecimal subsidyAmount;
     private BigDecimal preProjectUnitPrice;
 
-    private List<String> evidenceDocuments;
+    private List<EnRFileResponse> evidenceDocuments;
 }
