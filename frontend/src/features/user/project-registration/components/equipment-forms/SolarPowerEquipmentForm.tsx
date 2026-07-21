@@ -1,302 +1,304 @@
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { UseFormReturn } from "react-hook-form";
-import { SolarPowerFormData } from "@/lib/equipmentValidations";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Upload } from "lucide-react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import type { UseFormReturn } from 'react-hook-form';
+import { Upload } from 'lucide-react';
+import {
+  FormGrid,
+  FormSection,
+  FormSectionStack,
+} from '@/components/forms/form-layout';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import type { SolarPowerFormData } from '@/lib/equipmentValidations';
 
-interface SolarPowerEquipmentFormProps {
+type SolarPowerEquipmentFormProps = Readonly<{
   form: UseFormReturn<SolarPowerFormData>;
+}>;
+
+type FileUploadControlProps = Readonly<{
+  id: string;
+  value?: File;
+  onChange: (file?: File) => void;
+}>;
+
+function FileUploadControl({
+  id,
+  value,
+  onChange,
+}: FileUploadControlProps) {
+  return (
+    <div className="space-y-2">
+      <label
+        htmlFor={id}
+        className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
+      >
+        <Upload className="mr-2 h-4 w-4" />
+        ファイルを選択
+      </label>
+      <input
+        id={id}
+        type="file"
+        className="hidden"
+        onChange={(event) => onChange(event.target.files?.[0])}
+      />
+      {value && (
+        <span className="text-sm text-muted-foreground">{value.name}</span>
+      )}
+    </div>
+  );
 }
 
-export function SolarPowerEquipmentForm({ form }: Readonly<SolarPowerEquipmentFormProps>) {
-  const hasBattery = form.watch("hasBattery");
+type YesNoRadioProps = Readonly<{
+  idPrefix: string;
+  value: '' | 'yes' | 'no';
+  onValueChange: (value: 'yes' | 'no') => void;
+}>;
+
+function YesNoRadio({ idPrefix, value, onValueChange }: YesNoRadioProps) {
+  return (
+    <RadioGroup
+      value={value}
+      onValueChange={(nextValue) =>
+        onValueChange(nextValue as 'yes' | 'no')
+      }
+    >
+      <div className="flex items-center space-x-2">
+        <RadioGroupItem value="yes" id={`${idPrefix}-yes`} />
+        <Label htmlFor={`${idPrefix}-yes`} className="cursor-pointer font-normal">
+          有
+        </Label>
+      </div>
+      <div className="flex items-center space-x-2">
+        <RadioGroupItem value="no" id={`${idPrefix}-no`} />
+        <Label htmlFor={`${idPrefix}-no`} className="cursor-pointer font-normal">
+          無
+        </Label>
+      </div>
+    </RadioGroup>
+  );
+}
+
+export function SolarPowerEquipmentForm({
+  form,
+}: SolarPowerEquipmentFormProps) {
+  const hasBattery = form.watch('hasBattery') === 'yes';
+  const hasAdditionalEquipment = form.watch('additionalEquipment') === 'yes';
+  const hasSubsidy = form.watch('hasSubsidy') === 'yes';
 
   return (
-    <div className="space-y-6">
-      {/* 太陽光発電設備の情報 */}
-      <div className="space-y-4">
-        <h3 className="font-semibold text-lg">1. 太陽光発電設備の情報</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="equipmentOpDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>稼働開始日</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
+    <FormSectionStack>
+      <FormSection number={1} title="太陽光発電設備の情報">
+        <FormField
+          control={form.control}
+          name="equipmentOpDate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>稼働開始日（電力受給開始日）</FormLabel>
+              <FormControl>
+                <Input type="date" className="max-w-sm" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="operationStartDateFile"
-          render={({ field: { value, onChange, ...field } }) => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>確認資料：太陽光発電電力受給契約確認書</FormLabel>
               <FormControl>
-                <div className="space-y-2">
-                  <label
-                    htmlFor="equipment-op-date-file"
-                    className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    ファイルを選択
-                  </label>
-                  <input
-                    id="equipment-op-date-file"
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      onChange(file);
-                    }}
-                    {...field}
-                  />
-                  {value && (
-                    <span className="text-sm text-muted-foreground">{value.name}</span>
-                  )}
-                </div>
+                <FileUploadControl
+                  id="equipment-op-date-file"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-      </div>
+      </FormSection>
 
-      {/* 太陽光パネルの情報 */}
-      <div className="space-y-4">
-        <h3 className="font-semibold text-lg">2. 太陽光パネルの情報</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="nominalMaxOutput"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>公称最大出力 (kW)</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="例：10.5" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+      <FormSection number={2} title="太陽光パネルの情報">
+        <FormField
+          control={form.control}
+          name="nominalMaxOutput"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>公称最大出力 (kW)</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  min="0"
+                  step="any"
+                  className="max-w-sm"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="nominalMaxOutputFile"
-          render={({ field: { value, onChange, ...field } }) => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>確認資料：仕様書・カタログ</FormLabel>
               <FormControl>
-                <div className="space-y-2">
-                  <label
-                    htmlFor="nominal-max-output-file"
-                    className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    ファイルを選択
-                  </label>
-                  <input
-                    id="nominal-max-output-file"
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      onChange(file);
-                    }}
-                    {...field}
-                  />
-                  {value && (
-                    <span className="text-sm text-muted-foreground">{value.name}</span>
-                  )}
-                </div>
+                <FileUploadControl
+                  id="nominal-max-output-file"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-      </div>
+      </FormSection>
 
-      {/* パワーコンディショナー情報 */}
-      <div className="space-y-4">
-        <h3 className="font-semibold text-lg">3. パワーコンディショナー情報</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <FormSection number={3} title="パワーコンディショナーの情報">
+        <FormGrid>
           <FormField
             control={form.control}
-            name="pcManufacturer"
+            name="pcsManufacturer"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>メーカー</FormLabel>
                 <FormControl>
-                  <Input placeholder="例：○○電機" {...field} />
+                  <Input {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
-            name="pcModel"
+            name="pcsModel"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>型番</FormLabel>
+                <FormLabel>型式</FormLabel>
                 <FormControl>
-                  <Input placeholder="例：ABC-123" {...field} />
+                  <Input {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
-            name="pcQuantity"
+            name="powerCondUnitCount"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>台数</FormLabel>
+                <FormLabel>導入台数 (台)</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="例：2" {...field} />
+                  <Input type="number" min="0" step="1" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
-            name="pcSerialNumber"
+            name="deviceNo"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>機器固有番号（製造番号）</FormLabel>
                 <FormControl>
-                  <Input placeholder="例：SN123456" {...field} />
+                  <Input {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
-            name="pcStandbyPower"
+            name="powerCondStandby"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>夜間待機電力（1台あたり） (W)</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="例：50" {...field} />
+                  <Input type="number" min="0" step="any" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-        </div>
-
+        </FormGrid>
         <FormField
           control={form.control}
-          name="pcFile"
-          render={({ field: { value, onChange, ...field } }) => (
+          name="pcsFile"
+          render={({ field }) => (
             <FormItem>
-              <FormLabel>確認資料：仕様書</FormLabel>
+              <FormLabel>確認資料：仕様書・カタログ</FormLabel>
               <FormControl>
-                <div className="space-y-2">
-                  <label
-                    htmlFor="pc-file"
-                    className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    ファイルを選択
-                  </label>
-                  <input
-                    id="pc-file"
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      onChange(file);
-                    }}
-                    {...field}
-                  />
-                  {value && (
-                    <span className="text-sm text-muted-foreground">{value.name}</span>
-                  )}
-                </div>
+                <FileUploadControl
+                  id="pcs-file"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-      </div>
+      </FormSection>
 
-      {/* 蓄電池情報 */}
-      <div className="space-y-4">
-        <h3 className="font-semibold text-lg">4. 蓄電池情報</h3>
-
+      <FormSection number={4} title="蓄電池の情報">
         <FormField
           control={form.control}
           name="hasBattery"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>蓄電池の有無</FormLabel>
+              <FormLabel>蓄電池設置の有無</FormLabel>
               <FormControl>
-                <RadioGroup value={field.value} onValueChange={field.onChange}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yes" id="battery-yes" />
-                    <Label htmlFor="battery-yes" className="font-normal cursor-pointer">
-                      あり
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id="battery-no" />
-                    <Label htmlFor="battery-no" className="font-normal cursor-pointer">
-                      なし
-                    </Label>
-                  </div>
-                </RadioGroup>
+                <YesNoRadio
+                  idPrefix="battery"
+                  value={field.value}
+                  onValueChange={field.onChange}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
-        {hasBattery === "yes" && (
+        {hasBattery && (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormGrid>
               <FormField
                 control={form.control}
-                name="batteryManufacturer"
+                name="batteryMaker"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>メーカー</FormLabel>
                     <FormControl>
-                      <Input placeholder="例：△△バッテリー" {...field} />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="batteryModel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>型番</FormLabel>
+                    <FormLabel>型式</FormLabel>
                     <FormControl>
-                      <Input placeholder="例：BAT-456" {...field} />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="batteryCapacity"
@@ -304,43 +306,25 @@ export function SolarPowerEquipmentForm({ form }: Readonly<SolarPowerEquipmentFo
                   <FormItem>
                     <FormLabel>容量 (kWh)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="例：5.0" {...field} />
+                      <Input type="number" min="0" step="any" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
-
+            </FormGrid>
             <FormField
               control={form.control}
               name="batteryFile"
-              render={({ field: { value, onChange, ...field } }) => (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel>確認資料：仕様書・カタログ</FormLabel>
                   <FormControl>
-                    <div className="space-y-2">
-                      <label
-                        htmlFor="battery-file"
-                        className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
-                      >
-                        <Upload className="mr-2 h-4 w-4" />
-                        ファイルを選択
-                      </label>
-                      <input
-                        id="battery-file"
-                        type="file"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          onChange(file);
-                        }}
-                        {...field}
-                      />
-                      {value && (
-                        <span className="text-sm text-muted-foreground">{value.name}</span>
-                      )}
-                    </div>
+                    <FileUploadControl
+                      id="battery-file"
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -348,227 +332,231 @@ export function SolarPowerEquipmentForm({ form }: Readonly<SolarPowerEquipmentFo
             />
           </div>
         )}
-      </div>
+      </FormSection>
 
-      {/* 追加性評価に必要な情報 */}
-      <div className="space-y-4">
-        <h3 className="font-semibold text-lg">5. 追加性評価に必要な情報</h3>
+      <FormSection number={5} title="追加設備の情報">
+        <FormField
+          control={form.control}
+          name="additionalEquipment"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>追加設備の有無</FormLabel>
+              <FormControl>
+                <YesNoRadio
+                  idPrefix="additional-equipment"
+                  value={field.value}
+                  onValueChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {hasAdditionalEquipment && (
+          <FormGrid>
+            <FormField
+              control={form.control}
+              name="additionalEquipmentDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>導入日</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="additionalEquipmentType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>設備種別</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="additionalUnitCount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>導入台数 (台)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min="0" step="1" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="additionalDeviceUniqueNo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>機器固有番号</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="ictEquipmentPowerConsumption"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>ICT設備消費電力 (W)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min="0" step="any" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </FormGrid>
+        )}
+      </FormSection>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="totalInvestment"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>設備の総投資額 (円)</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="例：1000000" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-            
+      <FormSection number={6} title="追加性評価に必要な情報">
+        <FormField
+          control={form.control}
+          name="totalInvestment"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>設備の総投資額 (円)</FormLabel>
+              <FormControl>
+                <Input type="number" min="0" step="1" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="totalInvestmentFile"
-          render={({ field: { value, onChange, ...field } }) => (
+          render={({ field }) => (
             <FormItem>
-              <FormLabel>確認資料：工事請負契約書、請求書、領収書等</FormLabel>
+              <FormLabel>
+                確認資料：工事請負契約書、請求書、領収書等
+              </FormLabel>
               <FormControl>
-                <div className="space-y-2">
-                  <label
-                    htmlFor="total-investment-file"
-                    className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    ファイルを選択
-                  </label>
-                  <input
-                    id="total-investment-file"
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      onChange(file);
-                    }}
-                    {...field}
-                  />
-                  {value && (
-                    <span className="text-sm text-muted-foreground">{value.name}</span>
-                  )}
-                </div>
+                <FileUploadControl
+                  id="total-investment-file"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        {/* 蓄電池情報 */}
-        <div>
         <FormField
           control={form.control}
           name="hasSubsidy"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>補助金の有無</FormLabel>
+              <FormLabel>補助金受給の有無</FormLabel>
               <FormControl>
-                <RadioGroup value={field.value} onValueChange={field.onChange}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yes" id="subsidy-yes" />
-                    <Label htmlFor="subsidy-yes" className="font-normal cursor-pointer">
-                      あり
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id="subsidy-no" />
-                    <Label htmlFor="subsidy-no" className="font-normal cursor-pointer">
-                      なし
-                    </Label>
-                  </div>
-                </RadioGroup>
+                <YesNoRadio
+                  idPrefix="subsidy"
+                  value={field.value}
+                  onValueChange={field.onChange}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="receivedSubsidy"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>補助金受領額 (円)</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="例：300000" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="subsidyName"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>補助金名称</FormLabel>
-                <FormControl>
-                  <Input placeholder="例：再生可能エネルギー導入補助金" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        {hasSubsidy && (
+          <div className="space-y-4">
+            <FormGrid>
+              <FormField
+                control={form.control}
+                name="subsidyName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>補助金名称</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="subsidyAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>補助金額 (円)</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" step="any" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </FormGrid>
+            <FormField
+              control={form.control}
+              name="subsidyNameFile"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>確認資料：補助金交付決定通知書</FormLabel>
+                  <FormControl>
+                    <FileUploadControl
+                      id="subsidy-name-file"
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
 
         <FormField
           control={form.control}
-          name="subsidyNameFile"
-          render={({ field: { value, onChange, ...field } }) => (
+          name="preProjectUnitPrice"
+          render={({ field }) => (
             <FormItem>
-              <FormLabel>確認資料：補助金交付決定通知書</FormLabel>
+              <FormLabel>
+                プロジェクト実施前の電力購入単価 (円/kWh)
+              </FormLabel>
               <FormControl>
-                <div className="space-y-2">
-                  <label
-                    htmlFor="subsidy-name-file"
-                    className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    ファイルを選択
-                  </label>
-                  <input
-                    id="subsidy-name-file"
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      onChange(file);
-                    }}
-                    {...field}
-                  />
-                  {value && (
-                    <span className="text-sm text-muted-foreground">{value.name}</span>
-                  )}
-                </div>
+                <Input type="number" min="0" step="any" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="subsidyAmount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>補助金額 (円)</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="例：300000" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="prePurchaseUnitPrice"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>プロジェクト実施前の電力購入単価 (円/kWh)</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="例：42" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
         <FormField
           control={form.control}
-          name="prePurchaseUnitPriceFile"
-          render={({ field: { value, onChange, ...field } }) => (
+          name="preProjectUnitPriceFile"
+          render={({ field }) => (
             <FormItem>
               <FormLabel>確認資料：電力会社からの請求明細書等</FormLabel>
               <FormControl>
-                <div className="space-y-2">
-                  <label
-                    htmlFor="pre-purchase-unit-price-file"
-                    className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    ファイルを選択
-                  </label>
-                  <input
-                    id="pre-purchase-unit-price-file"
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      onChange(file);
-                    }}
-                    {...field}
-                  />
-                  {value && (
-                    <span className="text-sm text-muted-foreground">{value.name}</span>
-                  )}
-                </div>
+                <FileUploadControl
+                  id="pre-project-unit-price-file"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-      </div>
-    </div>
+      </FormSection>
+    </FormSectionStack>
   );
 }

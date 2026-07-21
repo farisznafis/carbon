@@ -124,10 +124,13 @@ export default function ProjectMembershipPage() {
 
   const handleJoin = (project: SiteProject) => {
     setCurrentProject(project);
-    navigate(paths.projectRegister(siteId, project.id), {
-      state: enteredFromMasterDashboard
-        ? masterDashboardProjectMembershipState
-        : undefined,
+    navigate(paths.projectEquipment(siteId, project.id), {
+      state: {
+        ...(enteredFromMasterDashboard
+          ? masterDashboardProjectMembershipState
+          : {}),
+        returnTo: paths.projectMembership(siteId),
+      },
     });
   };
 

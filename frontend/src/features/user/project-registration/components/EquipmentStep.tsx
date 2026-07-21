@@ -21,11 +21,15 @@ export function EquipmentStep({
   }>();
 
   const handleAddEquipment = () => {
-    navigate(paths.projectEquipment(siteId, projectId));
+    navigate(paths.projectEquipment(siteId, projectId), {
+      state: { returnTo: paths.projectRegister(siteId, projectId) },
+    });
   };
 
   const handleEditEquipment = (equipmentId: string) => {
-    navigate(`${paths.projectEquipment(siteId, projectId)}?equipmentId=${equipmentId}`);
+    navigate(`${paths.projectEquipment(siteId, projectId)}?equipmentId=${equipmentId}`, {
+      state: { returnTo: paths.projectRegister(siteId, projectId) },
+    });
   };
 
   return (

@@ -214,6 +214,64 @@ export type SiteProjectEquipmentResponse = {
   equipments?: SiteProjectEquipment[] | null;
 };
 
+export type SiteProjectEquipmentFileType =
+  | 'solar_contract'
+  | 'panel_catalog'
+  | 'pcs_spec'
+  | 'battery_catalog'
+  | 'construction_invoice'
+  | 'subsidy_notice'
+  | 'electricity_bill';
+
+export type SiteProjectEquipmentValidationFile = {
+  fileType: SiteProjectEquipmentFileType;
+  s3Key: string;
+  fileName: string;
+  fileId: string;
+};
+
+export type SiteProjectEquipmentValidationItem = {
+  tempId: string;
+  methodologyNumber: string;
+  equipmentOpDate: string;
+  nominalMaxOutput: number | null;
+  pcsManufacturer: string;
+  pcsModel: string;
+  powerCondUnitCount: number | null;
+  deviceNo: string;
+  powerCondStandby: number | null;
+  hasBattery: boolean | null;
+  batteryMaker?: string;
+  batteryModel?: string;
+  batteryCapacity?: number | null;
+  additionalEquipment: boolean | null;
+  ictEquipmentPowerConsumption: number | null;
+  additionalEquipmentDate?: string;
+  additionalEquipmentType?: string;
+  additionalUnitCount?: number | null;
+  additionalDeviceUniqueNo?: string;
+  totalInvestment: number | null;
+  hasSubsidy: boolean | null;
+  subsidyName?: string;
+  subsidyAmount?: number | null;
+  preProjectUnitPrice: number | null;
+  files: SiteProjectEquipmentValidationFile[];
+};
+
+export type SiteProjectEquipmentValidationResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+};
+
+export type SiteProjectEquipmentFileUploadResponse = {
+  statusCode?: string;
+  s3Key?: string;
+  fileId?: string;
+  originalName?: string;
+};
+
 // For GET /site list response
 export interface SiteListItem {
   siteId: string;

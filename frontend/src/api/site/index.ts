@@ -8,7 +8,11 @@ export {
   validateUpdateSite,
 } from './mutations';
 export { getSiteProjects } from './projects';
-export { getSiteProjectEquipment } from './equipment';
+export {
+  getSiteProjectEquipment,
+  uploadSiteProjectEquipmentFile,
+  validateSiteProjectEquipments,
+} from './equipment';
 export type {
   CreateSiteData,
   Site,
@@ -18,6 +22,11 @@ export type {
   SiteFormData,
   SiteProjectEquipment,
   SiteProjectEquipmentResponse,
+  SiteProjectEquipmentFileType,
+  SiteProjectEquipmentFileUploadResponse,
+  SiteProjectEquipmentValidationFile,
+  SiteProjectEquipmentValidationItem,
+  SiteProjectEquipmentValidationResponse,
   SiteListItem,
   SiteProject,
   SiteProjectsApiResponse,
