@@ -1,0 +1,96 @@
+url: POST /site/project/projects/{projectId}/join
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body
+{
+  "equipment": {
+    "tempId": "TEMP-001",
+    "siteId": 1,
+    "equipmentOpDate": "2024-05-01",
+    "nominalMaxOutput": 50.0,
+    "pcsManufacturer": "パナソニック",
+    "pcsModel": "VBK-030",
+    "pcsUnitCount": 2,
+    "deviceNo": "DEV-001-A",
+    "pcsStandby": 3.50,
+    "hasBattery": true,
+    "batteryMaker": "テスラ",
+    "batteryModel": "Powerwall-2",
+    "batteryCapacity": 13.5,
+    "totalInvestment": 5000000,
+    "hasSubsidy": true,
+    "subsidyName": "環境省補助金",
+    "subsidyAmount": 1000000,
+    "preProjectUnitPrice": 28.50,
+    "files": [
+      {
+        "fileType": "solar_contract",
+        "s3Key": "tmp/equipments/550e8400.../solar_contract_spec_sheet.pdf",
+        "fileName": "spec_sheet.pdf",
+        "fileId": "550e8400-e29b-41d4-a716-446655440000"
+      }
+    ]
+  },
+  "confirmationItems": {
+    "isAgreeDataUse": true,
+    "isAgreeExtraData": true,
+    "isAgreeTransfer": true,
+    "isNotRegistered": true,
+    "isKeidanrenParticipation": false,
+    "isEmitter": true,
+    "emitterCode": "123456789",
+    "isAdjustedEmissionsAdded": true,
+    "isSubjectToPeriodicReport": true,
+    "isPeriodicReportTypeOne": true,
+    "energyBusinessCode": "1234567",
+    "factoryCode": "7654321"
+  },
+  "sustainabilityCommitment": {
+    "companyName": "株式会社ソーラーファーム",
+    "repName": "伊藤健一",
+    "repRole": "代表取締役",
+    "hasConsent": true
+  },
+  "finalAgreement": {
+    "isAgreeTerms": true
+  }
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "message": "プロジェクトへの参加が完了しました。",
+  "participationId": 5,
+  "equipmentId": 3,
+  "siteProjectRelationId": 2
+}
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+{
+  "statusCode": "ALREADY_SUBMITTED",
+  "message": "こちらのフォームはすでに提出済みのため、内容の変更はできません。"
+},
+{
+  "statusCode": "VALIDATION_ERROR",
+  "message": "入力内容に不備があります。",
+  "errors": {
+    "TEMP-001::equipmentOpDate": "設備稼働日は申込日から2年以内である必要があります。"
+  }
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

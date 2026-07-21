@@ -4,7 +4,7 @@ import com.kct.jcredit.core_backend.dto.request.CreateSiteRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdateSiteRequest;
 import com.kct.jcredit.core_backend.dto.response.CreateSiteResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
-import com.kct.jcredit.core_backend.dto.response.EquipmentSolarRegisterResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentRegisterResponse;
 import com.kct.jcredit.core_backend.dto.response.SiteInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.SiteListResponse;
 import com.kct.jcredit.core_backend.exception.CustomException;
@@ -1089,7 +1089,7 @@ class SiteControllerTest {
             when(jwtUtil.extractRole("dummy-token")).thenReturn("user");
             when(jwtUtil.extractUsername("dummy-token")).thenReturn("testuser");
             
-            EquipmentSolarRegisterResponse mockResponse = mock(EquipmentSolarRegisterResponse.class);
+            EnR002EquipmentRegisterResponse mockResponse = mock(EnR002EquipmentRegisterResponse.class);
             // Setup mock responseEquipmentSolarRegisterResponse mockResponse = mock(EquipmentSolarRegisterResponse.class);
             when(mockResponse.getStatusCode()).thenReturn("200");
             
@@ -1101,7 +1101,7 @@ class SiteControllerTest {
             mockedUtil.when(() -> ResponseUtil.getHttpStatus("200")).thenReturn(HttpStatus.OK);
             
             // Act
-            ResponseEntity<EquipmentSolarRegisterResponse> result = 
+            ResponseEntity<EnR002EquipmentRegisterResponse> result = 
                     siteController.getSiteProjectEquipment(authentication, siteId, projectId);
             
             // Assert
@@ -1151,7 +1151,7 @@ class SiteControllerTest {
             when(jwtUtil.extractUsername("dummy-token")).thenReturn("testuser");
             
             // Setup mock response with empty equipment
-            EquipmentSolarRegisterResponse mockResponse = mock(EquipmentSolarRegisterResponse.class);
+            EnR002EquipmentRegisterResponse mockResponse = mock(EnR002EquipmentRegisterResponse.class);
             when(mockResponse.getStatusCode()).thenReturn("200");
             
             // Setup service mock
@@ -1162,7 +1162,7 @@ class SiteControllerTest {
             mockedUtil.when(() -> ResponseUtil.getHttpStatus("200")).thenReturn(HttpStatus.OK);
             
             // Act
-            ResponseEntity<EquipmentSolarRegisterResponse> result = 
+            ResponseEntity<EnR002EquipmentRegisterResponse> result = 
                     siteController.getSiteProjectEquipment(authentication, siteId, projectId);
             
             // Assert
@@ -1210,7 +1210,7 @@ class SiteControllerTest {
             when(jwtUtil.extractUsername("dummy-token")).thenReturn("testuser");
             
             // Setup mock response
-            EquipmentSolarRegisterResponse mockResponse = mock(EquipmentSolarRegisterResponse.class);
+            EnR002EquipmentRegisterResponse mockResponse = mock(EnR002EquipmentRegisterResponse.class);
             when(mockResponse.getStatusCode()).thenReturn("404");
             
             // Setup service mock
@@ -1221,7 +1221,7 @@ class SiteControllerTest {
             mockedUtil.when(() -> ResponseUtil.getHttpStatus("404")).thenReturn(HttpStatus.NOT_FOUND);
             
             // Act
-            ResponseEntity<EquipmentSolarRegisterResponse> result = 
+            ResponseEntity<EnR002EquipmentRegisterResponse> result = 
                     siteController.getSiteProjectEquipment(authentication, siteId, projectId);
             
             // Assert
@@ -1269,7 +1269,7 @@ class SiteControllerTest {
             when(jwtUtil.extractUsername("dummy-token")).thenReturn("testuser");
             
             // Setup mock response
-            EquipmentSolarRegisterResponse mockResponse = mock(EquipmentSolarRegisterResponse.class);
+            EnR002EquipmentRegisterResponse mockResponse = mock(EnR002EquipmentRegisterResponse.class);
             when(mockResponse.getStatusCode()).thenReturn("404");
             
             // Setup service mock
@@ -1280,7 +1280,7 @@ class SiteControllerTest {
             mockedUtil.when(() -> ResponseUtil.getHttpStatus("404")).thenReturn(HttpStatus.NOT_FOUND);
             
             // Act
-            ResponseEntity<EquipmentSolarRegisterResponse> result = 
+            ResponseEntity<EnR002EquipmentRegisterResponse> result = 
                     siteController.getSiteProjectEquipment(authentication, siteId, projectId);
             
             // Assert

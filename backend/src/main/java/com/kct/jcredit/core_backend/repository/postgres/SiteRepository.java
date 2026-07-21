@@ -24,6 +24,7 @@ public interface SiteRepository extends JpaRepository<Site, Integer> {
     List<Site> findDetailsByCompanyId(@Param("companyId") Integer companyId);
 
     public List<Site> findByCompanyIdAndPicEmail(Integer companyId, String picEmail);
+    List<Site> findByCompany_CompanyId(String companyId);
     long countByCompany_Id(Integer companyId);
 
     @Modifying

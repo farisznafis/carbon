@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,5 +18,5 @@ public class MethodologyInfoResponse {
     private Boolean hasSubsidy;
     private String subsidyName;
     private String remarks;
-    private List<EquipmentItemSolarResponse> equipmentItems;
+    private List<EnR002EquipmentResponse> equipmentItems;
 }

@@ -1,0 +1,43 @@
+url: GET /sites/{siteId}/equipment/{equipmentId}
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+リクエストボディなし（GET）。
+Response - Success (HTTP 200)
+{
+  "id": 3,
+  "siteId": 1,
+  "equipmentOpDate": "2024-05-01",
+  "nominalMaxOutput": 50.0,
+  "pcsManufacturer": "パナソニック",
+  "pcsModel": "VBK-030",
+  "pcsUnitCount": 2,
+  "deviceNo": "DEV-001-A",
+  "pcsStandby": 3.50,
+  "hasBattery": true,
+  "batteryMaker": "テスラ",
+  "batteryModel": "Powerwall-2",
+  "batteryCapacity": 13.5,
+  "totalInvestment": 5000000,
+  "hasSubsidy": true,
+  "subsidyName": "環境省補助金",
+  "subsidyAmount": 1000000,
+  "preProjectUnitPrice": 28.50
+}
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "設備情報が見つかりません。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

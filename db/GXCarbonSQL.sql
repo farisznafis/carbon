@@ -21,6 +21,11 @@ DROP TABLE IF EXISTS site_r002_equipment_file  CASCADE;
 DROP TABLE IF EXISTS company_deletion_request CASCADE;
 DROP TABLE IF EXISTS subscription_log CASCADE;
 DROP TABLE IF EXISTS notification CASCADE;
+DROP TABLE IF EXISTS participating_project CASCADE;
+DROP TABLE IF EXISTS en_r002_equipment CASCADE;
+DROP TABLE IF EXISTS en_r002_equipment_file CASCADE;
+
+
 
 
 -- ============================
@@ -185,22 +190,20 @@ CREATE TABLE site (
     deleted_by VARCHAR(100)
 );
 
--- Site-Project Relation
+-- site_project_relation
 CREATE TABLE site_project_relation (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-	is_active BOOLEAN NOT NULL,
-	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(100),
     updated_by VARCHAR(100),
-    project_id INT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
-    site_id INT NOT NULL REFERENCES site(id) ON DELETE CASCADE,
-    application_date DATE NOT NULL,
     activity_start_date DATE NOT NULL,
-    participating_company_id INT NOT NULL REFERENCES participating_company(id) ON DELETE CASCADE,
     status VARCHAR(100) NOT NULL,
     deleted_at TIMESTAMP,
-    deleted_by VARCHAR(100)
+    deleted_by VARCHAR(100),
+    site_id INT NOT NULL REFERENCES site(id) ON DELETE CASCADE,
+    project_id INT NOT NULL REFERENCES project(id) ON DELETE CASCADE
 );
 
 -- Project Files
@@ -240,6 +243,50 @@ CREATE TABLE operating_user (
         REFERENCES operator_company(id)
 );
 
+-- en_r002_equipment
+CREATE TABLE en_r002_equipment (
+    id SERIAL PRIMARY KEY,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+    deleted_at TIMESTAMP,
+    deleted_by VARCHAR(100),
+    site_id INT NOT NULL REFERENCES site(id) ON DELETE CASCADE,
+    equipment_op_date DATE NOT NULL,
+    nominal_max_output DECIMAL(10,1) NOT NULL,
+    pcs_manufacturer VARCHAR(100) NOT NULL,
+    pcs_model VARCHAR(50) NOT NULL,
+    pcs_unit_count INT,
+    device_no VARCHAR(100) NOT NULL,
+    pcs_standby DECIMAL(8,2) NOT NULL,
+    has_battery BOOLEAN NOT NULL,
+    battery_maker VARCHAR(100),
+    battery_model VARCHAR(100),
+    battery_capacity DECIMAL(10,1),
+    total_investment INT,
+    has_subsidy BOOLEAN NOT NULL,
+    subsidy_name VARCHAR(200),
+    subsidy_amount DECIMAL(15,0),
+    pre_project_unit_price DECIMAL(10,2)
+);
+
+-- en_r002_equipment_file
+CREATE TABLE en_r002_equipment_file (
+    id SERIAL PRIMARY KEY,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+    equipment_id INT NOT NULL REFERENCES en_r002_equipment(id) ON DELETE CASCADE,
+    deleted_at TIMESTAMP,
+    deleted_by VARCHAR(100),
+    file_type VARCHAR(50),
+    file_id VARCHAR(100),
+    s3_key TEXT NOT NULL
+);
 
 -- site_r002_member_data
 CREATE TABLE site_r002_member_data (
@@ -249,56 +296,8 @@ CREATE TABLE site_r002_member_data (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(100),
     updated_by VARCHAR(100),
-    project_id INT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
     site_id INT NOT NULL REFERENCES site(id) ON DELETE CASCADE,
-    participating_company_id INT NOT NULL REFERENCES participating_company(id) ON DELETE CASCADE,
-    methodology_number CHAR(3) NOT NULL,
-    is_eligible BOOLEAN NOT NULL,
-    equipment_op_date DATE NOT NULL,
-    nominal_max_output DECIMAL(10,1) NOT NULL,
-    pcs_manufacturer VARCHAR(100) NOT NULL,
-    pcs_model VARCHAR(50) NOT NULL,
-    power_cond_unit_count INT NOT NULL,
-    device_no VARCHAR(100) NOT NULL,
-    power_cond_standby DECIMAL(8,2) NOT NULL,
-    has_battery BOOLEAN NOT NULL,
-    battery_maker VARCHAR(100),
-    battery_model VARCHAR(100),
-    battery_capacity DECIMAL(10,1),
-    ict_equipment_power_consumption DECIMAL(12,3) NOT NULL,
-    additional_equipment BOOLEAN,
-    additional_equipment_date DATE,
-    equipment_type VARCHAR(50),
-    unit_count INT,
-    device_unique_no VARCHAR(100),
-    total_investment INT,
-    has_subsidy BOOLEAN NOT NULL,
-    subsidy_name VARCHAR(200),
-    subsidy_amount DECIMAL(15,0),
-    pre_project_unit_price DECIMAL(10,2),
-    deleted_at TIMESTAMP,
-    deleted_by VARCHAR(100)
-);
-
--- site_r002_equipment_file 
-CREATE TABLE site_r002_equipment_file (
-    id SERIAL PRIMARY KEY,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by VARCHAR(100),
-    updated_by VARCHAR(100),
-    member_data_id INT NOT NULL,
-    file_id VARCHAR(100), 
-    file_type VARCHAR(50) NOT NULL,
-    s3_key VARCHAR(1000) NOT NULL, 
-    original_name VARCHAR(255),
-    deleted_at TIMESTAMP,
-    deleted_by VARCHAR(100),
-    CONSTRAINT fk_member_data 
-        FOREIGN KEY (member_data_id) 
-        REFERENCES site_r002_member_data(id) 
-        ON DELETE CASCADE
+    project_id INT NOT NULL REFERENCES project(id) ON DELETE CASCADE
 );
 
 -- Participating User
@@ -328,6 +327,20 @@ CREATE TABLE participating_user (
     deleted_by VARCHAR(100)
 );
 
+-- participating_project
+CREATE TABLE participating_project (
+    id SERIAL PRIMARY KEY,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+    project_id INT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES participating_user(id) ON DELETE CASCADE,
+    is_eligible BOOLEAN NOT NULL,
+    equipment_id INT NOT NULL REFERENCES en_r002_equipment(id) ON DELETE CASCADE,
+    s3_key_pdf_membership TEXT
+);
 
 CREATE TABLE EN_R002_reduction_result_total(
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

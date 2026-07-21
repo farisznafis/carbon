@@ -17,7 +17,7 @@ import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepo
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.RecordCancelRequestRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
-import com.kct.jcredit.core_backend.repository.postgres.SiteR002EquipmentFileRepository;
+import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentFileRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteR002MemberDataRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 
@@ -34,7 +34,7 @@ public class CompanyDeletionService {
     private final ParticipatingUserRepository participatingUserRepository;
     private final SiteProjectRelationRepository siteProjectRelationRepository;
     private final SiteR002MemberDataRepository siteR002MemberDataRepository;
-    private final SiteR002EquipmentFileRepository siteR002EquipmentFileRepository;
+    private final EnR002EquipmentFileRepository siteR002EquipmentFileRepository;
     private final EnR002ReductionResultRepository reductionResultRepository;
     private final EnR002ReductionResultTotalRepository reductionResultTotalRepository;
     private final RecordCancelRequestRepository recordCancelRequestRepository;

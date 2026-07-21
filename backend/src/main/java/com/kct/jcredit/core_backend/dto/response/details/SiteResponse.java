@@ -24,4 +24,5 @@ public class SiteResponse{
     private String picLastName;
     private List<String> projects;
     private SiteDataResponse data;
+    private boolean alreadyInProject;
 }
