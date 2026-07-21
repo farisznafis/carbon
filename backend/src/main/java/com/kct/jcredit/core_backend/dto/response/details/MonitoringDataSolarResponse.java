@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MonitoringDataSolarResponse {
   private Integer projectId;
-  private Integer siteId;
+  private String siteId;
   private Integer userId;
   private String projectType; 
   private String timeUpdated;

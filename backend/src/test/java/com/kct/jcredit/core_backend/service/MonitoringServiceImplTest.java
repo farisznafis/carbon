@@ -201,7 +201,7 @@ class MonitoringServiceImplTest {
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         when(monitoringRecordSolarRepository.save(any())).thenReturn(new EnR002MonitoringRecord());
@@ -229,7 +229,7 @@ class MonitoringServiceImplTest {
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(regularUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         when(monitoringRecordSolarRepository.save(any())).thenReturn(new EnR002MonitoringRecord());
@@ -256,7 +256,7 @@ class MonitoringServiceImplTest {
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(regularUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(fukuokaSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(fukuokaSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
 
         // Act
@@ -325,7 +325,7 @@ class MonitoringServiceImplTest {
         when(userRepository.findByUsername(username))
                 .thenReturn(Optional.of(masterUser));
 
-        when(siteRepository.findById(siteId))
+        when(siteRepository.findByPublicId(siteId))
                 .thenReturn(Optional.of(tokyoSite));
 
         when(projectRepository.findById(projectId))
@@ -448,7 +448,7 @@ class MonitoringServiceImplTest {
         request.setElPv(new BigDecimal("-100"));
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
 
@@ -475,7 +475,7 @@ class MonitoringServiceImplTest {
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         // Site-Project relation doesn't exist!
         //サイトとプロジェクトの関係は存在しません
@@ -517,7 +517,7 @@ class MonitoringServiceImplTest {
         wrongCompanySite.setCompany(differentCompany);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(wrongCompanySite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(wrongCompanySite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
 
         // Act
@@ -547,11 +547,11 @@ class MonitoringServiceImplTest {
         // PK形式はSITE#PROJECTに変更されました（companyIdは引き続きユーザー/サイト/プロジェクトのエンティティで検証されます）
         entity.setId(siteId + "#" + projectId);
         entity.setProjectID(projectId);
-        entity.setSiteID(siteId);
+        entity.setSiteID(Integer.parseInt(siteId));
         entity.setElPv(new BigDecimal("100"));
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         when(monitoringRecordSolarRepository.findLatest(entity.getId())).thenReturn(Optional.of(entity));
@@ -577,7 +577,7 @@ class MonitoringServiceImplTest {
         String siteId = "22"; // Fukuoka - not assigned
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(regularUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(fukuokaSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(fukuokaSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
 
         // Act
@@ -599,7 +599,7 @@ class MonitoringServiceImplTest {
         String siteId = "21";
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         // No record found
@@ -633,7 +633,7 @@ class MonitoringServiceImplTest {
         SiteProjectRelation spr1 = new SiteProjectRelation();
         spr1.setProject(project);
         when(tokyoSite.getSiteProjectRelations()).thenReturn(Arrays.asList(spr1));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         // Setup S3Client mock for this test
@@ -668,7 +668,7 @@ class MonitoringServiceImplTest {
         SiteProjectRelation siteProjectRelation = new SiteProjectRelation();
         siteProjectRelation.setProject(project);
         when(tokyoSite.getSiteProjectRelations()).thenReturn(Arrays.asList(siteProjectRelation));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
 
         // Act
         FileUploadResponse response = monitoringService.uploadElpvEvidence(username, companyId, projectId, siteId, "Test", file);
@@ -697,7 +697,7 @@ class MonitoringServiceImplTest {
         SiteProjectRelation siteProjectRelation = new SiteProjectRelation();
         siteProjectRelation.setProject(project);
         when(tokyoSite.getSiteProjectRelations()).thenReturn(Arrays.asList(siteProjectRelation));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
 
         // Act
         FileUploadResponse response = monitoringService.uploadElpvEvidence(username, companyId, projectId, siteId, "Test", file);
@@ -721,7 +721,7 @@ class MonitoringServiceImplTest {
         MultipartFile file = createMockFile("test.pdf", "pdf", 1024);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(regularUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(fukuokaSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(fukuokaSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         // Setup site with project relations for deriveProjectIdFromSite
         SiteProjectRelation siteProjectRelation = new SiteProjectRelation();
@@ -753,7 +753,7 @@ class MonitoringServiceImplTest {
         SiteProjectRelation spr2 = new SiteProjectRelation();
         spr2.setProject(project);
         when(tokyoSite.getSiteProjectRelations()).thenReturn(Arrays.asList(spr2));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         // Setup S3Client mock for this test
@@ -787,7 +787,7 @@ class MonitoringServiceImplTest {
         SiteProjectRelation spr3 = new SiteProjectRelation();
         spr3.setProject(project);
         when(tokyoSite.getSiteProjectRelations()).thenReturn(Arrays.asList(spr3));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         // Setup S3Client mock for this test
@@ -821,7 +821,7 @@ class MonitoringServiceImplTest {
         SiteProjectRelation spr4 = new SiteProjectRelation();
         spr4.setProject(project);
         when(tokyoSite.getSiteProjectRelations()).thenReturn(Arrays.asList(spr4));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         // Setup S3Client mock for this test
@@ -878,8 +878,8 @@ class MonitoringServiceImplTest {
         MultipartFile file = createMockFile("test.pdf", "pdf", 1024);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(brokenSite));
-        when(brokenSite.getId()).thenReturn(siteId);
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(brokenSite));
+        when(brokenSite.getId()).thenReturn(Integer.parseInt(siteId));
         when(brokenSite.getCompany()).thenReturn(null); // NULL company FK!
         // Setup site with project relations for deriveProjectIdFromSite
         SiteProjectRelation siteProjectRelation = new SiteProjectRelation();
@@ -921,7 +921,7 @@ class MonitoringServiceImplTest {
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(unknownRoleUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
 
         // Act
@@ -945,7 +945,7 @@ class MonitoringServiceImplTest {
         request.setDateRecorded(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).plusDays(1).toString());
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
@@ -976,7 +976,7 @@ class MonitoringServiceImplTest {
         request.setDateRecorded(todayInJapan.minusDays(1).toString());
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
@@ -1007,7 +1007,7 @@ class MonitoringServiceImplTest {
         request.setElPvr(new BigDecimal("100.001"));
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
@@ -1036,7 +1036,7 @@ class MonitoringServiceImplTest {
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
@@ -1071,7 +1071,7 @@ class MonitoringServiceImplTest {
         request.setElPvr(new BigDecimal("10.001"));
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
@@ -1152,7 +1152,7 @@ class MonitoringServiceImplTest {
         request.setElpjControlEvidenceUrl(null);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
@@ -1187,7 +1187,7 @@ class MonitoringServiceImplTest {
         request.setElpjAccuracy(null);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
@@ -1217,7 +1217,7 @@ class MonitoringServiceImplTest {
         request.setElpjAccuracy(new BigDecimal("-0.01"));
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
@@ -1247,7 +1247,7 @@ class MonitoringServiceImplTest {
         request.setElpjAccuracy(new BigDecimal("100.01"));
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
@@ -1276,7 +1276,7 @@ class MonitoringServiceImplTest {
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
@@ -1321,7 +1321,7 @@ class MonitoringServiceImplTest {
 
     private void stubValidMonitoringContext(String username, Integer projectId, String siteId) {
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
-        when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
     }

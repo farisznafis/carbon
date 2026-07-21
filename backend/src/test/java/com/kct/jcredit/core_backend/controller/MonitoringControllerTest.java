@@ -598,7 +598,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         mockResponse.setTimestamp(LocalDateTime.now());
 
         when(monitoringService.readLastMonitoringRecordSolar(
-            anyString(), anyString(), anyInt(), anyInt()
+            anyString(), anyString(), anyInt(), anyString()
         )).thenReturn(mockResponse);
 
         // Act
@@ -1086,7 +1086,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         mockResponse.setTimestamp(LocalDateTime.now());
 
         when(monitoringService.readSiteMonitoringRecordsSolar(
-            anyString(), anyString(), anyInt(), anyInt(), eq(-1), anyInt(), any()
+            anyString(), anyString(), anyInt(), anyString(), eq(-1), anyInt(), any()
         )).thenReturn(mockResponse);
 
         // Act
@@ -1115,7 +1115,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         mockResponse.setTimestamp(LocalDateTime.now());
 
         when(monitoringService.readSiteMonitoringRecordsSolar(
-            anyString(), anyString(), anyInt(), anyInt(), anyInt(), eq(0), any()
+            anyString(), anyString(), anyInt(), anyString(), anyInt(), eq(0), any()
         )).thenReturn(mockResponse);
 
         // Act
