@@ -1466,7 +1466,7 @@ public class UserServiceTest {
         SiteResponse siteInfo = response.getSite();
         
         // サイト情報の各フィールドを検証
-        assertThat(siteInfo.getId())
+        assertThat(siteInfo.getSiteId())
                 .as("サイトIDが設定されていること")
                 .isNotNull();
         
@@ -2347,7 +2347,7 @@ void testUpdateUser_GeneralUserSelf_AsPIC_SiteUpdated() {
     // サイト情報も更新されていることを確認
     assertThat(response.getUpdatedSites()).hasSize(1);
     SiteResponse updatedSiteResponse = response.getUpdatedSites().get(0);
-    assertThat(updatedSiteResponse.getId()).isEqualTo("1");
+    assertThat(updatedSiteResponse.getSiteId()).isNotNull();
     assertThat(updatedSiteResponse.getPicFirstName()).isEqualTo("次郎改名");
     assertThat(updatedSiteResponse.getPicLastName()).isEqualTo("佐藤改名");
 
@@ -3441,7 +3441,6 @@ void testUpdateUser_NewSiteCompanyIsNull_ThrowsNullPointerException() {
 
     private SiteResponse mapToSiteResponse(Site site) {
         return SiteResponse.builder()
-                .id(String.valueOf(site.getId()))
                 .siteName(site.getSiteName())
                 .picFirstName(site.getPicFirstName())
                 .picLastName(site.getPicLastName())

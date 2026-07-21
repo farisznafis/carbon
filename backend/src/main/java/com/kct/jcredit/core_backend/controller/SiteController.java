@@ -51,7 +51,7 @@ public class SiteController {
     @Operation(summary = "拠点情報取得", description = "指定された拠点の情報を取得します。")
     public ResponseEntity<SiteInfoResponse> getSite(@PathVariable String siteId) {
 
-        SiteInfoResponse response = siteService.getSiteById(Integer.parseInt(siteId));
+        SiteInfoResponse response = siteService.getSiteByPublicId(siteId);
 
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
@@ -60,7 +60,7 @@ public class SiteController {
     @PreAuthorize("hasAnyRole('master','user')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "拠点に紐付くプロジェクト一覧取得", description = "指定された拠点に紐付くプロジェクトの一覧を取得します。")
-    public ResponseEntity<ProjectListInfoResponse> getProjectsBySiteId(Authentication authentication, @PathVariable Integer siteId) {
+    public ResponseEntity<ProjectListInfoResponse> getProjectsBySiteId(Authentication authentication, @PathVariable String siteId) {
         String token = authentication.getCredentials().toString();
         ProjectListInfoResponse response = projectService.getProjectsBySiteIdAndCompanyId(siteId, jwtUtil.extractCompanyId(token));
 

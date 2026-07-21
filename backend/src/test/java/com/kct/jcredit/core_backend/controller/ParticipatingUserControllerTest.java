@@ -234,7 +234,6 @@ class ParticipatingUserControllerTest {
 
                 // 紐付けられた拠点情報のレスポンスデータを準備
                 SiteResponse siteInfo = SiteResponse.builder()
-                        .id("1")
                         .siteName("東京本社")
                         .build();
 
@@ -323,7 +322,6 @@ class ParticipatingUserControllerTest {
                 // 更新後の拠点情報リストを準備
                 List<SiteResponse> updatedSites = new ArrayList<>();
                 SiteResponse siteInfo = SiteResponse.builder()
-                        .id("2")
                         .siteName("名古屋支社")
                         .build();
                 updatedSites.add(siteInfo);

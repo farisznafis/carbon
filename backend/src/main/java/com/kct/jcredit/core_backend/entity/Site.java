@@ -9,6 +9,7 @@ import org.hibernate.annotations.SQLRestriction;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.kct.jcredit.core_backend.entity.base.BaseEntity;
+import com.kct.jcredit.core_backend.util.PublicIdGenerator;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,6 +25,9 @@ import java.util.List;
 @Builder
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Site extends BaseEntity {
+
+    @Column(name = "public_id", nullable = false, unique = true, length = 32)
+    private String publicId;
 
     @Column(name = "site_name", nullable = false, length = 255)
     private String siteName;
@@ -76,4 +80,11 @@ public class Site extends BaseEntity {
 
     @Column(name = "deleted_by", length = 100)
     private String deletedBy;
+
+    @PrePersist
+    private void generatePublicId() {
+        if (this.publicId == null) {
+            this.publicId = PublicIdGenerator.generateSitePublicId();
+        }
+    }
 }

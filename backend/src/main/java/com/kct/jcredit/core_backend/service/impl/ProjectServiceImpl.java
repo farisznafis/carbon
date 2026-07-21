@@ -58,10 +58,10 @@ public class ProjectServiceImpl implements ProjectService {
     ZoneId DB_ZONE   = ZoneId.of("Asia/Tokyo");
 
     @Override
-    public ProjectListInfoResponse getProjectsBySiteIdAndCompanyId(Integer siteId, String companyId) {
+    public ProjectListInfoResponse getProjectsBySiteIdAndCompanyId(String siteId, String companyId) {
         ProjectListInfoResponse response = new ProjectListInfoResponse();
 
-        Site site = siteRepository.findById(siteId).orElse(null);
+        Site site = siteRepository.findByPublicId(siteId).orElse(null);
         if (site == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);

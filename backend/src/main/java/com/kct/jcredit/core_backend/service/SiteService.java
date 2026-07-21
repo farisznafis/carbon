@@ -10,7 +10,7 @@ import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 
 public interface SiteService {
     SiteListResponse getSitesByCompanyId(String companyId);
-    SiteInfoResponse getSiteById(int siteId);
+    SiteInfoResponse getSiteByPublicId(String publicId);
 
     BaseResponse validateCreateSite(CreateSiteRequest request, String companyId);
     CreateSiteResponse createSite(CreateSiteRequest request, String companyId);

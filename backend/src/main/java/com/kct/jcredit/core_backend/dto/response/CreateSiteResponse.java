@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreateSiteResponse extends BaseResponse {
-    private Integer SiteId;
+    private String siteId;
 }

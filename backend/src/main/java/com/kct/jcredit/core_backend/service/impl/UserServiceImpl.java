@@ -896,7 +896,6 @@ public class UserServiceImpl implements UserService {
      */
     private SiteResponse mapToSiteResponse(Site site) {
     return SiteResponse.builder()
-            .id(String.valueOf(site.getId()))
             .siteName(site.getSiteName())
             .postalCode(site.getPostalCode())
             .prefecture(site.getPrefecture())

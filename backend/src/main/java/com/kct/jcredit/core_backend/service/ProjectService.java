@@ -17,7 +17,7 @@ import com.kct.jcredit.core_backend.dto.response.UpdateProjectStatusResponse;
 
 
 public interface ProjectService {
-    ProjectListInfoResponse getProjectsBySiteIdAndCompanyId(Integer siteId, String companyId);
+    ProjectListInfoResponse getProjectsBySiteIdAndCompanyId(String siteId, String companyId);
 
     CreateProjectResponse createProject(CreateProjectRequest request);
 
