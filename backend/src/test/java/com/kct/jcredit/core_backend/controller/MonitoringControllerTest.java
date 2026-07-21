@@ -83,7 +83,7 @@ class MonitoringControllerTest {
     private static final String TOKEN = "Bearer test-jwt-token";
     private static final String USERNAME = "testuser";
     private static final String COMPANY_ID = "company123";
-    private static final Integer SITE_ID = 1;
+    private static final String SITE_ID = "1";
     private static final Integer PROJECT_ID = 100;
 
     @BeforeEach
@@ -96,7 +96,7 @@ class MonitoringControllerTest {
         request = new RegisterMonitoringRecordSolarRequest();
         // リクエストの必須フィールドを設定
         request.setProjectId(1);
-        request.setSiteId(100);
+        request.setSiteId("100");
         request.setProjectType("SOLAR");
         request.setDateRecorded("2024-01-15"); // ← これが正しい
         request.setElPv(new BigDecimal("123.456"));
@@ -114,7 +114,7 @@ class MonitoringControllerTest {
         
         RegisterMonitoringRecordSolarRequest request = new RegisterMonitoringRecordSolarRequest();
         request.setProjectId(1);
-        request.setSiteId(10);
+        request.setSiteId("10");
         request.setUserId(100);
         request.setProjectType("SOLAR");
         request.setDateRecorded("2024-01-15T10:30:00");
@@ -129,7 +129,7 @@ class MonitoringControllerTest {
         
         MonitoringDataSolarResponse dataResponse = MonitoringDataSolarResponse.builder()
                 .projectId(1)
-                .siteId(10)
+                .siteId("10")
                 .userId(100)
                 .projectType("SOLAR")
                 .dateRecorded("2024-01-15T10:30:00")
@@ -198,7 +198,7 @@ class MonitoringControllerTest {
         
         RegisterMonitoringRecordSolarRequest request = new RegisterMonitoringRecordSolarRequest();
         request.setProjectId(2);
-        request.setSiteId(20);
+        request.setSiteId("20");
         request.setUserId(200);
         request.setProjectType("SOLAR");
         request.setDateRecorded("2024-02-20T14:00:00");
@@ -214,7 +214,7 @@ class MonitoringControllerTest {
         
         MonitoringDataSolarResponse dataResponse = MonitoringDataSolarResponse.builder()
                 .projectId(2)
-                .siteId(20)
+                .siteId("20")
                 .userId(200)
                 .projectType("SOLAR")
                 .dateRecorded("2024-02-20T14:00:00")
@@ -263,7 +263,7 @@ class MonitoringControllerTest {
         
         RegisterMonitoringRecordSolarRequest request = new RegisterMonitoringRecordSolarRequest();
         request.setProjectId(3);
-        request.setSiteId(30);
+        request.setSiteId("30");
         request.setUserId(300);
         request.setProjectType("SOLAR");
         request.setDateRecorded("2024-03-10T09:15:00");
@@ -280,7 +280,7 @@ class MonitoringControllerTest {
         
         MonitoringDataSolarResponse dataResponse = MonitoringDataSolarResponse.builder()
                 .projectId(3)
-                .siteId(30)
+                .siteId("30")
                 .userId(300)
                 .projectType("SOLAR")
                 .dateRecorded("2024-03-10T09:15:00")
@@ -332,7 +332,7 @@ class MonitoringControllerTest {
         // Given
         RegisterMonitoringRecordSolarRequest request = new RegisterMonitoringRecordSolarRequest();
         request.setProjectId(1);
-        request.setSiteId(10);
+        request.setSiteId("10");
         request.setUserId(100);
         request.setProjectType("SOLAR");
         request.setDateRecorded("2024-01-15T10:30:00");
@@ -417,7 +417,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
     MonitoringDataSolarResponse dataResponse = MonitoringDataSolarResponse.builder()
         .userId(10)
         .projectId(100)
-        .siteId(200)
+        .siteId("200")
         .projectType("SOLAR")
         .build();
 
@@ -530,7 +530,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         MonitoringDataSolarResponse dataResponse = MonitoringDataSolarResponse.builder()
                 .userId(10)
                 .projectId(100)
-                .siteId(200)
+                .siteId("200")
                 .projectType("SOLAR")
                 .build();
 
@@ -643,7 +643,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
                 EnR002MonitoringRecord record = EnR002MonitoringRecord.builder()
                         .id(SITE_ID + "#" + PROJECT_ID)
                         .projectID(PROJECT_ID)
-                        .siteID(SITE_ID)
+                        .siteID(Integer.parseInt(SITE_ID))
                         .participatingUserID(100 + i)
                         .dateRecorded("2024-01-15T10:30:00")
                         .elPv(new BigDecimal("150.500"))
@@ -749,7 +749,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
                 EnR002MonitoringRecord record = EnR002MonitoringRecord.builder()
                         .id(SITE_ID + "#" + PROJECT_ID)
                         .projectID(PROJECT_ID)
-                        .siteID(SITE_ID)
+                        .siteID(Integer.parseInt(SITE_ID))
                         .participatingUserID(100 + i)
                         .dateRecorded("2024-01-15T10:30:00")
                         .elPv(new BigDecimal("150.500"))
@@ -856,7 +856,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
                 EnR002MonitoringRecord record = EnR002MonitoringRecord.builder()
                         .id(SITE_ID + "_" + PROJECT_ID)
                         .projectID(PROJECT_ID)
-                        .siteID(SITE_ID)
+                        .siteID(Integer.parseInt(SITE_ID))
                         .participatingUserID(200 + i)
                         .dateRecorded("2024-01-16T10:30:00")
                         .elPv(new BigDecimal("160.500"))
@@ -957,7 +957,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
                 EnR002MonitoringRecord record = EnR002MonitoringRecord.builder()
                         .id(SITE_ID + "#" + PROJECT_ID)
                         .projectID(PROJECT_ID)
-                        .siteID(SITE_ID)
+                        .siteID(Integer.parseInt(SITE_ID))
                         .participatingUserID(300 + i) // ページ3なので異なるユーザーID範囲
                         .dateRecorded("2024-01-17T10:30:00")
                         .elPv(new BigDecimal("170.500"))
@@ -1027,7 +1027,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
                 EnR002MonitoringRecord firstRecord = result.getBody().getItems().get(0);
                 assertEquals(PROJECT_ID, firstRecord.getProjectID(), 
                         "プロジェクトIDが一致しません");
-                assertEquals(SITE_ID, firstRecord.getSiteID(), 
+                assertEquals(Integer.parseInt(SITE_ID), firstRecord.getSiteID(), 
                         "サイトIDが一致しません");
                 assertEquals(300, firstRecord.getParticipatingUserID(), 
                         "ユーザーIDが一致しません");
