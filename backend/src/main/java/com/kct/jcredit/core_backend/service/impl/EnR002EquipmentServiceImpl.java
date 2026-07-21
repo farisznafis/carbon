@@ -81,7 +81,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
     private final EnR002EquipmentRepository              equipmentRepository;
     private final EnR002EquipmentFileRepository          equipmentFileRepository;
     private final EnR002FileUploadService                fileUploadService;
-    private final ParticipationProjectValidationService  validationService; // reuse validateEquipment yang sudah ada
+    private final ParticipationProjectValidationService  validationService; 
 
     @Override
     @Transactional
