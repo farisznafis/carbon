@@ -109,11 +109,12 @@ function getErrorMessage(value: unknown): string | null {
 
 function getSolarFormFieldName(
   path: string,
-  uploadedFiles: SiteProjectEquipmentValidationFile[],
+  validationFiles: SiteProjectEquipmentValidationFile[],
 ): keyof SolarPowerFormData | null {
-  const fileIndex = Number(path.match(/^files\[(\d+)\]/)?.[1]);
+  const filePathMatch = path.match(/files(?:\[(\d+)\]|\.(\d+))/);
+  const fileIndex = Number(filePathMatch?.[1] ?? filePathMatch?.[2]);
   if (Number.isInteger(fileIndex) && fileIndex >= 0) {
-    const fileType = uploadedFiles[fileIndex]?.fileType;
+    const fileType = validationFiles[fileIndex]?.fileType;
     return fileType
       ? solarFileFieldNames[fileType]
       : 'operationStartDateFile';
@@ -222,13 +223,15 @@ function normalizeStoredSolarData(value: unknown): SolarPowerFormData {
   };
 }
 
-function getEquipmentFiles(
+type EquipmentFileCandidate = {
+  fileType: SiteProjectEquipmentFileType;
+  file?: File;
+};
+
+function getEquipmentFileCandidates(
   data: SolarPowerFormData,
-): Array<{ fileType: SiteProjectEquipmentFileType; file: File }> {
-  const candidates: Array<{
-    fileType: SiteProjectEquipmentFileType;
-    file?: File;
-  }> = [
+): EquipmentFileCandidate[] {
+  return [
     { fileType: 'solar_contract', file: data.operationStartDateFile },
     { fileType: 'panel_catalog', file: data.nominalMaxOutputFile },
     { fileType: 'pcs_spec', file: data.pcsFile },
@@ -241,13 +244,17 @@ function getEquipmentFiles(
       : []),
     { fileType: 'electricity_bill', file: data.preProjectUnitPriceFile },
   ];
+}
 
-  return candidates.filter(
-    (candidate): candidate is {
-      fileType: SiteProjectEquipmentFileType;
-      file: File;
-    } => candidate.file instanceof File,
-  );
+function emptyEquipmentValidationFile(
+  fileType: SiteProjectEquipmentFileType,
+): SiteProjectEquipmentValidationFile {
+  return {
+    fileType,
+    s3Key: '',
+    fileName: '',
+    fileId: '',
+  };
 }
 
 export default function EquipmentFormPage() {
@@ -336,25 +343,27 @@ export default function EquipmentFormPage() {
     if (isSubmitting) return;
     solarForm.clearErrors();
     setIsSubmitting(true);
-    let uploadedFiles: SiteProjectEquipmentValidationFile[] = [];
+    let validationFiles: SiteProjectEquipmentValidationFile[] = [];
 
     try {
       const tempId = equipmentId ?? `equipment-${Date.now()}`;
-      uploadedFiles = await Promise.all(
-        getEquipmentFiles(data).map(({ fileType, file }) =>
-          uploadSiteProjectEquipmentFile(
-            siteId,
-            projectId,
-            fileType,
-            file,
-          ),
+      validationFiles = await Promise.all(
+        getEquipmentFileCandidates(data).map(({ fileType, file }) =>
+          file instanceof File
+            ? uploadSiteProjectEquipmentFile(
+                siteId,
+                projectId,
+                fileType,
+                file,
+              )
+            : Promise.resolve(emptyEquipmentValidationFile(fileType)),
         ),
       );
       const payload = mapSolarFormToEquipmentValidationItem(
         data,
         tempId,
         siteId,
-        uploadedFiles,
+        validationFiles,
       );
 
       await validateSiteProjectEquipment(payload);
@@ -377,7 +386,7 @@ export default function EquipmentFormPage() {
         typeof error.payload.errors === 'object'
       ) {
         Object.entries(error.payload.errors).forEach(([path, value]) => {
-          const fieldName = getSolarFormFieldName(path, uploadedFiles);
+          const fieldName = getSolarFormFieldName(path, validationFiles);
           const message = getErrorMessage(value);
           if (fieldName && message) {
             solarForm.setError(fieldName, { type: 'server', message });
