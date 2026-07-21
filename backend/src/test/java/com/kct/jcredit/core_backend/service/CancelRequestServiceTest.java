@@ -76,6 +76,7 @@ class CancelRequestServiceTest {
         testSite = new Site();
         testSite.setId(1);
         testSite.setSiteName("Test Site");
+        testSite.setPublicId(SITE_ID);
         testSite.setCompany(testCompany);
 
         // EnR002MonitoringRecordup
@@ -107,7 +108,7 @@ class CancelRequestServiceTest {
 
         // CreateCancelRequestRequest setup
         createRequest = new CreateCancelRequestRequest();
-        createRequest.setSiteId(1);
+        createRequest.setSiteId(SITE_ID);
         createRequest.setRecordPK(RECORD_PK);
         createRequest.setRecordSK(RECORD_SK);
         createRequest.setReasonText("Test cancellation reason");
@@ -123,7 +124,7 @@ class CancelRequestServiceTest {
         @DisplayName("正常に取消申請を作成できる")
         void shouldCreateCancelRequestSuccessfully() {
             // Given
-            when(siteRepository.findById(1)).thenReturn(Optional.of(testSite));
+            when(siteRepository.findByPublicId(SITE_ID)).thenReturn(Optional.of(testSite));
             when(monitoringRecordSolarRepository.findByPKandSK(RECORD_PK, RECORD_SK))
                 .thenReturn(Optional.of(testRecord));
             when(cancelRequestRepository.existsPendingRequestForRecord(RECORD_PK, RECORD_SK))
@@ -173,7 +174,7 @@ class CancelRequestServiceTest {
         @DisplayName("サイトが見つからない場合、NOT_FOUNDを返す")
         void shouldReturnNotFoundWhenSiteDoesNotExist() {
             // Given
-            when(siteRepository.findById(1)).thenReturn(Optional.empty());
+            when(siteRepository.findByPublicId(SITE_ID)).thenReturn(Optional.empty());
 
             // When
             CancelRequestResponse response = cancelRequestService.createCancelRequest(
@@ -194,7 +195,7 @@ class CancelRequestServiceTest {
         void shouldReturnForbiddenWhenCompanyIdDoesNotMatch() {
             // Given
             testCompany.setCompanyId("different_company");
-            when(siteRepository.findById(1)).thenReturn(Optional.of(testSite));
+            when(siteRepository.findByPublicId(SITE_ID)).thenReturn(Optional.of(testSite));
 
             // When
             CancelRequestResponse response = cancelRequestService.createCancelRequest(
@@ -214,7 +215,7 @@ class CancelRequestServiceTest {
         void shouldReturnForbiddenWhenSiteHasNoCompany() {
             // Given
             testSite.setCompany(null);
-            when(siteRepository.findById(1)).thenReturn(Optional.of(testSite));
+            when(siteRepository.findByPublicId(SITE_ID)).thenReturn(Optional.of(testSite));
 
             // When
             CancelRequestResponse response = cancelRequestService.createCancelRequest(
@@ -230,7 +231,7 @@ class CancelRequestServiceTest {
         @DisplayName("レコードが見つからない場合、NOT_FOUNDを返す")
         void shouldReturnNotFoundWhenRecordDoesNotExist() {
             // Given
-            when(siteRepository.findById(1)).thenReturn(Optional.of(testSite));
+            when(siteRepository.findByPublicId(SITE_ID)).thenReturn(Optional.of(testSite));
             when(monitoringRecordSolarRepository.findByPKandSK(RECORD_PK, RECORD_SK))
                 .thenReturn(Optional.empty());
 
@@ -252,7 +253,7 @@ class CancelRequestServiceTest {
         void shouldReturnBadRequestWhenRecordIsInactive() {
             // Given
             testRecord.setIsActive(false);
-            when(siteRepository.findById(1)).thenReturn(Optional.of(testSite));
+            when(siteRepository.findByPublicId(SITE_ID)).thenReturn(Optional.of(testSite));
             when(monitoringRecordSolarRepository.findByPKandSK(RECORD_PK, RECORD_SK))
                 .thenReturn(Optional.of(testRecord));
 
@@ -272,7 +273,7 @@ class CancelRequestServiceTest {
         @DisplayName("既にPENDINGの申請が存在する場合、BAD_REQUESTを返す")
         void shouldReturnBadRequestWhenPendingRequestExists() {
             // Given
-            when(siteRepository.findById(1)).thenReturn(Optional.of(testSite));
+            when(siteRepository.findByPublicId(SITE_ID)).thenReturn(Optional.of(testSite));
             when(monitoringRecordSolarRepository.findByPKandSK(RECORD_PK, RECORD_SK))
                 .thenReturn(Optional.of(testRecord));
             when(cancelRequestRepository.existsPendingRequestForRecord(RECORD_PK, RECORD_SK))
@@ -294,7 +295,7 @@ class CancelRequestServiceTest {
         @DisplayName("予期しない例外が発生した場合、INTERNAL_SERVER_ERRORを返す")
         void shouldReturnInternalServerErrorWhenExceptionOccurs() {
             // Given
-            when(siteRepository.findById(1))
+            when(siteRepository.findByPublicId(SITE_ID))
                 .thenThrow(new RuntimeException("Database error"));
 
             // When
