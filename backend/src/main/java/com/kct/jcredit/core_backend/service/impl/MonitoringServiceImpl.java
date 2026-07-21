@@ -1057,7 +1057,7 @@ public class MonitoringServiceImpl implements MonitoringService {
     private MonitoringDataSolarResponse mapEntityToResponse(EnR002MonitoringRecord entity, String projectType) {
         return MonitoringDataSolarResponse.builder()
                 .projectId(entity.getProjectID())
-                .siteId(entity.getSiteID())
+                .siteId(siteRepository.findById(entity.getSiteID()).map(Site::getPublicId).orElse(String.valueOf(entity.getSiteID())))
                 .userId(entity.getParticipatingUserID())
                 .projectType(projectType != null ? projectType : "ENR002")
                 .timeUpdated(entity.getTimeUpdated())
