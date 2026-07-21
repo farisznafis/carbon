@@ -158,7 +158,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             // DynamoDBエンティティを作成してデータを入力する
             EnR002MonitoringRecord entity = new EnR002MonitoringRecord();
             // Changed PK format: Now SITE#PROJECT (company validation still done via JWT + entity validation)
-            entity.setId(site.getId() + "#" + project.getId());
+            entity.setId(site.getPublicId() + "#" + project.getId());
             entity.setProjectID(project.getId());
             entity.setSiteID(site.getId());
             entity.setParticipatingUserID(user.getId());
@@ -296,7 +296,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // 4) Fetch latest monitoring record from DynamoDB
             // DynamoDBから最新の監視記録を取得する
-            String recordId = site.getId() + "#" + projectId;
+            String recordId = site.getPublicId() + "#" + projectId;
             EnR002MonitoringRecord entity = monitoringRecordSolarRepository.findLatest(recordId)
                     .orElse(null);
 
@@ -485,7 +485,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // Fetch data - pagination object is updated by repository
             //データ取得 - ページネーションオブジェクトはリポジトリによって更新されます
-            String recordId = site.getId() + "#" + projectId;
+            String recordId = site.getPublicId() + "#" + projectId;
             List<EnR002MonitoringRecord> entities = 
                 monitoringRecordSolarRepository.findAllByRecordIdPaginated(recordId, pagination);
 

@@ -171,12 +171,14 @@ class MonitoringServiceImplTest {
     private void setupSiteMocks() {
         // Setup Tokyo Site mock
         when(tokyoSite.getId()).thenReturn(21);
+        when(tokyoSite.getPublicId()).thenReturn("21");
         when(tokyoSite.getSiteName()).thenReturn("Tokyo HQ");
         when(tokyoSite.getCompany()).thenReturn(participatingCompany);
         when(tokyoSite.getIsActive()).thenReturn(true);
 
         // Setup Fukuoka Site mock
         when(fukuokaSite.getId()).thenReturn(22);
+        when(fukuokaSite.getPublicId()).thenReturn("22");
         when(fukuokaSite.getSiteName()).thenReturn("Fukuoka Office");
         when(fukuokaSite.getCompany()).thenReturn(participatingCompany);
         when(fukuokaSite.getIsActive()).thenReturn(true);
