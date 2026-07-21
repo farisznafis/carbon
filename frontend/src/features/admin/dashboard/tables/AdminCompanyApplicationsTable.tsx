@@ -40,7 +40,7 @@ const statusMeta: Record<
   },
   SUSPENDED: {
     label: '利用停止',
-    className: 'bg-red-100 texgt-red-800',
+    className: 'bg-red-100 text-red-800',
   },
 };
 

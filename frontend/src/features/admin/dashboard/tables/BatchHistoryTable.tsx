@@ -4,11 +4,11 @@ import {
   type BatchHistoryItem,
   type BatchHistoryPagination,
 } from '@/api/batch';
-import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import {
-  ProTable,
-  type Column,
-} from '@/components/data-display/ProTable/ProTable';
+  AdminGridTable,
+  type AdminGridTableColumn,
+} from '@/components/data-display/AdminGridTable';
+import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -20,6 +20,8 @@ const BATCH_STATUS_LABELS: Record<string, string> = {
 };
 const SUCCESS_BATCH_STATUSES = ['SUCCESS', 'SUCCEEDED', 'COMPLETED'];
 const FAILED_BATCH_STATUSES = ['FAILED', 'ERROR'];
+const batchHistoryGridColumns =
+  'minmax(72px, 0.45fr) minmax(130px, 0.8fr) minmax(110px, 0.65fr) minmax(175px, 1fr) minmax(175px, 1fr) minmax(160px, 0.9fr) minmax(175px, 1fr) minmax(160px, 0.9fr) minmax(175px, 1fr) minmax(160px, 0.9fr) minmax(175px, 1fr)';
 
 const DEFAULT_PAGINATION: BatchHistoryPagination = {
   page: INITIAL_PAGE,
@@ -28,10 +30,6 @@ const DEFAULT_PAGINATION: BatchHistoryPagination = {
   totalPages: 1,
   nextPageToken: null,
   hasMore: false,
-};
-
-type BatchHistoryTableRow = Omit<BatchHistoryItem, 'id'> & {
-  id: string;
 };
 
 function formatDateTime(value: string | null) {
@@ -75,7 +73,7 @@ function getErrorMessage(error: unknown) {
 }
 
 export function BatchHistoryTable() {
-  const [items, setItems] = useState<BatchHistoryTableRow[]>([]);
+  const [items, setItems] = useState<BatchHistoryItem[]>([]);
   const [pagination, setPagination] =
     useState<BatchHistoryPagination>(DEFAULT_PAGINATION);
   const [page, setPage] = useState(INITIAL_PAGE);
@@ -89,12 +87,7 @@ export function BatchHistoryTable() {
 
     try {
       const result = await getBatchHistory(page, itemsPerPage);
-      setItems(
-        result.items.map((item) => ({
-          ...item,
-          id: String(item.id),
-        })),
-      );
+      setItems(result.items);
       setPagination(result.pagination);
     } catch (error) {
       setLoadError(getErrorMessage(error));
@@ -107,98 +100,112 @@ export function BatchHistoryTable() {
     void loadHistory();
   }, [loadHistory]);
 
-  const columns = useMemo<Column<BatchHistoryTableRow>[]>(
+  const columns = useMemo<AdminGridTableColumn<BatchHistoryItem>[]>(
     () => [
       {
-        key: 'id',
+        id: 'id',
         label: 'ID',
         sortable: true,
-        className: 'w-[80px] whitespace-nowrap',
-        headerClassName: 'w-[80px] whitespace-nowrap',
+        sortValue: (item) => item.id,
+        render: (item) => <span className="text-body">{item.id}</span>,
       },
       {
-        key: 'status',
+        id: 'status',
         label: 'ステータス',
         sortable: true,
-        className: 'w-[140px] whitespace-nowrap',
-        headerClassName: 'w-[140px] whitespace-nowrap',
-        render: (value) => <BatchStatusBadge status={String(value)} />,
+        sortValue: (item) => item.status,
+        render: (item) => <BatchStatusBadge status={item.status} />,
       },
       {
-        key: 'is_active',
+        id: 'isActive',
         label: '有効状態',
         sortable: true,
-        className: 'w-[110px] whitespace-nowrap',
-        headerClassName: 'w-[110px] whitespace-nowrap',
-        render: (value) => (value ? '有効' : '無効'),
+        sortValue: (item) => (item.is_active ? 1 : 0),
+        render: (item) => (
+          <span className="text-body">{item.is_active ? '有効' : '無効'}</span>
+        ),
       },
       {
-        key: 'start_time',
+        id: 'startTime',
         label: '開始日時',
         sortable: true,
-        className: 'w-[180px] whitespace-nowrap',
-        headerClassName: 'w-[180px] whitespace-nowrap',
-        render: (value) => formatDateTime(String(value)),
+        sortValue: (item) => item.start_time,
+        render: (item) => (
+          <span className="block truncate text-body">
+            {formatDateTime(item.start_time)}
+          </span>
+        ),
       },
       {
-        key: 'end_time',
+        id: 'endTime',
         label: '終了日時',
         sortable: true,
-        className: 'w-[180px] whitespace-nowrap',
-        headerClassName: 'w-[180px] whitespace-nowrap',
-        render: (value) => formatDateTime(value ? String(value) : null),
+        sortValue: (item) => item.end_time,
+        render: (item) => (
+          <span className="block truncate text-body">
+            {formatDateTime(item.end_time)}
+          </span>
+        ),
       },
       {
-        key: 'created_by',
+        id: 'createdBy',
         label: '作成者',
         sortable: true,
-        truncate: true,
-        maxWidth: 'max-w-[180px]',
-        className: 'w-[160px]',
-        headerClassName: 'w-[160px] whitespace-nowrap',
+        sortValue: (item) => item.created_by,
+        render: (item) => (
+          <span className="block truncate text-body">{item.created_by || '-'}</span>
+        ),
       },
       {
-        key: 'created_at',
+        id: 'createdAt',
         label: '作成日時',
         sortable: true,
-        className: 'w-[180px] whitespace-nowrap',
-        headerClassName: 'w-[180px] whitespace-nowrap',
-        render: (value) => formatDateTime(String(value)),
+        sortValue: (item) => item.created_at,
+        render: (item) => (
+          <span className="block truncate text-body">
+            {formatDateTime(item.created_at)}
+          </span>
+        ),
       },
       {
-        key: 'updated_by',
+        id: 'updatedBy',
         label: '更新者',
         sortable: true,
-        truncate: true,
-        maxWidth: 'max-w-[180px]',
-        className: 'w-[160px]',
-        headerClassName: 'w-[160px] whitespace-nowrap',
+        sortValue: (item) => item.updated_by,
+        render: (item) => (
+          <span className="block truncate text-body">{item.updated_by || '-'}</span>
+        ),
       },
       {
-        key: 'updated_at',
+        id: 'updatedAt',
         label: '更新日時',
         sortable: true,
-        className: 'w-[180px] whitespace-nowrap',
-        headerClassName: 'w-[180px] whitespace-nowrap',
-        render: (value) => formatDateTime(String(value)),
+        sortValue: (item) => item.updated_at,
+        render: (item) => (
+          <span className="block truncate text-body">
+            {formatDateTime(item.updated_at)}
+          </span>
+        ),
       },
       {
-        key: 'claimed_by',
+        id: 'claimedBy',
         label: '処理担当者',
         sortable: true,
-        truncate: true,
-        maxWidth: 'max-w-[180px]',
-        className: 'w-[160px]',
-        headerClassName: 'w-[160px] whitespace-nowrap',
-        render: (value) => (value ? String(value) : '-'),
+        sortValue: (item) => item.claimed_by,
+        render: (item) => (
+          <span className="block truncate text-body">{item.claimed_by || '-'}</span>
+        ),
       },
       {
-        key: 'claimed_at',
+        id: 'claimedAt',
         label: '処理取得日時',
         sortable: true,
-        className: 'w-[180px] whitespace-nowrap',
-        headerClassName: 'w-[180px] whitespace-nowrap',
-        render: (value) => formatDateTime(value ? String(value) : null),
+        sortValue: (item) => item.claimed_at,
+        render: (item) => (
+          <span className="block truncate text-body">
+            {formatDateTime(item.claimed_at)}
+          </span>
+        ),
       },
     ],
     [],
@@ -232,19 +239,14 @@ export function BatchHistoryTable() {
 
   return (
     <div className="space-y-4">
-      <div className="w-full overflow-x-auto pb-2">
-        <ProTable
-          data={items}
-          columns={columns}
-          clickable={false}
-          height="max-h-[520px]"
-          containerClassName="min-w-[1850px] overflow-x-hidden"
-          tableClassName="table-fixed"
-          emptyState={
-            <p className="text-muted-foreground">バッチ履歴はありません。</p>
-          }
-        />
-      </div>
+      <AdminGridTable
+        rows={items}
+        columns={columns}
+        gridTemplateColumns={batchHistoryGridColumns}
+        minWidth={1850}
+        getRowKey={(item) => String(item.id)}
+        emptyMessage="バッチ履歴はありません。"
+      />
       <PaginationControls
         currentPage={pagination.page}
         totalPages={pagination.totalPages}

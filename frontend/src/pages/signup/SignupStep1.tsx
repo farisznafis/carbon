@@ -554,7 +554,7 @@ export const SignupStep1 = () => {
             <FormActions>
               <Button
                 type="submit"
-                size="sm"
+                size="md"
                 className="w-full"
                 disabled={form.formState.isSubmitting || isValidatingCompanyInfo}
               >

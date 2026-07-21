@@ -154,7 +154,7 @@ export function AdminGridTable<T>({
             onClick={() => onRowClick?.(row)}
             onKeyDown={(event) => handleRowKeyDown(event, row)}
             className={cn(
-              'grid items-center gap-4 border-b border-border px-5 py-4 last:border-b-0',
+              'grid min-h-[60px] items-center gap-4 border-b border-border px-5 py-3 last:border-b-0',
               onRowClick && 'cursor-pointer transition hover:bg-muted/40',
             )}
             style={{ ...gridStyle, minWidth }}

@@ -4,9 +4,9 @@ import {
   type MonitoringCancelRequestListItem,
 } from '@/api/monitoring';
 import {
-  type Column,
-  ProTable,
-} from '@/components/data-display/ProTable/ProTable';
+  AdminGridTable,
+  type AdminGridTableColumn,
+} from '@/components/data-display/AdminGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { Button } from '@/components/ui/button';
 import { CancelRequestStatusBadge } from '@/features/admin/monitoring/CancelRequestStatusBadge';
@@ -14,11 +14,8 @@ import { formatCancelRequestDateTime } from '@/features/admin/monitoring/cancelR
 import { usePagination } from '@/hooks/usePagination';
 
 const INITIAL_ITEMS_PER_PAGE = 10;
-
-type CancelRequestTableRow = Omit<MonitoringCancelRequestListItem, 'id'> & {
-  id: string;
-  cancelRequestId: number;
-};
+const cancelRequestGridColumns =
+  'minmax(200px, 1.35fr) minmax(140px, 0.8fr) minmax(190px, 1fr) minmax(130px, 0.7fr) minmax(180px, 0.9fr)';
 
 type CancelRequestHistoryTableProps = {
   initialRequests: MonitoringCancelRequestListItem[];
@@ -37,23 +34,12 @@ export function CancelRequestHistoryTable({
   initialLoadError,
   onViewRequest,
 }: CancelRequestHistoryTableProps) {
-  const [requests, setRequests] = useState<CancelRequestTableRow[]>(
-    initialRequests.map((request) => ({
-      ...request,
-      id: String(request.id),
-      cancelRequestId: request.id,
-    })),
-  );
+  const [requests, setRequests] = useState(initialRequests);
   const [isLoading, setIsLoading] = useState(initialLoading);
   const [loadError, setLoadError] = useState<string | null>(initialLoadError);
+
   useEffect(() => {
-    setRequests(
-      initialRequests.map((request) => ({
-        ...request,
-        id: String(request.id),
-        cancelRequestId: request.id,
-      })),
-    );
+    setRequests(initialRequests);
   }, [initialRequests]);
 
   useEffect(() => {
@@ -69,14 +55,7 @@ export function CancelRequestHistoryTable({
     setLoadError(null);
 
     try {
-      const responseItems = await getMonitoringCancelRequests();
-      setRequests(
-        responseItems.map((request) => ({
-          ...request,
-          id: String(request.id),
-          cancelRequestId: request.id,
-        })),
-      );
+      setRequests(await getMonitoringCancelRequests());
     } catch (error) {
       setLoadError(
         getErrorMessage(error, '取消申請一覧の取得に失敗しました。'),
@@ -96,65 +75,72 @@ export function CancelRequestHistoryTable({
     setItemsPerPage,
   } = usePagination(requests, { itemsPerPage: INITIAL_ITEMS_PER_PAGE });
 
-  const columns = useMemo<Column<CancelRequestTableRow>[]>(
+  const columns = useMemo<
+    AdminGridTableColumn<MonitoringCancelRequestListItem>[]
+  >(
     () => [
       {
-        key: 'siteName',
+        id: 'siteName',
         label: '地点名',
         sortable: true,
-        truncate: true,
-        maxWidth: 'max-w-[260px]',
-        className: 'w-[240px]',
-        headerClassName: 'w-[240px] whitespace-nowrap',
+        sortValue: (request) => request.siteName,
+        render: (request) => (
+          <span className="block truncate text-body font-bold text-slate-800">
+            {request.siteName || '-'}
+          </span>
+        ),
       },
       {
-        key: 'requestedBy',
+        id: 'requestedBy',
         label: '申請者',
         sortable: true,
-        truncate: true,
-        maxWidth: 'max-w-[180px]',
-        className: 'w-[140px]',
-        headerClassName: 'w-[140px] whitespace-nowrap',
+        sortValue: (request) => request.requestedBy,
+        render: (request) => (
+          <span className="block truncate text-body text-foreground">
+            {request.requestedBy || '-'}
+          </span>
+        ),
       },
       {
-        key: 'requestedAt',
+        id: 'requestedAt',
         label: '申請日時',
         sortable: true,
-        className: 'w-[180px] whitespace-nowrap',
-        headerClassName: 'w-[180px] whitespace-nowrap',
-        render: (value) => formatCancelRequestDateTime(String(value)),
+        sortValue: (request) => request.requestedAt,
+        render: (request) => (
+          <span className="block truncate text-body text-foreground">
+            {formatCancelRequestDateTime(request.requestedAt)}
+          </span>
+        ),
       },
       {
-        key: 'status',
+        id: 'status',
         label: 'ステータス',
         sortable: true,
-        className: 'w-[130px] whitespace-nowrap',
-        headerClassName: 'w-[130px] whitespace-nowrap',
-        render: (value) => <CancelRequestStatusBadge status={String(value)} />,
+        sortValue: (request) => request.status,
+        render: (request) => <CancelRequestStatusBadge status={request.status} />,
       },
       {
-        key: 'id',
         id: 'actions',
         label: '操作',
-        className: 'w-[180px] whitespace-nowrap text-left',
-        headerClassName: 'w-[180px] whitespace-nowrap text-left',
-        render: (_, request) => (
-          <Button
-            type="button"
-            variant={
-              request.status.toUpperCase() === 'PENDING' ? 'default' : 'outline'
-            }
-            onClick={() =>
-              onViewRequest({
-                ...request,
-                id: request.cancelRequestId,
-              })
-            }
+        render: (request) => (
+          <div
+            onClick={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
           >
-            {request.status.toUpperCase() === 'PENDING'
-              ? '取消内容を確認'
-              : '詳細'}
-          </Button>
+            <Button
+              type="button"
+              variant={
+                request.status.toUpperCase() === 'PENDING'
+                  ? 'default'
+                  : 'outline'
+              }
+              onClick={() => onViewRequest(request)}
+            >
+              {request.status.toUpperCase() === 'PENDING'
+                ? '取消内容を確認'
+                : '詳細'}
+            </Button>
+          </div>
         ),
       },
     ],
@@ -182,27 +168,22 @@ export function CancelRequestHistoryTable({
 
   return (
     <div className="space-y-4">
-        <div className="w-full overflow-x-auto pb-2">
-          <ProTable
-            data={paginatedItems}
-            columns={columns}
-            clickable={false}
-            height="max-h-[520px]"
-            containerClassName="min-w-[900px] overflow-x-hidden"
-            tableClassName="table-fixed"
-            emptyState={
-              <p className="text-muted-foreground">取消申請はありません。</p>
-            }
-          />
-        </div>
-        <PaginationControls
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={goToPage}
-          onItemsPerPageChange={setItemsPerPage}
-        />
+      <AdminGridTable
+        rows={paginatedItems}
+        columns={columns}
+        gridTemplateColumns={cancelRequestGridColumns}
+        minWidth={960}
+        getRowKey={(request) => String(request.id)}
+        emptyMessage="取消申請はありません。"
+      />
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        onPageChange={goToPage}
+        onItemsPerPageChange={setItemsPerPage}
+      />
     </div>
   );
 }
