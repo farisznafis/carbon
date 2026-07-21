@@ -7,27 +7,21 @@ import lombok.Getter;
 import lombok.Builder;
 
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
-import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
-import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
-import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
-import com.kct.jcredit.core_backend.dto.response.EnR002ConfirmationItemResponse;
-import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
-
-
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter 
+@Getter
 public class ParticipationReviewDetailResponse extends BaseResponse {
     private Integer participationId;
     private String  projectName;
     private String  siteName;
-    private EnR002EquipmentResponse equipment; 
+    private String companyName;
+    private String submittedAt;
+    private String role;
+    private EnR002EquipmentResponse equipment;
     private EnR002ConfirmationItemResponse confirmationItems;
     private EnR002SustainabilityCommitmentResponse sustainabilityCommitment;
-    // private ReviewRecord primaryReview;
-    private Integer nominatedSecondaryReviewerId;
-    // private ReviewRecord secondaryReview;
+    private ProjectParticipationConfirmationResponse review; 
 }

@@ -21,5 +21,6 @@ public class EnR002SustainabilityCommitmentResponse extends BaseResponse {
     private String companyName;
     private String repName;
     private String repRole;
-    private String hasConsent;
+    private Boolean hasConsent;
+    private Boolean isAgreeTerms;
 }

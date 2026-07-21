@@ -1,15 +1,24 @@
 package com.kct.jcredit.core_backend.controller;
 
 import com.kct.jcredit.core_backend.dto.request.RejectCompanyRequest;
+import com.kct.jcredit.core_backend.dto.request.ReviewParticipationRequest;
 import com.kct.jcredit.core_backend.dto.response.ApproveCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.PendingCompanyListResponse;
 import com.kct.jcredit.core_backend.dto.response.RejectCompanyResponse;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+import com.kct.jcredit.core_backend.dto.response.ParticipationReviewDetailResponse;
 import com.kct.jcredit.core_backend.service.CompanyApprovalService;
+import com.kct.jcredit.core_backend.service.ParticipationReviewService;
+import com.kct.jcredit.core_backend.util.JwtUtil;
+import com.kct.jcredit.core_backend.service.AuthService;
+import com.kct.jcredit.core_backend.service.UserService;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.*;
+import org.springframework.security.core.Authentication;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +27,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -27,6 +37,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminCompanyController {
 
     private final CompanyApprovalService companyApprovalService;
+    private final ParticipationReviewService reviewService;
+    private final JwtUtil jwtUtil;
 
     @PostMapping("/{companyId}/approve")
     @PreAuthorize("hasAnyRole('operator')")
@@ -55,5 +67,39 @@ public class AdminCompanyController {
     public ResponseEntity<PendingCompanyListResponse> getPendingCompanies() {
         PendingCompanyListResponse response = companyApprovalService.getPendingCompanies();
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+    
+    @GetMapping("/participation")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<List<ParticipationReviewDetailResponse>> getPendingReviews() {
+        return ResponseEntity.ok(reviewService.getPendingReviews());
+    }
+
+    @GetMapping("/{participationId}")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ParticipationReviewDetailResponse> getReviewDetail(
+            @PathVariable Integer participationId) {
+        return ResponseEntity.ok(reviewService.getReviewDetail(participationId));
+    }
+
+    @PostMapping("/{participationId}/review")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<BaseResponse> submitReview(
+            Authentication authentication,
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Integer participationId,
+            @RequestBody @Valid ReviewParticipationRequest request) {
+
+        String username = authentication.getName();
+        String token = authHeader.substring(7);
+
+        Integer operatorUserId = jwtUtil.extractUserId(token);
+        String operatorName = jwtUtil.extractUsername(token);
+
+        reviewService.submitReview(participationId, operatorUserId, operatorName, request);
+        return ResponseEntity.ok(BaseResponse.success("レビューを受け付けました。"));
     }
 }

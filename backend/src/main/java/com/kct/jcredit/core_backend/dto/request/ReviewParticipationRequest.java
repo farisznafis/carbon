@@ -20,22 +20,27 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
-public class ReviewParticipationRequest extends BaseRequest {
+@Getter @Setter
+public class ReviewParticipationRequest {
+
     @NotNull
     private String decision; // "APPROVED" / "REJECTED"
-
-    private String rejectReason; //REJECTED
+    private String rejectReason;
 
     @NotBlank
-    private String reviewerInkan; // digital inkan
+    private String reviewerInkan;
 
-    @NotNull
-    private Map<String, Boolean> docChecks;      // doc_check_1..7
+    @NotNull private Boolean isSolarContractDoc;
+    @NotNull private Boolean isPcsSpecDoc;
+    @NotNull private Boolean isBatterySpecDoc;
+    @NotNull private Boolean isOperationStartDoc;
+    @NotNull private Boolean isGenerationDataDoc;
+    @NotNull private Boolean isReversePowerDoc;
+    @NotNull private Boolean isInvestmentProofDoc;
 
-    @NotNull
-    private Map<String, Boolean> dataMgmtChecks; // data_mgmt_check_1..5
-
-    private Integer nominatedSecondaryReviewerId; // optional, only for primary reviewer to nominate secondary reviewer
+    @NotNull private Boolean isApplicationCompleteCheck;
+    @NotNull private Boolean isFormsAttachCheck;
+    @NotNull private Boolean isEmissionsReductionActivityListCheck;
+    @NotNull private Boolean isOriginalSpecCheck;
+    @NotNull private Boolean isSubsidyCheck;
 }
