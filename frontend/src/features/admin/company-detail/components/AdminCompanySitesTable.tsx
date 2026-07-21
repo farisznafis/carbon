@@ -1,8 +1,8 @@
 import type { AdminCompanyDetailSite } from '@/api/admin';
 import {
-  AdminGridTable,
-  type AdminGridTableColumn,
-} from '@/components/data-display/AdminGridTable';
+  DataGridTable,
+  type DataGridTableColumn,
+} from '@/components/data-display/DataGridTable';
 import { Badge } from '@/components/ui/badge';
 import {
   formatAdminCompanyAddress,
@@ -17,7 +17,7 @@ export function AdminCompanySitesTable({
 }: {
   sites: AdminCompanyDetailSite[];
 }) {
-  const columns: AdminGridTableColumn<AdminCompanyDetailSite>[] = [
+  const columns: DataGridTableColumn<AdminCompanyDetailSite>[] = [
     {
       id: 'siteName',
       label: '拠点名',
@@ -79,7 +79,7 @@ export function AdminCompanySitesTable({
   ];
 
   return (
-    <AdminGridTable
+    <DataGridTable
       rows={sites}
       columns={columns}
       gridTemplateColumns={siteTableColumns}

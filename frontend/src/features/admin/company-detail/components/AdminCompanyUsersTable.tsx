@@ -1,8 +1,8 @@
 import type { AdminCompanyDetailUser } from '@/api/admin';
 import {
-  AdminGridTable,
-  type AdminGridTableColumn,
-} from '@/components/data-display/AdminGridTable';
+  DataGridTable,
+  type DataGridTableColumn,
+} from '@/components/data-display/DataGridTable';
 import { formatAdminRole } from '../companyDetailDisplay';
 
 const userTableColumns =
@@ -13,7 +13,7 @@ export function AdminCompanyUsersTable({
 }: {
   users: AdminCompanyDetailUser[];
 }) {
-  const columns: AdminGridTableColumn<AdminCompanyDetailUser>[] = [
+  const columns: DataGridTableColumn<AdminCompanyDetailUser>[] = [
     {
       id: 'username',
       label: 'ユーザ名',
@@ -58,7 +58,7 @@ export function AdminCompanyUsersTable({
   ];
 
   return (
-    <AdminGridTable
+    <DataGridTable
       rows={users}
       columns={columns}
       gridTemplateColumns={userTableColumns}

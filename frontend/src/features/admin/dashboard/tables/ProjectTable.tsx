@@ -1,9 +1,9 @@
 import type { ProjectStatus } from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
 import {
-  AdminGridTable,
-  type AdminGridTableColumn,
-} from '@/components/data-display/AdminGridTable';
+  DataGridTable,
+  type DataGridTableColumn,
+} from '@/components/data-display/DataGridTable';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -142,7 +142,7 @@ export function ProjectTable({
   onStatusChange,
   updatingProjectStatusId,
 }: ProjectTableProps) {
-  const columns: AdminGridTableColumn<Project>[] = [
+  const columns: DataGridTableColumn<Project>[] = [
     {
       id: 'projectName',
       label: 'プロジェクト名',
@@ -260,7 +260,7 @@ export function ProjectTable({
   ];
 
   return (
-    <AdminGridTable
+    <DataGridTable
       rows={projects}
       columns={columns}
       gridTemplateColumns={projectTableGridColumns}

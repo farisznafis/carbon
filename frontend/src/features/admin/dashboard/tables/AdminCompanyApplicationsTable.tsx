@@ -3,9 +3,9 @@ import type {
   CompanyStatus,
 } from '@/api/admin/pendingCompanies';
 import {
-  AdminGridTable,
-  type AdminGridTableColumn,
-} from '@/components/data-display/AdminGridTable';
+  DataGridTable,
+  type DataGridTableColumn,
+} from '@/components/data-display/DataGridTable';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -105,7 +105,7 @@ export function AdminCompanyApplicationsTable({
   onDetails,
   onReview,
 }: AdminCompanyApplicationsTableProps) {
-  const columns: AdminGridTableColumn<AdminCompanyListItem>[] = [
+  const columns: DataGridTableColumn<AdminCompanyListItem>[] = [
     {
       id: 'nameJA',
       label: '企業名',
@@ -165,7 +165,7 @@ export function AdminCompanyApplicationsTable({
   ];
 
   return (
-    <AdminGridTable
+    <DataGridTable
       rows={items}
       columns={columns}
       gridTemplateColumns={companyTableGridColumns}

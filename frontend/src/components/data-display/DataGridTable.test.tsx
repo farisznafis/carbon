@@ -1,12 +1,12 @@
 import { render, screen } from '@testing-library/react';
-import { AdminGridTable, type AdminGridTableColumn } from './AdminGridTable';
+import { DataGridTable, type DataGridTableColumn } from './DataGridTable';
 
 type TestRow = {
   id: string;
   name: string;
 };
 
-const columns: AdminGridTableColumn<TestRow>[] = [
+const columns: DataGridTableColumn<TestRow>[] = [
   {
     id: 'name',
     label: 'Name',
@@ -14,10 +14,10 @@ const columns: AdminGridTableColumn<TestRow>[] = [
   },
 ];
 
-describe('AdminGridTable', () => {
+describe('DataGridTable', () => {
   it('uses the shared 60px minimum data-row height', () => {
     render(
-      <AdminGridTable
+      <DataGridTable
         rows={[{ id: 'row-1', name: 'First row' }]}
         columns={columns}
         gridTemplateColumns="1fr"

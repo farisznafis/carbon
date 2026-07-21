@@ -5,9 +5,9 @@ import {
   type BatchHistoryPagination,
 } from '@/api/batch';
 import {
-  AdminGridTable,
-  type AdminGridTableColumn,
-} from '@/components/data-display/AdminGridTable';
+  DataGridTable,
+  type DataGridTableColumn,
+} from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -100,7 +100,7 @@ export function BatchHistoryTable() {
     void loadHistory();
   }, [loadHistory]);
 
-  const columns = useMemo<AdminGridTableColumn<BatchHistoryItem>[]>(
+  const columns = useMemo<DataGridTableColumn<BatchHistoryItem>[]>(
     () => [
       {
         id: 'id',
@@ -239,7 +239,7 @@ export function BatchHistoryTable() {
 
   return (
     <div className="space-y-4">
-      <AdminGridTable
+      <DataGridTable
         rows={items}
         columns={columns}
         gridTemplateColumns={batchHistoryGridColumns}

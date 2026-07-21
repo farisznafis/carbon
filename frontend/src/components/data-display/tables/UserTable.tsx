@@ -1,12 +1,12 @@
+import type { UserList } from '@/api/users';
 import {
-  Action,
-  Column,
-  ProTable,
-} from '@/components/data-display/ProTable/ProTable';
+  DataGridTable,
+  type DataGridTableColumn,
+} from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { InlineHelp } from '@/components/feedback/InlineHelp/InlineHelp';
 import { Badge } from '@/components/ui/badge';
-import type { UserList } from '@/api/users';
+import { Button } from '@/components/ui/button';
 import { usePagination } from '@/hooks/usePagination';
 import { Users } from 'lucide-react';
 import { useMemo } from 'react';
@@ -15,6 +15,8 @@ const masterRoleBadgeClassName =
   'bg-blue-600 hover:bg-blue-600 text-white font-medium px-2 py-0.5 text-xs rounded-full';
 const masterSiteBadgeClassName =
   'bg-blue-600 hover:bg-blue-600 text-white font-medium px-2 py-0.5 text-sm rounded-full';
+const userTableGridColumns =
+  'minmax(180px, 1fr) minmax(240px, 1.25fr) minmax(180px, 1fr) minmax(180px, 1fr) minmax(100px, 0.55fr)';
 
 type UserTableProps = {
   users: UserList[];
@@ -29,102 +31,86 @@ export function UserTable({
   onRowClick,
   masterSiteLabel,
 }: UserTableProps) {
-  // 1. Sort users so that 'master' role is always at the top
   const sortedUsers = useMemo(() => {
     return [...users].sort((a, b) => {
       const aIsMaster = a.role === 'master';
       const bIsMaster = b.role === 'master';
 
-      if (aIsMaster && !bIsMaster) return -1; // 'a' goes first
-      if (!aIsMaster && bIsMaster) return 1;  // 'b' goes first
-      return 0; // keep original order for others
+      if (aIsMaster && !bIsMaster) return -1;
+      if (!aIsMaster && bIsMaster) return 1;
+      return 0;
     });
   }, [users]);
 
-  const userColumns: Column<UserList>[] = [
+  const columns: DataGridTableColumn<UserList>[] = [
     {
-      id: 'first-name',
-      key: 'firstName',
+      id: 'name',
       label: '氏名',
-      render: (_value, row) => {
-        const fullName = `${row.lastName ?? ''} ${row.firstName ?? ''}`.trim();
-        
+      sortable: true,
+      sortValue: (user) =>
+        `${user.lastName ?? ''} ${user.firstName ?? ''}`.trim(),
+      render: (user) => {
+        const fullName = `${user.lastName ?? ''} ${user.firstName ?? ''}`.trim();
+
         return (
-          <div className="flex items-center gap-2">
-            <span>{fullName}</span>
-            {row.role === 'master' && (
-              <Badge className={masterRoleBadgeClassName}>
-                マスター
-              </Badge>
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="truncate text-body">{fullName || '-'}</span>
+            {user.role === 'master' && (
+              <Badge className={masterRoleBadgeClassName}>マスター</Badge>
             )}
           </div>
         );
       },
-      sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[120px]',
     },
-    // {
-    //   id: 'user-kana',
-    //   key: 'firstNameKana',
-    //   label: 'ユーザー名',
-    //   render: (_value, row) =>
-    //     `${row.lastNameKana ?? ''} ${row.firstNameKana ?? ''}`.trim(),
-    //   sortable: true,
-    //   truncate: true,
-    //   maxWidth: 'max-w-[120px]',
-    // },
     {
-      id: 'user-email',
-      key: 'email',
+      id: 'email',
       label: 'メールアドレス',
       sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[240px]',
+      sortValue: (user) => user.email,
+      render: (user) => <span className="block truncate text-body">{user.email}</span>,
     },
     {
       id: 'username',
-      key: 'username',
       label: '社員名',
-      render: (_value, row) => row.username ?? '—',
       sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[220px]',
+      sortValue: (user) => user.username,
+      render: (user) => (
+        <span className="block truncate text-body">{user.username ?? '—'}</span>
+      ),
     },
     {
-      id: 'user-site',
-      key: 'siteId',
+      id: 'site',
       label: '拠点',
-      render: (_value, row) => {
-        if (row.role === 'master' && masterSiteLabel) {
-          return (
-            <Badge className={masterSiteBadgeClassName}>
-              {masterSiteLabel}
-            </Badge>
-          );
-        }
-
-        if (row.siteId == null || row.siteId === '') {
-          return <Badge variant='destructive'>未接続</Badge>;
-        }
-
-        return row.siteName ?? row.siteId;
-      },
       sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[220px]',
-    },
-  ];
+      sortValue: (user) => user.siteName ?? user.siteId,
+      render: (user) => {
+        if (user.role === 'master' && masterSiteLabel) {
+          return <Badge className={masterSiteBadgeClassName}>{masterSiteLabel}</Badge>;
+        }
 
-  const userActions: Action<UserList>[] = [
+        if (user.siteId == null || user.siteId === '') {
+          return <Badge variant="destructive">未接続</Badge>;
+        }
+
+        return <span className="block truncate text-body">{user.siteName ?? user.siteId}</span>;
+      },
+    },
     {
-      label: '更新',
-      onClick: (user) => onEdit?.(user),
-      colorClass: 'text-white',
+      id: 'actions',
+      label: '操作',
+      render: (user) => (
+        <div
+          onClick={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <Button type="button" onClick={() => onEdit?.(user)}>
+            更新
+          </Button>
+        </div>
+      ),
     },
   ];
 
-  // 2. Pass the SORTED list to the pagination hook
   const {
     currentPage,
     totalPages,
@@ -136,44 +122,35 @@ export function UserTable({
   } = usePagination(sortedUsers);
 
   return (
-    <>
-      <ProTable
-        title={
-          <p className='flex items-center gap-2 text-2xl font-bold'>
-            <Users className='h-6 w-6' />
-            社員
-            <InlineHelp
-              content={
-                <div className='text-sm'>
-                  社員の行をクリックすると、プロファイル詳細へ移動します。
-                </div>
-              }
-            />
-          </p>
-        }
-        data={paginatedUsers}
-        columns={userColumns}
-        actions={userActions}
-        onRowClick={onRowClick}
-        height='max-h-[300px]'
-        emptyState={
-          <p className='text-muted-foreground'>
-            まだ社員が登録されていません
-          </p>
-        }
-        clickable={Boolean(onRowClick)}
-      />
-
-      <div className='mt-4'>
-        <PaginationControls
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={goToPage}
-          onItemsPerPageChange={setItemsPerPage}
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 text-2xl font-bold">
+        <Users className="h-6 w-6" />
+        <span>社員</span>
+        <InlineHelp
+          content={
+            <div className="text-sm">
+              社員の行をクリックすると、プロファイル詳細へ移動します。
+            </div>
+          }
         />
       </div>
-    </>
+      <DataGridTable
+        rows={paginatedUsers}
+        columns={columns}
+        gridTemplateColumns={userTableGridColumns}
+        minWidth={960}
+        getRowKey={(user) => user.id}
+        emptyMessage="まだ社員が登録されていません"
+        onRowClick={onRowClick}
+      />
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        onPageChange={goToPage}
+        onItemsPerPageChange={setItemsPerPage}
+      />
+    </div>
   );
 }

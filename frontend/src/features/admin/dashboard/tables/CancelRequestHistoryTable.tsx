@@ -4,9 +4,9 @@ import {
   type MonitoringCancelRequestListItem,
 } from '@/api/monitoring';
 import {
-  AdminGridTable,
-  type AdminGridTableColumn,
-} from '@/components/data-display/AdminGridTable';
+  DataGridTable,
+  type DataGridTableColumn,
+} from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { Button } from '@/components/ui/button';
 import { CancelRequestStatusBadge } from '@/features/admin/monitoring/CancelRequestStatusBadge';
@@ -76,7 +76,7 @@ export function CancelRequestHistoryTable({
   } = usePagination(requests, { itemsPerPage: INITIAL_ITEMS_PER_PAGE });
 
   const columns = useMemo<
-    AdminGridTableColumn<MonitoringCancelRequestListItem>[]
+    DataGridTableColumn<MonitoringCancelRequestListItem>[]
   >(
     () => [
       {
@@ -168,7 +168,7 @@ export function CancelRequestHistoryTable({
 
   return (
     <div className="space-y-4">
-      <AdminGridTable
+      <DataGridTable
         rows={paginatedItems}
         columns={columns}
         gridTemplateColumns={cancelRequestGridColumns}

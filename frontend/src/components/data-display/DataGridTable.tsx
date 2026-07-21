@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-export type AdminGridTableColumn<T> = {
+export type DataGridTableColumn<T> = {
   id: string;
   label: string;
   sortable?: boolean;
@@ -15,9 +15,9 @@ export type AdminGridTableColumn<T> = {
 
 type SortDirection = 'asc' | 'desc';
 
-type AdminGridTableProps<T> = {
+type DataGridTableProps<T> = {
   rows: T[];
-  columns: AdminGridTableColumn<T>[];
+  columns: DataGridTableColumn<T>[];
   gridTemplateColumns: string;
   minWidth?: number;
   getRowKey: (row: T) => string;
@@ -49,7 +49,7 @@ function compareSortValues(
   return direction === 'asc' ? result : -result;
 }
 
-export function AdminGridTable<T>({
+export function DataGridTable<T>({
   rows,
   columns,
   gridTemplateColumns,
@@ -57,7 +57,7 @@ export function AdminGridTable<T>({
   getRowKey,
   emptyMessage,
   onRowClick,
-}: AdminGridTableProps<T>) {
+}: DataGridTableProps<T>) {
   const [sortColumnId, setSortColumnId] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const gridStyle = {
@@ -79,7 +79,7 @@ export function AdminGridTable<T>({
     );
   }, [columns, rows, sortColumnId, sortDirection]);
 
-  const handleHeaderClick = (column: AdminGridTableColumn<T>) => {
+  const handleHeaderClick = (column: DataGridTableColumn<T>) => {
     if (!column.sortable) return;
 
     if (sortColumnId === column.id) {
