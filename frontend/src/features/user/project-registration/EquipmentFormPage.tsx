@@ -7,12 +7,7 @@ import {
 } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ApiError } from '@/api/_shared/errors';
-import {
-  uploadSiteProjectEquipmentFile,
-  validateSiteProjectEquipment,
-  type SiteProjectEquipmentFileType,
-  type SiteProjectEquipmentValidationFile,
-} from '@/api/site';
+import { validateSiteProjectEquipment } from '@/api/site';
 import {
   FormCard,
   FormPageContent,
@@ -87,18 +82,54 @@ const solarApiFieldAliases: Record<string, keyof SolarPowerFormData> = {
   pcsUnitCount: 'powerCondUnitCount',
   pcsStandby: 'powerCondStandby',
 };
-const solarFileFieldNames: Record<
-  SiteProjectEquipmentFileType,
-  keyof SolarPowerFormData
-> = {
-  solar_contract: 'operationStartDateFile',
-  panel_catalog: 'nominalMaxOutputFile',
-  pcs_spec: 'pcsFile',
-  battery_catalog: 'batteryFile',
-  construction_invoice: 'totalInvestmentFile',
-  subsidy_notice: 'subsidyNameFile',
-  electricity_bill: 'preProjectUnitPriceFile',
-};
+const REQUIRED_FILE_MESSAGE = '確認資料をアップロードしてください。';
+
+function getMissingFileFields(
+  data: SolarPowerFormData,
+): Array<keyof SolarPowerFormData> {
+  const requiredFiles: Array<{
+    fieldName: keyof SolarPowerFormData;
+    file?: File;
+  }> = [
+    {
+      fieldName: 'operationStartDateFile',
+      file: data.operationStartDateFile,
+    },
+    {
+      fieldName: 'nominalMaxOutputFile',
+      file: data.nominalMaxOutputFile,
+    },
+    { fieldName: 'pcsFile', file: data.pcsFile },
+    {
+      fieldName: 'totalInvestmentFile',
+      file: data.totalInvestmentFile,
+    },
+    {
+      fieldName: 'preProjectUnitPriceFile',
+      file: data.preProjectUnitPriceFile,
+    },
+    ...(data.hasBattery === 'yes'
+      ? [
+          {
+            fieldName: 'batteryFile' as const,
+            file: data.batteryFile,
+          },
+        ]
+      : []),
+    ...(data.hasSubsidy === 'yes'
+      ? [
+          {
+            fieldName: 'subsidyNameFile' as const,
+            file: data.subsidyNameFile,
+          },
+        ]
+      : []),
+  ];
+
+  return requiredFiles
+    .filter(({ file }) => !(file instanceof File))
+    .map(({ fieldName }) => fieldName);
+}
 
 function getErrorMessage(value: unknown): string | null {
   if (typeof value === 'string') return value;
@@ -111,19 +142,7 @@ function getErrorMessage(value: unknown): string | null {
   return null;
 }
 
-function getSolarFormFieldName(
-  path: string,
-  validationFiles: SiteProjectEquipmentValidationFile[],
-): keyof SolarPowerFormData | null {
-  const filePathMatch = path.match(/files(?:\[(\d+)\]|\.(\d+))/);
-  const fileIndex = Number(filePathMatch?.[1] ?? filePathMatch?.[2]);
-  if (Number.isInteger(fileIndex) && fileIndex >= 0) {
-    const fileType = validationFiles[fileIndex]?.fileType;
-    return fileType
-      ? solarFileFieldNames[fileType]
-      : 'operationStartDateFile';
-  }
-
+function getSolarFormFieldName(path: string): keyof SolarPowerFormData | null {
   const fieldName = path.replace(/\[\d+\]/g, '').split('.').at(-1);
   if (!fieldName) return null;
 
@@ -227,40 +246,6 @@ function normalizeStoredSolarData(value: unknown): SolarPowerFormData {
   };
 }
 
-type EquipmentFileCandidate = {
-  fileType: SiteProjectEquipmentFileType;
-  file?: File;
-};
-
-function getEquipmentFileCandidates(
-  data: SolarPowerFormData,
-): EquipmentFileCandidate[] {
-  return [
-    { fileType: 'solar_contract', file: data.operationStartDateFile },
-    { fileType: 'panel_catalog', file: data.nominalMaxOutputFile },
-    { fileType: 'pcs_spec', file: data.pcsFile },
-    ...(data.hasBattery === 'yes'
-      ? [{ fileType: 'battery_catalog' as const, file: data.batteryFile }]
-      : []),
-    { fileType: 'construction_invoice', file: data.totalInvestmentFile },
-    ...(data.hasSubsidy === 'yes'
-      ? [{ fileType: 'subsidy_notice' as const, file: data.subsidyNameFile }]
-      : []),
-    { fileType: 'electricity_bill', file: data.preProjectUnitPriceFile },
-  ];
-}
-
-function emptyEquipmentValidationFile(
-  fileType: SiteProjectEquipmentFileType,
-): SiteProjectEquipmentValidationFile {
-  return {
-    fileType,
-    s3Key: '',
-    fileName: '',
-    fileId: '',
-  };
-}
-
 export default function EquipmentFormPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -346,41 +331,38 @@ export default function EquipmentFormPage() {
   const submitSolarEquipment = async (data: SolarPowerFormData) => {
     if (isSubmitting) return;
     solarForm.clearErrors();
+    const missingFileFields = getMissingFileFields(data);
+    missingFileFields.forEach((fieldName) => {
+      solarForm.setError(fieldName, {
+        type: 'required',
+        message: REQUIRED_FILE_MESSAGE,
+      });
+    });
     setIsSubmitting(true);
-    let validationFiles: SiteProjectEquipmentValidationFile[] = [];
 
     try {
       const tempId = equipmentId ?? `equipment-${Date.now()}`;
-      validationFiles = await Promise.all(
-        getEquipmentFileCandidates(data).map(({ fileType, file }) =>
-          file instanceof File
-            ? uploadSiteProjectEquipmentFile(
-                siteId,
-                projectId,
-                fileType,
-                file,
-              )
-            : Promise.resolve(emptyEquipmentValidationFile(fileType)),
-        ),
-      );
       const payload = mapSolarFormToEquipmentValidationItem(
         data,
         tempId,
         siteId,
-        validationFiles,
+        [],
       );
 
       await validateSiteProjectEquipment(payload);
+      if (missingFileFields.length > 0) {
+        toast({
+          title: '確認資料が不足しています',
+          description: REQUIRED_FILE_MESSAGE,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       saveEquipmentLocally({
         id: tempId,
         formType: 'solar',
         solarData: data,
-      });
-
-      toast({
-        title: '設備情報を確認しました',
-        description: '入力内容の検証が完了しました。',
-        variant: 'success',
       });
       navigateToProjectRegister();
     } catch (error) {
@@ -390,7 +372,7 @@ export default function EquipmentFormPage() {
         typeof error.payload.errors === 'object'
       ) {
         Object.entries(error.payload.errors).forEach(([path, value]) => {
-          const fieldName = getSolarFormFieldName(path, validationFiles);
+          const fieldName = getSolarFormFieldName(path);
           const message = getErrorMessage(value);
           if (fieldName && message) {
             solarForm.setError(fieldName, { type: 'server', message });
