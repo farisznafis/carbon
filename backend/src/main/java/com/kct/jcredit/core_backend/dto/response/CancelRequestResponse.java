@@ -19,6 +19,6 @@ public class CancelRequestResponse extends BaseResponse{
     private String status;
     private String requestedBy;
     private String requestedAt;  // ISO 8601 format
-    private Integer siteId;
+    private String siteId;
     private String reason;
 }

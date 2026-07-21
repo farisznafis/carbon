@@ -948,7 +948,7 @@ class MonitoringServiceImplTest {
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
 
         MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
@@ -979,7 +979,7 @@ class MonitoringServiceImplTest {
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(todayInJapan));
 
         MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
@@ -1010,7 +1010,7 @@ class MonitoringServiceImplTest {
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
 
         MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
@@ -1039,7 +1039,7 @@ class MonitoringServiceImplTest {
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
         when(monitoringRecordSolarRepository.existsActiveByRecordIdAndDateRecorded(
                 siteId + "#" + projectId,
@@ -1074,7 +1074,7 @@ class MonitoringServiceImplTest {
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
 
         BaseResponse response = monitoringService.validateMonitoringRecordSolar(
@@ -1155,7 +1155,7 @@ class MonitoringServiceImplTest {
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
 
         BaseResponse response = monitoringService.validateMonitoringRecordSolar(
@@ -1190,7 +1190,7 @@ class MonitoringServiceImplTest {
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
 
         BaseResponse response = monitoringService.validateMonitoringRecordSolar(
@@ -1220,7 +1220,7 @@ class MonitoringServiceImplTest {
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
 
         BaseResponse response = monitoringService.validateMonitoringRecordSolar(
@@ -1250,7 +1250,7 @@ class MonitoringServiceImplTest {
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
 
         BaseResponse response = monitoringService.validateMonitoringRecordSolar(
@@ -1279,7 +1279,7 @@ class MonitoringServiceImplTest {
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
         when(monitoringRecordSolarRepository.existsActiveByRecordIdAndDateRecorded(
                 siteId + "#" + projectId,
