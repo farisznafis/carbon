@@ -6,8 +6,8 @@ import {
   DataGridTable,
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 type AdminCompanyApplicationsTableProps = {
   items: AdminCompanyListItem[];
@@ -23,24 +23,24 @@ const statusMeta: Record<
   CompanyStatus,
   {
     label: string;
-    className: string;
+    tone: 'warning' | 'danger' | 'success';
   }
 > = {
   PENDING: {
     label: '申請受付',
-    className: 'bg-amber-100 text-amber-800',
+    tone: 'warning',
   },
   REJECTED: {
     label: '却下',
-    className: 'bg-red-100 text-red-800',
+    tone: 'danger',
   },
   ACTIVE: {
     label: '承認済み',
-    className: 'bg-emerald-100 text-emerald-800',
+    tone: 'success',
   },
   SUSPENDED: {
     label: '利用停止',
-    className: 'bg-red-100 text-red-800',
+    tone: 'danger',
   },
 };
 
@@ -53,18 +53,13 @@ function formatRepresentativeName(item: AdminCompanyListItem) {
   return name || '-';
 }
 
-function StatusBadge({ status }: { status: CompanyStatus }) {
+function CompanyStatusBadge({ status }: { status: CompanyStatus }) {
   const meta = statusMeta[status];
 
   return (
-    <span
-      className={cn(
-        'inline-flex rounded-md px-2 py-0.5 text-table font-bold',
-        meta.className,
-      )}
-    >
+    <StatusBadge tone={meta.tone}>
       {meta.label}
-    </span>
+    </StatusBadge>
   );
 }
 
@@ -144,7 +139,7 @@ export function AdminCompanyApplicationsTable({
       label: 'ステータス',
       sortable: true,
       sortValue: (item) => statusMeta[item.status].label,
-      render: (item) => <StatusBadge status={item.status} />,
+      render: (item) => <CompanyStatusBadge status={item.status} />,
     },
     {
       id: 'actions',

@@ -2,7 +2,7 @@
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { ApiError } from '@/api/_shared/errors';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import {
   FormActions,
   FormCard,
@@ -433,9 +433,9 @@ export function SiteForm({
                                   <span className="flex items-center gap-2">
                                     {formatUserOptionLabel(user)}
                                     {user.role === 'master' && (
-                                      <Badge variant="default" className="bg-blue-500 text-white text-[10px] px-1.5 py-0 leading-none">
+                                      <StatusBadge tone="info">
                                         マスター
-                                      </Badge>
+                                      </StatusBadge>
                                     )}
                                   </span>
                                 </SelectItem>

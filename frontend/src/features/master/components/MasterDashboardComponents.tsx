@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Site } from '@/api/site';
 import type { UserList } from '@/api/users';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -140,9 +140,9 @@ export function UserDashboardCard({
             {fullName}
           </h3>
           {user.role === 'master' && (
-            <Badge className="border-transparent bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-600">
+            <StatusBadge tone="info">
               マスター
-            </Badge>
+            </StatusBadge>
           )}
         </div>
 
@@ -167,13 +167,13 @@ export function UserDashboardCard({
               拠点
             </span>
             {user.role === 'master' ? (
-              <Badge className="border-transparent bg-blue-600 px-3 py-0.5 text-sm font-medium text-white hover:bg-blue-600">
+              <StatusBadge tone="info">
                 全て
-              </Badge>
+              </StatusBadge>
             ) : isDisconnectedFromSite ? (
-              <Badge className="border-transparent bg-destructive px-3 py-0.5 text-sm font-medium text-destructive-foreground hover:bg-destructive">
+              <StatusBadge tone="danger">
                 未設定
-              </Badge>
+              </StatusBadge>
             ) : (
               <span className="truncate">
                 {user.siteName || user.siteId || '-'}

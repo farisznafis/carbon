@@ -20,6 +20,7 @@ import {
   suspendAdminCompany,
 } from '@/api/admin';
 import { ApiError } from '@/api/_shared/errors';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,11 +60,14 @@ const DEFAULT_SUSPEND_PAYLOAD: SuspendCompanyPayload = {
   reasonDetail: '',
 };
 
-const companyStatusClassNames: Record<CompanyStatus, string> = {
-  PENDING: 'border-transparent bg-amber-100 text-amber-800 hover:bg-amber-100',
-  REJECTED: 'border-transparent bg-red-100 text-red-800 hover:bg-red-100',
-  ACTIVE: 'border-transparent bg-emerald-100 text-emerald-800 hover:bg-emerald-100',
-  SUSPENDED: 'border-transparent bg-slate-100 text-slate-700 hover:bg-slate-100',
+const companyStatusTones: Record<
+  CompanyStatus,
+  'warning' | 'danger' | 'success'
+> = {
+  PENDING: 'warning',
+  REJECTED: 'danger',
+  ACTIVE: 'success',
+  SUSPENDED: 'danger',
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -86,11 +90,19 @@ function getFieldErrors(error: unknown) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status: CompanyStatus }) {
+function CompanyStatusBadge({ status }: { status: CompanyStatus }) {
   return (
-    <Badge className={companyStatusClassNames[status]}>
+    <StatusBadge tone={companyStatusTones[status]}>
       {formatCompanyStatus(status)}
-    </Badge>
+    </StatusBadge>
+  );
+}
+
+function AccountStatusBadge({ isActive }: { isActive: boolean }) {
+  return (
+    <StatusBadge tone={isActive ? 'success' : 'danger'}>
+      {isActive ? 'アカウント有効' : 'アカウント無効'}
+    </StatusBadge>
   );
 }
 
@@ -399,15 +411,13 @@ export default function AdminCompanyDetailPage() {
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-0.5">
                 <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
                   ステータス：
-                  <StatusBadge status={company.companyStatus} />
+                  <CompanyStatusBadge status={company.companyStatus} />
                 </span>
 
                 {company.isActive !== undefined && (
                   <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
                     アカウント状態：
-                    <Badge variant={company.isActive ? 'default' : 'secondary'}>
-                      {company.isActive ? 'アカウント有効' : 'アカウント無効'}
-                    </Badge>
+                    <AccountStatusBadge isActive={company.isActive} />
                   </span>
                 )}
 
@@ -468,9 +478,7 @@ export default function AdminCompanyDetailPage() {
                   </CardTitle>
                 </div>
                 {masterAccount.isActive !== undefined && (
-                  <Badge variant={masterAccount.isActive ? 'default' : 'secondary'}>
-                    {masterAccount.isActive ? 'アカウント有効' : 'アカウント無効'}
-                  </Badge>
+                  <AccountStatusBadge isActive={masterAccount.isActive} />
                 )}
               </div>
             </CardHeader>

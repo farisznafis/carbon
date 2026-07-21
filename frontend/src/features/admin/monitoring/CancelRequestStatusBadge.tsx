@@ -1,20 +1,20 @@
-import { cn } from '@/lib/utils';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 
 const cancelRequestStatusPresentation: Record<
   string,
-  { label: string; className: string }
+  { label: string; tone: 'warning' | 'success' | 'danger' }
 > = {
   PENDING: {
     label: '承認待ち',
-    className: 'border-amber-200 bg-amber-50 text-amber-800',
+    tone: 'warning',
   },
   APPROVED: {
     label: '承認済み',
-    className: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+    tone: 'success',
   },
   REJECTED: {
     label: '却下',
-    className: 'border-red-200 bg-red-50 text-red-800',
+    tone: 'danger',
   },
 };
 
@@ -23,14 +23,8 @@ export function CancelRequestStatusBadge({ status }: { status: string }) {
   const presentation = cancelRequestStatusPresentation[normalizedStatus];
 
   return (
-    <span
-      className={cn(
-        'inline-flex rounded-full border px-2.5 py-1 text-xs font-medium',
-        presentation?.className ??
-          'border-border bg-muted text-muted-foreground',
-      )}
-    >
+    <StatusBadge tone={presentation?.tone}>
       {presentation?.label ?? status}
-    </span>
+    </StatusBadge>
   );
 }

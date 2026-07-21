@@ -1,5 +1,5 @@
 import type { Site } from '@/api/site';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { Button } from '@/components/ui/button';
 import {
   formatPersonName,
@@ -90,9 +90,9 @@ export function MasterSiteCard({
                   )}
                 </>
               ) : (
-                <Badge className="border-transparent bg-muted px-3 py-0.5 text-sm font-medium text-muted-foreground hover:bg-muted">
+                <StatusBadge tone="neutral">
                   未参加
-                </Badge>
+                </StatusBadge>
               )}
             </div>
           </div>

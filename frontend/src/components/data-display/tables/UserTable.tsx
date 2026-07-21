@@ -4,17 +4,13 @@ import {
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { InlineHelp } from '@/components/feedback/InlineHelp/InlineHelp';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { usePagination } from '@/hooks/usePagination';
 import { Users } from 'lucide-react';
 import { useMemo } from 'react';
 
-const masterRoleBadgeClassName =
-  'bg-blue-600 hover:bg-blue-600 text-white font-medium px-2 py-0.5 text-xs rounded-full';
-const masterSiteBadgeClassName =
-  'bg-blue-600 hover:bg-blue-600 text-white font-medium px-2 py-0.5 text-sm rounded-full';
 const userTableGridColumns =
   'minmax(180px, 1fr) minmax(240px, 1.25fr) minmax(180px, 1fr) minmax(180px, 1fr) minmax(100px, 0.55fr)';
 
@@ -56,7 +52,7 @@ export function UserTable({
           <div className="flex min-w-0 items-center gap-2">
             <span className="truncate text-body">{fullName || '-'}</span>
             {user.role === 'master' && (
-              <Badge className={masterRoleBadgeClassName}>マスター</Badge>
+              <StatusBadge tone="info">マスター</StatusBadge>
             )}
           </div>
         );
@@ -85,11 +81,11 @@ export function UserTable({
       sortValue: (user) => user.siteName ?? user.siteId,
       render: (user) => {
         if (user.role === 'master' && masterSiteLabel) {
-          return <Badge className={masterSiteBadgeClassName}>{masterSiteLabel}</Badge>;
+          return <StatusBadge tone="info">{masterSiteLabel}</StatusBadge>;
         }
 
         if (user.siteId == null || user.siteId === '') {
-          return <Badge variant="destructive">未接続</Badge>;
+          return <StatusBadge tone="danger">未接続</StatusBadge>;
         }
 
         return <span className="block truncate text-body">{user.siteName ?? user.siteId}</span>;
