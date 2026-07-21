@@ -16,7 +16,7 @@ import {
 } from '@/api/site';
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { FormCard } from '@/components/forms/form-layout';
 import { Form } from '@/components/ui/form';
 import { SolarPowerEquipmentForm } from '@/features/user/project-registration/components/equipment-forms/SolarPowerEquipmentForm';
 import type {
@@ -426,7 +426,7 @@ export default function EquipmentFormPage() {
       title=""
       onBack={handleCancel}
       backText="戻る"
-      contentMaxWidth="max-w-4xl"
+      contentMaxWidth="max-w-[768px]"
       wrapInCard={false}
     >
       <div className="space-y-6">
@@ -441,23 +441,23 @@ export default function EquipmentFormPage() {
               className="space-y-6"
               noValidate
             >
-              <Card className="mx-auto w-full border-hidden p-4">
-                <CardContent className="pt-6">
-                  <SolarPowerEquipmentForm form={solarForm} />
-                </CardContent>
-              </Card>
-              <div className="flex items-center justify-between gap-4">
+              <FormCard>
+                <SolarPowerEquipmentForm form={solarForm} />
+              </FormCard>
+              <div className="flex justify-end gap-4 pt-6">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleCancel}
                   disabled={isSubmitting}
+                  size="md"
                 >
                   キャンセル
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSubmitting}
+                  size="md"
                 >
                   {isSubmitting ? '確認中...' : '次へ'}
                   {!isSubmitting && <ArrowRight className="ml-2 h-4 w-4" />}
@@ -472,18 +472,17 @@ export default function EquipmentFormPage() {
               className="space-y-6"
               noValidate
             >
-              <Card className="mx-auto w-full border-hidden p-4">
-                <CardContent className="pt-6" />
-              </Card>
-              <div className="flex items-center justify-between gap-4">
+              <FormCard />
+              <div className="flex justify-end gap-4 pt-6">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleCancel}
+                  size="md"
                 >
                   キャンセル
                 </Button>
-                <Button type="submit">
+                <Button type="submit" size="md">
                   次へ
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>

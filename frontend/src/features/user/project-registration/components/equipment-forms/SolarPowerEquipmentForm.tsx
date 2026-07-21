@@ -1,13 +1,11 @@
 import type { UseFormReturn } from 'react-hook-form';
-import { Upload } from 'lucide-react';
+import { FileSelectButton } from '@/components/inputs/FileSelectButton/FileSelectButton';
 import {
   FormGrid,
   FormSection,
   FormSectionStack,
 } from '@/components/forms/form-layout';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   FormControl,
   FormField,
@@ -15,7 +13,16 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { SolarPowerFormData } from '@/lib/equipmentValidations';
+
+const EQUIPMENT_FILE_FORMATS = '(.pdf, .csv, .jpg, .jpeg, .png)';
 
 type SolarPowerEquipmentFormProps = Readonly<{
   form: UseFormReturn<SolarPowerFormData>;
@@ -23,64 +30,50 @@ type SolarPowerEquipmentFormProps = Readonly<{
 
 type FileUploadControlProps = Readonly<{
   id: string;
+  label: string;
   value?: File;
   onChange: (file?: File) => void;
 }>;
 
 function FileUploadControl({
   id,
+  label,
   value,
   onChange,
 }: FileUploadControlProps) {
   return (
-    <div className="space-y-2">
-      <label
-        htmlFor={id}
-        className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
-      >
-        <Upload className="mr-2 h-4 w-4" />
-        ファイルを選択
-      </label>
-      <input
-        id={id}
-        type="file"
-        className="hidden"
-        onChange={(event) => onChange(event.target.files?.[0])}
-      />
-      {value && (
-        <span className="text-sm text-muted-foreground">{value.name}</span>
-      )}
-    </div>
+    <FileSelectButton
+      id={id}
+      label={label}
+      variant="design-system-pro"
+      supportedFormats={EQUIPMENT_FILE_FORMATS}
+      value={value ?? null}
+      onChange={(file) => onChange(file ?? undefined)}
+    />
   );
 }
 
-type YesNoRadioProps = Readonly<{
-  idPrefix: string;
+type YesNoSelectProps = Readonly<{
   value: '' | 'yes' | 'no';
   onValueChange: (value: 'yes' | 'no') => void;
 }>;
 
-function YesNoRadio({ idPrefix, value, onValueChange }: YesNoRadioProps) {
+function YesNoSelect({ value, onValueChange }: YesNoSelectProps) {
   return (
-    <RadioGroup
+    <Select
       value={value}
       onValueChange={(nextValue) =>
         onValueChange(nextValue as 'yes' | 'no')
       }
     >
-      <div className="flex items-center space-x-2">
-        <RadioGroupItem value="yes" id={`${idPrefix}-yes`} />
-        <Label htmlFor={`${idPrefix}-yes`} className="cursor-pointer font-normal">
-          有
-        </Label>
-      </div>
-      <div className="flex items-center space-x-2">
-        <RadioGroupItem value="no" id={`${idPrefix}-no`} />
-        <Label htmlFor={`${idPrefix}-no`} className="cursor-pointer font-normal">
-          無
-        </Label>
-      </div>
-    </RadioGroup>
+      <SelectTrigger>
+        <SelectValue placeholder="選択してください" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="yes">あり</SelectItem>
+        <SelectItem value="no">なし</SelectItem>
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -92,7 +85,7 @@ export function SolarPowerEquipmentForm({
   const hasSubsidy = form.watch('hasSubsidy') === 'yes';
 
   return (
-    <FormSectionStack>
+    <FormSectionStack spacing="relaxed">
       <FormSection number={1} title="太陽光発電設備の情報">
         <FormField
           control={form.control}
@@ -101,7 +94,7 @@ export function SolarPowerEquipmentForm({
             <FormItem>
               <FormLabel>稼働開始日（電力受給開始日）</FormLabel>
               <FormControl>
-                <Input type="date" className="max-w-sm" {...field} />
+                <Input type="date" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -112,10 +105,10 @@ export function SolarPowerEquipmentForm({
           name="operationStartDateFile"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>確認資料：太陽光発電電力受給契約確認書</FormLabel>
               <FormControl>
                 <FileUploadControl
                   id="equipment-op-date-file"
+                  label="確認資料：太陽光発電電力受給契約確認書"
                   value={field.value}
                   onChange={field.onChange}
                 />
@@ -138,7 +131,7 @@ export function SolarPowerEquipmentForm({
                   type="number"
                   min="0"
                   step="any"
-                  className="max-w-sm"
+                  placeholder="数値を入力"
                   {...field}
                 />
               </FormControl>
@@ -151,10 +144,10 @@ export function SolarPowerEquipmentForm({
           name="nominalMaxOutputFile"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>確認資料：仕様書・カタログ</FormLabel>
               <FormControl>
                 <FileUploadControl
                   id="nominal-max-output-file"
+                  label="確認資料：仕様書・カタログ"
                   value={field.value}
                   onChange={field.onChange}
                 />
@@ -166,7 +159,7 @@ export function SolarPowerEquipmentForm({
       </FormSection>
 
       <FormSection number={3} title="パワーコンディショナーの情報">
-        <FormGrid>
+        <FormGrid columns={1}>
           <FormField
             control={form.control}
             name="pcsManufacturer"
@@ -174,7 +167,7 @@ export function SolarPowerEquipmentForm({
               <FormItem>
                 <FormLabel>メーカー</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="メーカー名を入力" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -187,7 +180,7 @@ export function SolarPowerEquipmentForm({
               <FormItem>
                 <FormLabel>型式</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="型式を入力" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -200,7 +193,13 @@ export function SolarPowerEquipmentForm({
               <FormItem>
                 <FormLabel>導入台数 (台)</FormLabel>
                 <FormControl>
-                  <Input type="number" min="0" step="1" {...field} />
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="数値を入力"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -213,7 +212,7 @@ export function SolarPowerEquipmentForm({
               <FormItem>
                 <FormLabel>機器固有番号（製造番号）</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="機器固有番号を入力" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -226,7 +225,13 @@ export function SolarPowerEquipmentForm({
               <FormItem>
                 <FormLabel>夜間待機電力（1台あたり） (W)</FormLabel>
                 <FormControl>
-                  <Input type="number" min="0" step="any" {...field} />
+                  <Input
+                    type="number"
+                    min="0"
+                    step="any"
+                    placeholder="数値を入力"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -238,10 +243,10 @@ export function SolarPowerEquipmentForm({
           name="pcsFile"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>確認資料：仕様書・カタログ</FormLabel>
               <FormControl>
                 <FileUploadControl
                   id="pcs-file"
+                  label="確認資料：仕様書・カタログ"
                   value={field.value}
                   onChange={field.onChange}
                 />
@@ -260,8 +265,7 @@ export function SolarPowerEquipmentForm({
             <FormItem>
               <FormLabel>蓄電池設置の有無</FormLabel>
               <FormControl>
-                <YesNoRadio
-                  idPrefix="battery"
+                <YesNoSelect
                   value={field.value}
                   onValueChange={field.onChange}
                 />
@@ -272,7 +276,7 @@ export function SolarPowerEquipmentForm({
         />
         {hasBattery && (
           <div className="space-y-4">
-            <FormGrid>
+            <FormGrid columns={1}>
               <FormField
                 control={form.control}
                 name="batteryMaker"
@@ -280,7 +284,7 @@ export function SolarPowerEquipmentForm({
                   <FormItem>
                     <FormLabel>メーカー</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input placeholder="メーカー名を入力" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -293,7 +297,7 @@ export function SolarPowerEquipmentForm({
                   <FormItem>
                     <FormLabel>型式</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input placeholder="型式を入力" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -306,7 +310,13 @@ export function SolarPowerEquipmentForm({
                   <FormItem>
                     <FormLabel>容量 (kWh)</FormLabel>
                     <FormControl>
-                      <Input type="number" min="0" step="any" {...field} />
+                      <Input
+                        type="number"
+                        min="0"
+                        step="any"
+                        placeholder="数値を入力"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -318,10 +328,10 @@ export function SolarPowerEquipmentForm({
               name="batteryFile"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>確認資料：仕様書・カタログ</FormLabel>
                   <FormControl>
                     <FileUploadControl
                       id="battery-file"
+                      label="確認資料：仕様書・カタログ"
                       value={field.value}
                       onChange={field.onChange}
                     />
@@ -342,8 +352,7 @@ export function SolarPowerEquipmentForm({
             <FormItem>
               <FormLabel>追加設備の有無</FormLabel>
               <FormControl>
-                <YesNoRadio
-                  idPrefix="additional-equipment"
+                <YesNoSelect
                   value={field.value}
                   onValueChange={field.onChange}
                 />
@@ -353,7 +362,7 @@ export function SolarPowerEquipmentForm({
           )}
         />
         {hasAdditionalEquipment && (
-          <FormGrid>
+          <FormGrid columns={1}>
             <FormField
               control={form.control}
               name="additionalEquipmentDate"
@@ -374,7 +383,7 @@ export function SolarPowerEquipmentForm({
                 <FormItem>
                   <FormLabel>設備種別</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input placeholder="設備種別を入力" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -387,7 +396,13 @@ export function SolarPowerEquipmentForm({
                 <FormItem>
                   <FormLabel>導入台数 (台)</FormLabel>
                   <FormControl>
-                    <Input type="number" min="0" step="1" {...field} />
+                    <Input
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="数値を入力"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -400,7 +415,7 @@ export function SolarPowerEquipmentForm({
                 <FormItem>
                   <FormLabel>機器固有番号</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input placeholder="機器固有番号を入力" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -413,7 +428,13 @@ export function SolarPowerEquipmentForm({
                 <FormItem>
                   <FormLabel>ICT設備消費電力 (W)</FormLabel>
                   <FormControl>
-                    <Input type="number" min="0" step="any" {...field} />
+                    <Input
+                      type="number"
+                      min="0"
+                      step="any"
+                      placeholder="数値を入力"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -431,7 +452,13 @@ export function SolarPowerEquipmentForm({
             <FormItem>
               <FormLabel>設備の総投資額 (円)</FormLabel>
               <FormControl>
-                <Input type="number" min="0" step="1" {...field} />
+                <Input
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="数値を入力"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -442,12 +469,10 @@ export function SolarPowerEquipmentForm({
           name="totalInvestmentFile"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>
-                確認資料：工事請負契約書、請求書、領収書等
-              </FormLabel>
               <FormControl>
                 <FileUploadControl
                   id="total-investment-file"
+                  label="確認資料：工事請負契約書、請求書、領収書等"
                   value={field.value}
                   onChange={field.onChange}
                 />
@@ -464,8 +489,7 @@ export function SolarPowerEquipmentForm({
             <FormItem>
               <FormLabel>補助金受給の有無</FormLabel>
               <FormControl>
-                <YesNoRadio
-                  idPrefix="subsidy"
+                <YesNoSelect
                   value={field.value}
                   onValueChange={field.onChange}
                 />
@@ -476,7 +500,7 @@ export function SolarPowerEquipmentForm({
         />
         {hasSubsidy && (
           <div className="space-y-4">
-            <FormGrid>
+            <FormGrid columns={1}>
               <FormField
                 control={form.control}
                 name="subsidyName"
@@ -484,7 +508,7 @@ export function SolarPowerEquipmentForm({
                   <FormItem>
                     <FormLabel>補助金名称</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input placeholder="補助金名称を入力" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -497,7 +521,13 @@ export function SolarPowerEquipmentForm({
                   <FormItem>
                     <FormLabel>補助金額 (円)</FormLabel>
                     <FormControl>
-                      <Input type="number" min="0" step="any" {...field} />
+                      <Input
+                        type="number"
+                        min="0"
+                        step="any"
+                        placeholder="数値を入力"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -509,10 +539,10 @@ export function SolarPowerEquipmentForm({
               name="subsidyNameFile"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>確認資料：補助金交付決定通知書</FormLabel>
                   <FormControl>
                     <FileUploadControl
                       id="subsidy-name-file"
+                      label="確認資料：補助金交付決定通知書"
                       value={field.value}
                       onChange={field.onChange}
                     />
@@ -533,7 +563,13 @@ export function SolarPowerEquipmentForm({
                 プロジェクト実施前の電力購入単価 (円/kWh)
               </FormLabel>
               <FormControl>
-                <Input type="number" min="0" step="any" {...field} />
+                <Input
+                  type="number"
+                  min="0"
+                  step="any"
+                  placeholder="数値を入力"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -544,10 +580,10 @@ export function SolarPowerEquipmentForm({
           name="preProjectUnitPriceFile"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>確認資料：電力会社からの請求明細書等</FormLabel>
               <FormControl>
                 <FileUploadControl
                   id="pre-project-unit-price-file"
+                  label="確認資料：電力会社からの請求明細書等"
                   value={field.value}
                   onChange={field.onChange}
                 />
