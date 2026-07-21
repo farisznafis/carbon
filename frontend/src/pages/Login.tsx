@@ -34,7 +34,7 @@ const Login = () => {
             <LogIn className="h-6 w-6" />
           </div>
           <h2>ログイン</h2>
-          <p className="mt-3 text-sm font-medium leading-6 text-muted-foreground">
+          <p className="mt-3 text-sm font-medium leading-6">
             GXデータの登録・管理を続けるにはログインしてください。
           </p>
         </header>

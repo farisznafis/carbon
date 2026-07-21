@@ -397,12 +397,18 @@ export default function AdminCompanyDetailPage() {
 
               {/* Inline metadata chips */}
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-0.5">
-                <StatusBadge status={company.companyStatus} />
+                <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                  ステータス：
+                  <StatusBadge status={company.companyStatus} />
+                </span>
 
                 {company.isActive !== undefined && (
-                  <Badge variant={company.isActive ? 'default' : 'secondary'}>
-                    {company.isActive ? 'アカウント有効' : 'アカウント無効'}
-                  </Badge>
+                  <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                    アカウント状態：
+                    <Badge variant={company.isActive ? 'default' : 'secondary'}>
+                      {company.isActive ? 'アカウント有効' : 'アカウント無効'}
+                    </Badge>
+                  </span>
                 )}
 
                 {company.corpNumber && (
