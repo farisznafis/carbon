@@ -22,12 +22,16 @@ import type {
   Equipment,
   EquipmentFormType,
 } from '@/features/user/project-registration/components/types';
-import { mapSolarFormToEquipmentValidationItem } from '@/features/user/project-registration/equipmentValidationMapper';
+import {
+  mapSolarFormFilesForValidation,
+  mapSolarFormToEquipmentValidationItem,
+} from '@/features/user/project-registration/equipmentValidationMapper';
 import {
   isFromMasterDashboard,
   masterDashboardProjectMembershipState,
 } from '@/features/user/project-registration/projectMembershipNavigation';
 import { useToast } from '@/hooks/use-toast';
+import { useSitesQuery } from '@/hooks/sites/useSitesQuery';
 import {
   type OtherEquipmentFormData,
   type SolarPowerFormData,
@@ -35,6 +39,7 @@ import {
 import { paths } from '@/routes/paths';
 
 const SOLAR_FORM_DEFAULT_VALUES: SolarPowerFormData = {
+  siteId: '',
   equipmentOpDate: '',
   operationStartDateFile: undefined,
   nominalMaxOutput: '',
@@ -83,6 +88,7 @@ const solarApiFieldAliases: Record<string, keyof SolarPowerFormData> = {
   pcsStandby: 'powerCondStandby',
 };
 const REQUIRED_FILE_MESSAGE = '確認資料をアップロードしてください。';
+const EMPTY_SITE_OPTIONS: never[] = [];
 
 function getMissingFileFields(
   data: SolarPowerFormData,
@@ -183,12 +189,18 @@ function getYesNoValue(
   return value === 'yes' || value === 'no' ? value : '';
 }
 
-function normalizeStoredSolarData(value: unknown): SolarPowerFormData {
-  if (!value || typeof value !== 'object') return SOLAR_FORM_DEFAULT_VALUES;
+function normalizeStoredSolarData(
+  value: unknown,
+  fallbackSiteId: string,
+): SolarPowerFormData {
+  if (!value || typeof value !== 'object') {
+    return { ...SOLAR_FORM_DEFAULT_VALUES, siteId: fallbackSiteId };
+  }
   const source = value as Record<string, unknown>;
 
   return {
     ...SOLAR_FORM_DEFAULT_VALUES,
+    siteId: getStringValue(source, 'siteId') || fallbackSiteId,
     equipmentOpDate: getStringValue(source, 'equipmentOpDate'),
     nominalMaxOutput: getStringValue(source, 'nominalMaxOutput'),
     pcsManufacturer: getStringValue(
@@ -258,13 +270,14 @@ export default function EquipmentFormPage() {
   const returnPath = getInternalReturnPath(location.state);
   const enteredFromMasterDashboard = isFromMasterDashboard(location.state);
   const { toast } = useToast();
+  const sitesQuery = useSitesQuery();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formType] = useState<EquipmentFormType>(() =>
     searchParams.get('type') === 'other' ? 'other' : 'solar',
   );
 
   const solarForm = useForm<SolarPowerFormData>({
-    defaultValues: SOLAR_FORM_DEFAULT_VALUES,
+    defaultValues: { ...SOLAR_FORM_DEFAULT_VALUES, siteId },
   });
 
   const otherForm = useForm<OtherEquipmentFormData>({
@@ -285,7 +298,7 @@ export default function EquipmentFormPage() {
       if (!equipment) return;
 
       if (equipment.formType === 'solar') {
-        solarForm.reset(normalizeStoredSolarData(equipment.solarData));
+        solarForm.reset(normalizeStoredSolarData(equipment.solarData, siteId));
       } else {
         otherForm.reset({
           oldEquipmentName: equipment.oldEquipmentName,
@@ -302,7 +315,24 @@ export default function EquipmentFormPage() {
         variant: 'destructive',
       });
     }
-  }, [equipmentId, otherForm, projectId, solarForm, toast]);
+  }, [equipmentId, otherForm, projectId, siteId, solarForm, toast]);
+
+  const sites = sitesQuery.data?.sites ?? EMPTY_SITE_OPTIONS;
+  const siteOptionsError = sitesQuery.isError
+    ? sitesQuery.error instanceof Error
+      ? sitesQuery.error.message
+      : '拠点情報を取得できませんでした。'
+    : null;
+
+  useEffect(() => {
+    if (sites.length === 0) return;
+
+    const selectedSiteId = solarForm.getValues('siteId');
+    if (sites.some((site) => site.siteId === selectedSiteId)) return;
+
+    const routeSite = sites.find((site) => site.siteId === siteId);
+    solarForm.setValue('siteId', routeSite?.siteId ?? sites[0].siteId);
+  }, [siteId, sites, solarForm]);
 
   const saveEquipmentLocally = (equipmentData: Equipment) => {
     const storageKey = `project_${projectId}_equipment`;
@@ -342,11 +372,12 @@ export default function EquipmentFormPage() {
 
     try {
       const tempId = equipmentId ?? `equipment-${Date.now()}`;
+      const validationFiles = mapSolarFormFilesForValidation(data);
       const payload = mapSolarFormToEquipmentValidationItem(
         data,
         tempId,
-        siteId,
-        [],
+        data.siteId,
+        validationFiles,
       );
 
       await validateSiteProjectEquipment(payload);
@@ -436,7 +467,12 @@ export default function EquipmentFormPage() {
               noValidate
             >
               <FormCard>
-                <SolarPowerEquipmentForm form={solarForm} />
+                <SolarPowerEquipmentForm
+                  form={solarForm}
+                  sites={sites}
+                  isSiteOptionsLoading={sitesQuery.isLoading}
+                  siteOptionsError={siteOptionsError}
+                />
                 <div className="flex justify-end gap-4 pt-6">
                   <Button
                     type="button"

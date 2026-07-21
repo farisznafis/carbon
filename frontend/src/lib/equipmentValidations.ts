@@ -1,6 +1,7 @@
 export type YesNoValue = '' | 'yes' | 'no';
 
 export type SolarPowerFormData = {
+  siteId: string;
   equipmentOpDate: string;
   operationStartDateFile?: File;
   nominalMaxOutput: string;

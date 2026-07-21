@@ -20,7 +20,7 @@ describe('validateSiteProjectEquipment', () => {
     vi.stubGlobal('fetch', fetchMock);
     const payload: SiteProjectEquipmentValidationItem = {
       tempId: 'temp-1',
-      siteId: 1,
+      siteId: 'SITE4f83ac050b20d755',
       equipmentOpDate: '2026-07-17',
       nominalMaxOutput: 10,
       pcsManufacturer: 'Maker',

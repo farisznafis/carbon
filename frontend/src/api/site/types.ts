@@ -232,7 +232,7 @@ export type SiteProjectEquipmentValidationFile = {
 
 export type SiteProjectEquipmentValidationItem = {
   tempId: string;
-  siteId: number | null;
+  siteId: string | null;
   equipmentOpDate: string;
   nominalMaxOutput: number | null;
   pcsManufacturer: string;

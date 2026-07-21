@@ -1,4 +1,5 @@
 import type { UseFormReturn } from 'react-hook-form';
+import type { Site } from '@/api/site';
 import { FileSelectButton } from '@/components/inputs/FileSelectButton/FileSelectButton';
 import {
   FormGrid,
@@ -26,6 +27,9 @@ const EQUIPMENT_FILE_FORMATS = '(.pdf, .csv, .jpg, .jpeg, .png)';
 
 type SolarPowerEquipmentFormProps = Readonly<{
   form: UseFormReturn<SolarPowerFormData>;
+  sites: Site[];
+  isSiteOptionsLoading: boolean;
+  siteOptionsError: string | null;
 }>;
 
 type FileUploadControlProps = Readonly<{
@@ -79,6 +83,9 @@ function YesNoSelect({ value, onValueChange }: YesNoSelectProps) {
 
 export function SolarPowerEquipmentForm({
   form,
+  sites,
+  isSiteOptionsLoading,
+  siteOptionsError,
 }: SolarPowerEquipmentFormProps) {
   const hasBattery = form.watch('hasBattery') === 'yes';
   const hasAdditionalEquipment = form.watch('additionalEquipment') === 'yes';
@@ -86,6 +93,42 @@ export function SolarPowerEquipmentForm({
 
   return (
     <FormSectionStack spacing="relaxed">
+      <FormField
+        control={form.control}
+        name="siteId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>対象拠点</FormLabel>
+            <Select
+              value={field.value}
+              onValueChange={field.onChange}
+              disabled={
+                isSiteOptionsLoading ||
+                Boolean(siteOptionsError) ||
+                sites.length === 0
+              }
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="拠点を選択してください" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {sites.map((site) => (
+                  <SelectItem key={site.siteId} value={site.siteId}>
+                    {site.siteName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {siteOptionsError && (
+              <p className="text-sm text-destructive">{siteOptionsError}</p>
+            )}
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       <FormSection number={1} title="太陽光発電設備の情報">
         <FormField
           control={form.control}

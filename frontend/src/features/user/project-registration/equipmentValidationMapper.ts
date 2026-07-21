@@ -1,8 +1,29 @@
 import type {
+  SiteProjectEquipmentFileType,
   SiteProjectEquipmentValidationFile,
   SiteProjectEquipmentValidationItem,
 } from '@/api/site';
 import type { SolarPowerFormData } from '@/lib/equipmentValidations';
+
+const VALIDATION_FILE_FIELDS: ReadonlyArray<{
+  fieldName:
+    | 'operationStartDateFile'
+    | 'nominalMaxOutputFile'
+    | 'pcsFile'
+    | 'batteryFile'
+    | 'totalInvestmentFile'
+    | 'subsidyNameFile'
+    | 'preProjectUnitPriceFile';
+  fileType: SiteProjectEquipmentFileType;
+}> = [
+  { fieldName: 'operationStartDateFile', fileType: 'solar_contract' },
+  { fieldName: 'nominalMaxOutputFile', fileType: 'panel_catalog' },
+  { fieldName: 'pcsFile', fileType: 'pcs_spec' },
+  { fieldName: 'batteryFile', fileType: 'battery_catalog' },
+  { fieldName: 'totalInvestmentFile', fileType: 'construction_invoice' },
+  { fieldName: 'subsidyNameFile', fileType: 'subsidy_notice' },
+  { fieldName: 'preProjectUnitPriceFile', fileType: 'electricity_bill' },
+];
 
 function validationNumber(value: string) {
   if (!value.trim()) return null;
@@ -17,6 +38,31 @@ function validationBoolean(value: SolarPowerFormData['hasBattery']) {
   return null;
 }
 
+export function mapSolarFormFilesForValidation(
+  formData: SolarPowerFormData,
+): SiteProjectEquipmentValidationFile[] {
+  return VALIDATION_FILE_FIELDS.flatMap(({ fieldName, fileType }) => {
+    const file = formData[fieldName];
+    if (!(file instanceof File)) return [];
+
+    const pendingFileReference = [
+      'pending-upload',
+      fileType,
+      file.lastModified,
+      file.size,
+    ].join('-');
+
+    return [
+      {
+        fileType,
+        s3Key: pendingFileReference,
+        fileName: file.name,
+        fileId: pendingFileReference,
+      },
+    ];
+  });
+}
+
 export function mapSolarFormToEquipmentValidationItem(
   formData: SolarPowerFormData,
   tempId: string,
@@ -25,11 +71,10 @@ export function mapSolarFormToEquipmentValidationItem(
 ): SiteProjectEquipmentValidationItem {
   const hasBattery = validationBoolean(formData.hasBattery);
   const hasSubsidy = validationBoolean(formData.hasSubsidy);
-  const numericSiteId = siteId.trim() ? Number(siteId) : Number.NaN;
 
   return {
     tempId,
-    siteId: Number.isInteger(numericSiteId) ? numericSiteId : null,
+    siteId: siteId.trim() || null,
     equipmentOpDate: formData.equipmentOpDate,
     nominalMaxOutput: validationNumber(formData.nominalMaxOutput),
     pcsManufacturer: formData.pcsManufacturer.trim(),

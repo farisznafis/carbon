@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { SiteProjectEquipmentValidationFile } from '@/api/site';
 import type { SolarPowerFormData } from '@/lib/equipmentValidations';
-import { mapSolarFormToEquipmentValidationItem } from './equipmentValidationMapper';
+import {
+  mapSolarFormFilesForValidation,
+  mapSolarFormToEquipmentValidationItem,
+} from './equipmentValidationMapper';
 
 const baseFormData: SolarPowerFormData = {
+  siteId: 'SITE4f83ac050b20d755',
   equipmentOpDate: '2026-07-17',
   nominalMaxOutput: '10.5',
   pcsManufacturer: 'PCS Maker',
@@ -41,12 +45,12 @@ describe('mapSolarFormToEquipmentValidationItem', () => {
       mapSolarFormToEquipmentValidationItem(
         baseFormData,
         'temp-1',
-        '1',
+        'SITE4f83ac050b20d755',
         [uploadedFile],
       ),
     ).toEqual({
       tempId: 'temp-1',
-      siteId: 1,
+      siteId: 'SITE4f83ac050b20d755',
       equipmentOpDate: '2026-07-17',
       nominalMaxOutput: 10.5,
       pcsManufacturer: 'PCS Maker',
@@ -81,7 +85,7 @@ describe('mapSolarFormToEquipmentValidationItem', () => {
         subsidyAmount: '250000',
       },
       'temp-2',
-      '1',
+      'SITE4f83ac050b20d755',
       [],
     );
 
@@ -123,6 +127,37 @@ describe('mapSolarFormToEquipmentValidationItem', () => {
       totalInvestment: null,
       hasSubsidy: null,
       preProjectUnitPrice: null,
+    });
+  });
+});
+
+describe('mapSolarFormFilesForValidation', () => {
+  it('maps every selected form file to validation metadata', () => {
+    const result = mapSolarFormFilesForValidation({
+      ...baseFormData,
+      operationStartDateFile: new File(['contract'], 'contract.pdf'),
+      nominalMaxOutputFile: new File(['panel'], 'panel.pdf'),
+      pcsFile: new File(['pcs'], 'pcs.pdf'),
+    });
+
+    expect(result).toHaveLength(3);
+    expect(result).toEqual([
+      expect.objectContaining({
+        fileType: 'solar_contract',
+        fileName: 'contract.pdf',
+      }),
+      expect.objectContaining({
+        fileType: 'panel_catalog',
+        fileName: 'panel.pdf',
+      }),
+      expect.objectContaining({
+        fileType: 'pcs_spec',
+        fileName: 'pcs.pdf',
+      }),
+    ]);
+    result.forEach((file) => {
+      expect(file.s3Key).not.toBe('');
+      expect(file.fileId).not.toBe('');
     });
   });
 });
