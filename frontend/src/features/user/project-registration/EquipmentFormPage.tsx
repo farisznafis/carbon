@@ -5,7 +5,6 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { ApiError } from '@/api/_shared/errors';
 import {
@@ -14,9 +13,14 @@ import {
   type SiteProjectEquipmentFileType,
   type SiteProjectEquipmentValidationFile,
 } from '@/api/site';
-import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
+import {
+  FormCard,
+  FormPageContent,
+  FormPageTitle,
+  FormStandalonePage,
+} from '@/components/forms/form-layout';
+import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
-import { FormCard } from '@/components/forms/form-layout';
 import { Form } from '@/components/ui/form';
 import { SolarPowerEquipmentForm } from '@/features/user/project-registration/components/equipment-forms/SolarPowerEquipmentForm';
 import type {
@@ -425,21 +429,21 @@ export default function EquipmentFormPage() {
     });
   };
 
-  const pageTitle = equipmentId ? '設備編集' : '設備追加';
+  const pageTitle = equipmentId ? '設備編集' : '設備登録';
   const equipmentTypeLabel =
     formType === 'solar' ? '太陽光発電設備' : 'その他設備';
 
   return (
-    <FormPageWrapper
-      pageName={pageTitle}
-      title=""
-      onBack={handleCancel}
-      backText="戻る"
-      contentMaxWidth="max-w-[768px]"
-      wrapInCard={false}
-    >
-      <div className="space-y-6">
-        <p className="text-center text-muted-foreground">
+    <FormStandalonePage>
+      <PageBackButton
+        onClick={handleCancel}
+        label=""
+        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
+      />
+
+      <FormPageContent>
+        <FormPageTitle>{pageTitle}</FormPageTitle>
+        <p className="text-sm text-muted-foreground">
           設備種別：{equipmentTypeLabel}
         </p>
 
@@ -447,59 +451,56 @@ export default function EquipmentFormPage() {
           <Form {...solarForm}>
             <form
               onSubmit={solarForm.handleSubmit(submitSolarEquipment)}
-              className="space-y-6"
               noValidate
             >
               <FormCard>
                 <SolarPowerEquipmentForm form={solarForm} />
+                <div className="flex justify-end gap-4 pt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancel}
+                    disabled={isSubmitting}
+                    size="md"
+                  >
+                    キャンセル
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    size="md"
+                  >
+                    {isSubmitting ? '確認中...' : '確認'}
+                  </Button>
+                </div>
               </FormCard>
-              <div className="flex justify-end gap-4 pt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCancel}
-                  disabled={isSubmitting}
-                  size="md"
-                >
-                  キャンセル
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  size="md"
-                >
-                  {isSubmitting ? '確認中...' : '次へ'}
-                  {!isSubmitting && <ArrowRight className="ml-2 h-4 w-4" />}
-                </Button>
-              </div>
             </form>
           </Form>
         ) : (
           <Form {...otherForm}>
             <form
               onSubmit={otherForm.handleSubmit(submitOtherEquipment)}
-              className="space-y-6"
               noValidate
             >
-              <FormCard />
-              <div className="flex justify-end gap-4 pt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCancel}
-                  size="md"
-                >
-                  キャンセル
-                </Button>
-                <Button type="submit" size="md">
-                  次へ
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
+              <FormCard>
+                <div className="flex justify-end gap-4 pt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancel}
+                    size="md"
+                  >
+                    キャンセル
+                  </Button>
+                  <Button type="submit" size="md">
+                    確認
+                  </Button>
+                </div>
+              </FormCard>
             </form>
           </Form>
         )}
-      </div>
-    </FormPageWrapper>
+      </FormPageContent>
+    </FormStandalonePage>
   );
 }
