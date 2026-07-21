@@ -41,22 +41,20 @@ describe('mapSolarFormToEquipmentValidationItem', () => {
       mapSolarFormToEquipmentValidationItem(
         baseFormData,
         'temp-1',
-        'EN-S-001',
+        '1',
         [uploadedFile],
       ),
     ).toEqual({
       tempId: 'temp-1',
-      methodologyNumber: 'EN-S-001',
+      siteId: 1,
       equipmentOpDate: '2026-07-17',
       nominalMaxOutput: 10.5,
       pcsManufacturer: 'PCS Maker',
       pcsModel: 'PCS-01',
-      powerCondUnitCount: 2,
+      pcsUnitCount: 2,
       deviceNo: 'DEVICE-01',
-      powerCondStandby: 3.5,
+      pcsStandby: 3.5,
       hasBattery: false,
-      additionalEquipment: false,
-      ictEquipmentPowerConsumption: 0,
       totalInvestment: 1000000,
       hasSubsidy: false,
       preProjectUnitPrice: 42.5,
@@ -64,7 +62,7 @@ describe('mapSolarFormToEquipmentValidationItem', () => {
     });
   });
 
-  it('includes conditional battery, additional equipment, and subsidy fields', () => {
+  it('includes conditional battery and subsidy fields', () => {
     const result = mapSolarFormToEquipmentValidationItem(
       {
         ...baseFormData,
@@ -83,7 +81,7 @@ describe('mapSolarFormToEquipmentValidationItem', () => {
         subsidyAmount: '250000',
       },
       'temp-2',
-      'EN-S-001',
+      '1',
       [],
     );
 
@@ -92,12 +90,6 @@ describe('mapSolarFormToEquipmentValidationItem', () => {
       batteryMaker: 'Battery Maker',
       batteryModel: 'BAT-01',
       batteryCapacity: 8.2,
-      additionalEquipment: true,
-      ictEquipmentPowerConsumption: 15,
-      additionalEquipmentDate: '2026-07-18',
-      additionalEquipmentType: 'ICT controller',
-      additionalUnitCount: 3,
-      additionalDeviceUniqueNo: 'ICT-01',
       hasSubsidy: true,
       subsidyName: '補助金A',
       subsidyAmount: 250000,
@@ -118,17 +110,16 @@ describe('mapSolarFormToEquipmentValidationItem', () => {
         preProjectUnitPrice: '',
       },
       'temp-3',
-      'EN-S-001',
+      '',
       [],
     );
 
     expect(result).toMatchObject({
       nominalMaxOutput: null,
-      powerCondUnitCount: null,
-      powerCondStandby: null,
+      pcsUnitCount: null,
+      pcsStandby: null,
       hasBattery: null,
-      additionalEquipment: null,
-      ictEquipmentPowerConsumption: null,
+      siteId: null,
       totalInvestment: null,
       hasSubsidy: null,
       preProjectUnitPrice: null,

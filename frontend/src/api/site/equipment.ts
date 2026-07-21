@@ -50,14 +50,14 @@ export async function uploadSiteProjectEquipmentFile(
   };
 }
 
-export async function validateSiteProjectEquipments(
-  equipments: SiteProjectEquipmentValidationItem[],
+export async function validateSiteProjectEquipment(
+  equipment: SiteProjectEquipmentValidationItem,
 ): Promise<SiteProjectEquipmentValidationResponse> {
   return apiRequest<SiteProjectEquipmentValidationResponse>(
-    '/site/project/equipments/validate',
+    '/site/project/equipment/validate',
     {
       method: 'POST',
-      body: equipments,
+      body: equipment,
       fallbackErrorMessage: '設備情報の検証に失敗しました。',
     },
   );

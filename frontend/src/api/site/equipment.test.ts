@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   uploadSiteProjectEquipmentFile,
-  validateSiteProjectEquipments,
+  validateSiteProjectEquipment,
 } from './equipment';
 import type { SiteProjectEquipmentValidationItem } from './types';
 
@@ -9,8 +9,8 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('validateSiteProjectEquipments', () => {
-  it('posts the equipment array to the validation endpoint', async () => {
+describe('validateSiteProjectEquipment', () => {
+  it('posts one equipment object to the validation endpoint', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ statusCode: '200' }), {
         status: 200,
@@ -18,31 +18,27 @@ describe('validateSiteProjectEquipments', () => {
       }),
     );
     vi.stubGlobal('fetch', fetchMock);
-    const payload: SiteProjectEquipmentValidationItem[] = [
-      {
-        tempId: 'temp-1',
-        methodologyNumber: 'EN-S-001',
-        equipmentOpDate: '2026-07-17',
-        nominalMaxOutput: 10,
-        pcsManufacturer: 'Maker',
-        pcsModel: 'Model',
-        powerCondUnitCount: 1,
-        deviceNo: 'DEVICE-01',
-        powerCondStandby: 2,
-        hasBattery: false,
-        additionalEquipment: false,
-        ictEquipmentPowerConsumption: 0,
-        totalInvestment: 1000,
-        hasSubsidy: false,
-        preProjectUnitPrice: 30,
-        files: [],
-      },
-    ];
+    const payload: SiteProjectEquipmentValidationItem = {
+      tempId: 'temp-1',
+      siteId: 1,
+      equipmentOpDate: '2026-07-17',
+      nominalMaxOutput: 10,
+      pcsManufacturer: 'Maker',
+      pcsModel: 'Model',
+      pcsUnitCount: 1,
+      deviceNo: 'DEVICE-01',
+      pcsStandby: 2,
+      hasBattery: false,
+      totalInvestment: 1000,
+      hasSubsidy: false,
+      preProjectUnitPrice: 30,
+      files: [],
+    };
 
-    await validateSiteProjectEquipments(payload);
+    await validateSiteProjectEquipment(payload);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/site/project/equipments/validate',
+      '/api/site/project/equipment/validate',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(payload),

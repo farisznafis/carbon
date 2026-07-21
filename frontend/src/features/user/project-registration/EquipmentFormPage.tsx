@@ -8,11 +8,11 @@ import {
 import { ArrowRight } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { ApiError } from '@/api/_shared/errors';
-import { getProjectDetails, type Project, type ProjectDetail } from '@/api/projects';
 import {
   uploadSiteProjectEquipmentFile,
-  validateSiteProjectEquipments,
+  validateSiteProjectEquipment,
   type SiteProjectEquipmentFileType,
+  type SiteProjectEquipmentValidationFile,
 } from '@/api/site';
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
 import { Button } from '@/components/ui/button';
@@ -34,7 +34,6 @@ import {
   type SolarPowerFormData,
 } from '@/lib/equipmentValidations';
 import { paths } from '@/routes/paths';
-import { useDashboardStore } from '@/stores/dashboardStore';
 
 const SOLAR_FORM_DEFAULT_VALUES: SolarPowerFormData = {
   equipmentOpDate: '',
@@ -80,6 +79,22 @@ const OTHER_FORM_DEFAULT_VALUES: OtherEquipmentFormData = {
 const SOLAR_FORM_FIELD_NAMES = new Set<keyof SolarPowerFormData>(
   Object.keys(SOLAR_FORM_DEFAULT_VALUES) as Array<keyof SolarPowerFormData>,
 );
+const solarApiFieldAliases: Record<string, keyof SolarPowerFormData> = {
+  pcsUnitCount: 'powerCondUnitCount',
+  pcsStandby: 'powerCondStandby',
+};
+const solarFileFieldNames: Record<
+  SiteProjectEquipmentFileType,
+  keyof SolarPowerFormData
+> = {
+  solar_contract: 'operationStartDateFile',
+  panel_catalog: 'nominalMaxOutputFile',
+  pcs_spec: 'pcsFile',
+  battery_catalog: 'batteryFile',
+  construction_invoice: 'totalInvestmentFile',
+  subsidy_notice: 'subsidyNameFile',
+  electricity_bill: 'preProjectUnitPriceFile',
+};
 
 function getErrorMessage(value: unknown): string | null {
   if (typeof value === 'string') return value;
@@ -92,9 +107,24 @@ function getErrorMessage(value: unknown): string | null {
   return null;
 }
 
-function getSolarFormFieldName(path: string): keyof SolarPowerFormData | null {
+function getSolarFormFieldName(
+  path: string,
+  uploadedFiles: SiteProjectEquipmentValidationFile[],
+): keyof SolarPowerFormData | null {
+  const fileIndex = Number(path.match(/^files\[(\d+)\]/)?.[1]);
+  if (Number.isInteger(fileIndex) && fileIndex >= 0) {
+    const fileType = uploadedFiles[fileIndex]?.fileType;
+    return fileType
+      ? solarFileFieldNames[fileType]
+      : 'operationStartDateFile';
+  }
+
   const fieldName = path.replace(/\[\d+\]/g, '').split('.').at(-1);
   if (!fieldName) return null;
+
+  if (fieldName in solarApiFieldAliases) {
+    return solarApiFieldAliases[fieldName];
+  }
 
   return SOLAR_FORM_FIELD_NAMES.has(fieldName as keyof SolarPowerFormData)
     ? (fieldName as keyof SolarPowerFormData)
@@ -192,13 +222,6 @@ function normalizeStoredSolarData(value: unknown): SolarPowerFormData {
   };
 }
 
-function getMethodologyNumber(project: Project | ProjectDetail | null) {
-  if (!project) return '';
-  return 'methodNumber' in project
-    ? project.methodNumber
-    : project.methodologyNumber;
-}
-
 function getEquipmentFiles(
   data: SolarPowerFormData,
 ): Array<{ fileType: SiteProjectEquipmentFileType; file: File }> {
@@ -238,10 +261,6 @@ export default function EquipmentFormPage() {
   const equipmentId = searchParams.get('equipmentId');
   const returnPath = getInternalReturnPath(location.state);
   const enteredFromMasterDashboard = isFromMasterDashboard(location.state);
-  const currentProject = useDashboardStore((state) => state.currentProject);
-  const setCurrentProject = useDashboardStore(
-    (state) => state.setCurrentProject,
-  );
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formType] = useState<EquipmentFormType>(() =>
@@ -289,17 +308,6 @@ export default function EquipmentFormPage() {
     }
   }, [equipmentId, otherForm, projectId, solarForm, toast]);
 
-  const resolveMethodologyNumber = async () => {
-    if (currentProject?.id === projectId) {
-      const storedMethodologyNumber = getMethodologyNumber(currentProject);
-      if (storedMethodologyNumber) return storedMethodologyNumber;
-    }
-
-    const project = await getProjectDetails(projectId);
-    setCurrentProject(project);
-    return project.methodologyNumber;
-  };
-
   const saveEquipmentLocally = (equipmentData: Equipment) => {
     const storageKey = `project_${projectId}_equipment`;
     const storedEquipment = localStorage.getItem(storageKey);
@@ -328,15 +336,11 @@ export default function EquipmentFormPage() {
     if (isSubmitting) return;
     solarForm.clearErrors();
     setIsSubmitting(true);
+    let uploadedFiles: SiteProjectEquipmentValidationFile[] = [];
 
     try {
-      const methodologyNumber = await resolveMethodologyNumber();
-      if (!methodologyNumber) {
-        throw new Error('方法論番号を取得できませんでした。');
-      }
-
       const tempId = equipmentId ?? `equipment-${Date.now()}`;
-      const files = await Promise.all(
+      uploadedFiles = await Promise.all(
         getEquipmentFiles(data).map(({ fileType, file }) =>
           uploadSiteProjectEquipmentFile(
             siteId,
@@ -349,11 +353,11 @@ export default function EquipmentFormPage() {
       const payload = mapSolarFormToEquipmentValidationItem(
         data,
         tempId,
-        methodologyNumber,
-        files,
+        siteId,
+        uploadedFiles,
       );
 
-      await validateSiteProjectEquipments([payload]);
+      await validateSiteProjectEquipment(payload);
       saveEquipmentLocally({
         id: tempId,
         formType: 'solar',
@@ -373,7 +377,7 @@ export default function EquipmentFormPage() {
         typeof error.payload.errors === 'object'
       ) {
         Object.entries(error.payload.errors).forEach(([path, value]) => {
-          const fieldName = getSolarFormFieldName(path);
+          const fieldName = getSolarFormFieldName(path, uploadedFiles);
           const message = getErrorMessage(value);
           if (fieldName && message) {
             solarForm.setError(fieldName, { type: 'server', message });

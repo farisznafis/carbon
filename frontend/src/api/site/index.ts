@@ -11,7 +11,7 @@ export { getSiteProjects } from './projects';
 export {
   getSiteProjectEquipment,
   uploadSiteProjectEquipmentFile,
-  validateSiteProjectEquipments,
+  validateSiteProjectEquipment,
 } from './equipment';
 export type {
   CreateSiteData,
