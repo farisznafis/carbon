@@ -43,7 +43,7 @@ public class BatchProcessController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクト貢献データ", description = "プロジェクト詳細のグラフ為のデータ取得。")
     public ResponseEntity<SiteReductionResultResponse> SiteReductionResult(
-            @PathVariable Integer siteId,
+            @PathVariable String siteId,
             @PathVariable Integer projectId) {
         
         SiteReductionResultResponse response = batchService.getSiteReductionResult(siteId, projectId);

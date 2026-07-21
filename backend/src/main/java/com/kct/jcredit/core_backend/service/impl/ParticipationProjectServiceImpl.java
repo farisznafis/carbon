@@ -127,7 +127,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                         .existsBySite_IdAndProject_Id(site.getId(), projectId);
 
                                 return SiteResponse.builder()
-                                        .id(String.valueOf(site.getId()))
+                                        .siteId(site.getPublicId())
                                         .siteName(site.getSiteName())
                                         .postalCode(site.getPostalCode())
                                         .prefecture(site.getPrefecture())
@@ -148,8 +148,8 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
     @Override
     public EnR002SustainabilityCommitmentResponse getSustainabilityCommitmentDefault(
-            Integer siteId) {
-        Site site = siteRepository.findById(siteId)
+            String siteId) {
+        Site site = siteRepository.findByPublicId(siteId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_SITE_NOT_FOUND));
@@ -175,7 +175,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                                         Integer userId,
                                                         EnR002JoinProjectRequest request) {
         Site site = siteRepository
-                .findById(request.getEquipment().getSiteId())
+                .findByPublicId(request.getEquipment().getSiteId())
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_SITE_NOT_FOUND));

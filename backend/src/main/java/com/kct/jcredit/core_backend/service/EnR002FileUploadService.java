@@ -17,13 +17,13 @@ import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 public interface EnR002FileUploadService {
 
     // Upload file evidence equipment ke S3 temp
-    EnR002FileUploadResponse uploadFile(Integer siteId,
+    EnR002FileUploadResponse uploadFile(String siteId,
                                         EquipmentFileType fileType,
                                         String uploadedBy,
                                         MultipartFile file);
 
     // projectId dihapus — equipment cuma butuh siteId + equipmentId
     String moveTempToPermanent(String tempS3Key,
-                               Integer siteId,
+                               String siteId,
                                Integer equipmentId);
 }

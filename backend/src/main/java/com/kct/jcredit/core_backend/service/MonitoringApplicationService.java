@@ -13,7 +13,7 @@ public interface MonitoringApplicationService {
 
     MonitoringReportResponse submitMonitoringReport(
             Integer projectId,
-            Integer siteId,
+            String siteId,
             MonitoringReportRequest request,
             String companyId,
             String role,
@@ -21,7 +21,7 @@ public interface MonitoringApplicationService {
 
     MonitoringReportResponse getMonitoringReport(
             Integer projectId,
-            Integer siteId,
+            String siteId,
             String companyId,
             String role,
             String username);

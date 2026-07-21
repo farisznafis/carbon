@@ -18,7 +18,7 @@ import jakarta.persistence.Column;
 public class EnR002EquipmentResponse {
     
     private Integer id;
-    private Integer siteId;
+    private String siteId;
 
     private LocalDate equipmentOpDate;
     private BigDecimal nominalMaxOutput;

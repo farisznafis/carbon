@@ -46,7 +46,7 @@ public interface ParticipationProjectService {
 
     // Auto-fill
     EnR002SustainabilityCommitmentResponse getSustainabilityCommitmentDefault(
-            Integer siteId);
+            String siteId);
 
     // Submit
     ProjectJoinResponse submitParticipation(Integer projectId,

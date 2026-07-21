@@ -359,7 +359,7 @@ public class SiteServiceImpl implements SiteService {
 
     @Override
     public EnR002EquipmentRegisterResponse getSiteProjectEquipment(
-            Integer siteId,
+            String siteId,
             Integer projectId,
             String companyId,
             String role,
@@ -367,12 +367,14 @@ public class SiteServiceImpl implements SiteService {
         EnR002EquipmentRegisterResponse response = new EnR002EquipmentRegisterResponse();        
 
         try {
-            Site site = siteRepository.findById(siteId).orElse(null);
+            Site site = siteRepository.findByPublicId(siteId).orElse(null);
             if (site == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
                 return response;
             }
+            
+            Integer siteDbId = site.getId();
 
             Project project = projectRepository.findById(projectId).orElse(null);
             if (project == null) {
@@ -387,7 +389,7 @@ public class SiteServiceImpl implements SiteService {
                 return response;
             }
 
-            SiteProjectRelation relation = siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId);
+            SiteProjectRelation relation = siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteDbId);
             if (relation == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
@@ -395,7 +397,7 @@ public class SiteServiceImpl implements SiteService {
             }
 
             SiteR002MemberData memberData = siteR002MemberDataRepository
-                    .findByProject_IdAndSite_Id(projectId, siteId)
+                    .findByProject_IdAndSite_Id(projectId, siteDbId)
                     .orElse(null);
             if (memberData == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -404,7 +406,7 @@ public class SiteServiceImpl implements SiteService {
             }
 
            List<EnR002Equipment> equipments =
-            siteR002EquipmentRepository.findBySite_Id(siteId);
+            siteR002EquipmentRepository.findBySite_Id(siteDbId);
 
             if (equipments.isEmpty()) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -415,11 +417,7 @@ public class SiteServiceImpl implements SiteService {
             EnR002Equipment equipment = equipments.get(0);
 
             List<EnR002EquipmentFile> equipmentFiles = siteR002EquipmentFileRepository
-                    .findByEquipment_Id(equipment.getId());  // ← pakai equipment.getId()
-
-            if (equipmentFiles.isEmpty() && !memberData.getId().equals(siteId)) {
-                equipmentFiles = siteR002EquipmentFileRepository.findByEquipment_Id(siteId);
-            }
+                    .findByEquipment_Id(equipment.getId());
 
             List<String> evidenceDocuments = equipmentFiles.stream()
                     .map(EnR002EquipmentFile::getS3Key)
@@ -488,6 +486,26 @@ public class SiteServiceImpl implements SiteService {
         return false;
     }
 
+    private String extractFileNameFroms3Key(String s3Key) {
+        if (s3Key == null || s3Key.isBlank()) {
+            return null;
+        }
+
+        String key = s3Key.startsWith("/") ? s3Key.substring(1) : s3Key;
+        int lastSlash = key.lastIndexOf('/');
+        String baseName = lastSlash >= 0 ? key.substring(lastSlash + 1) : key;
+
+        if (baseName.startsWith("file_")) {
+            int secondUnderscore = baseName.indexOf('_', "file_".length());
+            if (secondUnderscore > 0 && secondUnderscore + 1 < baseName.length()) {
+                return baseName.substring(secondUnderscore + 1);
+            }
+        }
+
+        return baseName;
+    }
+
+
     private Site updateSite(Site site, UpdateSiteRequest request, ParticipatingUser user) {
         if (StringUtils.isNotBlank(request.getSiteName())) {
             site.setSiteName(request.getSiteName());
@@ -521,7 +539,14 @@ public class SiteServiceImpl implements SiteService {
         return siteRepository.save(site);
     }
 
-    // TODO: [REMOVED] parseSiteId() no longer needed — Site API now uses public ID strings directly
+    private Integer parseSiteId(String siteId, Map<String, String> errors) {
+        try {
+            return Integer.parseInt(siteId);
+        } catch (NumberFormatException e) {
+            errors.put("siteId", ResponseConstants.MSG_BAD_REQUEST);
+            return null;
+        }
+    }
 
     private BaseResponse validationError(Map<String, String> errors) {
         BaseResponse response = BaseResponse.validationError(errors);

@@ -17,7 +17,7 @@ public class RegisterMonitoringRecordSolarRequest {
     
     @NotNull(message = "拠点IDを入力してください。")
     @JsonProperty("siteId")
-    private Integer siteId;
+    private String siteId;
     
     @JsonProperty("userId")
     private Integer userId;

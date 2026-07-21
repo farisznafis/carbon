@@ -143,7 +143,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
     @Override
     public MonitoringReportResponse submitMonitoringReport(
             Integer projectId,
-            Integer siteId,
+            String siteId,
             MonitoringReportRequest request,
             String companyId,
             String role,
@@ -151,7 +151,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
         MonitoringReportResponse response = new MonitoringReportResponse();
 
         // Validate site exists
-        Site site = siteRepository.findById(siteId).orElse(null);
+        Site site = siteRepository.findByPublicId(siteId).orElse(null);
         if (site == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
@@ -166,7 +166,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
         }
 
         // Build DynamoDB keys
-        String pk = buildPk(siteId, projectId);
+        String pk = buildPk(site.getId(), projectId);
         String monitoringId = UUID.randomUUID().toString();
         String sk = buildSk(monitoringId);
 
@@ -185,14 +185,14 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
     @Override
     public MonitoringReportResponse getMonitoringReport(
             Integer projectId,
-            Integer siteId,
+            String siteId,
             String companyId,
             String role,
             String username) {
         MonitoringReportResponse response = new MonitoringReportResponse();
 
         // Validate site exists
-        Site site = siteRepository.findById(siteId).orElse(null);
+        Site site = siteRepository.findByPublicId(siteId).orElse(null);
         if (site == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
@@ -207,7 +207,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
         }
 
         // Fetch from DynamoDB (latest version)
-        String pk = buildPk(siteId, projectId);
+        String pk = buildPk(site.getId(), projectId);
         MonitoringReportRequest saved = monitoringReportRepository.findLatestByPk(pk).orElse(null);
         if (saved == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);

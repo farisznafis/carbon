@@ -32,7 +32,7 @@ public interface MonitoringService {
         String username,
         String companyId,
         Integer projectId,
-        Integer siteId
+        String siteId
     );
 
     MonitoringRecordSolarListResponse readAllMonitoringRecordsSolar(
@@ -51,7 +51,7 @@ public interface MonitoringService {
         String username,
         String companyId,
         Integer projectId,
-        Integer siteId,
+        String siteId,
         Integer page,
         Integer limit,
         String nextPageToken
@@ -66,7 +66,7 @@ public interface MonitoringService {
         String username,
         String companyId,
         Integer projectId,
-        Integer siteId,
+        String siteId,
         String description,
         MultipartFile file
     );
@@ -75,7 +75,7 @@ public interface MonitoringService {
         String username,
         String companyId,
         Integer projectId,
-        Integer siteId,
+        String siteId,
         String description,
         MultipartFile file
     );
@@ -84,7 +84,7 @@ public interface MonitoringService {
         String username,
         String companyId,
         Integer projectId,
-        Integer siteId,
+        String siteId,
         String description,
         MultipartFile file
     );
@@ -93,7 +93,7 @@ public interface MonitoringService {
         String username,
         String companyId,
         Integer projectId,
-        Integer siteId,
+        String siteId,
         String description,
         MultipartFile file
     );

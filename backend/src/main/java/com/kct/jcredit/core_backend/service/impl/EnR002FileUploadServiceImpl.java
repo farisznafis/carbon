@@ -61,7 +61,7 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
     // ─────────────────────────────────────────────────────────────
 
     @Override
-    public EnR002FileUploadResponse uploadFile(Integer siteId,
+    public EnR002FileUploadResponse uploadFile(String siteId,
                                                 EquipmentFileType fileType,
                                                 String uploadedBy,
                                                 MultipartFile file) {
@@ -108,7 +108,7 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
                                     "fileId",     fileId,
                                     "uploadedBy", uploadedBy,
                                     "fileType",   fileType.getValue(),
-                                    "siteId",     String.valueOf(siteId)
+                                    "siteId",     siteId
                             ))
                             .build(),
                     RequestBody.fromInputStream(inputStream, file.getSize())
@@ -134,7 +134,7 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
 
     @Override
     public String moveTempToPermanent(String tempS3Key,
-                                       Integer siteId,
+                                       String siteId,
                                        Integer equipmentId) {
 
         // dari: tmp/equipments/{uuid}/solar_contract_file.pdf
@@ -144,7 +144,7 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
         );
 
         String permanentKey = String.format(
-                "sites/%d/equipments/%d/%s",
+                "sites/%s/equipments/%d/%s",
                 siteId,
                 equipmentId,
                 fileNamePart

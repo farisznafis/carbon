@@ -79,7 +79,7 @@ public class MonitoringReportController {
     public ResponseEntity<MonitoringReportResponse> submitMonitoringReport(
             Authentication authentication,
             @PathVariable Integer projectId,
-            @RequestParam Integer siteId,
+            @RequestParam String siteId,
             @Valid @RequestBody MonitoringReportRequest request) {
         String token = authentication.getCredentials().toString();
         MonitoringReportResponse response = monitoringApplicationService.submitMonitoringReport(
@@ -103,7 +103,7 @@ public class MonitoringReportController {
     public ResponseEntity<MonitoringReportResponse> getMonitoringReport(
             Authentication authentication,
             @PathVariable Integer projectId,
-            @RequestParam Integer siteId) {
+            @RequestParam String siteId) {
         String token = authentication.getCredentials().toString();
         MonitoringReportResponse response = monitoringApplicationService.getMonitoringReport(
                 projectId,

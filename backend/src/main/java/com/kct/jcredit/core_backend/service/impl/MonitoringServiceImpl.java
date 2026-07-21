@@ -94,7 +94,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // 2) Fetch site and project - now company-scoped
             // 入力情報のsiteIdから企業情報を1件取得
-            Site site = siteRepository.findById(request.getSiteId()).orElse(null);
+            Site site = siteRepository.findByPublicId(request.getSiteId()).orElse(null);
             // 企業情報のnullチェック
             if (site == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -234,7 +234,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             String username,
             String companyId,
             Integer projectId,
-            Integer siteId
+            String siteId
     ) {
         MonitoringRecordSolarResponse response = new MonitoringRecordSolarResponse();
 
@@ -253,7 +253,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             }
 
             //入力情報のsiteIdから企業情報を1件取得
-            Site site = siteRepository.findById(siteId).orElse(null);
+            Site site = siteRepository.findByPublicId(siteId).orElse(null);
             //拠点情報がnullの場合
             if (site == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -296,7 +296,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // 4) Fetch latest monitoring record from DynamoDB
             // DynamoDBから最新の監視記録を取得する
-            String recordId = siteId + "#" + projectId;
+            String recordId = site.getId() + "#" + projectId;
             EnR002MonitoringRecord entity = monitoringRecordSolarRepository.findLatest(recordId)
                     .orElse(null);
 
@@ -398,7 +398,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             String username,
             String companyId,
             Integer projectId,
-            Integer siteId,
+            String siteId,
             Integer page,
             Integer limit,
             String nextPageToken
@@ -435,7 +435,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             }
 
             //入力情報のsiteIdから企業情報を1件取得
-            Site site = siteRepository.findById(siteId).orElse(null);
+            Site site = siteRepository.findByPublicId(siteId).orElse(null);
             //拠点情報がnullの場合
             if (site == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -485,7 +485,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // Fetch data - pagination object is updated by repository
             //データ取得 - ページネーションオブジェクトはリポジトリによって更新されます
-            String recordId = siteId + "#" + projectId;
+            String recordId = site.getId() + "#" + projectId;
             List<EnR002MonitoringRecord> entities = 
                 monitoringRecordSolarRepository.findAllByRecordIdPaginated(recordId, pagination);
 
@@ -521,7 +521,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             String username,
             String companyId,
             Integer projectId,
-            Integer siteId,
+            String siteId,
             String fileType,
             String description,
             MultipartFile file
@@ -543,7 +543,7 @@ public class MonitoringServiceImpl implements MonitoringService {
                 return response;
             }
 
-            Site site = siteRepository.findById(siteId).orElse(null);
+            Site site = siteRepository.findByPublicId(siteId).orElse(null);
             if (site == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
@@ -586,7 +586,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             // 5) Generate unique file ID and S3 key
             String fileId = "file_" + UUID.randomUUID().toString().substring(0, 6);
             String safeFilename = sanitizeFileName(file.getOriginalFilename());
-            String s3Key = String.format("companies/%s/projects/%d/sites/%d/%s/%s_%s",
+            String s3Key = String.format("companies/%s/projects/%d/sites/%s/%s/%s_%s",
                     companyId, projectId, siteId, fileType, fileId, safeFilename);
 
             // SECURITY FIX: Use server-side determined Content-Type (prevent MIME-Type Spoofing)
@@ -680,7 +680,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             );
         }
 
-        Site site = siteRepository.findById(request.getSiteId()).orElse(null);
+        Site site = siteRepository.findByPublicId(request.getSiteId()).orElse(null);
         if (site == null) {
             return MonitoringValidationResult.invalid(
                     BaseResponse.error(ResponseConstants.NOT_FOUND, ResponseConstants.MSG_SITE_NOT_FOUND)
@@ -1136,7 +1136,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             String username,
             String companyId,
             Integer projectId,
-            Integer siteId,
+            String siteId,
             String description,
             MultipartFile file
     ) {
@@ -1148,7 +1148,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             String username,
             String companyId,
             Integer projectId,
-            Integer siteId,
+            String siteId,
             String description,
             MultipartFile file
     ) {
@@ -1160,7 +1160,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             String username,
             String companyId,
             Integer projectId,
-            Integer siteId,
+            String siteId,
             String description,
             MultipartFile file
     ) {
@@ -1172,7 +1172,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             String username,
             String companyId,
             Integer projectId,
-            Integer siteId,
+            String siteId,
             String description,
             MultipartFile file
     ) {

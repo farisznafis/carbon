@@ -28,7 +28,7 @@ public class EnR002EquipmentRequest {
     private String tempId;
      
     @NotNull
-    private Integer siteId;
+    private String siteId;
     // ── 設備稼働日 ──────────────────────────────────────────────
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd")

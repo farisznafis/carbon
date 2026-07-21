@@ -66,7 +66,7 @@ public class SiteProjectController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<EnR002FileUploadResponse> uploadFile(
             Authentication authentication,
-            @PathVariable Integer siteId,
+            @PathVariable String siteId,
             @RequestParam("fileType") String fileType,
             @RequestParam("file") MultipartFile file) {
 
@@ -104,7 +104,7 @@ public class SiteProjectController {
     @PreAuthorize("hasRole('master')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<EnR002SustainabilityCommitmentResponse> getSustainabilityCommitmentDefault(
-            @PathVariable Integer siteId) {
+            @PathVariable String siteId) {
         return ResponseEntity.ok(
                 participationService.getSustainabilityCommitmentDefault(siteId));
     }

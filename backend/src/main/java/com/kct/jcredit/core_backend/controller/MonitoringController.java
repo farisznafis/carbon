@@ -77,7 +77,7 @@ public class MonitoringController {
     public ResponseEntity<MonitoringRecordSolarResponse> ReadLastMonitoringRecordSolar(
             Authentication authentication,
             @RequestParam Integer projectId,
-            @RequestParam Integer siteId) {
+            @RequestParam String siteId) {
         String username = jwtUtil.extractUsername(authentication.getCredentials().toString());
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
         
@@ -123,7 +123,7 @@ public class MonitoringController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "モニタリング記録一覧取得", description = "指定されたプロジェクトと拠点のモニタリング記録一覧を取得します。")
     public ResponseEntity<MonitoringRecordSolarListResponse> listMonitoringRecordsbySite(
-            @PathVariable Integer siteId,
+            @PathVariable String siteId,
             @PathVariable Integer projectId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "50") Integer limit,
@@ -155,7 +155,7 @@ public class MonitoringController {
     public ResponseEntity<FileUploadResponse> uploadElpvEvidence(
             Authentication authentication,
             @RequestParam Integer projectId,
-            @RequestParam Integer siteId,
+            @RequestParam String siteId,
             @RequestParam(required = false) String description,
             @RequestParam MultipartFile file) {
         
@@ -174,7 +174,7 @@ public class MonitoringController {
     public ResponseEntity<FileUploadResponse> uploadElpvrEvidence(
             Authentication authentication,
             @RequestParam Integer projectId,
-            @RequestParam Integer siteId,
+            @RequestParam String siteId,
             @RequestParam(required = false) String description,
             @RequestParam MultipartFile file) {
         
@@ -193,7 +193,7 @@ public class MonitoringController {
     public ResponseEntity<FileUploadResponse> uploadElpjBatterySpecificationEvidence(
             Authentication authentication,
             @RequestParam Integer projectId,
-            @RequestParam Integer siteId,
+            @RequestParam String siteId,
             @RequestParam(required = false) String description,
             @RequestParam MultipartFile file) {
         
@@ -212,7 +212,7 @@ public class MonitoringController {
     public ResponseEntity<FileUploadResponse> uploadElpjControlEvidence(
             Authentication authentication,
             @RequestParam Integer projectId,
-            @RequestParam Integer siteId,
+            @RequestParam String siteId,
             @RequestParam(required = false) String description,
             @RequestParam MultipartFile file) {
         

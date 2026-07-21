@@ -18,7 +18,7 @@ public interface SiteService {
     SiteInfoResponse updateSite(String siteId, String companyId, UpdateSiteRequest request);
 
     EnR002EquipmentRegisterResponse getSiteProjectEquipment(
-            Integer siteId,
+            String siteId,
             Integer projectId,
             String companyId,
             String role,

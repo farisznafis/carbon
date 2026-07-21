@@ -196,7 +196,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
@@ -224,7 +224,7 @@ class MonitoringServiceImplTest {
         String username = "tokyo_operator";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
@@ -251,7 +251,7 @@ class MonitoringServiceImplTest {
         String username = "tokyo_operator";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 22; // Fukuoka - NOT assigned to regularUserv(福岡 - regularUserには割り当てられていません)
+        String siteId = "22"; // Fukuoka - NOT assigned to regularUserv(福岡 - regularUserには割り当てられていません)
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
@@ -278,7 +278,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
@@ -313,7 +313,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request =
                 buildValidMonitoringRequest(projectId, siteId);
@@ -371,7 +371,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setChangedBattery(true);
         request.setElpjBatteryValue(new BigDecimal("10.00"));
@@ -394,7 +394,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setChangedBattery(false);
         request.setElpjBatterySpecificationUrl(null);
@@ -416,7 +416,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setChangedBattery(null);
         request.setElpjBatterySpecificationUrl(null);
@@ -440,7 +440,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         // Set negative value
@@ -470,7 +470,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
@@ -500,7 +500,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
@@ -540,7 +540,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         EnR002MonitoringRecord entity = new EnR002MonitoringRecord();
         // PK format changed to SITE#PROJECT (companyId still validated via user/site/project entities)
@@ -574,7 +574,7 @@ class MonitoringServiceImplTest {
         String username = "tokyo_operator";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 22; // Fukuoka - not assigned
+        String siteId = "22"; // Fukuoka - not assigned
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(regularUser));
         when(siteRepository.findById(siteId)).thenReturn(Optional.of(fukuokaSite));
@@ -596,7 +596,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
@@ -623,7 +623,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         MultipartFile file = createMockFile("test.pdf", "pdf", 1024);
         setupMockFileForUpload(file, "pdf", 1024);
@@ -658,7 +658,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         // 15MB file
         MultipartFile file = createMockFile("large.pdf", "pdf", 15 * 1024 * 1024);
@@ -687,7 +687,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         // .txt is not allowed for ELPV
         MultipartFile file = createMockFile("test.txt", "txt", 1024);
@@ -716,7 +716,7 @@ class MonitoringServiceImplTest {
         String username = "tokyo_operator";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 22; // Fukuoka - not assigned
+        String siteId = "22"; // Fukuoka - not assigned
 
         MultipartFile file = createMockFile("test.pdf", "pdf", 1024);
 
@@ -745,7 +745,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         MultipartFile file = createMockFile("test.png", "png", 2048);        setupMockFileForUpload(file, "png", 2048);
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
@@ -777,7 +777,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         MultipartFile file = createMockFile("battery.jpg", "jpg", 1500);
         setupMockFileForUpload(file, "jpg", 1500);
@@ -811,7 +811,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         MultipartFile file = createMockFile("control.pdf", "pdf", 3000);
         setupMockFileForUpload(file, "pdf", 3000);
@@ -847,7 +847,7 @@ class MonitoringServiceImplTest {
         String username = "nonexistent_user";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
@@ -870,7 +870,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         // Create a mock Site with null company
         Site brokenSite = mock(Site.class, withSettings().lenient());
@@ -906,7 +906,7 @@ class MonitoringServiceImplTest {
         String companyId = "COMP00000002";
         Integer Id = 123;
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         ParticipatingUser unknownRoleUser = new ParticipatingUser();
         unknownRoleUser.setId(99);
@@ -939,7 +939,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setDateRecorded(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).plusDays(1).toString());
@@ -969,7 +969,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
         LocalDate todayInJapan = LocalDate.now(java.time.ZoneId.of("Asia/Tokyo"));
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
@@ -1001,7 +1001,7 @@ class MonitoringServiceImplTest {
         String companyId = "COMP00000002";
 
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setElPv(new BigDecimal("100.000"));
         request.setElPvr(new BigDecimal("100.001"));
@@ -1031,7 +1031,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
@@ -1064,7 +1064,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setElPv(new BigDecimal("10.000"));
@@ -1095,7 +1095,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setChangedBattery(true);
         request.setElpjBatteryValue(new BigDecimal("10.00"));
@@ -1118,7 +1118,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setChangedBattery(false);
         request.setElpjBatterySpecificationUrl(null);
@@ -1138,7 +1138,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setDateRecorded(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).plusDays(1).toString());
@@ -1181,7 +1181,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setElpjAccuracy(null);
@@ -1211,7 +1211,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setElpjAccuracy(new BigDecimal("-0.01"));
@@ -1241,7 +1241,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setElpjAccuracy(new BigDecimal("100.01"));
@@ -1271,7 +1271,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
         Integer projectId = 1;
-        Integer siteId = 21;
+        String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
@@ -1300,7 +1300,7 @@ class MonitoringServiceImplTest {
 
     // ============ TEST HELPER METHODS ============
 
-    private RegisterMonitoringRecordSolarRequest buildValidMonitoringRequest(Integer projectId, Integer siteId) {
+    private RegisterMonitoringRecordSolarRequest buildValidMonitoringRequest(Integer projectId, String siteId) {
         RegisterMonitoringRecordSolarRequest request = new RegisterMonitoringRecordSolarRequest();
         request.setProjectId(projectId);
         request.setSiteId(siteId);
@@ -1319,7 +1319,7 @@ class MonitoringServiceImplTest {
         return request;
     }
 
-    private void stubValidMonitoringContext(String username, Integer projectId, Integer siteId) {
+    private void stubValidMonitoringContext(String username, Integer projectId, String siteId) {
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findById(siteId)).thenReturn(Optional.of(tokyoSite));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
