@@ -233,7 +233,7 @@ export function ProjectTable({
     },
     {
       id: 'actions',
-      label: 'アクション',
+      label: '操作',
       render: (project) => (
         <div
           className="flex justify-start gap-2"

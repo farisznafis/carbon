@@ -148,7 +148,7 @@ export function AdminCompanyApplicationsTable({
     },
     {
       id: 'actions',
-      label: 'アクション',
+      label: '操作',
       render: (item) => (
         <div
           onClick={(event) => event.stopPropagation()}

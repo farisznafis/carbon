@@ -16,6 +16,11 @@ import {
   getAdminCompanies,
   rejectAdminCompany,
 } from '@/api/admin';
+import {
+  getBatchHistory,
+  type BatchHistoryItem,
+  type BatchHistoryPagination,
+} from '@/api/batch';
 import { getMonitoringCancelRequests } from '@/api/monitoring';
 import {
   updateAdminProjectStatus,
@@ -65,6 +70,15 @@ const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
 const DEFAULT_PAGINATION: Pagination = {
   page: 1,
   limit: 20,
+  totalItems: 0,
+  totalPages: 1,
+  nextPageToken: null,
+  hasMore: false,
+};
+
+const DEFAULT_BATCH_HISTORY_PAGINATION: BatchHistoryPagination = {
+  page: 1,
+  limit: 10,
   totalItems: 0,
   totalPages: 1,
   nextPageToken: null,
@@ -206,6 +220,15 @@ const AdminDashboard = () => {
   const [cancelRequestError, setCancelRequestError] = useState<string | null>(
     null,
   );
+  const [batchHistoryItems, setBatchHistoryItems] = useState<BatchHistoryItem[]>(
+    [],
+  );
+  const [batchHistoryPagination, setBatchHistoryPagination] =
+    useState<BatchHistoryPagination>(DEFAULT_BATCH_HISTORY_PAGINATION);
+  const [batchHistoryLoading, setBatchHistoryLoading] = useState(true);
+  const [batchHistoryError, setBatchHistoryError] = useState<string | null>(
+    null,
+  );
   const [applicationCompanies, setApplicationCompanies] = useState<
     AdminCompanyListItem[]
   >([]);
@@ -319,6 +342,38 @@ const AdminDashboard = () => {
     };
 
     void preloadCancelRequests();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const preloadBatchHistory = async () => {
+      setBatchHistoryLoading(true);
+      setBatchHistoryError(null);
+
+      try {
+        const response = await getBatchHistory(
+          DEFAULT_BATCH_HISTORY_PAGINATION.page,
+          DEFAULT_BATCH_HISTORY_PAGINATION.limit,
+        );
+        if (!isActive) return;
+        setBatchHistoryItems(response.items);
+        setBatchHistoryPagination(response.pagination);
+      } catch (error) {
+        if (!isActive) return;
+        setBatchHistoryError(
+          getApiMessage(error, 'バッチ履歴の取得に失敗しました。'),
+        );
+      } finally {
+        if (isActive) setBatchHistoryLoading(false);
+      }
+    };
+
+    void preloadBatchHistory();
 
     return () => {
       isActive = false;
@@ -754,7 +809,12 @@ const AdminDashboard = () => {
               title="バッチ履歴"
               description="バッチ処理の実行状況と処理履歴を確認できます。"
             >
-              <BatchHistoryTable />
+              <BatchHistoryTable
+                initialItems={batchHistoryItems}
+                initialPagination={batchHistoryPagination}
+                initialLoading={batchHistoryLoading}
+                initialLoadError={batchHistoryError}
+              />
             </AdminDashboardSection>
           </TabsContent>
         </main>

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { getBatchHistory, type BatchHistoryItem } from '@/api/batch';
 import { BatchHistoryTable } from './BatchHistoryTable';
 
@@ -21,23 +21,31 @@ const batchHistoryItem: BatchHistoryItem = {
 };
 
 describe('BatchHistoryTable', () => {
-  it('renders API data with the shared grid table', async () => {
-    vi.mocked(getBatchHistory).mockResolvedValue({
-      items: [batchHistoryItem],
-      pagination: {
-        page: 1,
-        limit: 10,
-        totalItems: 1,
-        totalPages: 1,
-        nextPageToken: null,
-        hasMore: false,
-      },
-    });
+  it('renders preloaded data and exposes remaining fields in the detail dialog', async () => {
+    render(
+      <BatchHistoryTable
+        initialItems={[batchHistoryItem]}
+        initialPagination={{
+          page: 1,
+          limit: 10,
+          totalItems: 1,
+          totalPages: 1,
+          nextPageToken: null,
+          hasMore: false,
+        }}
+        initialLoading={false}
+        initialLoadError={null}
+      />,
+    );
 
-    render(<BatchHistoryTable />);
+    expect(screen.getByText('成功')).toBeInTheDocument();
+    expect(getBatchHistory).not.toHaveBeenCalled();
 
-    expect(await screen.findByText('成功')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '詳細' }));
+
+    expect(await screen.findByText('バッチ履歴の詳細')).toBeInTheDocument();
+    expect(screen.getByText('有効状態')).toBeInTheDocument();
+    expect(screen.getByText('作成日時')).toBeInTheDocument();
     expect(screen.getAllByText('admin@example.com')).toHaveLength(2);
-    expect(getBatchHistory).toHaveBeenCalledWith(1, 10);
   });
 });

@@ -10,61 +10,21 @@ import {
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { BatchHistoryDetailDialog } from './BatchHistoryDetailDialog';
+import { BatchHistoryStatusBadge } from './BatchHistoryStatusBadge';
+import { formatBatchHistoryDateTime } from './batchHistoryFormatters';
 
 const INITIAL_PAGE = 1;
 const INITIAL_ITEMS_PER_PAGE = 10;
-const BATCH_STATUS_LABELS: Record<string, string> = {
-  SUCCESS: '成功',
-  FAILED: '失敗',
-};
-const SUCCESS_BATCH_STATUSES = ['SUCCESS', 'SUCCEEDED', 'COMPLETED'];
-const FAILED_BATCH_STATUSES = ['FAILED', 'ERROR'];
 const batchHistoryGridColumns =
-  'minmax(72px, 0.45fr) minmax(130px, 0.8fr) minmax(110px, 0.65fr) minmax(175px, 1fr) minmax(175px, 1fr) minmax(160px, 0.9fr) minmax(175px, 1fr) minmax(160px, 0.9fr) minmax(175px, 1fr) minmax(160px, 0.9fr) minmax(175px, 1fr)';
+  'minmax(72px, 0.45fr) minmax(130px, 0.8fr) minmax(175px, 1fr) minmax(175px, 1fr) minmax(160px, 0.9fr) minmax(175px, 1fr) minmax(100px, 0.55fr)';
 
-const DEFAULT_PAGINATION: BatchHistoryPagination = {
-  page: INITIAL_PAGE,
-  limit: INITIAL_ITEMS_PER_PAGE,
-  totalItems: 0,
-  totalPages: 1,
-  nextPageToken: null,
-  hasMore: false,
+type BatchHistoryTableProps = {
+  initialItems: BatchHistoryItem[];
+  initialPagination: BatchHistoryPagination;
+  initialLoading: boolean;
+  initialLoadError: string | null;
 };
-
-function formatDateTime(value: string | null) {
-  if (!value) return '-';
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return new Intl.DateTimeFormat('ja-JP', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'UTC',
-  }).format(date);
-}
-
-function BatchStatusBadge({ status }: { status: string }) {
-  const normalizedStatus = status.toUpperCase();
-  const isSuccess = SUCCESS_BATCH_STATUSES.includes(normalizedStatus);
-  const isFailed = FAILED_BATCH_STATUSES.includes(normalizedStatus);
-
-  return (
-    <span
-      className={cn(
-        'inline-flex rounded-full border px-2.5 py-1 text-xs font-medium',
-        isSuccess && 'border-emerald-200 bg-emerald-50 text-emerald-800',
-        isFailed && 'border-red-200 bg-red-50 text-red-800',
-        !isSuccess &&
-          !isFailed &&
-          'border-amber-200 bg-amber-50 text-amber-800',
-      )}
-    >
-      {(BATCH_STATUS_LABELS[normalizedStatus] ?? status) || '-'}
-    </span>
-  );
-}
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error && error.message
@@ -72,21 +32,36 @@ function getErrorMessage(error: unknown) {
     : 'バッチ履歴の取得に失敗しました。';
 }
 
-export function BatchHistoryTable() {
-  const [items, setItems] = useState<BatchHistoryItem[]>([]);
-  const [pagination, setPagination] =
-    useState<BatchHistoryPagination>(DEFAULT_PAGINATION);
-  const [page, setPage] = useState(INITIAL_PAGE);
-  const [itemsPerPage, setItemsPerPage] = useState(INITIAL_ITEMS_PER_PAGE);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+export function BatchHistoryTable({
+  initialItems,
+  initialPagination,
+  initialLoading,
+  initialLoadError,
+}: Readonly<BatchHistoryTableProps>) {
+  const [items, setItems] = useState(initialItems);
+  const [pagination, setPagination] = useState(initialPagination);
+  const [page, setPage] = useState(initialPagination.page);
+  const [itemsPerPage, setItemsPerPage] = useState(initialPagination.limit);
+  const [isLoading, setIsLoading] = useState(initialLoading);
+  const [loadError, setLoadError] = useState<string | null>(initialLoadError);
+  const [selectedItem, setSelectedItem] = useState<BatchHistoryItem | null>(null);
 
-  const loadHistory = useCallback(async () => {
+  useEffect(() => {
+    setItems(initialItems);
+    setPagination(initialPagination);
+    setIsLoading(initialLoading);
+    setLoadError(initialLoadError);
+  }, [initialItems, initialLoadError, initialLoading, initialPagination]);
+
+  const loadHistory = useCallback(async (
+    nextPage = page,
+    nextItemsPerPage = itemsPerPage,
+  ) => {
     setIsLoading(true);
     setLoadError(null);
 
     try {
-      const result = await getBatchHistory(page, itemsPerPage);
+      const result = await getBatchHistory(nextPage, nextItemsPerPage);
       setItems(result.items);
       setPagination(result.pagination);
     } catch (error) {
@@ -95,10 +70,6 @@ export function BatchHistoryTable() {
       setIsLoading(false);
     }
   }, [itemsPerPage, page]);
-
-  useEffect(() => {
-    void loadHistory();
-  }, [loadHistory]);
 
   const columns = useMemo<DataGridTableColumn<BatchHistoryItem>[]>(
     () => [
@@ -114,16 +85,7 @@ export function BatchHistoryTable() {
         label: 'ステータス',
         sortable: true,
         sortValue: (item) => item.status,
-        render: (item) => <BatchStatusBadge status={item.status} />,
-      },
-      {
-        id: 'isActive',
-        label: '有効状態',
-        sortable: true,
-        sortValue: (item) => (item.is_active ? 1 : 0),
-        render: (item) => (
-          <span className="text-body">{item.is_active ? '有効' : '無効'}</span>
-        ),
+        render: (item) => <BatchHistoryStatusBadge status={item.status} />,
       },
       {
         id: 'startTime',
@@ -132,7 +94,7 @@ export function BatchHistoryTable() {
         sortValue: (item) => item.start_time,
         render: (item) => (
           <span className="block truncate text-body">
-            {formatDateTime(item.start_time)}
+            {formatBatchHistoryDateTime(item.start_time)}
           </span>
         ),
       },
@@ -143,47 +105,7 @@ export function BatchHistoryTable() {
         sortValue: (item) => item.end_time,
         render: (item) => (
           <span className="block truncate text-body">
-            {formatDateTime(item.end_time)}
-          </span>
-        ),
-      },
-      {
-        id: 'createdBy',
-        label: '作成者',
-        sortable: true,
-        sortValue: (item) => item.created_by,
-        render: (item) => (
-          <span className="block truncate text-body">{item.created_by || '-'}</span>
-        ),
-      },
-      {
-        id: 'createdAt',
-        label: '作成日時',
-        sortable: true,
-        sortValue: (item) => item.created_at,
-        render: (item) => (
-          <span className="block truncate text-body">
-            {formatDateTime(item.created_at)}
-          </span>
-        ),
-      },
-      {
-        id: 'updatedBy',
-        label: '更新者',
-        sortable: true,
-        sortValue: (item) => item.updated_by,
-        render: (item) => (
-          <span className="block truncate text-body">{item.updated_by || '-'}</span>
-        ),
-      },
-      {
-        id: 'updatedAt',
-        label: '更新日時',
-        sortable: true,
-        sortValue: (item) => item.updated_at,
-        render: (item) => (
-          <span className="block truncate text-body">
-            {formatDateTime(item.updated_at)}
+            {formatBatchHistoryDateTime(item.end_time)}
           </span>
         ),
       },
@@ -203,8 +125,22 @@ export function BatchHistoryTable() {
         sortValue: (item) => item.claimed_at,
         render: (item) => (
           <span className="block truncate text-body">
-            {formatDateTime(item.claimed_at)}
+            {formatBatchHistoryDateTime(item.claimed_at)}
           </span>
+        ),
+      },
+      {
+        id: 'actions',
+        label: '操作',
+        render: (item) => (
+          <div
+            onClick={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            <Button type="button" variant="outline" onClick={() => setSelectedItem(item)}>
+              詳細
+            </Button>
+          </div>
         ),
       },
     ],
@@ -235,6 +171,12 @@ export function BatchHistoryTable() {
   const handleItemsPerPageChange = (nextItemsPerPage: number) => {
     setItemsPerPage(nextItemsPerPage);
     setPage(INITIAL_PAGE);
+    void loadHistory(INITIAL_PAGE, nextItemsPerPage);
+  };
+
+  const handlePageChange = (nextPage: number) => {
+    setPage(nextPage);
+    void loadHistory(nextPage, itemsPerPage);
   };
 
   return (
@@ -243,7 +185,7 @@ export function BatchHistoryTable() {
         rows={items}
         columns={columns}
         gridTemplateColumns={batchHistoryGridColumns}
-        minWidth={1850}
+        minWidth={1170}
         getRowKey={(item) => String(item.id)}
         emptyMessage="バッチ履歴はありません。"
       />
@@ -253,8 +195,15 @@ export function BatchHistoryTable() {
         totalItems={pagination.totalItems}
         itemsPerPage={pagination.limit}
         rowsPerPageOptions={[10, 20, 50, 100]}
-        onPageChange={setPage}
+        onPageChange={handlePageChange}
         onItemsPerPageChange={handleItemsPerPageChange}
+      />
+      <BatchHistoryDetailDialog
+        open={selectedItem !== null}
+        item={selectedItem}
+        onOpenChange={(open) => {
+          if (!open) setSelectedItem(null);
+        }}
       />
     </div>
   );
