@@ -711,7 +711,6 @@ export default function AdminCompanyDetailPage() {
         isLoading={resolveLoading}
         isSubmitting={submitting}
         onOpenChange={handleResolveDialogOpenChange}
-        onSelectedSuspensionIdChange={setSelectedSuspensionId}
         onResolutionNoteChange={setResolutionNote}
         onConfirm={handleConfirmResolve}
       />

@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
 
 const reasonCodeLabels: Record<CompanySuspension['reasonCode'], string> = {
   BILLING: '請求・支払い',
@@ -30,7 +29,6 @@ type CompanySuspensionResolveDialogProps = {
   isLoading?: boolean;
   isSubmitting?: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectedSuspensionIdChange: (id: number) => void;
   onResolutionNoteChange: (value: string) => void;
   onConfirm: () => void;
 };
@@ -45,7 +43,6 @@ export function CompanySuspensionResolveDialog({
   isLoading,
   isSubmitting,
   onOpenChange,
-  onSelectedSuspensionIdChange,
   onResolutionNoteChange,
   onConfirm,
 }: CompanySuspensionResolveDialogProps) {
@@ -68,52 +65,36 @@ export function CompanySuspensionResolveDialog({
           <div className="space-y-4 rounded-xl border border-border bg-card p-5">
             <div className="space-y-1">
               <p className="text-small text-muted-foreground">企業名</p>
-              <p className="break-all text-large font-bold text-foreground">
+              <p className="break-all text-small font-bold text-foreground">
                 {item?.nameJA ?? '-'}
               </p>
             </div>
             <div className="space-y-1">
               <p className="text-small text-muted-foreground">メールアドレス</p>
-              <p className="break-all text-large font-bold text-foreground">
+              <p className="break-all text-small font-bold text-foreground">
                 {item?.email ?? '-'}
               </p>
             </div>
           </div>
 
           <div className="space-y-3">
-            <p className="text-small font-bold">
-              有効な停止理由 <span className="text-destructive">*</span>
-            </p>
+            <p className="text-small font-bold">有効な停止理由</p>
             {isLoading ? (
               <p className="rounded-lg border border-dashed border-border px-4 py-5 text-small text-muted-foreground">
                 読み込み中...
               </p>
-            ) : suspensions.length === 0 ? (
+            ) : !selectedSuspension ? (
               <p className="rounded-lg border border-dashed border-border px-4 py-5 text-small text-muted-foreground">
                 有効な停止理由はありません。
               </p>
             ) : (
-              <div className="space-y-2">
-                {suspensions.map((suspension) => (
-                  <button
-                    type="button"
-                    key={suspension.id}
-                    onClick={() => onSelectedSuspensionIdChange(suspension.id)}
-                    className={cn(
-                      'w-full rounded-lg border px-4 py-3 text-left transition',
-                      selectedSuspensionId === suspension.id
-                        ? 'border-primary bg-secondary/50'
-                        : 'border-border bg-card hover:border-primary/60',
-                    )}
-                  >
-                    <span className="block text-small font-bold text-foreground">
-                      {reasonCodeLabels[suspension.reasonCode]}
-                    </span>
-                    <span className="mt-1 block text-small text-muted-foreground">
-                      {suspension.reasonDetail || '-'}
-                    </span>
-                  </button>
-                ))}
+              <div className="w-full rounded-lg border border-border bg-card px-4 py-3">
+                <p className="text-small font-bold text-foreground">
+                  {reasonCodeLabels[selectedSuspension.reasonCode]}
+                </p>
+                <p className="mt-1 text-small text-muted-foreground">
+                  {selectedSuspension.reasonDetail || '-'}
+                </p>
               </div>
             )}
             {fieldErrors?.suspensionId && (
