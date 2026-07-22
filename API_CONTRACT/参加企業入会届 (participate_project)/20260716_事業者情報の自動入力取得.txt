@@ -1,0 +1,27 @@
+url: GET /site/project/sites/{siteId}/sustainability-commitment/default
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+リクエストボディなし（GET）
+Response - Success (HTTP 200)
+{
+  "companyName": "株式会社ソーラーファーム",
+  "repName": "伊藤健一",
+  "repRole": "代表取締役"
+}
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+
+

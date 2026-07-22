@@ -1,0 +1,67 @@
+url: GET /sites/{siteId}/equipment
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+リクエストボディなし（GET）。
+Response - Success (HTTP 200)
+[
+  {
+    "id": 3,
+    "siteId": 1,
+    "equipmentOpDate": "2024-05-01",
+    "nominalMaxOutput": 50.0,
+    "pcsManufacturer": "パナソニック",
+    "pcsModel": "VBK-030",
+    "pcsUnitCount": 2,
+    "deviceNo": "DEV-001-A",
+    "pcsStandby": 3.50,
+    "hasBattery": true,
+    "batteryMaker": "テスラ",
+    "batteryModel": "Powerwall-2",
+    "batteryCapacity": 13.5,
+    "totalInvestment": 5000000,
+    "hasSubsidy": true,
+    "subsidyName": "環境省補助金",
+    "subsidyAmount": 1000000,
+    "preProjectUnitPrice": 28.50
+  },
+  {
+    "id": 4,
+    "siteId": 1,
+    "equipmentOpDate": "2024-08-01",
+    "nominalMaxOutput": 30.0,
+    "pcsManufacturer": "シャープ",
+    "pcsModel": "JH-55B",
+    "pcsUnitCount": 1,
+    "deviceNo": "DEV-002-B",
+    "pcsStandby": 2.80,
+    "hasBattery": false,
+    "batteryMaker": null,
+    "batteryModel": null,
+    "batteryCapacity": null,
+    "totalInvestment": 2000000,
+    "hasSubsidy": false,
+    "subsidyName": null,
+    "subsidyAmount": null,
+    "preProjectUnitPrice": 27.00
+  }
+]
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+
