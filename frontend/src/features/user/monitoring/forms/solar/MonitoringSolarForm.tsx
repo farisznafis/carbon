@@ -48,7 +48,7 @@ const base = {
 
 export const MonitoringSolarFormSchema = z.object({
   ...base,
-  changedBattery: z.boolean(),
+  changedBattery: z.boolean().nullable(),
   ELPJ_battery_value: z.union([z.string(), z.number(), z.null()]).optional(),
 });
 
@@ -58,7 +58,7 @@ export type MonitoringSolarFormData = {
   dateRecorded?: string;
   ELpv_value?: string | number | null;
   ELpvr_value?: string | number | null;
-  changedBattery: boolean;
+  changedBattery: boolean | null;
   ELPJ_battery_value?: string | number | null;
   ELPJ_control_value?: string | number | null;
   ELPJ_accuracy?: string | number | null;
@@ -98,7 +98,7 @@ export function MonitoringSolarForm({
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
   });
-  const isBatteryChanged = form.watch('changedBattery');
+  const isBatteryChanged = form.watch('changedBattery') === true;
 
   const handleFileChange = (
     fieldName: FieldPath<MonitoringSolarFormData>,
@@ -283,7 +283,13 @@ export function MonitoringSolarForm({
                             form.clearErrors('ELPJ_battery_evidence');
                           }
                         }}
-                        value={field.value ? 'true' : 'false'}
+                        value={
+                          field.value == null
+                            ? undefined
+                            : field.value
+                              ? 'true'
+                              : 'false'
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="選択してください" />
@@ -299,10 +305,7 @@ export function MonitoringSolarForm({
                 )}
               />
 
-              <fieldset
-                disabled={!isBatteryChanged}
-                className={!isBatteryChanged ? 'opacity-50' : ''}
-              >
+              {isBatteryChanged ? (
                 <FormField
                   control={form.control}
                   name="ELPJ_battery_value"
@@ -323,7 +326,6 @@ export function MonitoringSolarForm({
                               field.onChange(value === '' || value === '0' ? null : value);
                             }}
                             placeholder="数値を入力"
-                            disabled={!isBatteryChanged}
                           />
                           <span className="text-sm text-muted-foreground whitespace-nowrap">
                             kWh
@@ -334,7 +336,7 @@ export function MonitoringSolarForm({
                     </FormItem>
                   )}
                 />
-              </fieldset>
+              ) : null}
 
               <FormField
                 control={form.control}
