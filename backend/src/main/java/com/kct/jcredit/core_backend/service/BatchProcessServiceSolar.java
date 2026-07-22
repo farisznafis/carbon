@@ -15,6 +15,8 @@ import com.kct.jcredit.core_backend.repository.postgres.EnR002ReductionResultRep
 import com.kct.jcredit.core_backend.repository.postgres.EnR002ReductionResultTotalRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
+import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
+import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.repository.dynamodb.MonitoringTableRecordSolarRepository;
 import com.kct.jcredit.core_backend.dto.batch.ProcessingResult;
 import com.kct.jcredit.core_backend.dto.batch.ComparisonResult;
@@ -59,6 +61,7 @@ public class BatchProcessServiceSolar {
     private final MonitoringTableRecordSolarRepository monitoringTableRepo; // DynamoDB access
     private final ProjectRepository projectRepository;
     private final SiteProjectRelationRepository siteProjectRelationRepo;
+    private final SiteRepository siteRepository;
     
     // Service Dependencies
     private final CsvLogService csvLogService;
@@ -544,7 +547,9 @@ public class BatchProcessServiceSolar {
             Instant lastBatchStart,
             Instant currentBatchStart) {
         
-        String pk = projectId + "#" + siteId;
+        Site site = siteRepository.findById(siteId).orElse(null);
+        String publicId = site != null ? site.getPublicId() : String.valueOf(siteId);
+        String pk = publicId + "#" + projectId;
         String startSk = lastBatchStart.toString();
         String endSk = currentBatchStart.toString();
         

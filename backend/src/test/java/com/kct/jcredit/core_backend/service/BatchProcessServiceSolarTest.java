@@ -54,6 +54,9 @@ class BatchProcessServiceSolarTest {
     private SiteProjectRelationRepository siteProjectRelationRepo;
     
     @Mock
+    private SiteRepository siteRepository;
+    
+    @Mock
     private CsvLogService csvLogService;
     
     @InjectMocks
