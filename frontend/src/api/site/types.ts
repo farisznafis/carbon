@@ -259,6 +259,45 @@ export type SiteProjectEquipmentValidationResponse = {
   timestamp?: string;
 };
 
+export type SiteProjectJoinConfirmationItems = {
+  isAgreeDataUse: boolean;
+  isAgreeExtraData: boolean;
+  isAgreeTransfer: boolean;
+  isNotRegistered: boolean;
+  isKeidanrenParticipation: boolean;
+  isEmitter: boolean;
+  emitterCode?: string;
+  isAdjustedEmissionsAdded?: boolean;
+  isSubjectToPeriodicReport: boolean;
+  isPeriodicReportTypeOne?: boolean;
+  energyBusinessCode?: string;
+  factoryCode?: string;
+};
+
+export type SiteProjectJoinSustainabilityCommitment = {
+  companyName: string;
+  repName: string;
+  repRole: string;
+  hasConsent: boolean;
+};
+
+export type SiteProjectJoinRequest = {
+  equipment: SiteProjectEquipmentValidationItem;
+  confirmationItems: SiteProjectJoinConfirmationItems;
+  sustainabilityCommitment: SiteProjectJoinSustainabilityCommitment;
+  finalAgreement: {
+    isAgreeTerms: boolean;
+  };
+};
+
+export type SiteProjectJoinResponse = {
+  statusCode?: string;
+  message?: string | null;
+  participationId?: number;
+  equipmentId?: number;
+  siteProjectRelationId?: number;
+};
+
 export type SiteProjectEquipmentFileUploadResponse = {
   statusCode?: string;
   s3Key?: string;

@@ -23,8 +23,8 @@ function renderEquipmentForm() {
             element={<EquipmentFormPage />}
           />
           <Route
-            path="/projects/:siteId/:projectId/register"
-            element={<div>Project registration</div>}
+            path="/projects/:siteId/:projectId/equipment/confirmation"
+            element={<div>Equipment confirmation</div>}
           />
         </Routes>
       </MemoryRouter>
@@ -94,7 +94,7 @@ describe('EquipmentFormPage file handling', () => {
     fireEvent.click(screen.getByRole('button', { name: '確認' }));
 
     expect(
-      await screen.findByText('Project registration'),
+      await screen.findByText('Equipment confirmation'),
     ).toBeInTheDocument();
     expect(fetch).toHaveBeenCalledWith(
       '/api/site/project/equipment/validate',
@@ -130,6 +130,6 @@ describe('EquipmentFormPage file handling', () => {
       '/api/site/project/equipment/validate',
       expect.objectContaining({ method: 'POST' }),
     );
-    expect(screen.queryByText('Project registration')).not.toBeInTheDocument();
+    expect(screen.queryByText('Equipment confirmation')).not.toBeInTheDocument();
   });
 });

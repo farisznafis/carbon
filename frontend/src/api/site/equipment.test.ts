@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  joinSiteProject,
   uploadSiteProjectEquipmentFile,
   validateSiteProjectEquipment,
 } from './equipment';
@@ -82,5 +83,61 @@ describe('uploadSiteProjectEquipmentFile', () => {
       fileName: 'catalog.pdf',
       fileId: 'file-1',
     });
+  });
+});
+
+describe('joinSiteProject', () => {
+  it('posts the complete join payload to the project endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ statusCode: '200', participationId: 10 }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const payload = {
+      equipment: {
+        tempId: 'temp-1',
+        siteId: 'SITE-1',
+        equipmentOpDate: '2026-07-22',
+        nominalMaxOutput: 10,
+        pcsManufacturer: 'Maker',
+        pcsModel: 'Model',
+        pcsUnitCount: 1,
+        deviceNo: 'DEVICE-1',
+        pcsStandby: 1,
+        hasBattery: false,
+        totalInvestment: 1000,
+        hasSubsidy: false,
+        preProjectUnitPrice: 20,
+        files: [],
+      },
+      confirmationItems: {
+        isAgreeDataUse: true,
+        isAgreeExtraData: true,
+        isAgreeTransfer: true,
+        isNotRegistered: true,
+        isKeidanrenParticipation: false,
+        isEmitter: false,
+        isSubjectToPeriodicReport: false,
+      },
+      sustainabilityCommitment: {
+        companyName: 'Company',
+        repName: 'Representative',
+        repRole: 'Director',
+        hasConsent: true,
+      },
+      finalAgreement: { isAgreeTerms: true },
+    };
+
+    await joinSiteProject('2', payload);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/site/project/projects/2/join',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    );
   });
 });

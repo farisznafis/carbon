@@ -37,6 +37,12 @@ export const paths = {
     siteId: string,
     projectId: string | number,
   ) => `/projects/${siteId}/${projectId}/equipment`,
+  projectEquipmentConfirmationRoute:
+    '/projects/:siteId/:projectId/equipment/confirmation',
+  projectEquipmentConfirmation: (
+    siteId: string,
+    projectId: string | number,
+  ) => `/projects/${siteId}/${projectId}/equipment/confirmation`,
   equipmentAddRoute: '/equipment/add/:type',
   equipmentAdd: (type: string) => `/equipment/add/${type}`,
   siteProjectDetailRoute: '/sites/:siteId/projects/:projectId',

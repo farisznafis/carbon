@@ -5,15 +5,17 @@ import type {
 } from '@/api/site';
 import type { SolarPowerFormData } from '@/lib/equipmentValidations';
 
+type SolarFileFieldName =
+  | 'operationStartDateFile'
+  | 'nominalMaxOutputFile'
+  | 'pcsFile'
+  | 'batteryFile'
+  | 'totalInvestmentFile'
+  | 'subsidyNameFile'
+  | 'preProjectUnitPriceFile';
+
 const VALIDATION_FILE_FIELDS: ReadonlyArray<{
-  fieldName:
-    | 'operationStartDateFile'
-    | 'nominalMaxOutputFile'
-    | 'pcsFile'
-    | 'batteryFile'
-    | 'totalInvestmentFile'
-    | 'subsidyNameFile'
-    | 'preProjectUnitPriceFile';
+  fieldName: SolarFileFieldName;
   fileType: SiteProjectEquipmentFileType;
 }> = [
   { fieldName: 'operationStartDateFile', fileType: 'solar_contract' },
@@ -41,10 +43,7 @@ function validationBoolean(value: SolarPowerFormData['hasBattery']) {
 export function mapSolarFormFilesForValidation(
   formData: SolarPowerFormData,
 ): SiteProjectEquipmentValidationFile[] {
-  return VALIDATION_FILE_FIELDS.flatMap(({ fieldName, fileType }) => {
-    const file = formData[fieldName];
-    if (!(file instanceof File)) return [];
-
+  return getSolarFormSelectedFiles(formData).map(({ fileType, file }) => {
     const pendingFileReference = [
       'pending-upload',
       fileType,
@@ -52,14 +51,30 @@ export function mapSolarFormFilesForValidation(
       file.size,
     ].join('-');
 
-    return [
-      {
-        fileType,
-        s3Key: pendingFileReference,
-        fileName: file.name,
-        fileId: pendingFileReference,
-      },
-    ];
+    return {
+      fileType,
+      s3Key: pendingFileReference,
+      fileName: file.name,
+      fileId: pendingFileReference,
+    };
+  });
+}
+
+export function getSolarFormSelectedFiles(
+  formData: SolarPowerFormData,
+): Array<{
+  fieldName: SolarFileFieldName;
+  fileType: SiteProjectEquipmentFileType;
+  file: File;
+}> {
+  return VALIDATION_FILE_FIELDS.flatMap(({ fieldName, fileType }) => {
+    if (fieldName === 'batteryFile' && formData.hasBattery !== 'yes') return [];
+    if (fieldName === 'subsidyNameFile' && formData.hasSubsidy !== 'yes') {
+      return [];
+    }
+
+    const file = formData[fieldName];
+    return file instanceof File ? [{ fieldName, fileType, file }] : [];
   });
 }
 

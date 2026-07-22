@@ -26,6 +26,7 @@ import {
   mapSolarFormFilesForValidation,
   mapSolarFormToEquipmentValidationItem,
 } from '@/features/user/project-registration/equipmentValidationMapper';
+import { getSolarEquipmentDraft } from '@/features/user/project-registration/equipmentConfirmationState';
 import {
   isFromMasterDashboard,
   masterDashboardProjectMembershipState,
@@ -269,6 +270,7 @@ export default function EquipmentFormPage() {
   const equipmentId = searchParams.get('equipmentId');
   const returnPath = getInternalReturnPath(location.state);
   const enteredFromMasterDashboard = isFromMasterDashboard(location.state);
+  const equipmentDraft = getSolarEquipmentDraft(location.state);
   const { toast } = useToast();
   const sitesQuery = useSitesQuery();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -277,7 +279,7 @@ export default function EquipmentFormPage() {
   );
 
   const solarForm = useForm<SolarPowerFormData>({
-    defaultValues: { ...SOLAR_FORM_DEFAULT_VALUES, siteId },
+    defaultValues: equipmentDraft ?? { ...SOLAR_FORM_DEFAULT_VALUES, siteId },
   });
 
   const otherForm = useForm<OtherEquipmentFormData>({
@@ -285,6 +287,7 @@ export default function EquipmentFormPage() {
   });
 
   useEffect(() => {
+    if (equipmentDraft) return;
     if (!equipmentId) return;
 
     const storedEquipment = localStorage.getItem(
@@ -315,7 +318,7 @@ export default function EquipmentFormPage() {
         variant: 'destructive',
       });
     }
-  }, [equipmentId, otherForm, projectId, siteId, solarForm, toast]);
+  }, [equipmentDraft, equipmentId, otherForm, projectId, siteId, solarForm, toast]);
 
   const sites = sitesQuery.data?.sites ?? EMPTY_SITE_OPTIONS;
   const siteOptionsError = sitesQuery.isError
@@ -390,12 +393,15 @@ export default function EquipmentFormPage() {
         return;
       }
 
-      saveEquipmentLocally({
-        id: tempId,
-        formType: 'solar',
-        solarData: data,
+      navigate(paths.projectEquipmentConfirmation(siteId, projectId), {
+        state: {
+          equipmentId: tempId,
+          isEdit: Boolean(equipmentId),
+          formData: data,
+          returnTo: returnPath ?? undefined,
+          fromMasterDashboard: enteredFromMasterDashboard,
+        },
       });
-      navigateToProjectRegister();
     } catch (error) {
       if (
         error instanceof ApiError &&

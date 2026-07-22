@@ -11,6 +11,8 @@ import type {
   SiteProjectEquipmentValidationFile,
   SiteProjectEquipmentValidationItem,
   SiteProjectEquipmentValidationResponse,
+  SiteProjectJoinRequest,
+  SiteProjectJoinResponse,
 } from './types';
 
 export async function uploadSiteProjectEquipmentFile(
@@ -59,6 +61,20 @@ export async function validateSiteProjectEquipment(
       method: 'POST',
       body: equipment,
       fallbackErrorMessage: '設備情報の検証に失敗しました。',
+    },
+  );
+}
+
+export async function joinSiteProject(
+  projectId: string,
+  payload: SiteProjectJoinRequest,
+): Promise<SiteProjectJoinResponse> {
+  return apiRequest<SiteProjectJoinResponse>(
+    `/site/project/projects/${encodeURIComponent(projectId)}/join`,
+    {
+      method: 'POST',
+      body: payload,
+      fallbackErrorMessage: 'プロジェクト参加申請に失敗しました。',
     },
   );
 }

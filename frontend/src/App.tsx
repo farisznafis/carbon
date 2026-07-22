@@ -34,6 +34,9 @@ const SiteDetail = lazy(() => import("./features/user/sites/SiteDetailPage"));
 const ProjectMembership = lazy(() => import("./features/user/project-registration/ProjectMembershipPage"));
 const ProjectRegister = lazy(() => import("./features/user/project-registration/ProjectRegisterPage"));
 const EquipmentForm = lazy(() => import("./features/user/project-registration/EquipmentFormPage"));
+const EquipmentConfirmation = lazy(() =>
+  import("./features/user/project-registration/EquipmentConfirmationPage"),
+);
 const MasterDashboard = lazy(() => import("./features/master/pages/MasterDashboardPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Dashboard = lazy(() => import("./features/user/dashboard/DashboardPage"));
@@ -166,6 +169,14 @@ const App = () => {
               element={
                 <RequireMaster>
                   <EquipmentForm />
+                </RequireMaster>
+              }
+            />
+            <Route
+              path={paths.projectEquipmentConfirmationRoute}
+              element={
+                <RequireMaster>
+                  <EquipmentConfirmation />
                 </RequireMaster>
               }
             />

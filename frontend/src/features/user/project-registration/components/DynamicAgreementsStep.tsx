@@ -1,4 +1,4 @@
-import { useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -54,6 +54,7 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
   });
 
   const watchedValues = form.watch();
+  const previousValuesRef = useRef(watchedValues);
   const specifiedEmitterStatus = form.watch('specifiedEmitterStatus');
   const energyRationalizationCompliance = form.watch('energyRationalizationCompliance');
 
@@ -71,7 +72,12 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
 
   // Sync form values with parent component
   useEffect(() => {
-    onValueChange(watchedValues);
+    if (
+      JSON.stringify(previousValuesRef.current) !== JSON.stringify(watchedValues)
+    ) {
+      previousValuesRef.current = watchedValues;
+      onValueChange(watchedValues);
+    }
   }, [watchedValues, onValueChange]);
 
   return (
