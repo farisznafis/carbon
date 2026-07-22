@@ -8,7 +8,8 @@ import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002FinalAgreementRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyMethodologyValidateRequest;
-import com.kct.jcredit.core_backend.dto.response.EnR002FileUploadResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentFileResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002FileResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 import com.kct.jcredit.core_backend.dto.response.ProjectJoinResponse;
@@ -75,7 +76,7 @@ public class SiteProjectController {
 
         EnR002FileResponse response = fileUploadSolarService
                 .uploadFile(siteId, fileTypeEnum, uploadedBy, file);
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+        return new ResponseEntity<EnR002FileResponse>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
     // ─────────────────────────────────────────────────────────────
