@@ -176,19 +176,19 @@ export default function ProjectMembershipPage() {
         ) : (
           <>
             <MembershipSection
-              title="未参加のプロジェクト"
+              title="未入会のプロジェクト"
               description="この拠点は以下のプロジェクトにまだ参加していません。参加を希望する場合は、入会届へ進んでください。"
               projects={availableProjects}
               status="available"
-              emptyMessage="未参加のプロジェクトはありません。"
+              emptyMessage="未入会のプロジェクトはありません。"
               onJoin={handleJoin}
             />
             <MembershipSection
-              title="参加中のプロジェクト"
+              title="入会中のプロジェクト"
               description="この拠点が現在参加しているプロジェクトです。再度入会届を提出する必要はありません。"
               projects={joinedProjects}
               status="joined"
-              emptyMessage="参加中のプロジェクトはありません。"
+              emptyMessage="入会中のプロジェクトはありません。"
             />
           </>
         )}
