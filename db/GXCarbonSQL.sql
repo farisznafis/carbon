@@ -359,6 +359,10 @@ CREATE TABLE EN_R002_reduction_result_total(
     empj_s DECIMAL(12,3),
     empj_s_control DECIMAL(12,3),
     empj_s_battery DECIMAL(12,3),
+    elpj DECIMAL(12,3),
+    embl DECIMAL(12,3),
+    elbl DECIMAL(12,3),
+    er DECIMAL(12,3),
     deleted_at TIMESTAMP,
     deleted_by VARCHAR(100)
 );
@@ -376,11 +380,16 @@ CREATE TABLE EN_R002_reduction_result(
     start_time TIMESTAMP,
     end_time TIMESTAMP,
     site_id INT REFERENCES site(id) ON DELETE CASCADE,
+    equipment_id INT REFERENCES en_r002_equipment(id) ON DELETE CASCADE,
     empj DECIMAL(12,3),
     empj_m DECIMAL(12,3),
     empj_s DECIMAL(12,3),
     empj_s_control DECIMAL(12,3),
     empj_s_battery DECIMAL(12,3),
+    elpj DECIMAL(12,3),
+    embl DECIMAL(12,3),
+    elbl DECIMAL(12,3),
+    er DECIMAL(12,3),
     deleted_at TIMESTAMP,
     deleted_by VARCHAR(100)
 );

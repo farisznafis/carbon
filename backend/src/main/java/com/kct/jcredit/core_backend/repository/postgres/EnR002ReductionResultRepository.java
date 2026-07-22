@@ -48,4 +48,8 @@ public interface EnR002ReductionResultRepository extends JpaRepository<EnR002Red
          + "WHERE r.site_id IN (SELECT s.id FROM site s JOIN participating_company pc ON pc.id = s.participating_company_id WHERE pc.company_id = :companyId)",
          nativeQuery = true)
     void softDeleteByCompanyId(@Param("companyId") String companyId, @Param("deletedBy") String deletedBy);
+
+    Optional<EnR002ReductionResult> findTopByProjectIdAndSiteIdAndEquipmentIdOrderByBatchIdDesc(
+        Integer projectId, Integer siteId, Integer equipmentId
+    );
 }

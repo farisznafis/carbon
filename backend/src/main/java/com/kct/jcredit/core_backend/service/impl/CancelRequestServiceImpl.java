@@ -380,7 +380,7 @@ public class CancelRequestServiceImpl implements CancelRequestService {
         offsetRecord.setElpjControlEvidenceUrl(null);
         
         // ===== 相殺レコード特有の設定 =====
-        offsetRecord.setChangedBattery(false);  // 相殺レコードではバッテリー交換なし
+       // offsetRecord.setChangedBattery(false);  // 相殺レコードではバッテリー交換なし
         offsetRecord.setIsActive(true);    
         
         return offsetRecord;
