@@ -24,16 +24,6 @@ import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { CompanySuspendDialog } from '@/features/admin/dashboard/tables/CompanySuspendDialog';
@@ -192,9 +182,6 @@ export default function AdminCompanyDetailPage() {
   const [selectedSuspensionId, setSelectedSuspensionId] = useState<number | null>(null);
   const [resolutionNote, setResolutionNote] = useState('');
 
-  // Danger zone confirmation dialog
-  const [dangerConfirmOpen, setDangerConfirmOpen] = useState(false);
-
   const detail = companyDetailQuery.data;
 
   const actionTarget = useMemo<AdminCompanyAccountActionTarget | null>(() => {
@@ -230,12 +217,6 @@ export default function AdminCompanyDetailPage() {
       });
       return;
     }
-    // Show the danger zone confirmation first
-    setDangerConfirmOpen(true);
-  };
-
-  const handleDangerConfirmed = () => {
-    setDangerConfirmOpen(false);
     setSuspendDialogOpen(true);
   };
 
@@ -658,39 +639,6 @@ export default function AdminCompanyDetailPage() {
         )}
       </div>
 
-      {/* ── Danger Confirmation AlertDialog ─────────────────────────────────── */}
-      <AlertDialog open={dangerConfirmOpen} onOpenChange={setDangerConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>アカウントを停止しますか？</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <p>
-                  <span className="font-medium text-foreground">
-                    {company.nameJA}
-                  </span>{' '}
-                  のアカウントを停止しようとしています。
-                </p>
-                <p>
-                  停止すると、この企業に所属するすべてのユーザーがログインできなくなります。
-                  操作は後から解除できます。
-                </p>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>キャンセル</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDangerConfirmed}
-            >
-              停止手続きへ進む
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* ── Existing dialogs (unchanged) ────────────────────────────────────── */}
       <CompanySuspendDialog
         open={suspendDialogOpen}
         item={actionTarget}

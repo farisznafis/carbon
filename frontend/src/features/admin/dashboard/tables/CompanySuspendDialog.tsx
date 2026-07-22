@@ -49,13 +49,13 @@ export function CompanySuspendDialog({
           <div className="space-y-4 rounded-xl border border-border bg-card p-5">
             <div className="space-y-1">
               <p className="text-small text-muted-foreground">企業名</p>
-              <p className="break-all text-large font-bold text-foreground">
+              <p className="break-all text-small font-bold text-foreground">
                 {item?.nameJA ?? '-'}
               </p>
             </div>
             <div className="space-y-1">
               <p className="text-small text-muted-foreground">メールアドレス</p>
-              <p className="break-all text-large font-bold text-foreground">
+              <p className="break-all text-small font-bold text-foreground">
                 {item?.email ?? '-'}
               </p>
             </div>
@@ -63,7 +63,7 @@ export function CompanySuspendDialog({
 
           <div className="space-y-2">
             <Label htmlFor="suspensionReasonDetail" className="text-small font-bold">
-              詳細理由 <span className="text-destructive">*</span>
+              停止理由 <span className="text-destructive">*</span>
             </Label>
             <Textarea
               id="suspensionReasonDetail"
