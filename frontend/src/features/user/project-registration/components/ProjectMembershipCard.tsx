@@ -44,7 +44,7 @@ export function ProjectMembershipCard({
           </Badge>
         </div>
 
-        <dl className='mt-6 grid gap-x-8 gap-y-5 md:grid-cols-6'>
+        <dl className='mt-6 grid gap-x-8 gap-y-5 md:grid-cols-8'>
           <div className='md:col-span-2'>
             <dt className='text-small text-muted-foreground'>方法論名称</dt>
             <dd className='mt-1 break-words font-bold'>

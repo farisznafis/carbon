@@ -148,6 +148,7 @@ export default function ProjectMembershipPage() {
       title=""
       onBack={handleBack}
       contentMaxWidth="max-w-[1200px]"
+      headerClassName="bg-primary text-primary-foreground"
       wrapInCard={false}
     >
       <div className="space-y-10">
