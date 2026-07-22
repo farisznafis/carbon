@@ -86,6 +86,38 @@ interface MonitoringSolarFormProps {
   onDelete?: () => void;
 }
 
+interface NumericInputWithUnitProps {
+  value: string | number | null | undefined;
+  onChange: (value: string | null) => void;
+  placeholder: string;
+  unit: string;
+}
+
+function NumericInputWithUnit({
+  value,
+  onChange,
+  placeholder,
+  unit,
+}: Readonly<NumericInputWithUnitProps>) {
+  return (
+    <div className="relative w-full">
+      <Input
+        className="w-full pr-16 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        type="number"
+        value={String(value ?? '')}
+        onChange={(event) => {
+          const nextValue = event.target.value;
+          onChange(nextValue === '' || nextValue === '0' ? null : nextValue);
+        }}
+        placeholder={placeholder}
+      />
+      <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm text-muted-foreground">
+        {unit}
+      </span>
+    </div>
+  );
+}
+
 export function MonitoringSolarForm({
   value,
   serverErrors,
@@ -204,21 +236,12 @@ export function MonitoringSolarForm({
                       対象期間中に太陽光発電設備で発電した総電力量を入力してください。
                     </p>
                     <FormControl>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          className="w-full"
-                          type="number"
-                          value={String(field.value ?? '')}
-                          onChange={(event) => {
-                            const value = event.target.value;
-                            field.onChange(value === '' || value === '0' ? null : value);
-                          }}
-                          placeholder="数値を入力"
-                        />
-                        <span className="text-sm text-muted-foreground whitespace-nowrap">
-                          kWh
-                        </span>
-                      </div>
+                      <NumericInputWithUnit
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="数値を入力"
+                        unit="kWh"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -235,21 +258,12 @@ export function MonitoringSolarForm({
                       対象期間中に発電した電力量のうち、売電または他者へ提供した電力量を入力してください。
                     </p>
                     <FormControl>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          className="w-full"
-                          type="number"
-                          value={String(field.value ?? '')}
-                          onChange={(event) => {
-                            const value = event.target.value;
-                            field.onChange(value === '' || value === '0' ? null : value);
-                          }}
-                          placeholder="数値を入力"
-                        />
-                        <span className="text-sm text-muted-foreground whitespace-nowrap">
-                          kWh
-                        </span>
-                      </div>
+                      <NumericInputWithUnit
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="数値を入力"
+                        unit="kWh"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -316,21 +330,12 @@ export function MonitoringSolarForm({
                       対象期間中に蓄電池から放電された電力量を入力してください。
                       </p>
                       <FormControl>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            className="w-full"
-                            type="number"
-                            value={field.value == null ? '' : String(field.value)}
-                            onChange={(event) => {
-                              const value = event.target.value;
-                              field.onChange(value === '' || value === '0' ? null : value);
-                            }}
-                            placeholder="数値を入力"
-                          />
-                          <span className="text-sm text-muted-foreground whitespace-nowrap">
-                            kWh
-                          </span>
-                        </div>
+                        <NumericInputWithUnit
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="数値を入力"
+                          unit="kWh"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -348,21 +353,12 @@ export function MonitoringSolarForm({
                       対象期間中に制御機器が稼働した合計時間を入力してください。
                     </p>
                     <FormControl>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          className="w-full"
-                          type="number"
-                          value={String(field.value ?? '')}
-                          onChange={(event) => {
-                            const value = event.target.value;
-                            field.onChange(value === '' || value === '0' ? null : value);
-                          }}
-                          placeholder="数値を入力"
-                        />
-                        <span className="text-sm text-muted-foreground whitespace-nowrap">
-                          時間
-                        </span>
-                      </div>
+                      <NumericInputWithUnit
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="数値を入力"
+                        unit="時間"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -379,21 +375,12 @@ export function MonitoringSolarForm({
                           モニタリングデータの測定に使用した機器の測定精度を入力してください。
                         </p>
                         <FormControl>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              className="w-full"
-                              type="number"
-                              value={String(field.value ?? '')}
-                              onChange={(event) => {
-                                const value = event.target.value;
-                                field.onChange(value === '' || value === '0' ? null : value);
-                              }}
-                              placeholder="精度を入力"
-                            />
-                            <span className="text-sm text-muted-foreground whitespace-nowrap">
-                              %
-                            </span>
-                          </div>
+                          <NumericInputWithUnit
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="精度を入力"
+                            unit="%"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
