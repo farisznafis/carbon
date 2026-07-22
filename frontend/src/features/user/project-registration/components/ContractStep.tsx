@@ -8,10 +8,10 @@ import { useForm } from "react-hook-form";
 import { Form, FormItem, FormField, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 
 const contractStepSchema = z.object({
-  businessName: z.string().nonempty("莠区･ｭ閠・錐繧貞・蜉帙＠縺ｦ縺上□縺輔＞"),
-  representativeName: z.string().nonempty("莉｣陦ｨ閠・錐繧貞・蜉帙＠縺ｦ縺上□縺輔＞"),
-  representativePosition: z.string().nonempty("莉｣陦ｨ閠・ｽｹ閨ｷ繧貞・蜉帙＠縺ｦ縺上□縺輔＞"),
-  contractAgreed: z.boolean().refine(val => val === true, "蜷梧э縺励※縺上□縺輔＞"),
+  businessName: z.string().nonempty("事業者名を入力してください"),
+  representativeName: z.string().nonempty("代表者名を入力してください"),
+  representativePosition: z.string().nonempty("代表者役職を入力してください"),
+  contractAgreed: z.boolean().refine(val => val === true, "同意してください"),
 })
 
 type ContractStepData = z.infer<typeof contractStepSchema>;
@@ -87,12 +87,12 @@ formValues,
           <div className="p-6 border rounded-lg bg-muted/30 space-y-4">
             <div className="text-sm leading-relaxed space-y-1">
               
-              <p>譬ｪ蠑丈ｼ夂､ｾ繝翫Ξ繝・ず繧ｯ繝ｪ繧ｨ繝ｼ繧ｷ繝ｧ繝ｳ繝・け繝弱Ο繧ｸ縲蠕｡荳ｭ</p>
+              <p>株式会社ナレッジクリエーションテクノロジ　御中</p>
               <br />
 
               <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-2 items-center">
                 <Label htmlFor="businessName" className="text-sm font-medium whitespace-nowrap">
-                  莠区･ｭ閠・錐: 
+                  事業者名:
                 </Label>
                 <Form {...form}>
                   <FormField
@@ -115,7 +115,7 @@ formValues,
                 </Form>
 
                 <Label htmlFor="representativeName" className="text-sm font-medium whitespace-nowrap">
-                  莉｣陦ｨ閠・錐: 
+                  代表者名:
                 </Label>
                 <Form {...form}>
                   <FormField
@@ -138,7 +138,7 @@ formValues,
                 </Form>
 
                 <Label htmlFor="representativePosition" className="text-sm font-medium whitespace-nowrap">
-                  莉｣陦ｨ閠・ｽｹ閨ｷ: 
+                  代表者役職:
                 </Label>
                 <Form {...form}>
                   <FormField
@@ -164,24 +164,26 @@ formValues,
 
               <br />       
               <p>
-                蝗ｽ蜀・↓縺翫￠繧句慍逅・ｸｩ證門喧蟇ｾ遲悶・縺溘ａ縺ｮ謗貞・蜑頑ｸ帙・蜷ｸ蜿朱㍼隱崎ｨｼ蛻ｶ蠎ｦ・茨ｼｪ・阪け繝ｬ繧ｸ繝・ヨ蛻ｶ蠎ｦ・峨↓縲∵婿豕戊ｫ胞N-R-002・亥､ｪ髯ｽ蜈臥匱髮ｻ險ｭ蛯吶・蟆主・・峨↓蝓ｺ縺･縺上・繝ｭ繧ｸ繧ｧ繧ｯ繝医ｒ逋ｻ骭ｲ縺励※螳滓命縺吶ｋ縺ｫ縺ゅ◆繧翫∽ｺｺ髢薙・蛛･蠎ｷ縺ｨ螳牙・縲∬・辟ｶ迺ｰ蠅・∫､ｾ莨壹∈縺ｮ蠖ｱ髻ｿ繧貞屓驕ｿ縺ｾ縺溘・譛蟆丞喧縺励∝女縺大・繧後ｋ縺薙→縺後〒縺阪↑縺・ｈ縺・↑蠖ｱ髻ｿ繧偵ｂ縺溘ｉ縺吶％縺ｨ縺後↑縺・ｈ縺・∫腸蠅・､ｾ莨夐・諷ｮ繧定｡後＞謖∫ｶ壼庄閭ｽ諤ｧ繧堤｢ｺ菫昴☆繧九◆繧√・              </p>
+                国内における地球温暖化対策のための排出削減・吸収量認証制度（Ｊ－クレジット制度）に、方法論EN-R-002（太陽光発電設備の導入）に基づくプロジェクトを登録して実施するにあたり、人間の健康と安全、自然環境、社会への影響を回避または最小化し、受け入れることができないような影響をもたらすことがないよう、環境社会配慮を行い持続可能性を確保するため、
+              </p>
               <br />           
               <div className="pl-4 space-y-1">
-                <p>繝ｻ繧ｨ繝阪Ν繧ｮ繝ｼ縺ｮ菴ｿ逕ｨ縺ｮ蜷育炊蛹門所縺ｳ髱槫喧遏ｳ繧ｨ繝阪Ν繧ｮ繝ｼ縺ｸ縺ｮ霆｢謠帷ｭ峨↓髢｢縺吶ｋ豕募ｾ・</p>
-                <p>繝ｻ迚ｹ螳壼ｷ･蝣ｴ縺ｫ縺翫￠繧句・螳ｳ髦ｲ豁｢邨・ｹ斐・謨ｴ蛯吶↓髢｢縺吶ｋ豕募ｾ・</p>
-                <p>繝ｻ迺ｰ蠅・渕譛ｬ豕・</p>
-                <p>繝ｻ蟒ｺ遽牙渕貅匁ｳ・</p>
-                <p>繝ｻ髮ｻ豌嶺ｺ区･ｭ豕・</p>
-                <p>繝ｻ譎ｯ隕ｳ豕・</p>
-                <p>繝ｻ豸磯亟豕・</p>
-                <p>繝ｻ蜉ｴ蜒榊ｮ牙・陦帷函豕・</p>
-                <p>繝ｻ蝨ｰ逅・ｸｩ證門喧蟇ｾ遲悶・謗ｨ騾ｲ縺ｫ髢｢縺吶ｋ豕募ｾ・</p>
+                <p>・エネルギーの使用の合理化及び非化石エネルギーへの転換等に関する法律</p>
+                <p>・特定工場における公害防止組織の整備に関する法律</p>
+                <p>・環境基本法</p>
+                <p>・建築基準法</p>
+                <p>・電気事業法</p>
+                <p>・景観法</p>
+                <p>・消防法</p>
+                <p>・労働安全衛生法</p>
+                <p>・地球温暖化対策の推進に関する法律</p>
               </div>
               <br />     
               <p>
-                縺昴・莉夜未騾｣豕穂ｻ､遲峨ｒ驕ｵ螳医☆繧九％縺ｨ繧定ｪ鍋ｴ・＠縺ｾ縺吶・              </p>
+                その他関連法令等を遵守することを誓約します。
+              </p>
 
-              <p className="text-right pt-4">莉･荳・</p>
+              <p className="text-right pt-4">以上</p>
             </div>
           </div>
 
@@ -209,7 +211,8 @@ formValues,
                           </FormControl>
                           <div className="flex flex-col">
                             <FormLabel htmlFor="contractAgreed" className="text-sm font-medium leading-none">
-                              蜷梧э縺励∪縺・                            </FormLabel>
+                              同意します
+                            </FormLabel>
                             <FormMessage className="mt-1 text-xs text-destructive" /> {/* displays validation error */}
                           </div>
                         </FormItem>
