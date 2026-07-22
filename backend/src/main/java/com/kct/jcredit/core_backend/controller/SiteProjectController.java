@@ -3,10 +3,12 @@ package com.kct.jcredit.core_backend.controller;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentRegisterResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
+import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002FinalAgreementRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
-import com.kct.jcredit.core_backend.dto.response.EnR002FileResponse;
+import com.kct.jcredit.core_backend.dto.request.PartiCompanyMethodologyValidateRequest;
+import com.kct.jcredit.core_backend.dto.response.EnR002FileUploadResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 import com.kct.jcredit.core_backend.dto.response.ProjectJoinResponse;
@@ -86,12 +88,8 @@ public class SiteProjectController {
     public ResponseEntity<BaseResponse> validateEquipment(
             @RequestBody @Valid EnR002EquipmentRequest request) {
         validationService.validateEquipment(request);
-        BaseResponse response = BaseResponse.success("Equipment validation successful.");
-
-        return ResponseEntity.status(
-                ResponseUtil.getHttpStatus(response.getStatusCode()))
-                .body(response);
-}
+        return ResponseEntity.ok(BaseResponse.success("入力内容に問題ありません。"));
+    }
 
     @PostMapping("/confirmation-items/validate")
     @PreAuthorize("hasRole('master')")
@@ -99,11 +97,7 @@ public class SiteProjectController {
     public ResponseEntity<BaseResponse> validateConfirmationItems(
             @RequestBody @Valid EnR002ConfirmationItemRequest request) {
         validationService.validateConfirmationItems(request);
-        BaseResponse response = BaseResponse.success("Confirmation items validation successful.");
-
-        return ResponseEntity.status(
-                ResponseUtil.getHttpStatus(response.getStatusCode()))
-                .body(response);
+        return ResponseEntity.ok(BaseResponse.success("入力内容に問題ありません。"));
     }
 
     @GetMapping("/sites/{siteId}/sustainability-commitment/default")
@@ -111,13 +105,9 @@ public class SiteProjectController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<EnR002SustainabilityCommitmentResponse> getSustainabilityCommitmentDefault(
             @PathVariable Integer siteId) {
-         EnR002SustainabilityCommitmentResponse response =
-            participationService.getSustainabilityCommitmentDefault(siteId);
-
-    return ResponseEntity
-            .status(ResponseUtil.getHttpStatus(response.getStatusCode()))
-            .body(response);
-}
+        return ResponseEntity.ok(
+                participationService.getSustainabilityCommitmentDefault(siteId));
+    }
 
     @PostMapping("/sustainability-commitment/validate")
     @PreAuthorize("hasRole('master')")
@@ -125,24 +115,16 @@ public class SiteProjectController {
     public ResponseEntity<BaseResponse> validateSustainabilityCommitment(
             @RequestBody @Valid EnR002SustainabilityCommitmentRequest request) {
         validationService.validateSustainabilityCommitment(request);
-        BaseResponse response = BaseResponse.success("Sustainability commitment validation successful.");
-
-        return ResponseEntity.status(
-                ResponseUtil.getHttpStatus(response.getStatusCode()))
-                .body(response);
+        return ResponseEntity.ok(BaseResponse.success("入力内容に問題ありません。"));
     }
 
     @PostMapping("/final/validate")
     @PreAuthorize("hasRole('master')")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<BaseResponse> validateFinalAgreement(
+   public ResponseEntity<BaseResponse> validateFinalAgreement(
             @RequestBody @Valid EnR002FinalAgreementRequest request) {
         validationService.validateFinalAgreement(request);
-        BaseResponse response = BaseResponse.success("Final agreement validation successful.");
-
-        return ResponseEntity.status(
-                ResponseUtil.getHttpStatus(response.getStatusCode()))
-                .body(response);
+        return ResponseEntity.ok(BaseResponse.success("入力内容に問題ありません。"));
     }
     // ─────────────────────────────────────────────────────────────
     // SUBMIT — join project (endpoint utama)
