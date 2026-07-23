@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { SolarEquipment } from '@/features/user/project-registration/components/types';
-import { mapProjectJoinRequest } from './projectJoinMapper';
+import {
+  mapConfirmationItemsValidationRequest,
+  mapProjectJoinRequest,
+} from './projectJoinMapper';
 
 const equipment: SolarEquipment = {
   id: 'equipment-1',
@@ -90,6 +93,76 @@ describe('mapProjectJoinRequest', () => {
         hasConsent: true,
       },
       finalAgreement: { isAgreeTerms: true },
+    });
+  });
+});
+
+describe('mapConfirmationItemsValidationRequest', () => {
+  it('adds request context and sends explicit defaults for hidden fields', () => {
+    const result = mapConfirmationItemsValidationRequest(
+      {
+        useRegisteredInfo: true,
+        provideAdditionalInfo: true,
+        transferEnvironmentalValue: true,
+        notRegisteredElsewhere: true,
+        keidanrenParticipation: 'notParticipating',
+        specifiedEmitterStatus: 'notSpecifiedEmitter',
+        energyRationalizationCompliance: 'notApplicable',
+      },
+      {
+        projectId: '2',
+        processedBy: 'user-1',
+        companyId: 'PC000000001',
+      },
+    );
+
+    expect(result).toEqual({
+      id: '2',
+      processedBy: 'user-1',
+      companyId: 'PC000000001',
+      isAgreeDataUse: true,
+      isAgreeExtraData: true,
+      isAgreeTransfer: true,
+      isNotRegistered: true,
+      isKeidanrenParticipation: false,
+      isEmitter: false,
+      emitterCode: '',
+      isAdjustedEmissionsAdded: false,
+      isSubjectToPeriodicReport: false,
+      isPeriodicReportTypeOne: false,
+      energyBusinessCode: '',
+      factoryCode: '',
+    });
+  });
+
+  it('preserves unanswered checkboxes and radio fields as null', () => {
+    const result = mapConfirmationItemsValidationRequest(
+      {
+        useRegisteredInfo: null,
+        provideAdditionalInfo: null,
+        transferEnvironmentalValue: null,
+        notRegisteredElsewhere: null,
+        keidanrenParticipation: '',
+        specifiedEmitterStatus: '',
+        energyRationalizationCompliance: '',
+      },
+      {
+        projectId: '2',
+        processedBy: 'user-1',
+        companyId: 'PC000000001',
+      },
+    );
+
+    expect(result).toMatchObject({
+      isAgreeDataUse: null,
+      isAgreeExtraData: null,
+      isAgreeTransfer: null,
+      isNotRegistered: null,
+      isKeidanrenParticipation: null,
+      isEmitter: null,
+      isAdjustedEmissionsAdded: null,
+      isSubjectToPeriodicReport: null,
+      isPeriodicReportTypeOne: null,
     });
   });
 });

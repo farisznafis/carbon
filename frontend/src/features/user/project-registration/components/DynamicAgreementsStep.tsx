@@ -1,10 +1,14 @@
 import { useEffect, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from '@/components/ui/input-otp';
 import {
   Form,
   FormControl,
@@ -14,10 +18,37 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { type AgreementFormValues } from './agreementsConfig';
-import { agreementsSchema } from '@/lib/validations'; 
-import { InteractiveBlocksInput } from '@/components/inputs/InteractiveBlocksInput';
 
-type AgreementsFormValues = z.infer<typeof agreementsSchema>;
+type AgreementsFormValues = AgreementFormValues;
+
+interface NumericCodeInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  length: number;
+  label: string;
+}
+
+const NumericCodeInput = ({
+  value,
+  onChange,
+  length,
+  label,
+}: NumericCodeInputProps) => (
+  <InputOTP
+    value={value}
+    onChange={onChange}
+    maxLength={length}
+    pattern={REGEXP_ONLY_DIGITS}
+    aria-label={label}
+    containerClassName="gap-0"
+  >
+    <InputOTPGroup>
+      {Array.from({ length }, (_, index) => (
+        <InputOTPSlot key={index} index={index} className="h-9 w-9" />
+      ))}
+    </InputOTPGroup>
+  </InputOTP>
+);
 
 interface DynamicAgreementsStepProps {
   formValues: Partial<AgreementFormValues>;
@@ -26,25 +57,25 @@ interface DynamicAgreementsStepProps {
 }
 
 export interface DynamicAgreementsStepRef {
-  triggerValidation: () => Promise<boolean>;
+  getValues: () => AgreementFormValues;
 }
 
 export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, DynamicAgreementsStepProps>(({
   formValues,
   onValueChange,
+  errors = {},
 }, ref) => {
   const form = useForm<AgreementsFormValues>({
-    // resolver: zodResolver(agreementsSchema),
     mode: "onChange",
     defaultValues: {
-      useRegisteredInfo: false,
-      provideAdditionalInfo: false,
-      transferEnvironmentalValue: false,
-      notRegisteredElsewhere: false,
+      useRegisteredInfo: null,
+      provideAdditionalInfo: null,
+      transferEnvironmentalValue: null,
+      notRegisteredElsewhere: null,
       keidanrenParticipation: '',
       specifiedEmitterStatus: '',
       energyRationalizationCompliance: '',
-      emissionAdditionAgreement: false,
+      emissionAdditionAgreement: null,
       specifiedEmitterCode: '',
       energyLawType: '',
       energyLawBusinessNumber: '',
@@ -55,20 +86,38 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
 
   const watchedValues = form.watch();
   const previousValuesRef = useRef(watchedValues);
+  const serverErrorFieldsRef = useRef<Array<keyof AgreementsFormValues>>([]);
   const specifiedEmitterStatus = form.watch('specifiedEmitterStatus');
   const energyRationalizationCompliance = form.watch('energyRationalizationCompliance');
 
-  // Expose validation method to parent
   useImperativeHandle(ref, () => ({
-    triggerValidation: async () => {
-      return await form.trigger();
-    },
+    getValues: () => form.getValues(),
   }), [form]);
 
   // Reset form with saved values when component mounts or formValues changes
   useEffect(() => {
     form.reset(formValues as AgreementsFormValues);
   }, [form, formValues]);
+
+  useEffect(() => {
+    serverErrorFieldsRef.current.forEach((fieldName) => {
+      form.clearErrors(fieldName);
+    });
+
+    const serverErrorFields = Object.entries(errors).flatMap(
+      ([fieldName, message]) => {
+        if (!(fieldName in form.getValues()) || !message) return [];
+
+        const agreementFieldName = fieldName as keyof AgreementsFormValues;
+        form.setError(agreementFieldName, {
+          type: 'server',
+          message,
+        });
+        return [agreementFieldName];
+      },
+    );
+    serverErrorFieldsRef.current = serverErrorFields;
+  }, [errors, form]);
 
   // Sync form values with parent component
   useEffect(() => {
@@ -100,7 +149,11 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                     <FormControl>
-                      <Checkbox checked={field.value} onCheckedChange={field.onChange} 
+                      <Checkbox
+                        checked={field.value === true}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
                       className='h-5 w-5 rounded-none border-input'/>
                     </FormControl>
                     <div className="flex-1 leading-none">
@@ -124,7 +177,11 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                     <FormControl>
-                      <Checkbox checked={field.value} onCheckedChange={field.onChange} 
+                      <Checkbox
+                        checked={field.value === true}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
                       className='h-5 w-5 rounded-none border-input'/>
                     </FormControl>
                     <div className="flex-1 leading-none">
@@ -148,7 +205,11 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                     <FormControl>
-                      <Checkbox checked={field.value} onCheckedChange={field.onChange} 
+                      <Checkbox
+                        checked={field.value === true}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
                       className='h-5 w-5 rounded-none border-input'/>
                     </FormControl>
                     <div className="flex-1 leading-none">
@@ -172,7 +233,11 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                     <FormControl>
-                      <Checkbox checked={field.value} onCheckedChange={field.onChange} 
+                      <Checkbox
+                        checked={field.value === true}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
                       className='h-5 w-5 rounded-none border-input'/>
                     </FormControl>
                     <div className="flex-1 leading-none">
@@ -265,7 +330,11 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                         <FormControl>
-                          <Checkbox checked={field.value} onCheckedChange={field.onChange} 
+                          <Checkbox
+                            checked={field.value === true}
+                            onCheckedChange={(checked) =>
+                              field.onChange(checked === true)
+                            }
                           className='h-5 w-5 rounded-none border-input'/>
                         </FormControl>
                         <div className="flex-1 leading-none">
@@ -289,10 +358,11 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                           <span className="text-destructive ml-1">*</span>
                         </FormLabel>
                         <FormControl>
-                          <InteractiveBlocksInput
+                          <NumericCodeInput
                             value={field.value || ""}
                             onChange={field.onChange}
-                            length={9}          // change this to 5, 8, etc.
+                            length={9}
+                            label="特定排出者コード"
                           />
                         </FormControl>
                         <p className="text-xs">
@@ -391,13 +461,12 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                           <span className="text-destructive ml-1">*</span>
                         </FormLabel>
                         <FormControl>
-                          <FormControl>
-                            <InteractiveBlocksInput
-                              value={field.value || ""}
-                              onChange={field.onChange}
-                              length={7}         
-                            />
-                        </FormControl>
+                          <NumericCodeInput
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            length={7}
+                            label="省エネ法特定事業者番号"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -414,13 +483,12 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                           <span className="text-destructive ml-1">*</span>
                         </FormLabel>
                         <FormControl>
-                          <FormControl>
-                            <InteractiveBlocksInput
-                              value={field.value || ""}
-                              onChange={field.onChange}
-                              length={7}          // change this to 5, 8, etc.
-                            />
-                        </FormControl>
+                          <NumericCodeInput
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            length={7}
+                            label="省エネ法指定工場番号"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -437,24 +505,3 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
 });
 
 DynamicAgreementsStep.displayName = 'DynamicAgreementsStep';
-
-// Validation function for the entire form - maintains compatibility with ProjectRegister
-const validateAgreementsForm = (
-  formValues: Partial<AgreementFormValues>
-): { isValid: boolean; errors: Record<string, string> } => {
-  try {
-    agreementsSchema.parse(formValues);
-    return { isValid: true, errors: {} };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const errors: Record<string, string> = {};
-      error.errors.forEach((err) => {
-        if (err.path[0]) {
-          errors[err.path[0] as string] = err.message;
-        }
-      });
-      return { isValid: false, errors };
-    }
-    return { isValid: false, errors: {} };
-  }
-};

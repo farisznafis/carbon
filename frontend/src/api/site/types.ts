@@ -274,6 +274,31 @@ export type SiteProjectJoinConfirmationItems = {
   factoryCode?: string;
 };
 
+export type SiteProjectConfirmationItemsValidationRequest = {
+  id: string;
+  processedBy: string;
+  companyId: string;
+  isAgreeDataUse: boolean | null;
+  isAgreeExtraData: boolean | null;
+  isAgreeTransfer: boolean | null;
+  isNotRegistered: boolean | null;
+  isKeidanrenParticipation: boolean | null;
+  isEmitter: boolean | null;
+  emitterCode: string;
+  isAdjustedEmissionsAdded: boolean | null;
+  isSubjectToPeriodicReport: boolean | null;
+  isPeriodicReportTypeOne: boolean | null;
+  energyBusinessCode: string;
+  factoryCode: string;
+};
+
+export type SiteProjectConfirmationItemsValidationResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+};
+
 export type SiteProjectJoinSustainabilityCommitment = {
   companyName: string;
   repName: string;

@@ -11,7 +11,9 @@ import { getProjectDetails } from "@/api/projects";
 import {
   joinSiteProject,
   uploadSiteProjectEquipmentFile,
+  validateSiteProjectConfirmationItems,
 } from "@/api/site";
+import { ApiError } from "@/api/_shared/errors";
 import { DynamicAgreementsStep, type DynamicAgreementsStepRef } from "@/features/user/project-registration/components/DynamicAgreementsStep";
 import { ContractStep, type ContractStepRef, type ContractStepFormValues } from "@/features/user/project-registration/components/ContractStep";
 import { FinalTermsStep, type FinalTermsRef, type FinalTermsValues } from "@/features/user/project-registration/components/FinalTermsStep";
@@ -24,7 +26,10 @@ import {
   isFromMasterDashboard,
   masterDashboardProjectMembershipState,
 } from "@/features/user/project-registration/projectMembershipNavigation";
-import { mapProjectJoinRequest } from "@/features/user/project-registration/projectJoinMapper";
+import {
+  mapConfirmationItemsValidationRequest,
+  mapProjectJoinRequest,
+} from "@/features/user/project-registration/projectJoinMapper";
 import { getPendingSolarEquipment } from "@/features/user/project-registration/equipmentConfirmationState";
 import { getSolarFormSelectedFiles } from "@/features/user/project-registration/equipmentValidationMapper";
 
@@ -33,6 +38,56 @@ import { getSolarFormSelectedFiles } from "@/features/user/project-registration/
 const TOTAL_FORM_STEPS = 3;
 const FINAL_FORM_STEP = 3;
 const COMPLETION_STEP = 4;
+
+const confirmationItemFieldNames: Record<string, keyof AgreementFormValues> = {
+  isAgreeDataUse: "useRegisteredInfo",
+  isAgreeExtraData: "provideAdditionalInfo",
+  isAgreeTransfer: "transferEnvironmentalValue",
+  isNotRegistered: "notRegisteredElsewhere",
+  isKeidanrenParticipation: "keidanrenParticipation",
+  isEmitter: "specifiedEmitterStatus",
+  emitterCode: "specifiedEmitterCode",
+  isAdjustedEmissionsAdded: "emissionAdditionAgreement",
+  isSubjectToPeriodicReport: "energyRationalizationCompliance",
+  isPeriodicReportTypeOne: "energyLawType",
+  energyBusinessCode: "energyLawBusinessNumber",
+  factoryCode: "energyLawFactoryNumber",
+};
+
+const getValidationErrorMessage = (error: unknown): string => {
+  if (typeof error === "string") return error;
+  if (Array.isArray(error)) {
+    return error
+      .map(getValidationErrorMessage)
+      .filter(Boolean)
+      .join("\n");
+  }
+  if (error && typeof error === "object" && "message" in error) {
+    return getValidationErrorMessage(error.message);
+  }
+  return "";
+};
+
+const mapConfirmationItemErrors = (
+  errors: unknown,
+): Record<string, string> => {
+  if (!errors || typeof errors !== "object" || Array.isArray(errors)) return {};
+
+  return Object.entries(errors).reduce<Record<string, string>>(
+    (fieldErrors, [path, error]) => {
+      const requestFieldName =
+        path.split(/::|[.[\]]/).filter(Boolean).at(-1) ?? path;
+      const formFieldName = confirmationItemFieldNames[requestFieldName];
+      const message = getValidationErrorMessage(error);
+
+      if (formFieldName && message) {
+        fieldErrors[formFieldName] = message;
+      }
+      return fieldErrors;
+    },
+    {},
+  );
+};
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -66,10 +121,10 @@ const ProjectRegister = () => {
   const [projectLoadError, setProjectLoadError] = useState<string | null>(null);
 
   const [agreementFormValues, setAgreementFormValues] = useState<Partial<AgreementFormValues>>({
-    useRegisteredInfo: false,
-    provideAdditionalInfo: false,
-    transferEnvironmentalValue: false,
-    notRegisteredElsewhere: false,
+    useRegisteredInfo: null,
+    provideAdditionalInfo: null,
+    transferEnvironmentalValue: null,
+    notRegisteredElsewhere: null,
     keidanrenParticipation: '',
     specifiedEmitterStatus: '',
     energyRationalizationCompliance: '',
@@ -193,9 +248,41 @@ const ProjectRegister = () => {
   const validateStep = async (): Promise<boolean> => {
     switch (currentStep) {
       case 1:
-        if (agreementsStepRef.current) return await agreementsStepRef.current.triggerValidation();
+        if (!agreementsStepRef.current) return false;
+
+        setIsSubmitting(true);
         setAgreementErrors({});
-        return false;
+        try {
+          const currentAgreementValues =
+            agreementsStepRef.current.getValues();
+          setAgreementFormValues(currentAgreementValues);
+
+          await validateSiteProjectConfirmationItems(
+            mapConfirmationItemsValidationRequest(currentAgreementValues, {
+              projectId,
+              processedBy: user?.id ?? "",
+              companyId: user?.companyId ?? "",
+            }),
+          );
+          return true;
+        } catch (error) {
+          const fieldErrors =
+            error instanceof ApiError
+              ? mapConfirmationItemErrors(error.payload?.errors)
+              : {};
+          setAgreementErrors(fieldErrors);
+          toast({
+            title: "同意事項を確認できませんでした",
+            description:
+              error instanceof Error
+                ? error.message
+                : "同意事項の検証に失敗しました。",
+            variant: "destructive",
+          });
+          return false;
+        } finally {
+          setIsSubmitting(false);
+        }
 
       case 2:
         if (contractStepRef.current) return await contractStepRef.current.triggerValidation();
@@ -308,7 +395,12 @@ const ProjectRegister = () => {
           <DynamicAgreementsStep
             ref={agreementsStepRef}
             formValues={agreementFormValues}
-            onValueChange={setAgreementFormValues}
+            onValueChange={(values) => {
+              setAgreementFormValues(values);
+              if (Object.keys(agreementErrors).length > 0) {
+                setAgreementErrors({});
+              }
+            }}
             errors={agreementErrors}
           />
         );
@@ -401,7 +493,9 @@ const ProjectRegister = () => {
           <div className="flex justify-end">
             <Button onClick={handleNext} disabled={isSubmitting}>
               {isSubmitting
-                ? "送信中..."
+                ? currentStep === 1
+                  ? "確認中..."
+                  : "送信中..."
                 : currentStep === FINAL_FORM_STEP
                   ? "送信"
                   : "次へ"}

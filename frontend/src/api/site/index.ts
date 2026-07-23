@@ -12,6 +12,7 @@ export {
   getSiteProjectEquipment,
   joinSiteProject,
   uploadSiteProjectEquipmentFile,
+  validateSiteProjectConfirmationItems,
   validateSiteProjectEquipment,
 } from './equipment';
 export type {
@@ -28,6 +29,8 @@ export type {
   SiteProjectEquipmentValidationFile,
   SiteProjectEquipmentValidationItem,
   SiteProjectEquipmentValidationResponse,
+  SiteProjectConfirmationItemsValidationRequest,
+  SiteProjectConfirmationItemsValidationResponse,
   SiteProjectJoinConfirmationItems,
   SiteProjectJoinRequest,
   SiteProjectJoinResponse,

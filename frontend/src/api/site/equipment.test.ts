@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   joinSiteProject,
   uploadSiteProjectEquipmentFile,
+  validateSiteProjectConfirmationItems,
   validateSiteProjectEquipment,
 } from './equipment';
 import type { SiteProjectEquipmentValidationItem } from './types';
@@ -40,6 +41,45 @@ describe('validateSiteProjectEquipment', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/site/project/equipment/validate',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    );
+  });
+});
+
+describe('validateSiteProjectConfirmationItems', () => {
+  it('posts confirmation items to the dedicated validation endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ statusCode: '200' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const payload = {
+      id: '2',
+      processedBy: 'user-1',
+      companyId: 'PC000000001',
+      isAgreeDataUse: null,
+      isAgreeExtraData: null,
+      isAgreeTransfer: null,
+      isNotRegistered: null,
+      isKeidanrenParticipation: null,
+      isEmitter: null,
+      emitterCode: '',
+      isAdjustedEmissionsAdded: null,
+      isSubjectToPeriodicReport: null,
+      isPeriodicReportTypeOne: null,
+      energyBusinessCode: '',
+      factoryCode: '',
+    };
+
+    await validateSiteProjectConfirmationItems(payload);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/site/project/confirmation-items/validate',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(payload),

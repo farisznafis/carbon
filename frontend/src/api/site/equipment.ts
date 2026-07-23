@@ -11,6 +11,8 @@ import type {
   SiteProjectEquipmentValidationFile,
   SiteProjectEquipmentValidationItem,
   SiteProjectEquipmentValidationResponse,
+  SiteProjectConfirmationItemsValidationRequest,
+  SiteProjectConfirmationItemsValidationResponse,
   SiteProjectJoinRequest,
   SiteProjectJoinResponse,
 } from './types';
@@ -61,6 +63,19 @@ export async function validateSiteProjectEquipment(
       method: 'POST',
       body: equipment,
       fallbackErrorMessage: '設備情報の検証に失敗しました。',
+    },
+  );
+}
+
+export async function validateSiteProjectConfirmationItems(
+  payload: SiteProjectConfirmationItemsValidationRequest,
+): Promise<SiteProjectConfirmationItemsValidationResponse> {
+  return apiRequest<SiteProjectConfirmationItemsValidationResponse>(
+    '/site/project/confirmation-items/validate',
+    {
+      method: 'POST',
+      body: payload,
+      fallbackErrorMessage: '同意事項の検証に失敗しました。',
     },
   );
 }
