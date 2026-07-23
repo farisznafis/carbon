@@ -6,21 +6,21 @@ import com.kct.jcredit.core_backend.dto.response.ApplicableConditionsResponse;
 public interface ApplicableConditionsService {
 
     ApplicableConditionsResponse submitApplicableConditions(
-            Integer projectId,
+            String projectId,
             ApplicableConditionsRequest request,
             String companyId,
             String role,
             String username);
 
     ApplicableConditionsResponse updateApplicableConditions(
-            Integer projectId,
+            String projectId,
             ApplicableConditionsRequest request,
             String companyId,
             String role,
             String username);
 
     ApplicableConditionsResponse getApplicableConditions(
-            Integer projectId,
+            String projectId,
             String companyId,
             String role,
             String username);

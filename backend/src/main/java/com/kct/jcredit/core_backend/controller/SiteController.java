@@ -139,7 +139,7 @@ public class SiteController {
     public ResponseEntity<EnR002EquipmentRegisterResponse> getSiteProjectEquipment(
             Authentication authentication,
             @PathVariable String siteId,
-            @PathVariable Integer projectId) {
+            @PathVariable String projectId) {
         String token = (String) authentication.getCredentials();
 
         EnR002EquipmentRegisterResponse response = siteService.getSiteProjectEquipment(

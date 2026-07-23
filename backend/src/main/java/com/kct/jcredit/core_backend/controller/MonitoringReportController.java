@@ -58,7 +58,7 @@ public class MonitoringReportController {
     @Operation(summary = "モニタリング報告プロジェクト情報取得", description = "モニタリング報告書入力用のプロジェクトマスタ情報を取得します。")
     public ResponseEntity<ProjectMasterResponse> getProjectMaster(
             Authentication authentication,
-            @PathVariable Integer projectId) {
+            @PathVariable String projectId) {
         String token = authentication.getCredentials().toString();
         ProjectMasterResponse response = monitoringApplicationService.getProjectMaster(
                 projectId,
@@ -78,7 +78,7 @@ public class MonitoringReportController {
     @Operation(summary = "モニタリング報告書登録", description = "指定されたプロジェクトと拠点のモニタリング報告書を登録します。")
     public ResponseEntity<MonitoringReportResponse> submitMonitoringReport(
             Authentication authentication,
-            @PathVariable Integer projectId,
+            @PathVariable String projectId,
             @RequestParam String siteId,
             @Valid @RequestBody MonitoringReportRequest request) {
         String token = authentication.getCredentials().toString();
@@ -102,7 +102,7 @@ public class MonitoringReportController {
     @Operation(summary = "モニタリング報告書取得", description = "指定されたプロジェクトと拠点の最新モニタリング報告書を取得します。")
     public ResponseEntity<MonitoringReportResponse> getMonitoringReport(
             Authentication authentication,
-            @PathVariable Integer projectId,
+            @PathVariable String projectId,
             @RequestParam String siteId) {
         String token = authentication.getCredentials().toString();
         MonitoringReportResponse response = monitoringApplicationService.getMonitoringReport(

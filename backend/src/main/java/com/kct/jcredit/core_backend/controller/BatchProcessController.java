@@ -25,6 +25,7 @@ import com.kct.jcredit.core_backend.service.batch.GetBatchService;
 public class BatchProcessController {
 
     private final GetBatchService batchService;
+    private final com.kct.jcredit.core_backend.repository.postgres.ProjectRepository projectRepository;
 
     @GetMapping("/history")
     @SecurityRequirement(name = "bearerAuth")
@@ -44,9 +45,14 @@ public class BatchProcessController {
     @Operation(summary = "プロジェクト貢献データ", description = "プロジェクト詳細のグラフ為のデータ取得。")
     public ResponseEntity<SiteReductionResultResponse> SiteReductionResult(
             @PathVariable String siteId,
-            @PathVariable Integer projectId) {
+            @PathVariable String projectId) {
         
-        SiteReductionResultResponse response = batchService.getSiteReductionResult(siteId, projectId);
+        
+        Integer projDbId = projectRepository.findByPublicId(projectId)
+            .map(com.kct.jcredit.core_backend.entity.Project::getId)
+            .orElseThrow(() -> new RuntimeException("Project Not Found"));
+        SiteReductionResultResponse response = batchService.getSiteReductionResult(siteId, projDbId);
+    
         return ResponseEntity.ok(response);
     }
 
@@ -54,9 +60,14 @@ public class BatchProcessController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクト排出量合計", description = "プロジェクト詳細のグラフ為のデータ取得。")
     public ResponseEntity<ProjectReductionResultResponse> ProjectReductionResult(
-            @PathVariable Integer projectId) {
+            @PathVariable String projectId) {
         
-        ProjectReductionResultResponse response = batchService.getProjectReductionResult(projectId);
+        
+        Integer projDbId = projectRepository.findByPublicId(projectId)
+            .map(com.kct.jcredit.core_backend.entity.Project::getId)
+            .orElseThrow(() -> new RuntimeException("Project Not Found"));
+        ProjectReductionResultResponse response = batchService.getProjectReductionResult(projDbId);
+    
         return ResponseEntity.ok(response);
     }
 

@@ -76,7 +76,7 @@ public class MonitoringController {
     @Operation(summary = "最新モニタリング記録取得", description = "指定されたプロジェクトと拠点の最新モニタリング記録を取得します。")
     public ResponseEntity<MonitoringRecordSolarResponse> ReadLastMonitoringRecordSolar(
             Authentication authentication,
-            @RequestParam Integer projectId,
+            @RequestParam String projectId,
             @RequestParam String siteId) {
         String username = jwtUtil.extractUsername(authentication.getCredentials().toString());
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
@@ -96,7 +96,7 @@ public class MonitoringController {
     @PreAuthorize("hasRole('operator')")
     @Operation(summary = "モニタリング記録一覧取得", description = "管理者が参照できるためモニタリング記録一覧を取得します。")
     public ResponseEntity<MonitoringRecordSolarListResponse> listMonitoringRecords(
-            @PathVariable Integer projectId,
+            @PathVariable String projectId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "50") Integer limit,
             @RequestParam(required = false) String nextPageToken,
@@ -124,7 +124,7 @@ public class MonitoringController {
     @Operation(summary = "モニタリング記録一覧取得", description = "指定されたプロジェクトと拠点のモニタリング記録一覧を取得します。")
     public ResponseEntity<MonitoringRecordSolarListResponse> listMonitoringRecordsbySite(
             @PathVariable String siteId,
-            @PathVariable Integer projectId,
+            @PathVariable String projectId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "50") Integer limit,
             @RequestParam(required = false) String nextPageToken,
@@ -154,7 +154,7 @@ public class MonitoringController {
     @Operation(summary = "ELPV証跡アップロード", description = "ELPVの証跡ファイルをアップロードします。")
     public ResponseEntity<FileUploadResponse> uploadElpvEvidence(
             Authentication authentication,
-            @RequestParam Integer projectId,
+            @RequestParam String projectId,
             @RequestParam String siteId,
             @RequestParam(required = false) String description,
             @RequestParam MultipartFile file) {
@@ -173,7 +173,7 @@ public class MonitoringController {
     @Operation(summary = "ELPVR証跡アップロード", description = "ELPVRの証跡ファイルをアップロードします。")
     public ResponseEntity<FileUploadResponse> uploadElpvrEvidence(
             Authentication authentication,
-            @RequestParam Integer projectId,
+            @RequestParam String projectId,
             @RequestParam String siteId,
             @RequestParam(required = false) String description,
             @RequestParam MultipartFile file) {
@@ -192,7 +192,7 @@ public class MonitoringController {
     @Operation(summary = "ELPJ蓄電池仕様証跡アップロード", description = "ELPJ蓄電池仕様の証跡ファイルをアップロードします。")
     public ResponseEntity<FileUploadResponse> uploadElpjBatterySpecificationEvidence(
             Authentication authentication,
-            @RequestParam Integer projectId,
+            @RequestParam String projectId,
             @RequestParam String siteId,
             @RequestParam(required = false) String description,
             @RequestParam MultipartFile file) {
@@ -211,7 +211,7 @@ public class MonitoringController {
     @Operation(summary = "ELPJ制御証跡アップロード", description = "ELPJ制御の証跡ファイルをアップロードします。")
     public ResponseEntity<FileUploadResponse> uploadElpjControlEvidence(
             Authentication authentication,
-            @RequestParam Integer projectId,
+            @RequestParam String projectId,
             @RequestParam String siteId,
             @RequestParam(required = false) String description,
             @RequestParam MultipartFile file) {

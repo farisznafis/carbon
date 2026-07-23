@@ -2,7 +2,6 @@ package com.kct.jcredit.core_backend.service.impl;
  
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.response.NotificationListResponse;
-import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.details.NotificationDetailResponse;
 import com.kct.jcredit.core_backend.entity.base.PaginationDetailResponse;
 
@@ -28,7 +27,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
-import java.util.Optional;
 
 
 @Slf4j

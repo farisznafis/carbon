@@ -31,7 +31,7 @@ public interface MonitoringService {
     MonitoringRecordSolarResponse readLastMonitoringRecordSolar(
         String username,
         String companyId,
-        Integer projectId,
+        String projectId,
         String siteId
     );
 
@@ -39,7 +39,7 @@ public interface MonitoringService {
         String username,
         Integer page,
         Integer limit,
-        Integer projectId,
+        String projectId,
         String nextPageToken
     );
     
@@ -50,7 +50,7 @@ public interface MonitoringService {
      MonitoringRecordSolarListResponse readSiteMonitoringRecordsSolar(
         String username,
         String companyId,
-        Integer projectId,
+        String projectId,
         String siteId,
         Integer page,
         Integer limit,
@@ -65,7 +65,7 @@ public interface MonitoringService {
     FileUploadResponse uploadElpvEvidence(
         String username,
         String companyId,
-        Integer projectId,
+        String projectId,
         String siteId,
         String description,
         MultipartFile file
@@ -74,7 +74,7 @@ public interface MonitoringService {
     FileUploadResponse uploadElpvrEvidence(
         String username,
         String companyId,
-        Integer projectId,
+        String projectId,
         String siteId,
         String description,
         MultipartFile file
@@ -83,7 +83,7 @@ public interface MonitoringService {
     FileUploadResponse uploadElpjBatterySpecificationEvidence(
         String username,
         String companyId,
-        Integer projectId,
+        String projectId,
         String siteId,
         String description,
         MultipartFile file
@@ -92,7 +92,7 @@ public interface MonitoringService {
     FileUploadResponse uploadElpjControlEvidence(
         String username,
         String companyId,
-        Integer projectId,
+        String projectId,
         String siteId,
         String description,
         MultipartFile file

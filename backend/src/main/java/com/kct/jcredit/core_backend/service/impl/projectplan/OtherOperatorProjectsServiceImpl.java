@@ -34,7 +34,7 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
     @Override
     @Transactional
     public OtherOperatorProjectsResponse submitOtherOperatorProjects(
-            Integer projectId,
+            String projectId,
             OtherOperatorProjectsRequest request,
             String companyId,
             String role,
@@ -48,7 +48,7 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
     @Override
     @Transactional
     public OtherOperatorProjectsResponse updateOtherOperatorProjects(
-            Integer projectId,
+            String projectId,
             OtherOperatorProjectsRequest request,
             String companyId,
             String role,
@@ -62,7 +62,7 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
     @Override
     @Transactional(readOnly = true)
     public OtherOperatorProjectsResponse getOtherOperatorProjects(
-            Integer projectId,
+            String projectId,
             String companyId,
             String role,
             String username) {
@@ -88,7 +88,7 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
     }
 
     private OtherOperatorProjectsResponse validateAndSave(
-            Integer projectId,
+            String projectId,
             OtherOperatorProjectsRequest request,
             String companyId,
             String role,
@@ -105,7 +105,7 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
     }
 
     private OtherOperatorProjectsResponse saveOtherOperatorProjects(
-            Integer projectId,
+            String projectId,
             OtherOperatorProjectsRequest request) {
         String pk = buildPk(projectId);
 
@@ -131,7 +131,7 @@ public class OtherOperatorProjectsServiceImpl implements OtherOperatorProjectsSe
         response.setMessage(ResponseConstants.MSG_FORBIDDEN);
     }
 
-    private String buildPk(Integer projectId) {
+    private String buildPk(String projectId) {
         return String.valueOf(projectId);
     }
 }

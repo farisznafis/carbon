@@ -23,9 +23,9 @@ public interface ProjectService {
 
     ProjectResponse updateProject(UpdateProjectRequest request);
 
-    UpdateProjectStatusResponse updateProjectStatus(String newStatus, Integer projectId);
+    UpdateProjectStatusResponse updateProjectStatus(String newStatus, String projectId);
 
-    ProjectResponse getProject(Integer projectId, String userCompanyId);
+    ProjectResponse getProject(String projectId, String userCompanyId);
 
     ProjectListInfoResponse findByFilter(
             int page,

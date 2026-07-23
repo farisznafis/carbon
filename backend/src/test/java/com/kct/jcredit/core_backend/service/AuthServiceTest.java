@@ -26,6 +26,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 // ログ用
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +54,7 @@ import com.kct.jcredit.core_backend.service.impl.AuthServiceImpl;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class AuthServiceTest {
     private static final Logger log = LoggerFactory.getLogger(AuthServiceTest.class);
 

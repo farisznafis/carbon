@@ -27,6 +27,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
@@ -74,6 +76,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
  * 
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("MonitoringServiceImpl Unit Tests")
 class MonitoringServiceImplTest {
 
@@ -197,14 +200,15 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         when(monitoringRecordSolarRepository.save(any())).thenReturn(new EnR002MonitoringRecord());
 
@@ -225,14 +229,15 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "tokyo_operator";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(regularUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         when(monitoringRecordSolarRepository.save(any())).thenReturn(new EnR002MonitoringRecord());
 
@@ -252,14 +257,15 @@ class MonitoringServiceImplTest {
         // Arrange: regularUser only has Tokyo, but tries to access Fukuoka
         String username = "tokyo_operator";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "22"; // Fukuoka - NOT assigned to regularUserv(福岡 - regularUserには割り当てられていません)
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(regularUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(fukuokaSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
 
         // Act
         MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(username, companyId, request);
@@ -279,7 +285,7 @@ class MonitoringServiceImplTest {
         // Arrange: User from COMP00000001 tries to access COMP00000002
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
@@ -314,7 +320,7 @@ class MonitoringServiceImplTest {
 
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request =
@@ -330,7 +336,7 @@ class MonitoringServiceImplTest {
         when(siteRepository.findByPublicId(siteId))
                 .thenReturn(Optional.of(tokyoSite));
 
-        when(projectRepository.findById(projectId))
+        when(projectRepository.findById(1))
                 .thenReturn(Optional.of(project));
 
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite))
@@ -372,7 +378,7 @@ class MonitoringServiceImplTest {
     void testRegisterMonitoringRecord_ChangedBatteryWithoutEvidence_ValidationError() {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setChangedBattery(true);
@@ -395,7 +401,7 @@ class MonitoringServiceImplTest {
     void testRegisterMonitoringRecord_UnchangedBatteryWithoutEvidence_Success() {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setChangedBattery(false);
@@ -417,7 +423,7 @@ class MonitoringServiceImplTest {
     void testRegisterMonitoringRecord_MissingChangedBattery_ValidationError() {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setChangedBattery(null);
@@ -441,7 +447,7 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
@@ -451,7 +457,8 @@ class MonitoringServiceImplTest {
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
 
         // Act
@@ -471,14 +478,15 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         // Site-Project relation doesn't exist!
         //サイトとプロジェクトの関係は存在しません
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(false);
@@ -501,7 +509,7 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
@@ -520,7 +528,8 @@ class MonitoringServiceImplTest {
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(wrongCompanySite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
 
         // Act
         MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(username, companyId, request);
@@ -541,20 +550,21 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         EnR002MonitoringRecord entity = new EnR002MonitoringRecord();
         // PK format changed to SITE#PROJECT (companyId still validated via user/site/project entities)
         // PK形式はSITE#PROJECTに変更されました（companyIdは引き続きユーザー/サイト/プロジェクトのエンティティで検証されます）
         entity.setId(siteId + "#" + projectId);
-        entity.setProjectID(projectId);
+        entity.setProjectID(1);
         entity.setSiteID(Integer.parseInt(siteId));
         entity.setElPv(new BigDecimal("100"));
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         when(monitoringRecordSolarRepository.findLatest(entity.getId())).thenReturn(Optional.of(entity));
 
@@ -575,12 +585,13 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "tokyo_operator";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "22"; // Fukuoka - not assigned
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(regularUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(fukuokaSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
 
         // Act
         MonitoringRecordSolarResponse response = monitoringService.readLastMonitoringRecordSolar(username, companyId, projectId, siteId);
@@ -597,12 +608,13 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         // No record found
         when(monitoringRecordSolarRepository.findLatest(anyString())).thenReturn(Optional.empty());
@@ -624,7 +636,7 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         MultipartFile file = createMockFile("test.pdf", "pdf", 1024);
@@ -636,7 +648,8 @@ class MonitoringServiceImplTest {
         spr1.setProject(project);
         when(tokyoSite.getSiteProjectRelations()).thenReturn(Arrays.asList(spr1));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         // Setup S3Client mock for this test
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class))).thenReturn(null);
@@ -659,7 +672,7 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         // 15MB file
@@ -688,7 +701,7 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         // .txt is not allowed for ELPV
@@ -717,14 +730,15 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "tokyo_operator";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "22"; // Fukuoka - not assigned
 
         MultipartFile file = createMockFile("test.pdf", "pdf", 1024);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(regularUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(fukuokaSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         // Setup site with project relations for deriveProjectIdFromSite
         SiteProjectRelation siteProjectRelation = new SiteProjectRelation();
         siteProjectRelation.setProject(project);
@@ -746,7 +760,7 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         MultipartFile file = createMockFile("test.png", "png", 2048);        setupMockFileForUpload(file, "png", 2048);
@@ -756,7 +770,8 @@ class MonitoringServiceImplTest {
         spr2.setProject(project);
         when(tokyoSite.getSiteProjectRelations()).thenReturn(Arrays.asList(spr2));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         // Setup S3Client mock for this test
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class))).thenReturn(null);
@@ -778,7 +793,7 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         MultipartFile file = createMockFile("battery.jpg", "jpg", 1500);
@@ -790,7 +805,8 @@ class MonitoringServiceImplTest {
         spr3.setProject(project);
         when(tokyoSite.getSiteProjectRelations()).thenReturn(Arrays.asList(spr3));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         // Setup S3Client mock for this test
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class))).thenReturn(null);
@@ -812,7 +828,7 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         MultipartFile file = createMockFile("control.pdf", "pdf", 3000);
@@ -824,7 +840,8 @@ class MonitoringServiceImplTest {
         spr4.setProject(project);
         when(tokyoSite.getSiteProjectRelations()).thenReturn(Arrays.asList(spr4));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
         // Setup S3Client mock for this test
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class))).thenReturn(null);
@@ -848,7 +865,7 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "nonexistent_user";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
@@ -871,7 +888,7 @@ class MonitoringServiceImplTest {
         // Arrange
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         // Create a mock Site with null company
@@ -887,7 +904,8 @@ class MonitoringServiceImplTest {
         SiteProjectRelation siteProjectRelation = new SiteProjectRelation();
         siteProjectRelation.setProject(project);
         when(brokenSite.getSiteProjectRelations()).thenReturn(Arrays.asList(siteProjectRelation));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
 
         // Act
         FileUploadResponse response = monitoringService.uploadElpvEvidence(username, companyId, projectId, siteId, "Test", file);
@@ -907,7 +925,7 @@ class MonitoringServiceImplTest {
         String username = "unknown_role_user";
         String companyId = "COMP00000002";
         Integer Id = 123;
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         ParticipatingUser unknownRoleUser = new ParticipatingUser();
@@ -924,7 +942,8 @@ class MonitoringServiceImplTest {
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(unknownRoleUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
 
         // Act
         MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(username, companyId, request);
@@ -940,7 +959,7 @@ class MonitoringServiceImplTest {
     void testRegisterMonitoringRecord_FutureDateRecorded_ValidationError() {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
@@ -948,9 +967,10 @@ class MonitoringServiceImplTest {
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(1, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
 
         MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
@@ -970,7 +990,7 @@ class MonitoringServiceImplTest {
     void testRegisterMonitoringRecord_DateRecordedBeforeActivityStart_ValidationError() {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
         LocalDate todayInJapan = LocalDate.now(java.time.ZoneId.of("Asia/Tokyo"));
 
@@ -979,9 +999,10 @@ class MonitoringServiceImplTest {
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(1, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(todayInJapan));
 
         MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
@@ -1002,7 +1023,7 @@ class MonitoringServiceImplTest {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
 
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setElPv(new BigDecimal("100.000"));
@@ -1010,9 +1031,10 @@ class MonitoringServiceImplTest {
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(1, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
 
         MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
@@ -1032,16 +1054,17 @@ class MonitoringServiceImplTest {
     void testRegisterMonitoringRecord_DuplicateDateRecorded_ValidationError() {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(1, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
         when(monitoringRecordSolarRepository.existsActiveByRecordIdAndDateRecorded(
                 siteId + "#" + projectId,
@@ -1065,7 +1088,7 @@ class MonitoringServiceImplTest {
     void testValidateMonitoringRecord_ElpvrExceedsElpv_ValidationError() {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
@@ -1074,9 +1097,10 @@ class MonitoringServiceImplTest {
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(1, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
 
         BaseResponse response = monitoringService.validateMonitoringRecordSolar(
@@ -1096,7 +1120,7 @@ class MonitoringServiceImplTest {
     void testValidateMonitoringRecord_ChangedBatteryWithoutEvidence_ValidationError() {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setChangedBattery(true);
@@ -1119,7 +1143,7 @@ class MonitoringServiceImplTest {
     void testValidateMonitoringRecord_UnchangedBatteryWithoutEvidence_Success() {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
         request.setChangedBattery(false);
@@ -1139,7 +1163,7 @@ class MonitoringServiceImplTest {
     void testValidateMonitoringRecord_EmptyValuesAndFutureDate_AggregatesErrors() {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
@@ -1155,9 +1179,10 @@ class MonitoringServiceImplTest {
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(1, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
 
         BaseResponse response = monitoringService.validateMonitoringRecordSolar(
@@ -1182,7 +1207,7 @@ class MonitoringServiceImplTest {
     void testValidateMonitoringRecord_MissingAccuracy_ValidationError() {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
@@ -1190,9 +1215,10 @@ class MonitoringServiceImplTest {
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(1, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
 
         BaseResponse response = monitoringService.validateMonitoringRecordSolar(
@@ -1212,7 +1238,7 @@ class MonitoringServiceImplTest {
     void testValidateMonitoringRecord_AccuracyBelowZero_ValidationError() {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
@@ -1220,9 +1246,10 @@ class MonitoringServiceImplTest {
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(1, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
 
         BaseResponse response = monitoringService.validateMonitoringRecordSolar(
@@ -1242,7 +1269,7 @@ class MonitoringServiceImplTest {
     void testValidateMonitoringRecord_AccuracyAboveMax_ValidationError() {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
@@ -1250,9 +1277,10 @@ class MonitoringServiceImplTest {
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(1, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
 
         BaseResponse response = monitoringService.validateMonitoringRecordSolar(
@@ -1272,16 +1300,17 @@ class MonitoringServiceImplTest {
     void testValidateMonitoringRecord_DuplicateDateRecorded_ValidationError() {
         String username = "multi_site_master";
         String companyId = "COMP00000002";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         String siteId = "21";
 
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
-        when(siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, Integer.parseInt(siteId)))
+        when(siteProjectRelationRepository.findByProjectIdAndSiteId(1, Integer.parseInt(siteId)))
                 .thenReturn(buildRelation(LocalDate.now(java.time.ZoneId.of("Asia/Tokyo")).minusDays(10)));
         when(monitoringRecordSolarRepository.existsActiveByRecordIdAndDateRecorded(
                 siteId + "#" + projectId,
@@ -1302,9 +1331,9 @@ class MonitoringServiceImplTest {
 
     // ============ TEST HELPER METHODS ============
 
-    private RegisterMonitoringRecordSolarRequest buildValidMonitoringRequest(Integer projectId, String siteId) {
+    private RegisterMonitoringRecordSolarRequest buildValidMonitoringRequest(String projectId, String siteId) {
         RegisterMonitoringRecordSolarRequest request = new RegisterMonitoringRecordSolarRequest();
-        request.setProjectId(projectId);
+        request.setProjectId(Integer.parseInt(projectId.replace("PROJ", "")));
         request.setSiteId(siteId);
         request.setUserId(13); // Master user ID
         request.setElPvEvidenceUrl("https://example.com/elpv.pdf");
@@ -1321,10 +1350,11 @@ class MonitoringServiceImplTest {
         return request;
     }
 
-    private void stubValidMonitoringContext(String username, Integer projectId, String siteId) {
+    private void stubValidMonitoringContext(String username, String projectId, String siteId) {
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
         when(siteRepository.findByPublicId(siteId)).thenReturn(Optional.of(tokyoSite));
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+        when(projectRepository.findByPublicId(projectId)).thenReturn(Optional.of(project));
         when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
     }
 

@@ -7,7 +7,7 @@ import lombok.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.kct.jcredit.core_backend.converter.StringListJsonConverter;
 import com.kct.jcredit.core_backend.entity.base.BaseEntity;
-import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
+
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

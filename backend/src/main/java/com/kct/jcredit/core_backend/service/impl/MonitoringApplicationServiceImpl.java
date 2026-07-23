@@ -100,7 +100,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
 
     @Override
     @Transactional(readOnly = true)
-    public ProjectMasterResponse getProjectMaster(Integer projectId, String companyId, String role, String username) {
+    public ProjectMasterResponse getProjectMaster(String projectId, String companyId, String role, String username) {
         ProjectMasterResponse response = new ProjectMasterResponse();
 
         ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(companyId).orElse(null);
@@ -110,7 +110,13 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
             return response;
         }
 
-        Project project = projectRepository.findById(projectId).orElse(null);
+        Integer projectDbId = projectRepository.findByPublicId(projectId)
+            .map(Project::getId)
+            .orElse(null);
+        Project project = null;
+        if (projectDbId != null) {
+            project = projectRepository.findById(projectDbId).orElse(null);
+        }
         if (project == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
@@ -142,7 +148,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
 
     @Override
     public MonitoringReportResponse submitMonitoringReport(
-            Integer projectId,
+            String projectId,
             String siteId,
             MonitoringReportRequest request,
             String companyId,
@@ -165,8 +171,17 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
             return response;
         }
 
+        Integer projectDbId = projectRepository.findByPublicId(projectId)
+            .map(Project::getId)
+            .orElse(null);
+        if (projectDbId == null) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
+            return response;
+        }
+
         // Build DynamoDB keys
-        String pk = buildPk(site.getId(), projectId);
+        String pk = buildPk(site.getPublicId(), projectId);
         String monitoringId = UUID.randomUUID().toString();
         String sk = buildSk(monitoringId);
 
@@ -184,7 +199,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
 
     @Override
     public MonitoringReportResponse getMonitoringReport(
-            Integer projectId,
+            String projectId,
             String siteId,
             String companyId,
             String role,
@@ -206,8 +221,17 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
             return response;
         }
 
+        Integer projectDbId = projectRepository.findByPublicId(projectId)
+            .map(Project::getId)
+            .orElse(null);
+        if (projectDbId == null) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
+            return response;
+        }
+
         // Fetch from DynamoDB (latest version)
-        String pk = buildPk(site.getId(), projectId);
+        String pk = buildPk(site.getPublicId(), projectId);
         MonitoringReportRequest saved = monitoringReportRepository.findLatestByPk(pk).orElse(null);
         if (saved == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -283,8 +307,8 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
 
     // ==================== Key Builders ====================
 
-    private String buildPk(Integer siteId, Integer projectId) {
-        return String.format("SITE#%d#PROJ#%d", siteId, projectId);
+    private String buildPk(String siteId, String projectId) {
+        return String.format("SITE#%s#PROJ#%s", siteId, projectId);
     }
 
     private String buildSk(String monitoringId) {

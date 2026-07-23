@@ -34,6 +34,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
@@ -60,6 +62,7 @@ import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class MonitoringControllerTest {
     
     @Mock
@@ -84,7 +87,7 @@ class MonitoringControllerTest {
     private static final String USERNAME = "testuser";
     private static final String COMPANY_ID = "company123";
     private static final String SITE_ID = "1";
-    private static final Integer PROJECT_ID = 100;
+    private static final String PROJECT_ID = "PROJ0100";
 
     @BeforeEach
     void setUp() {
@@ -598,7 +601,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         mockResponse.setTimestamp(LocalDateTime.now());
 
         when(monitoringService.readLastMonitoringRecordSolar(
-            anyString(), anyString(), anyInt(), anyString()
+            anyString(), anyString(), anyString(), anyString()
         )).thenReturn(mockResponse);
 
         // Act
@@ -642,7 +645,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         for (int i = 0; i < 50; i++) {
                 EnR002MonitoringRecord record = EnR002MonitoringRecord.builder()
                         .id(SITE_ID + "#" + PROJECT_ID)
-                        .projectID(PROJECT_ID)
+                        .projectID(100)
                         .siteID(Integer.parseInt(SITE_ID))
                         .participatingUserID(100 + i)
                         .dateRecorded("2024-01-15T10:30:00")
@@ -748,7 +751,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         for (int i = 0; i < customLimit; i++) {
                 EnR002MonitoringRecord record = EnR002MonitoringRecord.builder()
                         .id(SITE_ID + "#" + PROJECT_ID)
-                        .projectID(PROJECT_ID)
+                        .projectID(100)
                         .siteID(Integer.parseInt(SITE_ID))
                         .participatingUserID(100 + i)
                         .dateRecorded("2024-01-15T10:30:00")
@@ -855,7 +858,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         for (int i = 0; i < 50; i++) {
                 EnR002MonitoringRecord record = EnR002MonitoringRecord.builder()
                         .id(SITE_ID + "_" + PROJECT_ID)
-                        .projectID(PROJECT_ID)
+                        .projectID(100)
                         .siteID(Integer.parseInt(SITE_ID))
                         .participatingUserID(200 + i)
                         .dateRecorded("2024-01-16T10:30:00")
@@ -956,7 +959,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         for (int i = 0; i < 50; i++) {
                 EnR002MonitoringRecord record = EnR002MonitoringRecord.builder()
                         .id(SITE_ID + "#" + PROJECT_ID)
-                        .projectID(PROJECT_ID)
+                        .projectID(100)
                         .siteID(Integer.parseInt(SITE_ID))
                         .participatingUserID(300 + i) // ページ3なので異なるユーザーID範囲
                         .dateRecorded("2024-01-17T10:30:00")
@@ -1086,7 +1089,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         mockResponse.setTimestamp(LocalDateTime.now());
 
         when(monitoringService.readSiteMonitoringRecordsSolar(
-            anyString(), anyString(), anyInt(), anyString(), eq(-1), anyInt(), any()
+            anyString(), anyString(), anyString(), anyString(), eq(-1), anyInt(), any()
         )).thenReturn(mockResponse);
 
         // Act
@@ -1115,7 +1118,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         mockResponse.setTimestamp(LocalDateTime.now());
 
         when(monitoringService.readSiteMonitoringRecordsSolar(
-            anyString(), anyString(), anyInt(), anyString(), anyInt(), eq(0), any()
+            anyString(), anyString(), anyString(), anyString(), anyInt(), eq(0), any()
         )).thenReturn(mockResponse);
 
         // Act

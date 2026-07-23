@@ -34,7 +34,7 @@ class ProjectControllerUpdateTest extends ProjectControllerBaseTest {
  
     // ==================== Test Data ====================
     
-    private static final Integer PROJECT_ID = 1;
+    private static final String PROJECT_ID = "PROJ0001";
     private static final String UPDATED_PROJECT_NAME = "Updated Solar Project";
     private static final String REGIONAL_CATEGORY = "関東";
     private static final String METHODOLOGY_VERSION = "Ver.2.0";
@@ -89,7 +89,7 @@ void should_call_service_once_with_project_id_and_request_when_request_is_valid(
     verify(projectService, times(1)).updateProject(any(UpdateProjectRequest.class));
 
     verify(projectService).updateProject(argThat(req -> 
-        req.getId() == PROJECT_ID && 
+        PROJECT_ID.equals(req.getId()) && 
         OPERATOR_COMPANY_ID.equals(req.getCompanyId()) && 
         OPERATOR_USERNAME.equals(req.getProcessedBy())    
     ));
@@ -235,7 +235,7 @@ void should_call_service_once_with_project_id_and_request_when_request_is_valid(
     @DisplayName("UT-PC-39: Should populate request ID from path variable")
     void should_populate_request_id_from_path_variable() {
         // Given
-        Integer customProjectId = 999;
+        String customProjectId = "PROJ0999";
         UpdateProjectRequest request = buildValidUpdateRequest();
         ProjectResponse mockResponse = buildSuccessUpdateResponse();
         
@@ -245,7 +245,7 @@ void should_call_service_once_with_project_id_and_request_when_request_is_valid(
         controller.updateProject(authentication, customProjectId, request);
 
         verify(projectService).updateProject(argThat(req -> 
-            req.getId() == customProjectId
+            customProjectId.equals(req.getId())
         ));
     }
     
@@ -313,7 +313,7 @@ void should_call_service_once_with_project_id_and_request_when_request_is_valid(
     @DisplayName("UT-PC-40: Should return project details successfully")
     void getProject_success() {
         // Given
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         
         setupJwtCompanyId(OPERATOR_COMPANY_ID); 
         
@@ -345,7 +345,7 @@ void should_call_service_once_with_project_id_and_request_when_request_is_valid(
     @Test
     @DisplayName("UT-PC-41: Should throw CustomException(404) when project details not found")
     void getProject_notFound_throwsException() {
-        Integer projectId = 999; 
+        String projectId = "PROJ0999"; 
         setupJwtCompanyId(OPERATOR_COMPANY_ID); 
         
         when(projectService.getProject(projectId, OPERATOR_COMPANY_ID))
@@ -368,7 +368,7 @@ void should_call_service_once_with_project_id_and_request_when_request_is_valid(
     @DisplayName("UT-PC-42: Should throw CustomException(500) when server error occurs")
     void getProject_serverError_throwsException() {
         // Given
-        Integer projectId = 1;
+        String projectId = "PROJ0999"; 
         setupJwtCompanyId(OPERATOR_COMPANY_ID); 
         
         when(projectService.getProject(projectId, OPERATOR_COMPANY_ID))

@@ -14,27 +14,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;  
-import java.time.Duration;
 import java.util.Map;
 import java.util.List;
 
-import software.amazon.awssdk.awscore.exception.AwsServiceException;
-import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.EncryptionTypeMismatchException;
-import software.amazon.awssdk.services.s3.model.InvalidRequestException;
-import software.amazon.awssdk.services.s3.model.InvalidWriteOffsetException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.S3Exception;
-import software.amazon.awssdk.services.s3.model.TooManyPartsException;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 
 @Slf4j

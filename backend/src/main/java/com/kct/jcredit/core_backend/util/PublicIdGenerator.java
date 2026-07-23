@@ -14,6 +14,7 @@ public final class PublicIdGenerator {
     private static final String BASE62_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
     private static final String SITE_PREFIX = "SITE";
+    private static final String PROJECT_PREFIX = "PROJ";
     private static final int RANDOM_PART_LENGTH = 16;
 
     private PublicIdGenerator() {
@@ -30,6 +31,10 @@ public final class PublicIdGenerator {
      */
     public static String generateSitePublicId() {
         return SITE_PREFIX + generateRandomBase62(RANDOM_PART_LENGTH);
+    }
+
+        public static String generateProjectPublicId() {
+        return PROJECT_PREFIX + generateRandomBase62(RANDOM_PART_LENGTH);
     }
 
     private static String generateRandomBase62(int length) {

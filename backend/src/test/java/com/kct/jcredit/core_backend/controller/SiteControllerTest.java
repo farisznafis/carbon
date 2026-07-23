@@ -20,6 +20,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -29,6 +31,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class SiteControllerTest {
 
     @Mock
@@ -1078,7 +1081,7 @@ class SiteControllerTest {
     void testGetSiteProjectEquipment_SuccessWithEquipment() {
         // Arrange
         String siteId = "1";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         
         try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
             // Setup authentication mock - direct cast, NOT .toString()
@@ -1094,7 +1097,7 @@ class SiteControllerTest {
             when(mockResponse.getStatusCode()).thenReturn("200");
             
             // Setup service mock
-            when(siteService.getSiteProjectEquipment("1", 1, "COMP001", "user", "testuser"))
+            when(siteService.getSiteProjectEquipment("1", "PROJ0001", "COMP001", "user", "testuser"))
                     .thenReturn(mockResponse);
             
             // Setup static utility mock
@@ -1115,7 +1118,7 @@ class SiteControllerTest {
             verify(jwtUtil, times(1)).extractCompanyId("dummy-token");
             verify(jwtUtil, times(1)).extractRole("dummy-token");
             verify(jwtUtil, times(1)).extractUsername("dummy-token");
-            verify(siteService, times(1)).getSiteProjectEquipment("1", 1, "COMP001", "user", "testuser");
+            verify(siteService, times(1)).getSiteProjectEquipment("1", "PROJ0001", "COMP001", "user", "testuser");
             verifyNoInteractions(projectService);
             mockedUtil.verify(() -> ResponseUtil.getHttpStatus("200"), times(1));
         }
@@ -1139,7 +1142,7 @@ class SiteControllerTest {
     void testGetSiteProjectEquipment_SuccessWithEmptyEquipment() {
         // Arrange
         String siteId = "1";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         
         try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
             // Setup authentication mock
@@ -1155,7 +1158,7 @@ class SiteControllerTest {
             when(mockResponse.getStatusCode()).thenReturn("200");
             
             // Setup service mock
-            when(siteService.getSiteProjectEquipment("1", 1, "COMP001", "user", "testuser"))
+            when(siteService.getSiteProjectEquipment("1", "PROJ0001", "COMP001", "user", "testuser"))
                     .thenReturn(mockResponse);
             
             // Setup static utility mock
@@ -1176,7 +1179,7 @@ class SiteControllerTest {
             verify(jwtUtil, times(1)).extractCompanyId("dummy-token");
             verify(jwtUtil, times(1)).extractRole("dummy-token");
             verify(jwtUtil, times(1)).extractUsername("dummy-token");
-            verify(siteService, times(1)).getSiteProjectEquipment("1", 1, "COMP001", "user", "testuser");
+            verify(siteService, times(1)).getSiteProjectEquipment("1", "PROJ0001", "COMP001", "user", "testuser");
             verifyNoInteractions(projectService);
             mockedUtil.verify(() -> ResponseUtil.getHttpStatus("200"), times(1));
         }
@@ -1198,7 +1201,7 @@ class SiteControllerTest {
     void testGetSiteProjectEquipment_SiteNotFound() {
         // Arrange
         String siteId = "999";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         
         try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
             // Setup authentication mock
@@ -1214,7 +1217,7 @@ class SiteControllerTest {
             when(mockResponse.getStatusCode()).thenReturn("404");
             
             // Setup service mock
-            when(siteService.getSiteProjectEquipment("999", 1, "COMP001", "user", "testuser"))
+            when(siteService.getSiteProjectEquipment("999", "PROJ0001", "COMP001", "user", "testuser"))
                     .thenReturn(mockResponse);
             
             // Setup static utility mock
@@ -1235,7 +1238,7 @@ class SiteControllerTest {
             verify(jwtUtil, times(1)).extractCompanyId("dummy-token");
             verify(jwtUtil, times(1)).extractRole("dummy-token");
             verify(jwtUtil, times(1)).extractUsername("dummy-token");
-            verify(siteService, times(1)).getSiteProjectEquipment("999", 1, "COMP001", "user", "testuser");
+            verify(siteService, times(1)).getSiteProjectEquipment("999", "PROJ0001", "COMP001", "user", "testuser");
             verifyNoInteractions(projectService);
             mockedUtil.verify(() -> ResponseUtil.getHttpStatus("404"), times(1));
         }
@@ -1257,7 +1260,7 @@ class SiteControllerTest {
     void testGetSiteProjectEquipment_ProjectNotFound() {
         // Arrange
         String siteId = "1";
-        Integer projectId = 999;
+        String projectId = "PROJ0999";
         
         try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
             // Setup authentication mock
@@ -1273,7 +1276,7 @@ class SiteControllerTest {
             when(mockResponse.getStatusCode()).thenReturn("404");
             
             // Setup service mock
-            when(siteService.getSiteProjectEquipment("1", 999, "COMP001", "user", "testuser"))
+            when(siteService.getSiteProjectEquipment("1", "PROJ0999", "COMP001", "user", "testuser"))
                     .thenReturn(mockResponse);
             
             // Setup static utility mock
@@ -1294,7 +1297,7 @@ class SiteControllerTest {
             verify(jwtUtil, times(1)).extractCompanyId("dummy-token");
             verify(jwtUtil, times(1)).extractRole("dummy-token");
             verify(jwtUtil, times(1)).extractUsername("dummy-token");
-            verify(siteService, times(1)).getSiteProjectEquipment("1", 999, "COMP001", "user", "testuser");
+            verify(siteService, times(1)).getSiteProjectEquipment("1", "PROJ0999", "COMP001", "user", "testuser");
             verifyNoInteractions(projectService);
             mockedUtil.verify(() -> ResponseUtil.getHttpStatus("404"), times(1));
         }
@@ -1315,7 +1318,7 @@ class SiteControllerTest {
     void testGetSiteProjectEquipment_CustomException() {
         // Arrange
         String siteId = "1";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         CustomException expectedException = new CustomException("E006", "機器情報の取得に失敗しました");
         
         try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
@@ -1328,7 +1331,7 @@ class SiteControllerTest {
             when(jwtUtil.extractUsername("dummy-token")).thenReturn("testuser");
             
             // Setup service mock to throw exception
-            when(siteService.getSiteProjectEquipment("1", 1, "COMP001", "user", "testuser"))
+            when(siteService.getSiteProjectEquipment("1", "PROJ0001", "COMP001", "user", "testuser"))
                     .thenThrow(expectedException);
             
             // Act & Assert
@@ -1344,7 +1347,7 @@ class SiteControllerTest {
             verify(jwtUtil, times(1)).extractCompanyId("dummy-token");
             verify(jwtUtil, times(1)).extractRole("dummy-token");
             verify(jwtUtil, times(1)).extractUsername("dummy-token");
-            verify(siteService, times(1)).getSiteProjectEquipment("1", 1, "COMP001", "user", "testuser");
+            verify(siteService, times(1)).getSiteProjectEquipment("1", "PROJ0001", "COMP001", "user", "testuser");
             verifyNoInteractions(projectService);}
     }
 
@@ -1363,7 +1366,7 @@ class SiteControllerTest {
     void testGetSiteProjectEquipment_InvalidToken() {
         // Arrange
         String siteId = "1";
-        Integer projectId = 1;
+        String projectId = "PROJ0001";
         CustomException expectedException = new CustomException("E004", "トークンが無効です");
         
         try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {

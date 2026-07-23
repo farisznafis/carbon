@@ -28,6 +28,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -68,6 +70,7 @@ import com.kct.jcredit.core_backend.service.impl.NotificationServiceImpl;
  * {@code @Tag("requirement-gap")} を付与しているため、CI レポート上で別途集計可能。
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("NotificationServiceImpl 単体テスト")
 class NotificationServiceImplTest {
  

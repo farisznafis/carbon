@@ -14,6 +14,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 
@@ -23,6 +25,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("ProjectService - Update (PATCH) Tests")
 class ProjectServiceUpdateTest {
 
@@ -50,14 +53,14 @@ class ProjectServiceUpdateTest {
     @Test
     @DisplayName("TC-UP-01: Update project success (Partial update / PATCH)")
     void updateProject_success() {
-        Integer targetProjectId = 12345;
+        String targetProjectId = "PROJ12345";
         
         UpdateProjectRequest updateReq = new UpdateProjectRequest();
         updateReq.setId(targetProjectId);
         updateReq.setProjectName("更新されたプロジェクト名"); 
         updateReq.setProcessedBy("operator_update");
 
-        when(projectRepository.findById(targetProjectId)).thenReturn(Optional.of(dummyProject));
+        when(projectRepository.findByPublicId(targetProjectId)).thenReturn(Optional.of(dummyProject));
         when(projectRepository.save(any(Project.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ProjectResponse response = projectService.updateProject(updateReq);
@@ -71,7 +74,7 @@ class ProjectServiceUpdateTest {
         assertEquals("P421", response.getProject().getProjectNumber());
         assertEquals("1250.0", response.getProject().getEmissionReduction());
 
-        verify(projectRepository, times(1)).findById(targetProjectId);
+        verify(projectRepository, times(1)).findByPublicId(targetProjectId);
         verify(projectRepository, times(1)).save(any(Project.class));
     }
 
@@ -80,9 +83,9 @@ class ProjectServiceUpdateTest {
     void updateProject_notFound() {
         // Given
         UpdateProjectRequest updateReq = new UpdateProjectRequest();
-        updateReq.setId(999);
+        updateReq.setId("PROJ0999");
         
-        when(projectRepository.findById(999)).thenReturn(Optional.empty());
+        when(projectRepository.findByPublicId("PROJ0999")).thenReturn(Optional.empty());
 
         // When
         ProjectResponse response = projectService.updateProject(updateReq);

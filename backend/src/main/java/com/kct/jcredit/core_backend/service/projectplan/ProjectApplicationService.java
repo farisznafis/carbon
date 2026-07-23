@@ -8,24 +8,24 @@ import com.kct.jcredit.core_backend.dto.response.ProjectMasterResponse;
 public interface ProjectApplicationService {
         CorporationMasterResponse getCorporationMaster(String requesterCompanyId, String role, String username);
 
-        ProjectMasterResponse getProjectMaster(Integer projectId, String companyId, String role, String username);
+        ProjectMasterResponse getProjectMaster(String projectId, String companyId, String role, String username);
 
     ProjectApplicationResponse submitProjectApplication(
-            Integer projectId,
+            String projectId,
             ProjectApplicationRequest request,
             String companyId,
             String role,
             String username);
 
     ProjectApplicationResponse updateProjectApplication(
-            Integer projectId,
+            String projectId,
             ProjectApplicationRequest request,
             String companyId,
             String role,
             String username);
 
     ProjectApplicationResponse getProjectApplication(
-            Integer projectId,
+            String projectId,
             String companyId,
             String role,
             String username);

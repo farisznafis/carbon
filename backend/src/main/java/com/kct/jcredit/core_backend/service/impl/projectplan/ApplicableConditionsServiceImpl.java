@@ -37,7 +37,7 @@ public class ApplicableConditionsServiceImpl implements ApplicableConditionsServ
     @Override
     @Transactional
     public ApplicableConditionsResponse submitApplicableConditions(
-            Integer projectId,
+            String projectId,
             ApplicableConditionsRequest request,
             String companyId,
             String role,
@@ -51,7 +51,7 @@ public class ApplicableConditionsServiceImpl implements ApplicableConditionsServ
     @Override
     @Transactional
     public ApplicableConditionsResponse updateApplicableConditions(
-            Integer projectId,
+            String projectId,
             ApplicableConditionsRequest request,
             String companyId,
             String role,
@@ -65,7 +65,7 @@ public class ApplicableConditionsServiceImpl implements ApplicableConditionsServ
     @Override
     @Transactional(readOnly = true)
     public ApplicableConditionsResponse getApplicableConditions(
-            Integer projectId,
+            String projectId,
             String companyId,
             String role,
             String username) {
@@ -93,7 +93,7 @@ public class ApplicableConditionsServiceImpl implements ApplicableConditionsServ
     }
 
     private ApplicableConditionsResponse validateAndSave(
-            Integer projectId,
+            String projectId,
             ApplicableConditionsRequest request,
             String companyId,
             String role,
@@ -110,7 +110,7 @@ public class ApplicableConditionsServiceImpl implements ApplicableConditionsServ
     }
 
     private ApplicableConditionsResponse saveApplicableConditions(
-            Integer projectId,
+            String projectId,
             ApplicableConditionsRequest request) {
         String pk = buildPk(projectId);
 
@@ -148,7 +148,7 @@ public class ApplicableConditionsServiceImpl implements ApplicableConditionsServ
         response.setMessage(ResponseConstants.MSG_FORBIDDEN);
     }
 
-    private String buildPk(Integer projectId) {
+    private String buildPk(String projectId) {
         return String.valueOf(projectId);
     }
 

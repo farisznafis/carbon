@@ -9,10 +9,10 @@ public interface MonitoringApplicationService {
 
     CorporationMasterResponse getCompanyMaster(String companyId, String requesterCompanyId, String role, String username);
 
-    ProjectMasterResponse getProjectMaster(Integer projectId, String companyId, String role, String username);
+    ProjectMasterResponse getProjectMaster(String projectId, String companyId, String role, String username);
 
     MonitoringReportResponse submitMonitoringReport(
-            Integer projectId,
+            String projectId,
             String siteId,
             MonitoringReportRequest request,
             String companyId,
@@ -20,7 +20,7 @@ public interface MonitoringApplicationService {
             String username);
 
     MonitoringReportResponse getMonitoringReport(
-            Integer projectId,
+            String projectId,
             String siteId,
             String companyId,
             String role,

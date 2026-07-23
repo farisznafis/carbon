@@ -233,7 +233,7 @@ public class MonitoringServiceImpl implements MonitoringService {
     public MonitoringRecordSolarResponse readLastMonitoringRecordSolar(
             String username,
             String companyId,
-            Integer projectId,
+            String projectId,
             String siteId
     ) {
         MonitoringRecordSolarResponse response = new MonitoringRecordSolarResponse();
@@ -270,7 +270,13 @@ public class MonitoringServiceImpl implements MonitoringService {
             }
 
             //プロジェクト取得
-            Project project = projectRepository.findById(projectId).orElse(null);
+            Integer projectDbId = projectRepository.findByPublicId(projectId)
+                .map(Project::getId)
+                .orElse(null);
+            Project project = null;
+            if (projectDbId != null) {
+                project = projectRepository.findById(projectDbId).orElse(null);
+            }
             //プロジェクトのnullチェック
             if (project == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -296,7 +302,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // 4) Fetch latest monitoring record from DynamoDB
             // DynamoDBから最新の監視記録を取得する
-            String recordId = site.getPublicId() + "#" + projectId;
+            String recordId = site.getPublicId() + "#" + project.getId();
             EnR002MonitoringRecord entity = monitoringRecordSolarRepository.findLatest(recordId)
                     .orElse(null);
 
@@ -327,7 +333,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             String username,
             Integer page,
             Integer limit,
-            Integer projectId,
+            String projectId,
             String nextPageToken
     ) {
         MonitoringRecordSolarListResponse response = new MonitoringRecordSolarListResponse();
@@ -348,7 +354,15 @@ public class MonitoringServiceImpl implements MonitoringService {
             }
 
             // Get list of site ids related to the project through site-project relation
-            List<Integer> siteIds = siteProjectRelationRepository.findSiteIdsByProjectId(projectId);
+            Integer projectDbId = projectRepository.findByPublicId(projectId)
+                .map(Project::getId)
+                .orElse(null);
+            if (projectDbId == null) {
+                response.setStatusCode(ResponseConstants.NOT_FOUND);
+                response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
+                return response;
+            }
+            List<Integer> siteIds = siteProjectRelationRepository.findSiteIdsByProjectId(projectDbId);
 
             // Create pagination object
             //ページネーション作成
@@ -357,10 +371,10 @@ public class MonitoringServiceImpl implements MonitoringService {
             pagination.setLimit(limit);
             pagination.setNextPageToken(nextPageToken);
 
-            // Fetch data - pagination object is updated by repository
+            //Fetch data - pagination object is updated by repository
             //データ取得 - ページネーションオブジェクトはリポジトリによって更新されます
             List<EnR002MonitoringRecord> entities = 
-                monitoringRecordSolarRepository.findAllByProjectIdPaginated(projectId, siteIds, pagination);
+                monitoringRecordSolarRepository.findAllByProjectIdPaginated(projectDbId, siteIds, pagination);
 
             //entitiesが空文字の場合
             if (entities.isEmpty()) {
@@ -397,7 +411,7 @@ public class MonitoringServiceImpl implements MonitoringService {
     public MonitoringRecordSolarListResponse readSiteMonitoringRecordsSolar(
             String username,
             String companyId,
-            Integer projectId,
+            String projectId,
             String siteId,
             Integer page,
             Integer limit,
@@ -452,7 +466,13 @@ public class MonitoringServiceImpl implements MonitoringService {
             }
 
             //プロジェクト取得
-            Project project = projectRepository.findById(projectId).orElse(null);
+            Integer projectDbId = projectRepository.findByPublicId(projectId)
+                .map(Project::getId)
+                .orElse(null);
+            Project project = null;
+            if (projectDbId != null) {
+                project = projectRepository.findById(projectDbId).orElse(null);
+            }
             //プロジェクトのnullチェック
             if (project == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -485,7 +505,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // Fetch data - pagination object is updated by repository
             //データ取得 - ページネーションオブジェクトはリポジトリによって更新されます
-            String recordId = site.getPublicId() + "#" + projectId;
+            String recordId = site.getPublicId() + "#" + project.getId();
             List<EnR002MonitoringRecord> entities = 
                 monitoringRecordSolarRepository.findAllByRecordIdPaginated(recordId, pagination);
 
@@ -520,7 +540,7 @@ public class MonitoringServiceImpl implements MonitoringService {
     private FileUploadResponse uploadMonitoringFileSolar(
             String username,
             String companyId,
-            Integer projectId,
+            String projectId,
             String siteId,
             String fileType,
             String description,
@@ -562,7 +582,13 @@ public class MonitoringServiceImpl implements MonitoringService {
                 return response;
             }
 
-            Project project = projectRepository.findById(projectId).orElse(null);
+            Integer projectDbId = projectRepository.findByPublicId(projectId)
+                .map(Project::getId)
+                .orElse(null);
+            Project project = null;
+            if (projectDbId != null) {
+                project = projectRepository.findById(projectDbId).orElse(null);
+            }
             if (project == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
@@ -587,7 +613,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             String fileId = "file_" + UUID.randomUUID().toString().substring(0, 6);
             String safeFilename = sanitizeFileName(file.getOriginalFilename());
             String s3Key = String.format("companies/%s/projects/%d/sites/%s/%s/%s_%s",
-                    companyId, projectId, siteId, fileType, fileId, safeFilename);
+                    companyId, project.getId(), site.getPublicId(), fileType, fileId, safeFilename);
 
             // SECURITY FIX: Use server-side determined Content-Type (prevent MIME-Type Spoofing)
             String safeExtension = getFileExtension(file.getOriginalFilename()).toLowerCase();
@@ -1135,7 +1161,7 @@ public class MonitoringServiceImpl implements MonitoringService {
     public FileUploadResponse uploadElpvEvidence(
             String username,
             String companyId,
-            Integer projectId,
+            String projectId,
             String siteId,
             String description,
             MultipartFile file
@@ -1147,7 +1173,7 @@ public class MonitoringServiceImpl implements MonitoringService {
     public FileUploadResponse uploadElpvrEvidence(
             String username,
             String companyId,
-            Integer projectId,
+            String projectId,
             String siteId,
             String description,
             MultipartFile file
@@ -1159,7 +1185,7 @@ public class MonitoringServiceImpl implements MonitoringService {
     public FileUploadResponse uploadElpjBatterySpecificationEvidence(
             String username,
             String companyId,
-            Integer projectId,
+            String projectId,
             String siteId,
             String description,
             MultipartFile file
@@ -1171,7 +1197,7 @@ public class MonitoringServiceImpl implements MonitoringService {
     public FileUploadResponse uploadElpjControlEvidence(
             String username,
             String companyId,
-            Integer projectId,
+            String projectId,
             String siteId,
             String description,
             MultipartFile file

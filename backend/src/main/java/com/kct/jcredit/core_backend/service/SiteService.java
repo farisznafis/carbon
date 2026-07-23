@@ -19,7 +19,7 @@ public interface SiteService {
 
     EnR002EquipmentRegisterResponse getSiteProjectEquipment(
             String siteId,
-            Integer projectId,
+            String projectId,
             String companyId,
             String role,
             String username);

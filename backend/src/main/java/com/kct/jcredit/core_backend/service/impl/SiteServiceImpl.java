@@ -30,7 +30,6 @@ import com.kct.jcredit.core_backend.repository.postgres.SiteR002MemberDataReposi
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.service.SiteService;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -360,7 +359,7 @@ public class SiteServiceImpl implements SiteService {
     @Override
     public EnR002EquipmentRegisterResponse getSiteProjectEquipment(
             String siteId,
-            Integer projectId,
+            String projectId,
             String companyId,
             String role,
             String username) {
@@ -376,7 +375,13 @@ public class SiteServiceImpl implements SiteService {
             
             Integer siteDbId = site.getId();
 
-            Project project = projectRepository.findById(projectId).orElse(null);
+            Integer projectDbId = projectRepository.findByPublicId(projectId)
+                .map(Project::getId)
+                .orElse(null);
+            Project project = null;
+            if (projectDbId != null) {
+                project = projectRepository.findById(projectDbId).orElse(null);
+            }
             if (project == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
@@ -389,7 +394,7 @@ public class SiteServiceImpl implements SiteService {
                 return response;
             }
 
-            SiteProjectRelation relation = siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteDbId);
+            SiteProjectRelation relation = siteProjectRelationRepository.findByProjectIdAndSiteId(projectDbId, siteDbId);
             if (relation == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
@@ -397,7 +402,7 @@ public class SiteServiceImpl implements SiteService {
             }
 
             SiteR002MemberData memberData = siteR002MemberDataRepository
-                    .findByProject_IdAndSite_Id(projectId, siteDbId)
+                    .findByProject_IdAndSite_Id(projectDbId, siteDbId)
                     .orElse(null);
             if (memberData == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);

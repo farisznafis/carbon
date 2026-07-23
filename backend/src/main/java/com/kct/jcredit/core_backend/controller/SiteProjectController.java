@@ -135,7 +135,7 @@ public class SiteProjectController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ProjectJoinResponse> joinProject(
             Authentication authentication,
-            @PathVariable Integer projectId,
+            @PathVariable String projectId,
             @RequestBody @Valid EnR002JoinProjectRequest request) {
 
         String  companyId = extractCompanyId(authentication);

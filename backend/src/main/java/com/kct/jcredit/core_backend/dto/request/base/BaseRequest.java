@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BaseRequest {
-    private int id;
+    private String id;
     private String processedBy;
     private String companyId;
 }
