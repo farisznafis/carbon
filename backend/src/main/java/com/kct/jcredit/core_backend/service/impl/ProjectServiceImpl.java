@@ -82,7 +82,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         for (Project project : projects) {
             ProjectDetailResponse resp = ProjectDetailResponse.builder()
-                    .id(String.valueOf(project.getId()))
+                    .id(project.getPublicId())
                     .projectName(project.getProjectName())
                     .emissionReduction(project.getEmissionReduction() != null ?
                             String.valueOf(project.getEmissionReduction()) : "0")
@@ -270,7 +270,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         List<ProjectDetailResponse> projectDetailList = projectList.stream()
             .map(p -> ProjectDetailResponse.builder()
-                    .id(p.getId().toString())
+                    .id(p.getPublicId())
                     .projectName(p.getProjectName())
                     .projectNumber(p.getProjectNumber())
                     .projectStatus(p.getProjectStatus())
@@ -428,7 +428,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     private ProjectDetailResponse convertToProjectDetailResponse(Project project) {
         ProjectDetailResponse dto =  ProjectDetailResponse.builder()
-            .id(project.getId() != null ? project.getId().toString() : null)
+            .id(project.getPublicId())
             .projectName(project.getProjectName())
             .projectNumber(project.getProjectNumber())
             .projectStatus(project.getProjectStatus())

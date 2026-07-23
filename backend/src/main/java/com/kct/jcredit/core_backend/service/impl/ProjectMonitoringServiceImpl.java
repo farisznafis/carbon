@@ -35,15 +35,14 @@ public class ProjectMonitoringServiceImpl implements ProjectMonitoringService {
     public ProjectMonitoringResponse getProjectDetail(String projectId) {
         
         ProjectMonitoringResponse response = new ProjectMonitoringResponse();
-        Integer idDatabase = Integer.valueOf(projectId); 
-        
         // 1. take project data from database
-        Project project = projectRepository.findById(idDatabase).orElse(null);
+        Project project = projectRepository.findByPublicId(projectId).orElse(null);
         if (project == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
             return response;
         }
+        Integer idDatabase = project.getId();
 
         // 2. graphic data (chart) & total reduction widget
         EnR002ReductionResultTotal probe = new EnR002ReductionResultTotal();

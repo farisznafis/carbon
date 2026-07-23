@@ -88,7 +88,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                                 companyId, project.getId());
 
                                 return ProjectDetailResponse.builder()
-                                        .id(String.valueOf(project.getId()))
+                                        .id(project.getPublicId())
                                         .projectName(project.getProjectName())
                                         .projectNumber(project.getProjectNumber())
                                         .isJoined(alreadyJoined)
