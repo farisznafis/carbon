@@ -67,6 +67,9 @@ const AdminProjectPlanApplication = lazy(() =>
 const AdminMonitoringReport = lazy(() =>
   import("./features/admin/project-detail/AdminMonitoringReportPage"),
 );
+const AdminProjectMonitoringDetail = lazy(() =>
+  import("./features/admin/monitoring/ProjectMonitoringDetailPage"),
+);
 
 function RequireAdmin({ children }: { children: JSX.Element }) {
   const { isAuthenticated } = useAuth();
@@ -236,6 +239,14 @@ const App = () => {
             element={
               <RequireAdmin>
                 <ProjectDetailAdmin />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminProjectMonitoringDetailRoute}
+            element={
+              <RequireAdmin>
+                <AdminProjectMonitoringDetail />
               </RequireAdmin>
             }
           />

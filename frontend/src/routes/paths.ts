@@ -71,6 +71,12 @@ export const paths = {
   adminProjectRegister: '/admin/project-register',
   adminProjectDetailRoute: '/admin/projects/:projectId',
   adminProjectDetail: (projectId: string | number) => `/admin/projects/${projectId}`,
+  adminProjectMonitoringDetailRoute:
+    '/admin/projects/:projectId/monitoring/:monitoringId',
+  adminProjectMonitoringDetail: (
+    projectId: string | number,
+    monitoringId: string | number,
+  ) => `/admin/projects/${projectId}/monitoring/${monitoringId}`,
   adminProjectEditRoute: '/admin/projects/:projectId/edit',
   adminProjectEdit: (projectId: string | number) => `/admin/projects/${projectId}/edit`,
   adminProjectPlanRoute: '/admin/projects/:projectId/project-plan',

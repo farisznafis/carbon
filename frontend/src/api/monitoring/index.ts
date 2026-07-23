@@ -1,5 +1,6 @@
 export { normalizeRecentMonitoringItem } from './mappers';
 export {
+  getAdminProjectMonitoringRecords,
   getMonitoringCancelRequests,
   getMonitoringRecent,
   getMonitoringRecords,

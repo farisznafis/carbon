@@ -21,7 +21,10 @@ import {
   type BatchHistoryItem,
   type BatchHistoryPagination,
 } from '@/api/batch';
-import { getMonitoringCancelRequests } from '@/api/monitoring';
+import {
+  getMonitoringCancelRequests,
+  type MonitoringRecordListItem,
+} from '@/api/monitoring';
 import {
   updateAdminProjectStatus,
   type ProjectStatus,
@@ -45,6 +48,7 @@ import { AdminCompanyApplicationsTable } from '@/features/admin/dashboard/tables
 import { PendingCompanyActionDialog } from '@/features/admin/dashboard/tables/PendingCompanyActionDialog';
 import { PendingCompanyApplicationDetail } from '@/features/admin/dashboard/tables/PendingCompanyApplicationDetail';
 import { ProjectTable } from '@/features/admin/dashboard/tables/ProjectTable';
+import { ProjectMonitoringTable } from '@/features/admin/dashboard/tables/ProjectMonitoringTable';
 import { useProjectsQuery } from '@/hooks/projects/useProjectsQuery';
 import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
@@ -191,7 +195,7 @@ function AdminDashboardEmptyState({ children }: { children: ReactNode }) {
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { applicationId } = useParams();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -249,6 +253,8 @@ const AdminDashboard = () => {
   const [updatingProjectStatusId, setUpdatingProjectStatusId] = useState<
     string | null
   >(null);
+  const [selectedMonitoringProjectId, setSelectedMonitoringProjectId] =
+    useState(searchParams.get('projectId') ?? '');
 
   const [pendingDialogOpen, setPendingDialogOpen] = useState(false);
   const [pendingDialogMode, setPendingDialogMode] =
@@ -512,6 +518,33 @@ const AdminDashboard = () => {
     navigate(paths.adminCancelRequestDetail(request.id), {
       state: { cancelRequest: request },
     });
+  };
+
+  const handleMonitoringProjectChange = (projectId: string) => {
+    setSelectedMonitoringProjectId(projectId);
+    setSearchParams(
+      {
+        tab: 'monitoring',
+        projectId,
+      },
+      { replace: true },
+    );
+  };
+
+  const openMonitoringDetail = (
+    record: MonitoringRecordListItem,
+    page: number,
+    limit: number,
+  ) => {
+    if (!selectedMonitoringProjectId) return;
+
+    navigate(
+      `${paths.adminProjectMonitoringDetail(
+        selectedMonitoringProjectId,
+        record.id,
+      )}?page=${page}&limit=${limit}`,
+      { state: { monitoringRecord: record } },
+    );
   };
 
   const handlePendingDialogOpenChange = (open: boolean) => {
@@ -802,6 +835,55 @@ const AdminDashboard = () => {
                   initialLoading={cancelRequestLoading}
                   initialLoadError={cancelRequestError}
                   onViewRequest={openCancelRequestDetail}
+                />
+              </ErrorBoundary>
+            </AdminDashboardSection>
+            <AdminDashboardSection
+              title="モニタリングデータ一覧"
+              description="プロジェクトを選択して、登録済みのモニタリングデータを確認できます。"
+            >
+              <ErrorBoundary
+                fallback={({ resetErrorBoundary }) => (
+                  <div
+                    role="alert"
+                    className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center"
+                  >
+                    <AlertTriangle
+                      className="h-5 w-5 text-destructive"
+                      aria-hidden="true"
+                    />
+                    <p className="text-small font-medium text-foreground">
+                      モニタリングデータを表示できませんでした。
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={resetErrorBoundary}
+                    >
+                      再試行
+                    </Button>
+                  </div>
+                )}
+              >
+                <ProjectMonitoringTable
+                  projects={projects}
+                  projectsLoading={projectsQuery.isLoading}
+                  projectsError={
+                    projectsQuery.error instanceof Error
+                      ? projectsQuery.error.message
+                      : null
+                  }
+                  selectedProjectId={selectedMonitoringProjectId}
+                  initialPage={Math.max(
+                    Number(searchParams.get('monitoringPage')) || 1,
+                    1,
+                  )}
+                  initialLimit={Math.max(
+                    Number(searchParams.get('monitoringLimit')) || 10,
+                    1,
+                  )}
+                  onProjectChange={handleMonitoringProjectChange}
+                  onViewDetail={openMonitoringDetail}
                 />
               </ErrorBoundary>
             </AdminDashboardSection>

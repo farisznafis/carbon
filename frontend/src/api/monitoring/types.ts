@@ -91,7 +91,7 @@ export type MonitoringRecentResponse = {
 export type MonitoringRecordListItem = {
   id: string;
   projectID: number;
-  siteID: string;
+  siteID: string | number;
   participatingUserID: number;
   timeUpdated: string;
   dateRecorded: string;

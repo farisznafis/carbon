@@ -148,6 +148,7 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                 name="useRegisteredInfo"
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    {/* isAgreeDataUse */}
                     <FormControl>
                       <Checkbox
                         checked={field.value === true}
@@ -158,7 +159,7 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                     </FormControl>
                     <div className="flex-1 leading-none">
                       <FormLabel className="text-sm font-semibold cursor-pointer leading-relaxed">
-                        本入会届に記載された情報を使用することに同意します。
+                        Ｊ－クレジット制度における各種申請に際し、本入会届に記載された情報を、プログラム型運営・管理者名が使用することに同意します。
                         <span className="text-destructive ml-1">*</span>
                       </FormLabel>
                       <FormMessage />
@@ -176,6 +177,7 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                 name="provideAdditionalInfo"
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    {/* isAgreeExtraData */}
                     <FormControl>
                       <Checkbox
                         checked={field.value === true}
@@ -186,7 +188,7 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
                     </FormControl>
                     <div className="flex-1 leading-none">
                       <FormLabel className="text-sm font-semibold cursor-pointer leading-relaxed">
-                        本入会届に記載された以外の情報を提供することに同意します。
+                        Ｊ－クレジット制度における各種申請に際し、本入会届に記載された以外の情報について、プログラム型運営・管理者名が必要とする場合は提供することに同意します。
                         <span className="text-destructive ml-1">*</span>
                       </FormLabel>
                       <FormMessage />

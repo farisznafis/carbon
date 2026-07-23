@@ -18,6 +18,27 @@ import type {
 const DEFAULT_MONITORING_LIST_PAGE = 1;
 const DEFAULT_MONITORING_LIST_LIMIT = 10;
 
+function normalizeMonitoringRecordListResult(
+  response: MonitoringRecordListResponse | null,
+  page: number,
+  limit: number,
+): MonitoringRecordListResult {
+  const items = Array.isArray(response?.items) ? response.items : [];
+  const responsePagination = response?.pagination;
+
+  return {
+    items,
+    pagination: {
+      page: responsePagination?.page ?? page,
+      limit: responsePagination?.limit ?? limit,
+      totalItems: responsePagination?.totalItems ?? items.length,
+      totalPages: Math.max(responsePagination?.totalPages ?? 1, 1),
+      nextPageToken: responsePagination?.nextPageToken ?? null,
+      hasMore: responsePagination?.hasMore ?? false,
+    },
+  };
+}
+
 export async function getMonitoringRecent(params: {
   projectId: string | number;
   siteId?: string | number;
@@ -84,19 +105,37 @@ export async function getMonitoringRecords(params: {
     );
   }
 
-  const responsePagination = json?.pagination;
+  return normalizeMonitoringRecordListResult(json, page, limit);
+}
 
-  return {
-    items: Array.isArray(json?.items) ? json.items : [],
-    pagination: {
-      page: responsePagination?.page ?? page,
-      limit: responsePagination?.limit ?? limit,
-      totalItems: responsePagination?.totalItems ?? json?.items?.length ?? 0,
-      totalPages: Math.max(responsePagination?.totalPages ?? 1, 1),
-      nextPageToken: responsePagination?.nextPageToken ?? null,
-      hasMore: responsePagination?.hasMore ?? false,
-    },
-  };
+export async function getAdminProjectMonitoringRecords(params: {
+  projectId: string | number;
+  page?: number;
+  limit?: number;
+}): Promise<MonitoringRecordListResult> {
+  const page = params.page ?? DEFAULT_MONITORING_LIST_PAGE;
+  const limit = params.limit ?? DEFAULT_MONITORING_LIST_LIMIT;
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+
+  const response = await apiFetch(
+    `/monitoring/${encodeURIComponent(String(params.projectId))}/list?${query.toString()}`,
+    { method: 'GET' },
+  );
+  const { data: json, rawBody } =
+    await parseJsonResponse<MonitoringRecordListResponse>(response);
+
+  if (!response.ok) {
+    throw new Error(
+      json?.message ||
+        rawBody ||
+        `Failed to fetch project monitoring records: HTTP ${response.status}`,
+    );
+  }
+
+  return normalizeMonitoringRecordListResult(json, page, limit);
 }
 
 export async function getMonitoringCancelRequests(): Promise<
