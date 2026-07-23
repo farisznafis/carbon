@@ -798,46 +798,6 @@ const AdminDashboard = () => {
             className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
             <AdminDashboardSection
-              title="取消一覧"
-              description="取消対象のモニタリングデータを確認し、取消申請を送信できます。"
-            >
-              <ErrorBoundary
-                fallback={({ resetErrorBoundary }) => (
-                  <div
-                    role="alert"
-                    className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center"
-                  >
-                    <AlertTriangle
-                      className="h-5 w-5 text-destructive"
-                      aria-hidden="true"
-                    />
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-foreground">
-                        モニタリングデータを表示できませんでした。
-                      </p>
-                      <p className="text-subtle text-muted-foreground">
-                        もう一度お試しください。
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={resetErrorBoundary}
-                    >
-                      再試行
-                    </Button>
-                  </div>
-                )}
-              >
-                <CancelRequestHistoryTable
-                  initialRequests={cancelRequestItems}
-                  initialLoading={cancelRequestLoading}
-                  initialLoadError={cancelRequestError}
-                  onViewRequest={openCancelRequestDetail}
-                />
-              </ErrorBoundary>
-            </AdminDashboardSection>
-            <AdminDashboardSection
               title="モニタリングデータ一覧"
               description="プロジェクトを選択して、登録済みのモニタリングデータを確認できます。"
             >
@@ -883,6 +843,46 @@ const AdminDashboard = () => {
                   )}
                   onProjectChange={handleMonitoringProjectChange}
                   onViewDetail={openMonitoringDetail}
+                />
+              </ErrorBoundary>
+            </AdminDashboardSection>
+            <AdminDashboardSection
+              title="取消一覧"
+              description="取消対象のモニタリングデータを確認し、取消申請を送信できます。"
+            >
+              <ErrorBoundary
+                fallback={({ resetErrorBoundary }) => (
+                  <div
+                    role="alert"
+                    className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center"
+                  >
+                    <AlertTriangle
+                      className="h-5 w-5 text-destructive"
+                      aria-hidden="true"
+                    />
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-foreground">
+                        モニタリングデータを表示できませんでした。
+                      </p>
+                      <p className="text-subtle text-muted-foreground">
+                        もう一度お試しください。
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={resetErrorBoundary}
+                    >
+                      再試行
+                    </Button>
+                  </div>
+                )}
+              >
+                <CancelRequestHistoryTable
+                  initialRequests={cancelRequestItems}
+                  initialLoading={cancelRequestLoading}
+                  initialLoadError={cancelRequestError}
+                  onViewRequest={openCancelRequestDetail}
                 />
               </ErrorBoundary>
             </AdminDashboardSection>
