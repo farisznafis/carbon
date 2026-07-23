@@ -92,7 +92,7 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
         }
 
         private List<ParticipatingProject> findPendingParticipations() {
-        return siteProjectRelationRepository.findByStatus("PENDING_REVIEW").stream()
+        return siteProjectRelationRepository.findByStatus("OPEN").stream()
                 .map(this::toParticipationOrNull)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -135,8 +135,7 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
 
     @Override
     @Transactional
-    public void submitReview(Integer participationId, Integer operatorUserId,
-                             String operatorName, ReviewParticipationRequest request) {
+    public void submitReview(Integer participationId, ReviewParticipationRequest request) {
 
         ParticipatingProject participation = participatingProjectRepository
                 .findById(participationId)
@@ -151,8 +150,8 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
 
-        if (!"PENDING_REVIEW".equals(relation.getStatus())) {
-            throw new CustomException("REVIEW_CLOSED", "このレビューは既に完了しています。");
+        if (!"PENDING".equals(relation.getStatus())) {
+            throw new CustomException("REVIEWED", "このレビューは既に完了しています。");
         }
 
         ProjectParticipationConfirmation confirmation = reviewRepository
@@ -164,12 +163,12 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
         boolean isPrimarySlotEmpty   = confirmation.getPrimaryReviewerId() == null;
         boolean isSecondarySlotEmpty = confirmation.getSecondaryReviewerId() == null;
 
-        if (!isPrimarySlotEmpty && !isSecondarySlotEmpty) {
-            throw new CustomException("REVIEW_CLOSED", "レビューは既に2名によって完了しています。");
-        }
-        if (!isPrimarySlotEmpty && confirmation.getPrimaryReviewerId().equals(operatorUserId)) {
-            throw new CustomException("SAME_REVIEWER", "一次確認者と同一の担当者は二次確認者になれません。");
-        }
+        // if (!isPrimarySlotEmpty && !isSecondarySlotEmpty) {
+        //     throw new CustomException("REVIEWED", "レビューは既に2名によって完了しています。");
+        // }
+        // if (!isPrimarySlotEmpty && confirmation.getPrimaryReviewerId().equals(operatorUserId)) {
+        //     throw new CustomException("SAME_REVIEWER", "一次確認者と同一の担当者は二次確認者になれません。");
+        // }
 
         confirmation.setIsSolarContractDoc(request.getIsSolarContractDoc());
         confirmation.setIsPcsSpecDoc(request.getIsPcsSpecDoc());
@@ -184,20 +183,20 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
         confirmation.setIsOriginalSpecCheck(request.getIsOriginalSpecCheck());
         confirmation.setIsSubsidyCheck(request.getIsSubsidyCheck());
 
-        if (isPrimarySlotEmpty) {
-            confirmation.setPrimaryApplReviewerName(operatorName);
-            confirmation.setPrimaryApplReviewerInkan(request.getReviewerInkan());
-            confirmation.setPrimaryReviewerId(operatorUserId);
-        } else {
-            confirmation.setSecondaryApplReviewerName(operatorName);
-            confirmation.setSecondaryApplReviewerInkan(request.getReviewerInkan());
-            confirmation.setSecondaryReviewerId(operatorUserId);
-        }
+        // if (isPrimarySlotEmpty) {
+        //     confirmation.setPrimaryApplReviewerName(operatorName);
+        //     confirmation.setPrimaryApplReviewerInkan(request.getReviewerInkan());
+        //     confirmation.setPrimaryReviewerId(operatorUserId);
+        // } else {
+        //     confirmation.setSecondaryApplReviewerName(operatorName);
+        //     confirmation.setSecondaryApplReviewerInkan(request.getReviewerInkan());
+        //     confirmation.setSecondaryReviewerId(operatorUserId);
+        // }
 
         reviewRepository.save(confirmation);
 
-        if ("REJECTED".equals(request.getDecision())) {
-            relation.setStatus("REJECTED");
+        if ("OPEN".equals(request.getDecision())) {
+            relation.setStatus("OPEN");
             siteProjectRelationRepository.save(relation);
             notifyParticipantRejected(participation, request.getRejectReason());
 

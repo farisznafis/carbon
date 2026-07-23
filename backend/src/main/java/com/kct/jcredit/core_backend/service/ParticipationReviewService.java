@@ -19,6 +19,5 @@ public interface ParticipationReviewService {
 
     ParticipationReviewDetailResponse getReviewDetail(Integer participationId);
 
-    void submitReview(Integer participationId, Integer operatorUserId,
-                      String operatorName, ReviewParticipationRequest request);
+    void submitReview(Integer participationId, ReviewParticipationRequest request);
 }

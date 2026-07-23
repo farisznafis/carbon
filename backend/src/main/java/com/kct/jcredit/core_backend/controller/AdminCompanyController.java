@@ -89,17 +89,10 @@ public class AdminCompanyController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<BaseResponse> submitReview(
             Authentication authentication,
-            @RequestHeader("Authorization") String authHeader,
             @PathVariable Integer participationId,
             @RequestBody @Valid ReviewParticipationRequest request) {
-
-        String username = authentication.getName();
-        String token = authHeader.substring(7);
-
-        Integer operatorUserId = jwtUtil.extractUserId(token);
-        String operatorName = jwtUtil.extractUsername(token);
-
-        reviewService.submitReview(participationId, operatorUserId, operatorName, request);
+        
+        reviewService.submitReview(participationId, request);
         return ResponseEntity.ok(BaseResponse.success("レビューを受け付けました。"));
     }
 }

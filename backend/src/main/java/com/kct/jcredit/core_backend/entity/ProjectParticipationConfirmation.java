@@ -11,7 +11,10 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 
 @DynamoDbBean
 @Builder
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@Getter 
+@Setter 
+@NoArgsConstructor 
+@AllArgsConstructor
 public class ProjectParticipationConfirmation {
 
     private String pk; // "PART#{participationId}"
