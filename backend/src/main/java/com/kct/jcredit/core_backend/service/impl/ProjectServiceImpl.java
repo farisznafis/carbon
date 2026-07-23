@@ -59,7 +59,7 @@ public class ProjectServiceImpl implements ProjectService {
     public ProjectListInfoResponse getProjectsBySiteIdAndCompanyId(String siteId, String companyId) {
         ProjectListInfoResponse response = new ProjectListInfoResponse();
 
-        Site site = siteRepository.findByPublicId(siteId).orElse(null);
+        Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
         if (site == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
@@ -176,7 +176,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional
     public ProjectResponse updateProject(UpdateProjectRequest request) {
         ProjectResponse response = new ProjectResponse();
-        Integer projectDbId = projectRepository.findByPublicId(request.getId())
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(request.getId())
             .map(Project::getId)
             .orElse(null);
         Project project = null;
@@ -403,7 +403,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public ProjectResponse getProject(String projectId, String userCompanyId) {
         ProjectResponse response = new ProjectResponse();
-        Integer projectDbId = projectRepository.findByPublicId(projectId)
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
             .map(Project::getId)
             .orElse(null);
         Project project = null;
@@ -539,7 +539,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public UpdateProjectStatusResponse updateProjectStatus(String newStatus, String projectId) {
         UpdateProjectStatusResponse response = new UpdateProjectStatusResponse();
-        Integer projectDbId = projectRepository.findByPublicId(projectId)
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
             .map(Project::getId)
             .orElse(null);
         Project project = null;

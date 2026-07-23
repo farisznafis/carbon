@@ -104,7 +104,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
        @Override
         public SiteListResponse getSites(String companyId, String projectId) {
                 List<Site> sites = siteRepository.findByCompany_CompanyId(companyId);
-                Integer projectDbId = projectRepository.findByPublicId(projectId)
+                Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
                         .map(com.kct.jcredit.core_backend.entity.Project::getId)
                         .orElse(0);
 
@@ -136,7 +136,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
     @Override
     public EnR002SustainabilityCommitmentResponse getSustainabilityCommitmentDefault(
             String siteId) {
-        Site site = siteRepository.findByPublicId(siteId)
+        Site site = siteRepository.findByPublicIdWithFallback(siteId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_SITE_NOT_FOUND));
@@ -171,7 +171,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 throw new CustomException(ResponseConstants.FORBIDDEN,
                         ResponseConstants.MSG_UNAUTHORIZED);
 
-        Project project = projectRepository.findByPublicId(projectId)
+        Project project = projectRepository.findByPublicIdWithFallback(projectId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_PROJECT_NOT_FOUND));

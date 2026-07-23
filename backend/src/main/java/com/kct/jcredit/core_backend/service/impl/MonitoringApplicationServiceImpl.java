@@ -110,7 +110,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
             return response;
         }
 
-        Integer projectDbId = projectRepository.findByPublicId(projectId)
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
             .map(Project::getId)
             .orElse(null);
         Project project = null;
@@ -157,7 +157,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
         MonitoringReportResponse response = new MonitoringReportResponse();
 
         // Validate site exists
-        Site site = siteRepository.findByPublicId(siteId).orElse(null);
+        Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
         if (site == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
@@ -171,7 +171,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
             return response;
         }
 
-        Integer projectDbId = projectRepository.findByPublicId(projectId)
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
             .map(Project::getId)
             .orElse(null);
         if (projectDbId == null) {
@@ -207,7 +207,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
         MonitoringReportResponse response = new MonitoringReportResponse();
 
         // Validate site exists
-        Site site = siteRepository.findByPublicId(siteId).orElse(null);
+        Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
         if (site == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
@@ -221,7 +221,7 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
             return response;
         }
 
-        Integer projectDbId = projectRepository.findByPublicId(projectId)
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
             .map(Project::getId)
             .orElse(null);
         if (projectDbId == null) {

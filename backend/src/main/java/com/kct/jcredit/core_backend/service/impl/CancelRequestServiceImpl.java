@@ -51,7 +51,7 @@ public class CancelRequestServiceImpl implements CancelRequestService {
             CancelRequestResponse response = new CancelRequestResponse();
 
             // 1. Validate site exists and user has access
-            Optional<Site> siteOpt = siteRepository.findByPublicId(request.getSiteId());
+            Optional<Site> siteOpt = siteRepository.findByPublicIdWithFallback(request.getSiteId());
             if (siteOpt.isEmpty()) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);

@@ -51,7 +51,7 @@ public class ProjectUploadDocumentServiceImpl implements ProjectUploadDocumentSe
                                                        MultipartFile fileVerificationReport, 
                                                        String username) { 
     
-        Integer projIdInt = projectRepository.findByPublicId(projectId)
+        Integer projIdInt = projectRepository.findByPublicIdWithFallback(projectId)
                 .map(com.kct.jcredit.core_backend.entity.Project::getId)
                 .orElseThrow(() -> new RuntimeException("エラー: プロジェクトが見つかりません (Project Not Found)"));
 
@@ -158,7 +158,7 @@ public class ProjectUploadDocumentServiceImpl implements ProjectUploadDocumentSe
     @Override
     public ProjectUploadDocumentResponse getDocumentsByProjectId(String projectId) {
         ProjectUploadDocumentResponse response = new ProjectUploadDocumentResponse();
-        Integer projIdInt = projectRepository.findByPublicId(projectId)
+        Integer projIdInt = projectRepository.findByPublicIdWithFallback(projectId)
                 .map(com.kct.jcredit.core_backend.entity.Project::getId)
                 .orElse(null);
 

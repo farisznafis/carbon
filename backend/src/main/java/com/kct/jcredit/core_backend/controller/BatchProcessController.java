@@ -48,7 +48,7 @@ public class BatchProcessController {
             @PathVariable String projectId) {
         
         
-        Integer projDbId = projectRepository.findByPublicId(projectId)
+        Integer projDbId = projectRepository.findByPublicIdWithFallback(projectId)
             .map(com.kct.jcredit.core_backend.entity.Project::getId)
             .orElseThrow(() -> new RuntimeException("Project Not Found"));
         SiteReductionResultResponse response = batchService.getSiteReductionResult(siteId, projDbId);
@@ -63,7 +63,7 @@ public class BatchProcessController {
             @PathVariable String projectId) {
         
         
-        Integer projDbId = projectRepository.findByPublicId(projectId)
+        Integer projDbId = projectRepository.findByPublicIdWithFallback(projectId)
             .map(com.kct.jcredit.core_backend.entity.Project::getId)
             .orElseThrow(() -> new RuntimeException("Project Not Found"));
         ProjectReductionResultResponse response = batchService.getProjectReductionResult(projDbId);

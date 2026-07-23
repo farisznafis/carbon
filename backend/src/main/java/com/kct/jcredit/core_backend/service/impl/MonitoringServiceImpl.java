@@ -94,7 +94,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // 2) Fetch site and project - now company-scoped
             // 入力情報のsiteIdから企業情報を1件取得
-            Site site = siteRepository.findByPublicId(request.getSiteId()).orElse(null);
+            Site site = siteRepository.findByPublicIdWithFallback(request.getSiteId()).orElse(null);
             // 企業情報のnullチェック
             if (site == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -253,7 +253,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             }
 
             //入力情報のsiteIdから企業情報を1件取得
-            Site site = siteRepository.findByPublicId(siteId).orElse(null);
+            Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
             //拠点情報がnullの場合
             if (site == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -270,7 +270,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             }
 
             //プロジェクト取得
-            Integer projectDbId = projectRepository.findByPublicId(projectId)
+            Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
                 .map(Project::getId)
                 .orElse(null);
             Project project = null;
@@ -354,7 +354,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             }
 
             // Get list of site ids related to the project through site-project relation
-            Integer projectDbId = projectRepository.findByPublicId(projectId)
+            Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
                 .map(Project::getId)
                 .orElse(null);
             if (projectDbId == null) {
@@ -449,7 +449,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             }
 
             //入力情報のsiteIdから企業情報を1件取得
-            Site site = siteRepository.findByPublicId(siteId).orElse(null);
+            Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
             //拠点情報がnullの場合
             if (site == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -466,7 +466,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             }
 
             //プロジェクト取得
-            Integer projectDbId = projectRepository.findByPublicId(projectId)
+            Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
                 .map(Project::getId)
                 .orElse(null);
             Project project = null;
@@ -563,7 +563,7 @@ public class MonitoringServiceImpl implements MonitoringService {
                 return response;
             }
 
-            Site site = siteRepository.findByPublicId(siteId).orElse(null);
+            Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
             if (site == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
@@ -582,7 +582,7 @@ public class MonitoringServiceImpl implements MonitoringService {
                 return response;
             }
 
-            Integer projectDbId = projectRepository.findByPublicId(projectId)
+            Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
                 .map(Project::getId)
                 .orElse(null);
             Project project = null;
@@ -706,7 +706,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             );
         }
 
-        Site site = siteRepository.findByPublicId(request.getSiteId()).orElse(null);
+        Site site = siteRepository.findByPublicIdWithFallback(request.getSiteId()).orElse(null);
         if (site == null) {
             return MonitoringValidationResult.invalid(
                     BaseResponse.error(ResponseConstants.NOT_FOUND, ResponseConstants.MSG_SITE_NOT_FOUND)

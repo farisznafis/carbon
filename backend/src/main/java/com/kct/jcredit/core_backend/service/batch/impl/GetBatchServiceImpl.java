@@ -90,7 +90,7 @@ public class GetBatchServiceImpl implements GetBatchService {
     @Override
     public SiteReductionResultResponse getSiteReductionResult(String siteId, Integer projectId) {
         // Fetch reduction result from database
-        Site site = siteRepository.findByPublicId(siteId).orElse(null);
+        Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
         if (site == null) {
             return SiteReductionResultResponse.builder()
                 .items(new ArrayList<>())

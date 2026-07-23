@@ -48,7 +48,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                                                  EnR002EquipmentRequest request) {
 
         // 1. Guard check — site harus milik company yang login
-        Site site = siteRepository.findByPublicId(siteId)
+        Site site = siteRepository.findByPublicIdWithFallback(siteId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_SITE_NOT_FOUND));
@@ -134,7 +134,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
 
     @Override
     public List<EnR002EquipmentResponse> getEquipmentsBySite(String siteId, String companyId) {
-        Site site = siteRepository.findByPublicId(siteId)
+        Site site = siteRepository.findByPublicIdWithFallback(siteId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_SITE_NOT_FOUND));
@@ -176,7 +176,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
     public EnR002EquipmentResponse getEquipmentById(String siteId,
                                                     Integer equipmentId,
                                                     String companyId) {
-        Site site = siteRepository.findByPublicId(siteId)
+        Site site = siteRepository.findByPublicIdWithFallback(siteId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_SITE_NOT_FOUND));

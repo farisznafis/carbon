@@ -113,7 +113,7 @@ public class SiteServiceImpl implements SiteService {
         SiteResponse siteDetails = new SiteResponse();
 
         try {
-            Optional<Site> siteOpt = siteRepository.findByPublicId(publicId);
+            Optional<Site> siteOpt = siteRepository.findByPublicIdWithFallback(publicId);
             if (siteOpt.isEmpty()) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
@@ -263,7 +263,7 @@ public class SiteServiceImpl implements SiteService {
     public BaseResponse validateUpdateSite(String siteId, String companyId, UpdateSiteRequest request) {
         Map<String, String> errors = new LinkedHashMap<>();
 
-        Site site = siteRepository.findByPublicId(siteId).orElse(null);
+        Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
         if (Objects.isNull(site)) {
             errors.put("siteId", ResponseConstants.MSG_NOT_FOUND);
             return validationError(errors);
@@ -302,7 +302,7 @@ public class SiteServiceImpl implements SiteService {
         SiteInfoResponse response = new SiteInfoResponse();
         
         // Find site by public ID
-        Site site = siteRepository.findByPublicId(siteId).orElse(null);
+        Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
         
         if (Objects.isNull(site)) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -366,7 +366,7 @@ public class SiteServiceImpl implements SiteService {
         EnR002EquipmentRegisterResponse response = new EnR002EquipmentRegisterResponse();        
 
         try {
-            Site site = siteRepository.findByPublicId(siteId).orElse(null);
+            Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
             if (site == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
@@ -375,7 +375,7 @@ public class SiteServiceImpl implements SiteService {
             
             Integer siteDbId = site.getId();
 
-            Integer projectDbId = projectRepository.findByPublicId(projectId)
+            Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
                 .map(Project::getId)
                 .orElse(null);
             Project project = null;

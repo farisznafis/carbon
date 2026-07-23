@@ -36,7 +36,7 @@ public class ProjectMonitoringServiceImpl implements ProjectMonitoringService {
         
         ProjectMonitoringResponse response = new ProjectMonitoringResponse();
         // 1. take project data from database
-        Project project = projectRepository.findByPublicId(projectId).orElse(null);
+        Project project = projectRepository.findByPublicIdWithFallback(projectId).orElse(null);
         if (project == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);

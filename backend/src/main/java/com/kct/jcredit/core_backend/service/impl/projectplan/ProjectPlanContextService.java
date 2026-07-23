@@ -39,7 +39,7 @@ public class ProjectPlanContextService {
             String companyId,
             String role,
             String username) {
-        Project project = projectRepository.findByPublicId(projectId).orElse(null);
+        Project project = projectRepository.findByPublicIdWithFallback(projectId).orElse(null);
         if (project == null) {
             return ProjectContext.notFound();
         }

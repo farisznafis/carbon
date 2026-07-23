@@ -33,4 +33,32 @@ public interface SiteRepository extends JpaRepository<Site, Integer> {
 
     Optional<Site> findByPublicId(String publicId);
     boolean existsByPublicId(String publicId);
+
+    default Optional<Site> findByPublicIdWithFallback(String publicId) {
+        try {
+            Optional<Site> site = findByPublicId(publicId);
+            if (site.isPresent()) {
+                return site;
+            }
+        } catch (Exception e) {
+            // ignore exception
+        }
+        
+        if (publicId != null && publicId.startsWith("SITE")) {
+            try {
+                Integer id = Integer.parseInt(publicId.substring(4));
+                return findById(id);
+            } catch (NumberFormatException e) {
+                // ignore
+            }
+        }
+        if (publicId != null && publicId.matches("\\d+")) {
+            try {
+                return findById(Integer.parseInt(publicId));
+            } catch (NumberFormatException e) {
+                // ignore
+            }
+        }
+        return Optional.empty();
+    }
 }
