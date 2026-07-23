@@ -24,7 +24,7 @@ export const sortMasterUsersFirst = (users: UserList[]) => {
 
 export const sortSitesById = (sites: Site[]) => {
   return [...sites].sort((a, b) => {
-    return a.siteId.localeCompare(b.siteId, 'ja');
+    return String(a.siteId ?? '').localeCompare(String(b.siteId ?? ''), 'ja');
   });
 };
 
