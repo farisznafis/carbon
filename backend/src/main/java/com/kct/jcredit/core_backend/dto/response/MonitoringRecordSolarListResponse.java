@@ -18,6 +18,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class MonitoringRecordSolarListResponse extends BaseResponse{
-    private List<EnR002MonitoringRecord> items;
+    private List<MonitoringDataSolarResponse> items;
     private PaginationDetailResponse pagination;
 }

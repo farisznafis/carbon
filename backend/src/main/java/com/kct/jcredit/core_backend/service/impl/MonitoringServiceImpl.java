@@ -383,13 +383,13 @@ public class MonitoringServiceImpl implements MonitoringService {
                 return response;
             }
 
-            // // Map to DTOs
-            // List<EnR002MonitoringRecord> items = entities.stream()
-            //         .map(entity -> mapEntityToResponse(entity, null))
-            //         .collect(Collectors.toList());
+            // Map to DTOs
+            List<MonitoringDataSolarResponse> items = entities.stream()
+                    .map(entity -> mapEntityToResponse(entity, null))
+                    .collect(java.util.stream.Collectors.toList());
 
             //レスポンスの作成
-            response.setItems(entities);
+            response.setItems(items);
             response.setPagination(pagination);  // Already updated by repository
             response.setStatusCode(ResponseConstants.OK);
             response.setMessage(ResponseConstants.OK);
@@ -516,13 +516,13 @@ public class MonitoringServiceImpl implements MonitoringService {
                 return response;
             }
 
-            // // Map to DTOs
-            // List<EnR002MonitoringRecord> items = entities.stream()
-            //         .map(entity -> mapEntityToResponse(entity, null))
-            //         .collect(Collectors.toList());
+            // Map to DTOs
+            List<MonitoringDataSolarResponse> items = entities.stream()
+                    .map(entity -> mapEntityToResponse(entity, null))
+                    .collect(java.util.stream.Collectors.toList());
 
             //レスポンスの作成
-            response.setItems(entities);
+            response.setItems(items);
             response.setPagination(pagination);  // Already updated by repository
             response.setStatusCode(ResponseConstants.OK);
             response.setMessage(ResponseConstants.OK);
@@ -1082,7 +1082,7 @@ public class MonitoringServiceImpl implements MonitoringService {
      */
     private MonitoringDataSolarResponse mapEntityToResponse(EnR002MonitoringRecord entity, String projectType) {
         return MonitoringDataSolarResponse.builder()
-                .projectId(entity.getProjectID())
+                .projectId(projectRepository.findById(entity.getProjectID()).map(Project::getPublicId).orElse(String.valueOf(entity.getProjectID())))
                 .siteId(siteRepository.findById(entity.getSiteID()).map(Site::getPublicId).orElse(String.valueOf(entity.getSiteID())))
                 .userId(entity.getParticipatingUserID())
                 .projectType(projectType != null ? projectType : "ENR002")

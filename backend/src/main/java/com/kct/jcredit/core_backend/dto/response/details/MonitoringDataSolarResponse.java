@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MonitoringDataSolarResponse {
-  private Integer projectId;
+  private String projectId;
   private String siteId;
   private Integer userId;
   private String projectType; 

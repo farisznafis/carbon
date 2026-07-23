@@ -131,7 +131,7 @@ class MonitoringControllerTest {
         request.setElpjControlEvidenceUrl("https://example.com/evidence/control_001.pdf");
         
         MonitoringDataSolarResponse dataResponse = MonitoringDataSolarResponse.builder()
-                .projectId(1)
+                .projectId("1")
                 .siteId("10")
                 .userId(100)
                 .projectType("SOLAR")
@@ -216,7 +216,7 @@ class MonitoringControllerTest {
         request.setElpjControlEvidenceUrl("https://example.com/evidence/control_002.pdf");
         
         MonitoringDataSolarResponse dataResponse = MonitoringDataSolarResponse.builder()
-                .projectId(2)
+                .projectId("2")
                 .siteId("20")
                 .userId(200)
                 .projectType("SOLAR")
@@ -282,7 +282,7 @@ class MonitoringControllerTest {
         request.setElpjControlEvidenceUrl("https://example.com/evidence/control_003.pdf");
         
         MonitoringDataSolarResponse dataResponse = MonitoringDataSolarResponse.builder()
-                .projectId(3)
+                .projectId("3")
                 .siteId("30")
                 .userId(300)
                 .projectType("SOLAR")
@@ -419,7 +419,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
     MonitoringDataSolarResponse dataResponse = MonitoringDataSolarResponse.builder()
         .userId(10)
-        .projectId(100)
+        .projectId("100")
         .siteId("200")
         .projectType("SOLAR")
         .build();
@@ -532,7 +532,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
         MonitoringDataSolarResponse dataResponse = MonitoringDataSolarResponse.builder()
                 .userId(10)
-                .projectId(100)
+                .projectId("100")
                 .siteId("200")
                 .projectType("SOLAR")
                 .build();
@@ -641,17 +641,17 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         expectedResponse.setPagination(pagination);
         
         // MonitoringTableRecordSolarのリストを作成
-        List<EnR002MonitoringRecord> items = new ArrayList<>();
+        List<MonitoringDataSolarResponse> items = new ArrayList<>();
         for (int i = 0; i < 50; i++) {
-                EnR002MonitoringRecord record = EnR002MonitoringRecord.builder()
-                        .id(SITE_ID + "#" + PROJECT_ID)
-                        .projectID(100)
-                        .siteID(Integer.parseInt(SITE_ID))
-                        .participatingUserID(100 + i)
+                MonitoringDataSolarResponse record = MonitoringDataSolarResponse.builder()
+                        
+                        .projectId("PROJ0100")
+                        .siteId(SITE_ID)
+                        .userId(100 + i)
                         .dateRecorded("2024-01-15T10:30:00")
                         .elPv(new BigDecimal("150.500"))
                         .timeUpdated("2024-01-15T10:30:00")
-                        .isActive(true)
+                        
                         .build();
                 items.add(record);
         }
@@ -747,17 +747,17 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         expectedResponse.setPagination(pagination);
         
         // MonitoringTableRecordSolarのリストを作成
-        List<EnR002MonitoringRecord> items = new ArrayList<>();
+        List<MonitoringDataSolarResponse> items = new ArrayList<>();
         for (int i = 0; i < customLimit; i++) {
-                EnR002MonitoringRecord record = EnR002MonitoringRecord.builder()
-                        .id(SITE_ID + "#" + PROJECT_ID)
-                        .projectID(100)
-                        .siteID(Integer.parseInt(SITE_ID))
-                        .participatingUserID(100 + i)
+                MonitoringDataSolarResponse record = MonitoringDataSolarResponse.builder()
+                        
+                        .projectId("PROJ0100")
+                        .siteId(SITE_ID)
+                        .userId(100 + i)
                         .dateRecorded("2024-01-15T10:30:00")
                         .elPv(new BigDecimal("150.500"))
                         .timeUpdated("2024-01-15T10:30:00")
-                        .isActive(true)
+                        
                         .build();
                 items.add(record);
         }
@@ -854,17 +854,17 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         expectedResponse.setPagination(pagination);
         
         // MonitoringTableRecordSolarのリストを作成
-        List<EnR002MonitoringRecord> items = new ArrayList<>();
+        List<MonitoringDataSolarResponse> items = new ArrayList<>();
         for (int i = 0; i < 50; i++) {
-                EnR002MonitoringRecord record = EnR002MonitoringRecord.builder()
-                        .id(SITE_ID + "_" + PROJECT_ID)
-                        .projectID(100)
-                        .siteID(Integer.parseInt(SITE_ID))
-                        .participatingUserID(200 + i)
+                MonitoringDataSolarResponse record = MonitoringDataSolarResponse.builder()
+                        
+                        .projectId("PROJ0100")
+                        .siteId(SITE_ID)
+                        .userId(200 + i)
                         .dateRecorded("2024-01-16T10:30:00")
                         .elPv(new BigDecimal("160.500"))
                         .timeUpdated("2024-01-16T10:30:00")
-                        .isActive(true)
+                        
                         .build();
                 items.add(record);
         }
@@ -955,17 +955,17 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         expectedResponse.setPagination(pagination);
         
         // ページ3なので残り50件
-        List<EnR002MonitoringRecord> items = new ArrayList<>();
+        List<MonitoringDataSolarResponse> items = new ArrayList<>();
         for (int i = 0; i < 50; i++) {
-                EnR002MonitoringRecord record = EnR002MonitoringRecord.builder()
-                        .id(SITE_ID + "#" + PROJECT_ID)
-                        .projectID(100)
-                        .siteID(Integer.parseInt(SITE_ID))
-                        .participatingUserID(300 + i) // ページ3なので異なるユーザーID範囲
+                MonitoringDataSolarResponse record = MonitoringDataSolarResponse.builder()
+                        
+                        .projectId("PROJ0100")
+                        .siteId(SITE_ID)
+                        .userId(300 + i) // ページ3なので異なるユーザーID範囲
                         .dateRecorded("2024-01-17T10:30:00")
                         .elPv(new BigDecimal("170.500"))
                         .timeUpdated("2024-01-17T10:30:00")
-                        .isActive(true)
+                        
                         .build();
                 items.add(record);
         }
@@ -1027,12 +1027,12 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
                         "ページ3のデータ件数が一致しません");
                 
                 // データの内容検証（最初のレコード）
-                EnR002MonitoringRecord firstRecord = result.getBody().getItems().get(0);
-                assertEquals(PROJECT_ID, firstRecord.getProjectID(), 
+                MonitoringDataSolarResponse firstRecord = result.getBody().getItems().get(0);
+                assertEquals(String.valueOf(PROJECT_ID), firstRecord.getProjectId(), 
                         "プロジェクトIDが一致しません");
-                assertEquals(Integer.parseInt(SITE_ID), firstRecord.getSiteID(), 
+                assertEquals(SITE_ID, firstRecord.getSiteId(), 
                         "サイトIDが一致しません");
-                assertEquals(300, firstRecord.getParticipatingUserID(), 
+                assertEquals(300, firstRecord.getUserId(), 
                         "ユーザーIDが一致しません");
 
                 // モック呼び出し検証
@@ -1371,7 +1371,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
         // FileInfoResponse を作成
         FileInfoResponse fileInfo = FileInfoResponse.builder()
-                .id("file-123")
+                
                 .fileType("PDF")
                 .fileName("evidence.pdf")
                 .contentType("application/pdf")
@@ -1461,7 +1461,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
         // FileInfoResponse を作成
         FileInfoResponse fileInfo = FileInfoResponse.builder()
-                .id("file-456")
+                
                 .fileType("CSV")
                 .fileName("evidence.csv")
                 .contentType("text/csv")
@@ -1549,7 +1549,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
         // FileInfoResponse を作成
         FileInfoResponse fileInfo = FileInfoResponse.builder()
-                .id("file-789")
+                
                 .fileType("IMAGE")
                 .fileName("evidence.png")
                 .contentType("image/png")
@@ -1634,7 +1634,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
         // FileInfoResponse を作成（description無し）
         FileInfoResponse fileInfo = FileInfoResponse.builder()
-                .id("file-101")
+                
                 .fileType("IMAGE")
                 .fileName("evidence.jpg")
                 .contentType("image/jpeg")
@@ -1752,7 +1752,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
     // FileInfoResponse を作成
     FileInfoResponse fileInfo = FileInfoResponse.builder()
-            .id("file-spec-001")
+            
             .fileType("PDF")
             .fileName("battery_specification.pdf")
             .contentType("application/pdf")
@@ -1871,7 +1871,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
         // FileInfoResponse を作成
         FileInfoResponse fileInfo = FileInfoResponse.builder()
-                .id("file-control-001")
+                
                 .fileType("PDF")
                 .fileName("control_device.pdf")
                 .contentType("application/pdf")
@@ -2204,7 +2204,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         // Given
 
         CancelRequestItemDto request1 = CancelRequestItemDto.builder()
-                .id(100)
+                
                 .recordPk("MONITORING#PROJECT#" + PROJECT_ID)
                 .status("PENDING")
                 .requestedBy(USERNAME)
@@ -2214,7 +2214,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
                 .build();
 
         CancelRequestItemDto request2 = CancelRequestItemDto.builder()
-                .id(101)
+                
                 .recordPk("MONITORING#PROJECT#" + PROJECT_ID)
                 .status("PENDING")
                 .requestedBy("user001")
@@ -2224,7 +2224,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
                 .build();
 
         CancelRequestItemDto request3 = CancelRequestItemDto.builder()
-                .id(102)
+                
                 .recordPk("MONITORING#PROJECT#2")
                 .status("APPROVED")
                 .requestedBy("user002")
