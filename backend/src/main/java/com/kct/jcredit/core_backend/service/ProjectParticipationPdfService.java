@@ -15,14 +15,8 @@ import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 
 public interface ProjectParticipationPdfService {
+    
+    void generateAndProcess(Integer participationId);
 
-    // Orchestrator PDF pipeline — dipanggil dari afterCommit
-    // return s3Key → disimpan ke participating_project.s3_key_pdf_membership
-    String createAndUpload(EnR002EquipmentRequest equipment,
-                           EnR002ConfirmationItemRequest confirmationItems,
-                           EnR002SustainabilityCommitmentRequest sustainabilityCommitment,
-                           ParticipatingProject participation);
-
-    // Generate presigned URL untuk download — dipanggil dari endpoint GET /pdf
     String generatePresignedUrl(String s3Key);
 }

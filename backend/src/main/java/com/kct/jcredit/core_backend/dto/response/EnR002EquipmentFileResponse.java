@@ -15,6 +15,7 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter 
 public class EnR002EquipmentFileResponse extends BaseResponse {
+    private Integer id;
     private String  fileType;
     private String  fileId;
     private String  s3Key;

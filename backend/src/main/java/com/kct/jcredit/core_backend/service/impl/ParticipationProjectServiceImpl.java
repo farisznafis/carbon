@@ -253,17 +253,17 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                         participationId, e.getMessage());
                         }
 
-                        try {
-                                String pdfS3Key = pdfService.createAndUpload(
-                                        request.getEquipment(),
-                                        request.getConfirmationItems(),
-                                        request.getSustainabilityCommitment(),
-                                        participation);
-                                participatingProjectRepository.updatePdfS3Key(participationId, pdfS3Key);
-                        } catch (Exception e) {
-                                log.error("PDF pipeline failed. participationId={}, error={}",
-                                        participationId, e.getMessage());
-                                }
+                        // try {
+                        //         String pdfS3Key = pdfService.createAndUpload(
+                        //                 request.getEquipment(),
+                        //                 request.getConfirmationItems(),
+                        //                 request.getSustainabilityCommitment(),
+                        //                 participation);
+                        //         participatingProjectRepository.updatePdfS3Key(participationId, pdfS3Key);
+                        // } catch (Exception e) {
+                        //         log.error("PDF pipeline failed. participationId={}, error={}",
+                        //                 participationId, e.getMessage());
+                        //         }
                         }
                 }
         );
