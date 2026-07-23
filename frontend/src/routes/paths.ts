@@ -30,25 +30,25 @@ export const paths = {
   projectRegisterRoute: '/projects/:siteId/:projectId/register',
   projectRegister: (
     siteId: string,
-    projectId: string | number,
+    projectId: string,
   ) => `/projects/${siteId}/${projectId}/register`,
   projectEquipmentRoute: '/projects/:siteId/:projectId/equipment',
   projectEquipment: (
     siteId: string,
-    projectId: string | number,
+    projectId: string,
   ) => `/projects/${siteId}/${projectId}/equipment`,
   projectEquipmentConfirmationRoute:
     '/projects/:siteId/:projectId/equipment/confirmation',
   projectEquipmentConfirmation: (
     siteId: string,
-    projectId: string | number,
+    projectId: string,
   ) => `/projects/${siteId}/${projectId}/equipment/confirmation`,
   equipmentAddRoute: '/equipment/add/:type',
   equipmentAdd: (type: string) => `/equipment/add/${type}`,
   siteProjectDetailRoute: '/sites/:siteId/projects/:projectId',
   siteProjectDetail: (
     siteId: string,
-    projectId: string | number,
+    projectId: string,
   ) => `/sites/${siteId}/projects/${projectId}`,
 
   monitoringRegisterRoute: '/monitoring/register/:projectType',
@@ -70,20 +70,20 @@ export const paths = {
     `/admin/monitoring/cancel-requests/${cancelRequestId}`,
   adminProjectRegister: '/admin/project-register',
   adminProjectDetailRoute: '/admin/projects/:projectId',
-  adminProjectDetail: (projectId: string | number) => `/admin/projects/${projectId}`,
+  adminProjectDetail: (projectId: string) => `/admin/projects/${projectId}`,
   adminProjectMonitoringDetailRoute:
     '/admin/projects/:projectId/monitoring/:monitoringId',
   adminProjectMonitoringDetail: (
-    projectId: string | number,
+    projectId: string,
     monitoringId: string | number,
   ) => `/admin/projects/${projectId}/monitoring/${monitoringId}`,
   adminProjectEditRoute: '/admin/projects/:projectId/edit',
-  adminProjectEdit: (projectId: string | number) => `/admin/projects/${projectId}/edit`,
+  adminProjectEdit: (projectId: string) => `/admin/projects/${projectId}/edit`,
   adminProjectPlanRoute: '/admin/projects/:projectId/project-plan',
-  adminProjectPlan: (projectId: string | number) =>
+  adminProjectPlan: (projectId: string) =>
     `/admin/projects/${projectId}/project-plan`,
   adminProjectMonitoringReportRoute:
     '/admin/projects/:projectId/monitoring-report',
-  adminProjectMonitoringReport: (projectId: string | number) =>
+  adminProjectMonitoringReport: (projectId: string) =>
     `/admin/projects/${projectId}/monitoring-report`,
 } as const;

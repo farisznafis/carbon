@@ -8,7 +8,7 @@ import { EmissionReductionProgress } from '@/features/user/project-detail/compon
 import { PROJECT_EMISSION_REDUCTION_TARGET } from '@/features/user/project-detail/components/emissionReductionProgressUtils';
 
 type DashboardEmissionReductionProgressProps = {
-  projectId: string | number;
+  projectId: string;
 };
 
 export function DashboardEmissionReductionProgress({

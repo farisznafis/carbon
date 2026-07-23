@@ -95,7 +95,7 @@ export type CreateAdminProjectResponse = {
   message?: string | null;
   errors?: unknown;
   project?: Array<Partial<AdminProjectDetail> & {
-    id?: string | number;
+    id?: string;
   }>;
 };
 
@@ -505,7 +505,7 @@ export type ProjectStatus =
   | '終了';
 
 export type UpdateProjectStatusPayload = {
-  id: string | number;
+  id: string;
   processedBy: string;
   companyId: string;
   projectStatus: ProjectStatus;

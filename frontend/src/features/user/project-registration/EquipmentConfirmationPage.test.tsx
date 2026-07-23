@@ -46,7 +46,7 @@ function renderPage() {
       <MemoryRouter
         initialEntries={[
           {
-            pathname: '/projects/SITE-1/2/equipment/confirmation',
+            pathname: '/projects/SITE-1/PROJ0002/equipment/confirmation',
             state: {
               equipmentId: 'equipment-1',
               isEdit: false,
@@ -130,7 +130,7 @@ describe('EquipmentConfirmationPage', () => {
     ).toBe(false);
 
     const stored = JSON.parse(
-      localStorage.getItem('project_2_equipment') ?? '[]',
+      localStorage.getItem('project_PROJ0002_equipment') ?? '[]',
     ) as Array<{ files: unknown[]; solarData: Record<string, unknown> }>;
     expect(stored[0]?.files).toHaveLength(0);
     expect(stored[0]?.solarData.operationStartDateFile).toBeUndefined();

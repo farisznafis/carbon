@@ -118,20 +118,20 @@ export function ProjectMonitoringTable({
         render: (record) => formatMonitoringDate(record.dateRecorded),
         sortValue: (record) => record.dateRecorded,
       },
-      {
-        id: 'siteID',
-        label: '拠点ID',
-        sortable: true,
-        render: (record) => formatMonitoringValue(record.siteID),
-        sortValue: (record) => String(record.siteID),
-      },
-      {
-        id: 'participatingUserID',
-        label: '参加ユーザID',
-        sortable: true,
-        render: (record) => formatMonitoringValue(record.participatingUserID),
-        sortValue: (record) => record.participatingUserID,
-      },
+      // {
+      //   id: 'siteID',
+      //   label: '拠点ID',
+      //   sortable: true,
+      //   render: (record) => formatMonitoringValue(record.siteID),
+      //   sortValue: (record) => String(record.siteID),
+      // },
+      // {
+      //   id: 'participatingUserID',
+      //   label: '参加ユーザID',
+      //   sortable: true,
+      //   render: (record) => formatMonitoringValue(record.participatingUserID),
+      //   sortValue: (record) => record.participatingUserID,
+      // },
       {
         id: 'methodologyType',
         label: '方法論',
@@ -190,7 +190,7 @@ export function ProjectMonitoringTable({
       },
       {
         id: 'actions',
-        label: 'アクション',
+        label: '操作',
         render: (record) => (
           <Button
             type="button"
@@ -278,8 +278,8 @@ export function ProjectMonitoringTable({
           <DataGridTable
             rows={result.items}
             columns={columns}
-            gridTemplateColumns="120px 80px 110px minmax(120px,1fr) 100px 110px 110px 120px 90px 80px 96px"
-            minWidth={1280}
+            gridTemplateColumns="minmax(90px,1.1fr) minmax(70px,.8fr) repeat(5,minmax(88px,1fr)) minmax(70px,.7fr) 88px"
+            minWidth={0}
             getRowKey={(record) => record.id}
             emptyMessage="モニタリングデータはありません。"
           />

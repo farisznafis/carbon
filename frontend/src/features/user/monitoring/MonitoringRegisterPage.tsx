@@ -22,13 +22,13 @@ import { logger } from '@/lib/logger';
 
 type MonitoringFormData = typeof formDefinitions[ProjectType]['emptyData'];
 type RouteState = {
-  projectId?: string | number;
+  projectId?: string;
   siteId?: string;
 };
 
 type MonitoringPayloadContext = {
   projectType: string;
-  projectIdValue: unknown;
+  projectIdValue: string;
   siteIdValue: unknown;
   evidenceUrls?: Partial<Record<keyof MonitoringData, string | null>>;
 };
@@ -105,7 +105,7 @@ function buildMonitoringPayload(
 
   return {
     projectType: context.projectType,
-    projectId: Number(context.projectIdValue) || 0,
+    projectId: context.projectIdValue,
     siteId: context.siteIdValue ? String(context.siteIdValue) : null,
     dateRecorded: currentData.dateRecorded ? String(currentData.dateRecorded) : null,
     ELpv_value: toNumberOrNull(currentData.ELpv_value),
@@ -178,8 +178,12 @@ const MonitoringRegister = () => {
     const currentData = asRecord(data);
 
     return {
-      projectIdValue:
-        state.projectId ?? search.get('projectId') ?? currentData.projectId ?? '',
+      projectIdValue: String(
+        state.projectId ??
+          search.get('projectId') ??
+          currentData.projectId ??
+          '',
+      ),
       siteIdValue:
         state.siteId ?? search.get('siteId') ?? currentData.siteId ?? '',
     };
@@ -271,15 +275,13 @@ const MonitoringRegister = () => {
       });
     };
 
-    // Ensure projectId/siteId are passed as strings to satisfy upload API typings
-    const projectIdStr = String(projectIdValue);
     const siteIdStr = String(siteIdValue);
 
     addUpload('ELpv_evidence', currentData.ELpv_evidence, (file) =>
-      uploadElpvFile(file, projectIdStr, siteIdStr, descriptionValue),
+      uploadElpvFile(file, projectIdValue, siteIdStr, descriptionValue),
     );
     addUpload('ELpvr_evidence', currentData.ELpvr_evidence, (file) =>
-      uploadElpvrFile(file, projectIdStr, siteIdStr, descriptionValue),
+      uploadElpvrFile(file, projectIdValue, siteIdStr, descriptionValue),
     );
     if (currentData.changedBattery) {
       addUpload(
@@ -288,7 +290,7 @@ const MonitoringRegister = () => {
         (file) =>
           uploadElpjBatteryFile(
             file,
-            projectIdStr,
+            projectIdValue,
             siteIdStr,
             descriptionValue,
           ),
@@ -298,7 +300,7 @@ const MonitoringRegister = () => {
       'ELPJ_control_equipment_spec_files',
       currentData.ELPJ_control_equipment_spec_files,
       (file) =>
-        uploadElpjControlFile(file, projectIdStr, siteIdStr, descriptionValue),
+        uploadElpjControlFile(file, projectIdValue, siteIdStr, descriptionValue),
     );
 
     if (uploadTasks.length > 0 && (!projectIdValue || !siteIdValue)) {

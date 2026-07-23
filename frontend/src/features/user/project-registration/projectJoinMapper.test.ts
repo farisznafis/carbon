@@ -110,14 +110,14 @@ describe('mapConfirmationItemsValidationRequest', () => {
         energyRationalizationCompliance: 'notApplicable',
       },
       {
-        projectId: '2',
+        projectId: 'PROJ0002',
         processedBy: 'user-1',
         companyId: 'PC000000001',
       },
     );
 
     expect(result).toEqual({
-      id: '2',
+      id: 'PROJ0002',
       processedBy: 'user-1',
       companyId: 'PC000000001',
       isAgreeDataUse: true,
@@ -147,7 +147,7 @@ describe('mapConfirmationItemsValidationRequest', () => {
         energyRationalizationCompliance: '',
       },
       {
-        projectId: '2',
+        projectId: 'PROJ0002',
         processedBy: 'user-1',
         companyId: 'PC000000001',
       },

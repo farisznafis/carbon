@@ -6,7 +6,7 @@ import ProjectRegisterPage from './ProjectRegisterPage';
 
 const setCurrentProject = vi.fn();
 const currentProject = {
-  id: '2',
+  id: 'PROJ0002',
   projectName: 'Solar Project',
 };
 
@@ -64,7 +64,7 @@ describe('ProjectRegisterPage', () => {
       <MemoryRouter
         initialEntries={[
           {
-            pathname: '/projects/SITE-1/2/register',
+            pathname: '/projects/SITE-1/PROJ0002/register',
             state: { pendingEquipment },
           },
         ]}

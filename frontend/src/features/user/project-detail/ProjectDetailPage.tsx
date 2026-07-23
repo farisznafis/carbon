@@ -75,7 +75,7 @@ type MonitoringDisplayRow = Pick<
 };
 
 const fallbackMonitoringRow: MonitoringDisplayRow = {
-  projectId: 0,
+  projectId: '',
   siteId: null,
   dateRecorded: '-',
   ELpv_value: null,

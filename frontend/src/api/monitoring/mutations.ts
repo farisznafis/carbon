@@ -27,7 +27,7 @@ type UploadResponse = {
 async function uploadEvidenceFile(
   kind: MonitoringEvidenceKind,
   file: File,
-  projectId: string | number,
+  projectId: string,
   siteId: string | number,
   description?: string,
 ): Promise<string> {
@@ -134,7 +134,7 @@ export async function decideMonitoringCancelRequest(
 
 export async function uploadElpvFile(
   file: File,
-  projectId: string | number,
+  projectId: string,
   siteId: string | number,
   description?: string,
 ): Promise<string> {
@@ -143,7 +143,7 @@ export async function uploadElpvFile(
 
 export async function uploadElpvrFile(
   file: File,
-  projectId: string | number,
+  projectId: string,
   siteId: string | number,
   description?: string,
 ): Promise<string> {
@@ -152,7 +152,7 @@ export async function uploadElpvrFile(
 
 export async function uploadElpjBatteryFile(
   file: File,
-  projectId: string | number,
+  projectId: string,
   siteId: string | number,
   description?: string,
 ): Promise<string> {
@@ -161,7 +161,7 @@ export async function uploadElpjBatteryFile(
 
 export async function uploadElpjControlFile(
   file: File,
-  projectId: string | number,
+  projectId: string,
   siteId: string | number,
   description?: string,
 ): Promise<string> {

@@ -40,7 +40,7 @@ function normalizeMonitoringRecordListResult(
 }
 
 export async function getMonitoringRecent(params: {
-  projectId: string | number;
+  projectId: string;
   siteId?: string | number;
   limit?: number;
 }): Promise<MonitoringRecentItem[]> {
@@ -79,7 +79,7 @@ export async function getMonitoringRecent(params: {
 
 export async function getMonitoringRecords(params: {
   siteId: string | number;
-  projectId: string | number;
+  projectId: string;
   page?: number;
   limit?: number;
 }): Promise<MonitoringRecordListResult> {
@@ -109,7 +109,7 @@ export async function getMonitoringRecords(params: {
 }
 
 export async function getAdminProjectMonitoringRecords(params: {
-  projectId: string | number;
+  projectId: string;
   page?: number;
   limit?: number;
 }): Promise<MonitoringRecordListResult> {

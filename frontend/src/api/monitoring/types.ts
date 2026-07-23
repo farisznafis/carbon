@@ -1,7 +1,7 @@
 import type { ApiPagination } from '../_shared/types';
 
 export type MonitoringData = {
-  projectId: number;
+  projectId: string;
   siteId?: string | null;
   projectType: string;
   dateRecorded: string | null;
@@ -30,7 +30,7 @@ export type MonitoringEvidenceKind =
   | "elpjControl";
 
 export type MonitoringRecentApiItem = {
-  projectId?: string | number | null;
+  projectId?: string | null;
   siteId?: string | number | null;
   userId?: string | number | null;
   projectType?: string | null;
@@ -90,7 +90,7 @@ export type MonitoringRecentResponse = {
 
 export type MonitoringRecordListItem = {
   id: string;
-  projectID: number;
+  projectID: string;
   siteID: string | number;
   participatingUserID: number;
   timeUpdated: string;

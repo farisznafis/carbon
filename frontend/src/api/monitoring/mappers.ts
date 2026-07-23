@@ -26,7 +26,7 @@ export function normalizeRecentMonitoringItem(
   const legacyBatteryValue = item.ELPJBatteryValue;
 
   return {
-    projectId: toNumberOrZero(item.projectId),
+    projectId: item.projectId == null ? '' : String(item.projectId),
     deviceId: toNumberOrNull(item.deviceId),
     parameter: item.parameter ?? "",
     value: toNumberOrNull(item.value),

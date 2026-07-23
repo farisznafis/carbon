@@ -81,7 +81,7 @@ export interface Equipment {
 }
 
 export type ProjectListItem = {
-  id: string | number;
+  id: string;
   companyId?: string | number | null;
   operatorCompanyId?: string | number | null;
   projectName: string;

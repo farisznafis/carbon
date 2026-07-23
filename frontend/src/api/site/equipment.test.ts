@@ -59,7 +59,7 @@ describe('validateSiteProjectConfirmationItems', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
     const payload = {
-      id: '2',
+      id: 'PROJ0002',
       processedBy: 'user-1',
       companyId: 'PC000000001',
       isAgreeDataUse: null,
@@ -108,13 +108,13 @@ describe('uploadSiteProjectEquipmentFile', () => {
 
     const result = await uploadSiteProjectEquipmentFile(
       'SITE-1',
-      '2',
+      'PROJ0002',
       'panel_catalog',
       new File(['catalog'], 'catalog.pdf', { type: 'application/pdf' }),
     );
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/site/project/SITE-1/2/files/upload?fileType=panel_catalog',
+      '/api/site/project/SITE-1/PROJ0002/files/upload?fileType=panel_catalog',
       expect.objectContaining({ method: 'POST', body: expect.any(FormData) }),
     );
     expect(result).toEqual({
@@ -170,10 +170,10 @@ describe('joinSiteProject', () => {
       finalAgreement: { isAgreeTerms: true },
     };
 
-    await joinSiteProject('2', payload);
+    await joinSiteProject('PROJ0002', payload);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/site/project/projects/2/join',
+      '/api/site/project/projects/PROJ0002/join',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(payload),

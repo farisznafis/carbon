@@ -13,7 +13,7 @@ function renderEquipmentForm() {
     <QueryClientProvider client={queryClient}>
       <MemoryRouter
         initialEntries={[
-          '/projects/SITE4f83ac050b20d755/2/equipment?type=solar',
+          '/projects/SITE4f83ac050b20d755/PROJ0002/equipment?type=solar',
         ]}
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >

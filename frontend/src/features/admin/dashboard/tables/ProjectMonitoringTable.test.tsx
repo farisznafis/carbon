@@ -11,7 +11,7 @@ vi.mock('@/api/monitoring', () => ({
 }));
 
 const project: Project = {
-  id: '7',
+  id: 'PROJ0007',
   projectName: '太陽光発電プロジェクト',
   projectStatus: 'ACTIVE',
   methodologyVersion: '1.0',
@@ -24,7 +24,7 @@ const project: Project = {
 
 const monitoringRecord: MonitoringRecordListItem = {
   id: 'monitoring-1',
-  projectID: 7,
+  projectID: 'PROJ0007',
   siteID: 3,
   participatingUserID: 11,
   timeUpdated: '2026-07-23T10:30:00.000Z',
@@ -92,14 +92,14 @@ describe('ProjectMonitoringTable', () => {
     render(
       <ProjectMonitoringTable
         {...defaultProps}
-        selectedProjectId="7"
+        selectedProjectId="PROJ0007"
         onViewDetail={onViewDetail}
       />,
     );
 
     expect(await screen.findByText('120 kWh')).toBeInTheDocument();
     expect(getAdminProjectMonitoringRecords).toHaveBeenCalledWith({
-      projectId: '7',
+      projectId: 'PROJ0007',
       page: 1,
       limit: 10,
     });
