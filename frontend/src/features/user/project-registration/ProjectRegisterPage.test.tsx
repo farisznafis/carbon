@@ -79,7 +79,11 @@ describe('ProjectRegisterPage', () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByText('同意事項')).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        /以下の各項目をご確認のうえ、該当する内容にご同意いただける場合はチェックを入れてください/,
+      ),
+    ).toBeInTheDocument();
     expect(screen.queryByText('設備一覧')).not.toBeInTheDocument();
     expect(screen.getByText('ステップ 1 / 3')).toBeInTheDocument();
   });

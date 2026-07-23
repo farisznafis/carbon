@@ -1,14 +1,14 @@
-import { useEffect, forwardRef, useImperativeHandle, useRef } from 'react';
+import {
+  forwardRef,
+  type ReactNode,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from '@/components/ui/input-otp';
 import {
   Form,
   FormControl,
@@ -17,86 +17,191 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { type AgreementFormValues } from './agreementsConfig';
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from '@/components/ui/input-otp';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  agreementsConfig,
+  type AgreementFormValues,
+} from './agreementsConfig';
 
 type AgreementsFormValues = AgreementFormValues;
 
-interface NumericCodeInputProps {
+const defaultAgreementValues: AgreementFormValues = {
+  useRegisteredInfo: null,
+  provideAdditionalInfo: null,
+  transferEnvironmentalValue: null,
+  notRegisteredElsewhere: null,
+  keidanrenParticipation: '',
+  specifiedEmitterStatus: '',
+  energyRationalizationCompliance: '',
+  emissionAdditionAgreement: null,
+  specifiedEmitterCode: '',
+  energyLawType: '',
+  energyLawBusinessNumber: '',
+  energyLawFactoryNumber: '',
+};
+
+const agreementLabels = Object.fromEntries(
+  agreementsConfig.map((field) => [field.id, field.label]),
+) as Record<keyof AgreementFormValues, string>;
+
+const agreementOptions = Object.fromEntries(
+  agreementsConfig.map((field) => [field.id, field.options ?? []]),
+) as Record<
+  keyof AgreementFormValues,
+  Array<{ value: string; label: string }>
+>;
+
+type NumericCodeInputProps = {
   value: string;
   onChange: (value: string) => void;
   length: number;
   label: string;
-}
+};
 
-const NumericCodeInput = ({
+function NumericCodeInput({
   value,
   onChange,
   length,
   label,
-}: NumericCodeInputProps) => (
-  <InputOTP
-    value={value}
-    onChange={onChange}
-    maxLength={length}
-    pattern={REGEXP_ONLY_DIGITS}
-    aria-label={label}
-    containerClassName="gap-0"
-  >
-    <InputOTPGroup>
-      {Array.from({ length }, (_, index) => (
-        <InputOTPSlot key={index} index={index} className="h-9 w-9" />
-      ))}
-    </InputOTPGroup>
-  </InputOTP>
-);
+}: NumericCodeInputProps) {
+  const separatorIndex = 3;
 
-interface DynamicAgreementsStepProps {
+  return (
+    <InputOTP
+      value={value}
+      onChange={onChange}
+      maxLength={length}
+      pattern={REGEXP_ONLY_DIGITS}
+      aria-label={label}
+      containerClassName="flex-wrap gap-2"
+    >
+      <InputOTPGroup>
+        {Array.from({ length: separatorIndex }, (_, index) => (
+          <InputOTPSlot
+            key={index}
+            index={index}
+            className="h-9 w-8 sm:w-9"
+          />
+        ))}
+      </InputOTPGroup>
+      <span aria-hidden="true" className="text-muted-foreground">
+        -
+      </span>
+      <InputOTPGroup>
+        {Array.from(
+          { length: length - separatorIndex },
+          (_, index) => index + separatorIndex,
+        ).map((index) => (
+          <InputOTPSlot
+            key={index}
+            index={index}
+            className="h-9 w-8 sm:w-9"
+          />
+        ))}
+      </InputOTPGroup>
+    </InputOTP>
+  );
+}
+
+function RequiredFieldLabel({
+  children,
+  htmlFor,
+}: {
+  children: ReactNode;
+  htmlFor?: string;
+}) {
+  return (
+    <FormLabel
+      htmlFor={htmlFor}
+      className="flex cursor-pointer items-start gap-1 text-small font-medium leading-5 text-foreground"
+    >
+      <span className="min-w-0">{children}</span>
+      <span aria-hidden="true" className="shrink-0 text-destructive">
+        *
+      </span>
+      <span className="sr-only">必須</span>
+    </FormLabel>
+  );
+}
+
+function AgreementCard({ children }: { children: ReactNode }) {
+  return (
+    <Card className="rounded-xl border-border shadow-sm">
+      <CardContent className="p-5 sm:p-6">{children}</CardContent>
+    </Card>
+  );
+}
+
+function RadioChoice({
+  id,
+  value,
+  label,
+}: {
+  id: string;
+  value: string;
+  label: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <RadioGroupItem id={id} value={value} className="size-4" />
+      <FormLabel
+        htmlFor={id}
+        className="cursor-pointer text-body text-foreground"
+      >
+        {label}
+      </FormLabel>
+    </div>
+  );
+}
+
+type DynamicAgreementsStepProps = {
   formValues: Partial<AgreementFormValues>;
   onValueChange: (values: Partial<AgreementFormValues>) => void;
   errors?: Record<string, string>;
-}
+};
 
-export interface DynamicAgreementsStepRef {
+export type DynamicAgreementsStepRef = {
   getValues: () => AgreementFormValues;
-}
+};
 
-export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, DynamicAgreementsStepProps>(({
-  formValues,
-  onValueChange,
-  errors = {},
-}, ref) => {
+export const DynamicAgreementsStep = forwardRef<
+  DynamicAgreementsStepRef,
+  DynamicAgreementsStepProps
+>(({ formValues, onValueChange, errors = {} }, ref) => {
   const form = useForm<AgreementsFormValues>({
-    mode: "onChange",
+    mode: 'onChange',
     defaultValues: {
-      useRegisteredInfo: null,
-      provideAdditionalInfo: null,
-      transferEnvironmentalValue: null,
-      notRegisteredElsewhere: null,
-      keidanrenParticipation: '',
-      specifiedEmitterStatus: '',
-      energyRationalizationCompliance: '',
-      emissionAdditionAgreement: null,
-      specifiedEmitterCode: '',
-      energyLawType: '',
-      energyLawBusinessNumber: '',
-      energyLawFactoryNumber: '',
+      ...defaultAgreementValues,
+      ...formValues,
     },
-    ...(formValues as Partial<AgreementsFormValues>),
   });
 
   const watchedValues = form.watch();
   const previousValuesRef = useRef(watchedValues);
   const serverErrorFieldsRef = useRef<Array<keyof AgreementsFormValues>>([]);
   const specifiedEmitterStatus = form.watch('specifiedEmitterStatus');
-  const energyRationalizationCompliance = form.watch('energyRationalizationCompliance');
+  const energyRationalizationCompliance = form.watch(
+    'energyRationalizationCompliance',
+  );
 
-  useImperativeHandle(ref, () => ({
-    getValues: () => form.getValues(),
-  }), [form]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      getValues: () => form.getValues(),
+    }),
+    [form],
+  );
 
-  // Reset form with saved values when component mounts or formValues changes
   useEffect(() => {
-    form.reset(formValues as AgreementsFormValues);
+    form.reset({
+      ...defaultAgreementValues,
+      ...formValues,
+    });
   }, [form, formValues]);
 
   useEffect(() => {
@@ -119,388 +224,317 @@ export const DynamicAgreementsStep = forwardRef<DynamicAgreementsStepRef, Dynami
     serverErrorFieldsRef.current = serverErrorFields;
   }, [errors, form]);
 
-  // Sync form values with parent component
   useEffect(() => {
     if (
-      JSON.stringify(previousValuesRef.current) !== JSON.stringify(watchedValues)
+      JSON.stringify(previousValuesRef.current) !==
+      JSON.stringify(watchedValues)
     ) {
       previousValuesRef.current = watchedValues;
       onValueChange(watchedValues);
     }
-  }, [watchedValues, onValueChange]);
+  }, [onValueChange, watchedValues]);
+
+  const checkboxAgreements = [
+    'useRegisteredInfo',
+    'provideAdditionalInfo',
+    'transferEnvironmentalValue',
+    'notRegisteredElsewhere',
+  ] as const;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold mb-2">同意事項</h2>
-        <p className="text-muted-foreground">
-          以下の項目をご確認の上、同意してください
-        </p>
-      </div>
+    <div className="space-y-4">
+      <p className="text-body text-muted-foreground">
+        以下の各項目をご確認のうえ、該当する内容にご同意いただける場合はチェックを入れてください。すべての必須項目に同意いただいた場合のみ、次のステップへ進むことができます。
+      </p>
 
       <Form {...form}>
-        <div className="space-y-4">
-          {/* Basic agreements */}
-          <Card>
-            <CardContent className="pt-6 space-y-4">
-              <FormField
-                control={form.control}
-                name="useRegisteredInfo"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    {/* isAgreeDataUse */}
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value === true}
-                        onCheckedChange={(checked) =>
-                          field.onChange(checked === true)
-                        }
-                      className='h-5 w-5 rounded-none border-input'/>
-                    </FormControl>
-                    <div className="flex-1 leading-none">
-                      <FormLabel className="text-sm font-semibold cursor-pointer leading-relaxed">
-                        Ｊ－クレジット制度における各種申請に際し、本入会届に記載された情報を、プログラム型運営・管理者名が使用することに同意します。
-                        <span className="text-destructive ml-1">*</span>
-                      </FormLabel>
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
+        <Card className="rounded-xl border-border shadow-sm">
+          <CardContent className="space-y-4 p-4 sm:space-y-6 sm:p-6">
+            {checkboxAgreements.map((fieldName) => (
+              <AgreementCard key={fieldName}>
+                <FormField
+                  control={form.control}
+                  name={fieldName}
+                  render={({ field }) => (
+                    <FormItem className="flex items-start gap-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          id={fieldName}
+                          checked={field.value === true}
+                          onCheckedChange={(checked) =>
+                            field.onChange(checked === true)
+                          }
+                          className="mt-0.5 size-4 shrink-0 rounded border-input"
+                        />
+                      </FormControl>
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <RequiredFieldLabel htmlFor={fieldName}>
+                          {agreementLabels[fieldName]}
+                        </RequiredFieldLabel>
+                        <FormMessage />
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </AgreementCard>
+            ))}
 
-          <Card>
-            <CardContent className="pt-6 space-y-4">
-              <FormField
-                control={form.control}
-                name="provideAdditionalInfo"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    {/* isAgreeExtraData */}
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value === true}
-                        onCheckedChange={(checked) =>
-                          field.onChange(checked === true)
-                        }
-                      className='h-5 w-5 rounded-none border-input'/>
-                    </FormControl>
-                    <div className="flex-1 leading-none">
-                      <FormLabel className="text-sm font-semibold cursor-pointer leading-relaxed">
-                        Ｊ－クレジット制度における各種申請に際し、本入会届に記載された以外の情報について、プログラム型運営・管理者名が必要とする場合は提供することに同意します。
-                        <span className="text-destructive ml-1">*</span>
-                      </FormLabel>
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-              <CardContent className="pt-6 space-y-4">
-              <FormField
-                control={form.control}
-                name="transferEnvironmentalValue"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value === true}
-                        onCheckedChange={(checked) =>
-                          field.onChange(checked === true)
-                        }
-                      className='h-5 w-5 rounded-none border-input'/>
-                    </FormControl>
-                    <div className="flex-1 leading-none">
-                      <FormLabel className="text-sm font-semibold cursor-pointer leading-relaxed">
-                        環境価値を譲渡し、削減主張できなくなることに同意します。
-                        <span className="text-destructive ml-1">*</span>
-                      </FormLabel>
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6 space-y-4">    
-              <FormField
-                control={form.control}
-                name="notRegisteredElsewhere"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value === true}
-                        onCheckedChange={(checked) =>
-                          field.onChange(checked === true)
-                        }
-                      className='h-5 w-5 rounded-none border-input'/>
-                    </FormControl>
-                    <div className="flex-1 leading-none">
-                      <FormLabel className="text-sm font-semibold cursor-pointer leading-relaxed">
-                        他制度・プロジェクトに登録していないことに同意します。
-                        <span className="text-destructive ml-1">*</span>
-                      </FormLabel>
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Keidanren participation */}
-          <Card>
-            <CardContent className="pt-6">
+            <AgreementCard>
               <FormField
                 control={form.control}
                 name="keidanrenParticipation"
                 render={({ field }) => (
                   <FormItem className="space-y-3">
-                    <FormLabel>
-                      日本経済団体連合会における経団連カーボンニュートラル行動計画への参加については以下の通りです。
-                      <span className="text-destructive ml-1">*</span>
-                    </FormLabel>
+                    <RequiredFieldLabel>
+                      {agreementLabels.keidanrenParticipation}
+                    </RequiredFieldLabel>
                     <FormControl>
-                      <RadioGroup value={field.value} onValueChange={field.onChange}>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="participating" id="participating" />
-                          <FormLabel htmlFor="participating" className="text-sm font-normal cursor-pointer">
-                            参加しています
-                          </FormLabel>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="notParticipating" id="notParticipating" />
-                          <FormLabel htmlFor="notParticipating" className="text-sm font-normal cursor-pointer">
-                            参加していません
-                          </FormLabel>
-                        </div>
+                      <RadioGroup
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        className="gap-2"
+                      >
+                        {agreementOptions.keidanrenParticipation.map(
+                          (option) => (
+                            <RadioChoice
+                              key={option.value}
+                              id={`keidanren-${option.value}`}
+                              value={option.value}
+                              label={option.label}
+                            />
+                          ),
+                        )}
                       </RadioGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </CardContent>
-          </Card>
+            </AgreementCard>
 
-          {/* Specified emitter status */}
-          <Card>
-            <CardContent className="pt-6 space-y-4">
+            <AgreementCard>
               <FormField
                 control={form.control}
                 name="specifiedEmitterStatus"
                 render={({ field }) => (
                   <FormItem className="space-y-3">
-                    <FormLabel>
-                      地球温暖化対策の推進に関する法律に基づく算定・報告・公表制度における特定排出者の区分について同意します。
-                      <span className="text-destructive ml-1">*</span>
-                    </FormLabel>
+                    <RequiredFieldLabel>
+                      {agreementLabels.specifiedEmitterStatus}
+                    </RequiredFieldLabel>
                     <FormControl>
-                      <RadioGroup value={field.value} onValueChange={field.onChange}>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="isSpecifiedEmitter" id="isSpecifiedEmitter" />
-                          <FormLabel htmlFor="isSpecifiedEmitter" className="text-sm font-normal cursor-pointer">
-                            特定排出者に該当します
-                          </FormLabel>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="notSpecifiedEmitter" id="notSpecifiedEmitter" />
-                          <FormLabel htmlFor="notSpecifiedEmitter" className="text-sm font-normal cursor-pointer">
-                            特定排出者ではありません
-                          </FormLabel>
-                        </div>
+                      <RadioGroup
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        className="gap-3"
+                      >
+                        <RadioChoice
+                          id="specified-emitter"
+                          value="isSpecifiedEmitter"
+                          label="特定排出者に該当します"
+                        />
+
+                        {specifiedEmitterStatus === 'isSpecifiedEmitter' && (
+                          <div className="ml-6 space-y-5 border-l border-border pl-5">
+                            <FormField
+                              control={form.control}
+                              name="specifiedEmitterCode"
+                              render={({ field: codeField }) => (
+                                <FormItem className="space-y-2">
+                                  <RequiredFieldLabel>
+                                    {agreementLabels.specifiedEmitterCode}
+                                  </RequiredFieldLabel>
+                                  <FormControl>
+                                    <NumericCodeInput
+                                      value={codeField.value || ''}
+                                      onChange={codeField.onChange}
+                                      length={9}
+                                      label="特定排出者コード"
+                                    />
+                                  </FormControl>
+                                  <p className="text-small text-muted-foreground">
+                                    不明な場合はこちらから検索してください：
+                                    <a
+                                      href="https://policies.env.go.jp/earth/ghg-santeikohyo/search.html"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="break-all text-primary hover:underline"
+                                    >
+                                      https://policies.env.go.jp/earth/ghg-santeikohyo/search.html
+                                    </a>
+                                  </p>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="emissionAdditionAgreement"
+                              render={({ field: agreementField }) => (
+                                <FormItem className="flex items-start gap-3 space-y-0">
+                                  <FormControl>
+                                    <Checkbox
+                                      id="emissionAdditionAgreement"
+                                      checked={agreementField.value === true}
+                                      onCheckedChange={(checked) =>
+                                        agreementField.onChange(
+                                          checked === true,
+                                        )
+                                      }
+                                      className="mt-0.5 size-4 shrink-0 rounded border-input"
+                                    />
+                                  </FormControl>
+                                  <div className="min-w-0 flex-1 space-y-1">
+                                    <RequiredFieldLabel htmlFor="emissionAdditionAgreement">
+                                      {
+                                        agreementLabels.emissionAdditionAgreement
+                                      }
+                                    </RequiredFieldLabel>
+                                    <FormMessage />
+                                  </div>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
+
+                        <RadioChoice
+                          id="not-specified-emitter"
+                          value="notSpecifiedEmitter"
+                          label="特定排出者ではありません"
+                        />
                       </RadioGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
-              {/* Conditional fields when specified emitter */}
-              {specifiedEmitterStatus === 'isSpecifiedEmitter' && (
-                <div className="ml-6 pt-4 border-t space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="emissionAdditionAgreement"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value === true}
-                            onCheckedChange={(checked) =>
-                              field.onChange(checked === true)
-                            }
-                          className='h-5 w-5 rounded-none border-input'/>
-                        </FormControl>
-                        <div className="flex-1 leading-none">
-                          <FormLabel className="text-sm font-normal cursor-pointer leading-relaxed">
-                            特定排出者に該当する場合、プログラム型運営・管理者へ譲渡した環境価値 (Ｊ－クレジット) に相当する排出量を、当該年度の調整後排出量の計算において加算することに同意します。
-                            <span className="text-destructive ml-1">*</span>
-                          </FormLabel>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="specifiedEmitterCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          特定排出者コード (9ケタの値)
-                          <span className="text-destructive ml-1">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <NumericCodeInput
-                            value={field.value || ""}
-                            onChange={field.onChange}
-                            length={9}
-                            label="特定排出者コード"
-                          />
-                        </FormControl>
-                        <p className="text-xs">
-                          不明な場合はこちらから検索してください：
-                          <a
-                            href="https://policies.env.go.jp/earth/ghg-santeikohyo/search.html"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary hover:underline"
-                          >
-                            https://policies.env.go.jp/earth/ghg-santeikohyo/search.html
-                          </a>
-                        </p>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            </AgreementCard>
 
-          {/* Energy rationalization compliance */}
-          <Card>
-            <CardContent className="pt-6 space-y-4">
+            <AgreementCard>
               <FormField
                 control={form.control}
                 name="energyRationalizationCompliance"
                 render={({ field }) => (
                   <FormItem className="space-y-3">
-                    <FormLabel>
-                      エネルギーの使用の合理化に関する法律に基づく定期報告における
-                      <span className="text-destructive ml-1">*</span>
-                    </FormLabel>
+                    <RequiredFieldLabel>
+                      {agreementLabels.energyRationalizationCompliance}
+                    </RequiredFieldLabel>
                     <FormControl>
-                      <RadioGroup value={field.value} onValueChange={field.onChange}>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="applicable" id="applicable" />
-                          <FormLabel htmlFor="applicable" className="text-sm font-normal cursor-pointer">
-                            対象者に該当します
-                          </FormLabel>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="notApplicable" id="notApplicable" />
-                          <FormLabel htmlFor="notApplicable" className="text-sm font-normal cursor-pointer">
-                            対象者に該当しません
-                          </FormLabel>
-                        </div>
+                      <RadioGroup
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        className="gap-3"
+                      >
+                        <RadioChoice
+                          id="energy-applicable"
+                          value="applicable"
+                          label="対象者に該当します"
+                        />
+
+                        {energyRationalizationCompliance === 'applicable' && (
+                          <div className="ml-6 space-y-5 border-l border-border pl-5">
+                            <FormField
+                              control={form.control}
+                              name="energyLawType"
+                              render={({ field: typeField }) => (
+                                <FormItem className="space-y-2">
+                                  <RequiredFieldLabel>
+                                    {agreementLabels.energyLawType}
+                                  </RequiredFieldLabel>
+                                  <FormControl>
+                                    <RadioGroup
+                                      value={typeField.value}
+                                      onValueChange={typeField.onChange}
+                                      className="gap-2"
+                                    >
+                                      {agreementOptions.energyLawType.map(
+                                        (option) => (
+                                          <RadioChoice
+                                            key={option.value}
+                                            id={`energy-law-${option.value}`}
+                                            value={option.value}
+                                            label={option.label}
+                                          />
+                                        ),
+                                      )}
+                                    </RadioGroup>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="energyLawBusinessNumber"
+                              render={({ field: numberField }) => (
+                                <FormItem className="space-y-2">
+                                  <RequiredFieldLabel>
+                                    {agreementLabels.energyLawBusinessNumber}
+                                  </RequiredFieldLabel>
+                                  <FormControl>
+                                    <NumericCodeInput
+                                      value={numberField.value || ''}
+                                      onChange={numberField.onChange}
+                                      length={7}
+                                      label="省エネ法特定事業者番号"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="energyLawFactoryNumber"
+                              render={({ field: factoryField }) => (
+                                <FormItem className="space-y-2">
+                                  <RequiredFieldLabel>
+                                    {agreementLabels.energyLawFactoryNumber}
+                                  </RequiredFieldLabel>
+                                  <FormControl>
+                                    <NumericCodeInput
+                                      value={factoryField.value || ''}
+                                      onChange={factoryField.onChange}
+                                      length={7}
+                                      label="省エネ法指定工場番号"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <p className="text-small text-muted-foreground">
+                              不明な場合はこちらから検索してください：
+                              <a
+                                href="https://www.enecho.meti.go.jp/category/saving_and_new/saving/004/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="break-all text-primary hover:underline"
+                              >
+                                https://www.enecho.meti.go.jp/category/saving_and_new/saving/004/
+                              </a>
+                            </p>
+                          </div>
+                        )}
+
+                        <RadioChoice
+                          id="energy-not-applicable"
+                          value="notApplicable"
+                          label="対象者に該当しません"
+                        />
                       </RadioGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
-              {/* Conditional fields when energy law applies */}
-              {energyRationalizationCompliance === 'applicable' && (
-                <div className="ml-6 pt-4 border-t space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="energyLawType"
-                    render={({ field }) => (
-                      <FormItem className="space-y-3">
-                        <FormLabel>
-                          種別
-                          <span className="text-destructive ml-1">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <RadioGroup value={field.value} onValueChange={field.onChange}>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="type1" id="type1" />
-                              <FormLabel htmlFor="type1" className="text-sm font-normal cursor-pointer">
-                                一種
-                              </FormLabel>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="type2" id="type2" />
-                              <FormLabel htmlFor="type2" className="text-sm font-normal cursor-pointer">
-                                二種
-                              </FormLabel>
-                            </div>
-                          </RadioGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="energyLawBusinessNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          省エネ法特定事業者番号又は特定連鎖化事業者番号 (7ケタの値)
-                          <span className="text-destructive ml-1">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <NumericCodeInput
-                            value={field.value || ""}
-                            onChange={field.onChange}
-                            length={7}
-                            label="省エネ法特定事業者番号"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="energyLawFactoryNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          省エネ法指定工場番号 (7ケタの値)
-                          <span className="text-destructive ml-1">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <NumericCodeInput
-                            value={field.value || ""}
-                            onChange={field.onChange}
-                            length={7}
-                            label="省エネ法指定工場番号"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            </AgreementCard>
+          </CardContent>
+        </Card>
       </Form>
     </div>
   );

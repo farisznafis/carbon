@@ -484,9 +484,7 @@ const ProjectRegister = () => {
         )}
 
         {/* Step content */}
-        <Card className="border-hidden w-full mx-auto p-4">
-          <CardContent className="pt-6">{renderStep()}</CardContent>
-        </Card>
+        <div className="mx-auto w-full">{renderStep()}</div>
 
         {/* Next button — hidden on completion step */}
         {!isCompletionStep && (
