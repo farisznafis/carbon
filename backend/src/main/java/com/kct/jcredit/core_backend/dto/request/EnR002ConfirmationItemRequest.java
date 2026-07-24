@@ -22,10 +22,12 @@ import java.util.List;
 public class EnR002ConfirmationItemRequest  {
  
    // ── Consent ─────────────────────────
-
     private Boolean isAgreeDataUse;
+
     private Boolean isAgreeExtraData;
+
     private Boolean isAgreeTransfer;
+
     private Boolean isNotRegistered;
 
     // 参加しています / 参加していません 

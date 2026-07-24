@@ -82,18 +82,26 @@ public class SolarBatchProcessService extends BaseBatchProcessService<EnR002Moni
     }
     
     @Override
-    public Object saveSiteResult(
+    public Object saveSiteResults(
             Integer projectId,
             Integer siteId,
             Integer batchId,
             LocalDate processingDate,
-            EnR002ReductionResult result) {
+            List<EnR002ReductionResult> results) {
         
-        result.setIsActive(true);
-        EnR002ReductionResult saved = resultRepository.save(result);
+        if (results == null || results.isEmpty()) {
+            return List.of();
+        }
         
-        log.debug("Saved solar result for site {}: ID {}", siteId, saved.getId());
-        return saved;
+        List<EnR002ReductionResult> savedResults = results.stream()
+            .map(result -> {
+                result.setIsActive(true);
+                return resultRepository.save(result);
+            })
+            .collect(Collectors.toList());
+        
+        log.debug("Saved {} solar result(s) for site {}", savedResults.size(), siteId);
+        return savedResults;
     }
     
     @Override
@@ -116,6 +124,10 @@ public class SolarBatchProcessService extends BaseBatchProcessService<EnR002Moni
                 existing.setEmpjS(projectTotal.getEmpjS());
                 existing.setEmpjSControl(projectTotal.getEmpjSControl());
                 existing.setEmpjSBattery(projectTotal.getEmpjSBattery());
+                existing.setElpj(projectTotal.getElpj());
+                existing.setEmbl(projectTotal.getEmbl());
+                existing.setElbl(projectTotal.getElbl());
+                existing.setEr(projectTotal.getEr());
                 existing.setIsActive(true);
                 return existing;
             })

@@ -53,6 +53,18 @@ public class EnR002ReductionResultTotal extends BaseEntity {
     @Column(name = "empj_s_battery", precision = 12, scale = 3)
     private BigDecimal empjSBattery;
 
+    @Column(name = "elpj", precision = 12, scale = 3)
+    private BigDecimal elpj;
+
+    @Column(name = "embl", precision = 12, scale = 3)
+    private BigDecimal embl;
+
+    @Column(name = "elbl", precision = 12, scale = 3)
+    private BigDecimal elbl;
+
+    @Column(name = "er", precision = 12, scale = 3)
+    private BigDecimal er;
+
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 

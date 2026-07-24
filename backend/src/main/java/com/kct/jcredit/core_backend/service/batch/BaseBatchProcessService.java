@@ -83,22 +83,22 @@ public abstract class BaseBatchProcessService<T extends MonitoringRecord, R> {
     protected abstract NotificationService getNotificationService();
     
     /**
-     * Subclasses must implement site-level result persistence.
-     * Called after calculating emissions for a single site.
+     * Subclasses must implement persistence for the emission results produced for a site.
+     * Equipment-based methodologies may return multiple rows per site and persist them here.
      * 
      * @param projectId Project ID
      * @param siteId Site ID
      * @param batchId Batch ID
      * @param processingDate Processing date
-     * @param result Calculation result
-     * @return Saved result entity
+     * @param results Calculation results produced for the site
+     * @return Saved result entities
      */
-    protected abstract Object saveSiteResult(
+    protected abstract Object saveSiteResults(
         Integer projectId,
         Integer siteId,
         Integer batchId,
         LocalDate processingDate,
-        R result
+        List<R> results
     );
     
     /**
@@ -261,6 +261,7 @@ public abstract class BaseBatchProcessService<T extends MonitoringRecord, R> {
             ProcessingResult processingResult = processSite(
                 batchId, projectId, siteId, siteData, processingDate, allResults
             );
+            siteResults.addAll(processingResult.getMonitoringItemId() == null ? List.of() : List.of(processingResult.getMonitoringItemId()));
             
             getCsvLogService().appendToResultCsv(csvPaths.result, processingResult);
         }
@@ -295,21 +296,24 @@ public abstract class BaseBatchProcessService<T extends MonitoringRecord, R> {
         Instant startTime = Instant.now();
         
         try {
-            // Calculate emissions
             EmissionsCalculator<T, R> calculator = getCalculator();
-            R result = calculator.calculateEmissions(
+            List<R> results = calculator.calculateEmissions(
                 projectId, siteId, batchId, siteData, processingDate
             );
             
-            // Save site result (always present, may contain zeros for no-data case)
-            saveSiteResult(projectId, siteId, batchId, processingDate, result);
-            allResults.add(result);
+            if (results == null || results.isEmpty()) {
+                saveSiteResults(projectId, siteId, batchId, processingDate, Collections.emptyList());
+                return ProcessingResult.noData(batchId, projectId, siteId);
+            }
+            
+            saveSiteResults(projectId, siteId, batchId, processingDate, results);
+            allResults.addAll(results);
             
             return ProcessingResult.success(
                 batchId, projectId, siteId,
                 startTime, Instant.now(),
                 siteData.size(),
-                1 // Result ID placeholder
+                results.size()
             );
             
         } catch (Exception e) {
