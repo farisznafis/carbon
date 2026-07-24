@@ -42,7 +42,7 @@ class ProjectParticipationPdfServiceTest {
     @Mock private ProjectParticipationConfirmationRepository reviewRepository;
     @Mock private NotificationRepository notificationRepository;
 
-    private ProjectParticipationPdfServiceImpl service;
+    private ParticipationPdfServiceImpl service;
 
     @TempDir
     Path tempDir; // 生成したPDFを一時的に保存する場所
@@ -50,7 +50,7 @@ class ProjectParticipationPdfServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        service = new ProjectParticipationPdfServiceImpl(
+        service = new ParticipationPdfServiceImpl(
                 s3Client, s3Presigner,
                 participatingProjectRepository,
                 confirmationItemsRepository,
