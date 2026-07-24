@@ -13,7 +13,7 @@ public class RegisterMonitoringRecordSolarRequest {
     
    @NotNull(message = "プロジェクトIDを入力してください。")
     @JsonProperty("projectId")
-    private Integer projectId;
+    private String projectId;
     
     @NotNull(message = "拠点IDを入力してください。")
     @JsonProperty("siteId")

@@ -157,8 +157,8 @@ public class MonitoringServiceImpl implements MonitoringService {
             // 7) Create and populate DynamoDB entity
             // DynamoDBエンティティを作成してデータを入力する
             EnR002MonitoringRecord entity = new EnR002MonitoringRecord();
-            // Changed PK format: Now SITE#PROJECT (company validation still done via JWT + entity validation)
-            entity.setId(site.getId() + "#" + project.getId());
+            // PK format: sitePublicId#projectPublicId (company validation still done via JWT + entity validation)
+            entity.setId(site.getPublicId() + "#" + project.getPublicId());
             entity.setProjectID(project.getId());
             entity.setSiteID(site.getId());
             entity.setParticipatingUserID(user.getId());
@@ -296,7 +296,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // 4) Fetch latest monitoring record from DynamoDB
             // DynamoDBから最新の監視記録を取得する
-            String recordId = site.getId() + "#" + project.getId();
+            String recordId = site.getPublicId() + "#" + project.getPublicId();
             EnR002MonitoringRecord entity = monitoringRecordSolarRepository.findLatest(recordId)
                     .orElse(null);
 
@@ -348,20 +348,19 @@ public class MonitoringServiceImpl implements MonitoringService {
             }
 
             // Get list of site ids related to the project through site-project relation
-            Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
-                .map(Project::getId)
-                .orElse(null);
-            if (projectDbId == null) {
+            Project project = projectRepository.findByPublicIdWithFallback(projectId).orElse(null);
+            if (project == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
                 return response;
             }
-            // Build target PKs for DynamoDB query (format: siteId#projectId)
-            List<Integer> siteIds = siteProjectRelationRepository.findSiteIdsByProjectId(projectDbId);
+            // Build target PKs for DynamoDB query (format: sitePublicId#projectPublicId)
+            List<Integer> siteIds = siteProjectRelationRepository.findSiteIdsByProjectId(project.getId());
             List<String> targetPks = new java.util.ArrayList<>();
             if (siteIds != null) {
                 for (Integer siteId : siteIds) {
-                    targetPks.add(siteId + "#" + projectDbId);
+                    siteRepository.findById(siteId)
+                        .ifPresent(s -> targetPks.add(s.getPublicId() + "#" + project.getPublicId()));
                 }
             }
 
@@ -500,7 +499,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // Fetch data - pagination object is updated by repository
             //データ取得 - ページネーションオブジェクトはリポジトリによって更新されます
-            String recordId = site.getId() + "#" + project.getId();
+            String recordId = site.getPublicId() + "#" + project.getPublicId();
             List<EnR002MonitoringRecord> entities = 
                 monitoringRecordSolarRepository.findAllByRecordIdPaginated(recordId, pagination);
 
@@ -730,7 +729,7 @@ public class MonitoringServiceImpl implements MonitoringService {
                 project.getId(),
                 site.getId()
         );
-        Map<String, String> businessErrors = collectMonitoringBusinessErrors(request, relation);
+        Map<String, String> businessErrors = collectMonitoringBusinessErrors(request, relation, site, project);
         mergeErrors(errors, businessErrors);
 
         if (!errors.isEmpty()) {
@@ -849,7 +848,9 @@ public class MonitoringServiceImpl implements MonitoringService {
 
     private Map<String, String> collectMonitoringBusinessErrors(
             RegisterMonitoringRecordSolarRequest request,
-            SiteProjectRelation relation
+            SiteProjectRelation relation,
+            Site site,
+            Project project
     ) {
         Map<String, String> errors = new LinkedHashMap<>();
 
@@ -867,7 +868,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             return errors;
         }
 
-        String recordId = request.getSiteId() + "#" + request.getProjectId();
+        String recordId = site.getPublicId() + "#" + project.getPublicId();
         if (monitoringRecordSolarRepository.existsActiveByRecordIdAndDateRecorded(
                 recordId,
                 request.getDateRecorded()

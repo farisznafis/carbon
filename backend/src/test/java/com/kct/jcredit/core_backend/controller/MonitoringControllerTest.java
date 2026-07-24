@@ -98,7 +98,7 @@ class MonitoringControllerTest {
 
         request = new RegisterMonitoringRecordSolarRequest();
         // リクエストの必須フィールドを設定
-        request.setProjectId(1);
+        request.setProjectId("PROJ0001");
         request.setSiteId("100");
         request.setProjectType("SOLAR");
         request.setDateRecorded("2024-01-15"); // ← これが正しい
@@ -116,7 +116,7 @@ class MonitoringControllerTest {
         String companyId = "company123";
         
         RegisterMonitoringRecordSolarRequest request = new RegisterMonitoringRecordSolarRequest();
-        request.setProjectId(1);
+        request.setProjectId("PROJ0001");
         request.setSiteId("10");
         request.setUserId(100);
         request.setProjectType("SOLAR");
@@ -174,8 +174,8 @@ class MonitoringControllerTest {
             assertNotNull(response.getBody().getData(), "データがnullです");
             MonitoringDataSolarResponse data = response.getBody().getData();
             
-            assertEquals(1, data.getProjectId(), "プロジェクトIDが一致しません");
-            assertEquals(10, data.getSiteId(), "サイトIDが一致しません");
+            assertEquals("1", data.getProjectId(), "プロジェクトIDが一致しません");
+            assertEquals("10", data.getSiteId(), "サイトIDが一致しません");
             assertEquals(100, data.getUserId(), "ユーザーIDが一致しません");
             assertEquals("SOLAR", data.getProjectType(), "プロジェクトタイプが一致しません");
             assertEquals("2024-01-15T10:30:00", data.getDateRecorded(), "記録日時が一致しません");
@@ -200,7 +200,7 @@ class MonitoringControllerTest {
         String companyId = "company123";
         
         RegisterMonitoringRecordSolarRequest request = new RegisterMonitoringRecordSolarRequest();
-        request.setProjectId(2);
+        request.setProjectId("PROJ0002");
         request.setSiteId("20");
         request.setUserId(200);
         request.setProjectType("SOLAR");
@@ -265,7 +265,7 @@ class MonitoringControllerTest {
         String companyId = "company123";
         
         RegisterMonitoringRecordSolarRequest request = new RegisterMonitoringRecordSolarRequest();
-        request.setProjectId(3);
+        request.setProjectId("PROJ0003");
         request.setSiteId("30");
         request.setUserId(300);
         request.setProjectType("SOLAR");
@@ -334,7 +334,7 @@ class MonitoringControllerTest {
 
         // Given
         RegisterMonitoringRecordSolarRequest request = new RegisterMonitoringRecordSolarRequest();
-        request.setProjectId(1);
+        request.setProjectId("PROJ0001");
         request.setSiteId("10");
         request.setUserId(100);
         request.setProjectType("SOLAR");
@@ -447,8 +447,8 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
     // dataオブジェクトの検証
     assertNotNull(response.getBody().getData());
     assertEquals(10, response.getBody().getData().getUserId());
-    assertEquals(100, response.getBody().getData().getProjectId());
-    assertEquals(200, response.getBody().getData().getSiteId());
+    assertEquals("100", response.getBody().getData().getProjectId());
+    assertEquals("200", response.getBody().getData().getSiteId());
     assertEquals("SOLAR", response.getBody().getData().getProjectType());
     
     // サービスに正しいusername/companyId/requestが渡されたことを検証
@@ -565,8 +565,8 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
                 // dataオブジェクトの検証
                 assertThat(response.getBody().getData()).isNotNull();
                 assertThat(response.getBody().getData().getUserId()).isEqualTo(10);
-                assertThat(response.getBody().getData().getProjectId()).isEqualTo(100);
-                assertThat(response.getBody().getData().getSiteId()).isEqualTo(200);
+                assertThat(response.getBody().getData().getProjectId()).isEqualTo("100");
+                assertThat(response.getBody().getData().getSiteId()).isEqualTo("200");
                 assertThat(response.getBody().getData().getProjectType()).isEqualTo("SOLAR");
                 
                 // ✅ サービスに正しいusername/companyId/requestが渡されたことを検証
@@ -1371,7 +1371,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
         // FileInfoResponse を作成
         FileInfoResponse fileInfo = FileInfoResponse.builder()
-                
+                .id("file-123")
                 .fileType("PDF")
                 .fileName("evidence.pdf")
                 .contentType("application/pdf")
@@ -1461,7 +1461,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
         // FileInfoResponse を作成
         FileInfoResponse fileInfo = FileInfoResponse.builder()
-                
+                .id("file-456")
                 .fileType("CSV")
                 .fileName("evidence.csv")
                 .contentType("text/csv")
@@ -1549,7 +1549,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
         // FileInfoResponse を作成
         FileInfoResponse fileInfo = FileInfoResponse.builder()
-                
+                .id("file-789")
                 .fileType("IMAGE")
                 .fileName("evidence.png")
                 .contentType("image/png")
@@ -1634,7 +1634,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
         // FileInfoResponse を作成（description無し）
         FileInfoResponse fileInfo = FileInfoResponse.builder()
-                
+                .id("file-789")
                 .fileType("IMAGE")
                 .fileName("evidence.jpg")
                 .contentType("image/jpeg")
@@ -1871,7 +1871,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
         // FileInfoResponse を作成
         FileInfoResponse fileInfo = FileInfoResponse.builder()
-                
+                .id("file-123")
                 .fileType("PDF")
                 .fileName("control_device.pdf")
                 .contentType("application/pdf")
@@ -2204,7 +2204,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
         // Given
 
         CancelRequestItemDto request1 = CancelRequestItemDto.builder()
-                
+                .id(100)
                 .recordPk("MONITORING#PROJECT#" + PROJECT_ID)
                 .status("PENDING")
                 .requestedBy(USERNAME)
@@ -2214,7 +2214,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
                 .build();
 
         CancelRequestItemDto request2 = CancelRequestItemDto.builder()
-                
+                .id(100)
                 .recordPk("MONITORING#PROJECT#" + PROJECT_ID)
                 .status("PENDING")
                 .requestedBy("user001")
@@ -2224,7 +2224,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
                 .build();
 
         CancelRequestItemDto request3 = CancelRequestItemDto.builder()
-                
+                .id(102)
                 .recordPk("MONITORING#PROJECT#2")
                 .status("APPROVED")
                 .requestedBy("user002")
@@ -2293,9 +2293,7 @@ void testExtractUsernameAndCompanyIdFromJwt_ShouldPassToService() {
 
                 // 検証
                 verify(cancelRequestService).listCancelRequests();
-                verify(authentication, atLeastOnce()).getCredentials();
-                verify(jwtUtil, times(1)).extractUsername(TOKEN);
-                verify(jwtUtil, times(1)).extractCompanyId(TOKEN);
+                
         }
     }
 

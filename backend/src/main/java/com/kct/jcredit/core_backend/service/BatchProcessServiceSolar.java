@@ -548,8 +548,11 @@ public class BatchProcessServiceSolar {
             Instant currentBatchStart) {
         
         Site site = siteRepository.findById(siteId).orElse(null);
-        String publicId = site != null ? site.getPublicId() : String.valueOf(siteId);
-        String pk = publicId + "#" + projectId;
+        String sitePublicId = site != null ? site.getPublicId() : String.valueOf(siteId);
+        String projectPublicId = projectRepository.findById(projectId)
+                .map(Project::getPublicId)
+                .orElse(String.valueOf(projectId));
+        String pk = sitePublicId + "#" + projectPublicId;
         String startSk = lastBatchStart.toString();
         String endSk = currentBatchStart.toString();
         

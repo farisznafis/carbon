@@ -41,7 +41,7 @@ public class EnR002ConfirmationItemRequest extends BaseRequest {
     // ── 特定排出者 (conditional) ──────────────────────────────────
     @NotNull
     private Boolean isEmitter;
-
+    
     // conditional
     private String emitterCode;
 
