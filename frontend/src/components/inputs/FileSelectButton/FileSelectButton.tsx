@@ -96,7 +96,7 @@ export function FileSelectButton({
           >
             <IconCloudUpload className={cn('h-6 w-6 transition-transform duration-200', isDragging && 'scale-110')} />
           </span>
-          <span className="flex min-w-0 flex-1 flex-col gap-0.5 xl:flex-row xl:items-center xl:gap-1">
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="truncate text-base font-normal leading-7 text-foreground">
               {value?.name || 'ファイルを選択'}
             </span>

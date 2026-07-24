@@ -262,7 +262,7 @@ export const DynamicAgreementsStep = forwardRef<
                           id={fieldName}
                           checked={field.value === true}
                           onCheckedChange={(checked) =>
-                            field.onChange(checked === true)
+                            field.onChange(checked === true ? true : null)
                           }
                           className="mt-0.5 size-4 shrink-0 rounded border-input"
                         />

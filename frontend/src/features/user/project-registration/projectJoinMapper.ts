@@ -26,12 +26,17 @@ export function mapAgreementValuesToConfirmationItems(
     agreementValues.specifiedEmitterStatus === 'isSpecifiedEmitter';
   const isSubjectToPeriodicReport =
     agreementValues.energyRationalizationCompliance === 'applicable';
+  const mapRequiredAgreement = (
+    value: boolean | null | undefined,
+  ): true | null => {
+    return value === true ? true : null;
+  };
 
   return {
-    isAgreeDataUse: agreementValues.useRegisteredInfo === true,
-    isAgreeExtraData: agreementValues.provideAdditionalInfo === true,
-    isAgreeTransfer: agreementValues.transferEnvironmentalValue === true,
-    isNotRegistered: agreementValues.notRegisteredElsewhere === true,
+    isAgreeDataUse: mapRequiredAgreement(agreementValues.useRegisteredInfo),
+    isAgreeExtraData: mapRequiredAgreement(agreementValues.provideAdditionalInfo),
+    isAgreeTransfer: mapRequiredAgreement(agreementValues.transferEnvironmentalValue),
+    isNotRegistered: mapRequiredAgreement(agreementValues.notRegisteredElsewhere),
     isKeidanrenParticipation:
       agreementValues.keidanrenParticipation === 'participating',
     isEmitter,

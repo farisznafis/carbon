@@ -63,7 +63,7 @@ export function UserLoginForm({ onSubmit, header }: UserLoginFormProps) {
               <FormItem>
                 <FormLabel>社員ID</FormLabel>
                 <FormControl>
-                  <Input type="text" placeholder="1234567890111" {...field} />
+                  <Input type="text" placeholder="例）1234567890111" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -75,9 +75,9 @@ export function UserLoginForm({ onSubmit, header }: UserLoginFormProps) {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>メールアドレス</FormLabel>
+                <FormLabel>メールアドレスまたはユーザー名</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="name@company.com" {...field} />
+                  <Input type="text" placeholder="例）user@example.com または yamada_taro または name.company" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

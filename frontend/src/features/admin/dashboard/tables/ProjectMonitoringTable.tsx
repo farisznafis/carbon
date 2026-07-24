@@ -280,7 +280,7 @@ export function ProjectMonitoringTable({
             columns={columns}
             gridTemplateColumns="minmax(90px,1.1fr) minmax(70px,.8fr) repeat(5,minmax(88px,1fr)) minmax(70px,.7fr) 88px"
             minWidth={0}
-            getRowKey={(record) => record.id}
+            getRowKey={(record) => `${record.id}:${record.timeUpdated}`}
             emptyMessage="モニタリングデータはありません。"
           />
           <PaginationControls

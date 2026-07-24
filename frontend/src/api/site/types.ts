@@ -260,12 +260,12 @@ export type SiteProjectEquipmentValidationResponse = {
 };
 
 export type SiteProjectJoinConfirmationItems = {
-  isAgreeDataUse: boolean;
-  isAgreeExtraData: boolean;
-  isAgreeTransfer: boolean;
-  isNotRegistered: boolean;
-  isKeidanrenParticipation: boolean;
-  isEmitter: boolean;
+  isAgreeDataUse: boolean | null;
+  isAgreeExtraData: boolean | null;
+  isAgreeTransfer: boolean | null;
+  isNotRegistered: boolean | null;
+  isKeidanrenParticipation: boolean | null;
+  isEmitter: boolean | null;
   emitterCode?: string;
   isAdjustedEmissionsAdded?: boolean;
   isSubjectToPeriodicReport: boolean;
