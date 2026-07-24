@@ -14,6 +14,7 @@ export {
   uploadSiteProjectEquipmentFile,
   validateSiteProjectConfirmationItems,
   validateSiteProjectEquipment,
+  validateSiteProjectFinalAgreement,
   validateSiteProjectSustainabilityCommitment,
 } from './equipment';
 export type {
@@ -30,9 +31,12 @@ export type {
   SiteProjectEquipmentValidationFile,
   SiteProjectEquipmentValidationItem,
   SiteProjectEquipmentValidationResponse,
+  SiteProjectFinalAgreementValidationRequest,
+  SiteProjectFinalAgreementValidationResponse,
   SiteProjectConfirmationItemsValidationRequest,
   SiteProjectConfirmationItemsValidationResponse,
   SiteProjectJoinConfirmationItems,
+  SiteProjectJoinConfirmationItemsRequest,
   SiteProjectJoinRequest,
   SiteProjectJoinResponse,
   SiteProjectJoinSustainabilityCommitmentRequest,

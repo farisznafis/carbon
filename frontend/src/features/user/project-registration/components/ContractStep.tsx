@@ -3,7 +3,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import {
   Form,
@@ -41,20 +40,26 @@ interface ContractStepProps {
   errors?: Record<string, string>;
 }
 
+const defaultContractStepValues: ContractStepFormValues = {
+  contractAgreed: false,
+  businessName: '',
+  representativePosition: '',
+  representativeName: '',
+};
+
 export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
-  ({ formValues, onValueChange }, ref) => {
+  ({ formValues, onValueChange, errors = {} }, ref) => {
     const form = useForm<ContractStepData>({
-      // resolver: zodResolver(contractStepSchema),
       mode: 'onChange',
       defaultValues: {
-        contractAgreed: false,
-        businessName: '',
-        representativePosition: '',
-        representativeName: '',
+        ...defaultContractStepValues,
+        ...formValues,
       },
-      ...(formValues as Partial<ContractStepData>),
     });
     const watchedValues = form.watch();
+    const serverErrorFieldsRef = useRef<Array<keyof ContractStepFormValues>>(
+      [],
+    );
 
     useImperativeHandle(
       ref,
@@ -67,8 +72,32 @@ export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
 
     // Reset form with saved values when component mounts or formValues changes
     useEffect(() => {
-      form.reset(formValues as ContractStepFormValues);
+      form.reset({
+        ...defaultContractStepValues,
+        ...formValues,
+      });
     }, [form, formValues]);
+
+    useEffect(() => {
+      serverErrorFieldsRef.current.forEach((fieldName) => {
+        form.clearErrors(fieldName);
+      });
+
+      const serverErrorFields = Object.entries(errors).flatMap(
+        ([fieldName, message]) => {
+          if (!(fieldName in form.getValues()) || !message) return [];
+
+          const contractFieldName =
+            fieldName as keyof ContractStepFormValues;
+          form.setError(contractFieldName, {
+            type: 'server',
+            message,
+          });
+          return [contractFieldName];
+        },
+      );
+      serverErrorFieldsRef.current = serverErrorFields;
+    }, [errors, form]);
 
     const prevValuesRef = useRef(watchedValues);
 

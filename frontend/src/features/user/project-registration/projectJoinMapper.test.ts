@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { SolarEquipment } from '@/features/user/project-registration/components/types';
 import {
   mapConfirmationItemsValidationRequest,
+  mapFinalAgreementRequest,
   mapProjectJoinRequest,
   mapSustainabilityCommitmentRequest,
 } from './projectJoinMapper';
@@ -69,6 +70,11 @@ describe('mapProjectJoinRequest', () => {
         contractAgreed: true,
       },
       { finalTermsAgreed: true },
+      {
+        projectId: 'PROJ0002',
+        processedBy: 'user-1',
+        companyId: 'PC000000001',
+      },
     );
 
     expect(result).toMatchObject({
@@ -77,6 +83,9 @@ describe('mapProjectJoinRequest', () => {
         files: equipment.files,
       },
       confirmationItems: {
+        id: 'PROJ0002',
+        processedBy: 'user-1',
+        companyId: 'PC000000001',
         isAgreeDataUse: true,
         isKeidanrenParticipation: true,
         isEmitter: true,
@@ -191,6 +200,17 @@ describe('mapSustainabilityCommitmentRequest', () => {
       repName: '',
       repRole: '',
       hasConsent: false,
+    });
+  });
+});
+
+describe('mapFinalAgreementRequest', () => {
+  it('maps the final agreement without inventing consent', () => {
+    expect(mapFinalAgreementRequest({ finalTermsAgreed: true })).toEqual({
+      isAgreeTerms: true,
+    });
+    expect(mapFinalAgreementRequest({})).toEqual({
+      isAgreeTerms: false,
     });
   });
 });

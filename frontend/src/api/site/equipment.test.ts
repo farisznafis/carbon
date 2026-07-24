@@ -4,6 +4,7 @@ import {
   uploadSiteProjectEquipmentFile,
   validateSiteProjectConfirmationItems,
   validateSiteProjectEquipment,
+  validateSiteProjectFinalAgreement,
   validateSiteProjectSustainabilityCommitment,
 } from './equipment';
 import type { SiteProjectEquipmentValidationItem } from './types';
@@ -117,6 +118,29 @@ describe('validateSiteProjectSustainabilityCommitment', () => {
   });
 });
 
+describe('validateSiteProjectFinalAgreement', () => {
+  it('posts the final agreement before project submission', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ statusCode: '200' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const payload = { isAgreeTerms: true };
+
+    await validateSiteProjectFinalAgreement(payload);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/site/project/final/validate',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    );
+  });
+});
+
 describe('uploadSiteProjectEquipmentFile', () => {
   it('uploads multipart data and returns validation file metadata', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
@@ -137,13 +161,12 @@ describe('uploadSiteProjectEquipmentFile', () => {
 
     const result = await uploadSiteProjectEquipmentFile(
       'SITE-1',
-      'PROJ0002',
       'panel_catalog',
       new File(['catalog'], 'catalog.pdf', { type: 'application/pdf' }),
     );
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/site/project/SITE-1/PROJ0002/files/upload?fileType=panel_catalog',
+      '/api/site/project/sites/SITE-1/files/upload?fileType=panel_catalog',
       expect.objectContaining({ method: 'POST', body: expect.any(FormData) }),
     );
     expect(result).toEqual({
@@ -182,6 +205,9 @@ describe('joinSiteProject', () => {
         files: [],
       },
       confirmationItems: {
+        id: 'PROJ0002',
+        processedBy: 'user-1',
+        companyId: 'PC000000001',
         isAgreeDataUse: true,
         isAgreeExtraData: true,
         isAgreeTransfer: true,

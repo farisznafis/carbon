@@ -274,6 +274,13 @@ export type SiteProjectJoinConfirmationItems = {
   factoryCode?: string;
 };
 
+export type SiteProjectJoinConfirmationItemsRequest =
+  SiteProjectJoinConfirmationItems & {
+    id: string;
+    processedBy: string;
+    companyId: string;
+  };
+
 export type SiteProjectConfirmationItemsValidationRequest = {
   id: string;
   processedBy: string;
@@ -313,13 +320,22 @@ export type SiteProjectJoinSustainabilityCommitmentResponse = {
   timestamp?: string;
 };
 
+export type SiteProjectFinalAgreementValidationRequest = {
+  isAgreeTerms: boolean;
+};
+
+export type SiteProjectFinalAgreementValidationResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+};
+
 export type SiteProjectJoinRequest = {
   equipment: SiteProjectEquipmentValidationItem;
-  confirmationItems: SiteProjectJoinConfirmationItems;
+  confirmationItems: SiteProjectJoinConfirmationItemsRequest;
   sustainabilityCommitment: SiteProjectJoinSustainabilityCommitmentRequest;
-  finalAgreement: {
-    isAgreeTerms: boolean;
-  };
+  finalAgreement: SiteProjectFinalAgreementValidationRequest;
 };
 
 export type SiteProjectJoinResponse = {

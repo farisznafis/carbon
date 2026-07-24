@@ -1,5 +1,6 @@
 import type {
   SiteProjectConfirmationItemsValidationRequest,
+  SiteProjectFinalAgreementValidationRequest,
   SiteProjectJoinConfirmationItems,
   SiteProjectJoinRequest,
   SiteProjectJoinSustainabilityCommitmentRequest,
@@ -9,6 +10,12 @@ import type { SolarEquipment } from '@/features/user/project-registration/compon
 import type { FinalTermsValues } from '@/features/user/project-registration/components/FinalTermsStep';
 import type { AgreementFormValues } from '@/features/user/project-registration/components/agreementsConfig';
 import { mapSolarFormToEquipmentValidationItem } from '@/features/user/project-registration/equipmentValidationMapper';
+
+type ProjectJoinRequestContext = {
+  projectId: string;
+  processedBy: string;
+  companyId: string;
+};
 
 const mapRadioSelection = (
   value: string | undefined,
@@ -62,11 +69,7 @@ export function mapAgreementValuesToConfirmationItems(
 
 export function mapConfirmationItemsValidationRequest(
   agreementValues: Partial<AgreementFormValues>,
-  context: {
-    projectId: string;
-    processedBy: string;
-    companyId: string;
-  },
+  context: ProjectJoinRequestContext,
 ): SiteProjectConfirmationItemsValidationRequest {
   const confirmationItems =
     mapAgreementValuesToConfirmationItems(agreementValues);
@@ -127,11 +130,20 @@ export function mapSustainabilityCommitmentRequest(
   };
 }
 
+export function mapFinalAgreementRequest(
+  values: Partial<FinalTermsValues>,
+): SiteProjectFinalAgreementValidationRequest {
+  return {
+    isAgreeTerms: values.finalTermsAgreed === true,
+  };
+}
+
 export function mapProjectJoinRequest(
   equipment: SolarEquipment,
   agreementValues: Partial<AgreementFormValues>,
   sustainabilityValues: Partial<ContractStepFormValues>,
   finalTermsValues: Partial<FinalTermsValues>,
+  context: ProjectJoinRequestContext,
 ): SiteProjectJoinRequest {
   return {
     equipment: mapSolarFormToEquipmentValidationItem(
@@ -140,12 +152,14 @@ export function mapProjectJoinRequest(
       equipment.solarData.siteId,
       equipment.files ?? [],
     ),
-    confirmationItems:
-      mapAgreementValuesToConfirmationItems(agreementValues),
+    confirmationItems: {
+      id: context.projectId,
+      processedBy: context.processedBy,
+      companyId: context.companyId,
+      ...mapAgreementValuesToConfirmationItems(agreementValues),
+    },
     sustainabilityCommitment:
       mapSustainabilityCommitmentRequest(sustainabilityValues),
-    finalAgreement: {
-      isAgreeTerms: finalTermsValues.finalTermsAgreed === true,
-    },
+    finalAgreement: mapFinalAgreementRequest(finalTermsValues),
   };
 }

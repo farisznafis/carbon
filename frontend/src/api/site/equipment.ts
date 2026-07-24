@@ -15,13 +15,14 @@ import type {
   SiteProjectConfirmationItemsValidationResponse,
   SiteProjectJoinSustainabilityCommitmentRequest,
   SiteProjectJoinSustainabilityCommitmentResponse,
+  SiteProjectFinalAgreementValidationRequest,
+  SiteProjectFinalAgreementValidationResponse,
   SiteProjectJoinRequest,
   SiteProjectJoinResponse,
 } from './types';
 
 export async function uploadSiteProjectEquipmentFile(
   siteId: string,
-  projectId: string,
   fileType: SiteProjectEquipmentFileType,
   file: File,
 ): Promise<SiteProjectEquipmentValidationFile> {
@@ -29,7 +30,7 @@ export async function uploadSiteProjectEquipmentFile(
   formData.append('file', file);
 
   const response = await apiFetch(
-    `/site/project/${encodeURIComponent(siteId)}/${encodeURIComponent(projectId)}/files/upload?fileType=${encodeURIComponent(fileType)}`,
+    `/site/project/sites/${encodeURIComponent(siteId)}/files/upload?fileType=${encodeURIComponent(fileType)}`,
     {
       method: 'POST',
       body: formData,
@@ -91,6 +92,19 @@ export async function validateSiteProjectSustainabilityCommitment(
       method: 'POST',
       body: payload,
       fallbackErrorMessage: '持続可能性約束の検証に失敗しました。',
+    },
+  );
+}
+
+export async function validateSiteProjectFinalAgreement(
+  payload: SiteProjectFinalAgreementValidationRequest,
+): Promise<SiteProjectFinalAgreementValidationResponse> {
+  return apiRequest<SiteProjectFinalAgreementValidationResponse>(
+    '/site/project/final/validate',
+    {
+      method: 'POST',
+      body: payload,
+      fallbackErrorMessage: '入会規約の検証に失敗しました。',
     },
   );
 }

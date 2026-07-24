@@ -1,12 +1,8 @@
 ﻿import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { z } from "zod";
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from "react-hook-form";
 import { Form, FormItem, FormField, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Checkbox } from "@/components/ui/checkbox";
 
 const FinalTermsSchema = z.object({
   finalTermsAgreed: z.boolean().refine(val => val === true, "同意してください"),
@@ -16,6 +12,7 @@ type FinalTermsData = z.infer<typeof FinalTermsSchema>;
 
 export interface FinalTermsRef {
   triggerValidation: () => Promise<boolean>;
+  getValues: () => FinalTermsValues;
 }
 
 export type FinalTermsValues = {
@@ -31,29 +28,51 @@ interface FinalTermsStepProps {
 export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
   formValues,
   onValueChange,
+  errors = {},
 }, ref) => {
 
   const form = useForm<FinalTermsData>({
-      // resolver: zodResolver(FinalTermsSchema),
       mode: "onChange",
       defaultValues: {
         finalTermsAgreed: false,
+        ...formValues,
       },
-      ...(formValues as Partial<FinalTermsData>),
     });
     const watchedValues = form.watch();
+    const serverErrorFieldsRef = useRef<Array<keyof FinalTermsValues>>([]);
   
     useImperativeHandle(ref, () => ({
-      triggerValidation: async () => {
-        return await form.trigger(); // parent can call this to validate
-      },
+      triggerValidation: () => form.trigger(),
+      getValues: () => form.getValues(),
     }), [form]);
   
     // Reset form with saved values when component mounts or formValues changes
     useEffect(() => {
-      form.reset(formValues as FinalTermsValues
-      );
+      form.reset({
+        finalTermsAgreed: false,
+        ...formValues,
+      });
     }, [form, formValues]);
+
+    useEffect(() => {
+      serverErrorFieldsRef.current.forEach((fieldName) => {
+        form.clearErrors(fieldName);
+      });
+
+      const serverErrorFields = Object.entries(errors).flatMap(
+        ([fieldName, message]) => {
+          if (!(fieldName in form.getValues()) || !message) return [];
+
+          const finalTermsFieldName = fieldName as keyof FinalTermsValues;
+          form.setError(finalTermsFieldName, {
+            type: 'server',
+            message,
+          });
+          return [finalTermsFieldName];
+        },
+      );
+      serverErrorFieldsRef.current = serverErrorFields;
+    }, [errors, form]);
   
     const prevValuesRef = useRef(watchedValues);
   

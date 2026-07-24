@@ -12,6 +12,7 @@ import {
   joinSiteProject,
   uploadSiteProjectEquipmentFile,
   validateSiteProjectConfirmationItems,
+  validateSiteProjectFinalAgreement,
   validateSiteProjectSustainabilityCommitment,
 } from "@/api/site";
 import { ApiError } from "@/api/_shared/errors";
@@ -29,6 +30,7 @@ import {
 } from "@/features/user/project-registration/projectMembershipNavigation";
 import {
   mapConfirmationItemsValidationRequest,
+  mapFinalAgreementRequest,
   mapSustainabilityCommitmentRequest,
   mapProjectJoinRequest,
 } from "@/features/user/project-registration/projectJoinMapper";
@@ -64,6 +66,10 @@ const sustainabilityCommitmentFieldNames: Record<
   repName: "representativeName",
   repRole: "representativePosition",
   hasConsent: "contractAgreed",
+};
+
+const finalAgreementFieldNames: Record<string, keyof FinalTermsValues> = {
+  isAgreeTerms: "finalTermsAgreed",
 };
 
 const getValidationErrorMessage = (error: unknown): string => {
@@ -112,6 +118,27 @@ const mapSustainabilityCommitmentErrors = (
         path.split(/::|[.[\]]/).filter(Boolean).at(-1) ?? path;
       const formFieldName =
         sustainabilityCommitmentFieldNames[requestFieldName];
+      const message = getValidationErrorMessage(error);
+
+      if (formFieldName && message) {
+        fieldErrors[formFieldName] = message;
+      }
+      return fieldErrors;
+    },
+    {},
+  );
+};
+
+const mapFinalAgreementErrors = (
+  errors: unknown,
+): Record<string, string> => {
+  if (!errors || typeof errors !== "object" || Array.isArray(errors)) return {};
+
+  return Object.entries(errors).reduce<Record<string, string>>(
+    (fieldErrors, [path, error]) => {
+      const requestFieldName =
+        path.split(/::|[.[\]]/).filter(Boolean).at(-1) ?? path;
+      const formFieldName = finalAgreementFieldNames[requestFieldName];
       const message = getValidationErrorMessage(error);
 
       if (formFieldName && message) {
@@ -351,9 +378,36 @@ const ProjectRegister = () => {
         }
 
       case 3:
-        if (finalStepRef.current) return await finalStepRef.current.triggerValidation();
+        if (!finalStepRef.current) return false;
+
+        setIsSubmitting(true);
         setFinalTermsErrors({});
-        return false;
+        try {
+          const currentFinalTermsValues = finalStepRef.current.getValues();
+          setFinalTermsValues(currentFinalTermsValues);
+
+          await validateSiteProjectFinalAgreement(
+            mapFinalAgreementRequest(currentFinalTermsValues),
+          );
+          return true;
+        } catch (error) {
+          const fieldErrors =
+            error instanceof ApiError
+              ? mapFinalAgreementErrors(error.payload?.errors)
+              : {};
+          setFinalTermsErrors(fieldErrors);
+          toast({
+            title: "入会規約を確認できませんでした",
+            description:
+              error instanceof Error
+                ? error.message
+                : "入会規約の検証に失敗しました。",
+            variant: "destructive",
+          });
+          return false;
+        } finally {
+          setIsSubmitting(false);
+        }
 
       default:
         return true;
@@ -379,7 +433,6 @@ const ProjectRegister = () => {
                 ({ fileType, file }) =>
                   uploadSiteProjectEquipmentFile(
                     solarEquipment.solarData.siteId,
-                    projectId,
                     fileType,
                     file,
                   ),
@@ -404,7 +457,12 @@ const ProjectRegister = () => {
         equipmentWithUploadedFiles,
         agreementFormValues,
         contractFormValues,
-        finalTermsValues,
+        finalStepRef.current?.getValues() ?? finalTermsValues,
+        {
+          projectId,
+          processedBy: user?.id ?? "",
+          companyId: user?.companyId ?? "",
+        },
       );
       await joinSiteProject(projectId, joinPayload);
 
@@ -484,7 +542,12 @@ const ProjectRegister = () => {
           <FinalTermsStep
             ref={finalStepRef}
             formValues={finalTermsValues}
-            onValueChange={setFinalTermsValues}
+            onValueChange={(values) => {
+              setFinalTermsValues(values);
+              if (Object.keys(finalTermsErrors).length > 0) {
+                setFinalTermsErrors({});
+              }
+            }}
             errors={finalTermsErrors}
           />
         );
