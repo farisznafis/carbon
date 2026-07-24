@@ -4,15 +4,20 @@ import com.kct.jcredit.core_backend.dto.request.CompanyListQuery;
 import com.kct.jcredit.core_backend.dto.request.CreateCompanySuspensionRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectCompanyRequest;
 import com.kct.jcredit.core_backend.dto.request.ResolveCompanySuspensionRequest;
+import com.kct.jcredit.core_backend.dto.request.ReviewParticipationRequest;
 import com.kct.jcredit.core_backend.dto.response.AdminCompanyListResponse;
 import com.kct.jcredit.core_backend.dto.response.AdminCompanyDetailResponse;
 import com.kct.jcredit.core_backend.dto.response.ApproveCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.CompanySuspensionListResponse;
 import com.kct.jcredit.core_backend.dto.response.CompanySuspensionResponse;
 import com.kct.jcredit.core_backend.dto.response.RejectCompanyResponse;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+import com.kct.jcredit.core_backend.dto.response.ParticipationReviewDetailResponse;
 import com.kct.jcredit.core_backend.service.AdminCompanyQueryService;
 import com.kct.jcredit.core_backend.service.CompanyApprovalService;
 import com.kct.jcredit.core_backend.service.CompanyLifecycleService;
+import com.kct.jcredit.core_backend.service.ParticipationReviewService;
+import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -20,9 +25,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import java.util.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -38,7 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/admin/companies")
-@Tag(name = "企業管理", description = "企業の承認、却下、一覧取得、利用停止を管理するAPIです。")
+@Tag(name = "企業管理", description = "企業の承認、却下、一覧取得、利用停止、参加審査を管理するAPIです。")
 @RequiredArgsConstructor
 @Validated
 public class AdminCompanyController {
@@ -46,6 +53,8 @@ public class AdminCompanyController {
     private final CompanyApprovalService companyApprovalService;
     private final AdminCompanyQueryService adminCompanyQueryService;
     private final CompanyLifecycleService companyLifecycleService;
+    private final ParticipationReviewService reviewService;
+    private final JwtUtil jwtUtil;
 
     /**
      * Approves a pending company and provisions its master account.
@@ -165,5 +174,40 @@ public class AdminCompanyController {
                 request
         );
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // PARTICIPATION REVIEW
+    // Note: namespaced under /participation to avoid colliding with the
+    // /{companyId} single-segment mapping above.
+    // ─────────────────────────────────────────────────────────────
+
+    @GetMapping("/participation")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<List<ParticipationReviewDetailResponse>> getPendingReviews() {
+        return ResponseEntity.ok(reviewService.getPendingReviews());
+    }
+
+    @GetMapping("/participation/{participationId}")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ParticipationReviewDetailResponse> getReviewDetail(
+            @PathVariable Integer participationId) {
+        return ResponseEntity.ok(reviewService.getReviewDetail(participationId));
+    }
+
+    @PostMapping("/participation/{participationId}/review")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<BaseResponse> submitReview(
+            Authentication authentication,
+            @PathVariable Integer participationId,
+            @RequestBody @Valid ReviewParticipationRequest request) {
+
+        Integer operatorUserId = jwtUtil.extractUserId(authentication.getCredentials().toString());
+
+        reviewService.submitReview(participationId, operatorUserId, request);
+        return ResponseEntity.ok(BaseResponse.success("レビューを受け付けました。"));
     }
 }

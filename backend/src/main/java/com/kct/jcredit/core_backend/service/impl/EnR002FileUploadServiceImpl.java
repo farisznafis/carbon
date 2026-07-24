@@ -1,7 +1,7 @@
 package com.kct.jcredit.core_backend.service.impl;
 
 import com.kct.jcredit.core_backend.service.EnR002FileUploadService;
-import com.kct.jcredit.core_backend.dto.response.EnR002FileUploadResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002FileResponse;
 import com.kct.jcredit.core_backend.dto.response.details.ValidationErrorDetail;
 import com.kct.jcredit.core_backend.enums.EquipmentFileType;
 import com.kct.jcredit.core_backend.exception.UnsupportedFileTypeException;
@@ -50,7 +50,7 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
     // ─────────────────────────────────────────────────────────────
 
     @Override
-    public EnR002FileUploadResponse uploadFile(String siteId,
+    public EnR002FileResponse uploadFile(String siteId,
                                                 EquipmentFileType fileType,
                                                 String uploadedBy,
                                                 MultipartFile file) {
@@ -109,7 +109,7 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
         log.info("File uploaded to S3 tmp. siteId={}, fileType={}, s3Key={}",
                  siteId, fileType.getValue(), s3Key);
 
-        return EnR002FileUploadResponse.builder()
+        return EnR002FileResponse.builder()
                 .statusCode("OK")
                 .s3Key(s3Key)
                 .fileId(fileId)

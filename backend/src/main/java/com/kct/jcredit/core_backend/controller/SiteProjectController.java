@@ -8,7 +8,7 @@ import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002FinalAgreementRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyMethodologyValidateRequest;
-import com.kct.jcredit.core_backend.dto.response.EnR002FileUploadResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002FileResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 import com.kct.jcredit.core_backend.dto.response.ProjectJoinResponse;
@@ -19,12 +19,14 @@ import com.kct.jcredit.core_backend.service.ParticipationProjectService;
 import com.kct.jcredit.core_backend.service.EnR002FileUploadService;
 import com.kct.jcredit.core_backend.service.ParticipationProjectService;
 import com.kct.jcredit.core_backend.service.ParticipationProjectValidationService;
+import com.kct.jcredit.core_backend.service.ProjectParticipationPdfService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 
 import java.io.IOException;
@@ -37,6 +39,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @RestController
 @RequestMapping("/site/project")
 @Tag(name = "拠点プロジェクト設備", description = "拠点プロジェクトの設備登録、ファイルアップロード、入力検証を管理するAPIです。")
@@ -46,15 +49,18 @@ public class SiteProjectController {
     private final ParticipationProjectService participationService;
     private final ParticipationProjectValidationService validationService;
     private final EnR002FileUploadService  fileUploadSolarService;
+    private final ProjectParticipationPdfService pdfService;
 
     public SiteProjectController(JwtUtil jwtUtil,
                                  ParticipationProjectService participationService,
                                  ParticipationProjectValidationService validationService,
-                                 EnR002FileUploadService fileUploadSolarService) {
+                                 EnR002FileUploadService fileUploadSolarService,
+                                 ProjectParticipationPdfService pdfService) {
         this.jwtUtil = jwtUtil;
         this.participationService = participationService;
         this.validationService = validationService;
         this.fileUploadSolarService = fileUploadSolarService;
+        this.pdfService = pdfService;
     }
     // ─────────────────────────────────────────────────────────────
     // FILE UPLOAD (reuse FileUploadSolarService)
@@ -64,7 +70,7 @@ public class SiteProjectController {
              consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('master','user')")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<EnR002FileUploadResponse> uploadFile(
+    public ResponseEntity<EnR002FileResponse> uploadFile(
             Authentication authentication,
             @PathVariable String siteId,
             @RequestParam("fileType") String fileType,
@@ -73,7 +79,7 @@ public class SiteProjectController {
         String uploadedBy = jwtUtil.extractUsername(authentication.getCredentials().toString());
         EquipmentFileType fileTypeEnum = EquipmentFileType.fromValue(fileType);
 
-        EnR002FileUploadResponse response = fileUploadSolarService
+        EnR002FileResponse response = fileUploadSolarService
                 .uploadFile(siteId, fileTypeEnum, uploadedBy, file);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
@@ -178,5 +184,60 @@ public class SiteProjectController {
 
     private Integer extractUserId(Authentication auth) {
         return jwtUtil.extractUserId(auth.getCredentials().toString());
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // PDF GENERATION (debug/manual trigger endpoints)
+    // ─────────────────────────────────────────────────────────────
+
+    @PostMapping("/generate/{participationId}")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<String> generate(@PathVariable Integer participationId) {
+        log.warn("[DEBUG] generateAndProcess を手動実行します。participationId={}", participationId);
+
+        try {
+            pdfService.generateAndProcess(participationId);
+            return ResponseEntity.ok("PDF生成処理が完了しました。participationId=" + participationId);
+        } catch (Exception e) {
+            log.error("[DEBUG] PDF生成失敗", e);
+            return ResponseEntity.internalServerError()
+                    .body("エラー: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/presigned-url")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<String> presignedUrl(@RequestParam String s3Key) {
+        log.warn("[DEBUG] Presigned URL を手動生成します。s3Key={}", s3Key);
+
+        try {
+            String url = pdfService.generatePresignedUrl(s3Key);
+            return ResponseEntity.ok(url);
+        } catch (Exception e) {
+            log.error("[DEBUG] Presigned URL生成失敗", e);
+            return ResponseEntity.internalServerError()
+                    .body("エラー: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/generate-and-get-url/{participationId}")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<String> generateAndGetUrl(
+            @PathVariable Integer participationId,
+            @RequestParam String s3Key) {
+
+        try {
+            pdfService.generateAndProcess(participationId);
+            String url = pdfService.generatePresignedUrl(s3Key);
+            log.warn("[DEBUG] 生成完了。ブラウザで以下URLを開いてPDFを確認してください: {}", url);
+            return ResponseEntity.ok(url);
+        } catch (Exception e) {
+            log.error("[DEBUG] end-to-endテスト失敗", e);
+            return ResponseEntity.internalServerError()
+                    .body("エラー: " + e.getMessage());
+        }
     }
 }

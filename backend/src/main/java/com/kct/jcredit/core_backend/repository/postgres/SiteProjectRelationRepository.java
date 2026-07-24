@@ -37,7 +37,8 @@ public interface SiteProjectRelationRepository extends JpaRepository<SiteProject
     Optional<SiteProjectRelation> findBySiteIdAndProjectId(Integer siteId, Integer projectId);
     
     SiteProjectRelation findByProjectIdAndSiteId(Integer projectId, Integer siteId);
-    
+
+    List<SiteProjectRelation> findByStatus(String status);
 
     @Query("SELECT spr.site.id FROM SiteProjectRelation spr WHERE spr.project.id = :projectId")
     List<Integer> findSiteIdsByProjectId(@Param("projectId") Integer projectId);

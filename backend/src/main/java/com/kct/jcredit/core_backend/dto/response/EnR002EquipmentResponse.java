@@ -9,14 +9,16 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+
 import jakarta.persistence.Column;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EnR002EquipmentResponse {
-    
+public class EnR002EquipmentResponse extends BaseResponse {
+
     private Integer id;
     private String siteId;
 
@@ -40,4 +42,5 @@ public class EnR002EquipmentResponse {
     private BigDecimal preProjectUnitPrice;
 
     private List<String> evidenceDocuments;
+    private List<EnR002EquipmentFileResponse> files;
 }

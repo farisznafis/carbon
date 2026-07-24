@@ -22,4 +22,6 @@ public interface ParticipatingProjectRepository
     @Transactional
     @Query("UPDATE ParticipatingProject p SET p.s3KeyPdfMembership = :s3Key WHERE p.id = :id")
     void updatePdfS3Key(@Param("id") Integer id, @Param("s3Key") String s3Key);
+
+    Optional<ParticipatingProject> findByEquipment_Site_IdAndProject_Id(Integer siteId, Integer projectId);
 }
