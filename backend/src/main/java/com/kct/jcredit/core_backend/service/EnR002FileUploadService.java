@@ -3,7 +3,7 @@ package com.kct.jcredit.core_backend.service;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002FinalAgreementRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
-import com.kct.jcredit.core_backend.dto.response.EnR002FileUploadResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002FileResponse;
 import com.kct.jcredit.core_backend.entity.ParticipatingProject;
 import com.kct.jcredit.core_backend.enums.EquipmentFileType;
 
@@ -17,7 +17,7 @@ import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 public interface EnR002FileUploadService {
 
     // Upload file evidence equipment ke S3 temp
-    EnR002FileUploadResponse uploadFile(Integer siteId,
+    EnR002FileResponse uploadFile(Integer siteId,
                                         EquipmentFileType fileType,
                                         String uploadedBy,
                                         MultipartFile file);

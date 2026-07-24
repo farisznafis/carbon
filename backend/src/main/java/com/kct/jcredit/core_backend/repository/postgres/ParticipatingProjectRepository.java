@@ -2,6 +2,7 @@ package com.kct.jcredit.core_backend.repository.postgres;
 
 import com.kct.jcredit.core_backend.entity.ParticipatingProject;
 import com.kct.jcredit.core_backend.entity.Project;
+import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 
 import jakarta.transaction.Transactional;
 
@@ -22,4 +23,9 @@ public interface ParticipatingProjectRepository
     @Transactional
     @Query("UPDATE ParticipatingProject p SET p.s3KeyPdfMembership = :s3Key WHERE p.id = :id")
     void updatePdfS3Key(@Param("id") Integer id, @Param("s3Key") String s3Key);
+
+    // List<SiteProjectRelation> findByStatus(String status);
+
+    Optional<ParticipatingProject> findByEquipment_Site_IdAndProject_Id(Integer siteId, Integer projectId);
+
 }

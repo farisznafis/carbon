@@ -19,7 +19,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortK
 @AllArgsConstructor
 public class EnR002ApplicationConfirmation {
 
-    private String  pk; // "PART#{participatingProjectId}"
+    private String  pk; 
 
     private Boolean isAgreeDataUse;
     private Boolean isAgreeExtraData;
