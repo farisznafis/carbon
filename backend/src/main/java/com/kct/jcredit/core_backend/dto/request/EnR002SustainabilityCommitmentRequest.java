@@ -34,7 +34,6 @@ public class EnR002SustainabilityCommitmentRequest {
     private String repRole;
 
     // true 
-    @NotNull
     private Boolean hasConsent;
 
     public static Object builder() {
