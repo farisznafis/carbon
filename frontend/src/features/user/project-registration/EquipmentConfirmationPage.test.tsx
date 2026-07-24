@@ -114,7 +114,7 @@ describe('EquipmentConfirmationPage', () => {
     vi.unstubAllGlobals();
   });
 
-  it('uploads files, stores their metadata, and returns to the equipment list', async () => {
+  it('uploads files, stores their metadata, and continues registration', async () => {
     renderPage();
 
     expect(await screen.findByText('設備登録の確認')).toBeInTheDocument();

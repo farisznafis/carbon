@@ -77,7 +77,7 @@ export function UserLoginForm({ onSubmit, header }: UserLoginFormProps) {
               <FormItem>
                 <FormLabel>メールアドレスまたはユーザー名</FormLabel>
                 <FormControl>
-                  <Input type="text" placeholder="例）user@example.com または yamada_taro または name.company" {...field} />
+                  <Input type="text" placeholder="例）user@example.com または name_company" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

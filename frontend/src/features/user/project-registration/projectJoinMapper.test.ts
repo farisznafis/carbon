@@ -3,7 +3,7 @@ import type { SolarEquipment } from '@/features/user/project-registration/compon
 import {
   mapConfirmationItemsValidationRequest,
   mapFinalAgreementRequest,
-  mapProjectSolarRegistrationRequest,
+  mapProjectJoinRequest,
   mapSustainabilityCommitmentRequest,
 } from './projectJoinMapper';
 
@@ -45,10 +45,10 @@ const equipment: SolarEquipment = {
   ],
 };
 
-describe('mapProjectSolarRegistrationRequest', () => {
-  it('maps every registration step to one aggregate solar request', () => {
-    const result = mapProjectSolarRegistrationRequest(
-      [equipment],
+describe('mapProjectJoinRequest', () => {
+  it('maps every registration step to the nested project join request', () => {
+    const result = mapProjectJoinRequest(
+      equipment,
       {
         useRegisteredInfo: true,
         provideAdditionalInfo: true,
@@ -71,45 +71,44 @@ describe('mapProjectSolarRegistrationRequest', () => {
       },
       { finalTermsAgreed: true },
       {
-        siteId: 'SITE-1',
         projectId: 'PROJ0002',
         processedBy: 'user-1',
         companyId: 'PC000000001',
-        methodologyNumber: 'EN-R-002',
       },
     );
 
     expect(result).toMatchObject({
-      siteId: 'SITE-1',
-      projectId: 'PROJ0002',
-      equipments: [
-        {
-          tempId: 'equipment-1',
-          methodologyNumber: 'EN-R-002',
-          isEligible: true,
-          powerCondUnitCount: 1,
-          powerCondStandby: 1,
-          files: equipment.files,
-        },
-      ],
-      isAgreeDataUse: true,
-      isKeidanrenParticipation: true,
-      isEmitter: true,
-      emitterCode: '123456789',
-      isAdjustedEmissionsAdded: true,
-      isSubjectToPeriodicReport: true,
-      isPeriodicReportTypeOne: true,
-      energyReport: 'type1',
-      energyBusinessCode: '1234567',
-      factoryCode: '7654321',
-      companyName: 'Company',
-      repName: 'Representative',
-      repRole: 'Director',
-      hasConsent: true,
-      isAgreeTerms: true,
+      equipment: {
+        tempId: 'equipment-1',
+        siteId: 'SITE-1',
+        pcsUnitCount: 1,
+        pcsStandby: 1,
+        files: equipment.files,
+      },
+      confirmationItems: {
+        id: 'PROJ0002',
+        processedBy: 'user-1',
+        companyId: 'PC000000001',
+        isAgreeDataUse: true,
+        isKeidanrenParticipation: true,
+        isEmitter: true,
+        emitterCode: '123456789',
+        isAdjustedEmissionsAdded: true,
+        isSubjectToPeriodicReport: true,
+        isPeriodicReportTypeOne: true,
+        energyBusinessCode: '1234567',
+        factoryCode: '7654321',
+      },
+      sustainabilityCommitment: {
+        companyName: 'Company',
+        repName: 'Representative',
+        repRole: 'Director',
+        hasConsent: true,
+      },
+      finalAgreement: {
+        isAgreeTerms: true,
+      },
     });
-    expect(result).not.toHaveProperty('equipment');
-    expect(result).not.toHaveProperty('confirmationItems');
   });
 });
 

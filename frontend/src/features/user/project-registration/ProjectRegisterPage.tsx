@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { getProjectDetails } from "@/api/projects";
 import {
-  registerSiteProjectSolar,
+  joinSiteProject,
   uploadSiteProjectEquipmentFile,
   validateSiteProjectConfirmationItems,
   validateSiteProjectFinalAgreement,
@@ -20,7 +20,6 @@ import { DynamicAgreementsStep, type DynamicAgreementsStepRef } from "@/features
 import { ContractStep, type ContractStepRef, type ContractStepFormValues } from "@/features/user/project-registration/components/ContractStep";
 import { FinalTermsStep, type FinalTermsRef, type FinalTermsValues } from "@/features/user/project-registration/components/FinalTermsStep";
 import { CompletionStep } from "@/features/user/project-registration/components/CompletionStep";
-import { EquipmentStep } from "@/features/user/project-registration/components/EquipmentStep";
 import { ProjectRegistrationReviewStep } from "@/features/user/project-registration/components/ProjectRegistrationReviewStep";
 import { FormPageWrapper } from "@/components/layout/FormPageWrapper/FormPageWrapper";
 import type { Equipment } from "@/features/user/project-registration/components/types";
@@ -34,20 +33,19 @@ import {
   mapConfirmationItemsValidationRequest,
   mapFinalAgreementRequest,
   mapSustainabilityCommitmentRequest,
-  mapProjectSolarRegistrationRequest,
+  mapProjectJoinRequest,
 } from "@/features/user/project-registration/projectJoinMapper";
 import { getPendingSolarEquipment } from "@/features/user/project-registration/equipmentConfirmationState";
 import { getSolarFormSelectedFiles } from "@/features/user/project-registration/equipmentValidationMapper";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const TOTAL_FORM_STEPS = 5;
-const EQUIPMENT_STEP = 1;
-const CONFIRMATION_ITEMS_STEP = 2;
-const SUSTAINABILITY_STEP = 3;
-const FINAL_AGREEMENT_STEP = 4;
-const REVIEW_STEP = 5;
-const COMPLETION_STEP = 6;
+const TOTAL_FORM_STEPS = 4;
+const CONFIRMATION_ITEMS_STEP = 1;
+const SUSTAINABILITY_STEP = 2;
+const FINAL_AGREEMENT_STEP = 3;
+const REVIEW_STEP = 4;
+const COMPLETION_STEP = 5;
 
 const confirmationItemFieldNames: Record<string, keyof AgreementFormValues> = {
   isAgreeDataUse: "useRegisteredInfo",
@@ -289,21 +287,28 @@ const ProjectRegister = () => {
     const loadEquipment = () => {
       const stored = localStorage.getItem(`project_${projectId}_equipment`);
       const storedEquipment: Equipment[] = stored ? JSON.parse(stored) : [];
-      if (!pendingEquipment) {
-        setEquipment(storedEquipment);
+      if (pendingEquipment) {
+        setEquipment([pendingEquipment]);
         return;
       }
 
-      const equipmentExists = storedEquipment.some(
-        (item) => item.id === pendingEquipment.id,
-      );
-      setEquipment(
-        equipmentExists
-          ? storedEquipment.map((item) =>
-              item.id === pendingEquipment.id ? pendingEquipment : item,
-            )
-          : [...storedEquipment, pendingEquipment],
-      );
+      const latestEquipmentWithFiles = storedEquipment
+        .filter(
+          (item): item is Extract<Equipment, { formType: 'solar' }> =>
+            item.formType === 'solar' && (item.files?.length ?? 0) > 0,
+        )
+        .at(-1);
+      const activeEquipment = latestEquipmentWithFiles
+        ? [latestEquipmentWithFiles]
+        : storedEquipment.slice(-1);
+
+      setEquipment(activeEquipment);
+      if (latestEquipmentWithFiles) {
+        localStorage.setItem(
+          `project_${projectId}_equipment`,
+          JSON.stringify(activeEquipment),
+        );
+      }
     };
 
     loadEquipment();
@@ -312,33 +317,8 @@ const ProjectRegister = () => {
   }, [pendingEquipment, projectId]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
-  const handleRemoveEquipment = useCallback(
-    (equipmentId: string) => {
-      setEquipment((currentEquipment) => {
-        const nextEquipment = currentEquipment.filter(
-          (item) => item.id !== equipmentId,
-        );
-        localStorage.setItem(
-          `project_${projectId}_equipment`,
-          JSON.stringify(nextEquipment),
-        );
-        return nextEquipment;
-      });
-    },
-    [projectId],
-  );
-
   const validateStep = async (): Promise<boolean> => {
     switch (currentStep) {
-      case EQUIPMENT_STEP:
-        if (equipment.length > 0) return true;
-        toast({
-          title: "設備情報が必要です",
-          description: "少なくとも1つの設備を追加してください。",
-          variant: "destructive",
-        });
-        return false;
-
       case CONFIRMATION_ITEMS_STEP:
         if (!agreementsStepRef.current) return false;
 
@@ -502,24 +482,24 @@ const ProjectRegister = () => {
         JSON.stringify(updatedEquipment),
       );
 
-      const registrationPayload = mapProjectSolarRegistrationRequest(
-        equipmentsWithUploadedFiles,
+      const equipmentToRegister =
+        equipmentsWithUploadedFiles[equipmentsWithUploadedFiles.length - 1];
+      if (!equipmentToRegister) {
+        throw new Error('登録する太陽光発電設備が見つかりません。');
+      }
+
+      const registrationPayload = mapProjectJoinRequest(
+        equipmentToRegister,
         agreementFormValues,
         contractFormValues,
         finalStepRef.current?.getValues() ?? finalTermsValues,
         {
-          siteId: resolvedSiteId,
           projectId,
           processedBy: user?.id ?? "",
           companyId: user?.companyId ?? "",
-          methodologyNumber: selectedProject.methodologyNumber ?? "",
         },
       );
-      await registerSiteProjectSolar(
-        resolvedSiteId,
-        projectId,
-        registrationPayload,
-      );
+      await joinSiteProject(projectId, registrationPayload);
 
       const storedProjects = localStorage.getItem("appliedProjects");
       const appliedProjects = storedProjects ? JSON.parse(storedProjects) : [];
@@ -564,13 +544,6 @@ const ProjectRegister = () => {
   // ── Render steps ──────────────────────────────────────────────────────────
   const renderStep = () => {
     switch (currentStep) {
-      case EQUIPMENT_STEP:
-        return (
-          <EquipmentStep
-            equipment={equipment}
-            onRemoveEquipment={handleRemoveEquipment}
-          />
-        );
       case CONFIRMATION_ITEMS_STEP:
         return (
           <DynamicAgreementsStep

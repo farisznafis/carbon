@@ -10,7 +10,7 @@ export {
 export { getSiteProjects } from './projects';
 export {
   getSiteProjectEquipment,
-  registerSiteProjectSolar,
+  joinSiteProject,
   uploadSiteProjectEquipmentFile,
   validateSiteProjectConfirmationItems,
   validateSiteProjectEquipment,
@@ -36,11 +36,11 @@ export type {
   SiteProjectConfirmationItemsValidationRequest,
   SiteProjectConfirmationItemsValidationResponse,
   SiteProjectJoinConfirmationItems,
+  SiteProjectJoinConfirmationItemsRequest,
+  SiteProjectJoinRequest,
+  SiteProjectJoinResponse,
   SiteProjectJoinSustainabilityCommitmentRequest,
   SiteProjectJoinSustainabilityCommitmentResponse,
-  SiteProjectSolarRegistrationEquipment,
-  SiteProjectSolarRegistrationRequest,
-  SiteProjectSolarRegistrationResponse,
   SiteListItem,
   SiteProject,
   SiteProjectsApiResponse,

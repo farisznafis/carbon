@@ -58,10 +58,6 @@ function saveEquipment(
   files: SiteProjectEquipmentValidationFile[],
 ): Extract<Equipment, { formType: 'solar' }> {
   const storageKey = `project_${projectId}_equipment`;
-  const storedEquipment = localStorage.getItem(storageKey);
-  const equipmentList: Equipment[] = storedEquipment
-    ? (JSON.parse(storedEquipment) as Equipment[])
-    : [];
   const pendingEquipment: Extract<Equipment, { formType: 'solar' }> = {
     id: confirmationState.equipmentId,
     formType: 'solar',
@@ -72,16 +68,7 @@ function saveEquipment(
     ...pendingEquipment,
     solarData: withoutLocalFiles(confirmationState.formData),
   };
-  const equipmentExists = equipmentList.some(
-    (item) => item.id === confirmationState.equipmentId,
-  );
-  const nextEquipment = equipmentExists
-    ? equipmentList.map((item) =>
-        item.id === confirmationState.equipmentId ? storedEquipmentData : item,
-      )
-    : [...equipmentList, storedEquipmentData];
-
-  localStorage.setItem(storageKey, JSON.stringify(nextEquipment));
+  localStorage.setItem(storageKey, JSON.stringify([storedEquipmentData]));
   return pendingEquipment;
 }
 
