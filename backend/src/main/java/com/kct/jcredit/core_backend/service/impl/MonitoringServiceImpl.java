@@ -110,7 +110,7 @@ public class MonitoringServiceImpl implements MonitoringService {
                 return response;
             }
 
-            Project project = projectRepository.findById(request.getProjectId()).orElse(null);
+            Project project = projectRepository.findByPublicIdWithFallback(request.getProjectId()).orElse(null);
             //プロジェクトのnullチェック
             if (project == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -158,7 +158,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             // DynamoDBエンティティを作成してデータを入力する
             EnR002MonitoringRecord entity = new EnR002MonitoringRecord();
             // Changed PK format: Now SITE#PROJECT (company validation still done via JWT + entity validation)
-            entity.setId(site.getPublicId() + "#" + project.getId());
+            entity.setId(site.getId() + "#" + project.getId());
             entity.setProjectID(project.getId());
             entity.setSiteID(site.getId());
             entity.setParticipatingUserID(user.getId());
@@ -270,13 +270,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             }
 
             //プロジェクト取得
-            Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
-                .map(Project::getId)
-                .orElse(null);
-            Project project = null;
-            if (projectDbId != null) {
-                project = projectRepository.findById(projectDbId).orElse(null);
-            }
+            Project project = projectRepository.findByPublicIdWithFallback(projectId).orElse(null);
             //プロジェクトのnullチェック
             if (project == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -302,7 +296,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // 4) Fetch latest monitoring record from DynamoDB
             // DynamoDBから最新の監視記録を取得する
-            String recordId = site.getPublicId() + "#" + project.getId();
+            String recordId = site.getId() + "#" + project.getId();
             EnR002MonitoringRecord entity = monitoringRecordSolarRepository.findLatest(recordId)
                     .orElse(null);
 
@@ -362,7 +356,14 @@ public class MonitoringServiceImpl implements MonitoringService {
                 response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
                 return response;
             }
+            // Build target PKs for DynamoDB query (format: siteId#projectId)
             List<Integer> siteIds = siteProjectRelationRepository.findSiteIdsByProjectId(projectDbId);
+            List<String> targetPks = new java.util.ArrayList<>();
+            if (siteIds != null) {
+                for (Integer siteId : siteIds) {
+                    targetPks.add(siteId + "#" + projectDbId);
+                }
+            }
 
             // Create pagination object
             //ページネーション作成
@@ -374,7 +375,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             //Fetch data - pagination object is updated by repository
             //データ取得 - ページネーションオブジェクトはリポジトリによって更新されます
             List<EnR002MonitoringRecord> entities = 
-                monitoringRecordSolarRepository.findAllByProjectIdPaginated(projectDbId, siteIds, pagination);
+                monitoringRecordSolarRepository.findAllByProjectIdPaginated(targetPks, pagination);
 
             //entitiesが空文字の場合
             if (entities.isEmpty()) {
@@ -466,13 +467,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             }
 
             //プロジェクト取得
-            Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
-                .map(Project::getId)
-                .orElse(null);
-            Project project = null;
-            if (projectDbId != null) {
-                project = projectRepository.findById(projectDbId).orElse(null);
-            }
+            Project project = projectRepository.findByPublicIdWithFallback(projectId).orElse(null);
             //プロジェクトのnullチェック
             if (project == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -505,7 +500,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // Fetch data - pagination object is updated by repository
             //データ取得 - ページネーションオブジェクトはリポジトリによって更新されます
-            String recordId = site.getPublicId() + "#" + project.getId();
+            String recordId = site.getId() + "#" + project.getId();
             List<EnR002MonitoringRecord> entities = 
                 monitoringRecordSolarRepository.findAllByRecordIdPaginated(recordId, pagination);
 
@@ -581,14 +576,7 @@ public class MonitoringServiceImpl implements MonitoringService {
                 response.setMessage(ResponseConstants.MSG_SITE_NOT_IN_COMPANY);
                 return response;
             }
-
-            Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
-                .map(Project::getId)
-                .orElse(null);
-            Project project = null;
-            if (projectDbId != null) {
-                project = projectRepository.findById(projectDbId).orElse(null);
-            }
+            Project project = projectRepository.findByPublicIdWithFallback(projectId).orElse(null);
             if (project == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
@@ -719,7 +707,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             );
         }
 
-        Project project = projectRepository.findById(request.getProjectId()).orElse(null);
+        Project project = projectRepository.findByPublicIdWithFallback(request.getProjectId()).orElse(null);
         if (project == null) {
             return MonitoringValidationResult.invalid(
                     BaseResponse.error(ResponseConstants.NOT_FOUND, ResponseConstants.MSG_PROJECT_NOT_FOUND)

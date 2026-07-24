@@ -183,15 +183,10 @@ public List<EnR002MonitoringRecord> findAllByRecordIdPaginated(
 
 
 public List<EnR002MonitoringRecord> findAllByProjectIdPaginated(
-        Integer projectId,
-        List<Integer> siteIds,
+        List<String> targetPks,
         PaginationDetailResponse pagination) {
 
-    // 1. Get all sites connected to the project.
-    // Replace ProjectSite with your actual site/entity class.
-   // List<ProjectSite> sites = siteRepository.findAllByProjectId(projectId);
-
-    if (siteIds == null || siteIds.isEmpty()) {
+    if (targetPks == null || targetPks.isEmpty()) {
         pagination.setNextPageToken(null);
         pagination.setHasMore(false);
         return java.util.Collections.emptyList();
@@ -207,10 +202,9 @@ public List<EnR002MonitoringRecord> findAllByProjectIdPaginated(
     int siteIndex = token.getSiteIndex();
     String lastSk = token.getLastSk();
 
-    // 2. Loop through project sites in project/site order.
-    while (siteIndex < siteIds.size() && result.size() < limit) {
-        Integer siteId = siteIds.get(siteIndex);
-        String pk = siteId + "#" + projectId;
+    // 2. Loop through target PKs (each PK = sitePublicId#projectDbId)
+    while (siteIndex < targetPks.size() && result.size() < limit) {
+        String pk = targetPks.get(siteIndex);
         int remainingLimit = limit - result.size();
 
         QueryConditional queryConditional = QueryConditional.keyEqualTo(
@@ -277,7 +271,7 @@ public List<EnR002MonitoringRecord> findAllByProjectIdPaginated(
 
     // 5. If we stopped because limit was reached exactly, but there are more sites left,
     // create a token pointing to the next site.
-    if (siteIndex < siteIds.size()) {
+    if (siteIndex < targetPks.size()) {
         ProjectPaginationToken nextToken = new ProjectPaginationToken(
             siteIndex,
             null
@@ -353,5 +347,55 @@ public List<EnR002MonitoringRecord> findAllByProjectIdPaginated(
             // If token is invalid, restart from beginning.
             return new ProjectPaginationToken(0, null);
         }
+    }
+
+    private List<EnR002MonitoringRecord> scanAllByProjectIdPaginated(Integer projectId, PaginationDetailResponse pagination) {
+        int limit = pagination.getLimit();
+        List<EnR002MonitoringRecord> result = new ArrayList<>();
+        
+        software.amazon.awssdk.enhanced.dynamodb.Expression filterExpression = software.amazon.awssdk.enhanced.dynamodb.Expression.builder()
+            .expression("projectID = :projectId")
+            .putExpressionValue(":projectId", software.amazon.awssdk.services.dynamodb.model.AttributeValue.builder().n(String.valueOf(projectId)).build())
+            .build();
+            
+        software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.Builder scanBuilder = software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.builder()
+            .filterExpression(filterExpression)
+            .limit(limit);
+            
+        if (pagination.getNextPageToken() != null && !pagination.getNextPageToken().isEmpty()) {
+            try {
+                String decodedStr = new String(java.util.Base64.getDecoder().decode(pagination.getNextPageToken()), java.nio.charset.StandardCharsets.UTF_8);
+                String[] parts = decodedStr.split("::");
+                if (parts.length == 2) {
+                    Map<String, software.amazon.awssdk.services.dynamodb.model.AttributeValue> startKey = new HashMap<>();
+                    startKey.put("PK", software.amazon.awssdk.services.dynamodb.model.AttributeValue.builder().s(parts[0]).build());
+                    startKey.put("SK", software.amazon.awssdk.services.dynamodb.model.AttributeValue.builder().s(parts[1]).build());
+                    scanBuilder.exclusiveStartKey(startKey);
+                }
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+
+        software.amazon.awssdk.enhanced.dynamodb.model.PageIterable<EnR002MonitoringRecord> pages = table.scan(scanBuilder.build());
+        
+        for (software.amazon.awssdk.enhanced.dynamodb.model.Page<EnR002MonitoringRecord> page : pages) {
+            result.addAll(page.items());
+            
+            Map<String, software.amazon.awssdk.services.dynamodb.model.AttributeValue> lastKey = page.lastEvaluatedKey();
+            if (lastKey != null && !lastKey.isEmpty()) {
+                String pk = lastKey.get("PK").s();
+                String sk = lastKey.get("SK").s();
+                String token = java.util.Base64.getEncoder().encodeToString((pk + "::" + sk).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                pagination.setNextPageToken(token);
+                pagination.setHasMore(true);
+            } else {
+                pagination.setNextPageToken(null);
+                pagination.setHasMore(false);
+            }
+            break;
+        }
+        
+        return result;
     }
 }
