@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 
 interface SiteData {
-  id: string;
+  siteId: string;
   name: string;
   postalCode: string;
   prefecture: string;
@@ -40,7 +40,7 @@ interface CompanyUser {
 }
 
 const SiteDetail = () => {
-  const { id } = useParams();
+  const { siteId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -82,7 +82,7 @@ const SiteDetail = () => {
       // Mock data - would come from API
       // 
       // ========== API Integration Stub for Backend ==========
-      // const response = await fetch(`/api/sites/${id}`, {
+      // const response = await fetch(`/api/sites/${siteId}`, {
       //   method: 'GET',
       //   headers: {
       //     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -93,7 +93,7 @@ const SiteDetail = () => {
       // const data = await response.json();
       // Expected response structure:
       // {
-      //   id: string,
+      //   siteId: string,
       //   name: string,
       //   postalCode: string,
       //   prefecture: string,
@@ -112,7 +112,7 @@ const SiteDetail = () => {
       await new Promise(resolve => setTimeout(resolve, 500));
       
       const mockSite: SiteData = {
-        id: id || 'LOC001',
+        siteId: siteId || 'SITEaB3kM9pQ7xL2vN8s',
         name: '東京本社',
         postalCode: '100-0001',
         prefecture: '東京都',
@@ -140,7 +140,7 @@ const SiteDetail = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, toast, user?.email, user?.id, user?.username]);
+    }, [siteId, toast, user?.email, user?.id, user?.username]);
 
   useEffect(() => {
     fetchSiteDetail();
@@ -160,7 +160,7 @@ const SiteDetail = () => {
       // Mock API call
       // 
       // ========== API Integration Stub for Backend ==========
-      // const response = await fetch(`/api/sites/${site?.id}`, {
+      // const response = await fetch(`/api/sites/${site?.siteId}`, {
       //   method: 'PATCH',
       //   headers: {
       //     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -427,7 +427,7 @@ const SiteDetail = () => {
                     <div
                       key={project.id}
                       className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/sites/${site.id}/projects/${project.id}`)}
+                      onClick={() => navigate(`/sites/${site.siteId}/projects/${project.id}`)}
                     >
                       <div>
                         <p className="font-medium">{project.name}</p>

@@ -16,7 +16,7 @@ const resolveSiteAssigneeId = (site: Site, users: UserList[] = []) => {
   const siteAssignee = users.find(
     (user) =>
       user.role !== 'admin' &&
-      (user.siteId === site.id || user.role === 'master') &&
+      (user.siteId === site.siteId || user.role === 'master') &&
       user.firstName === site.picFirstName &&
       user.lastName === site.picLastName,
   );
@@ -50,9 +50,9 @@ function SiteEdit() {
   const navigate = useNavigate();
   const [step, setStep] = useState<'form' | 'confirm'>('form');
 
-  const { id } = useParams<{ id: string }>();
+  const { siteId } = useParams<{ siteId: string }>();
   const sites = useDashboardStore((state) => state.sites) ?? [];
-  const initialSite = sites.find((site) => site.id === id);
+  const initialSite = sites.find((site) => site.siteId === siteId);
   const editSite = useDashboardStore((state) => state.editSite);
   const deleteSiteStore = useDashboardStore((state) => state.deleteSiteStore);
   const setUsers = useDashboardStore((state) => state.setUsers);
@@ -101,13 +101,13 @@ function SiteEdit() {
         (user) =>
           user.role !== 'admin' &&
           (user.role === 'master' ||
-            user.siteId === id ||
+            user.siteId === siteId ||
             user.id === formData?.userId),
       ),
-    [users, id, formData?.userId],
+    [users, siteId, formData?.userId],
   );
 
-  if (!id) {
+  if (!siteId) {
     return <div>読み込み中...</div>;
   }
 
@@ -116,12 +116,12 @@ function SiteEdit() {
   }
 
   const handleFormSubmit = async (values: SiteFormData) => {
-    if (!id) return;
+    if (!siteId) return;
 
     const picuserId = values.userId ? Number(values.userId) : null;
 
     try {
-      await validateUpdateSite(id, values, picuserId);
+      await validateUpdateSite(siteId, values, picuserId);
       setFormData(values);
       setStep('confirm');
     } catch (error) {
@@ -137,7 +137,7 @@ function SiteEdit() {
   };
 
   const handleFinalSubmit = async () => {
-    if (!id || !formData) return;
+    if (!siteId || !formData) return;
 
     const picuserId = formData.userId ? Number(formData.userId) : null;
     const selectedUser = formData.userId
@@ -145,7 +145,7 @@ function SiteEdit() {
       : null;
 
     try {
-      const result = await updateSite(id, formData, picuserId);
+      const result = await updateSite(siteId, formData, picuserId);
 
       const updatedSite: Site = {
         ...initialSite,
@@ -174,7 +174,7 @@ function SiteEdit() {
             .join(''),
       };
 
-      editSite(id, updatedSite);
+      editSite(siteId, updatedSite);
 
       toast({
         title: '更新完了',
@@ -198,9 +198,9 @@ function SiteEdit() {
   };
 
   const handleDelete = async () => {
-    if (!id) return;
+    if (!siteId) return;
 
-    if (!joinableSites().some((site) => site.id === id)) {
+    if (!joinableSites().some((site) => site.siteId === siteId)) {
       toast({
         title: 'エラー',
         description:
@@ -211,8 +211,8 @@ function SiteEdit() {
     }
 
     try {
-      await deleteSite(id);
-      deleteSiteStore(id);
+      await deleteSite(siteId);
+      deleteSiteStore(siteId);
 
       toast({
         title: '削除完了',
@@ -245,6 +245,7 @@ function SiteEdit() {
           userOptionsError={
             usersQuery.isError ? '責任者候補を取得できませんでした' : null
           }
+          userOptionsHelperText="この拠点に紐づいている社員のみ表示されます。"
         />
       )}
 

@@ -114,7 +114,7 @@ export function AddressForm({ defaultValues }: Readonly<AddressFormProps>) {
         </div>
 
         {apiError && (
-          <p className="text-sm text-red-500">{apiError}</p>
+          <p className="text-sm text-destructive">{apiError}</p>
         )}
 
         <FormField

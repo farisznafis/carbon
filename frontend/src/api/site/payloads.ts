@@ -16,6 +16,6 @@ export type UpdateSitePayload = {
   municipality: string;
   blocknum: string;
   buildingName: string;
-  siteId: number;
+  siteId: string;
   picuserId: number | null;
 };

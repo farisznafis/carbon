@@ -27,7 +27,7 @@ export function FileUploadButton({
         <div className="font-bold text-sm">{label}</div>
         <label
             htmlFor={id}
-            className="cursor-pointer text-sm text-gray-800 bg-gray-200 hover:bg-gray-300 py-1 px-3 rounded-md shadow-sm flex items-center"
+            className="flex cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
         >
             <Upload className="mr-2 h-4 w-4" />
             ファイルを選択
@@ -39,7 +39,7 @@ export function FileUploadButton({
             onChange={handleChange}
         />
         {selectedFile && (
-            <span className="text-sm text-gray-700 mt-1">{selectedFile.name}</span>
+            <span className="mt-1 text-sm text-muted-foreground">{selectedFile.name}</span>
         )}
         
     </div>

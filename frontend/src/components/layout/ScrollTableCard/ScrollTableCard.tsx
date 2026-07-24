@@ -26,7 +26,7 @@ export function ScrollTableCard({
   onRowClick,
 }: ScrollTableCardProps) {
   return (
-    <Card className="max-w-lg border border-neutral-200/70 shadow-sm">
+    <Card className="max-w-lg border-border shadow-app-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-semibold tracking-tight">
           {cardTitle}
@@ -34,9 +34,9 @@ export function ScrollTableCard({
       </CardHeader>
 
       <CardContent>
-        <Card className="border-neutral-200/80 shadow-none bg-neutral-50/60">
+        <Card className="border-border bg-muted/40 shadow-none">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-neutral-800">
+            <CardTitle className="text-sm font-medium text-foreground">
               {tableTitle}
             </CardTitle>
           </CardHeader>
@@ -47,16 +47,16 @@ export function ScrollTableCard({
                   {items.map((item) => (
                     <TableRow
                       key={item.id}
-                      className="cursor-pointer border-b last:border-b-0 hover:bg-neutral-100 transition-colors"
+                      className="cursor-pointer border-b transition-colors last:border-b-0 hover:bg-muted"
                       onClick={() => onRowClick?.(item)}
                     >
-                      <TableCell className="flex items-center justify-between gap-3 px-5 py-4 text-base font-medium text-neutral-900">
+                      <TableCell className="flex items-center justify-between gap-3 px-5 py-4 text-base font-medium text-foreground">
                         <span>{item.label}</span>
                         <div className="flex items-center gap-2">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-neutral-500 hover:text-neutral-900"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
                             onClick={(e) => {
                               e.stopPropagation()
                               onEdit?.(item)
@@ -64,7 +64,7 @@ export function ScrollTableCard({
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <ChevronRight className="h-5 w-5 text-neutral-400" />
+                          <ChevronRight className="h-5 w-5 text-muted-foreground" />
                         </div>
                       </TableCell>
                     </TableRow>

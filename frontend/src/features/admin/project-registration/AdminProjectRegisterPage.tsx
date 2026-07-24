@@ -237,6 +237,7 @@ export const AdminProjectRegister: React.FC = () => {
       toast({
         title: '保存しました',
         description: 'プロジェクト申請情報を保存しました。',
+        variant: 'success',
       });
     } catch (e) {
       const message = applyBackendValidationErrors(form, e);
@@ -273,6 +274,7 @@ export const AdminProjectRegister: React.FC = () => {
       toast({
         title: '保存しました',
         description: 'プロジェクト基本情報を保存しました。',
+        variant: 'success',
       });
     } catch (e) {
       setCreatedProjectId(null);
@@ -323,7 +325,7 @@ export const AdminProjectRegister: React.FC = () => {
               />
             );
           })}
-        {submitError && <p className='text-sm text-red-600'>{submitError}</p>}
+        {submitError && <p className='text-sm text-destructive'>{submitError}</p>}
       </ConfirmationLayout>
     );
   }
@@ -390,7 +392,7 @@ export const AdminProjectRegister: React.FC = () => {
               : '次へ'}
         </Button>
       </div>
-      {submitError && <p className='text-sm text-red-600'>{submitError}</p>}
+      {submitError && <p className='text-sm text-destructive'>{submitError}</p>}
     </FormPageWrapper>
   );
 };

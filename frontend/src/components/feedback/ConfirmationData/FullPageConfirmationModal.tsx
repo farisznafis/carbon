@@ -1,5 +1,6 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
+import { Button } from "@/components/ui/button";
 
 type FullPageConfirmationModalProps = {
   open: boolean;
@@ -23,19 +24,19 @@ export function FullPageConfirmationModal({
   return (
     <Transition.Root show={open} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onBack}>
-        <div className="fixed inset-0 bg-black/30" />
+        <div className="fixed inset-0 bg-foreground/30" />
 
         <div className="fixed inset-0 flex items-center justify-center">
-          <Dialog.Panel className="w-full max-w-3xl rounded bg-white p-6 shadow-xl">
-            <Dialog.Title className="text-lg font-medium text-gray-900">
+          <Dialog.Panel className="w-full max-w-3xl rounded-xl bg-card p-6 text-card-foreground shadow-app-md">
+            <Dialog.Title className="text-lg font-medium text-foreground">
               {title}
             </Dialog.Title>
 
             {description && (
-              <p className="mt-2 text-sm text-gray-500">{description}</p>
+              <p className="mt-2 text-sm text-muted-foreground">{description}</p>
             )}
 
-            <dl className="mt-6 divide-y divide-gray-200">
+            <dl className="mt-6 divide-y divide-border">
               {Object.entries(data).map(([key, value]) => {
                 const originalValue = originalData?.[key];
 
@@ -49,12 +50,12 @@ export function FullPageConfirmationModal({
                     key={key}
                     className="py-3 sm:grid sm:grid-cols-3 sm:gap-4"
                   >
-                    <dt className="text-sm font-medium text-gray-500">
+                    <dt className="text-sm font-medium text-muted-foreground">
                       {key}
                     </dt>
                     <dd
                       className={
-                        "mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2" +
+                        "mt-1 text-sm text-foreground sm:mt-0 sm:col-span-2" +
                         (isChanged ? " underline" : "")
                       }
                     >
@@ -66,20 +67,19 @@ export function FullPageConfirmationModal({
             </dl>
 
             <div className="mt-6 flex justify-end gap-3">
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={onBack}
-                className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
                 Back
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={onConfirm}
-                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
               >
                 Confirm
-              </button>
+              </Button>
             </div>
           </Dialog.Panel>
         </div>

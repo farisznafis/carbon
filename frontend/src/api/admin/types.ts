@@ -95,7 +95,7 @@ export type CreateAdminProjectResponse = {
   message?: string | null;
   errors?: unknown;
   project?: Array<Partial<AdminProjectDetail> & {
-    id?: string | number;
+    id?: string;
   }>;
 };
 
@@ -206,9 +206,200 @@ export type Methodology = {
   equipmentItems?: PendingCompanyEquipmentItem[];
 };
 
+export type CompanyStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'REJECTED';
+
+export type CompanySort = 'createdAt' | 'updatedAt' | 'nameJa' | 'companyId';
+
+export type SortOrder = 'asc' | 'desc';
+
+export type SuspensionReasonCode =
+  | 'BILLING'
+  | 'POLICY_VIOLATION'
+  | 'SECURITY'
+  | 'ADMINISTRATIVE'
+  | 'OTHER';
+
+export type PaymentMethod = 'CREDIT_CARD';
+
+export type AdminCompanyListItem = {
+  id: string | null;
+  companyId: string;
+  nameJA: string;
+  nameFurigana: string;
+  nameEN: string;
+  email: string;
+  phoneNumber: string;
+  fax: string | null;
+  corpNumber: string;
+  address: string;
+  postalCode: string;
+  prefecture: string;
+  municipality: string;
+  blocknum: string;
+  buildingName: string | null;
+  representativeFirstName: string;
+  representativeLastName: string;
+  representativeFirstNameKana: string;
+  representativeLastNameKana: string;
+  representativePosition: string;
+  representativePhoneNumber: string;
+  requestedMethodologies: string[];
+  activityInformation: string | null;
+  status: CompanyStatus;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+};
+
+export type AdminCompanyAccountActionTarget = Pick<
+  AdminCompanyListItem,
+  'companyId' | 'nameJA' | 'email'
+>;
+
+export type Pagination = {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  nextPageToken: string | null;
+  hasMore: boolean;
+};
+
+export type AdminCompanyListResponse = {
+  statusCode: string;
+  message: string;
+  companies: AdminCompanyListItem[];
+  pagination: Pagination;
+};
+
+export type AdminCompanyDetailMasterAccount = {
+  username: string;
+  fullName: string;
+  fullNameKana: string;
+  firstName: string;
+  lastName: string;
+  firstNameKana: string;
+  lastNameKana: string;
+  phoneNumber: string;
+  email: string;
+  userPosition: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
+};
+
+export type AdminCompanyDetailCompany = {
+  companyId: string;
+  corpNumber: string;
+  nameJA: string;
+  nameFurigana: string;
+  nameEN: string;
+  email: string;
+  phoneNumber: string;
+  faxNumber: string;
+  address: string;
+  postalCode: string;
+  prefecture: string;
+  municipality: string;
+  blocknum: string;
+  buildingName: string;
+  companyStatus: CompanyStatus;
+  subscriptionStatus: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
+};
+
+export type AdminCompanyDetailUser = {
+  username: string;
+  fullName: string;
+  email: string;
+  role: string;
+  siteName: string;
+};
+
+export type AdminCompanyDetailSite = {
+  siteName: string;
+  picEmail: string;
+  createdAt: string;
+  address: string;
+  postalCode: string;
+  prefecture: string;
+  municipality: string;
+  blocknum: string;
+  buildingName: string;
+  projectNames: string[];
+};
+
+export type AdminCompanyDetailResponse = {
+  statusCode: string;
+  message: string;
+  errors?: Record<string, string>;
+  timestamp: string;
+  masterAccount: AdminCompanyDetailMasterAccount;
+  company: AdminCompanyDetailCompany;
+  users: AdminCompanyDetailUser[];
+  sites: AdminCompanyDetailSite[];
+};
+
+export type GetAdminCompaniesParams = {
+  status?: CompanyStatus | CompanyStatus[];
+  search?: string;
+  prefecture?: string;
+  createdFrom?: string;
+  createdTo?: string;
+  page?: number;
+  limit?: number;
+  sort?: CompanySort;
+  sortOrder?: SortOrder;
+};
+
+export type CompanySuspension = {
+  id: number;
+  reasonCode: SuspensionReasonCode;
+  reasonDetail: string;
+  createdAt: string;
+  createdBy: string;
+  resolvedAt: string | null;
+  resolvedBy: string | null;
+  resolutionNote: string | null;
+  active: boolean;
+};
+
+export type CompanySuspensionListResponse = {
+  statusCode?: string;
+  message?: string | null;
+  suspensions: CompanySuspension[];
+  pagination: Pagination;
+};
+
+export type SuspendCompanyPayload = {
+  reasonCode: SuspensionReasonCode;
+  reasonDetail: string;
+};
+
+export type ResolveCompanySuspensionPayload = {
+  resolutionNote: string;
+  paymentMethod?: PaymentMethod;
+};
+
+export type CompanyMutationResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: unknown;
+  companyStatus?: CompanyStatus;
+  activeSuspensionCount?: number;
+};
+
 export type PendingCompanyItem = {
   id: string;
   companyId: string;
+  status: PendingCompanyStatus;
   nameJA: string;
   nameFurigana?: string;
   nameEN?: string;
@@ -235,10 +426,15 @@ export type PendingCompanyItem = {
   methodologies?: Methodology[];
 };
 
+export type PendingCompanyStatus = '申請受付' | '却下' | '承認済み' | '停止';
+
 export type PendingCompanyApiItem = {
   id?: string;
   requestId?: string;
   companyId?: string;
+  status?: string | null;
+  applicationStatus?: string | null;
+  statusLabel?: string | null;
   nameJA?: string;
   nameFurigana?: string;
   nameKana?: string;
@@ -309,7 +505,7 @@ export type ProjectStatus =
   | '終了';
 
 export type UpdateProjectStatusPayload = {
-  id: string | number;
+  id: string;
   processedBy: string;
   companyId: string;
   projectStatus: ProjectStatus;

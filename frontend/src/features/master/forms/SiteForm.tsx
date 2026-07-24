@@ -2,7 +2,7 @@
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { ApiError } from '@/api/_shared/errors';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import {
   FormActions,
   FormCard,
@@ -26,14 +26,18 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
 import type { SiteFormData } from '@/api/site';
 import type { UserList } from '@/api/users';
 import { prefectures } from '@/lib/constants/prefectures';
+import { UserPlus } from 'lucide-react';
 
 export type { SiteFormData } from '@/api/site';
+
+const ADD_USER_OPTION_VALUE = '__add_user__';
 
 const siteBackendFieldMap: Partial<Record<string, keyof SiteFormData>> = {
   siteName: 'siteName',
@@ -67,6 +71,8 @@ interface SiteFormProps {
   userOptions?: UserList[];
   isUserOptionsLoading?: boolean;
   userOptionsError?: string | null;
+  userOptionsHelperText?: string;
+  onAddUser?: (draft: SiteFormData) => void;
   embedded?: boolean;
 }
 
@@ -91,6 +97,8 @@ export function SiteForm({
   userOptions = [],
   isUserOptionsLoading = false,
   userOptionsError = null,
+  userOptionsHelperText,
+  onAddUser,
   embedded = false,
 }: Readonly<SiteFormProps>) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -200,8 +208,9 @@ export function SiteForm({
 
       if (data.results && data.results.length > 0) {
         const result = data.results[0];
+        const cityNameWithTown = `${result.address2 ?? ''}${result.address3 ?? ''}`;
         form.setValue('prefectureName', result.address1, { shouldDirty: true });
-        form.setValue('cityName', result.address2, { shouldDirty: true });
+        form.setValue('cityName', cityNameWithTown, { shouldDirty: true });
       }
     } catch (error) {
       if (!(error instanceof DOMException && error.name === 'AbortError')) {
@@ -356,7 +365,7 @@ export function SiteForm({
                   <FormItem>
                     <RequiredLabel>番地</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="1-1" {...field} />
+                      <Input inputSize="sm" placeholder="1-1-1" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -379,6 +388,11 @@ export function SiteForm({
             </FormSection>
 
               <FormSection number={3} title={<>責任者 <RequiredBadge /></>}>
+                {userOptionsHelperText && (
+                  <p className="-mt-2 mb-1 text-sm text-muted-foreground">
+                    {userOptionsHelperText}
+                  </p>
+                )}
                 <FormField
                   control={form.control}
                   name="userId"
@@ -393,11 +407,19 @@ export function SiteForm({
                         <div className="flex items-center gap-2">
                           <Select
                             value={field.value ?? ''}
-                            onValueChange={(value) => field.onChange(value)}
+                            onValueChange={(value) => {
+                              if (value === ADD_USER_OPTION_VALUE) {
+                                onAddUser?.(form.getValues());
+                                return;
+                              }
+
+                              field.onChange(value);
+                            }}
                             disabled={
-                              isUserOptionsLoading ||
-                              Boolean(userOptionsError) ||
-                              userOptions.length === 0
+                              !onAddUser &&
+                              (isUserOptionsLoading ||
+                                Boolean(userOptionsError) ||
+                                userOptions.length === 0)
                             }
                           >
                             <FormControl>
@@ -411,13 +433,30 @@ export function SiteForm({
                                   <span className="flex items-center gap-2">
                                     {formatUserOptionLabel(user)}
                                     {user.role === 'master' && (
-                                      <Badge variant="default" className="bg-blue-500 text-white text-[10px] px-1.5 py-0 leading-none">
+                                      <StatusBadge tone="info">
                                         マスター
-                                      </Badge>
+                                      </StatusBadge>
                                     )}
                                   </span>
                                 </SelectItem>
                               ))}
+                              {onAddUser && (
+                                <>
+                                  {userOptions.length > 0 && <SelectSeparator />}
+                                  <SelectItem
+                                    value={ADD_USER_OPTION_VALUE}
+                                    className="font-medium text-primary focus:text-primary"
+                                  >
+                                    <span className="flex items-center gap-2">
+                                      <UserPlus
+                                        className="h-4 w-4"
+                                        aria-hidden="true"
+                                      />
+                                      社員を追加
+                                    </span>
+                                  </SelectItem>
+                                </>
+                              )}
                             </SelectContent>
                           </Select>
 
@@ -474,7 +513,7 @@ export function SiteForm({
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
+                  size="md"
                   className="w-full"
                   onClick={() => navigate(-1)}
                 >
@@ -484,7 +523,7 @@ export function SiteForm({
 
               <Button
                 type="submit"
-                size="sm"
+                size="md"
                 className="w-full"
                 disabled={!isDirty || disableSubmit}
               >

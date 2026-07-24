@@ -1,197 +1,531 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-//import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning";
-import type { Equipment, EquipmentFormType } from "@/features/user/project-registration/components/types";
-import { SolarPowerEquipmentForm } from "@/features/user/project-registration/components/equipment-forms/SolarPowerEquipmentForm";
-import { useForm } from "react-hook-form";
-import type { SolarPowerFormData, OtherEquipmentFormData } from "@/lib/equipmentValidations";
-import { Form } from "@/components/ui/form";
-import { FormPageWrapper } from "@/components/layout/FormPageWrapper/FormPageWrapper";
+import { useEffect, useState } from 'react';
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { ApiError } from '@/api/_shared/errors';
+import { validateSiteProjectEquipment } from '@/api/site';
+import {
+  FormCard,
+  FormPageContent,
+  FormPageTitle,
+  FormStandalonePage,
+} from '@/components/forms/form-layout';
+import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { Button } from '@/components/ui/button';
+import { Form } from '@/components/ui/form';
+import { SolarPowerEquipmentForm } from '@/features/user/project-registration/components/equipment-forms/SolarPowerEquipmentForm';
+import type {
+  Equipment,
+  EquipmentFormType,
+} from '@/features/user/project-registration/components/types';
+import {
+  mapSolarFormFilesForValidation,
+  mapSolarFormToEquipmentValidationItem,
+} from '@/features/user/project-registration/equipmentValidationMapper';
+import { getSolarEquipmentDraft } from '@/features/user/project-registration/equipmentConfirmationState';
+import {
+  isFromMasterDashboard,
+  masterDashboardProjectMembershipState,
+} from '@/features/user/project-registration/projectMembershipNavigation';
+import { useToast } from '@/hooks/use-toast';
+import { useSitesQuery } from '@/hooks/sites/useSitesQuery';
+import {
+  type OtherEquipmentFormData,
+  type SolarPowerFormData,
+} from '@/lib/equipmentValidations';
+import { paths } from '@/routes/paths';
 
-/**
- * HOW TO SWITCH BETWEEN FORM TYPES:
- *
- * 1. Change the default type logic below to switch the default form:
- *    - "solar" for solar power equipment form
- *    - "other" for other equipment form
- *
- * 2. To add a new form type in the future:
- *    - Add the new type to EquipmentFormType in types.ts (e.g., "wind" | "battery")
- *    - Create a new form component in equipment-forms/ folder (e.g., WindEquipmentForm.tsx)
- *    - Add the component import above
- *    - Add a new case in the render section below
- *    - Update the form type selection logic if needed
- */
+const SOLAR_FORM_DEFAULT_VALUES: SolarPowerFormData = {
+  siteId: '',
+  equipmentOpDate: '',
+  operationStartDateFile: undefined,
+  nominalMaxOutput: '',
+  nominalMaxOutputFile: undefined,
+  pcsManufacturer: '',
+  pcsModel: '',
+  powerCondUnitCount: '',
+  deviceNo: '',
+  powerCondStandby: '',
+  pcsFile: undefined,
+  hasBattery: '',
+  batteryMaker: '',
+  batteryModel: '',
+  batteryCapacity: '',
+  batteryFile: undefined,
+  additionalEquipment: '',
+  ictEquipmentPowerConsumption: '',
+  additionalEquipmentDate: '',
+  additionalEquipmentType: '',
+  additionalUnitCount: '',
+  additionalDeviceUniqueNo: '',
+  totalInvestment: '',
+  totalInvestmentFile: undefined,
+  hasSubsidy: '',
+  subsidyName: '',
+  subsidyNameFile: undefined,
+  subsidyAmount: '',
+  preProjectUnitPrice: '',
+  preProjectUnitPriceFile: undefined,
+};
 
-const EquipmentForm = () => {
-  const navigate = useNavigate();
-  const { id: projectId } = useParams();
-  const [searchParams] = useSearchParams();
-  const equipmentId = searchParams.get("equipmentId");
-  const { toast } = useToast();
+const OTHER_FORM_DEFAULT_VALUES: OtherEquipmentFormData = {
+  oldEquipmentName: '',
+  oldEquipmentId: '',
+  oldEquipmentType: '',
+  newEquipmentName: '',
+  newEquipmentId: '',
+  newEquipmentType: '',
+};
 
-  const [formType] = useState<EquipmentFormType>(() => {
-    const type = searchParams.get("type");
-    return type === "other" ? "other" : "solar";
-  });
+const SOLAR_FORM_FIELD_NAMES = new Set<keyof SolarPowerFormData>(
+  Object.keys(SOLAR_FORM_DEFAULT_VALUES) as Array<keyof SolarPowerFormData>,
+);
+const solarApiFieldAliases: Record<string, keyof SolarPowerFormData> = {
+  pcsUnitCount: 'powerCondUnitCount',
+  pcsStandby: 'powerCondStandby',
+};
+const REQUIRED_FILE_MESSAGE = '確認資料をアップロードしてください。';
+const EMPTY_SITE_OPTIONS: never[] = [];
 
-  // Initialize forms with zodResolver
-  const solarForm = useForm<SolarPowerFormData>({
-    // resolver: zodResolver(solarPowerSchema),
-    mode: "onChange",
-    defaultValues: {
-      equipmentOpDate: "",
-      operationStartDateFile: undefined,
-      nominalMaxOutput: "",
-      nominalMaxOutputFile: undefined,
-      pcManufacturer: "",
-      pcModel: "",
-      pcQuantity: "",
-      pcSerialNumber: "",
-      pcStandbyPower: "",
-      pcFile: undefined,
-      hasBattery: "",
-      batteryManufacturer: "",
-      batteryModel: "",
-      batteryCapacity: "",
-      batteryFile: undefined,
-      totalInvestment: "",
-      totalInvestmentFile: undefined,
-      hasSubsidy: "",
-      receivedSubsidy: "",
-      subsidyName: "",
-      subsidyNameFile: undefined,
-      subsidyAmount: "",
-      prePurchaseUnitPrice: "",
-      prePurchaseUnitPriceFile: undefined,
+function getMissingFileFields(
+  data: SolarPowerFormData,
+): Array<keyof SolarPowerFormData> {
+  const requiredFiles: Array<{
+    fieldName: keyof SolarPowerFormData;
+    file?: File;
+  }> = [
+    {
+      fieldName: 'operationStartDateFile',
+      file: data.operationStartDateFile,
     },
+    {
+      fieldName: 'nominalMaxOutputFile',
+      file: data.nominalMaxOutputFile,
+    },
+    { fieldName: 'pcsFile', file: data.pcsFile },
+    {
+      fieldName: 'totalInvestmentFile',
+      file: data.totalInvestmentFile,
+    },
+    {
+      fieldName: 'preProjectUnitPriceFile',
+      file: data.preProjectUnitPriceFile,
+    },
+    ...(data.hasBattery === 'yes'
+      ? [
+          {
+            fieldName: 'batteryFile' as const,
+            file: data.batteryFile,
+          },
+        ]
+      : []),
+    ...(data.hasSubsidy === 'yes'
+      ? [
+          {
+            fieldName: 'subsidyNameFile' as const,
+            file: data.subsidyNameFile,
+          },
+        ]
+      : []),
+  ];
+
+  return requiredFiles
+    .filter(({ file }) => !(file instanceof File))
+    .map(({ fieldName }) => fieldName);
+}
+
+function getErrorMessage(value: unknown): string | null {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value)) {
+    const messages = value.filter(
+      (message): message is string => typeof message === 'string',
+    );
+    return messages.length ? messages.join('、') : null;
+  }
+  return null;
+}
+
+function getSolarFormFieldName(path: string): keyof SolarPowerFormData | null {
+  const fieldName = path.replace(/\[\d+\]/g, '').split('.').at(-1);
+  if (!fieldName) return null;
+
+  if (fieldName in solarApiFieldAliases) {
+    return solarApiFieldAliases[fieldName];
+  }
+
+  return SOLAR_FORM_FIELD_NAMES.has(fieldName as keyof SolarPowerFormData)
+    ? (fieldName as keyof SolarPowerFormData)
+    : null;
+}
+
+function getInternalReturnPath(state: unknown): string | null {
+  if (!state || typeof state !== 'object' || !('returnTo' in state)) {
+    return null;
+  }
+
+  const returnTo = (state as { returnTo?: unknown }).returnTo;
+  return typeof returnTo === 'string' && returnTo.startsWith('/')
+    ? returnTo
+    : null;
+}
+
+function getStringValue(
+  source: Record<string, unknown>,
+  key: string,
+  legacyKey?: string,
+) {
+  const value = source[key] ?? (legacyKey ? source[legacyKey] : undefined);
+  return typeof value === 'string' ? value : '';
+}
+
+function getYesNoValue(
+  source: Record<string, unknown>,
+  key: string,
+): '' | 'yes' | 'no' {
+  const value = source[key];
+  return value === 'yes' || value === 'no' ? value : '';
+}
+
+function normalizeStoredSolarData(
+  value: unknown,
+  fallbackSiteId: string,
+): SolarPowerFormData {
+  if (!value || typeof value !== 'object') {
+    return { ...SOLAR_FORM_DEFAULT_VALUES, siteId: fallbackSiteId };
+  }
+  const source = value as Record<string, unknown>;
+
+  return {
+    ...SOLAR_FORM_DEFAULT_VALUES,
+    siteId: getStringValue(source, 'siteId') || fallbackSiteId,
+    equipmentOpDate: getStringValue(source, 'equipmentOpDate'),
+    nominalMaxOutput: getStringValue(source, 'nominalMaxOutput'),
+    pcsManufacturer: getStringValue(
+      source,
+      'pcsManufacturer',
+      'pcManufacturer',
+    ),
+    pcsModel: getStringValue(source, 'pcsModel', 'pcModel'),
+    powerCondUnitCount: getStringValue(
+      source,
+      'powerCondUnitCount',
+      'pcQuantity',
+    ),
+    deviceNo: getStringValue(source, 'deviceNo', 'pcSerialNumber'),
+    powerCondStandby: getStringValue(
+      source,
+      'powerCondStandby',
+      'pcStandbyPower',
+    ),
+    hasBattery: getYesNoValue(source, 'hasBattery'),
+    batteryMaker: getStringValue(
+      source,
+      'batteryMaker',
+      'batteryManufacturer',
+    ),
+    batteryModel: getStringValue(source, 'batteryModel'),
+    batteryCapacity: getStringValue(source, 'batteryCapacity'),
+    additionalEquipment: getYesNoValue(source, 'additionalEquipment'),
+    ictEquipmentPowerConsumption: getStringValue(
+      source,
+      'ictEquipmentPowerConsumption',
+    ),
+    additionalEquipmentDate: getStringValue(
+      source,
+      'additionalEquipmentDate',
+    ),
+    additionalEquipmentType: getStringValue(
+      source,
+      'additionalEquipmentType',
+    ),
+    additionalUnitCount: getStringValue(source, 'additionalUnitCount'),
+    additionalDeviceUniqueNo: getStringValue(
+      source,
+      'additionalDeviceUniqueNo',
+    ),
+    totalInvestment: getStringValue(source, 'totalInvestment'),
+    hasSubsidy: getYesNoValue(source, 'hasSubsidy'),
+    subsidyName: getStringValue(source, 'subsidyName'),
+    subsidyAmount: getStringValue(source, 'subsidyAmount'),
+    preProjectUnitPrice: getStringValue(
+      source,
+      'preProjectUnitPrice',
+      'prePurchaseUnitPrice',
+    ),
+  };
+}
+
+export default function EquipmentFormPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { siteId = '', projectId = '' } = useParams<{
+    siteId: string;
+    projectId: string;
+  }>();
+  const [searchParams] = useSearchParams();
+  const equipmentId = searchParams.get('equipmentId');
+  const returnPath = getInternalReturnPath(location.state);
+  const enteredFromMasterDashboard = isFromMasterDashboard(location.state);
+  const equipmentDraft = getSolarEquipmentDraft(location.state);
+  const { toast } = useToast();
+  const sitesQuery = useSitesQuery();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formType] = useState<EquipmentFormType>(() =>
+    searchParams.get('type') === 'other' ? 'other' : 'solar',
+  );
+
+  const solarForm = useForm<SolarPowerFormData>({
+    defaultValues: equipmentDraft ?? { ...SOLAR_FORM_DEFAULT_VALUES, siteId },
   });
 
   const otherForm = useForm<OtherEquipmentFormData>({
-    // resolver: zodResolver(otherEquipmentSchema),
-    defaultValues: {
-      oldEquipmentName: "",
-      oldEquipmentId: "",
-      oldEquipmentType: "",
-      newEquipmentName: "",
-      newEquipmentId: "",
-      newEquipmentType: "",
-    },
+    defaultValues: OTHER_FORM_DEFAULT_VALUES,
   });
 
-  //useUnsavedChangesWarning({ hasUnsavedChanges });
+  useEffect(() => {
+    if (equipmentDraft) return;
+    if (!equipmentId) return;
+
+    const storedEquipment = localStorage.getItem(
+      `project_${projectId}_equipment`,
+    );
+    if (!storedEquipment) return;
+
+    try {
+      const equipmentList = JSON.parse(storedEquipment) as Equipment[];
+      const equipment = equipmentList.find((item) => item.id === equipmentId);
+      if (!equipment) return;
+
+      if (equipment.formType === 'solar') {
+        solarForm.reset(normalizeStoredSolarData(equipment.solarData, siteId));
+      } else {
+        otherForm.reset({
+          oldEquipmentName: equipment.oldEquipmentName,
+          oldEquipmentId: equipment.oldEquipmentId,
+          oldEquipmentType: equipment.oldEquipmentType,
+          newEquipmentName: equipment.newEquipmentName,
+          newEquipmentId: equipment.newEquipmentId,
+          newEquipmentType: equipment.newEquipmentType,
+        });
+      }
+    } catch {
+      toast({
+        title: '設備情報を読み込めませんでした',
+        variant: 'destructive',
+      });
+    }
+  }, [equipmentDraft, equipmentId, otherForm, projectId, siteId, solarForm, toast]);
+
+  const sites = sitesQuery.data?.sites ?? EMPTY_SITE_OPTIONS;
+  const siteOptionsError = sitesQuery.isError
+    ? sitesQuery.error instanceof Error
+      ? sitesQuery.error.message
+      : '拠点情報を取得できませんでした。'
+    : null;
 
   useEffect(() => {
-    // Load existing equipment data if editing
-    if (equipmentId) {
-      const storedEquipment = localStorage.getItem(`project_${projectId}_equipment`);
-      if (storedEquipment) {
-        const equipmentList: Equipment[] = JSON.parse(storedEquipment);
-        const equipment = equipmentList.find(e => e.id === equipmentId);
-        if (equipment) {
-          if (equipment.formType === "other" && equipment.oldEquipmentName) {
-            otherForm.reset({
-              oldEquipmentName: equipment.oldEquipmentName,
-              oldEquipmentId: equipment.oldEquipmentId || "",
-              oldEquipmentType: equipment.oldEquipmentType || "",
-              newEquipmentName: equipment.newEquipmentName || "",
-              newEquipmentId: equipment.newEquipmentId || "",
-              newEquipmentType: equipment.newEquipmentType || "",
-            });
-          } else if (equipment.formType === "solar" && equipment.solarData) {
-            solarForm.reset(equipment.solarData);
-          }
-        }
-      }
-    }
-  }, [equipmentId, projectId, solarForm, otherForm]);
+    if (sites.length === 0) return;
 
-  const onSubmit = (data: SolarPowerFormData | OtherEquipmentFormData) => {
-    const storedEquipment = localStorage.getItem(`project_${projectId}_equipment`);
-    let equipmentList: Equipment[] = storedEquipment ? JSON.parse(storedEquipment) : [];
+    const selectedSiteId = solarForm.getValues('siteId');
+    if (sites.some((site) => site.siteId === selectedSiteId)) return;
 
-    const equipmentData = formType === "solar"
-      ? ({
-          id: equipmentId || `equipment-${Date.now()}`,
-          formType: "solar",
-          solarData: data as unknown as Equipment["solarData"],
-        } as unknown as Equipment)
-      : ({
-          id: equipmentId || `equipment-${Date.now()}`,
-          formType: "other",
-          ...(data as OtherEquipmentFormData),
-        } as unknown as Equipment);
+    const routeSite = sites.find((site) => site.siteId === siteId);
+    solarForm.setValue('siteId', routeSite?.siteId ?? sites[0].siteId);
+  }, [siteId, sites, solarForm]);
 
-    if (equipmentId) {
-      equipmentList = equipmentList.map(e => e.id === equipmentId ? equipmentData : e);
-    } else {
-      equipmentList.push(equipmentData);
-    }
+  const saveEquipmentLocally = (equipmentData: Equipment) => {
+    const storageKey = `project_${projectId}_equipment`;
+    const storedEquipment = localStorage.getItem(storageKey);
+    let equipmentList: Equipment[] = storedEquipment
+      ? (JSON.parse(storedEquipment) as Equipment[])
+      : [];
 
-    localStorage.setItem(`project_${projectId}_equipment`, JSON.stringify(equipmentList));
+    equipmentList = equipmentId
+      ? equipmentList.map((item) =>
+          item.id === equipmentId ? equipmentData : item,
+        )
+      : [...equipmentList, equipmentData];
 
-    toast({
-      title: equipmentId ? "設備情報を更新しました" : "設備を追加しました",
-      description: "設備の登録が完了しました。",
+    localStorage.setItem(storageKey, JSON.stringify(equipmentList));
+  };
+
+  const navigateToProjectRegister = () => {
+    navigate(paths.projectRegister(siteId, projectId), {
+      state: enteredFromMasterDashboard
+        ? masterDashboardProjectMembershipState
+        : undefined,
     });
+  };
 
-    navigate(`/projects/${projectId}/register`);
+  const submitSolarEquipment = async (data: SolarPowerFormData) => {
+    if (isSubmitting) return;
+    solarForm.clearErrors();
+    const missingFileFields = getMissingFileFields(data);
+    missingFileFields.forEach((fieldName) => {
+      solarForm.setError(fieldName, {
+        type: 'required',
+        message: REQUIRED_FILE_MESSAGE,
+      });
+    });
+    setIsSubmitting(true);
+
+    try {
+      const tempId = equipmentId ?? `equipment-${Date.now()}`;
+      if (missingFileFields.length > 0) {
+        toast({
+          title: '確認資料が不足しています',
+          description: REQUIRED_FILE_MESSAGE,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const validationFiles = mapSolarFormFilesForValidation(data);
+      const payload = mapSolarFormToEquipmentValidationItem(
+        data,
+        tempId,
+        data.siteId,
+        validationFiles,
+      );
+
+      await validateSiteProjectEquipment(payload);
+
+      navigate(paths.projectEquipmentConfirmation(siteId, projectId), {
+        state: {
+          equipmentId: tempId,
+          isEdit: Boolean(equipmentId),
+          formData: data,
+          returnTo: returnPath ?? undefined,
+          fromMasterDashboard: enteredFromMasterDashboard,
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        error.payload?.errors &&
+        typeof error.payload.errors === 'object'
+      ) {
+        Object.entries(error.payload.errors).forEach(([path, value]) => {
+          const fieldName = getSolarFormFieldName(path);
+          const message = getErrorMessage(value);
+          if (fieldName && message) {
+            solarForm.setError(fieldName, { type: 'server', message });
+          }
+        });
+      }
+
+      toast({
+        title: '設備情報を確認できませんでした',
+        description:
+          error instanceof Error
+            ? error.message
+            : '設備情報の検証に失敗しました。',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const submitOtherEquipment = (data: OtherEquipmentFormData) => {
+    const tempId = equipmentId ?? `equipment-${Date.now()}`;
+    saveEquipmentLocally({
+      id: tempId,
+      formType: 'other',
+      ...data,
+    });
+    navigateToProjectRegister();
   };
 
   const handleCancel = () => {
-    navigate(`/projects/${projectId}/register`);
+    navigate(returnPath ?? paths.projectMembership(siteId), {
+      state: enteredFromMasterDashboard
+        ? masterDashboardProjectMembershipState
+        : undefined,
+    });
   };
 
-  const pageTitle = equipmentId ? "設備編集" : "設備追加";
-  const equipmentTypeLabel = formType === "solar" ? "太陽光発電設備" : "その他設備";
+  const pageTitle = equipmentId ? '設備編集' : '設備登録';
+  const equipmentTypeLabel =
+    formType === 'solar' ? '太陽光発電設備' : 'その他設備';
 
   return (
-    <FormPageWrapper
-      pageName={pageTitle}
-      title={pageTitle}
-      onBack={handleCancel}
-      backText="戻る"
-      contentMaxWidth="max-w-3xl"
-    >
-      <div className="space-y-6">
-        <h3 className="text-xl font-semibold">
-          {pageTitle} - {equipmentTypeLabel}
-        </h3>
+    <FormStandalonePage>
+      <PageBackButton
+        onClick={handleCancel}
+        label=""
+        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
+      />
 
-        {formType === "solar" ? (
+      <FormPageContent>
+        <FormPageTitle>{pageTitle}</FormPageTitle>
+        <p className="text-sm text-muted-foreground">
+          設備種別：{equipmentTypeLabel}
+        </p>
+
+        {formType === 'solar' ? (
           <Form {...solarForm}>
-            <form onSubmit={solarForm.handleSubmit(onSubmit)} className="space-y-6">
-              <SolarPowerEquipmentForm form={solarForm} />
-              <div className="flex gap-4 border-t pt-4">
-                <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">
-                  キャンセル
-                </Button>
-                <Button type="submit" className="flex-1">
-                  保存
-                </Button>
-              </div>
+            <form
+              onSubmit={solarForm.handleSubmit(submitSolarEquipment)}
+              noValidate
+            >
+              <FormCard>
+                <SolarPowerEquipmentForm
+                  form={solarForm}
+                  sites={sites}
+                  isSiteOptionsLoading={sitesQuery.isLoading}
+                  siteOptionsError={siteOptionsError}
+                />
+                <div className="flex justify-end gap-4 pt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancel}
+                    disabled={isSubmitting}
+                    size="md"
+                  >
+                    キャンセル
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    size="md"
+                  >
+                    {isSubmitting ? '確認中...' : '確認'}
+                  </Button>
+                </div>
+              </FormCard>
             </form>
           </Form>
         ) : (
           <Form {...otherForm}>
-            <form onSubmit={otherForm.handleSubmit(onSubmit)} className="space-y-6">
-              {/* <OtherEquipmentForm form={otherForm} /> */}
-              <div className="flex gap-4 border-t pt-4">
-                <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">
-                  キャンセル
-                </Button>
-                <Button type="submit" className="flex-1">
-                  保存
-                </Button>
-              </div>
+            <form
+              onSubmit={otherForm.handleSubmit(submitOtherEquipment)}
+              noValidate
+            >
+              <FormCard>
+                <div className="flex justify-end gap-4 pt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancel}
+                    size="md"
+                  >
+                    キャンセル
+                  </Button>
+                  <Button type="submit" size="md">
+                    確認
+                  </Button>
+                </div>
+              </FormCard>
             </form>
           </Form>
         )}
-      </div>
-    </FormPageWrapper>
+      </FormPageContent>
+    </FormStandalonePage>
   );
-};
-
-export default EquipmentForm;
+}

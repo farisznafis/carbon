@@ -14,7 +14,7 @@ export function FormPageShell({
 }: FormPageShellProps) {
   return (
     <main
-      className={cn("min-h-screen bg-background px-4 py-10 sm:px-6 lg:px-8", className)}
+      className={cn("min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8", className)}
       {...props}
     >
       <div className={cn("mx-auto w-full max-w-[768px]", contentClassName)}>
@@ -36,7 +36,7 @@ export function FormStandalonePage({
 }: FormStandalonePageProps) {
   return (
     <main
-      className={cn("relative min-h-screen overflow-hidden bg-background px-4 py-10 sm:px-6 lg:px-8", className)}
+      className={cn("relative min-h-screen overflow-hidden bg-background px-4 py-8 sm:px-6 lg:px-8", className)}
       {...props}
     >
       {watermark && (
@@ -58,7 +58,7 @@ export function FormPageContent({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("relative mx-auto w-full max-w-[768px] space-y-8", className)}
+      className={cn("relative mx-auto w-full max-w-[768px] space-y-6", className)}
       {...props}
     />
   );
@@ -103,13 +103,13 @@ export function FormPageHeader({
   return (
     <header className={cn("text-center", className)} {...props}>
       {icon && (
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-primary">
+        <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-primary">
           {icon}
         </div>
       )}
       <h2>{title}</h2>
       {description && (
-        <p className="mt-3 text-sm font-medium leading-6 text-muted-foreground">
+        <p className="mt-2 text-sm font-medium leading-5 text-muted-foreground">
           {description}
         </p>
       )}
@@ -191,7 +191,7 @@ export function FormCard({
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-card p-6 shadow-app-sm sm:p-10",
+        "rounded-xl border border-border bg-card p-5 shadow-app-sm sm:p-8",
         className,
       )}
       {...props}
@@ -212,14 +212,14 @@ export function FormSection({
   ...props
 }: FormSectionProps) {
   return (
-    <section className={cn("space-y-5", className)} {...props}>
+    <section className={cn("space-y-4", className)} {...props}>
       <div className="flex items-center gap-3">
         <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-xl font-bold text-primary">
           {number}
         </span>
         <h3>{title}</h3>
       </div>
-      <div className="space-y-5">{children}</div>
+      <div className="space-y-4">{children}</div>
     </section>
   );
 }
@@ -236,7 +236,7 @@ export function FormSectionStack({
   return (
     <div
       className={cn(
-        spacing === "default" ? "space-y-10" : "space-y-12",
+        spacing === "default" ? "space-y-8" : "space-y-10",
         className,
       )}
       {...props}
@@ -256,7 +256,7 @@ export function FormGrid({
   return (
     <div
       className={cn(
-        "grid grid-cols-1 gap-5",
+        "grid grid-cols-1 gap-4",
         columns === 2 && "md:grid-cols-2",
         className,
       )}
@@ -269,5 +269,5 @@ export function FormActions({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("pt-1", className)} {...props} />;
+  return <div className={cn("pt-0", className)} {...props} />;
 }

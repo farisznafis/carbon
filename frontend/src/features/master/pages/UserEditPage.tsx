@@ -118,7 +118,7 @@ export default function UserEdit() {
       );
       const updatedSiteId = payloadWithMasterSiteRule.siteId || null;
       const updatedSite = updatedSiteId
-        ? sitesQuery.data?.sites.find((site) => site.id === updatedSiteId)
+        ? sitesQuery.data?.sites.find((site) => site.siteId === updatedSiteId)
         : undefined;
       const mergedUpdatedUser: UserList = {
         ...initialUser,
@@ -142,7 +142,7 @@ export default function UserEdit() {
       );
 
       if (updatedSites?.length) {
-        updatedSites.forEach((site) => editSite(site.id, site));
+        updatedSites.forEach((site) => editSite(site.siteId, site));
       }
 
       toast({
@@ -168,13 +168,13 @@ export default function UserEdit() {
     try {
       const result = await deleteUser(
         id,
-        initialUser?.siteId ? ({ id: initialUser.siteId } as Site) : undefined,
+        initialUser?.siteId ? ({ siteId: initialUser.siteId } as Site) : undefined,
       );
 
       deleteUserStore(id);
 
       if (result.site) {
-        editSite(result.site.id, result.site);
+        editSite(result.site.siteId, result.site);
       }
 
       toast({

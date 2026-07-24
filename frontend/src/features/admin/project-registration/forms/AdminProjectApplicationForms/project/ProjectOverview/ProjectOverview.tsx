@@ -49,7 +49,7 @@ export const projectOverviewFields: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectOverview.reductionActivityIncluded',
-    label: '会員のカーボンニュートラル参加の有無実施者削減活動有無',
+    label: '社員のカーボンニュートラル参加の有無実施者削減活動有無',
     type: 'select',
     options: REDUCTION_ACTIVITY_INCLUDED,
   },

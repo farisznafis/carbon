@@ -29,17 +29,17 @@ export const emissionReduction: FieldConfig<FormValues>[] = [
   { name: 'emissionReduction.year', label: '年度', type: 'text' },
   {
     name: 'emissionReduction.newMembersTotal',
-    label: '新規参加会員数（累計）',
+    label: '新規参加社員数（累計）',
     type: 'number',
   },
   {
     name: 'emissionReduction.cumulativeMembersTotal',
-    label: '参加会員数（累計）',
+    label: '参加社員数（累計）',
     type: 'number',
   },
   {
     name: 'emissionReduction.membersTotal',
-    label: '参加会員数（当年度）',
+    label: '参加社員数（当年度）',
     type: 'number',
   },
   {

@@ -1,8 +1,10 @@
+import type { ApiPagination } from '../_shared/types';
+
 export type MonitoringData = {
-  projectId: number;
-  siteId?: number | null;
+  projectId: string;
+  siteId?: string | null;
   projectType: string;
-  dateRecorded: string;
+  dateRecorded: string | null;
   ELpv_value: number | null;
   ELpvr_value: number | null;
   changedBattery: boolean;
@@ -28,7 +30,7 @@ export type MonitoringEvidenceKind =
   | "elpjControl";
 
 export type MonitoringRecentApiItem = {
-  projectId?: string | number | null;
+  projectId?: string | null;
   siteId?: string | number | null;
   userId?: string | number | null;
   projectType?: string | null;
@@ -67,7 +69,7 @@ export type MonitoringRecentItem = MonitoringData & {
   dateRecorded: string;
   changedBattery: boolean;
   projectType: string;
-  siteId?: number | null;
+  siteId?: string | null;
   userId?: number | null;
   ELpv_value?: number | null;
   ELpvr_value?: number | null;
@@ -84,4 +86,109 @@ export type MonitoringRecentResponse = {
   statusCode?: string;
   message?: string | null;
   data?: unknown;
+};
+
+export type MonitoringRecordListItem = {
+  id: string;
+  projectID: string;
+  siteID: string | number;
+  participatingUserID: number;
+  timeUpdated: string;
+  dateRecorded: string;
+  elpjControlValue: number | null;
+  elpjControlEquipmentSpecFiles: string | null;
+  elpjBatteryValue: number | null;
+  elpjAccuracy: number | null;
+  elpjBatteryEvidence: string | null;
+  elPv: number | null;
+  elPvEvidence: string | null;
+  elPvr: number | null;
+  elPvrEvidence: string | null;
+  elPvEvidenceUrl: string | null;
+  elPvrEvidenceUrl: string | null;
+  elpjBatterySpecificationUrl: string | null;
+  elpjControlEvidenceUrl: string | null;
+  changedBattery: boolean;
+  isActive: boolean;
+  processedAt: string | null;
+  methodologyType: string | null;
+};
+
+export type MonitoringRecordListResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+  items?: MonitoringRecordListItem[] | null;
+  pagination?: Partial<ApiPagination> | null;
+};
+
+export type MonitoringRecordListResult = {
+  items: MonitoringRecordListItem[];
+  pagination: ApiPagination;
+};
+
+export type MonitoringCancelRequestPayload = {
+  siteId: string;
+  recordPK: string;
+  recordSK: string;
+  reasonText: string;
+};
+
+export type MonitoringCancelRequestResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+  cancelRequestId?: number;
+  recordPk?: string;
+  recordSk?: string;
+  status?: string;
+  requestedBy?: string;
+  requestedAt?: string;
+  siteId?: string;
+  reason?: string;
+};
+
+export type MonitoringCancelRequestListItem = {
+  id: number;
+  requestedAt: string;
+  reason: string;
+  recordPk: string;
+  status: string;
+  requestedBy: string;
+  siteName: string;
+  decidedAt: string | null;
+  decidedBy: string | null;
+};
+
+export type MonitoringCancelRequestListResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+  items?: MonitoringCancelRequestListItem[] | null;
+};
+
+export type MonitoringCancelDecision = 'APPROVE' | 'REJECTED';
+
+export type MonitoringCancelDecisionPayload = {
+  decision: MonitoringCancelDecision;
+  managerRemarks?: string;
+};
+
+export type MonitoringCancelDecisionResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+  cancelRequestId?: number;
+  status?: string;
+  decidedBy?: string;
+  decidedAt?: string;
+  originalRecordPk?: string;
+  originalRecordSk?: string;
+  offsetRecordPk?: string;
+  offsetRecordSk?: string;
+  managerRemarks?: string;
 };

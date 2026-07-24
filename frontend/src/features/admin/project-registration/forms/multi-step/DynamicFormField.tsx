@@ -66,7 +66,7 @@ export function DynamicFormField<TFormValues extends FieldValues = FieldValues>(
     'w-full rounded-md border px-3 py-2 text-sm',
     'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
     'disabled:cursor-not-allowed disabled:opacity-50',
-    hasError ? 'border-red-500' : 'border-gray-300',
+    hasError ? 'border-destructive' : 'border-input',
   ].join(' ');
 
   const registerProps = form.register(field.name);
@@ -171,7 +171,7 @@ export function DynamicFormField<TFormValues extends FieldValues = FieldValues>(
           <input
             id={field.name as string}
             type="checkbox"
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
             {...registerProps}
             disabled={disabled}
           />
@@ -198,7 +198,7 @@ export function DynamicFormField<TFormValues extends FieldValues = FieldValues>(
       )}
 
       {error && (
-        <p className="text-sm text-red-500">{String(error.message ?? '')}</p>
+        <p className="text-sm text-destructive">{String(error.message ?? '')}</p>
       )}
     </div>
   );

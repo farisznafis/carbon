@@ -7,9 +7,9 @@ export const ProgressBar = ({ step, total }: ProgressBarProps) => {
   const percentage = (step / total) * 100;
 
   return (
-    <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+    <div className="mb-4 h-2 w-full rounded-full bg-muted">
       <div
-        className="bg-blue-500 h-2 rounded-full transition-all"
+        className="h-2 rounded-full bg-primary transition-all"
         style={{ width: `${percentage}%` }}
       />
     </div>

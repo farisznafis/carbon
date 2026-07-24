@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { registerSite, validateCreateSite } from '@/api/site';
@@ -13,6 +13,11 @@ import {
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
+import {
+  createSiteRegistrationFlowState,
+  getSiteRegistrationFlowState,
+} from '@/features/master/navigation/siteRegistrationFlow';
+import { paths } from '@/routes/paths';
 
 const emptySiteValues: SiteFormData = {
   siteName: '',
@@ -35,23 +40,52 @@ const emptySiteValues: SiteFormData = {
 
 function SiteRegister() {
   const [step, setStep] = useState<'form' | 'confirm'>('form');
+  const location = useLocation();
   const navigate = useNavigate();
   const addSite = useDashboardStore((state) => state.addSite);
   const setUsers = useDashboardStore((state) => state.setUsers);
-  const [formData, setFormData] = useState<SiteFormData>(emptySiteValues);
+  const registrationFlowState = getSiteRegistrationFlowState(location.state);
+  const returnedUser = registrationFlowState?.createdUser;
+  const [formData, setFormData] = useState<SiteFormData>(() => ({
+    ...(registrationFlowState?.siteDraft ?? emptySiteValues),
+    userId:
+      returnedUser?.id ?? registrationFlowState?.siteDraft.userId ?? '',
+  }));
   const usersQuery = useUsersQuery();
-  const users = usersQuery.data?.users ?? [];
-  const selectableUsers = users.filter(
-    (user) =>
-      user.role !== 'admin' &&
-      (user.role === 'master' || user.siteId === null),
+  const availableUsers = useMemo(
+    () => {
+      const fetchedUsers = usersQuery.data?.users ?? [];
+
+      return returnedUser &&
+        !fetchedUsers.some((user) => user.id === returnedUser.id)
+        ? [...fetchedUsers, returnedUser]
+        : fetchedUsers;
+    },
+    [returnedUser, usersQuery.data?.users],
+  );
+  const selectableUsers = useMemo(
+    () =>
+      availableUsers.filter(
+        (user) =>
+          user.role !== 'admin' &&
+          (user.role === 'master' || user.siteId === null),
+      ),
+    [availableUsers],
   );
 
   useEffect(() => {
-    if (usersQuery.data?.users) {
-      setUsers(usersQuery.data.users);
+    if (availableUsers.length > 0 || usersQuery.data?.users) {
+      setUsers(availableUsers);
     }
-  }, [setUsers, usersQuery.data?.users]);
+  }, [availableUsers, setUsers, usersQuery.data?.users]);
+
+  const handleAddUser = (siteDraft: SiteFormData) => {
+    setFormData(siteDraft);
+    navigate(paths.masterUserRegister, {
+      replace: true,
+      state: createSiteRegistrationFlowState(siteDraft),
+    });
+  };
 
   const handleDraftSubmit = async (values: SiteFormData) => {
     try {
@@ -83,7 +117,7 @@ function SiteRegister() {
         description: '拠点を登録しました',
       });
 
-      navigate('/master/dashboard');
+      navigate(paths.masterDashboard);
     } catch (error) {
       logger.error('Error creating site:', error);
       toast({
@@ -129,10 +163,14 @@ function SiteRegister() {
           defaultValues={formData}
           originalData={emptySiteValues}
           userOptions={selectableUsers}
-          isUserOptionsLoading={usersQuery.isLoading}
+          isUserOptionsLoading={usersQuery.isLoading && !returnedUser}
           userOptionsError={
-            usersQuery.isError ? '責任者候補を取得できませんでした' : null
+            usersQuery.isError && !returnedUser
+              ? '責任者候補を取得できませんでした'
+              : null
           }
+          userOptionsHelperText="マスターおよび拠点に紐づいていない社員のみ表示されます。"
+          onAddUser={handleAddUser}
           embedded
         />
       </FormPageContent>

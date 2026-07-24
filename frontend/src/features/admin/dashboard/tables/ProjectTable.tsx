@@ -1,8 +1,10 @@
+import type { ProjectStatus } from '@/api/admin/projects';
+import type { Project } from '@/api/projects';
 import {
-  Action,
-  Column,
-  ProTable,
-} from '@/components/data-display/ProTable/ProTable';
+  DataGridTable,
+  type DataGridTableColumn,
+} from '@/components/data-display/DataGridTable';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -10,8 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { ProjectStatus } from '@/api/admin/projects';
-import type { Project } from '@/api/projects';
 
 type ProjectTableProps = {
   projects: Project[];
@@ -34,26 +34,88 @@ const projectStatusOptions: ProjectStatus[] = [
   '終了',
 ];
 
-function getProjectStatusClassName(status: Project['projectStatus']) {
-  const normalized = String(status).toLowerCase();
+const statusColors: Record<
+  ProjectStatus,
+  { bg: string; text: string; border: string }
+> = {
+  作成済み: {
+    bg: '#F1F5F9',
+    text: '#475569',
+    border: '#CBD5E1',
+  },
+  準備中: {
+    bg: '#FEF3C7',
+    text: '#92400E',
+    border: '#FCD34D',
+  },
+  変更中: {
+    bg: '#DBEAFE',
+    text: '#1D4ED8',
+    border: '#93C5FD',
+  },
+  妥当性確認処理: {
+    bg: '#E0E7FF',
+    text: '#4338CA',
+    border: '#A5B4FC',
+  },
+  却下: {
+    bg: '#FEE2E2',
+    text: '#B91C1C',
+    border: '#FCA5A5',
+  },
+  実施中: {
+    bg: '#DCFCE7',
+    text: '#15803D',
+    border: '#86EFAC',
+  },
+  検証中: {
+    bg: '#CCFBF1',
+    text: '#0F766E',
+    border: '#5EEAD4',
+  },
+  クレジット申請中: {
+    bg: '#F3E8FF',
+    text: '#7E22CE',
+    border: '#D8B4FE',
+  },
+  終了: {
+    bg: '#E5E7EB',
+    text: '#374151',
+    border: '#D1D5DB',
+  },
+};
 
-  if (normalized.includes('実施中') || normalized === 'active') {
-    return 'bg-emerald-100 text-emerald-800';
+const projectStatusAliases: Partial<Record<string, ProjectStatus>> = {
+  CREATED: '作成済み',
+  PREPARING: '準備中',
+  CHANGING: '変更中',
+  VALIDATING: '妥当性確認処理',
+  REJECTED: '却下',
+  ACTIVE: '実施中',
+  RUNNING: '実施中',
+  VERIFYING: '検証中',
+  VERIFICATION: '検証中',
+  CREDIT_APPLICATION: 'クレジット申請中',
+  ENDED: '終了',
+  INACTIVE: '終了',
+};
+
+const projectTableGridColumns =
+  'minmax(180px, 1.2fr) minmax(86px, 0.55fr) minmax(86px, 0.55fr) minmax(260px, 1.8fr) minmax(130px, 0.8fr) minmax(180px, 1fr)';
+
+function isProjectStatus(status: string): status is ProjectStatus {
+  return projectStatusOptions.includes(status as ProjectStatus);
+}
+
+function getProjectStatusColors(status: Project['projectStatus']) {
+  const normalizedStatus = String(status).trim();
+
+  if (isProjectStatus(normalizedStatus)) {
+    return statusColors[normalizedStatus];
   }
 
-  if (normalized.includes('却下') || normalized === 'rejected') {
-    return 'bg-red-100 text-red-800';
-  }
-
-  if (normalized.includes('終了') || normalized === 'inactive') {
-    return 'bg-slate-100 text-slate-800';
-  }
-
-  if (normalized.includes('検証') || normalized.includes('妥当性確認')) {
-    return 'bg-sky-100 text-sky-800';
-  }
-
-  return 'bg-amber-100 text-amber-800';
+  const aliasedStatus = projectStatusAliases[normalizedStatus.toUpperCase()];
+  return statusColors[aliasedStatus ?? '作成済み'];
 }
 
 function getStatusOptions(currentStatus: string): string[] {
@@ -67,6 +129,11 @@ function getStatusOptions(currentStatus: string): string[] {
   return [currentStatus, ...projectStatusOptions];
 }
 
+function displayValue(value: unknown) {
+  if (value === null || value === undefined || value === '') return '-';
+  return String(value);
+}
+
 export function ProjectTable({
   projects,
   onEdit,
@@ -75,116 +142,131 @@ export function ProjectTable({
   onStatusChange,
   updatingProjectStatusId,
 }: ProjectTableProps) {
-  const columns: Column<Project>[] = [
+  const columns: DataGridTableColumn<Project>[] = [
     {
-      key: 'projectName',
-      label: 'プロジェクト名称',
+      id: 'projectName',
+      label: 'プロジェクト名',
       sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[180px]',
+      sortValue: (project) => project.projectName,
+      render: (project) => (
+        <span className="block truncate text-body font-bold text-slate-800">
+          {displayValue(project.projectName)}
+        </span>
+      ),
     },
     {
-      key: 'methodCategory',
+      id: 'methodCategory',
       label: '方法論区分',
       sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[140px]',
+      sortValue: (project) => project.methodCategory,
+      render: (project) => (
+        <span className="block truncate text-body text-foreground">
+          {displayValue(project.methodCategory)}
+        </span>
+      ),
     },
     {
-      key: 'methodNumber',
+      id: 'methodNumber',
       label: '方法論番号',
       sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[140px]',
+      sortValue: (project) => project.methodNumber,
+      render: (project) => (
+        <span className="block truncate text-body text-foreground">
+          {displayValue(project.methodNumber)}
+        </span>
+      ),
     },
     {
-      key: 'methodName',
-      label: '方法論名称',
+      id: 'methodName',
+      label: '方法論名',
       sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[180px]',
+      sortValue: (project) => project.methodName,
+      render: (project) => (
+        <span className="block truncate text-body text-foreground">
+          {displayValue(project.methodName)}
+        </span>
+      ),
     },
     {
-      key: 'methodMainEmission',
-      label: '排出削減活動',
-      sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[160px]',
-    },
-    {
-      key: 'methodologyVersion',
-      label: 'Version',
-      sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[120px]',
-    },
-    {
-      key: 'projectStatus',
+      id: 'projectStatus',
       label: 'ステータス',
       sortable: true,
-      truncate: true,
-      maxWidth: 'max-w-[180px]',
-      render: (_, row) => (
+      sortValue: (project) => project.projectStatus,
+      render: (project) => {
+        const statusColor = getProjectStatusColors(project.projectStatus);
+
+        return (
+          <span
+            className="block min-w-0"
+            onClick={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            <Select
+              value={project.projectStatus}
+              disabled={updatingProjectStatusId === project.id}
+              onValueChange={(value) =>
+                onStatusChange?.(project, value as ProjectStatus)
+              }
+            >
+              <SelectTrigger
+                className="h-8 w-full rounded-full border px-3 text-table font-bold shadow-none focus:ring-1"
+                style={{
+                  backgroundColor: statusColor.bg,
+                  color: statusColor.text,
+                  borderColor: statusColor.border,
+                }}
+                title="ステータスを変更"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {getStatusOptions(project.projectStatus).map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {status}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </span>
+        );
+      },
+    },
+    {
+      id: 'actions',
+      label: '操作',
+      render: (project) => (
         <div
-          className="w-36 flex items-center justify-center "
+          className="flex justify-start gap-2"
           onClick={(event) => event.stopPropagation()}
           onPointerDown={(event) => event.stopPropagation()}
         >
-          <Select
-            value={row.projectStatus}
-            disabled={updatingProjectStatusId === row.id}
-            onValueChange={(value) =>
-              onStatusChange?.(row, value as ProjectStatus)
-            }
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => onEdit?.(project)}
           >
-            <SelectTrigger
-              className={`h-8 rounded-full border-0 px-3 text-xs font-medium shadow-none focus:ring-1 ${getProjectStatusClassName(row.projectStatus)}`}
-              title="ステータスを変更"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {getStatusOptions(row.projectStatus).map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            詳細
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onUpdate?.(project)}
+          >
+            更新
+          </Button>
         </div>
       ),
     },
   ];
 
-  const actions: Action<Project>[] = [
-    {
-      label: '詳細',
-      onClick: (row) => onEdit?.(row),
-      colorClass: 'text-white',
-    },
-    {
-      label: '更新',
-      onClick: (row) => onUpdate?.(row),
-      colorClass: 'text-white',
-    },
-  ];
-
   return (
-    <ProTable
-      title={
-        <p className="flex items-center gap-2 text-2xl font-bold">
-          プロジェクト管理
-        </p>
-      }
-      data={projects}
+    <DataGridTable
+      rows={projects}
       columns={columns}
-      actions={actions}
-      height="max-h-[320px]"
-      emptyState={
-        <p className="text-muted-foreground">
-          まだプロジェクトが登録されていません
-        </p>
-      }
+      gridTemplateColumns={projectTableGridColumns}
+      minWidth={980}
+      getRowKey={(project) => project.id}
+      emptyMessage="まだプロジェクトが登録されていません。"
       onRowClick={onRowClick}
     />
   );

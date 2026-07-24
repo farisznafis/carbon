@@ -6,6 +6,13 @@ function toNumberOrUndefined(value?: string | number | null): number | undefined
   return Number.isNaN(parsed) ? undefined : parsed;
 }
 
+function normalizeSiteId(
+  siteId?: string | number | null,
+  legacyId?: string | number | null,
+): string {
+  return String(siteId ?? legacyId ?? '');
+}
+
 // For GET /site/{siteId}/project response (projects.ts)
 export function mapSiteProject(item: SiteProjectApiItem): SiteProject {
   return {
@@ -54,7 +61,7 @@ export function mapSiteProject(item: SiteProjectApiItem): SiteProject {
 // For GET /site list response
 export function mapSiteListItem(item: SiteListItem): Site {
   return {
-    id: item.id,
+    siteId: normalizeSiteId(item.siteId, item.id),
     siteName: item.siteName,
     postalCode: item.postalCode ?? "",
     prefectureName: item.prefecture ?? item.prefName ?? "",
@@ -97,7 +104,7 @@ export function mapSiteDashboard(apiSite: SiteDashboardApiResponse['site']): Sit
     .join("");
 
   return {
-    id: apiSite.id,
+    siteId: normalizeSiteId(apiSite.siteId, apiSite.id),
     siteName: apiSite.siteName ?? "",
     postalCode: apiSite.postalCode ?? "",
     prefectureName,

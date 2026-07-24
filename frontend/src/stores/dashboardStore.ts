@@ -13,7 +13,7 @@ interface DashboardState {
   setSites: (sites: Site[]) => void;
   editSite: (siteId: string, updatedData: Partial<Site>) => void;
   deleteSiteStore: (siteId: string) => void;
-  getSiteById: (id: string) => Site | undefined;
+  getSiteById: (siteId: string) => Site | undefined;
   getUserSites: (userId: string) => Site[];
   getMasterSites: () => Site[];
   joinableSites: () => Site[];
@@ -115,18 +115,18 @@ export const useDashboardStore = create<DashboardState>()(
       editSite: (siteId, updatedData) => {
         set((state) => ({
           sites: state.sites.map((site) =>
-            site.id === siteId ? { ...site, ...updatedData } : site
+            site.siteId === siteId ? { ...site, ...updatedData } : site
           ),
         }));
       },
 
       deleteSiteStore: (siteId: string) => {
         set((state) => ({
-          sites: state.sites.filter(site => site.id !== siteId), //remove deleted user
+          sites: state.sites.filter(site => site.siteId !== siteId), //remove deleted user
         }));
       },
 
-      getSiteById: (siteId: string) => get().sites.find(s => s.id === siteId),
+      getSiteById: (siteId: string) => get().sites.find(s => s.siteId === siteId),
 
       getMasterSites: () => {
         const { users, sites } = get();
@@ -143,8 +143,8 @@ export const useDashboardStore = create<DashboardState>()(
 
         return sites.filter(
           site =>
-            (master.siteId && site.id === master.siteId) ||
-            !assignedSiteIds.has(site.id)
+            (master.siteId && site.siteId === master.siteId) ||
+            !assignedSiteIds.has(site.siteId)
         );
       },
 
@@ -157,7 +157,7 @@ export const useDashboardStore = create<DashboardState>()(
             .map((u) => u.siteId),
         );
 
-        return sites.filter((s) => !takenSiteIds.has(s.id));
+        return sites.filter((s) => !takenSiteIds.has(s.siteId));
       },
 
 
@@ -227,12 +227,12 @@ export const useDashboardStore = create<DashboardState>()(
           );
           return sites.filter(
             site =>
-              (user.siteId && site.id === user.siteId) ||
-              !assignedSiteIds.has(site.id)
+              (user.siteId && site.siteId === user.siteId) ||
+              !assignedSiteIds.has(site.siteId)
           );
         } else {
           //for　ユーザ: just their assigned site
-          return sites.filter(site => site.id === user.siteId);
+          return sites.filter(site => site.siteId === user.siteId);
         }
       },
 

@@ -1,7 +1,7 @@
 import type { Project } from "../projects/types";
 
 export interface Site {
-  id: string;
+  siteId: string;
   siteName: string;
   postalCode: string;
   prefectureName: string;
@@ -22,7 +22,7 @@ export interface Site {
 
 export type CreateSiteData = Omit<
   Site,
-  'id' | 'picEmail' | 'picPosition' | 'companyId' | 'project'
+  'siteId' | 'picEmail' | 'picPosition' | 'companyId' | 'project'
 >;
 
 export interface SiteAddResponse extends Site {
@@ -60,7 +60,9 @@ export type SiteDashboardApiResponse = {
   message?: string | null;
   errors?: unknown;
   site?: {
-    id: string;
+    siteId: string;
+    /** @deprecated Use siteId. */
+    id?: string;
     siteName: string;
     postalCode?: string | null;
     prefecture?: string | null;
@@ -173,9 +175,189 @@ export type SiteProject = Project & {
   createdAt?: string;
 };
 
+export type SiteProjectEquipment = {
+  tempId?: string | null;
+  equipmentId?: number | null;
+  methodologyNumber?: string | null;
+  isEligible?: boolean | null;
+  equipmentOpDate?: string | null;
+  nominalMaxOutput?: number | null;
+  pcsManufacturer?: string | null;
+  pcsModel?: string | null;
+  powerCondUnitCount?: number | null;
+  deviceNo?: string | null;
+  powerCondStandby?: number | null;
+  hasBattery?: boolean | null;
+  batteryMaker?: string | null;
+  batteryModel?: string | null;
+  batteryCapacity?: number | null;
+  ictEquipmentPowerConsumption?: number | null;
+  additionalEquipment?: boolean | null;
+  additionalEquipmentDate?: string | null;
+  additionalEquipmentType?: string | null;
+  additionalUnitCount?: number | null;
+  additionalDeviceUniqueNo?: string | null;
+  equipmentType?: string | null;
+  unitCount?: number | null;
+  deviceUniqueNo?: string | null;
+  totalInvestment?: number | null;
+  hasSubsidy?: boolean | null;
+  subsidyName?: string | null;
+  subsidyAmount?: number | null;
+  preProjectUnitPrice?: number | null;
+};
+
+export type SiteProjectEquipmentResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: unknown;
+  equipments?: SiteProjectEquipment[] | null;
+};
+
+export type SiteProjectEquipmentFileType =
+  | 'solar_contract'
+  | 'panel_catalog'
+  | 'pcs_spec'
+  | 'battery_catalog'
+  | 'construction_invoice'
+  | 'subsidy_notice'
+  | 'electricity_bill';
+
+export type SiteProjectEquipmentValidationFile = {
+  fileType: SiteProjectEquipmentFileType;
+  s3Key: string;
+  fileName: string;
+  fileId: string;
+};
+
+export type SiteProjectEquipmentValidationItem = {
+  tempId: string;
+  siteId: string | null;
+  equipmentOpDate: string;
+  nominalMaxOutput: number | null;
+  pcsManufacturer: string;
+  pcsModel: string;
+  pcsUnitCount: number | null;
+  deviceNo: string;
+  pcsStandby: number | null;
+  hasBattery: boolean | null;
+  batteryMaker?: string;
+  batteryModel?: string;
+  batteryCapacity?: number | null;
+  totalInvestment: number | null;
+  hasSubsidy: boolean | null;
+  subsidyName?: string;
+  subsidyAmount?: number | null;
+  preProjectUnitPrice: number | null;
+  files: SiteProjectEquipmentValidationFile[];
+};
+
+export type SiteProjectEquipmentValidationResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+};
+
+export type SiteProjectJoinConfirmationItems = {
+  isAgreeDataUse: boolean | null;
+  isAgreeExtraData: boolean | null;
+  isAgreeTransfer: boolean | null;
+  isNotRegistered: boolean | null;
+  isKeidanrenParticipation: boolean | null;
+  isEmitter: boolean | null;
+  emitterCode?: string;
+  isAdjustedEmissionsAdded?: boolean;
+  isSubjectToPeriodicReport: boolean;
+  isPeriodicReportTypeOne?: boolean;
+  energyBusinessCode?: string;
+  factoryCode?: string;
+};
+
+export type SiteProjectJoinConfirmationItemsRequest =
+  SiteProjectJoinConfirmationItems & {
+    id: string;
+    processedBy: string;
+    companyId: string;
+  };
+
+export type SiteProjectConfirmationItemsValidationRequest = {
+  id: string;
+  processedBy: string;
+  companyId: string;
+  isAgreeDataUse: boolean | null;
+  isAgreeExtraData: boolean | null;
+  isAgreeTransfer: boolean | null;
+  isNotRegistered: boolean | null;
+  isKeidanrenParticipation: boolean | null;
+  isEmitter: boolean | null;
+  emitterCode: string;
+  isAdjustedEmissionsAdded: boolean | null;
+  isSubjectToPeriodicReport: boolean | null;
+  isPeriodicReportTypeOne: boolean | null;
+  energyBusinessCode: string;
+  factoryCode: string;
+};
+
+export type SiteProjectConfirmationItemsValidationResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+};
+
+export type SiteProjectJoinSustainabilityCommitmentRequest = {
+  companyName: string;
+  repName: string;
+  repRole: string;
+  hasConsent: boolean;
+};
+
+export type SiteProjectJoinSustainabilityCommitmentResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+};
+
+export type SiteProjectFinalAgreementValidationRequest = {
+  isAgreeTerms: boolean;
+};
+
+export type SiteProjectFinalAgreementValidationResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+};
+
+export type SiteProjectJoinRequest = {
+  equipment: SiteProjectEquipmentValidationItem;
+  confirmationItems: SiteProjectJoinConfirmationItemsRequest;
+  sustainabilityCommitment: SiteProjectJoinSustainabilityCommitmentRequest;
+  finalAgreement: SiteProjectFinalAgreementValidationRequest;
+};
+
+export type SiteProjectJoinResponse = {
+  statusCode?: string;
+  message?: string | null;
+  participationId?: number;
+  equipmentId?: number;
+  siteProjectRelationId?: number;
+};
+
+export type SiteProjectEquipmentFileUploadResponse = {
+  statusCode?: string;
+  s3Key?: string;
+  fileId?: string;
+  originalName?: string;
+};
+
 // For GET /site list response
 export interface SiteListItem {
-  id: string;
+  siteId: string;
+  /** @deprecated Use siteId. */
+  id?: string;
   siteName: string;
   postalCode?: string;
   prefecture?: string;

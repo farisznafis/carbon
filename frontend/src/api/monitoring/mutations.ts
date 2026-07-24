@@ -1,7 +1,14 @@
-import { apiFetch, apiVoidRequest, parseJsonResponse } from "../_shared/httpClient";
+import { apiFetch, apiRequest, apiVoidRequest, parseJsonResponse } from "../_shared/httpClient";
 import { ApiError, getApiErrorMessage } from "../_shared/errors";
 import type { ApiErrorPayload } from "../_shared/types";
-import type { MonitoringData, SubmitDataResponse } from "./types";
+import type {
+  MonitoringCancelDecisionPayload,
+  MonitoringCancelDecisionResponse,
+  MonitoringCancelRequestPayload,
+  MonitoringCancelRequestResponse,
+  MonitoringData,
+  SubmitDataResponse,
+} from "./types";
 import type { MonitoringEvidenceKind } from "./types";
 
 type UploadResponse = {
@@ -20,7 +27,7 @@ type UploadResponse = {
 async function uploadEvidenceFile(
   kind: MonitoringEvidenceKind,
   file: File,
-  projectId: string | number,
+  projectId: string,
   siteId: string | number,
   description?: string,
 ): Promise<string> {
@@ -98,9 +105,36 @@ export async function validateMonitoringData(data: MonitoringData): Promise<void
   });
 }
 
+export async function createMonitoringCancelRequest(
+  payload: MonitoringCancelRequestPayload,
+): Promise<MonitoringCancelRequestResponse> {
+  return apiRequest<MonitoringCancelRequestResponse>(
+    '/monitoring/cancel-request',
+    {
+      method: 'POST',
+      body: payload,
+      fallbackErrorMessage: 'Failed to create monitoring cancel request',
+    },
+  );
+}
+
+export async function decideMonitoringCancelRequest(
+  cancelRequestId: number,
+  payload: MonitoringCancelDecisionPayload,
+): Promise<MonitoringCancelDecisionResponse> {
+  return apiRequest<MonitoringCancelDecisionResponse>(
+    `/monitoring/${cancelRequestId}/cancel-decision`,
+    {
+      method: 'POST',
+      body: payload,
+      fallbackErrorMessage: 'Failed to decide monitoring cancel request',
+    },
+  );
+}
+
 export async function uploadElpvFile(
   file: File,
-  projectId: string | number,
+  projectId: string,
   siteId: string | number,
   description?: string,
 ): Promise<string> {
@@ -109,7 +143,7 @@ export async function uploadElpvFile(
 
 export async function uploadElpvrFile(
   file: File,
-  projectId: string | number,
+  projectId: string,
   siteId: string | number,
   description?: string,
 ): Promise<string> {
@@ -118,7 +152,7 @@ export async function uploadElpvrFile(
 
 export async function uploadElpjBatteryFile(
   file: File,
-  projectId: string | number,
+  projectId: string,
   siteId: string | number,
   description?: string,
 ): Promise<string> {
@@ -127,7 +161,7 @@ export async function uploadElpjBatteryFile(
 
 export async function uploadElpjControlFile(
   file: File,
-  projectId: string | number,
+  projectId: string,
   siteId: string | number,
   description?: string,
 ): Promise<string> {

@@ -1,5 +1,6 @@
 import type { Site } from '@/api/site';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
+import { Button } from '@/components/ui/button';
 import {
   formatPersonName,
   formatSiteAddress,
@@ -18,17 +19,21 @@ type MasterSiteCardProps = {
   onOpen: (site: Site) => void;
 };
 
-export function MasterSiteCard({ site, onOpen }: MasterSiteCardProps) {
+export function MasterSiteCard({
+  site,
+  onOpen,
+}: MasterSiteCardProps) {
   const projects = Array.isArray(site.project) ? site.project : [];
   const visibleProjects = projects.slice(0, 2);
 
   return (
-    <button
-      type="button"
-      onClick={() => onOpen(site)}
-      className="group grid min-h-[112px] w-full grid-cols-[minmax(0,1fr)_80px] overflow-hidden rounded-[8px] border border-border bg-card text-left shadow-app-sm transition hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:grid-cols-[minmax(0,1fr)_96px]"
-    >
-      <div className="grid min-w-0 gap-5 px-5 py-5 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)] md:items-start md:px-7 xl:grid-cols-[minmax(0,1fr)_minmax(430px,0.75fr)]">
+    <article className="grid min-h-28 w-full overflow-hidden rounded-lg border border-border bg-card shadow-app-sm transition hover:border-primary/60 md:grid-cols-[minmax(0,1fr)_96px]">
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={() => onOpen(site)}
+        className="grid h-auto min-w-0 justify-normal gap-5 whitespace-normal rounded-none px-5 py-5 text-left shadow-none hover:bg-transparent md:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)] md:items-start md:px-7 xl:grid-cols-[minmax(0,1fr)_minmax(430px,0.75fr)]"
+      >
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
@@ -46,7 +51,7 @@ export function MasterSiteCard({ site, onOpen }: MasterSiteCardProps) {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-col gap-2 text-sm font-bold leading-6 text-foreground">
+          <div className="pl-3 mt-3 flex flex-col gap-2 text-sm font-bold leading-6 text-foreground">
             <span className="inline-flex items-center gap-1.5">
               <User className="h-4 w-4" />
               <span className="text-muted-foreground">責任者</span>
@@ -70,7 +75,7 @@ export function MasterSiteCard({ site, onOpen }: MasterSiteCardProps) {
                   <div>
                     {visibleProjects.map((project, index) => (
                       <p
-                        key={`${site.id}-${project}-${index}`}
+                        key={`${site.siteId}-${project}-${index}`}
                         className="truncate"
                       >
                         {project}
@@ -85,20 +90,26 @@ export function MasterSiteCard({ site, onOpen }: MasterSiteCardProps) {
                   )}
                 </>
               ) : (
-                <Badge className="border-transparent bg-muted px-3 py-0.5 text-sm font-medium text-muted-foreground hover:bg-muted">
+                <StatusBadge tone="neutral">
                   未参加
-                </Badge>
+                </StatusBadge>
               )}
             </div>
           </div>
         </div>
-      </div>
+      </Button>
 
-      <div className="flex h-full min-h-[112px] items-center justify-center">
-        <button className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:bg-[#EEF2CE] hover:text-primary">
+      <div className="flex min-h-28 items-center justify-center border-t border-border px-4 py-4 md:border-l md:border-t-0">
+        <Button
+          type="button"
+          size="icon"
+          aria-label={`${site.siteName || '拠点'}のダッシュボードを開く`}
+          onClick={() => onOpen(site)}
+          className="shrink-0"
+        >
           <ChevronRight className="h-6 w-6" />
-        </button>
+        </Button>
       </div>
-    </button>
+    </article>
   );
 }

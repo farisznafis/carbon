@@ -159,14 +159,14 @@ export const agreementsConfig: AgreementField[] = [
 
 // Type for the form values
 export type AgreementFormValues = {
-  useRegisteredInfo: boolean;
-  provideAdditionalInfo: boolean;
-  transferEnvironmentalValue: boolean;
-  notRegisteredElsewhere: boolean;
+  useRegisteredInfo: boolean | null;
+  provideAdditionalInfo: boolean | null;
+  transferEnvironmentalValue: boolean | null;
+  notRegisteredElsewhere: boolean | null;
   keidanrenParticipation: string;
   specifiedEmitterStatus: string;
   energyRationalizationCompliance: string;
-  emissionAdditionAgreement?: boolean;
+  emissionAdditionAgreement?: boolean | null;
   specifiedEmitterCode?: string;
   energyLawType?: string;
   energyLawBusinessNumber?: string;
@@ -187,7 +187,7 @@ export const shouldShowField = (
 // Validation helper
 export const validateField = (
   field: AgreementField,
-  value: string | boolean | undefined
+  value: string | boolean | null | undefined
 ): { isValid: boolean; message?: string } => {
   // Check required fields
   if (field.required && !value) {

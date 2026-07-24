@@ -31,8 +31,12 @@ const UserRegister = lazy(() => import("./features/master/pages/UserRegisterPage
 const UserEdit = lazy(() => import("./features/master/pages/UserEditPage"));
 const MasterUserProfile = lazy(() => import("./features/master/pages/MasterUserProfilePage"));
 const SiteDetail = lazy(() => import("./features/user/sites/SiteDetailPage"));
+const ProjectMembership = lazy(() => import("./features/user/project-registration/ProjectMembershipPage"));
 const ProjectRegister = lazy(() => import("./features/user/project-registration/ProjectRegisterPage"));
 const EquipmentForm = lazy(() => import("./features/user/project-registration/EquipmentFormPage"));
+const EquipmentConfirmation = lazy(() =>
+  import("./features/user/project-registration/EquipmentConfirmationPage"),
+);
 const MasterDashboard = lazy(() => import("./features/master/pages/MasterDashboardPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Dashboard = lazy(() => import("./features/user/dashboard/DashboardPage"));
@@ -44,6 +48,12 @@ const EquipmentPage = lazy(() =>
 );
 const Profile = lazy(() => import("./features/user/profile/ProfilePage"));
 const AdminDashboard = lazy(() => import("./features/admin/dashboard/AdminDashboardPage"));
+const AdminCompanyDetail = lazy(() =>
+  import("./features/admin/company-detail/AdminCompanyDetailPage"),
+);
+const AdminCancelRequestDetail = lazy(() =>
+  import("./features/admin/monitoring/CancelRequestDetailPage"),
+);
 const AdminProjectEdit = lazy(() => import("./features/admin/project-edit/AdminProjectEditPage"));
 const AdminProjectRegister = lazy(() =>
   import("./features/admin/project-registration/AdminProjectRegisterPage").then((module) => ({
@@ -57,10 +67,31 @@ const AdminProjectPlanApplication = lazy(() =>
 const AdminMonitoringReport = lazy(() =>
   import("./features/admin/project-detail/AdminMonitoringReportPage"),
 );
+const AdminProjectMonitoringDetail = lazy(() =>
+  import("./features/admin/monitoring/ProjectMonitoringDetailPage"),
+);
+const AdminHelpFaqPage = lazy(() => import("./features/master/help/AdminHelpFaqPage"));
 
 function RequireAdmin({ children }: { children: JSX.Element }) {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? children : <Navigate to={paths.adminLogin} replace />;
+}
+
+function RequireMaster({ children }: { children: JSX.Element }) {
+  const { user } = useAuth();
+
+  if (user?.role === 'master') {
+    return children;
+  }
+
+  const fallbackPath =
+    user?.role === 'admin'
+      ? paths.adminDashboard
+      : user?.siteId
+        ? paths.siteDashboard(user.siteId)
+        : paths.userDashboard;
+
+  return <Navigate to={fallbackPath} replace />;
 }
 
 function LegacyDashboardRedirect() {
@@ -121,8 +152,38 @@ const App = () => {
             <Route path={paths.userDashboard} element={<Dashboard />} />
             <Route path={paths.siteDashboardRoute} element={<Dashboard />} />
             <Route path={paths.legacyDashboardRoute} element={<LegacyDashboardRedirect />} />
-            <Route path={paths.projectRegisterRoute} element={<ProjectRegister />} />
-            <Route path={paths.projectEquipmentRoute} element={<EquipmentForm />} />
+            <Route
+              path={paths.projectMembershipRoute}
+              element={
+                <RequireMaster>
+                  <ProjectMembership />
+                </RequireMaster>
+              }
+            />
+            <Route
+              path={paths.projectRegisterRoute}
+              element={
+                <RequireMaster>
+                  <ProjectRegister />
+                </RequireMaster>
+              }
+            />
+            <Route
+              path={paths.projectEquipmentRoute}
+              element={
+                <RequireMaster>
+                  <EquipmentForm />
+                </RequireMaster>
+              }
+            />
+            <Route
+              path={paths.projectEquipmentConfirmationRoute}
+              element={
+                <RequireMaster>
+                  <EquipmentConfirmation />
+                </RequireMaster>
+              }
+            />
             <Route path={paths.equipmentAddRoute} element={<EquipmentPage />} />
             <Route path={paths.siteProjectDetailRoute} element={<ProjectDetail />} />
             <Route path={paths.legacyProjectRoute} element={<LegacyProjectRedirect />} />
@@ -143,6 +204,30 @@ const App = () => {
             }
           />
           <Route
+            path={paths.adminApplicationDetailRoute}
+            element={
+              <RequireAdmin>
+                <AdminDashboard />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminCompanyDetailRoute}
+            element={
+              <RequireAdmin>
+                <AdminCompanyDetail />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminCancelRequestDetailRoute}
+            element={
+              <RequireAdmin>
+                <AdminCancelRequestDetail />
+              </RequireAdmin>
+            }
+          />
+          <Route
             path={paths.adminProjectRegister}
             element={
               <RequireAdmin>
@@ -155,6 +240,14 @@ const App = () => {
             element={
               <RequireAdmin>
                 <ProjectDetailAdmin />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminProjectMonitoringDetailRoute}
+            element={
+              <RequireAdmin>
+                <AdminProjectMonitoringDetail />
               </RequireAdmin>
             }
           />
@@ -184,6 +277,12 @@ const App = () => {
           />
           <Route path={paths.passwordChange} element={<PasswordChange />} />
           <Route path="*" element={<NotFound />} />
+          <Route
+            path={paths.adminHelpFaq}
+            element={
+              <AdminHelpFaqPage />
+            }
+          />
           </Routes>
         </Suspense>
       </div>
