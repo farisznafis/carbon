@@ -2,6 +2,7 @@ import type {
   SiteProjectConfirmationItemsValidationRequest,
   SiteProjectJoinConfirmationItems,
   SiteProjectJoinRequest,
+  SiteProjectJoinSustainabilityCommitmentRequest,
 } from '@/api/site';
 import type { ContractStepFormValues } from '@/features/user/project-registration/components/ContractStep';
 import type { SolarEquipment } from '@/features/user/project-registration/components/types';
@@ -114,6 +115,18 @@ export function mapConfirmationItemsValidationRequest(
   };
 }
 
+// Step 3 Map
+export function mapSustainabilityCommitmentRequest(
+  values: Partial<ContractStepFormValues>,
+): SiteProjectJoinSustainabilityCommitmentRequest {
+  return {
+    companyName: values.businessName?.trim() ?? '',
+    repName: values.representativeName?.trim() ?? '',
+    repRole: values.representativePosition?.trim() ?? '',
+    hasConsent: values.contractAgreed === true,
+  };
+}
+
 export function mapProjectJoinRequest(
   equipment: SolarEquipment,
   agreementValues: Partial<AgreementFormValues>,
@@ -129,12 +142,8 @@ export function mapProjectJoinRequest(
     ),
     confirmationItems:
       mapAgreementValuesToConfirmationItems(agreementValues),
-    sustainabilityCommitment: {
-      companyName: sustainabilityValues.businessName?.trim() ?? '',
-      repName: sustainabilityValues.representativeName?.trim() ?? '',
-      repRole: sustainabilityValues.representativePosition?.trim() ?? '',
-      hasConsent: sustainabilityValues.contractAgreed === true,
-    },
+    sustainabilityCommitment:
+      mapSustainabilityCommitmentRequest(sustainabilityValues),
     finalAgreement: {
       isAgreeTerms: finalTermsValues.finalTermsAgreed === true,
     },

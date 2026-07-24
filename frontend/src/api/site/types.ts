@@ -299,17 +299,24 @@ export type SiteProjectConfirmationItemsValidationResponse = {
   timestamp?: string;
 };
 
-export type SiteProjectJoinSustainabilityCommitment = {
+export type SiteProjectJoinSustainabilityCommitmentRequest = {
   companyName: string;
   repName: string;
   repRole: string;
   hasConsent: boolean;
 };
 
+export type SiteProjectJoinSustainabilityCommitmentResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+};
+
 export type SiteProjectJoinRequest = {
   equipment: SiteProjectEquipmentValidationItem;
   confirmationItems: SiteProjectJoinConfirmationItems;
-  sustainabilityCommitment: SiteProjectJoinSustainabilityCommitment;
+  sustainabilityCommitment: SiteProjectJoinSustainabilityCommitmentRequest;
   finalAgreement: {
     isAgreeTerms: boolean;
   };

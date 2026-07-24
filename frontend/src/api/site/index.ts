@@ -14,6 +14,7 @@ export {
   uploadSiteProjectEquipmentFile,
   validateSiteProjectConfirmationItems,
   validateSiteProjectEquipment,
+  validateSiteProjectSustainabilityCommitment,
 } from './equipment';
 export type {
   CreateSiteData,
@@ -34,7 +35,8 @@ export type {
   SiteProjectJoinConfirmationItems,
   SiteProjectJoinRequest,
   SiteProjectJoinResponse,
-  SiteProjectJoinSustainabilityCommitment,
+  SiteProjectJoinSustainabilityCommitmentRequest,
+  SiteProjectJoinSustainabilityCommitmentResponse,
   SiteListItem,
   SiteProject,
   SiteProjectsApiResponse,

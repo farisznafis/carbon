@@ -3,6 +3,7 @@ import type { SolarEquipment } from '@/features/user/project-registration/compon
 import {
   mapConfirmationItemsValidationRequest,
   mapProjectJoinRequest,
+  mapSustainabilityCommitmentRequest,
 } from './projectJoinMapper';
 
 const equipment: SolarEquipment = {
@@ -163,6 +164,33 @@ describe('mapConfirmationItemsValidationRequest', () => {
       isAdjustedEmissionsAdded: null,
       isSubjectToPeriodicReport: null,
       isPeriodicReportTypeOne: null,
+    });
+  });
+});
+
+describe('mapSustainabilityCommitmentRequest', () => {
+  it('maps and trims the visible agreement fields', () => {
+    expect(
+      mapSustainabilityCommitmentRequest({
+        businessName: ' Company ',
+        representativeName: ' Representative ',
+        representativePosition: ' Director ',
+        contractAgreed: true,
+      }),
+    ).toEqual({
+      companyName: 'Company',
+      repName: 'Representative',
+      repRole: 'Director',
+      hasConsent: true,
+    });
+  });
+
+  it('sends empty values and false when the form is unanswered', () => {
+    expect(mapSustainabilityCommitmentRequest({})).toEqual({
+      companyName: '',
+      repName: '',
+      repRole: '',
+      hasConsent: false,
     });
   });
 });

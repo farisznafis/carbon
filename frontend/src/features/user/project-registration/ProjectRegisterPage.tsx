@@ -12,6 +12,7 @@ import {
   joinSiteProject,
   uploadSiteProjectEquipmentFile,
   validateSiteProjectConfirmationItems,
+  validateSiteProjectSustainabilityCommitment,
 } from "@/api/site";
 import { ApiError } from "@/api/_shared/errors";
 import { DynamicAgreementsStep, type DynamicAgreementsStepRef } from "@/features/user/project-registration/components/DynamicAgreementsStep";
@@ -28,6 +29,7 @@ import {
 } from "@/features/user/project-registration/projectMembershipNavigation";
 import {
   mapConfirmationItemsValidationRequest,
+  mapSustainabilityCommitmentRequest,
   mapProjectJoinRequest,
 } from "@/features/user/project-registration/projectJoinMapper";
 import { getPendingSolarEquipment } from "@/features/user/project-registration/equipmentConfirmationState";
@@ -54,6 +56,16 @@ const confirmationItemFieldNames: Record<string, keyof AgreementFormValues> = {
   factoryCode: "energyLawFactoryNumber",
 };
 
+const sustainabilityCommitmentFieldNames: Record<
+  string,
+  keyof ContractStepFormValues
+> = {
+  companyName: "businessName",
+  repName: "representativeName",
+  repRole: "representativePosition",
+  hasConsent: "contractAgreed",
+};
+
 const getValidationErrorMessage = (error: unknown): string => {
   if (typeof error === "string") return error;
   if (Array.isArray(error)) {
@@ -78,6 +90,28 @@ const mapConfirmationItemErrors = (
       const requestFieldName =
         path.split(/::|[.[\]]/).filter(Boolean).at(-1) ?? path;
       const formFieldName = confirmationItemFieldNames[requestFieldName];
+      const message = getValidationErrorMessage(error);
+
+      if (formFieldName && message) {
+        fieldErrors[formFieldName] = message;
+      }
+      return fieldErrors;
+    },
+    {},
+  );
+};
+
+const mapSustainabilityCommitmentErrors = (
+  errors: unknown,
+): Record<string, string> => {
+  if (!errors || typeof errors !== "object" || Array.isArray(errors)) return {};
+
+  return Object.entries(errors).reduce<Record<string, string>>(
+    (fieldErrors, [path, error]) => {
+      const requestFieldName =
+        path.split(/::|[.[\]]/).filter(Boolean).at(-1) ?? path;
+      const formFieldName =
+        sustainabilityCommitmentFieldNames[requestFieldName];
       const message = getValidationErrorMessage(error);
 
       if (formFieldName && message) {
@@ -285,9 +319,36 @@ const ProjectRegister = () => {
         }
 
       case 2:
-        if (contractStepRef.current) return await contractStepRef.current.triggerValidation();
+        if (!contractStepRef.current) return false;
+
+        setIsSubmitting(true);
         setContractErrors({});
-        return false;
+        try {
+          const currentContractValues = contractStepRef.current.getValues();
+          setContractFormValues(currentContractValues);
+
+          await validateSiteProjectSustainabilityCommitment(
+            mapSustainabilityCommitmentRequest(currentContractValues),
+          );
+          return true;
+        } catch (error) {
+          const fieldErrors =
+            error instanceof ApiError
+              ? mapSustainabilityCommitmentErrors(error.payload?.errors)
+              : {};
+          setContractErrors(fieldErrors);
+          toast({
+            title: "持続可能性の同意内容を確認できませんでした",
+            description:
+              error instanceof Error
+                ? error.message
+                : "持続可能性約束の検証に失敗しました。",
+            variant: "destructive",
+          });
+          return false;
+        } finally {
+          setIsSubmitting(false);
+        }
 
       case 3:
         if (finalStepRef.current) return await finalStepRef.current.triggerValidation();
@@ -409,7 +470,12 @@ const ProjectRegister = () => {
           <ContractStep
             ref={contractStepRef}
             formValues={contractFormValues}
-            onValueChange={setContractFormValues}
+            onValueChange={(values) => {
+              setContractFormValues(values);
+              if (Object.keys(contractErrors).length > 0) {
+                setContractErrors({});
+              }
+            }}
             errors={contractErrors}
           />
         );
@@ -491,9 +557,9 @@ const ProjectRegister = () => {
           <div className="flex justify-end">
             <Button onClick={handleNext} disabled={isSubmitting}>
               {isSubmitting
-                ? currentStep === 1
-                  ? "確認中..."
-                  : "送信中..."
+                ? currentStep === FINAL_FORM_STEP
+                  ? "送信中..."
+                  : "確認中..."
                 : currentStep === FINAL_FORM_STEP
                   ? "送信"
                   : "次へ"}

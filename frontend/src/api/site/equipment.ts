@@ -13,6 +13,8 @@ import type {
   SiteProjectEquipmentValidationResponse,
   SiteProjectConfirmationItemsValidationRequest,
   SiteProjectConfirmationItemsValidationResponse,
+  SiteProjectJoinSustainabilityCommitmentRequest,
+  SiteProjectJoinSustainabilityCommitmentResponse,
   SiteProjectJoinRequest,
   SiteProjectJoinResponse,
 } from './types';
@@ -76,6 +78,19 @@ export async function validateSiteProjectConfirmationItems(
       method: 'POST',
       body: payload,
       fallbackErrorMessage: '同意事項の検証に失敗しました。',
+    },
+  );
+}
+
+export async function validateSiteProjectSustainabilityCommitment(
+  payload: SiteProjectJoinSustainabilityCommitmentRequest,
+): Promise<SiteProjectJoinSustainabilityCommitmentResponse> {
+  return apiRequest<SiteProjectJoinSustainabilityCommitmentResponse>(
+    '/site/project/sustainability-commitment/validate',
+    {
+      method: 'POST',
+      body: payload,
+      fallbackErrorMessage: '持続可能性約束の検証に失敗しました。',
     },
   );
 }

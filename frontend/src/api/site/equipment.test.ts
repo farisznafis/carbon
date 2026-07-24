@@ -4,6 +4,7 @@ import {
   uploadSiteProjectEquipmentFile,
   validateSiteProjectConfirmationItems,
   validateSiteProjectEquipment,
+  validateSiteProjectSustainabilityCommitment,
 } from './equipment';
 import type { SiteProjectEquipmentValidationItem } from './types';
 
@@ -80,6 +81,34 @@ describe('validateSiteProjectConfirmationItems', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/site/project/confirmation-items/validate',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    );
+  });
+});
+
+describe('validateSiteProjectSustainabilityCommitment', () => {
+  it('posts the sustainability commitment to its validation endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ statusCode: '200' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const payload = {
+      companyName: 'Company',
+      repName: 'Representative',
+      repRole: 'Director',
+      hasConsent: true,
+    };
+
+    await validateSiteProjectSustainabilityCommitment(payload);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/site/project/sustainability-commitment/validate',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(payload),
