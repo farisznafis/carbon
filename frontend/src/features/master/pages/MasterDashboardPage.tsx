@@ -19,6 +19,7 @@ import { masterDashboardProjectMembershipState } from '@/features/user/project-r
 import { paths } from '@/routes/paths';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useDashboardStore } from '@/stores/dashboardStore';
+import { FloatingHelpButton } from '@/features/master/help/FloatingHelpButton';
 
 const MasterDashboard = () => {
   const navigate = useNavigate();
@@ -180,6 +181,7 @@ const MasterDashboard = () => {
           </TabsContent>
         </main>
       </Tabs>
+      <FloatingHelpButton />
     </div>
   );
 };

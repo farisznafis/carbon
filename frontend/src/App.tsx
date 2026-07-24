@@ -70,6 +70,7 @@ const AdminMonitoringReport = lazy(() =>
 const AdminProjectMonitoringDetail = lazy(() =>
   import("./features/admin/monitoring/ProjectMonitoringDetailPage"),
 );
+const AdminHelpFaqPage = lazy(() => import("./features/master/help/AdminHelpFaqPage"));
 
 function RequireAdmin({ children }: { children: JSX.Element }) {
   const { isAuthenticated } = useAuth();
@@ -276,6 +277,12 @@ const App = () => {
           />
           <Route path={paths.passwordChange} element={<PasswordChange />} />
           <Route path="*" element={<NotFound />} />
+          <Route
+            path={paths.adminHelpFaq}
+            element={
+              <AdminHelpFaqPage />
+            }
+          />
           </Routes>
         </Suspense>
       </div>

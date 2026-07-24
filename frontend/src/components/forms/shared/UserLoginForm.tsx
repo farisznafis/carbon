@@ -98,7 +98,7 @@ export function UserLoginForm({ onSubmit, header }: UserLoginFormProps) {
             )}
           />
 
-          <div className="text-center">
+          <div className="text-right">
             <Link
               to={paths.forgotPassword}
               className="text-sm font-medium text-foreground hover:text-primary"

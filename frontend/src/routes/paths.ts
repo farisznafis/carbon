@@ -86,4 +86,7 @@ export const paths = {
     '/admin/projects/:projectId/monitoring-report',
   adminProjectMonitoringReport: (projectId: string) =>
     `/admin/projects/${projectId}/monitoring-report`,
+
+  // Admin Help & FAQ
+  adminHelpFaq: '/admin/help-faq',
 } as const;
