@@ -19,7 +19,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EnR002ConfirmationItemRequest extends BaseRequest {
+public class EnR002ConfirmationItemRequest  {
  
    // ── Consent ─────────────────────────
     @NotNull

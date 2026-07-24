@@ -17,6 +17,5 @@ import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 public interface ProjectParticipationPdfService {
     
     void generateAndProcess(Integer participationId);
-
     String generatePresignedUrl(String s3Key);
 }

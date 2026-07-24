@@ -38,9 +38,6 @@ import com.kct.jcredit.core_backend.service.ParticipationProjectService;
 import com.kct.jcredit.core_backend.service.ProjectService;
 import com.kct.jcredit.core_backend.service.SiteService;
 
-import fr.opensagres.poi.xwpf.converter.pdf.PdfConverter;
-import fr.opensagres.poi.xwpf.converter.pdf.PdfOptions;
-
 import com.kct.jcredit.core_backend.service.ParticipationProjectValidationService;
 import com.kct.jcredit.core_backend.service.ProjectParticipationPdfService;
 import com.kct.jcredit.core_backend.service.EnR002FileUploadService;
@@ -53,13 +50,25 @@ import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentFileRepos
 import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.repository.postgres.NotificationRepository;
-import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
+
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingProjectRepository;
 
 import lombok.RequiredArgsConstructor;
 
+
+import fr.opensagres.poi.xwpf.converter.pdf.PdfConverter;
+import fr.opensagres.poi.xwpf.converter.pdf.PdfOptions;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.apache.poi.xwpf.usermodel.XWPFTable;
+import org.apache.poi.xwpf.usermodel.XWPFTableCell;
+import org.apache.poi.xwpf.usermodel.XWPFTableRow;
+import java.io.InputStream;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
@@ -101,27 +110,17 @@ public class ProjectParticipationPdfServiceImpl implements ProjectParticipationP
     private String bucketName;
 
     @Value("${app.s3.presign.expiry-seconds:900}")
-    private int presignExpirySeconds;
 
+    private int presignExpirySeconds;
     private final S3Client    s3Client;
     private final S3Presigner s3Presigner;
-
     private final ParticipatingProjectRepository participatingProjectRepository;
     private final EnR002ApplicationConfirmationRepository confirmationItemsRepository;
     private final EnR002SustainabilityCommitmentRepository sustainabilityRepository;
     private final ProjectParticipationConfirmationRepository reviewRepository;
-
-    // ⚠️ Ganti dengan nama class/repository notifikasi yang ASLI di codebase-mu —
-    //    aku asumsikan pola sederhana sesuai tabel `notification` yang sudah ada
-    //    (title, message, read, operating_user_id/participating_user_id)
     private final NotificationRepository notificationRepository;
-
-    private static final String TEMPLATE_PATH = "/templates/betsushi9_template.docx";
+    private static final String TEMPLATE_PATH = "resources/participate_solar.docx";
     private static final DateTimeFormatter JP_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy年MM月dd日");
-
-    // ─────────────────────────────────────────────────────────────
-    // ORCHESTRATOR
-    // ─────────────────────────────────────────────────────────────
 
     @Override
     @Transactional
@@ -165,6 +164,11 @@ public class ProjectParticipationPdfServiceImpl implements ProjectParticipationP
 
             participatingProjectRepository.updatePdfS3Key(participationId, s3Key);
 
+            Resource resource = new ClassPathResource(TEMPLATE_PATH);
+
+                System.out.println(resource.exists());
+                System.out.println(resource.getFilename());
+
             // ─────────────────────────────────────────────────
             // TODO: DocuSignアカウント準備後、ここでenvelope作成・送信を実装
             //   1. createEnvelope(pdfBytes, participation.getUser().getEmail())
@@ -184,6 +188,7 @@ public class ProjectParticipationPdfServiceImpl implements ProjectParticipationP
             throw new RuntimeException("PDF生成に失敗しました", e);
         }
     }
+
 
     // ─────────────────────────────────────────────────────────────
     // PRESIGNED URL
@@ -215,113 +220,116 @@ public class ProjectParticipationPdfServiceImpl implements ProjectParticipationP
     }
 
     private Map<String, String> buildPlaceholders(
-            Project project,
-            ParticipatingCompany company,
-            EnR002Equipment equipment,
-            EnR002ApplicationConfirmation confirmationItems,
-            EnR002SustainabilityCommitment sustainability,
-            ProjectParticipationConfirmation review,
-            ParticipatingProject participation) {
+        Project project,
+        ParticipatingCompany company,
+        EnR002Equipment equipment,
+        EnR002ApplicationConfirmation c,
+        EnR002SustainabilityCommitment s,
+        ProjectParticipationConfirmation review,
+        ParticipatingProject participation) {
 
         Map<String, String> map = new LinkedHashMap<>();
+        String CHECK = "☑";
 
-        // ── Halaman 1-2: プロジェクト・企業情報 ────────────────
+        // ── 企業情報ブロック（h1-h8）─────────────────────────────
         map.put("${プログラム名}", safe(project.getProjectName()));
-        map.put("${companyname}", safe(company.getNameJa()));
+        map.put("${companyname}", safe(company.getNameJa()));   
         map.put("${プロジェクト概要}", safe(project.getMethodName()));
         map.put("${applyDate}", formatDate(participation.getCreatedAt()));
         map.put("${h1}", safe(company.getNameFurigana()));
         map.put("${h2}", safe(company.getNameJa()));
-        // ⚠️ h3 (inkan online) — DocuSign belum siap, tidak ada data tanda tangan.
-        //     Dikosongkan dulu sampai flow signing diimplementasikan.
-        map.put("${h3}", "");
+        map.put("${h3}", ""); // inkan — DocuSign belum jalan
         map.put("${h4}", safe(company.getPostalCode()));
         map.put("${h5}", buildAddress(company));
         map.put("${h6}", safe(company.getPhoneNumber()));
         map.put("${h7}", safe(company.getFax()));
         map.put("${h8}", safe(company.getEmail()));
 
-        // ⚠️ プログラム型運営／管理者名 (operator company info) — perlu akses
-        //     project.getOperatorCompany(). Kalau relasi ini belum ada di
-        //     entity Project, tambahkan dulu (FK operator_company_id sudah
-        //     ada di tabel).
+        // ⚠️ MASIH BLOCKER — perlu project.getOperatorCompany()
         // map.put("${プログラム型運営}", safe(project.getOperatorCompany().getNameJa()));
         // map.put("${管理者名}", operatorRepName);
+        // map.put("${プログラム型運営・管理者名}", operatorNameJa + "・" + operatorRepName);
 
-        // ── Confirmation Items (a1-a16) ────────────────────────
-        // ⚠️ a1 "agree_terms" di dokumen pemetaan mengarah ke
-        //     en_r002_application_confirmation, TAPI di entity kita,
-        //     isAgreeTerms disimpan di SustainabilityCommitment (final
-        //     agreement), bukan ConfirmationItems. Aku ambil dari sana —
-        //     tolong konfirmasi apakah ini resolusi yang benar.
-        map.put("${a1}", boolToMark(sustainability.getIsAgreeTerms()));
-        map.put("${a2}", boolToMark(confirmationItems.getIsAgreeDataUse()));
-        map.put("${a3}", boolToMark(confirmationItems.getIsAgreeExtraData()));
-        map.put("${a4}", boolToMark(confirmationItems.getIsAgreeTransfer()));
-        map.put("${a5}", boolToMark(confirmationItems.getIsNotRegistered()));
-        map.put("${a6}", Boolean.TRUE.equals(confirmationItems.getIsKeidanrenParticipation())
-                ? "参加しています" : "参加していません");
-        map.put("${a7}", Boolean.TRUE.equals(confirmationItems.getIsEmitter())
-                ? "該当します" : "該当しません");
-        map.put("${a13}", safe(confirmationItems.getEmitterCode()));
-        map.put("${a8}", Boolean.TRUE.equals(confirmationItems.getIsSubjectToPeriodicReport())
-                ? "対象者に該当します" : "対象者に該当しません");
-        map.put("${a9}", confirmationItems.getIsPeriodicReportTypeOne() == null ? ""
-                : Boolean.TRUE.equals(confirmationItems.getIsPeriodicReportTypeOne()) ? "一種" : "二種");
-        map.put("${a14}", safe(confirmationItems.getEnergyBusinessCode()));
-        map.put("${a15}", safe(confirmationItems.getFactoryCode()));
+        // ── 確認事項（a-series）— checkbox berpasangan ───────────
+        map.put("${a1}", boolToMark(s.getIsAgreeTerms()));
+        map.put("${a2}", boolToMark(c.getIsAgreeDataUse()));
+        map.put("${a3}", boolToMark(c.getIsAgreeExtraData()));
+        map.put("${a4}", boolToMark(c.getIsAgreeTransfer()));
+        map.put("${a5}", boolToMark(c.getIsNotRegistered()));
 
-        // ⚠️ a10-a12 (sustainability_commitment_filled / equipment_info_filled /
-        //     equipment_info_attached) — sesuai keputusan sebelumnya, selalu
-        //     "true" karena validasi backend sudah mewajibkan ini terisi
-        //     sebelum submit berhasil.
-        map.put("${a10}", "○");
-        map.put("${a11}", "○");
-        map.put("${a12}", "○");
+        boolean keidanren = Boolean.TRUE.equals(c.getIsKeidanrenParticipation());
+        map.put("${a6}", keidanren ? CHECK : "");
+        map.put("${a7}", !keidanren ? CHECK : "");
 
-        // ── Halaman 3: Sustainability Commitment ───────────────
-        map.put("${事業者名}", safe(sustainability.getCompanyName()));
-        map.put("${代表者役職}", safe(sustainability.getRepRole()));
-        map.put("${代表者名}", safe(sustainability.getRepName()));
+        boolean isEmitter = Boolean.TRUE.equals(c.getIsEmitter());
+        map.put("${a8}", isEmitter ? CHECK : "");
+        map.put("${a9}", !isEmitter ? CHECK : "");
+        map.put("${a_adj}", boolToMark(c.getIsAdjustedEmissionsAdded()));
+        splitDigitsToMap(map, "ec", c.getEmitterCode(), 9);
 
-        // ── Halaman 4: Equipment ────────────────────────────────
-        map.put("${f1}", formatDate(equipment.getEquipmentOpDate()));
-        map.put("${f2}", decimal(equipment.getNominalMaxOutput()));
-        map.put("${f3}", safe(equipment.getPcsManufacturer()));
-        map.put("${f4}", safe(equipment.getPcsModel()));
-        map.put("${f5}", equipment.getPcsUnitCount() != null ? String.valueOf(equipment.getPcsUnitCount()) : "");
-        map.put("${f6}", safe(equipment.getDeviceNo()));
-        map.put("${f7}", decimal(equipment.getPcsStandby()));
-        map.put("${f8}", Boolean.TRUE.equals(equipment.getHasBattery()) ? "有" : "無");
-        map.put("${f9}", safe(equipment.getBatteryMaker()));
-        map.put("${f10}", safe(equipment.getBatteryModel()));
-        map.put("${f11}", decimal(equipment.getBatteryCapacity()));
-        map.put("${f12}", equipment.getTotalInvestment() != null
+        boolean periodicReport = Boolean.TRUE.equals(c.getIsSubjectToPeriodicReport());
+        Boolean typeOne = c.getIsPeriodicReportTypeOne();
+        map.put("${a10}", periodicReport ? CHECK : "");
+        map.put("${a11}", (periodicReport && Boolean.TRUE.equals(typeOne)) ? CHECK : "");
+        map.put("${a12}", (periodicReport && Boolean.FALSE.equals(typeOne)) ? CHECK : "");
+        map.put("${a13}", !periodicReport ? CHECK : "");
+
+        splitDigitsToMap(map, "ebc", c.getEnergyBusinessCode(), 7);
+        splitDigitsToMap(map, "fc", c.getFactoryCode(), 7);
+
+        // Selalu true — validasi backend sudah mewajibkan ini terisi sebelum submit
+        map.put("${a14}", "○");
+        map.put("${a15}", "○");
+        map.put("${a16}", "○");
+
+        // ── 別添1: Sustainability Commitment ─────────────────────
+        map.put("${事業者名}", safe(s.getCompanyName()));
+        map.put("${代表者役職}", safe(s.getRepRole()));
+        map.put("${代表者名}", safe(s.getRepName()));
+
+        // ── 別添2: Equipment (f-series) ───────────────────────────
+        LocalDate opDate = equipment.getEquipmentOpDate();
+        map.put("${f1}", opDate != null ? String.valueOf(opDate.getYear()) : "");
+        map.put("${f2}", opDate != null ? String.valueOf(opDate.getMonthValue()) : "");
+        map.put("${f3}", opDate != null ? String.valueOf(opDate.getDayOfMonth()) : "");
+        map.put("${f4}", decimal(equipment.getNominalMaxOutput()));
+        map.put("${f5}", safe(equipment.getPcsManufacturer()));
+        map.put("${f6}", safe(equipment.getPcsModel()));
+        map.put("${f7}", equipment.getPcsUnitCount() != null ? String.valueOf(equipment.getPcsUnitCount()) : "");
+        map.put("${f8}", safe(equipment.getDeviceNo()));
+        map.put("${f9}", decimal(equipment.getPcsStandby()));
+
+        boolean hasBattery = Boolean.TRUE.equals(equipment.getHasBattery());
+        map.put("${f10}", hasBattery ? CHECK : "");
+        map.put("${f11}", !hasBattery ? CHECK : "");
+        map.put("${f12}", safe(equipment.getBatteryMaker()));
+        map.put("${f13}", safe(equipment.getBatteryModel()));
+        map.put("${f14}", decimal(equipment.getBatteryCapacity()));
+
+        map.put("${f15}", equipment.getTotalInvestment() != null
                 ? String.format("%,d", equipment.getTotalInvestment()) : "");
-        map.put("${f13}", safe(equipment.getSubsidyName()));
-        map.put("${f14}", equipment.getSubsidyAmount() != null
+        map.put("${f16}", safe(equipment.getSubsidyName()));
+        map.put("${f17}", equipment.getSubsidyAmount() != null
                 ? String.format("%,.0f", equipment.getSubsidyAmount()) : "");
-        map.put("${f15}", decimal(equipment.getPreProjectUnitPrice()));
+        map.put("${f18}", decimal(equipment.getPreProjectUnitPrice()));
 
-        // ── Halaman 5: 添付資料確認欄（Review — auto dari file check operator）
-        map.put("${b1}", boolToMark(review.getIsSolarContractDoc()));
-        map.put("${b2}", boolToMark(review.getIsPcsSpecDoc()));
-        map.put("${b3}", boolToMark(review.getIsBatterySpecDoc()));
-        map.put("${b4}", boolToMark(review.getIsBatterySpecDoc()));
-        map.put("${b5}", boolToMark(review.getIsInvestmentProofDoc()));
+        // ── b-series: 添付資料チェック欄（peserta self-declare, SELALU true）
+        map.put("${b1}", "○");
+        map.put("${b2}", "○");
+        map.put("${b3}", "○");
+        map.put("${b4}", "○");
+        map.put("${b5}", "○");
 
-        // ⚠️ 送付先アドレス／送付先／FAX番号 — sumber data masih belum
-        //     dikonfirmasi (kemungkinan preferensi operator, bukan data
-        //     per-participation). Dikosongkan sampai dikonfirmasi.
+        // Data from?
         map.put("${送付先アドレス}", "");
         map.put("${送付先}", "");
         map.put("${FAX番号}", "");
 
-        // ── Halaman 6-8: プロジェクト概要（繰り返し）────────────
+        // ── 会員規約セクション（繰り返し使用）──────────────────────
         map.put("${利用目的}", safe(project.getMethodDetails()));
         map.put("${YYYY年MM月DD}", formatDate(participation.getCreatedAt()));
 
-        // ── Halaman 9-10: 確認者記名・押印欄 ─────────────────────
+        // ── c-series（operator checklist, 7項目）— sudah benar sebelumnya
         map.put("${c1}", boolToMark(review.getIsSolarContractDoc()));
         map.put("${c2}", boolToMark(review.getIsPcsSpecDoc()));
         map.put("${c3}", boolToMark(review.getIsBatterySpecDoc()));
@@ -330,53 +338,67 @@ public class ProjectParticipationPdfServiceImpl implements ProjectParticipationP
         map.put("${c6}", boolToMark(review.getIsReversePowerDoc()));
         map.put("${c7}", boolToMark(review.getIsInvestmentProofDoc()));
 
+        // ── d-series（データ管理確認欄, 5項目）─────────────────────
         map.put("${d1}", boolToMark(review.getIsApplicationCompleteCheck()));
         map.put("${d2}", boolToMark(review.getIsFormsAttachCheck()));
         map.put("${d3}", boolToMark(review.getIsEmissionsReductionActivityListCheck()));
         map.put("${d4}", boolToMark(review.getIsOriginalSpecCheck()));
         map.put("${d5}", boolToMark(review.getIsSubsidyCheck()));
 
+        // ── 確認者記名・押印欄（perlu edit Word dulu, lihat Bagian A.3-A.4）
         map.put("${管理者_1次}", safe(review.getPrimaryApplReviewerName()));
         map.put("${㊞1}", safe(review.getPrimaryApplReviewerInkan()));
         map.put("${管理者_2次}", safe(review.getSecondaryApplReviewerName()));
         map.put("${㊞2}", safe(review.getSecondaryApplReviewerInkan()));
 
         return map;
-    }
+        }
 
-    private void replacePlaceholdersInParagraphs(XWPFDocument doc, Map<String, String> placeholders) {
-        doc.getParagraphs().forEach(p -> replaceSingleParagraph(p, placeholders));
-    }
-
-    private void replacePlaceholdersInTables(XWPFDocument doc, Map<String, String> placeholders) {
-        doc.getTables().forEach(table ->
-                table.getRows().forEach(row ->
-                        row.getTableCells().forEach(cell ->
-                                cell.getParagraphs().forEach(p ->
-                                        replaceSingleParagraph(p, placeholders)))));
-    }
-
-    private void replaceSingleParagraph(XWPFParagraph paragraph, Map<String, String> placeholders) {
-        List<XWPFRun> runs = paragraph.getRuns();
-        if (runs.isEmpty()) return;
-
-        String fullText = runs.stream()
+        //HELPER
+        private void splitDigitsToMap(Map<String, String> map, String prefix, String code, int length) {
+                String padded = code != null ? code : "";
+                for (int i = 0; i < length; i++) {
+                        String digit = i < padded.length() ? String.valueOf(padded.charAt(i)) : "";
+                        map.put("${" + prefix + (i + 1) + "}", digit);
+                }
+        }
+        private void replacePlaceholdersInParagraphs(XWPFDocument doc, Map<String, String> placeholders) {
+                doc.getParagraphs().forEach(p -> replaceSingleParagraph(p, placeholders));
+        }
+        
+        private void replacePlaceholdersInTables(XWPFDocument doc, Map<String, String> placeholders) {
+                doc.getTables().forEach(table ->
+                        table.getRows().forEach(row ->
+                                row.getTableCells().forEach(cell ->
+                                        cell.getParagraphs().forEach(p ->
+                                                replaceSingleParagraph(p, placeholders)
+                                        )
+                                )
+                        )
+                );
+                                        
+        }
+        private void replaceSingleParagraph(XWPFParagraph paragraph, Map<String, String> placeholders) {
+                List<XWPFRun> runs = paragraph.getRuns();
+                if (runs.isEmpty()) return;
+                String fullText = runs.stream()
                 .map(r -> r.getText(0) != null ? r.getText(0) : "")
                 .collect(Collectors.joining());
+        
+        String normalized = fullText.replaceAll("\\$\\{\\s*([^}]*?)\\s*\\}", "\\${$1}");
 
-        boolean hasPlaceholder = placeholders.keySet().stream().anyMatch(fullText::contains);
+        boolean hasPlaceholder = placeholders.keySet().stream().anyMatch(normalized::contains);
         if (!hasPlaceholder) return;
 
-        String replaced = fullText;
+        String replaced = normalized;
         for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-            replaced = replaced.replace(entry.getKey(), entry.getValue());
+                replaced = replaced.replace(entry.getKey(), entry.getValue());
         }
-
         runs.get(0).setText(replaced, 0);
         for (int i = 1; i < runs.size(); i++) {
-            runs.get(i).setText("", 0);
+                runs.get(i).setText("", 0);
         }
-    }
+}
 
     private byte[] convertToPdf(XWPFDocument doc) throws IOException {
         ByteArrayOutputStream pdfOut = new ByteArrayOutputStream();
