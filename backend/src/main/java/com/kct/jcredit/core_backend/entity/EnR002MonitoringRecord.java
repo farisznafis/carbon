@@ -14,6 +14,7 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
     private String id;
     private Integer projectID;
     private Integer siteID;
+    private Integer equipmentID;
     private Integer participatingUserID;
     private String timeUpdated;
     private String dateRecorded;
@@ -52,7 +53,7 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
     private String elpjControlEvidenceUrl;
 
     // For IF Battery交換あり condition
-    private Boolean changedBattery; 
+    // private Boolean changedBattery; 
     
     private Boolean isActive; // レコードの有効/無効を示すフラグ
 
@@ -90,6 +91,12 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
     @DynamoDbAttribute("siteID")
     public Integer getSiteID() {
         return siteID;
+    }
+
+    @Override
+    @DynamoDbAttribute("equipmentID")
+    public Integer getEquipmentID() {
+        return equipmentID;
     }
     
     @Override
@@ -168,10 +175,10 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
         return elPvrEvidence;
     }
 
-    @DynamoDbAttribute("changedBattery")
-    public Boolean getChangedBattery() {
-        return changedBattery != null ? changedBattery : false;
-    }
+    // @DynamoDbAttribute("changedBattery")
+    // public Boolean getChangedBattery() {
+    //     return changedBattery != null ? changedBattery : false;
+    // }
     
     @DynamoDbAttribute("elPvEvidenceUrl")
     public String getElPvEvidenceUrl() {

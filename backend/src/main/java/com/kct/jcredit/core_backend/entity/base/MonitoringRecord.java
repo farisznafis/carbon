@@ -38,6 +38,9 @@ public interface MonitoringRecord {
     
     @DynamoDbAttribute("siteID")
     public Integer getSiteID();
+
+    @DynamoDbAttribute("equipmentID")
+    public Integer getEquipmentID();
     
     @DynamoDbAttribute("participatingUserID")
     public Integer getParticipatingUserID();
