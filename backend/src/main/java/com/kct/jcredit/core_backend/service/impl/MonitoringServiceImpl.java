@@ -1071,6 +1071,7 @@ public class MonitoringServiceImpl implements MonitoringService {
      */
     private MonitoringDataSolarResponse mapEntityToResponse(EnR002MonitoringRecord entity, String projectType) {
         return MonitoringDataSolarResponse.builder()
+                .id(entity.getId())
                 .projectId(projectRepository.findById(entity.getProjectID()).map(Project::getPublicId).orElse(String.valueOf(entity.getProjectID())))
                 .siteId(siteRepository.findById(entity.getSiteID()).map(Site::getPublicId).orElse(String.valueOf(entity.getSiteID())))
                 .userId(entity.getParticipatingUserID())
@@ -1078,12 +1079,23 @@ public class MonitoringServiceImpl implements MonitoringService {
                 .timeUpdated(entity.getTimeUpdated())
                 .dateRecorded(entity.getDateRecorded())
                 .elPv(entity.getElPv())
+                .elPvEvidence(entity.getElPvEvidence())
                 .elPvr(entity.getElPvr())
+                .elPvrEvidence(entity.getElPvrEvidence())
+                .elPvEvidenceUrl(entity.getElPvEvidenceUrl())
+                .elPvrEvidenceUrl(entity.getElPvrEvidenceUrl())
                 // CRITICAL: Check if battery value exists to set changedBattery boolean
                 .changedBattery(entity.getElpjBatteryValue() != null)
                 .elpjBatteryValue(entity.getElpjBatteryValue())
+                .elpjBatteryEvidence(entity.getElpjBatteryEvidence())
+                .elpjBatterySpecificationUrl(entity.getElpjBatterySpecificationUrl())
                 .elpjControl(entity.getElpjControlValue())
+                .elpjControlEquipmentSpecFiles(entity.getElpjControlEquipmentSpecFiles())
+                .elpjControlEvidenceUrl(entity.getElpjControlEvidenceUrl())
                 .elpjAccuracy(entity.getElpjAccuracy())
+                .isActive(entity.getIsActive())
+                .processedAt(entity.getProcessedAt())
+                .methodologyType(entity.getMethodologyType())
                 .build();
     }
 
