@@ -59,7 +59,7 @@ const pendingEquipment: SolarEquipment = {
 };
 
 describe('ProjectRegisterPage', () => {
-  it('skips the equipment list and opens the agreement step', async () => {
+  it('opens the equipment overview before the agreement steps', async () => {
     render(
       <MemoryRouter
         initialEntries={[
@@ -79,12 +79,13 @@ describe('ProjectRegisterPage', () => {
       </MemoryRouter>,
     );
 
+    expect(await screen.findByText('設備一覧')).toBeInTheDocument();
+    expect(screen.getByText('設備情報 1')).toBeInTheDocument();
+    expect(screen.getByText('ステップ 1 / 5')).toBeInTheDocument();
     expect(
-      await screen.findByText(
+      screen.queryByText(
         /以下の各項目をご確認のうえ、該当する内容にご同意いただける場合はチェックを入れてください/,
       ),
-    ).toBeInTheDocument();
-    expect(screen.queryByText('設備一覧')).not.toBeInTheDocument();
-    expect(screen.getByText('ステップ 1 / 3')).toBeInTheDocument();
+    ).not.toBeInTheDocument();
   });
 });

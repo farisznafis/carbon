@@ -17,8 +17,8 @@ import type {
   SiteProjectJoinSustainabilityCommitmentResponse,
   SiteProjectFinalAgreementValidationRequest,
   SiteProjectFinalAgreementValidationResponse,
-  SiteProjectJoinRequest,
-  SiteProjectJoinResponse,
+  SiteProjectSolarRegistrationRequest,
+  SiteProjectSolarRegistrationResponse,
 } from './types';
 
 export async function uploadSiteProjectEquipmentFile(
@@ -109,16 +109,17 @@ export async function validateSiteProjectFinalAgreement(
   );
 }
 
-export async function joinSiteProject(
+export async function registerSiteProjectSolar(
+  siteId: string,
   projectId: string,
-  payload: SiteProjectJoinRequest,
-): Promise<SiteProjectJoinResponse> {
-  return apiRequest<SiteProjectJoinResponse>(
-    `/site/project/projects/${encodeURIComponent(projectId)}/join`,
+  payload: SiteProjectSolarRegistrationRequest,
+): Promise<SiteProjectSolarRegistrationResponse> {
+  return apiRequest<SiteProjectSolarRegistrationResponse>(
+    `/site/project/${encodeURIComponent(siteId)}/${encodeURIComponent(projectId)}/solar/register`,
     {
       method: 'POST',
       body: payload,
-      fallbackErrorMessage: 'プロジェクト参加申請に失敗しました。',
+      fallbackErrorMessage: '太陽光発電設備の登録に失敗しました。',
     },
   );
 }

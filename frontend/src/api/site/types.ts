@@ -274,13 +274,6 @@ export type SiteProjectJoinConfirmationItems = {
   factoryCode?: string;
 };
 
-export type SiteProjectJoinConfirmationItemsRequest =
-  SiteProjectJoinConfirmationItems & {
-    id: string;
-    processedBy: string;
-    companyId: string;
-  };
-
 export type SiteProjectConfirmationItemsValidationRequest = {
   id: string;
   processedBy: string;
@@ -331,19 +324,65 @@ export type SiteProjectFinalAgreementValidationResponse = {
   timestamp?: string;
 };
 
-export type SiteProjectJoinRequest = {
-  equipment: SiteProjectEquipmentValidationItem;
-  confirmationItems: SiteProjectJoinConfirmationItemsRequest;
-  sustainabilityCommitment: SiteProjectJoinSustainabilityCommitmentRequest;
-  finalAgreement: SiteProjectFinalAgreementValidationRequest;
+export type SiteProjectSolarRegistrationEquipment = {
+  tempId: string;
+  methodologyNumber: string;
+  isEligible: boolean;
+  equipmentOpDate: string;
+  nominalMaxOutput: number | null;
+  pcsManufacturer: string;
+  pcsModel: string;
+  powerCondUnitCount: number | null;
+  deviceNo: string;
+  powerCondStandby: number | null;
+  hasBattery: boolean | null;
+  batteryMaker?: string;
+  batteryModel?: string;
+  batteryCapacity?: number | null;
+  ictEquipmentPowerConsumption: number | null;
+  additionalEquipment: boolean | null;
+  additionalEquipmentDate?: string;
+  additionalEquipmentType?: string;
+  additionalUnitCount?: number | null;
+  additionalDeviceUniqueNo?: string;
+  totalInvestment: number | null;
+  hasSubsidy: boolean | null;
+  subsidyName?: string;
+  subsidyAmount?: number | null;
+  preProjectUnitPrice: number | null;
+  files: SiteProjectEquipmentValidationFile[];
 };
 
-export type SiteProjectJoinResponse = {
+export type SiteProjectSolarRegistrationRequest = {
+  siteId: string;
+  projectId: string;
+  equipments: SiteProjectSolarRegistrationEquipment[];
+  isAgreeDataUse: boolean | null;
+  isAgreeExtraData: boolean | null;
+  isAgreeTransfer: boolean | null;
+  isNotRegistered: boolean | null;
+  isKeidanrenParticipation: boolean | null;
+  isEmitter: boolean | null;
+  isAdjustedEmissionsAdded: boolean | null;
+  isPeriodicReportTypeOne: boolean | null;
+  emitterCode: string;
+  isSubjectToPeriodicReport: boolean | null;
+  energyReport: string;
+  energyBusinessCode: string;
+  factoryCode: string;
+  companyName: string;
+  repName: string;
+  repRole: string;
+  hasConsent: boolean;
+  isAgreeTerms: boolean;
+};
+
+export type SiteProjectSolarRegistrationResponse = {
   statusCode?: string;
   message?: string | null;
-  participationId?: number;
-  equipmentId?: number;
-  siteProjectRelationId?: number;
+  errors?: Record<string, string> | null;
+  equipments?: SiteProjectEquipment[] | null;
+  timestamp?: string;
 };
 
 export type SiteProjectEquipmentFileUploadResponse = {

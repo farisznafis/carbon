@@ -40,8 +40,9 @@ describe('EquipmentFormPage file handling', () => {
       'fetch',
       vi.fn().mockImplementation((url: string | URL | Request) => {
         const requestUrl = String(url);
-        const responseBody = requestUrl.startsWith('/api/site?companyId=')
-          ? {
+        let responseBody: Record<string, unknown> = { statusCode: '200' };
+        if (requestUrl.startsWith('/api/site?companyId=')) {
+          responseBody = {
               statusCode: '200',
               siteList: [
                 {
@@ -50,8 +51,19 @@ describe('EquipmentFormPage file handling', () => {
                 },
                 { siteId: 'SITE-2', siteName: '大阪拠点' },
               ],
-            }
-          : { statusCode: '200' };
+            };
+        } else if (requestUrl.includes('/files/upload')) {
+          const fileType = new URL(
+            requestUrl,
+            'http://localhost',
+          ).searchParams.get('fileType');
+          responseBody = {
+            statusCode: '200',
+            s3Key: `temp/${fileType}`,
+            fileId: `file-${fileType}`,
+            originalName: `${fileType}.pdf`,
+          };
+        }
 
         return Promise.resolve(
           new Response(JSON.stringify(responseBody), {
@@ -67,7 +79,7 @@ describe('EquipmentFormPage file handling', () => {
     vi.unstubAllGlobals();
   });
 
-  it('validates without uploading a selected file', async () => {
+  it('validates selected file metadata without uploading the files', async () => {
     const { container } = renderEquipmentForm();
     expect((await screen.findAllByText('東京拠点')).length).toBeGreaterThan(0);
     const requiredFileInputIds = [
@@ -110,11 +122,10 @@ describe('EquipmentFormPage file handling', () => {
       String((validationRequest?.[1] as RequestInit | undefined)?.body),
     ) as { files: Array<{ fileName: string }> };
     expect(validationBody.files).toHaveLength(requiredFileInputIds.length);
-    expect(
-      vi.mocked(fetch).mock.calls.some(([url]) =>
-        String(url).includes('/files/upload'),
-      ),
-    ).toBe(false);
+    const uploadCalls = vi.mocked(fetch).mock.calls.filter(([url]) =>
+      String(url).includes('/files/upload'),
+    );
+    expect(uploadCalls).toHaveLength(0);
   });
 
   it('shows a warning for every missing required file', async () => {
@@ -126,10 +137,11 @@ describe('EquipmentFormPage file handling', () => {
       '確認資料をアップロードしてください。',
     );
     expect(warnings.length).toBeGreaterThanOrEqual(5);
-    expect(fetch).toHaveBeenCalledWith(
-      '/api/site/project/equipment/validate',
-      expect.objectContaining({ method: 'POST' }),
-    );
+    expect(
+      vi.mocked(fetch).mock.calls.some(([url]) =>
+        String(url).includes('/site/project/equipment/validate'),
+      ),
+    ).toBe(false);
     expect(screen.queryByText('Equipment confirmation')).not.toBeInTheDocument();
   });
 });

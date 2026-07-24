@@ -114,7 +114,7 @@ describe('EquipmentConfirmationPage', () => {
     vi.unstubAllGlobals();
   });
 
-  it('stores equipment without uploading and returns to project registration', async () => {
+  it('uploads files, stores their metadata, and returns to the equipment list', async () => {
     renderPage();
 
     expect(await screen.findByText('設備登録の確認')).toBeInTheDocument();
@@ -124,15 +124,19 @@ describe('EquipmentConfirmationPage', () => {
     const uploadCalls = vi.mocked(fetch).mock.calls.filter(([url]) =>
       String(url).includes('/files/upload'),
     );
-    expect(uploadCalls).toHaveLength(0);
-    expect(
-      vi.mocked(fetch).mock.calls.some(([url]) => String(url).includes('/join')),
-    ).toBe(false);
+    expect(uploadCalls).toHaveLength(5);
 
     const stored = JSON.parse(
       localStorage.getItem('project_PROJ0002_equipment') ?? '[]',
     ) as Array<{ files: unknown[]; solarData: Record<string, unknown> }>;
-    expect(stored[0]?.files).toHaveLength(0);
+    expect(stored[0]?.files).toHaveLength(5);
+    expect(stored[0]?.files[0]).toEqual(
+      expect.objectContaining({
+        fileType: 'solar_contract',
+        s3Key: 'equipment/solar_contract.pdf',
+        fileId: 'file-solar_contract',
+      }),
+    );
     expect(stored[0]?.solarData.operationStartDateFile).toBeUndefined();
   });
 });

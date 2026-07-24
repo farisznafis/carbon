@@ -35,7 +35,7 @@ export function EquipmentStep({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2">設備一覧</h2>
+        <h2 className="text-2xl font-bold">設備一覧</h2>
         <p className="text-muted-foreground">
           プロジェクトに登録する設備を追加してください。最低1つの設備が必要です。
         </p>
@@ -50,7 +50,7 @@ export function EquipmentStep({
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4 max-w-sm mx-auto">
+        <div className="space-y-4">
           {equipment.map((item, index) => (
             <Card key={item.id}>
               <CardHeader>
@@ -58,15 +58,19 @@ export function EquipmentStep({
                   <CardTitle className="text-lg">設備情報 {index + 1}</CardTitle>
                   <div className="flex gap-2">
                     <Button
+                      type="button"
                       variant="outline"
-                      size="sm"
+                      size="icon"
+                      aria-label={`設備情報 ${index + 1}を編集`}
                       onClick={() => handleEditEquipment(item.id)}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
+                      type="button"
                       variant="outline"
-                      size="sm"
+                      size="icon"
+                      aria-label={`設備情報 ${index + 1}を削除`}
                       onClick={() => onRemoveEquipment(item.id)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -74,15 +78,34 @@ export function EquipmentStep({
                   </div>
                 </div>
               </CardHeader>
-              {/* <CardContent>
+              <CardContent>
                 {item.formType === "solar" ? (
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">太陽光発電設備</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <p className="text-sm">稼働開始日: {item.solarData?.equipmentOpDate}</p>
-                      <p className="text-sm">公称最大出力: {item.solarData?.nominalMaxOutput || "不明"} kW</p>
-                      <p className="text-sm">パワーコンディショナーのメーカー: {item.solarData?.manufacturer || "不明"}</p>
-                      <p className="text-sm">蓄電池: {item.solarData?.hasBattery === "yes" ? "あり" : "なし"}</p>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                      <p className="text-small text-muted-foreground">稼働開始日</p>
+                      <p className="mt-1">{item.solarData.equipmentOpDate || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-small text-muted-foreground">公称最大出力</p>
+                      <p className="mt-1">
+                        {item.solarData.nominalMaxOutput
+                          ? `${item.solarData.nominalMaxOutput} kW`
+                          : "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-small text-muted-foreground">PCS</p>
+                      <p className="mt-1">
+                        {[item.solarData.pcsManufacturer, item.solarData.pcsModel]
+                          .filter(Boolean)
+                          .join(" ") || "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-small text-muted-foreground">
+                        アップロード済みファイル
+                      </p>
+                      <p className="mt-1">{item.files.length}件</p>
                     </div>
                   </div>
                 ) : (
@@ -101,14 +124,18 @@ export function EquipmentStep({
                     </div>
                   </div>
                 )}
-              </CardContent> */}
+              </CardContent>
             </Card>
           ))}
         </div>
       )}
 
       <div className="flex justify-center">
-        <Button onClick={handleAddEquipment} className="w-full sm:w-auto">
+        <Button
+          type="button"
+          onClick={handleAddEquipment}
+          className="w-full sm:w-auto"
+        >
           <Plus className="mr-2 h-4 w-4" />
           設備追加
         </Button>

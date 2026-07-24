@@ -13,12 +13,17 @@ import {
 import { ConfirmationItem } from '@/components/feedback/Confirmation/ConfirmationItem';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
+import {
+  uploadSiteProjectEquipmentFile,
+  type SiteProjectEquipmentValidationFile,
+} from '@/api/site';
 import type { Equipment } from '@/features/user/project-registration/components/types';
 import {
   getEquipmentConfirmationState,
   type EquipmentConfirmationState,
 } from '@/features/user/project-registration/equipmentConfirmationState';
 import { masterDashboardProjectMembershipState } from '@/features/user/project-registration/projectMembershipNavigation';
+import { getSolarFormSelectedFiles } from '@/features/user/project-registration/equipmentValidationMapper';
 import { useSitesQuery } from '@/hooks/sites/useSitesQuery';
 import { useToast } from '@/hooks/use-toast';
 import type { SolarPowerFormData } from '@/lib/equipmentValidations';
@@ -50,6 +55,7 @@ function withoutLocalFiles(data: SolarPowerFormData): SolarPowerFormData {
 function saveEquipment(
   projectId: string,
   confirmationState: EquipmentConfirmationState,
+  files: SiteProjectEquipmentValidationFile[],
 ): Extract<Equipment, { formType: 'solar' }> {
   const storageKey = `project_${projectId}_equipment`;
   const storedEquipment = localStorage.getItem(storageKey);
@@ -60,7 +66,7 @@ function saveEquipment(
     id: confirmationState.equipmentId,
     formType: 'solar',
     solarData: confirmationState.formData,
-    files: [],
+    files,
   };
   const storedEquipmentData: Equipment = {
     ...pendingEquipment,
@@ -116,7 +122,16 @@ export default function EquipmentConfirmationPage() {
     setIsSubmitting(true);
 
     try {
-      const pendingEquipment = saveEquipment(projectId, confirmationState);
+      const uploadedFiles = await Promise.all(
+        getSolarFormSelectedFiles(data).map(({ fileType, file }) =>
+          uploadSiteProjectEquipmentFile(data.siteId, fileType, file),
+        ),
+      );
+      const pendingEquipment = saveEquipment(
+        projectId,
+        confirmationState,
+        uploadedFiles,
+      );
       navigate(paths.projectRegister(siteId, projectId), {
         replace: true,
         state: {

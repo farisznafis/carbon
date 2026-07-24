@@ -375,6 +375,15 @@ export default function EquipmentFormPage() {
 
     try {
       const tempId = equipmentId ?? `equipment-${Date.now()}`;
+      if (missingFileFields.length > 0) {
+        toast({
+          title: '確認資料が不足しています',
+          description: REQUIRED_FILE_MESSAGE,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const validationFiles = mapSolarFormFilesForValidation(data);
       const payload = mapSolarFormToEquipmentValidationItem(
         data,
@@ -384,14 +393,6 @@ export default function EquipmentFormPage() {
       );
 
       await validateSiteProjectEquipment(payload);
-      if (missingFileFields.length > 0) {
-        toast({
-          title: '確認資料が不足しています',
-          description: REQUIRED_FILE_MESSAGE,
-          variant: 'destructive',
-        });
-        return;
-      }
 
       navigate(paths.projectEquipmentConfirmation(siteId, projectId), {
         state: {

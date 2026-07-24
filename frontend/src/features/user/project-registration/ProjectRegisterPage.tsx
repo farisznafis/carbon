@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { getProjectDetails } from "@/api/projects";
 import {
-  joinSiteProject,
+  registerSiteProjectSolar,
   uploadSiteProjectEquipmentFile,
   validateSiteProjectConfirmationItems,
   validateSiteProjectFinalAgreement,
@@ -20,6 +20,8 @@ import { DynamicAgreementsStep, type DynamicAgreementsStepRef } from "@/features
 import { ContractStep, type ContractStepRef, type ContractStepFormValues } from "@/features/user/project-registration/components/ContractStep";
 import { FinalTermsStep, type FinalTermsRef, type FinalTermsValues } from "@/features/user/project-registration/components/FinalTermsStep";
 import { CompletionStep } from "@/features/user/project-registration/components/CompletionStep";
+import { EquipmentStep } from "@/features/user/project-registration/components/EquipmentStep";
+import { ProjectRegistrationReviewStep } from "@/features/user/project-registration/components/ProjectRegistrationReviewStep";
 import { FormPageWrapper } from "@/components/layout/FormPageWrapper/FormPageWrapper";
 import type { Equipment } from "@/features/user/project-registration/components/types";
 import type { AgreementFormValues } from "@/features/user/project-registration/components/agreementsConfig";
@@ -32,16 +34,20 @@ import {
   mapConfirmationItemsValidationRequest,
   mapFinalAgreementRequest,
   mapSustainabilityCommitmentRequest,
-  mapProjectJoinRequest,
+  mapProjectSolarRegistrationRequest,
 } from "@/features/user/project-registration/projectJoinMapper";
 import { getPendingSolarEquipment } from "@/features/user/project-registration/equipmentConfirmationState";
 import { getSolarFormSelectedFiles } from "@/features/user/project-registration/equipmentValidationMapper";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const TOTAL_FORM_STEPS = 3;
-const FINAL_FORM_STEP = 3;
-const COMPLETION_STEP = 4;
+const TOTAL_FORM_STEPS = 5;
+const EQUIPMENT_STEP = 1;
+const CONFIRMATION_ITEMS_STEP = 2;
+const SUSTAINABILITY_STEP = 3;
+const FINAL_AGREEMENT_STEP = 4;
+const REVIEW_STEP = 5;
+const COMPLETION_STEP = 6;
 
 const confirmationItemFieldNames: Record<string, keyof AgreementFormValues> = {
   isAgreeDataUse: "useRegisteredInfo",
@@ -306,9 +312,34 @@ const ProjectRegister = () => {
   }, [pendingEquipment, projectId]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
+  const handleRemoveEquipment = useCallback(
+    (equipmentId: string) => {
+      setEquipment((currentEquipment) => {
+        const nextEquipment = currentEquipment.filter(
+          (item) => item.id !== equipmentId,
+        );
+        localStorage.setItem(
+          `project_${projectId}_equipment`,
+          JSON.stringify(nextEquipment),
+        );
+        return nextEquipment;
+      });
+    },
+    [projectId],
+  );
+
   const validateStep = async (): Promise<boolean> => {
     switch (currentStep) {
-      case 1:
+      case EQUIPMENT_STEP:
+        if (equipment.length > 0) return true;
+        toast({
+          title: "設備情報が必要です",
+          description: "少なくとも1つの設備を追加してください。",
+          variant: "destructive",
+        });
+        return false;
+
+      case CONFIRMATION_ITEMS_STEP:
         if (!agreementsStepRef.current) return false;
 
         setIsSubmitting(true);
@@ -345,7 +376,7 @@ const ProjectRegister = () => {
           setIsSubmitting(false);
         }
 
-      case 2:
+      case SUSTAINABILITY_STEP:
         if (!contractStepRef.current) return false;
 
         setIsSubmitting(true);
@@ -377,7 +408,7 @@ const ProjectRegister = () => {
           setIsSubmitting(false);
         }
 
-      case 3:
+      case FINAL_AGREEMENT_STEP:
         if (!finalStepRef.current) return false;
 
         setIsSubmitting(true);
@@ -417,34 +448,52 @@ const ProjectRegister = () => {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      const solarEquipment = equipment.find(
+      const solarEquipments = equipment.filter(
         (item): item is Extract<Equipment, { formType: 'solar' }> =>
           item.formType === 'solar',
       );
-      if (!solarEquipment || !projectId) {
+      if (solarEquipments.length === 0 || !projectId || !resolvedSiteId) {
         throw new Error('登録する太陽光発電設備が見つかりません。');
       }
 
-      const uploadedFiles =
-        (solarEquipment.files?.length ?? 0) > 0
-          ? solarEquipment.files
-          : await Promise.all(
-              getSolarFormSelectedFiles(solarEquipment.solarData).map(
+      const equipmentsWithUploadedFiles = await Promise.all(
+        solarEquipments.map(async (solarEquipment) => {
+          if ((solarEquipment.files?.length ?? 0) > 0) {
+            return solarEquipment;
+          }
+
+          const selectedFiles = getSolarFormSelectedFiles(
+            solarEquipment.solarData,
+          );
+          if (selectedFiles.length === 0) {
+            throw new Error(
+              '設備ファイル情報が見つかりません。設備情報を再度確認してください。',
+            );
+          }
+
+          const uploadedFiles = await Promise.all(
+            selectedFiles.map(
                 ({ fileType, file }) =>
                   uploadSiteProjectEquipmentFile(
-                    solarEquipment.solarData.siteId,
+                    resolvedSiteId,
                     fileType,
                     file,
                   ),
-              ),
-            );
-      const equipmentWithUploadedFiles = {
-        ...solarEquipment,
-        files: uploadedFiles,
-      };
+            ),
+          );
+
+          return {
+            ...solarEquipment,
+            files: uploadedFiles,
+          };
+        }),
+      );
+      const uploadedEquipmentById = new Map(
+        equipmentsWithUploadedFiles.map((item) => [item.id, item]),
+      );
       const updatedEquipment = equipment.map((item) =>
-        item.id === equipmentWithUploadedFiles.id
-          ? equipmentWithUploadedFiles
+        item.formType === 'solar'
+          ? uploadedEquipmentById.get(item.id) ?? item
           : item,
       );
       setEquipment(updatedEquipment);
@@ -453,18 +502,24 @@ const ProjectRegister = () => {
         JSON.stringify(updatedEquipment),
       );
 
-      const joinPayload = mapProjectJoinRequest(
-        equipmentWithUploadedFiles,
+      const registrationPayload = mapProjectSolarRegistrationRequest(
+        equipmentsWithUploadedFiles,
         agreementFormValues,
         contractFormValues,
         finalStepRef.current?.getValues() ?? finalTermsValues,
         {
+          siteId: resolvedSiteId,
           projectId,
           processedBy: user?.id ?? "",
           companyId: user?.companyId ?? "",
+          methodologyNumber: selectedProject.methodologyNumber ?? "",
         },
       );
-      await joinSiteProject(projectId, joinPayload);
+      await registerSiteProjectSolar(
+        resolvedSiteId,
+        projectId,
+        registrationPayload,
+      );
 
       const storedProjects = localStorage.getItem("appliedProjects");
       const appliedProjects = storedProjects ? JSON.parse(storedProjects) : [];
@@ -498,7 +553,7 @@ const ProjectRegister = () => {
   const handleNext = async () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     if (await validateStep()) {
-      if (currentStep === FINAL_FORM_STEP) {
+      if (currentStep === REVIEW_STEP) {
         await handleSubmit();
       } else {
         setCurrentStep((prev) => prev + 1);
@@ -509,7 +564,14 @@ const ProjectRegister = () => {
   // ── Render steps ──────────────────────────────────────────────────────────
   const renderStep = () => {
     switch (currentStep) {
-      case 1:
+      case EQUIPMENT_STEP:
+        return (
+          <EquipmentStep
+            equipment={equipment}
+            onRemoveEquipment={handleRemoveEquipment}
+          />
+        );
+      case CONFIRMATION_ITEMS_STEP:
         return (
           <DynamicAgreementsStep
             ref={agreementsStepRef}
@@ -523,7 +585,7 @@ const ProjectRegister = () => {
             errors={agreementErrors}
           />
         );
-      case 2:
+      case SUSTAINABILITY_STEP:
         return (
           <ContractStep
             ref={contractStepRef}
@@ -537,7 +599,7 @@ const ProjectRegister = () => {
             errors={contractErrors}
           />
         );
-      case 3:
+      case FINAL_AGREEMENT_STEP:
         return (
           <FinalTermsStep
             ref={finalStepRef}
@@ -551,7 +613,20 @@ const ProjectRegister = () => {
             errors={finalTermsErrors}
           />
         );
-      case 4:
+      case REVIEW_STEP:
+        return (
+          <ProjectRegistrationReviewStep
+            equipments={equipment.filter(
+              (item): item is Extract<Equipment, { formType: 'solar' }> =>
+                item.formType === 'solar',
+            )}
+            methodologyNumber={selectedProject.methodologyNumber ?? ""}
+            agreementValues={agreementFormValues}
+            contractValues={contractFormValues}
+            finalTermsValues={finalTermsValues}
+          />
+        );
+      case COMPLETION_STEP:
         return <CompletionStep onNavigateToDashboard={navigateToDashboard} />;
       default:
         return null;
@@ -620,13 +695,13 @@ const ProjectRegister = () => {
           <div className="flex justify-end">
             <Button onClick={handleNext} disabled={isSubmitting}>
               {isSubmitting
-                ? currentStep === FINAL_FORM_STEP
+                ? currentStep === REVIEW_STEP
                   ? "送信中..."
                   : "確認中..."
-                : currentStep === FINAL_FORM_STEP
+                : currentStep === REVIEW_STEP
                   ? "送信"
                   : "次へ"}
-              {currentStep < FINAL_FORM_STEP && (
+              {currentStep < REVIEW_STEP && (
                 <ArrowRight className="h-4 w-4 ml-2" />
               )}
             </Button>

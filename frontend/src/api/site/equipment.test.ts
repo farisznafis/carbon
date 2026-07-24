@@ -1,13 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  joinSiteProject,
+  registerSiteProjectSolar,
   uploadSiteProjectEquipmentFile,
   validateSiteProjectConfirmationItems,
   validateSiteProjectEquipment,
   validateSiteProjectFinalAgreement,
   validateSiteProjectSustainabilityCommitment,
 } from './equipment';
-import type { SiteProjectEquipmentValidationItem } from './types';
+import type {
+  SiteProjectEquipmentValidationItem,
+  SiteProjectSolarRegistrationRequest,
+} from './types';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -178,8 +181,8 @@ describe('uploadSiteProjectEquipmentFile', () => {
   });
 });
 
-describe('joinSiteProject', () => {
-  it('posts the complete join payload to the project endpoint', async () => {
+describe('registerSiteProjectSolar', () => {
+  it('posts the aggregate registration payload to the solar endpoint', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ statusCode: '200', participationId: 10 }), {
         status: 200,
@@ -187,48 +190,54 @@ describe('joinSiteProject', () => {
       }),
     );
     vi.stubGlobal('fetch', fetchMock);
-    const payload = {
-      equipment: {
-        tempId: 'temp-1',
-        siteId: 'SITE-1',
+    const payload: SiteProjectSolarRegistrationRequest = {
+      siteId: 'SITE-1',
+      projectId: 'PROJ0002',
+      equipments: [
+        {
+          tempId: 'temp-1',
+          methodologyNumber: 'EN-R-002',
+          isEligible: true,
         equipmentOpDate: '2026-07-22',
         nominalMaxOutput: 10,
         pcsManufacturer: 'Maker',
         pcsModel: 'Model',
-        pcsUnitCount: 1,
+          powerCondUnitCount: 1,
         deviceNo: 'DEVICE-1',
-        pcsStandby: 1,
+          powerCondStandby: 1,
         hasBattery: false,
+          ictEquipmentPowerConsumption: null,
+          additionalEquipment: false,
         totalInvestment: 1000,
         hasSubsidy: false,
         preProjectUnitPrice: 20,
         files: [],
       },
-      confirmationItems: {
-        id: 'PROJ0002',
-        processedBy: 'user-1',
-        companyId: 'PC000000001',
-        isAgreeDataUse: true,
-        isAgreeExtraData: true,
-        isAgreeTransfer: true,
-        isNotRegistered: true,
-        isKeidanrenParticipation: false,
-        isEmitter: false,
-        isSubjectToPeriodicReport: false,
-      },
-      sustainabilityCommitment: {
-        companyName: 'Company',
-        repName: 'Representative',
-        repRole: 'Director',
-        hasConsent: true,
-      },
-      finalAgreement: { isAgreeTerms: true },
+      ],
+      isAgreeDataUse: true,
+      isAgreeExtraData: true,
+      isAgreeTransfer: true,
+      isNotRegistered: true,
+      isKeidanrenParticipation: false,
+      isEmitter: false,
+      isAdjustedEmissionsAdded: false,
+      isSubjectToPeriodicReport: false,
+      isPeriodicReportTypeOne: false,
+      emitterCode: '',
+      energyReport: '',
+      energyBusinessCode: '',
+      factoryCode: '',
+      companyName: 'Company',
+      repName: 'Representative',
+      repRole: 'Director',
+      hasConsent: true,
+      isAgreeTerms: true,
     };
 
-    await joinSiteProject('PROJ0002', payload);
+    await registerSiteProjectSolar('SITE-1', 'PROJ0002', payload);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/site/project/projects/PROJ0002/join',
+      '/api/site/project/SITE-1/PROJ0002/solar/register',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(payload),
