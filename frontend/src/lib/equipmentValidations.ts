@@ -17,12 +17,6 @@ export type SolarPowerFormData = {
   batteryModel: string;
   batteryCapacity: string;
   batteryFile?: File;
-  additionalEquipment: YesNoValue;
-  ictEquipmentPowerConsumption: string;
-  additionalEquipmentDate: string;
-  additionalEquipmentType: string;
-  additionalUnitCount: string;
-  additionalDeviceUniqueNo: string;
   totalInvestment: string;
   totalInvestmentFile?: File;
   hasSubsidy: YesNoValue;

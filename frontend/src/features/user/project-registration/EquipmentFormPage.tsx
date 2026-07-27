@@ -27,10 +27,7 @@ import {
   mapSolarFormToEquipmentValidationItem,
 } from '@/features/user/project-registration/equipmentValidationMapper';
 import {
-  getEquipmentFormFieldName,
-  getEquipmentValidationErrorMessage,
-  getMissingEquipmentFileFields,
-  REQUIRED_EQUIPMENT_FILE_MESSAGE,
+  mapEquipmentValidationFieldErrors,
   SOLAR_FORM_DEFAULT_VALUES,
 } from '@/features/user/project-registration/solarEquipmentFormModel';
 import { getSolarEquipmentDraft } from '@/features/user/project-registration/equipmentConfirmationState';
@@ -124,24 +121,6 @@ function normalizeStoredSolarData(
     ),
     batteryModel: getStringValue(source, 'batteryModel'),
     batteryCapacity: getStringValue(source, 'batteryCapacity'),
-    additionalEquipment: getYesNoValue(source, 'additionalEquipment'),
-    ictEquipmentPowerConsumption: getStringValue(
-      source,
-      'ictEquipmentPowerConsumption',
-    ),
-    additionalEquipmentDate: getStringValue(
-      source,
-      'additionalEquipmentDate',
-    ),
-    additionalEquipmentType: getStringValue(
-      source,
-      'additionalEquipmentType',
-    ),
-    additionalUnitCount: getStringValue(source, 'additionalUnitCount'),
-    additionalDeviceUniqueNo: getStringValue(
-      source,
-      'additionalDeviceUniqueNo',
-    ),
     totalInvestment: getStringValue(source, 'totalInvestment'),
     hasSubsidy: getYesNoValue(source, 'hasSubsidy'),
     subsidyName: getStringValue(source, 'subsidyName'),
@@ -259,26 +238,10 @@ export default function EquipmentFormPage() {
   const submitSolarEquipment = async (data: SolarPowerFormData) => {
     if (isSubmitting) return;
     solarForm.clearErrors();
-    const missingFileFields = getMissingEquipmentFileFields(data);
-    missingFileFields.forEach((fieldName) => {
-      solarForm.setError(fieldName, {
-        type: 'required',
-        message: REQUIRED_EQUIPMENT_FILE_MESSAGE,
-      });
-    });
     setIsSubmitting(true);
 
     try {
       const tempId = equipmentId ?? `equipment-${Date.now()}`;
-      if (missingFileFields.length > 0) {
-        toast({
-          title: '確認資料が不足しています',
-          description: REQUIRED_EQUIPMENT_FILE_MESSAGE,
-          variant: 'destructive',
-        });
-        return;
-      }
-
       const validationFiles = mapSolarFormFilesForValidation(data);
       const payload = mapSolarFormToEquipmentValidationItem(
         data,
@@ -301,17 +264,16 @@ export default function EquipmentFormPage() {
     } catch (error) {
       if (
         error instanceof ApiError &&
-        error.payload?.errors &&
-        typeof error.payload.errors === 'object'
-      ) {
-        Object.entries(error.payload.errors).forEach(([path, value]) => {
-          const fieldName = getEquipmentFormFieldName(path);
-          const message = getEquipmentValidationErrorMessage(value);
-          if (fieldName && message) {
+          error.payload?.errors &&
+          typeof error.payload.errors === 'object'
+        ) {
+          mapEquipmentValidationFieldErrors(
+            error.payload.errors,
+            data,
+          ).forEach(({ fieldName, message }) => {
             solarForm.setError(fieldName, { type: 'server', message });
-          }
-        });
-      }
+          });
+        }
 
       toast({
         title: '設備情報を確認できませんでした',

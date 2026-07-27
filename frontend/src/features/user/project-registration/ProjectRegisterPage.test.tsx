@@ -1,10 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '@/api/_shared/errors';
 import type { SolarEquipment } from '@/features/user/project-registration/components/types';
 import ProjectRegisterPage from './ProjectRegisterPage';
 
+const { validateSiteProjectEquipment } = vi.hoisted(() => ({
+  validateSiteProjectEquipment: vi.fn(),
+}));
 const setCurrentProject = vi.fn();
 const currentProject = {
   id: 'PROJ0002',
@@ -29,6 +33,14 @@ vi.mock('@/hooks/sites/useSitesQuery', () => ({
     error: null,
   }),
 }));
+
+vi.mock('@/api/site', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/api/site')>();
+  return {
+    ...actual,
+    validateSiteProjectEquipment,
+  };
+});
 
 vi.mock('@/stores/dashboardStore', () => ({
   useDashboardStore: (
@@ -55,12 +67,6 @@ const pendingEquipment: SolarEquipment = {
     batteryMaker: '',
     batteryModel: '',
     batteryCapacity: '',
-    additionalEquipment: 'no',
-    ictEquipmentPowerConsumption: '',
-    additionalEquipmentDate: '',
-    additionalEquipmentType: '',
-    additionalUnitCount: '',
-    additionalDeviceUniqueNo: '',
     totalInvestment: '1000',
     hasSubsidy: 'no',
     subsidyName: '',
@@ -71,6 +77,12 @@ const pendingEquipment: SolarEquipment = {
 };
 
 describe('ProjectRegisterPage', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    validateSiteProjectEquipment.mockReset();
+    validateSiteProjectEquipment.mockResolvedValue({ statusCode: 'OK' });
+  });
+
   it('opens equipment registration as the first admission step', async () => {
     render(
       <MemoryRouter
@@ -95,6 +107,11 @@ describe('ProjectRegisterPage', () => {
     expect(screen.getByText('太陽光発電設備の情報')).toBeInTheDocument();
     expect(screen.queryByText('入力内容の確認')).not.toBeInTheDocument();
     expect(screen.getByText('ステップ 1 / 4')).toBeInTheDocument();
+    expect(screen.getByText('対象拠点').parentElement).toHaveTextContent('*');
+    expect(
+      screen.getByText('確認資料：太陽光発電電力受給契約確認書')
+        .parentElement,
+    ).toHaveTextContent('*');
   });
 
   it('keeps the first selected file when another file input is opened', async () => {
@@ -133,5 +150,60 @@ describe('ProjectRegisterPage', () => {
 
     expect(screen.getByText('contract.pdf')).toBeInTheDocument();
     expect(screen.getByText('catalog.pdf')).toBeInTheDocument();
+  });
+
+  it('calls backend validation when required fields and files are empty', async () => {
+    const user = userEvent.setup();
+    validateSiteProjectEquipment.mockRejectedValue(
+      new ApiError('入力内容に誤りがあります。', {
+        status: 400,
+        payload: {
+          statusCode: 'VALIDATION_ERROR',
+          message: '入力内容に誤りがあります。',
+          errors: {
+            equipmentOpDate: '稼働開始日を入力してください。',
+            nominalMaxOutput: '公称最大出力を入力してください。',
+            pcsManufacturer: 'メーカーを入力してください。',
+            files: '確認資料をアップロードしてください。',
+          },
+        },
+      }),
+    );
+
+    render(
+      <MemoryRouter
+        initialEntries={['/projects/SITE-1/PROJ0002/register']}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <Routes>
+          <Route
+            path="/projects/:siteId/:projectId/register"
+            element={<ProjectRegisterPage />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByRole('button', { name: '次へ' }));
+
+    expect(validateSiteProjectEquipment).toHaveBeenCalledTimes(1);
+    expect(validateSiteProjectEquipment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        equipmentOpDate: '',
+        nominalMaxOutput: null,
+        pcsManufacturer: '',
+        files: [],
+      }),
+    );
+    expect(
+      await screen.findByText('稼働開始日を入力してください。'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('公称最大出力を入力してください。'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('メーカーを入力してください。')).toBeInTheDocument();
+    expect(
+      screen.getAllByText('確認資料をアップロードしてください。'),
+    ).toHaveLength(5);
   });
 });

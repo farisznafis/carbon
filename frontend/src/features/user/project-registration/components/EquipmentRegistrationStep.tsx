@@ -11,10 +11,7 @@ import {
   mapSolarFormToEquipmentValidationItem,
 } from '@/features/user/project-registration/equipmentValidationMapper';
 import {
-  getEquipmentFormFieldName,
-  getEquipmentValidationErrorMessage,
-  getMissingEquipmentFileFields,
-  REQUIRED_EQUIPMENT_FILE_MESSAGE,
+  mapEquipmentValidationFieldErrors,
   SOLAR_FORM_DEFAULT_VALUES,
 } from '@/features/user/project-registration/solarEquipmentFormModel';
 import { useSitesQuery } from '@/hooks/sites/useSitesQuery';
@@ -67,18 +64,6 @@ export const EquipmentRegistrationStep = forwardRef<
     validate: async () => {
       form.clearErrors();
       const formData = form.getValues();
-      const missingFileFields = getMissingEquipmentFileFields(formData);
-
-      missingFileFields.forEach((fieldName) => {
-        form.setError(fieldName, {
-          type: 'required',
-          message: REQUIRED_EQUIPMENT_FILE_MESSAGE,
-        });
-      });
-      if (missingFileFields.length > 0) {
-        throw new Error(REQUIRED_EQUIPMENT_FILE_MESSAGE);
-      }
-
       const tempId = initialEquipment?.id ?? `equipment-${Date.now()}`;
 
       try {
@@ -96,12 +81,11 @@ export const EquipmentRegistrationStep = forwardRef<
           error.payload?.errors &&
           typeof error.payload.errors === 'object'
         ) {
-          Object.entries(error.payload.errors).forEach(([path, value]) => {
-            const fieldName = getEquipmentFormFieldName(path);
-            const message = getEquipmentValidationErrorMessage(value);
-            if (fieldName && message) {
-              form.setError(fieldName, { type: 'server', message });
-            }
+          mapEquipmentValidationFieldErrors(
+            error.payload.errors,
+            formData,
+          ).forEach(({ fieldName, message }) => {
+            form.setError(fieldName, { type: 'server', message });
           });
         }
         throw error;
