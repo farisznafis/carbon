@@ -152,11 +152,11 @@ export default function ProjectMembershipPage() {
       wrapInCard={false}
     >
       <div className="space-y-10">
-        {siteName && (
+        {/* {siteName && (
           <p className="text-center text-muted-foreground">
             拠点名：{siteName}
           </p>
-        )}
+        )} */}
 
         {isLoading ? (
           <Card className="rounded-lg border-border shadow-none">

@@ -316,8 +316,6 @@ const ProjectRegister = () => {
     };
 
     loadEquipment();
-    window.addEventListener('focus', loadEquipment);
-    return () => window.removeEventListener('focus', loadEquipment);
   }, [pendingEquipment, projectId]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────

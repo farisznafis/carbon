@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import type { SolarEquipment } from '@/features/user/project-registration/components/types';
@@ -94,5 +95,43 @@ describe('ProjectRegisterPage', () => {
     expect(screen.getByText('太陽光発電設備の情報')).toBeInTheDocument();
     expect(screen.queryByText('入力内容の確認')).not.toBeInTheDocument();
     expect(screen.getByText('ステップ 1 / 4')).toBeInTheDocument();
+  });
+
+  it('keeps the first selected file when another file input is opened', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/projects/SITE-1/PROJ0002/register',
+            state: { pendingEquipment },
+          },
+        ]}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <Routes>
+          <Route
+            path="/projects/:siteId/:projectId/register"
+            element={<ProjectRegisterPage />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+    const fileInputs = container.querySelectorAll<HTMLInputElement>(
+      'input[type="file"]',
+    );
+    const firstFile = new File(['contract'], 'contract.pdf', {
+      type: 'application/pdf',
+    });
+    const secondFile = new File(['catalog'], 'catalog.pdf', {
+      type: 'application/pdf',
+    });
+
+    await user.upload(fileInputs[0], firstFile);
+    window.dispatchEvent(new Event('focus'));
+    await user.upload(fileInputs[1], secondFile);
+
+    expect(screen.getByText('contract.pdf')).toBeInTheDocument();
+    expect(screen.getByText('catalog.pdf')).toBeInTheDocument();
   });
 });

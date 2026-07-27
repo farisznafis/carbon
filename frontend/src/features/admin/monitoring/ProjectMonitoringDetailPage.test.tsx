@@ -75,6 +75,12 @@ describe('ProjectMonitoringDetailPage', () => {
       </MemoryRouter>,
     );
 
+    expect(
+      await screen.findByRole('heading', {
+        level: 1,
+        name: 'モニタリング詳細',
+      }),
+    ).toBeInTheDocument();
     expect(await screen.findByText('基本情報')).toBeInTheDocument();
     expect(screen.getByText('モニタリング値')).toBeInTheDocument();
     expect(screen.getByText('エビデンス情報')).toBeInTheDocument();
