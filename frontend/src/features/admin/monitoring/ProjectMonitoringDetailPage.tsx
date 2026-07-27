@@ -110,12 +110,7 @@ export default function ProjectMonitoringDetailPage() {
     location.state as MonitoringDetailLocationState | null
   )?.monitoringRecord;
   const [record, setRecord] = useState<MonitoringRecordListItem | null>(
-    locationRecord && monitoringId && projectId
-      ? isMatchingMonitoringRecord(locationRecord, monitoringId) &&
-        String(locationRecord.projectID) === projectId
-        ? locationRecord
-        : null
-      : null,
+    locationRecord ?? null,
   );
   const [isLoading, setIsLoading] = useState(!record);
   const [error, setError] = useState<string | null>(null);
@@ -226,9 +221,9 @@ export default function ProjectMonitoringDetailPage() {
       <Card>
         <CardHeader>
           <CardTitle>モニタリング詳細</CardTitle>
-          <CardDescription>
+          {/* <CardDescription>
             モニタリングID: {formatMonitoringValue(record.id)}
-          </CardDescription>
+          </CardDescription> */}
         </CardHeader>
       </Card>
 
@@ -238,9 +233,9 @@ export default function ProjectMonitoringDetailPage() {
         icon={<Activity className="h-5 w-5" />}
       >
         <ProjectDetailItem label="モニタリングID" value={formatMonitoringValue(record.id)} />
-        <ProjectDetailItem label="プロジェクトID" value={formatMonitoringValue(record.projectID)} />
-        <ProjectDetailItem label="拠点ID" value={formatMonitoringValue(record.siteID)} />
-        <ProjectDetailItem label="参加ユーザID" value={formatMonitoringValue(record.participatingUserID)} />
+        <ProjectDetailItem label="プロジェクトID" value={formatMonitoringValue(record.projectId)} />
+        <ProjectDetailItem label="拠点ID" value={formatMonitoringValue(record.siteId)} />
+        <ProjectDetailItem label="参加ユーザID" value={formatMonitoringValue(record.participatingUserId)} />
         <ProjectDetailItem label="方法論" value={formatMonitoringValue(record.methodologyType)} />
         <ProjectDetailItem label="記録日" value={formatMonitoringDate(record.dateRecorded)} />
         <ProjectDetailItem label="更新日時" value={formatMonitoringDateTime(record.timeUpdated)} />
