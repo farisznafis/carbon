@@ -82,6 +82,33 @@ describe('EquipmentFormPage file handling', () => {
   it('validates selected file metadata without uploading the files', async () => {
     const { container } = renderEquipmentForm();
     expect((await screen.findAllByText('東京拠点')).length).toBeGreaterThan(0);
+    const requiredFieldValues = {
+      equipmentOpDate: '2026-07-27',
+      nominalMaxOutput: '10',
+      pcsManufacturer: 'メーカー',
+      pcsModel: 'MODEL-1',
+      powerCondUnitCount: '1',
+      deviceNo: 'DEVICE-1',
+      powerCondStandby: '0',
+      totalInvestment: '1000',
+      preProjectUnitPrice: '20',
+    };
+
+    Object.entries(requiredFieldValues).forEach(([fieldName, fieldValue]) => {
+      const input = container.querySelector<HTMLInputElement>(
+        `[name="${fieldName}"]`,
+      );
+      expect(input).not.toBeNull();
+      fireEvent.change(input!, { target: { value: fieldValue } });
+    });
+
+    const nativeSelects = container.querySelectorAll<HTMLSelectElement>(
+      'select[aria-hidden="true"]',
+    );
+    expect(nativeSelects).toHaveLength(3);
+    fireEvent.change(nativeSelects[1], { target: { value: 'no' } });
+    fireEvent.change(nativeSelects[2], { target: { value: 'no' } });
+
     const requiredFileInputIds = [
       'equipment-op-date-file',
       'nominal-max-output-file',
@@ -137,6 +164,23 @@ describe('EquipmentFormPage file handling', () => {
       '確認資料をアップロードしてください。',
     );
     expect(warnings.length).toBeGreaterThanOrEqual(5);
+    expect(
+      screen.getByText('稼働開始日を入力してください。'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('公称最大出力を入力してください。'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('メーカーを入力してください。')).toBeInTheDocument();
+    expect(screen.getByText('型式を入力してください。')).toBeInTheDocument();
+    expect(
+      screen.getByText('蓄電池設置の有無を選択してください。'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('補助金受給の有無を選択してください。'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('電力購入単価を入力してください。'),
+    ).toBeInTheDocument();
     expect(
       vi.mocked(fetch).mock.calls.some(([url]) =>
         String(url).includes('/site/project/equipment/validate'),

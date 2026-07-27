@@ -27,7 +27,7 @@ import {
   mapSolarFormToEquipmentValidationItem,
 } from '@/features/user/project-registration/equipmentValidationMapper';
 import {
-  getMissingEquipmentFileFieldErrors,
+  getMissingEquipmentRequiredFieldErrors,
   mapEquipmentValidationFieldErrors,
   SOLAR_FORM_DEFAULT_VALUES,
 } from '@/features/user/project-registration/solarEquipmentFormModel';
@@ -250,15 +250,16 @@ export default function EquipmentFormPage() {
         data.siteId,
         validationFiles,
       );
-      const missingFileErrors = getMissingEquipmentFileFieldErrors(data);
+      const missingFieldErrors =
+        getMissingEquipmentRequiredFieldErrors(data);
 
       await validateSiteProjectEquipment(payload);
 
-      if (missingFileErrors.length > 0) {
-        missingFileErrors.forEach(({ fieldName, message }) => {
+      if (missingFieldErrors.length > 0) {
+        missingFieldErrors.forEach(({ fieldName, message }) => {
           solarForm.setError(fieldName, { type: 'required', message });
         });
-        throw new Error('必要な確認資料をアップロードしてください。');
+        throw new Error('必須項目を入力してください。');
       }
 
       navigate(paths.projectEquipmentConfirmation(siteId, projectId), {
@@ -271,7 +272,7 @@ export default function EquipmentFormPage() {
         },
       });
     } catch (error) {
-      getMissingEquipmentFileFieldErrors(data).forEach(
+      getMissingEquipmentRequiredFieldErrors(data).forEach(
         ({ fieldName, message }) => {
           solarForm.setError(fieldName, { type: 'required', message });
         },

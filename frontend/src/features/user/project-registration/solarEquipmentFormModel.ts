@@ -32,8 +32,36 @@ export const REQUIRED_EQUIPMENT_FILE_MESSAGE =
   '確認資料をアップロードしてください。';
 
 const API_FIELD_ALIASES: Record<string, keyof SolarPowerFormData> = {
-  pcsUnitCount: 'powerCondUnitCount',
-  pcsStandby: 'powerCondStandby',
+  pcsunitcount: 'powerCondUnitCount',
+  pcsstandby: 'powerCondStandby',
+  solar_contract: 'operationStartDateFile',
+  panel_catalog: 'nominalMaxOutputFile',
+  pcs_spec: 'pcsFile',
+  battery_catalog: 'batteryFile',
+  construction_invoice: 'totalInvestmentFile',
+  subsidy_notice: 'subsidyNameFile',
+  electricity_bill: 'preProjectUnitPriceFile',
+};
+
+const REQUIRED_FIELD_MESSAGES: Partial<
+  Record<keyof SolarPowerFormData, string>
+> = {
+  equipmentOpDate: '稼働開始日を入力してください。',
+  nominalMaxOutput: '公称最大出力を入力してください。',
+  pcsManufacturer: 'メーカーを入力してください。',
+  pcsModel: '型式を入力してください。',
+  powerCondUnitCount: '導入台数を入力してください。',
+  deviceNo: '機器固有番号を入力してください。',
+  powerCondStandby: '夜間待機電力を入力してください。',
+  hasBattery: '蓄電池設置の有無を選択してください。',
+  batteryMaker: '蓄電池メーカーを入力してください。',
+  batteryModel: '蓄電池型式を入力してください。',
+  batteryCapacity: '蓄電池容量を入力してください。',
+  totalInvestment: '設備の総投資額を入力してください。',
+  hasSubsidy: '補助金受給の有無を選択してください。',
+  subsidyName: '補助金名称を入力してください。',
+  subsidyAmount: '補助金額を入力してください。',
+  preProjectUnitPrice: '電力購入単価を入力してください。',
 };
 
 const FORM_FIELD_NAMES = new Set<keyof SolarPowerFormData>(
@@ -93,11 +121,16 @@ export function getEquipmentValidationErrorMessage(
 export function getEquipmentFormFieldName(
   path: string,
 ): keyof SolarPowerFormData | null {
-  const fieldName = path.replace(/\[\d+\]/g, '').split('.').at(-1);
+  const fieldName = path
+    .replace(/\[\d+\]/g, '')
+    .split('.')
+    .at(-1)
+    ?.split('::')
+    .at(-1);
   if (!fieldName) return null;
 
   return (
-    API_FIELD_ALIASES[fieldName] ??
+    API_FIELD_ALIASES[fieldName.toLowerCase()] ??
     (FORM_FIELD_NAMES.has(fieldName as keyof SolarPowerFormData)
       ? (fieldName as keyof SolarPowerFormData)
       : null)
@@ -116,6 +149,44 @@ export function getMissingEquipmentFileFieldErrors(
     fieldName,
     message: REQUIRED_EQUIPMENT_FILE_MESSAGE,
   }));
+}
+
+export function getMissingEquipmentRequiredFieldErrors(
+  formData: SolarPowerFormData,
+): EquipmentValidationFieldError[] {
+  const requiredFields: Array<keyof SolarPowerFormData> = [
+    'equipmentOpDate',
+    'nominalMaxOutput',
+    'pcsManufacturer',
+    'pcsModel',
+    'powerCondUnitCount',
+    'deviceNo',
+    'powerCondStandby',
+    'hasBattery',
+    ...(formData.hasBattery === 'yes'
+      ? (['batteryMaker', 'batteryModel', 'batteryCapacity'] as const)
+      : []),
+    'totalInvestment',
+    'hasSubsidy',
+    ...(formData.hasSubsidy === 'yes'
+      ? (['subsidyName', 'subsidyAmount'] as const)
+      : []),
+    'preProjectUnitPrice',
+  ];
+  const scalarErrors = requiredFields.flatMap((fieldName) => {
+    const value = formData[fieldName];
+    if (typeof value === 'string' && value.trim()) return [];
+
+    return [
+      {
+        fieldName,
+        message:
+          REQUIRED_FIELD_MESSAGES[fieldName] ?? '必須項目を入力してください。',
+      },
+    ];
+  });
+
+  return [...scalarErrors, ...getMissingEquipmentFileFieldErrors(formData)];
 }
 
 function flattenEquipmentValidationErrors(

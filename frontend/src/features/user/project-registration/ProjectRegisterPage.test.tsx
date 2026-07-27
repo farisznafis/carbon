@@ -189,9 +189,9 @@ describe('ProjectRegisterPage', () => {
     expect(validateSiteProjectEquipment).toHaveBeenCalledTimes(1);
     expect(validateSiteProjectEquipment).toHaveBeenCalledWith(
       expect.objectContaining({
-        equipmentOpDate: '',
+        equipmentOpDate: null,
         nominalMaxOutput: null,
-        pcsManufacturer: '',
+        pcsManufacturer: null,
         files: [],
       }),
     );

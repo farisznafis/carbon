@@ -11,7 +11,7 @@ import {
   mapSolarFormToEquipmentValidationItem,
 } from '@/features/user/project-registration/equipmentValidationMapper';
 import {
-  getMissingEquipmentFileFieldErrors,
+  getMissingEquipmentRequiredFieldErrors,
   mapEquipmentValidationFieldErrors,
   SOLAR_FORM_DEFAULT_VALUES,
 } from '@/features/user/project-registration/solarEquipmentFormModel';
@@ -66,8 +66,8 @@ export const EquipmentRegistrationStep = forwardRef<
       form.clearErrors();
       const formData = form.getValues();
       const tempId = initialEquipment?.id ?? `equipment-${Date.now()}`;
-      const missingFileErrors =
-        getMissingEquipmentFileFieldErrors(formData);
+      const missingFieldErrors =
+        getMissingEquipmentRequiredFieldErrors(formData);
 
       try {
         await validateSiteProjectEquipment(
@@ -79,14 +79,14 @@ export const EquipmentRegistrationStep = forwardRef<
           ),
         );
 
-        if (missingFileErrors.length > 0) {
-          missingFileErrors.forEach(({ fieldName, message }) => {
+        if (missingFieldErrors.length > 0) {
+          missingFieldErrors.forEach(({ fieldName, message }) => {
             form.setError(fieldName, { type: 'required', message });
           });
-          throw new Error('必要な確認資料をアップロードしてください。');
+          throw new Error('必須項目を入力してください。');
         }
       } catch (error) {
-        missingFileErrors.forEach(({ fieldName, message }) => {
+        missingFieldErrors.forEach(({ fieldName, message }) => {
           form.setError(fieldName, { type: 'required', message });
         });
 

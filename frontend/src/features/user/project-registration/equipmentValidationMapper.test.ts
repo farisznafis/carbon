@@ -92,8 +92,12 @@ describe('mapSolarFormToEquipmentValidationItem', () => {
     const result = mapSolarFormToEquipmentValidationItem(
       {
         ...baseFormData,
+        equipmentOpDate: '',
         nominalMaxOutput: '',
+        pcsManufacturer: '',
+        pcsModel: '',
         powerCondUnitCount: '',
+        deviceNo: '',
         powerCondStandby: '',
         hasBattery: '',
         totalInvestment: '',
@@ -106,14 +110,44 @@ describe('mapSolarFormToEquipmentValidationItem', () => {
     );
 
     expect(result).toMatchObject({
+      equipmentOpDate: null,
       nominalMaxOutput: null,
+      pcsManufacturer: null,
+      pcsModel: null,
       pcsUnitCount: null,
+      deviceNo: null,
       pcsStandby: null,
       hasBattery: null,
       siteId: null,
       totalInvestment: null,
       hasSubsidy: null,
       preProjectUnitPrice: null,
+    });
+  });
+
+  it('maps empty conditional text values to null', () => {
+    const result = mapSolarFormToEquipmentValidationItem(
+      {
+        ...baseFormData,
+        hasBattery: 'yes',
+        batteryMaker: '',
+        batteryModel: '',
+        batteryCapacity: '',
+        hasSubsidy: 'yes',
+        subsidyName: '',
+        subsidyAmount: '',
+      },
+      'temp-4',
+      'SITE4f83ac050b20d755',
+      [],
+    );
+
+    expect(result).toMatchObject({
+      batteryMaker: null,
+      batteryModel: null,
+      batteryCapacity: null,
+      subsidyName: null,
+      subsidyAmount: null,
     });
   });
 });
