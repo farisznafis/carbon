@@ -1,6 +1,8 @@
 package com.kct.jcredit.core_backend.controller;
 
+import com.kct.jcredit.core_backend.dto.request.ApproveReviewRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectCompanyRequest;
+import com.kct.jcredit.core_backend.dto.request.RejectReviewRequest;
 import com.kct.jcredit.core_backend.dto.request.ReviewParticipationRequest;
 import com.kct.jcredit.core_backend.dto.response.ApproveCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.PendingCompanyListResponse;
@@ -69,32 +71,44 @@ public class AdminCompanyController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
     
-    @GetMapping("/participation")
-    @PreAuthorize("hasRole('operator')")
-    @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<List<ParticipationReviewDetailResponse>> getPendingReviews() {
-        return ResponseEntity.ok(reviewService.getPendingReviews());
-    }
+    // @GetMapping
+    //     @PreAuthorize("hasRole('operator')")
+    //     @SecurityRequirement(name = "bearerAuth")
+    //     public ResponseEntity<List<ParticipationReviewDetailResponse>> getPendingReviews() {
+    //         return ResponseEntity.ok(reviewService.getPendingReviews());
+    //     }
 
-    @GetMapping("/{participationId}")
-    @PreAuthorize("hasRole('operator')")
-    @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<ParticipationReviewDetailResponse> getReviewDetail(
-            @PathVariable Integer participationId) {
-        return ResponseEntity.ok(reviewService.getReviewDetail(participationId));
-    }
+    //     @GetMapping("/{participationId}")
+    //     @PreAuthorize("hasRole('operator')")
+    //     @SecurityRequirement(name = "bearerAuth")
+    //     public ResponseEntity<ParticipationReviewDetailResponse> getReviewDetail(
+    //             @PathVariable Integer participationId) {
+    //         return ResponseEntity.ok(reviewService.getReviewDetail(participationId));
+    //     }
 
-    @PostMapping("/{participationId}/review")
+    @PostMapping("/{participationId}/approve")
     @PreAuthorize("hasRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<BaseResponse> submitReview(
+    public ResponseEntity<BaseResponse> approveReview(
             Authentication authentication,
-        @PathVariable Integer participationId,
-        @RequestBody @Valid ReviewParticipationRequest request) {
+            @PathVariable Integer participationId,
+            @RequestBody @Valid ApproveReviewRequest request) {
 
-    Integer operatorUserId = jwtUtil.extractUserId(authentication.getCredentials().toString());
+        Integer operatorUserId = jwtUtil.extractUserId(authentication.getCredentials().toString());
+        reviewService.approveReview(participationId, operatorUserId, request);
+        return ResponseEntity.ok(BaseResponse.success("承認しました。"));
+    }
 
-    reviewService.submitReview(participationId, operatorUserId, request);
-    return ResponseEntity.ok(BaseResponse.success("レビューを受け付けました。"));
-}
+    @PostMapping("/{participationId}/reject")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<BaseResponse> rejectReview(
+            Authentication authentication,
+            @PathVariable Integer participationId,
+            @RequestBody @Valid RejectReviewRequest request) {
+
+        Integer operatorUserId = jwtUtil.extractUserId(authentication.getCredentials().toString());
+        reviewService.rejectReview(participationId, operatorUserId, request);
+        return ResponseEntity.ok(BaseResponse.success("却下しました。"));
+    }
 }

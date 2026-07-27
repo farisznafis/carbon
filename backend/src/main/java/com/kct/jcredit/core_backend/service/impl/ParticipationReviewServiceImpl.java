@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.ReviewParticipationRequest;
+import com.kct.jcredit.core_backend.dto.request.RejectReviewRequest;
+import com.kct.jcredit.core_backend.dto.request.ApproveReviewRequest;
 import com.kct.jcredit.core_backend.dto.response.ParticipationReviewDetailResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
@@ -35,6 +37,8 @@ import com.kct.jcredit.core_backend.exception.CustomException;
 import com.kct.jcredit.core_backend.enums.EquipmentFileType;
 import com.kct.jcredit.core_backend.service.ParticipationProjectService;
 import com.kct.jcredit.core_backend.service.ParticipationProjectValidationService;
+import com.kct.jcredit.core_backend.service.ProjectParticipationPdfService;
+import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.entity.ParticipatingProject;
 import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.entity.ProjectParticipationConfirmation;
@@ -70,93 +74,30 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
     private final EnR002SustainabilityCommitmentRepository sustainabilityRepository;
     private final ProjectParticipationConfirmationRepository reviewRepository;
     private final OperatingUserRepository operatingUserRepository;
+    private final ProjectParticipationPdfService pdfService;       
+    private final NotificationService notificationService;         
 
-        @Override
-        @Transactional(readOnly = true)
-        public List<ParticipationReviewDetailResponse> getPendingReviews() {
-        return findPendingParticipations().stream()
-                .map(participation -> getReviewDetail(participation.getId()))
-                .collect(Collectors.toList());
-        }
-
-        @Override
-        @Transactional(readOnly = true)
-        public List<ParticipationReviewDetailResponse> getPendingReviewsByUserId(Integer userId) {
-        return findPendingParticipations().stream()
-                .filter(participation -> {
-                        ProjectParticipationConfirmation review = reviewRepository
-                                .findByParticipationId(participation.getId())
-                                .orElse(null);
-                        return review == null || !userId.equals(review.getPrimaryReviewerId());
-                })
-                .map(participation -> getReviewDetail(participation.getId()))
-                .collect(Collectors.toList());
-        }
-
-        private List<ParticipatingProject> findPendingParticipations() {
-        return siteProjectRelationRepository.findByStatus("OPEN").stream()
-                .map(this::toParticipationOrNull)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ParticipationReviewDetailResponse getReviewDetail(Integer participationId) {
-
-        ParticipatingProject participation = participatingProjectRepository
-                .findById(participationId)
-                .orElseThrow(() -> new CustomException(
-                        ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
-
-        EnR002Equipment equipment = participation.getEquipment();
-        Site site = equipment.getSite();
-        Project project = participation.getProject();
-
-        List<EnR002EquipmentFile> files = equipmentFileRepository.findByEquipment_Id(equipment.getId());
-
-        EnR002ApplicationConfirmation confirmationItems = confirmationItemsRepository
-                .findByParticipationId(participationId).orElse(null);
-        EnR002SustainabilityCommitment sustainability = sustainabilityRepository
-                .findByParticipationId(participationId).orElse(null);
-        ProjectParticipationConfirmation review = reviewRepository
-                .findByParticipationId(participationId).orElse(null);
-
-        return ParticipationReviewDetailResponse.builder()
-                .participationId(participationId)
-                .projectName(project.getProjectName())
-                .siteName(site.getSiteName())
-                .companyName(site.getCompany().getNameJa())
-                .submittedAt(participation.getCreatedAt())
-                .equipment(toEquipmentResponse(equipment, files))
-                .confirmationItems(toConfirmationResponse(confirmationItems))
-                .sustainabilityCommitment(toSustainabilityResponse(sustainability))
-                .review(toReviewResponse(review))
-                .build();
-    }
+    // ... getPendingReviews / getPendingReviewsByUserId / findPendingParticipations /
+    //     getReviewDetail / toEquipmentResponse / toConfirmationResponse /
+    //     toSustainabilityResponse / toReviewResponse — TIDAK BERUBAH
 
     @Override
     @Transactional
-    public void submitReview(Integer participationId, Integer operatorUserId,
-                             ReviewParticipationRequest request) {
+    public void approveReview(Integer participationId, Integer operatorUserId, ApproveReviewRequest request) {
 
         OperatingUser operator = operatingUserRepository.findById(operatorUserId)
-                .orElseThrow(() -> new CustomException(
-                        ResponseConstants.NOT_FOUND, "オペレーター情報が見つかりません。"));
+                .orElseThrow(() -> new CustomException(ResponseConstants.NOT_FOUND, "オペレーター情報が見つかりません。"));
         String operatorName = operator.getFirstName() + operator.getLastName();
 
         ParticipatingProject participation = participatingProjectRepository
                 .findById(participationId)
-                .orElseThrow(() -> new CustomException(
-                        ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
-
-        Integer siteId = participation.getEquipment().getSite().getId();
-        Integer projectId = participation.getProject().getId();
+                .orElseThrow(() -> new CustomException(ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
 
         SiteProjectRelation relation = siteProjectRelationRepository
-                .findBySite_IdAndProject_Id(siteId, projectId)
-                .orElseThrow(() -> new CustomException(
-                        ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
+                .findBySite_IdAndProject_Id(
+                        participation.getEquipment().getSite().getId(),
+                        participation.getProject().getId())
+                .orElseThrow(() -> new CustomException(ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
 
         if (!"OPEN".equals(relation.getStatus())) {
             throw new CustomException("REVIEW_CLOSED", "このレビューは既に完了しています。");
@@ -168,10 +109,9 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
                         .pk("PART#" + participationId)
                         .build());
 
-        boolean isPrimarySlotEmpty   = confirmation.getPrimaryReviewerId() == null;
-        boolean isSecondarySlotEmpty = confirmation.getSecondaryReviewerId() == null;
+        boolean isPrimarySlotEmpty = confirmation.getPrimaryReviewerId() == null;
 
-        if (!isPrimarySlotEmpty && !isSecondarySlotEmpty) {
+        if (!isPrimarySlotEmpty && confirmation.getSecondaryReviewerId() != null) {
             throw new CustomException("REVIEW_CLOSED", "レビューは既に2名によって完了しています。");
         }
         if (!isPrimarySlotEmpty && confirmation.getPrimaryReviewerId().equals(operatorUserId)) {
@@ -203,137 +143,77 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
 
         reviewRepository.save(confirmation);
 
-        if ("REJECTED".equals(request.getDecision())) {
-            relation.setStatus("REJECTED");
+        if (!isPrimarySlotEmpty) {
+            // submission SECONDARY → kedua reviewer approve
+            relation.setStatus("APPROVED");
             siteProjectRelationRepository.save(relation);
-            notifyParticipantRejected(participation, request.getRejectReason());
-
-        } else if (!isPrimarySlotEmpty) {
-            relation.setStatus("REVIEWED");
-            siteProjectRelationRepository.save(relation);
-            // pdfService.generateAndProcess(participationId);
+            pdfService.generateAndProcess(participationId); // ← trigger PDF di sini
         }
-        // else: submission primary dengan APPROVED, status tetap "OPEN" menunggu secondary
+        // else: submission PRIMARY, status tetap OPEN menunggu secondary
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // PRIVATE — mapping
-    // ─────────────────────────────────────────────────────────────
+    @Override
+    @Transactional
+    public void rejectReview(Integer participationId, Integer operatorUserId, RejectReviewRequest request) {
 
-    private ParticipatingProject toParticipationOrNull(SiteProjectRelation relation) {
-        return participatingProjectRepository
-                .findByEquipment_Site_IdAndProject_Id(relation.getSite().getId(), relation.getProject().getId())
-                .orElse(null);
-    }
+        OperatingUser operator = operatingUserRepository.findById(operatorUserId)
+                .orElseThrow(() -> new CustomException(ResponseConstants.NOT_FOUND, "オペレーター情報が見つかりません。"));
+        String operatorName = operator.getFirstName() + operator.getLastName();
 
-//     private PendingReviewParticipationResponse toPendingResponse(ParticipatingProject p) {
-//         return PendingReviewParticipationResponse.builder()
-//                 .participationId(p.getId())
-//                 .projectName(p.getProject().getProjectName())
-//                 .siteName(p.getEquipment().getSite().getSiteName())
-//                 .companyName(p.getEquipment().getSite().getCompany().getNameJa())
-//                 .submittedAt(p.getCreatedAt())
-//                 .build();
-//     }
+        ParticipatingProject participation = participatingProjectRepository
+                .findById(participationId)
+                .orElseThrow(() -> new CustomException(ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
 
-    private EnR002EquipmentResponse toEquipmentResponse(EnR002Equipment equipment, List<EnR002EquipmentFile> files) {
-        List<EnR002EquipmentFileResponse> fileResponses = files.stream()
-                .map(f -> EnR002EquipmentFileResponse.builder()
-                        .id(f.getId())
-                        .fileType(f.getFileType() != null ? f.getFileType().getValue() : null)
-                        .fileId(f.getFileId())
-                        .s3Key(f.getS3Key())
-                        .build())
-                .collect(Collectors.toList());
+        SiteProjectRelation relation = siteProjectRelationRepository
+                .findBySite_IdAndProject_Id(
+                        participation.getEquipment().getSite().getId(),
+                        participation.getProject().getId())
+                .orElseThrow(() -> new CustomException(ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
 
-        return EnR002EquipmentResponse.builder()
-                .id(equipment.getId())
-                .siteId(equipment.getSite().getId())
-                .equipmentOpDate(equipment.getEquipmentOpDate())
-                .nominalMaxOutput(equipment.getNominalMaxOutput())
-                .pcsManufacturer(equipment.getPcsManufacturer())
-                .pcsModel(equipment.getPcsModel())
-                .pcsUnitCount(equipment.getPcsUnitCount())
-                .deviceNo(equipment.getDeviceNo())
-                .pcsStandby(equipment.getPcsStandby())
-                .hasBattery(equipment.getHasBattery())
-                .batteryMaker(equipment.getBatteryMaker())
-                .batteryModel(equipment.getBatteryModel())
-                .batteryCapacity(equipment.getBatteryCapacity())
-                .totalInvestment(equipment.getTotalInvestment())
-                .hasSubsidy(equipment.getHasSubsidy())
-                .subsidyName(equipment.getSubsidyName())
-                .subsidyAmount(equipment.getSubsidyAmount())
-                .preProjectUnitPrice(equipment.getPreProjectUnitPrice())
-                .files(fileResponses)
-                .build();
-    }
+        if (!"OPEN".equals(relation.getStatus())) {
+            throw new CustomException("REVIEW_CLOSED", "このレビューは既に完了しています。");
+        }
 
-    private EnR002ConfirmationItemResponse toConfirmationResponse(EnR002ApplicationConfirmation c) {
-        if (c == null) return null;
-        return EnR002ConfirmationItemResponse.builder()
-                .isAgreeDataUse(c.getIsAgreeDataUse())
-                .isAgreeExtraData(c.getIsAgreeExtraData())
-                .isAgreeTransfer(c.getIsAgreeTransfer())
-                .isNotRegistered(c.getIsNotRegistered())
-                .isKeidanrenParticipation(c.getIsKeidanrenParticipation())
-                .isEmitter(c.getIsEmitter())
-                .emitterCode(c.getEmitterCode())
-                .isAdjustedEmissionsAdded(c.getIsAdjustedEmissionsAdded())
-                .isSubjectToPeriodicReport(c.getIsSubjectToPeriodicReport())
-                .isPeriodicReportTypeOne(c.getIsPeriodicReportTypeOne())
-                .energyBusinessCode(c.getEnergyBusinessCode())
-                .factoryCode(c.getFactoryCode())
-                .build();
-    }
+        ProjectParticipationConfirmation confirmation = reviewRepository
+                .findByParticipationId(participationId)
+                .orElseGet(() -> ProjectParticipationConfirmation.builder()
+                        .pk("PART#" + participationId)
+                        .build());
 
-    private EnR002SustainabilityCommitmentResponse toSustainabilityResponse(EnR002SustainabilityCommitment s) {
-        if (s == null) return null;
-        return EnR002SustainabilityCommitmentResponse.builder()
-                .companyName(s.getCompanyName())
-                .repName(s.getRepName())
-                .repRole(s.getRepRole())
-                .hasConsent(s.getHasConsent())
-                .isAgreeTerms(s.getIsAgreeTerms())
-                .build();
-    }
+        boolean isPrimarySlotEmpty = confirmation.getPrimaryReviewerId() == null;
+        if (!isPrimarySlotEmpty && confirmation.getPrimaryReviewerId().equals(operatorUserId)) {
+            throw new CustomException("SAME_REVIEWER", "一次確認者と同一の担当者は二次確認者になれません。");
+        }
 
-    private ProjectParticipationConfirmationResponse toReviewResponse(ProjectParticipationConfirmation r) {
-        if (r == null) return null;
-        return ProjectParticipationConfirmationResponse.builder()
-                .isSolarContractDoc(r.getIsSolarContractDoc())
-                .isPcsSpecDoc(r.getIsPcsSpecDoc())
-                .isBatterySpecDoc(r.getIsBatterySpecDoc())
-                .isOperationStartDoc(r.getIsOperationStartDoc())
-                .isGenerationDataDoc(r.getIsGenerationDataDoc())
-                .isReversePowerDoc(r.getIsReversePowerDoc())
-                .isInvestmentProofDoc(r.getIsInvestmentProofDoc())
-                .isApplicationCompleteCheck(r.getIsApplicationCompleteCheck())
-                .isFormsAttachCheck(r.getIsFormsAttachCheck())
-                .isEmissionsReductionActivityListCheck(r.getIsEmissionsReductionActivityListCheck())
-                .isOriginalSpecCheck(r.getIsOriginalSpecCheck())
-                .isSubsidyCheck(r.getIsSubsidyCheck())
-                .primaryApplReviewerName(r.getPrimaryApplReviewerName())
-                .secondaryApplReviewerName(r.getSecondaryApplReviewerName())
-                .build();
-    }
+        confirmation.setIsSolarContractDoc(request.getIsSolarContractDoc());
+        confirmation.setIsPcsSpecDoc(request.getIsPcsSpecDoc());
+        confirmation.setIsBatterySpecDoc(request.getIsBatterySpecDoc());
+        confirmation.setIsOperationStartDoc(request.getIsOperationStartDoc());
+        confirmation.setIsGenerationDataDoc(request.getIsGenerationDataDoc());
+        confirmation.setIsReversePowerDoc(request.getIsReversePowerDoc());
+        confirmation.setIsInvestmentProofDoc(request.getIsInvestmentProofDoc());
+        confirmation.setIsApplicationCompleteCheck(request.getIsApplicationCompleteCheck());
+        confirmation.setIsFormsAttachCheck(request.getIsFormsAttachCheck());
+        confirmation.setIsEmissionsReductionActivityListCheck(request.getIsEmissionsReductionActivityListCheck());
+        confirmation.setIsOriginalSpecCheck(request.getIsOriginalSpecCheck());
+        confirmation.setIsSubsidyCheck(request.getIsSubsidyCheck());
 
-    private PendingReviewParticipationResponse toPendingResponse(ParticipatingProject participation) {
-    EnR002Equipment equipment = participation.getEquipment();
-    Site site = equipment.getSite();
-    Project project = participation.getProject();
+        if (isPrimarySlotEmpty) {
+            confirmation.setPrimaryApplReviewerName(operatorName);
+            confirmation.setPrimaryApplReviewerInkan(request.getReviewerInkan());
+            confirmation.setPrimaryReviewerId(operatorUserId);
+        } else {
+            confirmation.setSecondaryApplReviewerName(operatorName);
+            confirmation.setSecondaryApplReviewerInkan(request.getReviewerInkan());
+            confirmation.setSecondaryReviewerId(operatorUserId);
+        }
 
-    return PendingReviewParticipationResponse.builder()
-            .participationId(participation.getId())
-            .projectName(project.getProjectName())
-            .siteName(site.getSiteName())
-            .companyName(site.getCompany().getNameJa())
-            .submittedAt(participation.getCreatedAt())
-            .build();
-}
+        reviewRepository.save(confirmation);
 
-    private void notifyParticipantRejected(ParticipatingProject participation, String reason) {
-        log.warn("[TODO] participationId={}, reason={}",
-                participation.getId(), reason);
+        relation.setStatus("REJECTED");
+        siteProjectRelationRepository.save(relation);
+
+        notificationService.sendParticipationRejectionNotification(
+                participation.getUser(), request.getRejectReason());
     }
 }

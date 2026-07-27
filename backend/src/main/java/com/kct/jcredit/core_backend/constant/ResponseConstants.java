@@ -109,6 +109,9 @@ public class ResponseConstants {
     public static final String MSG_CANNOT_APPROVE_OWN_REQUEST = "自分の削除申請は承認できません。";
     public static final String MSG_DELETION_ALREADY_PROCESSED = "この削除申請は既に処理されています。";
     public static final String MSG_LIMIT_EXCEEDED = "上限に達しています。";
+    public static final String OPEN = "OPEN";
+    public static final String APPROVED = "APPROVED";
+    public static final String REJECTED = "REJECTED";
     
     private ResponseConstants() {}
 }
