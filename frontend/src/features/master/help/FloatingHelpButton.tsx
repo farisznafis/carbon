@@ -35,7 +35,7 @@ export function FloatingHelpButton() {
        * bottom-24 on sm+     → extra breathing room on larger screens
        * Adjust these values to match the exact height of your scroll-to-top button.
        */}
-      <div className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-50">
+      <div className="fixed bottom-4 right-4 sm:right-3 z-50">
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
           <PopoverTrigger asChild>
             <Button
