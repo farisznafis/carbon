@@ -104,10 +104,19 @@ export function getEquipmentFormFieldName(
   );
 }
 
-type EquipmentValidationFieldError = {
+export type EquipmentValidationFieldError = {
   fieldName: keyof SolarPowerFormData;
   message: string;
 };
+
+export function getMissingEquipmentFileFieldErrors(
+  formData: SolarPowerFormData,
+): EquipmentValidationFieldError[] {
+  return getMissingEquipmentFileFields(formData).map((fieldName) => ({
+    fieldName,
+    message: REQUIRED_EQUIPMENT_FILE_MESSAGE,
+  }));
+}
 
 function flattenEquipmentValidationErrors(
   error: unknown,

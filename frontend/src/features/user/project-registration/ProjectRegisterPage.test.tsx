@@ -206,4 +206,40 @@ describe('ProjectRegisterPage', () => {
       screen.getAllByText('確認資料をアップロードしてください。'),
     ).toHaveLength(5);
   });
+
+  it('shows the warning for the only missing required file after API validation', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <MemoryRouter
+        initialEntries={['/projects/SITE-1/PROJ0002/register']}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <Routes>
+          <Route
+            path="/projects/:siteId/:projectId/register"
+            element={<ProjectRegisterPage />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+    const fileInputs = container.querySelectorAll<HTMLInputElement>(
+      'input[type="file"]',
+    );
+
+    for (const index of [0, 1, 2, 4]) {
+      await user.upload(
+        fileInputs[index],
+        new File([`file-${index}`], `file-${index}.pdf`, {
+          type: 'application/pdf',
+        }),
+      );
+    }
+
+    await user.click(await screen.findByRole('button', { name: '次へ' }));
+
+    expect(validateSiteProjectEquipment).toHaveBeenCalledTimes(1);
+    expect(
+      await screen.findAllByText('確認資料をアップロードしてください。'),
+    ).toHaveLength(1);
+  });
 });

@@ -1,4 +1,5 @@
 import {
+  getMissingEquipmentFileFieldErrors,
   mapEquipmentValidationFieldErrors,
   SOLAR_FORM_DEFAULT_VALUES,
 } from './solarEquipmentFormModel';
@@ -40,6 +41,46 @@ describe('mapEquipmentValidationFieldErrors', () => {
         hasSubsidy: 'yes',
       },
     );
+
+    expect(fieldErrors.map(({ fieldName }) => fieldName)).toEqual([
+      'operationStartDateFile',
+      'nominalMaxOutputFile',
+      'pcsFile',
+      'batteryFile',
+      'totalInvestmentFile',
+      'subsidyNameFile',
+      'preProjectUnitPriceFile',
+    ]);
+  });
+});
+
+describe('getMissingEquipmentFileFieldErrors', () => {
+  it('detects an individual missing file even when the other files are selected', () => {
+    const selectedFile = new File(['content'], 'document.pdf', {
+      type: 'application/pdf',
+    });
+    const fieldErrors = getMissingEquipmentFileFieldErrors({
+      ...SOLAR_FORM_DEFAULT_VALUES,
+      operationStartDateFile: selectedFile,
+      nominalMaxOutputFile: selectedFile,
+      pcsFile: selectedFile,
+      preProjectUnitPriceFile: selectedFile,
+    });
+
+    expect(fieldErrors).toEqual([
+      {
+        fieldName: 'totalInvestmentFile',
+        message: '確認資料をアップロードしてください。',
+      },
+    ]);
+  });
+
+  it('requires battery and subsidy files only when those options are enabled', () => {
+    const fieldErrors = getMissingEquipmentFileFieldErrors({
+      ...SOLAR_FORM_DEFAULT_VALUES,
+      hasBattery: 'yes',
+      hasSubsidy: 'yes',
+    });
 
     expect(fieldErrors.map(({ fieldName }) => fieldName)).toEqual([
       'operationStartDateFile',

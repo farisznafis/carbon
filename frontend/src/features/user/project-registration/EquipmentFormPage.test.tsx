@@ -141,7 +141,7 @@ describe('EquipmentFormPage file handling', () => {
       vi.mocked(fetch).mock.calls.some(([url]) =>
         String(url).includes('/site/project/equipment/validate'),
       ),
-    ).toBe(false);
+    ).toBe(true);
     expect(screen.queryByText('Equipment confirmation')).not.toBeInTheDocument();
   });
 });
