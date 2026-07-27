@@ -26,6 +26,13 @@ import {
   mapSolarFormFilesForValidation,
   mapSolarFormToEquipmentValidationItem,
 } from '@/features/user/project-registration/equipmentValidationMapper';
+import {
+  getEquipmentFormFieldName,
+  getEquipmentValidationErrorMessage,
+  getMissingEquipmentFileFields,
+  REQUIRED_EQUIPMENT_FILE_MESSAGE,
+  SOLAR_FORM_DEFAULT_VALUES,
+} from '@/features/user/project-registration/solarEquipmentFormModel';
 import { getSolarEquipmentDraft } from '@/features/user/project-registration/equipmentConfirmationState';
 import {
   isFromMasterDashboard,
@@ -39,39 +46,6 @@ import {
 } from '@/lib/equipmentValidations';
 import { paths } from '@/routes/paths';
 
-const SOLAR_FORM_DEFAULT_VALUES: SolarPowerFormData = {
-  siteId: '',
-  equipmentOpDate: '',
-  operationStartDateFile: undefined,
-  nominalMaxOutput: '',
-  nominalMaxOutputFile: undefined,
-  pcsManufacturer: '',
-  pcsModel: '',
-  powerCondUnitCount: '',
-  deviceNo: '',
-  powerCondStandby: '',
-  pcsFile: undefined,
-  hasBattery: '',
-  batteryMaker: '',
-  batteryModel: '',
-  batteryCapacity: '',
-  batteryFile: undefined,
-  additionalEquipment: '',
-  ictEquipmentPowerConsumption: '',
-  additionalEquipmentDate: '',
-  additionalEquipmentType: '',
-  additionalUnitCount: '',
-  additionalDeviceUniqueNo: '',
-  totalInvestment: '',
-  totalInvestmentFile: undefined,
-  hasSubsidy: '',
-  subsidyName: '',
-  subsidyNameFile: undefined,
-  subsidyAmount: '',
-  preProjectUnitPrice: '',
-  preProjectUnitPriceFile: undefined,
-};
-
 const OTHER_FORM_DEFAULT_VALUES: OtherEquipmentFormData = {
   oldEquipmentName: '',
   oldEquipmentId: '',
@@ -81,86 +55,7 @@ const OTHER_FORM_DEFAULT_VALUES: OtherEquipmentFormData = {
   newEquipmentType: '',
 };
 
-const SOLAR_FORM_FIELD_NAMES = new Set<keyof SolarPowerFormData>(
-  Object.keys(SOLAR_FORM_DEFAULT_VALUES) as Array<keyof SolarPowerFormData>,
-);
-const solarApiFieldAliases: Record<string, keyof SolarPowerFormData> = {
-  pcsUnitCount: 'powerCondUnitCount',
-  pcsStandby: 'powerCondStandby',
-};
-const REQUIRED_FILE_MESSAGE = '確認資料をアップロードしてください。';
 const EMPTY_SITE_OPTIONS: never[] = [];
-
-function getMissingFileFields(
-  data: SolarPowerFormData,
-): Array<keyof SolarPowerFormData> {
-  const requiredFiles: Array<{
-    fieldName: keyof SolarPowerFormData;
-    file?: File;
-  }> = [
-    {
-      fieldName: 'operationStartDateFile',
-      file: data.operationStartDateFile,
-    },
-    {
-      fieldName: 'nominalMaxOutputFile',
-      file: data.nominalMaxOutputFile,
-    },
-    { fieldName: 'pcsFile', file: data.pcsFile },
-    {
-      fieldName: 'totalInvestmentFile',
-      file: data.totalInvestmentFile,
-    },
-    {
-      fieldName: 'preProjectUnitPriceFile',
-      file: data.preProjectUnitPriceFile,
-    },
-    ...(data.hasBattery === 'yes'
-      ? [
-          {
-            fieldName: 'batteryFile' as const,
-            file: data.batteryFile,
-          },
-        ]
-      : []),
-    ...(data.hasSubsidy === 'yes'
-      ? [
-          {
-            fieldName: 'subsidyNameFile' as const,
-            file: data.subsidyNameFile,
-          },
-        ]
-      : []),
-  ];
-
-  return requiredFiles
-    .filter(({ file }) => !(file instanceof File))
-    .map(({ fieldName }) => fieldName);
-}
-
-function getErrorMessage(value: unknown): string | null {
-  if (typeof value === 'string') return value;
-  if (Array.isArray(value)) {
-    const messages = value.filter(
-      (message): message is string => typeof message === 'string',
-    );
-    return messages.length ? messages.join('、') : null;
-  }
-  return null;
-}
-
-function getSolarFormFieldName(path: string): keyof SolarPowerFormData | null {
-  const fieldName = path.replace(/\[\d+\]/g, '').split('.').at(-1);
-  if (!fieldName) return null;
-
-  if (fieldName in solarApiFieldAliases) {
-    return solarApiFieldAliases[fieldName];
-  }
-
-  return SOLAR_FORM_FIELD_NAMES.has(fieldName as keyof SolarPowerFormData)
-    ? (fieldName as keyof SolarPowerFormData)
-    : null;
-}
 
 function getInternalReturnPath(state: unknown): string | null {
   if (!state || typeof state !== 'object' || !('returnTo' in state)) {
@@ -364,11 +259,11 @@ export default function EquipmentFormPage() {
   const submitSolarEquipment = async (data: SolarPowerFormData) => {
     if (isSubmitting) return;
     solarForm.clearErrors();
-    const missingFileFields = getMissingFileFields(data);
+    const missingFileFields = getMissingEquipmentFileFields(data);
     missingFileFields.forEach((fieldName) => {
       solarForm.setError(fieldName, {
         type: 'required',
-        message: REQUIRED_FILE_MESSAGE,
+        message: REQUIRED_EQUIPMENT_FILE_MESSAGE,
       });
     });
     setIsSubmitting(true);
@@ -378,7 +273,7 @@ export default function EquipmentFormPage() {
       if (missingFileFields.length > 0) {
         toast({
           title: '確認資料が不足しています',
-          description: REQUIRED_FILE_MESSAGE,
+          description: REQUIRED_EQUIPMENT_FILE_MESSAGE,
           variant: 'destructive',
         });
         return;
@@ -410,8 +305,8 @@ export default function EquipmentFormPage() {
         typeof error.payload.errors === 'object'
       ) {
         Object.entries(error.payload.errors).forEach(([path, value]) => {
-          const fieldName = getSolarFormFieldName(path);
-          const message = getErrorMessage(value);
+          const fieldName = getEquipmentFormFieldName(path);
+          const message = getEquipmentValidationErrorMessage(value);
           if (fieldName && message) {
             solarForm.setError(fieldName, { type: 'server', message });
           }

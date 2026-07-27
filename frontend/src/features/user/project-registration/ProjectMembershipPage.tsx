@@ -124,7 +124,7 @@ export default function ProjectMembershipPage() {
 
   const handleJoin = (project: SiteProject) => {
     setCurrentProject(project);
-    navigate(paths.projectEquipment(siteId, project.id), {
+    navigate(paths.projectRegister(siteId, project.id), {
       state: {
         ...(enteredFromMasterDashboard
           ? masterDashboardProjectMembershipState

@@ -18,6 +18,17 @@ vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
 
+vi.mock('@/hooks/sites/useSitesQuery', () => ({
+  useSitesQuery: () => ({
+    data: {
+      sites: [{ siteId: 'SITE-1', siteName: 'Tokyo Site' }],
+    },
+    isLoading: false,
+    isError: false,
+    error: null,
+  }),
+}));
+
 vi.mock('@/stores/dashboardStore', () => ({
   useDashboardStore: (
     selector: (state: {
@@ -59,7 +70,7 @@ const pendingEquipment: SolarEquipment = {
 };
 
 describe('ProjectRegisterPage', () => {
-  it('opens the agreement step after equipment confirmation', async () => {
+  it('opens equipment registration as the first admission step', async () => {
     render(
       <MemoryRouter
         initialEntries={[
@@ -79,12 +90,9 @@ describe('ProjectRegisterPage', () => {
       </MemoryRouter>,
     );
 
-    expect(
-      await screen.findByText(
-        /以下の各項目をご確認のうえ、該当する内容にご同意いただける場合はチェックを入れてください/,
-      ),
-    ).toBeInTheDocument();
-    expect(screen.queryByText('設備一覧')).not.toBeInTheDocument();
+    expect(await screen.findByText('設備登録')).toBeInTheDocument();
+    expect(screen.getByText('太陽光発電設備の情報')).toBeInTheDocument();
+    expect(screen.queryByText('入力内容の確認')).not.toBeInTheDocument();
     expect(screen.getByText('ステップ 1 / 4')).toBeInTheDocument();
   });
 });
