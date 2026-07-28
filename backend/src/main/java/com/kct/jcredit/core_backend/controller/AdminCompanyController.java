@@ -117,7 +117,7 @@ public class AdminCompanyController {
     }
 
     //  APPROVE 
-    @PostMapping("/{participationId}/approve")
+    @PostMapping("participation/{participationId}/approve")
     @PreAuthorize("hasRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "参加申請承認", description = "指定された参加申請を承認します（一次・二次確認共通）。")
@@ -132,7 +132,7 @@ public class AdminCompanyController {
     }
 
     //  REJECT 
-    @PostMapping("/{participationId}/reject")
+    @PostMapping("participation/{participationId}/reject")
     @PreAuthorize("hasRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "参加申請却下", description = "指定された参加申請を却下します。")

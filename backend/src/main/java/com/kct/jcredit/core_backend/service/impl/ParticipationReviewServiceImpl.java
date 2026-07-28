@@ -131,8 +131,8 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
 
         return ParticipationReviewDetailResponse.builder()
                 .participationId(participationId)
-                .projectId(project.getId())   // ← tambah, sesuai permintaanmu
-                .siteId(site.getId())         // ← tambah
+                .projectId(project.getId())   
+                .siteId(site.getId())         
                 .projectName(project.getProjectName())
                 .siteName(site.getSiteName())
                 .companyName(site.getCompany().getNameJa())
