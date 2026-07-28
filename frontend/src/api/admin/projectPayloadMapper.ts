@@ -3,6 +3,7 @@ import type {
   AdminProjectPayloadFormValues,
   CreateAdminProjectPlanApplicationPayload,
   CreateAdminProjectPayload,
+  UpdateAdminProjectPayload,
 } from './types';
 
 function toOptionalString(value: string | number | undefined): string | undefined {
@@ -239,4 +240,47 @@ export function mapAdminProjectPlanApplicationPayload(
     reviewerName: projectApplication.reviewerName,
     projectOutline: projectApplication.projectOutline,
   });
+}
+
+const toNumberValue = (value: unknown): number => {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : 0;
+};
+
+export function mapAdminProjectUpdatePayload(
+  values: AdminProjectPayloadFormValues,
+  processedBy: string,
+): UpdateAdminProjectPayload {
+  const projectBase = values.projectBase ?? {};
+
+  return {
+    processedBy,
+    projectName: toStringValue(projectBase.projectName) ?? '',
+    baselineEmissions: toNumberValue(projectBase.baselineEmissions),
+    postProjectEmission: toNumberValue(projectBase.postProjectEmission),
+    repFirstName: toStringValue(projectBase.repFirstName) ?? '',
+    repFirstNameKana: toStringValue(projectBase.repFirstNameKana) ?? '',
+    repLastName: toStringValue(projectBase.repLastName) ?? '',
+    repLastNameKana: toStringValue(projectBase.repLastNameKana) ?? '',
+    repEmail: toStringValue(projectBase.repEmail) ?? '',
+    repPhoneNumber: toStringValue(projectBase.repPhoneNumber) ?? '',
+    repPosition: toStringValue(projectBase.repPosition) ?? '',
+    picFirstName: toStringValue(projectBase.picFirstName) ?? '',
+    picFirstNameKana: toStringValue(projectBase.picFirstNameKana) ?? '',
+    picLastName: toStringValue(projectBase.picLastName) ?? '',
+    picLastNameKana: toStringValue(projectBase.picLastNameKana) ?? '',
+    picEmail: toStringValue(projectBase.picEmail) ?? '',
+    picPhoneNumber: toStringValue(projectBase.picPhoneNumber) ?? '',
+    picPosition: toStringValue(projectBase.picPosition) ?? '',
+    dataManagementPic: toStringValue(projectBase.picDataManagement) ?? '',
+    regionalCategory: toStringValue(projectBase.regionalCategory) ?? '',
+    methodologyVersion: toStringValue(projectBase.methodologyVersion) ?? '',
+    methodCategory: toStringValue(projectBase.methodCategory) ?? '',
+    methodNumber: toStringValue(projectBase.methodNumber) ?? '',
+    methodName: toStringValue(projectBase.methodName) ?? '',
+    methodMainEmission:
+      toStringValue(projectBase.methodMainEmission) ?? '',
+    methodCombiFeasibility: Boolean(projectBase.methodCombiFeasibility),
+    methodDetails: toStringValue(projectBase.methodDetails) ?? '',
+  };
 }

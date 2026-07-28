@@ -143,11 +143,8 @@ export const projectBaseSchema = z.object({
     .max(50, "文字列は最大50文字までです")
     .regex(REGEX_PATTERNS.FULLWIDTH_SYMBOLS, REGEX_MESSAGES.FULLWIDTH_SYMBOLS),
 
-  emissionReduction: z.coerce.number().optional(),
   baselineEmissions: z.coerce.number().optional(),
   postProjectEmission: z.coerce.number().optional(),
-
-  companyName: z.string().min(1), // unavailable in database
 
   regionalCategory: RegionalCategorySchema,
 
