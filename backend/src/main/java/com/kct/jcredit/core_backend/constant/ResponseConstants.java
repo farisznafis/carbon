@@ -19,13 +19,16 @@ public class ResponseConstants {
     public static final String UNSUPPORTED_FILE_TYPE = "UNSUPPORTED_FILE_TYPE";
     public static final String ALREADY_SUBMITTED = "ALREADY_SUBMITTED";
     public static final String SUSPENDED = "SUSPENDED";
-    public static final String PAYMENT_REQUIRED = "PAYMENT_REQUIRED";
     public static final String CONFLICT = "CONFLICT";
     public static final String EMAIL_ALREADY_USED = "EMAIL_ALREADY_USED";
     public static final String CORP_NUMBER_ALREADY_USED = "CORP_NUMBER_ALREADY_USED";
     public static final String PROJECT_NUMBER_ALREADY_USED = "PROJECT_NUMBER_ALREADY_USED";
     public static final String METHOD_NUMBER_ALREADY_USED = "METHOD_NUMBER_ALREADY_USED";
     public static final String LIMIT_EXCEEDED = "LIMIT_EXCEEDED";
+    public static final String SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE";
+    public static final String OTP_REQUIRED = "OTP_REQUIRED";
+    public static final String INVALID_OR_EXPIRED_TOKEN = "INVALID_OR_EXPIRED_TOKEN";
+    public static final String TOO_MANY_REQUESTS = "TOO_MANY_REQUESTS";
 
     // Messages
     public static final String MSG_LOGIN_NEEDED = "ログインが必要です。";
@@ -85,11 +88,9 @@ public class ResponseConstants {
     public static final String MSG_FILE_TOO_LARGE = "アップロードされたファイルは、許可されている最大サイズを超えています。";
     public static final String MSG_UNSUPPORTED_FILE_TYPE = "このファイル形式はアップロードできません。";
     public static final String MSG_ALREADY_SUBMITTED = "こちらのフォームはすでに提出済みのため、内容の変更はできません。";
-    public static final String MSG_SUSPENDED = "アカウントは現在停止されています。利用を再開するにはお支払いを確認してください。";
+    public static final String MSG_SUSPENDED = "アカウントは現在停止されています。管理者へお問い合わせください。";
     public static final String MSG_COMPANY_NOT_SUSPENDED = "会社は停止されていません。";
     public static final String MSG_REACTIVATION_SUCCESS = "アカウントが再開されました。";
-    public static final String MSG_PAYMENT_FAILED = "支払いに失敗しました。";
-    public static final String MSG_PAYMENT_DECLINED = "カード情報が無効です。";
     public static final String MSG_SUSPEND_SUCCESS = "会社が停止されました。";
     public static final String MSG_COMPANY_ALREADY_SUSPENDED = "会社はすでに停止されています。";
     public static final String MSG_COMPANY_NOT_PENDING = "会社は承認待ちではありません。";
@@ -109,9 +110,32 @@ public class ResponseConstants {
     public static final String MSG_CANNOT_APPROVE_OWN_REQUEST = "自分の削除申請は承認できません。";
     public static final String MSG_DELETION_ALREADY_PROCESSED = "この削除申請は既に処理されています。";
     public static final String MSG_LIMIT_EXCEEDED = "上限に達しています。";
+    
+    // Company lifecycle messages
+    public static final String MSG_COMPANY_LIST_RETRIEVED = "企業一覧を取得しました。";
+    public static final String MSG_COMPANY_DETAIL_RETRIEVED = "企業詳細を取得しました。";
+    public static final String MSG_COMPANY_NOT_FOUND = "対象の企業が見つかりませんでした。";
+    public static final String MSG_COMPANY_STATUS_CONFLICT = "現在の企業ステータスではこの操作を実行できません。";
+    public static final String MSG_SUSPENSION_ALREADY_ACTIVE = "同じ理由の停止がすでに有効です。";
+    public static final String MSG_SUSPENSION_CREATED = "企業の利用停止を登録しました。";
+    public static final String MSG_SUSPENSION_NOT_FOUND = "対象の停止情報が見つかりませんでした。";
+    public static final String MSG_SUSPENSION_ALREADY_RESOLVED = "この停止情報はすでに解除されています。";
+    public static final String MSG_SUSPENSION_LIST_RETRIEVED = "企業の停止履歴を取得しました。";
+    public static final String MSG_SUSPENSION_RESOLVED = "企業の停止理由を解除しました。";
+    public static final String MSG_SUSPENSION_RESOLVED_COMPANY_STILL_SUSPENDED =
+            "停止理由を解除しましたが、他の停止理由が残っているため企業は停止中です。";
+    public static final String MSG_COMPANY_ACCESS_SUSPENDED = "企業は現在利用停止中です。";
+
+    public static final String MSG_SERVICE_UNAVAILABLE = "Security verification service is temporarily unavailable.";
+    public static final String MSG_OTP_REQUIRED = "Email verification code is required.";
+    public static final String MSG_INVALID_OR_EXPIRED_TOKEN = "The security token is invalid or expired.";
+    public static final String MSG_TOO_MANY_REQUESTS = "Too many requests. Please try again later.";
+
+    public static final String MSG_PAYMENT_FAILED = "支払いに失敗しました。";
+    public static final String MSG_PAYMENT_DECLINED = "カード情報が無効です。";
     public static final String OPEN = "OPEN";
     public static final String APPROVED = "APPROVED";
     public static final String REJECTED = "REJECTED";
-    
+
     private ResponseConstants() {}
 }

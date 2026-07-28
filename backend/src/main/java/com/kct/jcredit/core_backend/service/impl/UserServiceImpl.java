@@ -19,11 +19,11 @@ import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepo
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.service.TokenBlacklistService;
+import com.kct.jcredit.core_backend.service.UsernameAvailabilityService;
 import com.kct.jcredit.core_backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -47,6 +47,7 @@ public class UserServiceImpl implements UserService {
     private final SiteRepository siteRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenBlacklistService tokenBlacklistService;
+    private final UsernameAvailabilityService usernameAvailabilityService;
     private static final int MAX_USERS_PER_SITE = 5; // Maximum number of users allowed per site
     private static final int MAX_USERS_PER_COMPANY = 50; // Maximum number of users allowed per company
 
@@ -210,10 +211,13 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(request.getEmail())
+                || userRepository.existsByEmailIgnoreCase(request.getEmail())) {
             errors.put("email", ResponseConstants.MSG_USED_EMAIL);
         }
-        if (userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByUsername(request.getUsername())
+                || (usernameAvailabilityService != null
+                    && !usernameAvailabilityService.isAvailable(request.getUsername()))) {
             errors.put("username", ResponseConstants.MSG_USED_USERNAME);
         }
 
@@ -223,6 +227,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public CreateUserResponse createUser(String masterCompanyId, String username, CreateUserRequest request) {
         CreateUserResponse response = new CreateUserResponse();
         ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(masterCompanyId)
@@ -268,7 +273,8 @@ public class UserServiceImpl implements UserService {
         }
 
         // 6. メールアドレスの重複チェック
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(request.getEmail())
+                || userRepository.existsByEmailIgnoreCase(request.getEmail())) {
             response.setStatusCode(ResponseConstants.USED_EMAIL);
             response.setMessage(ResponseConstants.MSG_USED_EMAIL);
             return response;
@@ -279,10 +285,13 @@ public class UserServiceImpl implements UserService {
             response.setMessage(ResponseConstants.MSG_USED_USERNAME);
             return response;
         }
+        String availableUsername = usernameAvailabilityService == null
+                ? request.getUsername().trim()
+                : usernameAvailabilityService.lockAndRequireAvailable(request.getUsername());
         LocalDateTime currentTime = LocalDateTime.now();
         // 8. 新しいユーザーを作成
         ParticipatingUser newUser = ParticipatingUser.builder()
-                .username(request.getUsername())
+                .username(availableUsername)
                 .firstName(request.getFirstName())
                 .firstNameKana(request.getFirstNameKana())
                 .lastName(request.getLastName())
@@ -886,7 +895,6 @@ public class UserServiceImpl implements UserService {
      */
     private SiteResponse mapToSiteResponse(Site site) {
     return SiteResponse.builder()
-            .id(String.valueOf(site.getId()))
             .siteName(site.getSiteName())
             .postalCode(site.getPostalCode())
             .prefecture(site.getPrefecture())

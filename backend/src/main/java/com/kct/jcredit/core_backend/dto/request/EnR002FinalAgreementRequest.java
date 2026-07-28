@@ -19,5 +19,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EnR002FinalAgreementRequest { // TODO: aptchaToken 
+    @NotNull
     private Boolean isAgreeTerms;
 }

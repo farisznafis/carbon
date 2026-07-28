@@ -17,15 +17,15 @@ import com.kct.jcredit.core_backend.dto.response.UpdateProjectStatusResponse;
 
 
 public interface ProjectService {
-    ProjectListInfoResponse getProjectsBySiteIdAndCompanyId(Integer siteId, String companyId);
+    ProjectListInfoResponse getProjectsBySiteIdAndCompanyId(String siteId, String companyId);
 
     CreateProjectResponse createProject(CreateProjectRequest request);
 
     ProjectResponse updateProject(UpdateProjectRequest request);
 
-    UpdateProjectStatusResponse updateProjectStatus(String newStatus, Integer projectId);
+    UpdateProjectStatusResponse updateProjectStatus(String newStatus, String projectId);
 
-    ProjectResponse getProject(Integer projectId, String userCompanyId);
+    ProjectResponse getProject(String projectId, String userCompanyId);
 
     ProjectListInfoResponse findByFilter(
             int page,

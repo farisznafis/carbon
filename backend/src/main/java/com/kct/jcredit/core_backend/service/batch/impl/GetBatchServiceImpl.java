@@ -20,6 +20,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
+import com.kct.jcredit.core_backend.entity.Site;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +35,7 @@ public class GetBatchServiceImpl implements GetBatchService {
     private final EnR002ReductionResultRepository reductionResultRepository;
     private final EnR002ReductionResultTotalRepository reductionResultTotalRepository;
     private final BatchProcessHistoryRepository batchProcessHistoryRepository;
+    private final SiteRepository siteRepository;
 
     @Override
     public BatchProcessHistoryResponse getBatchProcessHistory(Integer page, Integer limit, String nextPageToken) {
@@ -85,10 +88,17 @@ public class GetBatchServiceImpl implements GetBatchService {
     }
 
     @Override
-    public SiteReductionResultResponse getSiteReductionResult(Integer siteId, Integer projectId) {
+    public SiteReductionResultResponse getSiteReductionResult(String siteId, Integer projectId) {
         // Fetch reduction result from database
+        Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
+        if (site == null) {
+            return SiteReductionResultResponse.builder()
+                .items(new ArrayList<>())
+                .build();
+        }
+        
         List<EnR002ReductionResult> reductionResults = reductionResultRepository
-            .findByProjectIdAndSiteIdAndIsActiveTrueOrderByStartTimeDesc(projectId, siteId);
+            .findByProjectIdAndSiteIdAndIsActiveTrueOrderByStartTimeDesc(projectId, site.getId());
         
         List<SiteReductionResultItemDto> items = new ArrayList<>();
         if (reductionResults.isEmpty()) {
@@ -155,6 +165,7 @@ public class GetBatchServiceImpl implements GetBatchService {
                 .empjS(total.getEmpjS())
                 .empjSControl(total.getEmpjSControl())
                 .empjSBattery(total.getEmpjSBattery())
+                .embl(total.getEmbl())
                 .deletedAt(total.getDeletedAt())
                 .deletedBy(total.getDeletedBy())
                 .build();

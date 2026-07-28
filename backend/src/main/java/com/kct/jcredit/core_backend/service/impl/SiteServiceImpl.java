@@ -30,7 +30,6 @@ import com.kct.jcredit.core_backend.repository.postgres.SiteR002MemberDataReposi
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.service.SiteService;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,7 +84,7 @@ public class SiteServiceImpl implements SiteService {
         }
 
         List<SiteResponse> siteList = sites.stream().map(site -> SiteResponse.builder()
-                .id(String.valueOf(site.getId()))
+                .siteId(site.getPublicId())
                 .siteName(site.getSiteName())
                 .postalCode(site.getPostalCode())
                 .prefecture(site.getPrefecture())
@@ -109,12 +108,12 @@ public class SiteServiceImpl implements SiteService {
     }
 
     @Override
-    public SiteInfoResponse getSiteById(int siteId) {
+    public SiteInfoResponse getSiteByPublicId(String publicId) {
         SiteInfoResponse response = new SiteInfoResponse();
         SiteResponse siteDetails = new SiteResponse();
 
         try {
-            Optional<Site> siteOpt = siteRepository.findById(siteId);
+            Optional<Site> siteOpt = siteRepository.findByPublicIdWithFallback(publicId);
             if (siteOpt.isEmpty()) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
@@ -130,7 +129,7 @@ public class SiteServiceImpl implements SiteService {
             data.setSumEmissionReduction("0.5");
             data.setSumEmission("1.5");
 
-            siteDetails.setId(String.valueOf(site.getId()));
+            siteDetails.setSiteId(site.getPublicId());
             siteDetails.setSiteName(site.getSiteName());
             siteDetails.setPostalCode(site.getPostalCode());
             siteDetails.setPrefecture(site.getPrefecture());
@@ -247,7 +246,7 @@ public class SiteServiceImpl implements SiteService {
         site.setCreatedBy(company.getNameJa());
         try {
             Site savedSite = siteRepository.save(site);
-            response.setSiteId(savedSite.getId());
+            response.setSiteId(savedSite.getPublicId());
             user.setSite(site);
             participatingUserRepository.save(user);
             response.setStatusCode(ResponseConstants.OK);
@@ -264,12 +263,7 @@ public class SiteServiceImpl implements SiteService {
     public BaseResponse validateUpdateSite(String siteId, String companyId, UpdateSiteRequest request) {
         Map<String, String> errors = new LinkedHashMap<>();
 
-        Integer parsedSiteId = parseSiteId(siteId, errors);
-        if (parsedSiteId == null) {
-            return validationError(errors);
-        }
-
-        Site site = siteRepository.findById(parsedSiteId).orElse(null);
+        Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
         if (Objects.isNull(site)) {
             errors.put("siteId", ResponseConstants.MSG_NOT_FOUND);
             return validationError(errors);
@@ -307,8 +301,8 @@ public class SiteServiceImpl implements SiteService {
 
         SiteInfoResponse response = new SiteInfoResponse();
         
-        // Find site by ID
-        Site site = siteRepository.findById(Integer.parseInt(siteId)).orElse(null);
+        // Find site by public ID
+        Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
         
         if (Objects.isNull(site)) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -344,7 +338,7 @@ public class SiteServiceImpl implements SiteService {
         
         // Build response using SiteResponse
         SiteResponse siteResponse = SiteResponse.builder()
-            .id(String.valueOf(updatedSite.getId()))
+            .siteId(updatedSite.getPublicId())
             .siteName(updatedSite.getSiteName())
             .postalCode(updatedSite.getPostalCode())
             .prefecture(updatedSite.getPrefecture())
@@ -364,22 +358,30 @@ public class SiteServiceImpl implements SiteService {
 
     @Override
     public EnR002EquipmentRegisterResponse getSiteProjectEquipment(
-            Integer siteId,
-            Integer projectId,
+            String siteId,
+            String projectId,
             String companyId,
             String role,
             String username) {
         EnR002EquipmentRegisterResponse response = new EnR002EquipmentRegisterResponse();        
 
         try {
-            Site site = siteRepository.findById(siteId).orElse(null);
+            Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
             if (site == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
                 return response;
             }
+            
+            Integer siteDbId = site.getId();
 
-            Project project = projectRepository.findById(projectId).orElse(null);
+            Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+                .map(Project::getId)
+                .orElse(null);
+            Project project = null;
+            if (projectDbId != null) {
+                project = projectRepository.findById(projectDbId).orElse(null);
+            }
             if (project == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
@@ -392,7 +394,7 @@ public class SiteServiceImpl implements SiteService {
                 return response;
             }
 
-            SiteProjectRelation relation = siteProjectRelationRepository.findByProjectIdAndSiteId(projectId, siteId);
+            SiteProjectRelation relation = siteProjectRelationRepository.findByProjectIdAndSiteId(projectDbId, siteDbId);
             if (relation == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
@@ -400,7 +402,7 @@ public class SiteServiceImpl implements SiteService {
             }
 
             SiteR002MemberData memberData = siteR002MemberDataRepository
-                    .findByProject_IdAndSite_Id(projectId, siteId)
+                    .findByProject_IdAndSite_Id(projectDbId, siteDbId)
                     .orElse(null);
             if (memberData == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -409,7 +411,7 @@ public class SiteServiceImpl implements SiteService {
             }
 
            List<EnR002Equipment> equipments =
-            siteR002EquipmentRepository.findBySite_Id(siteId);
+            siteR002EquipmentRepository.findBySite_Id(siteDbId);
 
             if (equipments.isEmpty()) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -420,11 +422,7 @@ public class SiteServiceImpl implements SiteService {
             EnR002Equipment equipment = equipments.get(0);
 
             List<EnR002EquipmentFile> equipmentFiles = siteR002EquipmentFileRepository
-                    .findByEquipment_Id(equipment.getId());  // ← pakai equipment.getId()
-
-            if (equipmentFiles.isEmpty() && !memberData.getId().equals(siteId)) {
-                equipmentFiles = siteR002EquipmentFileRepository.findByEquipment_Id(siteId);
-            }
+                    .findByEquipment_Id(equipment.getId());
 
             List<String> evidenceDocuments = equipmentFiles.stream()
                     .map(EnR002EquipmentFile::getS3Key)

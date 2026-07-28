@@ -4,19 +4,27 @@ import com.kct.jcredit.core_backend.dto.request.PartiCompanyInfoValidateRequest;
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyRegisterRequest;
 import com.kct.jcredit.core_backend.dto.response.details.PartiCompanyResponseDetails;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
+import com.kct.jcredit.core_backend.enums.CompanyStatus;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRegisterRepository;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.service.PartiCompanyRegisterService;
 import com.kct.jcredit.core_backend.service.PartiCompanySignupValidator;
+import com.kct.jcredit.core_backend.service.OtpChallengeService;
+import com.kct.jcredit.core_backend.config.SecurityFlowProperties;
+import com.kct.jcredit.core_backend.enums.OtpPurpose;
+import com.kct.jcredit.core_backend.constant.ResponseConstants;
+import com.kct.jcredit.core_backend.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import java.util.UUID;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +33,8 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
     private final NotificationService notificationService;
     private final ParticipatingCompanyRegisterRepository repository;
     private final PartiCompanySignupValidator signupValidator;
+    private final OtpChallengeService otpChallengeService;
+    private final SecurityFlowProperties securityFlowProperties;
 
     @Override
     @Transactional(readOnly = true)
@@ -38,9 +48,31 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
 
         signupValidator.validateCompanyInfo(request);
 
-        ParticipatingCompany entity = repository.findByCorpNumberAndRegStatus(request.getCorporateNumber(), "REJECTED")
-                .or(() -> repository.findByEmailAndRegStatus(request.getEmail(), "REJECTED"))
-                .orElse(null);
+        if (securityFlowProperties.getFeatures().isRejectedSignupRevision()
+                && (repository.findByCorpNumberAndCompanyStatus(
+                        request.getCorporateNumber(), CompanyStatus.REJECTED).isPresent()
+                    || repository.findByEmailAndCompanyStatus(
+                        request.getEmail(), CompanyStatus.REJECTED).isPresent())) {
+            throw new CustomException(
+                    ResponseConstants.CONFLICT,
+                    "Rejected registrations must be revised through the emailed action link.");
+        }
+
+        if (securityFlowProperties.getFeatures().isSignupEmailVerification()) {
+            if (request.getEmailVerificationChallengeId() == null) {
+                throw new CustomException(ResponseConstants.OTP_REQUIRED, ResponseConstants.MSG_OTP_REQUIRED);
+            }
+            otpChallengeService.requireVerified(
+                    request.getEmailVerificationChallengeId(),
+                    OtpPurpose.SIGNUP_EMAIL_VERIFICATION,
+                    request.getEmail());
+        }
+
+        ParticipatingCompany entity = securityFlowProperties.getFeatures().isRejectedSignupRevision()
+                ? null
+                : repository.findByCorpNumberAndCompanyStatus(request.getCorporateNumber(), CompanyStatus.REJECTED)
+                    .or(() -> repository.findByEmailAndCompanyStatus(request.getEmail(), CompanyStatus.REJECTED))
+                    .orElse(null);
 
         boolean isReactivation = entity != null;
         if (!isReactivation) {
@@ -72,9 +104,11 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
 
         String newCompanyId = generateUniqueCompanyId();
         entity.setCompanyId(newCompanyId);
-        entity.setRegStatus("PENDING");
-        entity.setIsActive(true);
-        entity.setContractEndDate(LocalDate.now().plusYears(1));
+        entity.setCompanyStatus(CompanyStatus.PENDING);
+        entity.setIsActive(false);
+        if (securityFlowProperties.getFeatures().isSignupEmailVerification()) {
+            entity.setEmailVerifiedAt(LocalDateTime.now());
+        }
 
         repository.save(entity);
 
@@ -119,12 +153,31 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
                 emailBody
         );
 
+        if (securityFlowProperties.getFeatures().isSignupEmailVerification()) {
+            UUID challengeId = request.getEmailVerificationChallengeId();
+            afterCommit(() -> otpChallengeService.consumeVerified(
+                    challengeId, OtpPurpose.SIGNUP_EMAIL_VERIFICATION));
+        }
+
         return new PartiCompanyResponseDetails(
                 "CREATED",
                 "登録申請が完了しました。",
                 newCompanyId,
                 "PENDING"
         );
+    }
+
+    private void afterCommit(Runnable runnable) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    runnable.run();
+                }
+            });
+        } else {
+            runnable.run();
+        }
     }
 
     private String generateUniqueCompanyId() {

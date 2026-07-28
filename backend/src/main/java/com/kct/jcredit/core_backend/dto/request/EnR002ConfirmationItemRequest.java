@@ -19,29 +19,36 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EnR002ConfirmationItemRequest  {
+public class EnR002ConfirmationItemRequest extends BaseRequest {
  
    // ── Consent ─────────────────────────
+    @NotNull
     private Boolean isAgreeDataUse;
 
+    @NotNull
     private Boolean isAgreeExtraData;
 
+    @NotNull
     private Boolean isAgreeTransfer;
 
+    @NotNull
     private Boolean isNotRegistered;
 
     // 参加しています / 参加していません 
+    @NotNull
     private Boolean isKeidanrenParticipation;
 
     // ── 特定排出者 (conditional) ──────────────────────────────────
+    @NotNull
     private Boolean isEmitter;
-
+    
     // conditional
     private String emitterCode;
 
     private Boolean isAdjustedEmissionsAdded;
 
     // ── 省エネ法 (conditional) ────────────────────────────────────
+    @NotNull
     private Boolean isSubjectToPeriodicReport;
 
     // conditional:isSubjectToPeriodicReport = true

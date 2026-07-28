@@ -1,56 +1,21 @@
 package com.kct.jcredit.core_backend.service.impl;
 
-import com.kct.jcredit.core_backend.dto.response.details.ProjectDetailResponse;
-import com.kct.jcredit.core_backend.dto.response.details.SiteResponse;
-import com.kct.jcredit.core_backend.dto.response.details.ValidationErrorDetail;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentUpdateRequest;
-import com.kct.jcredit.core_backend.dto.request.EnR002FileItemRequest;
-import com.kct.jcredit.core_backend.dto.request.EnR002FinalAgreementRequest;
-import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
-import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
-import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
-import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
-import com.kct.jcredit.core_backend.dto.response.ProjectJoinResponse;
-import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
-import com.kct.jcredit.core_backend.dto.response.ProjectInfoResponse;
-import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
-import com.kct.jcredit.core_backend.dto.response.ProjectPdfDownloadResponse;
-import com.kct.jcredit.core_backend.dto.response.SiteListResponse;
-import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
-import com.kct.jcredit.core_backend.entity.ParticipatingProject;
-import com.kct.jcredit.core_backend.entity.ParticipatingUser;
-import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.entity.Site;
-import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.entity.EnR002EquipmentFile;
-import com.kct.jcredit.core_backend.entity.EnR002SustainabilityCommitment;
-import com.kct.jcredit.core_backend.entity.ConfirmationItems;
-import com.kct.jcredit.core_backend.entity.EnR002ApplicationConfirmation;
 import com.kct.jcredit.core_backend.entity.EnR002Equipment;
-import com.kct.jcredit.core_backend.exception.BulkValidationException;
 import com.kct.jcredit.core_backend.exception.CustomException;
-import com.kct.jcredit.core_backend.enums.EquipmentFileType;
 import com.kct.jcredit.core_backend.service.EnR002EquipmentService;
-import com.kct.jcredit.core_backend.service.ProjectService;
-import com.kct.jcredit.core_backend.service.SiteService;
 import com.kct.jcredit.core_backend.service.ParticipationProjectValidationService;
-import com.kct.jcredit.core_backend.service.ProjectParticipationPdfService;
 import com.kct.jcredit.core_backend.service.EnR002FileUploadService;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
-import com.kct.jcredit.core_backend.repository.dynamodb.EnR002ApplicationConfirmationRepository;
-import com.kct.jcredit.core_backend.repository.dynamodb.EnR002SustainabilityCommitmentRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
 import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentFileRepository;
 import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
-import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
-import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
-import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
-import com.kct.jcredit.core_backend.repository.postgres.ParticipatingProjectRepository;
-import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
 
 
 import java.util.List;
@@ -63,14 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.Collections;
 
 @Slf4j
 @Service
@@ -86,15 +44,17 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
 
     @Override
     @Transactional
-    public EnR002EquipmentResponse addEquipment(Integer siteId,
+    public EnR002EquipmentResponse addEquipment(String siteId,
                                                  String companyId,
                                                  EnR002EquipmentRequest request) {
 
-        // 1. Guard check 
-        Site site = siteRepository.findById(siteId)
+        // 1. Guard check — site harus milik company yang login
+        Site site = siteRepository.findByPublicIdWithFallback(siteId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_SITE_NOT_FOUND));
+        
+        Integer siteDbId = site.getId();
 
         if (!site.getCompany().getCompanyId().equals(companyId))
             throw new CustomException(ResponseConstants.FORBIDDEN,
@@ -102,7 +62,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
 
         // 2. Guard check 
         boolean hasJoinedAnyProject = siteProjectRelationRepository
-                .existsBySite_Id(siteId);
+                .existsBySite_Id(siteDbId);
         if (!hasJoinedAnyProject)
             throw new CustomException(
                     "SITE_NOT_JOINED",
@@ -112,44 +72,40 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
         validationService.validateEquipment(request);
 
         // 4. Save Equipment
-        EnR002Equipment saved = equipmentRepository.save(EnR002Equipment.builder()
-                .site(site)
-                .equipmentOpDate(request.getEquipmentOpDate())
-                .nominalMaxOutput(request.getNominalMaxOutput())
-                .pcsManufacturer(request.getPcsManufacturer())
-                .pcsModel(request.getPcsModel())
-                .pcsUnitCount(request.getPcsUnitCount())
-                .deviceNo(request.getDeviceNo())
-                .pcsStandby(request.getPcsStandby())
-                .hasBattery(request.getHasBattery())
-                .batteryMaker(request.getBatteryMaker())
-                .batteryModel(request.getBatteryModel())
-                .batteryCapacity(request.getBatteryCapacity())
-                .totalInvestment(request.getTotalInvestment())
-                .hasSubsidy(request.getHasSubsidy())
-                .subsidyName(request.getSubsidyName())
-                .subsidyAmount(request.getSubsidyAmount())
-                .preProjectUnitPrice(request.getPreProjectUnitPrice())
-                .build());
+        EnR002Equipment equipment = new EnR002Equipment();
+        equipment.setSite(site);
+        equipment.setEquipmentOpDate(request.getEquipmentOpDate());
+        equipment.setNominalMaxOutput(request.getNominalMaxOutput());
+        equipment.setPcsManufacturer(request.getPcsManufacturer());
+        equipment.setPcsModel(request.getPcsModel());
+        equipment.setPcsUnitCount(request.getPcsUnitCount());
+        equipment.setDeviceNo(request.getDeviceNo());
+        equipment.setPcsStandby(request.getPcsStandby());
+        equipment.setHasBattery(request.getHasBattery());
+        equipment.setBatteryMaker(request.getBatteryMaker());
+        equipment.setBatteryModel(request.getBatteryModel());
+        equipment.setBatteryCapacity(request.getBatteryCapacity());
+        equipment.setTotalInvestment(request.getTotalInvestment());
+        equipment.setHasSubsidy(request.getHasSubsidy());
+        equipment.setSubsidyName(request.getSubsidyName());
+        equipment.setSubsidyAmount(request.getSubsidyAmount());
+        equipment.setPreProjectUnitPrice(request.getPreProjectUnitPrice());
+        
+        EnR002Equipment saved = equipmentRepository.save(equipment);
 
         // 5. Save EquipmentFile
-        List<EnR002EquipmentFile> savedFiles = equipmentFileRepository.saveAll(
-                request.getFiles().stream()
-                        .map(f -> EnR002EquipmentFile.builder()
-                                .equipment(saved)
-                                .fileType(f.getFileType())
-                                .fileId(f.getFileId())
-                                .s3Key(f.getS3Key())
-                                .build())
-                        .collect(Collectors.toList()));
-
-        // 6. Move file temp → permanent setelah commit
-        Integer projectId = siteProjectRelationRepository
-                .findBySite_Id(siteId).stream()
-                .findFirst()
-                .map(r -> r.getProject().getId())
-                .orElseThrow(() -> new CustomException(
-                        "SITE_NOT_JOINED", "プロジェクト情報が見つかりません。"));
+        List<EnR002EquipmentFile> fileEntities = new java.util.ArrayList<>();
+        if (request.getFiles() != null) {
+            for (com.kct.jcredit.core_backend.dto.request.EnR002FileItemRequest f : request.getFiles()) {
+                EnR002EquipmentFile ef = new EnR002EquipmentFile();
+                ef.setEquipment(saved);
+                ef.setFileType(f.getFileType());
+                ef.setFileId(f.getFileId());
+                ef.setS3Key(f.getS3Key());
+                fileEntities.add(ef);
+            }
+        }
+        List<EnR002EquipmentFile> savedFiles = equipmentFileRepository.saveAll(fileEntities);
 
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
@@ -175,8 +131,8 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
     }
 
     @Override
-    public List<EnR002EquipmentResponse> getEquipmentsBySite(Integer siteId, String companyId) {
-        Site site = siteRepository.findById(siteId)
+    public List<EnR002EquipmentResponse> getEquipmentsBySite(String siteId, String companyId) {
+        Site site = siteRepository.findByPublicIdWithFallback(siteId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_SITE_NOT_FOUND));
@@ -185,7 +141,9 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
             throw new CustomException(ResponseConstants.FORBIDDEN,
                     ResponseConstants.MSG_UNAUTHORIZED);
 
-        return equipmentRepository.findBySite_Id(siteId).stream()
+        Integer siteDbId = site.getId();
+
+        return equipmentRepository.findBySite_Id(siteDbId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -193,7 +151,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
     private EnR002EquipmentResponse toResponse(EnR002Equipment e) {
         return EnR002EquipmentResponse.builder()
                 .id(e.getId())
-                .siteId(e.getSite().getId())
+                .siteId(e.getSite().getPublicId())
                 .equipmentOpDate(e.getEquipmentOpDate())
                 .nominalMaxOutput(e.getNominalMaxOutput())
                 .pcsManufacturer(e.getPcsManufacturer())
@@ -213,10 +171,10 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 .build();
     }
     @Override
-    public EnR002EquipmentResponse getEquipmentById(Integer siteId,
+    public EnR002EquipmentResponse getEquipmentById(String siteId,
                                                     Integer equipmentId,
                                                     String companyId) {
-        Site site = siteRepository.findById(siteId)
+        Site site = siteRepository.findByPublicIdWithFallback(siteId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_SITE_NOT_FOUND));
@@ -224,12 +182,14 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
         if (!site.getCompany().getCompanyId().equals(companyId))
             throw new CustomException(ResponseConstants.FORBIDDEN,
                     ResponseConstants.MSG_UNAUTHORIZED);
+        
+        Integer siteDbId = site.getId();
 
         EnR002Equipment equipment = equipmentRepository.findById(equipmentId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND, "設備情報が見つかりません。"));
 
-        if (!equipment.getSite().getId().equals(siteId))
+        if (!equipment.getSite().getId().equals(siteDbId))
             throw new CustomException(
                     ResponseConstants.NOT_FOUND, "設備情報が見つかりません。");
 
@@ -238,22 +198,24 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
 
         @Override
         @Transactional
-        public EnR002EquipmentResponse updateEquipment(Integer siteId, Integer equipmentId,
+        public EnR002EquipmentResponse updateEquipment(String siteId, Integer equipmentId,
                                                         String companyId, EnR002EquipmentUpdateRequest request) {
 
-        Site site = siteRepository.findById(siteId)
+        Site site = siteRepository.findByPublicIdWithFallback(siteId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND, ResponseConstants.MSG_SITE_NOT_FOUND));
 
         if (!site.getCompany().getCompanyId().equals(companyId))
                 throw new CustomException(ResponseConstants.FORBIDDEN, ResponseConstants.MSG_UNAUTHORIZED);
 
+        Integer siteDbId = site.getId();
+
         EnR002Equipment equipment = equipmentRepository.findById(equipmentId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND, "設備情報が見つかりません。"));
 
         // Guard — pastikan equipment ini memang milik site yang diminta
-        if (!equipment.getSite().getId().equals(siteId))
+        if (!equipment.getSite().getId().equals(siteDbId))
                 throw new CustomException(ResponseConstants.NOT_FOUND, "設備情報が見つかりません。");
 
         if (request.getEquipmentOpDate() != null) equipment.setEquipmentOpDate(request.getEquipmentOpDate());

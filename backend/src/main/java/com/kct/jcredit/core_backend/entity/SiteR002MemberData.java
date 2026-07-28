@@ -37,7 +37,7 @@ public class SiteR002MemberData extends BaseEntity {
     private Site site;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", referencedColumnName = "company_id", nullable = false) 
+    @JoinColumn(name = "participating_company_id", referencedColumnName = "id", nullable = false)
     @JsonIgnore
     private ParticipatingCompany company;
 

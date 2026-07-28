@@ -51,9 +51,8 @@ public class ProjectUploadDocumentServiceImpl implements ProjectUploadDocumentSe
                                                        MultipartFile fileVerificationReport, 
                                                        String username) { 
     
-        Integer projIdInt = Integer.valueOf(projectId);
-        
-        projectRepository.findById(projIdInt)
+        Integer projIdInt = projectRepository.findByPublicIdWithFallback(projectId)
+                .map(com.kct.jcredit.core_backend.entity.Project::getId)
                 .orElseThrow(() -> new RuntimeException("エラー: プロジェクトが見つかりません (Project Not Found)"));
 
         validateUploadFiles(fileRegistrationCert, fileValidationReport, fileVerificationReport);
@@ -69,21 +68,21 @@ public class ProjectUploadDocumentServiceImpl implements ProjectUploadDocumentSe
             // 1. Upload Registration Cert
             if (fileRegistrationCert != null && !fileRegistrationCert.isEmpty()) {
                 deleteFromS3IfExists(projectFiles.getCertificateRegistration()); 
-                String s3Key = uploadToS3(projIdInt, "cert_registration", fileRegistrationCert, username);
+                String s3Key = uploadToS3(projectId, "cert_registration", fileRegistrationCert, username);
                 projectFiles.setCertificateRegistration(s3Key);
             }
             
             // 2. Upload Validation Report
             if (fileValidationReport != null && !fileValidationReport.isEmpty()) {
                 deleteFromS3IfExists(projectFiles.getReportValidation()); 
-                String s3Key = uploadToS3(projIdInt, "report_validation", fileValidationReport, username);
+                String s3Key = uploadToS3(projectId, "report_validation", fileValidationReport, username);
                 projectFiles.setReportValidation(s3Key);
             }
             
             // 3. Upload Verification Report
             if (fileVerificationReport != null && !fileVerificationReport.isEmpty()) {
                 deleteFromS3IfExists(projectFiles.getReportVerification()); 
-                String s3Key = uploadToS3(projIdInt, "report_verification", fileVerificationReport, username);
+                String s3Key = uploadToS3(projectId, "report_verification", fileVerificationReport, username);
                 projectFiles.setReportVerification(s3Key);
             }
         } catch (IOException e) {
@@ -118,11 +117,11 @@ public class ProjectUploadDocumentServiceImpl implements ProjectUploadDocumentSe
         }
     }
 
-    private String uploadToS3(Integer projectId, String fileType, MultipartFile file, String username) throws IOException {
+    private String uploadToS3(String projectId, String fileType, MultipartFile file, String username) throws IOException {
         String fileId = "file_" + UUID.randomUUID().toString().substring(0, 6);
         
         String originalFilename = file.getOriginalFilename() != null ? file.getOriginalFilename().replaceAll("[^a-zA-Z0-9.-]", "_") : "document.pdf";
-        String s3Key = String.format("projects/%d/solar/%s/%s_%s", projectId, fileType, fileId, originalFilename);
+        String s3Key = String.format("projects/%s/solar/%s/%s_%s", projectId, fileType, fileId, originalFilename);
 
         s3Client.putObject(
                 PutObjectRequest.builder()
@@ -159,13 +158,17 @@ public class ProjectUploadDocumentServiceImpl implements ProjectUploadDocumentSe
     @Override
     public ProjectUploadDocumentResponse getDocumentsByProjectId(String projectId) {
         ProjectUploadDocumentResponse response = new ProjectUploadDocumentResponse();
-        Integer projIdInt = Integer.valueOf(projectId);
+        Integer projIdInt = projectRepository.findByPublicIdWithFallback(projectId)
+                .map(com.kct.jcredit.core_backend.entity.Project::getId)
+                .orElse(null);
 
-        projectFilesRepository.findById(projIdInt).ifPresent(files -> {
-            response.setRegistrationCertUrl(files.getCertificateRegistration());
-            response.setValidationReportUrl(files.getReportValidation());
-            response.setVerificationReportUrl(files.getReportVerification());
-        });
+        if (projIdInt != null) {
+            projectFilesRepository.findById(projIdInt).ifPresent(files -> {
+                response.setRegistrationCertUrl(files.getCertificateRegistration());
+                response.setValidationReportUrl(files.getReportValidation());
+                response.setVerificationReportUrl(files.getReportVerification());
+            });
+        }
 
         projectDocumentStatusRepository.findById(projectId).ifPresent(status -> {
             response.setIsRegistrationCertReceived(status.getIsRegistrationCertReceived());

@@ -35,11 +35,11 @@ public class ProjectPlanContextService {
      * @return authorized project context or an explicit failure status
      */
     public ProjectContext resolveProject(
-            Integer projectId,
+            String projectId,
             String companyId,
             String role,
             String username) {
-        Project project = projectRepository.findById(projectId).orElse(null);
+        Project project = projectRepository.findByPublicIdWithFallback(projectId).orElse(null);
         if (project == null) {
             return ProjectContext.notFound();
         }

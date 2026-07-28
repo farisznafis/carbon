@@ -28,32 +28,41 @@ public class EnR002EquipmentRequest {
     private String tempId;
      
     @NotNull
-    private Integer siteId;
+    private String siteId;
     // ── 設備稼働日 ──────────────────────────────────────────────
+    @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate equipmentOpDate;
 
     // ── 太陽光パネルの情報 ────────────────────────────────────────
     // 定格最大出力 (kW) 
+    @NotNull
     @DecimalMin(value = "0.0", inclusive = false)
     private BigDecimal nominalMaxOutput;
 
     // ── パワーコンディショナーの情報 ──────────────────────────────
+    @NotBlank
     private String pcsManufacturer;
+
+    @NotBlank
     private String pcsModel;
 
     // 台数 — minimal 1
+    @NotNull
     @Min(1)
     private Integer pcsUnitCount;
 
     // 機器固有番号（製造番号）
+    @NotBlank
     private String deviceNo;
 
     // 夜間待機電力（W）— konfirmasi satuan W dari UI design
+    @NotNull
     @DecimalMin("0.0")
     private BigDecimal pcsStandby;
 
     // ── 蓄電池の情報 ──────────────────────────────────────────────
+    @NotNull
     private Boolean hasBattery;
 
     // conditional: wajib kalau hasBattery = true
@@ -69,8 +78,11 @@ public class EnR002EquipmentRequest {
     // private BigDecimal ictEquipmentPowerConsumption; //ini total jadi ga perlu
 
     // ── 追加性評価に必要な情報 ────────────────────────────────────
+    @NotNull
     @Min(1)
     private Integer totalInvestment;
+
+    @NotNull
     private Boolean hasSubsidy;
 
     // conditional: wajib kalau hasSubsidy = true
@@ -78,6 +90,7 @@ public class EnR002EquipmentRequest {
     private BigDecimal subsidyAmount;
 
     // プロジェクト実施前の電力購入単価 (円/kWh)
+    @NotNull
     @DecimalMin(value = "0.0", inclusive = false)
     private BigDecimal preProjectUnitPrice;
 
@@ -98,6 +111,6 @@ public class EnR002EquipmentRequest {
 
     // ── ファイル証憑 ──────────────────────────────────────────────
  
-    @Valid
+    @NotEmpty  @Valid
     private List<EnR002FileItemRequest> files;
 }

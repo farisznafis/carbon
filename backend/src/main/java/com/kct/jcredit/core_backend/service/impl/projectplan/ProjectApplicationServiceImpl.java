@@ -95,7 +95,7 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
      */
     @Override
     @Transactional(readOnly = true)
-    public ProjectMasterResponse getProjectMaster(Integer projectId, String companyId, String role, String username) {
+    public ProjectMasterResponse getProjectMaster(String projectId, String companyId, String role, String username) {
         ProjectMasterResponse response = new ProjectMasterResponse();
 
         ProjectContext context = projectPlanContextService.resolveProject(projectId, companyId, role, username);
@@ -126,7 +126,7 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
     @Override
     @Transactional
     public ProjectApplicationResponse submitProjectApplication(
-            Integer projectId,
+            String projectId,
             ProjectApplicationRequest request,
             String companyId,
             String role,
@@ -140,7 +140,7 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
     @Override
     @Transactional
     public ProjectApplicationResponse updateProjectApplication(
-            Integer projectId,
+            String projectId,
             ProjectApplicationRequest request,
             String companyId,
             String role,
@@ -154,7 +154,7 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
     @Override
     @Transactional(readOnly = true)
     public ProjectApplicationResponse getProjectApplication(
-            Integer projectId,
+            String projectId,
             String companyId,
             String role,
             String username) {
@@ -192,7 +192,7 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
     }
 
     private ProjectApplicationResponse validateAndSave(
-            Integer projectId,
+            String projectId,
             ProjectApplicationRequest request,
             String companyId,
             String role,
@@ -206,7 +206,7 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
         return saveProjectApplication(projectId, request);
     }
 
-    private ProjectApplicationResponse saveProjectApplication(Integer projectId, ProjectApplicationRequest request) {
+    private ProjectApplicationResponse saveProjectApplication(String projectId, ProjectApplicationRequest request) {
         String pk = buildPk(projectId);
 
         // DynamoDB keys are server-managed and cannot be supplied by clients.
@@ -266,7 +266,7 @@ public class ProjectApplicationServiceImpl implements ProjectApplicationService 
         response.setMessage(ResponseConstants.MSG_FORBIDDEN);
     }
 
-    private String buildPk(Integer projectId) {
+    private String buildPk(String projectId) {
         return String.valueOf(projectId);
     }
 
