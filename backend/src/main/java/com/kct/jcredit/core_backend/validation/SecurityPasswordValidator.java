@@ -19,6 +19,15 @@ public class SecurityPasswordValidator implements ConstraintValidator<ValidSecur
         if (value.chars().anyMatch(character -> character < 0x20 || character > 0x7e)) {
             return false;
         }
+        if (value.chars().noneMatch(Character::isLowerCase)) {
+            return false;
+        }
+        if (value.chars().noneMatch(Character::isUpperCase)) {
+            return false;
+        }
+        if (value.chars().noneMatch(Character::isDigit)) {
+            return false;
+        }
         return !BLOCKED.contains(value.toLowerCase(Locale.ROOT));
     }
 }
