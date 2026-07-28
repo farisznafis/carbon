@@ -28,19 +28,11 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
 
-const PRINTABLE_ASCII_PATTERN = /^[\x20-\x7E]+$/;
 const INVALID_TOKEN_STATUS = 'INVALID_OR_EXPIRED_TOKEN';
 
 const resetPasswordSchema = z
   .object({
-    newPassword: z
-      .string()
-      .min(15, 'パスワードは15文字以上で入力してください')
-      .max(64, 'パスワードは64文字以内で入力してください')
-      .regex(
-        PRINTABLE_ASCII_PATTERN,
-        'パスワードは半角英数字・記号のみで入力してください',
-      ),
+    newPassword: z.string(),
     passwordConfirmation: z.string(),
   })
   .refine((values) => values.newPassword === values.passwordConfirmation, {
@@ -50,9 +42,6 @@ const resetPasswordSchema = z
 
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 type ResetPasswordPageState = 'exchanging' | 'ready' | 'invalid';
-
-const sanitizePassword = (value: string) =>
-  value.replace(/[^\x20-\x7E]/g, '').slice(0, 64);
 
 const getStatusCode = (error: ApiError) =>
   String(error.payload?.statusCode ?? '');
@@ -266,11 +255,7 @@ export default function ResetPassword() {
                     <FormControl>
                       <PasswordInput
                         {...field}
-                        maxLength={64}
                         autoComplete="new-password"
-                        onChange={(event) =>
-                          field.onChange(sanitizePassword(event.target.value))
-                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -286,11 +271,7 @@ export default function ResetPassword() {
                     <FormControl>
                       <PasswordInput
                         {...field}
-                        maxLength={64}
                         autoComplete="new-password"
-                        onChange={(event) =>
-                          field.onChange(sanitizePassword(event.target.value))
-                        }
                       />
                     </FormControl>
                     <FormMessage />
