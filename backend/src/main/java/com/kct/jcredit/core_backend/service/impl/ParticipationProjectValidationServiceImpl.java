@@ -88,8 +88,8 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
 
         if (!Boolean.TRUE.equals(request.getIsAgreeExtraData()))
             errors.add(err("request",
-                    "本入会届に記載されていない情報の提供への同意",
-                    "本入会届に記載されていない情報の提供への同意が必要です。"));
+                    "本入会届に記載された以外の情報の提供への同意",
+                    "本入会届に記載された以外の情報の提供への同意が必要です。"));
 
         if (!Boolean.TRUE.equals(request.getIsAgreeTransfer()))
             errors.add(err("request",
@@ -113,7 +113,7 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
                     || request.getEmitterCode().isBlank()
                     || !request.getEmitterCode().matches("\\d{9}"))
                 errors.add(err("request",
-                        "事業者コード",
+                        "事業者コード（9桁）",
                         "9桁の数字を入力してください。"));
 
             if (!Boolean.TRUE.equals(request.getIsAdjustedEmissionsAdded()))
@@ -127,13 +127,13 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
 
             if (request.getIsPeriodicReportTypeOne() == null)
                 errors.add(err("request",
-                        "定期報告書の区分",
-                        "第一種または第二種を選択してください。"));
+                        "第一種・第二種区分",
+                        "選択してください。"));
 
             if (request.getEnergyBusinessCode() == null
                     || !request.getEnergyBusinessCode().matches("\\d{7}"))
                 errors.add(err("request",
-                        "特定事業者番号",
+                        "事業者番号",
                         "7桁の数字を入力してください。"));
 
             if (request.getFactoryCode() == null
@@ -167,8 +167,8 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
 
         if (!Boolean.TRUE.equals(request.getHasConsent()))
             errors.add(err("request",
-                    "署名への同意",
-                    "同意が必要です。"));
+                    "同意する",
+                    "同意してください。"));
 
         if (!errors.isEmpty()) throw new BulkValidationException(errors);
     }
@@ -179,8 +179,8 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
 
         if (!Boolean.TRUE.equals(request.getIsAgreeTerms()))
             errors.add(err("request",
-                    "利用規約への同意",
-                    "同意が必要です。"));
+                    "同意します",
+                    "同意してください。"));
 
         if (!errors.isEmpty()) throw new BulkValidationException(errors);
     }
