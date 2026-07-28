@@ -131,5 +131,11 @@ public class ResponseConstants {
     public static final String MSG_INVALID_OR_EXPIRED_TOKEN = "The security token is invalid or expired.";
     public static final String MSG_TOO_MANY_REQUESTS = "Too many requests. Please try again later.";
 
+    public static final String MSG_PAYMENT_FAILED = "支払いに失敗しました。";
+    public static final String MSG_PAYMENT_DECLINED = "カード情報が無効です。";
+    public static final String OPEN = "OPEN";
+    public static final String APPROVED = "APPROVED";
+    public static final String REJECTED = "REJECTED";
+
     private ResponseConstants() {}
 }

@@ -50,20 +50,20 @@ export function UserLoginForm({ onSubmit, header }: UserLoginFormProps) {
           error={error}
           isSubmitting={form.formState.isSubmitting}
           header={header}
-          footer={
-            <a href="/contact" className="text-sm font-medium text-foreground hover:text-primary">
-              ログインに関するお問い合わせはこちら
-            </a>
-          }
+          // footer={
+          //   <a href="/contact" className="text-sm font-medium text-foreground hover:text-primary">
+          //     ログインに関するお問い合わせはこちら
+          //   </a>
+          // }
         >
           <FormField
             control={form.control}
             name="companyId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>会員ID</FormLabel>
+                <FormLabel>社員ID</FormLabel>
                 <FormControl>
-                  <Input type="text" placeholder="1234567890111" {...field} />
+                  <Input type="text" placeholder="例）1234567890111" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -75,9 +75,9 @@ export function UserLoginForm({ onSubmit, header }: UserLoginFormProps) {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>メールアドレス</FormLabel>
+                <FormLabel>メールアドレスまたはユーザー名</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="name@company.com" {...field} />
+                  <Input type="text" placeholder="例）user@example.com または name_company" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -98,7 +98,7 @@ export function UserLoginForm({ onSubmit, header }: UserLoginFormProps) {
             )}
           />
 
-          <div className="text-center">
+          <div className="text-right">
             <Link
               to={paths.forgotPassword}
               className="text-sm font-medium text-foreground hover:text-primary"

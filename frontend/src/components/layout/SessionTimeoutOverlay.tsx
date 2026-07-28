@@ -16,8 +16,8 @@ export const SessionTimeoutOverlay = ({ isOpen, onReAuthenticate }: SessionTimeo
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogHeader className="space-y-4">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/20">
-            <Clock className="h-6 w-6 text-amber-600 dark:text-amber-500" />
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-warning/15">
+            <Clock className="h-6 w-6 text-warning" />
           </div>
           <DialogTitle className="text-center text-xl">
             セッションが期限切れです

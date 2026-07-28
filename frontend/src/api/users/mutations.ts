@@ -12,7 +12,7 @@ type RegisterUserPayload = {
   phoneNumber: string;
   userPosition: string;
   password: string;
-  siteId: number | null;
+  siteId: string | null;
 };
 
 type UpdateUserInput = Omit<Partial<UserFormData>, "siteId"> & {
@@ -29,7 +29,7 @@ type UpdateUserPayload = {
   email: string;
   phoneNumber: string;
   userPosition: string;
-  siteId: number | null;
+  siteId: string | null;
 };
 
 type UpdateUserResponse = {
@@ -64,7 +64,7 @@ function mapRegisterUserPayload(userData: UserFormData): RegisterUserPayload {
     phoneNumber: String(userData.phoneNumber ?? "").replace(/-/g, ""),
     userPosition: userData.userPosition ?? "",
     password: userData.password ?? "",
-    siteId: userData.siteId ? Number(userData.siteId) : null,
+    siteId: userData.siteId || null,
   };
 }
 
@@ -76,7 +76,7 @@ function mapUpdateUserPayload(
   const resolvedSiteId =
     userData.siteId !== undefined ? userData.siteId : mergedData?.siteId ?? null;
   const normalizedSiteId =
-    resolvedSiteId === '' || resolvedSiteId === null ? null : Number(resolvedSiteId);
+    resolvedSiteId === '' || resolvedSiteId === null ? null : resolvedSiteId;
 
   return {
     userId: Number(userId),
@@ -164,7 +164,7 @@ export const updateUser = async (
           email: payload.email,
           phoneNumber: payload.phoneNumber,
           role: mergedData?.role ?? "user",
-          siteId: payload.siteId !== null ? String(payload.siteId) : null,
+           siteId: payload.siteId,
           position: payload.userPosition,
         };
 

@@ -1,67 +1,52 @@
 import type { ReactNode } from 'react';
 import type { Site } from '@/api/site';
 import type { UserList } from '@/api/users';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MasterSiteCard } from '@/features/master/components/MasterSiteCard';
 import {
-  formatDashboardDateTime,
-  formatPersonName,
-} from '@/features/master/components/masterDashboardUtils';
+  dashboardEmptyStateClassName,
+  dashboardPageContainerClassName,
+  dashboardPageHeaderClassName,
+  dashboardTabsListClassName,
+  dashboardTabTriggerClassName,
+} from '@/components/layout/DashboardLayout';
+import { MasterSiteCard } from '@/features/master/components/MasterSiteCard';
+import { formatPersonName } from '@/features/master/components/masterDashboardUtils';
 import { cn } from '@/lib/utils';
 import { Building2, Mail, Plus, User } from 'lucide-react';
 
-const dashboardContainer = 'mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-0';
+const dashboardContainer = dashboardPageContainerClassName;
 
 export function MasterDashboardHero({
   companyName,
-  lastUpdated,
+  action,
 }: {
   companyName: string;
-  lastUpdated: Date | null;
+  action?: ReactNode;
 }) {
   return (
     <header className="relative overflow-hidden border-b border-border bg-background">
-      <div className="relative flex min-h-[180px] flex-col items-center justify-center px-6 pt-10 text-center">
-        <p className="text-small text-muted-foreground">
-          {/* マスターダッシュボード */}
-        </p>
-        <h1 className="mt-2 max-w-5xl text-foreground">
+      <div className={cn('relative flex-col', dashboardPageHeaderClassName)}>
+        <h1 className="max-w-5xl text-foreground">
           {companyName}
         </h1>
-        {/* <p className="text-small mt-2 inline-flex items-center gap-2 text-muted-foreground">
-          サービスステータス
-          <span className="inline-flex items-center gap-1.5 text-foreground">
-            <span className="h-3 w-3 rounded-full bg-green-500" />
-            利用中
-          </span>
-        </p> */}
-      </div>
-
-      <div
-        className={cn(
-          'relative flex justify-end pb-8 text-sm font-medium leading-6 text-muted-foreground',
-          dashboardContainer,
+        {action && (
+          <div className="mt-5 flex w-full justify-end sm:absolute sm:bottom-4 sm:right-6 sm:mt-0 lg:right-0">
+            {action}
+          </div>
         )}
-      >
-        {/* 最終更新: {formatDashboardDateTime(lastUpdated)} */}
       </div>
     </header>
   );
 }
 
 export function MasterDashboardTabs() {
-  const triggerClassName = cn(
-    'h-10 min-w-0 flex-1 rounded-md border-0 bg-transparent px-6 py-2',
-    'text-sm leading-6 text-white shadow-none transition-colors',
-    'hover:bg-white/10 hover:text-white',
-    'data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-none',
-  );
+  const triggerClassName = dashboardTabTriggerClassName;
 
   return (
-    <div className="bg-card pt-4">
-      <TabsList className="mx-auto flex h-auto w-fit min-w-[288px] items-start rounded-lg bg-[#699267] p-1.5 text-white">
+    <div className="bg-card pt-6">
+      <TabsList className={dashboardTabsListClassName}>
         <TabsTrigger value="sites" className={triggerClassName}>
           拠点管理
         </TabsTrigger>
@@ -115,7 +100,7 @@ export function DashboardSection({
 
 export function DashboardEmptyState({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-[8px] border border-dashed border-border bg-card px-6 py-8 text-center text-sm font-medium text-muted-foreground">
+    <div className={dashboardEmptyStateClassName}>
       {children}
     </div>
   );
@@ -145,7 +130,7 @@ export function UserDashboardCard({
     user.role !== 'master' && !user.siteId && !user.siteName;
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-[8px] border border-border bg-card shadow-app-sm transition hover:border-primary/60 md:min-h-[112px] md:flex-row">
+    <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-app-sm transition hover:border-primary/60 md:min-h-28 md:flex-row">
       <div className="min-w-0 flex-1 px-5 py-5 md:px-7">
         <div className="flex flex-wrap items-center gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
@@ -155,13 +140,13 @@ export function UserDashboardCard({
             {fullName}
           </h3>
           {user.role === 'master' && (
-            <Badge className="border-transparent bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-600">
+            <StatusBadge tone="info">
               マスター
-            </Badge>
+            </StatusBadge>
           )}
         </div>
 
-        <div className="mt-4 grid gap-x-8 gap-y-3 text-sm font-bold leading-6 text-foreground xl:grid-cols-[minmax(360px,1.7fr)_minmax(220px,1fr)_minmax(220px,1fr)]">
+        <div className="pl-3 mt-3 grid gap-x-8 gap-y-3 text-sm font-bold leading-6 text-foreground xl:grid-cols-[minmax(360px,1.7fr)_minmax(220px,1fr)_minmax(220px,1fr)]">
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <Mail className="h-4 w-4 shrink-0" />
             <span className="shrink-0 text-muted-foreground">
@@ -182,13 +167,13 @@ export function UserDashboardCard({
               拠点
             </span>
             {user.role === 'master' ? (
-              <Badge className="border-transparent bg-blue-600 px-3 py-0.5 text-sm font-medium text-white hover:bg-blue-600">
+              <StatusBadge tone="info">
                 全て
-              </Badge>
+              </StatusBadge>
             ) : isDisconnectedFromSite ? (
-              <Badge className="border-transparent bg-destructive px-3 py-0.5 text-sm font-medium text-destructive-foreground hover:bg-destructive">
+              <StatusBadge tone="danger">
                 未設定
-              </Badge>
+              </StatusBadge>
             ) : (
               <span className="truncate">
                 {user.siteName || user.siteId || '-'}
@@ -199,20 +184,23 @@ export function UserDashboardCard({
       </div>
 
       <div className="grid grid-cols-2 border-t border-border md:w-[128px] md:shrink-0 md:grid-cols-1 md:border-l md:border-t-0">
-        <button
+        <Button
           type="button"
+          size="sm"
           onClick={() => onProfile(user)}
-          className="bg-primary px-4 py-4 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="h-full w-full rounded-none px-4 py-4 shadow-none"
         >
           プロファイル
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => onEdit(user)}
-          className="bg-card px-4 py-4 text-sm font-medium text-primary transition hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="h-full w-full rounded-none bg-card px-4 py-4 text-primary shadow-none hover:bg-secondary/60 hover:text-primary"
         >
           更新
-        </button>
+        </Button>
       </div>
     </article>
   );

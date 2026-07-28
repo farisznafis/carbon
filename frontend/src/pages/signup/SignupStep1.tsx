@@ -411,7 +411,7 @@ export const SignupStep1 = () => {
                   <FormItem>
                     <RequiredLabel>番地</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="1-1" {...field} />
+                      <Input inputSize="sm" placeholder="1-1-1" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -554,7 +554,7 @@ export const SignupStep1 = () => {
             <FormActions>
               <Button
                 type="submit"
-                size="sm"
+                size="md"
                 className="w-full"
                 disabled={form.formState.isSubmitting || isValidatingCompanyInfo}
               >

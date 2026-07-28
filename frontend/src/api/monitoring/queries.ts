@@ -3,16 +3,44 @@
  * ===========================
  * Fetch recent monitoring data for a project (and optional site)
  */
-import { apiFetch, parseJsonResponse } from "../_shared/httpClient";
+import { apiFetch, apiRequest, parseJsonResponse } from '../_shared/httpClient';
 import { normalizeRecentMonitoringItem } from "./mappers";
 import type {
+  MonitoringCancelRequestListItem,
+  MonitoringCancelRequestListResponse,
+  MonitoringRecordListResponse,
+  MonitoringRecordListResult,
   MonitoringRecentApiItem,
   MonitoringRecentItem,
   MonitoringRecentResponse,
 } from "./types";
 
+const DEFAULT_MONITORING_LIST_PAGE = 1;
+const DEFAULT_MONITORING_LIST_LIMIT = 10;
+
+function normalizeMonitoringRecordListResult(
+  response: MonitoringRecordListResponse | null,
+  page: number,
+  limit: number,
+): MonitoringRecordListResult {
+  const items = Array.isArray(response?.items) ? response.items : [];
+  const responsePagination = response?.pagination;
+
+  return {
+    items,
+    pagination: {
+      page: responsePagination?.page ?? page,
+      limit: responsePagination?.limit ?? limit,
+      totalItems: responsePagination?.totalItems ?? items.length,
+      totalPages: Math.max(responsePagination?.totalPages ?? 1, 1),
+      nextPageToken: responsePagination?.nextPageToken ?? null,
+      hasMore: responsePagination?.hasMore ?? false,
+    },
+  };
+}
+
 export async function getMonitoringRecent(params: {
-  projectId: string | number;
+  projectId: string;
   siteId?: string | number;
   limit?: number;
 }): Promise<MonitoringRecentItem[]> {
@@ -47,4 +75,79 @@ export async function getMonitoringRecent(params: {
       : [];
 
   return items.map(normalizeRecentMonitoringItem);
+}
+
+export async function getMonitoringRecords(params: {
+  siteId: string | number;
+  projectId: string;
+  page?: number;
+  limit?: number;
+}): Promise<MonitoringRecordListResult> {
+  const page = params.page ?? DEFAULT_MONITORING_LIST_PAGE;
+  const limit = params.limit ?? DEFAULT_MONITORING_LIST_LIMIT;
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+
+  const response = await apiFetch(
+    `/monitoring/${encodeURIComponent(params.siteId)}/${encodeURIComponent(params.projectId)}/list?${query.toString()}`,
+    { method: "GET" },
+  );
+  const { data: json, rawBody } =
+    await parseJsonResponse<MonitoringRecordListResponse>(response);
+
+  if (!response.ok) {
+    throw new Error(
+      json?.message ||
+        rawBody ||
+        `Failed to fetch monitoring records: HTTP ${response.status}`,
+    );
+  }
+
+  return normalizeMonitoringRecordListResult(json, page, limit);
+}
+
+export async function getAdminProjectMonitoringRecords(params: {
+  projectId: string;
+  page?: number;
+  limit?: number;
+}): Promise<MonitoringRecordListResult> {
+  const page = params.page ?? DEFAULT_MONITORING_LIST_PAGE;
+  const limit = params.limit ?? DEFAULT_MONITORING_LIST_LIMIT;
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+
+  const response = await apiFetch(
+    `/monitoring/${encodeURIComponent(String(params.projectId))}/list?${query.toString()}`,
+    { method: 'GET' },
+  );
+  const { data: json, rawBody } =
+    await parseJsonResponse<MonitoringRecordListResponse>(response);
+
+  if (!response.ok) {
+    throw new Error(
+      json?.message ||
+        rawBody ||
+        `Failed to fetch project monitoring records: HTTP ${response.status}`,
+    );
+  }
+
+  return normalizeMonitoringRecordListResult(json, page, limit);
+}
+
+export async function getMonitoringCancelRequests(): Promise<
+  MonitoringCancelRequestListItem[]
+> {
+  const response = await apiRequest<MonitoringCancelRequestListResponse>(
+    '/monitoring/cancel-requests',
+    {
+      method: 'GET',
+      fallbackErrorMessage: 'Failed to fetch monitoring cancel requests',
+    },
+  );
+
+  return Array.isArray(response?.items) ? response.items : [];
 }

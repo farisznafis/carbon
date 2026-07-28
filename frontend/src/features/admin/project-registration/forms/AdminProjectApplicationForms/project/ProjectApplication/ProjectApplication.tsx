@@ -486,7 +486,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.groupName',
-    label: '取りまとめる削減活動（会員）全体を指す団体、組織、活動等の名称',
+    label: '取りまとめる削減活動（社員）全体を指す団体、組織、活動等の名称',
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
@@ -496,7 +496,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   {
     name: 'projectApplication.groupNameFurigana',
     label:
-      '取りまとめる削減活動（会員）全体を指す団体、組織、活動等の名称（フリガナ）',
+      '取りまとめる削減活動（社員）全体を指す団体、組織、活動等の名称（フリガナ）',
     type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
@@ -505,7 +505,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   },
   {
     name: 'projectApplication.isParticipatingCnAct',
-    label: '会員のカーボンニュートラル行動計画参加有無',
+    label: '社員のカーボンニュートラル行動計画参加有無',
     type: 'select',
     options: [
       {

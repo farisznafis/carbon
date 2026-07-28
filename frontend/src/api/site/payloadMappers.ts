@@ -33,7 +33,7 @@ export function mapCreateSitePayload(formData: SiteFormData): CreateSitePayload 
 
 export function mapUpdateSitePayload(
   formData: SiteFormData,
-  siteId: number,
+  siteId: string,
   picuserId: number | null,
 ): UpdateSitePayload {
   return {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { cn } from '@/lib/utils';
 
 interface FormPageWrapperProps {
   /** Top page header title */
@@ -19,6 +20,7 @@ interface FormPageWrapperProps {
   backText?: string;
   contentMaxWidth?: string;
   contentClassName?: string;
+  headerClassName?: string;
   wrapInCard?: boolean;
 }
 
@@ -32,6 +34,7 @@ export const FormPageWrapper: React.FC<FormPageWrapperProps> = ({
   backText,
   contentMaxWidth = 'max-w-md',
   contentClassName = '',
+  headerClassName,
   wrapInCard = true,
 }) => {
   const content = wrapInCard ? (
@@ -44,7 +47,12 @@ export const FormPageWrapper: React.FC<FormPageWrapperProps> = ({
 
   return (
     <div className='min-h-screen bg-background'>
-      <div className='bg-primary/50 px-4 py-6 text-primary-foreground'>
+      <div
+        className={cn(
+          'bg-primary/50 px-4 py-6 text-primary-foreground',
+          headerClassName,
+        )}
+      >
         <div className='mx-auto max-w-5xl'>
           <h2 className='text-center text-3xl font-bold'>{pageName}</h2>
         </div>

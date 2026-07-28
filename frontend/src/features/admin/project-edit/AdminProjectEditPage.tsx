@@ -415,6 +415,7 @@ export default function AdminProjectEditPage() {
       toast({
         title: '更新しました',
         description: 'プロジェクト情報を更新しました。',
+        variant: 'success',
       });
       navigate(paths.adminProjectDetail(projectId));
     } catch (e) {
@@ -451,6 +452,7 @@ export default function AdminProjectEditPage() {
         toast({
           title: '更新しました',
           description: 'プロジェクト申請情報を更新しました。',
+          variant: 'success',
         });
         navigate(paths.adminProjectDetail(projectId));
       } catch (e) {

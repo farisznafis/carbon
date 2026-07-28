@@ -1,10 +1,16 @@
-import { usePagination } from "@/hooks/usePagination";
-import { Action, Column, ProTable } from "@/components/data-display/ProTable/ProTable";
-import { InlineHelp } from "@/components/feedback/InlineHelp/InlineHelp";
-import { Building2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import type { Site } from "@/api/site";
-import { PaginationControls } from "@/components/data-display/Pagination/PaginationControls";
+import type { Site } from '@/api/site';
+import {
+  DataGridTable,
+  type DataGridTableColumn,
+} from '@/components/data-display/DataGridTable';
+import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
+import { InlineHelp } from '@/components/feedback/InlineHelp/InlineHelp';
+import { Button } from '@/components/ui/button';
+import { usePagination } from '@/hooks/usePagination';
+import { Building2 } from 'lucide-react';
+
+const siteTableGridColumns =
+  'minmax(180px, 0.9fr) minmax(180px, 0.9fr) minmax(260px, 1.3fr) minmax(300px, 1.5fr) minmax(100px, 0.55fr)';
 
 type SiteTableProps = {
   sites: Site[];
@@ -13,49 +19,61 @@ type SiteTableProps = {
 };
 
 export function SiteTable({ sites, onEdit, onRowClick }: SiteTableProps) {
-  const siteColumns: Column<Site>[] = [
+  const columns: DataGridTableColumn<Site>[] = [
     {
-      key: "siteName",
-      label: "拠点名",
+      id: 'siteName',
+      label: '拠点名',
       sortable: true,
-      truncate: true,
-      maxWidth: "max-w-[180px]",
+      sortValue: (site) => site.siteName,
+      render: (site) => <span className="block truncate text-body">{site.siteName}</span>,
     },
     {
-      key: "picFirstName",
-      label: "責任者",
+      id: 'personInCharge',
+      label: '責任者',
       sortable: true,
-      truncate: true,
-      maxWidth: "max-w-[180px]",
-      render: (_, row) => `${row.picLastName} ${row.picFirstName}`,
+      sortValue: (site) => `${site.picLastName} ${site.picFirstName}`,
+      render: (site) => (
+        <span className="block truncate text-body">
+          {`${site.picLastName} ${site.picFirstName}`.trim() || '-'}
+        </span>
+      ),
     },
     {
-      key: "address",
-      label: "所在地",
+      id: 'address',
+      label: '所在地',
       sortable: true,
-      truncate: true,
-      maxWidth: "max-w-[260px]",
-      render: (_, row) => row.address || "なし",
+      sortValue: (site) => site.address,
+      render: (site) => (
+        <span className="block truncate text-body">{site.address || 'なし'}</span>
+      ),
     },
     {
-      key: "project",
-      label: "プロジェクト",
-      sortable: false,
-      truncate: true,
-      maxWidth: "max-w-[400px]",
-      render: (value) => {
-        const projects = Array.isArray(value) ? value : [];
-        if (projects.length === 0) return "なし";
-        return projects.join(", ");
+      id: 'projects',
+      label: 'プロジェクト',
+      sortable: true,
+      sortValue: (site) => site.project?.join(', '),
+      render: (site) => {
+        const projects = Array.isArray(site.project) ? site.project : [];
+        return (
+          <span className="block truncate text-body">
+            {projects.length > 0 ? projects.join(', ') : 'なし'}
+          </span>
+        );
       },
     },
-  ];
-
-  const siteActions: Action<Site>[] = [
     {
-      label: "更新",
-      onClick: (row) => onEdit?.(row),
-      colorClass: "text-white",
+      id: 'actions',
+      label: '操作',
+      render: (site) => (
+        <div
+          onClick={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <Button type="button" onClick={() => onEdit?.(site)}>
+            更新
+          </Button>
+        </div>
+      ),
     },
   ];
 
@@ -70,38 +88,35 @@ export function SiteTable({ sites, onEdit, onRowClick }: SiteTableProps) {
   } = usePagination(sites);
 
   return (
-    <>
-      <ProTable
-        title={
-          <p className="text-2xl font-bold flex items-center gap-2">
-            <Building2 className="h-6 w-6" />
-            拠点
-            <InlineHelp
-              content={
-                <div className="text-sm inline">
-                  拠点の行をクリックすると、その拠点のダッシュボードに移動します
-                </div>
-              }
-            />
-          </p>
-        }
-        data={paginatedSites}
-        columns={siteColumns}
-        actions={siteActions}
-        emptyState={<p className="text-muted-foreground">まだ拠点が登録されていません</p>}
-        onRowClick={onRowClick}
-      />
-
-      <div className="mt-4">
-        <PaginationControls
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={goToPage}
-          onItemsPerPageChange={setItemsPerPage}
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 text-2xl font-bold">
+        <Building2 className="h-6 w-6" />
+        <span>拠点</span>
+        <InlineHelp
+          content={
+            <div className="text-sm">
+              拠点の行をクリックすると、その拠点のダッシュボードに移動します。
+            </div>
+          }
         />
       </div>
-    </>
+      <DataGridTable
+        rows={paginatedSites}
+        columns={columns}
+        gridTemplateColumns={siteTableGridColumns}
+        minWidth={1100}
+        getRowKey={(site) => site.siteId}
+        emptyMessage="まだ拠点が登録されていません"
+        onRowClick={onRowClick}
+      />
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        onPageChange={goToPage}
+        onItemsPerPageChange={setItemsPerPage}
+      />
+    </div>
   );
 }

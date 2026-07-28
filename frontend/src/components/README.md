@@ -19,7 +19,7 @@
 - Prefer direct category imports, for example:
   - `@/components/layout/FormPageWrapper/FormPageWrapper`
   - `@/components/feedback/DeleteAlertDialog/DeleteAlertDialog`
-  - `@/components/data-display/ProTable/ProTable`
+  - `@/components/data-display/DataGridTable`
   - `@/components/forms/shared/GenericFormFields/GenericFormFields`
   - `@/components/inputs/FileSelectButton/FileSelectButton`
 
@@ -31,7 +31,6 @@
 - `src/components/Confirmation*` -> `src/components/feedback/*`
 - `src/components/ConfirmationData/*` -> `src/components/feedback/ConfirmationData/*`
 - `src/components/InlineHelp/*` -> `src/components/feedback/InlineHelp/*`
-- `src/components/ProTable/*` -> `src/components/data-display/ProTable/*`
 - `src/components/Pagination/*` -> `src/components/data-display/Pagination/*`
 - `src/components/FileSelectButton/*` -> `src/components/inputs/FileSelectButton/*`
 - `src/components/forms/GenericFormFields/*` -> `src/components/forms/shared/GenericFormFields/*`

@@ -43,8 +43,8 @@ export const SignupStep4 = () => {
             <div className="text-left">
               <h4 className="font-semibold mb-1">確認メールを送信しました</h4>
               <p className="text-sm text-muted-foreground">
-                <strong>{signupData.email}</strong>に確認メールを送信しました。
-                受信箱を確認し、確認リンクをクリックしてアカウントを有効化してください。
+                <strong>{signupData.email}</strong>で登録申請を受け付けました。
+登録内容を確認後、管理者による承認が行われます。
               </p>
             </div>
           </div>

@@ -1,6 +1,7 @@
 package com.kct.jcredit.core_backend.service;
 
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
+import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentUpdateRequest;
 
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 
@@ -18,4 +19,7 @@ public interface EnR002EquipmentService {
     EnR002EquipmentResponse getEquipmentById(String siteId,
                                              Integer equipmentId,
                                              String companyId);
+
+    EnR002EquipmentResponse updateEquipment(String siteId, Integer equipmentId,
+                                            String companyId, EnR002EquipmentUpdateRequest request);
 }

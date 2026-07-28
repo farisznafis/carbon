@@ -47,7 +47,15 @@ const transientSessionKeys = [
   storageKeys.appliedProjects,
   storageKeys.projects,
   storageKeys.profile,
+  storageKeys.dashboardStorage,
 ];
+
+const clearTransientSessionState = () => {
+  storage.removeMany(transientSessionKeys);
+  useDashboardStore.getState().resetDashboard();
+  useNotificationStore.getState().clearNotifications();
+  useProfileStore.getState().clearProfile();
+};
 
 const getSessionExpiresAt = () => {
   const rawExpiresAt = storage.get(storageKeys.sessionExpiresAt);
@@ -102,9 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = useCallback(
     async (companyId: string, email: string, password: string): Promise<User> => {
-      storage.removeMany(transientSessionKeys);
-      useNotificationStore.getState().clearNotifications();
-      useProfileStore.getState().clearProfile();
+      clearTransientSessionState();
 
       try {
         const data = await authApi.login(companyId, email, password);
@@ -140,9 +146,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const adminLogin = useCallback(
     async (identifier: string, password: string): Promise<User> => {
-      storage.removeMany(transientSessionKeys);
-      useNotificationStore.getState().clearNotifications();
-      useProfileStore.getState().clearProfile();
+      clearTransientSessionState();
 
       try {
         const data = (await authApi.adminLogin(

@@ -2,6 +2,7 @@ package com.kct.jcredit.core_backend.service;
 
 import com.kct.jcredit.core_backend.dto.response.NotificationListResponse;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
+import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.entity.Notification;
 
 public interface NotificationService {
@@ -19,14 +20,14 @@ public interface NotificationService {
         boolean isOperatingUser
     );
 
-    Notification createNotification(String title, 
-            String message, 
+    Notification createNotification(String title,
+            String message,
             Integer participatingUserId,
             Integer operatingUserId);
 
     void createNotificationForParticipatingCompany(
-            String title, 
-            String message, 
+            String title,
+            String message,
             Integer companyId,
             Integer operatingUserId);
 
@@ -42,4 +43,7 @@ public interface NotificationService {
     void sendEmailToAllOperatorCompanies(
             String subject,
             String body);
+
+    void sendParticipationRejectionNotification(ParticipatingUser user, String rejectionReason);
+    void sendParticipationApprovedNotification(ParticipatingUser user);
 }

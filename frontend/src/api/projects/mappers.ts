@@ -2,7 +2,7 @@ import type { Project, ProjectListItem } from './types';
 
 export function mapProjectListItem(item: ProjectListItem): Project {
   return {
-    id: String(item.id),
+    id: item.id,
     companyId: item.companyId != null ? String(item.companyId) : undefined,
     operatorCompanyId:
       item.operatorCompanyId != null ? String(item.operatorCompanyId) : undefined,

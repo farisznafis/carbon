@@ -5,7 +5,7 @@ import type { UserList } from '../users';
 
 type CreateSiteResponse = {
   statusCode: string;
-  siteId?: string | number;
+  siteId?: string;
   message?: string | null;
   errors?: unknown;
 };
@@ -32,7 +32,7 @@ export async function validateUpdateSite(
 ): Promise<void> {
   await apiVoidRequest(`/site/validate-update/${encodeURIComponent(siteId)}`, {
     method: 'POST',
-    body: mapUpdateSitePayload(formData, Number(siteId), picuserId),
+    body: mapUpdateSitePayload(formData, siteId, picuserId),
     fallbackErrorMessage: '拠点更新内容の検証に失敗しました',
   });
 }
@@ -57,7 +57,7 @@ export async function registerSite(
   return {
     statusCode: json?.statusCode || 'OK',
     site: {
-      id: String(json?.siteId ?? ''),
+      siteId: json?.siteId ?? '',
       siteName: formData.siteName,
       postalCode: formData.postalCode,
       prefectureName: formData.prefectureName,
@@ -83,9 +83,9 @@ export async function updateSite(
   formData: SiteFormData,
   picuserId: number | null = null,
 ): Promise<{ statusCode: string; site?: Site }> {
-  const payload = mapUpdateSitePayload(formData, Number(siteId), picuserId);
+  const payload = mapUpdateSitePayload(formData, siteId, picuserId);
 
-  const response = await apiFetch(`/site/${siteId}`, {
+  const response = await apiFetch(`/site/${encodeURIComponent(siteId)}`, {
     method: 'PATCH',
     body: payload,
   });

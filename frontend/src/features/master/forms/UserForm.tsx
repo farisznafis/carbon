@@ -102,7 +102,7 @@ export function UserForm({
   const storeSites = [...joinableSites(), ...(originalSite ? [originalSite] : [])];
   const baseSites = siteOptions ?? storeSites;
   const sites =
-    selectedSite && !baseSites.some((site) => site.id === selectedSite.id)
+    selectedSite && !baseSites.some((site) => site.siteId === selectedSite.siteId)
       ? [...baseSites, selectedSite]
       : baseSites;
 
@@ -354,7 +354,7 @@ export function UserForm({
                           </FormControl>
                           <SelectContent>
                             {sites.map((site) => (
-                              <SelectItem key={site.id} value={site.id}>
+                              <SelectItem key={site.siteId} value={site.siteId}>
                                 {site.siteName}
                               </SelectItem>
                             ))}
@@ -404,7 +404,7 @@ export function UserForm({
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="md"
                     className="w-full"
                     onClick={onBack}
                   >
@@ -415,7 +415,7 @@ export function UserForm({
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
+                  size="md"
                   className="w-full"
                   onClick={onBack}
                 >
@@ -425,7 +425,7 @@ export function UserForm({
 
               <Button
                 type="submit"
-                size="sm"
+                size="md"
                 className="w-full"
                 disabled={!isTrulyDirty}
               >

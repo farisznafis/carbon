@@ -19,6 +19,8 @@ import com.kct.jcredit.core_backend.dto.response.details.CompanyInfoResponse;
 @Getter
 public class ParticipationReviewDetailResponse {
     private Integer participationId;
+    private Integer siteId;
+    private Integer projectId;
     private String  projectName;
     private String  siteName;
     private String  companyName;

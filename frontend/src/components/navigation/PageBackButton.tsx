@@ -8,13 +8,13 @@ type PageBackButtonProps = {
   variant?: ButtonProps['variant'];
 } & Omit<ButtonProps, 'children' | 'onClick' | 'variant'>;
 
-export function PageBackButton({
+export const PageBackButton = ({
   label = '戻る',
   onClick,
   className,
   variant = 'default',
   ...buttonProps
-}: PageBackButtonProps) {
+}: PageBackButtonProps) => {
   if (!onClick) return null;
 
   return (
@@ -29,4 +29,4 @@ export function PageBackButton({
       {label}
     </Button>
   );
-}
+};
