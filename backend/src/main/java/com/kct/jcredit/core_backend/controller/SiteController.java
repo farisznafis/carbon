@@ -3,6 +3,7 @@ package com.kct.jcredit.core_backend.controller;
 import com.kct.jcredit.core_backend.dto.request.CreateSiteRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdateSiteRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
+import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentUpdateRequest;
 import com.kct.jcredit.core_backend.dto.response.CreateSiteResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentRegisterResponse;
@@ -186,5 +187,20 @@ public class SiteController {
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
         return ResponseEntity.ok(
                 equipmentService.getEquipmentById(siteId, equipmentId, companyId));
+    }
+
+    @PatchMapping("/{siteId}/equipment/{equipmentId}")
+    @PreAuthorize("hasAnyRole('master','user')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "設備情報更新", description = "既存の設備情報を部分更新します。")
+    public ResponseEntity<EnR002EquipmentResponse> updateEquipment(
+            Authentication authentication,
+            @PathVariable Integer siteId,
+            @PathVariable Integer equipmentId,
+            @RequestBody @Valid EnR002EquipmentUpdateRequest request) {
+
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+        return ResponseEntity.ok(
+                equipmentService.updateEquipment(siteId, equipmentId, companyId, request));
     }
 }

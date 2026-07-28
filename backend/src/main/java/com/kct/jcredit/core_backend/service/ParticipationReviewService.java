@@ -10,9 +10,9 @@ import com.kct.jcredit.core_backend.dto.response.ParticipationReviewDetailRespon
 import java.util.List;
 
 public interface ParticipationReviewService {
-    // List<ParticipationReviewDetailResponse> getPendingReviews();
-    // ParticipationReviewDetailResponse getReviewDetail(Integer participationId);
-    
+    List<ParticipationReviewDetailResponse> getPendingReviews();
+    List<ParticipationReviewDetailResponse> getPendingReviewsByUserId(Integer userId);
+    ParticipationReviewDetailResponse getReviewDetail(Integer participationId);
     void approveReview(Integer participationId, Integer operatorUserId, ApproveReviewRequest request);
     void rejectReview(Integer participationId, Integer operatorUserId, RejectReviewRequest request);
 }

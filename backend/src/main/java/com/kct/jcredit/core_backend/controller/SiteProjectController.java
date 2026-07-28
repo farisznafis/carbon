@@ -1,8 +1,10 @@
 package com.kct.jcredit.core_backend.controller;
 
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentRegisterResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
+import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentUpdateRequest;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002FinalAgreementRequest;
@@ -64,7 +66,7 @@ public class SiteProjectController {
         this.pdfService = pdfService;
     }
     // ─────────────────────────────────────────────────────────────
-    // FILE UPLOAD (reuse FileUploadSolarService)
+    // FILE UPLOAD 
     // ─────────────────────────────────────────────────────────────
 
     @PostMapping(value = "/sites/{siteId}/files/upload",
@@ -86,7 +88,7 @@ public class SiteProjectController {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // VALIDATE — per halaman (stateless, tidak simpan apapun)
+    // VALIDATE
     // ─────────────────────────────────────────────────────────────
 
     @PostMapping("/equipment/validate")
@@ -134,7 +136,7 @@ public class SiteProjectController {
         return ResponseEntity.ok(BaseResponse.success("入力内容に問題ありません。"));
     }
     // ─────────────────────────────────────────────────────────────
-    // SUBMIT — join project (endpoint utama)
+    // SUBMIT — join project 
     // ─────────────────────────────────────────────────────────────
 
     @PostMapping("/projects/{projectId}/join")

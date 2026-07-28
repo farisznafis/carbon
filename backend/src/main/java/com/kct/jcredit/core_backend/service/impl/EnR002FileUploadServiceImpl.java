@@ -56,24 +56,19 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
             "image/png"
     );
 
-    // ─────────────────────────────────────────────────────────────
     // UPLOAD
-    // ─────────────────────────────────────────────────────────────
 
     @Override
     public EnR002FileResponse uploadFile(Integer siteId,
                                                 EquipmentFileType fileType,
                                                 String uploadedBy,
                                                 MultipartFile file) {
-
-        // 1. Validasi mime type
         String mime = file.getContentType();
         if (!VALID_MIME_TYPES.contains(mime)) {
             throw new UnsupportedFileTypeException(
                     VALID_MIME_TYPES.stream().toList(), mime);
         }
 
-        // 2. Validasi ukuran file
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new BulkValidationException(List.of(
                     ValidationErrorDetail.builder()
@@ -88,8 +83,7 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
         String fileId    = UUID.randomUUID().toString();
         String sanitized = sanitizeFileName(file.getOriginalFilename());
 
-        // 4. S3 key dengan prefix tmp/ di ROOT (bukan di tengah path)
-        //    Format: tmp/equipments/{uuid}/{fileType}_{sanitizedFileName}
+        // 4. tmp
         String s3Key = String.format(
                 "tmp/equipments/%s/%s_%s",
                 fileId,
@@ -97,7 +91,7 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
                 sanitized
         );
 
-        // 5. Upload ke S3
+        // 5. Upload
         try (java.io.InputStream inputStream = file.getInputStream()) {
             s3Client.putObject(
                     PutObjectRequest.builder()
@@ -128,17 +122,13 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
                 .build();
     }
 
-    // ─────────────────────────────────────────────────────────────
     // MOVE
-    // ─────────────────────────────────────────────────────────────
 
     @Override
     public String moveTempToPermanent(String tempS3Key,
                                        Integer siteId,
                                        Integer equipmentId) {
 
-        // dari: tmp/equipments/{uuid}/solar_contract_file.pdf
-        // ke:   projects/{projectId}/sites/{siteId}/equipments/{equipmentId}/solar_contract_file.pdf
         String fileNamePart = tempS3Key.replaceAll(
                 "^tmp/equipments/[^/]+/", ""
         );
@@ -150,7 +140,6 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
                 fileNamePart
         );
 
-        // Copy ke path permanent
         s3Client.copyObject(CopyObjectRequest.builder()
                 .sourceBucket(bucketName)
                 .sourceKey(tempS3Key)
@@ -168,9 +157,7 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
         return permanentKey;
     }
 
-    // ─────────────────────────────────────────────────────────────
     // HELPER
-    // ─────────────────────────────────────────────────────────────
 
     private String sanitizeFileName(String fileName) {
         if (fileName == null) return "document";

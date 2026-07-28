@@ -86,9 +86,41 @@ public class AdminCompanyController {
     //         return ResponseEntity.ok(reviewService.getReviewDetail(participationId));
     //     }
 
+    // LIST PENDING (status OPEN) ───────
+    @GetMapping
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "レビュー待ち一覧取得", description = "承認待ちの入会届一覧を取得します。")
+    public ResponseEntity<List<ParticipationReviewDetailResponse>> getPendingReviews() {
+        return ResponseEntity.ok(reviewService.getPendingReviews());
+    }
+
+    // LIST — review other operator login ──
+    @GetMapping("/mine")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "自分がレビュー可能な一覧取得", description = "自分がまだレビューできる入会届一覧を取得します。")
+    public ResponseEntity<List<ParticipationReviewDetailResponse>> getPendingReviewsForMe(
+            Authentication authentication) {
+        Integer operatorUserId = jwtUtil.extractUserId(authentication.getCredentials().toString());
+        return ResponseEntity.ok(reviewService.getPendingReviewsByUserId(operatorUserId));
+    }
+
+    // DETAIL 
+    @GetMapping("/{participationId}")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "レビュー詳細取得", description = "指定した参加情報の詳細を取得します。")
+    public ResponseEntity<ParticipationReviewDetailResponse> getReviewDetail(
+            @PathVariable Integer participationId) {
+        return ResponseEntity.ok(reviewService.getReviewDetail(participationId));
+    }
+
+    //  APPROVE 
     @PostMapping("/{participationId}/approve")
     @PreAuthorize("hasRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "参加申請承認", description = "指定された参加申請を承認します（一次・二次確認共通）。")
     public ResponseEntity<BaseResponse> approveReview(
             Authentication authentication,
             @PathVariable Integer participationId,
@@ -99,9 +131,11 @@ public class AdminCompanyController {
         return ResponseEntity.ok(BaseResponse.success("承認しました。"));
     }
 
+    //  REJECT 
     @PostMapping("/{participationId}/reject")
     @PreAuthorize("hasRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "参加申請却下", description = "指定された参加申請を却下します。")
     public ResponseEntity<BaseResponse> rejectReview(
             Authentication authentication,
             @PathVariable Integer participationId,
