@@ -54,3 +54,23 @@ export type ChangePasswordResponse = {
   statusCode: string;
   message?: string | null;
 };
+
+export type PasswordResetRequestResponse = {
+  statusCode: string;
+  message?: string | null;
+  timestamp?: string;
+};
+
+export type ActionLinkExchangeResponse = {
+  statusCode: string;
+  message?: string | null;
+  actionSessionToken: string;
+  purpose: 'PASSWORD_RESET' | string;
+  expiresInSeconds: number;
+};
+
+export type PasswordResetCompleteResponse = {
+  statusCode: string;
+  message?: string | null;
+  timestamp?: string;
+};
