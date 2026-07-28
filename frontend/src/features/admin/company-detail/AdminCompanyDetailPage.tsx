@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Building2,
   Clock3,
+  KeyRound,
   ShieldCheck,
 } from 'lucide-react';
 import type {
@@ -17,6 +18,7 @@ import type {
 import {
   getCompanySuspensions,
   resolveCompanySuspension,
+  sendAdminCompanyPasswordResetLink,
   suspendAdminCompany,
 } from '@/api/admin';
 import { ApiError } from '@/api/_shared/errors';
@@ -33,6 +35,7 @@ import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
 import { AdminCompanySitesTable } from './components/AdminCompanySitesTable';
 import { AdminCompanyUsersTable } from './components/AdminCompanyUsersTable';
+import { AdminMasterPasswordResetDialog } from './components/AdminMasterPasswordResetDialog';
 import {
   formatAdminCompanyAddress,
   formatAdminCompanyDateTime,
@@ -75,6 +78,16 @@ function getFieldErrors(error: unknown) {
     Object.entries(errors).filter(
       (entry): entry is [string, string] => typeof entry[1] === 'string',
     ),
+  );
+}
+
+function getPasswordResetErrorMessage(error: unknown) {
+  if (error instanceof ApiError && error.status === 429) {
+    return '試行回数が多すぎます。しばらくしてからもう一度お試しください。';
+  }
+  return getErrorMessage(
+    error,
+    'パスワードリセットリンクの送信に失敗しました。',
   );
 }
 
@@ -168,6 +181,10 @@ export default function AdminCompanyDetailPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [passwordResetDialogOpen, setPasswordResetDialogOpen] =
+    useState(false);
+  const [passwordResetSubmitting, setPasswordResetSubmitting] =
+    useState(false);
 
   // Suspend dialog
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
@@ -310,6 +327,34 @@ export default function AdminCompanyDetailPage() {
     }
   };
 
+  const handlePasswordResetDialogOpenChange = (open: boolean) => {
+    if (passwordResetSubmitting) return;
+    setPasswordResetDialogOpen(open);
+  };
+
+  const handleConfirmPasswordReset = async () => {
+    if (!detail?.masterAccount) return;
+
+    setPasswordResetSubmitting(true);
+    try {
+      await sendAdminCompanyPasswordResetLink(detail.company.companyId);
+      setPasswordResetDialogOpen(false);
+      toast({
+        title: 'パスワードリセットリンクを送信しました',
+        description: `${detail.masterAccount.email} に送信しました。`,
+        variant: 'success',
+      });
+    } catch (error) {
+      toast({
+        title: 'パスワードリセットリンクを送信できませんでした',
+        description: getPasswordResetErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setPasswordResetSubmitting(false);
+    }
+  };
+
   const handleBack = () => navigate(paths.adminDashboard);
 
   // ── Guard states ───────────────────────────────────────────────────────────
@@ -343,12 +388,14 @@ export default function AdminCompanyDetailPage() {
   const { company, masterAccount, users, sites } = detail;
 
   const masterFullName =
-    masterAccount.fullName ||
-    [masterAccount.lastName, masterAccount.firstName].filter(Boolean).join(' ');
+    masterAccount?.fullName ||
+    [masterAccount?.lastName, masterAccount?.firstName]
+      .filter(Boolean)
+      .join(' ');
 
   const masterFullNameKana =
-    masterAccount.fullNameKana ||
-    [masterAccount.lastNameKana, masterAccount.firstNameKana]
+    masterAccount?.fullNameKana ||
+    [masterAccount?.lastNameKana, masterAccount?.firstNameKana]
       .filter(Boolean)
       .join(' ');
 
@@ -458,27 +505,46 @@ export default function AdminCompanyDetailPage() {
                     マスターアカウント
                   </CardTitle>
                 </div>
-                {masterAccount.isActive !== undefined && (
+                {masterAccount?.isActive !== undefined && (
                   <AccountStatusBadge isActive={masterAccount.isActive} />
                 )}
               </div>
             </CardHeader>
             <CardContent>
-              <dl className="divide-y divide-border/50">
-                 <DefinitionRow label="ユーザ名">{masterAccount.username || '―'}</DefinitionRow>
-                 <DefinitionRow label="氏名">{masterFullName || '―'}</DefinitionRow>
-                 <DefinitionRow label="氏名（カナ）">{masterFullNameKana || '―'}</DefinitionRow>
-                 <DefinitionRow label="役職">{masterAccount.userPosition || '―'}</DefinitionRow>
-                 <DefinitionRow label="メールアドレス">{masterAccount.email || '―'}</DefinitionRow>
-                 <DefinitionRow label="電話番号">{masterAccount.phoneNumber || '―'}</DefinitionRow>
-                <DefinitionRow label="権限">
-                  {masterAccount.role ? (
-                    <Badge variant="outline">{formatAdminRole(masterAccount.role)}</Badge>
-                  ) : (
-                    '―'
-                  )}
-                </DefinitionRow>
-              </dl>
+              {masterAccount ? (
+                <>
+                  <dl className="divide-y divide-border/50">
+                    <DefinitionRow label="ユーザ名">{masterAccount.username || '―'}</DefinitionRow>
+                    <DefinitionRow label="氏名">{masterFullName || '―'}</DefinitionRow>
+                    <DefinitionRow label="氏名（カナ）">{masterFullNameKana || '―'}</DefinitionRow>
+                    <DefinitionRow label="役職">{masterAccount.userPosition || '―'}</DefinitionRow>
+                    <DefinitionRow label="メールアドレス">{masterAccount.email || '―'}</DefinitionRow>
+                    <DefinitionRow label="電話番号">{masterAccount.phoneNumber || '―'}</DefinitionRow>
+                    <DefinitionRow label="権限">
+                      {masterAccount.role ? (
+                        <Badge variant="outline">{formatAdminRole(masterAccount.role)}</Badge>
+                      ) : (
+                        '―'
+                      )}
+                    </DefinitionRow>
+                  </dl>
+                  <div className="flex justify-end border-t border-border/50 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPasswordResetDialogOpen(true)}
+                    >
+                      <KeyRound />
+                      パスワードリセット
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <p className="py-4 text-sm text-muted-foreground">
+                  マスターアカウントが登録されていません。
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -543,13 +609,13 @@ export default function AdminCompanyDetailPage() {
               </DefinitionRow>
               <DefinitionRow label="企業更新者">{company.updatedBy || '―'}</DefinitionRow>
               <DefinitionRow label="マスター登録日時">
-                {formatAdminCompanyDateTime(masterAccount.createdAt) || '―'}
+                {formatAdminCompanyDateTime(masterAccount?.createdAt) || '―'}
               </DefinitionRow>
-              <DefinitionRow label="マスター登録者">{masterAccount.createdBy || '―'}</DefinitionRow>
+              <DefinitionRow label="マスター登録者">{masterAccount?.createdBy || '―'}</DefinitionRow>
               <DefinitionRow label="マスター更新日時">
-                {formatAdminCompanyDateTime(masterAccount.updatedAt) || '―'}
+                {formatAdminCompanyDateTime(masterAccount?.updatedAt) || '―'}
               </DefinitionRow>
-              <DefinitionRow label="マスター更新者">{masterAccount.updatedBy || '―'}</DefinitionRow>
+              <DefinitionRow label="マスター更新者">{masterAccount?.updatedBy || '―'}</DefinitionRow>
             </dl>
           </CardContent>
         </Card>
@@ -662,6 +728,16 @@ export default function AdminCompanyDetailPage() {
         onResolutionNoteChange={setResolutionNote}
         onConfirm={handleConfirmResolve}
       />
+      {masterAccount && (
+        <AdminMasterPasswordResetDialog
+          open={passwordResetDialogOpen}
+          masterName={masterFullName}
+          masterEmail={masterAccount.email}
+          isSubmitting={passwordResetSubmitting}
+          onOpenChange={handlePasswordResetDialogOpenChange}
+          onConfirm={() => void handleConfirmPasswordReset()}
+        />
+      )}
     </main>
   );
 }

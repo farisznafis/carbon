@@ -8,6 +8,7 @@ export {
   rejectAdminCompany,
   rejectPendingCompany,
   resolveCompanySuspension,
+  sendAdminCompanyPasswordResetLink,
   suspendAdminCompany,
 } from './pendingCompanies';
 export {
@@ -24,6 +25,7 @@ export type {
   AdminCompanyAccountActionTarget,
   AdminCompanyDetailCompany,
   AdminCompanyDetailMasterAccount,
+  AdminCompanyPasswordResetLinkResponse,
   AdminCompanyDetailResponse,
   AdminCompanyDetailSite,
   AdminCompanyDetailUser,

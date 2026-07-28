@@ -3,6 +3,7 @@ import type {
   AdminCompanyListItem,
   AdminCompanyListResponse,
   AdminCompanyDetailResponse,
+  AdminCompanyPasswordResetLinkResponse,
   CompanyMutationResponse,
   CompanyStatus,
   CompanySuspension,
@@ -153,6 +154,19 @@ export async function getAdminCompanyDetail(
         }))
       : [],
   };
+}
+
+export async function sendAdminCompanyPasswordResetLink(
+  companyId: string,
+): Promise<AdminCompanyPasswordResetLinkResponse> {
+  return apiRequest<AdminCompanyPasswordResetLinkResponse>(
+    `/admin/companies/${encodeURIComponent(companyId)}/password-reset-link`,
+    {
+      method: 'POST',
+      fallbackErrorMessage:
+        'パスワードリセットリンクの送信に失敗しました。',
+    },
+  );
 }
 
 type RawCompanySuspensionListResponse = Partial<CompanySuspensionListResponse> & {
