@@ -20,15 +20,11 @@ import java.util.List;
 @AllArgsConstructor
 public class EnR002JoinProjectRequest {
 
-    @NotNull @Valid
     private EnR002EquipmentRequest equipment;
 
-    @NotNull @Valid
     private EnR002ConfirmationItemRequest confirmationItems;
 
-    @NotNull @Valid
     private EnR002SustainabilityCommitmentRequest sustainabilityCommitment;
 
-    @NotNull
     private EnR002FinalAgreementRequest finalAgreement;
 }
