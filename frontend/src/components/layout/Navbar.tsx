@@ -30,9 +30,12 @@ export const Navbar = () => {
   const linkTarget = getHomePath(user);
   const isAdminLoginPage = location.pathname === paths.adminLogin;
 
-  const handleLogout = () => {
-    logout();
-    navigate(paths.home);
+  const handleLogout = async () => {
+    const redirectPath =
+      user?.role === 'admin' ? paths.adminLogin : paths.home;
+
+    await logout();
+    navigate(redirectPath, { replace: true });
   };
 
   return (
@@ -99,7 +102,7 @@ export const Navbar = () => {
                   </Button>
                   <Button
                     variant="ghost"
-                    onClick={handleLogout}
+                    onClick={() => void handleLogout()}
                     className="flex items-center space-x-1"
                   >
                     <LogOut className="h-4 w-4" />
