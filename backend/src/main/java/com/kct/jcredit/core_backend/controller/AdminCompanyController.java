@@ -17,6 +17,7 @@ import com.kct.jcredit.core_backend.service.AdminCompanyQueryService;
 import com.kct.jcredit.core_backend.service.CompanyApprovalService;
 import com.kct.jcredit.core_backend.service.CompanyLifecycleService;
 import com.kct.jcredit.core_backend.service.ParticipationReviewService;
+import com.kct.jcredit.core_backend.service.SecurityAccountService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,6 +55,7 @@ public class AdminCompanyController {
     private final AdminCompanyQueryService adminCompanyQueryService;
     private final CompanyLifecycleService companyLifecycleService;
     private final ParticipationReviewService reviewService;
+    private final SecurityAccountService securityAccountService;
     private final JwtUtil jwtUtil;
 
     /**
@@ -103,6 +105,18 @@ public class AdminCompanyController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApproveCompanyResponse> resendMasterSetupLink(@PathVariable String companyId) {
         ApproveCompanyResponse response = companyApprovalService.resendMasterSetupLink(companyId);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @PostMapping("/{companyId}/password-reset-link")
+    @PreAuthorize("hasAnyRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "マスターアカウントパスワードリセットリンク発行", description = "指定した企業のマスターアカウントに対して、パスワードリセット用のアクションリンクを発行します。")
+    public ResponseEntity<BaseResponse> requestMasterPasswordReset(
+            Authentication authentication,
+            @PathVariable String companyId) {
+        String actor = jwtUtil.extractUsername(authentication.getCredentials().toString());
+        BaseResponse response = securityAccountService.operatorRequestMasterPasswordReset(companyId, actor);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 

@@ -2,6 +2,7 @@ package com.kct.jcredit.core_backend.service;
 
 import com.kct.jcredit.core_backend.config.SecurityFlowProperties;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
+import com.kct.jcredit.core_backend.constant.RoleConstants;
 import com.kct.jcredit.core_backend.dto.request.ForgotPasswordRequest;
 import com.kct.jcredit.core_backend.dto.response.ActionLinkExchangeResponse;
 import com.kct.jcredit.core_backend.dto.response.AdminLoginResponse;
@@ -56,7 +57,7 @@ public class SecurityAccountService {
         SecurityActionLinkService.ActionSession session = actionLinkService.exchange(rawToken);
         ActionLinkExchangeResponse response = new ActionLinkExchangeResponse();
         response.setStatusCode(ResponseConstants.OK);
-        response.setMessage("Action link opened.");
+        response.setMessage(ResponseConstants.MSG_ACTION_LINK_OPENED);
         response.setActionSessionToken(session.sessionToken());
         response.setPurpose(session.purpose());
         response.setExpiresInSeconds(session.expiresInSeconds());
@@ -96,46 +97,34 @@ public class SecurityAccountService {
         participatingUserRepository.save(master);
         companyLifecycleService.activateApprovedCompany(company);
         actionLinkService.complete(sessionToken, SecurityActionPurpose.MASTER_ACCOUNT_SETUP);
-        return BaseResponse.success("Master account created. Company is active.");
+        return BaseResponse.success(ResponseConstants.MSG_MASTER_ACCOUNT_SETUP_COMPLETED);
     }
 
     @Transactional
     public BaseResponse requestPasswordReset(ForgotPasswordRequest request) {
         requireFeature(properties.getFeatures().isPasswordReset());
-        rateLimitService.require("password-reset-account",
-                request.getAccountType() + ":" + request.getCompanyId() + ":"
-                        + request.getIdentifier().trim().toLowerCase(Locale.ROOT),
-                3, Duration.ofHours(1));
-        if ("OPERATING".equals(request.getAccountType())) {
-            operatingUserRepository.findByEmailOrUsername(request.getIdentifier(), request.getIdentifier())
-                    .ifPresent(user -> issuePasswordReset(
-                            SecurityActionSubjectType.OPERATING_USER, user.getId(), user.getEmail(), "self-service"));
-        } else if (request.getCompanyId() != null && !request.getCompanyId().isBlank()) {
-            companyRepository.findByCompanyId(request.getCompanyId()).ifPresent(company ->
-                    participatingUserRepository.findByUsernameOrEmailAndCompanyId(
-                                    request.getIdentifier(), request.getIdentifier(), company.getId())
-                            .ifPresent(user -> issuePasswordReset(
-                                    SecurityActionSubjectType.PARTICIPATING_USER,
-                                    user.getId(), user.getEmail(), "self-service")));
-        }
-        return BaseResponse.success("If the account exists, a password reset email will be sent.");
+        String normalizedEmail = request.getEmail().trim().toLowerCase(Locale.ROOT);
+        rateLimitService.require("password-reset-account", normalizedEmail, 3, Duration.ofHours(1));
+
+        participatingUserRepository.findByEmailIgnoreCase(normalizedEmail)
+                .ifPresent(user -> issuePasswordReset(
+                        SecurityActionSubjectType.PARTICIPATING_USER, user.getId(), user.getEmail(), "self-service"));
+        operatingUserRepository.findByEmailIgnoreCase(normalizedEmail)
+                .ifPresent(user -> issuePasswordReset(
+                        SecurityActionSubjectType.OPERATING_USER, user.getId(), user.getEmail(), "self-service"));
+
+        return BaseResponse.success(ResponseConstants.MSG_PASSWORD_RESET_EMAIL_SENT);
     }
 
     @Transactional
-    public BaseResponse operatorRequestPasswordReset(String accountType, Integer accountId, String actor) {
+    public BaseResponse operatorRequestMasterPasswordReset(String companyId, String actor) {
         requireFeature(properties.getFeatures().isPasswordReset());
-        if ("OPERATING".equalsIgnoreCase(accountType)) {
-            OperatingUser user = operatingUserRepository.findById(accountId)
-                    .orElseThrow(() -> new CustomException(ResponseConstants.NOT_FOUND, ResponseConstants.MSG_NOT_FOUND));
-            issuePasswordReset(SecurityActionSubjectType.OPERATING_USER, user.getId(), user.getEmail(), actor);
-        } else if ("PARTICIPATING".equalsIgnoreCase(accountType)) {
-            ParticipatingUser user = participatingUserRepository.findById(accountId)
-                    .orElseThrow(() -> new CustomException(ResponseConstants.NOT_FOUND, ResponseConstants.MSG_NOT_FOUND));
-            issuePasswordReset(SecurityActionSubjectType.PARTICIPATING_USER, user.getId(), user.getEmail(), actor);
-        } else {
-            throw new CustomException(ResponseConstants.BAD_REQUEST, ResponseConstants.MSG_BAD_REQUEST);
-        }
-        return BaseResponse.success("Password reset link queued.");
+        ParticipatingCompany company = companyRepository.findByCompanyId(companyId)
+                .orElseThrow(() -> new CustomException(ResponseConstants.NOT_FOUND, ResponseConstants.MSG_COMPANY_NOT_FOUND));
+        ParticipatingUser master = participatingUserRepository.findByCompany_IdAndRole(company.getId(), RoleConstants.MASTER)
+                .orElseThrow(() -> new CustomException(ResponseConstants.NOT_FOUND, ResponseConstants.MSG_MASTER_ACCOUNT_NOT_FOUND));
+        issuePasswordReset(SecurityActionSubjectType.PARTICIPATING_USER, master.getId(), master.getEmail(), actor);
+        return BaseResponse.success(ResponseConstants.MSG_PASSWORD_RESET_LINK_QUEUED);
     }
 
     @Transactional
@@ -167,7 +156,7 @@ public class SecurityAccountService {
             throw invalidToken();
         }
         actionLinkService.complete(sessionToken, SecurityActionPurpose.PASSWORD_RESET);
-        return BaseResponse.success("Password reset completed. Please sign in again.");
+        return BaseResponse.success(ResponseConstants.MSG_PASSWORD_RESET_COMPLETED);
     }
 
     public boolean requiresParticipatingOtp(ParticipatingUser user) {
@@ -312,7 +301,7 @@ public class SecurityAccountService {
             authVersionService.increment(user);
         }
         otpChallengeService.consumeVerified(challengeId, OtpPurpose.EMAIL_LOGIN_SETTING);
-        return BaseResponse.success("Email login verification setting updated.");
+        return BaseResponse.success(ResponseConstants.MSG_EMAIL_OTP_SETTING_UPDATED);
     }
 
     private void issuePasswordReset(SecurityActionSubjectType type, Integer id, String email, String actor) {
@@ -325,14 +314,14 @@ public class SecurityAccountService {
         securityEmailDeliveryService.deliverActionLink(
                 issued.linkId(),
                 email,
-                "Reset your password",
-                "Use this single-use link to reset your password:\n" + issued.url());
+                "パスワードリセットのご案内",
+                "以下の使い捨てリンクからパスワードをリセットしてください。このリンクは一度のみ使用できます:\n" + issued.url());
     }
 
     private OtpChallengeResponse toChallengeResponse(OtpChallengeService.IssuedOtp issued) {
         OtpChallengeResponse response = new OtpChallengeResponse();
         response.setStatusCode(ResponseConstants.OK);
-        response.setMessage("Verification code sent.");
+        response.setMessage(ResponseConstants.MSG_OTP_CODE_SENT);
         response.setChallengeId(issued.challengeId());
         response.setMaskedEmail(issued.maskedEmail());
         response.setExpiresInSeconds(issued.expiresInSeconds());

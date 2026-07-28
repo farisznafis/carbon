@@ -115,6 +115,7 @@ public class ResponseConstants {
     public static final String MSG_COMPANY_LIST_RETRIEVED = "企業一覧を取得しました。";
     public static final String MSG_COMPANY_DETAIL_RETRIEVED = "企業詳細を取得しました。";
     public static final String MSG_COMPANY_NOT_FOUND = "対象の企業が見つかりませんでした。";
+    public static final String MSG_MASTER_ACCOUNT_NOT_FOUND = "対象の企業にマスターアカウントが存在しません。";
     public static final String MSG_COMPANY_STATUS_CONFLICT = "現在の企業ステータスではこの操作を実行できません。";
     public static final String MSG_SUSPENSION_ALREADY_ACTIVE = "同じ理由の停止がすでに有効です。";
     public static final String MSG_SUSPENSION_CREATED = "企業の利用停止を登録しました。";
@@ -126,10 +127,19 @@ public class ResponseConstants {
             "停止理由を解除しましたが、他の停止理由が残っているため企業は停止中です。";
     public static final String MSG_COMPANY_ACCESS_SUSPENDED = "企業は現在利用停止中です。";
 
-    public static final String MSG_SERVICE_UNAVAILABLE = "Security verification service is temporarily unavailable.";
-    public static final String MSG_OTP_REQUIRED = "Email verification code is required.";
-    public static final String MSG_INVALID_OR_EXPIRED_TOKEN = "The security token is invalid or expired.";
-    public static final String MSG_TOO_MANY_REQUESTS = "Too many requests. Please try again later.";
+    public static final String MSG_SERVICE_UNAVAILABLE = "セキュリティ確認サービスが一時的に利用できません。";
+    public static final String MSG_OTP_REQUIRED = "メール認証コードの入力が必要です。";
+    public static final String MSG_INVALID_OR_EXPIRED_TOKEN = "セキュリティトークンが無効か、有効期限が切れています。";
+    public static final String MSG_TOO_MANY_REQUESTS = "リクエストが多すぎます。しばらくしてから再度お試しください。";
+
+    // Security flow messages (action links, password reset, email OTP)
+    public static final String MSG_ACTION_LINK_OPENED = "リンクを開きました。";
+    public static final String MSG_MASTER_ACCOUNT_SETUP_COMPLETED = "マスターアカウントを作成しました。企業が有効化されました。";
+    public static final String MSG_PASSWORD_RESET_EMAIL_SENT = "該当するアカウントが存在する場合、パスワードリセット用のメールを送信しました。";
+    public static final String MSG_PASSWORD_RESET_LINK_QUEUED = "パスワードリセット用のリンクを送信しました。";
+    public static final String MSG_PASSWORD_RESET_COMPLETED = "パスワードのリセットが完了しました。再度ログインしてください。";
+    public static final String MSG_EMAIL_OTP_SETTING_UPDATED = "メールログイン認証設定を更新しました。";
+    public static final String MSG_OTP_CODE_SENT = "認証コードを送信しました。";
 
     public static final String MSG_PAYMENT_FAILED = "支払いに失敗しました。";
     public static final String MSG_PAYMENT_DECLINED = "カード情報が無効です。";

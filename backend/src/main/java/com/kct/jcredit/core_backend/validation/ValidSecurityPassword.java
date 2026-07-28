@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = SecurityPasswordValidator.class)
 public @interface ValidSecurityPassword {
-    String message() default "Password must be 15-64 printable characters and must not be commonly used.";
+    String message() default "パスワードは15〜64文字で、大文字・小文字・数字をそれぞれ1文字以上含めてください。よく使われるパスワードは使用できません。";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

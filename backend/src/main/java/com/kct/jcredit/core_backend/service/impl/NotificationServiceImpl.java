@@ -94,10 +94,10 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void sendOtpEmail(String email, String code, long expiresInMinutes) {
-        String subject = "Email verification code";
-        String body = "Your verification code is: " + code + "\n\n"
-                + "This code expires in " + expiresInMinutes + " minutes. "
-                + "Do not share this code with anyone.";
+        String subject = "メール認証コードのお知らせ";
+        String body = "認証コードは以下の通りです: " + code + "\n\n"
+                + "このコードの有効期限は" + expiresInMinutes + "分です。"
+                + "このコードは他人に共有しないでください。";
         sendMail(email, subject, body);
     }
 
