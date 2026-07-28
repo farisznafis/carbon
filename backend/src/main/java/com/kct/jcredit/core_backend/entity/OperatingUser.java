@@ -48,17 +48,22 @@ public class OperatingUser extends BaseEntity {
     @Column(nullable = false, length = 10)
     private String role; // "運用" or "ユーザ"
 
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive;
-
     @Column(name = "login_attempts", nullable = false)
     private Integer loginAttempts;
 
     @Column(name = "account_locked_until", nullable = true)
     private LocalDateTime accountLockedUntil;
 
+    @Column(name = "email_otp_login_enabled", nullable = false)
+    @Builder.Default
+    private Boolean emailOtpLoginEnabled = false;
+
+    @Column(name = "auth_version", nullable = false)
+    @Builder.Default
+    private Integer authVersion = 0;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
-    private ParticipatingCompany company;
+    private OperatorCompany company;
 
 }

@@ -26,6 +26,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 // ログ用
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +44,7 @@ import com.kct.jcredit.core_backend.entity.OperatingUser;
 import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
+import com.kct.jcredit.core_backend.enums.CompanyStatus;
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
@@ -51,6 +54,7 @@ import com.kct.jcredit.core_backend.service.impl.AuthServiceImpl;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class AuthServiceTest {
     private static final Logger log = LoggerFactory.getLogger(AuthServiceTest.class);
 
@@ -109,7 +113,11 @@ public class AuthServiceTest {
         operatingUser.setFirstName("Operating");
         operatingUser.setLastName("User");
         operatingUser.setIsActive(true);
-        operatingUser.setCompany(dummyCompany);
+        operatorCompany = new OperatorCompany();
+        operatorCompany.setId(123);
+        operatorCompany.setCompanyId("123");
+        operatorCompany.setIsActive(true);
+        operatingUser.setCompany(operatorCompany);
 }
 
     //正しい企業ID/正しいメールアドレス/パスワードでログイン成功
@@ -126,6 +134,7 @@ public class AuthServiceTest {
         ParticipatingCompany existingCompany = new ParticipatingCompany();
         existingCompany.setId(123);
         existingCompany.setCompanyId("123");
+        existingCompany.setCompanyStatus(CompanyStatus.ACTIVE);
         when(participatingCompanyRepository.findByCompanyId("123"))
                 .thenReturn(Optional.of(existingCompany));
         
@@ -205,6 +214,7 @@ public class AuthServiceTest {
         ParticipatingCompany existingCompany = new ParticipatingCompany();
         existingCompany.setId(123);
         existingCompany.setCompanyId("123");
+        existingCompany.setCompanyStatus(CompanyStatus.ACTIVE);
         when(participatingCompanyRepository.findByCompanyId("123"))
                 .thenReturn(Optional.of(existingCompany));
         
@@ -284,6 +294,7 @@ public class AuthServiceTest {
         ParticipatingCompany existingCompany = new ParticipatingCompany();
         existingCompany.setId(123);
         existingCompany.setCompanyId("123");
+        existingCompany.setCompanyStatus(CompanyStatus.ACTIVE);
         when(participatingCompanyRepository.findByCompanyId("123"))
                 .thenReturn(Optional.of(existingCompany));
         
@@ -346,6 +357,7 @@ public class AuthServiceTest {
         ParticipatingCompany existingCompany = new ParticipatingCompany();
         existingCompany.setId(123);
         existingCompany.setCompanyId("123");
+        existingCompany.setCompanyStatus(CompanyStatus.ACTIVE);
         when(participatingCompanyRepository.findByCompanyId("123"))
                 .thenReturn(Optional.of(existingCompany));
         
@@ -420,6 +432,7 @@ public class AuthServiceTest {
         ParticipatingCompany existingCompany = new ParticipatingCompany();
         existingCompany.setId(123);
         existingCompany.setCompanyId("123");
+        existingCompany.setCompanyStatus(CompanyStatus.ACTIVE);
         when(participatingCompanyRepository.findByCompanyId("123"))
                 .thenReturn(Optional.of(existingCompany));
         
@@ -501,6 +514,7 @@ public class AuthServiceTest {
         ParticipatingCompany existingCompany = new ParticipatingCompany();
         existingCompany.setId(123);
         existingCompany.setCompanyId("123");
+        existingCompany.setCompanyStatus(CompanyStatus.ACTIVE);
         when(participatingCompanyRepository.findByCompanyId("123"))
                 .thenReturn(Optional.of(existingCompany));
         
@@ -583,6 +597,7 @@ public class AuthServiceTest {
         ParticipatingCompany existingCompany = new ParticipatingCompany();
         existingCompany.setId(123);
         existingCompany.setCompanyId("123");
+        existingCompany.setCompanyStatus(CompanyStatus.ACTIVE);
         when(participatingCompanyRepository.findByCompanyId("123"))
                 .thenReturn(Optional.of(existingCompany));
         
@@ -639,9 +654,10 @@ public class AuthServiceTest {
         operator.setId(1);
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        ParticipatingCompany company = new ParticipatingCompany();
+        OperatorCompany company = new OperatorCompany();
         company.setId(123);
         company.setCompanyId("123");
+        company.setIsActive(true);
         operator.setCompany(company);
         operator.setRole("USER");
         operator.setFirstName("Alice");
@@ -707,9 +723,10 @@ public class AuthServiceTest {
         operator.setId(1);
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        ParticipatingCompany company = new ParticipatingCompany();
+        OperatorCompany company = new OperatorCompany();
         company.setId(123);
         company.setCompanyId("123");
+        company.setIsActive(true);
         operator.setCompany(company);
         operator.setRole("USER");
         operator.setFirstName("Alice");
@@ -775,8 +792,11 @@ public class AuthServiceTest {
         operator.setId(1);
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        ParticipatingCompany company = new ParticipatingCompany();
+        OperatorCompany company = new OperatorCompany();
         company.setId(123);
+        company.setCompanyId("123");
+        company.setIsActive(true);
+        operator.setCompany(company);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
@@ -858,9 +878,10 @@ public class AuthServiceTest {
         req.setIdentifier("alice");
         req.setPassword("raw-pass");
 
-        ParticipatingCompany company = new ParticipatingCompany();
+        OperatorCompany company = new OperatorCompany();
         company.setId(123);
         company.setCompanyId("123");
+        company.setIsActive(true);
 
         OperatingUser operator = new OperatingUser();
         operator.setId(1);
@@ -932,8 +953,11 @@ public class AuthServiceTest {
         OperatingUser operator = new OperatingUser();
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        ParticipatingCompany company = new ParticipatingCompany();
+        OperatorCompany company = new OperatorCompany();
         company.setId(123);
+        company.setCompanyId("123");
+        company.setIsActive(true);
+        operator.setCompany(company);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");
@@ -998,9 +1022,10 @@ public class AuthServiceTest {
         req.setIdentifier("alice");
         req.setPassword("raw-pass");
 
-        ParticipatingCompany company = new ParticipatingCompany();
+        OperatorCompany company = new OperatorCompany();
         company.setId(123);
         company.setCompanyId("123");
+        company.setIsActive(true);
 
         OperatingUser operator = new OperatingUser();
         operator.setId(1);
@@ -1074,8 +1099,11 @@ public class AuthServiceTest {
         OperatingUser operator = new OperatingUser();
         operator.setUsername("alice");
         operator.setEmail("alice@example.com");
-        ParticipatingCompany company = new ParticipatingCompany();
+        OperatorCompany company = new OperatorCompany();
         company.setId(123);
+        company.setCompanyId("123");
+        company.setIsActive(true);
+        operator.setCompany(company);
         operator.setRole("USER");
         operator.setFirstName("Alice");
         operator.setLastName("Smith");

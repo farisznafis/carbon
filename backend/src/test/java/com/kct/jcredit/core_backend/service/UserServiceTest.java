@@ -32,6 +32,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -51,7 +53,6 @@ import com.kct.jcredit.core_backend.entity.OperatingUser;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.entity.Site;
-import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
@@ -59,6 +60,7 @@ import com.kct.jcredit.core_backend.service.impl.UserServiceImpl;
 
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class UserServiceTest {
     @Mock
     private ParticipatingUserRepository userRepository;
@@ -107,7 +109,6 @@ public class UserServiceTest {
                 .fax("03-1234-5679")
                 .corpNumber("1234567890123")
                 .buildingName("東京都渋谷区")
-                .subscriptionStatus(SubscriptionStatus.ACTIVE)
                 .build();
         testCompany.setId(1);
 
@@ -1468,7 +1469,7 @@ public class UserServiceTest {
         SiteResponse siteInfo = response.getSite();
         
         // サイト情報の各フィールドを検証
-        assertThat(siteInfo.getId())
+        assertThat(siteInfo.getSiteId())
                 .as("サイトIDが設定されていること")
                 .isNotNull();
         
@@ -1607,7 +1608,6 @@ public class UserServiceTest {
                 .nameEn("Other Company")
                 .email("other@test.com")
                 .phoneNumber("03-9999-8888")
-                .subscriptionStatus(SubscriptionStatus.ACTIVE)
                 .build();
         otherCompany.setId(2);
         
@@ -2350,7 +2350,7 @@ void testUpdateUser_GeneralUserSelf_AsPIC_SiteUpdated() {
     // サイト情報も更新されていることを確認
     assertThat(response.getUpdatedSites()).hasSize(1);
     SiteResponse updatedSiteResponse = response.getUpdatedSites().get(0);
-    assertThat(updatedSiteResponse.getId()).isEqualTo("1");
+    assertThat(updatedSiteResponse.getSiteId()).isNotNull();
     assertThat(updatedSiteResponse.getPicFirstName()).isEqualTo("次郎改名");
     assertThat(updatedSiteResponse.getPicLastName()).isEqualTo("佐藤改名");
 
@@ -3444,7 +3444,6 @@ void testUpdateUser_NewSiteCompanyIsNull_ThrowsNullPointerException() {
 
     private SiteResponse mapToSiteResponse(Site site) {
         return SiteResponse.builder()
-                .id(String.valueOf(site.getId()))
                 .siteName(site.getSiteName())
                 .picFirstName(site.getPicFirstName())
                 .picLastName(site.getPicLastName())

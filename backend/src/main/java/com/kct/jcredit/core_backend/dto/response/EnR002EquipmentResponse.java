@@ -18,9 +18,9 @@ import jakarta.persistence.Column;
 @AllArgsConstructor
 @Builder
 public class EnR002EquipmentResponse extends BaseResponse {
-    
+
     private Integer id;
-    private Integer siteId;
+    private String siteId;
 
     private LocalDate equipmentOpDate;
     private BigDecimal nominalMaxOutput;

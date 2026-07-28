@@ -19,11 +19,14 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CompanyAuthorizationFilter companyAuthorizationFilter;
+    private final SecurityFlowProperties securityFlowProperties;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-                        CompanyAuthorizationFilter companyAuthorizationFilter) {
+                        CompanyAuthorizationFilter companyAuthorizationFilter,
+                        SecurityFlowProperties securityFlowProperties) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.companyAuthorizationFilter = companyAuthorizationFilter;
+        this.securityFlowProperties = securityFlowProperties;
     }
 
     @Bean
@@ -54,6 +57,6 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(securityFlowProperties.getBcryptStrength());
     }
 }

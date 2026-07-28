@@ -8,9 +8,10 @@ import com.kct.jcredit.core_backend.entity.Notification;
 public interface NotificationService {
     void sendSuspensionNotification(ParticipatingCompany company);
     void sendReactivationNotification(ParticipatingCompany company);
-    void sendFailureNotification(ParticipatingCompany company, String failureReason);
     void sendMasterAccountCredentials(ParticipatingCompany company, String username, String plainPassword);
     void sendCompanyRejectionNotification(ParticipatingCompany company, String rejectionReason);
+    void sendSecurityEmail(String email, String subject, String body);
+    void sendOtpEmail(String email, String code, long expiresInMinutes);
     NotificationListResponse getNotifications(
         Integer userId,
         Boolean unreadOnly,
@@ -19,14 +20,14 @@ public interface NotificationService {
         boolean isOperatingUser
     );
 
-    Notification createNotification(String title, 
-            String message, 
+    Notification createNotification(String title,
+            String message,
             Integer participatingUserId,
             Integer operatingUserId);
 
     void createNotificationForParticipatingCompany(
-            String title, 
-            String message, 
+            String title,
+            String message,
             Integer companyId,
             Integer operatingUserId);
 
@@ -43,6 +44,6 @@ public interface NotificationService {
             String subject,
             String body);
 
-        void sendParticipationRejectionNotification(ParticipatingUser user, String rejectionReason);
-        void sendParticipationApprovedNotification(ParticipatingUser user);
+    void sendParticipationRejectionNotification(ParticipatingUser user, String rejectionReason);
+    void sendParticipationApprovedNotification(ParticipatingUser user);
 }

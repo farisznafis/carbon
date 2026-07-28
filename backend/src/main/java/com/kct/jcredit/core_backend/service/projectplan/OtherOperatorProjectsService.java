@@ -6,21 +6,21 @@ import com.kct.jcredit.core_backend.dto.response.OtherOperatorProjectsResponse;
 public interface OtherOperatorProjectsService {
 
     OtherOperatorProjectsResponse submitOtherOperatorProjects(
-            Integer projectId,
+            String projectId,
             OtherOperatorProjectsRequest request,
             String companyId,
             String role,
             String username);
 
     OtherOperatorProjectsResponse updateOtherOperatorProjects(
-            Integer projectId,
+            String projectId,
             OtherOperatorProjectsRequest request,
             String companyId,
             String role,
             String username);
 
     OtherOperatorProjectsResponse getOtherOperatorProjects(
-            Integer projectId,
+            String projectId,
             String companyId,
             String role,
             String username);

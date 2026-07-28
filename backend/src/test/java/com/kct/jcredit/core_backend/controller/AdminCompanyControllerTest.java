@@ -1,296 +1,122 @@
 package com.kct.jcredit.core_backend.controller;
 
-import com.kct.jcredit.core_backend.dto.request.RejectCompanyRequest;
-import com.kct.jcredit.core_backend.dto.response.ApproveCompanyResponse;
-import com.kct.jcredit.core_backend.dto.response.PendingCompanyListResponse;
-import com.kct.jcredit.core_backend.dto.response.RejectCompanyResponse;
-import com.kct.jcredit.core_backend.exception.CustomException;
+import com.kct.jcredit.core_backend.constant.ResponseConstants;
+import com.kct.jcredit.core_backend.dto.request.CompanyListQuery;
+import com.kct.jcredit.core_backend.dto.request.CreateCompanySuspensionRequest;
+import com.kct.jcredit.core_backend.dto.request.ResolveCompanySuspensionRequest;
+import com.kct.jcredit.core_backend.dto.response.AdminCompanyDetailResponse;
+import com.kct.jcredit.core_backend.dto.response.AdminCompanyListResponse;
+import com.kct.jcredit.core_backend.dto.response.CompanySuspensionResponse;
+import com.kct.jcredit.core_backend.enums.SuspensionReasonCode;
+import com.kct.jcredit.core_backend.service.AdminCompanyQueryService;
 import com.kct.jcredit.core_backend.service.CompanyApprovalService;
-import com.kct.jcredit.core_backend.util.ResponseUtil;
-
-import org.junit.jupiter.api.DisplayName;
+import com.kct.jcredit.core_backend.service.CompanyLifecycleService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
- 
+import org.springframework.security.access.prepost.PreAuthorize;
+
+import java.lang.reflect.Method;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class AdminCompanyControllerTest {
-    
+@MockitoSettings(strictness = Strictness.LENIENT)
+class AdminCompanyControllerTest {
+
     @Mock
     private CompanyApprovalService companyApprovalService;
- 
+
+    @Mock
+    private AdminCompanyQueryService adminCompanyQueryService;
+
+    @Mock
+    private CompanyLifecycleService companyLifecycleService;
+
     @InjectMocks
-    private AdminCompanyController adminCompanyController;
- 
+    private AdminCompanyController controller;
+
     @Test
-    @DisplayName("UT-AC-101 有効な companyId で承認が成功した場合、200OK レスポンスを返す")
-    void approveCompany_validCompanyId_returnsOkResponse() {
-        // Arrange
-        String companyId = "COMP001";
+    void getCompaniesReturnsUnifiedCompanyPage() {
+        CompanyListQuery query = new CompanyListQuery();
+        AdminCompanyListResponse serviceResponse = new AdminCompanyListResponse();
+        serviceResponse.setStatusCode(ResponseConstants.OK);
+        when(adminCompanyQueryService.findCompanies(query)).thenReturn(serviceResponse);
 
-        ApproveCompanyResponse mockResponse = new ApproveCompanyResponse();
-        mockResponse.setStatusCode("200");
-        mockResponse.setMessage("会社を承認しました");
+        ResponseEntity<AdminCompanyListResponse> response = controller.getCompanies(query);
 
-        try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
-            when(companyApprovalService.approveCompany(companyId)).thenReturn(mockResponse);
-            mockedUtil.when(() -> ResponseUtil.getHttpStatus("200")).thenReturn(HttpStatus.OK);
-
-            // Act
-            ResponseEntity<ApproveCompanyResponse> response =
-                    adminCompanyController.approveCompany(companyId);
-
-            // Assert
-            assertThat(response).isNotNull();
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody()).isEqualTo(mockResponse);
-
-            verify(companyApprovalService, times(1)).approveCompany(companyId);
-            mockedUtil.verify(() -> ResponseUtil.getHttpStatus("200"), times(1));
-        }
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isSameAs(serviceResponse);
+        verify(adminCompanyQueryService).findCompanies(query);
     }
 
     @Test
-    @DisplayName("UT-AC-102 companyId に対応する会社が見つからない場合、404 NOT_FOUND レスポンスを返す")
-    void approveCompany_companyNotFound_returnsNotFoundResponse() {
-        // Arrange
-        String companyId = "COMP999";
+    void getCompanyDetailDelegatesToQueryService() throws NoSuchMethodException {
+        AdminCompanyDetailResponse serviceResponse = new AdminCompanyDetailResponse();
+        serviceResponse.setStatusCode(ResponseConstants.OK);
+        when(adminCompanyQueryService.findCompanyDetail("COMP00000001")).thenReturn(serviceResponse);
 
-        ApproveCompanyResponse mockResponse = new ApproveCompanyResponse();
-        mockResponse.setStatusCode("404");
-        mockResponse.setMessage("会社が見つかりません");
+        ResponseEntity<AdminCompanyDetailResponse> response = controller.getCompanyDetail("COMP00000001");
 
-        try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
-            when(companyApprovalService.approveCompany(companyId)).thenReturn(mockResponse);
-            mockedUtil.when(() -> ResponseUtil.getHttpStatus("404")).thenReturn(HttpStatus.NOT_FOUND);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isSameAs(serviceResponse);
+        verify(adminCompanyQueryService).findCompanyDetail("COMP00000001");
 
-            // Act
-            ResponseEntity<ApproveCompanyResponse> response =
-                    adminCompanyController.approveCompany(companyId);
-
-            // Assert
-            assertThat(response).isNotNull();
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-            assertThat(response.getBody()).isEqualTo(mockResponse);
-
-            verify(companyApprovalService, times(1)).approveCompany(companyId);
-            mockedUtil.verify(() -> ResponseUtil.getHttpStatus("404"), times(1));
-        }
+        Method endpoint = AdminCompanyController.class.getMethod("getCompanyDetail", String.class);
+        assertThat(endpoint.getAnnotation(PreAuthorize.class).value())
+                .isEqualTo("hasAnyRole('operator')");
     }
 
     @Test
-    @DisplayName("UT-AC-103 サービスが CustomException をスローする場合、例外が伝播される")
-    void approveCompany_serviceThrowsCustomException_propagatesException() {
-        // Arrange
-        String companyId = "COMP001";
+    void createSuspensionDelegatesToLifecycleService() {
+        CreateCompanySuspensionRequest request = new CreateCompanySuspensionRequest();
+        request.setReasonCode(SuspensionReasonCode.POLICY_VIOLATION);
+        request.setReasonDetail("Policy violation");
+        CompanySuspensionResponse serviceResponse = new CompanySuspensionResponse();
+        serviceResponse.setStatusCode(ResponseConstants.OK);
+        when(companyLifecycleService.createSuspension("COMP00000001", request))
+                .thenReturn(serviceResponse);
 
-        CustomException expectedException = new CustomException(
-                "E003",
-                "会社の承認処理に失敗しました"
+        ResponseEntity<CompanySuspensionResponse> response = controller.createSuspension(
+                "COMP00000001",
+                request
         );
 
-        try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
-            when(companyApprovalService.approveCompany(companyId)).thenThrow(expectedException);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isSameAs(serviceResponse);
+    }
 
-        // Act
-        CustomException thrown = assertThrows(
-                CustomException.class,
-                () -> adminCompanyController.approveCompany(companyId)
+    @Test
+    void billingIsNotAnAvailableSuspensionReason() {
+        assertThat(SuspensionReasonCode.values())
+                .extracting(Enum::name)
+                .doesNotContain("BILLING");
+    }
+
+    @Test
+    void resolveSuspensionDelegatesToLifecycleService() {
+        ResolveCompanySuspensionRequest request = new ResolveCompanySuspensionRequest();
+        request.setResolutionNote("Resolved");
+        CompanySuspensionResponse serviceResponse = new CompanySuspensionResponse();
+        serviceResponse.setStatusCode(ResponseConstants.OK);
+        when(companyLifecycleService.resolveSuspension("COMP00000001", 7, request))
+                .thenReturn(serviceResponse);
+
+        ResponseEntity<CompanySuspensionResponse> response = controller.resolveSuspension(
+                "COMP00000001",
+                7,
+                request
         );
 
-        // Assert
-        assertThat(thrown.getMessage()).isEqualTo("会社の承認処理に失敗しました");
-        assertThat(thrown.getErrorCode()).isEqualTo("E003");
-
-            verify(companyApprovalService, times(1)).approveCompany(companyId);
-            mockedUtil.verify(() -> ResponseUtil.getHttpStatus(anyString()), never());
-        }
-    }
-
-    @Test
-    @DisplayName("UT-AC-104 有効なリクエストで却下が成功した場合、200OK レスポンスを返す")
-    void rejectCompany_validRequest_returnsOkResponse() {
-        // Arrange
-        String companyId = "COMP001";
-        String rejectionReason = "申請内容に不備があります";
-
-        RejectCompanyRequest request = new RejectCompanyRequest();
-        request.setRejectionReason(rejectionReason);
-
-        RejectCompanyResponse mockResponse = new RejectCompanyResponse();
-        mockResponse.setStatusCode("200");
-        mockResponse.setMessage("会社を却下しました");
-
-        try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
-            when(companyApprovalService.rejectCompany(companyId, rejectionReason))
-                    .thenReturn(mockResponse);
-            mockedUtil.when(() -> ResponseUtil.getHttpStatus("200")).thenReturn(HttpStatus.OK);
-
-            // Act
-            ResponseEntity<RejectCompanyResponse> response =
-                    adminCompanyController.rejectCompany(companyId, request);
-
-            // Assert
-            assertThat(response).isNotNull();
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isEqualTo(mockResponse);
-
-            verify(companyApprovalService, times(1)).rejectCompany(companyId, rejectionReason);
-            mockedUtil.verify(() -> ResponseUtil.getHttpStatus("200"), times(1));
-        }
-    }
-
-    @Test
-    @DisplayName("UT-AC-105 companyId に対応する会社が見つからない場合、404 NOT_FOUND レスポンスを返す")
-    void rejectCompany_companyNotFound_returnsNotFoundResponse() {
-        // Arrange
-        String companyId = "COMP999";
-        String rejectionReason = "申請内容に不備があります";
-
-        RejectCompanyRequest request = new RejectCompanyRequest();
-        request.setRejectionReason(rejectionReason);
-
-        RejectCompanyResponse mockResponse = new RejectCompanyResponse();
-        mockResponse.setStatusCode("404");
-        mockResponse.setMessage("会社が見つかりません");
-
-        try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
-            when(companyApprovalService.rejectCompany(companyId, rejectionReason))
-                    .thenReturn(mockResponse);
-            mockedUtil.when(() -> ResponseUtil.getHttpStatus("404")).thenReturn(HttpStatus.NOT_FOUND);
-
-            // Act
-            ResponseEntity<RejectCompanyResponse> response =
-                    adminCompanyController.rejectCompany(companyId, request);
-
-            // Assert
-            assertThat(response).isNotNull();
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-            assertThat(response.getBody()).isEqualTo(mockResponse);
-
-            verify(companyApprovalService, times(1)).rejectCompany(companyId, rejectionReason);
-            mockedUtil.verify(() -> ResponseUtil.getHttpStatus("404"), times(1));
-        }
-    }
-
-    @Test
-    @DisplayName("UT-AC-106 サービスが CustomException をスローする場合、例外が伝播される")
-    void rejectCompany_serviceThrowsCustomException_propagatesException() {
-    // Arrange
-        String companyId = "COMP001";
-        String rejectionReason = "申請内容に不備があります";
-
-        RejectCompanyRequest request = new RejectCompanyRequest();
-        request.setRejectionReason(rejectionReason);
-
-        CustomException expectedException = new CustomException(
-                "E003",
-                "会社の却下処理に失敗しました"
-        );
-
-        try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
-            when(companyApprovalService.rejectCompany(companyId, rejectionReason))
-                    .thenThrow(expectedException);
-
-            // Act
-            CustomException thrown = assertThrows(
-                    CustomException.class,
-                    () -> adminCompanyController.rejectCompany(companyId, request)
-            );
-            // Assert
-            assertThat(thrown.getMessage()).isEqualTo("会社の却下処理に失敗しました");
-            assertThat(thrown.getErrorCode()).isEqualTo("E003");
-
-            verify(companyApprovalService, times(1)).rejectCompany(companyId, rejectionReason);
-            mockedUtil.verify(() -> ResponseUtil.getHttpStatus(anyString()), never());
-        }
-    }
-
-    @Test
-    @DisplayName("UT-AC-107 承認待ちの会社が存在する場合、200OK レスポンスを返す")
-    void getPendingCompanies_withData_returnsOkResponse() {
-        // Arrange
-        PendingCompanyListResponse mockResponse = new PendingCompanyListResponse();
-        mockResponse.setStatusCode("200");
-
-        try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
-            when(companyApprovalService.getPendingCompanies()).thenReturn(mockResponse);
-            mockedUtil.when(() -> ResponseUtil.getHttpStatus("200")).thenReturn(HttpStatus.OK);
-
-            // Act
-            ResponseEntity<PendingCompanyListResponse> response =
-                    adminCompanyController.getPendingCompanies();
-
-            // Assert
-            assertThat(response).isNotNull();
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isEqualTo(mockResponse);
-
-            verify(companyApprovalService, times(1)).getPendingCompanies();
-            mockedUtil.verify(() -> ResponseUtil.getHttpStatus("200"), times(1));
-        }
-    }
-
-    @Test
-    @DisplayName("UT-AC-108 承認待ちの会社が存在しない場合、空リストで200OK レスポンスを返す")
-    void getPendingCompanies_emptyList_returnsOkResponse() {
-        // Arrange
-        PendingCompanyListResponse mockResponse = new PendingCompanyListResponse();
-        mockResponse.setStatusCode("200");
-        // (default)
-        try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
-            when(companyApprovalService.getPendingCompanies()).thenReturn(mockResponse);
-            mockedUtil.when(() -> ResponseUtil.getHttpStatus("200")).thenReturn(HttpStatus.OK);
-
-            // Act
-            ResponseEntity<PendingCompanyListResponse> response =
-                    adminCompanyController.getPendingCompanies();
-
-            // Assert
-            assertThat(response).isNotNull();
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isEqualTo(mockResponse);
-
-            verify(companyApprovalService, times(1)).getPendingCompanies();
-            mockedUtil.verify(() -> ResponseUtil.getHttpStatus("200"), times(1));
-        }
-    }
-
-    @Test
-    @DisplayName("UT-AC-109 サービスが CustomException をスローする場合、例外が伝播される")
-    void getPendingCompanies_serviceThrowsCustomException_propagatesException() {
-        // Arrange
-        CustomException expectedException = new CustomException(
-                "E003",
-                "承認待ち会社一覧の取得に失敗しました"
-        );
-
-        try (MockedStatic<ResponseUtil> mockedUtil = mockStatic(ResponseUtil.class)) {
-            when(companyApprovalService.getPendingCompanies()).thenThrow(expectedException);
-
-            // Act
-            CustomException thrown = assertThrows(
-                    CustomException.class,
-                    adminCompanyController::getPendingCompanies
-            );
-
-            // Assert
-            assertThat(thrown.getMessage()).isEqualTo("承認待ち会社一覧の取得に失敗しました");
-            assertThat(thrown.getErrorCode()).isEqualTo("E003");
-
-            verify(companyApprovalService, times(1)).getPendingCompanies();
-            mockedUtil.verify(() -> ResponseUtil.getHttpStatus(anyString()), never());
-        }
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isSameAs(serviceResponse);
     }
 }

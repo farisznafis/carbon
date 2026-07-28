@@ -57,7 +57,7 @@ public class SiteController {
     @Operation(summary = "拠点情報取得", description = "指定された拠点の情報を取得します。")
     public ResponseEntity<SiteInfoResponse> getSite(@PathVariable String siteId) {
 
-        SiteInfoResponse response = siteService.getSiteById(Integer.parseInt(siteId));
+        SiteInfoResponse response = siteService.getSiteByPublicId(siteId);
 
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
@@ -66,7 +66,7 @@ public class SiteController {
     @PreAuthorize("hasAnyRole('master','user')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "拠点に紐付くプロジェクト一覧取得", description = "指定された拠点に紐付くプロジェクトの一覧を取得します。")
-    public ResponseEntity<ProjectListInfoResponse> getProjectsBySiteId(Authentication authentication, @PathVariable Integer siteId) {
+    public ResponseEntity<ProjectListInfoResponse> getProjectsBySiteId(Authentication authentication, @PathVariable String siteId) {
         String token = authentication.getCredentials().toString();
         ProjectListInfoResponse response = projectService.getProjectsBySiteIdAndCompanyId(siteId, jwtUtil.extractCompanyId(token));
 
@@ -139,8 +139,8 @@ public class SiteController {
     @Operation(summary = "拠点プロジェクト設備情報取得", description = "指定された拠点とプロジェクトに登録された設備情報を取得します。")
     public ResponseEntity<EnR002EquipmentRegisterResponse> getSiteProjectEquipment(
             Authentication authentication,
-            @PathVariable Integer siteId,
-            @PathVariable Integer projectId) {
+            @PathVariable String siteId,
+            @PathVariable String projectId) {
         String token = (String) authentication.getCredentials();
 
         EnR002EquipmentRegisterResponse response = siteService.getSiteProjectEquipment(
@@ -158,7 +158,7 @@ public class SiteController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<EnR002EquipmentResponse> addEquipment(
             Authentication authentication,
-            @PathVariable Integer siteId,
+            @PathVariable String siteId,
             @RequestBody @Valid EnR002EquipmentRequest request) {
 
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
@@ -170,7 +170,7 @@ public class SiteController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<EnR002EquipmentResponse>> getEquipments(
             Authentication authentication,
-            @PathVariable Integer siteId) {
+            @PathVariable String siteId) {
 
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
         return ResponseEntity.ok(equipmentService.getEquipmentsBySite(siteId, companyId));
@@ -181,7 +181,7 @@ public class SiteController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<EnR002EquipmentResponse> getEquipmentById(
             Authentication authentication,
-            @PathVariable Integer siteId,
+            @PathVariable String siteId,
             @PathVariable Integer equipmentId) {
 
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
@@ -195,7 +195,7 @@ public class SiteController {
     @Operation(summary = "設備情報更新", description = "既存の設備情報を部分更新します。")
     public ResponseEntity<EnR002EquipmentResponse> updateEquipment(
             Authentication authentication,
-            @PathVariable Integer siteId,
+            @PathVariable String siteId,
             @PathVariable Integer equipmentId,
             @RequestBody @Valid EnR002EquipmentUpdateRequest request) {
 

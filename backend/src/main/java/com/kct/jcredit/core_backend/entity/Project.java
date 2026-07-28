@@ -5,6 +5,7 @@ import java.util.List;
 import com.kct.jcredit.core_backend.entity.base.BaseEntity;
 
 import jakarta.persistence.*;
+import jakarta.persistence.PrePersist;
 import lombok.*;
 
 @Entity
@@ -15,6 +16,9 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class Project extends BaseEntity {
+
+    @Column(name = "public_id", nullable = false, unique = true, length = 32)
+    private String publicId;
 
     @Column(name = "project_name", nullable = false, length = 100)
     private String projectName;
@@ -121,4 +125,11 @@ public class Project extends BaseEntity {
 
     @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
     private List<SiteProjectRelation> siteRelations;
+    @PrePersist
+    private void generatePublicId() {
+        if (this.publicId == null) {
+            this.publicId = com.kct.jcredit.core_backend.util.PublicIdGenerator.generateProjectPublicId();
+        }
+    }
+
 }

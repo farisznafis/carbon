@@ -60,6 +60,14 @@ public class ParticipatingUser extends BaseEntity {
     @Column(name = "account_locked_until", nullable = true)
     private LocalDateTime accountLockedUntil;
 
+    @Column(name = "email_otp_login_enabled", nullable = false)
+    @Builder.Default
+    private Boolean emailOtpLoginEnabled = false;
+
+    @Column(name = "auth_version", nullable = false)
+    @Builder.Default
+    private Integer authVersion = 0;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "site_id", nullable = true)
     private Site site;

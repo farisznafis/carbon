@@ -2,19 +2,13 @@ package com.kct.jcredit.core_backend.service.impl;
 
 import com.kct.jcredit.core_backend.dto.response.details.ProjectDetailResponse;
 import com.kct.jcredit.core_backend.dto.response.details.SiteResponse;
-import com.kct.jcredit.core_backend.dto.response.details.ValidationErrorDetail;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
-import com.kct.jcredit.core_backend.dto.request.EnR002FileItemRequest;
-import com.kct.jcredit.core_backend.dto.request.EnR002FinalAgreementRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
-import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectJoinResponse;
-import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
-import com.kct.jcredit.core_backend.dto.response.ProjectInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectPdfDownloadResponse;
 import com.kct.jcredit.core_backend.dto.response.SiteListResponse;
@@ -29,12 +23,8 @@ import com.kct.jcredit.core_backend.entity.EnR002SustainabilityCommitment;
 import com.kct.jcredit.core_backend.entity.ConfirmationItems;
 import com.kct.jcredit.core_backend.entity.EnR002ApplicationConfirmation;
 import com.kct.jcredit.core_backend.entity.EnR002Equipment;
-import com.kct.jcredit.core_backend.exception.BulkValidationException;
 import com.kct.jcredit.core_backend.exception.CustomException;
-import com.kct.jcredit.core_backend.enums.EquipmentFileType;
 import com.kct.jcredit.core_backend.service.ParticipationProjectService;
-import com.kct.jcredit.core_backend.service.ProjectService;
-import com.kct.jcredit.core_backend.service.SiteService;
 import com.kct.jcredit.core_backend.service.ParticipationProjectValidationService;
 import com.kct.jcredit.core_backend.service.ProjectParticipationPdfService;
 import com.kct.jcredit.core_backend.service.EnR002FileUploadService;
@@ -45,7 +35,6 @@ import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepos
 import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentFileRepository;
 import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
-import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingProjectRepository;
@@ -60,14 +49,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.Collections;
 
 
 @Slf4j
@@ -104,7 +88,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                                 companyId, project.getId());
 
                                 return ProjectDetailResponse.builder()
-                                        .id(String.valueOf(project.getId()))
+                                        .id(project.getPublicId())
                                         .projectName(project.getProjectName())
                                         .projectNumber(project.getProjectNumber())
                                         .isJoined(alreadyJoined)
@@ -118,16 +102,19 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                         .build();
                 }
        @Override
-        public SiteListResponse getSites(String companyId, Integer projectId) {
+        public SiteListResponse getSites(String companyId, String projectId) {
                 List<Site> sites = siteRepository.findByCompany_CompanyId(companyId);
+                Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+                        .map(com.kct.jcredit.core_backend.entity.Project::getId)
+                        .orElse(0);
 
                 List<SiteResponse> siteResponses = sites.stream()
                         .map(site -> {
                                 boolean alreadyInProject = siteProjectRelationRepository
-                                        .existsBySite_IdAndProject_Id(site.getId(), projectId);
+                                        .existsBySite_IdAndProject_Id(site.getId(), projectDbId);
 
                                 return SiteResponse.builder()
-                                        .id(String.valueOf(site.getId()))
+                                        .siteId(site.getPublicId())
                                         .siteName(site.getSiteName())
                                         .postalCode(site.getPostalCode())
                                         .prefecture(site.getPrefecture())
@@ -148,8 +135,8 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
     @Override
     public EnR002SustainabilityCommitmentResponse getSustainabilityCommitmentDefault(
-            Integer siteId) {
-        Site site = siteRepository.findById(siteId)
+            String siteId) {
+        Site site = siteRepository.findByPublicIdWithFallback(siteId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_SITE_NOT_FOUND));
@@ -170,12 +157,12 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
     @Override
     @Transactional
-    public ProjectJoinResponse submitParticipation(Integer projectId,
+    public ProjectJoinResponse submitParticipation(String projectId,
                                                         String companyId,
                                                         Integer userId,
                                                         EnR002JoinProjectRequest request) {
         Site site = siteRepository
-                .findById(request.getEquipment().getSiteId())
+                .findByPublicId(request.getEquipment().getSiteId())
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_SITE_NOT_FOUND));
@@ -184,7 +171,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 throw new CustomException(ResponseConstants.FORBIDDEN,
                         ResponseConstants.MSG_UNAUTHORIZED);
 
-        Project project = projectRepository.findById(projectId)
+        Project project = projectRepository.findByPublicIdWithFallback(projectId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_PROJECT_NOT_FOUND));
@@ -195,7 +182,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
         // Duplicate check — via SiteProjectRelation, BUKAN ParticipatingProject
         boolean alreadyJoined = siteProjectRelationRepository
-                .existsBySite_IdAndProject_Id(site.getId(), projectId);
+                .existsBySite_IdAndProject_Id(site.getId(), project.getId());
         if (alreadyJoined)
                 throw new CustomException(
                         ResponseConstants.ALREADY_SUBMITTED,
@@ -226,7 +213,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                         String permanentKey = fileUploadSolarService
                                 .moveTempToPermanent(
                                         fileEntity.getS3Key(),
-                                        savedEquipment.getSite().getId(),
+                                        savedEquipment.getSite().getPublicId(),
                                         savedEquipment.getId()
                                 );
                         equipmentFileRepository.updateS3Key(fileEntity.getId(), permanentKey);

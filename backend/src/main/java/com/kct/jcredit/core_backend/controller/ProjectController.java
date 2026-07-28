@@ -83,7 +83,7 @@ public class ProjectController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクト情報更新", description = "指定されたプロジェクトの詳細情報を更新します。")
     public ResponseEntity<ProjectResponse> updateProject(Authentication authentication,
-            @PathVariable Integer projectId,
+            @PathVariable String projectId,
             @Valid @RequestBody UpdateProjectRequest request) {
             
         request.setId(projectId);
@@ -99,7 +99,7 @@ public class ProjectController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクトステータス更新", description = "指定されたプロジェクトのステータスを更新します。")
     public ResponseEntity<UpdateProjectStatusResponse> updateProjectStatus(Authentication authentication,
-            @PathVariable Integer projectId,
+            @PathVariable String projectId,
             @Valid @RequestBody UpdateProjectStatusRequest request) {
                 String newStatus = request.getProjectStatus();
         UpdateProjectStatusResponse response = projectService.updateProjectStatus(newStatus, projectId);
@@ -112,7 +112,7 @@ public class ProjectController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクト情報取得", description = "指定されたプロジェクトの詳細情報を取得します。")
     public ResponseEntity<ProjectResponse> getProject(Authentication authentication,
-            @PathVariable Integer projectId) {
+            @PathVariable String projectId) {
         
         ProjectResponse response = projectService.getProject(projectId, jwtUtil.extractCompanyId(authentication.getCredentials().toString()));
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));

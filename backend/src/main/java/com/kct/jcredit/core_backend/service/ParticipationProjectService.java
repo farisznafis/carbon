@@ -42,14 +42,14 @@ public interface ParticipationProjectService {
     // Browse
     ProjectListInfoResponse getActiveProjects(String companyId);
 
-    SiteListResponse getSites(String companyId, Integer projectId);
+    SiteListResponse getSites(String companyId, String projectId);
 
     // Auto-fill
     EnR002SustainabilityCommitmentResponse getSustainabilityCommitmentDefault(
-            Integer siteId);
+            String siteId);
 
     // Submit
-    ProjectJoinResponse submitParticipation(Integer projectId,
+    ProjectJoinResponse submitParticipation(String projectId,
                                              String companyId,
                                              Integer userId,
                                              EnR002JoinProjectRequest request);
@@ -63,13 +63,13 @@ public interface ParticipationProjectService {
 
 //     EnR002EquipmentResponse registerEquipments(
 //             Integer siteId,
-//             Integer projectId,
+//             String projectId,
 //             String companyId,
 //             EnR002ConfirmationItemRequest request);
 
 //     EnR002SustainabilityCommitmentResponse getJigyoushaDefault(
 //             Integer siteId,
-//             Integer projectId);
+//             String projectId);
 
 //     void validateEquipmentsNotEmpty(List<EnR002EquipmentRequest> equipments);
 
@@ -81,5 +81,5 @@ public interface ParticipationProjectService {
 
 //     void validateJigyousha(EnR002ConfirmationItemRequest request);
 
-//     void validateFinalAgreement(EnR002ConfirmationItemRequest request);boolean existsByCompany_CompanyIdAndSiteProjectRelation_Project_Id(String companyId, Integer projectId);
+//     void validateFinalAgreement(EnR002ConfirmationItemRequest request);boolean existsByCompany_CompanyIdAndSiteProjectRelation_Project_Id(String companyId, String projectId);
 }

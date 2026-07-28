@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
@@ -52,7 +51,7 @@ public class CancelRequestServiceImpl implements CancelRequestService {
             CancelRequestResponse response = new CancelRequestResponse();
 
             // 1. Validate site exists and user has access
-            Optional<Site> siteOpt = siteRepository.findById(request.getSiteId());
+            Optional<Site> siteOpt = siteRepository.findByPublicIdWithFallback(request.getSiteId());
             if (siteOpt.isEmpty()) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
@@ -124,7 +123,7 @@ public class CancelRequestServiceImpl implements CancelRequestService {
             try {
                 String title = "取消申請が作成されました";
                 String body = String.format("サイトID %d の取消申請がユーザー %s により登録されました。申請ID=%d", 
-                    savedRequest.getSite().getId(), savedRequest.getRequestedBy(), savedRequest.getId());
+                    savedRequest.getSite().getPublicId(), savedRequest.getRequestedBy(), savedRequest.getId());
                 notificationService.createNotificationForAllOperatingUsers(title, body);
                 notificationService.sendEmailToAllOperatingUsers(title, body);
             } catch (Exception e) {
@@ -140,7 +139,7 @@ public class CancelRequestServiceImpl implements CancelRequestService {
                     .status(savedRequest.getStatus())
                     .requestedBy(savedRequest.getRequestedBy())
                     .requestedAt(ISO_FORMATTER.format(savedRequest.getRequestedAt()))
-                    .siteId(savedRequest.getSite().getId())
+                    .siteId(savedRequest.getSite().getPublicId())
                     .reason(savedRequest.getReason())
                     .build();
             response.setStatusCode(ResponseConstants.OK);

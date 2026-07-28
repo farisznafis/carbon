@@ -1,16 +1,13 @@
 package com.kct.jcredit.core_backend.controller;
 
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentRegisterResponse;
-import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
-import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentUpdateRequest;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002FinalAgreementRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyMethodologyValidateRequest;
-import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentFileResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002FileResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
@@ -30,7 +27,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
 
 import java.io.IOException;
@@ -58,7 +54,8 @@ public class SiteProjectController {
     public SiteProjectController(JwtUtil jwtUtil,
                                  ParticipationProjectService participationService,
                                  ParticipationProjectValidationService validationService,
-                                 EnR002FileUploadService fileUploadSolarService, ProjectParticipationPdfService pdfService) {
+                                 EnR002FileUploadService fileUploadSolarService,
+                                 ProjectParticipationPdfService pdfService) {
         this.jwtUtil = jwtUtil;
         this.participationService = participationService;
         this.validationService = validationService;
@@ -66,7 +63,7 @@ public class SiteProjectController {
         this.pdfService = pdfService;
     }
     // ─────────────────────────────────────────────────────────────
-    // FILE UPLOAD 
+    // FILE UPLOAD (reuse FileUploadSolarService)
     // ─────────────────────────────────────────────────────────────
 
     @PostMapping(value = "/sites/{siteId}/files/upload",
@@ -75,7 +72,7 @@ public class SiteProjectController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<EnR002FileResponse> uploadFile(
             Authentication authentication,
-            @PathVariable Integer siteId,
+            @PathVariable String siteId,
             @RequestParam("fileType") String fileType,
             @RequestParam("file") MultipartFile file) {
 
@@ -84,11 +81,11 @@ public class SiteProjectController {
 
         EnR002FileResponse response = fileUploadSolarService
                 .uploadFile(siteId, fileTypeEnum, uploadedBy, file);
-        return new ResponseEntity<EnR002FileResponse>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
     // ─────────────────────────────────────────────────────────────
-    // VALIDATE
+    // VALIDATE — per halaman (stateless, tidak simpan apapun)
     // ─────────────────────────────────────────────────────────────
 
     @PostMapping("/equipment/validate")
@@ -113,7 +110,7 @@ public class SiteProjectController {
     @PreAuthorize("hasRole('master')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<EnR002SustainabilityCommitmentResponse> getSustainabilityCommitmentDefault(
-            @PathVariable Integer siteId) {
+            @PathVariable String siteId) {
         return ResponseEntity.ok(
                 participationService.getSustainabilityCommitmentDefault(siteId));
     }
@@ -136,7 +133,7 @@ public class SiteProjectController {
         return ResponseEntity.ok(BaseResponse.success("入力内容に問題ありません。"));
     }
     // ─────────────────────────────────────────────────────────────
-    // SUBMIT — join project 
+    // SUBMIT — join project (endpoint utama)
     // ─────────────────────────────────────────────────────────────
 
     @PostMapping("/projects/{projectId}/join")
@@ -144,8 +141,8 @@ public class SiteProjectController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ProjectJoinResponse> joinProject(
             Authentication authentication,
-            @PathVariable Integer projectId,
-            @RequestBody @Valid EnR002JoinProjectRequest request) {
+            @PathVariable String projectId,
+            @RequestBody EnR002JoinProjectRequest request) {
 
         String  companyId = extractCompanyId(authentication);
         Integer userId    = extractUserId(authentication);
@@ -172,6 +169,26 @@ public class SiteProjectController {
 
     //     return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(200));
     // }
+
+    // ─────────────────────────────────────────────────────────────
+    // PRIVATE — JWT helpers
+    // ─────────────────────────────────────────────────────────────
+
+    private String extractCompanyId(Authentication auth) {
+        return jwtUtil.extractCompanyId(auth.getCredentials().toString());
+    }
+
+    private String extractUsername(Authentication auth) {
+        return jwtUtil.extractUsername(auth.getCredentials().toString());
+    }
+
+    private Integer extractUserId(Authentication auth) {
+        return jwtUtil.extractUserId(auth.getCredentials().toString());
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // PDF GENERATION (debug/manual trigger endpoints)
+    // ─────────────────────────────────────────────────────────────
 
     @PostMapping("/generate/{participationId}")
     @PreAuthorize("hasRole('operator')")
@@ -222,23 +239,5 @@ public class SiteProjectController {
             return ResponseEntity.internalServerError()
                     .body("エラー: " + e.getMessage());
         }
-    }
-
-
-
-    // ─────────────────────────────────────────────────────────────
-    // PRIVATE — JWT helpers
-    // ─────────────────────────────────────────────────────────────
-
-    private String extractCompanyId(Authentication auth) {
-        return jwtUtil.extractCompanyId(auth.getCredentials().toString());
-    }
-
-    private String extractUsername(Authentication auth) {
-        return jwtUtil.extractUsername(auth.getCredentials().toString());
-    }
-
-    private Integer extractUserId(Authentication auth) {
-        return jwtUtil.extractUserId(auth.getCredentials().toString());
     }
 }

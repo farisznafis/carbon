@@ -9,7 +9,6 @@ import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
 import com.kct.jcredit.core_backend.dto.response.details.ProjectDetailResponse;
 import com.kct.jcredit.core_backend.dto.response.UpdateProjectStatusResponse;
-import com.kct.jcredit.core_backend.dto.request.UpdateProjectStatusRequest;
 import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.entity.Site;
@@ -32,7 +31,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -58,10 +56,10 @@ public class ProjectServiceImpl implements ProjectService {
     ZoneId DB_ZONE   = ZoneId.of("Asia/Tokyo");
 
     @Override
-    public ProjectListInfoResponse getProjectsBySiteIdAndCompanyId(Integer siteId, String companyId) {
+    public ProjectListInfoResponse getProjectsBySiteIdAndCompanyId(String siteId, String companyId) {
         ProjectListInfoResponse response = new ProjectListInfoResponse();
 
-        Site site = siteRepository.findById(siteId).orElse(null);
+        Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
         if (site == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
@@ -84,7 +82,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         for (Project project : projects) {
             ProjectDetailResponse resp = ProjectDetailResponse.builder()
-                    .id(String.valueOf(project.getId()))
+                    .id(project.getPublicId())
                     .projectName(project.getProjectName())
                     .emissionReduction(project.getEmissionReduction() != null ?
                             String.valueOf(project.getEmissionReduction()) : "0")
@@ -178,7 +176,13 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional
     public ProjectResponse updateProject(UpdateProjectRequest request) {
         ProjectResponse response = new ProjectResponse();
-        Project project = projectRepository.findById(request.getId()).orElse(null);
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(request.getId())
+            .map(Project::getId)
+            .orElse(null);
+        Project project = null;
+        if (projectDbId != null) {
+            project = projectRepository.findById(projectDbId).orElse(null);
+        }
         if (project == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
@@ -266,7 +270,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         List<ProjectDetailResponse> projectDetailList = projectList.stream()
             .map(p -> ProjectDetailResponse.builder()
-                    .id(p.getId().toString())
+                    .id(p.getPublicId())
                     .projectName(p.getProjectName())
                     .projectNumber(p.getProjectNumber())
                     .projectStatus(p.getProjectStatus())
@@ -397,9 +401,15 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectResponse getProject(Integer projectId, String userCompanyId) {
+    public ProjectResponse getProject(String projectId, String userCompanyId) {
         ProjectResponse response = new ProjectResponse();
-        Project project = projectRepository.findById(projectId).orElse(null);
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+            .map(Project::getId)
+            .orElse(null);
+        Project project = null;
+        if (projectDbId != null) {
+            project = projectRepository.findById(projectDbId).orElse(null);
+        }
 
         if (project == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -418,7 +428,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     private ProjectDetailResponse convertToProjectDetailResponse(Project project) {
         ProjectDetailResponse dto =  ProjectDetailResponse.builder()
-            .id(project.getId() != null ? project.getId().toString() : null)
+            .id(project.getPublicId())
             .projectName(project.getProjectName())
             .projectNumber(project.getProjectNumber())
             .projectStatus(project.getProjectStatus())
@@ -527,9 +537,15 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public UpdateProjectStatusResponse updateProjectStatus(String newStatus, Integer projectId) {
+    public UpdateProjectStatusResponse updateProjectStatus(String newStatus, String projectId) {
         UpdateProjectStatusResponse response = new UpdateProjectStatusResponse();
-        Project project = projectRepository.findById(projectId).orElse(null);
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+            .map(Project::getId)
+            .orElse(null);
+        Project project = null;
+        if (projectDbId != null) {
+            project = projectRepository.findById(projectDbId).orElse(null);
+        }
         if (project == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);

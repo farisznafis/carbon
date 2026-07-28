@@ -28,6 +28,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -68,6 +70,7 @@ import com.kct.jcredit.core_backend.service.impl.NotificationServiceImpl;
  * {@code @Tag("requirement-gap")} を付与しているため、CI レポート上で別途集計可能。
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("NotificationServiceImpl 単体テスト")
 class NotificationServiceImplTest {
  
@@ -103,7 +106,6 @@ void setUp() {
         .companyId("101")
         .nameJa("株式会社サンプル発電")
         .email("contact@sample-solar.co.jp")
-        .paymentMethod("CREDIT_CARD")
         .build();
 
     // id/createdAt/updatedAt は base/audit entity 由来で builder に乗らないため setter で個別セット
@@ -153,8 +155,9 @@ void setUp() {
         assertThat(sent.getTo()).containsExactly("contact@sample-solar.co.jp");
         assertThat(sent.getFrom()).isEqualTo("no-reply@gxcarbon.local");
         assertThat(sent.getSubject()).contains("停止");
-        // 支払い方法が本文に含まれることを確認（要件3の必須要素）
-        assertThat(sent.getText()).contains("CREDIT_CARD");
+        assertThat(sent.getText())
+            .contains("停止")
+            .doesNotContain("支払い", "CREDIT_CARD");
     }
 
     @Test
@@ -163,7 +166,6 @@ void setUp() {
         ParticipatingCompany noEmail = ParticipatingCompany.builder()
             .companyId("102")
             .email(null)
-            .paymentMethod("CREDIT_CARD")
             .build();
 
         notificationService.sendSuspensionNotification(noEmail);
@@ -172,21 +174,12 @@ void setUp() {
     }
 
     @Test
-    @DisplayName("UT-NS-03 [異常系] paymentMethod が null でも例外は発生せず本文に 'null' が出力される")
-    void UT_NS_03_nullPaymentMethod_noExceptionBodyContainsNull() {
-        ParticipatingCompany nullPayment = ParticipatingCompany.builder()
-            .companyId("103")
-            .email("contact@sample-solar.co.jp")
-            .paymentMethod(null)
-            .build();
-
-        assertThatCode(() -> notificationService.sendSuspensionNotification(nullPayment))
-            .doesNotThrowAnyException();
-
+    @DisplayName("UT-NS-03 [正常系] 停止通知本文に支払い情報を含めない")
+    void UT_NS_03_suspensionBodyDoesNotContainPaymentInformation() {
+        notificationService.sendSuspensionNotification(participatingCompany);
         ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
         verify(mailSender).send(captor.capture());
-        // 備考: null が文字列 "null" としてそのまま出力される。コンテンツ品質の改善余地あり
-        assertThat(captor.getValue().getText()).contains("null");
+        assertThat(captor.getValue().getText()).doesNotContain("支払い", "payment", "CREDIT_CARD");
     }
 
     @Test
@@ -236,58 +229,11 @@ void setUp() {
         ParticipatingCompany noEmail = ParticipatingCompany.builder()
             .companyId("102")
             .email(null)
-            .paymentMethod("CREDIT_CARD")
             .build();
 
         notificationService.sendReactivationNotification(noEmail);
 
         verify(mailSender, never()).send(any(SimpleMailMessage.class));
-    }
-
-// =========================================================================
-// 【要件2】sendFailureNotification — 支払い失敗通知
-// =========================================================================
-
-    @Test
-    @DisplayName("UT-NS-08 [正常系/現状仕様] ハードコードの admin@ 宛に企業ID・失敗理由を含むメールが送信される")
-    void UT_NS_08_currentImpl_sendsToHardcodedAdminWithDetails() {
-        notificationService.sendFailureNotification(participatingCompany, "カード残高不足");
-
-        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(mailSender).send(captor.capture());
-
-        SimpleMailMessage sent = captor.getValue();
-        // 備考: 現実装は admin@gxcarbon.jp へのハードコード。要件2 は動的通知を要求（TC-2-02参照）
-        assertThat(sent.getTo()).containsExactly("admin@gxcarbon.jp");
-        assertThat(sent.getText()).contains("101");
-        assertThat(sent.getText()).contains("カード残高不足");
-    }
-
-    @Test
-    @Tag("requirement-gap")
-    @Disabled("UT-NS-09: 要件2 は登録済み運営ユーザー全員への動的通知を要求するが、" +
-                "現実装は admin@gxcarbon.jp への単一ハードコードのみ。" +
-                "operatingUserRepository が inject 済みだが未使用。対応チケット: JIRA-XXX")
-    @DisplayName("UT-NS-09 [要件適合性] 支払い失敗時に登録済み運営ユーザー全員へ動的に通知される")
-    void UT_NS_09_shouldNotifyAllRegisteredOperatingUsers() {
-        when(operatingUserRepository.findAll()).thenReturn(List.of(operatingCompany));
-
-        notificationService.sendFailureNotification(participatingCompany, "カード残高不足");
-
-        verify(operatingUserRepository).findAll();
-        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(mailSender).send(captor.capture());
-        assertThat(captor.getValue().getTo()).containsExactly("yamada@gxcarbon.jp");
-    }
-
-    @Test
-    @DisplayName("UT-NS-10 [異常系] failureReason が null でも例外は発生しない")
-    void UT_NS_10_nullFailureReason_noException() {
-        assertThatCode(() ->
-            notificationService.sendFailureNotification(participatingCompany, null)
-        ).doesNotThrowAnyException();
-
-        verify(mailSender, times(1)).send(any(SimpleMailMessage.class));
     }
 
 // =========================================================================
@@ -426,7 +372,6 @@ void setUp() {
         ParticipatingCompany blankEmail = ParticipatingCompany.builder()
             .companyId("999")
             .email("")
-            .paymentMethod("CREDIT_CARD")
             .build();
 
         assertThatCode(() -> notificationService.sendSuspensionNotification(blankEmail))

@@ -16,7 +16,7 @@ import jakarta.validation.constraints.NotNull;
 public class CreateCancelRequestRequest {
 
     @NotNull(message = "siteId is required")
-    private Integer siteId;
+    private String siteId;
     
     @NotBlank(message = "recordPK is required")
     private String recordPK;
