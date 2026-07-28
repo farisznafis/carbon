@@ -93,7 +93,7 @@ public class SiteProjectController {
     @PreAuthorize("hasRole('master')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<BaseResponse> validateEquipment(
-            @RequestBody @Valid EnR002EquipmentRequest request) {
+            @RequestBody EnR002EquipmentRequest request) {
         validationService.validateEquipment(request);
         return ResponseEntity.ok(BaseResponse.success("入力内容に問題ありません。"));
     }
@@ -102,7 +102,7 @@ public class SiteProjectController {
     @PreAuthorize("hasRole('master')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<BaseResponse> validateConfirmationItems(
-            @RequestBody @Valid EnR002ConfirmationItemRequest request) {
+            @RequestBody EnR002ConfirmationItemRequest request) {
         validationService.validateConfirmationItems(request);
         return ResponseEntity.ok(BaseResponse.success("入力内容に問題ありません。"));
     }
@@ -120,7 +120,7 @@ public class SiteProjectController {
     @PreAuthorize("hasRole('master')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<BaseResponse> validateSustainabilityCommitment(
-            @RequestBody @Valid EnR002SustainabilityCommitmentRequest request) {
+            @RequestBody EnR002SustainabilityCommitmentRequest request) {
         validationService.validateSustainabilityCommitment(request);
         return ResponseEntity.ok(BaseResponse.success("入力内容に問題ありません。"));
     }
@@ -129,7 +129,7 @@ public class SiteProjectController {
     @PreAuthorize("hasRole('master')")
     @SecurityRequirement(name = "bearerAuth")
    public ResponseEntity<BaseResponse> validateFinalAgreement(
-            @RequestBody @Valid EnR002FinalAgreementRequest request) {
+            @RequestBody EnR002FinalAgreementRequest request) {
         validationService.validateFinalAgreement(request);
         return ResponseEntity.ok(BaseResponse.success("入力内容に問題ありません。"));
     }

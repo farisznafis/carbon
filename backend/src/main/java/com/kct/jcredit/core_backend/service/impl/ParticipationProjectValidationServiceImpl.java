@@ -56,8 +56,7 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
     );
 
     // ─────────────────────────────────────────────────────────────
-    // PUBLIC — dipanggil dari controller (per halaman)
-    //          dan dari ParticipationService (safety net)
+    // PUBLIC
     // ─────────────────────────────────────────────────────────────
 
     @Override
@@ -82,48 +81,66 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
     public void validateConfirmationItems(EnR002ConfirmationItemRequest request) {
         List<ValidationErrorDetail> errors = new ArrayList<>();
 
-        // Consent dasar — wajib semua true
         if (!Boolean.TRUE.equals(request.getIsAgreeDataUse()))
-            errors.add(err("request", "isAgreeDataUse",
+            errors.add(err("request",
+                    "データ利用への同意",
                     "データ利用への同意が必要です。"));
+
         if (!Boolean.TRUE.equals(request.getIsAgreeExtraData()))
-            errors.add(err("request", "isAgreeExtraData",
+            errors.add(err("request",
+                    "本入会届に記載されていない情報の提供への同意",
                     "本入会届に記載されていない情報の提供への同意が必要です。"));
+
         if (!Boolean.TRUE.equals(request.getIsAgreeTransfer()))
-            errors.add(err("request", "isAgreeTransfer",
-                    "環境価値(Ｊ－クレジット)の譲渡への同意が必要です。"));
+            errors.add(err("request",
+                    "環境価値（J-クレジット）の譲渡への同意",
+                    "環境価値（J-クレジット）の譲渡への同意が必要です。"));
+
         if (!Boolean.TRUE.equals(request.getIsNotRegistered()))
-            errors.add(err("request", "isNotRegistered",
+            errors.add(err("request",
+                    "他のJ-クレジット制度への未登録確認",
                     "他のJ-クレジット制度への未登録確認が必要です。"));
+
         if (request.getIsKeidanrenParticipation() == null)
-            errors.add(err("request", "isKeidanrenParticipation",
-                    "経団連カーボンニュートラル行動計画への参加状況の選択が必要です。"));
+            errors.add(err("request",
+                    "経団連カーボンニュートラル行動計画への参加状況",
+                    "選択してください。"));
 
         // Conditional: isEmitter
         if (Boolean.TRUE.equals(request.getIsEmitter())) {
+
             if (request.getEmitterCode() == null
                     || request.getEmitterCode().isBlank()
                     || !request.getEmitterCode().matches("\\d{9}"))
-                errors.add(err("request", "emitterCode",
-                        "isEmitterがtrueの場合、emitterCodeは9桁の数字必須です。"));
+                errors.add(err("request",
+                        "事業者コード",
+                        "9桁の数字を入力してください。"));
+
             if (!Boolean.TRUE.equals(request.getIsAdjustedEmissionsAdded()))
-                errors.add(err("request", "isAdjustedEmissionsAdded",
-                        "isEmitterがtrueの場合、調整後排出量への加算への同意が必要です。"));
+                errors.add(err("request",
+                        "調整後排出量への加算",
+                        "同意が必要です。"));
         }
 
         // Conditional: isSubjectToPeriodicReport
         if (Boolean.TRUE.equals(request.getIsSubjectToPeriodicReport())) {
+
             if (request.getIsPeriodicReportTypeOne() == null)
-                errors.add(err("request", "isPeriodicReportTypeOne",
-                        "isSubjectToPeriodicReportがtrueの場合、一種・二種の選択が必須です。"));
+                errors.add(err("request",
+                        "定期報告書の区分",
+                        "第一種または第二種を選択してください。"));
+
             if (request.getEnergyBusinessCode() == null
                     || !request.getEnergyBusinessCode().matches("\\d{7}"))
-                errors.add(err("request", "energyBusinessCode",
-                        "isSubjectToPeriodicReportがtrueの場合、energyBusinessCodeは7桁の数字必須です。"));
+                errors.add(err("request",
+                        "特定事業者番号",
+                        "7桁の数字を入力してください。"));
+
             if (request.getFactoryCode() == null
                     || !request.getFactoryCode().matches("\\d{7}"))
-                errors.add(err("request", "factoryCode",
-                        "isSubjectToPeriodicReportがtrueの場合、factoryCodeは7桁の数字必須です。"));
+                errors.add(err("request",
+                        "工場等番号",
+                        "7桁の数字を入力してください。"));
         }
 
         if (!errors.isEmpty()) throw new BulkValidationException(errors);
@@ -134,13 +151,24 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
         List<ValidationErrorDetail> errors = new ArrayList<>();
 
         if (request.getCompanyName() == null || request.getCompanyName().isBlank())
-            errors.add(err("request", "companyName", "事業者名は必須です。"));
+            errors.add(err("request",
+                    "事業者名",
+                    "必須項目です。"));
+
         if (request.getRepName() == null || request.getRepName().isBlank())
-            errors.add(err("request", "repName", "代表者名は必須です。"));
+            errors.add(err("request",
+                    "代表者名",
+                    "必須項目です。"));
+
         if (request.getRepRole() == null || request.getRepRole().isBlank())
-            errors.add(err("request", "repRole", "代表者役職は必須です。"));
+            errors.add(err("request",
+                    "代表者役職",
+                    "必須項目です。"));
+
         if (!Boolean.TRUE.equals(request.getHasConsent()))
-            errors.add(err("request", "hasConsent", "署名への同意が必要です。"));
+            errors.add(err("request",
+                    "署名への同意",
+                    "同意が必要です。"));
 
         if (!errors.isEmpty()) throw new BulkValidationException(errors);
     }
@@ -150,7 +178,9 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
         List<ValidationErrorDetail> errors = new ArrayList<>();
 
         if (!Boolean.TRUE.equals(request.getIsAgreeTerms()))
-            errors.add(err("request", "isAgreeTerms", "利用規約への同意が必要です。"));
+            errors.add(err("request",
+                    "利用規約への同意",
+                    "同意が必要です。"));
 
         if (!errors.isEmpty()) throw new BulkValidationException(errors);
     }
@@ -160,123 +190,249 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
     // ─────────────────────────────────────────────────────────────
 
     private void validateRequiredFields(EnR002EquipmentRequest item,
-                                         List<ValidationErrorDetail> errors) {
+                                    List<ValidationErrorDetail> errors) {
+
         if (item.getEquipmentOpDate() == null)
-            errors.add(err(item.getTempId(), "equipmentOpDate", "必須項目です。"));
+            errors.add(err(item.getTempId(),
+                    "稼働開始日（電力受給開始日）",
+                    "必須項目です。"));
+
         if (item.getNominalMaxOutput() != null
                 && item.getNominalMaxOutput().compareTo(BigDecimal.ZERO) <= 0)
-            errors.add(err(item.getTempId(), "nominalMaxOutput",
-                    "定格最大出力は0より大きい値を入力してください。"));
+            errors.add(err(item.getTempId(),
+                    "公称最大出力 (kW)",
+                    "0より大きい値を入力してください。"));
+
         if (item.getPcsManufacturer() == null || item.getPcsManufacturer().isBlank())
-            errors.add(err(item.getTempId(), "pcsManufacturer", "必須項目です。"));
+            errors.add(err(item.getTempId(),
+                    "メーカー",
+                    "必須項目です。"));
+
         if (item.getPcsModel() == null || item.getPcsModel().isBlank())
-            errors.add(err(item.getTempId(), "pcsModel", "必須項目です。"));
+            errors.add(err(item.getTempId(),
+                    "型式",
+                    "必須項目です。"));
+
         if (item.getPcsUnitCount() == null || item.getPcsUnitCount() < 1)
-            errors.add(err(item.getTempId(), "PcsUnitCount",
+            errors.add(err(item.getTempId(),
+                    "導入台数 (台)",
                     "1以上の数値を入力してください。"));
+
         if (item.getDeviceNo() == null || item.getDeviceNo().isBlank())
-            errors.add(err(item.getTempId(), "deviceNo", "必須項目です。"));
+            errors.add(err(item.getTempId(),
+                    "機器固有番号（製造番号）",
+                    "必須項目です。"));
+
         if (item.getPcsStandby() == null)
-            errors.add(err(item.getTempId(), "PcsStandby", "必須項目です。"));
+            errors.add(err(item.getTempId(),
+                    "夜間待機電力（1台あたり） (W)",
+                    "必須項目です。"));
+
         if (item.getTotalInvestment() == null || item.getTotalInvestment() <= 0)
-            errors.add(err(item.getTempId(), "totalInvestment",
-                    "総投資額は0より大きい値を入力してください。"));
+            errors.add(err(item.getTempId(),
+                    "設備の総投資額 (円)",
+                    "0より大きい値を入力してください。"));
+
         if (item.getPreProjectUnitPrice() != null
                 && item.getPreProjectUnitPrice().compareTo(BigDecimal.ZERO) <= 0)
-            errors.add(err(item.getTempId(), "preProjectUnitPrice",
-                    "プロジェクト前単価は0より大きい値を入力してください。"));
+            errors.add(err(item.getTempId(),
+                    "プロジェクト実施前の電力購入単価 (円/kWh)",
+                    "0より大きい値を入力してください。"));
     }
 
-    private void validateOperationDate(EnR002EquipmentRequest item,
-                                        List<ValidationErrorDetail> errors) {
+        private void validateOperationDate(EnR002EquipmentRequest item,
+                                    List<ValidationErrorDetail> errors) {
         if (item.getEquipmentOpDate() == null) return;
-        LocalDate today      = LocalDate.now();
+
+        LocalDate today = LocalDate.now();
         LocalDate twoYearsAgo = today.minusYears(2);
 
         if (item.getEquipmentOpDate().isBefore(twoYearsAgo))
-            errors.add(err(item.getTempId(), "equipmentOpDate",
-                    "設備稼働日は申込日から2年以内である必要があります。"));
+            errors.add(err(item.getTempId(),
+                    "稼働開始日（電力受給開始日）",
+                    "申込日から2年以内の日付を入力してください。"));
+
         if (item.getEquipmentOpDate().isAfter(today))
-            errors.add(err(item.getTempId(), "equipmentOpDate",
-                    "設備稼働日は未来の日付は設定できません。"));
+            errors.add(err(item.getTempId(),
+                    "稼働開始日（電力受給開始日）",
+                    "未来の日付は入力できません。"));
     }
 
-    private void validateRequiredFiles(EnR002EquipmentRequest item,
-                                        List<ValidationErrorDetail> errors) {
+        private void validateRequiredFiles(EnR002EquipmentRequest item,
+                                    List<ValidationErrorDetail> errors) {
+
         List<EnR002FileItemRequest> files = item.getFiles() == null
-                ? Collections.emptyList() : item.getFiles();
+                ? Collections.emptyList()
+                : item.getFiles();
 
         Set<EquipmentFileType> submitted = files.stream()
                 .map(EnR002FileItemRequest::getFileType)
                 .collect(Collectors.toSet());
 
         REQUIRED_FILES.forEach(required -> {
-            if (!submitted.contains(required))
+            if (!submitted.contains(required)) {
+
+                String field;
+                String message;
+
+                switch (required) {
+                    case SOLAR_CONTRACT:
+                        field = "確認資料：太陽光発電電力受給契約確認書";
+                        message = "太陽光発電電力受給契約確認書を添付してください。";
+                        break;
+
+                    case PANEL_CATALOG:
+                        field = "確認資料：仕様書・カタログ";
+                        message = "仕様書・カタログを添付してください。";
+                        break;
+
+                    case PCS_SPEC:
+                        field = "確認資料：仕様書・カタログ";
+                        message = "仕様書・カタログを添付してください。";
+                        break;
+
+                    case CONSTRUCTION_INVOICE:
+                        field = "確認資料：工事請負契約書、請求書、領収書等";
+                        message = "工事請負契約書、請求書、領収書等を添付してください。";
+                        break;
+
+                    case ELECTRICITY_BILL:
+                        field = "確認資料：電力会社からの請求明細書等";
+                        message = "電力会社からの請求明細書等を添付してください。";
+                        break;
+
+                    default:
+                        field = "確認資料";
+                        message = "確認資料を添付してください。";
+                        break;
+                }
+
                 errors.add(ValidationErrorDetail.builder()
                         .tempId(item.getTempId())
-                        .field(required.getValue())
-                        .message(required.getValue() + "ファイルは必須です。")
+                        .field(field)
+                        .message(message)
                         .build());
-        });
+                    }
+                }
+            );
     }
 
     private void validateFileContents(EnR002EquipmentRequest item,
-                                       List<ValidationErrorDetail> errors) {
-        if (item.getFiles() == null) return;
-        item.getFiles().forEach(f -> {
-            if (f.getS3Key() == null || f.getS3Key().isBlank())
-                errors.add(err(item.getTempId(),
-                        f.getFileType() != null ? f.getFileType().getValue() : "file",
-                        "S3キーが不正です。ファイルを再アップロードしてください。"));
-            if (f.getFileName() == null || f.getFileName().isBlank())
-                errors.add(err(item.getTempId(),
-                        f.getFileType() != null ? f.getFileType().getValue() : "file",
-                        "ファイル名が不正です。"));
-        });
-    }
+                                  List<ValidationErrorDetail> errors) {
+
+    if (item.getFiles() == null) return;
+
+    item.getFiles().forEach(f -> {
+
+        String field;
+
+        if (f.getFileType() == null) {
+            field = "確認資料";
+        } else {
+            switch (f.getFileType()) {
+                case SOLAR_CONTRACT:
+                    field = "確認資料：太陽光発電電力受給契約確認書";
+                    break;
+
+                case PANEL_CATALOG:
+                    field = "確認資料：太陽光パネル仕様書・カタログ";
+                    break;
+
+                case PCS_SPEC:
+                    field = "確認資料：PCS仕様書・カタログ";
+                    break;
+
+                case CONSTRUCTION_INVOICE:
+                    field = "確認資料：工事請負契約書、請求書、領収書等";
+                    break;
+
+                case ELECTRICITY_BILL:
+                    field = "確認資料：電力会社からの請求明細書等";
+                    break;
+
+                case BATTERY_CATALOG:
+                    field = "確認資料：蓄電池仕様書・カタログ";
+                    break;
+
+                case SUBSIDY_NOTICE:
+                    field = "確認資料：補助金交付決定通知書";
+                    break;
+
+                default:
+                    field = "確認資料";
+            }
+        }
+
+        if (f.getS3Key() == null || f.getS3Key().isBlank())
+            errors.add(err(item.getTempId(),
+                    field,
+                    "ファイルのアップロードに失敗しました。もう一度アップロードしてください。"));
+
+        if (f.getFileName() == null || f.getFileName().isBlank())
+            errors.add(err(item.getTempId(),
+                    field,
+                    "ファイル名を取得できませんでした。もう一度アップロードしてください。"));
+    });
+}
 
     private void validateBattery(EnR002EquipmentRequest item,
-                                  List<ValidationErrorDetail> errors) {
-        if (item.getBatteryMaker() == null || item.getBatteryMaker().isBlank())
-            errors.add(err(item.getTempId(), "batteryMaker",
-                    "hasBatteryがtrueの場合、batteryMakerは必須です。"));
-        if (item.getBatteryModel() == null || item.getBatteryModel().isBlank())
-            errors.add(err(item.getTempId(), "batteryModel",
-                    "hasBatteryがtrueの場合、batteryModelは必須です。"));
-        if (item.getBatteryCapacity() == null)
-            errors.add(err(item.getTempId(), "batteryCapacity",
-                    "hasBatteryがtrueの場合、batteryCapacity(kWh)は必須です。"));
-        else if (item.getBatteryCapacity().compareTo(BigDecimal.ZERO) <= 0)
-            errors.add(err(item.getTempId(), "batteryCapacity",
-                    "バッテリー容量は0より大きい値を入力してください。"));
+                             List<ValidationErrorDetail> errors) {
 
-        boolean hasBatteryCatalog = item.getFiles().stream()
-                .anyMatch(f -> EquipmentFileType.BATTERY_CATALOG.equals(f.getFileType()));
-        if (!hasBatteryCatalog)
-            errors.add(err(item.getTempId(),
-                    EquipmentFileType.BATTERY_CATALOG.getValue(),
-                    "hasBatteryがtrueの場合、battery_catalogファイルは必須です。"));
-    }
+    if (item.getBatteryMaker() == null || item.getBatteryMaker().isBlank())
+        errors.add(err(item.getTempId(),
+                "蓄電池メーカー",
+                "蓄電池を設置する場合は必須項目です。"));
+
+    if (item.getBatteryModel() == null || item.getBatteryModel().isBlank())
+        errors.add(err(item.getTempId(),
+                "蓄電池型式",
+                "蓄電池を設置する場合は必須項目です。"));
+
+    if (item.getBatteryCapacity() == null)
+        errors.add(err(item.getTempId(),
+                "蓄電池容量 (kWh)",
+                "蓄電池を設置する場合は必須項目です。"));
+
+    else if (item.getBatteryCapacity().compareTo(BigDecimal.ZERO) <= 0)
+        errors.add(err(item.getTempId(),
+                "蓄電池容量 (kWh)",
+                "0より大きい値を入力してください。"));
+
+    boolean hasBatteryCatalog = item.getFiles().stream()
+            .anyMatch(f -> EquipmentFileType.BATTERY_CATALOG.equals(f.getFileType()));
+
+    if (!hasBatteryCatalog)
+        errors.add(err(item.getTempId(),
+                "確認資料：蓄電池仕様書・カタログ",
+                "蓄電池を設置する場合は、蓄電池仕様書・カタログを添付してください。"));
+}
 
     private void validateSubsidy(EnR002EquipmentRequest item,
-                                  List<ValidationErrorDetail> errors) {
-        if (item.getSubsidyName() == null || item.getSubsidyName().isBlank())
-            errors.add(err(item.getTempId(), "subsidyName",
-                    "hasSubsidyがtrueの場合、subsidyNameは必須です。"));
-        if (item.getSubsidyAmount() == null)
-            errors.add(err(item.getTempId(), "subsidyAmount",
-                    "hasSubsidyがtrueの場合、subsidyAmountは必須です。"));
-        else if (item.getSubsidyAmount().compareTo(BigDecimal.ZERO) <= 0)
-            errors.add(err(item.getTempId(), "subsidyAmount",
-                    "補助金額は0より大きい値を入力してください。"));
+                             List<ValidationErrorDetail> errors) {
 
-        boolean hasSubsidyNotice = item.getFiles().stream()
-                .anyMatch(f -> EquipmentFileType.SUBSIDY_NOTICE.equals(f.getFileType()));
-        if (!hasSubsidyNotice)
-            errors.add(err(item.getTempId(),
-                    EquipmentFileType.SUBSIDY_NOTICE.getValue(),
-                    "hasSubsidyがtrueの場合、subsidy_noticeファイルは必須です。"));
-    }
+    if (item.getSubsidyName() == null || item.getSubsidyName().isBlank())
+        errors.add(err(item.getTempId(),
+                "補助金名称",
+                "補助金を受給する場合は必須項目です。"));
+
+    if (item.getSubsidyAmount() == null)
+        errors.add(err(item.getTempId(),
+                "補助金額 (円)",
+                "補助金を受給する場合は必須項目です。"));
+
+    else if (item.getSubsidyAmount().compareTo(BigDecimal.ZERO) <= 0)
+        errors.add(err(item.getTempId(),
+                "補助金額 (円)",
+                "0より大きい値を入力してください。"));
+
+    boolean hasSubsidyNotice = item.getFiles().stream()
+            .anyMatch(f -> EquipmentFileType.SUBSIDY_NOTICE.equals(f.getFileType()));
+
+    if (!hasSubsidyNotice)
+        errors.add(err(item.getTempId(),
+                "確認資料：補助金交付決定通知書",
+                "補助金を受給する場合は、補助金交付決定通知書を添付してください。"));
+}
 
     private ValidationErrorDetail err(String tempId, String field, String message) {
         return ValidationErrorDetail.builder()
