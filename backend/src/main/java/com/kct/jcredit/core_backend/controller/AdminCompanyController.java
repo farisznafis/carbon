@@ -5,6 +5,8 @@ import com.kct.jcredit.core_backend.dto.request.CreateCompanySuspensionRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectCompanyRequest;
 import com.kct.jcredit.core_backend.dto.request.ResolveCompanySuspensionRequest;
 import com.kct.jcredit.core_backend.dto.request.ReviewParticipationRequest;
+import com.kct.jcredit.core_backend.dto.request.ApproveReviewRequest;
+import com.kct.jcredit.core_backend.dto.request.RejectReviewRequest;
 import com.kct.jcredit.core_backend.dto.response.AdminCompanyListResponse;
 import com.kct.jcredit.core_backend.dto.response.AdminCompanyDetailResponse;
 import com.kct.jcredit.core_backend.dto.response.ApproveCompanyResponse;
@@ -183,7 +185,7 @@ public class AdminCompanyController {
     // ─────────────────────────────────────────────────────────────
 
     // ── LIST — semua item yang masih PENDING (status OPEN) ───────
-    @GetMapping
+    @GetMapping("participate/pending")
     @PreAuthorize("hasRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "レビュー待ち一覧取得", description = "承認待ちの入会届一覧を取得します。")
@@ -193,7 +195,7 @@ public class AdminCompanyController {
 
     // ── LIST — item yang MASIH BISA di-review oleh operator yang login ──
     // (exclude item yang dia sendiri sudah jadi primary reviewer)
-    @GetMapping("/mine")
+    @GetMapping("participate/mine")
     @PreAuthorize("hasRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "自分がレビュー可能な一覧取得", description = "自分がまだレビューできる入会届一覧を取得します。")
@@ -204,7 +206,7 @@ public class AdminCompanyController {
     }
 
     // ── DETAIL ─────────────────────────────────────────────────
-    @GetMapping("/{participationId}")
+    @GetMapping("participate/{participationId}")
     @PreAuthorize("hasRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "レビュー詳細取得", description = "指定した参加情報の詳細を取得します。")
