@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
 import type { UserNotification } from '@/api/notifications';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,19 @@ export function NotificationsList({
   const [processingNotificationIds, setProcessingNotificationIds] = useState<
     Array<UserNotification['id']>
   >([]);
+  const orderedNotifications = useMemo(
+    () =>
+      notifications
+        .map((notification, index) => ({ notification, index }))
+        .sort(
+          (left, right) =>
+            Number(left.notification.read) -
+              Number(right.notification.read) ||
+            left.index - right.index,
+        )
+        .map(({ notification }) => notification),
+    [notifications],
+  );
 
   const runNotificationAction = async (
     notificationId: UserNotification['id'],
@@ -68,7 +81,7 @@ export function NotificationsList({
 
   return (
     <ul className='space-y-3'>
-      {notifications.map((notification) => {
+      {orderedNotifications.map((notification) => {
         const isProcessing = processingNotificationIds.includes(
           notification.id,
         );
@@ -77,26 +90,34 @@ export function NotificationsList({
         return (
           <li
             key={notification.id}
-            className='space-y-3 rounded-xl border border-border bg-card p-4 shadow-app-sm'
+            className={`space-y-3 rounded-xl border border-border p-4 shadow-app-sm ${
+              isRead ? 'bg-muted/40' : 'bg-card'
+            }`}
           >
             <div className='min-w-0 space-y-2'>
               <div className='flex items-center justify-between gap-3'>
-                <div className='flex min-w-0 items-start flex-col'>
+                <div className='flex min-w-0 items-start gap-2'>
                   {!isRead && (
                     <span
                       className='mt-2 h-2 w-2 shrink-0 rounded-full bg-primary'
                       aria-label='未読'
                     />
                   )}
-                  <p className='break-words font-semibold leading-6'>
-                    {notification.title || '-'}
-                  </p>
-                  <time
-                    dateTime={notification.createdAt ?? undefined}
-                    className='block text-xs text-muted-foreground'
+                  <div className='min-w-0 flex flex-col'>
+                  <p
+                    className={`break-words leading-6 ${
+                      isRead ? 'font-normal' : 'font-semibold'
+                    }`}
                   >
-                    {formatNotificationDate(notification.createdAt)}
-                  </time>
+                      {notification.title || '-'}
+                    </p>
+                    <time
+                      dateTime={notification.createdAt ?? undefined}
+                      className='block text-xs text-muted-foreground'
+                    >
+                      {formatNotificationDate(notification.createdAt)}
+                    </time>
+                  </div>
                 </div>
 
                 {onDelete && (

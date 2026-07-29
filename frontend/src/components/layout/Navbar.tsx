@@ -110,7 +110,7 @@ export const Navbar = () => {
                         </Button>
                       </SheetClose>
                     </SheetHeader>
-                    <div className="flex-1 overflow-y-auto px-6 py-2">
+                    <div className="flex-1 overflow-y-auto p-4">
                       <NotificationsList
                         notifications={notifications}
                         loading={notificationsLoading}

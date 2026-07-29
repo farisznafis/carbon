@@ -1,20 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { UserNotification } from '@/api/notifications';
 import { NotificationsList } from './NotificationsList';
 
 const notifications: UserNotification[] = [
-  {
-    id: 1,
-    title: 'プロジェクト申請が承認されました',
-    message: '拠点Aの参加申請が承認されました。',
-    read: false,
-    operatingUserId: 10,
-    participatingUserId: null,
-    createdAt: '2026-07-29T10:30:00',
-    updatedAt: '2026-07-29T10:30:00',
-  },
   {
     id: 2,
     title: '既読のお知らせ',
@@ -24,6 +14,16 @@ const notifications: UserNotification[] = [
     participatingUserId: null,
     createdAt: '2026-07-28T09:00:00',
     updatedAt: '2026-07-28T09:00:00',
+  },
+  {
+    id: 1,
+    title: 'プロジェクト申請が承認されました',
+    message: '拠点Aの参加申請が承認されました。',
+    read: false,
+    operatingUserId: 10,
+    participatingUserId: null,
+    createdAt: '2026-07-29T10:30:00',
+    updatedAt: '2026-07-29T10:30:00',
   },
 ];
 
@@ -42,20 +42,33 @@ describe('NotificationsList', () => {
     expect(screen.getByRole('button', { name: '既読にする' })).toBeInTheDocument();
     expect(screen.getByText('2026年07月29日 10:30')).toBeInTheDocument();
     expect(screen.getAllByLabelText('通知メニュー')).toHaveLength(2);
-    const unreadTitle = screen.getByText('プロジェクト申請が承認されました');
-    const unreadHeader = unreadTitle.parentElement?.parentElement;
-    expect(unreadHeader).toHaveClass('flex', 'justify-between');
-    expect(unreadHeader).toContainElement(
-      screen.getAllByLabelText('通知メニュー')[0],
+    expect(screen.getAllByLabelText('通知メニュー')[0]).not.toHaveClass(
+      'absolute',
     );
-    screen.getAllByRole('listitem').forEach((notificationCard) => {
+    const notificationCards = screen.getAllByRole('listitem');
+    notificationCards.forEach((notificationCard) => {
       expect(notificationCard).toHaveClass(
         'rounded-xl',
         'border',
-        'bg-card',
         'p-4',
       );
     });
+    expect(
+      within(notificationCards[0]).getByText(
+        'プロジェクト申請が承認されました',
+      ),
+    ).toHaveClass('font-semibold');
+    expect(notificationCards[0]).toHaveClass('bg-card');
+    expect(
+      within(notificationCards[1]).getByText('既読のお知らせ'),
+    ).toHaveClass('font-normal');
+    expect(notificationCards[1]).toHaveClass('bg-muted/40');
+    expect(within(notificationCards[1]).queryByLabelText('未読')).toBeNull();
+    expect(
+      within(notificationCards[1]).queryByRole('button', {
+        name: '既読にする',
+      }),
+    ).toBeNull();
   });
 
   it('runs read and delete actions from the notification controls', async () => {
