@@ -11,9 +11,16 @@ const contexts: GuideContext[] = [
 ];
 
 describe('GUIDE_CONTENT', () => {
-  it.each(contexts)('provides eight steps for %s', (context) => {
-    expect(GUIDE_CONTENT[context].steps).toHaveLength(8);
-  });
+  it.each([
+    ['master-dashboard', 8],
+    ['site-dashboard', 5],
+    ['project-detail', 6],
+  ] satisfies Array<[GuideContext, number]>)(
+    'provides the configured number of steps for %s',
+    (context, totalSteps) => {
+      expect(GUIDE_CONTENT[context].steps).toHaveLength(totalSteps);
+    },
+  );
 
   it('uses page-specific content for each guide context', () => {
     const titles = contexts.map((context) => GUIDE_CONTENT[context].title);
