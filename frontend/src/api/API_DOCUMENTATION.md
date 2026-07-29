@@ -75,10 +75,18 @@ This document describes every file under `src/api/`. It is intended for develope
 | API function | Method and endpoint | Request data | Payload location |
 | --- | --- | --- | --- |
 | `getUsers` | `GET /user` | No request payload | [Request implementation](users/list.ts#L11) |
-| `getUserNotifications` | `GET /user/notifications` | No request payload | [Request implementation](users/notifications.ts#L40) |
 | `registerUser` | `POST /user` | JSON user creation body | [`RegisterUserPayload`](users/mutations.ts#L5); [`UserFormData`](users/types.ts#L51); [payload mapping](users/mutations.ts#L55) |
 | `updateUser` | `PATCH /user` | JSON user update body, including `userId` | [`UpdateUserPayload`](users/mutations.ts#L22); [`UserFormData`](users/types.ts#L51); [payload mapping](users/mutations.ts#L84) |
 | `deleteUser` | `DELETE /user/:userId` | Path: `userId`; no request body | [Function parameter and path](users/mutations.ts#L163) |
+
+### Notifications
+
+| API function | Method and endpoint | Request data | Payload location |
+| --- | --- | --- | --- |
+| `getNotifications` | `GET /notification/list` | Query: `unreadOnly`, `page`, `size` | [Request implementation](notifications/index.ts) |
+| `getUnreadNotificationCount` | `GET /notification/count` | No request payload | [Request implementation](notifications/index.ts) |
+| `markNotificationAsRead` | `PATCH /notification/:notificationId/read` | Path: `notificationId`; no request body | [Request implementation](notifications/index.ts) |
+| `deleteNotification` | `PATCH /notification/:notificationId/delete` | Path: `notificationId`; no request body | [Request implementation](notifications/index.ts) |
 
 ### Payload Ownership Rules
 
@@ -392,7 +400,7 @@ This document describes every file under `src/api/`. It is intended for develope
 ### `users/index.ts`
 
 - **Purpose:** Public barrel for user API.
-- **Main exports:** `getUsers`, `getUserNotifications`, `registerUser`, `updateUser`, `deleteUser`, notification and user/company types.
+- **Main exports:** `getUsers`, `registerUser`, `updateUser`, `deleteUser`, and user/company types.
 - **Boundary:** Public users module entrypoint.
 - **Notes:** Company mutation APIs live in `company`, not `users`.
 
@@ -402,11 +410,13 @@ This document describes every file under `src/api/`. It is intended for develope
 - **Main exports:** `getUsers`.
 - **Boundary:** User list query.
 
-### `users/notifications.ts`
+## `notifications`
 
-- **Purpose:** Fetches and normalizes notifications for the authenticated user.
-- **Main exports:** `getUserNotifications`, `UserNotification`.
-- **Boundary:** User notification query and response normalization.
+### `notifications/index.ts`
+
+- **Purpose:** Fetches, counts, reads, deletes, and normalizes notifications for the authenticated user.
+- **Main exports:** `getNotifications`, `getUnreadNotificationCount`, `markNotificationAsRead`, `deleteNotification`, `UserNotification`.
+- **Boundary:** Notification queries, mutations, and response normalization.
 
 ### `users/mutations.ts`
 

@@ -12,6 +12,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useNotifications } from '@/hooks/useNotifications';
+import { toast } from '@/hooks/use-toast';
 import { getHomePath } from '@/utils/getHomePath';
 import { paths } from '@/routes/paths';
 
@@ -23,6 +24,7 @@ export const Navbar = () => {
     error: notificationsError,
     unreadCount,
     markAsRead,
+    deleteNotification,
   } = useNotifications();
   const navigate = useNavigate();
   const location = useLocation();
@@ -36,6 +38,34 @@ export const Navbar = () => {
 
     await logout();
     navigate(redirectPath, { replace: true });
+  };
+
+  const handleMarkAsRead = async (
+    notificationId: Parameters<typeof markAsRead>[0],
+  ) => {
+    try {
+      await markAsRead(notificationId);
+    } catch {
+      toast({
+        title: 'エラー',
+        description: '通知を既読にできませんでした。',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteNotification = async (
+    notificationId: Parameters<typeof deleteNotification>[0],
+  ) => {
+    try {
+      await deleteNotification(notificationId);
+    } catch {
+      toast({
+        title: 'エラー',
+        description: '通知を削除できませんでした。',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -85,7 +115,8 @@ export const Navbar = () => {
                         notifications={notifications}
                         loading={notificationsLoading}
                         error={notificationsError}
-                        onMarkAsRead={markAsRead}
+                        onMarkAsRead={handleMarkAsRead}
+                        onDelete={handleDeleteNotification}
                       />
                     </div>
                   </SheetContent>

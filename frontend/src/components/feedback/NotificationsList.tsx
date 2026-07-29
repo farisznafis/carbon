@@ -1,12 +1,23 @@
-import { useEffect, useRef, useState } from 'react';
-import type { UserNotification } from '@/api/users';
-import { Badge } from '@/components/ui/badge';
+import { useState } from 'react';
+import { MoreHorizontal, Trash2 } from 'lucide-react';
+import type { UserNotification } from '@/api/notifications';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { formatNotificationDate } from './notificationFormatters';
 
 type NotificationsListProps = {
   notifications: UserNotification[];
   loading: boolean;
   error?: string | null;
-  onMarkAsRead?: (notificationId: UserNotification['id']) => void;
+  onMarkAsRead?: (
+    notificationId: UserNotification['id'],
+  ) => void | Promise<void>;
+  onDelete?: (notificationId: UserNotification['id']) => void | Promise<void>;
 };
 
 export function NotificationsList({
@@ -14,33 +25,29 @@ export function NotificationsList({
   loading,
   error,
   onMarkAsRead,
+  onDelete,
 }: NotificationsListProps) {
-  const [fadingNotificationIds, setFadingNotificationIds] = useState<
+  const [processingNotificationIds, setProcessingNotificationIds] = useState<
     Array<UserNotification['id']>
   >([]);
-  const timeoutRefs = useRef<Array<ReturnType<typeof setTimeout>>>([]);
 
-  useEffect(() => {
-    const timeouts = timeoutRefs.current;
+  const runNotificationAction = async (
+    notificationId: UserNotification['id'],
+    action: NotificationsListProps['onMarkAsRead'],
+  ) => {
+    if (!action) return;
 
-    return () => {
-      timeouts.forEach(clearTimeout);
-    };
-  }, []);
-
-  const markAsReadWithFade = (notificationId: UserNotification['id']) => {
-    setFadingNotificationIds((current) =>
+    setProcessingNotificationIds((current) =>
       current.includes(notificationId) ? current : [...current, notificationId],
     );
 
-    const timeout = setTimeout(() => {
-      onMarkAsRead?.(notificationId);
-      setFadingNotificationIds((current) =>
+    try {
+      await action(notificationId);
+    } finally {
+      setProcessingNotificationIds((current) =>
         current.filter((id) => id !== notificationId),
       );
-    }, 250);
-
-    timeoutRefs.current.push(timeout);
+    }
   };
 
   if (loading) {
@@ -60,51 +67,85 @@ export function NotificationsList({
   }
 
   return (
-    <ul className='divide-y rounded-lg border'>
+    <ul className='space-y-3'>
       {notifications.map((notification) => {
-        const isFading = fadingNotificationIds.includes(notification.id);
+        const isProcessing = processingNotificationIds.includes(
+          notification.id,
+        );
         const isRead = notification.read;
 
         return (
           <li
             key={notification.id}
-            className={`flex flex-col gap-2 p-4 transition-colors duration-300 sm:flex-row sm:items-start sm:justify-between ${
-              isRead ? 'bg-muted/50' : ''
-            }`}
+            className='space-y-3 rounded-xl border border-border bg-card p-4 shadow-app-sm'
           >
-            <div className='min-w-0 space-y-1'>
-              <p
-                className={`font-semibold break-words transition-colors duration-300 ${
-                  isRead ? 'text-muted-foreground' : ''
-                }`}
-              >
-                {notification.title || '-'}
-              </p>
-              <p
-                className={`text-sm break-words transition-colors duration-300 ${
-                  isRead ? 'text-muted-foreground/80' : 'text-muted-foreground'
-                }`}
-              >
+            <div className='min-w-0 space-y-2'>
+              <div className='flex items-center justify-between gap-3'>
+                <div className='flex min-w-0 items-start flex-col'>
+                  {!isRead && (
+                    <span
+                      className='mt-2 h-2 w-2 shrink-0 rounded-full bg-primary'
+                      aria-label='未読'
+                    />
+                  )}
+                  <p className='break-words font-semibold leading-6'>
+                    {notification.title || '-'}
+                  </p>
+                  <time
+                    dateTime={notification.createdAt ?? undefined}
+                    className='block text-xs text-muted-foreground'
+                  >
+                    {formatNotificationDate(notification.createdAt)}
+                  </time>
+                </div>
+
+                {onDelete && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='icon'
+                        className='h-8 w-8 shrink-0'
+                        disabled={isProcessing}
+                        aria-label='通知メニュー'
+                      >
+                        <MoreHorizontal className='h-4 w-4' />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align='end'>
+                      <DropdownMenuItem
+                        className='text-destructive focus:text-destructive'
+                        onSelect={() =>
+                          void runNotificationAction(notification.id, onDelete)
+                        }
+                      >
+                        <Trash2 className='mr-2 h-4 w-4' />
+                        削除
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
+              <p className='break-words text-sm leading-6 text-muted-foreground'>
                 {notification.message || '-'}
               </p>
             </div>
-            <div className='flex min-w-12 shrink-0 justify-start sm:justify-end'>
-              {!isRead && (
-                <button
-                  type='button'
-                  aria-label='既読にする'
-                  disabled={isFading}
-                  onClick={() => markAsReadWithFade(notification.id)}
-                  className={`w-fit shrink-0 transition-opacity duration-300 disabled:cursor-default ${
-                    isFading ? 'opacity-0' : 'opacity-100'
-                  }`}
-                >
-                  <Badge className='cursor-pointer'>
-                    未読
-                  </Badge>
-                </button>
-              )}
-            </div>
+
+            {!isRead && (
+              <Button
+                type='button'
+                variant='link'
+                size='sm'
+                className='h-auto p-0'
+                disabled={isProcessing}
+                onClick={() =>
+                  void runNotificationAction(notification.id, onMarkAsRead)
+                }
+              >
+                既読にする
+              </Button>
+            )}
           </li>
         );
       })}
