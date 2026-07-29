@@ -74,8 +74,10 @@ const AdminProjectMonitoringDetail = lazy(() =>
 const AdminHelpFaqPage = lazy(() => import("./features/master/help/AdminHelpFaqPage"));
 
 function RequireAdmin({ children }: { children: JSX.Element }) {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? children : <Navigate to={paths.adminLogin} replace />;
+  const { isAuthenticated, user } = useAuth();
+  return isAuthenticated && user?.role === 'admin'
+    ? children
+    : <Navigate to={paths.adminLogin} replace />;
 }
 
 function RequireMaster({ children }: { children: JSX.Element }) {

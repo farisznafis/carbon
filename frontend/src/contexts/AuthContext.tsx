@@ -4,6 +4,7 @@ import {
   useState,
   useCallback,
   useMemo,
+  useEffect,
   ReactNode,
 } from 'react';
 import * as authApi from '@/api/auth';
@@ -20,7 +21,6 @@ interface AuthContextType {
   adminLogin: (identifier: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
-  isLoggedIn: () => boolean;
   loading: boolean;
 }
 
@@ -38,10 +38,14 @@ type AdminLoginResponse = {
   };
 };
 
+type AuthSession = {
+  user: User | null;
+  isAuthenticated: boolean;
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const SESSION_DURATION_MS = 60 * 60 * 1000;
 const transientSessionKeys = [
-  storageKeys.authToken,
   storageKeys.sites,
   storageKeys.users,
   storageKeys.appliedProjects,
@@ -90,23 +94,60 @@ const isStoredSessionExpired = () => {
   return hasToken && expiresAt !== null && Date.now() >= expiresAt;
 };
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    if (isStoredSessionExpired()) {
+const EMPTY_AUTH_SESSION: AuthSession = {
+  user: null,
+  isAuthenticated: false,
+};
+
+const getStoredAuthSession = (): AuthSession => {
+  const token = storage.get(storageKeys.authToken);
+  const storedUser = storage.getJson<User>(storageKeys.user);
+  const hasStoredSession = !!token || !!storedUser || getSessionExpiresAt() !== null;
+
+  if (!token || !storedUser || isStoredSessionExpired()) {
+    if (hasStoredSession) {
       clearStoredSession();
-      return null;
     }
 
-    return storage.getJson<User>(storageKeys.user);
-  });
+    return EMPTY_AUTH_SESSION;
+  }
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return !!storage.get(storageKeys.authToken) && !isStoredSessionExpired();
-  });
+  return {
+    user: storedUser,
+    isAuthenticated: true,
+  };
+};
 
-  const isLoggedIn = useCallback(() => !!user, [user]);
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [session, setSession] = useState<AuthSession>(getStoredAuthSession);
+  const { user, isAuthenticated } = session;
 
   const [loading] = useState(false);
+
+  useEffect(() => {
+    const synchronizeSession = () => {
+      const nextSession = getStoredAuthSession();
+
+      setSession((currentSession) => {
+        if (
+          currentSession.user?.id === nextSession.user?.id &&
+          currentSession.isAuthenticated === nextSession.isAuthenticated
+        ) {
+          return currentSession;
+        }
+
+        return nextSession;
+      });
+    };
+
+    window.addEventListener('storage', synchronizeSession);
+    window.addEventListener('focus', synchronizeSession);
+
+    return () => {
+      window.removeEventListener('storage', synchronizeSession);
+      window.removeEventListener('focus', synchronizeSession);
+    };
+  }, []);
 
   const login = useCallback(
     async (companyId: string, email: string, password: string): Promise<User> => {
@@ -132,8 +173,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         storage.setJson(storageKeys.user, loginUser);
         storage.set(storageKeys.siteId, loginUser.siteId);
         setSessionExpiry();
-        setUser(loginUser);
-        setIsAuthenticated(true);
+        setSession({
+          user: loginUser,
+          isAuthenticated: true,
+        });
 
         return loginUser;
       } catch (err) {
@@ -169,8 +212,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         storage.setJson(storageKeys.user, adminUser);
         storage.remove(storageKeys.siteId);
         setSessionExpiry();
-        setUser(adminUser);
-        setIsAuthenticated(true);
+        setSession({
+          user: adminUser,
+          isAuthenticated: true,
+        });
 
         return adminUser;
       } catch (err) {
@@ -184,16 +229,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = useCallback(async () => {
     try {
       clearStoredSession();
-      setUser(null);
-      setIsAuthenticated(false);
+      setSession(EMPTY_AUTH_SESSION);
     } catch (err) {
       logger.error('Logout error:', err);
     }
   }, []);
 
   const value = useMemo(
-    () => ({ user, login, adminLogin, logout, isAuthenticated, isLoggedIn, loading }),
-    [user, login, adminLogin, logout, isAuthenticated, isLoggedIn, loading],
+    () => ({ user, login, adminLogin, logout, isAuthenticated, loading }),
+    [user, login, adminLogin, logout, isAuthenticated, loading],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
