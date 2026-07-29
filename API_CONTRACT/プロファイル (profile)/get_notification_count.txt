@@ -1,0 +1,17 @@
+3-2-5 お知らせの取得 (Get Announcements)
+
+URL: GET /api/user/notifications/count
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+
+Response - Success (HTTP 200):
+{
+  "total":3
+}
+
+Response - Error (HTTP 401):
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "認証に失敗しました。"
+}

@@ -1,0 +1,52 @@
+3-2-5 お知らせの取得 (Get Announcements)
+
+URL: GET /api/user/notification/list
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Query Parameters (optional):
+{
+  "type": "system|project|maintenance",
+  "status": "active|archived",
+  "page": 1,
+  "perPage": 10
+}
+
+Response - Success (HTTP 200):
+{
+  "statusCode": "OK",
+  "announcements": [
+    {
+      "announcementId": "ann_001",
+      "title": "システムメンテナンスのお知らせ",
+      "content": "2026年2月10日 22:00～24:00にシステムメンテナンスを実施します。",
+      "type": "system",
+      "severity": "info",
+      "publishedAt": "2026-02-05T10:00:00Z",
+      "expiresAt": "2026-02-10T24:00:00Z",
+      "read": false
+    },
+    {
+      "announcementId": "ann_002",
+      "title": "新しいプロジェクトが追加されました",
+      "content": "バイオマスプロジェクト2026が利用可能になりました。",
+      "type": "project",
+      "severity": "notice",
+      "publishedAt": "2026-02-04T09:30:00Z",
+      "expiresAt": null
+      "read": true
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "perPage": 10,
+    "total": 2,
+    "totalPages": 1
+  }
+}
+
+Response - Error (HTTP 401):
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "認証に失敗しました。"
+}

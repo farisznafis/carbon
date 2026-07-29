@@ -34,7 +34,6 @@ public class ParticipatingUserController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
-    private final NotificationService notificationService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('master')")
@@ -129,19 +128,4 @@ public class ParticipatingUserController {
         UserProfileResponse response = userService.getUserProfileById(userId, role, companyId);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
-
-    @GetMapping("/notifications")
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "参加企業ユーザー通知一覧取得", description = "ログイン中の参加企業ユーザーの通知一覧を取得します。")
-    public ResponseEntity<NotificationListResponse> getNotifications(
-            Authentication authentication,
-            @RequestParam(required = false, defaultValue = "false") Boolean unreadOnly,
-            @RequestParam(defaultValue = "0") Integer page,
-            @RequestParam(defaultValue = "10") Integer size) {
-        Integer userId = jwtUtil.extractUserId(authentication.getCredentials().toString());
-        boolean isOperatingUser = jwtUtil.extractRole(authentication.getCredentials().toString()).equals("operator");
-
-        NotificationListResponse response = notificationService.getNotifications(userId,unreadOnly, page, size, isOperatingUser);
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
-    }  
 }

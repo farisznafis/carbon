@@ -1,6 +1,7 @@
 package com.kct.jcredit.core_backend.service;
 
 import com.kct.jcredit.core_backend.dto.response.NotificationListResponse;
+import com.kct.jcredit.core_backend.dto.response.NotificationCountResponse;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.entity.Notification;
@@ -19,6 +20,12 @@ public interface NotificationService {
         Integer size,
         boolean isOperatingUser
     );
+
+    NotificationCountResponse getNotificationCount(Integer userId, boolean isOperatingUser);
+
+    NotificationListResponse readNotification(Integer userId, Integer notificationId, boolean isOperatingUser);
+
+    NotificationListResponse deleteNotification(Integer userId, Integer notificationId, boolean isOperatingUser);
 
     Notification createNotification(String title,
             String message,

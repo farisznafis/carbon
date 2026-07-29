@@ -3,6 +3,7 @@ package com.kct.jcredit.core_backend.service.impl;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.response.NotificationListResponse;
 import com.kct.jcredit.core_backend.dto.response.details.NotificationDetailResponse;
+import com.kct.jcredit.core_backend.dto.response.NotificationCountResponse;
 import com.kct.jcredit.core_backend.entity.base.PaginationDetailResponse;
 
 import com.kct.jcredit.core_backend.entity.Notification;
@@ -27,6 +28,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+
 
 
 @Slf4j
@@ -172,6 +174,80 @@ public class NotificationServiceImpl implements NotificationService {
         response.setPagination(pagination);
         
         return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public NotificationCountResponse getNotificationCount(Integer userId, boolean isOperatingUser) {
+        log.info("Counting unread notifications - userId: {}, isOperatingUser: {}", userId, isOperatingUser);
+
+        long unreadCount = isOperatingUser
+            ? notificationRepository.countUnreadByOperatingUserId(userId)
+            : notificationRepository.countUnreadByParticipatingUserId(userId);
+
+        NotificationCountResponse response = new NotificationCountResponse();
+        response.setUnreadCount(unreadCount);
+        response.setStatusCode(ResponseConstants.OK);
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public NotificationListResponse readNotification(Integer userId, Integer notificationId, boolean isOperatingUser) {
+        log.info("Marking notification read - userId: {}, notificationId: {}, isOperatingUser: {}", userId, notificationId, isOperatingUser);
+
+        NotificationListResponse response = new NotificationListResponse();
+
+        Notification notification = notificationRepository.findById(notificationId)
+            .filter(Notification::getIsActive)
+            .orElse(null);
+
+        if (notification == null || !isNotificationAccessible(notification, userId, isOperatingUser)) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage("Notification not found");
+            return response;
+        }
+
+        if (!Boolean.TRUE.equals(notification.getRead())) {
+            notification.markAsRead();
+            notificationRepository.save(notification);
+        }
+
+        response.setStatusCode(ResponseConstants.OK);
+        response.setNotifications(List.of(convertToNotificationDetailResponse(notification)));
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public NotificationListResponse deleteNotification(Integer userId, Integer notificationId, boolean isOperatingUser) {
+        log.info("Deleting notification - userId: {}, notificationId: {}, isOperatingUser: {}", userId, notificationId, isOperatingUser);
+
+        NotificationListResponse response = new NotificationListResponse();
+
+        Notification notification = notificationRepository.findById(notificationId)
+            .filter(Notification::getIsActive)
+            .orElse(null);
+
+        if (notification == null || !isNotificationAccessible(notification, userId, isOperatingUser)) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage("Notification not found");
+            return response;
+        }
+
+        notification.setIsActive(false);
+        notificationRepository.save(notification);
+
+        response.setStatusCode(ResponseConstants.OK);
+        response.setNotifications(List.of());
+        return response;
+    }
+
+    private boolean isNotificationAccessible(Notification notification, Integer userId, boolean isOperatingUser) {
+        if (Boolean.TRUE.equals(isOperatingUser)) {
+            return notification.getOperatingUser() != null && notification.getOperatingUser().getId().equals(userId);
+        }
+        return notification.getParticipatingUser() != null && notification.getParticipatingUser().getId().equals(userId);
     }
 
     private NotificationDetailResponse convertToNotificationDetailResponse(Notification notification) {

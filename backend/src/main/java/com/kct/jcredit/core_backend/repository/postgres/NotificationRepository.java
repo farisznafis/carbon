@@ -32,6 +32,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Inte
         @Param("read") Boolean read,
         Pageable pageable
     );
+
+
     
     // Participating User - 全件
     @Query("""
@@ -58,6 +60,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Inte
         @Param("read") Boolean read,
         Pageable pageable
     );
+
     
     // Operating User - 全件
     @Query("""
