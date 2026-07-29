@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, CircleHelp, HelpCircle, MessageCircleQuestion } from 'lucide-react';
+import { BookOpen, HelpCircle, MessageCircleQuestion } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -9,10 +9,15 @@ import {
 } from '@/components/ui/popover';
 import { paths } from '@/routes/paths';
 import { GuideModal } from './GuideModal';
+import type { GuideContext } from './guideSteps';
 
-// ─── Component ────────────────────────────────────────────────────────────────
+type FloatingHelpButtonProps = {
+  context: GuideContext;
+};
 
-export function FloatingHelpButton() {
+export function FloatingHelpButton({
+  context,
+}: Readonly<FloatingHelpButtonProps>) {
   const navigate = useNavigate();
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
@@ -29,13 +34,7 @@ export function FloatingHelpButton() {
 
   return (
     <>
-      {/*
-       * Positioned fixed at bottom-right.
-       * bottom-20 on mobile  → clears a scroll-to-top button at bottom-4 (h-10)
-       * bottom-24 on sm+     → extra breathing room on larger screens
-       * Adjust these values to match the exact height of your scroll-to-top button.
-       */}
-      <div className="fixed bottom-4 right-4 sm:right-3 z-50">
+      <div className="fixed bottom-4 right-4 z-40 sm:right-3">
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -56,30 +55,34 @@ export function FloatingHelpButton() {
             sideOffset={8}
             className="w-48 p-1.5"
           >
-            {/* ── メニュー項目 ──────────────────────────────── */}
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={handleOpenGuide}
-              className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors focus:outline-none focus:bg-accent"
+              className="h-9 w-full justify-start rounded-md px-3"
             >
               <BookOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
               使い方ガイド
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={handleOpenFaq}
-              className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors focus:outline-none focus:bg-accent"
+              className="h-9 w-full justify-start rounded-md px-3"
             >
               <MessageCircleQuestion className="h-4 w-4 shrink-0 text-muted-foreground" />
               ヘルプ・FAQ
-            </button>
+            </Button>
           </PopoverContent>
         </Popover>
       </div>
 
-      {/* Guide modal is rendered at top level so it overlays everything */}
-      <GuideModal open={guideOpen} onClose={() => setGuideOpen(false)} />
+      <GuideModal
+        open={guideOpen}
+        context={context}
+        onClose={() => setGuideOpen(false)}
+      />
     </>
   );
 }

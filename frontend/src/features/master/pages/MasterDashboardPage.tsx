@@ -181,7 +181,7 @@ const MasterDashboard = () => {
           </TabsContent>
         </main>
       </Tabs>
-      <FloatingHelpButton />
+      <FloatingHelpButton context="master-dashboard" />
     </div>
   );
 };

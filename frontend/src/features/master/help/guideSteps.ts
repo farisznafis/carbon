@@ -1,29 +1,41 @@
-// guideSteps.ts
+export type GuideContext =
+  | 'master-dashboard'
+  | 'site-dashboard'
+  | 'project-detail';
 
 export type GuideStep = {
   title: string;
   description: string;
-  videoSrc?: string;    // 🔁 Replace with your actual video path or URL
-  videoPoster?: string; // 🔁 Optional: thumbnail shown before the video plays
+  mediaSrc?: string;
+  mediaPoster?: string;
 };
 
-export const GUIDE_STEPS: GuideStep[] = [
-  {
-    title: 'アカウントを作成する',
-    description: 'サインアップして企業情報を入力するところから始めましょう。',
-    videoSrc: '/videos/step-1.mp4',           // 🔁 Replace this path
-    videoPoster: '/images/step-1-thumb.jpg',  // 🔁 Replace or remove
+export type GuideContent = {
+  title: string;
+  description: string;
+  steps: GuideStep[];
+};
+
+const createPlaceholderSteps = (pageName: string): GuideStep[] =>
+  Array.from({ length: 8 }, (_, index) => ({
+    title: `${pageName}ガイド ステップ${index + 1}`,
+    description: `${pageName}で利用できる機能と操作方法の説明をここに表示します。正式なガイド文言は後から設定できます。`,
+  }));
+
+export const GUIDE_CONTENT: Record<GuideContext, GuideContent> = {
+  'master-dashboard': {
+    title: 'マスターダッシュボードガイド',
+    description: '企業全体の拠点・ユーザー管理について案内します。',
+    steps: createPlaceholderSteps('マスターダッシュボード'),
   },
-  {
-    title: 'Set up your profile',
-    description: 'Add your logo, address, and contact information.',
-    videoSrc: '/videos/step-2.mp4',           // 🔁 Replace this path
-    videoPoster: '/images/step-2-thumb.jpg',  // 🔁 Replace or remove
+  'site-dashboard': {
+    title: '拠点ダッシュボードガイド',
+    description: '拠点情報と参加プロジェクトの確認方法について案内します。',
+    steps: createPlaceholderSteps('拠点ダッシュボード'),
   },
-  {
-    title: 'Invite your team',
-    description: 'Send invitations to your team members to join the workspace.',
-    videoSrc: '/videos/step-3.mp4',           // 🔁 Replace this path
-    // videoPoster not set — thumbnail is optional
+  'project-detail': {
+    title: 'プロジェクト詳細ガイド',
+    description: 'プロジェクト情報・設備・モニタリングの確認方法について案内します。',
+    steps: createPlaceholderSteps('プロジェクト詳細'),
   },
-];
+};

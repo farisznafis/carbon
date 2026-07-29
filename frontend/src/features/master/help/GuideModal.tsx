@@ -1,35 +1,50 @@
-// GuideModal.tsx
-
-import { useState } from 'react';
-import { X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Play, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { GUIDE_STEPS } from './guideSteps';
+import { Progress } from '@/components/ui/progress';
+import {
+  GUIDE_CONTENT,
+  type GuideContext,
+} from './guideSteps';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type Props = {
+type GuideModalProps = {
   open: boolean;
+  context: GuideContext;
   onClose: () => void;
 };
 
-// ─── Video Player ─────────────────────────────────────────────────────────────
-
-type VideoPlayerProps = {
+type GuideMediaProps = {
   src: string;
   poster?: string;
+  title: string;
 };
 
-function VideoPlayer({ src, poster }: VideoPlayerProps) {
+function GuideMedia({ src, poster, title }: Readonly<GuideMediaProps>) {
+  const isImage = /\.(gif|png|jpe?g|webp|avif)(?:\?.*)?$/i.test(src);
+
+  if (isImage) {
+    return (
+      <div className="aspect-video w-full overflow-hidden rounded-xl bg-muted">
+        <img
+          src={src}
+          alt={title}
+          className="h-full w-full object-cover"
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full rounded-xl overflow-hidden bg-black aspect-video">
+    <div className="aspect-video w-full overflow-hidden rounded-xl bg-black">
       <video
-        className="w-full h-full object-cover"
+        className="h-full w-full object-cover"
         src={src}
         poster={poster}
         controls
@@ -40,151 +55,132 @@ function VideoPlayer({ src, poster }: VideoPlayerProps) {
   );
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
-export function GuideModal({ open, onClose }: Props) {
+export function GuideModal({
+  open,
+  context,
+  onClose,
+}: Readonly<GuideModalProps>) {
   const [currentIndex, setCurrentIndex] = useState(0);
-
-  const totalSteps = GUIDE_STEPS.length;
+  const content = GUIDE_CONTENT[context];
+  const totalSteps = content.steps.length;
+  const currentStep = content.steps[currentIndex];
   const isFirst = currentIndex === 0;
   const isLast = currentIndex === totalSteps - 1;
-  const step = GUIDE_STEPS[currentIndex];
+  const progress = ((currentIndex + 1) / totalSteps) * 100;
+
+  useEffect(() => {
+    setCurrentIndex(0);
+  }, [context, open]);
 
   const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen) {
-      onClose();
-      setTimeout(() => setCurrentIndex(0), 300);
-    }
+    if (!isOpen) onClose();
   };
-
-  const handlePrev = () => setCurrentIndex((prev) => Math.max(prev - 1, 0));
-  const handleNext = () => setCurrentIndex((prev) => Math.min(prev + 1, totalSteps - 1));
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="w-full max-w-[580px] p-0 gap-0 overflow-hidden"
+        className="w-[calc(100vw-2rem)] max-w-xl gap-0 overflow-hidden rounded-xl p-0"
         hideCloseButton
       >
-
-        {/* ── ヘッダー ──────────────────────────────────────────────────── */}
-        <DialogHeader className="flex flex-row items-center justify-between px-6 pt-6 pb-4 border-b border-border">
-          <div className="space-y-0.5">
-            <DialogTitle className="text-base font-semibold leading-tight">
-              使い方ガイド
-            </DialogTitle>
-            <p className="text-xs text-muted-foreground tabular-nums">
-              ステップ {currentIndex + 1} / {totalSteps}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md p-1 opacity-60 hover:opacity-100 hover:bg-muted transition-all focus:outline-none focus:ring-2 focus:ring-ring"
-            aria-label="閉じる"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </DialogHeader>
-
-        {/* ── プログレスバー ────────────────────────────────────────────── */}
-        <div
-          className="w-full h-1 bg-muted"
-          role="progressbar"
-          aria-valuenow={currentIndex + 1}
-          aria-valuemin={1}
-          aria-valuemax={totalSteps}
-          aria-label="ガイドの進行状況"
-        >
-          <div
-            className="h-full bg-primary transition-all duration-300"
-            style={{ width: `${((currentIndex + 1) / totalSteps) * 100}%` }}
-          />
-        </div>
-
-        {/* ── 本文 ────────────────────────────────────────────────────── */}
-        <div className="px-6 py-6 space-y-4">
-
-          {/* ステップラベル・タイトル */}
-          <div className="space-y-1.5">
-            <p className="text-xs font-medium text-primary uppercase tracking-widest">
-              ステップ {currentIndex + 1}
-            </p>
-            <h3 className="text-lg font-semibold text-foreground leading-snug">
-              {step.title}
-            </h3>
-          </div>
-
-          {/* 説明文 */}
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {step.description}
-          </p>
-
-          {/* ── 動画 ─────────────────────────────────────────────────── */}
-          {step.videoSrc ? (
-            <VideoPlayer
-              src={step.videoSrc}
-              poster={step.videoPoster}
-            />
-          ) : (
-            // 動画がない場合のフォールバック
-            <div
-              className="flex flex-col items-center justify-center w-full rounded-xl bg-muted text-muted-foreground gap-2"
-              style={{ minHeight: '220px' }}
-            >
-              <div className="h-10 w-10 rounded-full bg-muted-foreground/20 flex items-center justify-center">
-                <svg className="h-5 w-5 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </div>
-              <p className="text-sm">このステップには動画がありません</p>
+        <DialogHeader className="border-b border-border px-6 py-5 text-left">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <DialogTitle>{content.title}</DialogTitle>
+              <DialogDescription>{content.description}</DialogDescription>
             </div>
-          )}
-
-        </div>
-
-        {/* ── フッター ──────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-border">
-
-          {/* 左：スキップ（最終ステップでは非表示） */}
-          {!isLast ? (
             <Button
               type="button"
               variant="ghost"
-              size="sm"
+              size="icon"
+              className="-mr-2 -mt-2 shrink-0"
+              aria-label="閉じる"
               onClick={onClose}
-              className="text-muted-foreground hover:text-foreground"
             >
-              スキップ
+              <X />
             </Button>
-          ) : (
-            <div />
-          )}
+          </div>
+          <div className="space-y-2 pt-3">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>
+                ステップ {currentIndex + 1} / {totalSteps}
+              </span>
+              <span>{Math.round(progress)}%</span>
+            </div>
+            <Progress
+              value={progress}
+              className="h-2"
+              aria-label="ガイドの進行状況"
+            />
+          </div>
+        </DialogHeader>
 
-          {/* 右：戻る / 次へ または 完了 */}
+        <div className="space-y-5 px-6 py-6">
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-primary">
+              STEP {currentIndex + 1}
+            </p>
+            <h3 className="text-lg font-semibold text-foreground">
+              {currentStep.title}
+            </h3>
+            <p className="text-sm leading-6 text-muted-foreground">
+              {currentStep.description}
+            </p>
+          </div>
+
+          {currentStep.mediaSrc ? (
+            <GuideMedia
+              src={currentStep.mediaSrc}
+              poster={currentStep.mediaPoster}
+              title={currentStep.title}
+            />
+          ) : (
+            <div className="flex min-h-52 w-full flex-col items-center justify-center gap-2 rounded-xl bg-muted text-muted-foreground">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-muted-foreground/20">
+                <Play className="h-5 w-5 fill-current" />
+              </span>
+              <p className="text-sm">このステップには動画がありません</p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between border-t border-border px-6 py-4">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+          >
+            スキップ
+          </Button>
+
           <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={handlePrev}
               disabled={isFirst}
-              className={isFirst ? 'invisible' : ''}
+              onClick={() =>
+                setCurrentIndex((previous) => Math.max(previous - 1, 0))
+              }
             >
               戻る
             </Button>
-
-            {isLast ? (
-              <Button type="button" size="sm" onClick={onClose}>
-                完了
-              </Button>
-            ) : (
-              <Button type="button" size="sm" onClick={handleNext}>
-                次へ
-              </Button>
-            )}
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                if (isLast) {
+                  onClose();
+                  return;
+                }
+                setCurrentIndex((previous) =>
+                  Math.min(previous + 1, totalSteps - 1),
+                );
+              }}
+            >
+              {isLast ? '完了' : '次へ'}
+            </Button>
           </div>
-
         </div>
       </DialogContent>
     </Dialog>
