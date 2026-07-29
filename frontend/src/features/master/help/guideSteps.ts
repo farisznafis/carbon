@@ -1,32 +1,29 @@
+// guideSteps.ts
+
 export type GuideStep = {
   title: string;
   description: string;
+  videoSrc?: string;    // 🔁 Replace with your actual video path or URL
+  videoPoster?: string; // 🔁 Optional: thumbnail shown before the video plays
 };
 
 export const GUIDE_STEPS: GuideStep[] = [
   {
-    title: 'ダッシュボードの見方',
-    description:
-      'ダッシュボードでは、企業ごとのステータスや最新の申請状況を一覧で確認できます。',
+    title: 'アカウントを作成する',
+    description: 'サインアップして企業情報を入力するところから始めましょう。',
+    videoSrc: '/videos/step-1.mp4',           // 🔁 Replace this path
+    videoPoster: '/images/step-1-thumb.jpg',  // 🔁 Replace or remove
   },
   {
-    title: '申請状況の確認',
-    description:
-      '各企業の申請ステータスをリアルタイムで確認できます。フィルターを使うと素早く絞り込めます。',
+    title: 'Set up your profile',
+    description: 'Add your logo, address, and contact information.',
+    videoSrc: '/videos/step-2.mp4',           // 🔁 Replace this path
+    videoPoster: '/images/step-2-thumb.jpg',  // 🔁 Replace or remove
   },
   {
-    title: '入会届の提出',
-    description:
-      '新規企業の入会届を提出する手順を説明します。必要な書類と入力項目を確認してください。',
-  },
-  {
-    title: '設備情報の追加',
-    description:
-      '企業に紐づく設備情報（拠点・機器など）を追加・編集する方法を説明します。',
-  },
-  {
-    title: 'ヘルプ・FAQの使い方',
-    description:
-      'よくある質問やトラブルシューティングはヘルプ・FAQページからいつでも参照できます。',
+    title: 'Invite your team',
+    description: 'Send invitations to your team members to join the workspace.',
+    videoSrc: '/videos/step-3.mp4',           // 🔁 Replace this path
+    // videoPoster not set — thumbnail is optional
   },
 ];

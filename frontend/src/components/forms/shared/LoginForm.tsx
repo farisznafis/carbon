@@ -28,7 +28,7 @@ export function LoginForm({
   useRedirectIfLoggedIn();
 
   return (
-    <main className="min-h-screen bg-background px-4 py-16 sm:px-6 lg:px-8">
+    <main className="h-dvh w-screen overflow-hidden bg-background px-4 sm:px-6 lg:px-8 flex items-center justify-center">
       <div className="mx-auto flex w-full max-w-[768px] flex-col items-center">
         {header ?? (
           <header className="text-center">

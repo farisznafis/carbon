@@ -1,3 +1,5 @@
+// GuideModal.tsx
+
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,16 +18,24 @@ type Props = {
   onClose: () => void;
 };
 
-// ─── Video placeholder ────────────────────────────────────────────────────────
+// ─── Video Player ─────────────────────────────────────────────────────────────
 
-function VideoPlaceholder() {
+type VideoPlayerProps = {
+  src: string;
+  poster?: string;
+};
+
+function VideoPlayer({ src, poster }: VideoPlayerProps) {
   return (
-    <div
-      className="flex items-center justify-center w-full rounded-lg bg-muted text-muted-foreground text-sm"
-      style={{ minHeight: '10rem' }}
-      aria-label="動画プレースホルダー"
-    >
-      操作説明動画がここに表示されます
+    <div className="w-full rounded-xl overflow-hidden bg-black aspect-video">
+      <video
+        className="w-full h-full object-cover"
+        src={src}
+        poster={poster}
+        controls
+        playsInline
+        preload="metadata"
+      />
     </div>
   );
 }
@@ -40,96 +50,118 @@ export function GuideModal({ open, onClose }: Props) {
   const isLast = currentIndex === totalSteps - 1;
   const step = GUIDE_STEPS[currentIndex];
 
-  // Reset to step 1 whenever the modal opens
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       onClose();
-      // Delay reset so the closing animation finishes
       setTimeout(() => setCurrentIndex(0), 300);
     }
   };
 
-  const handlePrev = () =>
-    setCurrentIndex((prev) => Math.max(prev - 1, 0));
-
-  const handleNext = () =>
-    setCurrentIndex((prev) => Math.min(prev + 1, totalSteps - 1));
+  const handlePrev = () => setCurrentIndex((prev) => Math.max(prev - 1, 0));
+  const handleNext = () => setCurrentIndex((prev) => Math.min(prev + 1, totalSteps - 1));
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        // Cap width at 480px; let it be narrower on small screens
-        className="w-full max-w-[480px] p-0 gap-0 overflow-hidden"
-        // Hide the default shadcn close icon — we render our own in the footer
+        className="w-full max-w-[580px] p-0 gap-0 overflow-hidden"
         hideCloseButton
       >
-        {/* ── Header ──────────────────────────────────────────────────── */}
-        <DialogHeader className="flex flex-row items-center justify-between px-5 pt-5 pb-3 border-b border-border">
-          <DialogTitle className="text-base font-semibold leading-tight">
-            使い方ガイド
-          </DialogTitle>
+
+        {/* ── ヘッダー ──────────────────────────────────────────────────── */}
+        <DialogHeader className="flex flex-row items-center justify-between px-6 pt-6 pb-4 border-b border-border">
+          <div className="space-y-0.5">
+            <DialogTitle className="text-base font-semibold leading-tight">
+              使い方ガイド
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground tabular-nums">
+              ステップ {currentIndex + 1} / {totalSteps}
+            </p>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-sm opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-opacity"
+            className="rounded-md p-1 opacity-60 hover:opacity-100 hover:bg-muted transition-all focus:outline-none focus:ring-2 focus:ring-ring"
             aria-label="閉じる"
           >
             <X className="h-4 w-4" />
           </button>
         </DialogHeader>
 
-        {/* ── Body ────────────────────────────────────────────────────── */}
-        <div className="px-5 py-5 space-y-4">
-          {/* Progress indicator */}
-          <p className="text-xs text-muted-foreground text-right tabular-nums">
-            {currentIndex + 1} / {totalSteps}
-          </p>
-
-          {/* Progress bar */}
+        {/* ── プログレスバー ────────────────────────────────────────────── */}
+        <div
+          className="w-full h-1 bg-muted"
+          role="progressbar"
+          aria-valuenow={currentIndex + 1}
+          aria-valuemin={1}
+          aria-valuemax={totalSteps}
+          aria-label="ガイドの進行状況"
+        >
           <div
-            className="w-full h-1.5 rounded-full bg-muted overflow-hidden"
-            role="progressbar"
-            aria-valuenow={currentIndex + 1}
-            aria-valuemin={1}
-            aria-valuemax={totalSteps}
-            aria-label="ガイドの進捗"
-          >
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-300"
-              style={{
-                width: `${((currentIndex + 1) / totalSteps) * 100}%`,
-              }}
-            />
+            className="h-full bg-primary transition-all duration-300"
+            style={{ width: `${((currentIndex + 1) / totalSteps) * 100}%` }}
+          />
+        </div>
+
+        {/* ── 本文 ────────────────────────────────────────────────────── */}
+        <div className="px-6 py-6 space-y-4">
+
+          {/* ステップラベル・タイトル */}
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-primary uppercase tracking-widest">
+              ステップ {currentIndex + 1}
+            </p>
+            <h3 className="text-lg font-semibold text-foreground leading-snug">
+              {step.title}
+            </h3>
           </div>
 
-          {/* Step title */}
-          <h3 className="text-[15px] font-semibold text-foreground leading-snug">
-            {step.title}
-          </h3>
-
-          {/* Description */}
+          {/* 説明文 */}
           <p className="text-sm text-muted-foreground leading-relaxed">
             {step.description}
           </p>
 
-          {/* Video placeholder */}
-          <VideoPlaceholder />
+          {/* ── 動画 ─────────────────────────────────────────────────── */}
+          {step.videoSrc ? (
+            <VideoPlayer
+              src={step.videoSrc}
+              poster={step.videoPoster}
+            />
+          ) : (
+            // 動画がない場合のフォールバック
+            <div
+              className="flex flex-col items-center justify-center w-full rounded-xl bg-muted text-muted-foreground gap-2"
+              style={{ minHeight: '220px' }}
+            >
+              <div className="h-10 w-10 rounded-full bg-muted-foreground/20 flex items-center justify-center">
+                <svg className="h-5 w-5 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+              <p className="text-sm">このステップには動画がありません</p>
+            </div>
+          )}
+
         </div>
 
-        {/* ── Footer ──────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between px-5 pb-5 pt-1 border-t border-border gap-2">
-          {/* Left: スキップ */}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            スキップ
-          </Button>
+        {/* ── フッター ──────────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-border">
 
-          {/* Right: 戻る / 次へ or 完了 */}
+          {/* 左：スキップ（最終ステップでは非表示） */}
+          {!isLast ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              スキップ
+            </Button>
+          ) : (
+            <div />
+          )}
+
+          {/* 右：戻る / 次へ または 完了 */}
           <div className="flex items-center gap-2">
             <Button
               type="button"
@@ -137,30 +169,22 @@ export function GuideModal({ open, onClose }: Props) {
               size="sm"
               onClick={handlePrev}
               disabled={isFirst}
-              aria-disabled={isFirst}
               className={isFirst ? 'invisible' : ''}
             >
               戻る
             </Button>
 
             {isLast ? (
-              <Button
-                type="button"
-                size="sm"
-                onClick={onClose}
-              >
+              <Button type="button" size="sm" onClick={onClose}>
                 完了
               </Button>
             ) : (
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleNext}
-              >
+              <Button type="button" size="sm" onClick={handleNext}>
                 次へ
               </Button>
             )}
           </div>
+
         </div>
       </DialogContent>
     </Dialog>
