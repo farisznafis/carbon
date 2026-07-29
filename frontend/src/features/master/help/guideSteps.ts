@@ -1,32 +1,44 @@
+export type GuideContext =
+  | 'master-dashboard'
+  | 'site-dashboard'
+  | 'project-detail';
+
 export type GuideStep = {
   title: string;
   description: string;
+  mediaSrc?: string;
+  mediaPoster?: string;
 };
 
-export const GUIDE_STEPS: GuideStep[] = [
-  {
-    title: 'ダッシュボードの見方',
-    description:
-      'ダッシュボードでは、企業ごとのステータスや最新の申請状況を一覧で確認できます。',
+export type GuideContent = {
+  title: string;
+  description: string;
+  steps: GuideStep[];
+};
+
+const createPlaceholderSteps = (
+  pageName: string,
+  totalSteps: number,
+): GuideStep[] =>
+  Array.from({ length: totalSteps }, (_, index) => ({
+    title: `${pageName}ガイド ステップ${index + 1}`,
+    description: `${pageName}で利用できる機能と操作方法の説明をここに表示します。正式なガイド文言は後から設定できます。`,
+  }));
+
+export const GUIDE_CONTENT: Record<GuideContext, GuideContent> = {
+  'master-dashboard': {
+    title: 'マスターダッシュボードガイド',
+    description: '企業全体の拠点・ユーザー管理について案内します。',
+    steps: createPlaceholderSteps('マスターダッシュボード', 8),
   },
-  {
-    title: '申請状況の確認',
-    description:
-      '各企業の申請ステータスをリアルタイムで確認できます。フィルターを使うと素早く絞り込めます。',
+  'site-dashboard': {
+    title: '拠点ダッシュボードガイド',
+    description: '拠点情報と参加プロジェクトの確認方法について案内します。',
+    steps: createPlaceholderSteps('拠点ダッシュボード', 5),
   },
-  {
-    title: '入会届の提出',
-    description:
-      '新規企業の入会届を提出する手順を説明します。必要な書類と入力項目を確認してください。',
+  'project-detail': {
+    title: 'プロジェクト詳細ガイド',
+    description: 'プロジェクト情報・設備・モニタリングの確認方法について案内します。',
+    steps: createPlaceholderSteps('プロジェクト詳細', 6),
   },
-  {
-    title: '設備情報の追加',
-    description:
-      '企業に紐づく設備情報（拠点・機器など）を追加・編集する方法を説明します。',
-  },
-  {
-    title: 'ヘルプ・FAQの使い方',
-    description:
-      'よくある質問やトラブルシューティングはヘルプ・FAQページからいつでも参照できます。',
-  },
-];
+};

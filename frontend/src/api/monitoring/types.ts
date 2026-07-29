@@ -90,9 +90,9 @@ export type MonitoringRecentResponse = {
 
 export type MonitoringRecordListItem = {
   id: string;
-  projectID: string;
-  siteID: string | number;
-  participatingUserID: number;
+  projectId: string;
+  siteId: string;
+  participatingUserId: number;
   timeUpdated: string;
   dateRecorded: string;
   elpjControlValue: number | null;
@@ -114,12 +114,44 @@ export type MonitoringRecordListItem = {
   methodologyType: string | null;
 };
 
+export type MonitoringRecordListApiItem = {
+  id?: string | number | null;
+  monitoringId?: string | number | null;
+  recordId?: string | number | null;
+  projectId?: string | number | null;
+  projectID?: string | number | null;
+  siteId?: string | number | null;
+  siteID?: string | number | null;
+  participatingUserId?: string | number | null;
+  participatingUserID?: string | number | null;
+  timeUpdated?: string | null;
+  updatedAt?: string | null;
+  dateRecorded?: string | null;
+  elpjControlValue?: string | number | null;
+  elpjControlEquipmentSpecFiles?: string | null;
+  elpjBatteryValue?: string | number | null;
+  elpjAccuracy?: string | number | null;
+  elpjBatteryEvidence?: string | null;
+  elPv?: string | number | null;
+  elPvEvidence?: string | null;
+  elPvr?: string | number | null;
+  elPvrEvidence?: string | null;
+  elPvEvidenceUrl?: string | null;
+  elPvrEvidenceUrl?: string | null;
+  elpjBatterySpecificationUrl?: string | null;
+  elpjControlEvidenceUrl?: string | null;
+  changedBattery?: boolean | string | number | null;
+  isActive?: boolean | string | number | null;
+  processedAt?: string | null;
+  methodologyType?: string | null;
+};
+
 export type MonitoringRecordListResponse = {
   statusCode?: string;
   message?: string | null;
   errors?: Record<string, string> | null;
   timestamp?: string;
-  items?: MonitoringRecordListItem[] | null;
+  items?: MonitoringRecordListApiItem[] | null;
   pagination?: Partial<ApiPagination> | null;
 };
 

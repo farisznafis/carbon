@@ -5,17 +5,27 @@ import type { Project } from '@/api/projects';
 import {
   mapAdminProjectPayload,
   mapAdminProjectPlanApplicationPayload,
+  mapAdminProjectUpdatePayload,
 } from '@/api/admin/projectPayloadMapper';
 import {
   createAdminProject,
   createAdminProjectPlanApplication,
   getProjectPlanAutofillByProject,
   getProjectPlanAutofillDefaults,
+  updateAdminProject,
 } from '@/api/admin/projects';
 import { ConfirmationItem } from '@/components/feedback/Confirmation/ConfirmationItem';
 import { ConfirmationLayout } from '@/components/feedback/Confirmation/ConfirmationLayout';
 import { PageDropdown } from '@/components/forms/shared/PageDropdown';
-import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
+import {
+  FormActions,
+  FormCard,
+  FormPageContent,
+  FormPageTitle,
+  FormSectionStack,
+  FormStandalonePage,
+} from '@/components/forms/form-layout';
+import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -177,15 +187,14 @@ export const AdminProjectRegister: React.FC = () => {
 
   const goNext = async () => {
     if (step < maxStep) {
-      if (!createdProjectId || !isProjectBaseSaved) {
-        showErrorToast(
-          '保存が必要です',
-          '次へ進む前にプロジェクト基本情報を保存してください。',
-        );
-        return;
-      }
+      const projectId =
+        createdProjectId && isProjectBaseSaved
+          ? createdProjectId
+          : await saveProjectBase();
 
-      await loadProjectApplication(createdProjectId);
+      if (!projectId) return;
+
+      await loadProjectApplication(projectId);
       return;
     }
 
@@ -254,31 +263,54 @@ export const AdminProjectRegister: React.FC = () => {
     }
   };
 
-  const onSave = async () => {
+  const saveProjectBase = async (): Promise<string | null> => {
+    if (isSavingProjectBase) return null;
+
     setIsSavingProjectBase(true);
     setSubmitError(null);
     form.clearErrors();
 
     try {
       const createdBy = String(user?.id ?? '');
-      const projectPayload = mapAdminProjectPayload(form.getValues(), createdBy);
-      const createdProjects = await createAdminProject(projectPayload);
-      const projectId = createdProjects?.[0]?.id;
+      let projectId = createdProjectId;
 
-      if (projectId === undefined || projectId === null || projectId === '') {
-        throw new Error('Project ID was not returned');
+      if (projectId) {
+        await updateAdminProject(
+          projectId,
+          mapAdminProjectUpdatePayload(form.getValues(), createdBy),
+        );
+      } else {
+        const projectPayload = mapAdminProjectPayload(
+          form.getValues(),
+          createdBy,
+        );
+        const createdProjects = await createAdminProject(projectPayload);
+        const returnedProjectId = createdProjects?.[0]?.id;
+
+        if (
+          returnedProjectId === undefined ||
+          returnedProjectId === null ||
+          returnedProjectId === ''
+        ) {
+          throw new Error('Project ID was not returned');
+        }
+
+        projectId = String(returnedProjectId);
       }
 
-      setCreatedProjectId(String(projectId));
+      setCreatedProjectId(projectId);
       setSavedProjectBaseSnapshot(projectBaseSnapshot);
       toast({
         title: '保存しました',
         description: 'プロジェクト基本情報を保存しました。',
         variant: 'success',
       });
+      return projectId;
     } catch (e) {
-      setCreatedProjectId(null);
-      setSavedProjectBaseSnapshot(null);
+      if (!createdProjectId) {
+        setCreatedProjectId(null);
+        setSavedProjectBaseSnapshot(null);
+      }
       const message = applyBackendValidationErrors(form, e);
       setSubmitError(message);
       showErrorToast(
@@ -288,6 +320,7 @@ export const AdminProjectRegister: React.FC = () => {
             ? e.message
             : 'プロジェクト基本情報を保存できませんでした。'),
       );
+      return null;
     } finally {
       setIsSavingProjectBase(false);
     }
@@ -331,68 +364,80 @@ export const AdminProjectRegister: React.FC = () => {
   }
 
   return (
-    <FormPageWrapper
-      pageName='プロジェクト登録申請'
-      title=''
-      onBack={() => navigate(paths.adminDashboard)}
-      backText='戻る'
-      contentMaxWidth='max-w-3xl'
-    >
-      <div className='mb-4 flex items-center justify-between gap-3'>
-        <PageDropdown
-          steps={visibleSteps}
-          value={step}
-          onChange={jumpToStep}
-        />
-        {step === 1 && <TemporaryAdminProjectAutofillButton form={form} />}
-        {step === 2 && (
-          <TemporaryAdminProjectApplicationAutofillButton form={form} />
-        )}
-      </div>
-
-      <MultiStepForm
-        form={form}
-        step={step}
-        stepsOverride={visibleSteps}
+    <FormStandalonePage>
+      <PageBackButton
+        onClick={() => navigate(paths.adminDashboard)}
+        label=''
+        className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
       />
 
-      <div className='mt-6 flex justify-between gap-2'>
-        {step === 1 && (
-          <Button
-            type='button'
-            variant='outline'
-            onClick={onSave}
-            disabled={isSavingProjectBase}
-          >
-            {isSavingProjectBase ? '保存中...' : '保存'}
-          </Button>
-        )}
-        {step > 1 && (
-          <Button
-            type='button'
-            variant='outline'
-            onClick={goBack}
-          >
-            戻る
-          </Button>
-        )}
-        <Button
-          type='button'
-          onClick={goNext}
-          disabled={
-            isSavingProjectBase ||
-            isLoadingApplication ||
-            (step === 1 && !isProjectBaseSaved)
-          }
-        >
-          {step === maxStep
-            ? '確認へ'
-            : isLoadingApplication
-              ? '読み込み中...'
-              : '次へ'}
-        </Button>
-      </div>
-      {submitError && <p className='text-sm text-destructive'>{submitError}</p>}
-    </FormPageWrapper>
+      <FormPageContent>
+        <FormPageTitle align='center'>プロジェクト登録申請</FormPageTitle>
+
+        <div className='flex items-center justify-between gap-3'>
+          <PageDropdown
+            steps={visibleSteps}
+            value={step}
+            onChange={jumpToStep}
+          />
+          {step === 1 && <TemporaryAdminProjectAutofillButton form={form} />}
+          {step === 2 && (
+            <TemporaryAdminProjectApplicationAutofillButton form={form} />
+          )}
+        </div>
+
+        <FormCard>
+          <FormSectionStack spacing='relaxed'>
+            <MultiStepForm
+              form={form}
+              step={step}
+              stepsOverride={visibleSteps}
+            />
+
+            {submitError && (
+              <p className='text-sm text-destructive'>{submitError}</p>
+            )}
+
+            <FormActions
+              className={
+                step > 1
+                  ? 'grid grid-cols-1 gap-3 sm:grid-cols-2'
+                  : 'grid grid-cols-1 gap-3'
+              }
+            >
+              {step > 1 && (
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='md'
+                  className='w-full'
+                  onClick={goBack}
+                  disabled={isSubmitting || isLoadingApplication}
+                >
+                  戻る
+                </Button>
+              )}
+              <Button
+                type='button'
+                size='md'
+                className='w-full'
+                onClick={goNext}
+                disabled={
+                  isSavingProjectBase || isLoadingApplication || isSubmitting
+                }
+              >
+                {step === maxStep
+                  ? '確認へ'
+                  : isSavingProjectBase
+                    ? '保存中...'
+                    : isLoadingApplication
+                      ? '読み込み中...'
+                      : '次へ'}
+              </Button>
+            </FormActions>
+          </FormSectionStack>
+        </FormCard>
+      </FormPageContent>
+    </FormStandalonePage>
   );
 };

@@ -42,7 +42,6 @@ export const projectFields: FieldConfig<FormValues>[] = [
     label: 'プロジェクト番号',
     type: 'text',
   },
-  { name: 'projectBase.companyName', label: '会社名', type: 'text' },
 ];
 
 export const representativeFields: FieldConfig<FormValues>[] = [
@@ -172,18 +171,13 @@ export const methodologyFields: FieldConfig<FormValues>[] = [
 
 export const emissionFields: FieldConfig<FormValues>[] = [
   {
-    name: 'projectBase.emissionReduction',
-    label: '削減量',
-    type: 'number',
-  },
-  {
     name: 'projectBase.baselineEmissions',
     label: 'ベースライン排出量',
     type: 'number',
   },
   {
     name: 'projectBase.postProjectEmission',
-    label: 'プロジェクト後排出量',
+    label: 'プロジェクト実施後排出量',
     type: 'number',
   },
 ];

@@ -16,7 +16,7 @@ import {
   type MonitoringRecordListItem,
 } from '@/api/monitoring';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
-import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
+import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -26,6 +26,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { logger } from '@/lib/logger';
+import { cn } from '@/lib/utils';
 import { paths } from '@/routes/paths';
 import { ProjectDetailItem } from '../project-detail/ProjectDetailItem';
 import {
@@ -39,6 +40,34 @@ import {
 type MonitoringDetailLocationState = {
   monitoringRecord?: MonitoringRecordListItem;
 };
+
+function MonitoringDetailLayout({
+  children,
+  onBack,
+  contentMaxWidth = 'max-w-5xl',
+}: {
+  children: React.ReactNode;
+  onBack: () => void;
+  contentMaxWidth?: string;
+}) {
+  return (
+    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-10">
+      <div className="mx-auto grid w-full max-w-[1200px] grid-cols-[48px_minmax(0,1fr)] items-start gap-4 sm:gap-6">
+        <PageBackButton
+          onClick={onBack}
+          label=""
+          aria-label="モニタリングデータ一覧へ戻る"
+          className="h-12 w-12 rounded-full p-0"
+        />
+
+        <div className={cn('w-full space-y-6', contentMaxWidth)}>
+          <h1 className="text-foreground">モニタリング詳細</h1>
+          {children}
+        </div>
+      </div>
+    </main>
+  );
+}
 
 function EvidenceLink({
   label,
@@ -110,12 +139,7 @@ export default function ProjectMonitoringDetailPage() {
     location.state as MonitoringDetailLocationState | null
   )?.monitoringRecord;
   const [record, setRecord] = useState<MonitoringRecordListItem | null>(
-    locationRecord && monitoringId && projectId
-      ? isMatchingMonitoringRecord(locationRecord, monitoringId) &&
-        String(locationRecord.projectID) === projectId
-        ? locationRecord
-        : null
-      : null,
+    locationRecord ?? null,
   );
   const [isLoading, setIsLoading] = useState(!record);
   const [error, setError] = useState<string | null>(null);
@@ -186,12 +210,9 @@ export default function ProjectMonitoringDetailPage() {
 
   if (!record || error) {
     return (
-      <FormPageWrapper
-        pageName="モニタリング詳細"
-        title=""
+      <MonitoringDetailLayout
         onBack={returnToList}
         contentMaxWidth="max-w-3xl"
-        wrapInCard={false}
       >
         <Card>
           <CardHeader>
@@ -211,36 +232,21 @@ export default function ProjectMonitoringDetailPage() {
             </Button>
           </CardContent>
         </Card>
-      </FormPageWrapper>
+      </MonitoringDetailLayout>
     );
   }
 
   return (
-    <FormPageWrapper
-      pageName="モニタリング詳細"
-      title=""
-      onBack={returnToList}
-      contentMaxWidth="max-w-5xl"
-      wrapInCard={false}
-    >
-      <Card>
-        <CardHeader>
-          <CardTitle>モニタリング詳細</CardTitle>
-          <CardDescription>
-            モニタリングID: {formatMonitoringValue(record.id)}
-          </CardDescription>
-        </CardHeader>
-      </Card>
-
+    <MonitoringDetailLayout onBack={returnToList}>
       <DetailSection
         title="基本情報"
         description="対象レコードと処理状況を確認できます。"
         icon={<Activity className="h-5 w-5" />}
       >
         <ProjectDetailItem label="モニタリングID" value={formatMonitoringValue(record.id)} />
-        <ProjectDetailItem label="プロジェクトID" value={formatMonitoringValue(record.projectID)} />
-        <ProjectDetailItem label="拠点ID" value={formatMonitoringValue(record.siteID)} />
-        <ProjectDetailItem label="参加ユーザID" value={formatMonitoringValue(record.participatingUserID)} />
+        <ProjectDetailItem label="プロジェクトID" value={formatMonitoringValue(record.projectId)} />
+        <ProjectDetailItem label="拠点ID" value={formatMonitoringValue(record.siteId)} />
+        <ProjectDetailItem label="参加ユーザID" value={formatMonitoringValue(record.participatingUserId)} />
         <ProjectDetailItem label="方法論" value={formatMonitoringValue(record.methodologyType)} />
         <ProjectDetailItem label="記録日" value={formatMonitoringDate(record.dateRecorded)} />
         <ProjectDetailItem label="更新日時" value={formatMonitoringDateTime(record.timeUpdated)} />
@@ -315,6 +321,6 @@ export default function ProjectMonitoringDetailPage() {
           url={record.elpjControlEvidenceUrl}
         />
       </DetailSection>
-    </FormPageWrapper>
+    </MonitoringDetailLayout>
   );
 }

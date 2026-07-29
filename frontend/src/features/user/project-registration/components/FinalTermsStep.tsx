@@ -1,8 +1,10 @@
 ﻿import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import { RequiredLabel } from "@/components/forms/shared/RequiredLabel";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
-import { Form, FormItem, FormField, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Form, FormItem, FormField, FormControl, FormMessage } from "@/components/ui/form";
 
 const FinalTermsSchema = z.object({
   finalTermsAgreed: z.boolean().refine(val => val === true, "同意してください"),
@@ -92,7 +94,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
 
       <Card>
         <CardContent className="pt-6">
-          <div className="max-h-[600px] overflow-y-auto p-6 border rounded-lg bg-muted/30">
+          <div className="max-h-[600px] overflow-y-auto p-6 border rounded-lg">
             <div className="text-sm leading-relaxed space-y-6">
               <section>
                 <h3 className="font-semibold mb-2">(名称)</h3>
@@ -247,41 +249,35 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
             </div>
           </div>
 
-          <div className="flex items-start space-x-3 mt-6">
-            <Card className="max-w-sm mx-auto mt-6 p-6 rounded-lg">
-              
-                <Form {...form}>
-                  <FormField
-                    control={form.control}
-                    name="finalTermsAgreed"
-                    render={({ field }) => {
-                      const { value, ...rest } = field;
-                      return (
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              id="finalTermsAgreed"
-                              {...rest}
-                              checked={value}
-                              onChange={(e) => field.onChange(e.target.checked)}
-                              className="h-5 w-5 rounded-sm border-input align-middle text-primary focus:ring-2 focus:ring-ring"
-                            />
-                          </FormControl>
-                          <div className="flex flex-col">
-                            <FormLabel htmlFor="finalTermsAgreed" className="text-sm font-medium leading-none">
-                              同意します
-                            </FormLabel>
-                            <FormMessage className="mt-1 text-xs text-destructive" /> {/* displays validation error */}
-                          </div>
-                        </FormItem>
-                      );
-                    }}
-                  />
-                </Form>
-              
-            </Card>
-          </div>
+          <Form {...form}>
+            <FormField
+              control={form.control}
+              name="finalTermsAgreed"
+              render={({ field }) => (
+                <FormItem className="mt-6 rounded-lg border border-border p-4">
+                  <div className="flex items-center gap-3">
+                    <FormControl>
+                      <Checkbox
+                        id="finalTermsAgreed"
+                        checked={field.value}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
+                        aria-required="true"
+                      />
+                    </FormControl>
+                    <RequiredLabel
+                      htmlFor="finalTermsAgreed"
+                      className="cursor-pointer"
+                    >
+                      同意します
+                    </RequiredLabel>
+                  </div>
+                  <FormMessage className="mt-2" />
+                </FormItem>
+              )}
+            />
+          </Form>
         </CardContent>
       </Card>
     </div>
