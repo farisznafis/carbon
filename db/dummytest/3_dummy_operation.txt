@@ -86,14 +86,13 @@ INSERT INTO notification (
     id, is_active, created_at, created_by, updated_at, updated_by,
     title, message, read, operating_user_id, participating_user_id
 )
-OVERRIDING SYSTEM VALUE
 VALUES
-(1, TRUE, '2026-07-15 09:05:00', 'operator1', '2026-07-15 09:05:00', 'operator1', 'Company suspension notice', 'Kuma Power has been temporarily suspended. Please review the administrative requirements before continuing the project setup.', FALSE, 1, NULL),
-(2, TRUE, '2026-07-21 09:10:00', 'operator1', '2026-07-21 09:10:00', 'operator1', 'Record cancellation request received', 'A cancellation request has been submitted for the April monitoring record of the Shibuya headquarters site.', FALSE, 1, 2),
-(3, TRUE, '2026-07-22 11:05:00', 'operator1', '2026-07-22 11:05:00', 'operator1', 'Record cancellation approved', 'The duplicate May monitoring record for the Shinagawa logistics center has been approved for cancellation.', TRUE, 1, 3),
-(4, TRUE, '2026-07-14 15:35:00', 'operator1', '2026-07-14 15:35:00', 'operator1', 'Company deletion request rejected', 'The deletion request cannot be approved while active project-related records remain.', FALSE, 1, 10),
-(5, TRUE, '2026-07-29 08:31:00', 'system', '2026-07-29 08:31:00', 'system', 'Password reset requested', 'A password reset link has been sent to your registered email address.', FALSE, NULL, 2),
-(6, TRUE, '2026-07-18 16:45:00', 'kumagai.nao', '2026-07-18 16:45:00', 'kumagai.nao', 'Cancellation request submitted', 'Your cancellation request for equipment KP-AIC-001 has been submitted for review.', TRUE, NULL, 8);
+(1, TRUE, '2026-07-15 09:05:00', 'operator1', '2026-07-15 09:05:00', 'operator1', '企業の利用停止のお知らせ', 'Kuma Powerは一時的に利用が停止されました。プロジェクト設定を続行する前に、管理要件をご確認ください。', FALSE, 1, NULL),
+(2, TRUE, '2026-07-21 09:10:00', 'operator1', '2026-07-21 09:10:00', 'operator1', '記録の取消申請を受理しました', '渋谷本社拠点の4月分モニタリング記録について、取消申請が提出されました。', FALSE, 1, 2),
+(3, TRUE, '2026-07-22 11:05:00', 'operator1', '2026-07-22 11:05:00', 'operator1', '記録の取消が承認されました', '品川ロジスティクスセンターの5月分モニタリング記録（重複）の取消が承認されました。', TRUE, 1, 3),
+(4, TRUE, '2026-07-14 15:35:00', 'operator1', '2026-07-14 15:35:00', 'operator1', '企業の削除申請が却下されました', '進行中のプロジェクトに関連する記録が残っているため、削除申請を承認できません。', FALSE, 1, 10),
+(5, TRUE, '2026-07-29 08:31:00', 'system', '2026-07-29 08:31:00', 'system', 'パスワード再設定のリクエストを受け付けました', 'ご登録のメールアドレスにパスワード再設定用のリンクを送信しました。', FALSE, NULL, 2),
+(6, TRUE, '2026-07-18 16:45:00', 'kumagai.nao', '2026-07-18 16:45:00', 'kumagai.nao', '取消申請を受け付けました', '設備「KP-AIC-001」に関する取消申請が確認のため提出されました。', TRUE, NULL, 8);
 
 -- =========================================================
 -- Synchronize identity sequences
