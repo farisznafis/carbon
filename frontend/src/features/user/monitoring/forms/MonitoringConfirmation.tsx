@@ -7,6 +7,7 @@ import {
 } from '@/components/forms/form-layout';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
+import { ChangedConfirmationValue } from '@/components/feedback/Confirmation/ChangedConfirmationValue';
 import { ConfirmationItem } from './confirmationItem';
 
 type ConfirmationLayoutProps = {
@@ -50,8 +51,14 @@ export function MonitoringConfirmationLayout({
                   <div className="mb-1 text-sm font-medium text-muted-foreground">
                     {item.label}
                   </div>
-                  <div className={item.isChanged ? 'font-bold underline' : ''}>
-                    {item.value}
+                  <div>
+                    {item.isChanged ? (
+                      <ChangedConfirmationValue>
+                        {item.value}
+                      </ChangedConfirmationValue>
+                    ) : (
+                      item.value
+                    )}
                   </div>
                 </div>
               ))}

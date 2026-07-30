@@ -1,6 +1,7 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 import { Button } from "@/components/ui/button";
+import { ChangedConfirmationValue } from '@/components/feedback/Confirmation/ChangedConfirmationValue';
 
 type FullPageConfirmationModalProps = {
   open: boolean;
@@ -54,12 +55,15 @@ export function FullPageConfirmationModal({
                       {key}
                     </dt>
                     <dd
-                      className={
-                        "mt-1 text-sm text-foreground sm:mt-0 sm:col-span-2" +
-                        (isChanged ? " underline" : "")
-                      }
+                      className='mt-1 text-sm text-foreground sm:col-span-2 sm:mt-0'
                     >
-                      {value}
+                      {isChanged ? (
+                        <ChangedConfirmationValue>
+                          {value}
+                        </ChangedConfirmationValue>
+                      ) : (
+                        value
+                      )}
                     </dd>
                   </div>
                 );
