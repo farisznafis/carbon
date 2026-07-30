@@ -24,9 +24,9 @@ const project: Project = {
 
 const monitoringRecord: MonitoringRecordListItem = {
   id: 'monitoring-1',
-  projectID: 'PROJ0007',
-  siteID: 3,
-  participatingUserID: 11,
+  projectId: 'PROJ0007',
+  siteId: 'SITE0003',
+  participatingUserId: 11,
   timeUpdated: '2026-07-23T10:30:00.000Z',
   dateRecorded: '2026-07-23',
   elpjControlValue: 8,

@@ -1,10 +1,14 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronDown, ChevronUp, LifeBuoy } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, LifeBuoy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { paths } from '@/routes/paths';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -88,38 +92,6 @@ const FAQ_SECTIONS: FaqSection[] = [
   },
 ];
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function FaqAccordionItem({ question, answer }: FaqItem) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="border-b border-border/50 last:border-0">
-      <button
-        type="button"
-        className="flex w-full items-center justify-between gap-4 py-3.5 text-left text-sm font-medium text-foreground hover:text-primary transition-colors focus:outline-none focus:text-primary"
-        onClick={() => setOpen((prev) => !prev)}
-        aria-expanded={open}
-      >
-        <span>{question}</span>
-        {open ? (
-          <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
-        ) : (
-          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-        )}
-      </button>
-
-      {open && (
-        <p className="pb-4 text-sm text-muted-foreground leading-relaxed">
-          {answer}
-        </p>
-      )}
-    </div>
-  );
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function AdminHelpFaqPage() {
   const navigate = useNavigate();
 
@@ -129,14 +101,16 @@ export default function AdminHelpFaqPage() {
 
         {/* ── Page header ─────────────────────────────────────────────── */}
         <div className="space-y-3">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="-ml-3 w-fit text-muted-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             戻る
-          </button>
+          </Button>
 
           <div className="flex items-center gap-3">
             <LifeBuoy className="h-6 w-6 text-muted-foreground" />
@@ -185,11 +159,18 @@ export default function AdminHelpFaqPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <dl>
+              <Accordion type="single" collapsible>
                 {section.items.map((item) => (
-                  <FaqAccordionItem key={item.question} {...item} />
+                  <AccordionItem key={item.question} value={item.question}>
+                    <AccordionTrigger className="text-left text-sm hover:no-underline">
+                      {item.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
+                      {item.answer}
+                    </AccordionContent>
+                  </AccordionItem>
                 ))}
-              </dl>
+              </Accordion>
             </CardContent>
           </Card>
         ))}

@@ -102,16 +102,6 @@ export function ProjectRegistrationReviewStep({
                   })}
                 />
                 <ReviewField
-                  label="追加設備"
-                  value={displaySelection(
-                    equipment.solarData.additionalEquipment,
-                    {
-                      yes: 'あり',
-                      no: 'なし',
-                    },
-                  )}
-                />
-                <ReviewField
                   label="設備の総投資額"
                   value={displayText(equipment.solarData.totalInvestment)}
                 />
@@ -135,40 +125,6 @@ export function ProjectRegistrationReviewStep({
                     <ReviewField
                       label="蓄電池容量"
                       value={displayText(equipment.solarData.batteryCapacity)}
-                    />
-                  </>
-                )}
-                {equipment.solarData.additionalEquipment === 'yes' && (
-                  <>
-                    <ReviewField
-                      label="追加設備導入日"
-                      value={displayText(
-                        equipment.solarData.additionalEquipmentDate,
-                      )}
-                    />
-                    <ReviewField
-                      label="追加設備種別"
-                      value={displayText(
-                        equipment.solarData.additionalEquipmentType,
-                      )}
-                    />
-                    <ReviewField
-                      label="追加設備台数"
-                      value={displayText(
-                        equipment.solarData.additionalUnitCount,
-                      )}
-                    />
-                    <ReviewField
-                      label="追加設備固有番号"
-                      value={displayText(
-                        equipment.solarData.additionalDeviceUniqueNo,
-                      )}
-                    />
-                    <ReviewField
-                      label="ICT設備消費電力"
-                      value={displayText(
-                        equipment.solarData.ictEquipmentPowerConsumption,
-                      )}
                     />
                   </>
                 )}

@@ -233,20 +233,20 @@ export type SiteProjectEquipmentValidationFile = {
 export type SiteProjectEquipmentValidationItem = {
   tempId: string;
   siteId: string | null;
-  equipmentOpDate: string;
+  equipmentOpDate: string | null;
   nominalMaxOutput: number | null;
-  pcsManufacturer: string;
-  pcsModel: string;
+  pcsManufacturer: string | null;
+  pcsModel: string | null;
   pcsUnitCount: number | null;
-  deviceNo: string;
+  deviceNo: string | null;
   pcsStandby: number | null;
   hasBattery: boolean | null;
-  batteryMaker?: string;
-  batteryModel?: string;
+  batteryMaker?: string | null;
+  batteryModel?: string | null;
   batteryCapacity?: number | null;
   totalInvestment: number | null;
   hasSubsidy: boolean | null;
-  subsidyName?: string;
+  subsidyName?: string | null;
   subsidyAmount?: number | null;
   preProjectUnitPrice: number | null;
   files: SiteProjectEquipmentValidationFile[];

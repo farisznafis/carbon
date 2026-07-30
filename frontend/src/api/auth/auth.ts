@@ -6,9 +6,12 @@
 
 import { apiFetch, apiRequest, parseJsonResponse } from '../_shared/httpClient';
 import type {
+  ActionLinkExchangeResponse,
   ChangePasswordPayload,
   ChangePasswordResponse,
   LoginResponse,
+  PasswordResetCompleteResponse,
+  PasswordResetRequestResponse,
   SignUpData,
   SignUpResponse,
 } from './types';
@@ -111,4 +114,48 @@ export async function changePassword(
   }
 
   return response;
+}
+
+export async function requestPasswordReset(
+  email: string,
+): Promise<PasswordResetRequestResponse> {
+  return apiRequest<PasswordResetRequestResponse>(
+    '/auth/password-reset/request',
+    {
+      method: 'POST',
+      auth: false,
+      body: { email },
+      fallbackErrorMessage:
+        'パスワードリセット用メールの送信に失敗しました。',
+    },
+  );
+}
+
+export async function exchangePasswordResetActionLink(
+  token: string,
+): Promise<ActionLinkExchangeResponse> {
+  return apiRequest<ActionLinkExchangeResponse>('/auth/action-links/exchange', {
+    method: 'POST',
+    auth: false,
+    body: { token },
+    fallbackErrorMessage: 'パスワードリセットリンクを確認できませんでした。',
+  });
+}
+
+export async function completePasswordReset(
+  actionSessionToken: string,
+  newPassword: string,
+): Promise<PasswordResetCompleteResponse> {
+  return apiRequest<PasswordResetCompleteResponse>(
+    '/auth/password-reset/complete',
+    {
+      method: 'POST',
+      auth: false,
+      headers: {
+        'X-Action-Session': actionSessionToken,
+      },
+      body: { newPassword },
+      fallbackErrorMessage: 'パスワードの再設定に失敗しました。',
+    },
+  );
 }
