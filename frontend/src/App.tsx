@@ -71,6 +71,12 @@ const AdminMonitoringReport = lazy(() =>
 const AdminProjectMonitoringDetail = lazy(() =>
   import("./features/admin/monitoring/ProjectMonitoringDetailPage"),
 );
+const AdminParticipationReviewList = lazy(() =>
+  import("./features/admin/membership-review/ParticipationReviewListPage"),
+);
+const AdminParticipationReviewDetail = lazy(() =>
+  import("./features/admin/membership-review/ParticipationReviewDetailPage"),
+);
 const AdminHelpFaqPage = lazy(() => import("./features/master/help/AdminHelpFaqPage"));
 
 function RequireAdmin({ children }: { children: JSX.Element }) {
@@ -244,6 +250,22 @@ const App = () => {
             element={
               <RequireAdmin>
                 <ProjectDetailAdmin />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminProjectMembershipRoute}
+            element={
+              <RequireAdmin>
+                <AdminParticipationReviewList />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminProjectMembershipDetailRoute}
+            element={
+              <RequireAdmin>
+                <AdminParticipationReviewDetail />
               </RequireAdmin>
             }
           />
