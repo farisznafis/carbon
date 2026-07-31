@@ -178,7 +178,7 @@ export function ProjectTable({
       sortable: true,
       sortValue: (project) => project.projectName,
       render: (project) => (
-        <span className="block truncate text-body font-bold text-slate-800">
+        <span className="block truncate text-body font-bold text-foreground">
           {displayValue(project.projectName)}
         </span>
       ),

@@ -127,7 +127,7 @@ export function PaginationControls({
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 text-sm text-muted-foreground md:flex-row md:items-center md:justify-end',
+        'flex flex-col gap-3 text-sm text-foreground md:flex-row md:items-center md:justify-end',
         className,
       )}
     >

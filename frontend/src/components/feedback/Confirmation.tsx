@@ -42,7 +42,7 @@
  * @example
  * // Modal Confirmation
  * const [isModalOpen, setModalOpen] = useState(false);
- * 
+ *
  * <Confirmation
  *   asModal
  *   isOpen={isModalOpen}
@@ -57,7 +57,7 @@
  *   mode="profile"
  *   onConfirm={handleConfirm}
  * />
- * 
+ *
  * <Button onClick={() => setModalOpen(true)}>確認する</Button>
  */
 
@@ -139,7 +139,7 @@ export const Confirmation: React.FC<ConfirmationProps> = ({
 
             return (
               <div key={field.key}>
-                <div className="text-sm font-medium text-muted-foreground mb-1">
+                <div className="text-sm font-medium text-foreground mb-1">
                   {field.label}
                 </div>
                 <div className={isChanged ? undefined : 'font-bold'}>

@@ -59,7 +59,7 @@ function DetailRow({
 }) {
   return (
     <div>
-      <div className="mb-1 text-sm font-medium text-muted-foreground">
+      <div className="mb-1 text-sm font-medium text-foreground">
         {label}
       </div>
       <div className="text-foreground">{value || missingValue}</div>
@@ -110,7 +110,7 @@ export const SignupStep3 = () => {
       <FormSectionStack>
         <div className="text-center">
           <h3 className="mb-2 text-2xl font-semibold">入力内容の確認</h3>
-          <p className="text-muted-foreground">
+          <p className="text-foreground">
             登録を完了する前に、入力内容を確認してください。
           </p>
         </div>
@@ -151,7 +151,7 @@ export const SignupStep3 = () => {
         <FormSection number={4} title="方法論・活動情報">
           <div className="space-y-5">
             <div>
-              <div className="mb-2 text-sm font-medium text-muted-foreground">
+              <div className="mb-2 text-sm font-medium text-foreground">
                 参加したいプロジェクト
               </div>
               <div className="space-y-2">
@@ -165,7 +165,7 @@ export const SignupStep3 = () => {
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground">{missingValue}</p>
+                  <p className="text-sm text-foreground">{missingValue}</p>
                 )}
               </div>
             </div>

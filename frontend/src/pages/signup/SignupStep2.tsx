@@ -245,7 +245,7 @@ export const SignupStep2 = () => {
                   name="activityInformation"
                   render={({ field }) => (
                     <FormItem>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-foreground">
                         ※排出量削減活動の概要をご記入ください。
                       </p>
                       <FormControl>

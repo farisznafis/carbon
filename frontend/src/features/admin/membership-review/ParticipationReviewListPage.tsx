@@ -189,7 +189,7 @@ export default function ParticipationReviewListPage() {
       <div className="mx-auto w-full max-w-[1120px] space-y-8 pt-16 sm:pt-0">
         <header className="space-y-2">
           <h1>入会届一覧</h1>
-          <p className="text-small text-muted-foreground">
+          <p className="text-small text-foreground">
             レビュー対象となる入会届を確認します。
           </p>
         </header>
@@ -204,7 +204,7 @@ export default function ParticipationReviewListPage() {
         >
           <TabsList className="grid h-auto w-full grid-cols-2 sm:w-fit">
             <TabsTrigger value="mine">
-              自分のレビュー対象（{myReviews.length}）
+              自分の承認待ち（{myReviews.length}）
             </TabsTrigger>
             <TabsTrigger value="pending">
               承認待ち全件（{pendingReviews.length}）
@@ -214,7 +214,7 @@ export default function ParticipationReviewListPage() {
           {(['mine', 'pending'] as const).map((tab) => (
             <TabsContent key={tab} value={tab} className="space-y-4">
               {isLoading ? (
-                <div className="rounded-xl border border-border bg-card py-12 text-center text-small text-muted-foreground">
+                <div className="rounded-xl border border-border bg-card py-12 text-center text-small text-foreground">
                   入会届一覧を読み込んでいます...
                 </div>
               ) : loadError ? (

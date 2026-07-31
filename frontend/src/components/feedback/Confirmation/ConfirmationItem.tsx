@@ -16,7 +16,7 @@ export const ConfirmationItem = <T,>({
 
     return (
         <div>
-            <div className="text-sm font-medium text-muted-foreground mb-1">
+            <div className="text-sm font-medium text-foreground mb-1">
                 {label}
             </div>
             <div className={isChanged ? undefined : "text-foreground"}>

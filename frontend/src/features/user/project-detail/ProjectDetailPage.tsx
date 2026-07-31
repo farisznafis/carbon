@@ -4,7 +4,12 @@ import {
   getSiteProjectEquipment,
   type SiteProjectEquipment,
 } from '@/api/site';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  useLocation,
+  useParams,
+  useNavigate,
+  useSearchParams,
+} from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -89,6 +94,10 @@ const fallbackMonitoringRow: MonitoringDisplayRow = {
 
 type ProjectDetailTabValue = 'overview' | 'equipment';
 
+type ProjectDetailNavigationState = {
+  siteName?: string;
+};
+
 function ProjectDetailTabs() {
   return (
     <TabsList className={dashboardTabsListClassName}>
@@ -141,7 +150,7 @@ function RecentMetricCard({
 }: RecentMetricCardProps) {
   return (
     <div className='flex h-24 min-w-0 flex-col items-center justify-center gap-1 rounded-lg border border-border bg-card px-3 py-3 text-center shadow-app-sm'>
-      <div className='text-table flex min-w-0 items-center justify-center gap-1 font-bold text-muted-foreground'>
+      <div className='text-table flex min-w-0 items-center justify-center gap-1 font-bold text-foreground'>
         {icon}
         <span className='min-w-0 truncate'>{label}</span>
       </div>
@@ -150,7 +159,7 @@ function RecentMetricCard({
           {value}
         </span>
         {unit ? (
-          <span className='text-table pb-0.5 text-muted-foreground'>
+          <span className='text-table pb-0.5 text-foreground'>
             {unit}
           </span>
         ) : null}
@@ -174,12 +183,12 @@ function RecentDataBar({
 }: RecentDataBarProps) {
   // If battery was not replaced (false), show 0 for battery discharge value
   const batteryDischargeValue = row.changedBattery === false ? 0 : row.ELPJ_battery_value;
-  
+
   return (
     <section className={`${projectDetailCardClassName} p-5`}>
       <div className='mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
         <div className='text-table inline-flex w-fit items-center gap-1.5 rounded-full border border-border px-4 py-1.5 font-bold text-foreground'>
-          <span className='text-muted-foreground'>記録日</span>
+          <span className='text-foreground'>記録日</span>
           {formatMonitoringDate(row.dateRecorded)}
         </div>
         <div className='flex flex-wrap items-center gap-2'>
@@ -238,9 +247,12 @@ const ProjectDetail = () => {
   const { id, projectId: routeProjectId, siteId: routeSiteId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const navigationState = useLocation()
+    .state as ProjectDetailNavigationState | null;
 
   const projectId = routeProjectId || id || '';
   const siteId = routeSiteId || searchParams.get('siteId') || '';
+  const siteName = navigationState?.siteName?.trim() || '-';
 
   type ProjectView = {
     name: string;
@@ -421,7 +433,7 @@ const ProjectDetail = () => {
               ? 'active'
               : 'inactive',
           createdDate: result.createdAt ?? '',
-          location: result.companyName || '-',
+          location: siteName,
           membersTotal: result.membersTotal ?? null,
           devices: [],
           recentData: [],
@@ -436,7 +448,7 @@ const ProjectDetail = () => {
     };
 
     loadProject();
-  }, [projectId]);
+  }, [projectId, siteName]);
 
   useEffect(() => {
     const fetchRecent = async () => {
@@ -552,11 +564,11 @@ const ProjectDetail = () => {
           label=''
           className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
         />
-        
+
         <div className='w-full space-y-7'>
           <header className='min-h-[66px] animate-slide-up'>
             <h1 className='text-foreground'>{project.name}</h1>
-            <p className='text-body mt-2 text-muted-foreground'>{project.description}</p>
+            <p className='text-body mt-2 text-foreground'>{project.description}</p>
           </header>
 
           <Tabs
@@ -580,11 +592,11 @@ const ProjectDetail = () => {
                 <CardContent className='px-7 pb-7'>
                   <dl className='grid grid-cols-1 gap-x-16 gap-y-5 md:grid-cols-2'>
                     <div className='flex items-start gap-3'>
-                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-foreground'>
+                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground'>
                         <MapPin className='h-5 w-5' />
                       </span>
                       <div>
-                        <dt className='text-small text-muted-foreground'>
+                        <dt className='text-small text-foreground'>
                           拠点
                         </dt>
                         <dd className='font-bold text-foreground'>
@@ -594,11 +606,11 @@ const ProjectDetail = () => {
                     </div>
 
                     <div className='flex items-start gap-3'>
-                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-foreground'>
+                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground'>
                         <Layers className='h-5 w-5' />
                       </span>
                       <div>
-                        <dt className='text-small text-muted-foreground'>
+                        <dt className='text-small text-foreground'>
                           方法論
                         </dt>
                         <dd className='break-words font-bold text-foreground'>
@@ -608,11 +620,11 @@ const ProjectDetail = () => {
                     </div>
 
                     <div className='flex items-start gap-3'>
-                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-foreground'>
+                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground'>
                         <Hash className='h-5 w-5' />
                       </span>
                       <div>
-                        <dt className='text-small text-muted-foreground'>
+                        <dt className='text-small text-foreground'>
                           プロジェクト番号
                         </dt>
                         <dd className='font-bold text-foreground'>
@@ -622,11 +634,11 @@ const ProjectDetail = () => {
                     </div>
 
                     <div className='flex items-start gap-3'>
-                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-foreground'>
+                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground'>
                         <Calendar className='h-5 w-5' />
                       </span>
                       <div>
-                        <dt className='text-small text-muted-foreground'>
+                        <dt className='text-small text-foreground'>
                           認証期間
                         </dt>
                         <dd className='font-bold text-foreground'>
@@ -639,7 +651,7 @@ const ProjectDetail = () => {
               </Card>
 
               {recentLoading ? (
-                <div className={`${projectDetailCardClassName} text-subtle p-5 text-muted-foreground`}>
+                <div className={`${projectDetailCardClassName} text-subtle p-5 text-foreground`}>
                   読み込み中...
                 </div>
               ) : (
@@ -721,7 +733,7 @@ const ProjectDetail = () => {
               </Card>
 
               {equipmentLoading ? (
-                <div className={`${projectDetailCardClassName} text-subtle p-5 text-muted-foreground`}>
+                <div className={`${projectDetailCardClassName} text-subtle p-5 text-foreground`}>
                   読み込み中...
                 </div>
               ) : equipmentError ? (
@@ -735,7 +747,7 @@ const ProjectDetail = () => {
                 <EquipmentList equipments={equipmentList} />
               ) : (
                 <Card className={projectDetailCardClassName}>
-                  <CardContent className='p-8 text-center text-muted-foreground'>
+                  <CardContent className='p-8 text-center text-foreground'>
                     設備情報がありません。
                   </CardContent>
                 </Card>
@@ -753,7 +765,7 @@ const ProjectDetail = () => {
               </CardHeader>
               <CardContent>
                 {recentLoading ? (
-                  <div className='text-table text-muted-foreground'>
+                  <div className='text-table text-foreground'>
                     Loading...
                   </div>
                 ) : (
@@ -764,7 +776,7 @@ const ProjectDetail = () => {
                         className='p-4'
                       >
                         <div className='flex flex-wrap items-center justify-between gap-3'>
-                          <div className='text-table text-muted-foreground'>
+                          <div className='text-table text-foreground'>
                             {row.dateRecorded}
                           </div>
                           <div className='text-table flex flex-wrap gap-4'>
@@ -794,7 +806,7 @@ const ProjectDetail = () => {
                             </span>
                           </div>
                         </div>
-                        <div className='text-subtle mt-2 grid grid-cols-2 gap-2 text-muted-foreground md:grid-cols-4'>
+                        <div className='text-subtle mt-2 grid grid-cols-2 gap-2 text-foreground md:grid-cols-4'>
                           <div>
                             Control Runtime:{' '}
                             {formatNumber(row.ELPJ_control_value)} hours
@@ -835,7 +847,7 @@ const ProjectDetail = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className='text-table text-muted-foreground'>
+                <div className='text-table text-foreground'>
                   資料はまだありません。
                 </div>
               </CardContent>
@@ -858,4 +870,3 @@ const ProjectDetail = () => {
 };
 
 export default ProjectDetail;
-

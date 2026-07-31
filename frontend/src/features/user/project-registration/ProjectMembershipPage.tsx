@@ -38,11 +38,11 @@ function MembershipSection({
       <div className="mb-5">
         <div className="flex flex-wrap items-baseline gap-3">
           <h2 className="text-foreground">{title}</h2>
-          <span className="text-small text-muted-foreground">
+          <span className="text-small text-foreground">
             {projects.length}件
           </span>
         </div>
-        <p className="text-small mt-2 text-muted-foreground">{description}</p>
+        <p className="text-small mt-2 text-foreground">{description}</p>
       </div>
 
       {projects.length > 0 ? (
@@ -58,7 +58,7 @@ function MembershipSection({
         </div>
       ) : (
         <Card className="rounded-lg border-dashed border-border shadow-none">
-          <CardContent className="p-8 text-center text-muted-foreground">
+          <CardContent className="p-8 text-center text-foreground">
             {emptyMessage}
           </CardContent>
         </Card>
@@ -153,14 +153,14 @@ export default function ProjectMembershipPage() {
     >
       <div className="space-y-10">
         {/* {siteName && (
-          <p className="text-center text-muted-foreground">
+          <p className="text-center text-foreground">
             拠点名：{siteName}
           </p>
         )} */}
 
         {isLoading ? (
           <Card className="rounded-lg border-border shadow-none">
-            <CardContent className="p-10 text-center text-muted-foreground">
+            <CardContent className="p-10 text-center text-foreground">
               読み込み中...
             </CardContent>
           </Card>

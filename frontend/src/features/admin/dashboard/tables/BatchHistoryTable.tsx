@@ -149,7 +149,7 @@ export function BatchHistoryTable({
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border border-border py-12 text-center text-sm text-muted-foreground">
+      <div className="rounded-lg border border-border py-12 text-center text-sm text-foreground">
         バッチ履歴を読み込んでいます...
       </div>
     );

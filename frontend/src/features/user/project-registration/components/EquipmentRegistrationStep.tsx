@@ -118,7 +118,7 @@ export const EquipmentRegistrationStep = forwardRef<
     <div className="space-y-4">
       <div>
         <h2 className="text-foreground">設備登録</h2>
-        <p className="text-small mt-2 text-muted-foreground">
+        <p className="text-small mt-2 text-foreground">
           プロジェクトに登録する設備情報と確認資料を入力してください。
         </p>
       </div>

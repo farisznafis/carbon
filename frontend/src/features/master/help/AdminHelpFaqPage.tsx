@@ -106,16 +106,16 @@ export default function AdminHelpFaqPage() {
             variant="ghost"
             size="sm"
             onClick={() => navigate(-1)}
-            className="-ml-3 w-fit text-muted-foreground"
+            className="-ml-3 w-fit text-foreground"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 text-muted-foreground" />
             戻る
           </Button>
 
           <div className="flex items-center gap-3">
             <LifeBuoy className="h-6 w-6 text-muted-foreground" />
             <div>
-              <p className="text-sm text-muted-foreground tracking-wide">
+              <p className="text-sm text-foreground tracking-wide">
                 サポート
               </p>
               <h1 className="text-2xl font-semibold tracking-tight text-foreground">
@@ -124,7 +124,7 @@ export default function AdminHelpFaqPage() {
             </div>
           </div>
 
-          <p className="text-sm text-muted-foreground max-w-xl">
+          <p className="text-sm text-foreground max-w-xl">
             よくあるご質問と操作方法をまとめています。
             お探しの情報が見つからない場合はサポートまでお問い合わせください。
           </p>
@@ -137,7 +137,7 @@ export default function AdminHelpFaqPage() {
               <p className="text-sm font-medium text-foreground">
                 解決しない場合はサポートへ
               </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-xs text-foreground mt-0.5">
                 平日 9:00〜18:00 対応 / 返信は翌営業日以降になる場合があります
               </p>
             </div>
@@ -165,7 +165,7 @@ export default function AdminHelpFaqPage() {
                     <AccordionTrigger className="text-left text-sm hover:no-underline">
                       {item.question}
                     </AccordionTrigger>
-                    <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
+                    <AccordionContent className="text-sm leading-relaxed text-foreground">
                       {item.answer}
                     </AccordionContent>
                   </AccordionItem>

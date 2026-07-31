@@ -66,11 +66,11 @@ export function ProjectCompletionDialog({
             対象申請
           </h3>
           <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-small">
-            <dt className="text-muted-foreground">会社名：</dt>
+            <dt className="text-foreground">会社名：</dt>
             <dd className="break-words text-foreground">
               {displayValue(project?.companyName)}
             </dd>
-            <dt className="text-muted-foreground">プロジェクト名：</dt>
+            <dt className="text-foreground">プロジェクト名：</dt>
             <dd className="break-words text-foreground">
               {displayValue(project?.projectName)}
             </dd>

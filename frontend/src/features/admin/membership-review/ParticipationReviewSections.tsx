@@ -21,7 +21,7 @@ function DetailField({
 }) {
   return (
     <div className={fullWidth ? 'space-y-1.5 md:col-span-2' : 'space-y-1.5'}>
-      <dt className="text-small font-bold text-muted-foreground">{label}</dt>
+      <dt className="text-small font-bold text-foreground">{label}</dt>
       <dd className="break-words text-body text-foreground">{children}</dd>
     </div>
   );
@@ -157,7 +157,7 @@ export function ParticipationReviewSections({
                 ))}
               </ul>
             ) : (
-              <p className="text-small text-muted-foreground">―</p>
+              <p className="text-small text-foreground">―</p>
             )}
           </div>
 
@@ -177,7 +177,7 @@ export function ParticipationReviewSections({
                         <p className="text-small font-bold text-foreground">
                           {formatFileType(file.fileType)}
                         </p>
-                        {/* <p className="mt-1 break-all text-xs text-muted-foreground">
+                        {/* <p className="mt-1 break-all text-xs text-foreground">
                           {displayParticipationValue(file.s3Key || file.fileId)}
                         </p> */}
                       </div>
@@ -187,7 +187,7 @@ export function ParticipationReviewSections({
                 ))}
               </ul>
             ) : (
-              <p className="text-small text-muted-foreground">―</p>
+              <p className="text-small text-foreground">―</p>
             )}
           </div>
         </div>

@@ -217,7 +217,7 @@ function KpiCard({
         <p
           className={cn(
             'text-small',
-            variant === 'primary' ? 'text-white/85' : 'text-muted-foreground',
+            variant === 'primary' ? 'text-white/85' : 'text-foreground',
           )}
         >
           {title}
@@ -228,7 +228,7 @@ function KpiCard({
         <p
           className={cn(
             'text-subtle',
-            variant === 'primary' ? 'text-white/80' : 'text-muted-foreground',
+            variant === 'primary' ? 'text-white/80' : 'text-foreground',
           )}
         >
           {unit}
@@ -323,13 +323,13 @@ function JoinedProjectCard({
             <div className='rounded-2xl border border-border bg-transparent p-5'>
               <dl className='space-y-4'>
                 <div>
-                  <dt className='text-small text-muted-foreground'>方法論</dt>
+                  <dt className='text-small text-foreground'>方法論</dt>
                   <dd className='mt-1 font-bold'>
                     {getMethodologyLabel(project)}
                   </dd>
                 </div>
                 <div>
-                  <dt className='text-small text-muted-foreground'>
+                  <dt className='text-small text-foreground'>
                     方法論番号
                   </dt>
                   <dd className='mt-1 font-bold'>
@@ -337,7 +337,7 @@ function JoinedProjectCard({
                   </dd>
                 </div>
                 <div>
-                  <dt className='text-small text-muted-foreground'>
+                  <dt className='text-small text-foreground'>
                     ステータス
                   </dt>
                   <dd className='mt-1'>
@@ -374,17 +374,17 @@ function AvailableProjectCard({ project }: { project: SiteProject }) {
 
         <dl className='mt-6 space-y-4'>
           <div>
-            <dt className='text-small text-muted-foreground'>方法論</dt>
+            <dt className='text-small text-foreground'>方法論</dt>
             <dd className='mt-1 font-bold'>{getMethodologyLabel(project)}</dd>
           </div>
           <div>
-            <dt className='text-small text-muted-foreground'>方法論番号</dt>
+            <dt className='text-small text-foreground'>方法論番号</dt>
             <dd className='mt-1 font-bold'>
               {project.methodNumber} {project.methodologyVersion}
             </dd>
           </div>
           <div>
-            <dt className='text-small text-muted-foreground'>ステータス</dt>
+            <dt className='text-small text-foreground'>ステータス</dt>
             <dd className='mt-1'>
               <ProjectStatus joined={false} />
             </dd>
@@ -557,6 +557,11 @@ const Dashboard = () => {
   const handleOpenProject = (project: SiteProject) => {
     navigate(
       `/sites/${encodeURIComponent(activeSiteId)}/projects/${project.id}`,
+      {
+        state: {
+          siteName: site?.siteName ?? '',
+        },
+      },
     );
   };
 
@@ -568,7 +573,7 @@ const Dashboard = () => {
     return (
       <div className='min-h-screen bg-background py-8'>
         <div className={pageContainer}>
-          <div className='py-16 text-center text-muted-foreground'>
+          <div className='py-16 text-center text-foreground'>
             読み込み中...
           </div>
         </div>
@@ -581,7 +586,7 @@ const Dashboard = () => {
       <div className='min-h-screen bg-background py-8'>
         <div className={pageContainer}>
           <Card className='mx-auto mt-16 max-w-2xl'>
-            <CardContent className='p-8 text-center text-muted-foreground'>
+            <CardContent className='p-8 text-center text-foreground'>
               所属している拠点がありません。マスターにお問い合わせください。
             </CardContent>
           </Card>
@@ -604,7 +609,7 @@ const Dashboard = () => {
         <div className='grid items-stretch gap-6 '>
           <div className='relative'>
             <div>
-              <p className='text-small pl-[60px] text-muted-foreground'>
+              <p className='text-small pl-[60px] text-foreground'>
                 {user?.companyName || '株式会社ABC'}
               </p>
               <div className='flex items-center justify-between gap-3'>
@@ -631,11 +636,11 @@ const Dashboard = () => {
               </div>
               <dl className='ml-[60px] mt-5 grid gap-x-10 gap-y-4 sm:grid-cols-[max-content_minmax(0,1fr)]'>
                 <div>
-                  <dt className='text-small text-muted-foreground'>担当者</dt>
+                  <dt className='text-small text-foreground'>担当者</dt>
                   <dd className='mt-1 font-bold'>{picName}</dd>
                 </div>
                 <div className='min-w-0'>
-                  <dt className='text-small text-muted-foreground'>所在地</dt>
+                  <dt className='text-small text-foreground'>所在地</dt>
                   <dd className='mt-1 break-words font-bold'>{address}</dd>
                 </div>
               </dl>
@@ -659,7 +664,7 @@ const Dashboard = () => {
       <section className='bg-card py-12'>
         <div className={pageContainer}>
           <div className='mb-6'>
-            <h2 className='text-foreground'>入会中のプロジェクト</h2>
+            <h2 className='text-foreground'>参加中のプロジェクト</h2>
             <p className='text-small mt-2 text-foreground'>
               この拠点が現在参加しているプロジェクトです。進捗や排出量の詳細を確認できます。
             </p>
@@ -667,7 +672,7 @@ const Dashboard = () => {
 
           {isLoading ? (
             <Card className='rounded-2xl border-border'>
-              <CardContent className='p-10 text-center text-muted-foreground'>
+              <CardContent className='p-10 text-center text-foreground'>
                 読み込み中...
               </CardContent>
             </Card>
@@ -683,8 +688,8 @@ const Dashboard = () => {
             </div>
           ) : (
             <Card className='rounded-2xl border-border'>
-              <CardContent className='p-10 text-center text-muted-foreground'>
-                入会中のプロジェクトがありません
+              <CardContent className='p-10 text-center text-foreground'>
+                参加中のプロジェクトがありません
               </CardContent>
             </Card>
           )}
@@ -716,7 +721,7 @@ const Dashboard = () => {
 
           {isLoading ? (
             <Card className='rounded-2xl border-border'>
-              <CardContent className='p-10 text-center text-muted-foreground'>
+              <CardContent className='p-10 text-center text-foreground'>
                 読み込み中...
               </CardContent>
             </Card>
@@ -731,7 +736,7 @@ const Dashboard = () => {
             </div>
           ) : (
             <Card className='rounded-2xl border-border'>
-              <CardContent className='p-10 text-center text-muted-foreground'>
+              <CardContent className='p-10 text-center text-foreground'>
                 未参加のプロジェクトがありません
               </CardContent>
             </Card>

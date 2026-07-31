@@ -65,18 +65,18 @@ export function EmissionTrendChart({
 
       <div className='mt-4 flex min-h-[280px] flex-1 items-center justify-center'>
         {isLoading ? (
-          <p className='text-subtle text-muted-foreground'>読み込み中...</p>
+          <p className='text-subtle text-foreground'>読み込み中...</p>
         ) : error ? (
           <p className='text-subtle text-destructive' role='alert'>
             {error}
           </p>
         ) : data.length === 0 ? (
-          <p className='text-subtle text-muted-foreground'>
+          <p className='text-subtle text-foreground'>
             排出量データがありません。
           </p>
         ) : (
           <div className='w-full'>
-            <p className='text-subtle mb-2 ml-1 text-muted-foreground'>
+            <p className='text-subtle mb-2 ml-1 text-foreground'>
               排出量（tCO₂）
             </p>
             <ChartContainer
@@ -115,7 +115,7 @@ export function EmissionTrendChart({
                       }
                       formatter={(value) => (
                         <div className='flex min-w-[12rem] items-center justify-between gap-4'>
-                          <span className='text-muted-foreground'>
+                          <span className='text-foreground'>
                             {EMISSION_SERIES_LABEL}
                           </span>
                           <span className='font-mono font-medium tabular-nums text-foreground'>
@@ -137,7 +137,7 @@ export function EmissionTrendChart({
                 />
               </LineChart>
             </ChartContainer>
-            <p className='text-subtle mt-2 text-center text-muted-foreground'>
+            <p className='text-subtle mt-2 text-center text-foreground'>
               算定期間
             </p>
             <div

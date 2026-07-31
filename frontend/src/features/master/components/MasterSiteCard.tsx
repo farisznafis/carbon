@@ -44,7 +44,7 @@ export function MasterSiteCard({
                 {site.siteName || '-'}
               </h3>
               {/* ponytail: address shown in 所在地 row below, remove comment when design confirmed
-              <span className="truncate text-sm font-medium leading-6 text-muted-foreground">
+              <span className="truncate text-sm font-medium leading-6 text-foreground">
                 {formatSiteAddress(site)}
               </span>
               */}
@@ -53,13 +53,13 @@ export function MasterSiteCard({
 
           <div className="pl-3 mt-3 flex flex-col gap-2 text-sm font-bold leading-6 text-foreground">
             <span className="inline-flex items-center gap-1.5">
-              <User className="h-4 w-4" />
-              <span className="text-muted-foreground">責任者</span>
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="text-foreground">責任者</span>
               <span>{formatPersonName(site.picLastName, site.picFirstName)}</span>
             </span>
             <span className="inline-flex min-w-0 items-center gap-1.5">
-              <MapPin className="h-4 w-4 shrink-0" />
-              <span className="text-muted-foreground">所在地</span>
+              <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <span className="text-foreground">所在地</span>
               <span className="min-w-0 break-words">{formatSiteAddress(site)}</span>
             </span>
           </div>
@@ -67,8 +67,8 @@ export function MasterSiteCard({
 
         <div className="min-w-0 pt-1 text-sm font-bold leading-6 text-foreground md:pt-0">
           <div className="flex min-w-0 items-start gap-2">
-            <FolderKanban className="mt-1 h-4 w-4 shrink-0" />
-            <span className="shrink-0 text-muted-foreground">プロジェクト</span>
+            <FolderKanban className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
+            <span className="shrink-0 text-foreground">プロジェクト</span>
             <div className="min-w-0 flex-1">
               {visibleProjects.length > 0 ? (
                 <>
@@ -83,9 +83,9 @@ export function MasterSiteCard({
                     ))}
                   </div>
                   {projects.length > 2 && (
-                    <span className="mt-1 inline-flex items-center gap-2 text-sm font-medium leading-6 text-muted-foreground">
+                    <span className="mt-1 inline-flex items-center gap-2 text-sm font-medium leading-6 text-foreground">
                       もっと見る
-                      <ChevronDown className="h-4 w-4" />
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
                     </span>
                   )}
                 </>

@@ -34,7 +34,7 @@ export function FullPageConfirmationModal({
             </Dialog.Title>
 
             {description && (
-              <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+              <p className="mt-2 text-sm text-foreground">{description}</p>
             )}
 
             <dl className="mt-6 divide-y divide-border">
@@ -51,7 +51,7 @@ export function FullPageConfirmationModal({
                     key={key}
                     className="py-3 sm:grid sm:grid-cols-3 sm:gap-4"
                   >
-                    <dt className="text-sm font-medium text-muted-foreground">
+                    <dt className="text-sm font-medium text-foreground">
                       {key}
                     </dt>
                     <dd

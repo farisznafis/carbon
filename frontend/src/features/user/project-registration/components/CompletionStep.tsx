@@ -16,8 +16,8 @@ export function CompletionStep({ onNavigateToDashboard }: CompletionStepProps) {
 
       <div>
         <h2 className="text-3xl font-bold mb-4">申請完了</h2>
-        <p className="text-lg text-muted-foreground mb-2">プロジェクト参加申請が完了しました</p>
-        <p className="text-muted-foreground">審査結果は後日メールにてお知らせいたします</p>
+        <p className="text-lg text-foreground mb-2">プロジェクト参加申請が完了しました</p>
+        <p className="text-foreground">審査結果は後日メールにてお知らせいたします</p>
       </div>
 
       <div className="pt-8">
