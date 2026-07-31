@@ -63,7 +63,7 @@ const AUTOFILL_VALUES = {
     methodMainEmission: 'CO2',
     methodCombiFeasibility: false,
     methodDetails: '太陽光発電設備を導入し、系統電力由来の排出量を削減する。',
-    operatorCompanyId: 'COMP001',
+    operatorCompanyId: 'OP000000001',
   },
   projectApplication: {
     applicationCategory: APPLICATION_CATEGORY_OPTIONS[1],
