@@ -30,6 +30,12 @@ const REVIEW_GRID_COLUMNS =
 
 type ReviewTab = 'mine' | 'pending';
 
+const REVIEW_TAB_DESCRIPTIONS: Record<ReviewTab, string> = {
+  mine: 'あなたがまだ承認していない、対応が必要な入会届を表示しています。',
+  pending:
+    '他の管理者の承認待ちを含む、最終承認前の入会届をすべて表示しています。',
+};
+
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error && error.message ? error.message : fallback;
 }
@@ -213,6 +219,10 @@ export default function ParticipationReviewListPage() {
 
           {(['mine', 'pending'] as const).map((tab) => (
             <TabsContent key={tab} value={tab} className="space-y-4">
+              <p className="text-small text-foreground">
+                {REVIEW_TAB_DESCRIPTIONS[tab]}
+              </p>
+
               {isLoading ? (
                 <div className="rounded-xl border border-border bg-card py-12 text-center text-small text-foreground">
                   入会届一覧を読み込んでいます...
