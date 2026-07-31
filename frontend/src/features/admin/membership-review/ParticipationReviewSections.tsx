@@ -7,6 +7,7 @@ import {
   displayParticipationValue,
   getParticipationReviewStage,
 } from './participationReviewDisplay';
+import { ParticipationReviewFileActions } from './ParticipationReviewFileActions';
 
 function DetailField({
   label,
@@ -170,12 +171,17 @@ export function ParticipationReviewSections({
                     key={file.fileId || file.s3Key || String(index)}
                     className="rounded-lg border border-border bg-muted/20 px-4 py-3"
                   >
-                    <p className="text-small font-bold text-foreground">
-                      {displayParticipationValue(file.fileType)}
-                    </p>
-                    <p className="mt-1 break-all text-xs text-muted-foreground">
-                      {displayParticipationValue(file.s3Key || file.fileId)}
-                    </p>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="text-small font-bold text-foreground">
+                          {displayParticipationValue(file.fileType)}
+                        </p>
+                        <p className="mt-1 break-all text-xs text-muted-foreground">
+                          {displayParticipationValue(file.s3Key || file.fileId)}
+                        </p>
+                      </div>
+                      <ParticipationReviewFileActions file={file} />
+                    </div>
                   </li>
                 ))}
               </ul>
