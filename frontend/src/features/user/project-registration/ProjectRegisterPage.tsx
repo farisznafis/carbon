@@ -20,7 +20,10 @@ import { DynamicAgreementsStep, type DynamicAgreementsStepRef } from "@/features
 import { ContractStep, type ContractStepRef, type ContractStepFormValues } from "@/features/user/project-registration/components/ContractStep";
 import { FinalTermsStep, type FinalTermsRef, type FinalTermsValues } from "@/features/user/project-registration/components/FinalTermsStep";
 import { CompletionStep } from "@/features/user/project-registration/components/CompletionStep";
-import { ProjectRegistrationReviewStep } from "@/features/user/project-registration/components/ProjectRegistrationReviewStep";
+import {
+  EquipmentRegistrationStep,
+  type EquipmentRegistrationStepRef,
+} from "@/features/user/project-registration/components/EquipmentRegistrationStep";
 import { FormPageWrapper } from "@/components/layout/FormPageWrapper/FormPageWrapper";
 import type { Equipment } from "@/features/user/project-registration/components/types";
 import type { AgreementFormValues } from "@/features/user/project-registration/components/agreementsConfig";
@@ -41,10 +44,10 @@ import { getSolarFormSelectedFiles } from "@/features/user/project-registration/
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const TOTAL_FORM_STEPS = 4;
-const CONFIRMATION_ITEMS_STEP = 1;
-const SUSTAINABILITY_STEP = 2;
-const FINAL_AGREEMENT_STEP = 3;
-const REVIEW_STEP = 4;
+const EQUIPMENT_STEP = 1;
+const CONFIRMATION_ITEMS_STEP = 2;
+const SUSTAINABILITY_STEP = 3;
+const FINAL_AGREEMENT_STEP = 4;
 const COMPLETION_STEP = 5;
 
 const confirmationItemFieldNames: Record<string, keyof AgreementFormValues> = {
@@ -177,6 +180,7 @@ const ProjectRegister = () => {
   const agreementsStepRef = useRef<DynamicAgreementsStepRef>(null);
   const contractStepRef = useRef<ContractStepRef>(null);
   const finalStepRef = useRef<FinalTermsRef>(null);
+  const equipmentStepRef = useRef<EquipmentRegistrationStepRef>(null);
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [currentStep, setCurrentStep] = useState(1);
@@ -312,13 +316,34 @@ const ProjectRegister = () => {
     };
 
     loadEquipment();
-    window.addEventListener('focus', loadEquipment);
-    return () => window.removeEventListener('focus', loadEquipment);
   }, [pendingEquipment, projectId]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const validateStep = async (): Promise<boolean> => {
     switch (currentStep) {
+      case EQUIPMENT_STEP:
+        if (!equipmentStepRef.current) return false;
+
+        setIsSubmitting(true);
+        try {
+          const validatedEquipment =
+            await equipmentStepRef.current.validate();
+          setEquipment([validatedEquipment]);
+          return true;
+        } catch (error) {
+          toast({
+            title: "設備情報を確認できませんでした",
+            description:
+              error instanceof Error
+                ? error.message
+                : "設備情報の検証に失敗しました。",
+            variant: "destructive",
+          });
+          return false;
+        } finally {
+          setIsSubmitting(false);
+        }
+
       case CONFIRMATION_ITEMS_STEP:
         if (!agreementsStepRef.current) return false;
 
@@ -514,6 +539,7 @@ const ProjectRegister = () => {
         lastUpdate: new Date().toISOString().split("T")[0],
       });
       localStorage.setItem("appliedProjects", JSON.stringify(appliedProjects));
+      localStorage.removeItem(`project_${projectId}_equipment`);
 
       setCurrentStep(COMPLETION_STEP);
       toast({ title: "申請完了", description: "プロジェクト参加申請が完了しました" });
@@ -533,7 +559,7 @@ const ProjectRegister = () => {
   const handleNext = async () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     if (await validateStep()) {
-      if (currentStep === REVIEW_STEP) {
+      if (currentStep === FINAL_AGREEMENT_STEP) {
         await handleSubmit();
       } else {
         setCurrentStep((prev) => prev + 1);
@@ -544,6 +570,17 @@ const ProjectRegister = () => {
   // ── Render steps ──────────────────────────────────────────────────────────
   const renderStep = () => {
     switch (currentStep) {
+      case EQUIPMENT_STEP:
+        return (
+          <EquipmentRegistrationStep
+            ref={equipmentStepRef}
+            siteId={resolvedSiteId}
+            initialEquipment={equipment.find(
+              (item): item is Extract<Equipment, { formType: 'solar' }> =>
+                item.formType === 'solar',
+            )}
+          />
+        );
       case CONFIRMATION_ITEMS_STEP:
         return (
           <DynamicAgreementsStep
@@ -584,19 +621,6 @@ const ProjectRegister = () => {
               }
             }}
             errors={finalTermsErrors}
-          />
-        );
-      case REVIEW_STEP:
-        return (
-          <ProjectRegistrationReviewStep
-            equipments={equipment.filter(
-              (item): item is Extract<Equipment, { formType: 'solar' }> =>
-                item.formType === 'solar',
-            )}
-            methodologyNumber={selectedProject.methodologyNumber ?? ""}
-            agreementValues={agreementFormValues}
-            contractValues={contractFormValues}
-            finalTermsValues={finalTermsValues}
           />
         );
       case COMPLETION_STEP:
@@ -668,13 +692,13 @@ const ProjectRegister = () => {
           <div className="flex justify-end">
             <Button onClick={handleNext} disabled={isSubmitting}>
               {isSubmitting
-                ? currentStep === REVIEW_STEP
+                ? currentStep === FINAL_AGREEMENT_STEP
                   ? "送信中..."
                   : "確認中..."
-                : currentStep === REVIEW_STEP
+                : currentStep === FINAL_AGREEMENT_STEP
                   ? "送信"
                   : "次へ"}
-              {currentStep < REVIEW_STEP && (
+              {currentStep < FINAL_AGREEMENT_STEP && (
                 <ArrowRight className="h-4 w-4 ml-2" />
               )}
             </Button>

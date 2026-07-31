@@ -10,6 +10,7 @@ import {
   FormSectionStack,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
+import { RequiredLabel } from '@/components/forms/shared';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +18,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -210,7 +210,7 @@ export function MonitoringSolarForm({
                 name="dateRecorded"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>測定日</FormLabel>
+                    <RequiredLabel>測定日</RequiredLabel>
                     <p className="text-sm text-muted-foreground mt-1">
                       モニタリングを実施した日を入力してください。申請日ではありません。
                     </p>
@@ -231,7 +231,7 @@ export function MonitoringSolarForm({
                 name="ELpv_value"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>発電量 (ELPV)</FormLabel>
+                    <RequiredLabel>発電量 (ELPV)</RequiredLabel>
                     <p className="text-sm text-muted-foreground mt-1">
                       対象期間中に太陽光発電設備で発電した総電力量を入力してください。
                     </p>
@@ -253,7 +253,7 @@ export function MonitoringSolarForm({
                 name="ELpvr_value"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>自家消費量 (ELPVR)</FormLabel>
+                    <RequiredLabel>自家消費量 (ELPVR)</RequiredLabel>
                     <p className="text-sm text-muted-foreground mt-1">
                       対象期間中に発電した電力量のうち、売電または他者へ提供した電力量を入力してください。
                     </p>
@@ -275,7 +275,7 @@ export function MonitoringSolarForm({
                 name="changedBattery"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>蓄電池交換の有無</FormLabel>
+                    <RequiredLabel>蓄電池交換の有無</RequiredLabel>
                     <p className="text-sm text-muted-foreground mt-1">
                       対象期間中に蓄電池を交換したかどうかを選択してください。
 交換した場合は、交換後の蓄電池に関する証憑資料をアップロードしてください。
@@ -325,7 +325,7 @@ export function MonitoringSolarForm({
                   name="ELPJ_battery_value"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>蓄電池放電量 (ELPJ)</FormLabel>
+                      <RequiredLabel>蓄電池放電量 (ELPJ)</RequiredLabel>
                       <p className="text-sm text-muted-foreground mt-1">
                       対象期間中に蓄電池から放電された電力量を入力してください。
                       </p>
@@ -348,7 +348,7 @@ export function MonitoringSolarForm({
                 name="ELPJ_control_value"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>制御機器稼働時間 (ELPJ)</FormLabel>
+                    <RequiredLabel>制御機器稼働時間 (ELPJ)</RequiredLabel>
                     <p className="text-sm text-muted-foreground mt-1">
                       対象期間中に制御機器が稼働した合計時間を入力してください。
                     </p>
@@ -370,7 +370,7 @@ export function MonitoringSolarForm({
                     name="ELPJ_accuracy"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>測定精度</FormLabel>
+                        <RequiredLabel>測定精度</RequiredLabel>
                         <p className="text-sm text-muted-foreground mt-1">
                           モニタリングデータの測定に使用した機器の測定精度を入力してください。
                         </p>
@@ -401,6 +401,7 @@ export function MonitoringSolarForm({
                           <FileSelectButton
                             id="elpv-file"
                             label="発電量 (ELPV) エビデンス"
+                            required
                             variant="design-system-pro"
                             supportedFormats="(.pdf, .csv)"
                             value={(field.value as File) ?? null}
@@ -428,6 +429,7 @@ export function MonitoringSolarForm({
                           <FileSelectButton
                             id="elpvr-file"
                             label="自家消費量 (ELPVR) エビデンス"
+                            required
                             variant="design-system-pro"
                             supportedFormats="(.pdf, .jpg, .jpeg, .png)"
                             value={(field.value as File) ?? null}
@@ -456,6 +458,7 @@ export function MonitoringSolarForm({
                             <FileSelectButton
                               id="elpj-battery-file"
                               label="蓄電池エビデンス"
+                              required
                               variant="design-system-pro"
                               supportedFormats="(.pdf, .jpg, .jpeg, .png)"
                               value={(field.value as File) ?? null}
@@ -484,6 +487,7 @@ export function MonitoringSolarForm({
                           <FileSelectButton
                             id="elpj-control-file"
                             label="制御機器仕様 (ELPJ) エビデンス"
+                            required
                             variant="design-system-pro"
                             supportedFormats="(.pdf, .jpg, .jpeg, .png)"
                             value={(field.value as File) ?? null}

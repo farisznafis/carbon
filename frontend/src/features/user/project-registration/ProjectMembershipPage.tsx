@@ -124,7 +124,7 @@ export default function ProjectMembershipPage() {
 
   const handleJoin = (project: SiteProject) => {
     setCurrentProject(project);
-    navigate(paths.projectEquipment(siteId, project.id), {
+    navigate(paths.projectRegister(siteId, project.id), {
       state: {
         ...(enteredFromMasterDashboard
           ? masterDashboardProjectMembershipState
@@ -152,11 +152,11 @@ export default function ProjectMembershipPage() {
       wrapInCard={false}
     >
       <div className="space-y-10">
-        {siteName && (
+        {/* {siteName && (
           <p className="text-center text-muted-foreground">
             拠点名：{siteName}
           </p>
-        )}
+        )} */}
 
         {isLoading ? (
           <Card className="rounded-lg border-border shadow-none">

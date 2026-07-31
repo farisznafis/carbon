@@ -52,6 +52,7 @@ import { PROJECT_EMISSION_REDUCTION_TARGET } from './components/emissionReductio
 import { projectDetailCardClassName } from './projectDetailStyles';
 import { cn } from '@/lib/utils';
 import { paths } from '@/routes/paths';
+import { FloatingHelpButton } from '@/features/master/help/FloatingHelpButton';
 
 function formatNumber(n: number | null | undefined) {
   if (n == null || Number.isNaN(n)) return '-';
@@ -849,6 +850,7 @@ const ProjectDetail = () => {
           projectId={projectId}
           onOpenChange={setMonitoringCancellationOpen}
         />
+        <FloatingHelpButton context='project-detail' />
         </div>
       </div>
     </div>

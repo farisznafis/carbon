@@ -20,6 +20,7 @@ import { paths } from '@/routes/paths';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { DashboardEmissionReductionProgress } from './components/DashboardEmissionReductionProgress';
+import { FloatingHelpButton } from '@/features/master/help/FloatingHelpButton';
 
 const pageContainer = dashboardPageContainerClassName;
 
@@ -737,6 +738,7 @@ const Dashboard = () => {
           )}
         </div>
       </section>
+      <FloatingHelpButton context='site-dashboard' />
     </div>
   );
 };

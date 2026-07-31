@@ -18,7 +18,7 @@ interface AuthContextType {
   user: User | null;
   login: (companyId: string, email: string, password: string) => Promise<User>;
   adminLogin: (identifier: string, password: string) => Promise<User>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
   isLoggedIn: () => boolean;
   loading: boolean;

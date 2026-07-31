@@ -12,6 +12,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useNotifications } from '@/hooks/useNotifications';
+import { toast } from '@/hooks/use-toast';
 import { getHomePath } from '@/utils/getHomePath';
 import { paths } from '@/routes/paths';
 
@@ -23,6 +24,7 @@ export const Navbar = () => {
     error: notificationsError,
     unreadCount,
     markAsRead,
+    deleteNotification,
   } = useNotifications();
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,9 +32,40 @@ export const Navbar = () => {
   const linkTarget = getHomePath(user);
   const isAdminLoginPage = location.pathname === paths.adminLogin;
 
-  const handleLogout = () => {
-    logout();
-    navigate(paths.home);
+  const handleLogout = async () => {
+    const redirectPath =
+      user?.role === 'admin' ? paths.adminLogin : paths.home;
+
+    await logout();
+    navigate(redirectPath, { replace: true });
+  };
+
+  const handleMarkAsRead = async (
+    notificationId: Parameters<typeof markAsRead>[0],
+  ) => {
+    try {
+      await markAsRead(notificationId);
+    } catch {
+      toast({
+        title: 'エラー',
+        description: '通知を既読にできませんでした。',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteNotification = async (
+    notificationId: Parameters<typeof deleteNotification>[0],
+  ) => {
+    try {
+      await deleteNotification(notificationId);
+    } catch {
+      toast({
+        title: 'エラー',
+        description: '通知を削除できませんでした。',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -77,12 +110,13 @@ export const Navbar = () => {
                         </Button>
                       </SheetClose>
                     </SheetHeader>
-                    <div className="flex-1 overflow-y-auto px-6 py-2">
+                    <div className="flex-1 overflow-y-auto p-4">
                       <NotificationsList
                         notifications={notifications}
                         loading={notificationsLoading}
                         error={notificationsError}
-                        onMarkAsRead={markAsRead}
+                        onMarkAsRead={handleMarkAsRead}
+                        onDelete={handleDeleteNotification}
                       />
                     </div>
                   </SheetContent>
@@ -99,7 +133,7 @@ export const Navbar = () => {
                   </Button>
                   <Button
                     variant="ghost"
-                    onClick={handleLogout}
+                    onClick={() => void handleLogout()}
                     className="flex items-center space-x-1"
                   >
                     <LogOut className="h-4 w-4" />

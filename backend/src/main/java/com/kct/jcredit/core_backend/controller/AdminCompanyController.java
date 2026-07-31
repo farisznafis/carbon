@@ -200,7 +200,7 @@ public class AdminCompanyController {
     // /{companyId} single-segment mapping above.
     // ─────────────────────────────────────────────────────────────
 
-    // ── LIST — semua item yang masih PENDING (status OPEN) ───────
+    // ── LIST — (status OPEN) ───────
     @GetMapping("participate/pending")
     @PreAuthorize("hasRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
@@ -209,9 +209,8 @@ public class AdminCompanyController {
         return ResponseEntity.ok(reviewService.getPendingReviews());
     }
 
-    // ── LIST — item yang MASIH BISA di-review oleh operator yang login ──
-    // (exclude item yang dia sendiri sudah jadi primary reviewer)
-    @GetMapping("participate/mine")
+    // ── LIST — 
+    @GetMapping("participate/self-sign")
     @PreAuthorize("hasRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "自分がレビュー可能な一覧取得", description = "自分がまだレビューできる入会届一覧を取得します。")

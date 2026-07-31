@@ -22,6 +22,7 @@ const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
 const AdminLogin = lazy(() => import("./features/admin/auth/AdminLoginPage"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Signup = lazy(() => import("./pages/Signup"));
 const ProjectDetail = lazy(() => import("./features/user/project-detail/ProjectDetailPage"));
 const MonitoringRegister = lazy(() => import("./features/user/monitoring/MonitoringRegisterPage"));
@@ -141,6 +142,7 @@ const App = () => {
           <Route path={paths.login} element={<Login />} />
           <Route path={paths.adminLogin} element={<AdminLogin />} />
           <Route path={paths.forgotPassword} element={<ForgotPassword />} />
+          <Route path={paths.resetPassword} element={<ResetPassword />} />
           <Route path={paths.signup} element={<Signup />} />
           <Route element={<ProtectedRoute />}>
             <Route path={paths.masterDashboard} element={<MasterDashboard />} />
