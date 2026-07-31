@@ -42,3 +42,18 @@ export function displayParticipationBoolean(value: boolean | null): string {
   return '―';
 }
 
+export const FILE_TYPE_LABEL: Record<string, string> = {
+  solar_contract: '太陽光発電電力受給契約確認書',
+  panel_catalog: '仕様書・カタログ',
+  pcs_spec: 'PCS仕様書',
+  battery_catalog: '仕様書・カタログ',
+
+  construction_invoice: '工事請負契約書・請求書等',
+  subsidy_notice: '補助金交付決定通知書',
+  electricity_bill: '電力会社請求明細書等',
+};
+
+export function formatFileType(fileType: string | null | undefined): string {
+  if (!fileType) return '―';
+  return FILE_TYPE_LABEL[fileType] ?? fileType;
+}

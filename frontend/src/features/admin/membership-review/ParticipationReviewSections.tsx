@@ -6,6 +6,7 @@ import {
   displayParticipationBoolean,
   displayParticipationValue,
   getParticipationReviewStage,
+  formatFileType,
 } from './participationReviewDisplay';
 import { ParticipationReviewFileActions } from './ParticipationReviewFileActions';
 
@@ -174,11 +175,11 @@ export function ParticipationReviewSections({
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0">
                         <p className="text-small font-bold text-foreground">
-                          {displayParticipationValue(file.fileType)}
+                          {formatFileType(file.fileType)}
                         </p>
-                        <p className="mt-1 break-all text-xs text-muted-foreground">
+                        {/* <p className="mt-1 break-all text-xs text-muted-foreground">
                           {displayParticipationValue(file.s3Key || file.fileId)}
-                        </p>
+                        </p> */}
                       </div>
                       <ParticipationReviewFileActions file={file} />
                     </div>
