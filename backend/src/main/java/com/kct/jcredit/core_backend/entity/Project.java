@@ -1,5 +1,6 @@
 package com.kct.jcredit.core_backend.entity;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.kct.jcredit.core_backend.entity.base.BaseEntity;
@@ -28,6 +29,9 @@ public class Project extends BaseEntity {
 
     @Column(name = "project_status", nullable = false, length = 10)
     private String projectStatus;
+
+    @Column(name = "status_finalized_at")
+    private LocalDateTime statusFinalizedAt;
 
     @Column(name = "rep_first_name", nullable = false, length = 50)
     private String repFirstName;

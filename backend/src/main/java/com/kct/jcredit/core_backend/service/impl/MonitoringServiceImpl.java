@@ -40,12 +40,14 @@ import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.service.MonitoringService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MonitoringServiceImpl implements MonitoringService {
 
     private final ProjectRepository projectRepository;
@@ -400,6 +402,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
 
         } catch (Exception e) {
+            log.error("readAllMonitoringRecordsSolar failed for projectId={}", projectId, e);
             response.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR);
             response.setMessage(ResponseConstants.MSG_INTERNAL_ERROR);
             return response;

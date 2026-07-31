@@ -14,6 +14,7 @@ import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.entity.base.PaginationDetailResponse;
+import com.kct.jcredit.core_backend.exception.ResourceNotFoundException;
 import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -327,11 +329,11 @@ public class ProjectServiceImpl implements ProjectService {
             operatorCompany = operatorCompanyRepository.findByCompanyId(operatorCompanyId)
                 .orElseThrow(() -> {
                     log.error("ProjectServiceImpl.createProject()関数 : エラーcompany Id " + operatorCompanyId);
-                    return new UnsupportedOperationException(ResponseConstants.MSG_UNEXPEXTED_ERROR);
+                    return new ResourceNotFoundException(ResponseConstants.MSG_COMPANY_NOT_FOUND);
                 });
         } else {
             log.error("ProjectServiceImpl.createProject()関数 : company Id is missing");
-            throw new UnsupportedOperationException(ResponseConstants.MSG_UNEXPEXTED_ERROR);
+            throw new ResourceNotFoundException(ResponseConstants.MSG_COMPANY_NOT_FOUND);
         }
         
         Project project = Project.builder().build();
@@ -389,13 +391,13 @@ public class ProjectServiceImpl implements ProjectService {
                 .orElseGet(() -> operatorCompanyRepository.findByCompanyId(operatorCompanyId)
                     .orElseThrow(() -> {
                         log.error("ProjectServiceImpl.createProject()関数 : エラーcompany Id " + operatorCompanyId);
-                        return new UnsupportedOperationException(ResponseConstants.MSG_UNEXPEXTED_ERROR);
+                        return new ResourceNotFoundException(ResponseConstants.MSG_COMPANY_NOT_FOUND);
                     }));
         } catch (NumberFormatException ex) {
             return operatorCompanyRepository.findByCompanyId(operatorCompanyId)
                 .orElseThrow(() -> {
                     log.error("ProjectServiceImpl.createProject()関数 : エラーcompany Id " + operatorCompanyId);
-                    return new UnsupportedOperationException(ResponseConstants.MSG_UNEXPEXTED_ERROR);
+                    return new ResourceNotFoundException(ResponseConstants.MSG_COMPANY_NOT_FOUND);
                 });
         }
     }
@@ -570,7 +572,10 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         String previousStatus = project.getProjectStatus();
-        
+
+        if ("終了".equals(newStatus)) {
+            project.setStatusFinalizedAt(LocalDateTime.now());
+        }
 
         project.setProjectStatus(newStatus);
 
