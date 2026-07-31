@@ -138,6 +138,7 @@ public class ProjectDtoReq {
     @Min(value = 0, message = "累計会員数は0以上で入力してください。")
     private Integer cumulativeMembers;
 
+    @NotNull(message = "会員数は必須です。")
     @Min(value = 0, message = "会員数は0以上で入力してください。")
     private Integer membersTotal;
 
@@ -172,5 +173,6 @@ public class ProjectDtoReq {
     @Size(max = 1000, message = "方法論詳細は1000文字以内で入力してください。")
     private String methodDetails;
 
+    @NotBlank(message = "事業者IDは必須です。")
     private String operatorCompanyId;
 }
