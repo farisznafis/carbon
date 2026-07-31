@@ -173,6 +173,6 @@ public class ProjectDtoReq {
     @Size(max = 1000, message = "方法論詳細は1000文字以内で入力してください。")
     private String methodDetails;
 
-    @NotBlank(message = "事業者IDは必須です。")
+    @NotBlank(message = "運営会社IDは必須です。")
     private String operatorCompanyId;
 }
