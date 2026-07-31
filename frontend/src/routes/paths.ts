@@ -101,3 +101,15 @@ export const paths = {
   // Admin Help & FAQ
   adminHelpFaq: '/admin/help-faq',
 } as const;
+
+const normalizePathname = (pathname: string) =>
+  pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
+
+export const isLoginPath = (pathname: string) => {
+  const normalizedPathname = normalizePathname(pathname);
+
+  return (
+    normalizedPathname === paths.login ||
+    normalizedPathname === paths.adminLogin
+  );
+};
