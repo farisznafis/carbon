@@ -38,13 +38,13 @@ export function AdminMasterPasswordResetDialog({
 
         <dl className="rounded-lg border border-border bg-muted/30 px-4 py-2">
           <div className="grid gap-4 border-b border-border/60 py-2 sm:grid-cols-[100px_1fr]">
-            <dt className="text-sm text-muted-foreground">氏名</dt>
+            <dt className="text-sm text-foreground">氏名</dt>
             <dd className="break-words text-sm font-medium text-foreground">
               {masterName || '―'}
             </dd>
           </div>
           <div className="grid gap-4 py-2 sm:grid-cols-[100px_1fr]">
-            <dt className="text-sm text-muted-foreground">メールアドレス</dt>
+            <dt className="text-sm text-foreground">メールアドレス</dt>
             <dd className="break-all text-sm font-medium text-foreground">
               {masterEmail || '―'}
             </dd>

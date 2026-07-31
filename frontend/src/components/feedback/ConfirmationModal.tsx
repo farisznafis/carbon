@@ -60,20 +60,20 @@ export default function ConfirmationModal<T extends Record<string, unknown>>({
       <DialogContent className="max-w-md w-[92%] rounded-xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          {description && <p className="text-muted-foreground text-sm mt-1">{description}</p>}
+          {description && <p className="text-foreground text-sm mt-1">{description}</p>}
         </DialogHeader>
 
         <div className="mt-4 space-y-3 max-h-[60vh] overflow-y-auto">
           {changes.length === 0 ? (
-            <div className="text-sm text-muted-foreground">変更はありません。</div>
+            <div className="text-sm text-foreground">変更はありません。</div>
           ) : (
             changes.map((c) => (
               <div key={c.key} className="flex gap-4 items-start border-b pb-2">
-                <div className="w-1/3 text-sm text-muted-foreground">{labels[c.key] ?? c.key}</div>
+                <div className="w-1/3 text-sm text-foreground">{labels[c.key] ?? c.key}</div>
                 <div className="w-2/3 text-sm">
-                  <div className="text-xs text-muted-foreground">Before</div>
+                  <div className="text-xs text-foreground">Before</div>
                   <div className="font-medium">{String(c.before ?? "—")}</div>
-                  <div className="text-xs text-muted-foreground mt-1">After</div>
+                  <div className="text-xs text-foreground mt-1">After</div>
                   <div className="font-medium">{String(c.after ?? "—")}</div>
                 </div>
               </div>

@@ -30,7 +30,7 @@ export const SignupStep4 = () => {
 
       <div>
         <h3 className="text-3xl font-semibold mb-2">登録完了！</h3>
-        <p className="text-muted-foreground text-lg">
+        <p className="text-foreground text-lg">
           ご登録ありがとうございます
         </p>
       </div>
@@ -42,7 +42,7 @@ export const SignupStep4 = () => {
             </div>
             <div className="text-left">
               <h4 className="font-semibold mb-1">確認メールを送信しました</h4>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-foreground">
                 <strong>{signupData.email}</strong>で登録申請を受け付けました。
 登録内容を確認後、管理者による承認が行われます。
               </p>
@@ -54,7 +54,7 @@ export const SignupStep4 = () => {
         <Button onClick={handleContinue} size="sm" className="w-full max-w-md">
           ログインへ続く
         </Button>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-foreground">
           メールが届かない場合は、迷惑メールフォルダを確認するか、サポートにお問い合わせください。
         </p>
       </div>

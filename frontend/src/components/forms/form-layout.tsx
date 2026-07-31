@@ -109,7 +109,7 @@ export function FormPageHeader({
       )}
       <h2>{title}</h2>
       {description && (
-        <p className="mt-2 text-sm font-medium leading-5 text-muted-foreground">
+        <p className="mt-2 text-sm font-medium leading-5 text-foreground">
           {description}
         </p>
       )}
@@ -170,7 +170,7 @@ export function WizardProgress({
                 <span
                   className={cn(
                     "truncate text-xs font-medium",
-                    isReached ? "text-primary" : "text-muted-foreground",
+                    isReached ? "text-primary" : "text-foreground",
                   )}
                 >
                   {step.title}

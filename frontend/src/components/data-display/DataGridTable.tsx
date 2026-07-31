@@ -142,7 +142,7 @@ export function DataGridTable<T>({
       </div>
 
       {sortedRows.length === 0 ? (
-        <div className="px-5 py-8 text-center text-small text-muted-foreground">
+        <div className="px-5 py-8 text-center text-small text-foreground">
           {emptyMessage}
         </div>
       ) : (

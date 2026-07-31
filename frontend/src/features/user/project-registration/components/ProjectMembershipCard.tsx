@@ -28,7 +28,7 @@ export function ProjectMembershipCard({
             <h3 className='break-words text-foreground'>
               {project.projectName || '-'}
             </h3>
-            <p className='text-small mt-2 whitespace-pre-wrap break-words text-muted-foreground'>
+            <p className='text-small mt-2 whitespace-pre-wrap break-words text-foreground'>
               {project.methodDetails || '-'}
             </p>
           </div>
@@ -46,19 +46,19 @@ export function ProjectMembershipCard({
 
         <dl className='mt-6 grid gap-x-8 gap-y-5 md:grid-cols-8'>
           <div className='md:col-span-2'>
-            <dt className='text-small text-muted-foreground'>方法論名称</dt>
+            <dt className='text-small text-foreground'>方法論名称</dt>
             <dd className='mt-1 break-words font-bold'>
               {project.methodName || '-'}
             </dd>
           </div>
           <div className='md:col-span-2'>
-            <dt className='text-small text-muted-foreground'>方法論番号</dt>
+            <dt className='text-small text-foreground'>方法論番号</dt>
             <dd className='mt-1 break-words font-bold'>
               {project.methodNumber || '-'}
             </dd>
           </div>
           <div className='md:col-span-2'>
-            <dt className='text-small text-muted-foreground'>排出削減活動</dt>
+            <dt className='text-small text-foreground'>排出削減活動</dt>
             <dd className='mt-1 whitespace-pre-wrap break-words font-bold'>
               {project.methodMainEmission || '-'}
             </dd>

@@ -72,6 +72,16 @@ export const paths = {
   adminProjectRegister: '/admin/project-register',
   adminProjectDetailRoute: '/admin/projects/:projectId',
   adminProjectDetail: (projectId: string) => `/admin/projects/${projectId}`,
+  adminProjectMembershipRoute: '/admin/projects/:projectId/memberships',
+  adminProjectMembership: (projectId: string) =>
+    `/admin/projects/${projectId}/memberships`,
+  adminProjectMembershipDetailRoute:
+    '/admin/projects/:projectId/memberships/:participationId',
+  adminProjectMembershipDetail: (
+    projectId: string,
+    participationId: string | number,
+  ) =>
+    `/admin/projects/${projectId}/memberships/${participationId}`,
   adminProjectMonitoringDetailRoute:
     '/admin/projects/:projectId/monitoring/:monitoringId',
   adminProjectMonitoringDetail: (
@@ -91,3 +101,15 @@ export const paths = {
   // Admin Help & FAQ
   adminHelpFaq: '/admin/help-faq',
 } as const;
+
+const normalizePathname = (pathname: string) =>
+  pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
+
+export const isLoginPath = (pathname: string) => {
+  const normalizedPathname = normalizePathname(pathname);
+
+  return (
+    normalizedPathname === paths.login ||
+    normalizedPathname === paths.adminLogin
+  );
+};

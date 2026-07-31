@@ -40,7 +40,7 @@ export default function AdminMonitoringReportPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className='text-sm text-muted-foreground'>
+            <div className='text-sm text-foreground'>
               報告書データはまだありません。
             </div>
           </CardContent>

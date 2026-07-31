@@ -160,7 +160,7 @@ const MonitoringRegister = () => {
   if (!definition || !projectType) {
     return (
       <div className='flex min-h-screen items-center justify-center'>
-        <p className='text-muted-foreground'>
+        <p className='text-foreground'>
           未対応のプロジェクト種別です
         </p>
       </div>

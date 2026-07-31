@@ -389,7 +389,7 @@ export function SiteForm({
 
               <FormSection number={3} title={<>責任者 <RequiredBadge /></>}>
                 {userOptionsHelperText && (
-                  <p className="-mt-2 mb-1 text-sm text-muted-foreground">
+                  <p className="-mt-2 mb-1 text-sm text-foreground">
                     {userOptionsHelperText}
                   </p>
                 )}
