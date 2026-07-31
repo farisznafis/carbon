@@ -659,7 +659,7 @@ const Dashboard = () => {
       <section className='bg-card py-12'>
         <div className={pageContainer}>
           <div className='mb-6'>
-            <h2 className='text-foreground'>参加中のプロジェクト</h2>
+            <h2 className='text-foreground'>入会中のプロジェクト</h2>
             <p className='text-small mt-2 text-foreground'>
               この拠点が現在参加しているプロジェクトです。進捗や排出量の詳細を確認できます。
             </p>
@@ -684,7 +684,7 @@ const Dashboard = () => {
           ) : (
             <Card className='rounded-2xl border-border'>
               <CardContent className='p-10 text-center text-muted-foreground'>
-                参加中のプロジェクトがありません
+                入会中のプロジェクトがありません
               </CardContent>
             </Card>
           )}
