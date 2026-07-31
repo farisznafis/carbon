@@ -2,6 +2,7 @@ package com.kct.jcredit.core_backend.controller;
 
 import com.kct.jcredit.core_backend.dto.request.CompanyListQuery;
 import com.kct.jcredit.core_backend.dto.request.CreateCompanySuspensionRequest;
+import com.kct.jcredit.core_backend.dto.request.CreateUserRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectCompanyRequest;
 import com.kct.jcredit.core_backend.dto.request.ResolveCompanySuspensionRequest;
 import com.kct.jcredit.core_backend.dto.request.ReviewParticipationRequest;
@@ -12,6 +13,7 @@ import com.kct.jcredit.core_backend.dto.response.AdminCompanyDetailResponse;
 import com.kct.jcredit.core_backend.dto.response.ApproveCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.CompanySuspensionListResponse;
 import com.kct.jcredit.core_backend.dto.response.CompanySuspensionResponse;
+import com.kct.jcredit.core_backend.dto.response.CreateUserResponse;
 import com.kct.jcredit.core_backend.dto.response.RejectCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.response.ParticipationReviewDetailResponse;
@@ -257,5 +259,35 @@ public class AdminCompanyController {
         Integer operatorUserId = jwtUtil.extractUserId(authentication.getCredentials().toString());
         reviewService.rejectReview(participationId, operatorUserId, request);
         return ResponseEntity.ok(BaseResponse.success("却下しました。"));
+    }
+
+    // ── Operator User List ─────────────────────────────────────────────────
+    //get a list of operator users that are associated with the current users operating companyiD
+    // admin user has superiority and can make operators that should be able to access the admin tool and manage companies, users, and sites
+    // only admin can accept new users and requests to join projects 
+
+
+    // ── Operator Create List ─────────────────────────────────────────────────
+    //create a new operating user and set their permissions to different parts of the admin tool page
+
+    @PostMapping("/operator-user")
+    @PreAuthorize("hasAnyRole('master')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "運用者ユーザー作成", description = "ログイン中の管理企業に新しい参加企業ユーザーを作成します。")
+    public ResponseEntity<CreateUserResponse> createUser(
+            Authentication authentication,
+            @RequestBody @Valid CreateUserRequest request) {
+            String companyId = jwtUtil.extractCompanyId(
+            authentication.getCredentials().toString()
+        );
+        String username = jwtUtil.extractUsername(authentication.getCredentials().toString());
+        
+        CreateUserResponse response = userService.createUser(companyId, username, request);
+        
+        // レスポンスのステータスコードに応じたHTTPステータスを返す
+        return new ResponseEntity<>(
+            response, 
+            ResponseUtil.getHttpStatus(response.getStatusCode())
+        );
     }
 }
