@@ -6,6 +6,8 @@ export function mapProjectListItem(item: ProjectListItem): Project {
     companyId: item.companyId != null ? String(item.companyId) : undefined,
     operatorCompanyId:
       item.operatorCompanyId != null ? String(item.operatorCompanyId) : undefined,
+    companyName: item.companyName ?? undefined,
+    siteName: item.siteName ?? undefined,
     projectName: item.projectName,
     projectStatus: item.projectStatus as Project['projectStatus'],
     methodCategory: item.methodologyCategory,

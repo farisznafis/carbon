@@ -25,7 +25,7 @@ type ProfileInfoCardsProps = {
 function InfoItem({ label, value, helpText }: InfoItemProps & { helpText?: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+      <p className="text-sm font-medium text-foreground flex items-center gap-1">
         {label}
         {helpText && <InlineHelp content={helpText} />}
       </p>
@@ -52,8 +52,8 @@ export function ProfileInfoCards({
   onPasswordChange,
 }: ProfileInfoCardsProps) {
   const isMaster = profile?.role?.toLowerCase() === 'master';
-  
-  const roleHelpText = isMaster 
+
+  const roleHelpText = isMaster
     ? 'すべての機能を利用・管理できる権限です。'
     : '基本機能を利用できる権限です。';
 
@@ -86,9 +86,9 @@ export function ProfileInfoCards({
           <InfoItem label="役職" value={profile?.userPosition} />
           <InfoItem label="電話番号" value={profile?.phoneNumber} />
           {!isMaster && <InfoItem label="拠点名" value={profile?.siteName} />}
-          <InfoItem 
-            label="権限" 
-            value={formatRole(profile?.role)} 
+          <InfoItem
+            label="権限"
+            value={formatRole(profile?.role)}
             helpText={roleHelpText}
           />
         </CardContent>
@@ -116,7 +116,7 @@ export function ProfileInfoCards({
         </CardContent>
 
         <CardFooter className="pt-2">
-          <CardDescription className="text-sm text-muted-foreground">
+          <CardDescription className="text-sm text-foreground">
             法人情報の更新をご希望の方は、お問い合わせください。
           </CardDescription>
         </CardFooter>

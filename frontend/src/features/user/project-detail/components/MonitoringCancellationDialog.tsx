@@ -198,7 +198,7 @@ export function MonitoringCancellationDialog({
 
           <div className='min-h-0 flex-1 space-y-4 overflow-y-auto'>
             {isLoading ? (
-              <div className='rounded-xl border border-border p-8 text-center text-muted-foreground'>
+              <div className='rounded-xl border border-border p-8 text-center text-foreground'>
                 読み込み中...
               </div>
             ) : loadError ? (
@@ -241,7 +241,7 @@ export function MonitoringCancellationDialog({
                       <TableRow>
                         <TableCell
                           colSpan={9}
-                          className='h-28 text-center text-muted-foreground'
+                          className='h-28 text-center text-foreground'
                         >
                           モニタリングデータはありません。
                         </TableCell>
@@ -288,7 +288,7 @@ export function MonitoringCancellationDialog({
                                 className={
                                   record.isActive
                                     ? 'border-primary/40 text-primary'
-                                    : 'border-border text-muted-foreground'
+                                    : 'border-border text-foreground'
                                 }
                               >
                                 {record.isActive ? '有効' : '取消済み'}

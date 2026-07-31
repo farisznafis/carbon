@@ -25,7 +25,7 @@ const MasterDashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-  
+
   const activeTab = searchParams.get('tab') === 'users' ? 'users' : 'sites';
 
   const sites = useDashboardStore((state) => state.sites);
@@ -78,7 +78,7 @@ const MasterDashboard = () => {
 
   if (loading || loadingStore) {
     return (
-      <div className="text-small flex min-h-screen items-center justify-center bg-background px-6 text-center text-muted-foreground">
+      <div className="text-small flex min-h-screen items-center justify-center bg-background px-6 text-center text-foreground">
         読み込み中...
       </div>
     );
@@ -106,8 +106,8 @@ const MasterDashboard = () => {
         }
       />
 
-      <Tabs 
-        value={activeTab} 
+      <Tabs
+        value={activeTab}
         onValueChange={(value) => setSearchParams({ tab: value })}
         className="flex flex-1 flex-col bg-card"
       >

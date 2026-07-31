@@ -39,7 +39,7 @@ export function AdminCompanyDetailSection({
             key={`${title}-${field.label}`}
             className={cn('min-w-0 space-y-1', field.className)}
           >
-            <p className="text-small font-bold text-muted-foreground">
+            <p className="text-small font-bold text-foreground">
               {field.label}
             </p>
             {field.content ?? (

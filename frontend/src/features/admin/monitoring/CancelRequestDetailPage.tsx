@@ -41,7 +41,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 function DetailField({ label, children, fullWidth }: DetailFieldProps) {
   return (
     <div className={fullWidth ? 'space-y-2 md:col-span-2' : 'space-y-2'}>
-      <dt className="text-small font-bold text-muted-foreground">{label}</dt>
+      <dt className="text-small font-bold text-foreground">{label}</dt>
       <dd className="break-words text-body font-bold text-foreground">
         {children}
       </dd>
@@ -165,7 +165,7 @@ export default function CancelRequestDetailPage() {
 
   if (isLoading && !cancelRequest) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-background px-6 text-small text-muted-foreground">
+      <main className="flex min-h-screen items-center justify-center bg-background px-6 text-small text-foreground">
         取消申請情報を読み込んでいます...
       </main>
     );
@@ -195,7 +195,7 @@ export default function CancelRequestDetailPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background px-6">
         <div className="space-y-4 text-center">
-          <p className="text-small text-muted-foreground">
+          <p className="text-small text-foreground">
             取消申請情報が見つかりませんでした。
           </p>
           <Button type="button" variant="outline" onClick={returnToList}>

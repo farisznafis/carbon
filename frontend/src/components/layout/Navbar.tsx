@@ -14,7 +14,8 @@ import {
 import { useNotifications } from '@/hooks/useNotifications';
 import { toast } from '@/hooks/use-toast';
 import { getHomePath } from '@/utils/getHomePath';
-import { paths } from '@/routes/paths';
+import { isLoginPath, paths } from '@/routes/paths';
+import { cn } from '@/lib/utils';
 
 export const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -30,7 +31,9 @@ export const Navbar = () => {
   const location = useLocation();
 
   const linkTarget = getHomePath(user);
-  const isAdminLoginPage = location.pathname === paths.adminLogin;
+  const isLoginPage = isLoginPath(location.pathname);
+  const isAdminLoginPage =
+    isLoginPage && location.pathname.startsWith(paths.adminLogin);
 
   const handleLogout = async () => {
     const redirectPath =
@@ -69,8 +72,13 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 border-b bg-card/50 backdrop-blur-sm">
-      <div className="container mx-auto px-4 py-4">
+    <nav className="sticky top-0 z-50 shrink-0 border-b bg-card/50 backdrop-blur-sm">
+      <div
+        className={cn(
+          'container mx-auto px-4 py-4',
+          isLoginPage && '[@media(max-height:480px)]:py-2',
+        )}
+      >
         <div className="flex items-center justify-between">
           <Link to={linkTarget} className="flex items-center space-x-2">
             <div className="h-8 w-8 rounded-lg gradient-primary" />

@@ -77,7 +77,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
                 className='space-y-6'
               >
                 <div className='flex flex-col items-start'>
-                  <p className='text-sm font-medium text-muted-foreground'>法人番号</p>
+                  <p className='text-sm font-medium text-foreground'>法人番号</p>
                   <p className='text-base font-medium'>
                     {company?.corpNumber ?? ''}
                   </p>
@@ -85,7 +85,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
 
                 {/* 企業名　*/}
                 <div className='flex flex-col items-start'>
-                  <p className='text-sm font-medium text-muted-foreground'>企業名</p>
+                  <p className='text-sm font-medium text-foreground'>企業名</p>
                   <p className='text-base font-medium'>
                     {company?.nameJA ?? ''}
                   </p>
@@ -93,7 +93,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
 
                 {/* 企業名（カナ） */}
                 <div className='flex flex-col items-start'>
-                  <p className='text-sm font-medium text-muted-foreground'>
+                  <p className='text-sm font-medium text-foreground'>
                     企業名（カナ）
                   </p>
                   <p className='text-base font-medium'>
@@ -103,7 +103,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
 
                 {/* 企業名（英語） */}
                 <div className='flex flex-col items-start'>
-                  <p className='text-sm font-medium text-muted-foreground'>
+                  <p className='text-sm font-medium text-foreground'>
                     企業名（英語）
                   </p>
                   <p className='text-base font-medium'>
@@ -113,7 +113,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
 
                 {/* 所在地 */}
                 <div className='flex flex-col items-start'>
-                  <p className='text-sm font-medium text-muted-foreground'>所在地</p>
+                  <p className='text-sm font-medium text-foreground'>所在地</p>
                   <p className='text-base font-medium'>
                     {company?.address ?? ''}
                   </p>

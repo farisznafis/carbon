@@ -119,7 +119,7 @@ function DefinitionRow({
 }) {
   return (
     <div className="grid grid-cols-1 gap-0.5 sm:grid-cols-[180px_1fr] sm:gap-2 sm:items-start py-2 border-b border-border/50 last:border-0">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
+      <dt className="text-sm text-foreground">{label}</dt>
       <dd className="text-sm font-medium text-foreground break-words">{children}</dd>
     </div>
   );
@@ -127,7 +127,7 @@ function DefinitionRow({
 
 function DetailLoadingState() {
   return (
-    <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground">
+    <div className="flex min-h-[60vh] items-center justify-center text-sm text-foreground">
       読み込み中...
     </div>
   );
@@ -152,7 +152,7 @@ function DetailErrorState({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <p className="text-sm text-muted-foreground">{message}</p>
+            <p className="text-sm text-foreground">{message}</p>
             <div className="flex flex-wrap gap-3">
               <Button type="button" variant="outline" onClick={onBack}>
                 戻る
@@ -419,16 +419,16 @@ export default function AdminCompanyDetailPage() {
           <button
             type="button"
             onClick={handleBack}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-foreground hover:text-foreground transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 text-muted-foreground" />
             一覧に戻る
           </button>
 
           {/* Title row */}
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1.5 min-w-0">
-              <p className="text-sm text-muted-foreground tracking-wide">
+              <p className="text-sm text-foreground tracking-wide">
                 企業情報の詳細
               </p>
               <h1 className="text-2xl font-semibold tracking-tight text-foreground truncate">
@@ -437,20 +437,20 @@ export default function AdminCompanyDetailPage() {
 
               {/* Inline metadata chips */}
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-0.5">
-                <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                <span className="inline-flex items-center gap-1 text-sm text-foreground">
                   ステータス：
                   <CompanyStatusBadge status={company.companyStatus} />
                 </span>
 
                 {company.isActive !== undefined && (
-                  <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                  <span className="inline-flex items-center gap-1 text-sm text-foreground">
                     アカウント状態：
                     <AccountStatusBadge isActive={company.isActive} />
                   </span>
                 )}
 
                 {company.corpNumber && (
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-foreground">
                     法人番号：
                     <span className="font-medium text-foreground ml-1">
                       {company.corpNumber}
@@ -459,7 +459,7 @@ export default function AdminCompanyDetailPage() {
                 )}
 
                 {company.companyId && (
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-foreground">
                     企業ID：
                     <span className="font-medium text-foreground ml-1">
                       {company.companyId}
@@ -541,7 +541,7 @@ export default function AdminCompanyDetailPage() {
                   </div>
                 </>
               ) : (
-                <p className="py-4 text-sm text-muted-foreground">
+                <p className="py-4 text-sm text-foreground">
                   マスターアカウントが登録されていません。
                 </p>
               )}
@@ -560,7 +560,7 @@ export default function AdminCompanyDetailPage() {
                 <TabsTrigger value="users">
                   ユーザー一覧
                   {users?.length != null && (
-                    <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
+                    <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground">
                       {users.length}
                     </span>
                   )}
@@ -568,7 +568,7 @@ export default function AdminCompanyDetailPage() {
                 <TabsTrigger value="sites">
                   拠点一覧
                   {sites?.length != null && (
-                    <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
+                    <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground">
                       {sites.length}
                     </span>
                   )}
@@ -655,7 +655,7 @@ export default function AdminCompanyDetailPage() {
                       <p className="text-sm font-medium text-foreground">
                         アカウント停止
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-foreground">
                         この企業のアカウントを停止すると、ログインできなくなります。
                       </p>
                     </>
@@ -664,7 +664,7 @@ export default function AdminCompanyDetailPage() {
                       <p className="text-sm font-medium text-foreground">
                         {dangerZoneActionLabel}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-foreground">
                         {dangerZoneActionDescription}
                       </p>
                     </>

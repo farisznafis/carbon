@@ -2,6 +2,8 @@ export interface Project {
   id: string;
   companyId?: string;
   operatorCompanyId?: string | number;
+  companyName?: string;
+  siteName?: string;
   projectName: string;
   projectStatus: string;
   emissionReduction?: number;
@@ -84,6 +86,8 @@ export type ProjectListItem = {
   id: string;
   companyId?: string | number | null;
   operatorCompanyId?: string | number | null;
+  companyName?: string | null;
+  siteName?: string | null;
   projectName: string;
   projectStatus: string;
   methodologyCategory: string;

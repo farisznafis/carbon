@@ -3,6 +3,7 @@ import {
   apiRequest,
   parseJsonResponse,
 } from '@/api/_shared/httpClient';
+import { ApiError } from '@/api/_shared/errors';
 import type {
   SiteProjectEquipment,
   SiteProjectEquipmentFileType,
@@ -55,6 +56,62 @@ export async function uploadSiteProjectEquipmentFile(
     fileName: json.originalName || file.name,
     fileId: json.fileId,
   };
+}
+
+export async function getSiteProjectEquipmentPresignedUrl(
+  s3Key: string,
+): Promise<string> {
+  const normalizedS3Key = s3Key.trim();
+  if (!normalizedS3Key) {
+    throw new Error('ファイルキーが指定されていません。');
+  }
+
+  const response = await apiFetch(
+    `/site/project/presigned-url?s3Key=${encodeURIComponent(normalizedS3Key)}`,
+    { method: 'GET' },
+  );
+  const { data, rawBody } = await parseJsonResponse<unknown>(response);
+
+  if (!response.ok) {
+    const responseMessage =
+      data !== null &&
+      typeof data === 'object' &&
+      !Array.isArray(data) &&
+      typeof (data as Record<string, unknown>).message === 'string'
+        ? String((data as Record<string, unknown>).message)
+        : '';
+
+    throw new ApiError(
+      responseMessage ||
+        rawBody ||
+        `ファイルURLの取得に失敗しました: HTTP ${response.status}`,
+      {
+        status: response.status,
+        payload: data,
+        rawBody,
+      },
+    );
+  }
+
+  const presignedUrl =
+    typeof data === 'string' ? data.trim() : rawBody.trim();
+
+  if (!presignedUrl) {
+    throw new Error('ファイルURLを取得できませんでした。');
+  }
+
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(presignedUrl);
+  } catch {
+    throw new Error('取得したファイルURLが不正です。');
+  }
+
+  if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+    throw new Error('取得したファイルURLが不正です。');
+  }
+
+  return parsedUrl.toString();
 }
 
 export async function validateSiteProjectEquipment(
