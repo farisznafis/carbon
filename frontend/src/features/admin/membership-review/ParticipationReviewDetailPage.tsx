@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   approveParticipationReview,
+  getAdminProjectDetail,
   getMyParticipationReviews,
   getParticipationReviewDetail,
   participationReviewChecklistFields,
@@ -29,6 +30,7 @@ import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
 import { ParticipationReviewChecklistCard } from './ParticipationReviewChecklistCard';
 import { ParticipationReviewSections } from './ParticipationReviewSections';
+import { isParticipationReviewForProject } from './participationReviewProjectMatch';
 
 type Decision = 'approve' | 'reject';
 
@@ -129,12 +131,13 @@ export default function ParticipationReviewDetailPage() {
     setLoadError(null);
 
     try {
-      const [detail, myReviews] = await Promise.all([
+      const [project, detail, myReviews] = await Promise.all([
+        getAdminProjectDetail(projectId),
         getParticipationReviewDetail(numericParticipationId),
         getMyParticipationReviews(),
       ]);
 
-      if (String(detail.projectId) !== String(projectId)) {
+      if (!isParticipationReviewForProject(detail, projectId, project)) {
         setReview(null);
         setLoadError(
           'この入会届は指定されたプロジェクトに属していません。',
@@ -148,7 +151,7 @@ export default function ParticipationReviewDetailPage() {
         myReviews.some(
           (candidate) =>
             candidate.participationId === numericParticipationId &&
-            String(candidate.projectId) === String(projectId),
+            isParticipationReviewForProject(candidate, projectId, project),
         ),
       );
     } catch (error) {

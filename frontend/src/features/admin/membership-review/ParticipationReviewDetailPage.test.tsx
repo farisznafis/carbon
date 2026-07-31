@@ -7,11 +7,13 @@ import ParticipationReviewDetailPage from './ParticipationReviewDetailPage';
 
 const {
   approveParticipationReview,
+  getAdminProjectDetail,
   getMyParticipationReviews,
   getParticipationReviewDetail,
   rejectParticipationReview,
 } = vi.hoisted(() => ({
   approveParticipationReview: vi.fn(),
+  getAdminProjectDetail: vi.fn(),
   getMyParticipationReviews: vi.fn(),
   getParticipationReviewDetail: vi.fn(),
   rejectParticipationReview: vi.fn(),
@@ -22,6 +24,7 @@ vi.mock('@/api/admin', async (importOriginal) => {
   return {
     ...actual,
     approveParticipationReview,
+    getAdminProjectDetail,
     getMyParticipationReviews,
     getParticipationReviewDetail,
     rejectParticipationReview,
@@ -96,9 +99,14 @@ function renderPage() {
 describe('ParticipationReviewDetailPage', () => {
   beforeEach(() => {
     approveParticipationReview.mockReset();
+    getAdminProjectDetail.mockReset();
     getMyParticipationReviews.mockReset();
     getParticipationReviewDetail.mockReset();
     rejectParticipationReview.mockReset();
+    getAdminProjectDetail.mockResolvedValue({
+      id: '7',
+      projectName: 'プロジェクトA',
+    });
     getParticipationReviewDetail.mockResolvedValue(reviewDetail);
     getMyParticipationReviews.mockResolvedValue([reviewDetail]);
     approveParticipationReview.mockResolvedValue(undefined);
@@ -160,4 +168,3 @@ describe('ParticipationReviewDetailPage', () => {
     );
   });
 });
-

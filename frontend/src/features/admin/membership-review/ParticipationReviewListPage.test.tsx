@@ -6,11 +6,9 @@ import { mapParticipationReviewDetail } from '@/api/admin/participationReviewMap
 import ParticipationReviewListPage from './ParticipationReviewListPage';
 
 const {
-  getAdminProjectDetail,
   getMyParticipationReviews,
   getPendingParticipationReviews,
 } = vi.hoisted(() => ({
-  getAdminProjectDetail: vi.fn(),
   getMyParticipationReviews: vi.fn(),
   getPendingParticipationReviews: vi.fn(),
 }));
@@ -19,7 +17,6 @@ vi.mock('@/api/admin', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/admin')>();
   return {
     ...actual,
-    getAdminProjectDetail,
     getMyParticipationReviews,
     getPendingParticipationReviews,
   };
@@ -51,13 +48,8 @@ function makeReview(
 
 describe('ParticipationReviewListPage', () => {
   beforeEach(() => {
-    getAdminProjectDetail.mockReset();
     getMyParticipationReviews.mockReset();
     getPendingParticipationReviews.mockReset();
-    getAdminProjectDetail.mockResolvedValue({
-      id: '7',
-      projectName: '対象プロジェクト',
-    });
     getMyParticipationReviews.mockResolvedValue([
       makeReview(1, 7, '自分の対象会社'),
       makeReview(2, 8, '別プロジェクト会社'),
@@ -69,7 +61,7 @@ describe('ParticipationReviewListPage', () => {
     ]);
   });
 
-  it('defaults to mine, filters by project, and switches to all pending', async () => {
+  it('renders the complete API lists and switches between mine and pending', async () => {
     const user = userEvent.setup();
     render(
       <MemoryRouter
@@ -86,17 +78,16 @@ describe('ParticipationReviewListPage', () => {
     );
 
     expect(await screen.findByText('自分の対象会社')).toBeInTheDocument();
-    expect(screen.queryByText('別プロジェクト会社')).not.toBeInTheDocument();
+    expect(screen.getByText('別プロジェクト会社')).toBeInTheDocument();
     expect(screen.queryByText('全件のみの会社')).not.toBeInTheDocument();
-    expect(screen.getByText('一次確認待ち')).toBeInTheDocument();
+    expect(screen.getAllByText('一次確認待ち')).toHaveLength(2);
 
     await user.click(
-      screen.getByRole('tab', { name: '承認待ち全件（2）' }),
+      screen.getByRole('tab', { name: '承認待ち全件（3）' }),
     );
 
     expect(screen.getByText('全件のみの会社')).toBeInTheDocument();
     expect(screen.getByText('二次確認待ち')).toBeInTheDocument();
-    expect(screen.queryByText('別プロジェクト会社')).not.toBeInTheDocument();
+    expect(screen.getByText('別プロジェクト会社')).toBeInTheDocument();
   });
 });
-

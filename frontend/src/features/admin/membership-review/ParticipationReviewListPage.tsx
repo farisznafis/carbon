@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  getAdminProjectDetail,
   getMyParticipationReviews,
   getPendingParticipationReviews,
   type ParticipationReviewDetail,
@@ -39,7 +38,6 @@ export default function ParticipationReviewListPage() {
   const navigate = useNavigate();
   const { projectId = '' } = useParams();
   const [activeTab, setActiveTab] = useState<ReviewTab>('mine');
-  const [projectName, setProjectName] = useState('');
   const [myReviews, setMyReviews] = useState<ParticipationReviewDetail[]>([]);
   const [pendingReviews, setPendingReviews] = useState<
     ParticipationReviewDetail[]
@@ -58,24 +56,13 @@ export default function ParticipationReviewListPage() {
     setLoadError(null);
 
     try {
-      const [project, mine, pending] = await Promise.all([
-        getAdminProjectDetail(projectId),
+      const [mine, pending] = await Promise.all([
         getMyParticipationReviews(),
         getPendingParticipationReviews(),
       ]);
-      const normalizedProjectId = String(projectId);
 
-      setProjectName(project.projectName);
-      setMyReviews(
-        mine.filter(
-          (review) => String(review.projectId) === normalizedProjectId,
-        ),
-      );
-      setPendingReviews(
-        pending.filter(
-          (review) => String(review.projectId) === normalizedProjectId,
-        ),
-      );
+      setMyReviews(mine);
+      setPendingReviews(pending);
     } catch (error) {
       setLoadError(
         getErrorMessage(error, '入会届一覧の取得に失敗しました。'),
@@ -106,12 +93,12 @@ export default function ParticipationReviewListPage() {
     (review: ParticipationReviewDetail) => {
       navigate(
         paths.adminProjectMembershipDetail(
-          projectId,
+          String(review.projectId),
           review.participationId,
         ),
       );
     },
-    [navigate, projectId],
+    [navigate],
   );
 
   const columns = useMemo<
@@ -203,7 +190,7 @@ export default function ParticipationReviewListPage() {
         <header className="space-y-2">
           <h1>入会届一覧</h1>
           <p className="text-small text-muted-foreground">
-            {projectName || 'プロジェクト'}の入会届を確認します。
+            レビュー対象となる入会届を確認します。
           </p>
         </header>
 
@@ -275,4 +262,3 @@ export default function ParticipationReviewListPage() {
     </main>
   );
 }
-
