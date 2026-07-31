@@ -26,7 +26,7 @@ describe("FullPageConfirmationModal", () => {
     expect(screen.getByText("30")).toBeDefined();
   });
 
-  it("underlines changed values when originalData differs", () => {
+  it("highlights changed values when originalData differs", () => {
     const { container } = render(
       <FullPageConfirmationModal
         {...baseProps}
@@ -38,13 +38,16 @@ describe("FullPageConfirmationModal", () => {
     const ageElement = screen.getByText("31");
     const nameElement = screen.getByText("John");
 
-    expect(ageElement.className).toMatch(/underline/);
-    expect(nameElement.className).not.toMatch(/underline/);
+    expect(ageElement.className).toMatch(/bg-secondary\/60/);
+    expect(ageElement.className).toMatch(/text-primary/);
+    expect(ageElement.className).not.toMatch(/underline/);
+    expect(nameElement.className).not.toMatch(/text-primary/);
+    expect(screen.getByText('変更あり')).toBeInTheDocument();
 
     expect(container).toMatchSnapshot();
   });
 
-  it("does not underline when originalData is missing", () => {
+  it("does not highlight when originalData is missing", () => {
     const value = "31";
     const el = render(
       <FullPageConfirmationModal
@@ -53,6 +56,7 @@ describe("FullPageConfirmationModal", () => {
       />
     ).getByText(value);
 
-    expect(el.className).not.toMatch(/underline/);
+    expect(el.className).not.toMatch(/bg-secondary\/60/);
+    expect(screen.queryByText('変更あり')).not.toBeInTheDocument();
   });
 });

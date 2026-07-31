@@ -1,3 +1,5 @@
+import { ChangedConfirmationValue } from './ChangedConfirmationValue';
+
 interface ConfirmationItemProps<T> {
     label: string;
     value: T;
@@ -17,14 +19,14 @@ export const ConfirmationItem = <T,>({
             <div className="text-sm font-medium text-muted-foreground mb-1">
                 {label}
             </div>
-            <div
-                className={
-                    isChanged
-                        ? "underline underline-offset-4 font-medium"
-                        : "text-foreground"
-                }
-            >
-                {String(value)}
+            <div className={isChanged ? undefined : "text-foreground"}>
+                {isChanged ? (
+                    <ChangedConfirmationValue>
+                        {String(value)}
+                    </ChangedConfirmationValue>
+                ) : (
+                    String(value)
+                )}
             </div>
         </div>
     );

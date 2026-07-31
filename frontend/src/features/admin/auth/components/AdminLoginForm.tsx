@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { LogIn } from 'lucide-react';
 import { PasswordInput } from '@/components/inputs';
 import { LoginForm } from '@/components/forms/shared/LoginForm';
 import {
@@ -40,33 +39,31 @@ export function AdminLoginForm({ onSubmit }: AdminLoginFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} noValidate>
+      <form
+        className="absolute inset-0 h-full w-full min-w-0 max-w-full overflow-hidden"
+        onSubmit={form.handleSubmit(handleSubmit)}
+        noValidate
+      >
         <LoginForm
+          title="管理者ログイン"
+          description="管理画面にアクセスするにはログインしてください。"
           submitLabel="ログイン"
           error={error}
           isSubmitting={form.formState.isSubmitting}
-          header={
-            <header className="text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-primary">
-                <LogIn className="h-6 w-6" />
-              </div>
-              <h2>管理者ログイン</h2>
-              <p className="mt-3 text-sm font-medium leading-6 text-muted-foreground">
-                管理画面にアクセスするにはログインしてください。
-              </p>
-            </header>
-          }
         >
           <FormField
             control={form.control}
             name="identifier"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>管理者ID</FormLabel>
+              <FormItem className="[@media(max-height:480px)]:space-y-0.5">
+                <FormLabel className="[@media(max-height:480px)]:text-sm [@media(max-height:480px)]:leading-5">
+                  管理者ID
+                </FormLabel>
                 <FormControl>
                   <Input
                     type="text"
                     placeholder="社員名またはメールアドレス"
+                    className="[@media(max-height:480px)]:h-8 [@media(max-height:480px)]:py-1"
                     {...field}
                   />
                 </FormControl>
@@ -79,10 +76,16 @@ export function AdminLoginForm({ onSubmit }: AdminLoginFormProps) {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>パスワード</FormLabel>
+              <FormItem className="[@media(max-height:480px)]:space-y-0.5">
+                <FormLabel className="[@media(max-height:480px)]:text-sm [@media(max-height:480px)]:leading-5">
+                  パスワード
+                </FormLabel>
                 <FormControl>
-                  <PasswordInput placeholder="パスワードを入力" {...field} />
+                  <PasswordInput
+                    placeholder="パスワードを入力"
+                    className="[@media(max-height:480px)]:h-8 [@media(max-height:480px)]:py-1"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
