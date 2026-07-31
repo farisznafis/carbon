@@ -11,6 +11,7 @@ import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
+import com.kct.jcredit.core_backend.dto.response.PdfDownloadResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectJoinResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
@@ -375,6 +376,9 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
             textBuilder.append(run.text());
         }
         String text = textBuilder.toString();
+
+        text = text.replaceAll("\\$\\{\\s*([^}]*?)\\s*\\}", "\\${$1}");
+
         boolean changed = false;
         for (Map.Entry<String, String> entry : placeholders.entrySet()) {
             if (text.contains(entry.getKey())) {
@@ -421,5 +425,32 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         return String.format("%s%s%s%s",
                 safe(company.getPrefecture()), safe(company.getMunicipality()),
                 safe(company.getBlocknum()), safe(company.getBuildingName()));
+    }
+
+    @Override
+public PdfDownloadResponse getPdfDownloadUrl(Integer participationId, String companyId) {
+
+    ParticipatingProject participation = participatingProjectRepository
+            .findById(participationId)
+            .orElseThrow(() -> new CustomException(
+                    ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
+
+    String ownerCompanyId = participation.getEquipment().getSite().getCompany().getCompanyId();
+    if (!ownerCompanyId.equals(companyId)) {
+        throw new CustomException(ResponseConstants.FORBIDDEN, ResponseConstants.MSG_UNAUTHORIZED);
+    }
+
+    String s3Key = participation.getS3KeyPdfMembership();
+    if (s3Key == null || s3Key.isBlank()) {
+        throw new CustomException("PDF_NOT_READY",
+                "PDFはまだ準備できていません。審査完了までしばらくお待ちください。");
+    }
+
+    String presignedUrl = generatePresignedUrl(s3Key);
+
+    return PdfDownloadResponse.builder()
+            .pdfUrl(presignedUrl)
+            .expiresIn(presignExpirySeconds)
+            .build();
     }
 }
