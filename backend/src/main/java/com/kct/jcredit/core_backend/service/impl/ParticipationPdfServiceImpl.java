@@ -124,7 +124,7 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
     private final ProjectParticipationConfirmationRepository reviewRepository;
     private final NotificationService notificationService; 
 
-    private static final String TEMPLATE_PATH = "/templates/participate_solar.docx"; // ← fix
+    private static final String TEMPLATE_PATH = "/templates/participate_solar.docx";
     private static final DateTimeFormatter JP_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy年MM月dd日");
 
     @Override
@@ -206,7 +206,7 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
     private Map<String, String> buildPlaceholders(
             Project project,
             ParticipatingCompany company,
-            OperatorCompany operatorCompany,     // ← tambah parameter
+            OperatorCompany operatorCompany,     
             EnR002Equipment equipment,
             EnR002ApplicationConfirmation c,
             EnR002SustainabilityCommitment s,
