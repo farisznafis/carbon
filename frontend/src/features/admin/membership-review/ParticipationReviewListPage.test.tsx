@@ -81,6 +81,11 @@ describe('ParticipationReviewListPage', () => {
     expect(screen.getByText('別プロジェクト会社')).toBeInTheDocument();
     expect(screen.queryByText('全件のみの会社')).not.toBeInTheDocument();
     expect(screen.getAllByText('一次確認待ち')).toHaveLength(2);
+    expect(
+      screen.getByText(
+        'あなたがまだ承認していない、対応が必要な入会届を表示しています。',
+      ),
+    ).toBeInTheDocument();
 
     await user.click(
       screen.getByRole('tab', { name: '承認待ち全件（3）' }),
@@ -89,5 +94,10 @@ describe('ParticipationReviewListPage', () => {
     expect(screen.getByText('全件のみの会社')).toBeInTheDocument();
     expect(screen.getByText('二次確認待ち')).toBeInTheDocument();
     expect(screen.getByText('別プロジェクト会社')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        '他の管理者の承認待ちを含む、最終承認前の入会届をすべて表示しています。',
+      ),
+    ).toBeInTheDocument();
   });
 });

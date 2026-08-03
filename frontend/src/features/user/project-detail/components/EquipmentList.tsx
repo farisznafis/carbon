@@ -33,7 +33,7 @@ function EquipmentField({
 }) {
   return (
     <div className='min-w-0'>
-      <dt className='text-small text-muted-foreground'>{field.label}</dt>
+      <dt className='text-small text-foreground'>{field.label}</dt>
       <dd className='mt-1 break-words font-medium text-foreground'>
         {formatEquipmentField(equipment, field)}
       </dd>

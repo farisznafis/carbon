@@ -58,7 +58,7 @@ function jsonResponse(body: unknown) {
 }
 
 describe('participation review API', () => {
-  it('loads and maps mine, pending, and detail endpoints', async () => {
+  it('loads and maps self-sign, pending, and detail endpoints', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(jsonResponse([rawReview]))
@@ -71,7 +71,7 @@ describe('participation review API', () => {
     const detail = await getParticipationReviewDetail(12);
 
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
-      '/api/admin/companies/participate/mine',
+      '/api/admin/companies/participate/self-sign',
       '/api/admin/companies/participate/pending',
       '/api/admin/companies/participate/12',
     ]);

@@ -291,7 +291,7 @@ export default function ParticipationReviewDetailPage() {
 
   if (isLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-background px-6 text-small text-muted-foreground">
+      <main className="flex min-h-screen items-center justify-center bg-background px-6 text-small text-foreground">
         入会届の詳細を読み込んでいます...
       </main>
     );
@@ -306,7 +306,7 @@ export default function ParticipationReviewDetailPage() {
             className={
               loadError
                 ? 'text-small text-destructive'
-                : 'text-small text-muted-foreground'
+                : 'text-small text-foreground'
             }
           >
             {loadError || '入会届が見つかりませんでした。'}
@@ -340,7 +340,7 @@ export default function ParticipationReviewDetailPage() {
       <FormPageContent className="max-w-[960px] space-y-6 pt-16 sm:pt-0">
         <header className="space-y-2">
           <h1>入会届の詳細</h1>
-          <p className="text-small text-muted-foreground">
+          <p className="text-small text-foreground">
             申請内容と確認資料を確認してください。
           </p>
         </header>
@@ -348,7 +348,7 @@ export default function ParticipationReviewDetailPage() {
         {!isReviewable && (
           <div
             role="status"
-            className="rounded-xl border border-border bg-muted/30 px-5 py-4 text-small text-muted-foreground"
+            className="rounded-xl border border-border bg-muted/30 px-5 py-4 text-small text-foreground"
           >
             この入会届は現在あなたのレビュー対象ではないため、閲覧のみ可能です。
           </div>

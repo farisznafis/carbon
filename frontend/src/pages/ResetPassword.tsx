@@ -194,7 +194,7 @@ export default function ResetPassword() {
   if (pageState === 'exchanging') {
     return (
       <div className="flex min-h-screen items-center justify-center px-4 py-12">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-foreground">
           パスワードリセットリンクを確認しています...
         </p>
       </div>
@@ -235,7 +235,7 @@ export default function ResetPassword() {
             15～64文字の半角英数字・記号を使用してください。一般的なパスワードは避けてください。
           </CardDescription>
           {secondsRemaining !== null && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-foreground">
               この画面の有効期限：{formatRemainingTime(secondsRemaining)}
             </p>
           )}

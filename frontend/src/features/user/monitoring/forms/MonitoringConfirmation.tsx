@@ -39,7 +39,7 @@ export function MonitoringConfirmationLayout({
         <div className="space-y-3">
           <FormPageTitle>{title}</FormPageTitle>
           {description && (
-            <p className="text-small text-muted-foreground">{description}</p>
+            <p className="text-small text-foreground">{description}</p>
           )}
         </div>
 
@@ -48,7 +48,7 @@ export function MonitoringConfirmationLayout({
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               {items.map((item, i) => (
                 <div key={`${item.label}-${i}`}>
-                  <div className="mb-1 text-sm font-medium text-muted-foreground">
+                  <div className="mb-1 text-sm font-medium text-foreground">
                     {item.label}
                   </div>
                   <div>

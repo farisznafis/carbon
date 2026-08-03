@@ -160,7 +160,7 @@ const App = () => {
             isLoginPage && 'relative overflow-hidden',
           )}
         >
-          <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading...</div>}>
+          <Suspense fallback={<div className="p-6 text-sm text-foreground">Loading...</div>}>
             <Routes>
           <Route path={paths.home} element={<Index />} />
           <Route path={paths.login} element={<Login />} />

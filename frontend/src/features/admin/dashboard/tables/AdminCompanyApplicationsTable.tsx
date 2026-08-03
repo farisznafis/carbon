@@ -107,7 +107,7 @@ export function AdminCompanyApplicationsTable({
       sortable: true,
       sortValue: (item) => item.nameJA,
       render: (item) => (
-        <span className="block truncate text-body font-bold text-slate-800">
+        <span className="block truncate text-body font-bold text-foreground">
           {item.nameJA || '-'}
         </span>
       ),

@@ -120,7 +120,7 @@ export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
             環境社会配慮を行い持続可能性を確保することの同意書
             <RequiredBadge />
           </h2>
-          <p className="text-small mt-2 text-muted-foreground">
+          <p className="text-small mt-2 text-foreground">
             以下の内容をご確認の上、該当する項目にご入力いただき、すべての必須項目に同意いただいた場合のみ、次のステップへ進むことができます。
           </p>
         </header>

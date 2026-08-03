@@ -106,7 +106,7 @@ export function FileSelectButton({
             <span className="truncate text-base font-normal leading-7 text-foreground">
               {value?.name || 'ファイルを選択'}
             </span>
-            <span className="text-sm font-normal leading-5 text-muted-foreground">
+            <span className="text-sm font-normal leading-5 text-foreground">
               {supportedFormats}
             </span>
           </span>
@@ -127,7 +127,7 @@ export function FileSelectButton({
           }}
         />
         {helperText && (
-          <p className="text-sm font-normal leading-5 text-muted-foreground">
+          <p className="text-sm font-normal leading-5 text-foreground">
             {helperText}
           </p>
         )}
@@ -154,7 +154,7 @@ export function FileSelectButton({
           onChange(file);
         }}
       />
-      {value && <span className="text-sm text-muted-foreground">{value.name}</span>}
+      {value && <span className="text-sm text-foreground">{value.name}</span>}
     </div>
   );
 }

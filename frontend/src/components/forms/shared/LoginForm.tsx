@@ -33,7 +33,7 @@ export function LoginForm({
             <LogIn className="h-6 w-6" />
           </div>
           <h2>{title}</h2>
-          <p className="mt-3 text-sm font-medium leading-6 text-muted-foreground [@media(max-height:700px)]:hidden">
+          <p className="mt-3 text-sm font-medium leading-6 text-foreground [@media(max-height:700px)]:hidden">
             {description}
           </p>
         </header>

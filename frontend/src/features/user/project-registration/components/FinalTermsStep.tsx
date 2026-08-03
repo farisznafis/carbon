@@ -89,7 +89,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-2">「プログラム名」入会規約 <span className="ml-1 text-destructive">*</span></h2>
-        <p className="text-muted-foreground">入会規約をご確認の上、同意してください</p>
+        <p className="text-foreground">入会規約をご確認の上、同意してください</p>
       </div>
 
       <Card>
@@ -161,7 +161,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
                 <h3 className="font-semibold mb-2">(Ｊ－クレジット売却益の取り扱い)</h3>
                 <h4 className="font-semibold mb-2">第5条</h4>
                 <p>Ｊ－クレジットの売買による売却益は、利用目的に活用することとする。</p>
-                <p className="text-xs text-muted-foreground mt-1">※利用目的は、プロジェクトにおける活用予定・実際の活用方法に応じてご修正ください。</p>
+                <p className="text-xs text-foreground mt-1">※利用目的は、プロジェクトにおける活用予定・実際の活用方法に応じてご修正ください。</p>
               </section>
 
               <section>
@@ -202,7 +202,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
 
               <section>
                 <h3 className="font-semibold mb-2">(退会)</h3>
-                <p className="text-xs text-muted-foreground mb-2">※補助金受給者を対象としたプロジェクト等で退会を禁ずる場合や、その他プロジェクトの実際に応じて適宜ご修正ください。</p>
+                <p className="text-xs text-foreground mb-2">※補助金受給者を対象としたプロジェクト等で退会を禁ずる場合や、その他プロジェクトの実際に応じて適宜ご修正ください。</p>
                 <h4 className="font-semibold mb-2">第9条</h4>
                 <p>会員は、本会を退会しようとするときは、運営・管理者にその旨を届け出、その承認を得なければならない。</p>
               </section>
@@ -227,7 +227,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
                 <h3 className="font-semibold mb-2">(会員資格の有効期間)</h3>
                 <h4 className="font-semibold mb-2">第11条</h4>
                 <p>会員資格の有効期間は入会申込日若しくはプロジェクトが実施された日（※）のいずれか遅い日から8年間とする。ただし、運営・管理者が提出し、Ｊ－クレジット制度管理者が承認した、認証対象期間の延長に係るプロジェクト計画変更届に記載された手続きに沿って延長を行う場合、会員資格は8年間延長されるものとする。</p>
-                <p className="text-xs text-muted-foreground mt-1">※プロジェクトが実施された日は、温室効果ガス排出量の削減又は温室効果ガスの除去をもたらす活動が実質的に開始された日とする。</p>
+                <p className="text-xs text-foreground mt-1">※プロジェクトが実施された日は、温室効果ガス排出量の削減又は温室効果ガスの除去をもたらす活動が実質的に開始された日とする。</p>
               </section>
 
               <section>

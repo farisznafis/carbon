@@ -20,7 +20,7 @@ const NotFound = () => {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="text-center">
         <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="mb-4 text-xl text-muted-foreground">ページが見つかりません</p>
+        <p className="mb-4 text-xl text-foreground">ページが見つかりません</p>
         <Button
           type="button"
           variant="link"

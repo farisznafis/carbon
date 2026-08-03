@@ -41,7 +41,7 @@ export function ParticipationReviewChecklistCard({
           <h2 className="text-xl font-bold text-foreground">
             レビューチェックリスト
           </h2>
-          <p className="text-small text-muted-foreground">
+          <p className="text-small text-foreground">
             承認するには、すべての項目を確認してください。
           </p>
         </div>

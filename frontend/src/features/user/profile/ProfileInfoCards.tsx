@@ -25,7 +25,7 @@ type ProfileInfoCardsProps = {
 function InfoItem({ label, value, helpText }: InfoItemProps & { helpText?: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+      <p className="text-sm font-medium text-foreground flex items-center gap-1">
         {label}
         {helpText && <InlineHelp content={helpText} />}
       </p>
@@ -116,7 +116,7 @@ export function ProfileInfoCards({
         </CardContent>
 
         <CardFooter className="pt-2">
-          <CardDescription className="text-sm text-muted-foreground">
+          <CardDescription className="text-sm text-foreground">
             法人情報の更新をご希望の方は、お問い合わせください。
           </CardDescription>
         </CardFooter>

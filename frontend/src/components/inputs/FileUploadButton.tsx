@@ -39,7 +39,7 @@ export function FileUploadButton({
             onChange={handleChange}
         />
         {selectedFile && (
-            <span className="mt-1 text-sm text-muted-foreground">{selectedFile.name}</span>
+            <span className="mt-1 text-sm text-foreground">{selectedFile.name}</span>
         )}
         
     </div>

@@ -148,7 +148,7 @@ export default function EquipmentConfirmationPage() {
         <FormPageContent>
           <FormPageTitle>設備登録の確認</FormPageTitle>
           <FormCard className="space-y-5 text-center">
-            <p className="text-muted-foreground">確認する設備情報がありません。</p>
+            <p className="text-foreground">確認する設備情報がありません。</p>
             <Button type="button" onClick={navigateBack}>
               設備入力へ戻る
             </Button>
@@ -169,7 +169,7 @@ export default function EquipmentConfirmationPage() {
       <FormPageContent>
         <div className="space-y-3">
           <FormPageTitle>設備登録の確認</FormPageTitle>
-          <p className="text-small text-muted-foreground">
+          <p className="text-small text-foreground">
             内容をご確認ください。
           </p>
         </div>

@@ -139,7 +139,7 @@ export const Confirmation: React.FC<ConfirmationProps> = ({
 
             return (
               <div key={field.key}>
-                <div className="text-sm font-medium text-muted-foreground mb-1">
+                <div className="text-sm font-medium text-foreground mb-1">
                   {field.label}
                 </div>
                 <div className={isChanged ? undefined : 'font-bold'}>

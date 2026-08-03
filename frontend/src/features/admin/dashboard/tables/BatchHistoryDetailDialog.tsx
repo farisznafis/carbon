@@ -54,7 +54,7 @@ export function BatchHistoryDetailDialog({
         <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
           {details.map((detail) => (
             <div key={detail.label} className="space-y-1">
-              <dt className="text-small font-medium text-muted-foreground">
+              <dt className="text-small font-medium text-foreground">
                 {detail.label}
               </dt>
               <dd className="break-words text-body text-foreground">

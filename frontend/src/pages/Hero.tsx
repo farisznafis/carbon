@@ -17,7 +17,7 @@ const Hero = () => {
             <h1 className="mb-6 text-5xl lg:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
               demo
             </h1>
-            <p className="mb-8 text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="mb-8 text-xl text-foreground max-w-2xl mx-auto">
               test
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -51,7 +51,7 @@ const Hero = () => {
                 <Shield className="h-6 w-6 text-white" />
               </div>
               <h3 className="mb-3">コンプライアンス追跡</h3>
-              <p className="text-muted-foreground">
+              <p className="text-foreground">
                 リアルタイムモニタリングと自動レポートで環境規制に準拠。
               </p>
             </div>
@@ -61,7 +61,7 @@ const Hero = () => {
                 <BarChart3 className="h-6 w-6 text-white" />
               </div>
               <h3 className="mb-3">データ分析</h3>
-              <p className="text-muted-foreground">
+              <p className="text-foreground">
                 強力な分析とカスタマイズ可能なダッシュボードでモニタリングデータを可視化。
               </p>
             </div>
@@ -71,7 +71,7 @@ const Hero = () => {
                 <Users className="h-6 w-6 text-white" />
               </div>
               <h3 className="mb-3">チームコラボレーション</h3>
-              <p className="text-muted-foreground">
+              <p className="text-foreground">
                 ロールベースのアクセスとプロジェクト管理ダッシュボードでシームレスに協働。
               </p>
             </div>

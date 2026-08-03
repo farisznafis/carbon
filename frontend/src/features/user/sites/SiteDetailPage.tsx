@@ -215,7 +215,7 @@ const SiteDetail = () => {
       <div className="container mx-auto p-6">
         <Card>
           <CardContent className="pt-6 text-center">
-            <p className="text-muted-foreground">拠点が見つかりません</p>
+            <p className="text-foreground">拠点が見つかりません</p>
           </CardContent>
         </Card>
       </div>
@@ -244,7 +244,7 @@ const SiteDetail = () => {
             <MapPin className="h-8 w-8 text-primary" />
             {site.name}
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-foreground mt-2">
             {site.prefecture}{site.city}{site.address}
           </p>
         </div>
@@ -355,24 +355,24 @@ const SiteDetail = () => {
                 <>
                   <div className="grid grid-cols-2 gap-6">
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">郵便番号</p>
+                      <p className="text-sm text-foreground mb-1">郵便番号</p>
                       <p className="font-medium">{site.postalCode}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">都道府県</p>
+                      <p className="text-sm text-foreground mb-1">都道府県</p>
                       <p className="font-medium">{site.prefecture}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">市区町村</p>
+                      <p className="text-sm text-foreground mb-1">市区町村</p>
                       <p className="font-medium">{site.city}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">番地</p>
+                      <p className="text-sm text-foreground mb-1">番地</p>
                       <p className="font-medium">{site.address}</p>
                     </div>
                     {site.building && (
                       <div className="col-span-2">
-                        <p className="text-sm text-muted-foreground mb-1">建物名・部屋番号</p>
+                        <p className="text-sm text-foreground mb-1">建物名・部屋番号</p>
                         <p className="font-medium">{site.building}</p>
                       </div>
                     )}
@@ -385,11 +385,11 @@ const SiteDetail = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">氏名</p>
+                        <p className="text-sm text-foreground mb-1">氏名</p>
                         <p className="font-medium">{site.personInChargeName}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">メールアドレス</p>
+                        <p className="text-sm text-foreground mb-1">メールアドレス</p>
                         <p className="font-medium">{site.personInChargeEmail}</p>
                       </div>
                     </div>
@@ -399,7 +399,7 @@ const SiteDetail = () => {
                     <div className="flex items-center gap-2">
                       <Calendar className="h-5 w-5 text-primary" />
                       <div>
-                        <p className="text-sm text-muted-foreground">登録日</p>
+                        <p className="text-sm text-foreground">登録日</p>
                         <p className="font-medium">{site.createdAt}</p>
                       </div>
                     </div>
@@ -418,7 +418,7 @@ const SiteDetail = () => {
             </CardHeader>
             <CardContent>
               {site.joinedProjects.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
+                <p className="text-center text-foreground py-8">
                   まだプロジェクトに参加していません
                 </p>
               ) : (
@@ -431,7 +431,7 @@ const SiteDetail = () => {
                     >
                       <div>
                         <p className="font-medium">{project.name}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-foreground">
                           参加日: {project.joinedDate}
                         </p>
                       </div>

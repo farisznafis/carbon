@@ -95,7 +95,7 @@ export function NotificationsList({
   };
 
   if (loading) {
-    return <div className='text-sm text-muted-foreground'>読み込み中...</div>;
+    return <div className='text-sm text-foreground'>読み込み中...</div>;
   }
 
   if (error) {
@@ -104,7 +104,7 @@ export function NotificationsList({
 
   if (notifications.length === 0) {
     return (
-      <div className='text-sm text-muted-foreground'>
+      <div className='text-sm text-foreground'>
         お知らせはありません。
       </div>
     );
@@ -159,7 +159,7 @@ export function NotificationsList({
                       </p>
                       <time
                         dateTime={notification.createdAt ?? undefined}
-                        className='block text-xs text-muted-foreground'
+                        className='block text-xs text-foreground'
                       >
                         {formatNotificationDate(notification.createdAt)}
                       </time>
@@ -200,7 +200,7 @@ export function NotificationsList({
                   )}
                 </div>
 
-                <p className='line-clamp-2 break-words text-sm leading-6 text-muted-foreground'>
+                <p className='line-clamp-2 break-words text-sm leading-6 text-foreground'>
                   {notification.message || '-'}
                 </p>
               </div>

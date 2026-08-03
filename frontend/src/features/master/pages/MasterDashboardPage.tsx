@@ -78,7 +78,7 @@ const MasterDashboard = () => {
 
   if (loading || loadingStore) {
     return (
-      <div className="text-small flex min-h-screen items-center justify-center bg-background px-6 text-center text-muted-foreground">
+      <div className="text-small flex min-h-screen items-center justify-center bg-background px-6 text-center text-foreground">
         読み込み中...
       </div>
     );

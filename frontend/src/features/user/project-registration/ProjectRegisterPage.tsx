@@ -634,7 +634,7 @@ const ProjectRegister = () => {
   if (isProjectLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground text-lg">プロジェクト情報を読み込み中...</p>
+        <p className="text-foreground text-lg">プロジェクト情報を読み込み中...</p>
       </div>
     );
   }
@@ -644,7 +644,7 @@ const ProjectRegister = () => {
       <div className="flex min-h-screen items-center justify-center p-6">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center space-y-4">
-            <p className="text-muted-foreground">
+            <p className="text-foreground">
               {projectLoadError || "プロジェクト情報が見つかりません"}
             </p>
             <Button onClick={navigateToMembership}>入会届に戻る</Button>
@@ -667,7 +667,7 @@ const ProjectRegister = () => {
       <div className="space-y-6">
 
         {/* Project name */}
-        <p className="text-center text-muted-foreground">
+        <p className="text-center text-foreground">
           プロジェクト名：{selectedProject.projectName}
         </p>
 
@@ -675,7 +675,7 @@ const ProjectRegister = () => {
         {!isCompletionStep && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">
+              <span className="text-foreground">
                 ステップ {currentStep} / {TOTAL_FORM_STEPS}
               </span>
               <span className="font-medium">{Math.round(progress)}%</span>
