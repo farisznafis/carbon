@@ -190,6 +190,18 @@ public class SiteProjectController {
     // PDF GENERATION (debug/manual trigger endpoints)
     // ─────────────────────────────────────────────────────────────
 
+    @GetMapping("/participation/{participationId}/pdf")
+    @PreAuthorize("hasAnyRole('master','user')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ProjectPdfDownloadResponse> downloadPdf( 
+            Authentication authentication,
+            @PathVariable Integer participationId) {
+
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+        ProjectPdfDownloadResponse response = pdfService.getPdfDownloadUrl(participationId, companyId); // ← ganti tipe
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/generate/{participationId}")
     @PreAuthorize("hasRole('operator')")
     @SecurityRequirement(name = "bearerAuth")

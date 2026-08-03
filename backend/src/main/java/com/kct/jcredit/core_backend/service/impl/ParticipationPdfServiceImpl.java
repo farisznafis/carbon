@@ -121,9 +121,9 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
     private final EnR002ApplicationConfirmationRepository confirmationItemsRepository;
     private final EnR002SustainabilityCommitmentRepository sustainabilityRepository;
     private final ProjectParticipationConfirmationRepository reviewRepository;
-    private final NotificationService notificationService; 
+    private final NotificationService notificationService;
 
-    private static final String TEMPLATE_PATH = "/templates/participate_solar.docx"; // ← fix
+    private static final String TEMPLATE_PATH = "/templates/participate_solar.docx";
     private static final DateTimeFormatter JP_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy年MM月dd日");
 
     @Override
@@ -139,7 +139,7 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         Site site = equipment.getSite();
         ParticipatingCompany company = site.getCompany();
         Project project = participation.getProject();
-        OperatorCompany operatorCompany = project.getOperatorCompany(); // ← tambah
+        OperatorCompany operatorCompany = project.getOperatorCompany();
 
         EnR002ApplicationConfirmation confirmationItems = confirmationItemsRepository
                 .findByParticipationId(participationId)
@@ -153,6 +153,7 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
                 .findByParticipationId(participationId)
                 .orElseThrow(() -> new CustomException("DATA_MISSING", "レビューデータが見つかりません。"));
 
+        // ── PDF生成 — 失敗した場合のみ例外を投げる ──────────────
         try {
             XWPFDocument doc = loadTemplate();
 
@@ -169,16 +170,25 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
 
             participatingProjectRepository.updatePdfS3Key(participationId, s3Key);
 
-            // TODO: DocuSign — sama seperti sebelumnya, belum diimplementasikan
             log.warn("[TODO] DocuSign envelope belum dikirim — akun belum siap. participationId={}",
                     participationId);
-
-            notificationService.sendParticipationApprovedNotification(participation.getUser());
 
         } catch (IOException e) {
             log.error("PDF generation failed. participationId={}, error={}",
                     participationId, e.getMessage(), e);
             throw new RuntimeException("PDF生成に失敗しました", e);
+        }
+
+        // ── 通知 — PDF生成成功後、独立したtry-catch ──────────────
+        // メール送信の失敗が承認・PDF生成の成功を巻き込んでロールバック
+        // させないようにする。メールサーバー未設定の開発環境でも
+        // ここでは処理が止まらない。
+        try {
+            notificationService.sendParticipationApprovedNotification(participation.getUser());
+        } catch (Exception e) {
+            log.error("Notification failed, but approval & PDF generation succeeded. " +
+                    "participationId={}, error={}", participationId, e.getMessage());
+            // TODO: retry table — 承認自体はメール失敗に関係なく有効
         }
     }
 
@@ -194,6 +204,33 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         return s3Presigner.presignGetObject(presignRequest).url().toString();
     }
 
+    @Override
+    public ProjectPdfDownloadResponse getPdfDownloadUrl(Integer participationId, String companyId) {
+
+        ParticipatingProject participation = participatingProjectRepository
+                .findById(participationId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
+
+        String ownerCompanyId = participation.getEquipment().getSite().getCompany().getCompanyId();
+        if (!ownerCompanyId.equals(companyId)) {
+            throw new CustomException(ResponseConstants.FORBIDDEN, ResponseConstants.MSG_UNAUTHORIZED);
+        }
+
+        String s3Key = participation.getS3KeyPdfMembership();
+        if (s3Key == null || s3Key.isBlank()) {
+            throw new CustomException("PDF_NOT_READY",
+                    "PDFはまだ準備できていません。審査完了までしばらくお待ちください。");
+        }
+
+        String presignedUrl = generatePresignedUrl(s3Key);
+
+        return ProjectPdfDownloadResponse.builder()
+                .pdfUrl(presignedUrl)
+                .expiresIn(presignExpirySeconds)
+                .build();
+    }
+
     private XWPFDocument loadTemplate() throws IOException {
         InputStream stream = getClass().getResourceAsStream(TEMPLATE_PATH);
         if (stream == null) {
@@ -205,7 +242,7 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
     private Map<String, String> buildPlaceholders(
             Project project,
             ParticipatingCompany company,
-            OperatorCompany operatorCompany,     // ← tambah parameter
+            OperatorCompany operatorCompany,
             EnR002Equipment equipment,
             EnR002ApplicationConfirmation c,
             EnR002SustainabilityCommitment s,
@@ -215,30 +252,27 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         Map<String, String> map = new LinkedHashMap<>();
         String CHECK = "☑";
 
-        // ── operator company info ────────────────────────────────
         String operatorNameJa  = safe(operatorCompany.getNameJa());
         String operatorRepName = safe(operatorCompany.getRepFirstName()) + safe(operatorCompany.getRepLastName());
 
         map.put("${プログラム型運営}", operatorNameJa);
         map.put("${管理者名}", operatorRepName);
-        map.put("${管理者}", operatorRepName); 
+        map.put("${管理者}", operatorRepName);
         map.put("${プログラム型運営・管理者名}", operatorNameJa + "・" + operatorRepName);
 
-        // ── 企業情報ブロック（h1-h8）─────────────────────────────
         map.put("${プログラム名}", safe(project.getProjectName()));
         map.put("${companyname}", safe(company.getNameJa()));
         map.put("${プロジェクト概要}", safe(project.getMethodName()));
         map.put("${applyDate}", formatDate(participation.getCreatedAt()));
         map.put("${h1}", safe(company.getNameFurigana()));
         map.put("${h2}", safe(company.getNameJa()));
-        map.put("${h3}", ""); // inkan — DocuSign belum jalan
+        map.put("${h3}", "");
         map.put("${h4}", safe(company.getPostalCode()));
         map.put("${h5}", buildAddress(company));
         map.put("${h6}", safe(company.getPhoneNumber()));
         map.put("${h7}", safe(company.getFax()));
         map.put("${h8}", safe(company.getEmail()));
 
-        // ── 確認事項（a-series）─────────────────────────────────
         map.put("${a1}", boolToMark(s.getIsAgreeTerms()));
         map.put("${a2}", boolToMark(c.getIsAgreeDataUse()));
         map.put("${a3}", boolToMark(c.getIsAgreeExtraData()));
@@ -269,12 +303,10 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         map.put("${a15}", "○");
         map.put("${a16}", "○");
 
-        // ── 別添1: Sustainability Commitment ─────────────────────
         map.put("${事業者名}", safe(s.getCompanyName()));
         map.put("${代表者役職}", safe(s.getRepRole()));
         map.put("${代表者名}", safe(s.getRepName()));
 
-        // ── 別添2: Equipment (f-series) ───────────────────────────
         LocalDate opDate = equipment.getEquipmentOpDate();
         map.put("${f1}", opDate != null ? String.valueOf(opDate.getYear()) : "");
         map.put("${f2}", opDate != null ? String.valueOf(opDate.getMonthValue()) : "");
@@ -300,7 +332,6 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
                 ? String.format("%,.0f", equipment.getSubsidyAmount()) : "");
         map.put("${f18}", decimal(equipment.getPreProjectUnitPrice()));
 
-        // ── b-series ────────────────────────────────────────────
         map.put("${b1}", "○");
         map.put("${b2}", "○");
         map.put("${b3}", "○");
@@ -311,11 +342,9 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         map.put("${送付先}", "");
         map.put("${FAX番号}", "");
 
-        // ── 会員規約セクション ─────────────────────────────────
         map.put("${利用目的}", safe(project.getMethodDetails()));
         map.put("${YYYY年MM月DD}", formatDate(participation.getCreatedAt()));
 
-        // ── c-series（operator checklist）──────────────────────
         map.put("${c1}", boolToMark(review.getIsSolarContractDoc()));
         map.put("${c2}", boolToMark(review.getIsPcsSpecDoc()));
         map.put("${c3}", boolToMark(review.getIsBatterySpecDoc()));
@@ -324,14 +353,12 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         map.put("${c6}", boolToMark(review.getIsReversePowerDoc()));
         map.put("${c7}", boolToMark(review.getIsInvestmentProofDoc()));
 
-        // ── d-series ────────────────────────────────────────────
         map.put("${d1}", boolToMark(review.getIsApplicationCompleteCheck()));
         map.put("${d2}", boolToMark(review.getIsFormsAttachCheck()));
         map.put("${d3}", boolToMark(review.getIsEmissionsReductionActivityListCheck()));
         map.put("${d4}", boolToMark(review.getIsOriginalSpecCheck()));
         map.put("${d5}", boolToMark(review.getIsSubsidyCheck()));
 
-        // ── 確認者記名・押印欄 — reviewer SPESIFIK, BUKAN operatorRepName ──
         map.put("${管理者_1次}", safe(review.getPrimaryApplReviewerName()));
         map.put("${㊞1}", safe(review.getPrimaryApplReviewerInkan()));
         map.put("${管理者_2次}", safe(review.getSecondaryApplReviewerName()));
@@ -375,6 +402,14 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
             textBuilder.append(run.text());
         }
         String text = textBuilder.toString();
+
+        // ── プレースホルダー内の余分な空白を正規化 ──────────────
+        // テンプレート内に "${h3 }" や "${ 代表者名}" のような
+        // 空白入りのプレースホルダーが存在する場合、正規のキー名
+        // ("${h3}" 等) と一致させるための処理。これがないと
+        // マップ内のキーと一致せず置換されないまま残ってしまう。
+        text = text.replaceAll("\\$\\{\\s*([^}]*?)\\s*\\}", "\\${$1}");
+
         boolean changed = false;
         for (Map.Entry<String, String> entry : placeholders.entrySet()) {
             if (text.contains(entry.getKey())) {
