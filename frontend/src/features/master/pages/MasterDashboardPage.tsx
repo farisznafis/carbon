@@ -154,7 +154,7 @@ const MasterDashboard = () => {
           <TabsContent value="sites" className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
             <DashboardSection
               title="拠点"
-              description="各店舗のカーボンクレジット、削減活動、レポート進捗を一か所で確認できます。"
+              description="各店舗のカーボンクレジット、削減活動、レポート進捗を一箇所で確認できます。"
               addLabel="拠点を追加"
               onAdd={() => navigate(paths.masterSiteRegister)}
             >
