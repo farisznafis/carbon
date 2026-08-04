@@ -34,6 +34,7 @@ import com.kct.jcredit.core_backend.dto.response.BatchProcessHistoryResponse;
 import com.kct.jcredit.core_backend.entity.EnR002ReductionResult;
 import com.kct.jcredit.core_backend.entity.EnR002ReductionResultTotal;
 import com.kct.jcredit.core_backend.entity.BatchProcessHistory;
+import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.base.PaginationDetailResponse;
 import com.kct.jcredit.core_backend.repository.postgres.EnR002ReductionResultRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
@@ -76,7 +77,8 @@ class GetBatchServiceImplTest {
     @DisplayName("getBatchProcessHistory applies default page=1 and limit=20 when nulls are passed")
     void getBatchProcessHistory_appliesDefaults() {
         BatchProcessHistory history = BatchProcessHistory.builder()
-            .id(1).status("SUCCESS").build();
+            // .id(1)
+            .status("SUCCESS").build();
         Page<BatchProcessHistory> page = new PageImpl<>(List.of(history), PageRequest.of(0, 20), 1);
 
         when(batchProcessHistoryRepository.findAll(any(Pageable.class))).thenReturn(page);
@@ -155,8 +157,8 @@ class GetBatchServiceImplTest {
         when(siteRepository.findByPublicIdWithFallback("site-1")).thenReturn(Optional.of(site));
 
         EnR002ReductionResult dummyResult = EnR002ReductionResult.builder()
-            .id(1)
-            .isActive(true)
+            // .id(1)
+            // .isActive(true)
             .batchId(1)
             .processingDate(LocalDate.of(2026, 7, 1))
             .projectId(1)
@@ -200,8 +202,8 @@ class GetBatchServiceImplTest {
     @DisplayName("getProjectReductionResult maps the aggregated project total using the batch dummy total row")
     void getProjectReductionResult_found_mapsTotals() {
         EnR002ReductionResultTotal total = EnR002ReductionResultTotal.builder()
-            .id(1)
-            .isActive(true)
+            // .id(1)
+            // .isActive(true)
             .batchId(1)
             .processingDate(LocalDate.of(2026, 7, 10))
             .projectId(1)
