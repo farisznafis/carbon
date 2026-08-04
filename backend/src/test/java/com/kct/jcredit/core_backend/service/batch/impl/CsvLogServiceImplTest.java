@@ -154,7 +154,7 @@ class CsvLogServiceImplTest {
         List<String> comparisonLines = Files.readAllLines(comparisonFile);
         assertThat(comparisonLines.get(0)).isEqualTo(
             "site_id,target_status,result_status,match_status,issue_type,details");
-        assertThat(comparisonLines).hasSize(6); // header + 5 site
+        assertThat(comparisonLines).hasSize(6);
     }
 
     @Test
