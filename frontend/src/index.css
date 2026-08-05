@@ -256,6 +256,25 @@ All colors MUST be HSL.
     animation: pop-up 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
+  .animate-ambient-drift {
+    animation: ambient-drift 9s ease-in-out infinite;
+  }
+
+  .animate-ambient-drift-slow {
+    animation: ambient-drift 16s ease-in-out infinite reverse;
+  }
+
+  @keyframes ambient-drift {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    50% {
+      transform: translate3d(6%, -4%, 0) scale(1.08);
+    }
+  }
+
   @keyframes slide-up {
     from {
       opacity: 0;

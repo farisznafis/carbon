@@ -15,7 +15,7 @@ import { SessionExpiryGuard } from "@/components/layout/SessionExpiryGuard";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "./contexts/ProtectedRoute";
 import { ErrorBoundary } from "@/components/feedback/ErrorBoundary";
-import { isLoginPath, paths } from "@/routes/paths";
+import { isAuthPagePath, paths } from "@/routes/paths";
 import { cn } from "@/lib/utils";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
@@ -124,7 +124,7 @@ function LegacyProjectRedirect() {
 
 const App = () => {
   const location = useLocation();
-  const isLoginPage = isLoginPath(location.pathname);
+  const isAuthPage = isAuthPagePath(location.pathname);
 
   useEffect(() => {
     const lenis = new Lenis({
@@ -146,7 +146,7 @@ const App = () => {
       <div
         className={cn(
           'flex flex-col bg-background text-foreground',
-          isLoginPage ? 'h-dvh overflow-hidden' : 'min-h-dvh',
+          isAuthPage ? 'h-dvh overflow-hidden' : 'min-h-dvh',
         )}
       >
         <Toaster />
@@ -157,7 +157,7 @@ const App = () => {
         <div
           className={cn(
             'min-h-0 min-w-0 flex-1',
-            isLoginPage && 'relative overflow-hidden',
+            isAuthPage && 'relative overflow-hidden',
           )}
         >
           <Suspense fallback={<div className="p-6 text-sm text-foreground">Loading...</div>}>

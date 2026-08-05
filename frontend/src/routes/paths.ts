@@ -113,3 +113,12 @@ export const isLoginPath = (pathname: string) => {
     normalizedPathname === paths.adminLogin
   );
 };
+
+export const isAuthPagePath = (pathname: string) => {
+  const normalizedPathname = normalizePathname(pathname);
+
+  return (
+    isLoginPath(normalizedPathname) ||
+    normalizedPathname === paths.forgotPassword
+  );
+};

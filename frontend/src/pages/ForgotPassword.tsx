@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AuthPageLayout } from '@/components/forms/shared/AuthPageLayout';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -49,51 +49,50 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      
-      <Card className="w-full max-w-md animate-slide-up">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-3xl">パスワードをお忘れですか</CardTitle>
-          <CardDescription>
-            登録されたメールアドレスを入力してください。パスワードリセット用のリンクをお送りします。
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>メールアドレス</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="you@company.com"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? '送信中...' : 'リセットリンクを送信'}
-              </Button>
-            </form>
-          </Form>
-          <div className="mt-4 text-center text-sm">
-            <button
-              onClick={() => navigate(paths.login)}
-              className="text-primary hover:underline"
-            >
-              ログインページに戻る
-            </button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <AuthPageLayout
+      title="パスワードをお忘れですか"
+      description="登録されたメールアドレスを入力してください。パスワードリセット用のリンクをお送りします。"
+      footer={
+        <button
+          type="button"
+          onClick={() => navigate(paths.login)}
+          className="text-sm font-medium text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          ログインページに戻る
+        </button>
+      }
+    >
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>メールアドレス</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="you@company.com"
+                    autoComplete="email"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={form.formState.isSubmitting}
+          >
+            {form.formState.isSubmitting ? '送信中...' : 'リセットリンクを送信'}
+          </Button>
+        </form>
+      </Form>
+    </AuthPageLayout>
   );
 };
 
