@@ -20,6 +20,10 @@ public interface OperatingUserRepository extends JpaRepository<OperatingUser, In
     Optional<OperatingUser> findByEmailOrUsername(@Param("email") String email, @Param("username") String username);
     Optional<OperatingUser> findByEmailIgnoreCase(String email);
     boolean existsByUsernameIgnoreCase(String username);
+    boolean existsByUsername(String username);
+    boolean existsByEmail(String email);
+    boolean existsByEmailIgnoreCase(String email);
+    long countByCompany_Id(Integer companyId);
 
     List<OperatingUser> findByCompany_Id(Integer companyId);
     Optional<OperatingUser> findByCompany_IdAndRole(Integer companyId, String role);
