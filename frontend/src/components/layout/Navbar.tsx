@@ -152,11 +152,11 @@ export const Navbar = () => {
             ) : (
               !isAdminLoginPage && (
                 <div className="flex items-center space-x-2">
-                  <Button onClick={() => navigate(paths.signup)}>
-                    新規登録
-                  </Button>
                   <Button variant="ghost" onClick={() => navigate(paths.login)}>
                     ログイン
+                  </Button>
+                  <Button onClick={() => navigate(paths.signup)}>
+                    新規登録
                   </Button>
                 </div>
               )
