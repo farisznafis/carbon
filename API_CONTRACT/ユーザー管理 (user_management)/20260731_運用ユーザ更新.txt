@@ -1,0 +1,77 @@
+PATCH /api/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body (JSON):
+{
+  "firstName": "山口",
+  "firstNameKana": "ヤマグチ",
+  "phoneNumber": "123453789",
+  "siteId": "123", //siteId: 124から更新しました例
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "user": {
+    "userId": "12345",
+    "firstName": "山口",
+    "firstNameKana": "ヤマグチ",
+    "lastName": "太郎",
+    "lastNameKana": "タロウ",
+    "email": "ytaro@test.com",
+    "phoneNumber": "123453789",
+    "role": "一般社員",
+    "siteId”: "123"
+  }
+  "updatedSites": [
+    {
+        "siteId": "123",
+        "siteName": "ABC支店",
+        "postalCode": "1110000"
+        "prefName": "東京都",   
+        "cityName": "千代田区",
+        "blockName": "千代田1-1-1",
+        "addressDetail": "○○マンション101号室",
+        "picFirstName": "山口", //担当者の情報が更新された
+        "picLastName": "太郎",
+        "projects": ["ProjectA"]
+      },
+      {
+        "siteId": "124",
+        "siteName": "DEF支店",
+        "postalCode": "1000102"
+        "prefName": "東京都",   
+        "cityName": "大島町",
+        "blockName": "岡田1-1-1",
+        "addressDetail": "○○マンション101号室",
+        "picFirstName": "松田", //前の担当した拠点がマスターユーザの拠点になります
+        "picLastName": "太郎",
+        "projects": ["ProjectB"]
+      }
+  ]
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+},
+{
+  "errorCode": "LIMIT_ERROR",
+  "message": "上限に達しています。"
+}
+
+
