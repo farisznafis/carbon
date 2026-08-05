@@ -27,10 +27,18 @@ const EQUIPMENT_FILE_FORMATS = '(.pdf, .csv, .jpg, .jpeg, .png)';
 
 type SolarPowerEquipmentFormProps = Readonly<{
   form: UseFormReturn<SolarPowerFormData>;
-  sites: Site[];
-  isSiteOptionsLoading: boolean;
-  siteOptionsError: string | null;
-}>;
+}> &
+  Readonly<
+    | {
+        mode?: 'registration';
+        sites: Site[];
+        isSiteOptionsLoading: boolean;
+        siteOptionsError: string | null;
+      }
+    | {
+        mode: 'edit';
+      }
+  >;
 
 type FileUploadControlProps = Readonly<{
   id: string;
@@ -82,52 +90,56 @@ function YesNoSelect({ value, onValueChange }: YesNoSelectProps) {
   );
 }
 
-export function SolarPowerEquipmentForm({
-  form,
-  sites,
-  isSiteOptionsLoading,
-  siteOptionsError,
-}: SolarPowerEquipmentFormProps) {
+export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
+  const { form } = props;
+  const isEditMode = props.mode === 'edit';
+  const sites = isEditMode ? [] : props.sites;
+  const isSiteOptionsLoading = isEditMode
+    ? false
+    : props.isSiteOptionsLoading;
+  const siteOptionsError = isEditMode ? null : props.siteOptionsError;
   const hasBattery = form.watch('hasBattery') === 'yes';
   const hasSubsidy = form.watch('hasSubsidy') === 'yes';
 
   return (
     <FormSectionStack spacing="relaxed">
-      <FormField
-        control={form.control}
-        name="siteId"
-        render={({ field }) => (
-          <FormItem>
-            <RequiredLabel>対象拠点</RequiredLabel>
-            <Select
-              value={field.value}
-              onValueChange={field.onChange}
-              disabled={
-                isSiteOptionsLoading ||
-                Boolean(siteOptionsError) ||
-                sites.length === 0
-              }
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="拠点を選択してください" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {sites.map((site) => (
-                  <SelectItem key={site.siteId} value={site.siteId}>
-                    {site.siteName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {siteOptionsError && (
-              <p className="text-sm text-destructive">{siteOptionsError}</p>
-            )}
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {!isEditMode && (
+        <FormField
+          control={form.control}
+          name="siteId"
+          render={({ field }) => (
+            <FormItem>
+              <RequiredLabel>対象拠点</RequiredLabel>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+                disabled={
+                  isSiteOptionsLoading ||
+                  Boolean(siteOptionsError) ||
+                  sites.length === 0
+                }
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="拠点を選択してください" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {sites.map((site) => (
+                    <SelectItem key={site.siteId} value={site.siteId}>
+                      {site.siteName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {siteOptionsError && (
+                <p className="text-sm text-destructive">{siteOptionsError}</p>
+              )}
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       <FormSection number={1} title="太陽光発電設備の情報">
         <FormField
@@ -143,23 +155,25 @@ export function SolarPowerEquipmentForm({
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="operationStartDateFile"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <FileUploadControl
-                  id="equipment-op-date-file"
-                  label="確認資料：太陽光発電電力受給契約確認書"
-                  value={field.value}
-                  onChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {!isEditMode && (
+          <FormField
+            control={form.control}
+            name="operationStartDateFile"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <FileUploadControl
+                    id="equipment-op-date-file"
+                    label="確認資料：太陽光発電電力受給契約確認書"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
       </FormSection>
 
       <FormSection number={2} title="太陽光パネルの情報">
@@ -182,23 +196,25 @@ export function SolarPowerEquipmentForm({
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="nominalMaxOutputFile"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <FileUploadControl
-                  id="nominal-max-output-file"
-                  label="確認資料：仕様書・カタログ"
-                  value={field.value}
-                  onChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {!isEditMode && (
+          <FormField
+            control={form.control}
+            name="nominalMaxOutputFile"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <FileUploadControl
+                    id="nominal-max-output-file"
+                    label="確認資料：仕様書・カタログ"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
       </FormSection>
 
       <FormSection number={3} title="パワーコンディショナーの情報">
@@ -283,23 +299,25 @@ export function SolarPowerEquipmentForm({
             )}
           />
         </FormGrid>
-        <FormField
-          control={form.control}
-          name="pcsFile"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <FileUploadControl
-                  id="pcs-file"
-                  label="確認資料：仕様書・カタログ"
-                  value={field.value}
-                  onChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {!isEditMode && (
+          <FormField
+            control={form.control}
+            name="pcsFile"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <FileUploadControl
+                    id="pcs-file"
+                    label="確認資料：仕様書・カタログ"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
       </FormSection>
 
       <FormSection number={4} title="蓄電池の情報">
@@ -368,23 +386,25 @@ export function SolarPowerEquipmentForm({
                 )}
               />
             </FormGrid>
-            <FormField
-              control={form.control}
-              name="batteryFile"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <FileUploadControl
-                      id="battery-file"
-                      label="確認資料：仕様書・カタログ"
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!isEditMode && (
+              <FormField
+                control={form.control}
+                name="batteryFile"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <FileUploadControl
+                        id="battery-file"
+                        label="確認資料：仕様書・カタログ"
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </div>
         )}
       </FormSection>
@@ -409,23 +429,25 @@ export function SolarPowerEquipmentForm({
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="totalInvestmentFile"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <FileUploadControl
-                  id="total-investment-file"
-                  label="確認資料：工事請負契約書、請求書、領収書等"
-                  value={field.value}
-                  onChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {!isEditMode && (
+          <FormField
+            control={form.control}
+            name="totalInvestmentFile"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <FileUploadControl
+                    id="total-investment-file"
+                    label="確認資料：工事請負契約書、請求書、領収書等"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <FormField
           control={form.control}
@@ -479,23 +501,25 @@ export function SolarPowerEquipmentForm({
                 )}
               />
             </FormGrid>
-            <FormField
-              control={form.control}
-              name="subsidyNameFile"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <FileUploadControl
-                      id="subsidy-name-file"
-                      label="確認資料：補助金交付決定通知書"
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!isEditMode && (
+              <FormField
+                control={form.control}
+                name="subsidyNameFile"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <FileUploadControl
+                        id="subsidy-name-file"
+                        label="確認資料：補助金交付決定通知書"
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </div>
         )}
 
@@ -520,23 +544,25 @@ export function SolarPowerEquipmentForm({
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="preProjectUnitPriceFile"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <FileUploadControl
-                  id="pre-project-unit-price-file"
-                  label="確認資料：電力会社からの請求明細書等"
-                  value={field.value}
-                  onChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {!isEditMode && (
+          <FormField
+            control={form.control}
+            name="preProjectUnitPriceFile"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <FileUploadControl
+                    id="pre-project-unit-price-file"
+                    label="確認資料：電力会社からの請求明細書等"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
       </FormSection>
     </FormSectionStack>
   );

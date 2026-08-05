@@ -207,11 +207,50 @@ export type SiteProjectEquipment = {
   preProjectUnitPrice?: number | null;
 };
 
+export type SiteProjectEquipmentApiItem = Omit<
+  SiteProjectEquipment,
+  'equipmentId' | 'powerCondUnitCount' | 'powerCondStandby'
+> & {
+  id?: number | null;
+  equipmentId?: number | null;
+  pcsUnitCount?: number | null;
+  powerCondUnitCount?: number | null;
+  pcsStandby?: number | null;
+  powerCondStandby?: number | null;
+};
+
 export type SiteProjectEquipmentResponse = {
   statusCode?: string;
   message?: string | null;
   errors?: unknown;
-  equipments?: SiteProjectEquipment[] | null;
+  equipments?: SiteProjectEquipmentApiItem[] | null;
+};
+
+export type SiteProjectEquipmentDetailResponse = SiteProjectEquipmentApiItem & {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+  siteId?: string | null;
+};
+
+export type SiteProjectEquipmentUpdateRequest = {
+  equipmentOpDate?: string | null;
+  nominalMaxOutput?: number | null;
+  pcsManufacturer?: string | null;
+  pcsModel?: string | null;
+  pcsUnitCount?: number | null;
+  deviceNo?: string | null;
+  pcsStandby?: number | null;
+  hasBattery?: boolean | null;
+  batteryMaker?: string | null;
+  batteryModel?: string | null;
+  batteryCapacity?: number | null;
+  totalInvestment?: number | null;
+  hasSubsidy?: boolean | null;
+  subsidyName?: string | null;
+  subsidyAmount?: number | null;
+  preProjectUnitPrice?: number | null;
 };
 
 export type SiteProjectEquipmentFileType =

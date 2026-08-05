@@ -744,7 +744,18 @@ const ProjectDetail = () => {
                   {equipmentError}
                 </div>
               ) : equipmentList.length > 0 ? (
-                <EquipmentList equipments={equipmentList} />
+                <EquipmentList
+                  equipments={equipmentList}
+                  onEditEquipment={(equipmentId) =>
+                    navigate(
+                      paths.siteProjectEquipmentEdit(
+                        siteId,
+                        projectId,
+                        equipmentId,
+                      ),
+                    )
+                  }
+                />
               ) : (
                 <Card className={projectDetailCardClassName}>
                   <CardContent className='p-8 text-center text-foreground'>

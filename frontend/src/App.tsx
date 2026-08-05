@@ -40,6 +40,9 @@ const EquipmentForm = lazy(() => import("./features/user/project-registration/Eq
 const EquipmentConfirmation = lazy(() =>
   import("./features/user/project-registration/EquipmentConfirmationPage"),
 );
+const EquipmentEdit = lazy(() =>
+  import("./features/user/equipment-edit/EquipmentEditPage"),
+);
 const MasterDashboard = lazy(() => import("./features/master/pages/MasterDashboardPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Dashboard = lazy(() => import("./features/user/dashboard/DashboardPage"));
@@ -212,6 +215,10 @@ const App = () => {
             />
             <Route path={paths.equipmentAddRoute} element={<EquipmentPage />} />
             <Route path={paths.siteProjectDetailRoute} element={<ProjectDetail />} />
+            <Route
+              path={paths.siteProjectEquipmentEditRoute}
+              element={<EquipmentEdit />}
+            />
             <Route path={paths.legacyProjectRoute} element={<LegacyProjectRedirect />} />
             <Route
               path={paths.monitoringRegisterRoute}

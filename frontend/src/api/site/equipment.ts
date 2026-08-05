@@ -6,9 +6,12 @@ import {
 import { ApiError } from '@/api/_shared/errors';
 import type {
   SiteProjectEquipment,
+  SiteProjectEquipmentApiItem,
+  SiteProjectEquipmentDetailResponse,
   SiteProjectEquipmentFileType,
   SiteProjectEquipmentFileUploadResponse,
   SiteProjectEquipmentResponse,
+  SiteProjectEquipmentUpdateRequest,
   SiteProjectEquipmentValidationFile,
   SiteProjectEquipmentValidationItem,
   SiteProjectEquipmentValidationResponse,
@@ -21,6 +24,19 @@ import type {
   SiteProjectJoinRequest,
   SiteProjectJoinResponse,
 } from './types';
+
+function normalizeSiteProjectEquipment(
+  equipment: SiteProjectEquipmentApiItem,
+): SiteProjectEquipment {
+  return {
+    ...equipment,
+    equipmentId: equipment.equipmentId ?? equipment.id ?? null,
+    powerCondUnitCount:
+      equipment.powerCondUnitCount ?? equipment.pcsUnitCount ?? null,
+    powerCondStandby:
+      equipment.powerCondStandby ?? equipment.pcsStandby ?? null,
+  };
+}
 
 export async function uploadSiteProjectEquipmentFile(
   siteId: string,
@@ -204,5 +220,39 @@ export async function getSiteProjectEquipment(
     );
   }
 
-  return Array.isArray(json?.equipments) ? json.equipments : [];
+  return Array.isArray(json?.equipments)
+    ? json.equipments.map(normalizeSiteProjectEquipment)
+    : [];
+}
+
+export async function getSiteEquipmentById(
+  siteId: string,
+  equipmentId: number,
+): Promise<SiteProjectEquipment> {
+  return normalizeSiteProjectEquipment(
+    await apiRequest<SiteProjectEquipmentDetailResponse>(
+      `/site/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}`,
+      {
+        method: 'GET',
+        fallbackErrorMessage: '設備情報の取得に失敗しました。',
+      },
+    ),
+  );
+}
+
+export async function updateSiteEquipment(
+  siteId: string,
+  equipmentId: number,
+  payload: SiteProjectEquipmentUpdateRequest,
+): Promise<SiteProjectEquipment> {
+  return normalizeSiteProjectEquipment(
+    await apiRequest<SiteProjectEquipmentDetailResponse>(
+      `/site/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}`,
+      {
+        method: 'PATCH',
+        body: payload,
+        fallbackErrorMessage: '設備情報の変更に失敗しました。',
+      },
+    ),
+  );
 }
