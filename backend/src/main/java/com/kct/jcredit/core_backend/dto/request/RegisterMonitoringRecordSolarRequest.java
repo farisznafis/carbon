@@ -50,7 +50,7 @@ public class RegisterMonitoringRecordSolarRequest {
     @JsonProperty("ELpvr_value")
     private BigDecimal elPvr;
     
-    @NotNull(message = "バッテリー交換フラグを入力してください。")
+    // 設備にhasBattery=trueの場合のみ必須（MonitoringServiceImplでequipment-aware検証）
     @JsonProperty("changedBattery")
     private Boolean changedBattery;
     
