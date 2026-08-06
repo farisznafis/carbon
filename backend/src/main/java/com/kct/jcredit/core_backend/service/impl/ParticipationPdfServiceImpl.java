@@ -127,6 +127,9 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
     private static final String TEMPLATE_PATH = "/templates/participate_solar.docx";
     private static final DateTimeFormatter JP_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy年MM月dd日");
 
+    @Value("${app.pdf.japanese-font-path:C:/Windows/Fonts/msgothic.ttc,0}")
+    private String japaneseFontPath;
+
     @Override
     @Transactional
     public void generateAndProcess(Integer participationId) {
@@ -404,6 +407,11 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         }
         String text = textBuilder.toString();
 
+        // ── プレースホルダー内の余分な空白を正規化 ──────────────
+        // テンプレート内に "${h3 }" や "${ 代表者名}" のような
+        // 空白入りのプレースホルダーが存在する場合、正規のキー名
+        // ("${h3}" 等) と一致させるための処理。これがないと
+        // マップ内のキーと一致せず置換されないまま残ってしまう。
         text = text.replaceAll("\\$\\{\\s*([^}]*?)\\s*\\}", "\\${$1}");
 
         boolean changed = false;
@@ -425,11 +433,39 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
     }
 
     private byte[] convertToPdf(XWPFDocument document) throws IOException {
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            PdfOptions options = PdfOptions.create();
-            PdfConverter.getInstance().convert(document, out, options);
-            return out.toByteArray();
-        }
+    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+        PdfOptions options = PdfOptions.create()
+                .fontEncoding(com.lowagie.text.pdf.BaseFont.IDENTITY_H) // wajib untuk Unicode CJK
+                .fontProvider(japaneseFontProvider());
+
+        PdfConverter.getInstance().convert(document, out, options);
+        return out.toByteArray();
+    }
+}
+
+    private fr.opensagres.xdocreport.itext.extension.font.IFontProvider japaneseFontProvider() {
+        return new fr.opensagres.xdocreport.itext.extension.font.IFontProvider() {
+            @Override
+            public com.lowagie.text.Font getFont(String familyName, String encoding,
+                                                float size, int style, java.awt.Color color) {
+                try {
+                    com.lowagie.text.pdf.BaseFont baseFont = com.lowagie.text.pdf.BaseFont.createFont(
+                            japaneseFontPath,                              
+                            com.lowagie.text.pdf.BaseFont.IDENTITY_H,
+                            com.lowagie.text.pdf.BaseFont.EMBEDDED
+                    );
+                    com.lowagie.text.Font font = new com.lowagie.text.Font(baseFont, size, style, color);
+                    if (familyName != null) {
+                        font.setFamily(familyName);
+                    }
+                    return font;
+                } catch (Exception e) {
+                    log.error("Font loading failed for path={}, error={}", japaneseFontPath, e.getMessage());
+                    return null;
+                }
+            }
+        };
     }
 
     private String uploadDraftToS3(byte[] pdfBytes, Integer projectId, Integer siteId, Integer participationId) {
@@ -452,32 +488,5 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         return String.format("%s%s%s%s",
                 safe(company.getPrefecture()), safe(company.getMunicipality()),
                 safe(company.getBlocknum()), safe(company.getBuildingName()));
-    }
-
-    @Override
-public PdfDownloadResponse getPdfDownloadUrl(Integer participationId, String companyId) {
-
-    ParticipatingProject participation = participatingProjectRepository
-            .findById(participationId)
-            .orElseThrow(() -> new CustomException(
-                    ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
-
-    String ownerCompanyId = participation.getEquipment().getSite().getCompany().getCompanyId();
-    if (!ownerCompanyId.equals(companyId)) {
-        throw new CustomException(ResponseConstants.FORBIDDEN, ResponseConstants.MSG_UNAUTHORIZED);
-    }
-
-    String s3Key = participation.getS3KeyPdfMembership();
-    if (s3Key == null || s3Key.isBlank()) {
-        throw new CustomException("PDF_NOT_READY",
-                "PDFはまだ準備できていません。審査完了までしばらくお待ちください。");
-    }
-
-    String presignedUrl = generatePresignedUrl(s3Key);
-
-    return PdfDownloadResponse.builder()
-            .pdfUrl(presignedUrl)
-            .expiresIn(presignExpirySeconds)
-            .build();
     }
 }
