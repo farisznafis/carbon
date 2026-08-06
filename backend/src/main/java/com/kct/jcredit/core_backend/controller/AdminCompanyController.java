@@ -6,6 +6,7 @@ import com.kct.jcredit.core_backend.dto.request.CreateUserRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectCompanyRequest;
 import com.kct.jcredit.core_backend.dto.request.ResolveCompanySuspensionRequest;
 import com.kct.jcredit.core_backend.dto.request.ReviewParticipationRequest;
+import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.ApproveReviewRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectReviewRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdateUserRequest;
@@ -17,6 +18,7 @@ import com.kct.jcredit.core_backend.dto.response.CompanySuspensionResponse;
 import com.kct.jcredit.core_backend.dto.response.CreateUserResponse;
 import com.kct.jcredit.core_backend.dto.response.UpdateUserResponse;
 import com.kct.jcredit.core_backend.dto.response.UserListResponse;
+import com.kct.jcredit.core_backend.dto.response.UserProfileResponse;
 import com.kct.jcredit.core_backend.dto.response.RejectCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.response.ParticipationReviewDetailResponse;
@@ -36,6 +38,8 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -317,6 +321,26 @@ public class AdminCompanyController {
         request.setUserId(userId);
 
         UpdateUserResponse response = operatorUserService.updateUser(companyId, username, request);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @GetMapping("operator-user/{userId}")
+    @PreAuthorize("hasAnyRole('admin', 'operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "運用者ユーザープロファイル取得", description = "運用者ユーザーの基本情報と権限を取得します。")
+    public ResponseEntity<UserProfileResponse> getOperatorUserProfile(
+            Authentication authentication,
+            @PathVariable Integer userId) {
+
+        Integer operatorUserId = userId;
+        Integer currentId = jwtUtil.extractUserId(authentication.getCredentials().toString());
+        
+        UserProfileResponse response = operatorUserService.getOperatorUserProfileById(
+                operatorUserId,
+                currentId,
+                jwtUtil.extractRole(authentication.getCredentials().toString()),
+                jwtUtil.extractCompanyId(authentication.getCredentials().toString())
+        );
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 }
