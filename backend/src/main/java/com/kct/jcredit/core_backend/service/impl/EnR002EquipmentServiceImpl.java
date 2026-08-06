@@ -3,6 +3,7 @@ package com.kct.jcredit.core_backend.service.impl;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentUpdateRequest;
+import com.kct.jcredit.core_backend.dto.request.EnR002FileItemRequest;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentFileResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 import com.kct.jcredit.core_backend.entity.Site;
@@ -20,9 +21,11 @@ import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -229,52 +232,66 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
         if (!equipment.getSite().getId().equals(siteDbId))
                 throw new CustomException(ResponseConstants.NOT_FOUND, "設備情報が見つかりません。");
 
-        if (request.getEquipmentOpDate() != null) equipment.setEquipmentOpDate(request.getEquipmentOpDate());
-        if (request.getNominalMaxOutput() != null) equipment.setNominalMaxOutput(request.getNominalMaxOutput());
-        if (request.getPcsManufacturer() != null) equipment.setPcsManufacturer(request.getPcsManufacturer());
-        if (request.getPcsModel() != null) equipment.setPcsModel(request.getPcsModel());
-        if (request.getPcsUnitCount() != null) equipment.setPcsUnitCount(request.getPcsUnitCount());
-        if (request.getDeviceNo() != null) equipment.setDeviceNo(request.getDeviceNo());
-        if (request.getPcsStandby() != null) equipment.setPcsStandby(request.getPcsStandby());
-        if (request.getHasBattery() != null) equipment.setHasBattery(request.getHasBattery());
-        if (request.getBatteryMaker() != null) equipment.setBatteryMaker(request.getBatteryMaker());
-        if (request.getBatteryModel() != null) equipment.setBatteryModel(request.getBatteryModel());
-        if (request.getBatteryCapacity() != null) equipment.setBatteryCapacity(request.getBatteryCapacity());
-        if (request.getTotalInvestment() != null) equipment.setTotalInvestment(request.getTotalInvestment());
-        if (request.getHasSubsidy() != null) equipment.setHasSubsidy(request.getHasSubsidy());
-        if (request.getSubsidyName() != null) equipment.setSubsidyName(request.getSubsidyName());
-        if (request.getSubsidyAmount() != null) equipment.setSubsidyAmount(request.getSubsidyAmount());
-        if (request.getPreProjectUnitPrice() != null) equipment.setPreProjectUnitPrice(request.getPreProjectUnitPrice());
+        // ... field update non-file, not change
 
         EnR002Equipment saved = equipmentRepository.save(equipment);
 
-        List<EnR002EquipmentFile> savedNewFiles = new ArrayList<>();
+        // ── Update file new vs existing ──
+        List<EnR002EquipmentFile> filesToMoveAfterCommit = new ArrayList<>();
+
         if (request.getFiles() != null) {
 
-                List<EnR002EquipmentFile> oldFiles = equipmentFileRepository.findByEquipment_Id(equipmentId);
-                equipmentFileRepository.deleteAll(oldFiles);
+                List<EnR002EquipmentFile> existingFiles = equipmentFileRepository.findByEquipment_Id(equipmentId);
 
-                List<EnR002EquipmentFile> newFileEntities = request.getFiles().stream()
-                        .map(f -> {
+                // gather s3key
+                Set<String> requestedS3Keys = request.getFiles().stream()
+                        .map(EnR002FileItemRequest::getS3Key)
+                        .collect(Collectors.toSet());
+
+                // 1. delete file not in reqest
+                List<EnR002EquipmentFile> filesToDelete = existingFiles.stream()
+                        .filter(f -> !requestedS3Keys.contains(f.getS3Key()))
+                        .collect(Collectors.toList());
+
+                filesToDelete.forEach(f -> {
+                try {
+                        fileUploadService.deletePermanentFile(f.getS3Key()); // ⚠️ lihat catatan di bawah
+                } catch (Exception e) {
+                        log.error("Failed to delete old S3 file. s3Key={}, error={}", f.getS3Key(), e.getMessage());
+                }
+                });
+                equipmentFileRepository.deleteAll(filesToDelete);
+
+                // 2. 
+                for (EnR002FileItemRequest f : request.getFiles()) {
+
+                boolean isNewFile = f.getS3Key().startsWith("tmp/equipments/");
+                boolean alreadyExists = existingFiles.stream()
+                        .anyMatch(existing -> existing.getS3Key().equals(f.getS3Key()));
+
+                if (isNewFile) {
                         EnR002EquipmentFile ef = new EnR002EquipmentFile();
                         ef.setEquipment(saved);
                         ef.setFileType(f.getFileType());
                         ef.setFileId(f.getFileId());
-                        ef.setS3Key(f.getS3Key()); 
-                        return ef;
-                        })
-                        .collect(Collectors.toList());
+                        ef.setS3Key(f.getS3Key());
+                        EnR002EquipmentFile savedFile = equipmentFileRepository.save(ef);
+                        filesToMoveAfterCommit.add(savedFile);
 
-                savedNewFiles = equipmentFileRepository.saveAll(newFileEntities);
+                } else if (alreadyExists) {
+
+                }
+
+                }
         }
 
-        final List<EnR002EquipmentFile> filesToMove = savedNewFiles;
-        if (!filesToMove.isEmpty()) {
+        // ── afterCommit — just for new equipment ──
+        if (!filesToMoveAfterCommit.isEmpty()) {
                 TransactionSynchronizationManager.registerSynchronization(
                         new TransactionSynchronization() {
                         @Override
                         public void afterCommit() {
-                                filesToMove.forEach(fileEntity -> {
+                                filesToMoveAfterCommit.forEach(fileEntity -> {
                                 try {
                                         String permanentKey = fileUploadService.moveTempToPermanent(
                                                 fileEntity.getS3Key(), siteId, saved.getId());
