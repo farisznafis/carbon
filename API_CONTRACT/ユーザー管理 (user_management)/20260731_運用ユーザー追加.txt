@@ -1,4 +1,4 @@
-﻿POST /api/users
+﻿POST /api/admin/operator-user
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Content-Type: application/json
 
@@ -11,7 +11,12 @@ Request Body (JSON): //新しいユーザーを登録
   "email": "y.taro@test.com",
   "phoneNumber": "123456789",
   "role": "一般社員",
-  "siteId”: "123"
+  "permissionCodes": [
+        "PROJECT_READ",
+        "PARTICIPATING_COMPANY_READ",
+        "MONITORING_READ",
+        "METHODOLOGY_READ"
+      ]
 }
 
 Response - Success (HTTP 200)
@@ -26,20 +31,13 @@ Response - Success (HTTP 200)
     "email": "ytaro@test.com",
     "phoneNumber": "123456789",
     "role": "一般社員",
-    "siteId”: "123"
+    "permissions": [
+        "PROJECT_READ",
+        "PARTICIPATING_COMPANY_READ",
+        "MONITORING_READ",
+        "METHODOLOGY_READ"
+      ]
   },
-  "site": {
-    "siteId": "123",
-    "siteName": "ABC支店",
-    "postalCode": "1110000"
-    "prefName": "東京都",   
-    "cityName": "千代田区",
-    "blockName": "千代田1-1-1",
-    "addressDetail": "○○マンション101号室",
-    "picFirstName": "山田", //担当者の情報が更新された
-    "picLastName": "太郎",
-    "projects": ["ProjectA"]
-  }
 }
 
 ERROR RESPONSES

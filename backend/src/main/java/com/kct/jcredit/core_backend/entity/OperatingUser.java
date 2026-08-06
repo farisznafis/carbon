@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.kct.jcredit.core_backend.constant.RoleConstants;
 import com.kct.jcredit.core_backend.entity.base.BaseEntity;
@@ -18,7 +17,6 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -118,8 +116,6 @@ public class OperatingUser extends BaseEntity {
     @Builder.Default
     private Integer authVersion = 0;
 
-    @Column(name = "last_login_at")
-    private LocalDateTime lastLoginAt;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(

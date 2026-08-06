@@ -29,8 +29,4 @@ public class Permission extends BaseEntity {
 
     @Column(nullable = false, length = 50)
     private String category;
-
-    @Column(nullable = false)
-    @Builder.Default
-    private Boolean active = true;
 }

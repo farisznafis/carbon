@@ -32,4 +32,5 @@ public enum PermissionCode {
     //project form management
     METHODOLOGY_READ,
     APPLICATION_FORM_READ
+    
 }
