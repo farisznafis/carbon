@@ -42,5 +42,5 @@ public class EnR002EquipmentUpdateRequest {
     private BigDecimal subsidyAmount;
     private BigDecimal preProjectUnitPrice;
 
-    // field s3?
+    private List<EnR002FileItemRequest> files;
 }
