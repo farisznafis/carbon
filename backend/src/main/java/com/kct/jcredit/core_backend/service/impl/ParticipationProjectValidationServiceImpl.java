@@ -441,6 +441,7 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
             List<ValidationErrorDetail> errors = new ArrayList<>();
 
             validateRequiredFields(tempId, equipment, errors);
+            validateRequiredFiles(tempId, currentFiles, errors);
 
             if (Boolean.TRUE.equals(equipment.getHasBattery())) {
                 boolean hasBatteryCatalog = currentFiles.stream()
@@ -456,6 +457,50 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
 
             if (!errors.isEmpty()) throw new BulkValidationException(errors);
         }
+            public static void validateNewFileContents(String tempId, List<EnR002FileItemRequest> files) {
+                List<ValidationErrorDetail> errors = new ArrayList<>();
+                files.forEach(f -> {
+                    String field = fieldNameFor(f.getFileType());
+                    if (f.getS3Key() == null || f.getS3Key().isBlank())
+                        errors.add(err(tempId, field,
+                                "ファイルのアップロードに失敗しました。もう一度アップロードしてください。"));
+                    if (f.getFileName() == null || f.getFileName().isBlank())
+                        errors.add(err(tempId, field,
+                                "ファイル名を取得できませんでした。もう一度アップロードしてください。"));
+                });
+                if (!errors.isEmpty()) throw new BulkValidationException(errors);
+            }
+
+        private static void validateRequiredFiles(String tempId, List<EnR002EquipmentFile> currentFiles,
+                                               List<ValidationErrorDetail> errors) {
+
+        Set<EquipmentFileType> submitted = currentFiles.stream()
+                .map(EnR002EquipmentFile::getFileType)
+                .collect(Collectors.toSet());
+
+        REQUIRED_FILES.forEach(required -> {
+            if (!submitted.contains(required)) {
+
+                String field;
+                switch (required) {
+                    case SOLAR_CONTRACT:
+                        field = "確認資料：太陽光発電電力受給契約確認書"; break;
+                    case PANEL_CATALOG:
+                        field = "確認資料：仕様書・カタログ"; break;
+                    case PCS_SPEC:
+                        field = "確認資料：仕様書・カタログ"; break;
+                    case CONSTRUCTION_INVOICE:
+                        field = "確認資料：工事請負契約書、請求書、領収書等"; break;
+                    case ELECTRICITY_BILL:
+                        field = "確認資料：電力会社からの請求明細書等"; break;
+                    default:
+                        field = "確認資料";
+                }
+
+                errors.add(err(tempId, field, required.getValue() + "の添付が必要です。"));
+            }
+        });
+    }
 
         private static void validateRequiredFields(String tempId, EnR002Equipment e,
                                                      List<ValidationErrorDetail> errors) {
@@ -524,6 +569,20 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
             if (!hasSubsidyNotice)
                 errors.add(err(tempId, "確認資料：補助金交付決定通知書",
                         "補助金を受給する場合は、補助金交付決定通知書を添付してください。"));
+        }
+
+        private static String fieldNameFor(EquipmentFileType type) {
+            if (type == null) return "確認資料";
+            switch (type) {
+                case SOLAR_CONTRACT: return "確認資料：太陽光発電電力受給契約確認書";
+                case PANEL_CATALOG: return "確認資料：太陽光パネル仕様書・カタログ";
+                case PCS_SPEC: return "確認資料：PCS仕様書・カタログ";
+                case CONSTRUCTION_INVOICE: return "確認資料：工事請負契約書、請求書、領収書等";
+                case ELECTRICITY_BILL: return "確認資料：電力会社からの請求明細書等";
+                case BATTERY_CATALOG: return "確認資料：蓄電池仕様書・カタログ";
+                case SUBSIDY_NOTICE: return "確認資料：補助金交付決定通知書";
+                default: return "確認資料";
+            }
         }
 
         private static ValidationErrorDetail err(String tempId, String field, String message) {
