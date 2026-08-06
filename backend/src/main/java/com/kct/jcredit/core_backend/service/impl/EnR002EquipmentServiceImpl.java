@@ -3,6 +3,7 @@ package com.kct.jcredit.core_backend.service.impl;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentUpdateRequest;
+import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentFileResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.EnR002EquipmentFile;
@@ -17,7 +18,7 @@ import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentFileRepos
 import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 
-
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -149,6 +150,16 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
     }
 
     private EnR002EquipmentResponse toResponse(EnR002Equipment e) {
+        List<EnR002EquipmentFileResponse> fileResponses = equipmentFileRepository
+                .findByEquipment_Id(e.getId()).stream()
+                .map(f -> EnR002EquipmentFileResponse.builder()
+                        .id(f.getId())
+                        .fileType(f.getFileType() != null ? f.getFileType().getValue() : null)
+                        .fileId(f.getFileId())
+                        .s3Key(f.getS3Key())
+                        .build())
+                .collect(Collectors.toList());
+
         return EnR002EquipmentResponse.builder()
                 .id(e.getId())
                 .siteId(e.getSite().getPublicId())
@@ -168,8 +179,9 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 .subsidyName(e.getSubsidyName())
                 .subsidyAmount(e.getSubsidyAmount())
                 .preProjectUnitPrice(e.getPreProjectUnitPrice())
+                .files(fileResponses)
                 .build();
-    }
+        }
     @Override
     public EnR002EquipmentResponse getEquipmentById(String siteId,
                                                     Integer equipmentId,
@@ -214,7 +226,6 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND, "設備情報が見つかりません。"));
 
-        // Guard — pastikan equipment ini memang milik site yang diminta
         if (!equipment.getSite().getId().equals(siteDbId))
                 throw new CustomException(ResponseConstants.NOT_FOUND, "設備情報が見つかりません。");
 
@@ -236,6 +247,50 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
         if (request.getPreProjectUnitPrice() != null) equipment.setPreProjectUnitPrice(request.getPreProjectUnitPrice());
 
         EnR002Equipment saved = equipmentRepository.save(equipment);
+
+        List<EnR002EquipmentFile> savedNewFiles = new ArrayList<>();
+        if (request.getFiles() != null) {
+
+                List<EnR002EquipmentFile> oldFiles = equipmentFileRepository.findByEquipment_Id(equipmentId);
+                equipmentFileRepository.deleteAll(oldFiles);
+
+                List<EnR002EquipmentFile> newFileEntities = request.getFiles().stream()
+                        .map(f -> {
+                        EnR002EquipmentFile ef = new EnR002EquipmentFile();
+                        ef.setEquipment(saved);
+                        ef.setFileType(f.getFileType());
+                        ef.setFileId(f.getFileId());
+                        ef.setS3Key(f.getS3Key()); 
+                        return ef;
+                        })
+                        .collect(Collectors.toList());
+
+                savedNewFiles = equipmentFileRepository.saveAll(newFileEntities);
+        }
+
+        final List<EnR002EquipmentFile> filesToMove = savedNewFiles;
+        if (!filesToMove.isEmpty()) {
+                TransactionSynchronizationManager.registerSynchronization(
+                        new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                                filesToMove.forEach(fileEntity -> {
+                                try {
+                                        String permanentKey = fileUploadService.moveTempToPermanent(
+                                                fileEntity.getS3Key(), siteId, saved.getId());
+                                        equipmentFileRepository.updateS3Key(
+                                                fileEntity.getId(), permanentKey);
+                                } catch (Exception e) {
+                                        log.error("S3 move failed. fileId={}, error={}",
+                                                fileEntity.getFileId(), e.getMessage());
+                                        // TODO: retry table
+                                }
+                                });
+                        }
+                        }
+                );
+        }
+
         return toResponse(saved);
         }
 }
