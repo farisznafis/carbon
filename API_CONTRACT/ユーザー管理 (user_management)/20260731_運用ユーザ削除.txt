@@ -1,4 +1,4 @@
-DELETE /api/users/:userId
+DELETE /api/admin/{operator-user_id}
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Content-Type: application/json
 
@@ -6,20 +6,6 @@ Response - Success (HTTP 200)
 {
   "statusCode": "OK",
   "deletedUserId": "1234",
-  "site": { //ユーザが削除した場合、拠点の担当者はマスターになります。
-    "site": {
-      "siteId": "123",
-      "siteName": "ABC支店",
-      "postalCode": "1110000"
-      "prefName": "東京都",   
-      "cityName": "千代田区",
-      "blockName": "千代田1-1-1",
-      "addressDetail": "○○マンション101号室",
-      "picFirstName": "松田", //担当者の情報が更新された
-      "picLastName": "太郎",
-      "projects": ["ProjectA"]
-    }
-  }
 }
 
 ERROR RESPONSES
@@ -34,10 +20,6 @@ ERROR RESPONSES
 {
   "statusCode": "NOT_FOUND",
   "message": "該当するユーザが見つかりませんでした。"
-},
-{
-  "statusCode": "CONFLICT",
-  "message": "マスターユーザーを削除できません",
 },
 {
   "errorCode": "SERVER_ERROR",
