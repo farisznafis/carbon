@@ -236,7 +236,6 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 throw new CustomException(ResponseConstants.NOT_FOUND, "設備情報が見つかりません。");
 
         // ── 2. Merge field non-file (in-memory) ─────────
-        if (request.getEquipmentOpDate() != null) equipment.setEquipmentOpDate(request.getEquipmentOpDate());
         if (request.getNominalMaxOutput() != null) equipment.setNominalMaxOutput(request.getNominalMaxOutput());
         if (request.getPcsManufacturer() != null) equipment.setPcsManufacturer(request.getPcsManufacturer());
         if (request.getPcsModel() != null) equipment.setPcsModel(request.getPcsModel());
