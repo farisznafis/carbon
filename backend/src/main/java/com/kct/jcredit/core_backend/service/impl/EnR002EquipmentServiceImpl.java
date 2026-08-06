@@ -18,6 +18,7 @@ import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepos
 import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentFileRepository;
 import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
+import com.kct.jcredit.core_backend.enums.EquipmentFileType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -216,6 +217,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
         public EnR002EquipmentResponse updateEquipment(String siteId, Integer equipmentId,
                                                         String companyId, EnR002EquipmentUpdateRequest request) {
 
+        // ── 1. Guard checks ──────────────────────────────────────────
         Site site = siteRepository.findByPublicIdWithFallback(siteId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND, ResponseConstants.MSG_SITE_NOT_FOUND));
@@ -232,37 +234,83 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
         if (!equipment.getSite().getId().equals(siteDbId))
                 throw new CustomException(ResponseConstants.NOT_FOUND, "設備情報が見つかりません。");
 
-        // ... field update non-file, not change
+        // ── 2. Merge field non-file (in-memory, BELUM di-save) ─────────
+        if (request.getEquipmentOpDate() != null) equipment.setEquipmentOpDate(request.getEquipmentOpDate());
+        if (request.getNominalMaxOutput() != null) equipment.setNominalMaxOutput(request.getNominalMaxOutput());
+        if (request.getPcsManufacturer() != null) equipment.setPcsManufacturer(request.getPcsManufacturer());
+        if (request.getPcsModel() != null) equipment.setPcsModel(request.getPcsModel());
+        if (request.getPcsUnitCount() != null) equipment.setPcsUnitCount(request.getPcsUnitCount());
+        if (request.getDeviceNo() != null) equipment.setDeviceNo(request.getDeviceNo());
+        if (request.getPcsStandby() != null) equipment.setPcsStandby(request.getPcsStandby());
+        if (request.getHasBattery() != null) equipment.setHasBattery(request.getHasBattery());
+        if (request.getBatteryMaker() != null) equipment.setBatteryMaker(request.getBatteryMaker());
+        if (request.getBatteryModel() != null) equipment.setBatteryModel(request.getBatteryModel());
+        if (request.getBatteryCapacity() != null) equipment.setBatteryCapacity(request.getBatteryCapacity());
+        if (request.getTotalInvestment() != null) equipment.setTotalInvestment(request.getTotalInvestment());
+        if (request.getHasSubsidy() != null) equipment.setHasSubsidy(request.getHasSubsidy());
+        if (request.getSubsidyName() != null) equipment.setSubsidyName(request.getSubsidyName());
+        if (request.getSubsidyAmount() != null) equipment.setSubsidyAmount(request.getSubsidyAmount());
+        if (request.getPreProjectUnitPrice() != null) equipment.setPreProjectUnitPrice(request.getPreProjectUnitPrice());
 
+        // ── 3. Hitung FINAL file type — TANPA sentuh DB dulu ────────────
+        List<EnR002EquipmentFile> existingFiles = equipmentFileRepository.findByEquipment_Id(equipmentId);
+
+        List<EquipmentFileType> finalFileTypes;
+        if (request.getFiles() != null) {
+                // files dikirim = state akhir MENGIKUTI request ini
+                finalFileTypes = request.getFiles().stream()
+                        .map(EnR002FileItemRequest::getFileType)
+                        .collect(Collectors.toList());
+        } else {
+                // files TIDAK dikirim = tidak berubah, pakai yang sudah ada
+                finalFileTypes = existingFiles.stream()
+                        .map(EnR002EquipmentFile::getFileType)
+                        .collect(Collectors.toList());
+        }
+
+        // Bungkus jadi entity "dummy" (tidak di-persist) — cuma untuk
+        // dicek fileType-nya oleh validator, tidak menyentuh database
+        List<EnR002EquipmentFile> filesForValidation = finalFileTypes.stream()
+                .map(type -> {
+                        EnR002EquipmentFile f = new EnR002EquipmentFile();
+                        f.setFileType(type);
+                        return f;
+                })
+                .collect(Collectors.toList());
+
+        // ── 4. Validasi — SEBELUM ada tulisan apapun ke DB ──────────────
+        ParticipationProjectValidationServiceImpl.EquipmentUpdateValidator
+                .validateEquipmentEntityState(String.valueOf(equipmentId), equipment, filesForValidation);
+
+        // ═══════════════════ Validasi lolos, baru mulai tulis DB ═══════════════════
+
+        // ── 5. Save equipment (field non-file) ──────────────────────────
         EnR002Equipment saved = equipmentRepository.save(equipment);
 
-        // ── Update file new vs existing ──
+        // ── 6. Update file — proses insert/delete SEKARANG ──────────────
         List<EnR002EquipmentFile> filesToMoveAfterCommit = new ArrayList<>();
 
         if (request.getFiles() != null) {
 
-                List<EnR002EquipmentFile> existingFiles = equipmentFileRepository.findByEquipment_Id(equipmentId);
-
-                // gather s3key
                 Set<String> requestedS3Keys = request.getFiles().stream()
                         .map(EnR002FileItemRequest::getS3Key)
                         .collect(Collectors.toSet());
 
-                // 1. delete file not in reqest
+                // Hapus file lama yang tidak ada lagi di request
                 List<EnR002EquipmentFile> filesToDelete = existingFiles.stream()
                         .filter(f -> !requestedS3Keys.contains(f.getS3Key()))
                         .collect(Collectors.toList());
 
                 filesToDelete.forEach(f -> {
                 try {
-                        fileUploadService.deletePermanentFile(f.getS3Key()); // ⚠️ lihat catatan di bawah
+                        fileUploadService.deletePermanentFile(f.getS3Key());
                 } catch (Exception e) {
                         log.error("Failed to delete old S3 file. s3Key={}, error={}", f.getS3Key(), e.getMessage());
                 }
                 });
                 equipmentFileRepository.deleteAll(filesToDelete);
 
-                // 2. 
+                // Proses tiap entry di request — bedakan baru vs lama
                 for (EnR002FileItemRequest f : request.getFiles()) {
 
                 boolean isNewFile = f.getS3Key().startsWith("tmp/equipments/");
@@ -277,15 +325,12 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                         ef.setS3Key(f.getS3Key());
                         EnR002EquipmentFile savedFile = equipmentFileRepository.save(ef);
                         filesToMoveAfterCommit.add(savedFile);
-
-                } else if (alreadyExists) {
-
                 }
-
+                // else (alreadyExists): file lama yang dipertahankan — tidak diapa-apakan
                 }
         }
 
-        // ── afterCommit — just for new equipment ──
+        // ── 7. afterCommit — HANYA untuk file baru ──────────────────────
         if (!filesToMoveAfterCommit.isEmpty()) {
                 TransactionSynchronizationManager.registerSynchronization(
                         new TransactionSynchronization() {

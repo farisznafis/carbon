@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.kct.jcredit.core_backend.dto.response.details.ValidationErrorDetail;
+import com.kct.jcredit.core_backend.entity.EnR002Equipment;
+import com.kct.jcredit.core_backend.entity.EnR002EquipmentFile;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002FileItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002FinalAgreementRequest;
@@ -426,6 +428,108 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
     public void validateSustainabilityCommitment(EnR002SustainabilityCommitmentResponse request) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'validateSustainabilityCommitment'");
+    }
+    // PATCH専用バリデーター
+    public static class EquipmentUpdateValidator {
+
+        private EquipmentUpdateValidator() {
+            // static utility — インスタンス化不要
+        }
+
+        public static void validateEquipmentEntityState(String tempId, EnR002Equipment equipment,
+                                                          List<EnR002EquipmentFile> currentFiles) {
+            List<ValidationErrorDetail> errors = new ArrayList<>();
+
+            validateRequiredFields(tempId, equipment, errors);
+
+            if (Boolean.TRUE.equals(equipment.getHasBattery())) {
+                boolean hasBatteryCatalog = currentFiles.stream()
+                        .anyMatch(f -> EquipmentFileType.BATTERY_CATALOG.equals(f.getFileType()));
+                validateBattery(tempId, equipment, hasBatteryCatalog, errors);
+            }
+
+            if (Boolean.TRUE.equals(equipment.getHasSubsidy())) {
+                boolean hasSubsidyNotice = currentFiles.stream()
+                        .anyMatch(f -> EquipmentFileType.SUBSIDY_NOTICE.equals(f.getFileType()));
+                validateSubsidy(tempId, equipment, hasSubsidyNotice, errors);
+            }
+
+            if (!errors.isEmpty()) throw new BulkValidationException(errors);
+        }
+
+        private static void validateRequiredFields(String tempId, EnR002Equipment e,
+                                                     List<ValidationErrorDetail> errors) {
+
+            if (e.getEquipmentOpDate() == null)
+                errors.add(err(tempId, "稼働開始日（電力受給開始日）", "必須項目です。"));
+
+            if (e.getNominalMaxOutput() != null
+                    && e.getNominalMaxOutput().compareTo(BigDecimal.ZERO) <= 0)
+                errors.add(err(tempId, "公称最大出力 (kW)", "0より大きい値を入力してください。"));
+
+            if (e.getPcsManufacturer() == null || e.getPcsManufacturer().isBlank())
+                errors.add(err(tempId, "メーカー", "必須項目です。"));
+
+            if (e.getPcsModel() == null || e.getPcsModel().isBlank())
+                errors.add(err(tempId, "型式", "必須項目です。"));
+
+            if (e.getPcsUnitCount() == null || e.getPcsUnitCount() < 1)
+                errors.add(err(tempId, "導入台数 (台)", "1以上の数値を入力してください。"));
+
+            if (e.getDeviceNo() == null || e.getDeviceNo().isBlank())
+                errors.add(err(tempId, "機器固有番号（製造番号）", "必須項目です。"));
+
+            if (e.getPcsStandby() == null)
+                errors.add(err(tempId, "夜間待機電力（1台あたり） (W)", "必須項目です。"));
+
+            if (e.getTotalInvestment() == null || e.getTotalInvestment() <= 0)
+                errors.add(err(tempId, "設備の総投資額 (円)", "0より大きい値を入力してください。"));
+
+            if (e.getPreProjectUnitPrice() != null
+                    && e.getPreProjectUnitPrice().compareTo(BigDecimal.ZERO) <= 0)
+                errors.add(err(tempId, "プロジェクト実施前の電力購入単価 (円/kWh)",
+                        "0より大きい値を入力してください。"));
+        }
+
+        private static void validateBattery(String tempId, EnR002Equipment e, boolean hasBatteryCatalog,
+                                             List<ValidationErrorDetail> errors) {
+
+            if (e.getBatteryMaker() == null || e.getBatteryMaker().isBlank())
+                errors.add(err(tempId, "蓄電池メーカー", "蓄電池を設置する場合は必須項目です。"));
+
+            if (e.getBatteryModel() == null || e.getBatteryModel().isBlank())
+                errors.add(err(tempId, "蓄電池型式", "蓄電池を設置する場合は必須項目です。"));
+
+            if (e.getBatteryCapacity() == null)
+                errors.add(err(tempId, "蓄電池容量 (kWh)", "蓄電池を設置する場合は必須項目です。"));
+            else if (e.getBatteryCapacity().compareTo(BigDecimal.ZERO) <= 0)
+                errors.add(err(tempId, "蓄電池容量 (kWh)", "0より大きい値を入力してください。"));
+
+            if (!hasBatteryCatalog)
+                errors.add(err(tempId, "確認資料：蓄電池仕様書・カタログ",
+                        "蓄電池を設置する場合は、蓄電池仕様書・カタログを添付してください。"));
+        }
+
+        private static void validateSubsidy(String tempId, EnR002Equipment e, boolean hasSubsidyNotice,
+                                             List<ValidationErrorDetail> errors) {
+
+            if (e.getSubsidyName() == null || e.getSubsidyName().isBlank())
+                errors.add(err(tempId, "補助金名称", "補助金を受給する場合は必須項目です。"));
+
+            if (e.getSubsidyAmount() == null)
+                errors.add(err(tempId, "補助金額 (円)", "補助金を受給する場合は必須項目です。"));
+            else if (e.getSubsidyAmount().compareTo(BigDecimal.ZERO) <= 0)
+                errors.add(err(tempId, "補助金額 (円)", "0より大きい値を入力してください。"));
+
+            if (!hasSubsidyNotice)
+                errors.add(err(tempId, "確認資料：補助金交付決定通知書",
+                        "補助金を受給する場合は、補助金交付決定通知書を添付してください。"));
+        }
+
+        private static ValidationErrorDetail err(String tempId, String field, String message) {
+            return ValidationErrorDetail.builder()
+                    .tempId(tempId).field(field).message(message).build();
+        }
     }
 }
 
