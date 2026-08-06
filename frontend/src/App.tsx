@@ -5,6 +5,7 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
   useParams,
   useSearchParams,
 } from "react-router-dom";
@@ -14,7 +15,8 @@ import { SessionExpiryGuard } from "@/components/layout/SessionExpiryGuard";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "./contexts/ProtectedRoute";
 import { ErrorBoundary } from "@/components/feedback/ErrorBoundary";
-import { paths } from "@/routes/paths";
+import { isLoginPath, paths } from "@/routes/paths";
+import { cn } from "@/lib/utils";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
 
@@ -22,6 +24,7 @@ const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
 const AdminLogin = lazy(() => import("./features/admin/auth/AdminLoginPage"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Signup = lazy(() => import("./pages/Signup"));
 const ProjectDetail = lazy(() => import("./features/user/project-detail/ProjectDetailPage"));
 const MonitoringRegister = lazy(() => import("./features/user/monitoring/MonitoringRegisterPage"));
@@ -70,11 +73,19 @@ const AdminMonitoringReport = lazy(() =>
 const AdminProjectMonitoringDetail = lazy(() =>
   import("./features/admin/monitoring/ProjectMonitoringDetailPage"),
 );
+const AdminParticipationReviewList = lazy(() =>
+  import("./features/admin/membership-review/ParticipationReviewListPage"),
+);
+const AdminParticipationReviewDetail = lazy(() =>
+  import("./features/admin/membership-review/ParticipationReviewDetailPage"),
+);
 const AdminHelpFaqPage = lazy(() => import("./features/master/help/AdminHelpFaqPage"));
 
 function RequireAdmin({ children }: { children: JSX.Element }) {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? children : <Navigate to={paths.adminLogin} replace />;
+  const { isAuthenticated, user } = useAuth();
+  return isAuthenticated && user?.role === 'admin'
+    ? children
+    : <Navigate to={paths.adminLogin} replace />;
 }
 
 function RequireMaster({ children }: { children: JSX.Element }) {
@@ -112,6 +123,9 @@ function LegacyProjectRedirect() {
 }
 
 const App = () => {
+  const location = useLocation();
+  const isLoginPage = isLoginPath(location.pathname);
+
   useEffect(() => {
     const lenis = new Lenis({
       autoRaf: true,
@@ -129,18 +143,30 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-background text-foreground">
+      <div
+        className={cn(
+          'flex flex-col bg-background text-foreground',
+          isLoginPage ? 'h-dvh overflow-hidden' : 'min-h-dvh',
+        )}
+      >
         <Toaster />
         <Sonner />
         <Navbar />
         <ScrollToTop />
         <SessionExpiryGuard />
-        <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading...</div>}>
-          <Routes>
+        <div
+          className={cn(
+            'min-h-0 min-w-0 flex-1',
+            isLoginPage && 'relative overflow-hidden',
+          )}
+        >
+          <Suspense fallback={<div className="p-6 text-sm text-foreground">Loading...</div>}>
+            <Routes>
           <Route path={paths.home} element={<Index />} />
           <Route path={paths.login} element={<Login />} />
           <Route path={paths.adminLogin} element={<AdminLogin />} />
           <Route path={paths.forgotPassword} element={<ForgotPassword />} />
+          <Route path={paths.resetPassword} element={<ResetPassword />} />
           <Route path={paths.signup} element={<Signup />} />
           <Route element={<ProtectedRoute />}>
             <Route path={paths.masterDashboard} element={<MasterDashboard />} />
@@ -244,6 +270,22 @@ const App = () => {
             }
           />
           <Route
+            path={paths.adminProjectMembershipRoute}
+            element={
+              <RequireAdmin>
+                <AdminParticipationReviewList />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminProjectMembershipDetailRoute}
+            element={
+              <RequireAdmin>
+                <AdminParticipationReviewDetail />
+              </RequireAdmin>
+            }
+          />
+          <Route
             path={paths.adminProjectMonitoringDetailRoute}
             element={
               <RequireAdmin>
@@ -283,8 +325,9 @@ const App = () => {
               <AdminHelpFaqPage />
             }
           />
-          </Routes>
-        </Suspense>
+            </Routes>
+          </Suspense>
+        </div>
       </div>
     </ErrorBoundary>
   );

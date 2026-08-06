@@ -22,4 +22,6 @@ public interface EnR002EquipmentService {
 
     EnR002EquipmentResponse updateEquipment(String siteId, Integer equipmentId,
                                             String companyId, EnR002EquipmentUpdateRequest request);
+
+    
 }

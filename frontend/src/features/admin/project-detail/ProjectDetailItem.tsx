@@ -21,7 +21,7 @@ export function ProjectDetailItem({
           {icon ?? <Hash className='h-4 w-4 text-muted-foreground' />}
         </span>
         <div className='min-w-0'>
-          <dt className='text-xs text-muted-foreground tracking-wide'>
+          <dt className='text-xs text-foreground tracking-wide'>
             {label}
           </dt>
           <dd className='font-medium break-words'>{value}</dd>

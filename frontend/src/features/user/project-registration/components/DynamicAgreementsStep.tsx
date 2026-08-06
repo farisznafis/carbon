@@ -89,7 +89,7 @@ function NumericCodeInput({
           />
         ))}
       </InputOTPGroup>
-      <span aria-hidden="true" className="text-muted-foreground">
+      <span aria-hidden="true" className="text-foreground">
         -
       </span>
       <InputOTPGroup>
@@ -243,7 +243,7 @@ export const DynamicAgreementsStep = forwardRef<
 
   return (
     <div className="space-y-4">
-      <p className="text-body text-muted-foreground">
+      <p className="text-body text-foreground">
         以下の各項目をご確認のうえ、該当する内容にご同意いただける場合はチェックを入れてください。すべての必須項目に同意いただいた場合のみ、次のステップへ進むことができます。
       </p>
 
@@ -351,7 +351,7 @@ export const DynamicAgreementsStep = forwardRef<
                                       label="特定排出者コード"
                                     />
                                   </FormControl>
-                                  <p className="text-small text-muted-foreground">
+                                  <p className="text-small text-foreground">
                                     不明な場合はこちらから検索してください：
                                     <a
                                       href="https://policies.env.go.jp/earth/ghg-santeikohyo/search.html"
@@ -507,7 +507,7 @@ export const DynamicAgreementsStep = forwardRef<
                               )}
                             />
 
-                            <p className="text-small text-muted-foreground">
+                            <p className="text-small text-foreground">
                               不明な場合はこちらから検索してください：
                               <a
                                 href="https://www.enecho.meti.go.jp/category/saving_and_new/saving/004/"

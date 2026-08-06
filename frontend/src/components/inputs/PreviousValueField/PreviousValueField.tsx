@@ -29,7 +29,7 @@ interface PreviousValueFieldProps {
   onChange: (value: string) => void;
   previousValue?: string;
   unit?: string;
-  placeholder?: string; 
+  placeholder?: string;
   disabled?: boolean;
 }
 
@@ -71,7 +71,7 @@ export const PreviousValueField: React.FC<PreviousValueFieldProps> = ({
         disabled={disabled}
       />
       {previousValue && (
-        <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="mt-1 flex items-center gap-2 text-sm text-foreground">
           <span>
             以前の値：{previousValue}
             {unit ? ` ${unit}` : ""}

@@ -1,8 +1,10 @@
 ﻿import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import { RequiredLabel } from "@/components/forms/shared/RequiredLabel";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
-import { Form, FormItem, FormField, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Form, FormItem, FormField, FormControl, FormMessage } from "@/components/ui/form";
 
 const FinalTermsSchema = z.object({
   finalTermsAgreed: z.boolean().refine(val => val === true, "同意してください"),
@@ -40,12 +42,12 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
     });
     const watchedValues = form.watch();
     const serverErrorFieldsRef = useRef<Array<keyof FinalTermsValues>>([]);
-  
+
     useImperativeHandle(ref, () => ({
       triggerValidation: () => form.trigger(),
       getValues: () => form.getValues(),
     }), [form]);
-  
+
     // Reset form with saved values when component mounts or formValues changes
     useEffect(() => {
       form.reset({
@@ -73,9 +75,9 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
       );
       serverErrorFieldsRef.current = serverErrorFields;
     }, [errors, form]);
-  
+
     const prevValuesRef = useRef(watchedValues);
-  
+
     useEffect(() => {
       if (JSON.stringify(prevValuesRef.current) !== JSON.stringify(watchedValues)) {
         prevValuesRef.current = watchedValues;
@@ -87,12 +89,12 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-2">「プログラム名」入会規約 <span className="ml-1 text-destructive">*</span></h2>
-        <p className="text-muted-foreground">入会規約をご確認の上、同意してください</p>
+        <p className="text-foreground">入会規約をご確認の上、同意してください</p>
       </div>
 
       <Card>
         <CardContent className="pt-6">
-          <div className="max-h-[600px] overflow-y-auto p-6 border rounded-lg bg-muted/30">
+          <div className="max-h-[600px] overflow-y-auto p-6 border rounded-lg">
             <div className="text-sm leading-relaxed space-y-6">
               <section>
                 <h3 className="font-semibold mb-2">(名称)</h3>
@@ -159,7 +161,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
                 <h3 className="font-semibold mb-2">(Ｊ－クレジット売却益の取り扱い)</h3>
                 <h4 className="font-semibold mb-2">第5条</h4>
                 <p>Ｊ－クレジットの売買による売却益は、利用目的に活用することとする。</p>
-                <p className="text-xs text-muted-foreground mt-1">※利用目的は、プロジェクトにおける活用予定・実際の活用方法に応じてご修正ください。</p>
+                <p className="text-xs text-foreground mt-1">※利用目的は、プロジェクトにおける活用予定・実際の活用方法に応じてご修正ください。</p>
               </section>
 
               <section>
@@ -200,7 +202,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
 
               <section>
                 <h3 className="font-semibold mb-2">(退会)</h3>
-                <p className="text-xs text-muted-foreground mb-2">※補助金受給者を対象としたプロジェクト等で退会を禁ずる場合や、その他プロジェクトの実際に応じて適宜ご修正ください。</p>
+                <p className="text-xs text-foreground mb-2">※補助金受給者を対象としたプロジェクト等で退会を禁ずる場合や、その他プロジェクトの実際に応じて適宜ご修正ください。</p>
                 <h4 className="font-semibold mb-2">第9条</h4>
                 <p>会員は、本会を退会しようとするときは、運営・管理者にその旨を届け出、その承認を得なければならない。</p>
               </section>
@@ -225,7 +227,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
                 <h3 className="font-semibold mb-2">(会員資格の有効期間)</h3>
                 <h4 className="font-semibold mb-2">第11条</h4>
                 <p>会員資格の有効期間は入会申込日若しくはプロジェクトが実施された日（※）のいずれか遅い日から8年間とする。ただし、運営・管理者が提出し、Ｊ－クレジット制度管理者が承認した、認証対象期間の延長に係るプロジェクト計画変更届に記載された手続きに沿って延長を行う場合、会員資格は8年間延長されるものとする。</p>
-                <p className="text-xs text-muted-foreground mt-1">※プロジェクトが実施された日は、温室効果ガス排出量の削減又は温室効果ガスの除去をもたらす活動が実質的に開始された日とする。</p>
+                <p className="text-xs text-foreground mt-1">※プロジェクトが実施された日は、温室効果ガス排出量の削減又は温室効果ガスの除去をもたらす活動が実質的に開始された日とする。</p>
               </section>
 
               <section>
@@ -247,41 +249,35 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
             </div>
           </div>
 
-          <div className="flex items-start space-x-3 mt-6">
-            <Card className="max-w-sm mx-auto mt-6 p-6 rounded-lg">
-              
-                <Form {...form}>
-                  <FormField
-                    control={form.control}
-                    name="finalTermsAgreed"
-                    render={({ field }) => {
-                      const { value, ...rest } = field;
-                      return (
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              id="finalTermsAgreed"
-                              {...rest}
-                              checked={value}
-                              onChange={(e) => field.onChange(e.target.checked)}
-                              className="h-5 w-5 rounded-sm border-input align-middle text-primary focus:ring-2 focus:ring-ring"
-                            />
-                          </FormControl>
-                          <div className="flex flex-col">
-                            <FormLabel htmlFor="finalTermsAgreed" className="text-sm font-medium leading-none">
-                              同意します
-                            </FormLabel>
-                            <FormMessage className="mt-1 text-xs text-destructive" /> {/* displays validation error */}
-                          </div>
-                        </FormItem>
-                      );
-                    }}
-                  />
-                </Form>
-              
-            </Card>
-          </div>
+          <Form {...form}>
+            <FormField
+              control={form.control}
+              name="finalTermsAgreed"
+              render={({ field }) => (
+                <FormItem className="mt-6 rounded-lg border border-border p-4">
+                  <div className="flex items-center gap-3">
+                    <FormControl>
+                      <Checkbox
+                        id="finalTermsAgreed"
+                        checked={field.value}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
+                        aria-required="true"
+                      />
+                    </FormControl>
+                    <RequiredLabel
+                      htmlFor="finalTermsAgreed"
+                      className="cursor-pointer"
+                    >
+                      同意します
+                    </RequiredLabel>
+                  </div>
+                  <FormMessage className="mt-2" />
+                </FormItem>
+              )}
+            />
+          </Form>
         </CardContent>
       </Card>
     </div>

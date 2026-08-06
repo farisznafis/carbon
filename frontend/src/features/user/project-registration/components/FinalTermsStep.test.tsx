@@ -3,6 +3,19 @@ import { describe, expect, it, vi } from 'vitest';
 import { FinalTermsStep } from './FinalTermsStep';
 
 describe('FinalTermsStep', () => {
+  it('uses the shared required consent control', () => {
+    render(
+      <FinalTermsStep
+        formValues={{ finalTermsAgreed: false }}
+        onValueChange={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole('checkbox', { name: /同意します\s*\*/ }),
+    ).toHaveAttribute('aria-required', 'true');
+  });
+
   it('shows the backend validation message on the agreement checkbox', async () => {
     render(
       <FinalTermsStep

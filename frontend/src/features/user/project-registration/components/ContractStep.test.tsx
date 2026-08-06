@@ -3,6 +3,28 @@ import { describe, expect, it, vi } from 'vitest';
 import { ContractStep } from './ContractStep';
 
 describe('ContractStep', () => {
+  it('marks the title and every required control with the shared required marker', () => {
+    render(
+      <ContractStep
+        formValues={{
+          businessName: '',
+          representativeName: '',
+          representativePosition: '',
+          contractAgreed: false,
+        }}
+        onValueChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText(/事業者名\s*\*/)).toBeRequired();
+    expect(screen.getByLabelText(/代表者名\s*\*/)).toBeRequired();
+    expect(screen.getByLabelText(/代表者役職\s*\*/)).toBeRequired();
+    expect(
+      screen.getByRole('checkbox', { name: /同意する\s*\*/ }),
+    ).toHaveAttribute('aria-required', 'true');
+    expect(screen.getAllByText('*')).toHaveLength(5);
+  });
+
   it('shows backend validation messages on the matching controls', async () => {
     render(
       <ContractStep

@@ -56,13 +56,13 @@ export function PendingCompanyActionDialog({
 
           <div className="space-y-4 rounded-xl border border-border bg-card p-5">
             <div className="space-y-1">
-              <p className="text-small text-muted-foreground">メールアドレス</p>
+              <p className="text-small text-foreground">メールアドレス</p>
               <p className="break-all text-large font-bold text-foreground">
                 {item?.email ?? '-'}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-small text-muted-foreground">企業名</p>
+              <p className="text-small text-foreground">企業名</p>
               <p className="break-all text-large font-bold text-foreground">
                 {item?.nameJA ?? '-'}
               </p>
@@ -74,7 +74,7 @@ export function PendingCompanyActionDialog({
               <label htmlFor="rejectReason" className="text-small font-bold">
                 却下理由 <span className="text-destructive">*</span>
               </label>
-              <p className="text-subtle text-muted-foreground">
+              <p className="text-subtle text-foreground">
                 この内容は申請者に通知されます。
               </p>
               <textarea

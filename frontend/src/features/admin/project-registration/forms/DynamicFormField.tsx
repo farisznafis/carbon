@@ -6,7 +6,11 @@
 
 import { useFormContext, FieldValues, PathValue } from 'react-hook-form';
 import { FieldConfig } from '@/components/forms/shared/GenericFormFields/GenericFormFields';
+import { RequiredBadge } from '@/components/forms/shared/RequiredLabel';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from '@/lib/utils';
 import {
   Select,
   SelectTrigger,
@@ -37,25 +41,7 @@ export function DynamicFormField<TFormValues extends FieldValues = FieldValues>(
   const error = getError(field.name as string);
   const hasError = !!error;
 
-  const inputClasses = `
-    w-full rounded-md border px-3 py-2 text-sm
-    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-    disabled:cursor-not-allowed disabled:opacity-50
-    ${hasError ? 'border-destructive' : 'border-input'}
-  `;
-
-  const registerProps = form.register(field.name);
-  const numberRegisterProps =
-    field.type === 'number'
-      ? form.register(field.name, {
-          setValueAs: (value) =>
-            value === '' || value === null || value === undefined
-              ? undefined
-              : Number(value),
-        })
-      : registerProps;
-
-  // disable const
+  // Disabled controls are intentionally excluded from required validation.
   const isDisabled = () => {
     if (!field.disabledWhen) return false;
 
@@ -72,61 +58,91 @@ export function DynamicFormField<TFormValues extends FieldValues = FieldValues>(
   };
 
   const disabled = isDisabled();
+  const isRequired = field.required !== false;
+  const registerProps = form.register(field.name);
+  const numberRegisterProps =
+    field.type === 'number'
+      ? form.register(field.name, {
+          setValueAs: (value) =>
+            value === '' || value === null || value === undefined
+              ? undefined
+              : Number(value),
+        })
+      : registerProps;
+
+  const fieldId = field.name as string;
+  const errorId = `${fieldId}-error`;
+  const accessibilityProps = {
+    'aria-invalid': hasError,
+    'aria-describedby': hasError ? errorId : undefined,
+    'aria-required': isRequired,
+  } as const;
 
   return (
-    <div className="space-y-2">
-      <label htmlFor={field.name as string} className="text-sm font-medium block ml-2">
-        {field.label}
+    <div
+      className={cn(
+        'space-y-2',
+        ['textarea', 'checkbox', 'file'].includes(field.type) &&
+          'md:col-span-2',
+      )}
+    >
+      <label
+        htmlFor={fieldId}
+        className="inline-flex max-w-full flex-wrap items-center gap-1 text-sm font-medium"
+      >
+        <span>{field.label}</span>
+        {isRequired && <RequiredBadge />}
       </label>
 
       {field.type === 'text' && (
-        <input
-          id={field.name as string}
+        <Input
+          id={fieldId}
           type="text"
           placeholder={field.placeholder}
-          className={inputClasses}
           {...registerProps}
+          {...accessibilityProps}
           disabled={disabled}
         />
       )}
 
       {field.type === 'email' && (
-        <input
-          id={field.name as string}
+        <Input
+          id={fieldId}
           type="email"
           placeholder={field.placeholder}
-          className={inputClasses}
           {...registerProps}
+          {...accessibilityProps}
           disabled={disabled}
         />
       )}
 
       {field.type === 'number' && (
-        <input
-          id={field.name as string}
+        <Input
+          id={fieldId}
           type="number"
           placeholder={field.placeholder}
-          className={inputClasses}
           {...numberRegisterProps}
+          {...accessibilityProps}
           disabled={disabled}
         />
       )}
 
       {field.type === 'date' && (
-        <input
-          id={field.name as string}
+        <Input
+          id={fieldId}
           type="date"
-          className={inputClasses}
           {...registerProps}
+          {...accessibilityProps}
           disabled={disabled}
         />
       )}
 
       {field.type === 'textarea' && (
         <Textarea
-          id={field.name as string}
+          id={fieldId}
           placeholder={field.placeholder}
           {...registerProps}
+          {...accessibilityProps}
           disabled={disabled}
         />
       )}
@@ -142,11 +158,15 @@ export function DynamicFormField<TFormValues extends FieldValues = FieldValues>(
             const selected = field.options?.find(
               (opt) => String(opt.value) === value
             );
-            form.setValue(field.name, selected?.value as PathValue<TFormValues, typeof field.name>);
+            form.setValue(
+              field.name,
+              selected?.value as PathValue<TFormValues, typeof field.name>,
+              { shouldDirty: true, shouldValidate: true },
+            );
           }}
           disabled={disabled}
         >
-          <SelectTrigger className={inputClasses}>
+          <SelectTrigger id={fieldId} {...accessibilityProps}>
             <SelectValue placeholder={field.placeholder} />
           </SelectTrigger>
           <SelectContent>
@@ -161,39 +181,49 @@ export function DynamicFormField<TFormValues extends FieldValues = FieldValues>(
 
       {field.type === 'checkbox' && (
         <div className="flex items-center space-x-2">
-          <input
-            id={field.name as string}
-            type="checkbox"
-            className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
-            {...registerProps}
+          <Checkbox
+            id={fieldId}
+            checked={Boolean(form.watch(field.name))}
+            onCheckedChange={(checked) =>
+              form.setValue(
+                field.name,
+                (checked === true) as PathValue<
+                  TFormValues,
+                  typeof field.name
+                >,
+                { shouldDirty: true, shouldValidate: true },
+              )
+            }
+            {...accessibilityProps}
             disabled={disabled}
           />
-          <label htmlFor={field.name as string} className="text-sm font-normal">
+          <label htmlFor={fieldId} className="text-sm font-normal">
             {field.placeholder || field.label}
           </label>
         </div>
       )}
 
       {field.type === 'file' && (
-        <input
-          id={field.name as string}
+        <Input
+          id={fieldId}
           type="file"
           accept={field.accept}
           multiple={field.multiple}
-          className={inputClasses}
           // {...registerProps}
           onChange={(e) =>
             form.setValue(
               field.name,
               e.target.files?.[0] as PathValue<TFormValues, typeof field.name>,
+              { shouldDirty: true, shouldValidate: true },
             )
           }
+          {...accessibilityProps}
           disabled={disabled}
         />
       )}
 
       {error && (
-        <p className="text-sm text-destructive">
+        <p id={errorId} className="text-sm text-destructive">
           {(error as { message?: unknown }).message?.toString()}
         </p>
       )}

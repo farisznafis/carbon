@@ -1,6 +1,7 @@
 ﻿// FileSelectButton.tsx
 import { useState } from 'react';
 import { IconCloudUpload } from '@tabler/icons-react';
+import { RequiredBadge } from '@/components/forms/shared/RequiredLabel';
 import { cn } from '@/lib/utils';
 
 type Props = {
@@ -12,6 +13,7 @@ type Props = {
   supportedFormats?: string;
   helperText?: string;
   variant?: 'default' | 'design-system-pro';
+  required?: boolean;
 };
 
 export function FileSelectButton({
@@ -23,6 +25,7 @@ export function FileSelectButton({
   supportedFormats = '(.pdf, .csv, .jpg, .jpeg, .png)',
   helperText,
   variant = 'default',
+  required = false,
 }: Readonly<Props>) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragCounter, setDragCounter] = useState(0);
@@ -68,7 +71,10 @@ export function FileSelectButton({
 
     return (
       <div className={cn('flex w-full flex-col items-start gap-2', className)}>
-        <p className="text-small text-foreground">{label}</p>
+        <p className="inline-flex items-center gap-1 text-small text-foreground">
+          <span>{label}</span>
+          {required && <RequiredBadge />}
+        </p>
         <label
           htmlFor={id}
           onDragEnter={handleDragEnter}
@@ -100,7 +106,7 @@ export function FileSelectButton({
             <span className="truncate text-base font-normal leading-7 text-foreground">
               {value?.name || 'ファイルを選択'}
             </span>
-            <span className="text-sm font-normal leading-5 text-muted-foreground">
+            <span className="text-sm font-normal leading-5 text-foreground">
               {supportedFormats}
             </span>
           </span>
@@ -114,13 +120,14 @@ export function FileSelectButton({
           id={id}
           type="file"
           className="hidden"
+          aria-required={required}
           onChange={(e) => {
             const file = e.target.files?.[0] ?? null;
             onChange(file);
           }}
         />
         {helperText && (
-          <p className="text-sm font-normal leading-5 text-muted-foreground">
+          <p className="text-sm font-normal leading-5 text-foreground">
             {helperText}
           </p>
         )}
@@ -141,12 +148,13 @@ export function FileSelectButton({
         id={id}
         type="file"
         className="hidden"
+        aria-required={required}
         onChange={(e) => {
           const file = e.target.files?.[0] ?? null;
           onChange(file);
         }}
       />
-      {value && <span className="text-sm text-muted-foreground">{value.name}</span>}
+      {value && <span className="text-sm text-foreground">{value.name}</span>}
     </div>
   );
 }

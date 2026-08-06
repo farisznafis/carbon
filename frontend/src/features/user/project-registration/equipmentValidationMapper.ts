@@ -34,6 +34,10 @@ function validationNumber(value: string) {
   return Number.isFinite(numericValue) ? numericValue : null;
 }
 
+function validationString(value: string) {
+  return value.trim() || null;
+}
+
 function validationBoolean(value: SolarPowerFormData['hasBattery']) {
   if (value === 'yes') return true;
   if (value === 'no') return false;
@@ -90,18 +94,18 @@ export function mapSolarFormToEquipmentValidationItem(
   return {
     tempId,
     siteId: siteId.trim() || null,
-    equipmentOpDate: formData.equipmentOpDate,
+    equipmentOpDate: validationString(formData.equipmentOpDate),
     nominalMaxOutput: validationNumber(formData.nominalMaxOutput),
-    pcsManufacturer: formData.pcsManufacturer.trim(),
-    pcsModel: formData.pcsModel.trim(),
+    pcsManufacturer: validationString(formData.pcsManufacturer),
+    pcsModel: validationString(formData.pcsModel),
     pcsUnitCount: validationNumber(formData.powerCondUnitCount),
-    deviceNo: formData.deviceNo.trim(),
+    deviceNo: validationString(formData.deviceNo),
     pcsStandby: validationNumber(formData.powerCondStandby),
     hasBattery,
     ...(hasBattery === true
       ? {
-          batteryMaker: formData.batteryMaker.trim(),
-          batteryModel: formData.batteryModel.trim(),
+          batteryMaker: validationString(formData.batteryMaker),
+          batteryModel: validationString(formData.batteryModel),
           batteryCapacity: validationNumber(formData.batteryCapacity),
         }
       : {}),
@@ -109,7 +113,7 @@ export function mapSolarFormToEquipmentValidationItem(
     hasSubsidy,
     ...(hasSubsidy === true
       ? {
-          subsidyName: formData.subsidyName.trim(),
+          subsidyName: validationString(formData.subsidyName),
           subsidyAmount: validationNumber(formData.subsidyAmount),
         }
       : {}),

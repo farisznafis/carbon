@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Building2,
   Clock3,
+  KeyRound,
   ShieldCheck,
 } from 'lucide-react';
 import type {
@@ -17,6 +18,7 @@ import type {
 import {
   getCompanySuspensions,
   resolveCompanySuspension,
+  sendAdminCompanyPasswordResetLink,
   suspendAdminCompany,
 } from '@/api/admin';
 import { ApiError } from '@/api/_shared/errors';
@@ -33,6 +35,7 @@ import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
 import { AdminCompanySitesTable } from './components/AdminCompanySitesTable';
 import { AdminCompanyUsersTable } from './components/AdminCompanyUsersTable';
+import { AdminMasterPasswordResetDialog } from './components/AdminMasterPasswordResetDialog';
 import {
   formatAdminCompanyAddress,
   formatAdminCompanyDateTime,
@@ -78,6 +81,16 @@ function getFieldErrors(error: unknown) {
   );
 }
 
+function getPasswordResetErrorMessage(error: unknown) {
+  if (error instanceof ApiError && error.status === 429) {
+    return '試行回数が多すぎます。しばらくしてからもう一度お試しください。';
+  }
+  return getErrorMessage(
+    error,
+    'パスワードリセットリンクの送信に失敗しました。',
+  );
+}
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function CompanyStatusBadge({ status }: { status: CompanyStatus }) {
@@ -106,7 +119,7 @@ function DefinitionRow({
 }) {
   return (
     <div className="grid grid-cols-1 gap-0.5 sm:grid-cols-[180px_1fr] sm:gap-2 sm:items-start py-2 border-b border-border/50 last:border-0">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
+      <dt className="text-sm text-foreground">{label}</dt>
       <dd className="text-sm font-medium text-foreground break-words">{children}</dd>
     </div>
   );
@@ -114,7 +127,7 @@ function DefinitionRow({
 
 function DetailLoadingState() {
   return (
-    <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground">
+    <div className="flex min-h-[60vh] items-center justify-center text-sm text-foreground">
       読み込み中...
     </div>
   );
@@ -139,7 +152,7 @@ function DetailErrorState({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <p className="text-sm text-muted-foreground">{message}</p>
+            <p className="text-sm text-foreground">{message}</p>
             <div className="flex flex-wrap gap-3">
               <Button type="button" variant="outline" onClick={onBack}>
                 戻る
@@ -168,6 +181,10 @@ export default function AdminCompanyDetailPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [passwordResetDialogOpen, setPasswordResetDialogOpen] =
+    useState(false);
+  const [passwordResetSubmitting, setPasswordResetSubmitting] =
+    useState(false);
 
   // Suspend dialog
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
@@ -310,6 +327,34 @@ export default function AdminCompanyDetailPage() {
     }
   };
 
+  const handlePasswordResetDialogOpenChange = (open: boolean) => {
+    if (passwordResetSubmitting) return;
+    setPasswordResetDialogOpen(open);
+  };
+
+  const handleConfirmPasswordReset = async () => {
+    if (!detail?.masterAccount) return;
+
+    setPasswordResetSubmitting(true);
+    try {
+      await sendAdminCompanyPasswordResetLink(detail.company.companyId);
+      setPasswordResetDialogOpen(false);
+      toast({
+        title: 'パスワードリセットリンクを送信しました',
+        description: `${detail.masterAccount.email} に送信しました。`,
+        variant: 'success',
+      });
+    } catch (error) {
+      toast({
+        title: 'パスワードリセットリンクを送信できませんでした',
+        description: getPasswordResetErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setPasswordResetSubmitting(false);
+    }
+  };
+
   const handleBack = () => navigate(paths.adminDashboard);
 
   // ── Guard states ───────────────────────────────────────────────────────────
@@ -343,12 +388,14 @@ export default function AdminCompanyDetailPage() {
   const { company, masterAccount, users, sites } = detail;
 
   const masterFullName =
-    masterAccount.fullName ||
-    [masterAccount.lastName, masterAccount.firstName].filter(Boolean).join(' ');
+    masterAccount?.fullName ||
+    [masterAccount?.lastName, masterAccount?.firstName]
+      .filter(Boolean)
+      .join(' ');
 
   const masterFullNameKana =
-    masterAccount.fullNameKana ||
-    [masterAccount.lastNameKana, masterAccount.firstNameKana]
+    masterAccount?.fullNameKana ||
+    [masterAccount?.lastNameKana, masterAccount?.firstNameKana]
       .filter(Boolean)
       .join(' ');
 
@@ -372,16 +419,16 @@ export default function AdminCompanyDetailPage() {
           <button
             type="button"
             onClick={handleBack}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-foreground hover:text-foreground transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 text-muted-foreground" />
             一覧に戻る
           </button>
 
           {/* Title row */}
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1.5 min-w-0">
-              <p className="text-sm text-muted-foreground tracking-wide">
+              <p className="text-sm text-foreground tracking-wide">
                 企業情報の詳細
               </p>
               <h1 className="text-2xl font-semibold tracking-tight text-foreground truncate">
@@ -390,20 +437,20 @@ export default function AdminCompanyDetailPage() {
 
               {/* Inline metadata chips */}
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-0.5">
-                <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                <span className="inline-flex items-center gap-1 text-sm text-foreground">
                   ステータス：
                   <CompanyStatusBadge status={company.companyStatus} />
                 </span>
 
                 {company.isActive !== undefined && (
-                  <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                  <span className="inline-flex items-center gap-1 text-sm text-foreground">
                     アカウント状態：
                     <AccountStatusBadge isActive={company.isActive} />
                   </span>
                 )}
 
                 {company.corpNumber && (
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-foreground">
                     法人番号：
                     <span className="font-medium text-foreground ml-1">
                       {company.corpNumber}
@@ -412,7 +459,7 @@ export default function AdminCompanyDetailPage() {
                 )}
 
                 {company.companyId && (
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-foreground">
                     企業ID：
                     <span className="font-medium text-foreground ml-1">
                       {company.companyId}
@@ -458,27 +505,46 @@ export default function AdminCompanyDetailPage() {
                     マスターアカウント
                   </CardTitle>
                 </div>
-                {masterAccount.isActive !== undefined && (
+                {masterAccount?.isActive !== undefined && (
                   <AccountStatusBadge isActive={masterAccount.isActive} />
                 )}
               </div>
             </CardHeader>
             <CardContent>
-              <dl className="divide-y divide-border/50">
-                 <DefinitionRow label="ユーザ名">{masterAccount.username || '―'}</DefinitionRow>
-                 <DefinitionRow label="氏名">{masterFullName || '―'}</DefinitionRow>
-                 <DefinitionRow label="氏名（カナ）">{masterFullNameKana || '―'}</DefinitionRow>
-                 <DefinitionRow label="役職">{masterAccount.userPosition || '―'}</DefinitionRow>
-                 <DefinitionRow label="メールアドレス">{masterAccount.email || '―'}</DefinitionRow>
-                 <DefinitionRow label="電話番号">{masterAccount.phoneNumber || '―'}</DefinitionRow>
-                <DefinitionRow label="権限">
-                  {masterAccount.role ? (
-                    <Badge variant="outline">{formatAdminRole(masterAccount.role)}</Badge>
-                  ) : (
-                    '―'
-                  )}
-                </DefinitionRow>
-              </dl>
+              {masterAccount ? (
+                <>
+                  <dl className="divide-y divide-border/50">
+                    <DefinitionRow label="ユーザ名">{masterAccount.username || '―'}</DefinitionRow>
+                    <DefinitionRow label="氏名">{masterFullName || '―'}</DefinitionRow>
+                    <DefinitionRow label="氏名（カナ）">{masterFullNameKana || '―'}</DefinitionRow>
+                    <DefinitionRow label="役職">{masterAccount.userPosition || '―'}</DefinitionRow>
+                    <DefinitionRow label="メールアドレス">{masterAccount.email || '―'}</DefinitionRow>
+                    <DefinitionRow label="電話番号">{masterAccount.phoneNumber || '―'}</DefinitionRow>
+                    <DefinitionRow label="権限">
+                      {masterAccount.role ? (
+                        <Badge variant="outline">{formatAdminRole(masterAccount.role)}</Badge>
+                      ) : (
+                        '―'
+                      )}
+                    </DefinitionRow>
+                  </dl>
+                  <div className="flex justify-end border-t border-border/50 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPasswordResetDialogOpen(true)}
+                    >
+                      <KeyRound />
+                      パスワードリセット
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <p className="py-4 text-sm text-foreground">
+                  マスターアカウントが登録されていません。
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -494,7 +560,7 @@ export default function AdminCompanyDetailPage() {
                 <TabsTrigger value="users">
                   ユーザー一覧
                   {users?.length != null && (
-                    <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
+                    <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground">
                       {users.length}
                     </span>
                   )}
@@ -502,7 +568,7 @@ export default function AdminCompanyDetailPage() {
                 <TabsTrigger value="sites">
                   拠点一覧
                   {sites?.length != null && (
-                    <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
+                    <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground">
                       {sites.length}
                     </span>
                   )}
@@ -543,13 +609,13 @@ export default function AdminCompanyDetailPage() {
               </DefinitionRow>
               <DefinitionRow label="企業更新者">{company.updatedBy || '―'}</DefinitionRow>
               <DefinitionRow label="マスター登録日時">
-                {formatAdminCompanyDateTime(masterAccount.createdAt) || '―'}
+                {formatAdminCompanyDateTime(masterAccount?.createdAt) || '―'}
               </DefinitionRow>
-              <DefinitionRow label="マスター登録者">{masterAccount.createdBy || '―'}</DefinitionRow>
+              <DefinitionRow label="マスター登録者">{masterAccount?.createdBy || '―'}</DefinitionRow>
               <DefinitionRow label="マスター更新日時">
-                {formatAdminCompanyDateTime(masterAccount.updatedAt) || '―'}
+                {formatAdminCompanyDateTime(masterAccount?.updatedAt) || '―'}
               </DefinitionRow>
-              <DefinitionRow label="マスター更新者">{masterAccount.updatedBy || '―'}</DefinitionRow>
+              <DefinitionRow label="マスター更新者">{masterAccount?.updatedBy || '―'}</DefinitionRow>
             </dl>
           </CardContent>
         </Card>
@@ -589,7 +655,7 @@ export default function AdminCompanyDetailPage() {
                       <p className="text-sm font-medium text-foreground">
                         アカウント停止
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-foreground">
                         この企業のアカウントを停止すると、ログインできなくなります。
                       </p>
                     </>
@@ -598,7 +664,7 @@ export default function AdminCompanyDetailPage() {
                       <p className="text-sm font-medium text-foreground">
                         {dangerZoneActionLabel}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-foreground">
                         {dangerZoneActionDescription}
                       </p>
                     </>
@@ -662,6 +728,16 @@ export default function AdminCompanyDetailPage() {
         onResolutionNoteChange={setResolutionNote}
         onConfirm={handleConfirmResolve}
       />
+      {masterAccount && (
+        <AdminMasterPasswordResetDialog
+          open={passwordResetDialogOpen}
+          masterName={masterFullName}
+          masterEmail={masterAccount.email}
+          isSubmitting={passwordResetSubmitting}
+          onOpenChange={handlePasswordResetDialogOpenChange}
+          onConfirm={() => void handleConfirmPasswordReset()}
+        />
+      )}
     </main>
   );
 }

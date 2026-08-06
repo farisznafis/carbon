@@ -78,7 +78,7 @@ export function UserConfirmation({
           <FormPageTitle>
             {isCreateMode ? '社員情報の確認' : '社員更新の確認'}
           </FormPageTitle>
-          <p className="text-small text-muted-foreground">
+          <p className="text-small text-foreground">
             内容をご確認ください。
           </p>
         </div>

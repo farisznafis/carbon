@@ -9,6 +9,7 @@ export {
 } from './mutations';
 export { getSiteProjects } from './projects';
 export {
+  getSiteProjectEquipmentPresignedUrl,
   getSiteProjectEquipment,
   joinSiteProject,
   uploadSiteProjectEquipmentFile,

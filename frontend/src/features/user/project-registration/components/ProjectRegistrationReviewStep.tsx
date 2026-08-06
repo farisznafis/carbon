@@ -28,7 +28,7 @@ const displaySelection = (
 function ReviewField({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-small text-muted-foreground">{label}</p>
+      <p className="text-small text-foreground">{label}</p>
       <p className="mt-1 break-words text-foreground">{value}</p>
     </div>
   );
@@ -45,7 +45,7 @@ export function ProjectRegistrationReviewStep({
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">申請内容の確認</h2>
-        <p className="mt-2 text-muted-foreground">
+        <p className="mt-2 text-foreground">
           入力内容をご確認の上、送信してください。
         </p>
       </div>
@@ -102,16 +102,6 @@ export function ProjectRegistrationReviewStep({
                   })}
                 />
                 <ReviewField
-                  label="追加設備"
-                  value={displaySelection(
-                    equipment.solarData.additionalEquipment,
-                    {
-                      yes: 'あり',
-                      no: 'なし',
-                    },
-                  )}
-                />
-                <ReviewField
                   label="設備の総投資額"
                   value={displayText(equipment.solarData.totalInvestment)}
                 />
@@ -135,40 +125,6 @@ export function ProjectRegistrationReviewStep({
                     <ReviewField
                       label="蓄電池容量"
                       value={displayText(equipment.solarData.batteryCapacity)}
-                    />
-                  </>
-                )}
-                {equipment.solarData.additionalEquipment === 'yes' && (
-                  <>
-                    <ReviewField
-                      label="追加設備導入日"
-                      value={displayText(
-                        equipment.solarData.additionalEquipmentDate,
-                      )}
-                    />
-                    <ReviewField
-                      label="追加設備種別"
-                      value={displayText(
-                        equipment.solarData.additionalEquipmentType,
-                      )}
-                    />
-                    <ReviewField
-                      label="追加設備台数"
-                      value={displayText(
-                        equipment.solarData.additionalUnitCount,
-                      )}
-                    />
-                    <ReviewField
-                      label="追加設備固有番号"
-                      value={displayText(
-                        equipment.solarData.additionalDeviceUniqueNo,
-                      )}
-                    />
-                    <ReviewField
-                      label="ICT設備消費電力"
-                      value={displayText(
-                        equipment.solarData.ictEquipmentPowerConsumption,
-                      )}
                     />
                   </>
                 )}
