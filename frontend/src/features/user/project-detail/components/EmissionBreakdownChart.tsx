@@ -85,13 +85,13 @@ export function EmissionBreakdownChart({
 
       <div className='mt-4 flex min-h-[280px] flex-1 items-center justify-center'>
         {isLoading ? (
-          <p className='text-subtle text-muted-foreground'>読み込み中...</p>
+          <p className='text-subtle text-foreground'>読み込み中...</p>
         ) : error ? (
           <p className='text-subtle text-destructive' role='alert'>
             {error}
           </p>
         ) : chartData.length === 0 ? (
-          <p className='text-subtle text-muted-foreground'>
+          <p className='text-subtle text-foreground'>
             表示できるデータがありません。
           </p>
         ) : (
@@ -146,7 +146,7 @@ export function EmissionBreakdownChart({
                 />
               </BarChart>
             </ChartContainer>
-            <p className='text-subtle mt-2 text-center text-muted-foreground'>
+            <p className='text-subtle mt-2 text-center text-foreground'>
               排出量（tCO₂）
             </p>
           </div>

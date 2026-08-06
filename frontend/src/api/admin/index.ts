@@ -8,6 +8,7 @@ export {
   rejectAdminCompany,
   rejectPendingCompany,
   resolveCompanySuspension,
+  sendAdminCompanyPasswordResetLink,
   suspendAdminCompany,
 } from './pendingCompanies';
 export {
@@ -19,11 +20,20 @@ export {
   getProjectPlanAutofillDefaults,
   updateAdminProject,
 } from './projects';
+export {
+  approveParticipationReview,
+  getMyParticipationReviews,
+  getParticipationReviewDetail,
+  getPendingParticipationReviews,
+  rejectParticipationReview,
+  participationReviewChecklistFields,
+} from './participationReviews';
 export type {
   AdminMutationResponse,
   AdminCompanyAccountActionTarget,
   AdminCompanyDetailCompany,
   AdminCompanyDetailMasterAccount,
+  AdminCompanyPasswordResetLinkResponse,
   AdminCompanyDetailResponse,
   AdminCompanyDetailSite,
   AdminCompanyDetailUser,
@@ -55,3 +65,15 @@ export type {
   ProjectPlanApplicationResponse,
   UpdateAdminProjectPayload,
 } from './types';
+export type {
+  ApproveParticipationReviewPayload,
+  ParticipationConfirmationItems,
+  ParticipationReviewChecklist,
+  ParticipationReviewChecklistField,
+  ParticipationReviewDetail,
+  ParticipationReviewEquipment,
+  ParticipationReviewFile,
+  ParticipationReviewState,
+  ParticipationSustainabilityCommitment,
+  RejectParticipationReviewPayload,
+} from './participationReviews';

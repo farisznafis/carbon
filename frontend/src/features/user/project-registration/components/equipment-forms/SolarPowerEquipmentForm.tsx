@@ -1,5 +1,6 @@
 import type { UseFormReturn } from 'react-hook-form';
 import type { Site } from '@/api/site';
+import { RequiredLabel } from '@/components/forms/shared';
 import { FileSelectButton } from '@/components/inputs/FileSelectButton/FileSelectButton';
 import {
   FormGrid,
@@ -11,7 +12,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import {
@@ -51,6 +51,7 @@ function FileUploadControl({
       label={label}
       variant="design-system-pro"
       supportedFormats={EQUIPMENT_FILE_FORMATS}
+      required
       value={value ?? null}
       onChange={(file) => onChange(file ?? undefined)}
     />
@@ -88,7 +89,6 @@ export function SolarPowerEquipmentForm({
   siteOptionsError,
 }: SolarPowerEquipmentFormProps) {
   const hasBattery = form.watch('hasBattery') === 'yes';
-  const hasAdditionalEquipment = form.watch('additionalEquipment') === 'yes';
   const hasSubsidy = form.watch('hasSubsidy') === 'yes';
 
   return (
@@ -98,7 +98,7 @@ export function SolarPowerEquipmentForm({
         name="siteId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>対象拠点</FormLabel>
+            <RequiredLabel>対象拠点</RequiredLabel>
             <Select
               value={field.value}
               onValueChange={field.onChange}
@@ -135,7 +135,7 @@ export function SolarPowerEquipmentForm({
           name="equipmentOpDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>稼働開始日（電力受給開始日）</FormLabel>
+              <RequiredLabel>稼働開始日（電力受給開始日）</RequiredLabel>
               <FormControl>
                 <Input type="date" {...field} />
               </FormControl>
@@ -168,7 +168,7 @@ export function SolarPowerEquipmentForm({
           name="nominalMaxOutput"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>公称最大出力 (kW)</FormLabel>
+              <RequiredLabel>公称最大出力 (kW)</RequiredLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -208,7 +208,7 @@ export function SolarPowerEquipmentForm({
             name="pcsManufacturer"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>メーカー</FormLabel>
+                <RequiredLabel>メーカー</RequiredLabel>
                 <FormControl>
                   <Input placeholder="メーカー名を入力" {...field} />
                 </FormControl>
@@ -221,7 +221,7 @@ export function SolarPowerEquipmentForm({
             name="pcsModel"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>型式</FormLabel>
+                <RequiredLabel>型式</RequiredLabel>
                 <FormControl>
                   <Input placeholder="型式を入力" {...field} />
                 </FormControl>
@@ -234,7 +234,7 @@ export function SolarPowerEquipmentForm({
             name="powerCondUnitCount"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>導入台数 (台)</FormLabel>
+                <RequiredLabel>導入台数 (台)</RequiredLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -253,7 +253,7 @@ export function SolarPowerEquipmentForm({
             name="deviceNo"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>機器固有番号（製造番号）</FormLabel>
+                <RequiredLabel>機器固有番号（製造番号）</RequiredLabel>
                 <FormControl>
                   <Input placeholder="機器固有番号を入力" {...field} />
                 </FormControl>
@@ -266,7 +266,9 @@ export function SolarPowerEquipmentForm({
             name="powerCondStandby"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>夜間待機電力（1台あたり） (W)</FormLabel>
+                <RequiredLabel>
+                  夜間待機電力（1台あたり） (W)
+                </RequiredLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -306,7 +308,7 @@ export function SolarPowerEquipmentForm({
           name="hasBattery"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>蓄電池設置の有無</FormLabel>
+              <RequiredLabel>蓄電池設置の有無</RequiredLabel>
               <FormControl>
                 <YesNoSelect
                   value={field.value}
@@ -325,7 +327,7 @@ export function SolarPowerEquipmentForm({
                 name="batteryMaker"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>メーカー</FormLabel>
+                    <RequiredLabel>メーカー</RequiredLabel>
                     <FormControl>
                       <Input placeholder="メーカー名を入力" {...field} />
                     </FormControl>
@@ -338,7 +340,7 @@ export function SolarPowerEquipmentForm({
                 name="batteryModel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>型式</FormLabel>
+                    <RequiredLabel>型式</RequiredLabel>
                     <FormControl>
                       <Input placeholder="型式を入力" {...field} />
                     </FormControl>
@@ -351,7 +353,7 @@ export function SolarPowerEquipmentForm({
                 name="batteryCapacity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>容量 (kWh)</FormLabel>
+                    <RequiredLabel>容量 (kWh)</RequiredLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -387,113 +389,13 @@ export function SolarPowerEquipmentForm({
         )}
       </FormSection>
 
-      <FormSection number={5} title="追加設備の情報">
-        <FormField
-          control={form.control}
-          name="additionalEquipment"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>追加設備の有無</FormLabel>
-              <FormControl>
-                <YesNoSelect
-                  value={field.value}
-                  onValueChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {hasAdditionalEquipment && (
-          <FormGrid columns={1}>
-            <FormField
-              control={form.control}
-              name="additionalEquipmentDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>導入日</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="additionalEquipmentType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>設備種別</FormLabel>
-                  <FormControl>
-                    <Input placeholder="設備種別を入力" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="additionalUnitCount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>導入台数 (台)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="1"
-                      placeholder="数値を入力"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="additionalDeviceUniqueNo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>機器固有番号</FormLabel>
-                  <FormControl>
-                    <Input placeholder="機器固有番号を入力" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="ictEquipmentPowerConsumption"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ICT設備消費電力 (W)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="any"
-                      placeholder="数値を入力"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </FormGrid>
-        )}
-      </FormSection>
-
-      <FormSection number={6} title="追加性評価に必要な情報">
+      <FormSection number={5} title="追加性評価に必要な情報">
         <FormField
           control={form.control}
           name="totalInvestment"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>設備の総投資額 (円)</FormLabel>
+              <RequiredLabel>設備の総投資額 (円)</RequiredLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -530,7 +432,7 @@ export function SolarPowerEquipmentForm({
           name="hasSubsidy"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>補助金受給の有無</FormLabel>
+              <RequiredLabel>補助金受給の有無</RequiredLabel>
               <FormControl>
                 <YesNoSelect
                   value={field.value}
@@ -549,7 +451,7 @@ export function SolarPowerEquipmentForm({
                 name="subsidyName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>補助金名称</FormLabel>
+                    <RequiredLabel>補助金名称</RequiredLabel>
                     <FormControl>
                       <Input placeholder="補助金名称を入力" {...field} />
                     </FormControl>
@@ -562,7 +464,7 @@ export function SolarPowerEquipmentForm({
                 name="subsidyAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>補助金額 (円)</FormLabel>
+                    <RequiredLabel>補助金額 (円)</RequiredLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -602,9 +504,9 @@ export function SolarPowerEquipmentForm({
           name="preProjectUnitPrice"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>
+              <RequiredLabel>
                 プロジェクト実施前の電力購入単価 (円/kWh)
-              </FormLabel>
+              </RequiredLabel>
               <FormControl>
                 <Input
                   type="number"

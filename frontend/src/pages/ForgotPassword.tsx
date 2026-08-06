@@ -7,7 +7,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { logger } from '@/lib/logger';
+import { requestPasswordReset } from '@/api/auth';
+import { paths } from '@/routes/paths';
 
 const forgotPasswordSchema = z.object({
   email: z
@@ -26,7 +27,7 @@ const ForgotPassword = () => {
   });
 
   const form = useForm<ForgotPasswordFormData>({
-    // resolver: zodResolver(forgotPasswordSchema),
+    resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
       email: '',
     },
@@ -34,14 +35,13 @@ const ForgotPassword = () => {
 
   const onSubmit = async (data: ForgotPasswordFormData) => {
     try {
-      // TODO: Implement password reset API call
-      logger.debug('Password reset requested for:', data.email);
+      await requestPasswordReset(data.email);
 
       handleSuccess("パスワードリセット用のメールを送信しました");
 
       // Redirect back to login after a short delay
       setTimeout(() => {
-        navigate('/login');
+        navigate(paths.login);
       }, 2000);
     } catch (error) {
       handleError(error);
@@ -85,7 +85,7 @@ const ForgotPassword = () => {
           </Form>
           <div className="mt-4 text-center text-sm">
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate(paths.login)}
               className="text-primary hover:underline"
             >
               ログインページに戻る

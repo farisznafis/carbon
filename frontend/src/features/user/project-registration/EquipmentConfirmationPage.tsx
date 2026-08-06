@@ -148,7 +148,7 @@ export default function EquipmentConfirmationPage() {
         <FormPageContent>
           <FormPageTitle>設備登録の確認</FormPageTitle>
           <FormCard className="space-y-5 text-center">
-            <p className="text-muted-foreground">確認する設備情報がありません。</p>
+            <p className="text-foreground">確認する設備情報がありません。</p>
             <Button type="button" onClick={navigateBack}>
               設備入力へ戻る
             </Button>
@@ -169,7 +169,7 @@ export default function EquipmentConfirmationPage() {
       <FormPageContent>
         <div className="space-y-3">
           <FormPageTitle>設備登録の確認</FormPageTitle>
-          <p className="text-small text-muted-foreground">
+          <p className="text-small text-foreground">
             内容をご確認ください。
           </p>
         </div>
@@ -212,7 +212,7 @@ export default function EquipmentConfirmationPage() {
               </FormGrid>
             </FormSection>
 
-            <FormSection number={4} title="蓄電池・追加設備の情報">
+            <FormSection number={4} title="蓄電池の情報">
               <FormGrid>
                 <ConfirmationItem label="蓄電池の有無" value={displayYesNo(data.hasBattery)} />
                 {data.hasBattery === 'yes' && (
@@ -221,19 +221,6 @@ export default function EquipmentConfirmationPage() {
                     <ConfirmationItem label="蓄電池型式" value={displayValue(data.batteryModel)} />
                     <ConfirmationItem label="容量 (kWh)" value={displayValue(data.batteryCapacity)} />
                     <ConfirmationItem label="蓄電池確認資料" value={fileName(data.batteryFile)} />
-                  </>
-                )}
-                <ConfirmationItem
-                  label="追加設備の有無"
-                  value={displayYesNo(data.additionalEquipment)}
-                />
-                {data.additionalEquipment === 'yes' && (
-                  <>
-                    <ConfirmationItem label="導入日" value={displayValue(data.additionalEquipmentDate)} />
-                    <ConfirmationItem label="設備種別" value={displayValue(data.additionalEquipmentType)} />
-                    <ConfirmationItem label="導入台数" value={displayValue(data.additionalUnitCount)} />
-                    <ConfirmationItem label="機器固有番号" value={displayValue(data.additionalDeviceUniqueNo)} />
-                    <ConfirmationItem label="ICT設備消費電力 (W)" value={displayValue(data.ictEquipmentPowerConsumption)} />
                   </>
                 )}
               </FormGrid>

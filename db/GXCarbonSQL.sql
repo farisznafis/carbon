@@ -436,45 +436,6 @@ CREATE TABLE site_project_relation (
     CONSTRAINT uq_site_project_relation_project_site UNIQUE (project_id, site_id)
 );
 
--- site_r002_member_data
-CREATE TABLE site_r002_member_data (
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by VARCHAR(100),
-    updated_by VARCHAR(100),
-    project_id INT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
-    site_id INT NOT NULL REFERENCES site(id) ON DELETE CASCADE,
-    participating_company_id INT NOT NULL REFERENCES participating_company(id) ON DELETE CASCADE,
-    methodology_number CHAR(3) NOT NULL,
-    is_eligible BOOLEAN NOT NULL,
-    equipment_op_date DATE NOT NULL,
-    nominal_max_output DECIMAL(10,1) NOT NULL,
-    pcs_manufacturer VARCHAR(100) NOT NULL,
-    pcs_model VARCHAR(50) NOT NULL,
-    power_cond_unit_count INT NOT NULL,
-    device_no VARCHAR(100) NOT NULL,
-    power_cond_standby DECIMAL(8,2) NOT NULL,
-    has_battery BOOLEAN NOT NULL,
-    battery_maker VARCHAR(100),
-    battery_model VARCHAR(100),
-    battery_capacity DECIMAL(10,1),
-    ict_equipment_power_consumption DECIMAL(12,3) NOT NULL,
-    additional_equipment BOOLEAN,
-    additional_equipment_date DATE,
-    equipment_type VARCHAR(50),
-    unit_count INT,
-    device_unique_no VARCHAR(100),
-    total_investment INT,
-    has_subsidy BOOLEAN NOT NULL,
-    subsidy_name VARCHAR(200),
-    subsidy_amount DECIMAL(15,0),
-    pre_project_unit_price DECIMAL(10,2),
-    deleted_at TIMESTAMP,
-    deleted_by VARCHAR(100)
-);
-
 -- en_r002_equipment_file
 CREATE TABLE en_r002_equipment_file (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

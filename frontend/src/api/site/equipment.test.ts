@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  getSiteProjectEquipmentPresignedUrl,
   joinSiteProject,
   uploadSiteProjectEquipmentFile,
   validateSiteProjectConfirmationItems,
@@ -178,6 +179,31 @@ describe('uploadSiteProjectEquipmentFile', () => {
       fileName: 'catalog.pdf',
       fileId: 'file-1',
     });
+  });
+});
+
+describe('getSiteProjectEquipmentPresignedUrl', () => {
+  it.each([
+    ['plain text', 'https://storage.example.com/equipment.pdf'],
+    ['JSON string', JSON.stringify('https://storage.example.com/equipment.pdf')],
+  ])('returns a valid URL from a %s response', async (_label, responseBody) => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(responseBody, {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getSiteProjectEquipmentPresignedUrl(
+      'tmp/equipments/file 1/document.pdf',
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/site/project/presigned-url?s3Key=tmp%2Fequipments%2Ffile%201%2Fdocument.pdf',
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result).toBe('https://storage.example.com/equipment.pdf');
   });
 });
 

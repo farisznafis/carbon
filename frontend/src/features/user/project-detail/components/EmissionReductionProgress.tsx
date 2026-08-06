@@ -51,7 +51,7 @@ export function EmissionReductionProgress({
       </h3>
 
       {!metrics ? (
-        <p className='text-subtle py-10 text-center text-muted-foreground'>
+        <p className='text-subtle py-10 text-center text-foreground'>
           データがありません。
         </p>
       ) : (
@@ -62,7 +62,7 @@ export function EmissionReductionProgress({
 
           <div className='mt-5'>
             <div
-              className='text-subtle mb-2 flex justify-between text-muted-foreground'
+              className='text-subtle mb-2 flex justify-between text-foreground'
               aria-hidden='true'
             >
               <span>0%</span>
@@ -110,19 +110,19 @@ export function EmissionReductionProgress({
 
           <dl className='mt-6 grid grid-cols-3 divide-x divide-border text-center'>
             <div className='px-2'>
-              <dt className='text-subtle text-muted-foreground'>達成</dt>
+              <dt className='text-subtle text-foreground'>達成</dt>
               <dd className='mt-1 font-bold tabular-nums text-foreground'>
                 {emissionNumberFormatter.format(metrics.reductionAmount)} tCO₂
               </dd>
             </div>
             <div className='px-2'>
-              <dt className='text-subtle text-muted-foreground'>目標</dt>
+              <dt className='text-subtle text-foreground'>目標</dt>
               <dd className='mt-1 font-bold tabular-nums text-foreground'>
                 {emissionNumberFormatter.format(targetReduction)} tCO₂
               </dd>
             </div>
             <div className='px-2'>
-              <dt className='text-subtle text-muted-foreground'>残り</dt>
+              <dt className='text-subtle text-foreground'>残り</dt>
               <dd className='mt-1 font-bold tabular-nums text-foreground'>
                 {emissionNumberFormatter.format(metrics.remainingReduction)}{' '}
                 tCO₂

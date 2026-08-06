@@ -190,7 +190,7 @@ function InformationGrid({
               isFullWidthField ? 'md:col-span-2' : ''
             }`}
           >
-            <dt className='text-sm font-medium text-muted-foreground'>
+            <dt className='text-sm font-medium text-foreground'>
               {projectBaseLabelOverrides[fieldName] ?? field.label}
             </dt>
             <dd className='mt-2 whitespace-pre-wrap break-words text-base font-semibold'>

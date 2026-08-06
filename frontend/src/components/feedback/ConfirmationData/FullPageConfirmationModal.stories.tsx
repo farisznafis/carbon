@@ -52,7 +52,7 @@ export const Default: Story = {
   },
 };
 
-/** Shows underlined fields where data differs from originalData */
+/** Shows highlighted fields with a change badge where data differs from originalData */
 export const WithChanges: Story = {
   args: {
     data: changedData,

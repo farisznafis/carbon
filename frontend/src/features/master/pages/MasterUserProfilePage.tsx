@@ -74,7 +74,7 @@ export default function MasterUserProfilePage() {
       <FormPageContent>
         <FormPageTitle>プロファイル</FormPageTitle>
         {loading ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">
+          <div className="py-12 text-center text-sm text-foreground">
             読み込み中...
           </div>
         ) : (

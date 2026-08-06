@@ -1,0 +1,224 @@
+--7. project
+--8. site_project_relation
+--9. en_r002_equipment
+--10. en_r002_equipment_file
+--11. participating_project
+--12. project_files
+
+BEGIN;
+
+-- =========================================================
+-- 7. PROJECT
+-- public_id shortened to exactly 32 chars (was 33).
+-- =========================================================
+
+INSERT INTO project (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    project_name, project_number, project_status,
+    rep_first_name, rep_first_name_kana,
+    rep_last_name, rep_last_name_kana,
+    rep_email, rep_phone_number, rep_position,
+    pic_first_name, pic_first_name_kana,
+    pic_last_name, pic_last_name_kana,
+    pic_email, pic_phone_number, pic_position,
+    data_management_pic,
+    emission_reduction, baseline_emission, post_project_emission,
+    regional_category,
+    new_members_total, withdrawn_members, cumulative_members_total,
+    members_total,
+    methodology_version, method_category, method_number,
+    method_name, method_main_emission,
+    method_combi_feasibility, method_details,
+    operator_company_id, public_id
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(
+    1, TRUE,
+    '2026-07-07 09:00:00', '2026-07-07 09:00:00',
+    'operator1', 'operator1',
+    'ソーラーファーム東京都内太陽光発電プロジェクト',
+    'P000001',
+    'ACTIVE',
+    '健一', 'ケンイチ',
+    '伊藤', 'イトウ',
+    'ito.kenichi@solarfarm.co.jp',
+    '03-5432-1240',
+    '代表取締役',
+    '明子', 'アキコ',
+    '伊藤', 'イトウ',
+    'ito.akiko@solarfarm.co.jp',
+    '03-5432-1241',
+    '設備管理責任者',
+    'ito.akiko@solarfarm.co.jp',
+    1250.5,
+    1850.0,
+    599.5,
+    '関東',
+    4,
+    0,
+    4,
+    4,
+    'Ver.2.0',
+    'EN-R',
+    '002',
+    '太陽光発電設備の導入による排出削減',
+    '電力使用に伴う二酸化炭素排出量',
+    TRUE,
+    '東京都内の事業所に太陽光発電設備を導入し、系統電力の使用量を削減するプロジェクト。',
+    1,
+    'prj001'
+),
+(
+    2, TRUE,
+    '2026-07-08 09:00:00', '2026-07-08 09:00:00',
+    'operator1', 'operator1',
+    '関東地域自家消費型太陽光発電プロジェクト',
+    'P000002',
+    'DRAFT',
+    '拓也', 'タクヤ',
+    '熊谷', 'クマガイ',
+    'kumagai.takuya@kuma-power.co.jp',
+    '052-345-6791',
+    '代表取締役',
+    '奈緒', 'ナオ',
+    '熊谷', 'クマガイ',
+    'kumagai.nao@kuma-power.co.jp',
+    '052-345-6792',
+    '設備管理担当',
+    'kumagai.nao@kuma-power.co.jp',
+    780.0,
+    1200.0,
+    420.0,
+    '関東',
+    2,
+    0,
+    2,
+    2,
+    'Ver.2.0',
+    'EN-R',
+    '003',
+    '自家消費型太陽光発電設備の導入',
+    '事業所における購入電力使用に伴う排出量',
+    FALSE,
+    '工場および物流施設に太陽光発電設備を導入し、発電電力を施設内で自家消費するプロジェクト。',
+    1,
+    'prj002'
+);
+
+-- =========================================================
+-- 8. SITE-PROJECT RELATION
+-- =========================================================
+
+INSERT INTO site_project_relation (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    project_id, site_id, activity_start_date, status
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(1, TRUE, '2026-07-07 10:00:00', '2026-07-07 10:00:00', 'operator1', 'operator1', 1, 1, '2026-04-01', 'REVIEWED'),
+(2, TRUE, '2026-07-07 10:05:00', '2026-07-07 10:05:00', 'operator1', 'operator1', 1, 2, '2026-04-01', 'OPEN'),
+(3, TRUE, '2026-07-07 10:10:00', '2026-07-07 10:10:00', 'operator1', 'operator1', 1, 3, '2026-04-15', 'OPEN'),
+(4, TRUE, '2026-07-07 10:15:00', '2026-07-07 10:15:00', 'operator1', 'operator1', 1, 4, '2026-05-01', 'OPEN'),
+(5, TRUE, '2026-07-08 10:00:00', '2026-07-08 10:00:00', 'operator1', 'operator1', 2, 7, '2026-08-01', 'REJECTED'),
+(6, TRUE, '2026-07-08 10:05:00', '2026-07-08 10:05:00', 'operator1', 'operator1', 2, 8, '2026-08-01', 'REJECTED');
+
+-- =========================================================
+-- 9. EN-R002 EQUIPMENT
+-- =========================================================
+
+INSERT INTO en_r002_equipment (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    site_id, equipment_op_date, nominal_max_output,
+    pcs_manufacturer, pcs_model, pcs_unit_count, device_no,
+    pcs_standby, has_battery, battery_maker, battery_model,
+    battery_capacity, total_investment, has_subsidy, subsidy_name,
+    subsidy_amount, pre_project_unit_price
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(1, TRUE, '2026-07-07 11:00:00', '2026-07-07 11:00:00', 'ito.akiko', 'ito.akiko', 1, '2026-03-20', 49.5, '株式会社オムロン', 'KP49R', 1, 'SF-TKY-001', 0.05, TRUE, 'Tesla Japan', 'Powerwall 3', 13.5, 7800000, TRUE, '東京都自家消費型太陽光発電導入補助金', 1500000, 26.50),
+(2, TRUE, '2026-07-07 11:10:00', '2026-07-07 11:10:00', 'ito.jun', 'ito.jun', 2, '2026-03-25', 74.0, '株式会社安川電機', 'Enewell-SOL 74', 1, 'SF-TKY-002', 0.06, TRUE, 'ニチコン株式会社', 'ESS-U4M1', 16.6, 11200000, TRUE, '東京都自家消費型太陽光発電導入補助金', 2200000, 25.80),
+(3, TRUE, '2026-07-07 11:20:00', '2026-07-07 11:20:00', 'ito.akiko', 'ito.akiko', 3, '2026-04-10', 39.6, 'Huawei Technologies', 'SUN2000-40KTL', 1, 'SF-TKY-003', 0.04, FALSE, NULL, NULL, NULL, 6200000, FALSE, NULL, NULL, 27.10),
+(4, TRUE, '2026-07-07 11:30:00', '2026-07-07 11:30:00', 'ito.kenichi', 'ito.kenichi', 4, '2026-04-25', 99.0, 'Sungrow Japan', 'SG110CX', 2, 'SF-TKY-004', 0.08, TRUE, '伊藤忠商事株式会社', 'Smart Star 3', 13.16, 16800000, TRUE, '東京都中小企業向け再エネ設備補助金', 3000000, 24.90),
+(5, TRUE, '2026-07-08 11:00:00', '2026-07-08 11:00:00', 'kumagai.nao', 'kumagai.nao', 7, '2026-07-20', 110.0, 'Sungrow Japan', 'SG125CX', 2, 'KP-AIC-001', 0.10, FALSE, NULL, NULL, NULL, 18500000, FALSE, NULL, NULL, 26.20),
+(6, TRUE, '2026-07-08 11:10:00', '2026-07-08 11:10:00', 'kumagai.takuya', 'kumagai.takuya', 8, '2026-07-25', 82.5, '株式会社東芝', 'TPV-PCS082', 1, 'KP-AIC-002', 0.07, TRUE, 'オムロン株式会社', 'KP-BU98-B', 9.8, 14200000, TRUE, '愛知県再生可能エネルギー設備導入補助金', 2500000, 25.40);
+
+-- =========================================================
+-- 10. EQUIPMENT FILES
+-- =========================================================
+
+INSERT INTO en_r002_equipment_file (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    equipment_id, file_type, file_id, s3_key
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(1, TRUE, '2026-07-07 12:00:00', '2026-07-07 12:00:00', 'ito.akiko', 'ito.akiko', 1, 'SOLAR_CONTRACT', '94e9ecbf-8550-4794-becc-42830602554a', 'tmp/equipments/94e9ecbf-8550-4794-becc-42830602554a/solar_contract_____1_.png'),
+(2, TRUE, '2026-07-07 12:05:00', '2026-07-07 12:05:00', 'ito.akiko', 'ito.akiko', 1, 'PANEL_CATALOG', '7e2ea3d4-47e0-42c9-9941-44869c8156f3', 'tmp/equipments/7e2ea3d4-47e0-42c9-9941-44869c8156f3/panel_catalog_____1_.png'),
+(3, TRUE, '2026-07-07 12:10:00', '2026-07-07 12:10:00', 'ito.jun', 'ito.jun', 2, 'PCS_SPEC', '0c5c2415-806f-4e4e-b12e-d41b96ef59f3', 'tmp/equipments/0c5c2415-806f-4e4e-b12e-d41b96ef59f3/pcs_spec_____1_.png'),
+(4, TRUE, '2026-07-07 12:15:00', '2026-07-07 12:15:00', 'ito.akiko', 'ito.akiko', 3, 'BATTERY_CATALOG', '241f1ac0-52f7-454a-99cf-0b650784ec14', 'tmp/equipments/241f1ac0-52f7-454a-99cf-0b650784ec14/battery_catalog_____1_.png'),
+(5, TRUE, '2026-07-07 12:20:00', '2026-07-07 12:20:00', 'ito.kenichi', 'ito.kenichi', 4, 'CONSTRUCTION_INVOICE', '3a7045e5-f146-4979-a0fe-8275394628de', 'tmp/equipments/3a7045e5-f146-4979-a0fe-8275394628de/construction_invoice_____1_.png'),
+(6, TRUE, '2026-07-08 12:00:00', '2026-07-08 12:00:00', 'kumagai.nao', 'kumagai.nao', 5, 'SUBSIDY_NOTICE', '7a41d8fd-9b53-4150-a2fd-ba58140912c4', 'tmp/equipments/7a41d8fd-9b53-4150-a2fd-ba58140912c4/subsidy_notice_____1_.png'),
+(7, TRUE, '2026-07-08 12:05:00', '2026-07-08 12:05:00', 'kumagai.takuya', 'kumagai.takuya', 6, 'ELECTRICITY_BILL', '5884f1e6-708d-427f-b683-e803969e7ac7', 'tmp/equipments/5884f1e6-708d-427f-b683-e803969e7ac7/electricity_bill_____1_.png');
+-- =========================================================
+-- 11. PARTICIPATING PROJECT
+-- Only participating_company.id = 1 is included; Project 2 has none yet.
+-- =========================================================
+
+INSERT INTO participating_project (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    project_id, user_id, is_eligible, equipment_id,
+    s3_key_pdf_membership
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(1, TRUE, '2026-07-07 13:00:00', '2026-07-07 13:00:00', 'ito.kenichi', 'ito.kenichi', 1, 1, TRUE, 1, 's3://gxcarbon/participation/P000001/user-1/membership.pdf'),
+(2, TRUE, '2026-07-07 13:05:00', '2026-07-07 13:05:00', 'ito.kenichi', 'ito.kenichi', 1, 2, TRUE, 2, 's3://gxcarbon/participation/P000001/user-2/membership.pdf'),
+(3, TRUE, '2026-07-07 13:10:00', '2026-07-07 13:10:00', 'ito.kenichi', 'ito.kenichi', 1, 3, TRUE, 3, 's3://gxcarbon/participation/P000001/user-3/membership.pdf'),
+(4, TRUE, '2026-07-07 13:15:00', '2026-07-07 13:15:00', 'ito.kenichi', 'ito.kenichi', 1, 4, TRUE, 4, 's3://gxcarbon/participation/P000001/user-4/membership.pdf'),
+(5, TRUE, '2026-07-08 13:00:00', '2026-07-08 13:00:00', 'kumagai.takuya', 'kumagai.takuya', 2, 8, FALSE, 5, NULL),
+(6, TRUE, '2026-07-08 13:05:00', '2026-07-08 13:05:00', 'kumagai.nao', 'kumagai.nao', 2, 9, FALSE, 6, NULL);
+
+-- =========================================================
+-- 12. PROJECT FILES
+-- =========================================================
+
+INSERT INTO project_files (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    project_id, certificate_registration, report_validation,
+    report_verification
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(
+    1, TRUE,
+    '2026-07-07 09:30:00', '2026-07-07 09:30:00',
+    'operator1', 'operator1',
+    1,
+    's3://gxcarbon/project/P000001/certificate-registration.pdf',
+    's3://gxcarbon/project/P000001/report-validation.pdf',
+    's3://gxcarbon/project/P000001/report-verification.pdf'
+),
+(
+    2, TRUE,
+    '2026-07-08 09:30:00', '2026-07-08 09:30:00',
+    'operator1', 'operator1',
+    2,
+    's3://gxcarbon/project/P000002/certificate-registration.pdf',
+    NULL,
+    NULL
+);
+
+-- =========================================================
+-- Synchronize identity sequences
+-- =========================================================
+
+SELECT setval(pg_get_serial_sequence('project', 'id'), (SELECT MAX(id) FROM project), TRUE);
+SELECT setval(pg_get_serial_sequence('site_project_relation', 'id'), (SELECT MAX(id) FROM site_project_relation), TRUE);
+SELECT setval(pg_get_serial_sequence('en_r002_equipment', 'id'), (SELECT MAX(id) FROM en_r002_equipment), TRUE);
+SELECT setval(pg_get_serial_sequence('en_r002_equipment_file', 'id'), (SELECT MAX(id) FROM en_r002_equipment_file), TRUE);
+SELECT setval(pg_get_serial_sequence('participating_project', 'id'), (SELECT MAX(id) FROM participating_project), TRUE);
+SELECT setval(pg_get_serial_sequence('project_files', 'id'), (SELECT MAX(id) FROM project_files), TRUE);
+
+COMMIT;

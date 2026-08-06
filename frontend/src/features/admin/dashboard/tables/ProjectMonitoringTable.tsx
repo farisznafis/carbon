@@ -122,15 +122,15 @@ export function ProjectMonitoringTable({
       //   id: 'siteID',
       //   label: '拠点ID',
       //   sortable: true,
-      //   render: (record) => formatMonitoringValue(record.siteID),
-      //   sortValue: (record) => String(record.siteID),
+      //   render: (record) => formatMonitoringValue(record.siteId),
+      //   sortValue: (record) => record.siteId,
       // },
       // {
       //   id: 'participatingUserID',
       //   label: '参加ユーザID',
       //   sortable: true,
-      //   render: (record) => formatMonitoringValue(record.participatingUserID),
-      //   sortValue: (record) => record.participatingUserID,
+      //   render: (record) => formatMonitoringValue(record.participatingUserId),
+      //   sortValue: (record) => record.participatingUserId,
       // },
       {
         id: 'methodologyType',
@@ -240,7 +240,7 @@ export function ProjectMonitoringTable({
           </SelectContent>
         </Select>
         {projectsLoading && (
-          <p className="text-small text-muted-foreground">
+          <p className="text-small text-foreground">
             プロジェクトを読み込んでいます...
           </p>
         )}
@@ -252,11 +252,11 @@ export function ProjectMonitoringTable({
       </div>
 
       {!selectedProjectId ? (
-        <div className="rounded-lg border border-dashed border-border bg-muted/20 px-6 py-10 text-center text-small text-muted-foreground">
+        <div className="rounded-lg border border-dashed border-border bg-muted/20 px-6 py-10 text-center text-small text-foreground">
           表示するプロジェクトを選択してください。
         </div>
       ) : isLoading ? (
-        <div className="rounded-lg border border-border py-12 text-center text-small text-muted-foreground">
+        <div className="rounded-lg border border-border py-12 text-center text-small text-foreground">
           モニタリングデータを読み込んでいます...
         </div>
       ) : loadError ? (

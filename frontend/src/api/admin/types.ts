@@ -341,10 +341,16 @@ export type AdminCompanyDetailResponse = {
   message: string;
   errors?: Record<string, string>;
   timestamp: string;
-  masterAccount: AdminCompanyDetailMasterAccount;
+  masterAccount: AdminCompanyDetailMasterAccount | null;
   company: AdminCompanyDetailCompany;
   users: AdminCompanyDetailUser[];
   sites: AdminCompanyDetailSite[];
+};
+
+export type AdminCompanyPasswordResetLinkResponse = {
+  statusCode: string;
+  message: string;
+  timestamp?: string;
 };
 
 export type GetAdminCompaniesParams = {

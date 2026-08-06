@@ -145,6 +145,13 @@ export default function ProjectDetailAdmin() {
               <FileText className='mr-2 h-4 w-4' />
               モニタリングデータ報告書
             </Button>
+            <Button
+              variant='outline'
+              onClick={() => navigate(paths.adminProjectMembership(projectId))}
+            >
+              <FileText className='mr-2 h-4 w-4' />
+              入会届一覧
+            </Button>
           </div>
         </CardHeader>
       </Card>

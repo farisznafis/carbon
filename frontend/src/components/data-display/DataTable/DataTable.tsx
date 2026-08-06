@@ -64,7 +64,7 @@ export function DataTable({
                     <TableBody>
                         {data.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={colCount} className="text-center py-8 text-muted-foreground">
+                                <TableCell colSpan={colCount} className="text-center py-8 text-foreground">
                                     {emptyMessage || 'データはありません'}
                                 </TableCell>
                             </TableRow>

@@ -6,6 +6,7 @@ import { FormProvider } from "react-hook-form";
 import { DynamicFormRenderer } from "./DynamicFormRenderer";
 import { steps } from "./projectSteps";
 import { logger } from "@/lib/logger";
+import { FormSection } from '@/components/forms/form-layout';
 
 export type MultiStepFormProps<TFormValues extends FieldValues> = {
   form: UseFormReturn<TFormValues>;
@@ -29,13 +30,12 @@ export function MultiStepForm<TFormValues extends FieldValues>({
   }
 
   return (
-    <div className="space-y-4">
-      <h2>{current.title}</h2>
+    <FormSection number={step} title={current.title}>
       <FormProvider {...form}>
         <DynamicFormRenderer<TFormValues>
           fields={current.fields as FieldConfig<TFormValues>[]}
         />
       </FormProvider>
-    </div>
+    </FormSection>
   );
 }

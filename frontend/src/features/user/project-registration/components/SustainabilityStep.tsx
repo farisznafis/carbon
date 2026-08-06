@@ -17,14 +17,14 @@ export function SustainabilityStep({
         <h2 className="text-2xl font-bold mb-2">
           環境社会配慮を行い持続可能性を確保することの同意書
         </h2>
-        <p className="text-muted-foreground">
+        <p className="text-foreground">
           以下の内容をご確認の上、同意してください
         </p>
       </div>
 
       <Card>
         <CardContent className="pt-6">
-          <div className="h-96 overflow-y-auto p-4 border rounded-lg bg-muted/30 space-y-4 text-sm text-muted-foreground leading-relaxed">
+          <div className="h-96 overflow-y-auto p-4 border rounded-lg bg-muted/30 space-y-4 text-sm text-foreground leading-relaxed">
             <p>
               国内における地球温暖化対策のための排出削減・吸収量認証制度（Ｊ－クレジット制度）に、
               方法論EN-R-002（太陽光発電設備の導入）に基づくプロジェクトを登録して実施するにあたり、

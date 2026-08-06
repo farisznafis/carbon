@@ -38,11 +38,11 @@ function MembershipSection({
       <div className="mb-5">
         <div className="flex flex-wrap items-baseline gap-3">
           <h2 className="text-foreground">{title}</h2>
-          <span className="text-small text-muted-foreground">
+          <span className="text-small text-foreground">
             {projects.length}件
           </span>
         </div>
-        <p className="text-small mt-2 text-muted-foreground">{description}</p>
+        <p className="text-small mt-2 text-foreground">{description}</p>
       </div>
 
       {projects.length > 0 ? (
@@ -58,7 +58,7 @@ function MembershipSection({
         </div>
       ) : (
         <Card className="rounded-lg border-dashed border-border shadow-none">
-          <CardContent className="p-8 text-center text-muted-foreground">
+          <CardContent className="p-8 text-center text-foreground">
             {emptyMessage}
           </CardContent>
         </Card>
@@ -124,7 +124,7 @@ export default function ProjectMembershipPage() {
 
   const handleJoin = (project: SiteProject) => {
     setCurrentProject(project);
-    navigate(paths.projectEquipment(siteId, project.id), {
+    navigate(paths.projectRegister(siteId, project.id), {
       state: {
         ...(enteredFromMasterDashboard
           ? masterDashboardProjectMembershipState
@@ -152,15 +152,15 @@ export default function ProjectMembershipPage() {
       wrapInCard={false}
     >
       <div className="space-y-10">
-        {siteName && (
-          <p className="text-center text-muted-foreground">
+        {/* {siteName && (
+          <p className="text-center text-foreground">
             拠点名：{siteName}
           </p>
-        )}
+        )} */}
 
         {isLoading ? (
           <Card className="rounded-lg border-border shadow-none">
-            <CardContent className="p-10 text-center text-muted-foreground">
+            <CardContent className="p-10 text-center text-foreground">
               読み込み中...
             </CardContent>
           </Card>
@@ -176,16 +176,16 @@ export default function ProjectMembershipPage() {
         ) : (
           <>
             <MembershipSection
-              title="未入会のプロジェクト"
-              description="この拠点は以下のプロジェクトにまだ参加していません。参加を希望する場合は、入会届へ進んでください。"
+              title="入会可能なプロジェクト"
+              description="この拠点は以下のプロジェクトにまだ入会していません。入会を希望する場合は、入会届へ進んでください。"
               projects={availableProjects}
               status="available"
-              emptyMessage="未入会のプロジェクトはありません。"
+              emptyMessage="入会可能なプロジェクトはありません。"
               onJoin={handleJoin}
             />
             <MembershipSection
               title="入会中のプロジェクト"
-              description="この拠点が現在参加しているプロジェクトです。再度入会届を提出する必要はありません。"
+              description="この拠点が現在入会しているプロジェクトです。再度入会届を提出する必要はありません。"
               projects={joinedProjects}
               status="joined"
               emptyMessage="入会中のプロジェクトはありません。"

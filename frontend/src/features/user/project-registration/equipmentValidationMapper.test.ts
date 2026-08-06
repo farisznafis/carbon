@@ -19,12 +19,6 @@ const baseFormData: SolarPowerFormData = {
   batteryMaker: '',
   batteryModel: '',
   batteryCapacity: '',
-  additionalEquipment: 'no',
-  ictEquipmentPowerConsumption: '',
-  additionalEquipmentDate: '',
-  additionalEquipmentType: '',
-  additionalUnitCount: '',
-  additionalDeviceUniqueNo: '',
   totalInvestment: '1000000',
   hasSubsidy: 'no',
   subsidyName: '',
@@ -74,12 +68,6 @@ describe('mapSolarFormToEquipmentValidationItem', () => {
         batteryMaker: 'Battery Maker',
         batteryModel: 'BAT-01',
         batteryCapacity: '8.2',
-        additionalEquipment: 'yes',
-        ictEquipmentPowerConsumption: '15',
-        additionalEquipmentDate: '2026-07-18',
-        additionalEquipmentType: 'ICT controller',
-        additionalUnitCount: '3',
-        additionalDeviceUniqueNo: 'ICT-01',
         hasSubsidy: 'yes',
         subsidyName: '補助金A',
         subsidyAmount: '250000',
@@ -104,11 +92,14 @@ describe('mapSolarFormToEquipmentValidationItem', () => {
     const result = mapSolarFormToEquipmentValidationItem(
       {
         ...baseFormData,
+        equipmentOpDate: '',
         nominalMaxOutput: '',
+        pcsManufacturer: '',
+        pcsModel: '',
         powerCondUnitCount: '',
+        deviceNo: '',
         powerCondStandby: '',
         hasBattery: '',
-        additionalEquipment: '',
         totalInvestment: '',
         hasSubsidy: '',
         preProjectUnitPrice: '',
@@ -119,14 +110,44 @@ describe('mapSolarFormToEquipmentValidationItem', () => {
     );
 
     expect(result).toMatchObject({
+      equipmentOpDate: null,
       nominalMaxOutput: null,
+      pcsManufacturer: null,
+      pcsModel: null,
       pcsUnitCount: null,
+      deviceNo: null,
       pcsStandby: null,
       hasBattery: null,
       siteId: null,
       totalInvestment: null,
       hasSubsidy: null,
       preProjectUnitPrice: null,
+    });
+  });
+
+  it('maps empty conditional text values to null', () => {
+    const result = mapSolarFormToEquipmentValidationItem(
+      {
+        ...baseFormData,
+        hasBattery: 'yes',
+        batteryMaker: '',
+        batteryModel: '',
+        batteryCapacity: '',
+        hasSubsidy: 'yes',
+        subsidyName: '',
+        subsidyAmount: '',
+      },
+      'temp-4',
+      'SITE4f83ac050b20d755',
+      [],
+    );
+
+    expect(result).toMatchObject({
+      batteryMaker: null,
+      batteryModel: null,
+      batteryCapacity: null,
+      subsidyName: null,
+      subsidyAmount: null,
     });
   });
 });

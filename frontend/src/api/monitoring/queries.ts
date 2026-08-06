@@ -4,7 +4,10 @@
  * Fetch recent monitoring data for a project (and optional site)
  */
 import { apiFetch, apiRequest, parseJsonResponse } from '../_shared/httpClient';
-import { normalizeRecentMonitoringItem } from "./mappers";
+import {
+  normalizeMonitoringRecordListItem,
+  normalizeRecentMonitoringItem,
+} from "./mappers";
 import type {
   MonitoringCancelRequestListItem,
   MonitoringCancelRequestListResponse,
@@ -23,7 +26,9 @@ function normalizeMonitoringRecordListResult(
   page: number,
   limit: number,
 ): MonitoringRecordListResult {
-  const items = Array.isArray(response?.items) ? response.items : [];
+  const items = Array.isArray(response?.items)
+    ? response.items.map(normalizeMonitoringRecordListItem)
+    : [];
   const responsePagination = response?.pagination;
 
   return {
