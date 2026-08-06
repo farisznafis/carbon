@@ -36,6 +36,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
@@ -50,21 +52,6 @@ public class OperatorUserServiceImpl implements OperatorUserService {
     private final UsernameAvailabilityService usernameAvailabilityService;
     private static final int MAX_USERS_PER_COMPANY = 50;
 
-    @Override
-    public UserProfileResponse getOperatorUserProfile(String username) {
-        UserProfileResponse response = new UserProfileResponse();
-        OperatingUser user = operatingUserRepository.findByUsername(username).orElse(null);
-        if (user == null) {
-            response.setStatusCode(ResponseConstants.NOT_FOUND);
-            response.setMessage(ResponseConstants.MSG_USER_NOT_FOUND);
-            return response;
-        }
-
-        response.setProfile(mapToUserInfoResponse(user));
-        response.setStatusCode(ResponseConstants.OK);
-        response.setMessage("運用者ユーザー情報を取得しました。");
-        return response;
-    }
 
     @Override
     public UserListResponse getOperatorUsersByCompany(String companyId) {
@@ -281,7 +268,7 @@ public class OperatorUserServiceImpl implements OperatorUserService {
 
         response.setStatusCode(ResponseConstants.OK);
         response.setMessage(changed ? "運用者ユーザーを更新しました。" : "更新内容がありませんでした。");
-        response.setUser(mapToUserInfoResponse(targetUser)); //TODO: dont let the role change
+        response.setUser(mapToUserInfoResponse(targetUser));
         return response;
     }
 
@@ -298,12 +285,18 @@ public class OperatorUserServiceImpl implements OperatorUserService {
     }
 
     @Override
-    public UserProfileResponse getOperatorUserProfileById(Integer userId, String requestingRole, String requestingCompanyId) {
+    public UserProfileResponse getOperatorUserProfileById(Integer userId, Integer requestingId, String requestingRole, String requestingCompanyId) {
         UserProfileResponse response = new UserProfileResponse();
         OperatingUser user = operatingUserRepository.findById(userId).orElse(null);
         if (user == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_USER_NOT_FOUND);
+            return response;
+        }
+
+        if (!requestingRole.equalsIgnoreCase(RoleConstants.ADMIN) && !user.getId().equals(requestingId)) {
+            response.setStatusCode(ResponseConstants.FORBIDDEN);
+            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
             return response;
         }
 
@@ -412,7 +405,27 @@ public class OperatorUserServiceImpl implements OperatorUserService {
                 .phoneNumber(user.getPhoneNumber())
                 .role(user.getRole() != null ? user.getRole().toLowerCase(Locale.ROOT) : null)
                 .companyId(user.getCompany() != null ? user.getCompany().getCompanyId() : null)
+                .permissions(resolveDisplayPermissions(user)) 
                 .build();
+    }
+
+    private List<String> resolveDisplayPermissions(OperatingUser user) {
+        // adminは全権限を保有している扱い（DB上のpermissionsに関係なくバイパス）
+        if (RoleConstants.ADMIN.equalsIgnoreCase(user.getRole())) {
+            return Arrays.stream(PermissionCode.values())
+                    .map(Enum::name)
+                    .collect(Collectors.toList());
+        }
+
+        // operatorは実際に紐づいているpermissionのみ返す
+        if (user.getPermissions() == null) {
+            return Collections.emptyList();
+        }
+
+        return user.getPermissions().stream()
+                .map(permission -> permission.getCode().name())
+                .sorted()
+                .collect(Collectors.toList());
     }
 
     private BaseResponse validationError(Map<String, String> errors) {
