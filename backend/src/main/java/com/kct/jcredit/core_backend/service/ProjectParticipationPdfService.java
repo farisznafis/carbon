@@ -4,7 +4,7 @@ import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002FinalAgreementRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
 import com.kct.jcredit.core_backend.dto.response.EnR002FileResponse;
-import com.kct.jcredit.core_backend.dto.response.PdfDownloadResponse;
+import com.kct.jcredit.core_backend.dto.response.ProjectPdfDownloadResponse;
 import com.kct.jcredit.core_backend.entity.ParticipatingProject;
 import com.kct.jcredit.core_backend.enums.EquipmentFileType;
 
@@ -18,5 +18,5 @@ import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 public interface ProjectParticipationPdfService {
     void generateAndProcess(Integer participationId);
     String generatePresignedUrl(String s3Key);
-    PdfDownloadResponse getPdfDownloadUrl(Integer participationId, String companyId); 
+    ProjectPdfDownloadResponse getPdfDownloadUrl(Integer participationId, String companyId); // ← ganti tipe return
 }
