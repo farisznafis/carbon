@@ -25,7 +25,6 @@ import java.util.List;
 @Setter
 public class EnR002EquipmentUpdateRequest {
 
-    private LocalDate equipmentOpDate;
     private BigDecimal nominalMaxOutput;
     private String pcsManufacturer;
     private String pcsModel;
