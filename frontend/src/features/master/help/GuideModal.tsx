@@ -100,7 +100,7 @@ export function GuideModal({
             </Button>
           </div>
           <div className="space-y-2 pt-3">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div className="flex items-center justify-between text-xs text-foreground">
               <span>
                 ステップ {currentIndex + 1} / {totalSteps}
               </span>
@@ -122,7 +122,7 @@ export function GuideModal({
             <h3 className="text-lg font-semibold text-foreground">
               {currentStep.title}
             </h3>
-            <p className="text-sm leading-6 text-muted-foreground">
+            <p className="text-sm leading-6 text-foreground">
               {currentStep.description}
             </p>
           </div>
@@ -134,9 +134,9 @@ export function GuideModal({
               title={currentStep.title}
             />
           ) : (
-            <div className="flex min-h-52 w-full flex-col items-center justify-center gap-2 rounded-xl bg-muted text-muted-foreground">
+            <div className="flex min-h-52 w-full flex-col items-center justify-center gap-2 rounded-xl bg-muted text-foreground">
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-muted-foreground/20">
-                <Play className="h-5 w-5 fill-current" />
+                <Play className="h-5 w-5 fill-current text-muted-foreground" />
               </span>
               <p className="text-sm">このステップには動画がありません</p>
             </div>

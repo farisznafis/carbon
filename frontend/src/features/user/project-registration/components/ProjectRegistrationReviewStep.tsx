@@ -28,7 +28,7 @@ const displaySelection = (
 function ReviewField({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-small text-muted-foreground">{label}</p>
+      <p className="text-small text-foreground">{label}</p>
       <p className="mt-1 break-words text-foreground">{value}</p>
     </div>
   );
@@ -45,7 +45,7 @@ export function ProjectRegistrationReviewStep({
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">申請内容の確認</h2>
-        <p className="mt-2 text-muted-foreground">
+        <p className="mt-2 text-foreground">
           入力内容をご確認の上、送信してください。
         </p>
       </div>

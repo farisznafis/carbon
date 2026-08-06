@@ -85,7 +85,7 @@ export function CancelRequestHistoryTable({
         sortable: true,
         sortValue: (request) => request.siteName,
         render: (request) => (
-          <span className="block truncate text-body font-bold text-slate-800">
+          <span className="block truncate text-body font-bold text-foreground">
             {request.siteName || '-'}
           </span>
         ),
@@ -149,7 +149,7 @@ export function CancelRequestHistoryTable({
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border border-border py-12 text-center text-sm text-muted-foreground">
+      <div className="rounded-lg border border-border py-12 text-center text-sm text-foreground">
         取消申請一覧を読み込んでいます...
       </div>
     );

@@ -93,7 +93,7 @@ export function SiteConfirmation({
       <FormPageContent>
         <div className="space-y-3">
           <FormPageTitle>{pageTitle}</FormPageTitle>
-          <p className="text-small text-muted-foreground">
+          <p className="text-small text-foreground">
             内容をご確認ください。
           </p>
         </div>

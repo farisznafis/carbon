@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
-import type { ReactNode } from 'react';
 import { PasswordInput } from '@/components/inputs';
 import { LoginForm } from '@/components/forms/shared/LoginForm';
 import {
@@ -18,10 +17,9 @@ import { paths } from '@/routes/paths';
 
 type UserLoginFormProps = {
   onSubmit: (values: UserLoginFormData) => Promise<void> | void;
-  header?: ReactNode;
 };
 
-export function UserLoginForm({ onSubmit, header }: UserLoginFormProps) {
+export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<UserLoginFormData>({
@@ -44,12 +42,17 @@ export function UserLoginForm({ onSubmit, header }: UserLoginFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} noValidate>
+      <form
+        className="absolute inset-0 h-full w-full min-w-0 max-w-full overflow-hidden"
+        onSubmit={form.handleSubmit(handleSubmit)}
+        noValidate
+      >
         <LoginForm
+          title="ログイン"
+          description="GXデータの登録・管理を続けるにはログインしてください。"
           submitLabel="ログイン"
           error={error}
           isSubmitting={form.formState.isSubmitting}
-          header={header}
           // footer={
           //   <a href="/contact" className="text-sm font-medium text-foreground hover:text-primary">
           //     ログインに関するお問い合わせはこちら
@@ -60,10 +63,17 @@ export function UserLoginForm({ onSubmit, header }: UserLoginFormProps) {
             control={form.control}
             name="companyId"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>社員ID</FormLabel>
+              <FormItem className="[@media(max-height:480px)]:space-y-0.5">
+                <FormLabel className="[@media(max-height:480px)]:text-sm [@media(max-height:480px)]:leading-5">
+                  社員ID
+                </FormLabel>
                 <FormControl>
-                  <Input type="text" placeholder="例）1234567890111" {...field} />
+                  <Input
+                    type="text"
+                    placeholder="例）1234567890111"
+                    className="[@media(max-height:480px)]:h-8 [@media(max-height:480px)]:py-1"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -74,10 +84,17 @@ export function UserLoginForm({ onSubmit, header }: UserLoginFormProps) {
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>メールアドレスまたはユーザー名</FormLabel>
+              <FormItem className="[@media(max-height:480px)]:space-y-0.5">
+                <FormLabel className="[@media(max-height:480px)]:text-sm [@media(max-height:480px)]:leading-5">
+                  メールアドレスまたはユーザー名
+                </FormLabel>
                 <FormControl>
-                  <Input type="text" placeholder="例）user@example.com または name_company" {...field} />
+                  <Input
+                    type="text"
+                    placeholder="例）user@example.com または name_company"
+                    className="[@media(max-height:480px)]:h-8 [@media(max-height:480px)]:py-1"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -88,10 +105,16 @@ export function UserLoginForm({ onSubmit, header }: UserLoginFormProps) {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>パスワード</FormLabel>
+              <FormItem className="[@media(max-height:480px)]:space-y-0.5">
+                <FormLabel className="[@media(max-height:480px)]:text-sm [@media(max-height:480px)]:leading-5">
+                  パスワード
+                </FormLabel>
                 <FormControl>
-                  <PasswordInput placeholder="パスワードを入力" {...field} />
+                  <PasswordInput
+                    placeholder="パスワードを入力"
+                    className="[@media(max-height:480px)]:h-8 [@media(max-height:480px)]:py-1"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -125,7 +125,7 @@ export default function ContributionTimeline({
           <h3 className='leading-8 text-foreground'>
             貢献のグラフ
           </h3>
-          <p className='text-subtle text-muted-foreground'>
+          <p className='text-subtle text-foreground'>
             日次のコミット数とモデル実行回数を記録しています。
           </p>
         </div>
@@ -269,7 +269,7 @@ export default function ContributionTimeline({
               </span>
 
               <div className='text-subtle mt-2 space-y-1'>
-                <div className='flex justify-between text-muted-foreground'>
+                <div className='flex justify-between text-foreground'>
                   <span>貢献数</span>
                   <div className='flex items-center gap-1'>
                     <span className='font-mono font-bold text-primary'>

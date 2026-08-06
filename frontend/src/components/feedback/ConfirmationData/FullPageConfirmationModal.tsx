@@ -1,6 +1,7 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 import { Button } from "@/components/ui/button";
+import { ChangedConfirmationValue } from '@/components/feedback/Confirmation/ChangedConfirmationValue';
 
 type FullPageConfirmationModalProps = {
   open: boolean;
@@ -33,7 +34,7 @@ export function FullPageConfirmationModal({
             </Dialog.Title>
 
             {description && (
-              <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+              <p className="mt-2 text-sm text-foreground">{description}</p>
             )}
 
             <dl className="mt-6 divide-y divide-border">
@@ -50,16 +51,19 @@ export function FullPageConfirmationModal({
                     key={key}
                     className="py-3 sm:grid sm:grid-cols-3 sm:gap-4"
                   >
-                    <dt className="text-sm font-medium text-muted-foreground">
+                    <dt className="text-sm font-medium text-foreground">
                       {key}
                     </dt>
                     <dd
-                      className={
-                        "mt-1 text-sm text-foreground sm:mt-0 sm:col-span-2" +
-                        (isChanged ? " underline" : "")
-                      }
+                      className='mt-1 text-sm text-foreground sm:col-span-2 sm:mt-0'
                     >
-                      {value}
+                      {isChanged ? (
+                        <ChangedConfirmationValue>
+                          {value}
+                        </ChangedConfirmationValue>
+                      ) : (
+                        value
+                      )}
                     </dd>
                   </div>
                 );

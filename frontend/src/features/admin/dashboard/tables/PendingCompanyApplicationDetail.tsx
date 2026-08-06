@@ -45,7 +45,7 @@ function DetailFieldItem({
 }: DetailField) {
   return (
     <div className={cn('min-w-0 space-y-1', className)}>
-      <p className="text-small font-bold text-muted-foreground">{label}</p>
+      <p className="text-small font-bold text-foreground">{label}</p>
       <p
         className={cn(
           'break-words text-body font-bold text-foreground',

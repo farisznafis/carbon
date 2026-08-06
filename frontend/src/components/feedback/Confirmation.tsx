@@ -42,7 +42,7 @@
  * @example
  * // Modal Confirmation
  * const [isModalOpen, setModalOpen] = useState(false);
- * 
+ *
  * <Confirmation
  *   asModal
  *   isOpen={isModalOpen}
@@ -57,7 +57,7 @@
  *   mode="profile"
  *   onConfirm={handleConfirm}
  * />
- * 
+ *
  * <Button onClick={() => setModalOpen(true)}>確認する</Button>
  */
 
@@ -66,6 +66,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, X } from 'lucide-react';
 import  styles from "./Confirmation.module.css"
+import { ChangedConfirmationValue } from './Confirmation/ChangedConfirmationValue';
 
 interface ConfirmationField {
   key: string;
@@ -138,13 +139,21 @@ export const Confirmation: React.FC<ConfirmationProps> = ({
 
             return (
               <div key={field.key}>
-                <div className="text-sm font-medium text-muted-foreground mb-1">
+                <div className="text-sm font-medium text-foreground mb-1">
                   {field.label}
                 </div>
-                <div className={isChanged ? "font-bold underline" : "font-bold"}>
-                  {field.formatValue
-                    ? field.formatValue(data[field.key], data)
-                    : data[field.key]}
+                <div className={isChanged ? undefined : 'font-bold'}>
+                  {isChanged ? (
+                    <ChangedConfirmationValue>
+                      {field.formatValue
+                        ? field.formatValue(data[field.key], data)
+                        : data[field.key]}
+                    </ChangedConfirmationValue>
+                  ) : field.formatValue ? (
+                    field.formatValue(data[field.key], data)
+                  ) : (
+                    data[field.key]
+                  )}
                 </div>
               </div>
             );

@@ -58,7 +58,7 @@ export function DashboardEmissionReductionProgress({
     <div className='min-h-[280px] rounded-2xl p-5 xl:order-1 border-border border'>
       {isLoading ? (
         <div
-          className='flex min-h-[240px] items-center justify-center text-muted-foreground'
+          className='flex min-h-[240px] items-center justify-center text-foreground'
           role='status'
         >
           読み込み中...

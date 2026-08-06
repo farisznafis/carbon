@@ -336,7 +336,7 @@ export default function EquipmentFormPage() {
 
       <FormPageContent>
         <FormPageTitle>{pageTitle}</FormPageTitle>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-foreground">
           設備種別：{equipmentTypeLabel}
         </p>
 
