@@ -64,13 +64,13 @@ export function CompanySuspensionResolveDialog({
         <div className="space-y-5">
           <div className="space-y-4 rounded-xl border border-border bg-card p-5">
             <div className="space-y-1">
-              <p className="text-small text-muted-foreground">企業名</p>
+              <p className="text-small text-foreground">企業名</p>
               <p className="break-all text-small font-bold text-foreground">
                 {item?.nameJA ?? '-'}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-small text-muted-foreground">メールアドレス</p>
+              <p className="text-small text-foreground">メールアドレス</p>
               <p className="break-all text-small font-bold text-foreground">
                 {item?.email ?? '-'}
               </p>
@@ -80,11 +80,11 @@ export function CompanySuspensionResolveDialog({
           <div className="space-y-3">
             <p className="text-small font-bold">有効な停止理由</p>
             {isLoading ? (
-              <p className="rounded-lg border border-dashed border-border px-4 py-5 text-small text-muted-foreground">
+              <p className="rounded-lg border border-dashed border-border px-4 py-5 text-small text-foreground">
                 読み込み中...
               </p>
             ) : !selectedSuspension ? (
-              <p className="rounded-lg border border-dashed border-border px-4 py-5 text-small text-muted-foreground">
+              <p className="rounded-lg border border-dashed border-border px-4 py-5 text-small text-foreground">
                 有効な停止理由はありません。
               </p>
             ) : (
@@ -92,7 +92,7 @@ export function CompanySuspensionResolveDialog({
                 <p className="text-small font-bold text-foreground">
                   {reasonCodeLabels[selectedSuspension.reasonCode]}
                 </p>
-                <p className="mt-1 text-small text-muted-foreground">
+                <p className="mt-1 text-small text-foreground">
                   {selectedSuspension.reasonDetail || '-'}
                 </p>
               </div>
@@ -105,7 +105,7 @@ export function CompanySuspensionResolveDialog({
           </div>
 
           {selectedSuspension?.reasonCode === 'BILLING' && (
-            <div className="rounded-lg bg-muted/40 px-4 py-3 text-small text-muted-foreground">
+            <div className="rounded-lg bg-muted/40 px-4 py-3 text-small text-foreground">
               支払い関連のアカウント有効化では paymentMethod として CREDIT_CARD を送信します。
             </div>
           )}

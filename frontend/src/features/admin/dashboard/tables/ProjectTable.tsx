@@ -1,5 +1,6 @@
 import type { ProjectStatus } from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
+import { useState } from 'react';
 import {
   DataGridTable,
   type DataGridTableColumn,
@@ -12,13 +13,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ProjectCompletionDialog } from './ProjectCompletionDialog';
 
 type ProjectTableProps = {
   projects: Project[];
   onEdit?: (project: Project) => void;
   onUpdate?: (project: Project) => void;
   onRowClick?: (project: Project) => void;
-  onStatusChange?: (project: Project, status: ProjectStatus) => void;
+  onStatusChange?: (
+    project: Project,
+    status: ProjectStatus,
+  ) => void | Promise<void>;
   updatingProjectStatusId?: string | null;
 };
 
@@ -129,6 +134,11 @@ function getStatusOptions(currentStatus: string): string[] {
   return [currentStatus, ...projectStatusOptions];
 }
 
+function isTerminalProjectStatus(status: string) {
+  const normalizedStatus = status.trim().toUpperCase();
+  return ['終了', 'ENDED', 'INACTIVE'].includes(normalizedStatus);
+}
+
 function displayValue(value: unknown) {
   if (value === null || value === undefined || value === '') return '-';
   return String(value);
@@ -142,6 +152,25 @@ export function ProjectTable({
   onStatusChange,
   updatingProjectStatusId,
 }: ProjectTableProps) {
+  const [completionProject, setCompletionProject] = useState<Project | null>(
+    null,
+  );
+
+  const handleStatusChange = (project: Project, status: ProjectStatus) => {
+    if (status === '終了') {
+      setCompletionProject(project);
+      return;
+    }
+
+    void onStatusChange?.(project, status);
+  };
+
+  const confirmCompletion = async () => {
+    if (!completionProject || !onStatusChange) return;
+    await onStatusChange(completionProject, '終了');
+    setCompletionProject(null);
+  };
+
   const columns: DataGridTableColumn<Project>[] = [
     {
       id: 'projectName',
@@ -149,7 +178,7 @@ export function ProjectTable({
       sortable: true,
       sortValue: (project) => project.projectName,
       render: (project) => (
-        <span className="block truncate text-body font-bold text-slate-800">
+        <span className="block truncate text-body font-bold text-foreground">
           {displayValue(project.projectName)}
         </span>
       ),
@@ -203,9 +232,12 @@ export function ProjectTable({
           >
             <Select
               value={project.projectStatus}
-              disabled={updatingProjectStatusId === project.id}
+              disabled={
+                updatingProjectStatusId === project.id ||
+                isTerminalProjectStatus(project.projectStatus)
+              }
               onValueChange={(value) =>
-                onStatusChange?.(project, value as ProjectStatus)
+                handleStatusChange(project, value as ProjectStatus)
               }
             >
               <SelectTrigger
@@ -260,14 +292,27 @@ export function ProjectTable({
   ];
 
   return (
-    <DataGridTable
-      rows={projects}
-      columns={columns}
-      gridTemplateColumns={projectTableGridColumns}
-      minWidth={980}
-      getRowKey={(project) => project.id}
-      emptyMessage="まだプロジェクトが登録されていません。"
-      onRowClick={onRowClick}
-    />
+    <>
+      <DataGridTable
+        rows={projects}
+        columns={columns}
+        gridTemplateColumns={projectTableGridColumns}
+        minWidth={980}
+        getRowKey={(project) => project.id}
+        emptyMessage="まだプロジェクトが登録されていません。"
+        onRowClick={onRowClick}
+      />
+      <ProjectCompletionDialog
+        project={completionProject}
+        isSubmitting={
+          Boolean(completionProject) &&
+          updatingProjectStatusId === completionProject?.id
+        }
+        onOpenChange={(open) => {
+          if (!open) setCompletionProject(null);
+        }}
+        onConfirm={() => void confirmCompletion()}
+      />
+    </>
   );
 }

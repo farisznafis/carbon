@@ -67,7 +67,7 @@ VALUES
     TRUE,
     '東京都内の事業所に太陽光発電設備を導入し、系統電力の使用量を削減するプロジェクト。',
     1,
-    'prj00000000000000000000000000001'
+    'prj001'
 ),
 (
     2, TRUE,
@@ -103,7 +103,7 @@ VALUES
     FALSE,
     '工場および物流施設に太陽光発電設備を導入し、発電電力を施設内で自家消費するプロジェクト。',
     1,
-    'prj00000000000000000000000000002'
+    'prj002'
 );
 
 -- =========================================================
@@ -154,14 +154,13 @@ INSERT INTO en_r002_equipment_file (
 )
 OVERRIDING SYSTEM VALUE
 VALUES
-(1, TRUE, '2026-07-07 12:00:00', '2026-07-07 12:00:00', 'ito.akiko', 'ito.akiko', 1, 'EQUIPMENT_SPECIFICATION', 'file-eq-000001', 's3://gxcarbon/equipment/SF-TKY-001/specification.pdf'),
-(2, TRUE, '2026-07-07 12:05:00', '2026-07-07 12:05:00', 'ito.akiko', 'ito.akiko', 1, 'INSTALLATION_PHOTO', 'file-eq-000002', 's3://gxcarbon/equipment/SF-TKY-001/installation-photo.jpg'),
-(3, TRUE, '2026-07-07 12:10:00', '2026-07-07 12:10:00', 'ito.jun', 'ito.jun', 2, 'EQUIPMENT_SPECIFICATION', 'file-eq-000003', 's3://gxcarbon/equipment/SF-TKY-002/specification.pdf'),
-(4, TRUE, '2026-07-07 12:15:00', '2026-07-07 12:15:00', 'ito.akiko', 'ito.akiko', 3, 'EQUIPMENT_SPECIFICATION', 'file-eq-000004', 's3://gxcarbon/equipment/SF-TKY-003/specification.pdf'),
-(5, TRUE, '2026-07-07 12:20:00', '2026-07-07 12:20:00', 'ito.kenichi', 'ito.kenichi', 4, 'EQUIPMENT_SPECIFICATION', 'file-eq-000005', 's3://gxcarbon/equipment/SF-TKY-004/specification.pdf'),
-(6, TRUE, '2026-07-08 12:00:00', '2026-07-08 12:00:00', 'kumagai.nao', 'kumagai.nao', 5, 'EQUIPMENT_SPECIFICATION', 'file-eq-000006', 's3://gxcarbon/equipment/KP-AIC-001/specification.pdf'),
-(7, TRUE, '2026-07-08 12:05:00', '2026-07-08 12:05:00', 'kumagai.takuya', 'kumagai.takuya', 6, 'EQUIPMENT_SPECIFICATION', 'file-eq-000007', 's3://gxcarbon/equipment/KP-AIC-002/specification.pdf');
-
+(1, TRUE, '2026-07-07 12:00:00', '2026-07-07 12:00:00', 'ito.akiko', 'ito.akiko', 1, 'SOLAR_CONTRACT', '94e9ecbf-8550-4794-becc-42830602554a', 'tmp/equipments/94e9ecbf-8550-4794-becc-42830602554a/solar_contract_____1_.png'),
+(2, TRUE, '2026-07-07 12:05:00', '2026-07-07 12:05:00', 'ito.akiko', 'ito.akiko', 1, 'PANEL_CATALOG', '7e2ea3d4-47e0-42c9-9941-44869c8156f3', 'tmp/equipments/7e2ea3d4-47e0-42c9-9941-44869c8156f3/panel_catalog_____1_.png'),
+(3, TRUE, '2026-07-07 12:10:00', '2026-07-07 12:10:00', 'ito.jun', 'ito.jun', 2, 'PCS_SPEC', '0c5c2415-806f-4e4e-b12e-d41b96ef59f3', 'tmp/equipments/0c5c2415-806f-4e4e-b12e-d41b96ef59f3/pcs_spec_____1_.png'),
+(4, TRUE, '2026-07-07 12:15:00', '2026-07-07 12:15:00', 'ito.akiko', 'ito.akiko', 3, 'BATTERY_CATALOG', '241f1ac0-52f7-454a-99cf-0b650784ec14', 'tmp/equipments/241f1ac0-52f7-454a-99cf-0b650784ec14/battery_catalog_____1_.png'),
+(5, TRUE, '2026-07-07 12:20:00', '2026-07-07 12:20:00', 'ito.kenichi', 'ito.kenichi', 4, 'CONSTRUCTION_INVOICE', '3a7045e5-f146-4979-a0fe-8275394628de', 'tmp/equipments/3a7045e5-f146-4979-a0fe-8275394628de/construction_invoice_____1_.png'),
+(6, TRUE, '2026-07-08 12:00:00', '2026-07-08 12:00:00', 'kumagai.nao', 'kumagai.nao', 5, 'SUBSIDY_NOTICE', '7a41d8fd-9b53-4150-a2fd-ba58140912c4', 'tmp/equipments/7a41d8fd-9b53-4150-a2fd-ba58140912c4/subsidy_notice_____1_.png'),
+(7, TRUE, '2026-07-08 12:05:00', '2026-07-08 12:05:00', 'kumagai.takuya', 'kumagai.takuya', 6, 'ELECTRICITY_BILL', '5884f1e6-708d-427f-b683-e803969e7ac7', 'tmp/equipments/5884f1e6-708d-427f-b683-e803969e7ac7/electricity_bill_____1_.png');
 -- =========================================================
 -- 11. PARTICIPATING PROJECT
 -- Only participating_company.id = 1 is included; Project 2 has none yet.
@@ -177,7 +176,9 @@ VALUES
 (1, TRUE, '2026-07-07 13:00:00', '2026-07-07 13:00:00', 'ito.kenichi', 'ito.kenichi', 1, 1, TRUE, 1, 's3://gxcarbon/participation/P000001/user-1/membership.pdf'),
 (2, TRUE, '2026-07-07 13:05:00', '2026-07-07 13:05:00', 'ito.kenichi', 'ito.kenichi', 1, 2, TRUE, 2, 's3://gxcarbon/participation/P000001/user-2/membership.pdf'),
 (3, TRUE, '2026-07-07 13:10:00', '2026-07-07 13:10:00', 'ito.kenichi', 'ito.kenichi', 1, 3, TRUE, 3, 's3://gxcarbon/participation/P000001/user-3/membership.pdf'),
-(4, TRUE, '2026-07-07 13:15:00', '2026-07-07 13:15:00', 'ito.kenichi', 'ito.kenichi', 1, 4, TRUE, 4, 's3://gxcarbon/participation/P000001/user-4/membership.pdf');
+(4, TRUE, '2026-07-07 13:15:00', '2026-07-07 13:15:00', 'ito.kenichi', 'ito.kenichi', 1, 4, TRUE, 4, 's3://gxcarbon/participation/P000001/user-4/membership.pdf'),
+(5, TRUE, '2026-07-08 13:00:00', '2026-07-08 13:00:00', 'kumagai.takuya', 'kumagai.takuya', 2, 8, FALSE, 5, NULL),
+(6, TRUE, '2026-07-08 13:05:00', '2026-07-08 13:05:00', 'kumagai.nao', 'kumagai.nao', 2, 9, FALSE, 6, NULL);
 
 -- =========================================================
 -- 12. PROJECT FILES

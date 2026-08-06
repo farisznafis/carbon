@@ -14,7 +14,7 @@ function FieldRow({
 }) {
   return (
     <div className={className}>
-      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="text-xs text-foreground">{label}</div>
       <div className="break-words font-medium">
         {value === null || value === undefined || value === '' ? '-' : String(value)}
       </div>
@@ -124,7 +124,7 @@ export function PendingCompanyDetailDialog({
           <DetailSection title="申請内容">
             <div className="space-y-4">
               <div>
-                <div className="mb-2 text-xs text-muted-foreground">参加したいプロジェクト</div>
+                <div className="mb-2 text-xs text-foreground">参加したいプロジェクト</div>
                 <ListValue items={item?.requestedMethodologies ?? []} />
               </div>
               <FieldRow
@@ -166,7 +166,7 @@ export function PendingCompanyDetailDialog({
 
                         {methodology.equipmentItems && methodology.equipmentItems.length > 0 && (
                           <div className="border-t pt-3">
-                            <p className="mb-3 text-xs font-bold text-slate-700">設備情報</p>
+                            <p className="mb-3 text-xs font-bold text-foreground">設備情報</p>
                             <div className="space-y-3">
                               {methodology.equipmentItems.map((equipment, eIdx) => (
                                 <div key={eIdx} className="rounded border border-slate-200 bg-white p-3">

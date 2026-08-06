@@ -92,7 +92,7 @@ const FileInput = React.forwardRef<HTMLInputElement, FileInputProps>(
             )}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-xl font-medium leading-7 text-muted-foreground">
+            <span className="block text-xl font-medium leading-7 text-foreground">
               {value ? value.name : label}
               {required && <span className="ml-1 text-destructive">*</span>}
             </span>
@@ -114,7 +114,7 @@ const FileInput = React.forwardRef<HTMLInputElement, FileInputProps>(
         {(error || helperText || accept) && (
           <p
             className={cn(
-              "text-sm leading-6 text-muted-foreground",
+              "text-sm leading-6 text-foreground",
               error && "text-destructive",
             )}
           >

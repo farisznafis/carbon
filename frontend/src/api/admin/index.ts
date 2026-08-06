@@ -20,6 +20,14 @@ export {
   getProjectPlanAutofillDefaults,
   updateAdminProject,
 } from './projects';
+export {
+  approveParticipationReview,
+  getMyParticipationReviews,
+  getParticipationReviewDetail,
+  getPendingParticipationReviews,
+  rejectParticipationReview,
+  participationReviewChecklistFields,
+} from './participationReviews';
 export type {
   AdminMutationResponse,
   AdminCompanyAccountActionTarget,
@@ -57,3 +65,15 @@ export type {
   ProjectPlanApplicationResponse,
   UpdateAdminProjectPayload,
 } from './types';
+export type {
+  ApproveParticipationReviewPayload,
+  ParticipationConfirmationItems,
+  ParticipationReviewChecklist,
+  ParticipationReviewChecklistField,
+  ParticipationReviewDetail,
+  ParticipationReviewEquipment,
+  ParticipationReviewFile,
+  ParticipationReviewState,
+  ParticipationSustainabilityCommitment,
+  RejectParticipationReviewPayload,
+} from './participationReviews';

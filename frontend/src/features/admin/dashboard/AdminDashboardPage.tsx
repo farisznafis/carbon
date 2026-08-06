@@ -175,7 +175,7 @@ function AdminDashboardSection({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2">
           <h2 className="text-foreground">{title}</h2>
-          <p className="text-subtle text-muted-foreground">{description}</p>
+          <p className="text-subtle text-foreground">{description}</p>
         </div>
         {action}
       </div>
@@ -595,7 +595,7 @@ const AdminDashboard = () => {
 
   if (projectsQuery.isLoading) {
     return (
-      <div className="text-small flex min-h-screen items-center justify-center bg-background px-6 text-center text-muted-foreground">
+      <div className="text-small flex min-h-screen items-center justify-center bg-background px-6 text-center text-foreground">
         読み込み中...
       </div>
     );
@@ -621,7 +621,7 @@ const AdminDashboard = () => {
             onReject={openRejectCompany}
           />
         ) : (
-          <div className="flex min-h-screen items-center justify-center bg-background px-6 text-small text-muted-foreground">
+          <div className="flex min-h-screen items-center justify-center bg-background px-6 text-small text-foreground">
             {companyListLoading
               ? '読み込み中...'
               : '申請情報を取得できませんでした。'}
@@ -864,7 +864,7 @@ const AdminDashboard = () => {
                       <p className="text-sm font-medium text-foreground">
                         モニタリングデータを表示できませんでした。
                       </p>
-                      <p className="text-subtle text-muted-foreground">
+                      <p className="text-subtle text-foreground">
                         もう一度お試しください。
                       </p>
                     </div>

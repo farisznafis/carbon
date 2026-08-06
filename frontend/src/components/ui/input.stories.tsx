@@ -22,7 +22,7 @@ export const States: Story = {
       <div className="space-y-2">
         <label className="text-small block text-foreground">Your Message Title</label>
         <Input placeholder="Email" />
-        <p className="text-sm leading-6 text-muted-foreground">
+        <p className="text-sm leading-6 text-foreground">
           Enter your email address
         </p>
       </div>
@@ -56,7 +56,7 @@ export const TextareaStates: Story = {
     <div className="w-[420px] max-w-[calc(100vw-2rem)] space-y-2">
       <label className="text-small block text-foreground">Description</label>
       <Textarea placeholder="Enter details" />
-      <p className="text-sm leading-6 text-muted-foreground">
+      <p className="text-sm leading-6 text-foreground">
         補足情報がある場合は入力してください
       </p>
     </div>
