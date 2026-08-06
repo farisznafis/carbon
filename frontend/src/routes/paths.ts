@@ -5,6 +5,7 @@ export const paths = {
   forgotPassword: '/forgot-password',
   resetPassword: '/reset-password',
   signup: '/signup',
+  signupRevision: '/signup/revision',
 
   masterDashboard: '/master/dashboard',
   masterSiteRegister: '/master/site-register',

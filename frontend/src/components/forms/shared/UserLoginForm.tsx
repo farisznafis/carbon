@@ -64,7 +64,7 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
             name="companyId"
             render={({ field }) => (
               <FormItem className="[@media(max-height:700px)]:space-y-1">
-                <FormLabel className="[@media(max-height:700px)]:text-sm [@media(max-height:700px)]:leading-5">
+                <FormLabel className="[@media(max-heigght:700px)]:text-sm [@media(max-height:700px)]:leading-5">
                   社員ID
                 </FormLabel>
                 <FormControl>

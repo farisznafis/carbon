@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useSignup, type SignupData } from '@/contexts/SignupContext';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorToastContent, parseError } from '@/lib/errors';
+import { useState } from 'react';
 import { participationMethodologies } from './signupStep2Model';
 
 const methodologyLabels = Object.fromEntries(
@@ -67,14 +68,40 @@ function DetailRow({
   );
 }
 
-export const SignupStep3 = () => {
+type SignupStep3Props = {
+  data?: SignupData;
+  onBack?: () => void;
+  onConfirm?: () => Promise<void> | void;
+  title?: string;
+  description?: string;
+  confirmLabel?: string;
+};
+
+export const SignupStep3 = ({
+  data,
+  onBack,
+  onConfirm,
+  title = '入力内容の確認',
+  description = '登録を完了する前に、入力内容を確認してください。',
+  confirmLabel = '確認して登録',
+}: SignupStep3Props = {}) => {
   const { signupData, setCurrentStep } = useSignup();
   const { toast } = useToast();
-  const selectedMethodologies = getSelectedMethodologies(signupData);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const reviewData = data ?? signupData;
+  const selectedMethodologies = getSelectedMethodologies(reviewData);
 
   const handleConfirm = async () => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
     try {
-      const res = await signUp(buildSignUpPayload(signupData));
+      if (onConfirm) {
+        await onConfirm();
+        return;
+      }
+
+      const res = await signUp(buildSignUpPayload(reviewData));
 
       setCurrentStep(4);
       toast?.({
@@ -102,6 +129,8 @@ export const SignupStep3 = () => {
             : errorToast.description,
         variant: 'destructive',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -109,42 +138,40 @@ export const SignupStep3 = () => {
     <FormCard>
       <FormSectionStack>
         <div className="text-center">
-          <h3 className="mb-2 text-2xl font-semibold">入力内容の確認</h3>
-          <p className="text-foreground">
-            登録を完了する前に、入力内容を確認してください。
-          </p>
+          <h3 className="mb-2 text-2xl font-semibold">{title}</h3>
+          <p className="text-foreground">{description}</p>
         </div>
 
         <FormSection number={1} title="法人情報">
           <FormGrid>
-            <DetailRow label="法人番号" value={signupData.corporateNumber} />
-            <DetailRow label="法人名" value={signupData.companyName} />
-            <DetailRow label="法人名カナ" value={signupData.companyNameKana} />
-            <DetailRow label="会社名（英語）" value={signupData.companyNameEnglish} />
-            <DetailRow label="法人電話番号" value={signupData.corporatePhoneNumber} />
+            <DetailRow label="法人番号" value={reviewData.corporateNumber} />
+            <DetailRow label="法人名" value={reviewData.companyName} />
+            <DetailRow label="法人名カナ" value={reviewData.companyNameKana} />
+            <DetailRow label="会社名（英語）" value={reviewData.companyNameEnglish} />
+            <DetailRow label="法人電話番号" value={reviewData.corporatePhoneNumber} />
           </FormGrid>
         </FormSection>
 
         <FormSection number={2} title="所在地">
           <FormGrid>
-            <DetailRow label="郵便番号" value={signupData.postalCode} />
-            <DetailRow label="都道府県" value={signupData.prefecture} />
-            <DetailRow label="市区町村" value={signupData.municipality} />
-            <DetailRow label="番地" value={signupData.blocknum} />
-            <DetailRow label="建物名" value={signupData.buildingName} />
+            <DetailRow label="郵便番号" value={reviewData.postalCode} />
+            <DetailRow label="都道府県" value={reviewData.prefecture} />
+            <DetailRow label="市区町村" value={reviewData.municipality} />
+            <DetailRow label="番地" value={reviewData.blocknum} />
+            <DetailRow label="建物名" value={reviewData.buildingName} />
           </FormGrid>
         </FormSection>
 
         <FormSection number={3} title="責任者情報">
           <FormGrid>
-            <DetailRow label="姓" value={signupData.lastName} />
-            <DetailRow label="名" value={signupData.firstName} />
-            <DetailRow label="姓（カナ）" value={signupData.lastNameKana} />
-            <DetailRow label="名（カナ）" value={signupData.firstNameKana} />
-            <DetailRow label="役職" value={signupData.position} />
-            <DetailRow label="電話番号" value={signupData.phoneNumber} />
-            <DetailRow label="FAX番号" value={signupData.faxNumber} />
-            <DetailRow label="メールアドレス" value={signupData.email} />
+            <DetailRow label="姓" value={reviewData.lastName} />
+            <DetailRow label="名" value={reviewData.firstName} />
+            <DetailRow label="姓（カナ）" value={reviewData.lastNameKana} />
+            <DetailRow label="名（カナ）" value={reviewData.firstNameKana} />
+            <DetailRow label="役職" value={reviewData.position} />
+            <DetailRow label="電話番号" value={reviewData.phoneNumber} />
+            <DetailRow label="FAX番号" value={reviewData.faxNumber} />
+            <DetailRow label="メールアドレス" value={reviewData.email} />
           </FormGrid>
         </FormSection>
 
@@ -172,17 +199,30 @@ export const SignupStep3 = () => {
 
             <DetailRow
               label="現在の活動情報"
-              value={signupData.activityInformation}
+              value={reviewData.activityInformation}
             />
           </div>
         </FormSection>
 
         <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Button type="button" variant="outline" size="sm" onClick={() => setCurrentStep(2)} className="w-full">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onBack ?? (() => setCurrentStep(2))}
+            disabled={isSubmitting}
+            className="w-full"
+          >
             戻る
           </Button>
-          <Button type="button" size="sm" onClick={handleConfirm} className="w-full">
-            確認して登録
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleConfirm}
+            disabled={isSubmitting}
+            className="w-full"
+          >
+            {isSubmitting ? '送信中...' : confirmLabel}
           </Button>
         </FormActions>
       </FormSectionStack>

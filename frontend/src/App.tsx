@@ -26,6 +26,9 @@ const AdminLogin = lazy(() => import("./features/admin/auth/AdminLoginPage"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Signup = lazy(() => import("./pages/Signup"));
+const SignupRevision = lazy(() =>
+  import("./features/public/signup-revision/SignupRevisionPage"),
+);
 const ProjectDetail = lazy(() => import("./features/user/project-detail/ProjectDetailPage"));
 const MonitoringRegister = lazy(() => import("./features/user/monitoring/MonitoringRegisterPage"));
 const SiteRegister = lazy(() => import("./features/master/pages/SiteRegisterPage"));
@@ -171,6 +174,7 @@ const App = () => {
           <Route path={paths.forgotPassword} element={<ForgotPassword />} />
           <Route path={paths.resetPassword} element={<ResetPassword />} />
           <Route path={paths.signup} element={<Signup />} />
+          <Route path={paths.signupRevision} element={<SignupRevision />} />
           <Route element={<ProtectedRoute />}>
             <Route path={paths.masterDashboard} element={<MasterDashboard />} />
             <Route path={paths.masterSiteRegister} element={<SiteRegister />} />
