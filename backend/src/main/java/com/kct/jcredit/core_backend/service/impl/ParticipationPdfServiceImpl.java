@@ -11,6 +11,7 @@ import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
+import com.kct.jcredit.core_backend.dto.response.PdfDownloadResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectJoinResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
@@ -125,6 +126,9 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
 
     private static final String TEMPLATE_PATH = "/templates/participate_solar.docx";
     private static final DateTimeFormatter JP_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy年MM月dd日");
+
+    @Value("${app.pdf.japanese-font-path:C:/Windows/Fonts/msgothic.ttc,0}")
+    private String japaneseFontPath;
 
     @Override
     @Transactional
@@ -429,11 +433,39 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
     }
 
     private byte[] convertToPdf(XWPFDocument document) throws IOException {
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            PdfOptions options = PdfOptions.create();
-            PdfConverter.getInstance().convert(document, out, options);
-            return out.toByteArray();
-        }
+    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+        PdfOptions options = PdfOptions.create()
+                .fontEncoding(com.lowagie.text.pdf.BaseFont.IDENTITY_H) // wajib untuk Unicode CJK
+                .fontProvider(japaneseFontProvider());
+
+        PdfConverter.getInstance().convert(document, out, options);
+        return out.toByteArray();
+    }
+}
+
+    private fr.opensagres.xdocreport.itext.extension.font.IFontProvider japaneseFontProvider() {
+        return new fr.opensagres.xdocreport.itext.extension.font.IFontProvider() {
+            @Override
+            public com.lowagie.text.Font getFont(String familyName, String encoding,
+                                                float size, int style, java.awt.Color color) {
+                try {
+                    com.lowagie.text.pdf.BaseFont baseFont = com.lowagie.text.pdf.BaseFont.createFont(
+                            japaneseFontPath,                              
+                            com.lowagie.text.pdf.BaseFont.IDENTITY_H,
+                            com.lowagie.text.pdf.BaseFont.EMBEDDED
+                    );
+                    com.lowagie.text.Font font = new com.lowagie.text.Font(baseFont, size, style, color);
+                    if (familyName != null) {
+                        font.setFamily(familyName);
+                    }
+                    return font;
+                } catch (Exception e) {
+                    log.error("Font loading failed for path={}, error={}", japaneseFontPath, e.getMessage());
+                    return null;
+                }
+            }
+        };
     }
 
     private String uploadDraftToS3(byte[] pdfBytes, Integer projectId, Integer siteId, Integer participationId) {
