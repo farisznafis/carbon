@@ -264,7 +264,7 @@ CREATE TABLE permission (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(100),
-    updated_by VARCHAR(100),
+    updated_by VARCHAR(100)
 );
 
 CREATE TABLE operating_user_permission (
@@ -283,32 +283,31 @@ CREATE TABLE operating_user_permission (
 );
 
 INSERT INTO permission
-    (code, display_name, category)
+    (code, display_name, category, is_active)
 VALUES
-    ('PROJECT_CREATE', 'プロジェクト作成', 'PROJECT'),
-    ('PROJECT_READ', 'プロジェクト参照', 'PROJECT'),
-    ('PROJECT_UPDATE', 'プロジェクト更新', 'PROJECT'),
-    ('PROJECT_STATUS_UPDATE', 'プロジェクトステータス変更', 'PROJECT'),
-    ('PROJECT_APPLICATION_OUTPUT', '申請書出力', 'PROJECT'),
+    ('PROJECT_CREATE', 'プロジェクト作成', 'PROJECT', TRUE),
+    ('PROJECT_READ', 'プロジェクト参照', 'PROJECT', TRUE),
+    ('PROJECT_UPDATE', 'プロジェクト更新', 'PROJECT', TRUE),
+    ('PROJECT_STATUS_UPDATE', 'プロジェクトステータス変更', 'PROJECT', TRUE),
+    ('PROJECT_APPLICATION_OUTPUT', '申請書出力', 'PROJECT', TRUE),
 
-    ('PARTICIPATING_COMPANY_READ', '参加企業参照', 'PARTICIPATING_COMPANY'),
-    ('PARTICIPATING_COMPANY_APPLICATION_REVIEW', '参加申請処理', 'PARTICIPATING_COMPANY'),
-    ('PARTICIPATING_COMPANY_SUSPEND', '参加企業一時停止', 'PARTICIPATING_COMPANY'),
-    ('MASTER_USER_PASSWORD_RESET', 'マスターユーザーパスワードリセット', 'PARTICIPATING_COMPANY'),
+    ('PARTICIPATING_COMPANY_READ', '参加企業参照', 'PARTICIPATING_COMPANY', TRUE),
+    ('PARTICIPATING_COMPANY_APPLICATION_REVIEW', '参加申請処理', 'PARTICIPATING_COMPANY', TRUE),
+    ('PARTICIPATING_COMPANY_SUSPEND', '参加企業一時停止', 'PARTICIPATING_COMPANY', TRUE),
+    ('MASTER_USER_PASSWORD_RESET', 'マスターユーザーパスワードリセット', 'PARTICIPATING_COMPANY', TRUE),
 
-    ('MONITORING_READ', 'モニタリングデータ参照', 'MONITORING'),
-    ('MONITORING_DELETE', 'モニタリングデータ削除', 'MONITORING'),
-    ('MONITORING_CANCEL', 'モニタリングデータ取消', 'MONITORING'),
-    ('MONITORING_BATCH_HISTORY_READ', 'バッチ履歴参照', 'MONITORING'),
-    ('MONITORING_BATCH_ERROR_READ', 'バッチエラー参照', 'MONITORING'),
+    ('MONITORING_READ', 'モニタリングデータ参照', 'MONITORING', TRUE),
+    ('MONITORING_DELETE', 'モニタリングデータ削除', 'MONITORING', TRUE),
+    ('MONITORING_CANCEL', 'モニタリングデータ取消', 'MONITORING', TRUE),
+    ('MONITORING_BATCH_HISTORY_READ', 'バッチ履歴参照', 'MONITORING', TRUE),
+    ('MONITORING_BATCH_ERROR_READ', 'バッチエラー参照', 'MONITORING', TRUE),
 
-    ('OPERATOR_USER_READ', '運用者一覧参照', 'USER_MANAGEMENT'),
-    ('OPERATOR_USER_CREATE', '運用者作成', 'USER_MANAGEMENT'),
-    ('OPERATOR_USER_UPDATE', '運用者更新', 'USER_MANAGEMENT'),
+    ('OPERATOR_USER_READ', '運用者一覧参照', 'USER_MANAGEMENT', TRUE),
+    ('OPERATOR_USER_CREATE', '運用者作成', 'USER_MANAGEMENT', TRUE),
+    ('OPERATOR_USER_UPDATE', '運用者更新', 'USER_MANAGEMENT', TRUE),
 
-
-    ('METHODOLOGY_READ', '方法論参照', 'METHODOLOGY'),
-    ('APPLICATION_FORM_READ', '申請書様式参照', 'APPLICATION_FORM');
+    ('METHODOLOGY_READ', '方法論参照', 'METHODOLOGY', TRUE),
+    ('APPLICATION_FORM_READ', '申請書様式参照', 'APPLICATION_FORM', TRUE);
 
 -- Site
 CREATE TABLE site (
