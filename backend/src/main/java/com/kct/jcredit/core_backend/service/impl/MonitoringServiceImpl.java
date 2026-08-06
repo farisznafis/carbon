@@ -168,6 +168,16 @@ public class MonitoringServiceImpl implements MonitoringService {
                 return response;
             }
 
+            // 6.5) Validate battery fields against equipment.hasBattery
+            // 設備のhasBatteryに基づきバッテリー関連項目を検証する
+            Map<String, String> batteryEligibilityErrors = collectBatteryEligibilityErrors(request, equipment);
+            if (!batteryEligibilityErrors.isEmpty()) {
+                response.setStatusCode(ResponseConstants.VALIDATION_ERROR);
+                response.setMessage(ResponseConstants.MSG_VALIDATION_ERROR);
+                response.setErrors(batteryEligibilityErrors);
+                return response;
+            }
+
             // 7) Create and populate DynamoDB entity
             // DynamoDBエンティティを作成してデータを入力する
             EnR002MonitoringRecord entity = new EnR002MonitoringRecord();
@@ -201,6 +211,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // 11) Handle battery-related data (ELPJ_battery_value)
             // バッテリーが交換されたかを(true)安全に判定
+            entity.setChangedBattery(request.getChangedBattery());
             if (Boolean.TRUE.equals(request.getChangedBattery())) {
                 if (request.getElpjBatteryValue() != null) {
                     entity.setElpjBatteryValue(request.getElpjBatteryValue());
@@ -754,6 +765,7 @@ public class MonitoringServiceImpl implements MonitoringService {
         );
         Map<String, String> businessErrors = collectMonitoringBusinessErrors(request, relation, site, project);
         mergeErrors(errors, businessErrors);
+        mergeErrors(errors, collectBatteryEligibilityErrors(request, equipment));
 
         if (!errors.isEmpty()) {
             return MonitoringValidationResult.invalid(validationError(errors));
@@ -798,9 +810,8 @@ public class MonitoringServiceImpl implements MonitoringService {
         if (isBlank(request.getDateRecorded())) {
             errors.put("dateRecorded", ResponseConstants.MSG_DATE_RECORDED_REQUIRED);
         }
-        if (request.getChangedBattery() == null) {
-            errors.put("changedBattery", ResponseConstants.MSG_CHANGED_BATTERY_REQUIRED);
-        }
+        // changedBattery requiredness depends on equipment.hasBattery - see collectBatteryEligibilityErrors,
+        // which runs once the equipment tied to this record has been resolved.
 
         errors.putAll(collectMandatoryEvidenceErrors(request));
         errors.putAll(collectMonitoringDataErrors(request));
@@ -867,6 +878,36 @@ public class MonitoringServiceImpl implements MonitoringService {
         }
         if (request.getElpjAccuracy() != null && request.getElpjAccuracy().compareTo(MAX_PERCENT_VALUE) > 0) {
             errors.put("ELPJ_accuracy", ResponseConstants.MSG_ELPJ_ACCURACY_MAX);
+        }
+
+        return errors;
+    }
+
+    /**
+     * changedBattery/ELPJ_battery_value/ELPJ_battery_evidence are only meaningful when the
+     * equipment this record belongs to actually has a battery (EnR002Equipment.hasBattery).
+     */
+    private Map<String, String> collectBatteryEligibilityErrors(
+            RegisterMonitoringRecordSolarRequest request,
+            EnR002Equipment equipment
+    ) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        if (equipment == null) {
+            return errors;
+        }
+
+        if (Boolean.TRUE.equals(equipment.getHasBattery())) {
+            if (request.getChangedBattery() == null) {
+                errors.put("changedBattery", ResponseConstants.MSG_CHANGED_BATTERY_REQUIRED);
+            }
+        } else {
+            boolean hasBatteryData = Boolean.TRUE.equals(request.getChangedBattery())
+                    || request.getElpjBatteryValue() != null
+                    || !isBlank(request.getElpjBatterySpecificationUrl());
+            if (hasBatteryData) {
+                errors.put("changedBattery", ResponseConstants.MSG_BATTERY_NOT_APPLICABLE);
+            }
         }
 
         return errors;
@@ -1111,8 +1152,7 @@ public class MonitoringServiceImpl implements MonitoringService {
                 .elPvrEvidence(entity.getElPvrEvidence())
                 .elPvEvidenceUrl(entity.getElPvEvidenceUrl())
                 .elPvrEvidenceUrl(entity.getElPvrEvidenceUrl())
-                // CRITICAL: Check if battery value exists to set changedBattery boolean
-                .changedBattery(entity.getElpjBatteryValue() != null)
+                .changedBattery(entity.getChangedBattery())
                 .elpjBatteryValue(entity.getElpjBatteryValue())
                 .elpjBatteryEvidence(entity.getElpjBatteryEvidence())
                 .elpjBatterySpecificationUrl(entity.getElpjBatterySpecificationUrl())

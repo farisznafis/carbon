@@ -537,6 +537,89 @@ class MonitoringServiceImplTest {
     }
 
     @Test
+    @DisplayName("POST should succeed without changedBattery when equipment has no battery")
+    void testRegisterMonitoringRecord_NoBatteryEquipment_ChangedBatteryOmitted_Success() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        String projectId = "PROJ0001";
+        String siteId = "21";
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setChangedBattery(null);
+        request.setElpjBatteryValue(null);
+        request.setElpjBatterySpecificationUrl(null);
+
+        stubValidMonitoringContext(username, projectId, siteId);
+        EnR002Equipment noBatteryEquipment = new EnR002Equipment();
+        noBatteryEquipment.setId(100);
+        noBatteryEquipment.setSite(tokyoSite);
+        noBatteryEquipment.setHasBattery(false);
+        when(equipmentRepository.findById(100)).thenReturn(Optional.of(noBatteryEquipment));
+        when(monitoringRecordSolarRepository.save(any())).thenReturn(new EnR002MonitoringRecord());
+
+        MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
+                username, companyId, request);
+
+        assertEquals(ResponseConstants.OK, response.getStatusCode());
+        verify(monitoringRecordSolarRepository, times(1)).save(any(EnR002MonitoringRecord.class));
+    }
+
+    @Test
+    @DisplayName("POST should reject changedBattery=true when equipment has no battery")
+    void testRegisterMonitoringRecord_NoBatteryEquipment_ChangedBatteryTrue_ValidationError() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        String projectId = "PROJ0001";
+        String siteId = "21";
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setChangedBattery(true);
+        request.setElpjBatteryValue(new BigDecimal("10.00"));
+        request.setElpjBatterySpecificationUrl("https://example.com/battery.pdf");
+
+        stubValidMonitoringContext(username, projectId, siteId);
+        EnR002Equipment noBatteryEquipment = new EnR002Equipment();
+        noBatteryEquipment.setId(100);
+        noBatteryEquipment.setSite(tokyoSite);
+        noBatteryEquipment.setHasBattery(false);
+        when(equipmentRepository.findById(100)).thenReturn(Optional.of(noBatteryEquipment));
+
+        MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
+                username, companyId, request);
+
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_BATTERY_NOT_APPLICABLE,
+                response.getErrors().get("changedBattery"));
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("POST should reject stray ELPJ_battery_value when equipment has no battery, even without changedBattery")
+    void testRegisterMonitoringRecord_NoBatteryEquipment_StrayBatteryValue_ValidationError() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        String projectId = "PROJ0001";
+        String siteId = "21";
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setChangedBattery(null);
+        request.setElpjBatteryValue(new BigDecimal("10.00"));
+        request.setElpjBatterySpecificationUrl(null);
+
+        stubValidMonitoringContext(username, projectId, siteId);
+        EnR002Equipment noBatteryEquipment = new EnR002Equipment();
+        noBatteryEquipment.setId(100);
+        noBatteryEquipment.setSite(tokyoSite);
+        noBatteryEquipment.setHasBattery(false);
+        when(equipmentRepository.findById(100)).thenReturn(Optional.of(noBatteryEquipment));
+
+        MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
+                username, companyId, request);
+
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_BATTERY_NOT_APPLICABLE,
+                response.getErrors().get("changedBattery"));
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
     //数値モニタリングデータに負の値が含まれている場合は拒否する必要があります〇
     @DisplayName("Should reject when numerical monitoring data has negative values")
     void testRegisterMonitoringRecord_NegativeValues_ValidationError() {
