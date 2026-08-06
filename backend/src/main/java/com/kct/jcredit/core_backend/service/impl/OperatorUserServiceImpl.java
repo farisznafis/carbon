@@ -214,9 +214,9 @@ public class OperatorUserServiceImpl implements OperatorUserService {
             return validationError(errors);
         }
 
-        if (StringUtils.isNotBlank(request.getRole()) && !isSupportedRole(request.getRole())) {
-            errors.put("role", "役割は admin または operator を指定してください。");
-        }
+        // if (StringUtils.isNotBlank(request.getRole()) && !isSupportedRole(request.getRole())) {
+        //     errors.put("role", "役割は admin または operator を指定してください。");
+        // }
 
         Set<String> requestedPermissionCodes = normalizePermissionCodes(request.getPermissionCodes());
         if (!requestedPermissionCodes.isEmpty()) {
@@ -254,13 +254,13 @@ public class OperatorUserServiceImpl implements OperatorUserService {
         boolean changed = false;
         changed |= updateBaseFields(targetUser, request);
 
-        if (StringUtils.isNotBlank(request.getRole())) {
-            String newRole = normalizeRole(request.getRole());
-            if (!StringUtils.equals(newRole, targetUser.getRole())) {
-                targetUser.setRole(newRole);
-                changed = true;
-            }
-        }
+        // if (StringUtils.isNotBlank(request.getRole())) {
+        //     String newRole = normalizeRole(request.getRole());
+        //     if (!StringUtils.equals(newRole, targetUser.getRole())) {
+        //         targetUser.setRole(newRole);
+        //         changed = true;
+        //     }
+        // }
 
         if (request.getPermissionCodes() != null) {
             Set<Permission> resolvedPermissions = resolvePermissions(request.getPermissionCodes());
@@ -281,7 +281,7 @@ public class OperatorUserServiceImpl implements OperatorUserService {
 
         response.setStatusCode(ResponseConstants.OK);
         response.setMessage(changed ? "運用者ユーザーを更新しました。" : "更新内容がありませんでした。");
-        response.setUser(mapToUserInfoResponse(targetUser));
+        response.setUser(mapToUserInfoResponse(targetUser)); //TODO: dont let the role change
         return response;
     }
 

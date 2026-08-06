@@ -59,7 +59,6 @@ class OperatorUserServiceImplTest {
                 .code(PermissionCode.PROJECT_READ)
                 .displayName("プロジェクト参照")
                 .category("PROJECT")
-                .active(true)
                 .build();
         when(permissionRepository.findByCodeIn(List.of(PermissionCode.PROJECT_READ, PermissionCode.OPERATOR_USER_CREATE)))
                 .thenReturn(List.of(permission));
