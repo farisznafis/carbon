@@ -235,17 +235,4 @@ public class SiteProjectController {
                     .body("エラー: " + e.getMessage());
         }
     }
-    
-    @GetMapping("/participation/{participationId}/pdf")
-    @PreAuthorize("hasAnyRole('master','user')")
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "入会届PDFダウンロード", description = "承認済み入会届のPDFダウンロードURLを取得します。")
-    public ResponseEntity<PdfDownloadResponse> downloadPdf(
-            Authentication authentication,
-            @PathVariable Integer participationId) {
-
-        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
-        PdfDownloadResponse response = pdfService.getPdfDownloadUrl(participationId, companyId);
-        return ResponseEntity.ok(response);
-    }
 }
