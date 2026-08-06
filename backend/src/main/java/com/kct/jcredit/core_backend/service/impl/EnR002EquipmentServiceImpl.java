@@ -22,6 +22,7 @@ import com.kct.jcredit.core_backend.enums.EquipmentFileType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
@@ -184,9 +185,9 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 .subsidyAmount(e.getSubsidyAmount())
                 .preProjectUnitPrice(e.getPreProjectUnitPrice())
                 .files(fileResponses)
-                .build();
-        }
-    @Override
+                                .build(); 
+    }
+        @Override
     public EnR002EquipmentResponse getEquipmentById(String siteId,
                                                     Integer equipmentId,
                                                     String companyId) {
@@ -234,7 +235,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
         if (!equipment.getSite().getId().equals(siteDbId))
                 throw new CustomException(ResponseConstants.NOT_FOUND, "設備情報が見つかりません。");
 
-        // ── 2. Merge field non-file (in-memory, BELUM di-save) ─────────
+        // ── 2. Merge field non-file (in-memory) ─────────
         if (request.getEquipmentOpDate() != null) equipment.setEquipmentOpDate(request.getEquipmentOpDate());
         if (request.getNominalMaxOutput() != null) equipment.setNominalMaxOutput(request.getNominalMaxOutput());
         if (request.getPcsManufacturer() != null) equipment.setPcsManufacturer(request.getPcsManufacturer());
@@ -252,24 +253,19 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
         if (request.getSubsidyAmount() != null) equipment.setSubsidyAmount(request.getSubsidyAmount());
         if (request.getPreProjectUnitPrice() != null) equipment.setPreProjectUnitPrice(request.getPreProjectUnitPrice());
 
-        // ── 3. Hitung FINAL file type — TANPA sentuh DB dulu ────────────
+        // ── 3. final file types ────────────
         List<EnR002EquipmentFile> existingFiles = equipmentFileRepository.findByEquipment_Id(equipmentId);
 
         List<EquipmentFileType> finalFileTypes;
         if (request.getFiles() != null) {
-                // files dikirim = state akhir MENGIKUTI request ini
                 finalFileTypes = request.getFiles().stream()
                         .map(EnR002FileItemRequest::getFileType)
                         .collect(Collectors.toList());
         } else {
-                // files TIDAK dikirim = tidak berubah, pakai yang sudah ada
                 finalFileTypes = existingFiles.stream()
                         .map(EnR002EquipmentFile::getFileType)
                         .collect(Collectors.toList());
         }
-
-        // Bungkus jadi entity "dummy" (tidak di-persist) — cuma untuk
-        // dicek fileType-nya oleh validator, tidak menyentuh database
         List<EnR002EquipmentFile> filesForValidation = finalFileTypes.stream()
                 .map(type -> {
                         EnR002EquipmentFile f = new EnR002EquipmentFile();
@@ -278,16 +274,20 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 })
                 .collect(Collectors.toList());
 
-        // ── 4. Validasi — SEBELUM ada tulisan apapun ke DB ──────────────
+        // ── 4. Validation ──────────────
+        if (request.getFiles() != null) {
+        ParticipationProjectValidationServiceImpl.EquipmentUpdateValidator
+                .validateNewFileContents(String.valueOf(equipmentId), request.getFiles());
+}
         ParticipationProjectValidationServiceImpl.EquipmentUpdateValidator
                 .validateEquipmentEntityState(String.valueOf(equipmentId), equipment, filesForValidation);
 
-        // ═══════════════════ Validasi lolos, baru mulai tulis DB ═══════════════════
+        // ═══════════════════ pass validation ═══════════════════
 
         // ── 5. Save equipment (field non-file) ──────────────────────────
         EnR002Equipment saved = equipmentRepository.save(equipment);
 
-        // ── 6. Update file — proses insert/delete SEKARANG ──────────────
+        // ── 6. Update files ──────────────
         List<EnR002EquipmentFile> filesToMoveAfterCommit = new ArrayList<>();
 
         if (request.getFiles() != null) {
@@ -296,7 +296,6 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                         .map(EnR002FileItemRequest::getS3Key)
                         .collect(Collectors.toSet());
 
-                // Hapus file lama yang tidak ada lagi di request
                 List<EnR002EquipmentFile> filesToDelete = existingFiles.stream()
                         .filter(f -> !requestedS3Keys.contains(f.getS3Key()))
                         .collect(Collectors.toList());
@@ -310,14 +309,15 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 });
                 equipmentFileRepository.deleteAll(filesToDelete);
 
-                // Proses tiap entry di request — bedakan baru vs lama
                 for (EnR002FileItemRequest f : request.getFiles()) {
 
                 boolean isNewFile = f.getS3Key().startsWith("tmp/equipments/");
-                boolean alreadyExists = existingFiles.stream()
-                        .anyMatch(existing -> existing.getS3Key().equals(f.getS3Key()));
+                Optional<EnR002EquipmentFile> matchedExisting = existingFiles.stream()
+                        .filter(existing -> existing.getS3Key().equals(f.getS3Key()))
+                        .findFirst();
 
                 if (isNewFile) {
+                        // ── new file— insert, move permanent after commit ──
                         EnR002EquipmentFile ef = new EnR002EquipmentFile();
                         ef.setEquipment(saved);
                         ef.setFileType(f.getFileType());
@@ -325,12 +325,23 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                         ef.setS3Key(f.getS3Key());
                         EnR002EquipmentFile savedFile = equipmentFileRepository.save(ef);
                         filesToMoveAfterCommit.add(savedFile);
-                }
-                // else (alreadyExists): file lama yang dipertahankan — tidak diapa-apakan
+
+                } else if (matchedExisting.isPresent()) {
+                        EnR002EquipmentFile existing = matchedExisting.get();
+                        if (!existing.getFileType().equals(f.getFileType())) {
+                        existing.setFileType(f.getFileType());
+                        equipmentFileRepository.save(existing);
+                        }
+
+                } else {
+                        throw new CustomException("INVALID_FILE_REFERENCE",
+                                "無効なファイル参照です。ファイルを再アップロードしてください。s3Key=" + f.getS3Key());
+                        }
                 }
         }
+                
 
-        // ── 7. afterCommit — HANYA untuk file baru ──────────────────────
+        // ── 7. afterCommit ─────
         if (!filesToMoveAfterCommit.isEmpty()) {
                 TransactionSynchronizationManager.registerSynchronization(
                         new TransactionSynchronization() {
