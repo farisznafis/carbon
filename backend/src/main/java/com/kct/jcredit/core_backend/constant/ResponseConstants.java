@@ -47,6 +47,8 @@ public class ResponseConstants {
     public static final String MSG_ELPJ_CONTROL_EVIDENCE_REQUIRED = "制御機器稼働時間（ELPJ）の証憑ファイルをアップロードしてください。";
     public static final String MSG_PROJECT_ID_REQUIRED = "プロジェクトIDを入力してください。";
     public static final String MSG_SITE_ID_REQUIRED = "拠点IDを入力してください。";
+    public static final String MSG_EQUIPMENT_ID_REQUIRED = "設備IDを入力してください。";
+    public static final String MSG_EQUIPMENT_NOT_FOUND = "該当する設備が見つかりませんでした。";
     public static final String MSG_PROJECT_TYPE_REQUIRED = "プロジェクトタイプを入力してください。";
     public static final String MSG_DATE_RECORDED_REQUIRED = "記録日を入力してください。";
     public static final String MSG_DATE_RECORDED_RANGE = "記録日は活動開始日以降、かつ本日以前の日付を入力してください。";

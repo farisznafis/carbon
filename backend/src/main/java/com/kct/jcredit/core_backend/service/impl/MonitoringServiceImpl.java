@@ -24,6 +24,7 @@ import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.response.details.FileErrorDetailsResponse;
 import com.kct.jcredit.core_backend.dto.response.details.FileInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.details.MonitoringDataSolarResponse;
+import com.kct.jcredit.core_backend.entity.EnR002Equipment;
 import com.kct.jcredit.core_backend.entity.EnR002MonitoringRecord;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.entity.Project;
@@ -33,6 +34,7 @@ import com.kct.jcredit.core_backend.entity.base.PaginationDetailResponse;
 import com.kct.jcredit.core_backend.exception.FileTooLargeException;
 import com.kct.jcredit.core_backend.exception.UnsupportedFileTypeException;
 import com.kct.jcredit.core_backend.repository.dynamodb.MonitoringTableRecordSolarRepository;
+import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
@@ -55,6 +57,7 @@ public class MonitoringServiceImpl implements MonitoringService {
     private final ParticipatingUserRepository userRepository;
     private final SiteRepository siteRepository;
     private final SiteProjectRelationRepository siteProjectRelationRepository;
+    private final EnR002EquipmentRepository equipmentRepository;
     private final S3Client s3Client;
     
     @Value("${app.s3.bucket:}")
@@ -136,6 +139,15 @@ public class MonitoringServiceImpl implements MonitoringService {
                 return response;
             }
 
+            // 4.5) Validate equipment exists and belongs to the resolved site
+            // 設備が存在し、対象拠点に属していることを確認する
+            EnR002Equipment equipment = equipmentRepository.findById(request.getEquipmentId()).orElse(null);
+            if (equipment == null || equipment.getSite() == null || !equipment.getSite().getId().equals(site.getId())) {
+                response.setStatusCode(ResponseConstants.NOT_FOUND);
+                response.setMessage(ResponseConstants.MSG_EQUIPMENT_NOT_FOUND);
+                return response;
+            }
+
             // 5) Validate all 4 mandatory evidence files are provided
             //4つの証憑ファイルがnullか空文字の場合
             Map<String, String> evidenceErrors = collectMandatoryEvidenceErrors(request);
@@ -163,6 +175,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             entity.setId(site.getPublicId() + "#" + project.getPublicId());
             entity.setProjectID(project.getId());
             entity.setSiteID(site.getId());
+            entity.setEquipmentID(equipment.getId());
             entity.setParticipatingUserID(user.getId());
             entity.setTimeUpdated(Instant.now().toString()); // Auto-set with server time in ISO format as SK
             entity.setDateRecorded(request.getDateRecorded());
@@ -683,7 +696,7 @@ public class MonitoringServiceImpl implements MonitoringService {
         }
 
         mergeErrors(errors, collectMonitoringPayloadDateErrors(request));
-        if (request.getProjectId() == null || request.getSiteId() == null) {
+        if (request.getProjectId() == null || request.getSiteId() == null || request.getEquipmentId() == null) {
             return MonitoringValidationResult.invalid(validationError(errors));
         }
 
@@ -728,6 +741,13 @@ public class MonitoringServiceImpl implements MonitoringService {
             );
         }
 
+        EnR002Equipment equipment = equipmentRepository.findById(request.getEquipmentId()).orElse(null);
+        if (equipment == null || equipment.getSite() == null || !equipment.getSite().getId().equals(site.getId())) {
+            return MonitoringValidationResult.invalid(
+                    BaseResponse.error(ResponseConstants.NOT_FOUND, ResponseConstants.MSG_EQUIPMENT_NOT_FOUND)
+            );
+        }
+
         SiteProjectRelation relation = siteProjectRelationRepository.findByProjectIdAndSiteId(
                 project.getId(),
                 site.getId()
@@ -768,6 +788,9 @@ public class MonitoringServiceImpl implements MonitoringService {
         }
         if (request.getSiteId() == null) {
             errors.put("siteId", ResponseConstants.MSG_SITE_ID_REQUIRED);
+        }
+        if (request.getEquipmentId() == null) {
+            errors.put("equipmentId", ResponseConstants.MSG_EQUIPMENT_ID_REQUIRED);
         }
         if (isBlank(request.getProjectType())) {
             errors.put("projectType", ResponseConstants.MSG_PROJECT_TYPE_REQUIRED);
@@ -1077,6 +1100,7 @@ public class MonitoringServiceImpl implements MonitoringService {
                 .id(entity.getId())
                 .projectId(projectRepository.findById(entity.getProjectID()).map(Project::getPublicId).orElse(String.valueOf(entity.getProjectID())))
                 .siteId(siteRepository.findById(entity.getSiteID()).map(Site::getPublicId).orElse(String.valueOf(entity.getSiteID())))
+                .equipmentId(entity.getEquipmentID())
                 .userId(entity.getParticipatingUserID())
                 .projectType(projectType != null ? projectType : "ENR002")
                 .timeUpdated(entity.getTimeUpdated())
