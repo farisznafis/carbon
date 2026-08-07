@@ -86,7 +86,7 @@ public class SiteProjectController {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // VALIDATE — per halaman (stateless, tidak simpan apapun)
+    // VALIDATE
     // ─────────────────────────────────────────────────────────────
 
     @PostMapping("/equipment/validate")
