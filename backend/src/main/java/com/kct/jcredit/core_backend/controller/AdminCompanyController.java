@@ -18,6 +18,7 @@ import com.kct.jcredit.core_backend.dto.response.ParticipationReviewDetailRespon
 import com.kct.jcredit.core_backend.service.AdminCompanyQueryService;
 import com.kct.jcredit.core_backend.service.CompanyApprovalService;
 import com.kct.jcredit.core_backend.service.CompanyLifecycleService;
+import com.kct.jcredit.core_backend.service.DocuSignAuthService;
 import com.kct.jcredit.core_backend.service.ParticipationReviewService;
 import com.kct.jcredit.core_backend.service.SecurityAccountService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
@@ -59,7 +60,7 @@ public class AdminCompanyController {
     private final ParticipationReviewService reviewService;
     private final SecurityAccountService securityAccountService;
     private final JwtUtil jwtUtil;
-
+    private final DocuSignAuthService docuSignAuthService;
     /**
      * Approves a pending company and provisions its master account.
      */
@@ -256,5 +257,23 @@ public class AdminCompanyController {
         Integer operatorUserId = jwtUtil.extractUserId(authentication.getCredentials().toString());
         reviewService.rejectReview(participationId, operatorUserId, request);
         return ResponseEntity.ok(BaseResponse.success("却下しました。"));
+    }
+
+    @GetMapping("/token")
+    @PreAuthorize("hasAnyRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<Map<String, String>> testToken() {
+        try {
+            String token = docuSignAuthService.getAccessToken();
+            return ResponseEntity.ok(Map.of(
+                    "status", "OK",
+                    "tokenPreview", token.substring(0, 20) + "..." 
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                    "status", "ERROR",
+                    "message", e.getMessage()
+            ));
+        }
     }
 }
