@@ -250,6 +250,15 @@ export type SiteProjectEquipmentResponse = {
   equipments?: SiteProjectEquipmentApiItem[] | null;
 };
 
+export type SiteEquipmentListResponse =
+  | SiteProjectEquipmentApiItem[]
+  | {
+      statusCode?: string;
+      message?: string | null;
+      errors?: unknown;
+      equipments?: SiteProjectEquipmentApiItem[] | null;
+    };
+
 export type SiteProjectEquipmentDetailResponse = SiteProjectEquipmentApiItem & {
   statusCode?: string;
   message?: string | null;

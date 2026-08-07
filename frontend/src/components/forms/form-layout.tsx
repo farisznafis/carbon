@@ -222,7 +222,7 @@ export function FormSection({
         </span>
         <h3>{title}</h3>
       </div>
-      <div className="space-y-4">{children}</div>
+      <div className="space-y-6">{children}</div>
     </section>
   );
 }

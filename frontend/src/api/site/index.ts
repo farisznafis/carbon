@@ -11,6 +11,7 @@ export { getSiteProjects } from './projects';
 export {
   getSiteProjectEquipmentPresignedUrl,
   getSiteProjectEquipment,
+  getSiteEquipmentList,
   getSiteEquipmentById,
   joinSiteProject,
   uploadSiteProjectEquipmentFile,
@@ -32,6 +33,7 @@ export type {
   SiteProjectEquipmentApiItem,
   SiteProjectEquipmentDetailResponse,
   SiteProjectEquipmentResponse,
+  SiteEquipmentListResponse,
   SiteProjectEquipmentUpdateRequest,
   SiteProjectEquipmentFileType,
   SiteProjectEquipmentFileUploadResponse,

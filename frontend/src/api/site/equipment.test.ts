@@ -3,6 +3,7 @@ import {
   getSiteEquipmentById,
   getSiteProjectEquipment,
   getSiteProjectEquipmentPresignedUrl,
+  getSiteEquipmentList,
   joinSiteProject,
   uploadSiteProjectEquipmentFile,
   updateSiteEquipment,
@@ -60,6 +61,35 @@ describe('validateSiteProjectEquipment', () => {
 });
 
 describe('site equipment read and update', () => {
+  it.each([
+    ['array', [{ id: 10, deviceNo: 'PV-10', hasBattery: true }]],
+    [
+      'wrapped response',
+      { equipments: [{ id: 11, deviceNo: 'PV-11', hasBattery: false }] },
+    ],
+  ])('gets a site equipment list from a %s response', async (_label, body) => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(body), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getSiteEquipmentList('SITE A');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/site/SITE%20A/equipment',
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        equipmentId: _label === 'array' ? 10 : 11,
+        hasBattery: _label === 'array',
+      }),
+    );
+  });
+
   it('normalizes backend equipment field names for project equipment lists', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(

@@ -9,6 +9,7 @@ import type {
   SiteProjectEquipmentApiItem,
   SiteProjectEquipmentApiFile,
   SiteProjectEquipmentDetailResponse,
+  SiteEquipmentListResponse,
   SiteProjectEquipmentFileType,
   SiteProjectEquipmentFileUploadResponse,
   SiteProjectEquipmentResponse,
@@ -261,6 +262,34 @@ export async function getSiteProjectEquipment(
 
   return Array.isArray(json?.equipments)
     ? json.equipments.map(normalizeSiteProjectEquipment)
+    : [];
+}
+
+export async function getSiteEquipmentList(
+  siteId: string,
+): Promise<SiteProjectEquipment[]> {
+  if (!siteId) return [];
+
+  const response = await apiFetch(
+    `/site/${encodeURIComponent(siteId)}/equipment`,
+    { method: 'GET' },
+  );
+  const { data: json, rawBody } =
+    await parseJsonResponse<SiteEquipmentListResponse>(response);
+
+  if (!response.ok) {
+    const message =
+      !Array.isArray(json) && json?.message
+        ? json.message
+        : rawBody;
+    throw new Error(
+      message || `設備一覧の取得に失敗しました: HTTP ${response.status}`,
+    );
+  }
+
+  const equipments = Array.isArray(json) ? json : json?.equipments;
+  return Array.isArray(equipments)
+    ? equipments.map(normalizeSiteProjectEquipment)
     : [];
 }
 
