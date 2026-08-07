@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,6 +28,17 @@ import java.util.UUID;
 public class PartiCompanyRegisterRequest {
 
     private UUID emailVerificationChallengeId;
+
+    /**
+     * Populated only in GET /company/signup/revision responses so the frontend can
+     * display why the application was rejected. Ignored when submitted on PUT.
+     */
+    private String rejectionReason;
+
+    /**
+     * Populated only in GET /company/signup/revision responses. Ignored when submitted on PUT.
+     */
+    private LocalDateTime rejectedAt;
 
     @NotBlank(message = "法人番号は13桁の数字で入力してください。")
     @CorpNumber
