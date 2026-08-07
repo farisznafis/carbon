@@ -4,6 +4,7 @@ import {
   hasEquipmentEditChanges,
   mapEquipmentEditToUpdateRequest,
   mapEquipmentToEditForm,
+  mergeEquipmentFilesForUpdate,
 } from './equipmentEditMapper';
 
 const equipment: SiteProjectEquipment = {
@@ -82,5 +83,83 @@ describe('equipmentEditMapper', () => {
         original,
       ),
     ).toBe(true);
+    expect(
+      hasEquipmentEditChanges(
+        {
+          ...original,
+          pcsFile: new File(['updated'], 'updated-pcs.pdf', {
+            type: 'application/pdf',
+          }),
+        },
+        original,
+      ),
+    ).toBe(true);
+  });
+
+  it('merges uploaded file replacements with existing file metadata', () => {
+    const files = mergeEquipmentFilesForUpdate(
+      [
+        {
+          fileType: 'solar_contract',
+          s3Key: 'equipment/existing-contract.pdf',
+          fileId: 'existing-contract-id',
+        },
+        {
+          fileType: 'pcs_spec',
+          s3Key: 'equipment/existing-pcs.pdf',
+          fileId: 'existing-pcs-id',
+        },
+      ],
+      [
+        {
+          fileType: 'solar_contract',
+          s3Key: 'equipment/new-contract.pdf',
+          fileName: 'new-contract.pdf',
+          fileId: 'new-contract-id',
+        },
+      ],
+    );
+
+    expect(files).toEqual([
+      {
+        fileType: 'solar_contract',
+        s3Key: 'equipment/new-contract.pdf',
+        fileName: 'new-contract.pdf',
+        fileId: 'new-contract-id',
+      },
+      {
+        fileType: 'pcs_spec',
+        s3Key: 'equipment/existing-pcs.pdf',
+        fileName: 'existing-pcs.pdf',
+        fileId: 'existing-pcs-id',
+      },
+    ]);
+
+    const original = mapEquipmentToEditForm(equipment, 'SITE-1');
+    expect(mapEquipmentEditToUpdateRequest(original, original, files)).toEqual({
+      files,
+    });
+  });
+
+  it('keeps existing file metadata even when no replacement is selected', () => {
+    expect(
+      mergeEquipmentFilesForUpdate(
+        [
+          {
+            fileType: 'pcs_spec',
+            s3Key: 'equipment/existing-pcs.pdf',
+            fileId: 'existing-pcs-id',
+          },
+        ],
+        [],
+      ),
+    ).toEqual([
+      {
+        fileType: 'pcs_spec',
+        s3Key: 'equipment/existing-pcs.pdf',
+        fileName: 'existing-pcs.pdf',
+        fileId: 'existing-pcs-id',
+      },
+    ]);
   });
 });

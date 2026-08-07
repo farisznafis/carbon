@@ -1,9 +1,12 @@
 import type {
   SiteProjectEquipment,
+  SiteProjectEquipmentFile,
   SiteProjectEquipmentUpdateRequest,
+  SiteProjectEquipmentValidationFile,
 } from '@/api/site';
 import type { SolarPowerFormData } from '@/lib/equipmentValidations';
 import { SOLAR_FORM_DEFAULT_VALUES } from '@/features/user/project-registration/solarEquipmentFormModel';
+import { getSolarFormSelectedFiles } from '@/features/user/project-registration/equipmentValidationMapper';
 
 function formString(value: string | number | null | undefined) {
   return value == null ? '' : String(value);
@@ -74,6 +77,7 @@ function assignChangedValue<
 export function mapEquipmentEditToUpdateRequest(
   current: SolarPowerFormData,
   original: SolarPowerFormData,
+  files: SiteProjectEquipmentValidationFile[] = [],
 ): SiteProjectEquipmentUpdateRequest {
   const payload: SiteProjectEquipmentUpdateRequest = {};
 
@@ -182,12 +186,54 @@ export function mapEquipmentEditToUpdateRequest(
     numberValue(original.preProjectUnitPrice),
   );
 
+  if (files.length > 0) {
+    payload.files = files;
+  }
+
   return payload;
+}
+
+export function getEquipmentFileDisplayName(file: SiteProjectEquipmentFile) {
+  if (file.fileName?.trim()) return file.fileName.trim();
+
+  const lastS3Segment = file.s3Key?.split('/').at(-1)?.trim();
+  if (lastS3Segment) {
+    try {
+      return decodeURIComponent(lastS3Segment);
+    } catch {
+      return lastS3Segment;
+    }
+  }
+
+  return file.fileId?.trim() || 'existing-file';
+}
+
+export function mergeEquipmentFilesForUpdate(
+  existingFiles: SiteProjectEquipmentFile[],
+  uploadedFiles: SiteProjectEquipmentValidationFile[],
+): SiteProjectEquipmentValidationFile[] {
+  const mergedFiles = new Map<string, SiteProjectEquipmentValidationFile>();
+  existingFiles.forEach((file) => {
+    if (!file.fileType || !file.s3Key || !file.fileId) return;
+
+    mergedFiles.set(file.fileType, {
+      fileType: file.fileType as SiteProjectEquipmentValidationFile['fileType'],
+      s3Key: file.s3Key,
+      fileName: getEquipmentFileDisplayName(file),
+      fileId: file.fileId,
+    });
+  });
+  uploadedFiles.forEach((file) => mergedFiles.set(file.fileType, file));
+
+  return Array.from(mergedFiles.values());
 }
 
 export function hasEquipmentEditChanges(
   current: SolarPowerFormData,
   original: SolarPowerFormData,
 ) {
-  return Object.keys(mapEquipmentEditToUpdateRequest(current, original)).length > 0;
+  return (
+    Object.keys(mapEquipmentEditToUpdateRequest(current, original)).length > 0 ||
+    getSolarFormSelectedFiles(current).length > 0
+  );
 }

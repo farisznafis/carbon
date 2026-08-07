@@ -205,11 +205,33 @@ export type SiteProjectEquipment = {
   subsidyName?: string | null;
   subsidyAmount?: number | null;
   preProjectUnitPrice?: number | null;
+  evidenceDocuments?: string[] | null;
+  files?: SiteProjectEquipmentFile[] | null;
+};
+
+export type SiteProjectEquipmentFile = {
+  id?: number | null;
+  fileType?: string | null;
+  fileId?: string | null;
+  s3Key?: string | null;
+  fileName?: string | null;
+};
+
+export type SiteProjectEquipmentApiFile = SiteProjectEquipmentFile & {
+  FileType?: string | null;
+  file_type?: string | null;
+  FileId?: string | number | null;
+  file_id?: string | number | null;
+  S3Key?: string | null;
+  s3key?: string | null;
+  s3_key?: string | null;
+  FileName?: string | null;
+  originalName?: string | null;
 };
 
 export type SiteProjectEquipmentApiItem = Omit<
   SiteProjectEquipment,
-  'equipmentId' | 'powerCondUnitCount' | 'powerCondStandby'
+  'equipmentId' | 'powerCondUnitCount' | 'powerCondStandby' | 'files'
 > & {
   id?: number | null;
   equipmentId?: number | null;
@@ -217,6 +239,8 @@ export type SiteProjectEquipmentApiItem = Omit<
   powerCondUnitCount?: number | null;
   pcsStandby?: number | null;
   powerCondStandby?: number | null;
+  files?: SiteProjectEquipmentApiFile[] | null;
+  Files?: SiteProjectEquipmentApiFile[] | null;
 };
 
 export type SiteProjectEquipmentResponse = {
@@ -251,6 +275,7 @@ export type SiteProjectEquipmentUpdateRequest = {
   subsidyName?: string | null;
   subsidyAmount?: number | null;
   preProjectUnitPrice?: number | null;
+  files?: SiteProjectEquipmentValidationFile[];
 };
 
 export type SiteProjectEquipmentFileType =

@@ -1,6 +1,11 @@
 import type { UseFormReturn } from 'react-hook-form';
-import type { Site } from '@/api/site';
+import type {
+  Site,
+  SiteProjectEquipmentFile,
+  SiteProjectEquipmentFileType,
+} from '@/api/site';
 import { RequiredLabel } from '@/components/forms/shared';
+import { PresignedFileLink } from '@/components/files/PresignedFileLink';
 import { FileSelectButton } from '@/components/inputs/FileSelectButton/FileSelectButton';
 import {
   FormGrid,
@@ -37,6 +42,7 @@ type SolarPowerEquipmentFormProps = Readonly<{
       }
     | {
         mode: 'edit';
+        existingFiles?: SiteProjectEquipmentFile[];
       }
   >;
 
@@ -45,6 +51,8 @@ type FileUploadControlProps = Readonly<{
   label: string;
   value?: File;
   onChange: (file?: File) => void;
+  required?: boolean;
+  existingFile?: SiteProjectEquipmentFile | null;
 }>;
 
 function FileUploadControl({
@@ -52,18 +60,66 @@ function FileUploadControl({
   label,
   value,
   onChange,
+  required = true,
+  existingFile,
 }: FileUploadControlProps) {
+  const existingFileName = existingFile
+    ? getExistingFileName(existingFile)
+    : null;
+
   return (
-    <FileSelectButton
-      id={id}
-      label={label}
-      variant="design-system-pro"
-      supportedFormats={EQUIPMENT_FILE_FORMATS}
-      required
-      value={value ?? null}
-      onChange={(file) => onChange(file ?? undefined)}
-    />
+    <div className="space-y-2">
+      <FileSelectButton
+        id={id}
+        label={label}
+        variant="design-system-pro"
+        supportedFormats={EQUIPMENT_FILE_FORMATS}
+        required={required}
+        value={value ?? null}
+        onChange={(file) => onChange(file ?? undefined)}
+        helperText={
+          existingFileName || required
+            ? undefined
+            : '変更する場合のみファイルを選択してください。'
+        }
+      />
+      {existingFileName && (
+        <p className="flex flex-wrap items-center gap-1 text-sm text-foreground">
+          <span>登録済み：</span>
+          {existingFile?.s3Key ? (
+            <PresignedFileLink
+              s3Key={existingFile.s3Key}
+              label={existingFileName}
+            />
+          ) : (
+            <span>{existingFileName}</span>
+          )}
+        </p>
+      )}
+    </div>
   );
+}
+
+function getExistingFile(
+  files: SiteProjectEquipmentFile[],
+  fileType: SiteProjectEquipmentFileType,
+) {
+  return files.find((candidate) => candidate.fileType === fileType) ?? null;
+}
+
+function getExistingFileName(file: SiteProjectEquipmentFile) {
+  if (file.fileName?.trim()) return file.fileName.trim();
+
+  const lastS3Segment = file.s3Key?.split('/').at(-1)?.trim();
+  if (lastS3Segment) {
+    try {
+      return decodeURIComponent(lastS3Segment);
+    } catch {
+      return lastS3Segment;
+    }
+  }
+
+  return file.fileId?.trim() || '登録済みファイル';
 }
 
 type YesNoSelectProps = Readonly<{
@@ -93,6 +149,7 @@ function YesNoSelect({ value, onValueChange }: YesNoSelectProps) {
 export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
   const { form } = props;
   const isEditMode = props.mode === 'edit';
+  const existingFiles = isEditMode ? props.existingFiles ?? [] : [];
   const sites = isEditMode ? [] : props.sites;
   const isSiteOptionsLoading = isEditMode
     ? false
@@ -155,25 +212,25 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
             </FormItem>
           )}
         />
-        {!isEditMode && (
-          <FormField
-            control={form.control}
-            name="operationStartDateFile"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <FileUploadControl
-                    id="equipment-op-date-file"
-                    label="確認資料：太陽光発電電力受給契約確認書"
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        <FormField
+          control={form.control}
+          name="operationStartDateFile"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <FileUploadControl
+                  id="equipment-op-date-file"
+                  label="確認資料：太陽光発電電力受給契約確認書"
+                  value={field.value}
+                  onChange={field.onChange}
+                  required={!isEditMode}
+                  existingFile={getExistingFile(existingFiles, 'solar_contract')}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </FormSection>
 
       <FormSection number={2} title="太陽光パネルの情報">
@@ -196,25 +253,25 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
             </FormItem>
           )}
         />
-        {!isEditMode && (
-          <FormField
-            control={form.control}
-            name="nominalMaxOutputFile"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <FileUploadControl
-                    id="nominal-max-output-file"
-                    label="確認資料：仕様書・カタログ"
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        <FormField
+          control={form.control}
+          name="nominalMaxOutputFile"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <FileUploadControl
+                  id="nominal-max-output-file"
+                  label="確認資料：仕様書・カタログ"
+                  value={field.value}
+                  onChange={field.onChange}
+                  required={!isEditMode}
+                  existingFile={getExistingFile(existingFiles, 'panel_catalog')}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </FormSection>
 
       <FormSection number={3} title="パワーコンディショナーの情報">
@@ -299,25 +356,25 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
             )}
           />
         </FormGrid>
-        {!isEditMode && (
-          <FormField
-            control={form.control}
-            name="pcsFile"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <FileUploadControl
-                    id="pcs-file"
-                    label="確認資料：仕様書・カタログ"
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        <FormField
+          control={form.control}
+          name="pcsFile"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <FileUploadControl
+                  id="pcs-file"
+                  label="確認資料：仕様書・カタログ"
+                  value={field.value}
+                  onChange={field.onChange}
+                  required={!isEditMode}
+                  existingFile={getExistingFile(existingFiles, 'pcs_spec')}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </FormSection>
 
       <FormSection number={4} title="蓄電池の情報">
@@ -386,25 +443,25 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
                 )}
               />
             </FormGrid>
-            {!isEditMode && (
-              <FormField
-                control={form.control}
-                name="batteryFile"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <FileUploadControl
-                        id="battery-file"
-                        label="確認資料：仕様書・カタログ"
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+            <FormField
+              control={form.control}
+              name="batteryFile"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <FileUploadControl
+                      id="battery-file"
+                      label="確認資料：仕様書・カタログ"
+                      value={field.value}
+                      onChange={field.onChange}
+                      required={!isEditMode}
+                      existingFile={getExistingFile(existingFiles, 'battery_catalog')}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         )}
       </FormSection>
@@ -429,25 +486,25 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
             </FormItem>
           )}
         />
-        {!isEditMode && (
-          <FormField
-            control={form.control}
-            name="totalInvestmentFile"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <FileUploadControl
-                    id="total-investment-file"
-                    label="確認資料：工事請負契約書、請求書、領収書等"
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        <FormField
+          control={form.control}
+          name="totalInvestmentFile"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <FileUploadControl
+                  id="total-investment-file"
+                  label="確認資料：工事請負契約書、請求書、領収書等"
+                  value={field.value}
+                  onChange={field.onChange}
+                  required={!isEditMode}
+                  existingFile={getExistingFile(existingFiles, 'construction_invoice')}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
@@ -501,25 +558,25 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
                 )}
               />
             </FormGrid>
-            {!isEditMode && (
-              <FormField
-                control={form.control}
-                name="subsidyNameFile"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <FileUploadControl
-                        id="subsidy-name-file"
-                        label="確認資料：補助金交付決定通知書"
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+            <FormField
+              control={form.control}
+              name="subsidyNameFile"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <FileUploadControl
+                      id="subsidy-name-file"
+                      label="確認資料：補助金交付決定通知書"
+                      value={field.value}
+                      onChange={field.onChange}
+                      required={!isEditMode}
+                      existingFile={getExistingFile(existingFiles, 'subsidy_notice')}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         )}
 
@@ -544,25 +601,25 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
             </FormItem>
           )}
         />
-        {!isEditMode && (
-          <FormField
-            control={form.control}
-            name="preProjectUnitPriceFile"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <FileUploadControl
-                    id="pre-project-unit-price-file"
-                    label="確認資料：電力会社からの請求明細書等"
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        <FormField
+          control={form.control}
+          name="preProjectUnitPriceFile"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <FileUploadControl
+                  id="pre-project-unit-price-file"
+                  label="確認資料：電力会社からの請求明細書等"
+                  value={field.value}
+                  onChange={field.onChange}
+                  required={!isEditMode}
+                  existingFile={getExistingFile(existingFiles, 'electricity_bill')}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </FormSection>
     </FormSectionStack>
   );

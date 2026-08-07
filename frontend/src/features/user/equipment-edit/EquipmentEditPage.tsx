@@ -2,7 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '@/api/_shared/errors';
-import { getSiteEquipmentById, updateSiteEquipment } from '@/api/site';
+import {
+  getSiteEquipmentById,
+  updateSiteEquipment,
+  uploadSiteProjectEquipmentFile,
+  type SiteProjectEquipmentFile,
+} from '@/api/site';
 import {
   FormActions,
   FormCard,
@@ -15,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { SolarPowerEquipmentForm } from '@/features/user/project-registration/components/equipment-forms/SolarPowerEquipmentForm';
 import { mapEquipmentValidationFieldErrors } from '@/features/user/project-registration/solarEquipmentFormModel';
+import { getSolarFormSelectedFiles } from '@/features/user/project-registration/equipmentValidationMapper';
 import { useToast } from '@/hooks/use-toast';
 import type { SolarPowerFormData } from '@/lib/equipmentValidations';
 import { paths } from '@/routes/paths';
@@ -23,6 +29,7 @@ import {
   hasEquipmentEditChanges,
   mapEquipmentEditToUpdateRequest,
   mapEquipmentToEditForm,
+  mergeEquipmentFilesForUpdate,
 } from './equipmentEditMapper';
 
 type EquipmentEditStep = 'form' | 'confirmation';
@@ -54,6 +61,7 @@ export default function EquipmentEditPage() {
     useState<SolarPowerFormData | null>(null);
   const [confirmedValues, setConfirmedValues] =
     useState<SolarPowerFormData | null>(null);
+  const [existingFiles, setExistingFiles] = useState<SiteProjectEquipmentFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -91,6 +99,7 @@ export default function EquipmentEditPage() {
         const values = mapEquipmentToEditForm(equipment, siteId);
         form.reset(values);
         setOriginalValues(values);
+        setExistingFiles(Array.isArray(equipment.files) ? equipment.files : []);
       })
       .catch((error: unknown) => {
         if (!isActive) return;
@@ -143,9 +152,16 @@ export default function EquipmentEditPage() {
     setIsSubmitting(true);
 
     try {
+      const uploadedFiles = await Promise.all(
+        getSolarFormSelectedFiles(confirmedValues).map(({ fileType, file }) =>
+          uploadSiteProjectEquipmentFile(siteId, fileType, file),
+        ),
+      );
+      const files = mergeEquipmentFilesForUpdate(existingFiles, uploadedFiles);
       const payload = mapEquipmentEditToUpdateRequest(
         confirmedValues,
         originalValues,
+        files,
       );
       await updateSiteEquipment(siteId, equipmentId, payload);
       toast({
@@ -224,6 +240,7 @@ export default function EquipmentEditPage() {
       <EquipmentEditConfirmation
         current={confirmedValues}
         original={originalValues}
+        existingFiles={existingFiles}
         isSubmitting={isSubmitting}
         onBack={() => setStep('form')}
         onConfirm={() => void handleConfirm()}
@@ -250,7 +267,11 @@ export default function EquipmentEditPage() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleReview)} noValidate>
             <FormCard>
-              <SolarPowerEquipmentForm form={form} mode="edit" />
+              <SolarPowerEquipmentForm
+                form={form}
+                mode="edit"
+                existingFiles={existingFiles}
+              />
               <FormActions className="grid grid-cols-1 gap-3 pt-8 sm:grid-cols-2">
                 <Button
                   type="button"

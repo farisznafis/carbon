@@ -118,6 +118,39 @@ describe('site equipment read and update', () => {
     );
   });
 
+  it('normalizes existing file metadata regardless of backend key casing', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          id: 7,
+          Files: [
+            {
+              id: 21,
+              FileType: 'pcs_spec',
+              FileId: 'existing-pcs-id',
+              S3Key: 'equipment/existing-pcs.pdf',
+              FileName: 'PCS仕様書.pdf',
+            },
+          ],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getSiteEquipmentById('SITE-1', 7);
+
+    expect(result.files).toEqual([
+      {
+        id: 21,
+        fileType: 'pcs_spec',
+        fileId: 'existing-pcs-id',
+        s3Key: 'equipment/existing-pcs.pdf',
+        fileName: 'PCS仕様書.pdf',
+      },
+    ]);
+  });
+
   it('patches only the supplied equipment fields and preserves false and zero', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ id: 7, hasBattery: false, pcsStandby: 0 }), {

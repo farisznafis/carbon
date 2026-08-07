@@ -28,6 +28,7 @@ export type {
   SiteDashboardMetrics,
   SiteFormData,
   SiteProjectEquipment,
+  SiteProjectEquipmentFile,
   SiteProjectEquipmentApiItem,
   SiteProjectEquipmentDetailResponse,
   SiteProjectEquipmentResponse,

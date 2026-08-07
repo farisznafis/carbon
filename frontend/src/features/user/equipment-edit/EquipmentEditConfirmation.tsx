@@ -11,11 +11,17 @@ import {
 } from '@/components/forms/form-layout';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
+import type {
+  SiteProjectEquipmentFile,
+  SiteProjectEquipmentFileType,
+} from '@/api/site';
 import type { SolarPowerFormData } from '@/lib/equipmentValidations';
+import { getEquipmentFileDisplayName } from './equipmentEditMapper';
 
 type EquipmentEditConfirmationProps = {
   current: SolarPowerFormData;
   original: SolarPowerFormData;
+  existingFiles: SiteProjectEquipmentFile[];
   isSubmitting: boolean;
   onBack: () => void;
   onConfirm: () => void;
@@ -31,9 +37,39 @@ function displayYesNo(value: SolarPowerFormData['hasBattery']) {
   return '-';
 }
 
+function existingFileValue(
+  files: SiteProjectEquipmentFile[],
+  fileType: SiteProjectEquipmentFileType,
+) {
+  const file = files.find((candidate) => candidate.fileType === fileType);
+  return file ? getEquipmentFileDisplayName(file) : '-';
+}
+
+function FileConfirmationItem({
+  label,
+  selectedFile,
+  existingFiles,
+  fileType,
+}: {
+  label: string;
+  selectedFile?: File;
+  existingFiles: SiteProjectEquipmentFile[];
+  fileType: SiteProjectEquipmentFileType;
+}) {
+  const originalValue = existingFileValue(existingFiles, fileType);
+  return (
+    <ConfirmationItem
+      label={label}
+      value={selectedFile?.name ?? originalValue}
+      originalValue={originalValue}
+    />
+  );
+}
+
 export function EquipmentEditConfirmation({
   current,
   original,
+  existingFiles,
   isSubmitting,
   onBack,
   onConfirm,
@@ -63,10 +99,22 @@ export function EquipmentEditConfirmation({
                   value={displayValue(current.equipmentOpDate)}
                   originalValue={displayValue(original.equipmentOpDate)}
                 />
+                <FileConfirmationItem
+                  label="電力受給契約確認書"
+                  selectedFile={current.operationStartDateFile}
+                  existingFiles={existingFiles}
+                  fileType="solar_contract"
+                />
                 <ConfirmationItem
                   label="公称最大出力 (kW)"
                   value={displayValue(current.nominalMaxOutput)}
                   originalValue={displayValue(original.nominalMaxOutput)}
+                />
+                <FileConfirmationItem
+                  label="パネル仕様書・カタログ"
+                  selectedFile={current.nominalMaxOutputFile}
+                  existingFiles={existingFiles}
+                  fileType="panel_catalog"
                 />
               </FormGrid>
             </FormSection>
@@ -98,6 +146,12 @@ export function EquipmentEditConfirmation({
                   value={displayValue(current.powerCondStandby)}
                   originalValue={displayValue(original.powerCondStandby)}
                 />
+                <FileConfirmationItem
+                  label="PCS仕様書・カタログ"
+                  selectedFile={current.pcsFile}
+                  existingFiles={existingFiles}
+                  fileType="pcs_spec"
+                />
               </FormGrid>
             </FormSection>
 
@@ -125,6 +179,12 @@ export function EquipmentEditConfirmation({
                       value={displayValue(current.batteryCapacity)}
                       originalValue={displayValue(original.batteryCapacity)}
                     />
+                    <FileConfirmationItem
+                      label="蓄電池仕様書・カタログ"
+                      selectedFile={current.batteryFile}
+                      existingFiles={existingFiles}
+                      fileType="battery_catalog"
+                    />
                   </>
                 )}
               </FormGrid>
@@ -136,6 +196,12 @@ export function EquipmentEditConfirmation({
                   label="設備の総投資額 (円)"
                   value={displayValue(current.totalInvestment)}
                   originalValue={displayValue(original.totalInvestment)}
+                />
+                <FileConfirmationItem
+                  label="投資額確認資料"
+                  selectedFile={current.totalInvestmentFile}
+                  existingFiles={existingFiles}
+                  fileType="construction_invoice"
                 />
                 <ConfirmationItem
                   label="補助金受給の有無"
@@ -154,12 +220,24 @@ export function EquipmentEditConfirmation({
                       value={displayValue(current.subsidyAmount)}
                       originalValue={displayValue(original.subsidyAmount)}
                     />
+                    <FileConfirmationItem
+                      label="補助金交付決定通知書"
+                      selectedFile={current.subsidyNameFile}
+                      existingFiles={existingFiles}
+                      fileType="subsidy_notice"
+                    />
                   </>
                 )}
                 <ConfirmationItem
                   label="プロジェクト実施前の電力購入単価 (円/kWh)"
                   value={displayValue(current.preProjectUnitPrice)}
                   originalValue={displayValue(original.preProjectUnitPrice)}
+                />
+                <FileConfirmationItem
+                  label="電力購入単価確認資料"
+                  selectedFile={current.preProjectUnitPriceFile}
+                  existingFiles={existingFiles}
+                  fileType="electricity_bill"
                 />
               </FormGrid>
             </FormSection>

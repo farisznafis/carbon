@@ -7,6 +7,7 @@ import { ApiError } from '@/api/_shared/errors';
 import type {
   SiteProjectEquipment,
   SiteProjectEquipmentApiItem,
+  SiteProjectEquipmentApiFile,
   SiteProjectEquipmentDetailResponse,
   SiteProjectEquipmentFileType,
   SiteProjectEquipmentFileUploadResponse,
@@ -25,9 +26,46 @@ import type {
   SiteProjectJoinResponse,
 } from './types';
 
+function normalizedText(...values: unknown[]): string | null {
+  const value = values.find(
+    (candidate) =>
+      (typeof candidate === 'string' && candidate.trim().length > 0) ||
+      typeof candidate === 'number',
+  );
+
+  return value == null ? null : String(value).trim();
+}
+
+function normalizeSiteProjectEquipmentFile(
+  file: SiteProjectEquipmentApiFile,
+) {
+  return {
+    id: typeof file.id === 'number' ? file.id : null,
+    fileType: normalizedText(file.fileType, file.FileType, file.file_type),
+    fileId: normalizedText(
+      file.fileId,
+      file.FileId,
+      file.file_id,
+      file.id,
+    ),
+    s3Key: normalizedText(file.s3Key, file.S3Key, file.s3key, file.s3_key),
+    fileName: normalizedText(
+      file.fileName,
+      file.FileName,
+      file.originalName,
+    ),
+  };
+}
+
 function normalizeSiteProjectEquipment(
   equipment: SiteProjectEquipmentApiItem,
 ): SiteProjectEquipment {
+  const rawFiles = Array.isArray(equipment.files)
+    ? equipment.files
+    : Array.isArray(equipment.Files)
+      ? equipment.Files
+      : [];
+
   return {
     ...equipment,
     equipmentId: equipment.equipmentId ?? equipment.id ?? null,
@@ -35,6 +73,7 @@ function normalizeSiteProjectEquipment(
       equipment.powerCondUnitCount ?? equipment.pcsUnitCount ?? null,
     powerCondStandby:
       equipment.powerCondStandby ?? equipment.pcsStandby ?? null,
+    files: rawFiles.map(normalizeSiteProjectEquipmentFile),
   };
 }
 
