@@ -25,7 +25,6 @@ import java.util.List;
 @Setter
 public class EnR002EquipmentUpdateRequest {
 
-    private LocalDate equipmentOpDate;
     private BigDecimal nominalMaxOutput;
     private String pcsManufacturer;
     private String pcsModel;
@@ -42,5 +41,5 @@ public class EnR002EquipmentUpdateRequest {
     private BigDecimal subsidyAmount;
     private BigDecimal preProjectUnitPrice;
 
-    // field s3?
+    private List<EnR002FileItemRequest> files;
 }

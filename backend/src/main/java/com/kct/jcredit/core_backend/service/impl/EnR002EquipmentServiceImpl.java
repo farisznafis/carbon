@@ -3,6 +3,8 @@ package com.kct.jcredit.core_backend.service.impl;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentUpdateRequest;
+import com.kct.jcredit.core_backend.dto.request.EnR002FileItemRequest;
+import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentFileResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.EnR002EquipmentFile;
@@ -16,12 +18,16 @@ import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepos
 import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentFileRepository;
 import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
+import com.kct.jcredit.core_backend.enums.EquipmentFileType;
 
-
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -149,6 +155,16 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
     }
 
     private EnR002EquipmentResponse toResponse(EnR002Equipment e) {
+        List<EnR002EquipmentFileResponse> fileResponses = equipmentFileRepository
+                .findByEquipment_Id(e.getId()).stream()
+                .map(f -> EnR002EquipmentFileResponse.builder()
+                        .id(f.getId())
+                        .fileType(f.getFileType() != null ? f.getFileType().getValue() : null)
+                        .fileId(f.getFileId())
+                        .s3Key(f.getS3Key())
+                        .build())
+                .collect(Collectors.toList());
+
         return EnR002EquipmentResponse.builder()
                 .id(e.getId())
                 .siteId(e.getSite().getPublicId())
@@ -168,9 +184,10 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 .subsidyName(e.getSubsidyName())
                 .subsidyAmount(e.getSubsidyAmount())
                 .preProjectUnitPrice(e.getPreProjectUnitPrice())
-                .build();
+                .files(fileResponses)
+                                .build(); 
     }
-    @Override
+        @Override
     public EnR002EquipmentResponse getEquipmentById(String siteId,
                                                     Integer equipmentId,
                                                     String companyId) {
@@ -201,6 +218,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
         public EnR002EquipmentResponse updateEquipment(String siteId, Integer equipmentId,
                                                         String companyId, EnR002EquipmentUpdateRequest request) {
 
+        // ── 1. Guard checks ──────────────────────────────────────────
         Site site = siteRepository.findByPublicIdWithFallback(siteId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND, ResponseConstants.MSG_SITE_NOT_FOUND));
@@ -214,11 +232,10 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND, "設備情報が見つかりません。"));
 
-        // Guard — pastikan equipment ini memang milik site yang diminta
         if (!equipment.getSite().getId().equals(siteDbId))
                 throw new CustomException(ResponseConstants.NOT_FOUND, "設備情報が見つかりません。");
 
-        if (request.getEquipmentOpDate() != null) equipment.setEquipmentOpDate(request.getEquipmentOpDate());
+        // ── 2. Merge field non-file (in-memory) ─────────
         if (request.getNominalMaxOutput() != null) equipment.setNominalMaxOutput(request.getNominalMaxOutput());
         if (request.getPcsManufacturer() != null) equipment.setPcsManufacturer(request.getPcsManufacturer());
         if (request.getPcsModel() != null) equipment.setPcsModel(request.getPcsModel());
@@ -235,7 +252,117 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
         if (request.getSubsidyAmount() != null) equipment.setSubsidyAmount(request.getSubsidyAmount());
         if (request.getPreProjectUnitPrice() != null) equipment.setPreProjectUnitPrice(request.getPreProjectUnitPrice());
 
+        // ── 3. final file types ────────────
+        List<EnR002EquipmentFile> existingFiles = equipmentFileRepository.findByEquipment_Id(equipmentId);
+
+        List<EquipmentFileType> finalFileTypes;
+        if (request.getFiles() != null) {
+                finalFileTypes = request.getFiles().stream()
+                        .map(EnR002FileItemRequest::getFileType)
+                        .collect(Collectors.toList());
+        } else {
+                finalFileTypes = existingFiles.stream()
+                        .map(EnR002EquipmentFile::getFileType)
+                        .collect(Collectors.toList());
+        }
+        List<EnR002EquipmentFile> filesForValidation = finalFileTypes.stream()
+                .map(type -> {
+                        EnR002EquipmentFile f = new EnR002EquipmentFile();
+                        f.setFileType(type);
+                        return f;
+                })
+                .collect(Collectors.toList());
+
+        // ── 4. Validation ──────────────
+        if (request.getFiles() != null) {
+        ParticipationProjectValidationServiceImpl.EquipmentUpdateValidator
+                .validateNewFileContents(String.valueOf(equipmentId), request.getFiles());
+}
+        ParticipationProjectValidationServiceImpl.EquipmentUpdateValidator
+                .validateEquipmentEntityState(String.valueOf(equipmentId), equipment, filesForValidation);
+
+        // ═══════════════════ pass validation ═══════════════════
+
+        // ── 5. Save equipment (field non-file) ──────────────────────────
         EnR002Equipment saved = equipmentRepository.save(equipment);
+
+        // ── 6. Update files ──────────────
+        List<EnR002EquipmentFile> filesToMoveAfterCommit = new ArrayList<>();
+
+        if (request.getFiles() != null) {
+
+                Set<String> requestedS3Keys = request.getFiles().stream()
+                        .map(EnR002FileItemRequest::getS3Key)
+                        .collect(Collectors.toSet());
+
+                List<EnR002EquipmentFile> filesToDelete = existingFiles.stream()
+                        .filter(f -> !requestedS3Keys.contains(f.getS3Key()))
+                        .collect(Collectors.toList());
+
+                filesToDelete.forEach(f -> {
+                try {
+                        fileUploadService.deletePermanentFile(f.getS3Key());
+                } catch (Exception e) {
+                        log.error("Failed to delete old S3 file. s3Key={}, error={}", f.getS3Key(), e.getMessage());
+                }
+                });
+                equipmentFileRepository.deleteAll(filesToDelete);
+
+                for (EnR002FileItemRequest f : request.getFiles()) {
+
+                boolean isNewFile = f.getS3Key().startsWith("tmp/equipments/");
+                Optional<EnR002EquipmentFile> matchedExisting = existingFiles.stream()
+                        .filter(existing -> existing.getS3Key().equals(f.getS3Key()))
+                        .findFirst();
+
+                if (isNewFile) {
+                        // ── new file— insert, move permanent after commit ──
+                        EnR002EquipmentFile ef = new EnR002EquipmentFile();
+                        ef.setEquipment(saved);
+                        ef.setFileType(f.getFileType());
+                        ef.setFileId(f.getFileId());
+                        ef.setS3Key(f.getS3Key());
+                        EnR002EquipmentFile savedFile = equipmentFileRepository.save(ef);
+                        filesToMoveAfterCommit.add(savedFile);
+
+                } else if (matchedExisting.isPresent()) {
+                        EnR002EquipmentFile existing = matchedExisting.get();
+                        if (!existing.getFileType().equals(f.getFileType())) {
+                        existing.setFileType(f.getFileType());
+                        equipmentFileRepository.save(existing);
+                        }
+
+                } else {
+                        throw new CustomException("INVALID_FILE_REFERENCE",
+                                "無効なファイル参照です。ファイルを再アップロードしてください。s3Key=" + f.getS3Key());
+                        }
+                }
+        }
+                
+
+        // ── 7. afterCommit ─────
+        if (!filesToMoveAfterCommit.isEmpty()) {
+                TransactionSynchronizationManager.registerSynchronization(
+                        new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                                filesToMoveAfterCommit.forEach(fileEntity -> {
+                                try {
+                                        String permanentKey = fileUploadService.moveTempToPermanent(
+                                                fileEntity.getS3Key(), siteId, saved.getId());
+                                        equipmentFileRepository.updateS3Key(
+                                                fileEntity.getId(), permanentKey);
+                                } catch (Exception e) {
+                                        log.error("S3 move failed. fileId={}, error={}",
+                                                fileEntity.getFileId(), e.getMessage());
+                                        // TODO: retry table
+                                }
+                                });
+                        }
+                        }
+                );
+        }
+
         return toResponse(saved);
         }
 }
