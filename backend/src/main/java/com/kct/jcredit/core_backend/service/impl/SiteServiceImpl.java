@@ -19,14 +19,12 @@ import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.entity.EnR002Equipment;
 import com.kct.jcredit.core_backend.entity.EnR002EquipmentFile;
-import com.kct.jcredit.core_backend.entity.SiteR002MemberData;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
 import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentFileRepository;
 import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentRepository;
-import com.kct.jcredit.core_backend.repository.postgres.SiteR002MemberDataRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.service.SiteService;
 
@@ -53,7 +51,6 @@ public class SiteServiceImpl implements SiteService {
     private final SiteRepository siteRepository;
     private final ParticipatingCompanyRepository participatingCompanyRepository;
     private final ProjectRepository projectRepository;
-    private final SiteR002MemberDataRepository siteR002MemberDataRepository;
     private final EnR002EquipmentFileRepository siteR002EquipmentFileRepository;
     private final EnR002EquipmentRepository siteR002EquipmentRepository;
     private final SiteProjectRelationRepository siteProjectRelationRepository;
@@ -396,15 +393,6 @@ public class SiteServiceImpl implements SiteService {
 
             SiteProjectRelation relation = siteProjectRelationRepository.findByProjectIdAndSiteId(projectDbId, siteDbId);
             if (relation == null) {
-                response.setStatusCode(ResponseConstants.NOT_FOUND);
-                response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
-                return response;
-            }
-
-            SiteR002MemberData memberData = siteR002MemberDataRepository
-                    .findByProject_IdAndSite_Id(projectDbId, siteDbId)
-                    .orElse(null);
-            if (memberData == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
                 return response;
