@@ -270,7 +270,42 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         map.put("${applyDate}", formatDate(participation.getCreatedAt()));
         map.put("${h1}", safe(company.getNameFurigana()));
         map.put("${h2}", safe(company.getNameJa()));
-        map.put("${h3}", "");
+        // ── 印鑑欄（申請企業）─────────────────────────────────────
+        // 【現状】印鑑レス運用（Jalur C）
+        // hasConsent + isAgreeTerms + repName + repRole + timestamp が
+        // DynamoDBに記録済みのため、電子的な同意証跡としては十分と判断。
+        map.put("${h3}", "電子同意済");
+
+        // ─────────────────────────────────────────────────────────
+        // 【将来対応】DocuSign連携（Jalur A）
+        //
+        // 実装の流れ:
+        //   1. PDF下書き生成（現状のgenerateAndProcess()の処理）
+        //   2. DocuSign envelope作成 + 下書きPDF添付
+        //      - signer: participation.getUser().getEmail()
+        //      - 署名欄の位置指定はアンカーテキスト方式を推奨
+        //        （テンプレートに "/sig_sankasha/" 等の隠しテキストを配置）
+        //   3. DocuSignが申請者へ署名依頼メールを自動送信
+        //      （このメール送信はDocuSign側の機能。自前のメール送信は不要）
+        //   4. 署名完了 → DocuSign Connect (webhook) で通知受信
+        //      - エンドポイント: POST /webhooks/docusign/envelope-completed
+        //      - HMAC署名検証が必須（偽装リクエスト防止）
+        //   5. 署名済みPDFをDocuSign APIから取得
+        //   6. S3へ再アップロード → s3_key_pdf_membership を更新
+        //
+        // 開発環境:
+        //   Developer Sandbox は無料・無期限（月25 envelope程度）
+        //   ただしデモ環境のためテストスタンプ付き・法的効力なし
+        //   本番は有料（Starter ~$50/月〜）
+        //
+        // 必要な追加実装:
+        //   - DocuSignAuthService（OAuth 2.0 JWT Grant）
+        //   - DocuSignEnvelopeService（envelope作成・送信・取得）
+        //   - DocuSignWebhookController（完了通知受信）
+        //   - participating_project に envelope_id / signing_status カラム追加
+        //   - 再生成用の generateFinalPdf() メソッド
+        //     （下書きと署名済みで2回PDF処理が発生する）
+        // ─────────────────────────────────────────────────────────
         map.put("${h4}", safe(company.getPostalCode()));
         map.put("${h5}", buildAddress(company));
         map.put("${h6}", safe(company.getPhoneNumber()));
@@ -342,9 +377,9 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         map.put("${b4}", "○");
         map.put("${b5}", "○");
 
-        map.put("${送付先アドレス}", "");
-        map.put("${送付先}", "");
-        map.put("${FAX番号}", "");
+        map.put("${送付先アドレス}", safe(company.getEmail()));
+        map.put("${送付先}", buildAddress(company)); 
+        map.put("${FAX番号}", safe(company.getFax()));       
 
         map.put("${利用目的}", safe(project.getMethodDetails()));
         map.put("${YYYY年MM月DD}", formatDate(participation.getCreatedAt()));
@@ -364,9 +399,9 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         map.put("${d5}", boolToMark(review.getIsSubsidyCheck()));
 
         map.put("${管理者_1次}", safe(review.getPrimaryApplReviewerName()));
-        map.put("${㊞1}", safe(review.getPrimaryApplReviewerInkan()));
+        map.put("${㊞1}", review.getPrimaryApplReviewerName() != null ? "電子承認" : "");
         map.put("${管理者_2次}", safe(review.getSecondaryApplReviewerName()));
-        map.put("${㊞2}", safe(review.getSecondaryApplReviewerInkan()));
+        map.put("${㊞2}", review.getSecondaryApplReviewerName() != null ? "電子承認" : "");
 
         return map;
     }

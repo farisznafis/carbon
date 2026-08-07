@@ -10,9 +10,13 @@ import lombok.Data;
 @Data
 public class UpdateUserRequest {
 
-    // サイトID 
-    @Min(value = 1, message = "サイトIDは1以上の数値を指定してください。")
-    private Integer UserId;  // Target user ID to update. Not to be changed.
+    @Min(value = 1, message = "ユーザーIDは1以上の数値を指定してください。")
+    private Integer userId;
+
+    @Pattern(regexp = "^(admin|operator)$", message = "役割は 'admin' または 'operator' を指定してください。")
+    private String role;
+
+    private java.util.List<String> permissionCodes;
 
     // 名前（名）
 

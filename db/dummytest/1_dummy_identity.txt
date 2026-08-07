@@ -399,7 +399,7 @@ VALUES
     'operator1', '真耶', 'マヤ', '増田', 'マスダ',
     'operator1@creation-tech.co.jp', '03-5555-0101',
     '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S',
-    'operator', 0, NULL, 1, FALSE, 0
+    'admin', 0, NULL, 1, FALSE, 0
 ),
 (
     2, TRUE,
