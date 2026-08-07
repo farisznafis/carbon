@@ -10,6 +10,7 @@ import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRe
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyMethodologyValidateRequest;
 import com.kct.jcredit.core_backend.dto.response.EnR002FileResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
+import com.kct.jcredit.core_backend.dto.response.PdfDownloadResponse;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 import com.kct.jcredit.core_backend.dto.response.ProjectJoinResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectPdfDownloadResponse;
@@ -85,7 +86,7 @@ public class SiteProjectController {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // VALIDATE — per halaman (stateless, tidak simpan apapun)
+    // VALIDATE
     // ─────────────────────────────────────────────────────────────
 
     @PostMapping("/equipment/validate")
@@ -133,7 +134,7 @@ public class SiteProjectController {
         return ResponseEntity.ok(BaseResponse.success("入力内容に問題ありません。"));
     }
     // ─────────────────────────────────────────────────────────────
-    // SUBMIT — join project (endpoint utama)
+    // SUBMIT — join project
     // ─────────────────────────────────────────────────────────────
 
     @PostMapping("/projects/{projectId}/join")
@@ -151,24 +152,6 @@ public class SiteProjectController {
                 .submitParticipation(projectId, companyId, userId, request);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
-
-    // ─────────────────────────────────────────────────────────────
-    // PDF DOWNLOAD
-    // ─────────────────────────────────────────────────────────────
-
-    // @GetMapping("/{participationId}/pdf")
-    // @PreAuthorize("hasRole('master')")
-    // @SecurityRequirement(name = "bearerAuth")
-    // public ResponseEntity<ProjectPdfDownloadResponse> downloadPdf(
-    //         Authentication authentication,
-    //         @PathVariable Integer participationId) {
-
-    //     String companyId = extractCompanyId(authentication);
-    //     ProjectPdfDownloadResponse response = participationService
-    //             .getPdfDownloadUrl(participationId, companyId);
-
-    //     return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(200));
-    // }
 
     // ─────────────────────────────────────────────────────────────
     // PRIVATE — JWT helpers
@@ -206,13 +189,13 @@ public class SiteProjectController {
     @PreAuthorize("hasRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<String> generate(@PathVariable Integer participationId) {
-        log.warn("[DEBUG] generateAndProcess を手動実行します。participationId={}", participationId);
+        log.warn("generateAndProcess を手動実行します。participationId={}", participationId);
 
         try {
             pdfService.generateAndProcess(participationId);
             return ResponseEntity.ok("PDF生成処理が完了しました。participationId=" + participationId);
         } catch (Exception e) {
-            log.error("[DEBUG] PDF生成失敗", e);
+            log.error("PDF生成失敗", e);
             return ResponseEntity.internalServerError()
                     .body("エラー: " + e.getMessage());
         }
@@ -244,7 +227,7 @@ public class SiteProjectController {
         try {
             pdfService.generateAndProcess(participationId);
             String url = pdfService.generatePresignedUrl(s3Key);
-            log.warn("[DEBUG] 生成完了。ブラウザで以下URLを開いてPDFを確認してください: {}", url);
+            log.warn("生成完了。ブラウザで以下URLを開いてPDFを確認してください: {}", url);
             return ResponseEntity.ok(url);
         } catch (Exception e) {
             log.error("[DEBUG] end-to-endテスト失敗", e);

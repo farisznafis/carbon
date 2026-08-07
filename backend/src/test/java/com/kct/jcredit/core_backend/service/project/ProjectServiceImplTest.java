@@ -8,6 +8,7 @@ import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
 import com.kct.jcredit.core_backend.service.impl.ProjectServiceImpl;
 import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.Project;
+import com.kct.jcredit.core_backend.exception.ResourceNotFoundException;
 import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -133,11 +134,11 @@ class ProjectServiceImplTest {
         projectDtoReq.setOperatorCompanyId("999");
         when(operatorCompanyRepository.findById(999)).thenReturn(Optional.empty());
 
-        UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class, () -> {
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             projectService.createProject(createRequest);
         });
 
-        assertEquals(ResponseConstants.MSG_UNEXPEXTED_ERROR, exception.getMessage());
+        assertEquals(ResponseConstants.MSG_COMPANY_NOT_FOUND, exception.getMessage());
 
         verify(projectRepository, never()).saveAll(any());
     }
