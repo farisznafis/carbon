@@ -13,6 +13,9 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
+import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -27,9 +30,11 @@ import java.util.Optional;
 public class MonitoringTableRecordSolarRepository {
 
     private final DynamoDbTable<EnR002MonitoringRecord> table;
+    private final DynamoDbEnhancedClient enhancedClient;
 
 
     public MonitoringTableRecordSolarRepository(DynamoDbEnhancedClient enhancedClient) {
+        this.enhancedClient = enhancedClient;
         this.table = enhancedClient.table(
             "solar_monitoring_table_record",
             TableSchema.fromBean(EnR002MonitoringRecord.class)
@@ -90,6 +95,47 @@ public class MonitoringTableRecordSolarRepository {
             .limit(1)
         );
         return pages.items().stream().findFirst();
+    }
+
+    public List<EnR002MonitoringRecord> findAllByPk(String pk) {
+        QueryConditional qc = QueryConditional.keyEqualTo(k -> k.partitionValue(pk));
+        PageIterable<EnR002MonitoringRecord> pages = table.query(r -> r.queryConditional(qc));
+
+        List<EnR002MonitoringRecord> items = new ArrayList<>();
+        for (Page<EnR002MonitoringRecord> page : pages) {
+            items.addAll(page.items());
+        }
+        return items;
+    }
+
+    /**
+     * Hapus banyak record sekaligus lewat DynamoDB BatchWriteItem (maks 25 item/request,
+     * di-chunk otomatis). Return list Key yang GAGAL dihapus (unprocessed) setelah retry,
+     * supaya caller tahu persis record mana yang perlu ditandai FAILURE di history.
+     */
+    public List<Key> deleteBatch(List<Key> keys) {
+        List<Key> unprocessed = new ArrayList<>();
+        for (List<Key> chunk : partition(keys, 25)) {
+            WriteBatch.Builder<EnR002MonitoringRecord> batchBuilder =
+                    WriteBatch.builder(EnR002MonitoringRecord.class).mappedTableResource(table);
+            chunk.forEach(batchBuilder::addDeleteItem);
+
+            BatchWriteResult result = enhancedClient.batchWriteItem(
+                    BatchWriteItemEnhancedRequest.builder()
+                            .writeBatches(batchBuilder.build())
+                            .build());
+
+            unprocessed.addAll(result.unprocessedDeleteItemsForTable(table));
+        }
+        return unprocessed;
+    }
+
+    private static List<List<Key>> partition(List<Key> keys, int size) {
+        List<List<Key>> chunks = new ArrayList<>();
+        for (int i = 0; i < keys.size(); i += size) {
+            chunks.add(keys.subList(i, Math.min(i + size, keys.size())));
+        }
+        return chunks;
     }
 
     public boolean existsActiveByRecordIdAndDateRecorded(String recordId, String dateRecorded) {

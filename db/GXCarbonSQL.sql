@@ -1,5 +1,5 @@
 -- ============================================================================
--- GXCarbon schema — 2026-07-28
+-- GXCarbon schema — 2026-08-07
 -- Complete, code-accurate baseline: matches every @Entity in
 -- src/main/java/com/kct/jcredit/core_backend/entity/ as of this date.
 -- Intended for setting up a fresh database from scratch (DROP + CREATE),
@@ -17,15 +17,27 @@
 --     a fresh CREATE — no existing data to violate batch_id/project_id
 --     uniqueness or file_type/file_id NOT NULL)
 --   - migration_2026-07-27_create-participating-project.sql
+--   - monitoring_data_deletion_ddl.sql (monitoring_data_deletion_history,
+--     project.status_finalized_at)
+--
+-- operating_user.role: correct set is ('admin','operator'); the live DB's
+-- operating_user_role_check currently allows ('operator','user') instead,
+-- which is out of date. Needs a manual ALTER on the live DB to match.
+--
+-- site_r002_member_data: intentionally DROPped and NOT recreated.
+-- SiteR002MemberData / its service is deprecated and being removed from the
+-- codebase; once that lands, drop the DROP TABLE line too.
 --
 -- Intentionally NOT included (dropped/orphaned, not used by any entity):
---   subscription_log, batch_processing_history, site_r002_equipment_file
+--   subscription_log, batch_processing_history, site_r002_equipment_file,
+--   site_r002_member_data (deprecated, pending removal — see note above)
 -- ============================================================================
 
 -- ============================
 -- DROP TABLES (dependency-safe)
 -- ============================
 
+DROP TABLE IF EXISTS monitoring_data_deletion_history CASCADE;
 DROP TABLE IF EXISTS notification CASCADE;
 DROP TABLE IF EXISTS en_r002_reduction_result_total CASCADE;
 DROP TABLE IF EXISTS en_r002_reduction_result CASCADE;
@@ -47,6 +59,8 @@ DROP TABLE IF EXISTS security_action_link CASCADE;
 DROP TABLE IF EXISTS batch_process_history CASCADE;
 DROP TABLE IF EXISTS participating_company CASCADE;
 DROP TABLE IF EXISTS operator_company CASCADE;
+DROP TABLE IF EXISTS permission CASCADE;
+DROP TABLE IF EXISTS operating_user_permission CASCADE;
 
 
 -- ============================
@@ -222,7 +236,8 @@ CREATE TABLE project (
     method_combi_feasibility BOOLEAN NOT NULL,
     method_details VARCHAR(1000) NOT NULL,
     operator_company_id INT NOT NULL REFERENCES operator_company(id),
-    public_id VARCHAR(32) NOT NULL UNIQUE
+    public_id VARCHAR(32) NOT NULL UNIQUE,
+    status_finalized_at TIMESTAMP
 );
 
 -- Operating User
@@ -241,13 +256,71 @@ CREATE TABLE operating_user (
     email VARCHAR(254) NOT NULL,
     phone_number VARCHAR(20) NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role VARCHAR(10) NOT NULL CHECK (role IN ('operator', 'user')),
+    role VARCHAR(10) NOT NULL CHECK (role IN ('admin', 'operator')),
     login_attempts INT NOT NULL,
     account_locked_until TIMESTAMP,
     company_id INT NOT NULL REFERENCES operator_company(id),
     email_otp_login_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     auth_version INT NOT NULL DEFAULT 0
 );
+
+CREATE TABLE permission (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    code VARCHAR(80) NOT NULL UNIQUE,
+
+    display_name VARCHAR(100) NOT NULL,
+
+    category VARCHAR(50) NOT NULL,
+
+    is_active BOOLEAN NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100)
+);
+
+CREATE TABLE operating_user_permission (
+    operating_user_id INT NOT NULL
+        REFERENCES operating_user(id)
+        ON DELETE CASCADE,
+
+    permission_id INT NOT NULL
+        REFERENCES permission(id)
+        ON DELETE RESTRICT,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+
+    PRIMARY KEY (operating_user_id, permission_id)
+);
+
+INSERT INTO permission
+    (code, display_name, category, is_active)
+VALUES
+    ('PROJECT_CREATE', 'プロジェクト作成', 'PROJECT', TRUE),
+    ('PROJECT_READ', 'プロジェクト参照', 'PROJECT', TRUE),
+    ('PROJECT_UPDATE', 'プロジェクト更新', 'PROJECT', TRUE),
+    ('PROJECT_STATUS_UPDATE', 'プロジェクトステータス変更', 'PROJECT', TRUE),
+    ('PROJECT_APPLICATION_OUTPUT', '申請書出力', 'PROJECT', TRUE),
+
+    ('PARTICIPATING_COMPANY_READ', '参加企業参照', 'PARTICIPATING_COMPANY', TRUE),
+    ('PARTICIPATING_COMPANY_APPLICATION_REVIEW', '参加申請処理', 'PARTICIPATING_COMPANY', TRUE),
+    ('PARTICIPATING_COMPANY_SUSPEND', '参加企業一時停止', 'PARTICIPATING_COMPANY', TRUE),
+    ('MASTER_USER_PASSWORD_RESET', 'マスターユーザーパスワードリセット', 'PARTICIPATING_COMPANY', TRUE),
+
+    ('MONITORING_READ', 'モニタリングデータ参照', 'MONITORING', TRUE),
+    ('MONITORING_DELETE', 'モニタリングデータ削除', 'MONITORING', TRUE),
+    ('MONITORING_CANCEL', 'モニタリングデータ取消', 'MONITORING', TRUE),
+    ('MONITORING_BATCH_HISTORY_READ', 'バッチ履歴参照', 'MONITORING', TRUE),
+    ('MONITORING_BATCH_ERROR_READ', 'バッチエラー参照', 'MONITORING', TRUE),
+
+    ('OPERATOR_USER_READ', '運用者一覧参照', 'USER_MANAGEMENT', TRUE),
+    ('OPERATOR_USER_CREATE', '運用者作成', 'USER_MANAGEMENT', TRUE),
+    ('OPERATOR_USER_UPDATE', '運用者更新', 'USER_MANAGEMENT', TRUE),
+
+    ('METHODOLOGY_READ', '方法論参照', 'METHODOLOGY', TRUE),
+    ('APPLICATION_FORM_READ', '申請書様式参照', 'APPLICATION_FORM', TRUE);
 
 -- Site
 CREATE TABLE site (
@@ -521,6 +594,23 @@ CREATE TABLE notification (
     participating_user_id INT REFERENCES participating_user(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
+-- Monitoring Data Deletion History
+CREATE TABLE monitoring_data_deletion_history (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    monitoring_record_id VARCHAR(100) NOT NULL,
+    record_time_updated VARCHAR(50) NOT NULL,
+    date_recorded VARCHAR(10),
+    project_id INT NOT NULL,
+    site_id INT,
+    result VARCHAR(10) NOT NULL,
+    failure_reason VARCHAR(500),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100)
+);
+
 
 -- ============================
 -- INDEXES
@@ -532,6 +622,9 @@ CREATE INDEX idx_company_suspension_company_created
 CREATE INDEX idx_participating_company_status_created
     ON participating_company (company_status, created_at DESC, id DESC)
     WHERE (deleted_at IS NULL);
+
+CREATE INDEX idx_monitoring_deletion_history_project_id
+    ON monitoring_data_deletion_history (project_id);
 
 CREATE INDEX idx_participating_user_company_id ON participating_user (company_id);
 

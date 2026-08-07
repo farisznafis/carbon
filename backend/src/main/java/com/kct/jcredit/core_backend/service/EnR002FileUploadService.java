@@ -26,4 +26,6 @@ public interface EnR002FileUploadService {
     String moveTempToPermanent(String tempS3Key,
                                String siteId,
                                Integer equipmentId);
+                               
+    void deletePermanentFile(String s3Key);
 }

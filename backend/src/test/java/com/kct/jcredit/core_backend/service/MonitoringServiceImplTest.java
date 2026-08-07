@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -36,6 +38,7 @@ import com.kct.jcredit.core_backend.dto.request.RegisterMonitoringRecordSolarReq
 import com.kct.jcredit.core_backend.dto.response.FileUploadResponse;
 import com.kct.jcredit.core_backend.dto.response.MonitoringRecordSolarResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+import com.kct.jcredit.core_backend.entity.EnR002Equipment;
 import com.kct.jcredit.core_backend.entity.EnR002MonitoringRecord;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
@@ -43,6 +46,7 @@ import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.repository.dynamodb.MonitoringTableRecordSolarRepository;
+import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
@@ -94,6 +98,9 @@ class MonitoringServiceImplTest {
 
     @Mock(lenient = true)
     private MonitoringTableRecordSolarRepository monitoringRecordSolarRepository;
+
+    @Mock(lenient = true)
+    private EnR002EquipmentRepository equipmentRepository;
 
     @Mock(lenient = true)
     private S3Client s3Client;
@@ -186,6 +193,13 @@ class MonitoringServiceImplTest {
         when(fukuokaSite.getSiteName()).thenReturn("Fukuoka Office");
         when(fukuokaSite.getCompany()).thenReturn(participatingCompany);
         when(fukuokaSite.getIsActive()).thenReturn(true);
+
+        // Setup default equipment (Tokyo, hasBattery=true) returned for any equipmentId lookup
+        EnR002Equipment defaultEquipment = new EnR002Equipment();
+        defaultEquipment.setId(100);
+        defaultEquipment.setSite(tokyoSite);
+        defaultEquipment.setHasBattery(true);
+        when(equipmentRepository.findById(anyInt())).thenReturn(Optional.of(defaultEquipment));
     }
 
     // ============ SUITE 1: registerMonitoringRecordSolar ============
@@ -375,6 +389,87 @@ class MonitoringServiceImplTest {
     }
 
     @Test
+    @DisplayName("Should reject when equipmentId is missing")
+    void testRegisterMonitoringRecord_MissingEquipmentId_ValidationError() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        String projectId = "PROJ0001";
+        String siteId = "21";
+
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setEquipmentId(null);
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
+        when(siteRepository.findByPublicIdWithFallback(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(projectRepository.findByPublicIdWithFallback(projectId)).thenReturn(Optional.of(project));
+        when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
+
+        MonitoringRecordSolarResponse response =
+                monitoringService.registerMonitoringRecordSolar(username, companyId, request);
+
+        assertNotNull(response);
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_EQUIPMENT_ID_REQUIRED, response.getErrors().get("equipmentId"));
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should reject when equipmentId belongs to a different site")
+    void testRegisterMonitoringRecord_EquipmentNotInSite_NotFound() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        String projectId = "PROJ0001";
+        String siteId = "21";
+
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setEquipmentId(999);
+
+        EnR002Equipment equipmentInAnotherSite = new EnR002Equipment();
+        equipmentInAnotherSite.setId(999);
+        equipmentInAnotherSite.setSite(fukuokaSite);
+        equipmentInAnotherSite.setHasBattery(true);
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
+        when(siteRepository.findByPublicIdWithFallback(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(projectRepository.findByPublicIdWithFallback(projectId)).thenReturn(Optional.of(project));
+        when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
+        when(equipmentRepository.findById(999)).thenReturn(Optional.of(equipmentInAnotherSite));
+
+        MonitoringRecordSolarResponse response =
+                monitoringService.registerMonitoringRecordSolar(username, companyId, request);
+
+        assertNotNull(response);
+        assertEquals(ResponseConstants.NOT_FOUND, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_EQUIPMENT_NOT_FOUND, response.getMessage());
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should persist equipmentID on the saved monitoring record entity")
+    void testRegisterMonitoringRecord_Success_PersistsEquipmentId() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        String projectId = "PROJ0001";
+        String siteId = "21";
+
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(masterUser));
+        when(siteRepository.findByPublicIdWithFallback(siteId)).thenReturn(Optional.of(tokyoSite));
+        when(projectRepository.findByPublicIdWithFallback(projectId)).thenReturn(Optional.of(project));
+        when(siteProjectRelationRepository.existsByProjectAndSite(project, tokyoSite)).thenReturn(true);
+        when(monitoringRecordSolarRepository.save(any())).thenReturn(new EnR002MonitoringRecord());
+
+        MonitoringRecordSolarResponse response =
+                monitoringService.registerMonitoringRecordSolar(username, companyId, request);
+
+        assertEquals(ResponseConstants.OK, response.getStatusCode());
+        ArgumentCaptor<EnR002MonitoringRecord> captor = ArgumentCaptor.forClass(EnR002MonitoringRecord.class);
+        verify(monitoringRecordSolarRepository).save(captor.capture());
+        assertEquals(100, captor.getValue().getEquipmentID());
+    }
+
+    @Test
     @DisplayName("POST should require battery evidence when changedBattery is true")
     void testRegisterMonitoringRecord_ChangedBatteryWithoutEvidence_ValidationError() {
         String username = "multi_site_master";
@@ -437,6 +532,89 @@ class MonitoringServiceImplTest {
 
         assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
         assertEquals(ResponseConstants.MSG_CHANGED_BATTERY_REQUIRED,
+                response.getErrors().get("changedBattery"));
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("POST should succeed without changedBattery when equipment has no battery")
+    void testRegisterMonitoringRecord_NoBatteryEquipment_ChangedBatteryOmitted_Success() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        String projectId = "PROJ0001";
+        String siteId = "21";
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setChangedBattery(null);
+        request.setElpjBatteryValue(null);
+        request.setElpjBatterySpecificationUrl(null);
+
+        stubValidMonitoringContext(username, projectId, siteId);
+        EnR002Equipment noBatteryEquipment = new EnR002Equipment();
+        noBatteryEquipment.setId(100);
+        noBatteryEquipment.setSite(tokyoSite);
+        noBatteryEquipment.setHasBattery(false);
+        when(equipmentRepository.findById(100)).thenReturn(Optional.of(noBatteryEquipment));
+        when(monitoringRecordSolarRepository.save(any())).thenReturn(new EnR002MonitoringRecord());
+
+        MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
+                username, companyId, request);
+
+        assertEquals(ResponseConstants.OK, response.getStatusCode());
+        verify(monitoringRecordSolarRepository, times(1)).save(any(EnR002MonitoringRecord.class));
+    }
+
+    @Test
+    @DisplayName("POST should reject changedBattery=true when equipment has no battery")
+    void testRegisterMonitoringRecord_NoBatteryEquipment_ChangedBatteryTrue_ValidationError() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        String projectId = "PROJ0001";
+        String siteId = "21";
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setChangedBattery(true);
+        request.setElpjBatteryValue(new BigDecimal("10.00"));
+        request.setElpjBatterySpecificationUrl("https://example.com/battery.pdf");
+
+        stubValidMonitoringContext(username, projectId, siteId);
+        EnR002Equipment noBatteryEquipment = new EnR002Equipment();
+        noBatteryEquipment.setId(100);
+        noBatteryEquipment.setSite(tokyoSite);
+        noBatteryEquipment.setHasBattery(false);
+        when(equipmentRepository.findById(100)).thenReturn(Optional.of(noBatteryEquipment));
+
+        MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
+                username, companyId, request);
+
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_BATTERY_NOT_APPLICABLE,
+                response.getErrors().get("changedBattery"));
+        verify(monitoringRecordSolarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("POST should reject stray ELPJ_battery_value when equipment has no battery, even without changedBattery")
+    void testRegisterMonitoringRecord_NoBatteryEquipment_StrayBatteryValue_ValidationError() {
+        String username = "multi_site_master";
+        String companyId = "COMP00000002";
+        String projectId = "PROJ0001";
+        String siteId = "21";
+        RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
+        request.setChangedBattery(null);
+        request.setElpjBatteryValue(new BigDecimal("10.00"));
+        request.setElpjBatterySpecificationUrl(null);
+
+        stubValidMonitoringContext(username, projectId, siteId);
+        EnR002Equipment noBatteryEquipment = new EnR002Equipment();
+        noBatteryEquipment.setId(100);
+        noBatteryEquipment.setSite(tokyoSite);
+        noBatteryEquipment.setHasBattery(false);
+        when(equipmentRepository.findById(100)).thenReturn(Optional.of(noBatteryEquipment));
+
+        MonitoringRecordSolarResponse response = monitoringService.registerMonitoringRecordSolar(
+                username, companyId, request);
+
+        assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
+        assertEquals(ResponseConstants.MSG_BATTERY_NOT_APPLICABLE,
                 response.getErrors().get("changedBattery"));
         verify(monitoringRecordSolarRepository, never()).save(any());
     }
@@ -1336,6 +1514,7 @@ class MonitoringServiceImplTest {
         RegisterMonitoringRecordSolarRequest request = new RegisterMonitoringRecordSolarRequest();
         request.setProjectId(projectId);
         request.setSiteId(siteId);
+        request.setEquipmentId(100);
         request.setUserId(13); // Master user ID
         request.setElPvEvidenceUrl("https://example.com/elpv.pdf");
         request.setElPvrEvidenceUrl("https://example.com/elpvr.pdf");

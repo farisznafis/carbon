@@ -16,6 +16,7 @@ public class MonitoringDataSolarResponse {
   private String id;
   private String projectId;
   private String siteId;
+  private Integer equipmentId;
   private Integer userId;
   private String projectType;
   private String timeUpdated;

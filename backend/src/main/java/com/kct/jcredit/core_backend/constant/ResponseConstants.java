@@ -47,11 +47,14 @@ public class ResponseConstants {
     public static final String MSG_ELPJ_CONTROL_EVIDENCE_REQUIRED = "制御機器稼働時間（ELPJ）の証憑ファイルをアップロードしてください。";
     public static final String MSG_PROJECT_ID_REQUIRED = "プロジェクトIDを入力してください。";
     public static final String MSG_SITE_ID_REQUIRED = "拠点IDを入力してください。";
+    public static final String MSG_EQUIPMENT_ID_REQUIRED = "設備IDを入力してください。";
+    public static final String MSG_EQUIPMENT_NOT_FOUND = "該当する設備が見つかりませんでした。";
     public static final String MSG_PROJECT_TYPE_REQUIRED = "プロジェクトタイプを入力してください。";
     public static final String MSG_DATE_RECORDED_REQUIRED = "記録日を入力してください。";
     public static final String MSG_DATE_RECORDED_RANGE = "記録日は活動開始日以降、かつ本日以前の日付を入力してください。";
     public static final String MSG_DATE_RECORDED_DUPLICATE = "同一プロジェクト、同一拠点、同一記録日はすでに登録されています。";
     public static final String MSG_CHANGED_BATTERY_REQUIRED = "バッテリー交換フラグを入力してください。";
+    public static final String MSG_BATTERY_NOT_APPLICABLE = "この設備には蓄電池が登録されていないため、バッテリー関連項目は入力できません。";
     public static final String MSG_ELPV_VALUE_MIN = "ELpv（電力使用量）は0以上で入力してください。";
     public static final String MSG_ELPVR_VALUE_MIN = "ELpvr（電力供給量）は0以上で入力してください。";
     public static final String MSG_ELPVR_EXCEEDS_ELPV = "自家消費量（ELPVR）は発電量（ELPV）を超えることはできません。";
@@ -143,6 +146,14 @@ public class ResponseConstants {
 
     public static final String MSG_PAYMENT_FAILED = "支払いに失敗しました。";
     public static final String MSG_PAYMENT_DECLINED = "カード情報が無効です。";
+
+    // Monitoring data deletion messages
+    public static final String MSG_MONITORING_DELETION_CANDIDATES_RETRIEVED = "モニタリングデータの削除候補を取得しました。";
+    public static final String MSG_MONITORING_DELETION_NO_CANDIDATES = "削除対象のモニタリングデータはありません。";
+    public static final String MSG_MONITORING_DELETION_COMPLETED = "モニタリングデータの削除が完了しました。";
+    public static final String MSG_MONITORING_DELETION_HISTORY_RETRIEVED = "モニタリングデータの削除履歴を取得しました。";
+    public static final String MSG_MONITORING_DELETION_CANDIDATE_RECORDS_RETRIEVED = "モニタリングデータの削除候補明細を取得しました。";
+    public static final String MSG_MONITORING_DELETION_PROJECT_NOT_CANDIDATE = "対象のプロジェクトは削除候補ではありません。";
     public static final String OPEN = "OPEN";
     public static final String APPROVED = "APPROVED";
     public static final String REJECTED = "REJECTED";
