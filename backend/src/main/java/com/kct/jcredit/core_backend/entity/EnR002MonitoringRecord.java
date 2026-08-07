@@ -53,8 +53,8 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
     private String elpjControlEvidenceUrl;
 
     // For IF Battery交換あり condition
-    // private Boolean changedBattery; 
-    
+    private Boolean changedBattery;
+
     private Boolean isActive; // レコードの有効/無効を示すフラグ
 
     private String processedAt; // レコードが処理された日時を保存するフィールド
@@ -175,11 +175,11 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
         return elPvrEvidence;
     }
 
-    // @DynamoDbAttribute("changedBattery")
-    // public Boolean getChangedBattery() {
-    //     return changedBattery != null ? changedBattery : false;
-    // }
-    
+    @DynamoDbAttribute("changedBattery")
+    public Boolean getChangedBattery() {
+        return changedBattery != null ? changedBattery : false;
+    }
+
     @DynamoDbAttribute("elPvEvidenceUrl")
     public String getElPvEvidenceUrl() {
         return elPvEvidenceUrl;

@@ -18,7 +18,11 @@ public class RegisterMonitoringRecordSolarRequest {
     @NotNull(message = "拠点IDを入力してください。")
     @JsonProperty("siteId")
     private String siteId;
-    
+
+    @NotNull(message = "設備IDを入力してください。")
+    @JsonProperty("equipmentId")
+    private Integer equipmentId;
+
     @JsonProperty("userId")
     private Integer userId;
     
@@ -46,7 +50,7 @@ public class RegisterMonitoringRecordSolarRequest {
     @JsonProperty("ELpvr_value")
     private BigDecimal elPvr;
     
-    @NotNull(message = "バッテリー交換フラグを入力してください。")
+    // 設備にhasBattery=trueの場合のみ必須（MonitoringServiceImplでequipment-aware検証）
     @JsonProperty("changedBattery")
     private Boolean changedBattery;
     

@@ -1,5 +1,5 @@
 -- ============================================================================
--- GXCarbon schema — 2026-07-28
+-- GXCarbon schema — 2026-08-07
 -- Complete, code-accurate baseline: matches every @Entity in
 -- src/main/java/com/kct/jcredit/core_backend/entity/ as of this date.
 -- Intended for setting up a fresh database from scratch (DROP + CREATE),
@@ -17,15 +17,27 @@
 --     a fresh CREATE — no existing data to violate batch_id/project_id
 --     uniqueness or file_type/file_id NOT NULL)
 --   - migration_2026-07-27_create-participating-project.sql
+--   - monitoring_data_deletion_ddl.sql (monitoring_data_deletion_history,
+--     project.status_finalized_at)
+--
+-- operating_user.role: correct set is ('admin','operator'); the live DB's
+-- operating_user_role_check currently allows ('operator','user') instead,
+-- which is out of date. Needs a manual ALTER on the live DB to match.
+--
+-- site_r002_member_data: intentionally DROPped and NOT recreated.
+-- SiteR002MemberData / its service is deprecated and being removed from the
+-- codebase; once that lands, drop the DROP TABLE line too.
 --
 -- Intentionally NOT included (dropped/orphaned, not used by any entity):
---   subscription_log, batch_processing_history, site_r002_equipment_file
+--   subscription_log, batch_processing_history, site_r002_equipment_file,
+--   site_r002_member_data (deprecated, pending removal — see note above)
 -- ============================================================================
 
 -- ============================
 -- DROP TABLES (dependency-safe)
 -- ============================
 
+DROP TABLE IF EXISTS monitoring_data_deletion_history CASCADE;
 DROP TABLE IF EXISTS notification CASCADE;
 DROP TABLE IF EXISTS en_r002_reduction_result_total CASCADE;
 DROP TABLE IF EXISTS en_r002_reduction_result CASCADE;
@@ -224,7 +236,8 @@ CREATE TABLE project (
     method_combi_feasibility BOOLEAN NOT NULL,
     method_details VARCHAR(1000) NOT NULL,
     operator_company_id INT NOT NULL REFERENCES operator_company(id),
-    public_id VARCHAR(32) NOT NULL UNIQUE
+    public_id VARCHAR(32) NOT NULL UNIQUE,
+    status_finalized_at TIMESTAMP
 );
 
 -- Operating User
@@ -581,6 +594,23 @@ CREATE TABLE notification (
     participating_user_id INT REFERENCES participating_user(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
+-- Monitoring Data Deletion History
+CREATE TABLE monitoring_data_deletion_history (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    monitoring_record_id VARCHAR(100) NOT NULL,
+    record_time_updated VARCHAR(50) NOT NULL,
+    date_recorded VARCHAR(10),
+    project_id INT NOT NULL,
+    site_id INT,
+    result VARCHAR(10) NOT NULL,
+    failure_reason VARCHAR(500),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100)
+);
+
 
 -- ============================
 -- INDEXES
@@ -592,6 +622,9 @@ CREATE INDEX idx_company_suspension_company_created
 CREATE INDEX idx_participating_company_status_created
     ON participating_company (company_status, created_at DESC, id DESC)
     WHERE (deleted_at IS NULL);
+
+CREATE INDEX idx_monitoring_deletion_history_project_id
+    ON monitoring_data_deletion_history (project_id);
 
 CREATE INDEX idx_participating_user_company_id ON participating_user (company_id);
 
