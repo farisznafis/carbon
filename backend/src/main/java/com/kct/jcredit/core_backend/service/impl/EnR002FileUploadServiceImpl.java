@@ -146,10 +146,21 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
         return permanentKey;
     }
 
+     @Override
+        public void deletePermanentFile(String s3Key) {
+        s3Client.deleteObject(DeleteObjectRequest.builder()
+                .bucket(bucketName)
+                .key(s3Key)
+                .build());
+        log.info("Permanent file deleted from S3. s3Key={}", s3Key);
+        }
+
     // HELPER
 
     private String sanitizeFileName(String fileName) {
         if (fileName == null) return "document";
         return fileName.replaceAll("[^a-zA-Z0-9._-]", "_");
     }
+
+
 }

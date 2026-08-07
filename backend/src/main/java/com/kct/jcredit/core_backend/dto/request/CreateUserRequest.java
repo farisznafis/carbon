@@ -9,6 +9,8 @@ import com.kct.jcredit.core_backend.validation.ZenkakuWithSymbols;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class CreateUserRequest {
     
@@ -81,14 +83,10 @@ public class CreateUserRequest {
              message = "パスワードは大文字、小文字、数字をそれぞれ1文字以上含む必要があります。")
     private String password;
     
-   //　マスターユーザは一般ユーザを作成するため、roleは不要
-    // 役割 (master / user)
-   
-    // @NotBlank(message = "役割を選択してください。")
-    // @Pattern(regexp = "^(master|user)$", 
-    //          message = "役割は 'master' または 'user' を指定してください。")
-    // private String role;
-    
+@Pattern(regexp = "^(admin|operator)$", message = "役割は 'admin' または 'operator' を指定してください。")
+    private String role;
+
+    private List<String> permissionCodes;
    
     // サイトID 
     // @NotNull(message = "拠点IDは必須です。") 

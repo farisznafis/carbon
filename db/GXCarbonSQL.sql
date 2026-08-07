@@ -47,6 +47,8 @@ DROP TABLE IF EXISTS security_action_link CASCADE;
 DROP TABLE IF EXISTS batch_process_history CASCADE;
 DROP TABLE IF EXISTS participating_company CASCADE;
 DROP TABLE IF EXISTS operator_company CASCADE;
+DROP TABLE IF EXISTS permission CASCADE;
+DROP TABLE IF EXISTS operating_user_permission CASCADE;
 
 
 -- ============================
@@ -241,13 +243,71 @@ CREATE TABLE operating_user (
     email VARCHAR(254) NOT NULL,
     phone_number VARCHAR(20) NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role VARCHAR(10) NOT NULL CHECK (role IN ('operator', 'user')),
+    role VARCHAR(10) NOT NULL CHECK (role IN ('admin', 'operator')),
     login_attempts INT NOT NULL,
     account_locked_until TIMESTAMP,
     company_id INT NOT NULL REFERENCES operator_company(id),
     email_otp_login_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     auth_version INT NOT NULL DEFAULT 0
 );
+
+CREATE TABLE permission (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    code VARCHAR(80) NOT NULL UNIQUE,
+
+    display_name VARCHAR(100) NOT NULL,
+
+    category VARCHAR(50) NOT NULL,
+
+    is_active BOOLEAN NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100)
+);
+
+CREATE TABLE operating_user_permission (
+    operating_user_id INT NOT NULL
+        REFERENCES operating_user(id)
+        ON DELETE CASCADE,
+
+    permission_id INT NOT NULL
+        REFERENCES permission(id)
+        ON DELETE RESTRICT,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+
+    PRIMARY KEY (operating_user_id, permission_id)
+);
+
+INSERT INTO permission
+    (code, display_name, category, is_active)
+VALUES
+    ('PROJECT_CREATE', 'プロジェクト作成', 'PROJECT', TRUE),
+    ('PROJECT_READ', 'プロジェクト参照', 'PROJECT', TRUE),
+    ('PROJECT_UPDATE', 'プロジェクト更新', 'PROJECT', TRUE),
+    ('PROJECT_STATUS_UPDATE', 'プロジェクトステータス変更', 'PROJECT', TRUE),
+    ('PROJECT_APPLICATION_OUTPUT', '申請書出力', 'PROJECT', TRUE),
+
+    ('PARTICIPATING_COMPANY_READ', '参加企業参照', 'PARTICIPATING_COMPANY', TRUE),
+    ('PARTICIPATING_COMPANY_APPLICATION_REVIEW', '参加申請処理', 'PARTICIPATING_COMPANY', TRUE),
+    ('PARTICIPATING_COMPANY_SUSPEND', '参加企業一時停止', 'PARTICIPATING_COMPANY', TRUE),
+    ('MASTER_USER_PASSWORD_RESET', 'マスターユーザーパスワードリセット', 'PARTICIPATING_COMPANY', TRUE),
+
+    ('MONITORING_READ', 'モニタリングデータ参照', 'MONITORING', TRUE),
+    ('MONITORING_DELETE', 'モニタリングデータ削除', 'MONITORING', TRUE),
+    ('MONITORING_CANCEL', 'モニタリングデータ取消', 'MONITORING', TRUE),
+    ('MONITORING_BATCH_HISTORY_READ', 'バッチ履歴参照', 'MONITORING', TRUE),
+    ('MONITORING_BATCH_ERROR_READ', 'バッチエラー参照', 'MONITORING', TRUE),
+
+    ('OPERATOR_USER_READ', '運用者一覧参照', 'USER_MANAGEMENT', TRUE),
+    ('OPERATOR_USER_CREATE', '運用者作成', 'USER_MANAGEMENT', TRUE),
+    ('OPERATOR_USER_UPDATE', '運用者更新', 'USER_MANAGEMENT', TRUE),
+
+    ('METHODOLOGY_READ', '方法論参照', 'METHODOLOGY', TRUE),
+    ('APPLICATION_FORM_READ', '申請書様式参照', 'APPLICATION_FORM', TRUE);
 
 -- Site
 CREATE TABLE site (

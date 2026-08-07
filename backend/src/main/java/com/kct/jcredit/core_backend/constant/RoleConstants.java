@@ -6,4 +6,5 @@ public class RoleConstants {
     public static final String MASTER = "master";
     
     public static final String OPERATOR = "operator";
+    public static final String ADMIN = "admin";
 }

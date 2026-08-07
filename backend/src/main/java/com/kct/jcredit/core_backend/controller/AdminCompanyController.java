@@ -2,22 +2,30 @@ package com.kct.jcredit.core_backend.controller;
 
 import com.kct.jcredit.core_backend.dto.request.CompanyListQuery;
 import com.kct.jcredit.core_backend.dto.request.CreateCompanySuspensionRequest;
+import com.kct.jcredit.core_backend.dto.request.CreateUserRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectCompanyRequest;
 import com.kct.jcredit.core_backend.dto.request.ResolveCompanySuspensionRequest;
 import com.kct.jcredit.core_backend.dto.request.ReviewParticipationRequest;
+import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.ApproveReviewRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectReviewRequest;
+import com.kct.jcredit.core_backend.dto.request.UpdateUserRequest;
 import com.kct.jcredit.core_backend.dto.response.AdminCompanyListResponse;
 import com.kct.jcredit.core_backend.dto.response.AdminCompanyDetailResponse;
 import com.kct.jcredit.core_backend.dto.response.ApproveCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.CompanySuspensionListResponse;
 import com.kct.jcredit.core_backend.dto.response.CompanySuspensionResponse;
+import com.kct.jcredit.core_backend.dto.response.CreateUserResponse;
+import com.kct.jcredit.core_backend.dto.response.UpdateUserResponse;
+import com.kct.jcredit.core_backend.dto.response.UserListResponse;
+import com.kct.jcredit.core_backend.dto.response.UserProfileResponse;
 import com.kct.jcredit.core_backend.dto.response.RejectCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.response.ParticipationReviewDetailResponse;
 import com.kct.jcredit.core_backend.service.AdminCompanyQueryService;
 import com.kct.jcredit.core_backend.service.CompanyApprovalService;
 import com.kct.jcredit.core_backend.service.CompanyLifecycleService;
+import com.kct.jcredit.core_backend.service.OperatorUserService;
 import com.kct.jcredit.core_backend.service.ParticipationReviewService;
 import com.kct.jcredit.core_backend.service.SecurityAccountService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
@@ -30,12 +38,15 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -53,6 +64,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 public class AdminCompanyController {
 
+    private final OperatorUserService operatorUserService;
     private final CompanyApprovalService companyApprovalService;
     private final AdminCompanyQueryService adminCompanyQueryService;
     private final CompanyLifecycleService companyLifecycleService;
@@ -256,5 +268,79 @@ public class AdminCompanyController {
         Integer operatorUserId = jwtUtil.extractUserId(authentication.getCredentials().toString());
         reviewService.rejectReview(participationId, operatorUserId, request);
         return ResponseEntity.ok(BaseResponse.success("却下しました。"));
+    }
+
+
+
+    // Operator User Management
+
+    // ── Operator User List ─────────────────────────────────────────────────
+    //get a list of operator users that are associated with the current users operating companyiD
+    // admin user has superiority and can make operators that should be able to access the admin tool and manage companies, users, and sites
+    // only admin can accept new users and requests to join projects 
+
+
+    // ── Operator Create ─────────────────────────────────────────────────
+    //create a new operating user and set their permissions to different parts of the admin tool page
+    //permissions set through many to many table relation
+
+    @GetMapping("/operator-user")
+    @PreAuthorize("hasAnyRole('admin')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "運用者一覧取得", description = "ログイン中の管理企業に所属する運用者ユーザー一覧を取得します。")
+    public ResponseEntity<UserListResponse> getOperatorUsers(Authentication authentication) {
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+        UserListResponse response = operatorUserService.getOperatorUsersByCompany(companyId);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @PostMapping("/operator-user")
+    @PreAuthorize("hasAnyRole('admin')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "運用者ユーザー作成", description = "ログイン中の管理企業に新しい運用者ユーザーを作成します。")
+    public ResponseEntity<CreateUserResponse> createUser(
+            Authentication authentication,
+            @RequestBody @Valid CreateUserRequest request) {
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+        String username = jwtUtil.extractUsername(authentication.getCredentials().toString());
+
+        CreateUserResponse response = operatorUserService.createOperatorUser(companyId, username, request);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @PatchMapping("/operator-user/{userId}")
+    @PreAuthorize("hasAnyRole('admin')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "運用者ユーザー更新", description = "運用者ユーザーの基本情報と権限を更新します。")
+    public ResponseEntity<UpdateUserResponse> updateOperatorUser(
+            Authentication authentication,
+            @PathVariable Integer userId,
+            @RequestBody @Valid UpdateUserRequest request) {
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+        String username = jwtUtil.extractUsername(authentication.getCredentials().toString());
+        request.setUserId(userId);
+
+        UpdateUserResponse response = operatorUserService.updateUser(companyId, username, request);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @GetMapping("operator-user/{userId}")
+    @PreAuthorize("hasAnyRole('admin', 'operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "運用者ユーザープロファイル取得", description = "運用者ユーザーの基本情報と権限を取得します。")
+    public ResponseEntity<UserProfileResponse> getOperatorUserProfile(
+            Authentication authentication,
+            @PathVariable Integer userId) {
+
+        Integer operatorUserId = userId;
+        Integer currentId = jwtUtil.extractUserId(authentication.getCredentials().toString());
+        
+        UserProfileResponse response = operatorUserService.getOperatorUserProfileById(
+                operatorUserId,
+                currentId,
+                jwtUtil.extractRole(authentication.getCredentials().toString()),
+                jwtUtil.extractCompanyId(authentication.getCredentials().toString())
+        );
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 }
