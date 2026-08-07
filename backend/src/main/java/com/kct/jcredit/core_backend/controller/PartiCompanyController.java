@@ -1,45 +1,47 @@
 package com.kct.jcredit.core_backend.controller;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.ApproveDeletionRequest;
 import com.kct.jcredit.core_backend.dto.request.CreateDeletionRequest;
+import com.kct.jcredit.core_backend.dto.request.EmailOtpStartRequest;
+import com.kct.jcredit.core_backend.dto.request.OtpResendRequest;
+import com.kct.jcredit.core_backend.dto.request.OtpVerifyRequest;
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyInfoValidateRequest;
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyMethodologyValidateRequest;
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyRegisterRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectDeletionRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdatePartiCompanyRequest;
-import com.kct.jcredit.core_backend.dto.request.EmailOtpStartRequest;
-import com.kct.jcredit.core_backend.dto.request.OtpResendRequest;
-import com.kct.jcredit.core_backend.dto.request.OtpVerifyRequest;
 import com.kct.jcredit.core_backend.dto.response.DeletionRequestResponse;
-import com.kct.jcredit.core_backend.dto.response.UpdatePartiCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.OtpChallengeResponse;
+import com.kct.jcredit.core_backend.dto.response.UpdatePartiCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.response.details.PartiCompanyResponseDetails;
 import com.kct.jcredit.core_backend.service.CompanyDeletionService;
+import com.kct.jcredit.core_backend.service.CompanySecurityFlowService;
 import com.kct.jcredit.core_backend.service.PartiCompanyRegisterService;
 import com.kct.jcredit.core_backend.service.PartiCompanyService;
-import com.kct.jcredit.core_backend.service.CompanySecurityFlowService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 
 /**
  * Exposes participating-company self-service and signup operations.
@@ -58,6 +60,7 @@ public class PartiCompanyController {
 
     /**
      * Updates the authenticated master user's company information.
+     * 認証されたマスター ユーザーの会社情報を更新する
      */
     @PatchMapping
     @PreAuthorize("hasAnyRole('master')")
@@ -71,6 +74,7 @@ public class PartiCompanyController {
 
     /**
      * Registers a new company application or resubmits a rejected application.
+     * 新しい会社の申請を登録するか、却下された申請を再提出します。
      */
     @PostMapping("/signup")
     @Operation(summary = "参加企業登録申請", description = "新しい参加企業の登録申請を作成します。")
@@ -114,6 +118,7 @@ public class PartiCompanyController {
 
     /**
      * Validates company identity fields before the final signup request.
+     * 最終サインアップリクエストの前に、会社の身元情報を確認する。
      */
     @PostMapping("/signup/company-info/validate")
     @Operation(summary = "企業情報事前検証", description = "企業情報を保存せずに検証します。")
@@ -125,6 +130,7 @@ public class PartiCompanyController {
 
     /**
      * Validates methodology fields before the final signup request.
+     * 最終サインアップのリクエスト前に、方法論のフィールドを確認する。
      */
     @PostMapping("/signup/methodology/validate")
     @Operation(summary = "方法論事前検証", description = "方法論情報を保存せずに検証します。")
@@ -135,6 +141,7 @@ public class PartiCompanyController {
 
     /**
      * Creates a deletion request for the authenticated master user's company.
+     * 認証済みのマスターユーザーの会社の削除リクエストを作る。
      */
     @PostMapping("/{companyId}/deletion-request")
     @PreAuthorize("hasAnyRole('master')")
@@ -155,6 +162,7 @@ public class PartiCompanyController {
 
     /**
      * Approves a pending company deletion request.
+     * 保留中の会社削除リクエストを承認する。
      */
     @PostMapping("/{companyId}/deletion-approve")
     @PreAuthorize("hasAnyRole('operator')")
@@ -171,6 +179,7 @@ public class PartiCompanyController {
 
     /**
      * Rejects a pending company deletion request.
+     * 保留中の会社削除リクエストを拒否する。
      */
     @PostMapping("/{companyId}/deletion-reject")
     @PreAuthorize("hasAnyRole('operator')")
