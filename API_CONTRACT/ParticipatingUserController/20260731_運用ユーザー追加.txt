@@ -1,0 +1,67 @@
+﻿POST /api/admin/operator-user
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body (JSON): //新しいユーザーを登録
+{
+  "firstName": "山田",
+  "firstNameKana": "ヤマダ",
+  "lastName": "太郎",
+  "lastNameKana": "タロウ",
+  "email": "y.taro@test.com",
+  "phoneNumber": "123456789",
+  "role": "一般社員",
+  "permissionCodes": [
+        "PROJECT_READ",
+        "PARTICIPATING_COMPANY_READ",
+        "MONITORING_READ",
+        "METHODOLOGY_READ"
+      ]
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "user": {
+    "userId": "12345",
+    "firstName": "山田",
+    "firstNameKana": "ヤマダ",
+    "lastName": "太郎",
+    "lastNameKana": "タロウ",
+    "email": "ytaro@test.com",
+    "phoneNumber": "123456789",
+    "role": "一般社員",
+    "permissions": [
+        "PROJECT_READ",
+        "PARTICIPATING_COMPANY_READ",
+        "MONITORING_READ",
+        "METHODOLOGY_READ"
+      ]
+  },
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+},
+{
+  "errorCode": "LIMIT_ERROR",
+  "message": "上限に達しています。"
+}
+
+
+
+
