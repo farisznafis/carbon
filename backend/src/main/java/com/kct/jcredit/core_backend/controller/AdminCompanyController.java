@@ -270,7 +270,7 @@ public class AdminCompanyController {
         reviewService.rejectReview(participationId, operatorUserId, request);
         return ResponseEntity.ok(BaseResponse.success("却下しました。"));
     }
-
+    
     @GetMapping("/token")
     @PreAuthorize("hasAnyRole('operator')")
     @SecurityRequirement(name = "bearerAuth")
