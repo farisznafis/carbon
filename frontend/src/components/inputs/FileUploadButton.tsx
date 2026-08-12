@@ -10,7 +10,7 @@ interface FileUploadButtonProps {
 
 export function FileUploadButton({
   id,
-  label = "ファイルを選択",
+  label = "ファイルを選択またはドラッグ＆ドロップ",
   fileKey,
   files,
   onFileChange,
@@ -30,7 +30,7 @@ export function FileUploadButton({
             className="flex cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
         >
             <Upload className="mr-2 h-4 w-4" />
-            ファイルを選択
+            ファイルを選択またはドラッグ＆ドロップ
         </label>
         <input
             id={id}
@@ -41,7 +41,7 @@ export function FileUploadButton({
         {selectedFile && (
             <span className="mt-1 text-sm text-foreground">{selectedFile.name}</span>
         )}
-
+        
     </div>
   );
 }

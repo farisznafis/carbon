@@ -1,5 +1,4 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -9,29 +8,25 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
+import {
+  floatingPageBackButtonClassName,
+  PageBackButton,
+} from '@/components/navigation/PageBackButton';
 
 export default function AdminMonitoringReportPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
 
   return (
-    <div className='min-h-screen py-8'>
-      <div className='container mx-auto px-4 space-y-6'>
-        <PageBackButton
-          onClick={() => navigate(-1)}
-          label='戻る'
-          className='rounded-full'
-        />
-        <Button
-          variant='ghost'
-          onClick={() => navigate(-1)}
-          className='hidden'
-        >
-          <ArrowLeft className='h-4 w-4 mr-2' />
-          戻る
-        </Button>
+    <main className='relative min-h-screen bg-background px-4 py-8 sm:px-6'>
+      <PageBackButton
+        onClick={() => navigate(-1)}
+        label=''
+        aria-label='プロジェクト詳細へ戻る'
+        className={floatingPageBackButtonClassName}
+      />
 
+      <div className='container mx-auto space-y-6 pt-16'>
         <Card>
           <CardHeader>
             <CardTitle>モニタリングデータ報告書</CardTitle>
@@ -49,6 +44,6 @@ export default function AdminMonitoringReportPage() {
           </CardFooter>
         </Card>
       </div>
-    </div>
+    </main>
   );
 }

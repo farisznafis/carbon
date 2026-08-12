@@ -42,12 +42,12 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
     });
     const watchedValues = form.watch();
     const serverErrorFieldsRef = useRef<Array<keyof FinalTermsValues>>([]);
-
+  
     useImperativeHandle(ref, () => ({
       triggerValidation: () => form.trigger(),
       getValues: () => form.getValues(),
     }), [form]);
-
+  
     // Reset form with saved values when component mounts or formValues changes
     useEffect(() => {
       form.reset({
@@ -75,9 +75,9 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
       );
       serverErrorFieldsRef.current = serverErrorFields;
     }, [errors, form]);
-
+  
     const prevValuesRef = useRef(watchedValues);
-
+  
     useEffect(() => {
       if (JSON.stringify(prevValuesRef.current) !== JSON.stringify(watchedValues)) {
         prevValuesRef.current = watchedValues;

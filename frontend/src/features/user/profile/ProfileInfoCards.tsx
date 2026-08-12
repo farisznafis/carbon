@@ -52,8 +52,8 @@ export function ProfileInfoCards({
   onPasswordChange,
 }: ProfileInfoCardsProps) {
   const isMaster = profile?.role?.toLowerCase() === 'master';
-
-  const roleHelpText = isMaster
+  
+  const roleHelpText = isMaster 
     ? 'すべての機能を利用・管理できる権限です。'
     : '基本機能を利用できる権限です。';
 
@@ -86,9 +86,9 @@ export function ProfileInfoCards({
           <InfoItem label="役職" value={profile?.userPosition} />
           <InfoItem label="電話番号" value={profile?.phoneNumber} />
           {!isMaster && <InfoItem label="拠点名" value={profile?.siteName} />}
-          <InfoItem
-            label="権限"
-            value={formatRole(profile?.role)}
+          <InfoItem 
+            label="権限" 
+            value={formatRole(profile?.role)} 
             helpText={roleHelpText}
           />
         </CardContent>
