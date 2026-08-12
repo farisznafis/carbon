@@ -35,4 +35,6 @@ public interface EnR002EquipmentFileRepository extends JpaRepository<EnR002Equip
          + "WHERE f.equipment_id IN (SELECT md.id FROM en_r002_equipment md WHERE md.company_id = :companyId)",
          nativeQuery = true)
     void softDeleteByCompanyId(@Param("companyId") String companyId, @Param("deletedBy") String deletedBy);
+
+    long countByS3KeyAndEquipment_IdNot(String s3Key, Integer equipmentId);
 }

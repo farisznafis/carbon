@@ -5,6 +5,7 @@ import com.kct.jcredit.core_backend.entity.EnR002EquipmentFile;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
+import java.util.Optional;
 
 public interface EnR002EquipmentRepository extends JpaRepository<EnR002Equipment, Integer> {
 
@@ -12,4 +13,6 @@ public interface EnR002EquipmentRepository extends JpaRepository<EnR002Equipment
     List<EnR002Equipment> findBySite_Id(Integer siteId);
 
     boolean existsBySite_Id(Integer siteId);
+
+    Optional<EnR002Equipment> findByPreviousEquipment_Id(Integer previousEquipmentId);
 }
