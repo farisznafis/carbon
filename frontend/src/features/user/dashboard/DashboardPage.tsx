@@ -517,7 +517,7 @@ const Dashboard = () => {
 
         if (!isMounted) return;
 
-        setSite(siteResponse.site);
+        // setSite(siteResponse.site);
         setMetrics(siteResponse.metrics);
         setProjects(projectData);
       } catch (error) {
@@ -664,7 +664,7 @@ const Dashboard = () => {
       <section className='bg-card py-12'>
         <div className={pageContainer}>
           <div className='mb-6'>
-            <h2 className='text-foreground'>参加中のプロジェクト</h2>
+            <h2 className='text-foreground'>入会中のプロジェクト</h2>
             <p className='text-small mt-2 text-foreground'>
               この拠点が現在参加しているプロジェクトです。進捗や排出量の詳細を確認できます。
             </p>

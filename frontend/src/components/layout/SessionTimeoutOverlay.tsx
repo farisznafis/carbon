@@ -10,8 +10,8 @@ interface SessionTimeoutOverlayProps {
 export const SessionTimeoutOverlay = ({ isOpen, onReAuthenticate }: SessionTimeoutOverlayProps) => {
   return (
     <Dialog open={isOpen} modal>
-      <DialogContent
-        className="sm:max-w-md"
+      <DialogContent 
+        className="sm:max-w-md" 
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
@@ -33,9 +33,9 @@ export const SessionTimeoutOverlay = ({ isOpen, onReAuthenticate }: SessionTimeo
             </p>
           </DialogDescription>
         </DialogHeader>
-
+        
         <DialogFooter className="sm:justify-center">
-          <Button
+          <Button 
             onClick={onReAuthenticate}
             className="w-full sm:w-auto px-8"
             size="lg"

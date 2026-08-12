@@ -1,10 +1,11 @@
 package com.kct.jcredit.core_backend.controller;
 
 import com.kct.jcredit.core_backend.dto.request.CreateSiteRequest;
+import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentChangeRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdateSiteRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
-import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentUpdateRequest;
 import com.kct.jcredit.core_backend.dto.response.CreateSiteResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentHistoryResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentRegisterResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
@@ -101,7 +102,7 @@ public class SiteController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
-     @PatchMapping("/{siteId}")
+    @PatchMapping("/{siteId}")
     @PreAuthorize("hasAnyRole('master')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "拠点情報更新", description = "指定された拠点の情報を更新します。")
@@ -189,18 +190,36 @@ public class SiteController {
                 equipmentService.getEquipmentById(siteId, equipmentId, companyId));
     }
 
-    @PatchMapping("/{siteId}/equipment/{equipmentId}")
+    @PostMapping("/{siteId}/equipment/{equipmentId}/change")
     @PreAuthorize("hasAnyRole('master','user')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "設備情報更新", description = "既存の設備情報を部分更新します。")
-    public ResponseEntity<EnR002EquipmentResponse> updateEquipment(
+    @Operation(summary = "設備変更",
+            description = "設備を変更します。変更前の設備は履歴として保持され、"
+                        + "モニタリングデータは変更前後で分離されます。")
+    public ResponseEntity<EnR002EquipmentResponse> changeEquipment(
             Authentication authentication,
             @PathVariable String siteId,
             @PathVariable Integer equipmentId,
-            @RequestBody @Valid EnR002EquipmentUpdateRequest request) {
+            @RequestBody @Valid EnR002EquipmentChangeRequest request) {
 
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
         return ResponseEntity.ok(
-                equipmentService.updateEquipment(siteId, equipmentId, companyId, request));
+                equipmentService.changeEquipment(siteId, equipmentId, companyId, request));
+    }
+
+    @GetMapping("/{siteId}/equipment/{equipmentId}/history")
+    @PreAuthorize("hasAnyRole('master','user','operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "設備履歴取得",
+            description = "設備の変更履歴を時系列で取得します。"
+                        + "各バージョンのモニタリング期間、証憑、登録者情報を含みます。")
+    public ResponseEntity<List<EnR002EquipmentHistoryResponse>> getEquipmentHistory(
+            Authentication authentication,
+            @PathVariable String siteId,
+            @PathVariable Integer equipmentId) {
+
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+        return ResponseEntity.ok(
+                equipmentService.getEquipmentHistory(siteId, equipmentId, companyId));
     }
 }

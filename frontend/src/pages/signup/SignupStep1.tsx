@@ -12,16 +12,16 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useSignup } from '@/contexts/SignupContext';
+import { useSignup, type SignupData } from '@/contexts/SignupContext';
 import { useToast } from '@/hooks/use-toast';
 import { useRedirectIfLoggedIn } from '@/hooks/useRedirectIfLoggedIn';
 import { PREFECTURE_OPTIONS } from '@/lib/constants/prefectures';
 import { logger } from '@/lib/logger';
 import { Loader2 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, type UseFormReturn } from 'react-hook-form';
 
-type SignupStep1FormData = {
+export type SignupStep1FormData = {
   corporateNumber: string;
   companyName: string;
   companyNameKana: string;
@@ -41,6 +41,15 @@ type SignupStep1FormData = {
   phoneNumber: string;
   faxNumber: string;
   email: string;
+};
+
+type SignupStep1Props = {
+  initialData?: SignupData;
+  onNext?: (data: SignupStep1FormData) => void;
+  validateBeforeNext?: boolean;
+  redirectIfLoggedIn?: boolean;
+  serverErrors?: Partial<Record<keyof SignupData, string>>;
+  submitLabel?: string;
 };
 
 type SignupCompanyValidationPayload = {
@@ -137,8 +146,15 @@ function applyBackendValidationErrors(
   return error.payload?.message || error.message;
 }
 
-export const SignupStep1 = () => {
-  useRedirectIfLoggedIn();
+export const SignupStep1 = ({
+  initialData,
+  onNext,
+  validateBeforeNext = true,
+  redirectIfLoggedIn = true,
+  serverErrors,
+  submitLabel = '方法論へ続く',
+}: SignupStep1Props = {}) => {
+  useRedirectIfLoggedIn(redirectIfLoggedIn);
 
   const { signupData, updateSignupData, setCurrentStep } = useSignup();
   const { toast } = useToast();
@@ -146,29 +162,42 @@ export const SignupStep1 = () => {
   const [isValidatingCompanyInfo, setIsValidatingCompanyInfo] = useState(false);
   const postalCodeLookupAbortRef = useRef<AbortController | null>(null);
 
+  const sourceData = initialData ?? signupData;
   const form = useForm<SignupStep1FormData>({
     defaultValues: {
-      corporateNumber: signupData.corporateNumber || '',
-      companyName: signupData.companyName || '',
-      companyNameKana: signupData.companyNameKana || '',
-      companyNameEnglish: signupData.companyNameEnglish || '',
-      corporateEmail: signupData.corporateEmail || '',
-      corporatePhoneNumber: signupData.corporatePhoneNumber || '',
-      postalCode: signupData.postalCode || '',
-      prefecture: signupData.prefecture || '',
-      municipality: signupData.municipality || '',
-      blocknum: signupData.blocknum || '',
-      buildingName: signupData.buildingName || '',
-      lastName: signupData.lastName || '',
-      firstName: signupData.firstName || '',
-      lastNameKana: signupData.lastNameKana || '',
-      firstNameKana: signupData.firstNameKana || '',
-      position: signupData.position || '',
-      phoneNumber: signupData.phoneNumber || '',
-      faxNumber: signupData.faxNumber || '',
-      email: signupData.email || '',
+      corporateNumber: sourceData.corporateNumber || '',
+      companyName: sourceData.companyName || '',
+      companyNameKana: sourceData.companyNameKana || '',
+      companyNameEnglish: sourceData.companyNameEnglish || '',
+      corporateEmail: sourceData.corporateEmail || '',
+      corporatePhoneNumber: sourceData.corporatePhoneNumber || '',
+      postalCode: sourceData.postalCode || '',
+      prefecture: sourceData.prefecture || '',
+      municipality: sourceData.municipality || '',
+      blocknum: sourceData.blocknum || '',
+      buildingName: sourceData.buildingName || '',
+      lastName: sourceData.lastName || '',
+      firstName: sourceData.firstName || '',
+      lastNameKana: sourceData.lastNameKana || '',
+      firstNameKana: sourceData.firstNameKana || '',
+      position: sourceData.position || '',
+      phoneNumber: sourceData.phoneNumber || '',
+      faxNumber: sourceData.faxNumber || '',
+      email: sourceData.email || '',
     },
   });
+
+  useEffect(() => {
+    if (!serverErrors) return;
+
+    Object.entries(serverErrors).forEach(([fieldName, message]) => {
+      if (!message || !(fieldName in form.getValues())) return;
+      form.setError(fieldName as keyof SignupStep1FormData, {
+        type: 'server',
+        message,
+      });
+    });
+  }, [form, serverErrors]);
 
   const handlePostalCodeChange = async (
     postalCode: string,
@@ -239,14 +268,22 @@ export const SignupStep1 = () => {
     setIsValidatingCompanyInfo(true);
 
     try {
-      await validateSignupCompanyInfo(payload);
+      if (validateBeforeNext) {
+        await validateSignupCompanyInfo(payload);
+      }
 
-      updateSignupData({
+      const nextData: SignupStep1FormData = {
         ...data,
         companyNameEnglish: data.companyNameEnglish || '',
         faxNumber: data.faxNumber || '',
-      });
-      setCurrentStep(2);
+      };
+
+      if (onNext) {
+        onNext(nextData);
+      } else {
+        updateSignupData(nextData);
+        setCurrentStep(2);
+      }
     } catch (error) {
       const message = applyBackendValidationErrors(form, error);
 
@@ -559,7 +596,7 @@ export const SignupStep1 = () => {
                 disabled={form.formState.isSubmitting || isValidatingCompanyInfo}
               >
                 {isValidatingCompanyInfo && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                方法論へ続く
+                {submitLabel}
               </Button>
             </FormActions>
           </FormSectionStack>

@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react';
 import { useForm, type UseFormReturn } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -19,7 +20,7 @@ import {
 } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
-import { useSignup } from '@/contexts/SignupContext';
+import { useSignup, type SignupData } from '@/contexts/SignupContext';
 import { validateSignupMethodology } from '@/api/company';
 import { ApiError } from '@/api/_shared/errors';
 import { useToast } from '@/hooks/use-toast';
@@ -41,30 +42,79 @@ function RequiredSectionTitle({ children }: Readonly<{ children: string }>) {
   );
 }
 
-export const SignupStep2 = () => {
+export type SignupStep2Data = Pick<
+  SignupData,
+  'methodology' | 'activityHas' | 'activityInformation'
+>;
+
+type SignupStep2Props = {
+  initialData?: SignupStep2Data;
+  onNext?: (data: SignupStep2Data) => void;
+  onBack?: () => void;
+  validateBeforeNext?: boolean;
+  serverErrors?: Partial<Record<keyof SignupData, string>>;
+  submitLabel?: string;
+  useDefaultMethodologies?: boolean;
+};
+
+export const SignupStep2 = ({
+  initialData,
+  onNext,
+  onBack,
+  validateBeforeNext = true,
+  serverErrors,
+  submitLabel = '次へ',
+  useDefaultMethodologies = true,
+}: SignupStep2Props = {}) => {
   const { signupData, updateSignupData, setCurrentStep } = useSignup();
   const { toast } = useToast();
+  const [isValidating, setIsValidating] = useState(false);
+  const sourceData = initialData ?? signupData;
 
   const form = useForm<MethodologyFormData>({
     mode: 'onChange',
     defaultValues: {
       methodology:
-        signupData.methodology.length > 0
-          ? signupData.methodology
-          : defaultMethodologyValues.methodology,
+        sourceData.methodology.length > 0
+          ? sourceData.methodology
+          : useDefaultMethodologies
+            ? defaultMethodologyValues.methodology
+            : [],
       activityHas:
-        signupData.activityHas || defaultMethodologyValues.activityHas,
+        sourceData.activityHas || defaultMethodologyValues.activityHas,
       activityInformation:
-        signupData.activityHas === 'no'
+        sourceData.activityHas === 'no'
           ? ''
-          : signupData.activityInformation === '-'
+          : sourceData.activityInformation === '-'
             ? ''
-            : signupData.activityInformation ||
+            : sourceData.activityInformation ||
         defaultMethodologyValues.activityInformation,
     },
   });
 
   const activityHas = form.watch('activityHas');
+  const methodologyOptions = useMemo(() => {
+    const knownValues = new Set(
+      participationMethodologies.map((methodology) => methodology.value),
+    );
+    const unknownOptions = sourceData.methodology
+      .filter((methodology) => !knownValues.has(methodology))
+      .map((methodology) => ({ value: methodology, label: methodology }));
+
+    return [...participationMethodologies, ...unknownOptions];
+  }, [sourceData.methodology]);
+
+  useEffect(() => {
+    if (!serverErrors) return;
+
+    Object.entries(serverErrors).forEach(([fieldName, message]) => {
+      if (!message || !(fieldName in form.getValues())) return;
+      form.setError(fieldName as keyof MethodologyFormData, {
+        type: 'server',
+        message,
+      });
+    });
+  }, [form, serverErrors]);
 
   function toMessage(value: unknown): string {
     if (typeof value === 'string') {
@@ -118,22 +168,30 @@ export const SignupStep2 = () => {
 
   const handleNext = async (data: MethodologyFormData) => {
     form.clearErrors();
+    setIsValidating(true);
 
     try {
-      await validateSignupMethodology({
-        methodology: data.methodology,
-        activityInformation:
-          data.activityHas === 'no' ? '-' : data.activityInformation.trim(),
-      });
+      if (validateBeforeNext) {
+        await validateSignupMethodology({
+          methodology: data.methodology,
+          activityInformation:
+            data.activityHas === 'no' ? '-' : data.activityInformation.trim(),
+        });
+      }
 
-      updateSignupData({
+      const nextData: SignupStep2Data = {
         methodology: data.methodology,
         activityHas: data.activityHas,
         activityInformation:
           data.activityHas === 'no' ? '-' : data.activityInformation.trim(),
-      });
+      };
 
-      setCurrentStep(3);
+      if (onNext) {
+        onNext(nextData);
+      } else {
+        updateSignupData(nextData);
+        setCurrentStep(3);
+      }
     } catch (error) {
       const message = applyBackendValidationErrors(form, error);
 
@@ -143,6 +201,8 @@ export const SignupStep2 = () => {
         variant: 'destructive',
       });
       logger.error('Signup step 2 validation failed:', error);
+    } finally {
+      setIsValidating(false);
     }
   };
 
@@ -162,7 +222,7 @@ export const SignupStep2 = () => {
                   <FormItem>
                     <div className="space-y-4">
                       <Card className="overflow-hidden rounded-md">
-                        {participationMethodologies.map((methodology) => {
+                        {methodologyOptions.map((methodology) => {
                           const checked = field.value.includes(methodology.value);
 
                           return (
@@ -280,12 +340,18 @@ export const SignupStep2 = () => {
                 variant="outline"
                 size="sm"
                 className="w-full"
-                onClick={() => setCurrentStep(1)}
+                onClick={onBack ?? (() => setCurrentStep(1))}
+                disabled={isValidating}
               >
                 戻る
               </Button>
-              <Button type="submit" size="sm" className="w-full">
-                次へ
+              <Button
+                type="submit"
+                size="sm"
+                className="w-full"
+                disabled={isValidating}
+              >
+                {submitLabel}
               </Button>
             </FormActions>
           </FormSectionStack>

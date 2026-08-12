@@ -5,6 +5,7 @@ export const paths = {
   forgotPassword: '/forgot-password',
   resetPassword: '/reset-password',
   signup: '/signup',
+  signupRevision: '/signup/revision',
 
   masterDashboard: '/master/dashboard',
   masterSiteRegister: '/master/site-register',
@@ -51,6 +52,14 @@ export const paths = {
     siteId: string,
     projectId: string,
   ) => `/sites/${siteId}/projects/${projectId}`,
+  siteProjectEquipmentEditRoute:
+    '/sites/:siteId/projects/:projectId/equipment/:equipmentId/edit',
+  siteProjectEquipmentEdit: (
+    siteId: string,
+    projectId: string,
+    equipmentId: string | number,
+  ) =>
+    `/sites/${encodeURIComponent(siteId)}/projects/${encodeURIComponent(projectId)}/equipment/${encodeURIComponent(String(equipmentId))}/edit`,
 
   monitoringRegisterRoute: '/monitoring/register/:projectType',
   monitoringRegister: (projectType: string) => `/monitoring/register/${projectType}`,
@@ -111,5 +120,14 @@ export const isLoginPath = (pathname: string) => {
   return (
     normalizedPathname === paths.login ||
     normalizedPathname === paths.adminLogin
+  );
+};
+
+export const isAuthPagePath = (pathname: string) => {
+  const normalizedPathname = normalizePathname(pathname);
+
+  return (
+    isLoginPath(normalizedPathname) ||
+    normalizedPathname === paths.forgotPassword
   );
 };
