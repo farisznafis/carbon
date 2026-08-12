@@ -100,6 +100,7 @@ export const Navbar = () => {
       <div
         className={cn(
           'w-full px-4 py-4 sm:px-6 lg:px-8',
+          isAuthenticated && user && 'py-3',
           isLoginPage && '[@media(max-height:480px)]:py-2',
         )}
       >
@@ -118,7 +119,7 @@ export const Navbar = () => {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="relative h-11 w-11 border border-border"
+                      className="relative h-12 w-12 border border-border"
                       aria-label="お知らせ"
                     >
                       <Bell className="h-4 w-4" />

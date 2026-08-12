@@ -44,7 +44,7 @@ export function AccountMenu({
         <Button
           type="button"
           variant="ghost"
-          className="group h-11 w-11 gap-2 border border-border px-2 sm:px-3 lg:w-[280px]"
+          className="group h-12 w-12 gap-2 border border-border px-2 sm:px-3 lg:w-[280px]"
           aria-label={`アカウントメニューを開く：${displayName}`}
         >
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
