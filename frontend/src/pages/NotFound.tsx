@@ -1,16 +1,16 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext"; 
 import { getHomePath } from "@/utils/getHomePath";
 import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
   const location = useLocation();
-  const { user } = useAuth();
-  const navigate  = useNavigate();
+  const { user } = useAuth(); 
+  const navigate  = useNavigate(); 
 
-  const destination = getHomePath(user);
+  const destination = getHomePath(user); 
 
   useEffect(() => {
     logger.error("404:", location.pathname);

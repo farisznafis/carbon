@@ -20,7 +20,7 @@ export function FileSelectButton({
   id,
   value,
   onChange,
-  label = 'ファイルを選択',
+  label = 'ファイルを選択またはドラッグ＆ドロップ',
   className = '',
   supportedFormats = '(.pdf, .csv, .jpg, .jpeg, .png)',
   helperText,
@@ -104,7 +104,7 @@ export function FileSelectButton({
           </span>
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="truncate text-base font-normal leading-7 text-foreground">
-              {value?.name || 'ファイルを選択'}
+              {value?.name || 'ファイルを選択またはドラッグ＆ドロップ'}
             </span>
             <span className="text-sm font-normal leading-5 text-foreground">
               {supportedFormats}

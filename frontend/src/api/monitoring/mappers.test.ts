@@ -7,10 +7,12 @@ describe('normalizeRecentMonitoringItem', () => {
   it('preserves the Project public ID without numeric conversion', () => {
     const monitoringItem = normalizeRecentMonitoringItem({
       projectId: 'PROJ0123',
+      equipmentId: '100',
       dateRecorded: '2026-07-23',
     });
 
     expect(monitoringItem.projectId).toBe('PROJ0123');
+    expect(monitoringItem.equipmentId).toBe(100);
   });
 });
 
@@ -20,6 +22,7 @@ describe('normalizeMonitoringRecordListItem', () => {
       id: 'MON0001',
       projectId: 'PROJ0123',
       siteId: 'SITE0001',
+      equipmentId: '100',
       participatingUserId: '42',
       timeUpdated: '2026-07-23T12:30:00Z',
       dateRecorded: '2026-07-23',
@@ -46,6 +49,7 @@ describe('normalizeMonitoringRecordListItem', () => {
       id: 'MON0001',
       projectId: 'PROJ0123',
       siteId: 'SITE0001',
+      equipmentId: 100,
       participatingUserId: 42,
       timeUpdated: '2026-07-23T12:30:00Z',
       dateRecorded: '2026-07-23',

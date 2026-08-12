@@ -42,7 +42,7 @@
  * @example
  * // Modal Confirmation
  * const [isModalOpen, setModalOpen] = useState(false);
- *
+ * 
  * <Confirmation
  *   asModal
  *   isOpen={isModalOpen}
@@ -57,7 +57,7 @@
  *   mode="profile"
  *   onConfirm={handleConfirm}
  * />
- *
+ * 
  * <Button onClick={() => setModalOpen(true)}>確認する</Button>
  */
 

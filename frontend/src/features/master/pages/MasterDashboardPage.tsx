@@ -25,7 +25,7 @@ const MasterDashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-
+  
   const activeTab = searchParams.get('tab') === 'users' ? 'users' : 'sites';
 
   const sites = useDashboardStore((state) => state.sites);
@@ -106,8 +106,8 @@ const MasterDashboard = () => {
         }
       />
 
-      <Tabs
-        value={activeTab}
+      <Tabs 
+        value={activeTab} 
         onValueChange={(value) => setSearchParams({ tab: value })}
         className="flex flex-1 flex-col bg-card"
       >
@@ -154,7 +154,7 @@ const MasterDashboard = () => {
           <TabsContent value="sites" className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
             <DashboardSection
               title="拠点"
-              description="各店舗のカーボンクレジット、削減活動、レポート進捗を一か所で確認できます。"
+              description="各店舗のカーボンクレジット、削減活動、レポート進捗を一箇所で確認できます。"
               addLabel="拠点を追加"
               onAdd={() => navigate(paths.masterSiteRegister)}
             >

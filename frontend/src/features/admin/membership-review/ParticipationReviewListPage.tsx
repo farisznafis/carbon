@@ -10,7 +10,10 @@ import {
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
+import {
+  floatingPageBackButtonClassName,
+  PageBackButton,
+} from '@/components/navigation/PageBackButton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -189,7 +192,7 @@ export default function ParticipationReviewListPage() {
         onClick={returnToProject}
         label=""
         aria-label="プロジェクト詳細へ戻る"
-        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-8"
+        className={floatingPageBackButtonClassName}
       />
 
       <div className="mx-auto w-full max-w-[1120px] space-y-8 pt-16 sm:pt-0">
