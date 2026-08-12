@@ -1,4 +1,5 @@
 export { updateCompany, validateSignupCompanyInfo, validateSignupMethodology } from './mutations';
+export { getSignupRevision, updateSignupRevision } from './signupRevision';
 export type {
   Company,
   UpdateCompanyResponse,
@@ -6,4 +7,7 @@ export type {
   ValidateSignupCompanyInfoResponse,
   ValidateSignupMethodologyPayload,
   ValidateSignupMethodologyResponse,
+  SignupRevisionRequest,
+  SignupRevisionResponse,
+  SignupRevisionUpdateResponse,
 } from './types';

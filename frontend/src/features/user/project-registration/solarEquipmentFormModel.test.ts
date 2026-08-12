@@ -95,6 +95,35 @@ describe('mapEquipmentValidationFieldErrors', () => {
       'nominalMaxOutputFile',
     ]);
   });
+
+  it('maps Japanese PATCH file errors to their upload controls', () => {
+    const fieldErrors = mapEquipmentValidationFieldErrors(
+      {
+        '1::確認資料：蓄電池仕様書・カタログ':
+          '蓄電池を設置する場合は、蓄電池仕様書・カタログを添付してください。',
+        '1::確認資料：工事請負契約書、請求書、領収書等':
+          'construction_invoiceの添付が必要です。',
+        '1::確認資料：補助金交付決定通知書':
+          '補助金を受給する場合は、補助金交付決定通知書を添付してください。',
+        '1::確認資料：電力会社からの請求明細書等':
+          'electricity_billの添付が必要です。',
+        '1::確認資料：仕様書・カタログ': 'pcs_specの添付が必要です。',
+      },
+      {
+        ...SOLAR_FORM_DEFAULT_VALUES,
+        hasBattery: 'yes',
+        hasSubsidy: 'yes',
+      },
+    );
+
+    expect(fieldErrors.map(({ fieldName }) => fieldName)).toEqual([
+      'batteryFile',
+      'totalInvestmentFile',
+      'subsidyNameFile',
+      'preProjectUnitPriceFile',
+      'pcsFile',
+    ]);
+  });
 });
 
 describe('getMissingEquipmentFileFieldErrors', () => {

@@ -1,6 +1,7 @@
 ﻿import { useEffect } from 'react';
 import { useForm, type FieldPath } from 'react-hook-form';
 import { z } from 'zod';
+import type { SiteProjectEquipment } from '@/api/site';
 import { FileSelectButton } from '@/components/inputs/FileSelectButton/FileSelectButton';
 import {
   FormCard,
@@ -34,6 +35,8 @@ import { emptyFormData } from './emptyFormData';
 const base = {
   projectId: z.string().optional(),
   siteId: z.string().optional(),
+  equipmentId: z.number().nullable().optional(),
+  equipmentHasBattery: z.boolean().optional(),
   dateRecorded: z.string().optional(),
   ELpv_value: z.union([z.string(), z.number(), z.null()]).optional(),
   ELpvr_value: z.union([z.string(), z.number(), z.null()]).optional(),
@@ -55,6 +58,8 @@ export const MonitoringSolarFormSchema = z.object({
 export type MonitoringSolarFormData = {
   projectId?: string;
   siteId?: string;
+  equipmentId?: number | null;
+  equipmentHasBattery?: boolean;
   dateRecorded?: string;
   ELpv_value?: string | number | null;
   ELpvr_value?: string | number | null;
@@ -84,6 +89,10 @@ interface MonitoringSolarFormProps {
   onNext: (data: MonitoringSolarFormData) => void | Promise<void>;
   onBack: () => void;
   onDelete?: () => void;
+  equipmentList?: SiteProjectEquipment[];
+  isEquipmentLoading?: boolean;
+  equipmentLoadError?: string | null;
+  onEquipmentRetry?: () => void;
 }
 
 interface NumericInputWithUnitProps {
@@ -124,6 +133,10 @@ export function MonitoringSolarForm({
   onChange,
   onNext,
   onBack,
+  equipmentList = [],
+  isEquipmentLoading = false,
+  equipmentLoadError,
+  onEquipmentRetry,
 }: Readonly<MonitoringSolarFormProps>) {
   const form = useForm<MonitoringSolarFormData>({
     defaultValues: value ?? emptyFormData,
@@ -131,6 +144,11 @@ export function MonitoringSolarForm({
     reValidateMode: 'onSubmit',
   });
   const isBatteryChanged = form.watch('changedBattery') === true;
+  const selectedEquipmentId = form.watch('equipmentId');
+  const selectedEquipment = equipmentList.find(
+    (equipment) => equipment.equipmentId === selectedEquipmentId,
+  );
+  const equipmentHasBattery = selectedEquipment?.hasBattery === true;
 
   const handleFileChange = (
     fieldName: FieldPath<MonitoringSolarFormData>,
@@ -168,10 +186,42 @@ export function MonitoringSolarForm({
   };
 
   useEffect(() => {
-    if (!isBatteryChanged) {
+    if (!equipmentHasBattery || !isBatteryChanged) {
       form.setValue('ELPJ_battery_value', null, { shouldValidate: false });
     }
-  }, [form, isBatteryChanged]);
+  }, [equipmentHasBattery, form, isBatteryChanged]);
+
+  useEffect(() => {
+    if (equipmentList.length !== 1 || form.getValues('equipmentId') != null) {
+      return;
+    }
+
+    const equipment = equipmentList[0];
+    if (equipment.equipmentId == null) return;
+
+    form.setValue('equipmentId', equipment.equipmentId, {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+    form.setValue('equipmentHasBattery', equipment.hasBattery === true);
+  }, [equipmentList, form]);
+
+  useEffect(() => {
+    form.setValue('equipmentHasBattery', equipmentHasBattery, {
+      shouldValidate: false,
+    });
+
+    if (equipmentHasBattery) return;
+
+    form.setValue('changedBattery', null, { shouldValidate: false });
+    form.setValue('ELPJ_battery_value', null, { shouldValidate: false });
+    form.setValue('ELPJ_battery_evidence', null, { shouldValidate: false });
+    form.clearErrors([
+      'changedBattery',
+      'ELPJ_battery_value',
+      'ELPJ_battery_evidence',
+    ]);
+  }, [equipmentHasBattery, form]);
 
   useEffect(() => {
     Object.entries(serverErrors ?? {}).forEach(([fieldName, message]) => {
@@ -205,6 +255,94 @@ export function MonitoringSolarForm({
             <FormCard>
               <FormSectionStack spacing="relaxed">
                 <FormSection number={1} title="モニタリング情報">
+              <FormField
+                control={form.control}
+                name="equipmentId"
+                render={({ field }) => (
+                  <FormItem>
+                    <RequiredLabel>設備ID</RequiredLabel>
+                    <p className="mt-1 text-sm text-foreground">
+                      モニタリング対象の設備を選択してください。
+                    </p>
+                    <FormControl>
+                      <Select
+                        value={field.value == null ? '' : String(field.value)}
+                        disabled={isEquipmentLoading || equipmentList.length === 0}
+                        onValueChange={(nextValue) => {
+                          const equipmentId = Number(nextValue);
+                          const equipment = equipmentList.find(
+                            (candidate) => candidate.equipmentId === equipmentId,
+                          );
+                          field.onChange(equipmentId);
+                          form.setValue(
+                            'equipmentHasBattery',
+                            equipment?.hasBattery === true,
+                            { shouldDirty: true },
+                          );
+                          form.clearErrors('equipmentId');
+                        }}
+                      >
+                        <SelectTrigger aria-label="設備ID">
+                          <SelectValue
+                            placeholder={
+                              isEquipmentLoading
+                                ? '設備を読み込んでいます...'
+                                : '設備を選択してください'
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {equipmentList.map((equipment) => {
+                            if (equipment.equipmentId == null) return null;
+                            const details = [
+                              equipment.deviceNo,
+                              equipment.pcsManufacturer,
+                              equipment.pcsModel,
+                            ].filter(Boolean);
+
+                            return (
+                              <SelectItem
+                                key={equipment.equipmentId}
+                                value={String(equipment.equipmentId)}
+                              >
+                                {`設備ID：${equipment.equipmentId}${
+                                  details.length ? `（${details.join(' / ')}）` : ''
+                                }`}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    {equipmentLoadError ? (
+                      <div className="space-y-2" role="alert">
+                        <p className="text-sm text-destructive">
+                          {equipmentLoadError}
+                        </p>
+                        {onEquipmentRetry ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={onEquipmentRetry}
+                          >
+                            再読み込み
+                          </Button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    {!isEquipmentLoading &&
+                    !equipmentLoadError &&
+                    equipmentList.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        選択できる設備がありません。
+                      </p>
+                    ) : null}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="dateRecorded"
@@ -270,7 +408,8 @@ export function MonitoringSolarForm({
                 )}
               />
 
-              <FormField
+              {equipmentHasBattery ? (
+                <FormField
                 control={form.control}
                 name="changedBattery"
                 render={({ field }) => (
@@ -317,9 +456,10 @@ export function MonitoringSolarForm({
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+                />
+              ) : null}
 
-              {isBatteryChanged ? (
+              {equipmentHasBattery && isBatteryChanged ? (
                 <FormField
                   control={form.control}
                   name="ELPJ_battery_value"
@@ -335,6 +475,37 @@ export function MonitoringSolarForm({
                           onChange={field.onChange}
                           placeholder="数値を入力"
                           unit="kWh"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : null}
+
+              {/* 蓄電池エビデンス / Battery Changed Evidence */}
+              {equipmentHasBattery && isBatteryChanged ? (
+                <FormField
+                  control={form.control}
+                  name="ELPJ_battery_evidence"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <FileSelectButton
+                          id="elpj-battery-file"
+                          label="蓄電池エビデンス"
+                          required
+                          variant="design-system-pro"
+                          supportedFormats="(.pdf, .jpg, .jpeg, .png)"
+                          value={(field.value as File) ?? null}
+                          onChange={(file) =>
+                            handleFileChange(
+                              'ELPJ_battery_evidence',
+                              field.onChange,
+                              file,
+                              DEFAULT_EVIDENCE_FILE_EXTENSIONS,
+                            )
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -448,35 +619,7 @@ export function MonitoringSolarForm({
                     )}
                   />
 
-                  {isBatteryChanged ? (
-                    <FormField
-                      control={form.control}
-                      name="ELPJ_battery_evidence"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <FileSelectButton
-                              id="elpj-battery-file"
-                              label="蓄電池エビデンス"
-                              required
-                              variant="design-system-pro"
-                              supportedFormats="(.pdf, .jpg, .jpeg, .png)"
-                              value={(field.value as File) ?? null}
-                              onChange={(file) =>
-                                handleFileChange(
-                                  'ELPJ_battery_evidence',
-                                  field.onChange,
-                                  file,
-                                  DEFAULT_EVIDENCE_FILE_EXTENSIONS,
-                                )
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  ) : null}
+
 
                   <FormField
                     control={form.control}

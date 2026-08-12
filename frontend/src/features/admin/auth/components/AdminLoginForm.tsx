@@ -55,15 +55,15 @@ export function AdminLoginForm({ onSubmit }: AdminLoginFormProps) {
             control={form.control}
             name="identifier"
             render={({ field }) => (
-              <FormItem className="[@media(max-height:480px)]:space-y-0.5">
-                <FormLabel className="[@media(max-height:480px)]:text-sm [@media(max-height:480px)]:leading-5">
+              <FormItem className="[@media(max-height:700px)]:space-y-1">
+                <FormLabel className="[@media(max-height:700px)]:text-sm [@media(max-height:700px)]:leading-5">
                   管理者ID
                 </FormLabel>
                 <FormControl>
                   <Input
                     type="text"
                     placeholder="社員名またはメールアドレス"
-                    className="[@media(max-height:480px)]:h-8 [@media(max-height:480px)]:py-1"
+                    className="[@media(max-height:700px)]:h-9 [@media(max-height:700px)]:py-1.5 [@media(max-height:480px)]:h-8"
                     {...field}
                   />
                 </FormControl>
@@ -76,14 +76,14 @@ export function AdminLoginForm({ onSubmit }: AdminLoginFormProps) {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem className="[@media(max-height:480px)]:space-y-0.5">
-                <FormLabel className="[@media(max-height:480px)]:text-sm [@media(max-height:480px)]:leading-5">
+              <FormItem className="[@media(max-height:700px)]:space-y-1">
+                <FormLabel className="[@media(max-height:700px)]:text-sm [@media(max-height:700px)]:leading-5">
                   パスワード
                 </FormLabel>
                 <FormControl>
                   <PasswordInput
                     placeholder="パスワードを入力"
-                    className="[@media(max-height:480px)]:h-8 [@media(max-height:480px)]:py-1"
+                    className="[@media(max-height:700px)]:h-9 [@media(max-height:700px)]:py-1.5 [@media(max-height:480px)]:h-8"
                     {...field}
                   />
                 </FormControl>

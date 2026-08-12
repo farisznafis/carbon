@@ -43,6 +43,49 @@ const API_FIELD_ALIASES: Record<string, keyof SolarPowerFormData> = {
   electricity_bill: 'preProjectUnitPriceFile',
 };
 
+const FILE_ERROR_HINTS: ReadonlyArray<{
+  hints: string[];
+  fieldName: keyof SolarPowerFormData;
+}> = [
+  {
+    hints: ['solar_contract', '太陽光発電電力受給契約確認書'],
+    fieldName: 'operationStartDateFile',
+  },
+  {
+    hints: ['panel_catalog', 'パネル仕様書'],
+    fieldName: 'nominalMaxOutputFile',
+  },
+  {
+    hints: ['battery_catalog', '蓄電池仕様書'],
+    fieldName: 'batteryFile',
+  },
+  {
+    hints: ['construction_invoice', '工事請負契約書'],
+    fieldName: 'totalInvestmentFile',
+  },
+  {
+    hints: ['subsidy_notice', '補助金交付決定通知書'],
+    fieldName: 'subsidyNameFile',
+  },
+  {
+    hints: ['electricity_bill', '電力会社からの請求明細書'],
+    fieldName: 'preProjectUnitPriceFile',
+  },
+  {
+    hints: ['pcs_spec', '確認資料：仕様書・カタログ'],
+    fieldName: 'pcsFile',
+  },
+];
+
+function getFileFieldFromError(path: string, message: string) {
+  const searchableError = `${path} ${message}`.toLowerCase();
+  return (
+    FILE_ERROR_HINTS.find(({ hints }) =>
+      hints.some((hint) => searchableError.includes(hint.toLowerCase())),
+    )?.fieldName ?? null
+  );
+}
+
 const REQUIRED_FIELD_MESSAGES: Partial<
   Record<keyof SolarPowerFormData, string>
 > = {
@@ -242,6 +285,13 @@ export function mapEquipmentValidationFieldErrors(
     const normalizedPath = path
       .replaceAll('request::', '')
       .replaceAll('equipment::', '');
+    const hintedFileField = getFileFieldFromError(normalizedPath, message);
+    if (hintedFileField) {
+      if (!mappedErrors.has(hintedFileField)) {
+        mappedErrors.set(hintedFileField, message);
+      }
+      return;
+    }
     const filePathMatch = normalizedPath.match(
       /(?:^|\.)files(?:\[(\d+)\])?(?:\.|$)/,
     );

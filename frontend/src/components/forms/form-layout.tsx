@@ -135,7 +135,10 @@ export function WizardProgress({
 }: WizardProgressProps) {
   return (
     <nav aria-label="Progress" className={cn("w-full", className)} {...props}>
-      <ol className="grid grid-cols-4 gap-2">
+      <ol
+        className="grid gap-2"
+        style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}
+      >
         {steps.map((step) => {
           const isComplete = currentStep > step.number;
           const isActive = currentStep === step.number;
@@ -219,7 +222,7 @@ export function FormSection({
         </span>
         <h3>{title}</h3>
       </div>
-      <div className="space-y-4">{children}</div>
+      <div className="space-y-6">{children}</div>
     </section>
   );
 }
