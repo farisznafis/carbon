@@ -9,6 +9,7 @@ import java.util.Optional;
 import com.kct.jcredit.core_backend.dto.request.ApplicableConditionsRequest;
 import com.kct.jcredit.core_backend.dto.request.OtherOperatorProjectsRequest;
 import com.kct.jcredit.core_backend.dto.request.ProjectApplicationRequest;
+import com.kct.jcredit.core_backend.util.AddressFormatter;
 
 import org.springframework.stereotype.Component;
 
@@ -46,9 +47,11 @@ public class ProjectPlanFormRegistry {
                         sql("corpPosition", (d, c) -> d.setCorpPosition(c.company().getRepPosition())),
                         sql("corpName", (d, c) -> d.setCorpName(c.company().getNameJa())),
                         sql("prefecture", (d, c) -> d.setPrefecture(c.company().getPrefecture())),
-                        sql("municipality", (d, c) -> d.setMunicipality(c.company().getMunicipality())),
-                        sql("blocknum", (d, c) -> d.setBlocknum(c.company().getBlocknum())),
-                        sql("buildingName", (d, c) -> d.setBuildingName(c.company().getBuildingName())),
+                        sql("city", (d, c) -> d.setCity(c.company().getMunicipality())),
+                        // 市区町村以降の住所: the company record splits this across two
+                        // columns, the form keeps it as one line.
+                        sql("address", (d, c) -> d.setAddress(
+                                AddressFormatter.joinAddressAfterCity(c.company().getBlocknum(), c.company().getBuildingName()))),
                         sql("representativePosition",
                                 (d, c) -> d.setRepresentativePosition(c.company().getRepPosition())),
                         sql("representativeName",
@@ -113,6 +116,7 @@ public class ProjectPlanFormRegistry {
             String jsonName, java.util.function.BiConsumer<T, ProjectPlanSqlContext> apply) {
         return new SqlField<>(jsonName, apply);
     }
+
 
     private void register(FormDefinition<?> definition) {
         if (bySlug.putIfAbsent(definition.slug(), definition) != null) {
