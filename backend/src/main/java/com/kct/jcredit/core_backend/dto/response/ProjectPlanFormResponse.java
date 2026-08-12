@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
-import com.kct.jcredit.core_backend.service.projectplan.registry.FormDefinition.ConditionalField;
+import com.kct.jcredit.core_backend.service.projectplan.FormDefinition.ConditionalField;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

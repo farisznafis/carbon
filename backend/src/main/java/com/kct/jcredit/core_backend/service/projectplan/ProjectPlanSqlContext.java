@@ -1,4 +1,4 @@
-package com.kct.jcredit.core_backend.service.projectplan.registry;
+package com.kct.jcredit.core_backend.service.projectplan;
 
 import java.util.function.Supplier;
 

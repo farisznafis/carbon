@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.kct.jcredit.core_backend.dto.request.base.ProjectPlanFormBase;
 import com.kct.jcredit.core_backend.dto.request.base.ProjectPlanFormEnvelope;
-import com.kct.jcredit.core_backend.service.projectplan.registry.ProjectPlanFormRegistry;
+import com.kct.jcredit.core_backend.service.projectplan.ProjectPlanFormRegistry;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
