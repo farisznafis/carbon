@@ -111,8 +111,8 @@ export function AuthPageLayout({
           <header
             className={
               preserveHeaderOnShortViewport
-                ? 'text-center'
-                : 'text-center [@media(max-height:620px)]:sr-only'
+                ? 'text-g'
+                : 'text-g [@media(max-height:620px)]:sr-only'
             }
           >
             {headerIcon && (
