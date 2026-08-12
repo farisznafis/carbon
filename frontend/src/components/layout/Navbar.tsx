@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, LogOut, User, X } from 'lucide-react';
+import { Bell, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { NotificationsList } from '@/components/feedback/NotificationsList';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,30 @@ import { toast } from '@/hooks/use-toast';
 import { getHomePath } from '@/utils/getHomePath';
 import { isLoginPath, paths } from '@/routes/paths';
 import { cn } from '@/lib/utils';
+import { AccountMenu } from './AccountMenu';
+import { useAccountIdentity } from './useAccountIdentity';
+
+type AuthenticatedNavbarContentProps = {
+  user: NonNullable<ReturnType<typeof useAuth>['user']>;
+  onLogout: () => Promise<void>;
+};
+
+function AuthenticatedNavbarContent({
+  user,
+  onLogout,
+}: Readonly<AuthenticatedNavbarContentProps>) {
+  const navigate = useNavigate();
+  const { displayName, email } = useAccountIdentity(user);
+
+  return (
+    <AccountMenu
+      displayName={displayName}
+      email={email}
+      onProfile={() => navigate(paths.profile)}
+      onLogout={onLogout}
+    />
+  );
+}
 
 export const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -75,7 +99,7 @@ export const Navbar = () => {
     <nav className="sticky top-0 z-50 shrink-0 border-b bg-card/50 backdrop-blur-sm">
       <div
         className={cn(
-          'container mx-auto px-4 py-4',
+          'w-full px-4 py-4 sm:px-6 lg:px-8',
           isLoginPage && '[@media(max-height:480px)]:py-2',
         )}
       >
@@ -94,7 +118,7 @@ export const Navbar = () => {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="relative"
+                      className="relative h-11 w-11 border border-border"
                       aria-label="お知らせ"
                     >
                       <Bell className="h-4 w-4" />
@@ -130,24 +154,10 @@ export const Navbar = () => {
                   </SheetContent>
                 </Sheet>
 
-                <div className="flex items-center space-x-0">
-                  <Button
-                    variant="ghost"
-                    onClick={() => navigate(paths.profile)}
-                    className="flex items-center space-x-1"
-                  >
-                    <User className="h-4 w-4" />
-                    <span>プロファイル</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => void handleLogout()}
-                    className="flex items-center space-x-1"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>ログアウト</span>
-                  </Button>
-                </div>
+                <AuthenticatedNavbarContent
+                  user={user}
+                  onLogout={handleLogout}
+                />
               </>
             ) : (
               !isAdminLoginPage && (
