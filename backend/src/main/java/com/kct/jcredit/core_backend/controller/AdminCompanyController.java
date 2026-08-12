@@ -73,40 +73,13 @@ public class AdminCompanyController {
     private final SecurityAccountService securityAccountService;
     private final JwtUtil jwtUtil;
     private final DocuSignAuthService docuSignAuthService;
-    /**
-     * Approves a pending company and provisions its master account.
-     */
-    @PostMapping("/{companyId}/approve")
-    @PreAuthorize("hasAnyRole('operator')")
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "企業登録承認", description = "申請中の企業を承認し、マスターユーザーを作成します。")
-    public ResponseEntity<ApproveCompanyResponse> approveCompany(@PathVariable String companyId) {
-        ApproveCompanyResponse response = companyApprovalService.approveCompany(companyId);
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
-    }
 
-    /**
-     * Rejects a pending company registration with an auditable explanation.
-     */
-    @PostMapping("/{companyId}/reject")
-    @PreAuthorize("hasAnyRole('operator')")
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "企業登録却下", description = "申請中の企業登録を却下します。")
-    public ResponseEntity<RejectCompanyResponse> rejectCompany(
-            @PathVariable String companyId,
-            @RequestBody @Valid RejectCompanyRequest request) {
-        RejectCompanyResponse response = companyApprovalService.rejectCompany(
-                companyId,
-                request.getRejectionReason()
-        );
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
-    }
 
     /**
      * Returns a unified, filtered, and paginated company list.
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasAnyRole('operator', 'admin') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_READ.name())")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "企業一覧取得", description = "企業ステータス、検索条件、日付範囲で企業一覧を取得します。")
     public ResponseEntity<AdminCompanyListResponse> getCompanies(
@@ -116,15 +89,16 @@ public class AdminCompanyController {
     }
 
     @PostMapping("/{companyId}/master-setup-link/resend")
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasAnyRole('operator', 'admin') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name())")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "マスターアカウントセットアップリンク再送信", description = "指定した企業のマスターアカウントに対して、セットアップ用のアクションリンクを再送信します。")
     public ResponseEntity<ApproveCompanyResponse> resendMasterSetupLink(@PathVariable String companyId) {
         ApproveCompanyResponse response = companyApprovalService.resendMasterSetupLink(companyId);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
     @PostMapping("/{companyId}/password-reset-link")
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasAnyRole('operator', 'admin') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MASTER_USER_PASSWORD_RESET.name())")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "マスターアカウントパスワードリセットリンク発行", description = "指定した企業のマスターアカウントに対して、パスワードリセット用のアクションリンクを発行します。")
     public ResponseEntity<BaseResponse> requestMasterPasswordReset(
@@ -139,7 +113,7 @@ public class AdminCompanyController {
      * Returns master-account, company, user, and site details for one participating company.
      */
     @GetMapping("/{companyId}")
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasAnyRole('operator', 'admin') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_READ.name())")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "企業詳細取得", description = "指定した企業のマスターアカウント、ユーザー、拠点情報を取得します。")
     public ResponseEntity<AdminCompanyDetailResponse> getCompanyDetail(
@@ -152,7 +126,7 @@ public class AdminCompanyController {
      * Creates one operational blocker for an active or already suspended company.
      */
     @PostMapping("/{companyId}/suspensions")
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasAnyRole('operator', 'admin') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_SUSPEND.name())")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "企業利用停止登録", description = "指定した理由で企業の利用停止を登録します。")
     public ResponseEntity<CompanySuspensionResponse> createSuspension(
@@ -166,7 +140,7 @@ public class AdminCompanyController {
      * Returns active blockers or complete suspension history for a company.
      */
     @GetMapping("/{companyId}/suspensions")
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasAnyRole('operator', 'admin') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_SUSPEND.name())")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "企業停止履歴取得", description = "企業の有効な停止理由または停止履歴を取得します。")
     public ResponseEntity<CompanySuspensionListResponse> getSuspensions(
@@ -190,7 +164,7 @@ public class AdminCompanyController {
      * Resolves one blocker and conditionally reactivates the company.
      */
     @PostMapping("/{companyId}/suspensions/{suspensionId}/resolve")
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_SUSPEND.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "企業停止解除", description = "指定した停止理由を解除し、残りの停止理由を確認します。")
     public ResponseEntity<CompanySuspensionResponse> resolveSuspension(
@@ -213,7 +187,7 @@ public class AdminCompanyController {
 
     // ── LIST — (status OPEN) ───────
     @GetMapping("participate/pending")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "レビュー待ち一覧取得", description = "承認待ちの入会届一覧を取得します。")
     public ResponseEntity<List<ParticipationReviewDetailResponse>> getPendingReviews() {
@@ -222,7 +196,7 @@ public class AdminCompanyController {
 
     // ── LIST — 
     @GetMapping("participate/self-sign")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "自分がレビュー可能な一覧取得", description = "自分がまだレビューできる入会届一覧を取得します。")
     public ResponseEntity<List<ParticipationReviewDetailResponse>> getPendingReviewsForMe(
@@ -233,7 +207,7 @@ public class AdminCompanyController {
 
     // ── DETAIL ─────────────────────────────────────────────────
     @GetMapping("participate/{participationId}")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "レビュー詳細取得", description = "指定した参加情報の詳細を取得します。")
     public ResponseEntity<ParticipationReviewDetailResponse> getReviewDetail(
@@ -243,7 +217,7 @@ public class AdminCompanyController {
 
     // ── APPROVE ────────────────────────────────────────────────
     @PostMapping("participation/{participationId}/approve")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "参加申請承認", description = "指定された参加申請を承認します（一次・二次確認共通）。")
     public ResponseEntity<BaseResponse> approveReview(
@@ -258,7 +232,7 @@ public class AdminCompanyController {
 
     // ── REJECT ─────────────────────────────────────────────────
     @PostMapping("participation/{participationId}/reject")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "参加申請却下", description = "指定された参加申請を却下します。")
     public ResponseEntity<BaseResponse> rejectReview(
@@ -272,8 +246,9 @@ public class AdminCompanyController {
     }
     
     @GetMapping("/token")
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "リンクトークン", description = "DocuSignのアクセストークンを取得します。")
     public ResponseEntity<Map<String, String>> testToken() {
         try {
             String token = docuSignAuthService.getAccessToken();
@@ -304,7 +279,7 @@ public class AdminCompanyController {
     //permissions set through many to many table relation
 
     @GetMapping("/operator-user")
-    @PreAuthorize("hasAnyRole('admin')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).OPERATOR_USER_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "運用者一覧取得", description = "ログイン中の管理企業に所属する運用者ユーザー一覧を取得します。")
     public ResponseEntity<UserListResponse> getOperatorUsers(Authentication authentication) {
@@ -314,7 +289,7 @@ public class AdminCompanyController {
     }
 
     @PostMapping("/operator-user")
-    @PreAuthorize("hasAnyRole('admin')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).OPERATOR_USER_CREATE.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "運用者ユーザー作成", description = "ログイン中の管理企業に新しい運用者ユーザーを作成します。")
     public ResponseEntity<CreateUserResponse> createUser(
@@ -328,7 +303,7 @@ public class AdminCompanyController {
     }
 
     @PatchMapping("/operator-user/{userId}")
-    @PreAuthorize("hasAnyRole('admin')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).OPERATOR_USER_UPDATE.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "運用者ユーザー更新", description = "運用者ユーザーの基本情報と権限を更新します。")
     public ResponseEntity<UpdateUserResponse> updateOperatorUser(
@@ -344,22 +319,28 @@ public class AdminCompanyController {
     }
 
     @GetMapping("operator-user/{userId}")
-    @PreAuthorize("hasAnyRole('admin', 'operator')")
+    @PreAuthorize("hasAnyRole('operator', 'admin')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "運用者ユーザープロファイル取得", description = "運用者ユーザーの基本情報と権限を取得します。")
     public ResponseEntity<UserProfileResponse> getOperatorUserProfile(
             Authentication authentication,
             @PathVariable Integer userId) {
+    String role = jwtUtil.extractRole(authentication.getCredentials().toString());
+    Integer currentId = jwtUtil.extractUserId(authentication.getCredentials().toString());
 
-        Integer operatorUserId = userId;
-        Integer currentId = jwtUtil.extractUserId(authentication.getCredentials().toString());
-        
-        UserProfileResponse response = operatorUserService.getOperatorUserProfileById(
-                operatorUserId,
-                currentId,
-                jwtUtil.extractRole(authentication.getCredentials().toString()),
-                jwtUtil.extractCompanyId(authentication.getCredentials().toString())
-        );
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    boolean isAdmin = "admin".equalsIgnoreCase(role);
+    boolean isSelf = currentId.equals(userId);
+
+    if (!isAdmin && !isSelf) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+    }
+
+    UserProfileResponse response = operatorUserService.getOperatorUserProfileById(
+            userId,
+            currentId,
+            role,
+            jwtUtil.extractCompanyId(authentication.getCredentials().toString())
+    );
+    return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 }
