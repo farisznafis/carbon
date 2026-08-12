@@ -320,9 +320,14 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
     @JsonProperty("registrationDate")
     private String registrationDate;
 
+    // 審査機関名 is picked from the official 審査機関 list, and 6 of those names
+    // contain half-width Latin or ASCII spaces/parentheses ("SGS ジャパン株式会社
+    // 認証サービス事業部", "株式会社 JACO CDM", "環境省(ダミーの審査機関)", …).
+    // @Zenkaku rejects all ASCII, so it made half the dropdown unsavable.
+    // Matches validationCheckReviewerName, which is fed by the same list.
     @NotBlank
     @Size(max = 255)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("reviewerName")
     private String reviewerName;
 
