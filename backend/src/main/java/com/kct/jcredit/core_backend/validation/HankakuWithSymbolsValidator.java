@@ -8,7 +8,13 @@ public class HankakuWithSymbolsValidator implements ConstraintValidator<HankakuW
 
     private Pattern pattern;
 
-    private static final String REGEX_META_CHARS = "\\^$.|?*+()[]{}";
+    /**
+     * '-' is included because an unescaped hyphen between two characters in a
+     * character class is a range operator. {@code allowedSymbols = "-."} used to
+     * build {@code [A-Za-z0-9 @-\.]}, where {@code @-\.} is a reverse range
+     * (0x40 down to 0x2E) and throws PatternSyntaxException on initialize.
+     */
+    private static final String REGEX_META_CHARS = "\\^$.|?*+()[]{}-";
 
     @Override
     public void initialize(HankakuWithSymbols constraintAnnotation) {

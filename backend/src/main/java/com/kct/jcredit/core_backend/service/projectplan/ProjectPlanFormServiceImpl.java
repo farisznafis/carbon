@@ -78,6 +78,9 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
     }
 
     @Override
+    // readOnly despite the name: the page itself is written to DynamoDB, which
+    // is outside this transaction. The only SQL work here is the authorization
+    // read. Anything added that writes to PostgreSQL must drop readOnly.
     @Transactional(readOnly = true)
     public ProjectPlanFormResponse saveForm(
             String projectId,
