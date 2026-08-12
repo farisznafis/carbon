@@ -92,22 +92,23 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
     @JsonProperty("prefecture")
     private String prefecture;
 
+    // 本社所在地 on the official 登録申請書 is three fields — 都道府県 / 市区町村 /
+    // 市区町村以降の住所 — and that is what the frontend and the API contract use.
+    // These previously mirrored operator_company's four columns
+    // (municipality/blocknum/buildingName), which the frontend never sent, so
+    // its 市区町村 and 住所 inputs were bound to fields the backend did not have.
+    // Autofill folds blocknum + buildingName into address.
     @NotBlank
     @Size(max = 150)
     @Zenkaku
-    @JsonProperty("municipality")
-    private String municipality;
+    @JsonProperty("city")
+    private String city;
 
     @NotBlank
-    @Size(max = 100)
+    @Size(max = 500)
     @JapaneseText(allowAlphanumeric = true)
-    @JsonProperty("blocknum")
-    private String blocknum;
-
-    @Size(max = 255)
-    @JapaneseText(allowAlphanumeric = true)
-    @JsonProperty("buildingName")
-    private String buildingName;
+    @JsonProperty("address")
+    private String address;
 
     @NotNull(message = "特定排出者の該当有無は必須です。")
     @JsonProperty("isDesignatedEmitter")

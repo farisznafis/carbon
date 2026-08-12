@@ -12,6 +12,7 @@ import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
+import com.kct.jcredit.core_backend.util.AddressFormatter;
 import com.kct.jcredit.core_backend.service.projectplan.ProjectPlanContextService.ProjectContext;
 import com.kct.jcredit.core_backend.service.projectplan.ProjectPlanContextService.ProjectContextStatus;
 
@@ -63,9 +64,9 @@ public class ProjectPlanAutofillService {
                 .corpName(company.getNameJa())
                 .corpPosition(company.getRepPosition())
                 .prefecture(company.getPrefecture())
-                .municipality(company.getMunicipality())
-                .blocknum(company.getBlocknum())
-                .buildingName(company.getBuildingName())
+                .city(company.getMunicipality())
+                .address(AddressFormatter.joinAddressAfterCity(
+                        company.getBlocknum(), company.getBuildingName()))
                 .representativePosition(company.getRepPosition())
                 .representativeName(
                         buildFullName(company.getRepLastName(), company.getRepFirstName()))
