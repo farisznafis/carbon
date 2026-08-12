@@ -6,6 +6,8 @@ import {
   mapAdminProjectPayload,
   mapAdminProjectPlanApplicationPayload,
   mapAdminProjectUpdatePayload,
+  mapApplicableConditionsPayload,
+  mapOtherOperatorProjectsPayload,
 } from '@/api/admin/projectPayloadMapper';
 import {
   createAdminProject,
@@ -39,7 +41,11 @@ import {
 import { applyBackendValidationErrors } from './forms/backendValidationErrors';
 import type { AdminProjectRegisterFormInputValues } from './forms/projectFormTypes';
 import { ProjectStatusSchema } from './forms/projectBaseSchema';
-import { getFormSlugForStep, getStepForFormSlug } from './forms/projectPlanFormSlugs';
+import {
+  LAST_IMPLEMENTED_STEP,
+  getFormSlugForStep,
+  getStepForFormSlug,
+} from './forms/projectPlanFormSlugs';
 import { steps } from './forms/projectSteps';
 
 type LocationState = {
@@ -140,7 +146,9 @@ export const AdminProjectRegister: React.FC = () => {
     }
   }, [state?.project, form]);
 
-  const visibleSteps = steps.slice(0, 2);
+  // Only the steps the plan API actually serves; the rest of `steps` has no
+  // backend page yet.
+  const visibleSteps = steps.slice(0, LAST_IMPLEMENTED_STEP);
   const maxStep = visibleSteps.length;
   const projectBaseValues = useWatch({
     control: form.control,
@@ -182,29 +190,35 @@ export const AdminProjectRegister: React.FC = () => {
     }
   };
 
-  const APPLICATION_STEP = 2;
+  /**
+   * Payload mapper per wizard step. A page can only be staged once it has one,
+   * so adding a step means adding its mapper here alongside the registry entry
+   * on the backend.
+   */
+  const PAGE_PAYLOAD_MAPPERS: Record<
+    number,
+    (values: AdminProjectRegisterFormInputValues) => Record<string, unknown>
+  > = {
+    2: mapAdminProjectPlanApplicationPayload,
+    3: mapOtherOperatorProjectsPayload,
+    4: mapApplicableConditionsPayload,
+  };
 
   /**
-   * Stages the プロジェクト申請 page. The server stores it only if the whole page
-   * validates, so a rejection means nothing was persisted and the operator
-   * stays where they are.
-   *
-   * Each page needs its own payload mapper; when steps 3+ are added to
-   * `visibleSteps`, give them a mapper and save them the same way.
+   * Stages one page. The server stores it only if the whole page validates, so
+   * a rejection means nothing was persisted and the operator stays put.
    */
-  const saveApplicationPage = async (
+  const savePlanPage = async (
     projectId: string,
+    targetStep: number,
     values: AdminProjectRegisterFormInputValues,
   ): Promise<boolean> => {
-    const slug = getFormSlugForStep(APPLICATION_STEP);
-    if (!slug) return true;
+    const slug = getFormSlugForStep(targetStep);
+    const mapPayload = PAGE_PAYLOAD_MAPPERS[targetStep];
+    if (!slug || !mapPayload) return true;
 
     try {
-      await saveProjectPlanForm(
-        projectId,
-        slug,
-        mapAdminProjectPlanApplicationPayload(values),
-      );
+      await saveProjectPlanForm(projectId, slug, mapPayload(values));
       await refreshProgress(projectId);
       return true;
     } catch (e) {
@@ -257,7 +271,9 @@ export const AdminProjectRegister: React.FC = () => {
   };
 
   const goNext = async () => {
-    if (step < maxStep) {
+    // Step 1 is the SQL project record, not a page of the plan. Saving it is
+    // what yields the project id everything else is keyed by.
+    if (step === 1) {
       const projectId =
         createdProjectId && isProjectBaseSaved
           ? createdProjectId
@@ -266,6 +282,18 @@ export const AdminProjectRegister: React.FC = () => {
       if (!projectId) return;
 
       await loadProjectApplication(projectId);
+      return;
+    }
+
+    if (!createdProjectId) return;
+
+    // Pages are atomic: only move on once this one is actually stored, so the
+    // operator can never advance past a page the server rejected.
+    const saved = await savePlanPage(createdProjectId, step, form.getValues());
+    if (!saved) return;
+
+    if (step < maxStep) {
+      setStep(step + 1);
       return;
     }
 
@@ -310,15 +338,14 @@ export const AdminProjectRegister: React.FC = () => {
         throw new Error('Project ID is required to submit project application');
       }
 
-      // saveApplicationPage surfaces its own errors, so only report success here.
-      const saved = await saveApplicationPage(createdProjectId, values);
-      if (!saved) {
-        return;
-      }
+      // Every page, including the last, was already stored on the way here —
+      // goNext will not advance past a page the server rejected. So this is a
+      // confirmation step, not another write; just re-read where things stand.
+      await refreshProgress(createdProjectId);
 
       toast({
         title: '保存しました',
-        description: 'プロジェクト申請情報を保存しました。',
+        description: 'プロジェクト計画書を保存しました。',
         variant: 'success',
       });
     } finally {

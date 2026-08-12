@@ -14,6 +14,11 @@ export const PROJECT_PLAN_FORM_SLUG_BY_STEP: Readonly<Record<number, string>> = 
   4: 'applicable-conditions',
 };
 
+/** Highest wizard step currently backed by the plan API. */
+export const LAST_IMPLEMENTED_STEP = Math.max(
+  ...Object.keys(PROJECT_PLAN_FORM_SLUG_BY_STEP).map(Number),
+);
+
 export const PROJECT_PLAN_STEP_BY_FORM_SLUG: Readonly<Record<string, number>> =
   Object.fromEntries(
     Object.entries(PROJECT_PLAN_FORM_SLUG_BY_STEP).map(([step, slug]) => [slug, Number(step)]),
