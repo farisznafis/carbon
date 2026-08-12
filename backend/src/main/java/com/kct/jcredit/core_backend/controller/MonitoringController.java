@@ -93,7 +93,7 @@ public class MonitoringController {
      */
     @GetMapping(value = "/{projectId}/list")
     @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
     @Operation(summary = "モニタリング記録一覧取得", description = "管理者が参照できるためモニタリング記録一覧を取得します。")
     public ResponseEntity<MonitoringRecordSolarListResponse> listMonitoringRecords(
             @PathVariable String projectId,
@@ -250,7 +250,7 @@ public class MonitoringController {
 
     //get record cancel request list
     @GetMapping("/cancel-requests")
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_CANCEL.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "取消申請一覧取得", description = "モニタリング記録の取消申請一覧を取得します。")
     public ResponseEntity<CancelRequestListResponse> getCancelRequests(Authentication authentication) {
@@ -260,7 +260,7 @@ public class MonitoringController {
     }
 
     @PostMapping("/{cancelRequestId}/cancel-decision")
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_CANCEL.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "取消申請を承認または却下", 
                description = "承認時は相殺レコードを自動作成し、NoSQLに登録します")

@@ -14,6 +14,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.Map;
 import java.time.Duration;
+import java.util.List;
 
 @Component
 public class JwtUtil {
@@ -31,11 +32,11 @@ public class JwtUtil {
     }
 
     // Generate token with username, companyId, and role
-    public String generateToken(Integer userId, String username, String companyId, String role) {
-        return generateToken(userId, username, companyId, role, 0);
+    public String generateToken(Integer userId, String username, String companyId, String role, List<String> permissions) {
+        return generateToken(userId, username, companyId, role, 0, permissions);
     }
 
-    public String generateToken(Integer userId, String username, String companyId, String role, Integer authVersion) {
+    public String generateToken(Integer userId, String username, String companyId, String role, Integer authVersion, List<String> permissions) {
         return Jwts.builder()
             .setSubject(username)
             .setIssuedAt(new Date())
@@ -44,7 +45,8 @@ public class JwtUtil {
                 "userId", userId,
                 "companyId", companyId,
                 "role", role,
-                "authVersion", authVersion == null ? 0 : authVersion
+                "authVersion", authVersion == null ? 0 : authVersion,
+                "permissions", permissions == null ? List.of() : permissions
             ))
             .signWith(getSigningKey(), SignatureAlgorithm.HS256)
             .compact();
@@ -111,5 +113,14 @@ public class JwtUtil {
     public long extractIssuedAtMillis(String token) {
         Date issuedAt = extractAllClaims(token).getIssuedAt();
         return issuedAt != null ? issuedAt.getTime() : 0L;
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> extractPermissions(String token) {
+        Object raw = extractAllClaims(token).get("permissions");
+        if (raw instanceof List<?> list) {
+            return list.stream().map(String::valueOf).toList();
+        }
+        return List.of();
     }
 }
