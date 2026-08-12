@@ -70,6 +70,13 @@ public class EnR002Equipment extends BaseEntity {
     @Column(name = "pre_project_unit_price", precision = 10, scale = 2)
     private BigDecimal preProjectUnitPrice;
 
+    @Column(name = "change_date")
+    private LocalDate changeDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "previous_equipment_id")
+    private EnR002Equipment previousEquipment;
+
     @OneToMany(mappedBy = "equipment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EnR002EquipmentFile> files = new ArrayList<>();
 }

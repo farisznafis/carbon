@@ -1,8 +1,9 @@
 package com.kct.jcredit.core_backend.service;
 
+import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentChangeRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
-import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentUpdateRequest;
-
+import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentChangeRequest;
+import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentHistoryResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 
 import java.util.List;
@@ -20,8 +21,12 @@ public interface EnR002EquipmentService {
                                              Integer equipmentId,
                                              String companyId);
 
-    EnR002EquipmentResponse updateEquipment(String siteId, Integer equipmentId,
-                                            String companyId, EnR002EquipmentUpdateRequest request);
+    EnR002EquipmentResponse changeEquipment(String siteId, Integer equipmentId,
+                                             String companyId,
+                                             EnR002EquipmentChangeRequest request);
+                                             
+    List<EnR002EquipmentHistoryResponse> getEquipmentHistory(String siteId,
+                                                              Integer equipmentId,
+                                                              String companyId);
 
-    
 }
