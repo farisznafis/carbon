@@ -1,10 +1,11 @@
 package com.kct.jcredit.core_backend.dto.request;
 
 import com.kct.jcredit.core_backend.validation.ValidEmail;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kct.jcredit.core_backend.dto.request.base.ProjectPlanFormBase;
 import com.kct.jcredit.core_backend.validation.CorpNumber;
 import com.kct.jcredit.core_backend.validation.DateFormat;
+import com.kct.jcredit.core_backend.validation.RequiredIf;
 import com.kct.jcredit.core_backend.validation.Hankaku;
 import com.kct.jcredit.core_backend.validation.HankakuWithSymbols;
 import com.kct.jcredit.core_backend.validation.JapaneseText;
@@ -18,29 +19,24 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 @Data
-@Builder
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-@AllArgsConstructor
 @DynamoDbBean
-public class ProjectApplicationRequest {
-
-
-
-    @JsonIgnore
-    private String pk;
-
-    @JsonIgnore
-    private String sk;
+// 有/無 rules from the official 登録申請書 sheet: 特定排出者コード is filled only when
+// 特定排出者である, and the 省エネ法 numbers only when 定期報告の対象である.
+@RequiredIf(field = "emitterCode", when = "isDesignatedEmitter", is = true,
+        message = "特定排出者コードは必須です。")
+@RequiredIf(field = "energyActOperationNumber", when = "hasEnergyActPeriodReport", is = true,
+        message = "省エネ法特定事業者番号又は特定連鎖化事業者番号は必須です。")
+@RequiredIf(field = "energyManageFactoryNumber", when = "hasEnergyActPeriodReport", is = true,
+        message = "エネルギー管理指定工場番号は必須です。")
+public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank(message = "申請区分は必須です。")
     @Size(max = 20, message = "申請区分は20文字以内で入力してください。")
@@ -117,7 +113,7 @@ public class ProjectApplicationRequest {
     @JsonProperty("isDesignatedEmitter")
     private Boolean isDesignatedEmitter;
 
-    @NotBlank
+    // Required only when isDesignatedEmitter is true — see @RequiredIf above.
     @Size(min = 9, max = 9)
     @NumericOnly
     @JsonProperty("emitterCode")
@@ -283,7 +279,14 @@ public class ProjectApplicationRequest {
 
     @NotBlank
     @Size(max = 10)
-    @Pattern(regexp = "^(北海道|東北|関東|中部|近畿|中国|四国|九州|沖縄)$")
+    // 地域区分 per the official 【削除不可】プルダウン用 sheet: 九州・沖縄 is a SINGLE
+    // value, not two. The previous pattern split it and so rejected the value
+    // autofilled from project.regional_category, making the page unsavable for
+    // any project in that region.
+    @Pattern(
+        regexp = "^(北海道|東北|関東|中部|近畿|中国|四国|九州・沖縄)$",
+        message = "地域区分の値が不正です。"
+    )
     @JsonProperty("regionalCategory")
     private String regionalCategory;
 
@@ -326,16 +329,4 @@ public class ProjectApplicationRequest {
     @DateFormat
     @JsonProperty("applicationChangeDate")
     private String applicationChangeDate;
-
-    @DynamoDbPartitionKey
-    @DynamoDbAttribute("PK")
-    public String getPk() {
-        return pk;
-    }
-
-    @DynamoDbSortKey
-    @DynamoDbAttribute("SK")
-    public String getSk() {
-        return sk;
-    }
 }

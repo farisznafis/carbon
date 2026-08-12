@@ -9,14 +9,19 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.kct.jcredit.core_backend.dto.response.ApplicableConditionsResponse;
 import com.kct.jcredit.core_backend.dto.response.CorporationMasterResponse;
 import com.kct.jcredit.core_backend.dto.response.OtherOperatorProjectsResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectMasterResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectApplicationResponse;
+import com.kct.jcredit.core_backend.dto.response.ProjectPlanFormResponse;
+import com.kct.jcredit.core_backend.dto.response.ProjectPlanProgressResponse;
+import com.kct.jcredit.core_backend.service.projectplan.ProjectPlanFormService;
 import com.kct.jcredit.core_backend.dto.request.ApplicableConditionsRequest;
 import com.kct.jcredit.core_backend.dto.request.OtherOperatorProjectsRequest;
 import com.kct.jcredit.core_backend.dto.request.ProjectApplicationRequest;
@@ -42,7 +47,77 @@ public class ProjectPlanController {
     private final ProjectApplicationService projectApplicationService;
     private final OtherOperatorProjectsService otherOperatorProjectsService;
     private final ApplicableConditionsService applicableConditionsService;
+    private final ProjectPlanFormService projectPlanFormService;
     private final JwtUtil jwtUtil;
+
+    // ---------------------------------------------------------------
+    // Registry-driven form API.
+    //
+    // One set of endpoints serves every page of the plan; adding a page is a
+    // registry entry plus its DTO. Pages are atomic — a page is stored only
+    // when it fully validates — so /progress can report exactly where an
+    // interrupted operator should resume.
+    // ---------------------------------------------------------------
+
+    @GetMapping("/{projectId}/forms/{formSlug}")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "計画書フォーム取得",
+            description = "指定ページを取得します。SQL由来の項目は readOnlyFields、"
+                    + "有/無で必須が変わる項目は conditionalFields で返却します。")
+    public ResponseEntity<ProjectPlanFormResponse> getForm(Authentication authentication,
+            @PathVariable String projectId,
+            @PathVariable String formSlug,
+            @RequestParam(name = "methodology", required = false) Integer methodology) {
+        String token = authentication.getCredentials().toString();
+        ProjectPlanFormResponse response = projectPlanFormService.getForm(
+                projectId,
+                formSlug,
+                methodology,
+                jwtUtil.extractCompanyId(token),
+                jwtUtil.extractRole(token),
+                jwtUtil.extractUsername(token));
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @PutMapping("/{projectId}/forms/{formSlug}")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "計画書フォーム保存",
+            description = "ページ全体を検証し、すべて有効な場合のみ保存します。"
+                    + "検証エラー時は何も保存されません。")
+    public ResponseEntity<ProjectPlanFormResponse> saveForm(Authentication authentication,
+            @PathVariable String projectId,
+            @PathVariable String formSlug,
+            @RequestParam(name = "methodology", required = false) Integer methodology,
+            @RequestBody JsonNode body) {
+        String token = authentication.getCredentials().toString();
+        ProjectPlanFormResponse response = projectPlanFormService.saveForm(
+                projectId,
+                formSlug,
+                methodology,
+                body,
+                jwtUtil.extractCompanyId(token),
+                jwtUtil.extractRole(token),
+                jwtUtil.extractUsername(token));
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @GetMapping("/{projectId}/progress")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "計画書入力状況取得",
+            description = "全ページの入力状況と、次に入力すべきページを返します。")
+    public ResponseEntity<ProjectPlanProgressResponse> getProgress(Authentication authentication,
+            @PathVariable String projectId) {
+        String token = authentication.getCredentials().toString();
+        ProjectPlanProgressResponse response = projectPlanFormService.getProgress(
+                projectId,
+                jwtUtil.extractCompanyId(token),
+                jwtUtil.extractRole(token),
+                jwtUtil.extractUsername(token));
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
 
         @GetMapping("/autofill")
         @PreAuthorize("hasRole('operator')")
