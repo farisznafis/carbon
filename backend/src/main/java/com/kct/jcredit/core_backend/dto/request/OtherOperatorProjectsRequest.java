@@ -1,9 +1,10 @@
 package com.kct.jcredit.core_backend.dto.request;
 
 import com.kct.jcredit.core_backend.validation.ValidEmail;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kct.jcredit.core_backend.dto.request.base.ProjectPlanFormBase;
 import com.kct.jcredit.core_backend.validation.CorpNumber;
+import com.kct.jcredit.core_backend.validation.RequiredIf;
 import com.kct.jcredit.core_backend.validation.Hankaku;
 import com.kct.jcredit.core_backend.validation.HankakuWithSymbols;
 import com.kct.jcredit.core_backend.validation.JapaneseText;
@@ -17,27 +18,24 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 @Data
-@Builder
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-@AllArgsConstructor
 @DynamoDbBean
-public class OtherOperatorProjectsRequest {
-
-    @JsonIgnore
-    private String pk;
-
-    @JsonIgnore
-    private String sk;
+// 有/無 rules from the official form: these are only required once the
+// corresponding toggle is selected. See RequiredIf.
+@RequiredIf(field = "emitterCode", when = "isDesignatedEmitter", is = true,
+        message = "特定排出者コードは必須です。")
+@RequiredIf(field = "energyActOpeNumber", when = "hasEnergyActPeriodReport", is = true,
+        message = "省エネ法特定事業者番号又は特定連鎖化事業者番号は必須です。")
+@RequiredIf(field = "energyManagFactoryNumber", when = "hasEnergyActPeriodReport", is = true,
+        message = "エネルギー管理指定工場番号は必須です。")
+public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 50)
@@ -133,7 +131,7 @@ public class OtherOperatorProjectsRequest {
     @JsonProperty("isDesignatedEmitter")
     private Boolean isDesignatedEmitter;
 
-    @NotBlank
+    // Required only when isDesignatedEmitter is true — see @RequiredIf above.
     @Size(min = 9, max = 9)
     @NumericOnly
     @JsonProperty("emitterCode")
@@ -143,28 +141,16 @@ public class OtherOperatorProjectsRequest {
     @JsonProperty("hasEnergyActPeriodReport")
     private Boolean hasEnergyActPeriodReport;
 
-    @NotBlank
+    // Required only when hasEnergyActPeriodReport is true — see @RequiredIf above.
     @Size(max = 50)
     @HankakuWithSymbols(allowedSymbols = "-")
     @JsonProperty("energyActOpeNumber")
     private String energyActOpeNumber;
 
-    @NotBlank
+    // Required only when hasEnergyActPeriodReport is true — see @RequiredIf above.
     @Size(max = 50)
     @Hankaku
     @Pattern(regexp = "^[A-Za-z0-9]+$")
     @JsonProperty("energyManagFactoryNumber")
     private String energyManagFactoryNumber;
-
-    @DynamoDbPartitionKey
-    @DynamoDbAttribute("PK")
-    public String getPk() {
-        return pk;
-    }
-
-    @DynamoDbSortKey
-    @DynamoDbAttribute("SK")
-    public String getSk() {
-        return sk;
-    }
 }

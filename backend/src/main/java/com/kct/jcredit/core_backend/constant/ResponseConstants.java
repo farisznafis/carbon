@@ -158,5 +158,11 @@ public class ResponseConstants {
     public static final String APPROVED = "APPROVED";
     public static final String REJECTED = "REJECTED";
 
+    // --- Project plan (プロジェクト計画書) ---
+    public static final String MSG_FORM_NOT_DEFINED = "指定されたフォームは存在しません。";
+    public static final String MSG_FORM_RETRIEVED = "フォーム情報を取得しました。";
+    public static final String MSG_FORM_SAVED = "フォームを保存しました。";
+    public static final String MSG_PROGRESS_RETRIEVED = "入力状況を取得しました。";
+
     private ResponseConstants() {}
 }

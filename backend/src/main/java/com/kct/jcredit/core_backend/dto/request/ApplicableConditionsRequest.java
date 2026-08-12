@@ -1,34 +1,23 @@
 package com.kct.jcredit.core_backend.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kct.jcredit.core_backend.dto.request.base.ProjectPlanFormBase;
 import com.kct.jcredit.core_backend.validation.DateFormat;
 import com.kct.jcredit.core_backend.validation.HankakuWithSymbols;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 @Data
-@Builder
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-@AllArgsConstructor
 @DynamoDbBean
-public class ApplicableConditionsRequest {
-
-    @JsonIgnore
-    private String pk;
-
-    @JsonIgnore
-    private String sk;
+public class ApplicableConditionsRequest extends ProjectPlanFormBase {
 
     @Size(max = 15)
     @HankakuWithSymbols(allowedSymbols = "-.")
@@ -73,16 +62,4 @@ public class ApplicableConditionsRequest {
     @Zenkaku
     @JsonProperty("regulation")
     private String regulation;
-
-    @DynamoDbPartitionKey
-    @DynamoDbAttribute("PK")
-    public String getPk() {
-        return pk;
-    }
-
-    @DynamoDbSortKey
-    @DynamoDbAttribute("SK")
-    public String getSk() {
-        return sk;
-    }
 }

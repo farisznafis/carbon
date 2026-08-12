@@ -9,9 +9,10 @@ import {
 } from '@/api/admin/projectPayloadMapper';
 import {
   createAdminProject,
-  createAdminProjectPlanApplication,
   getProjectPlanAutofillByProject,
   getProjectPlanAutofillDefaults,
+  getProjectPlanProgress,
+  saveProjectPlanForm,
   updateAdminProject,
 } from '@/api/admin/projects';
 import { ConfirmationItem } from '@/components/feedback/Confirmation/ConfirmationItem';
@@ -38,6 +39,7 @@ import {
 import { applyBackendValidationErrors } from './forms/backendValidationErrors';
 import type { AdminProjectRegisterFormInputValues } from './forms/projectFormTypes';
 import { ProjectStatusSchema } from './forms/projectBaseSchema';
+import { getFormSlugForStep, getStepForFormSlug } from './forms/projectPlanFormSlugs';
 import { steps } from './forms/projectSteps';
 
 type LocationState = {
@@ -106,6 +108,13 @@ export const AdminProjectRegister: React.FC = () => {
   const [savedProjectBaseSnapshot, setSavedProjectBaseSnapshot] = useState<
     string | null
   >(null);
+  // Steps already saved on the server, so a returning operator can see how far
+  // they got. Populated from the plan's progress endpoint.
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [planProgress, setPlanProgress] = useState<{
+    completed: number;
+    total: number;
+  } | null>(null);
   const { state } = useLocation() as { state?: LocationState };
 
   const form = useForm<AdminProjectRegisterFormInputValues>({
@@ -152,6 +161,64 @@ export const AdminProjectRegister: React.FC = () => {
     });
   };
 
+  /**
+   * Refreshes which pages are already stored. Best-effort: progress is a
+   * convenience, so a failure here must not block filling the form.
+   */
+  const refreshProgress = async (projectId: string) => {
+    try {
+      const progress = await getProjectPlanProgress(projectId);
+      const done = (progress.forms ?? [])
+        .filter((planForm) => planForm.status === 'COMPLETE')
+        .map((planForm) => getStepForFormSlug(planForm.formSlug))
+        .filter((planStep): planStep is number => planStep !== undefined);
+      setCompletedSteps(done);
+      setPlanProgress({
+        completed: progress.completedForms ?? 0,
+        total: progress.totalForms ?? 0,
+      });
+    } catch (e) {
+      console.warn('Failed to load project plan progress', e);
+    }
+  };
+
+  const APPLICATION_STEP = 2;
+
+  /**
+   * Stages the プロジェクト申請 page. The server stores it only if the whole page
+   * validates, so a rejection means nothing was persisted and the operator
+   * stays where they are.
+   *
+   * Each page needs its own payload mapper; when steps 3+ are added to
+   * `visibleSteps`, give them a mapper and save them the same way.
+   */
+  const saveApplicationPage = async (
+    projectId: string,
+    values: AdminProjectRegisterFormInputValues,
+  ): Promise<boolean> => {
+    const slug = getFormSlugForStep(APPLICATION_STEP);
+    if (!slug) return true;
+
+    try {
+      await saveProjectPlanForm(
+        projectId,
+        slug,
+        mapAdminProjectPlanApplicationPayload(values),
+      );
+      await refreshProgress(projectId);
+      return true;
+    } catch (e) {
+      const message = applyBackendValidationErrors(form, e);
+      setSubmitError(message);
+      showErrorToast(
+        '保存に失敗しました',
+        message ??
+          (e instanceof Error ? e.message : 'この画面の内容を保存できませんでした。'),
+      );
+      return false;
+    }
+  };
+
   const loadProjectApplication = async (projectId: string) => {
     setIsLoadingApplication(true);
     setSubmitError(null);
@@ -171,6 +238,10 @@ export const AdminProjectRegister: React.FC = () => {
           shouldDirty: false,
         });
       }
+
+      // Show which pages are already stored, so a returning operator can tell
+      // how far they got before continuing.
+      await refreshProgress(projectId);
 
       setStep(2);
     } catch (e) {
@@ -239,25 +310,17 @@ export const AdminProjectRegister: React.FC = () => {
         throw new Error('Project ID is required to submit project application');
       }
 
-      await createAdminProjectPlanApplication(
-        createdProjectId,
-        mapAdminProjectPlanApplicationPayload(values),
-      );
+      // saveApplicationPage surfaces its own errors, so only report success here.
+      const saved = await saveApplicationPage(createdProjectId, values);
+      if (!saved) {
+        return;
+      }
+
       toast({
         title: '保存しました',
         description: 'プロジェクト申請情報を保存しました。',
         variant: 'success',
       });
-    } catch (e) {
-      const message = applyBackendValidationErrors(form, e);
-      setSubmitError(message);
-      showErrorToast(
-        '保存に失敗しました',
-        message ??
-          (e instanceof Error
-            ? e.message
-            : '申請情報を保存できませんでした。'),
-      );
     } finally {
       setIsSubmitting(false);
     }
@@ -379,12 +442,19 @@ export const AdminProjectRegister: React.FC = () => {
             steps={visibleSteps}
             value={step}
             onChange={jumpToStep}
+            completedIds={completedSteps}
           />
           {step === 1 && <TemporaryAdminProjectAutofillButton form={form} />}
           {step === 2 && (
             <TemporaryAdminProjectApplicationAutofillButton form={form} />
           )}
         </div>
+
+        {planProgress && planProgress.total > 0 && (
+          <p className='text-sm text-muted-foreground'>
+            入力済み: {planProgress.completed} / {planProgress.total} ページ
+          </p>
+        )}
 
         <FormCard>
           <FormSectionStack spacing='relaxed'>
