@@ -11,6 +11,8 @@ type AuthPageLayoutProps = {
   title: string;
   description?: string;
   error?: string | null;
+  headerIcon?: ReactNode;
+  preserveHeaderOnShortViewport?: boolean;
   children: ReactNode;
   footer?: ReactNode;
 };
@@ -44,6 +46,8 @@ export function AuthPageLayout({
   title,
   description,
   error,
+  headerIcon,
+  preserveHeaderOnShortViewport = false,
   children,
   footer,
 }: AuthPageLayoutProps) {
@@ -54,25 +58,29 @@ export function AuthPageLayout({
 
   useGSAP(
     () => {
-      const prefersReducedMotion = window.matchMedia(
-        '(prefers-reduced-motion: reduce)',
-      ).matches;
+      const prefersReducedMotion =
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       if (prefersReducedMotion) return;
 
       const timeline = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
-      timeline
-        .from(pageHeaderRef.current, {
+      if (pageHeaderRef.current) {
+        timeline.from(pageHeaderRef.current, {
           y: -12,
           opacity: 0,
           duration: 0.45,
-        })
-        .from(
+        });
+      }
+
+      if (cardRef.current) {
+        timeline.from(
           cardRef.current,
           { y: 28, scale: 0.98, opacity: 0, duration: 0.65 },
           '<0.08',
         );
+      }
 
       if (contentRef.current?.children.length) {
         timeline.from(
@@ -100,7 +108,18 @@ export function AuthPageLayout({
           ref={cardRef}
           className="w-full max-w-[480px] rounded-2xl border border-border/70 bg-card/95 p-6 shadow-app-md backdrop-blur-md sm:p-9 [@media(max-height:700px)]:max-w-[460px] [@media(max-height:700px)]:p-5 [@media(max-height:560px)]:p-4"
         >
-          <header className="text-center [@media(max-height:620px)]:sr-only">
+          <header
+            className={
+              preserveHeaderOnShortViewport
+                ? 'text-center'
+                : 'text-center [@media(max-height:620px)]:sr-only'
+            }
+          >
+            {headerIcon && (
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-primary [@media(max-height:700px)]:mb-3 [@media(max-height:700px)]:h-14 [@media(max-height:700px)]:w-14">
+                {headerIcon}
+              </div>
+            )}
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               {title}
             </h1>
