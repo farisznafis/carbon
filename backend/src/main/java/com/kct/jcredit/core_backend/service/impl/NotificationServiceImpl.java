@@ -5,6 +5,8 @@ import com.kct.jcredit.core_backend.dto.response.NotificationListResponse;
 import com.kct.jcredit.core_backend.dto.response.details.NotificationDetailResponse;
 import com.kct.jcredit.core_backend.dto.response.NotificationCountResponse;
 import com.kct.jcredit.core_backend.entity.base.PaginationDetailResponse;
+import com.kct.jcredit.core_backend.dto.request.InquiryRequest;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 
 import com.kct.jcredit.core_backend.entity.Notification;
 import com.kct.jcredit.core_backend.entity.OperatingUser;
@@ -425,5 +427,23 @@ public Notification createNotification(
         sendMail(user.getEmail(), subject, body);
         log.info("[NOTIFICATION] Participation Approved - userId: {}, email: {}",
             user.getId(), user.getEmail());
+    }
+
+    @Override
+    public BaseResponse createInquiry(InquiryRequest request) {
+        // making use of methods here send email to operator and make a notification for operator user
+        String subject = "新しいお問い合わせが届きました";
+        String body = "会社名: " + request.getCompanyName() + "\n"
+                + "氏名: " + request.getName() + "\n"
+                + "メールアドレス: " + request.getEmail() + "\n"
+                + "お問い合わせ内容:\n" + request.getContent();
+        sendEmailToAllOperatingUsers(subject, body);
+        createNotificationForAllOperatingUsers(subject, body);
+
+        // 仮のレスポンスを返す
+        BaseResponse response = new BaseResponse();
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage("お問い合わせ内容を受け付けました。");
+        return response;
     }
 }

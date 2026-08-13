@@ -4,12 +4,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
+import jakarta.validation.Valid;
+
 
 import com.kct.jcredit.core_backend.dto.response.NotificationListResponse;
+import com.kct.jcredit.core_backend.dto.request.InquiryRequest;
 import com.kct.jcredit.core_backend.dto.response.NotificationCountResponse;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
@@ -81,4 +87,13 @@ public class NotificationController {
         NotificationListResponse response = notificationService.deleteNotification(userId, notificationId, isOperatingUser);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }  
+
+     @PostMapping
+    @Operation(summary = "問い合わせ受付", description = "お問い合わせ内容を受け付け、担当オペレーターへ通知・メール送信を行います。")
+    public ResponseEntity<BaseResponse> createInquiry(
+            @Valid @RequestBody InquiryRequest request) {
+                
+        BaseResponse response = notificationService.createInquiry(request);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
 }
