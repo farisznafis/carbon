@@ -50,7 +50,7 @@ const SiteDetail = () => {
   const [editedData, setEditedData] = useState<Partial<SiteData>>({});
 
   // Mock company users
-  //
+  // 
   // ========== API Integration Stub for Backend ==========
   // async function fetchCompanyUsers(companyId: string) {
   //   // Endpoint: GET /api/companies/:companyId/users
@@ -80,7 +80,7 @@ const SiteDetail = () => {
     setLoading(true);
     try {
       // Mock data - would come from API
-      //
+      // 
       // ========== API Integration Stub for Backend ==========
       // const response = await fetch(`/api/sites/${siteId}`, {
       //   method: 'GET',
@@ -110,7 +110,7 @@ const SiteDetail = () => {
       // return;
       // ======================================================
       await new Promise(resolve => setTimeout(resolve, 500));
-
+      
       const mockSite: SiteData = {
         siteId: siteId || 'SITEaB3kM9pQ7xL2vN8s',
         name: '東京本社',
@@ -158,7 +158,7 @@ const SiteDetail = () => {
   const handleSave = async () => {
     try {
       // Mock API call
-      //
+      // 
       // ========== API Integration Stub for Backend ==========
       // const response = await fetch(`/api/sites/${site?.siteId}`, {
       //   method: 'PATCH',
@@ -229,8 +229,8 @@ const SiteDetail = () => {
         label='プロファイルに戻る'
         className='mb-4 rounded-full'
       />
-      <Button
-        variant="ghost"
+      <Button 
+        variant="ghost" 
         onClick={() => navigate('/profile')}
         className="hidden"
       >

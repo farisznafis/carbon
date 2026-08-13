@@ -63,9 +63,19 @@ public class CompanySecurityFlowService {
                 SecurityActionSubjectType.COMPANY,
                 company.getId(), actor);
         afterCommit(() -> deliverLink(issued, company.getEmail(),
-                "Complete your master account setup",
-                "Your registration has been approved.\nCompany ID: " + company.getCompanyId()
-                        + "\nCreate your username and password here:\n" + issued.url()));
+                "【マスターアカウント設定のお願い】",
+                "いつもお世話になっております。\n\n"
+                        + "ご登録内容が承認されましたのでお知らせいたします。\n"
+                        + "企業ID: " + company.getCompanyId() + "\n\n"
+                        + "つきましては、下記のリンクよりマスターアカウントのユーザー名とパスワードを設定してください。\n\n"
+                        + issued.url() + "\n\n"
+                        + "【リンクに関するご注意】\n"
+                        + "・このリンクは一度クリックすると無効になります(一回限り有効です)。同じリンクを再度開くことはできませんのでご注意ください。\n"
+                        + "・このリンクの有効期限は発行から" + formatDuration(properties.getMasterSetupLinkTtl()) + "です。"
+                        + "期限を過ぎた場合は再度リンクの発行が必要となりますので、サポートまでお問い合わせください。\n"
+                        + "・リンクを開いた後、設定を行うためのセッションの有効期限は" + formatDuration(properties.getMasterSetupSessionTtl())
+                        + "です。時間内に設定を完了してください。\n\n"
+                        + "ご不明な点がございましたら、サポートまでお問い合わせください。"));
         return issued;
     }
 
@@ -80,10 +90,32 @@ public class CompanySecurityFlowService {
                 SecurityActionSubjectType.COMPANY,
                 company.getId(), actor);
         afterCommit(() -> deliverLink(issued, company.getEmail(),
-                "Registration revision required",
-                "Your registration was rejected.\nReason: " + rejectionReason
-                        + "\nReview and correct your application here:\n" + issued.url()));
+                "【ご登録内容の修正のお願い】",
+                "いつもお世話になっております。\n\n"
+                        + "誠に恐れ入りますが、ご登録いただいた内容は下記の理由により却下となりました。\n\n"
+                        + "却下理由:\n" + rejectionReason + "\n\n"
+                        + "つきましては、下記のリンクよりご登録内容をご確認のうえ、修正・再提出をお願いいたします。\n\n"
+                        + issued.url() + "\n\n"
+                        + "【リンクに関するご注意】\n"
+                        + "・このリンクは一度クリックすると無効になります(一回限り有効です)。同じリンクを再度開くことはできませんのでご注意ください。\n"
+                        + "・このリンクの有効期限は発行から" + formatDuration(properties.getRevisionLinkTtl()) + "です。"
+                        + "期限を過ぎた場合は再度リンクの発行が必要となりますので、サポートまでお問い合わせください。\n"
+                        + "・リンクを開いた後、入力・再提出を行うためのセッションの有効期限は" + formatDuration(properties.getRevisionSessionTtl())
+                        + "です。時間内に修正内容の入力・再提出を完了してください。\n\n"
+                        + "ご不明な点がございましたら、サポートまでお問い合わせください。"));
         return issued;
+    }
+
+    private String formatDuration(java.time.Duration duration) {
+        long days = duration.toDays();
+        if (days >= 1) {
+            return days + "日間";
+        }
+        long hours = duration.toHours();
+        if (hours >= 1) {
+            return hours + "時間";
+        }
+        return duration.toMinutes() + "分";
     }
 
     @Transactional(readOnly = true)
@@ -124,7 +156,8 @@ public class CompanySecurityFlowService {
                 });
 
         boolean emailChanged = !company.getEmail().equalsIgnoreCase(request.getEmail());
-        boolean requiresEmailVerification = emailChanged || company.getEmailVerifiedAt() == null;
+        boolean requiresEmailVerification = properties.getFeatures().isSignupEmailVerification()
+                && (emailChanged || company.getEmailVerifiedAt() == null);
         if (requiresEmailVerification) {
             if (request.getEmailVerificationChallengeId() == null) {
                 throw new CustomException(ResponseConstants.OTP_REQUIRED, ResponseConstants.MSG_OTP_REQUIRED);
@@ -136,6 +169,8 @@ public class CompanySecurityFlowService {
         apply(company, request);
         company.setCompanyStatus(CompanyStatus.PENDING);
         company.setIsActive(false);
+        company.setLastRejectionReason(null);
+        company.setRejectedAt(null);
         if (requiresEmailVerification) {
             company.setEmailVerifiedAt(LocalDateTime.now());
         }
@@ -169,6 +204,8 @@ public class CompanySecurityFlowService {
 
     private PartiCompanyRegisterRequest toRequest(ParticipatingCompany company) {
         return PartiCompanyRegisterRequest.builder()
+                .rejectionReason(company.getLastRejectionReason())
+                .rejectedAt(company.getRejectedAt())
                 .corporateNumber(company.getCorpNumber())
                 .corporateName(company.getNameJa())
                 .corporateNameKana(company.getNameFurigana())

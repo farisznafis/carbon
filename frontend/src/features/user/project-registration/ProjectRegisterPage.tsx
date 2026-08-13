@@ -3,8 +3,12 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDashboardStore } from "@/stores/dashboardStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { ArrowRight } from "lucide-react";
+import {
+  FormPageHeader,
+  FormPageShell,
+  WizardProgress,
+} from "@/components/forms/form-layout";
+import { ArrowRight, FileSignature } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { getProjectDetails } from "@/api/projects";
@@ -24,7 +28,10 @@ import {
   EquipmentRegistrationStep,
   type EquipmentRegistrationStepRef,
 } from "@/features/user/project-registration/components/EquipmentRegistrationStep";
-import { FormPageWrapper } from "@/components/layout/FormPageWrapper/FormPageWrapper";
+import {
+  floatingPageBackButtonClassName,
+  PageBackButton,
+} from "@/components/navigation/PageBackButton";
 import type { Equipment } from "@/features/user/project-registration/components/types";
 import type { AgreementFormValues } from "@/features/user/project-registration/components/agreementsConfig";
 import { paths } from "@/routes/paths";
@@ -48,7 +55,14 @@ const EQUIPMENT_STEP = 1;
 const CONFIRMATION_ITEMS_STEP = 2;
 const SUSTAINABILITY_STEP = 3;
 const FINAL_AGREEMENT_STEP = 4;
-const COMPLETION_STEP = 5;
+const COMPLETION_STEP = TOTAL_FORM_STEPS + 1;
+
+const PROJECT_REGISTRATION_STEPS = [
+  { number: EQUIPMENT_STEP, title: "設備登録" },
+  { number: CONFIRMATION_ITEMS_STEP, title: "同意事項" },
+  { number: SUSTAINABILITY_STEP, title: "持続可能性" },
+  { number: FINAL_AGREEMENT_STEP, title: "入会規約" },
+];
 
 const confirmationItemFieldNames: Record<string, keyof AgreementFormValues> = {
   isAgreeDataUse: "useRegisteredInfo",
@@ -215,7 +229,6 @@ const ProjectRegister = () => {
   const [finalTermsErrors, setFinalTermsErrors] = useState<Record<string, string>>({});
 
   // ── Derived ───────────────────────────────────────────────────────────────
-  const progress = (currentStep / TOTAL_FORM_STEPS) * 100;
   const selectedProject = projectId && currentProject?.id === projectId ? currentProject : null;
   const resolvedSiteId = siteId;
   const isCompletionStep = currentStep === COMPLETION_STEP;
@@ -656,57 +669,52 @@ const ProjectRegister = () => {
 
   // ── Main render ───────────────────────────────────────────────────────────
   return (
-    <FormPageWrapper
-      pageName="プロジェクト参加申請"
-      title=""
-      onBack={!isCompletionStep ? handleBack : undefined}
-      backText={currentStep === 1 ? "入会届に戻る" : "前へ"}
-      contentMaxWidth="max-w-4xl"
-      wrapInCard={false}
-    >
-      <div className="space-y-6">
-
-        {/* Project name */}
-        <p className="text-center text-foreground">
-          プロジェクト名：{selectedProject.projectName}
-        </p>
-
-        {/* Progress bar — hidden on completion step */}
+    <FormPageShell className="relative">
+      <div className="space-y-8">
         {!isCompletionStep && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-foreground">
-                ステップ {currentStep} / {TOTAL_FORM_STEPS}
-              </span>
-              <span className="font-medium">{Math.round(progress)}%</span>
+          <PageBackButton
+            onClick={handleBack}
+            label=""
+            aria-label={currentStep === EQUIPMENT_STEP ? "入会届に戻る" : "前へ"}
+            className={floatingPageBackButtonClassName}
+          />
+        )}
+
+        <FormPageHeader
+          icon={<FileSignature className="h-6 w-6" />}
+          title="プロジェクト参加申請"
+          description={`プロジェクト名：${selectedProject.projectName}`}
+        />
+
+        <div className="space-y-6">
+          {!isCompletionStep && (
+            <WizardProgress
+              currentStep={currentStep}
+              steps={PROJECT_REGISTRATION_STEPS}
+            />
+          )}
+
+          <div className="mx-auto w-full animate-slide-up">{renderStep()}</div>
+
+          {!isCompletionStep && (
+            <div className="flex justify-end">
+              <Button onClick={handleNext} disabled={isSubmitting}>
+                {isSubmitting
+                  ? currentStep === FINAL_AGREEMENT_STEP
+                    ? "送信中..."
+                    : "確認中..."
+                  : currentStep === FINAL_AGREEMENT_STEP
+                    ? "送信"
+                    : "次へ"}
+                {currentStep < FINAL_AGREEMENT_STEP && (
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                )}
+              </Button>
             </div>
-            <Progress value={progress} />
-          </div>
-        )}
-
-        {/* Step content */}
-        <div className="mx-auto w-full">{renderStep()}</div>
-
-        {/* Next button — hidden on completion step */}
-        {!isCompletionStep && (
-          <div className="flex justify-end">
-            <Button onClick={handleNext} disabled={isSubmitting}>
-              {isSubmitting
-                ? currentStep === FINAL_AGREEMENT_STEP
-                  ? "送信中..."
-                  : "確認中..."
-                : currentStep === FINAL_AGREEMENT_STEP
-                  ? "送信"
-                  : "次へ"}
-              {currentStep < FINAL_AGREEMENT_STEP && (
-                <ArrowRight className="h-4 w-4 ml-2" />
-              )}
-            </Button>
-          </div>
-        )}
-
+          )}
+        </div>
       </div>
-    </FormPageWrapper>
+    </FormPageShell>
   );
 };
 

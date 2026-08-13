@@ -131,15 +131,21 @@ export async function requestPasswordReset(
   );
 }
 
-export async function exchangePasswordResetActionLink(
+export async function exchangeActionLink(
   token: string,
 ): Promise<ActionLinkExchangeResponse> {
   return apiRequest<ActionLinkExchangeResponse>('/auth/action-links/exchange', {
     method: 'POST',
     auth: false,
     body: { token },
-    fallbackErrorMessage: 'パスワードリセットリンクを確認できませんでした。',
+    fallbackErrorMessage: 'アクションリンクを確認できませんでした。',
   });
+}
+
+export async function exchangePasswordResetActionLink(
+  token: string,
+): Promise<ActionLinkExchangeResponse> {
+  return exchangeActionLink(token);
 }
 
 export async function completePasswordReset(

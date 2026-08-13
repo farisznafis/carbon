@@ -61,6 +61,7 @@ export function normalizeRecentMonitoringItem(
     projectType: item.projectType ?? "",
 
     siteId: item.siteId == null ? null : String(item.siteId),
+    equipmentId: toNumberOrNull(item.equipmentId),
     userId: toNumberOrNull(item.userId),
 
     ELpv_value: toNumberOrZero(item.ELpv_value),
@@ -86,6 +87,7 @@ export function normalizeMonitoringRecordListItem(
     id: toStringOrEmpty(item.id ?? item.monitoringId ?? item.recordId),
     projectId: toStringOrEmpty(item.projectId ?? item.projectID),
     siteId: toStringOrEmpty(item.siteId ?? item.siteID),
+    equipmentId: toNumberOrNull(item.equipmentId ?? item.equipmentID),
     participatingUserId:
       toNumberOrNull(
         item.participatingUserId ?? item.participatingUserID,

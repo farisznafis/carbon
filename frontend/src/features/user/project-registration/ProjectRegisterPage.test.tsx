@@ -103,10 +103,15 @@ describe('ProjectRegisterPage', () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByText('設備登録')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: '設備登録' }),
+    ).toBeInTheDocument();
     expect(screen.getByText('太陽光発電設備の情報')).toBeInTheDocument();
     expect(screen.queryByText('入力内容の確認')).not.toBeInTheDocument();
-    expect(screen.getByText('ステップ 1 / 4')).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Progress' })).toHaveTextContent(
+      '設備登録同意事項持続可能性入会規約',
+    );
+    expect(screen.queryByText('ステップ 1 / 4')).not.toBeInTheDocument();
     expect(screen.getByText('対象拠点').parentElement).toHaveTextContent('*');
     expect(
       screen.getByText('確認資料：太陽光発電電力受給契約確認書')
