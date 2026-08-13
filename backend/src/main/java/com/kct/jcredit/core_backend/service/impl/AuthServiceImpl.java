@@ -30,6 +30,9 @@ import com.kct.jcredit.core_backend.service.AuthService;
 import com.kct.jcredit.core_backend.service.TokenBlacklistService;
 import com.kct.jcredit.core_backend.service.SecurityAccountService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
+import jakarta.transaction.Transactional;
+
+import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 
@@ -49,6 +52,7 @@ public class AuthServiceImpl implements AuthService {
 
     
     @Override
+    @Transactional
     public LoginResponse userLogin(LoginRequest request) {
         LoginResponse response = new LoginResponse();
 
@@ -137,9 +141,11 @@ public class AuthServiceImpl implements AuthService {
         if (securityAccountService != null && securityAccountService.requiresParticipatingOtp(user)) {
             return securityAccountService.beginParticipatingLogin(user, company);
         }
+    
+        List<String> permissions = List.of(); // Empty list for now, replace with actual permissions if needed
 
         String token = generateVersionedToken(user.getId(), user.getUsername(), company.getCompanyId(),
-                user.getRole(), user.getAuthVersion());
+                user.getRole(), user.getAuthVersion(), permissions);
 
         //もしユーザの情報は必要なら、レスポンスにユーザの情報も入れる
         // UserInfoResponse resData = UserInfoResponse.builder()
@@ -169,6 +175,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public AdminLoginResponse operatorLogin(AdminLoginRequest request) {
         // Find operator by companyId + identifier (email/username)
         AdminLoginResponse response = new AdminLoginResponse();
@@ -224,14 +231,19 @@ public class AuthServiceImpl implements AuthService {
         //reset attempts on successful login
         operator.setLoginAttempts(0);
         operatingUserRepository.save(operator); 
-        
+
+        // extract permissions for operator user //TODO: Implement permission extraction logic if needed
+        List<String> permissions = operator.getPermissions().stream()
+        .map(p -> p.getCode().name())
+        .toList();
+
         // Generate JWT
         if (securityAccountService != null && securityAccountService.requiresOperatingOtp()) {
             return securityAccountService.beginOperatingLogin(operator);
         }
 
         String token = generateVersionedToken(operator.getId(), operator.getUsername(),
-                operator.getCompany().getCompanyId(), operator.getRole(), operator.getAuthVersion());
+                operator.getCompany().getCompanyId(), operator.getRole(), operator.getAuthVersion(), permissions);
 
         // Build response
         AdminResponse admin = AdminResponse.builder()
@@ -278,11 +290,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private String generateVersionedToken(Integer userId, String username, String companyId,
-                                          String role, Integer authVersion) {
+                                          String role, Integer authVersion, List<String> permission) {
         if (authVersion == null || authVersion == 0) {
-            return jwtUtil.generateToken(userId, username, companyId, role);
+            return jwtUtil.generateToken(userId, username, companyId, role, permission);
         }
-        return jwtUtil.generateToken(userId, username, companyId, role, authVersion);
+        return jwtUtil.generateToken(userId, username, companyId, role, authVersion, permission);
     }
 
      /**

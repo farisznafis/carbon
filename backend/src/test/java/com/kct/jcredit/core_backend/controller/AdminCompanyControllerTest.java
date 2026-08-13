@@ -72,7 +72,7 @@ class AdminCompanyControllerTest {
 
         Method endpoint = AdminCompanyController.class.getMethod("getCompanyDetail", String.class);
         assertThat(endpoint.getAnnotation(PreAuthorize.class).value())
-                .isEqualTo("hasAnyRole('operator')");
+                .isEqualTo("hasAnyRole(T(com.kct.jcredit.core_backend.constant.RoleConstants).OPERATOR, T(com.kct.jcredit.core_backend.constant.RoleConstants).ADMIN) and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_READ.name())");
     }
 
     @Test
