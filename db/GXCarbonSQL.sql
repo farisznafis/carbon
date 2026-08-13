@@ -424,7 +424,7 @@ CREATE TABLE en_r002_equipment (
     subsidy_name VARCHAR(200),
     subsidy_amount DECIMAL(15,0),
     pre_project_unit_price DECIMAL(10,2),
-    fk_eq_previous FOREIGN KEY (previous_equipment_id)
+    CONSTRAINT fk_eq_previous FOREIGN KEY (previous_equipment_id)
         REFERENCES en_r002_equipment(id)
 );
 
