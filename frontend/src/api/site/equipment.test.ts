@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   getSiteEquipmentById,
+  getSiteEquipmentHistory,
   getSiteProjectEquipment,
   getSiteProjectEquipmentPresignedUrl,
   getSiteEquipmentList,
@@ -179,6 +180,71 @@ describe('site equipment read and update', () => {
         fileName: 'PCS仕様書.pdf',
       },
     ]);
+  });
+
+  it('gets equipment history and normalizes nested equipment data', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify([
+          {
+            id: 31,
+            changeDate: '2026-08-13',
+            previousEquipmentId: 6,
+            monitoringStartDate: '2026-08-13',
+            monitoringEndDate: null,
+            isActive: false,
+            registeredBy: 'operator-1',
+            registeredAt: '2026-08-13T01:39:59.538Z',
+            equipment: {
+              id: 7,
+              pcsUnitCount: 0,
+              pcsStandby: 0,
+              hasBattery: false,
+              Files: [
+                {
+                  id: 21,
+                  FileType: 'pcs_spec',
+                  FileId: 'file-21',
+                  S3Key: 'equipment/pcs.pdf',
+                  FileName: 'PCS仕様書.pdf',
+                },
+              ],
+            },
+          },
+        ]),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getSiteEquipmentHistory('SITE A', 7);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/site/SITE%20A/equipment/7/history',
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        id: 31,
+        previousEquipmentId: 6,
+        isActive: false,
+        equipment: expect.objectContaining({
+          equipmentId: 7,
+          powerCondUnitCount: 0,
+          powerCondStandby: 0,
+          hasBattery: false,
+          files: [
+            {
+              id: 21,
+              fileType: 'pcs_spec',
+              fileId: 'file-21',
+              s3Key: 'equipment/pcs.pdf',
+              fileName: 'PCS仕様書.pdf',
+            },
+          ],
+        }),
+      }),
+    );
   });
 
   it('patches only the supplied equipment fields and preserves false and zero', async () => {

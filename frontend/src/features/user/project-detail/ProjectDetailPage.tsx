@@ -745,6 +745,7 @@ const ProjectDetail = () => {
                 </div>
               ) : equipmentList.length > 0 ? (
                 <EquipmentList
+                  siteId={siteId}
                   equipments={equipmentList}
                   onEditEquipment={(equipmentId) =>
                     navigate(

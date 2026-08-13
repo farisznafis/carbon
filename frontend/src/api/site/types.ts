@@ -178,6 +178,7 @@ export type SiteProject = Project & {
 export type SiteProjectEquipment = {
   tempId?: string | null;
   equipmentId?: number | null;
+  siteId?: string | null;
   methodologyNumber?: string | null;
   isEligible?: boolean | null;
   equipmentOpDate?: string | null;
@@ -265,6 +266,30 @@ export type SiteProjectEquipmentDetailResponse = SiteProjectEquipmentApiItem & {
   errors?: Record<string, string> | null;
   timestamp?: string;
   siteId?: string | null;
+};
+
+export type SiteEquipmentHistoryApiItem = {
+  id?: number | null;
+  changeDate?: string | null;
+  previousEquipmentId?: number | null;
+  monitoringStartDate?: string | null;
+  monitoringEndDate?: string | null;
+  isActive?: boolean | null;
+  registeredBy?: string | null;
+  registeredAt?: string | null;
+  equipment?: SiteProjectEquipmentApiItem | null;
+};
+
+export type SiteEquipmentHistory = {
+  id: number | null;
+  changeDate: string | null;
+  previousEquipmentId: number | null;
+  monitoringStartDate: string | null;
+  monitoringEndDate: string | null;
+  isActive: boolean | null;
+  registeredBy: string | null;
+  registeredAt: string | null;
+  equipment: SiteProjectEquipment;
 };
 
 export type SiteProjectEquipmentUpdateRequest = {

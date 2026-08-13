@@ -9,6 +9,8 @@ import type {
   SiteProjectEquipmentApiItem,
   SiteProjectEquipmentApiFile,
   SiteProjectEquipmentDetailResponse,
+  SiteEquipmentHistory,
+  SiteEquipmentHistoryApiItem,
   SiteEquipmentListResponse,
   SiteProjectEquipmentFileType,
   SiteProjectEquipmentFileUploadResponse,
@@ -306,6 +308,37 @@ export async function getSiteEquipmentById(
       },
     ),
   );
+}
+
+export async function getSiteEquipmentHistory(
+  siteId: string,
+  equipmentId: number,
+): Promise<SiteEquipmentHistory[]> {
+  const history = await apiRequest<SiteEquipmentHistoryApiItem[]>(
+    `/site/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}/history`,
+    {
+      method: 'GET',
+      fallbackErrorMessage: '設備変更履歴の取得に失敗しました。',
+    },
+  );
+
+  return Array.isArray(history)
+    ? history.map((entry) => ({
+        id: typeof entry.id === 'number' ? entry.id : null,
+        changeDate: normalizedText(entry.changeDate),
+        previousEquipmentId:
+          typeof entry.previousEquipmentId === 'number'
+            ? entry.previousEquipmentId
+            : null,
+        monitoringStartDate: normalizedText(entry.monitoringStartDate),
+        monitoringEndDate: normalizedText(entry.monitoringEndDate),
+        isActive:
+          typeof entry.isActive === 'boolean' ? entry.isActive : null,
+        registeredBy: normalizedText(entry.registeredBy),
+        registeredAt: normalizedText(entry.registeredAt),
+        equipment: normalizeSiteProjectEquipment(entry.equipment ?? {}),
+      }))
+    : [];
 }
 
 export async function updateSiteEquipment(
