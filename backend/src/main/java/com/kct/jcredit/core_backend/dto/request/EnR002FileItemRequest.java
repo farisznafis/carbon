@@ -16,12 +16,9 @@ import jakarta.validation.constraints.NotBlank;
 @AllArgsConstructor
 public class EnR002FileItemRequest {
  
-    // Enum — Spring otomatis reject nilai yang tidak ada di EquipmentFileType
-    // via @JsonCreator, tidak perlu @NotBlank String lagi
     @NotNull
     private EquipmentFileType fileType;
  
-    // S3 key hasil presign — bukan URL langsung
     @NotBlank
     private String s3Key;
  
