@@ -79,7 +79,7 @@ public class AdminCompanyController {
      * Returns a unified, filtered, and paginated company list.
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('operator', 'admin') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_READ.name())")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "企業一覧取得", description = "企業ステータス、検索条件、日付範囲で企業一覧を取得します。")
     public ResponseEntity<AdminCompanyListResponse> getCompanies(
@@ -89,7 +89,7 @@ public class AdminCompanyController {
     }
 
     @PostMapping("/{companyId}/master-setup-link/resend")
-    @PreAuthorize("hasAnyRole('operator', 'admin') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name())")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "マスターアカウントセットアップリンク再送信", description = "指定した企業のマスターアカウントに対して、セットアップ用のアクションリンクを再送信します。")
     public ResponseEntity<ApproveCompanyResponse> resendMasterSetupLink(@PathVariable String companyId) {
@@ -98,7 +98,7 @@ public class AdminCompanyController {
     }
 
     @PostMapping("/{companyId}/password-reset-link")
-    @PreAuthorize("hasAnyRole('operator', 'admin') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MASTER_USER_PASSWORD_RESET.name())")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MASTER_USER_PASSWORD_RESET.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "マスターアカウントパスワードリセットリンク発行", description = "指定した企業のマスターアカウントに対して、パスワードリセット用のアクションリンクを発行します。")
     public ResponseEntity<BaseResponse> requestMasterPasswordReset(
@@ -113,7 +113,7 @@ public class AdminCompanyController {
      * Returns master-account, company, user, and site details for one participating company.
      */
     @GetMapping("/{companyId}")
-    @PreAuthorize("hasAnyRole('operator', 'admin') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_READ.name())")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "企業詳細取得", description = "指定した企業のマスターアカウント、ユーザー、拠点情報を取得します。")
     public ResponseEntity<AdminCompanyDetailResponse> getCompanyDetail(
@@ -126,7 +126,7 @@ public class AdminCompanyController {
      * Creates one operational blocker for an active or already suspended company.
      */
     @PostMapping("/{companyId}/suspensions")
-    @PreAuthorize("hasAnyRole('operator', 'admin') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_SUSPEND.name())")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_SUSPEND.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "企業利用停止登録", description = "指定した理由で企業の利用停止を登録します。")
     public ResponseEntity<CompanySuspensionResponse> createSuspension(
@@ -140,8 +140,7 @@ public class AdminCompanyController {
      * Returns active blockers or complete suspension history for a company.
      */
     @GetMapping("/{companyId}/suspensions")
-    @PreAuthorize("hasAnyRole('operator', 'admin') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_SUSPEND.name())")
-    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_SUSPEND.name()))")
     @Operation(summary = "企業停止履歴取得", description = "企業の有効な停止理由または停止履歴を取得します。")
     public ResponseEntity<CompanySuspensionListResponse> getSuspensions(
             @PathVariable String companyId,

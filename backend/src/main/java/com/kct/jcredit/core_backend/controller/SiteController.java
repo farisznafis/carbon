@@ -208,7 +208,7 @@ public class SiteController {
     }
 
     @GetMapping("/{siteId}/equipment/{equipmentId}/history")
-    @PreAuthorize("hasAnyRole('master','user','operator')")
+    @PreAuthorize("hasAnyRole('master','user','admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "設備履歴取得",
             description = "設備の変更履歴を時系列で取得します。"

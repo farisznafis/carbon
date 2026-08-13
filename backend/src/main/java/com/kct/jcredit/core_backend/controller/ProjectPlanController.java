@@ -45,7 +45,7 @@ public class ProjectPlanController {
     private final JwtUtil jwtUtil;
 
         @GetMapping("/autofill")
-        @PreAuthorize("hasRole('operator')")
+        @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
         @SecurityRequirement(name = "bearerAuth")
         @Operation(summary = "法人マスタ自動入力情報取得", description = "プロジェクト計画書入力用の法人マスタ情報を取得します。")
         public ResponseEntity<CorporationMasterResponse> getCorporationMaster(Authentication authentication) {
@@ -58,7 +58,7 @@ public class ProjectPlanController {
         }
 
         @GetMapping("/autofill/{projectId}")
-        @PreAuthorize("hasRole('operator')")
+        @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
         @SecurityRequirement(name = "bearerAuth")
         @Operation(summary = "プロジェクトマスタ自動入力情報取得", description = "指定されたプロジェクトの計画書入力用マスタ情報を取得します。")
         public ResponseEntity<ProjectMasterResponse> getProjectMaster(Authentication authentication,
@@ -73,7 +73,7 @@ public class ProjectPlanController {
         }
 
         @PostMapping("/{projectId}/application")
-        @PreAuthorize("hasRole('operator')")
+        @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
         @SecurityRequirement(name = "bearerAuth")
         @Operation(summary = "プロジェクト申請情報登録", description = "指定されたプロジェクトの申請情報を登録します。")
         public ResponseEntity<ProjectApplicationResponse> submitProjectApplication(Authentication authentication,
@@ -90,7 +90,7 @@ public class ProjectPlanController {
         }
 
         @PutMapping("/{projectId}/application")
-        @PreAuthorize("hasRole('operator')")
+        @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
         @SecurityRequirement(name = "bearerAuth")
         @Operation(summary = "プロジェクト申請情報更新", description = "指定されたプロジェクトの申請情報を更新します。")
         public ResponseEntity<ProjectApplicationResponse> updateProjectApplication(Authentication authentication,
@@ -107,7 +107,7 @@ public class ProjectPlanController {
         }
 
         @GetMapping("/{projectId}/application")
-        @PreAuthorize("hasRole('operator')")
+        @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
         @SecurityRequirement(name = "bearerAuth")
         @Operation(summary = "プロジェクト申請情報取得", description = "指定されたプロジェクトの申請情報を取得します。")
         public ResponseEntity<ProjectApplicationResponse> getProjectApplication(Authentication authentication,
@@ -122,7 +122,7 @@ public class ProjectPlanController {
         }
 
         @PostMapping("/{projectId}/other-operator-projects")
-        @PreAuthorize("hasRole('operator')")
+        @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
         @SecurityRequirement(name = "bearerAuth")
         @Operation(summary = "他運営事業者プロジェクト情報登録", description = "指定されたプロジェクトの他運営事業者プロジェクト情報を登録します。")
         public ResponseEntity<OtherOperatorProjectsResponse> submitOtherOperatorProjects(Authentication authentication,
@@ -139,7 +139,7 @@ public class ProjectPlanController {
         }
 
         @PutMapping("/{projectId}/other-operator-projects")
-        @PreAuthorize("hasRole('operator')")
+        @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
         @SecurityRequirement(name = "bearerAuth")
         @Operation(summary = "他運営事業者プロジェクト情報更新", description = "指定されたプロジェクトの他運営事業者プロジェクト情報を更新します。")
         public ResponseEntity<OtherOperatorProjectsResponse> updateOtherOperatorProjects(Authentication authentication,
@@ -156,7 +156,7 @@ public class ProjectPlanController {
         }
 
         @GetMapping("/{projectId}/other-operator-projects")
-        @PreAuthorize("hasRole('operator')")
+        @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
         @SecurityRequirement(name = "bearerAuth")
         @Operation(summary = "他運営事業者プロジェクト情報取得", description = "指定されたプロジェクトの他運営事業者プロジェクト情報を取得します。")
         public ResponseEntity<OtherOperatorProjectsResponse> getOtherOperatorProjects(Authentication authentication,
@@ -171,7 +171,7 @@ public class ProjectPlanController {
         }
 
         @PostMapping("/{projectId}/applicable-conditions")
-        @PreAuthorize("hasRole('operator')")
+        @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
         @SecurityRequirement(name = "bearerAuth")
         @Operation(summary = "適用条件情報登録", description = "指定されたプロジェクトの適用条件情報を登録します。")
         public ResponseEntity<ApplicableConditionsResponse> submitApplicableConditions(Authentication authentication,
@@ -188,7 +188,7 @@ public class ProjectPlanController {
         }
 
         @PutMapping("/{projectId}/applicable-conditions")
-        @PreAuthorize("hasRole('operator')")
+        @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
         @SecurityRequirement(name = "bearerAuth")
         @Operation(summary = "適用条件情報更新", description = "指定されたプロジェクトの適用条件情報を更新します。")
         public ResponseEntity<ApplicableConditionsResponse> updateApplicableConditions(Authentication authentication,
@@ -205,7 +205,7 @@ public class ProjectPlanController {
         }
 
         @GetMapping("/{projectId}/applicable-conditions")
-        @PreAuthorize("hasRole('operator')")
+        @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
         @SecurityRequirement(name = "bearerAuth")
         @Operation(summary = "適用条件情報取得", description = "指定されたプロジェクトの適用条件情報を取得します。")
         public ResponseEntity<ApplicableConditionsResponse> getApplicableConditions(Authentication authentication,
