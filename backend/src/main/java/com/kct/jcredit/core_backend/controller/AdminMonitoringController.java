@@ -43,7 +43,7 @@ public class AdminMonitoringController {
     private final JwtUtil jwtUtil;
 
     @GetMapping("/deletion-candidates")
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "削除対象データ抽出", description = "認証対象期間終了から2年が経過したモニタリングデータを削除候補として抽出します。")
     public ResponseEntity<MonitoringDeletionCandidateListResponse> getDeletionCandidates() {
@@ -52,7 +52,7 @@ public class AdminMonitoringController {
     }
 
     @GetMapping("/deletion-candidates/{projectPublicId}")
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "削除対象データ明細取得", description = "指定したプロジェクト・拠点の削除候補モニタリングデータを、レコード単位の明細で取得します。")
     public ResponseEntity<MonitoringDeletionCandidateRecordListResponse> getDeletionCandidateRecords(
@@ -64,7 +64,7 @@ public class AdminMonitoringController {
     }
 
     @PostMapping("/deletion")
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_DELETE.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "モニタリングデータ削除実行", description = "指定されたプロジェクトの削除対象モニタリングデータを削除し、削除履歴を記録します。")
     public ResponseEntity<MonitoringDeletionExecutionResponse> executeDeletion(
@@ -79,7 +79,7 @@ public class AdminMonitoringController {
     }
 
     @GetMapping("/deletion-history")
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "削除履歴取得", description = "モニタリングデータの削除履歴を取得します。")
     public ResponseEntity<MonitoringDataDeletionHistoryListResponse> getDeletionHistory(

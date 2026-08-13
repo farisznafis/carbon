@@ -65,7 +65,7 @@ public class ProjectController {
     private final ProjectMonitoringService projectMonitoringService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_CREATE.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクト作成", description = "新しいプロジェクトを作成します。")
     public ResponseEntity<CreateProjectResponse> createProject(Authentication authentication,
@@ -79,7 +79,7 @@ public class ProjectController {
 
     //update project details
     @PatchMapping("/{projectId}")
-    @PreAuthorize("hasAnyRole('operator','master','user')") // allow both operator and master to update project details
+    @PreAuthorize("hasAnyRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))") // allow both operator and master to update project details
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクト情報更新", description = "指定されたプロジェクトの詳細情報を更新します。")
     public ResponseEntity<ProjectResponse> updateProject(Authentication authentication,
@@ -95,7 +95,7 @@ public class ProjectController {
 
      //update project details
     @PatchMapping("/{projectId}/status")
-    @PreAuthorize("hasAnyRole('operator','master')") // allow both operator and master to update project details
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_STATUS_UPDATE.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクトステータス更新", description = "指定されたプロジェクトのステータスを更新します。")
     public ResponseEntity<UpdateProjectStatusResponse> updateProjectStatus(Authentication authentication,
@@ -108,7 +108,7 @@ public class ProjectController {
 
     //get project details
     @GetMapping("/{projectId}")
-    @PreAuthorize("hasAnyRole('operator','master','user')") 
+    @PreAuthorize("hasAnyRole('admin','master','user') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))") 
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクト情報取得", description = "指定されたプロジェクトの詳細情報を取得します。")
     public ResponseEntity<ProjectResponse> getProject(Authentication authentication,
@@ -120,7 +120,7 @@ public class ProjectController {
 
     //5.4 upload document
     @PostMapping(value="/{projectId}/document/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('operator')")
+     @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクト書類アップロード", description = "指定されたプロジェクトの承認関連書類をアップロードします。")
     public ProjectUploadDocumentResponse uploadApprovalDocuments(
@@ -142,7 +142,7 @@ public class ProjectController {
     }
 
     @GetMapping("/{projectId}/document/list")
-    @PreAuthorize("hasAnyRole('operator')")
+     @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクト書類一覧取得", description = "指定されたプロジェクトに登録された書類一覧を取得します。")
     public ProjectUploadDocumentResponse getDocumentList(@PathVariable String projectId) {
@@ -150,7 +150,7 @@ public class ProjectController {
     }
 
     @PatchMapping("/{projectId}/document/status")
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクト書類ステータス更新", description = "指定されたプロジェクト書類のステータスを更新します。")
     public ProjectUploadDocumentResponse updateDocumentStatus(
@@ -162,7 +162,7 @@ public class ProjectController {
 
     //list projects with filters
     @GetMapping
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクト一覧取得", description = "条件に一致するプロジェクト一覧をページング付きで取得します。")
     public ResponseEntity<ProjectListInfoResponse> listProjects(
@@ -196,7 +196,7 @@ public class ProjectController {
 
     //5.5 project monitoring details
     @GetMapping("/{projectId}/monitoring")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクトモニタリング情報取得", description = "指定されたプロジェクトのモニタリング詳細情報を取得します。")
     public ResponseEntity<ProjectMonitoringResponse> getProjectMonitoringDetails(
