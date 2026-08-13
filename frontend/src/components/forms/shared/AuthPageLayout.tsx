@@ -124,7 +124,7 @@ export function AuthPageLayout({
               {title}
             </h1>
             {description && (
-              <p className="mx-auto mt-2 max-w-sm text-small text-muted-foreground">
+              <p className="mt-2 max-w-sm text-small text-muted-foreground">
                 {description}
               </p>
             )}

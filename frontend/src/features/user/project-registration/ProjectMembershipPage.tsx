@@ -5,7 +5,15 @@ import {
   getSiteProjects,
   type SiteProject,
 } from '@/api/site';
-import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
+import {
+  FormPageContent,
+  FormPageTitle,
+  FormStandalonePage,
+} from '@/components/forms/form-layout';
+import {
+  PageBackButton,
+  floatingPageBackButtonClassName,
+} from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ProjectMembershipCard } from '@/features/user/project-registration/components/ProjectMembershipCard';
@@ -143,20 +151,21 @@ export default function ProjectMembershipPage() {
   };
 
   return (
-    <FormPageWrapper
-      pageName="プロジェクト入会届"
-      title=""
-      onBack={handleBack}
-      contentMaxWidth="max-w-[1200px]"
-      headerClassName="bg-primary text-primary-foreground"
-      wrapInCard={false}
-    >
-      <div className="space-y-10">
-        {/* {siteName && (
-          <p className="text-center text-foreground">
-            拠点名：{siteName}
-          </p>
-        )} */}
+    <FormStandalonePage className="overflow-visible">
+      <PageBackButton
+        onClick={handleBack}
+        label=""
+        aria-label="前の画面へ戻る"
+        className={floatingPageBackButtonClassName}
+      />
+
+      <FormPageContent className="max-w-[1200px] space-y-10 pt-16 sm:pt-0">
+        <header className="space-y-2">
+          <FormPageTitle as="h1">プロジェクト入会届</FormPageTitle>
+          {siteName && (
+            <p className="text-small text-foreground">対象拠点：{siteName}</p>
+          )}
+        </header>
 
         {isLoading ? (
           <Card className="rounded-lg border-border shadow-none">
@@ -192,7 +201,7 @@ export default function ProjectMembershipPage() {
             />
           </>
         )}
-      </div>
-    </FormPageWrapper>
+      </FormPageContent>
+    </FormStandalonePage>
   );
 }
