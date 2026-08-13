@@ -439,7 +439,6 @@ public class SiteServiceImpl implements SiteService {
                     .subsidyName(equipment.getSubsidyName())
                     .subsidyAmount(equipment.getSubsidyAmount())
                     .preProjectUnitPrice(equipment.getPreProjectUnitPrice())
-                    .evidenceDocuments(evidenceDocuments)
                     .build();
     
             response.setEquipments(List.of(item));

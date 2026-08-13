@@ -10,6 +10,8 @@ import java.util.stream.Stream;
 import com.kct.jcredit.core_backend.dto.projectplan.ApplicableConditionsRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.OtherOperatorProjectsRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectApplicationRequest;
+import com.kct.jcredit.core_backend.service.projectplan.FormDefinition;
+import com.kct.jcredit.core_backend.service.projectplan.ProjectPlanFormRegistry;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormBase;
 
 import org.junit.jupiter.api.Test;
@@ -36,11 +38,14 @@ class ProjectPlanFormBaseTest {
         VALIDATOR = factory.getValidator();
     }
 
+    /**
+     * Every page the registry serves. Taken from the registry rather than
+     * listed here because ProjectPlanFormRepository builds a schema for each of
+     * these at startup — an unmappable DTO stops the application booting, so
+     * this must cover whatever is registered, not a snapshot of it.
+     */
     static Stream<Class<? extends ProjectPlanFormBase>> registeredFormTypes() {
-        return Stream.of(
-                ProjectApplicationRequest.class,
-                ApplicableConditionsRequest.class,
-                OtherOperatorProjectsRequest.class);
+        return new ProjectPlanFormRegistry().all().stream().map(FormDefinition::type);
     }
 
     /**
