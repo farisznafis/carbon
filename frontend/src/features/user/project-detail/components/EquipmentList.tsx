@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Eye, Wrench } from 'lucide-react';
+import { Eye, PencilLine, Wrench } from 'lucide-react';
 import {
   equipmentDetailSections,
   equipmentSummaryFields,
@@ -98,10 +98,12 @@ function EquipmentSummaryCard({
   equipment,
   index,
   onShowDetails,
+  onEdit,
 }: {
   equipment: SiteProjectEquipment;
   index: number;
   onShowDetails: (equipment: SiteProjectEquipment) => void;
+  onEdit: (equipmentId: number) => void;
 }) {
   const equipmentTitle = equipment.equipmentType || `設備 ${index + 1}`;
 
@@ -122,16 +124,28 @@ function EquipmentSummaryCard({
               </CardDescription>
             </div>
           </div>
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            className='self-start sm:self-auto'
-            onClick={() => onShowDetails(equipment)}
-          >
-            <Eye className='h-4 w-4' />
-            詳細
-          </Button>
+          <div className='flex flex-wrap gap-2 self-start sm:self-auto'>
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              onClick={() => onShowDetails(equipment)}
+            >
+              <Eye className='h-4 w-4' />
+              詳細
+            </Button>
+            {typeof equipment.equipmentId === 'number' && (
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                onClick={() => onEdit(equipment.equipmentId as number)}
+              >
+                <PencilLine className='h-4 w-4' />
+                設備変更
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className='px-6 pb-6'>
@@ -151,8 +165,10 @@ function EquipmentSummaryCard({
 
 export function EquipmentList({
   equipments,
+  onEditEquipment,
 }: {
   equipments: SiteProjectEquipment[];
+  onEditEquipment: (equipmentId: number) => void;
 }) {
   const [selectedEquipment, setSelectedEquipment] =
     useState<SiteProjectEquipment | null>(null);
@@ -166,6 +182,7 @@ export function EquipmentList({
             equipment={equipment}
             index={index}
             onShowDetails={setSelectedEquipment}
+            onEdit={onEditEquipment}
           />
         ))}
       </div>

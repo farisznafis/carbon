@@ -48,3 +48,38 @@ export type ValidateSignupMethodologyResponse = {
   success?: boolean;
   valid?: boolean;
 };
+
+export type SignupRevisionRequest = {
+  emailVerificationChallengeId?: string;
+  corporateNumber: string;
+  corporateName: string;
+  corporateNameKana: string;
+  companyNameEnglish: string;
+  corporatePhoneNumber: string;
+  postalCode: string;
+  prefecture: string;
+  municipality: string;
+  blocknum: string;
+  buildingName: string;
+  lastName: string;
+  firstName: string;
+  lastNameKana: string;
+  firstNameKana: string;
+  position: string;
+  phoneNumber: string;
+  faxNumber: string;
+  email: string;
+  methodology: string[];
+  activityInformation: string;
+};
+
+export type SignupRevisionResponse = SignupRevisionRequest & {
+  rejectionReason?: string | null;
+};
+
+export type SignupRevisionUpdateResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+};

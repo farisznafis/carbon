@@ -15,7 +15,7 @@ import { SessionExpiryGuard } from "@/components/layout/SessionExpiryGuard";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "./contexts/ProtectedRoute";
 import { ErrorBoundary } from "@/components/feedback/ErrorBoundary";
-import { isLoginPath, paths } from "@/routes/paths";
+import { isAuthPagePath, paths } from "@/routes/paths";
 import { cn } from "@/lib/utils";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
@@ -26,6 +26,9 @@ const AdminLogin = lazy(() => import("./features/admin/auth/AdminLoginPage"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Signup = lazy(() => import("./pages/Signup"));
+const SignupRevision = lazy(() =>
+  import("./features/public/signup-revision/SignupRevisionPage"),
+);
 const ProjectDetail = lazy(() => import("./features/user/project-detail/ProjectDetailPage"));
 const MonitoringRegister = lazy(() => import("./features/user/monitoring/MonitoringRegisterPage"));
 const SiteRegister = lazy(() => import("./features/master/pages/SiteRegisterPage"));
@@ -39,6 +42,9 @@ const ProjectRegister = lazy(() => import("./features/user/project-registration/
 const EquipmentForm = lazy(() => import("./features/user/project-registration/EquipmentFormPage"));
 const EquipmentConfirmation = lazy(() =>
   import("./features/user/project-registration/EquipmentConfirmationPage"),
+);
+const EquipmentEdit = lazy(() =>
+  import("./features/user/equipment-edit/EquipmentEditPage"),
 );
 const MasterDashboard = lazy(() => import("./features/master/pages/MasterDashboardPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -124,7 +130,7 @@ function LegacyProjectRedirect() {
 
 const App = () => {
   const location = useLocation();
-  const isLoginPage = isLoginPath(location.pathname);
+  const isAuthPage = isAuthPagePath(location.pathname);
 
   useEffect(() => {
     const lenis = new Lenis({
@@ -146,7 +152,7 @@ const App = () => {
       <div
         className={cn(
           'flex flex-col bg-background text-foreground',
-          isLoginPage ? 'h-dvh overflow-hidden' : 'min-h-dvh',
+          isAuthPage ? 'h-dvh overflow-hidden' : 'min-h-dvh',
         )}
       >
         <Toaster />
@@ -157,7 +163,7 @@ const App = () => {
         <div
           className={cn(
             'min-h-0 min-w-0 flex-1',
-            isLoginPage && 'relative overflow-hidden',
+            isAuthPage && 'relative overflow-hidden',
           )}
         >
           <Suspense fallback={<div className="p-6 text-sm text-foreground">Loading...</div>}>
@@ -168,6 +174,7 @@ const App = () => {
           <Route path={paths.forgotPassword} element={<ForgotPassword />} />
           <Route path={paths.resetPassword} element={<ResetPassword />} />
           <Route path={paths.signup} element={<Signup />} />
+          <Route path={paths.signupRevision} element={<SignupRevision />} />
           <Route element={<ProtectedRoute />}>
             <Route path={paths.masterDashboard} element={<MasterDashboard />} />
             <Route path={paths.masterSiteRegister} element={<SiteRegister />} />
@@ -212,6 +219,10 @@ const App = () => {
             />
             <Route path={paths.equipmentAddRoute} element={<EquipmentPage />} />
             <Route path={paths.siteProjectDetailRoute} element={<ProjectDetail />} />
+            <Route
+              path={paths.siteProjectEquipmentEditRoute}
+              element={<EquipmentEdit />}
+            />
             <Route path={paths.legacyProjectRoute} element={<LegacyProjectRedirect />} />
             <Route
               path={paths.monitoringRegisterRoute}

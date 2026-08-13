@@ -13,7 +13,10 @@ import {
 } from '@/api/admin';
 import { ApiError } from '@/api/_shared/errors';
 import { FormActions, FormPageContent } from '@/components/forms/form-layout';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
+import {
+  floatingPageBackButtonClassName,
+  PageBackButton,
+} from '@/components/navigation/PageBackButton';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -334,7 +337,7 @@ export default function ParticipationReviewDetailPage() {
         onClick={returnToList}
         label=""
         aria-label="入会届一覧へ戻る"
-        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-8"
+        className={floatingPageBackButtonClassName}
       />
 
       <FormPageContent className="max-w-[960px] space-y-6 pt-16 sm:pt-0">

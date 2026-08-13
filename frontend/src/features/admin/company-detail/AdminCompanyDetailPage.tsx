@@ -1,5 +1,5 @@
 ﻿import { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -23,7 +23,19 @@ import {
 } from '@/api/admin';
 import { ApiError } from '@/api/_shared/errors';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
+import {
+  floatingPageBackButtonClassName,
+  PageBackButton,
+} from '@/components/navigation/PageBackButton';
 import { Badge } from '@/components/ui/badge';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -410,66 +422,84 @@ export default function AdminCompanyDetailPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <main className="min-h-screen bg-background px-4 py-8 sm:px-6">
+    <main className="relative min-h-screen bg-background px-4 py-8 sm:px-6">
+      <PageBackButton
+        onClick={handleBack}
+        label=""
+        aria-label="ダッシュボードへ戻る"
+        className={floatingPageBackButtonClassName}
+      />
+
       <div className="mx-auto w-full max-w-7xl space-y-6">
 
         {/* ── Page Header ─────────────────────────────────────────────────── */}
-        <div className="space-y-3">
-          {/* Back link */}
-          <button
-            type="button"
-            onClick={handleBack}
-            className="inline-flex items-center gap-1.5 text-sm text-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-            一覧に戻る
-          </button>
+        <div className="min-w-0 space-y-3 pl-16 sm:pl-20 2xl:pl-0">
+            <Breadcrumb>
+              <BreadcrumbList className="flex-nowrap">
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link
+                      to={paths.adminDashboard}
+                      className="inline-flex items-center gap-1.5 font-medium text-foreground hover:text-primary"
+                    >
+                      <ArrowLeft className="h-4 w-4 text-muted-foreground" />
+                      ダッシュボード
+                    </Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator>/</BreadcrumbSeparator>
+                <BreadcrumbItem className="min-w-0">
+                  <BreadcrumbPage className="block truncate">
+                    {company.nameJA || `企業ID: ${company.companyId}`}
+                  </BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
 
-          {/* Title row */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1.5 min-w-0">
-              <p className="text-sm text-foreground tracking-wide">
-                企業情報の詳細
-              </p>
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground truncate">
-                {company.nameJA || `企業ID: ${company.companyId}`}
-              </h1>
+            {/* Title row */}
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1.5 min-w-0">
+                <p className="text-sm text-foreground tracking-wide">
+                  企業情報の詳細
+                </p>
+                <h1 className="text-2xl font-semibold tracking-tight text-foreground truncate">
+                  {company.nameJA || `企業ID: ${company.companyId}`}
+                </h1>
 
-              {/* Inline metadata chips */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-0.5">
-                <span className="inline-flex items-center gap-1 text-sm text-foreground">
-                  ステータス：
-                  <CompanyStatusBadge status={company.companyStatus} />
-                </span>
-
-                {company.isActive !== undefined && (
+                {/* Inline metadata chips */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-0.5">
                   <span className="inline-flex items-center gap-1 text-sm text-foreground">
-                    アカウント状態：
-                    <AccountStatusBadge isActive={company.isActive} />
+                    ステータス：
+                    <CompanyStatusBadge status={company.companyStatus} />
                   </span>
-                )}
 
-                {company.corpNumber && (
-                  <span className="text-sm text-foreground">
-                    法人番号：
-                    <span className="font-medium text-foreground ml-1">
-                      {company.corpNumber}
+                  {company.isActive !== undefined && (
+                    <span className="inline-flex items-center gap-1 text-sm text-foreground">
+                      アカウント状態：
+                      <AccountStatusBadge isActive={company.isActive} />
                     </span>
-                  </span>
-                )}
+                  )}
 
-                {company.companyId && (
-                  <span className="text-sm text-foreground">
-                    企業ID：
-                    <span className="font-medium text-foreground ml-1">
-                      {company.companyId}
+                  {company.corpNumber && (
+                    <span className="text-sm text-foreground">
+                      法人番号：
+                      <span className="font-medium text-foreground ml-1">
+                        {company.corpNumber}
+                      </span>
                     </span>
-                  </span>
-                )}
+                  )}
+
+                  {company.companyId && (
+                    <span className="text-sm text-foreground">
+                      企業ID：
+                      <span className="font-medium text-foreground ml-1">
+                        {company.companyId}
+                      </span>
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-
-          </div>
         </div>
 
         <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">

@@ -24,6 +24,7 @@ import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.response.details.FileErrorDetailsResponse;
 import com.kct.jcredit.core_backend.dto.response.details.FileInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.details.MonitoringDataSolarResponse;
+import com.kct.jcredit.core_backend.entity.EnR002Equipment;
 import com.kct.jcredit.core_backend.entity.EnR002MonitoringRecord;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.entity.Project;
@@ -33,6 +34,7 @@ import com.kct.jcredit.core_backend.entity.base.PaginationDetailResponse;
 import com.kct.jcredit.core_backend.exception.FileTooLargeException;
 import com.kct.jcredit.core_backend.exception.UnsupportedFileTypeException;
 import com.kct.jcredit.core_backend.repository.dynamodb.MonitoringTableRecordSolarRepository;
+import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
@@ -40,12 +42,14 @@ import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.service.MonitoringService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MonitoringServiceImpl implements MonitoringService {
 
     private final ProjectRepository projectRepository;
@@ -53,6 +57,7 @@ public class MonitoringServiceImpl implements MonitoringService {
     private final ParticipatingUserRepository userRepository;
     private final SiteRepository siteRepository;
     private final SiteProjectRelationRepository siteProjectRelationRepository;
+    private final EnR002EquipmentRepository equipmentRepository;
     private final S3Client s3Client;
     
     @Value("${app.s3.bucket:}")
@@ -134,6 +139,15 @@ public class MonitoringServiceImpl implements MonitoringService {
                 return response;
             }
 
+            // 4.5) Validate equipment exists and belongs to the resolved site
+            // 設備が存在し、対象拠点に属していることを確認する
+            EnR002Equipment equipment = equipmentRepository.findById(request.getEquipmentId()).orElse(null);
+            if (equipment == null || equipment.getSite() == null || !equipment.getSite().getId().equals(site.getId())) {
+                response.setStatusCode(ResponseConstants.NOT_FOUND);
+                response.setMessage(ResponseConstants.MSG_EQUIPMENT_NOT_FOUND);
+                return response;
+            }
+
             // 5) Validate all 4 mandatory evidence files are provided
             //4つの証憑ファイルがnullか空文字の場合
             Map<String, String> evidenceErrors = collectMandatoryEvidenceErrors(request);
@@ -154,6 +168,16 @@ public class MonitoringServiceImpl implements MonitoringService {
                 return response;
             }
 
+            // 6.5) Validate battery fields against equipment.hasBattery
+            // 設備のhasBatteryに基づきバッテリー関連項目を検証する
+            Map<String, String> batteryEligibilityErrors = collectBatteryEligibilityErrors(request, equipment);
+            if (!batteryEligibilityErrors.isEmpty()) {
+                response.setStatusCode(ResponseConstants.VALIDATION_ERROR);
+                response.setMessage(ResponseConstants.MSG_VALIDATION_ERROR);
+                response.setErrors(batteryEligibilityErrors);
+                return response;
+            }
+
             // 7) Create and populate DynamoDB entity
             // DynamoDBエンティティを作成してデータを入力する
             EnR002MonitoringRecord entity = new EnR002MonitoringRecord();
@@ -161,6 +185,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             entity.setId(site.getPublicId() + "#" + project.getPublicId());
             entity.setProjectID(project.getId());
             entity.setSiteID(site.getId());
+            entity.setEquipmentID(equipment.getId());
             entity.setParticipatingUserID(user.getId());
             entity.setTimeUpdated(Instant.now().toString()); // Auto-set with server time in ISO format as SK
             entity.setDateRecorded(request.getDateRecorded());
@@ -186,6 +211,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // 11) Handle battery-related data (ELPJ_battery_value)
             // バッテリーが交換されたかを(true)安全に判定
+            entity.setChangedBattery(request.getChangedBattery());
             if (Boolean.TRUE.equals(request.getChangedBattery())) {
                 if (request.getElpjBatteryValue() != null) {
                     entity.setElpjBatteryValue(request.getElpjBatteryValue());
@@ -400,6 +426,7 @@ public class MonitoringServiceImpl implements MonitoringService {
 
 
         } catch (Exception e) {
+            log.error("readAllMonitoringRecordsSolar failed for projectId={}", projectId, e);
             response.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR);
             response.setMessage(ResponseConstants.MSG_INTERNAL_ERROR);
             return response;
@@ -680,7 +707,7 @@ public class MonitoringServiceImpl implements MonitoringService {
         }
 
         mergeErrors(errors, collectMonitoringPayloadDateErrors(request));
-        if (request.getProjectId() == null || request.getSiteId() == null) {
+        if (request.getProjectId() == null || request.getSiteId() == null || request.getEquipmentId() == null) {
             return MonitoringValidationResult.invalid(validationError(errors));
         }
 
@@ -725,12 +752,20 @@ public class MonitoringServiceImpl implements MonitoringService {
             );
         }
 
+        EnR002Equipment equipment = equipmentRepository.findById(request.getEquipmentId()).orElse(null);
+        if (equipment == null || equipment.getSite() == null || !equipment.getSite().getId().equals(site.getId())) {
+            return MonitoringValidationResult.invalid(
+                    BaseResponse.error(ResponseConstants.NOT_FOUND, ResponseConstants.MSG_EQUIPMENT_NOT_FOUND)
+            );
+        }
+
         SiteProjectRelation relation = siteProjectRelationRepository.findByProjectIdAndSiteId(
                 project.getId(),
                 site.getId()
         );
         Map<String, String> businessErrors = collectMonitoringBusinessErrors(request, relation, site, project);
         mergeErrors(errors, businessErrors);
+        mergeErrors(errors, collectBatteryEligibilityErrors(request, equipment));
 
         if (!errors.isEmpty()) {
             return MonitoringValidationResult.invalid(validationError(errors));
@@ -766,15 +801,17 @@ public class MonitoringServiceImpl implements MonitoringService {
         if (request.getSiteId() == null) {
             errors.put("siteId", ResponseConstants.MSG_SITE_ID_REQUIRED);
         }
+        if (request.getEquipmentId() == null) {
+            errors.put("equipmentId", ResponseConstants.MSG_EQUIPMENT_ID_REQUIRED);
+        }
         if (isBlank(request.getProjectType())) {
             errors.put("projectType", ResponseConstants.MSG_PROJECT_TYPE_REQUIRED);
         }
         if (isBlank(request.getDateRecorded())) {
             errors.put("dateRecorded", ResponseConstants.MSG_DATE_RECORDED_REQUIRED);
         }
-        if (request.getChangedBattery() == null) {
-            errors.put("changedBattery", ResponseConstants.MSG_CHANGED_BATTERY_REQUIRED);
-        }
+        // changedBattery requiredness depends on equipment.hasBattery - see collectBatteryEligibilityErrors,
+        // which runs once the equipment tied to this record has been resolved.
 
         errors.putAll(collectMandatoryEvidenceErrors(request));
         errors.putAll(collectMonitoringDataErrors(request));
@@ -841,6 +878,36 @@ public class MonitoringServiceImpl implements MonitoringService {
         }
         if (request.getElpjAccuracy() != null && request.getElpjAccuracy().compareTo(MAX_PERCENT_VALUE) > 0) {
             errors.put("ELPJ_accuracy", ResponseConstants.MSG_ELPJ_ACCURACY_MAX);
+        }
+
+        return errors;
+    }
+
+    /**
+     * changedBattery/ELPJ_battery_value/ELPJ_battery_evidence are only meaningful when the
+     * equipment this record belongs to actually has a battery (EnR002Equipment.hasBattery).
+     */
+    private Map<String, String> collectBatteryEligibilityErrors(
+            RegisterMonitoringRecordSolarRequest request,
+            EnR002Equipment equipment
+    ) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        if (equipment == null) {
+            return errors;
+        }
+
+        if (Boolean.TRUE.equals(equipment.getHasBattery())) {
+            if (request.getChangedBattery() == null) {
+                errors.put("changedBattery", ResponseConstants.MSG_CHANGED_BATTERY_REQUIRED);
+            }
+        } else {
+            boolean hasBatteryData = Boolean.TRUE.equals(request.getChangedBattery())
+                    || request.getElpjBatteryValue() != null
+                    || !isBlank(request.getElpjBatterySpecificationUrl());
+            if (hasBatteryData) {
+                errors.put("changedBattery", ResponseConstants.MSG_BATTERY_NOT_APPLICABLE);
+            }
         }
 
         return errors;
@@ -1074,6 +1141,7 @@ public class MonitoringServiceImpl implements MonitoringService {
                 .id(entity.getId())
                 .projectId(projectRepository.findById(entity.getProjectID()).map(Project::getPublicId).orElse(String.valueOf(entity.getProjectID())))
                 .siteId(siteRepository.findById(entity.getSiteID()).map(Site::getPublicId).orElse(String.valueOf(entity.getSiteID())))
+                .equipmentId(entity.getEquipmentID())
                 .userId(entity.getParticipatingUserID())
                 .projectType(projectType != null ? projectType : "ENR002")
                 .timeUpdated(entity.getTimeUpdated())
@@ -1084,8 +1152,7 @@ public class MonitoringServiceImpl implements MonitoringService {
                 .elPvrEvidence(entity.getElPvrEvidence())
                 .elPvEvidenceUrl(entity.getElPvEvidenceUrl())
                 .elPvrEvidenceUrl(entity.getElPvrEvidenceUrl())
-                // CRITICAL: Check if battery value exists to set changedBattery boolean
-                .changedBattery(entity.getElpjBatteryValue() != null)
+                .changedBattery(entity.getChangedBattery())
                 .elpjBatteryValue(entity.getElpjBatteryValue())
                 .elpjBatteryEvidence(entity.getElpjBatteryEvidence())
                 .elpjBatterySpecificationUrl(entity.getElpjBatterySpecificationUrl())

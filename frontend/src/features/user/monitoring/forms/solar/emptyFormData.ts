@@ -3,6 +3,8 @@ import { MonitoringSolarFormData } from "./MonitoringSolarForm";
 export const emptyFormData: MonitoringSolarFormData = {
   projectId: '',
   siteId: '',
+  equipmentId: null,
+  equipmentHasBattery: false,
   dateRecorded: '',
   ELpv_value: null,
   ELpvr_value: null,
