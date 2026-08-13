@@ -11,7 +11,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 /**
  * A file uploaded against a project-plan page.
  *
- * <p>Clients send the {@code s3Key} returned by the temp upload endpoint. On a
+ * Clients send the {@code s3Key} returned by the temp upload endpoint. On a
  * successful page save the key is promoted from {@code tmp/} to its permanent
  * location and the permanent key is what gets stored here.
  */
