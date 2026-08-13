@@ -16,10 +16,8 @@ import jakarta.persistence.Column;
 @AllArgsConstructor
 @Builder
 public class ProjectPdfDownloadResponse {
-    // Presigned URL dari S3 — berlaku sesuai konfigurasi (default 15 menit)
+    // Presigned URL 
     private String pdfUrl;
 
-    // Berapa detik URL ini masih berlaku
     private Integer expiresIn;
-    
 }

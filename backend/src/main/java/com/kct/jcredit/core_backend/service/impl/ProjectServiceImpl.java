@@ -635,7 +635,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectPdfDownloadResponse getMembershipPdfForOperator(String projectId, String companyId) {
+    public ProjectPdfDownloadResponse getMembershipPdfForOperator(String projectId, Integer participationId) {
 
         Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
                 .map(Project::getId)
@@ -643,7 +643,7 @@ public class ProjectServiceImpl implements ProjectService {
                         ResponseConstants.NOT_FOUND, ResponseConstants.MSG_PROJECT_NOT_FOUND));
 
         ParticipatingProject participation = participatingProjectRepository
-                .findByProject_IdAndEquipment_Site_Company_CompanyId(projectDbId, companyId)
+                .findByIdAndProject_Id(participationId, projectDbId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
 

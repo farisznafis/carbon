@@ -218,15 +218,16 @@ public class ProjectController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
-    @GetMapping("/{projectId}/companies/{companyId}/membership-pdf")
+    @GetMapping("/{projectId}/participations/{participationId}/membership-pdf")
     @PreAuthorize("hasAnyRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_VIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "入会届PDFダウンロード（管理者用）", description = "指定企業の入会届PDFダウンロードURLを取得します。")
+    @Operation(summary = "入会届PDFダウンロード（管理者用）", description = "指定参加情報の入会届PDFダウンロードURLを取得します。")
     public ResponseEntity<ProjectPdfDownloadResponse> getMembershipPdf(
             @PathVariable String projectId,
-            @PathVariable String companyId) {
+            @PathVariable Integer participationId) {
 
-        ProjectPdfDownloadResponse response = projectService.getMembershipPdfForOperator(projectId, companyId);
+        ProjectPdfDownloadResponse response = projectService
+                .getMembershipPdfForOperator(projectId, participationId);
         return ResponseEntity.ok(response);
     }
 }

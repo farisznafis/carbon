@@ -44,6 +44,6 @@ public interface ProjectService {
 
     ProjectCompanyListResponse getProjectCompanies(String projectId);
     
-    ProjectPdfDownloadResponse getMembershipPdfForOperator(String projectId, String companyId);
+    ProjectPdfDownloadResponse getMembershipPdfForOperator(String projectId, Integer participationId);
 
 }

@@ -27,6 +27,5 @@ public interface ParticipatingProjectRepository
 
     List<ParticipatingProject> findByProject_Id(Integer projectId);
 
-    Optional<ParticipatingProject> findByProject_IdAndEquipment_Site_Company_CompanyId(
-        Integer projectId, String companyId);
+    Optional<ParticipatingProject> findByIdAndProject_Id(Integer participationId, Integer projectId);
 }
