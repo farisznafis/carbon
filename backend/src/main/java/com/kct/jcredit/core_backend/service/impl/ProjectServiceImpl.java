@@ -5,19 +5,27 @@ import com.kct.jcredit.core_backend.dto.request.CreateProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdateProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.details.ProjectDtoReq;
 import com.kct.jcredit.core_backend.dto.response.CreateProjectResponse;
+import com.kct.jcredit.core_backend.dto.response.ProjectCompanyListResponse;
+import com.kct.jcredit.core_backend.dto.response.ProjectCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
+import com.kct.jcredit.core_backend.dto.response.ProjectPdfDownloadResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
 import com.kct.jcredit.core_backend.dto.response.details.ProjectDetailResponse;
 import com.kct.jcredit.core_backend.dto.response.UpdateProjectStatusResponse;
 import com.kct.jcredit.core_backend.entity.OperatorCompany;
+import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
+import com.kct.jcredit.core_backend.entity.ParticipatingProject;
 import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.entity.base.PaginationDetailResponse;
+import com.kct.jcredit.core_backend.exception.CustomException;
 import com.kct.jcredit.core_backend.exception.ResourceNotFoundException;
 import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
+import com.kct.jcredit.core_backend.repository.postgres.ParticipatingProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
+import com.kct.jcredit.core_backend.service.ProjectParticipationPdfService;
 import com.kct.jcredit.core_backend.service.ProjectService;
 import com.kct.jcredit.core_backend.util.ProjectSpecification;
 
@@ -51,6 +59,8 @@ public class ProjectServiceImpl implements ProjectService {
     private final SiteRepository siteRepository;
     private final ProjectRepository projectRepository;
     private final OperatorCompanyRepository operatorCompanyRepository;
+    private final ParticipatingProjectRepository participatingProjectRepository; 
+    private final ProjectParticipationPdfService pdfService;  
     
     
 
@@ -588,5 +598,65 @@ public class ProjectServiceImpl implements ProjectService {
         response.setStatusCode(ResponseConstants.OK);
 
         return response;
+    }
+
+    @Override
+    public ProjectCompanyListResponse getProjectCompanies(String projectId) {
+        ProjectCompanyListResponse response = new ProjectCompanyListResponse();
+
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+                .map(Project::getId)
+                .orElse(null);
+
+        if (projectDbId == null) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
+            return response;
+        }
+
+        List<ParticipatingProject> participations = participatingProjectRepository
+                .findByProject_Id(projectDbId);
+
+        List<ProjectCompanyResponse> companies = participations.stream()
+                .map(p -> {
+                    ParticipatingCompany company = p.getEquipment().getSite().getCompany();
+                    return ProjectCompanyResponse.builder()
+                            .companyId(company.getCompanyId())
+                            .companyName(company.getNameJa())
+                            .participationId(p.getId())
+                            .pdfStatus(p.getS3KeyPdfMembership() != null ? "READY" : "NOT_READY")
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        response.setCompanies(companies);
+        response.setStatusCode(ResponseConstants.OK);
+        return response;
+    }
+
+    @Override
+    public ProjectPdfDownloadResponse getMembershipPdfForOperator(String projectId, String companyId) {
+
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+                .map(Project::getId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND, ResponseConstants.MSG_PROJECT_NOT_FOUND));
+
+        ParticipatingProject participation = participatingProjectRepository
+                .findByProject_IdAndEquipment_Site_Company_CompanyId(projectDbId, companyId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
+
+        String s3Key = participation.getS3KeyPdfMembership();
+        if (s3Key == null || s3Key.isBlank()) {
+            throw new CustomException("PDF_NOT_READY", "PDFはまだ準備できていません。");
+        }
+
+        String presignedUrl = pdfService.generatePresignedUrl(s3Key);
+
+        return ProjectPdfDownloadResponse.builder()
+                .pdfUrl(presignedUrl)
+                .expiresIn(900)
+                .build();
     }
 }
