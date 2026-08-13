@@ -4,8 +4,8 @@ import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.constant.RoleConstants;
 import com.kct.jcredit.core_backend.dto.request.CreateSiteRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
-import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentUpdateRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdateSiteRequest;
+import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentChangeRequest;
 import com.kct.jcredit.core_backend.dto.response.CreateSiteResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentRegisterResponse;
@@ -740,38 +740,38 @@ class SiteControllerTest {
     }
 
     @Nested
-    @DisplayName("updateEquipment のテスト")
-    class UpdateEquipmentTest {
+    @DisplayName("changeEquipment のテスト")
+    class ChangeEquipmentTest {
 
         @Test
         @DisplayName("SC-1: 有効なリクエストで設備更新が成功し、200OK を返す")
         void validRequest_returnsOkResponse() {
-            EnR002EquipmentUpdateRequest request = new EnR002EquipmentUpdateRequest();
+            EnR002EquipmentChangeRequest request = new EnR002EquipmentChangeRequest();
             EnR002EquipmentResponse mockResponse = EnR002EquipmentResponse.builder().id(100).build();
 
             when(authentication.getCredentials()).thenReturn(TOKEN);
             when(jwtUtil.extractCompanyId(TOKEN)).thenReturn("COMP001");
-            when(equipmentService.updateEquipment("PUB-SITE-001", 100, "COMP001", request))
+            when(equipmentService.changeEquipment("PUB-SITE-001", 100, "COMP001", request))
                     .thenReturn(mockResponse);
 
             ResponseEntity<EnR002EquipmentResponse> response =
-                    siteController.updateEquipment(authentication, "PUB-SITE-001", 100, request);
+                    siteController.changeEquipment(authentication, "PUB-SITE-001", 100, request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             verify(equipmentService, times(1))
-                    .updateEquipment("PUB-SITE-001", 100, "COMP001", request);
+                    .changeEquipment("PUB-SITE-001", 100, "COMP001", request);
         }
 
         @Test
         @DisplayName("EC-1: トークンが無効な場合、サービスは呼ばれない")
         void invalidToken_skipsService() {
-            EnR002EquipmentUpdateRequest request = new EnR002EquipmentUpdateRequest();
+            EnR002EquipmentChangeRequest request = new EnR002EquipmentChangeRequest();
             when(authentication.getCredentials()).thenReturn("");
             when(jwtUtil.extractCompanyId(""))
                     .thenThrow(new CustomException("E004", "トークンが無効です"));
 
             assertThrows(CustomException.class,
-                    () -> siteController.updateEquipment(authentication, "PUB-SITE-001", 100, request));
+                    () -> siteController.changeEquipment(authentication, "PUB-SITE-001", 100, request));
 
             verifyNoInteractions(equipmentService);
         }
@@ -779,14 +779,14 @@ class SiteControllerTest {
         @Test
         @DisplayName("EC-2: サービスが例外をスローする場合、例外が伝播される")
         void serviceThrows_propagatesException() {
-            EnR002EquipmentUpdateRequest request = new EnR002EquipmentUpdateRequest();
+            EnR002EquipmentChangeRequest request = new EnR002EquipmentChangeRequest();
             when(authentication.getCredentials()).thenReturn(TOKEN);
             when(jwtUtil.extractCompanyId(TOKEN)).thenReturn("COMP001");
-            when(equipmentService.updateEquipment("PUB-SITE-001", 100, "COMP001", request))
+            when(equipmentService.changeEquipment("PUB-SITE-001", 100, "COMP001", request))
                     .thenThrow(new CustomException("E003", "設備の更新に失敗しました"));
 
             assertThrows(CustomException.class,
-                    () -> siteController.updateEquipment(authentication, "PUB-SITE-001", 100, request));
+                    () -> siteController.changeEquipment(authentication, "PUB-SITE-001", 100, request));
         }
     }
 }
