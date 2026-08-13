@@ -186,7 +186,7 @@ public class SiteProjectController {
     }
 
     @PostMapping("/generate/{participationId}")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasAnyRole('admin','operator')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<String> generate(@PathVariable Integer participationId) {
         log.warn("generateAndProcess を手動実行します。participationId={}", participationId);
@@ -202,7 +202,7 @@ public class SiteProjectController {
     }
 
     @GetMapping("/presigned-url")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasAnyRole('admin','operator')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<String> presignedUrl(@RequestParam String s3Key) {
         log.warn("[DEBUG] Presigned URL を手動生成します。s3Key={}", s3Key);
@@ -218,7 +218,7 @@ public class SiteProjectController {
     }
 
     @PostMapping("/generate-and-get-url/{participationId}")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasAnyRole('admin','operator')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<String> generateAndGetUrl(
             @PathVariable Integer participationId,
