@@ -11,7 +11,9 @@ import com.kct.jcredit.core_backend.dto.request.UpdateProjectStatusRequest;
 import com.kct.jcredit.core_backend.dto.request.CreateProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdateProjectRequest;
 import com.kct.jcredit.core_backend.dto.response.CreateProjectResponse;
+import com.kct.jcredit.core_backend.dto.response.ProjectCompanyListResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
+import com.kct.jcredit.core_backend.dto.response.ProjectPdfDownloadResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
 import com.kct.jcredit.core_backend.dto.response.UpdateProjectStatusResponse;
 
@@ -39,5 +41,9 @@ public interface ProjectService {
             String search,
             String sort,
             String sortOrder);
+
+    ProjectCompanyListResponse getProjectCompanies(String projectId);
+    
+    ProjectPdfDownloadResponse getMembershipPdfForOperator(String projectId, Integer participationId);
 
 }
