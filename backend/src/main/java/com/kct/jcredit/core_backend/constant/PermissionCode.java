@@ -20,7 +20,7 @@ public enum PermissionCode {
 
     //monitoring data management
     MONITORING_READ, //included
-    MONITORING_DELETE,
+    MONITORING_DELETE, //included
     MONITORING_CANCEL, //included
     MONITORING_BATCH_HISTORY_READ,//included
     MONITORING_BATCH_ERROR_READ, 
