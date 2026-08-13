@@ -20,6 +20,7 @@ const record: MonitoringRecordListItem = {
   id: 'MON0001',
   projectId: 'PROJ0123',
   siteId: 'SITE0001',
+  equipmentId: 100,
   participatingUserId: 7,
   timeUpdated: '2026-07-23T12:30:00Z',
   dateRecorded: '2026-07-23',

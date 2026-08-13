@@ -406,6 +406,8 @@ CREATE TABLE en_r002_equipment (
     deleted_at TIMESTAMP,
     deleted_by VARCHAR(100),
     site_id INT NOT NULL REFERENCES site(id) ON DELETE CASCADE,
+    change_date DATE,
+    previous_equipment_id INT,
     equipment_op_date DATE NOT NULL,
     nominal_max_output DECIMAL(10,1) NOT NULL,
     pcs_manufacturer VARCHAR(100) NOT NULL,
@@ -421,7 +423,9 @@ CREATE TABLE en_r002_equipment (
     has_subsidy BOOLEAN NOT NULL,
     subsidy_name VARCHAR(200),
     subsidy_amount DECIMAL(15,0),
-    pre_project_unit_price DECIMAL(10,2)
+    pre_project_unit_price DECIMAL(10,2),
+    CONSTRAINT fk_eq_previous FOREIGN KEY (previous_equipment_id)
+        REFERENCES en_r002_equipment(id)
 );
 
 -- Participating User

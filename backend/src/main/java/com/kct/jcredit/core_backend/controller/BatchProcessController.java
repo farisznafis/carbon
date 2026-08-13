@@ -28,6 +28,7 @@ public class BatchProcessController {
     private final com.kct.jcredit.core_backend.repository.postgres.ProjectRepository projectRepository;
 
     @GetMapping("/history")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_BATCH_HISTORY_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "バッチ履歴", description = "バッチ履歴を取得します。")
     public ResponseEntity<BatchProcessHistoryResponse> BatchProcessHistory(
