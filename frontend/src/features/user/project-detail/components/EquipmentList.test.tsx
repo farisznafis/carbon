@@ -18,13 +18,26 @@ vi.mock('@/api/site', async (importOriginal) => ({
 
 const equipment: SiteProjectEquipment = {
   equipmentId: 7,
-  equipmentType: '太陽光発電設備',
+  siteId: 'SITE-1',
+  deviceNo: 'SF-TKY-001',
   equipmentOpDate: '2026-01-01',
   nominalMaxOutput: 25,
-  powerCondUnitCount: 0,
+  pcsManufacturer: 'PCS Maker',
+  pcsModel: 'PCS-100',
+  powerCondUnitCount: 1,
   powerCondStandby: 0,
+  totalInvestment: 7_800_000,
   hasBattery: false,
   hasSubsidy: false,
+  files: [
+    {
+      id: 11,
+      fileType: 'solar_contract',
+      fileId: 'file-11',
+      fileName: '契約確認書.pdf',
+      s3Key: 'equipment/contract.pdf',
+    },
+  ],
 };
 
 const history: SiteEquipmentHistory = {
@@ -58,6 +71,49 @@ describe('EquipmentList equipment history', () => {
     getSiteProjectEquipmentPresignedUrl.mockResolvedValue(
       'https://storage.example.com/pcs.pdf',
     );
+  });
+
+  it('shows endpoint fields in the summary and complete details with files', async () => {
+    const user = userEvent.setup();
+    const anchorClick = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+
+    render(
+      <EquipmentList
+        siteId="SITE-1"
+        equipments={[equipment]}
+        onEditEquipment={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('SF-TKY-001')).toBeInTheDocument();
+    expect(screen.getByText('PCSメーカー')).toBeInTheDocument();
+    expect(screen.getByText('PCS Maker')).toBeInTheDocument();
+    expect(screen.getByText('パワコン台数')).toBeInTheDocument();
+    expect(screen.getByText('1 台')).toBeInTheDocument();
+    expect(screen.getByText('総投資額')).toBeInTheDocument();
+    expect(screen.getByText('7,800,000 円')).toBeInTheDocument();
+    expect(screen.getByText('補助金有無')).toBeInTheDocument();
+    expect(screen.queryByText('方法論番号')).not.toBeInTheDocument();
+    expect(screen.queryByText('適格性')).not.toBeInTheDocument();
+    expect(screen.queryByText('設備ID')).not.toBeInTheDocument();
+    expect(screen.queryByText('拠点ID')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '詳細' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('基本情報')).toBeInTheDocument();
+    expect(within(dialog).getByText('PCS情報')).toBeInTheDocument();
+    expect(within(dialog).queryByText('設備ID')).not.toBeInTheDocument();
+    expect(within(dialog).queryByText('拠点ID')).not.toBeInTheDocument();
+    expect(within(dialog).getByText('契約確認書.pdf')).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole('button', { name: '表示' }));
+    expect(getSiteProjectEquipmentPresignedUrl).toHaveBeenCalledWith(
+      'equipment/contract.pdf',
+    );
+    expect(anchorClick).toHaveBeenCalledTimes(1);
+    anchorClick.mockRestore();
   });
 
   it('opens history, drills into details, and reuses the cached response', async () => {

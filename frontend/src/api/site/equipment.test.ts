@@ -182,6 +182,51 @@ describe('site equipment read and update', () => {
     ]);
   });
 
+  it('preserves history metadata and files from a site equipment list', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify([
+          {
+            id: 1,
+            siteId: 'SITE-1',
+            changeDate: '2026-08-13',
+            previousEquipmentId: 0,
+            files: [
+              {
+                id: 20,
+                fileType: 'pcs_spec',
+                fileId: 'file-20',
+                s3Key: 'equipment/pcs.pdf',
+              },
+            ],
+          },
+        ]),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getSiteEquipmentList('SITE-1');
+
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        equipmentId: 1,
+        siteId: 'SITE-1',
+        changeDate: '2026-08-13',
+        previousEquipmentId: 0,
+        files: [
+          {
+            id: 20,
+            fileType: 'pcs_spec',
+            fileId: 'file-20',
+            s3Key: 'equipment/pcs.pdf',
+            fileName: null,
+          },
+        ],
+      }),
+    );
+  });
+
   it('gets equipment history and normalizes nested equipment data', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(

@@ -21,6 +21,7 @@ import {
 } from '../equipmentDisplay';
 import { projectDetailCardClassName } from '../projectDetailStyles';
 import { EquipmentDetails, EquipmentField } from './EquipmentDetails';
+import { EquipmentDocuments } from './EquipmentDocuments';
 import { EquipmentHistoryDialog } from './EquipmentHistoryDialog';
 
 function EquipmentDetailDialog({
@@ -42,7 +43,12 @@ function EquipmentDetailDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {equipment ? <EquipmentDetails equipment={equipment} /> : null}
+        {equipment ? (
+          <div className='space-y-5'>
+            <EquipmentDetails equipment={equipment} />
+            <EquipmentDocuments equipment={equipment} />
+          </div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );
@@ -61,7 +67,13 @@ function EquipmentSummaryCard({
   onShowHistory: (equipmentId: number) => void;
   onEdit: (equipmentId: number) => void;
 }) {
-  const equipmentTitle = equipment.equipmentType || `設備 ${index + 1}`;
+  const deviceNo = equipment.deviceNo?.trim();
+  const pcsManufacturer = equipment.pcsManufacturer?.trim();
+  const pcsModel = equipment.pcsModel?.trim();
+  const pcsIdentity = [pcsManufacturer, pcsModel].filter(Boolean).join(' / ');
+  const equipmentTitle =
+    deviceNo || pcsModel || pcsManufacturer || `設備 ${index + 1}`;
+  const equipmentDescription = deviceNo ? pcsIdentity : '';
 
   return (
     <Card className={projectDetailCardClassName}>
@@ -75,9 +87,11 @@ function EquipmentSummaryCard({
               <CardTitle className='break-words text-foreground'>
                 {equipmentTitle}
               </CardTitle>
-              <CardDescription className='text-table mt-1'>
-                設備ID: {equipment.equipmentId ?? '-'}
-              </CardDescription>
+              {equipmentDescription && (
+                <CardDescription className='text-table mt-1 break-words'>
+                  {equipmentDescription}
+                </CardDescription>
+              )}
             </div>
           </div>
           <div className='flex flex-wrap gap-2 self-start sm:self-auto'>

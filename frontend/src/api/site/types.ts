@@ -206,6 +206,8 @@ export type SiteProjectEquipment = {
   subsidyName?: string | null;
   subsidyAmount?: number | null;
   preProjectUnitPrice?: number | null;
+  changeDate?: string | null;
+  previousEquipmentId?: number | null;
   evidenceDocuments?: string[] | null;
   files?: SiteProjectEquipmentFile[] | null;
 };

@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState, type ReactNode } from 'react';
 import { getProjectDetails, type ProjectDetail as ProjectDetailApi } from '@/api/projects';
 import {
-  getSiteProjectEquipment,
+  getSiteEquipmentList,
   type SiteProjectEquipment,
 } from '@/api/site';
 import {
@@ -488,7 +488,7 @@ const ProjectDetail = () => {
       try {
         setEquipmentLoading(true);
         setEquipmentError(null);
-        const rows = await getSiteProjectEquipment(siteId, projectId);
+        const rows = await getSiteEquipmentList(siteId);
         setEquipmentList(rows);
         setEquipmentHasFetched(true);
       } catch (error) {
