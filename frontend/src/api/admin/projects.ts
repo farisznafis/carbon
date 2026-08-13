@@ -8,6 +8,8 @@ import type {
   CreateAdminProjectPayload,
   ProjectPlanAutofillResponse,
   ProjectPlanApplicationResponse,
+  ProjectPlanFormResponse,
+  ProjectPlanProgressResponse,
   ProjectStatus,
   UpdateProjectStatusPayload,
   UpdateProjectStatusResponse,
@@ -21,6 +23,10 @@ export type {
   CreateAdminProjectPayload,
   ProjectPlanAutofillResponse,
   ProjectPlanApplicationResponse,
+  ProjectPlanFormProgress,
+  ProjectPlanFormResponse,
+  ProjectPlanFormStatus,
+  ProjectPlanProgressResponse,
   ProjectStatus,
   UpdateProjectStatusPayload,
   UpdateProjectStatusResponse,
@@ -225,4 +231,91 @@ export async function createAdminProjectPlanApplication<TPayload extends object>
       rawBody,
     });
   }
+}
+
+// --- Registry-driven project plan pages (staging) ---
+//
+// One pair of endpoints serves every page. A page is persisted only when it
+// validates in full, so the progress endpoint can say exactly where an
+// operator who stopped partway should resume.
+
+function projectPlanFormPath(projectId: string, formSlug: string, methodology?: number) {
+  const base = `/projectplan/${encodeURIComponent(projectId)}/forms/${encodeURIComponent(formSlug)}`;
+  return methodology === undefined ? base : `${base}?methodology=${methodology}`;
+}
+
+export async function getProjectPlanForm(
+  projectId: string,
+  formSlug: string,
+  methodology?: number,
+): Promise<ProjectPlanFormResponse> {
+  const response = await apiFetch(projectPlanFormPath(projectId, formSlug, methodology), {
+    method: 'GET',
+  });
+  const { data: json, rawBody } = await parseJsonResponse<ProjectPlanFormResponse>(response);
+
+  if (!response.ok) {
+    const message =
+      json?.message || rawBody || `Failed to load project plan form: HTTP ${response.status}`;
+    throw new ApiError(message, {
+      status: response.status,
+      payload: json,
+      rawBody,
+    });
+  }
+
+  return json ?? {};
+}
+
+/**
+ * Saves one page. Rejects with an ApiError carrying field errors when the page
+ * is incomplete — nothing is stored in that case.
+ */
+export async function saveProjectPlanForm<TPayload extends object>(
+  projectId: string,
+  formSlug: string,
+  payload: TPayload,
+  methodology?: number,
+): Promise<ProjectPlanFormResponse> {
+  const response = await apiFetch(projectPlanFormPath(projectId, formSlug, methodology), {
+    method: 'PUT',
+    body: payload,
+  });
+  const { data: json, rawBody } = await parseJsonResponse<ProjectPlanFormResponse>(response);
+
+  if (!response.ok) {
+    const message =
+      json?.message || rawBody || `Failed to save project plan form: HTTP ${response.status}`;
+    throw new ApiError(message, {
+      status: response.status,
+      payload: json,
+      rawBody,
+    });
+  }
+
+  return json ?? {};
+}
+
+export async function getProjectPlanProgress(
+  projectId: string,
+): Promise<ProjectPlanProgressResponse> {
+  const response = await apiFetch(
+    `/projectplan/${encodeURIComponent(projectId)}/progress`,
+    {
+      method: 'GET',
+    },
+  );
+  const { data: json, rawBody } = await parseJsonResponse<ProjectPlanProgressResponse>(response);
+
+  if (!response.ok) {
+    const message =
+      json?.message || rawBody || `Failed to load project plan progress: HTTP ${response.status}`;
+    throw new ApiError(message, {
+      status: response.status,
+      payload: json,
+      rawBody,
+    });
+  }
+
+  return json ?? {};
 }

@@ -14,9 +14,11 @@ public class CorporationMasterData {
     private String corpName;
     private String corpPosition;
     private String prefecture;
-    private String municipality;
-    private String blocknum;
-    private String buildingName;
+    // 本社所在地 as the official form structures it. The frontend merges this
+    // response straight into the application form values, so the names must
+    // match ProjectApplicationRequest.
+    private String city;
+    private String address;
     private String representativePosition;
     private String representativeName;
     private String picPosition;

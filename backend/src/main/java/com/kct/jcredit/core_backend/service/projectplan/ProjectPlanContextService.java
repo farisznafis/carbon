@@ -1,4 +1,4 @@
-package com.kct.jcredit.core_backend.service.impl.projectplan;
+package com.kct.jcredit.core_backend.service.projectplan;
 
 import com.kct.jcredit.core_backend.constant.RoleConstants;
 import com.kct.jcredit.core_backend.entity.OperatorCompany;
