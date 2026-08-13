@@ -115,6 +115,51 @@ export type ProjectPlanAutofillResponse = {
   data?: Record<string, unknown>;
 };
 
+/** A page is stored only once it fully validates, so there is no partial state. */
+export type ProjectPlanFormStatus = 'NOT_STARTED' | 'COMPLETE';
+
+/** A field that is only shown, and only required, when `when` equals `is`. */
+export type ProjectPlanConditionalField = {
+  field: string;
+  when: string;
+  is: boolean;
+};
+
+export type ProjectPlanFormResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string>;
+  formSlug?: string;
+  displayName?: string;
+  status?: ProjectPlanFormStatus;
+  updatedAt?: string | null;
+  updatedBy?: string | null;
+  /** Autofilled from the backend's SQL data — render these read-only. */
+  readOnlyFields?: string[];
+  conditionalFields?: ProjectPlanConditionalField[];
+  data?: Record<string, unknown>;
+};
+
+export type ProjectPlanFormProgress = {
+  formSlug: string;
+  displayName: string;
+  order: number;
+  status: ProjectPlanFormStatus;
+  updatedAt?: string | null;
+  updatedBy?: string | null;
+};
+
+export type ProjectPlanProgressResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: unknown;
+  totalForms?: number;
+  completedForms?: number;
+  /** First page not yet complete — where an interrupted operator resumes. */
+  nextIncompleteSlug?: string | null;
+  forms?: ProjectPlanFormProgress[];
+};
+
 export type UpdateAdminProjectPayload = {
   processedBy: string;
   projectName: string;

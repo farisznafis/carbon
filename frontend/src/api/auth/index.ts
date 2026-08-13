@@ -2,6 +2,7 @@ export {
   adminLogin,
   changePassword,
   completePasswordReset,
+  exchangeActionLink,
   exchangePasswordResetActionLink,
   login,
   logout,

@@ -3,12 +3,13 @@ import type { ApiPagination } from '../_shared/types';
 export type MonitoringData = {
   projectId: string;
   siteId?: string | null;
+  equipmentId: number | null;
   projectType: string;
   dateRecorded: string | null;
   ELpv_value: number | null;
   ELpvr_value: number | null;
-  changedBattery: boolean;
-  ELPJ_battery_value: number | null;
+  changedBattery?: boolean | null;
+  ELPJ_battery_value?: number | null;
   ELPJ_control_value: number | null;
   ELPJ_accuracy: number | null;
   ELpv_evidence?: string | null;
@@ -32,6 +33,7 @@ export type MonitoringEvidenceKind =
 export type MonitoringRecentApiItem = {
   projectId?: string | null;
   siteId?: string | number | null;
+  equipmentId?: string | number | null;
   userId?: string | number | null;
   projectType?: string | null;
 
@@ -70,6 +72,7 @@ export type MonitoringRecentItem = MonitoringData & {
   changedBattery: boolean;
   projectType: string;
   siteId?: string | null;
+  equipmentId: number | null;
   userId?: number | null;
   ELpv_value?: number | null;
   ELpvr_value?: number | null;
@@ -92,6 +95,7 @@ export type MonitoringRecordListItem = {
   id: string;
   projectId: string;
   siteId: string;
+  equipmentId: number | null;
   participatingUserId: number;
   timeUpdated: string;
   dateRecorded: string;
@@ -122,6 +126,8 @@ export type MonitoringRecordListApiItem = {
   projectID?: string | number | null;
   siteId?: string | number | null;
   siteID?: string | number | null;
+  equipmentId?: string | number | null;
+  equipmentID?: string | number | null;
   participatingUserId?: string | number | null;
   participatingUserID?: string | number | null;
   timeUpdated?: string | null;

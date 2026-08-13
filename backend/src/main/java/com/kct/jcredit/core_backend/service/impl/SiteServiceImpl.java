@@ -360,8 +360,8 @@ public class SiteServiceImpl implements SiteService {
             String companyId,
             String role,
             String username) {
-        EnR002EquipmentRegisterResponse response = new EnR002EquipmentRegisterResponse();        
-
+        EnR002EquipmentRegisterResponse response = new EnR002EquipmentRegisterResponse();
+    
         try {
             Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
             if (site == null) {
@@ -369,9 +369,9 @@ public class SiteServiceImpl implements SiteService {
                 response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
                 return response;
             }
-            
+    
             Integer siteDbId = site.getId();
-
+    
             Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
                 .map(Project::getId)
                 .orElse(null);
@@ -384,41 +384,43 @@ public class SiteServiceImpl implements SiteService {
                 response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
                 return response;
             }
-
+    
             if (!hasAccessToSite(site, companyId, role, username)) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
                 response.setMessage(ResponseConstants.MSG_FORBIDDEN);
                 return response;
             }
-
+    
+            // Relasi project↔site TETAP menjadi gerbang akses seperti semula —
+            // ini yang membuktikan site memang terdaftar pada project yang diminta.
             SiteProjectRelation relation = siteProjectRelationRepository.findByProjectIdAndSiteId(projectDbId, siteDbId);
             if (relation == null) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
                 return response;
             }
-
-           List<EnR002Equipment> equipments =
-            siteR002EquipmentRepository.findBySite_Id(siteDbId);
-
+    
+            List<EnR002Equipment> equipments =
+                siteR002EquipmentRepository.findBySite_Id(siteDbId);
+    
             if (equipments.isEmpty()) {
                 response.setStatusCode(ResponseConstants.NOT_FOUND);
                 response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
                 return response;
             }
-
+    
             EnR002Equipment equipment = equipments.get(0);
-
+    
             List<EnR002EquipmentFile> equipmentFiles = siteR002EquipmentFileRepository
                     .findByEquipment_Id(equipment.getId());
-
+    
             List<String> evidenceDocuments = equipmentFiles.stream()
                     .map(EnR002EquipmentFile::getS3Key)
                     .map(this::extractFileNameFroms3Key)
                     .filter(Objects::nonNull)
                     .filter(name -> !name.isBlank())
                     .collect(Collectors.toList());
-
+    
             EnR002EquipmentResponse item = EnR002EquipmentResponse.builder()
                     .id(equipment.getId())
                     .equipmentOpDate(equipment.getEquipmentOpDate())
@@ -428,30 +430,28 @@ public class SiteServiceImpl implements SiteService {
                     .pcsUnitCount(equipment.getPcsUnitCount())
                     .deviceNo(equipment.getDeviceNo())
                     .pcsStandby(equipment.getPcsStandby())
-
                     .hasBattery(equipment.getHasBattery())
                     .batteryMaker(equipment.getBatteryMaker())
                     .batteryModel(equipment.getBatteryModel())
                     .batteryCapacity(equipment.getBatteryCapacity())
-
                     .totalInvestment(equipment.getTotalInvestment())
                     .hasSubsidy(equipment.getHasSubsidy())
                     .subsidyName(equipment.getSubsidyName())
                     .subsidyAmount(equipment.getSubsidyAmount())
                     .preProjectUnitPrice(equipment.getPreProjectUnitPrice())
-                    .evidenceDocuments(evidenceDocuments)  
+                    .evidenceDocuments(evidenceDocuments)
                     .build();
-
-                        response.setEquipments(List.of(item));
-                        response.setStatusCode(ResponseConstants.OK);
-                        return response;
-                    } catch (Exception e) {
-                        log.error("SiteServiceImpl.getSiteProjectEquipment error", e);
-                        response.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR);
-                        response.setMessage(ResponseConstants.MSG_INTERNAL_ERROR);
-                        return response;
-                    }
-                }
+    
+            response.setEquipments(List.of(item));
+            response.setStatusCode(ResponseConstants.OK);
+            return response;
+        } catch (Exception e) {
+            log.error("SiteServiceImpl.getSiteProjectEquipment error", e);
+            response.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR);
+            response.setMessage(ResponseConstants.MSG_INTERNAL_ERROR);
+            return response;
+        }
+    }
 
     private boolean hasAccessToSite(Site site, String companyId, String role, String username) {
         if (site == null || site.getCompany() == null || site.getCompany().getCompanyId() == null) {

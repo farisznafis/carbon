@@ -2,6 +2,7 @@ package com.kct.jcredit.core_backend.service.impl;
 
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.constant.RoleConstants;
+import com.kct.jcredit.core_backend.util.AddressFormatter;
 import com.kct.jcredit.core_backend.dto.request.MonitoringReportRequest;
 import com.kct.jcredit.core_backend.dto.response.CorporationMasterResponse;
 import com.kct.jcredit.core_backend.dto.response.MonitoringReportResponse;
@@ -82,9 +83,9 @@ public class MonitoringApplicationServiceImpl implements MonitoringApplicationSe
                 .corpName(company.getNameJa())
                 .corpPosition(company.getRepPosition())
                 .prefecture(company.getPrefecture())
-                .municipality(company.getMunicipality())
-                .blocknum(company.getBlocknum())
-                .buildingName(company.getBuildingName())
+                .city(company.getMunicipality())
+                .address(AddressFormatter.joinAddressAfterCity(
+                        company.getBlocknum(), company.getBuildingName()))
                 .representativePosition(company.getRepPosition())
                 .representativeName(buildFullName(company.getRepLastName(), company.getRepFirstName()))
                 .picPosition(masterUser == null ? null : masterUser.getUserPosition())

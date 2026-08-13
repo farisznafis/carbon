@@ -88,9 +88,13 @@ export const formSchema = z.object({
 
 export type FormValues = z.output<typeof formSchema>;
 
+// Steps reachable from the registration wizard. Every key after projectBase is
+// one page of the plan, staged to the backend independently.
 export const adminProjectRegisterSchema = z.object({
   projectBase: projectBaseSchema,
   projectApplication: projectApplicationSchema,
+  otherProjectOperator: otherProjectOperatorSchema,
+  appConditions: applicableConditionsSchema,
 });
 
 export type AdminProjectRegisterFormInputValues = z.input<typeof adminProjectRegisterSchema>;
