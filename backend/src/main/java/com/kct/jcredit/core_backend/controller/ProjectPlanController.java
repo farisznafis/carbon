@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.kct.jcredit.core_backend.dto.response.CorporationMasterResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectMasterResponse;
+import com.kct.jcredit.core_backend.dto.projectplan.ApplicableConditionsRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.OtherOperatorProjectsRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectApplicationRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
@@ -28,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 /**
  * Project plan (プロジェクト計画書).
@@ -54,7 +58,7 @@ public class ProjectPlanController {
     // --- Autofill (master data from PostgreSQL) ---
 
     @GetMapping("/autofill")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "法人マスタ自動入力情報取得",
             description = "プロジェクト計画書入力用の法人マスタ情報を取得します。")
@@ -68,7 +72,7 @@ public class ProjectPlanController {
     }
 
     @GetMapping("/autofill/{projectId}")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクトマスタ自動入力情報取得",
             description = "指定されたプロジェクトの計画書入力用マスタ情報を取得します。")
@@ -85,7 +89,7 @@ public class ProjectPlanController {
     // --- Registry-driven pages ---
 
     @GetMapping("/{projectId}/forms/{formSlug}")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "計画書フォーム取得",
             description = "指定ページを取得します。SQL由来の項目は readOnlyFields、"
@@ -98,7 +102,7 @@ public class ProjectPlanController {
     }
 
     @PutMapping("/{projectId}/forms/{formSlug}")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "計画書フォーム保存",
             description = "ページ全体を検証し、すべて有効な場合のみ保存します。"
@@ -135,7 +139,7 @@ public class ProjectPlanController {
 
     @Deprecated(forRemoval = true)
     @GetMapping("/{projectId}/application")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクト申請情報取得（非推奨）",
             description = "GET /{projectId}/forms/application を使用してください。",
@@ -147,7 +151,7 @@ public class ProjectPlanController {
 
     @Deprecated(forRemoval = true)
     @PostMapping("/{projectId}/application")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクト申請情報登録（非推奨）",
             description = "PUT /{projectId}/forms/application を使用してください。",
@@ -161,7 +165,7 @@ public class ProjectPlanController {
 
     @Deprecated(forRemoval = true)
     @PutMapping("/{projectId}/application")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "プロジェクト申請情報更新（非推奨）",
             description = "PUT /{projectId}/forms/application を使用してください。",

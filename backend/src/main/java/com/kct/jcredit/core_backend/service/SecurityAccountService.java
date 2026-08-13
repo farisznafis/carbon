@@ -33,6 +33,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.util.Locale;
 import java.util.UUID;
 import java.time.Duration;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -217,7 +218,7 @@ public class SecurityAccountService {
         response.setSiteId(user.getSite() == null ? null : user.getSite().getId());
         response.setCompanyName(company.getNameJa());
         response.setToken(jwtUtil.generateToken(user.getId(), user.getUsername(), company.getCompanyId(),
-                user.getRole(), user.getAuthVersion()));
+                user.getRole(), user.getAuthVersion(),List.of()));
         return response;
     }
 
@@ -233,8 +234,9 @@ public class SecurityAccountService {
         otpChallengeService.consumeVerified(challengeId, OtpPurpose.OPERATING_LOGIN);
         AdminLoginResponse response = new AdminLoginResponse();
         response.setStatusCode(ResponseConstants.OK);
+        //TODO: need to get the permissions for this user
         response.setToken(jwtUtil.generateToken(user.getId(), user.getUsername(), user.getCompany().getCompanyId(),
-                user.getRole(), user.getAuthVersion()));
+                user.getRole(), user.getAuthVersion(), List.of()));
         response.setAdmin(toAdmin(user));
         return response;
     }

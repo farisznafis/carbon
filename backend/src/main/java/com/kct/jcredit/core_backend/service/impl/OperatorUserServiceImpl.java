@@ -54,6 +54,7 @@ public class OperatorUserServiceImpl implements OperatorUserService {
 
 
     @Override
+    @Transactional(readOnly = true)
     public UserListResponse getOperatorUsersByCompany(String companyId) {
         UserListResponse response = new UserListResponse();
         OperatorCompany company = operatorCompanyRepository.findByCompanyId(companyId).orElse(null);
@@ -285,6 +286,7 @@ public class OperatorUserServiceImpl implements OperatorUserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserProfileResponse getOperatorUserProfileById(Integer userId, Integer requestingId, String requestingRole, String requestingCompanyId) {
         UserProfileResponse response = new UserProfileResponse();
         OperatingUser user = operatingUserRepository.findById(userId).orElse(null);

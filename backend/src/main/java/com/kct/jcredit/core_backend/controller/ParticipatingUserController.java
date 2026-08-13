@@ -92,6 +92,7 @@ public class ParticipatingUserController {
 
     @PatchMapping
     @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasAnyRole('master')")
     @Operation(summary = "参加企業ユーザー情報更新", description = "指定された参加企業ユーザーの情報を更新します。")
     public ResponseEntity<UpdateUserResponse> updateUser(
             Authentication authentication,
@@ -116,7 +117,7 @@ public class ParticipatingUserController {
     }
 
     @GetMapping("/profile/{userId}")
-    @PreAuthorize("hasAnyRole('master', 'operator')")
+    @PreAuthorize("hasAnyRole('admin', 'master') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_USER_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "参加企業ユーザープロフィール取得", description = "指定された参加企業ユーザーIDのプロフィール情報を取得します。")
     public ResponseEntity<UserProfileResponse> getUserProfileById(

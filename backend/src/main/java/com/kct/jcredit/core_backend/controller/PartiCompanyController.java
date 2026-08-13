@@ -157,7 +157,7 @@ public class PartiCompanyController {
      * Approves a pending company deletion request.
      */
     @PostMapping("/{companyId}/deletion-approve")
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasAnyRole('admin')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "企業削除申請承認", description = "指定した企業の削除申請を承認します。")
     public ResponseEntity<DeletionRequestResponse> approveDeletionRequest(
@@ -173,7 +173,7 @@ public class PartiCompanyController {
      * Rejects a pending company deletion request.
      */
     @PostMapping("/{companyId}/deletion-reject")
-    @PreAuthorize("hasAnyRole('operator')")
+    @PreAuthorize("hasAnyRole('admin')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "企業削除申請却下", description = "指定した企業の削除申請を却下します。")
     public ResponseEntity<DeletionRequestResponse> rejectDeletionRequest(
