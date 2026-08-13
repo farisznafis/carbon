@@ -162,9 +162,9 @@ export default function ProjectMembershipPage() {
       <FormPageContent className="max-w-[1200px] space-y-10 pt-16 sm:pt-0">
         <header className="space-y-2">
           <FormPageTitle as="h1">プロジェクト入会届</FormPageTitle>
-          {siteName && (
+          {/* {siteName && (
             <p className="text-small text-foreground">対象拠点：{siteName}</p>
-          )}
+          )} */}
         </header>
 
         {isLoading ? (

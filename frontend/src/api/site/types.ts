@@ -55,6 +55,19 @@ export type SiteDashboardMetrics = {
   jcredit?: string | null;
 };
 
+export type SiteDashboardApiData = SiteDashboardMetrics & {
+  siteId?: string | null;
+  siteName?: string | null;
+  postalCode?: string | null;
+  prefecture?: string | null;
+  municipality?: string | null;
+  blocknum?: string | null;
+  buildingName?: string | null;
+  picFirstName?: string | null;
+  picLastName?: string | null;
+  projects?: string[] | null;
+};
+
 export type SiteDashboardApiResponse = {
   statusCode: string;
   message?: string | null;
@@ -79,7 +92,7 @@ export type SiteDashboardApiResponse = {
     picFirstName?: string | null;
     picLastName?: string | null;
     projects?: string[] | null;
-    data?: SiteDashboardMetrics | null;
+    data?: SiteDashboardApiData | null;
   } | null;
 };
 
