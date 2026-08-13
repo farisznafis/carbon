@@ -1,4 +1,4 @@
-package com.kct.jcredit.core_backend.dto.request.base;
+package com.kct.jcredit.core_backend.dto.projectplan;
 
 import java.time.Instant;
 

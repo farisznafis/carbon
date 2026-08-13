@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.kct.jcredit.core_backend.dto.request.ApplicableConditionsRequest;
-import com.kct.jcredit.core_backend.dto.request.OtherOperatorProjectsRequest;
-import com.kct.jcredit.core_backend.dto.request.ProjectApplicationRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ApplicableConditionsRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.OtherOperatorProjectsRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectApplicationRequest;
 import com.kct.jcredit.core_backend.util.AddressFormatter;
 
 import org.springframework.stereotype.Component;

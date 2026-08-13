@@ -7,10 +7,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.kct.jcredit.core_backend.dto.request.ApplicableConditionsRequest;
-import com.kct.jcredit.core_backend.dto.request.OtherOperatorProjectsRequest;
-import com.kct.jcredit.core_backend.dto.request.ProjectApplicationRequest;
-import com.kct.jcredit.core_backend.dto.request.base.ProjectPlanFormBase;
+import com.kct.jcredit.core_backend.dto.projectplan.ApplicableConditionsRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.OtherOperatorProjectsRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectApplicationRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormBase;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

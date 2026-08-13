@@ -2,7 +2,7 @@ package com.kct.jcredit.core_backend.service.projectplan;
 
 import java.util.List;
 
-import com.kct.jcredit.core_backend.dto.request.base.ProjectPlanFormBase;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormBase;
 import com.kct.jcredit.core_backend.validation.RequiredIf;
 
 /**

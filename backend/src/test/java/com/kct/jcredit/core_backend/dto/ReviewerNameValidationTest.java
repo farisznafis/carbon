@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.kct.jcredit.core_backend.dto.request.ProjectApplicationRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectApplicationRequest;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

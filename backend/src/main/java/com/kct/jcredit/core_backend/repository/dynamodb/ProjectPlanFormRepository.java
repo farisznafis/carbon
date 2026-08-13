@@ -6,8 +6,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.kct.jcredit.core_backend.dto.request.base.ProjectPlanFormBase;
-import com.kct.jcredit.core_backend.dto.request.base.ProjectPlanFormEnvelope;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormBase;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormEnvelope;
 import com.kct.jcredit.core_backend.service.projectplan.ProjectPlanFormRegistry;
 
 import jakarta.annotation.PostConstruct;
