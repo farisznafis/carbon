@@ -45,6 +45,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Exposes participating-company self-service and signup operations.
+ * 参加企業のセルフサービスやサインアップ操作を公開します。
  */
 @RestController
 @RequestMapping("/company")
@@ -75,6 +76,8 @@ public class PartiCompanyController {
     /**
      * Registers a new company application or resubmits a rejected application.
      * 新しい会社の申請を登録するか、却下された申請を再提出します。
+     * 
+     * テスト新規追加
      */
     @PostMapping("/signup")
     @Operation(summary = "参加企業登録申請", description = "新しい参加企業の登録申請を作成します。")
@@ -84,18 +87,21 @@ public class PartiCompanyController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    //テスト新規追加
     @PostMapping("/signup/email-verification/start")
     public ResponseEntity<OtpChallengeResponse> startSignupEmailVerification(
             @Valid @RequestBody EmailOtpStartRequest request) {
         return ResponseEntity.ok(companySecurityFlowService.startSignupEmailVerification(request.getEmail()));
     }
 
+    //テスト新規追加
     @PostMapping("/signup/email-verification/resend")
     public ResponseEntity<OtpChallengeResponse> resendSignupEmailVerification(
             @Valid @RequestBody OtpResendRequest request) {
         return ResponseEntity.ok(companySecurityFlowService.resendSignupEmailVerification(request.getChallengeId()));
     }
 
+    //テスト新規追加
     @PostMapping("/signup/email-verification/verify")
     public ResponseEntity<BaseResponse> verifySignupEmail(
             @Valid @RequestBody OtpVerifyRequest request) {
@@ -103,12 +109,14 @@ public class PartiCompanyController {
                 request.getChallengeId(), request.getCode()));
     }
 
+    //テスト新規追加
     @GetMapping("/signup/revision")
     public ResponseEntity<PartiCompanyRegisterRequest> getRejectedSignupRevision(
             @RequestHeader("X-Action-Session") String actionSession) {
         return ResponseEntity.ok(companySecurityFlowService.getRevisionDraft(actionSession));
     }
 
+    //テスト新規追加
     @PutMapping("/signup/revision")
     public ResponseEntity<BaseResponse> reviseRejectedSignup(
             @RequestHeader("X-Action-Session") String actionSession,
@@ -119,6 +127,8 @@ public class PartiCompanyController {
     /**
      * Validates company identity fields before the final signup request.
      * 最終サインアップリクエストの前に、会社の身元情報を確認する。
+     * 
+     * テスト新規追加
      */
     @PostMapping("/signup/company-info/validate")
     @Operation(summary = "企業情報事前検証", description = "企業情報を保存せずに検証します。")
@@ -131,6 +141,8 @@ public class PartiCompanyController {
     /**
      * Validates methodology fields before the final signup request.
      * 最終サインアップのリクエスト前に、方法論のフィールドを確認する。
+     * 
+     * テスト新規追加
      */
     @PostMapping("/signup/methodology/validate")
     @Operation(summary = "方法論事前検証", description = "方法論情報を保存せずに検証します。")
