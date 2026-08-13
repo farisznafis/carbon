@@ -1,7 +1,7 @@
-package com.kct.jcredit.core_backend.dto.request;
+package com.kct.jcredit.core_backend.dto.projectplan;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kct.jcredit.core_backend.dto.request.base.ProjectPlanFormBase;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormBase;
 import com.kct.jcredit.core_backend.validation.DateFormat;
 import com.kct.jcredit.core_backend.validation.HankakuWithSymbols;
 import com.kct.jcredit.core_backend.validation.Zenkaku;

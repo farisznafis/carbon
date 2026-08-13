@@ -1,8 +1,8 @@
 package com.kct.jcredit.core_backend.service.projectplan;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.kct.jcredit.core_backend.dto.response.ProjectPlanFormResponse;
-import com.kct.jcredit.core_backend.dto.response.ProjectPlanProgressResponse;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormResponse;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressResponse;
 
 /**
  * Serves every page of the project plan from the form registry.

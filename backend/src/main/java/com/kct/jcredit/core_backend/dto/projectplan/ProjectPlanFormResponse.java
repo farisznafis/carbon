@@ -1,4 +1,4 @@
-package com.kct.jcredit.core_backend.dto.response;
+package com.kct.jcredit.core_backend.dto.projectplan;
 
 import java.time.Instant;
 import java.util.List;
