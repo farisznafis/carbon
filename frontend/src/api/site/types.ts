@@ -55,6 +55,19 @@ export type SiteDashboardMetrics = {
   jcredit?: string | null;
 };
 
+export type SiteDashboardApiData = SiteDashboardMetrics & {
+  siteId?: string | null;
+  siteName?: string | null;
+  postalCode?: string | null;
+  prefecture?: string | null;
+  municipality?: string | null;
+  blocknum?: string | null;
+  buildingName?: string | null;
+  picFirstName?: string | null;
+  picLastName?: string | null;
+  projects?: string[] | null;
+};
+
 export type SiteDashboardApiResponse = {
   statusCode: string;
   message?: string | null;
@@ -79,7 +92,7 @@ export type SiteDashboardApiResponse = {
     picFirstName?: string | null;
     picLastName?: string | null;
     projects?: string[] | null;
-    data?: SiteDashboardMetrics | null;
+    data?: SiteDashboardApiData | null;
   } | null;
 };
 
@@ -178,6 +191,7 @@ export type SiteProject = Project & {
 export type SiteProjectEquipment = {
   tempId?: string | null;
   equipmentId?: number | null;
+  siteId?: string | null;
   methodologyNumber?: string | null;
   isEligible?: boolean | null;
   equipmentOpDate?: string | null;
@@ -205,6 +219,8 @@ export type SiteProjectEquipment = {
   subsidyName?: string | null;
   subsidyAmount?: number | null;
   preProjectUnitPrice?: number | null;
+  changeDate?: string | null;
+  previousEquipmentId?: number | null;
   evidenceDocuments?: string[] | null;
   files?: SiteProjectEquipmentFile[] | null;
 };
@@ -265,6 +281,30 @@ export type SiteProjectEquipmentDetailResponse = SiteProjectEquipmentApiItem & {
   errors?: Record<string, string> | null;
   timestamp?: string;
   siteId?: string | null;
+};
+
+export type SiteEquipmentHistoryApiItem = {
+  id?: number | null;
+  changeDate?: string | null;
+  previousEquipmentId?: number | null;
+  monitoringStartDate?: string | null;
+  monitoringEndDate?: string | null;
+  isActive?: boolean | null;
+  registeredBy?: string | null;
+  registeredAt?: string | null;
+  equipment?: SiteProjectEquipmentApiItem | null;
+};
+
+export type SiteEquipmentHistory = {
+  id: number | null;
+  changeDate: string | null;
+  previousEquipmentId: number | null;
+  monitoringStartDate: string | null;
+  monitoringEndDate: string | null;
+  isActive: boolean | null;
+  registeredBy: string | null;
+  registeredAt: string | null;
+  equipment: SiteProjectEquipment;
 };
 
 export type SiteProjectEquipmentUpdateRequest = {
