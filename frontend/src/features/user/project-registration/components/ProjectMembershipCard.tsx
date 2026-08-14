@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { ExternalLink, LoaderCircle } from 'lucide-react';
+import { ExternalLink, LoaderCircle, MapPin } from 'lucide-react';
 
 type ProjectMembershipStatus = 'available' | 'joined';
 
@@ -14,6 +14,13 @@ type ProjectMembershipCardProps = Readonly<{
   onDownloadPdf?: (project: SiteProject) => void;
   isDownloadingPdf?: boolean;
 }>;
+
+// Builds the compact methodology reference shown on membership project cards.
+function formatMethodologyReference(project: SiteProject): string {
+  return [project.methodNumber, project.methodologyVersion]
+    .filter(Boolean)
+    .join(' / ') || '-';
+}
 
 export function ProjectMembershipCard({
   project,
@@ -32,9 +39,12 @@ export function ProjectMembershipCard({
             <h3 className='break-words text-foreground'>
               {project.projectName || '-'}
             </h3>
-            <p className='text-small mt-2 whitespace-pre-wrap break-words text-foreground'>
-              {project.methodDetails || '-'}
-            </p>
+            {/* {project.regionalCategory && (
+              <p className='text-small mt-2 flex items-center gap-1.5 text-muted-foreground'>
+                <MapPin className='h-4 w-4 shrink-0' aria-hidden='true' />
+                <span className='break-words'>{project.regionalCategory}</span>
+              </p>
+            )} */}
           </div>
           <Badge
             className={cn(
@@ -55,13 +65,15 @@ export function ProjectMembershipCard({
               {project.methodName || '-'}
             </dd>
           </div>
-          <div className='md:col-span-1'>
-            <dt className='text-small text-foreground'>方法論番号</dt>
+          <div className='md:col-span-2'>
+            <dt className='text-small text-foreground'>
+              方法論番号・バージョン
+            </dt>
             <dd className='mt-1 break-words font-bold'>
-              {project.methodNumber || '-'}
+              {formatMethodologyReference(project)}
             </dd>
           </div>
-          <div className='md:col-span-4'>
+          <div className='md:col-span-3'>
             <dt className='text-small text-foreground'>排出削減活動</dt>
             <dd className='mt-1 whitespace-pre-wrap break-words font-bold'>
               {project.methodMainEmission || '-'}

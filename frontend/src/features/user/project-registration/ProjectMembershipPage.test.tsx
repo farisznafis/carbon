@@ -166,7 +166,7 @@ describe('ProjectMembershipPage tabs', () => {
       await screen.findByRole('tab', { name: /入会中のプロジェクト\s*1/ }),
     );
     await user.click(
-      screen.getByRole('button', { name: '表示' }),
+      screen.getByRole('button', { name: 'PDFを表示' }),
     );
 
     expect(getMyProjectParticipations).toHaveBeenCalledWith('PROJ002');
