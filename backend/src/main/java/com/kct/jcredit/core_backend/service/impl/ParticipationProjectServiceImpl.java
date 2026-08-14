@@ -8,6 +8,7 @@ import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
+import com.kct.jcredit.core_backend.dto.response.MyParticipationResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectJoinResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectPdfDownloadResponse;
@@ -331,6 +332,36 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 .isEligible(false)
                 .build();
         return participatingProjectRepository.save(participation);
+        }
+
+        @Override
+        public List<MyParticipationResponse> getMyParticipations(String projectId, String companyId) {
+
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+                .map(Project::getId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND, ResponseConstants.MSG_PROJECT_NOT_FOUND));
+
+        List<ParticipatingProject> participations = participatingProjectRepository
+                .findByProject_IdAndEquipment_Site_Company_CompanyId(projectDbId, companyId);
+
+        return participations.stream()
+                .map(p -> {
+                        Site site = p.getEquipment().getSite();
+
+                        SiteProjectRelation relation = siteProjectRelationRepository
+                                .findBySite_IdAndProject_Id(site.getId(), projectDbId)
+                                .orElse(null);
+
+                        return MyParticipationResponse.builder()
+                                .participationId(p.getId())
+                                .siteId(site.getPublicId())
+                                .siteName(site.getSiteName())
+                                .status(relation != null ? relation.getStatus() : null)
+                                .pdfStatus(p.getS3KeyPdfMembership() != null ? "READY" : "NOT_READY")
+                                .build();
+                })
+                .collect(Collectors.toList());
         }
 
     // ─────────────────────────────────────────────────────────────
