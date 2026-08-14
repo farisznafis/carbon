@@ -4,6 +4,9 @@ import type {
   SiteProjectEquipmentUpdateRequest,
   SiteProjectEquipmentValidationFile,
 } from '@/api/site';
+import { getEquipmentFileDisplayName } from '@/features/user/equipment/equipmentFileDisplay';
+
+export { getEquipmentFileDisplayName } from '@/features/user/equipment/equipmentFileDisplay';
 import type { SolarPowerFormData } from '@/lib/equipmentValidations';
 import { SOLAR_FORM_DEFAULT_VALUES } from '@/features/user/project-registration/solarEquipmentFormModel';
 import { getSolarFormSelectedFiles } from '@/features/user/project-registration/equipmentValidationMapper';
@@ -191,21 +194,6 @@ export function mapEquipmentEditToUpdateRequest(
   }
 
   return payload;
-}
-
-export function getEquipmentFileDisplayName(file: SiteProjectEquipmentFile) {
-  if (file.fileName?.trim()) return file.fileName.trim();
-
-  const lastS3Segment = file.s3Key?.split('/').at(-1)?.trim();
-  if (lastS3Segment) {
-    try {
-      return decodeURIComponent(lastS3Segment);
-    } catch {
-      return lastS3Segment;
-    }
-  }
-
-  return file.fileId?.trim() || 'existing-file';
 }
 
 export function mergeEquipmentFilesForUpdate(

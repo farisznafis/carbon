@@ -5,11 +5,15 @@ import { getProfile } from '@/api/profile';
 import {
   getSiteData,
   getSiteProjects,
+  type Site,
   type SiteDashboardMetrics,
   type SiteProject,
 } from '@/api/site';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
-import { dashboardPageContainerClassName } from '@/components/layout/DashboardLayout';
+import {
+  dashboardPageContainerClassName,
+  dashboardPageHeaderClassName,
+} from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -417,13 +421,7 @@ const Dashboard = () => {
     !refreshedSiteId;
 
   const [isLoading, setIsLoading] = useState(true);
-  const [site, setSite] = useState<{
-    id: string;
-    siteName: string;
-    picFirstName: string;
-    picLastName: string;
-    address?: string;
-  } | null>(null);
+  const [site, setSite] = useState<Site | null>(null);
   const [metrics, setMetrics] = useState<SiteDashboardMetrics | null>(null);
   const [projects, setProjects] = useState<SiteProject[]>([]);
 
@@ -517,7 +515,7 @@ const Dashboard = () => {
 
         if (!isMounted) return;
 
-        // setSite(siteResponse.site);
+        setSite(siteResponse.site);
         setMetrics(siteResponse.metrics);
         setProjects(projectData);
       } catch (error) {
@@ -605,61 +603,50 @@ const Dashboard = () => {
         />
       )}
 
-      <section className={cn('relative pb-12 pt-14', pageContainer)}>
-        <div className='grid items-stretch gap-6 '>
-          <div className='relative'>
-            <div>
-              <p className='text-small pl-[60px] text-foreground'>
+      <header className='relative border-b border-border bg-background'>
+        <div
+          className={cn(
+            dashboardPageHeaderClassName,
+            'flex-col items-start justify-between gap-5 py-5 text-left sm:flex-row sm:items-center sm:py-0',
+          )}
+        >
+          <div className='min-w-0'>
+            {/* <span className='text-small pl-[60px] text-muted-foreground'>
+              拠点ダッシュボード
+            </span> */}
+            <div className='mt-1 flex min-w-0 items-center gap-3'>
+              <span className='flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-primary'>
+                <Factory className='h-6 w-6' />
+              </span>
+              <h1 className='min-w-0 break-words text-4xl leading-10 text-foreground'>
                 {user?.companyName || '株式会社ABC'}
-              </p>
-              <div className='flex items-center justify-between gap-3'>
-                <div className='flex items-center gap-3'>
-                  <span className='flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-primary'>
-                    <Factory className='h-6 w-6' />
-                  </span>
-                  <h1 className='mt-1 text-4xl leading-10 text-foreground'>
-                    {site?.siteName || '拠点ダッシュボード'}
-                  </h1>
-                </div>
-                {user?.role === 'master' && activeSiteId && (
-                  <Button
-                    type='button'
-                    variant='outline'
-                    size='md'
-                    onClick={() =>
-                      navigate(`/master/site-edit/${activeSiteId}`)
-                    }
-                  >
-                    拠点情報を更新
-                  </Button>
-                )}
-              </div>
-              <dl className='ml-[60px] mt-5 grid gap-x-10 gap-y-4 sm:grid-cols-[max-content_minmax(0,1fr)]'>
-                <div>
-                  <dt className='text-small text-foreground'>担当者</dt>
-                  <dd className='mt-1 font-bold'>{picName}</dd>
-                </div>
-                <div className='min-w-0'>
-                  <dt className='text-small text-foreground'>所在地</dt>
-                  <dd className='mt-1 break-words font-bold'>{address}</dd>
-                </div>
-              </dl>
+              </h1>
             </div>
+            <dl className='ml-[60px] mt-2 grid gap-x-10 gap-y-3 sm:grid-cols-[max-content_minmax(0,1fr)]'>
+              <div>
+                <dt className='text-small text-muted-foreground'>担当者</dt>
+                <dd className='mt-1 font-bold'>{picName}</dd>
+              </div>
+              <div className='min-w-0'>
+                <dt className='text-small text-muted-foreground'>所在地</dt>
+                <dd className='mt-1 break-words font-bold'>{address}</dd>
+              </div>
+            </dl>
           </div>
 
-          {/* <div className="grid h-full gap-3 md:grid-cols-2">
-            <KpiCard
-              title="排出総量"
-              value={formatNumber(metrics?.sumEmission)}
-              variant="primary"
-            />
-            <KpiCard
-              title="排出削減総量"
-              value={formatNumber(metrics?.sumEmissionReduction)}
-            />
-          </div> */}
+          {user?.role === 'master' && activeSiteId && (
+            <Button
+              type='button'
+              variant='outline'
+              size='md'
+              className='shrink-0'
+              onClick={() => navigate(`/master/site-edit/${activeSiteId}`)}
+            >
+              拠点情報を更新
+            </Button>
+          )}
         </div>
-      </section>
+      </header>
 
       <section className='bg-card py-12'>
         <div className={pageContainer}>
