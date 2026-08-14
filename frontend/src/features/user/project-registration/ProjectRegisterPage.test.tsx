@@ -103,6 +103,27 @@ describe('ProjectRegisterPage', () => {
     validateSiteProjectEquipment.mockResolvedValue({ statusCode: 'OK' });
   });
 
+  it('asks the user to select a site instead of selecting the route site', async () => {
+    render(
+      <MemoryRouter
+        initialEntries={['/projects/SITE-1/PROJ0002/register']}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <Routes>
+          <Route
+            path="/projects/:siteId/:projectId/register"
+            element={<ProjectRegisterPage />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect((await screen.findAllByRole('combobox'))[0]).toHaveTextContent(
+      '拠点を選択してください',
+    );
+    expect(screen.queryByText('Tokyo Site')).not.toBeInTheDocument();
+  });
+
   it('opens equipment registration as the first admission step', async () => {
     const user = userEvent.setup();
     render(

@@ -25,7 +25,6 @@ export type EquipmentRegistrationStepRef = {
 };
 
 type EquipmentRegistrationStepProps = {
-  siteId: string;
   initialEquipment?: SolarEquipment;
   onAddSite: (draft: SolarPowerFormData) => void;
 };
@@ -33,11 +32,11 @@ type EquipmentRegistrationStepProps = {
 export const EquipmentRegistrationStep = forwardRef<
   EquipmentRegistrationStepRef,
   EquipmentRegistrationStepProps
->(({ siteId, initialEquipment, onAddSite }, ref) => {
+>(({ initialEquipment, onAddSite }, ref) => {
   const sitesQuery = useSitesQuery();
   const form = useForm<SolarPowerFormData>({
     defaultValues:
-      initialEquipment?.solarData ?? { ...SOLAR_FORM_DEFAULT_VALUES, siteId },
+      initialEquipment?.solarData ?? { ...SOLAR_FORM_DEFAULT_VALUES },
   });
   const sites = sitesQuery.data?.sites ?? EMPTY_SITE_OPTIONS;
   const siteOptionsError = sitesQuery.isError
@@ -53,14 +52,13 @@ export const EquipmentRegistrationStep = forwardRef<
   }, [form, initialEquipment]);
 
   useEffect(() => {
-    if (sites.length === 0) return;
-
     const selectedSiteId = form.getValues('siteId');
+    if (!selectedSiteId) return;
     if (sites.some((site) => site.siteId === selectedSiteId)) return;
 
-    const routeSite = sites.find((site) => site.siteId === siteId);
-    form.setValue('siteId', routeSite?.siteId ?? sites[0].siteId);
-  }, [form, siteId, sites]);
+    // Clear stale drafts without selecting a site on the user's behalf.
+    form.setValue('siteId', '');
+  }, [form, sites]);
 
   useImperativeHandle(ref, () => ({
     validate: async () => {

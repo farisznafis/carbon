@@ -635,7 +635,6 @@ const ProjectRegister = () => {
         return (
           <EquipmentRegistrationStep
             ref={equipmentStepRef}
-            siteId={resolvedSiteId}
             onAddSite={handleAddSite}
             initialEquipment={equipment.find(
               (item): item is Extract<Equipment, { formType: 'solar' }> =>
