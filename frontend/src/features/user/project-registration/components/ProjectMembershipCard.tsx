@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { Download } from 'lucide-react';
+import { Download, LoaderCircle } from 'lucide-react';
 
 type ProjectMembershipStatus = 'available' | 'joined';
 
@@ -11,12 +11,16 @@ type ProjectMembershipCardProps = Readonly<{
   project: SiteProject;
   status: ProjectMembershipStatus;
   onJoin?: (project: SiteProject) => void;
+  onDownloadPdf?: (project: SiteProject) => void;
+  isDownloadingPdf?: boolean;
 }>;
 
 export function ProjectMembershipCard({
   project,
   status,
   onJoin,
+  onDownloadPdf,
+  isDownloadingPdf = false,
 }: ProjectMembershipCardProps) {
   const isJoined = status === 'joined';
 
@@ -71,9 +75,16 @@ export function ProjectMembershipCard({
               type='button'
               variant='outline'
               size='md'
-              disabled
+              disabled={
+                !project.participationId || !onDownloadPdf || isDownloadingPdf
+              }
+              onClick={() => onDownloadPdf?.(project)}
             >
-              <Download />
+              {isDownloadingPdf ? (
+                <LoaderCircle className='animate-spin' />
+              ) : (
+                <Download />
+              )}
               PDFをダウンロード
             </Button>
           </div>

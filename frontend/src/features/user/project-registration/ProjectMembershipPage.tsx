@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   getSiteData,
   getSiteProjects,
+  downloadProjectMembershipPdf,
   type SiteProject,
 } from '@/api/site';
 import {
@@ -16,6 +17,7 @@ import {
 } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProjectMembershipCard } from '@/features/user/project-registration/components/ProjectMembershipCard';
 import {
   isFromMasterDashboard,
@@ -23,35 +25,31 @@ import {
 } from '@/features/user/project-registration/projectMembershipNavigation';
 import { paths } from '@/routes/paths';
 import { useDashboardStore } from '@/stores/dashboardStore';
+import { downloadBlob } from '@/utils/download';
+import { useToast } from '@/hooks/use-toast';
 
 type MembershipSectionProps = Readonly<{
-  title: string;
   description: string;
   projects: SiteProject[];
   status: 'available' | 'joined';
   emptyMessage: string;
   onJoin?: (project: SiteProject) => void;
+  onDownloadPdf?: (project: SiteProject) => void;
+  downloadingProjectIds?: ReadonlySet<string>;
 }>;
 
 function MembershipSection({
-  title,
   description,
   projects,
   status,
   emptyMessage,
   onJoin,
+  onDownloadPdf,
+  downloadingProjectIds,
 }: MembershipSectionProps) {
   return (
     <section>
-      <div className="mb-5">
-        <div className="flex flex-wrap items-baseline gap-3">
-          <h2 className="text-foreground">{title}</h2>
-          <span className="text-small text-foreground">
-            {projects.length}件
-          </span>
-        </div>
-        <p className="text-small mt-2 text-foreground">{description}</p>
-      </div>
+      <p className="text-small mb-5 text-foreground">{description}</p>
 
       {projects.length > 0 ? (
         <div className="space-y-5">
@@ -61,6 +59,8 @@ function MembershipSection({
               project={project}
               status={status}
               onJoin={onJoin}
+              onDownloadPdf={onDownloadPdf}
+              isDownloadingPdf={downloadingProjectIds?.has(project.id)}
             />
           ))}
         </div>
@@ -79,6 +79,7 @@ export default function ProjectMembershipPage() {
   const { siteId = '' } = useParams<{ siteId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const enteredFromMasterDashboard = isFromMasterDashboard(location.state);
   const setCurrentProject = useDashboardStore(
     (state) => state.setCurrentProject,
@@ -87,6 +88,9 @@ export default function ProjectMembershipPage() {
   const [projects, setProjects] = useState<SiteProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [downloadingProjectIds, setDownloadingProjectIds] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   const loadMembershipData = useCallback(async () => {
     if (!siteId) {
@@ -142,6 +146,34 @@ export default function ProjectMembershipPage() {
     });
   };
 
+  const handleDownloadPdf = async (project: SiteProject) => {
+    if (!project.participationId || downloadingProjectIds.has(project.id)) return;
+
+    setDownloadingProjectIds((current) => new Set(current).add(project.id));
+    try {
+      const { blob, fileName } = await downloadProjectMembershipPdf(
+        project.id,
+        project.participationId,
+      );
+      downloadBlob(blob, fileName);
+    } catch (error) {
+      toast({
+        title: 'PDFをダウンロードできませんでした',
+        description:
+          error instanceof Error && error.message
+            ? error.message
+            : 'しばらくしてからもう一度お試しください。',
+        variant: 'destructive',
+      });
+    } finally {
+      setDownloadingProjectIds((current) => {
+        const next = new Set(current);
+        next.delete(project.id);
+        return next;
+      });
+    }
+  };
+
   const handleBack = () => {
     navigate(
       enteredFromMasterDashboard
@@ -183,23 +215,49 @@ export default function ProjectMembershipPage() {
             </CardContent>
           </Card>
         ) : (
-          <>
-            <MembershipSection
-              title="入会可能なプロジェクト"
-              description="この拠点は以下のプロジェクトにまだ入会していません。入会を希望する場合は、入会届へ進んでください。"
-              projects={availableProjects}
-              status="available"
-              emptyMessage="入会可能なプロジェクトはありません。"
-              onJoin={handleJoin}
-            />
-            <MembershipSection
-              title="入会中のプロジェクト"
-              description="この拠点が現在入会しているプロジェクトです。再度入会届を提出する必要はありません。"
-              projects={joinedProjects}
-              status="joined"
-              emptyMessage="入会中のプロジェクトはありません。"
-            />
-          </>
+          <Tabs defaultValue="available">
+            <TabsList className="grid h-auto w-full grid-cols-2 justify-start sm:inline-flex sm:h-10 sm:w-auto">
+              <TabsTrigger
+                value="available"
+                className="min-w-0 flex-col gap-0.5 px-2 sm:flex-row sm:gap-0 sm:px-3"
+              >
+                入会可能なプロジェクト
+                <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground sm:ml-1.5">
+                  {availableProjects.length}
+                </span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="joined"
+                className="min-w-0 flex-col gap-0.5 px-2 sm:flex-row sm:gap-0 sm:px-3"
+              >
+                入会中のプロジェクト
+                <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground sm:ml-1.5">
+                  {joinedProjects.length}
+                </span>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="available" className="mt-6">
+              <MembershipSection
+                description="この拠点は以下のプロジェクトにまだ入会していません。入会を希望する場合は、入会届へ進んでください。"
+                projects={availableProjects}
+                status="available"
+                emptyMessage="入会可能なプロジェクトはありません。"
+                onJoin={handleJoin}
+              />
+            </TabsContent>
+
+            <TabsContent value="joined" className="mt-6">
+              <MembershipSection
+                description="この拠点が現在入会しているプロジェクトです。再度入会届を提出する必要はありません。"
+                projects={joinedProjects}
+                status="joined"
+                emptyMessage="入会中のプロジェクトはありません。"
+                onDownloadPdf={(project) => void handleDownloadPdf(project)}
+                downloadingProjectIds={downloadingProjectIds}
+              />
+            </TabsContent>
+          </Tabs>
         )}
       </FormPageContent>
     </FormStandalonePage>

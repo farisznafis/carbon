@@ -118,6 +118,7 @@ export type SiteProjectsApiResponse = {
 
 export type SiteProjectApiItem = {
   id: string;
+  participationId?: number | null;
   projectName: string;
   projectNumber: string;
   projectStatus: string;
@@ -159,6 +160,7 @@ export type SiteProjectApiItem = {
 };
 
 export type SiteProject = Project & {
+  participationId?: number;
   isJoined: boolean;
   projectNumber: string;
   repFirstName?: string;
@@ -186,6 +188,11 @@ export type SiteProject = Project & {
   operatorCompanyId?: string | number;
   updatedAt?: string;
   createdAt?: string;
+};
+
+export type MembershipPdfDownload = {
+  blob: Blob;
+  fileName: string;
 };
 
 export type SiteProjectEquipment = {

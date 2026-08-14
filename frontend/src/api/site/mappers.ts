@@ -17,6 +17,7 @@ function normalizeSiteId(
 export function mapSiteProject(item: SiteProjectApiItem): SiteProject {
   return {
     id: item.id,
+    participationId: item.participationId ?? undefined,
     projectName: item.projectName ?? "",
     projectStatus: (item.projectStatus as SiteProject["projectStatus"]) ?? "準備中",
     emissionReduction: toNumberOrUndefined(item.emissionReduction),
