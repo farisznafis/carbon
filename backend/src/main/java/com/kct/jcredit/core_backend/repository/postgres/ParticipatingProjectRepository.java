@@ -30,4 +30,9 @@ public interface ParticipatingProjectRepository
     Optional<ParticipatingProject> findByIdAndProject_Id(Integer participationId, Integer projectId);
 
     List<ParticipatingProject> findByEquipment_Id(Integer equipmentId);
+
+    List<ParticipatingProject> findByProject_IdAndEquipment_Site_Company_CompanyId(
+        Integer projectId, String companyId);
+
+
 }
