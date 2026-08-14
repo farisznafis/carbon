@@ -155,8 +155,8 @@ public class ProjectOverviewRequest extends ProjectPlanFormBase {
     /** プロジェクト実施場所の分類（英語表記） */
     @Size(max = 20)
     @Hankaku
-    @JsonProperty("projectLocationClassificatonEn")
-    private String projectLocationClassificatonEn;
+    @JsonProperty("projectLocationClassificationEn")
+    private String projectLocationClassificationEn;
 
     /** 地域区分 */
     @Size(max = 50)
