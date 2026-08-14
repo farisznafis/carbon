@@ -14,7 +14,7 @@ const joinedProject = {
 } as SiteProject;
 
 describe('ProjectMembershipCard', () => {
-  it('downloads the membership PDF for a joined project', async () => {
+  it('opens the membership PDF for a joined project', async () => {
     const user = userEvent.setup();
     const onDownloadPdf = vi.fn();
 
@@ -27,7 +27,7 @@ describe('ProjectMembershipCard', () => {
     );
 
     await user.click(
-      screen.getByRole('button', { name: 'PDFをダウンロード' }),
+      screen.getByRole('button', { name: '表示' }),
     );
 
     expect(onDownloadPdf).toHaveBeenCalledOnce();
@@ -44,7 +44,7 @@ describe('ProjectMembershipCard', () => {
     );
 
     expect(
-      screen.getByRole('button', { name: 'PDFをダウンロード' }),
+      screen.getByRole('button', { name: '表示' }),
     ).toBeDisabled();
   });
 
@@ -59,7 +59,7 @@ describe('ProjectMembershipCard', () => {
     );
 
     expect(
-      screen.getByRole('button', { name: 'PDFをダウンロード' }),
+      screen.getByRole('button', { name: '表示' }),
     ).toBeDisabled();
   });
 });

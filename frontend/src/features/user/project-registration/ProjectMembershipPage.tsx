@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   getSiteData,
   getSiteProjects,
+  getMyProjectParticipations,
   downloadProjectMembershipPdf,
   type SiteProject,
 } from '@/api/site';
@@ -25,7 +26,7 @@ import {
 } from '@/features/user/project-registration/projectMembershipNavigation';
 import { paths } from '@/routes/paths';
 import { useDashboardStore } from '@/stores/dashboardStore';
-import { downloadBlob } from '@/utils/download';
+import { downloadFromUrl } from '@/utils/download';
 import { useToast } from '@/hooks/use-toast';
 
 type MembershipSectionProps = Readonly<{
@@ -108,8 +109,30 @@ export default function ProjectMembershipPage() {
         getSiteProjects(siteId),
       ]);
 
+      // participationId comes from GET /site/project/{projectId}/my-participations.
+      // The project list supplies the IDs and remains the source for joined status.
+      const projectsWithParticipation = await Promise.all(
+        siteProjects.map(async (project) => {
+          if (!project.isJoined) return project;
+
+          const participations = await getMyProjectParticipations(project.id);
+          const participation = participations.find(
+            (candidate) => candidate.siteId === siteId,
+          );
+
+          return participation
+            ? {
+                ...project,
+                participationId: participation.participationId,
+                participationStatus: participation.status,
+                pdfStatus: participation.pdfStatus,
+              }
+            : project;
+        }),
+      );
+
       setSiteName(siteData.site?.siteName ?? '');
-      setProjects(siteProjects);
+      setProjects(projectsWithParticipation);
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -147,18 +170,20 @@ export default function ProjectMembershipPage() {
   };
 
   const handleDownloadPdf = async (project: SiteProject) => {
-    if (!project.participationId || downloadingProjectIds.has(project.id)) return;
+    if (
+      project.participationId == null ||
+      downloadingProjectIds.has(project.id)
+    ) return;
 
     setDownloadingProjectIds((current) => new Set(current).add(project.id));
     try {
-      const { blob, fileName } = await downloadProjectMembershipPdf(
-        project.id,
+      const { pdfUrl } = await downloadProjectMembershipPdf(
         project.participationId,
       );
-      downloadBlob(blob, fileName);
+      downloadFromUrl(pdfUrl);
     } catch (error) {
       toast({
-        title: 'PDFをダウンロードできませんでした',
+        title: 'PDFを表示できませんでした',
         description:
           error instanceof Error && error.message
             ? error.message

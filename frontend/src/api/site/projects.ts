@@ -3,32 +3,12 @@ import { apiFetch, parseJsonResponse } from '../_shared/httpClient';
 import type { ApiErrorPayload } from '../_shared/types';
 import type {
   MembershipPdfDownload,
+  MyProjectParticipation,
+  MyProjectParticipationApiItem,
   SiteProject,
   SiteProjectsApiResponse,
 } from './types';
 import { mapSiteProject } from "./mappers";
-
-const DEFAULT_MEMBERSHIP_PDF_BASENAME = 'membership';
-
-function decodeFileName(value: string): string {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return value;
-  }
-}
-
-function getContentDispositionFileName(headerValue: string | null): string | null {
-  if (!headerValue) return null;
-
-  const encodedMatch = headerValue.match(/filename\*=UTF-8''([^;]+)/i);
-  if (encodedMatch?.[1]) {
-    return decodeFileName(encodedMatch[1].trim().replace(/^"|"$/g, ''));
-  }
-
-  const plainMatch = headerValue.match(/filename="?([^";]+)"?/i);
-  return plainMatch?.[1]?.trim() || null;
-}
 
 export async function getSiteProjects(siteId: string): Promise<SiteProject[]> {
   if (!siteId) return [];
@@ -50,17 +30,59 @@ export async function getSiteProjects(siteId: string): Promise<SiteProject[]> {
   return json.projects.map(mapSiteProject);
 }
 
-export async function downloadProjectMembershipPdf(
+// GET /site/project/{projectId}/my-participations
+// Returns the current user's participation records for one project.
+export async function getMyProjectParticipations(
   projectId: string,
+): Promise<MyProjectParticipation[]> {
+  if (!projectId) return [];
+
+  const response = await apiFetch(
+    `/site/project/${encodeURIComponent(projectId)}/my-participations`,
+    { method: 'GET' },
+  );
+  const { data, rawBody } = await parseJsonResponse<
+    MyProjectParticipationApiItem[]
+  >(response);
+
+  if (!response.ok) {
+    throw new ApiError(
+      getApiErrorMessage(
+        response,
+        null,
+        rawBody,
+        '参加情報の取得に失敗しました',
+      ),
+      { status: response.status, rawBody },
+    );
+  }
+
+  if (!Array.isArray(data)) return [];
+
+  return data.map((participation) => ({
+    participationId: participation.participationId,
+    siteId: String(participation.siteId ?? ''),
+    siteName: participation.siteName ?? '',
+    status: participation.status ?? '',
+    pdfStatus: participation.pdfStatus ?? '',
+  }));
+}
+
+// GET /site/project/participation/{participationId}/pdf
+// Requests the temporary URL used to download an approved membership PDF.
+export async function downloadProjectMembershipPdf(
   participationId: number,
 ): Promise<MembershipPdfDownload> {
   const response = await apiFetch(
-    `/project/${encodeURIComponent(projectId)}/participations/${encodeURIComponent(String(participationId))}/membership-pdf`,
+    `/site/project/participation/${encodeURIComponent(String(participationId))}/pdf`,
     { method: 'GET' },
   );
 
+  const { data, rawBody } = await parseJsonResponse<
+    MembershipPdfDownload & ApiErrorPayload
+  >(response);
+
   if (!response.ok) {
-    const { data, rawBody } = await parseJsonResponse<ApiErrorPayload>(response);
     throw new ApiError(
       getApiErrorMessage(
         response,
@@ -76,12 +98,11 @@ export async function downloadProjectMembershipPdf(
     );
   }
 
-  return {
-    blob: await response.blob(),
-    fileName:
-      getContentDispositionFileName(response.headers.get('Content-Disposition')) ??
-      `${DEFAULT_MEMBERSHIP_PDF_BASENAME}-${projectId}.pdf`,
-  };
+  if (!data?.pdfUrl) {
+    throw new Error('PDFのダウンロードURLが見つかりませんでした');
+  }
+
+  return { pdfUrl: data.pdfUrl, expiresIn: data.expiresIn ?? 0 };
 }
 
 export { SiteProject };

@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { Download, LoaderCircle } from 'lucide-react';
+import { ExternalLink, LoaderCircle } from 'lucide-react';
 
 type ProjectMembershipStatus = 'available' | 'joined';
 
@@ -49,19 +49,19 @@ export function ProjectMembershipCard({
         </div>
 
         <dl className='mt-6 grid gap-x-8 gap-y-5 md:grid-cols-8'>
-          <div className='md:col-span-2'>
+          <div className='md:col-span-3'>
             <dt className='text-small text-foreground'>方法論名称</dt>
             <dd className='mt-1 break-words font-bold'>
               {project.methodName || '-'}
             </dd>
           </div>
-          <div className='md:col-span-2'>
+          <div className='md:col-span-1'>
             <dt className='text-small text-foreground'>方法論番号</dt>
             <dd className='mt-1 break-words font-bold'>
               {project.methodNumber || '-'}
             </dd>
           </div>
-          <div className='md:col-span-2'>
+          <div className='md:col-span-4'>
             <dt className='text-small text-foreground'>排出削減活動</dt>
             <dd className='mt-1 whitespace-pre-wrap break-words font-bold'>
               {project.methodMainEmission || '-'}
@@ -76,16 +76,18 @@ export function ProjectMembershipCard({
               variant='outline'
               size='md'
               disabled={
-                !project.participationId || !onDownloadPdf || isDownloadingPdf
+                project.participationId == null ||
+                !onDownloadPdf ||
+                isDownloadingPdf
               }
               onClick={() => onDownloadPdf?.(project)}
             >
               {isDownloadingPdf ? (
                 <LoaderCircle className='animate-spin' />
               ) : (
-                <Download />
+                <ExternalLink />
               )}
-              PDFをダウンロード
+              PDFを表示
             </Button>
           </div>
         )}

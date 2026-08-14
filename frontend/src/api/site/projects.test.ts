@@ -1,13 +1,17 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../_shared/errors';
-import { downloadProjectMembershipPdf, getSiteProjects } from './projects';
+import {
+  downloadProjectMembershipPdf,
+  getMyProjectParticipations,
+  getSiteProjects,
+} from './projects';
 
 afterEach(() => {
   vi.unstubAllGlobals();
 });
 
 describe('getSiteProjects', () => {
-  it('preserves the participation ID returned for a joined project', async () => {
+  it('maps joined project information without requiring a participation ID', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(
@@ -17,7 +21,6 @@ describe('getSiteProjects', () => {
             projects: [
               {
                 id: 'PROJ/001',
-                participationId: 42,
                 projectName: '太陽光発電プロジェクト',
                 projectNumber: 'P001',
                 projectStatus: '実施中',
@@ -35,50 +38,85 @@ describe('getSiteProjects', () => {
     expect(projects[0]).toEqual(
       expect.objectContaining({
         id: 'PROJ/001',
-        participationId: 42,
         isJoined: true,
       }),
     );
   });
 });
 
-describe('downloadProjectMembershipPdf', () => {
-  it('downloads the PDF using encoded IDs and the response filename', async () => {
+describe('getMyProjectParticipations', () => {
+  it('loads participation IDs using the encoded project ID', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(new Blob(['pdf'], { type: 'application/pdf' }), {
-        status: 200,
-        headers: {
-          'Content-Disposition':
-            "attachment; filename*=UTF-8''%E5%85%A5%E4%BC%9A%E5%B1%8A.pdf",
-          'Content-Type': 'application/pdf',
-        },
-      }),
+      new Response(
+        JSON.stringify([
+          {
+            participationId: 42,
+            siteId: 'site001',
+            siteName: '東京拠点',
+            status: 'APPROVED',
+            pdfStatus: 'READY',
+          },
+        ]),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    const result = await downloadProjectMembershipPdf('PROJ/001', 42);
-
+    await expect(getMyProjectParticipations('PROJ/001')).resolves.toEqual([
+      {
+        participationId: 42,
+        siteId: 'site001',
+        siteName: '東京拠点',
+        status: 'APPROVED',
+        pdfStatus: 'READY',
+      },
+    ]);
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/project/PROJ%2F001/participations/42/membership-pdf',
+      '/api/site/project/PROJ%2F001/my-participations',
       expect.objectContaining({ method: 'GET' }),
     );
-    expect(result.fileName).toBe('入会届.pdf');
-    expect(result.blob.type).toBe('application/pdf');
+  });
+});
+
+describe('downloadProjectMembershipPdf', () => {
+  it('gets a presigned PDF URL using the participation ID', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          pdfUrl: 'https://example.com/membership.pdf',
+          expiresIn: 300,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await downloadProjectMembershipPdf(42);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/site/project/participation/42/pdf',
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result).toEqual({
+      pdfUrl: 'https://example.com/membership.pdf',
+      expiresIn: 300,
+    });
   });
 
-  it('uses a project-specific fallback filename', async () => {
+  it('rejects a successful response without a PDF URL', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(
-        new Response(new Blob(['pdf']), {
+        new Response(JSON.stringify({ expiresIn: 0 }), {
           status: 200,
+          headers: { 'Content-Type': 'application/json' },
         }),
       ),
     );
 
-    const result = await downloadProjectMembershipPdf('PROJ001', 7);
-
-    expect(result.fileName).toBe('membership-PROJ001.pdf');
+    await expect(downloadProjectMembershipPdf(7)).rejects.toThrow(
+      'PDFのダウンロードURLが見つかりませんでした',
+    );
   });
 
   it('maps a backend error response to ApiError', async () => {
@@ -95,7 +133,7 @@ describe('downloadProjectMembershipPdf', () => {
       ),
     );
 
-    await expect(downloadProjectMembershipPdf('PROJ001', 7)).rejects.toEqual(
+    await expect(downloadProjectMembershipPdf(7)).rejects.toEqual(
       expect.objectContaining<ApiError>({
         name: 'ApiError',
         status: 409,
