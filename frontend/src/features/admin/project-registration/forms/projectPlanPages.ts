@@ -46,7 +46,27 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
   { step: 4, slug: 'applicable-conditions', formKey: 'appConditions' },
   { step: 5, slug: 'project-change-information', formKey: 'projChangeInfo' },
   { step: 6, slug: 'project-plan-cover', formKey: 'projPlanCover' },
+  {
+    step: 7,
+    slug: 'project-overview',
+    formKey: 'projectOverview',
+    // The spec abbreviates these; the form spells them out.
+    renames: {
+      projectOperatorNameKana: 'projectOperatorKana',
+      projectOperatorNameJa: 'projectOperatorName',
+    },
+  },
   { step: 8, slug: 'applicable-methodology', formKey: 'applicableMethodology' },
+  {
+    step: 9,
+    slug: 'program-type-methodology',
+    formKey: 'programMethodology',
+    // The spec truncates "Manage" to "Manag" in both column names.
+    renames: {
+      opeManageStructure: 'opeManagStructure',
+      infoCollManageMethod: 'infoCollManagMethod',
+    },
+  },
   { step: 10, slug: 'emission-reduction-plan', formKey: 'emissionReduction' },
   {
     step: 13,
