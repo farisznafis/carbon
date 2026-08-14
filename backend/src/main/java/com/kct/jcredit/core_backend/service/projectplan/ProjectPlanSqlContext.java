@@ -87,6 +87,15 @@ public final class ProjectPlanSqlContext {
         return category + "-" + number;
     }
 
+    /**
+     * Project stores emissions as {@code Double} while the plan DTOs use
+     * {@code BigDecimal}. Null-safe so an unset figure stays unset rather than
+     * autofilling as zero.
+     */
+    public static java.math.BigDecimal decimal(Double value) {
+        return value == null ? null : java.math.BigDecimal.valueOf(value);
+    }
+
     private static boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
     }

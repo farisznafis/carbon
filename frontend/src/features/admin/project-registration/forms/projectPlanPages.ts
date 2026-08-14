@@ -203,8 +203,14 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     formKey: 'monitoringExplanation',
     renames: { monitoringDesc: 'monitoringItemDescription' },
   },
-  // Step 34 (係数の実測方法に関する説明) is still out: its form holds one field
-  // against the DTO's three, so it is a gap in the form, not a rename.
+  {
+    step: 34,
+    slug: 'coefficient-measure-explanation',
+    formKey: 'coefficient',
+    // coefficientSchema is monitoringExplanationSchema without the diagram, so
+    // it carries the same 説明 field under the form's shorter name.
+    renames: { monitoringDesc: 'monitoringItemDescription' },
+  },
 ];
 
 const BY_STEP: ReadonlyMap<number, ProjectPlanPage> = new Map(
