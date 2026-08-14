@@ -40,6 +40,7 @@ import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserReposit
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingProjectRepository;
 
 import java.util.List;
+import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -197,6 +198,10 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
         EnR002Equipment savedEquipment = saveEquipment(request.getEquipment(), site);
         List<EnR002EquipmentFile> savedFiles = saveEquipmentFiles(request.getEquipment(), savedEquipment);
 
+        // Key tmp disimpan terpisah — DB sudah memegang key final sejak commit.
+        Map<String, String> tempKeyByFileId = request.getEquipment().getFiles().stream()
+                .collect(Collectors.toMap(f -> f.getFileId(), f -> f.getS3Key()));
+
         // 7. Save ParticipatingProject
         ParticipatingProject participation = saveParticipatingProject(
             project, user, savedEquipment);
@@ -210,16 +215,12 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
             public void afterCommit() {
                 savedFiles.forEach(fileEntity -> {
                     try {
-                        String permanentKey = fileUploadSolarService
-                                .moveTempToPermanent(
-                                        fileEntity.getS3Key(),
-                                        savedEquipment.getSite().getPublicId(),
-                                        savedEquipment.getId()
-                                );
-                        equipmentFileRepository.updateS3Key(fileEntity.getId(), permanentKey);
+                        fileUploadSolarService.moveToPermanent(
+                                tempKeyByFileId.get(fileEntity.getFileId()),
+                                fileEntity.getS3Key());
                     } catch (Exception e) {
-                        log.error("S3 move failed. fileId={}, error={}",
-                                fileEntity.getFileId(), e.getMessage());
+                        log.error("S3 move failed. fileId={}, s3Key={}, error={}",
+                                fileEntity.getFileId(), fileEntity.getS3Key(), e.getMessage());
                                 }
                         });
 
@@ -311,7 +312,11 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                 .equipment(saved)
                                 .fileType(f.getFileType())
                                 .fileId(f.getFileId())
-                                .s3Key(f.getS3Key())
+                                // key final, bukan key tmp — lihat submitParticipation()
+                                .s3Key(fileUploadSolarService.buildPermanentKey(
+                                        f.getS3Key(),
+                                        saved.getSite().getPublicId(),
+                                        saved.getId()))
                                 .build())
                         .collect(Collectors.toList()));
     }
