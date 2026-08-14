@@ -160,6 +160,20 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 .collect(Collectors.toList());
     }
 
+    private Integer resolveParticipationId(EnR002Equipment equipment) {
+    EnR002Equipment root = equipment;
+    while (root.getPreviousEquipment() != null) {
+        root = root.getPreviousEquipment();
+    }
+
+    return participatingProjectRepository
+            .findByEquipment_Id(root.getId())
+            .stream()
+            .findFirst()
+            .map(ParticipatingProject::getId)
+            .orElse(null);
+}
+
     private EnR002EquipmentResponse toResponse(EnR002Equipment e) {
         List<EnR002EquipmentFileResponse> fileResponses = equipmentFileRepository
                 .findByEquipment_Id(e.getId()).stream()
@@ -171,12 +185,12 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                         .build())
                 .collect(Collectors.toList());
 
-        Integer participationId = participatingProjectRepository
-                .findByEquipment_Id(e.getId())
-                .stream()
-                .findFirst()
-                .map(ParticipatingProject::getId)
-                .orElse(null);
+        // Integer participationId = participatingProjectRepository
+        //         .findByEquipment_Id(e.getId())
+        //         .stream()
+        //         .findFirst()
+        //         .map(ParticipatingProject::getId)
+        //         .orElse(null);
 
         return EnR002EquipmentResponse.builder()
                 .id(e.getId())
@@ -197,7 +211,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 .subsidyName(e.getSubsidyName())
                 .subsidyAmount(e.getSubsidyAmount())
                 .preProjectUnitPrice(e.getPreProjectUnitPrice())
-                .participationId(participationId)
+                .participationId(resolveParticipationId(e))
                 .files(fileResponses)
                                 .build(); 
     }
