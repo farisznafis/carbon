@@ -28,4 +28,6 @@ public interface ParticipatingProjectRepository
     List<ParticipatingProject> findByProject_Id(Integer projectId);
 
     Optional<ParticipatingProject> findByIdAndProject_Id(Integer participationId, Integer projectId);
+
+    List<ParticipatingProject> findByEquipment_Id(Integer equipmentId);
 }
