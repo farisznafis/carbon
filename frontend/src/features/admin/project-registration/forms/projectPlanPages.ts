@@ -93,9 +93,118 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     slug: 'main-activity-project-emission',
     formKey: 'mainActivity',
   },
+  {
+    step: 11,
+    slug: 'monitoring-calculation',
+    formKey: 'monitoringCalc',
+    renames: {
+      isStandardMonitor: 'isStandardMonitorCalcEmissionAct',
+      isUseSampling: 'isUsingSampling',
+      collectDataAndMeasurement: 'collectDataAndMeasurementTarget',
+      populationComposition: 'populationCompositionCharacter',
+      dataAnalysis: 'dataAnalysisNonsamplErrHandling',
+      implMethodSched: 'implMethodScheduleAssignee',
+      implMethodSchedImg: 'implMethodScheduleAssigneeImg',
+    },
+  },
+  {
+    step: 12,
+    slug: 'data-management',
+    formKey: 'dataManagement',
+    renames: {
+      moniDataAcquiring: 'moniDataAcquiringMethod',
+      moniDataCollection: 'moniDataCollectionMethod',
+      moniDataRec: 'moniDataRecStoreMethod',
+      dataStoring: 'dataStoringPeriod',
+      isRisksForEmission: 'isRisksForEmissionReduction',
+      isSimilar: 'isSimilarProjectRegistered',
+      isIndependentofLegal: 'isIndependentOfLegalCompli',
+    },
+  },
+  {
+    step: 14,
+    slug: 'additional-assessment-method',
+    formKey: 'additionalAssessment',
+    renames: {
+      assessingAdditionality: 'assessingAdditionalityMethod',
+      assessingAdditionalityImg: 'assessingAdditionalityMethodImg',
+    },
+  },
+  {
+    step: 18,
+    slug: 'post-implement-incidental-activity',
+    formKey: 'postImplemental',
+    renames: {
+      monitorCalc: 'monitorCalcBeingDone',
+      emissionsTotal: 'emissionsTotalValue',
+      impactTotal: 'impactTotalValue',
+    },
+  },
+  // 20/22/23 share incidentalActivitySchema, which is mainActivitySchema minus
+  // `concept` — the same six fields their DTOs declare.
+  {
+    step: 20,
+    slug: 'incidental-activity-project-emission',
+    formKey: 'incidentalActivity',
+  },
+  { step: 21, slug: 'baseline-emission', formKey: 'baselineEmission' },
+  { step: 22, slug: 'main-baseline-emission', formKey: 'mainBaseline' },
+  {
+    step: 23,
+    slug: 'incidental-baseline-emission',
+    formKey: 'incidentalEmission',
+  },
   { step: 24, slug: 'monitoring-item-plan', formKey: 'monitoringItem' },
   { step: 25, slug: 'monitoring-method-plan', formKey: 'monitoringMethod' },
   { step: 26, slug: 'expected-project-plan', formKey: 'expectedProject' },
+  {
+    step: 27,
+    slug: 'monitoring-item-plan-coefficient',
+    formKey: 'monitoringItemPlanCoefficient',
+  },
+  {
+    step: 28,
+    slug: 'monitoring-method-plan-coefficient',
+    formKey: 'monitoringMethodPlanCoefficient',
+  },
+  {
+    step: 29,
+    slug: 'expected-project-plan-coefficient',
+    formKey: 'expectedProjectPlanCoefficient',
+  },
+  {
+    step: 30,
+    slug: 'monitoring-plan',
+    formKey: 'monitoringPlan',
+    renames: {
+      itemList: 'monitoringItemList',
+      methodCollDesc: 'methodCollDescription',
+      methodCollDescImg: 'methodCollDescriptionImg',
+    },
+  },
+  {
+    step: 31,
+    slug: 'measure-specified-instrument',
+    formKey: 'measureSpecified',
+    renames: {
+      validityPeriod: 'validityPeriodOfCert',
+      methodCollImg: 'methodCollDescriptionImg',
+    },
+  },
+  {
+    step: 32,
+    slug: 'measure-other-instruments',
+    formKey: 'measureOther',
+    renames: { instrumentCalibration: 'instrumentCalibrationMethodDescription' },
+  },
+  {
+    step: 33,
+    slug: 'monitoring-method-explanation',
+    formKey: 'monitoringExplanation',
+    renames: { monitoringDesc: 'monitoringItemDescription' },
+  },
+  // Step 34 (係数の実測方法に関する説明) is still out: its form holds one field
+  // against the DTO's three, so it is a gap in the form, not a rename.
 ];
 
 const BY_STEP: ReadonlyMap<number, ProjectPlanPage> = new Map(
