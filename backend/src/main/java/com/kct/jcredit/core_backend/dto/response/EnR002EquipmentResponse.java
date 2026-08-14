@@ -41,6 +41,8 @@ public class EnR002EquipmentResponse extends BaseResponse {
     private BigDecimal subsidyAmount;
     private BigDecimal preProjectUnitPrice;
 
+    private Integer participationId;
+
     private LocalDate changeDate;
     private Integer previousEquipmentId;
     
