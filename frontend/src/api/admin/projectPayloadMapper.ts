@@ -296,48 +296,27 @@ function toDateString(value: unknown): string | undefined {
 }
 
 /**
- * 代表以外のプログラム型運営・管理者 (step 3).
+ * Maps one project-plan page's form values onto its backend payload.
  *
- * Renames the three fields whose form names differ from the backend DTO;
- * everything else already matches, so it is passed through.
- */
-export function mapOtherOperatorProjectsPayload(
-  values: Record<string, unknown>,
-): Record<string, unknown> {
-  const page = (values.otherProjectOperator ?? {}) as Record<string, unknown>;
-
-  return cleanPayload({
-    ...page,
-    projectOperatorKana: firstStringValue(
-      page.projectOperatorKana,
-      page.projectOperatorNameKana,
-    ),
-    projectOperatorNameKana: undefined,
-    hasEnergyActPeriodReport: toBooleanValue(
-      page.hasEnergyActPeriodReport ?? page.hasEnergyActReport,
-    ),
-    hasEnergyActReport: undefined,
-    energyManagFactoryNumber: firstStringValue(
-      page.energyManagFactoryNumber,
-      page.energyManageFactoryNumber,
-    ),
-    energyManageFactoryNumber: undefined,
-    isDesignatedEmitter: toBooleanValue(page.isDesignatedEmitter),
-  });
-}
-
-/**
- * (参考様式)適用条件 (step 4).
+ * Field names line up with the backend DTO for most pages, so the default is a
+ * pass-through; the few that disagree declare a rename map in
+ * `projectPlanPages.ts` rather than getting a bespoke mapper.
  *
- * Field names already match the backend DTO; only the date needs formatting.
+ * Dates are normalised because the pickers hold Date objects while the backend
+ * @DateFormat expects yyyy-MM-dd.
  */
-export function mapApplicableConditionsPayload(
+export function mapPlanPagePayload(
   values: Record<string, unknown>,
+  formKey: string,
+  renames?: Readonly<Record<string, string>>,
 ): Record<string, unknown> {
-  const page = (values.appConditions ?? {}) as Record<string, unknown>;
+  const page = (values[formKey] ?? {}) as Record<string, unknown>;
+  const payload: Record<string, unknown> = {};
 
-  return cleanPayload({
-    ...page,
-    esgPledgeCaseDate: toDateString(page.esgPledgeCaseDate),
-  });
+  for (const [key, value] of Object.entries(page)) {
+    const target = renames?.[key] ?? key;
+    payload[target] = value instanceof Date ? toDateString(value) : value;
+  }
+
+  return cleanPayload(payload);
 }

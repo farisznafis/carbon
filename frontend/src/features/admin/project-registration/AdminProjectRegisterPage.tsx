@@ -6,8 +6,7 @@ import {
   mapAdminProjectPayload,
   mapAdminProjectPlanApplicationPayload,
   mapAdminProjectUpdatePayload,
-  mapApplicableConditionsPayload,
-  mapOtherOperatorProjectsPayload,
+  mapPlanPagePayload,
 } from '@/api/admin/projectPayloadMapper';
 import {
   createAdminProject,
@@ -43,9 +42,10 @@ import type { AdminProjectRegisterFormInputValues } from './forms/projectFormTyp
 import { ProjectStatusSchema } from './forms/projectBaseSchema';
 import {
   LAST_IMPLEMENTED_STEP,
-  getFormSlugForStep,
-  getStepForFormSlug,
-} from './forms/projectPlanFormSlugs';
+  getPlanPageForSlug,
+  getPlanPageForStep,
+  type ProjectPlanPage,
+} from './forms/projectPlanPages';
 import { steps } from './forms/projectSteps';
 
 type LocationState = {
@@ -178,7 +178,7 @@ export const AdminProjectRegister: React.FC = () => {
       const progress = await getProjectPlanProgress(projectId);
       const done = (progress.forms ?? [])
         .filter((planForm) => planForm.status === 'COMPLETE')
-        .map((planForm) => getStepForFormSlug(planForm.formSlug))
+        .map((planForm) => getPlanPageForSlug(planForm.formSlug)?.step)
         .filter((planStep): planStep is number => planStep !== undefined);
       setCompletedSteps(done);
       setPlanProgress({
@@ -191,18 +191,21 @@ export const AdminProjectRegister: React.FC = () => {
   };
 
   /**
-   * Payload mapper per wizard step. A page can only be staged once it has one,
-   * so adding a step means adding its mapper here alongside the registry entry
-   * on the backend.
+   * The application page keeps a bespoke mapper: it normalises booleans and
+   * reconciles several legacy field aliases. Every other page goes through the
+   * generic mapper driven by `PROJECT_PLAN_PAGES`.
    */
-  const PAGE_PAYLOAD_MAPPERS: Record<
-    number,
-    (values: AdminProjectRegisterFormInputValues) => Record<string, unknown>
-  > = {
-    2: mapAdminProjectPlanApplicationPayload,
-    3: mapOtherOperatorProjectsPayload,
-    4: mapApplicableConditionsPayload,
-  };
+  const buildPagePayload = (
+    page: ProjectPlanPage,
+    values: AdminProjectRegisterFormInputValues,
+  ): Record<string, unknown> =>
+    page.slug === 'application'
+      ? mapAdminProjectPlanApplicationPayload(values)
+      : mapPlanPagePayload(
+          values as Record<string, unknown>,
+          page.formKey,
+          page.renames,
+        );
 
   /**
    * Stages one page. The server stores it only if the whole page validates, so
@@ -213,12 +216,12 @@ export const AdminProjectRegister: React.FC = () => {
     targetStep: number,
     values: AdminProjectRegisterFormInputValues,
   ): Promise<boolean> => {
-    const slug = getFormSlugForStep(targetStep);
-    const mapPayload = PAGE_PAYLOAD_MAPPERS[targetStep];
-    if (!slug || !mapPayload) return true;
+    // Steps with no plan page (step 1) are saved elsewhere; nothing to stage.
+    const page = getPlanPageForStep(targetStep);
+    if (!page) return true;
 
     try {
-      await saveProjectPlanForm(projectId, slug, mapPayload(values));
+      await saveProjectPlanForm(projectId, page.slug, buildPagePayload(page, values));
       await refreshProgress(projectId);
       return true;
     } catch (e) {
