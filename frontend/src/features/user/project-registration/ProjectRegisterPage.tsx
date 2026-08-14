@@ -32,7 +32,10 @@ import {
   floatingPageBackButtonClassName,
   PageBackButton,
 } from "@/components/navigation/PageBackButton";
-import type { Equipment } from "@/features/user/project-registration/components/types";
+import type {
+  Equipment,
+  SolarEquipment,
+} from "@/features/user/project-registration/components/types";
 import type { AgreementFormValues } from "@/features/user/project-registration/components/agreementsConfig";
 import { paths } from "@/routes/paths";
 import {
@@ -45,8 +48,13 @@ import {
   mapSustainabilityCommitmentRequest,
   mapProjectJoinRequest,
 } from "@/features/user/project-registration/projectJoinMapper";
-import { getPendingSolarEquipment } from "@/features/user/project-registration/equipmentConfirmationState";
+import {
+  getCreatedSiteId,
+  getPendingSolarEquipment,
+} from "@/features/user/project-registration/equipmentConfirmationState";
 import { getSolarFormSelectedFiles } from "@/features/user/project-registration/equipmentValidationMapper";
+import { createSiteRegistrationReturnState } from "@/features/master/navigation/siteRegistrationFlow";
+import type { SolarPowerFormData } from "@/lib/equipmentValidations";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -182,7 +190,19 @@ const ProjectRegister = () => {
   const navigate = useNavigate();
   const enteredFromMasterDashboard = isFromMasterDashboard(location.state);
   const pendingEquipment = useMemo(
-    () => getPendingSolarEquipment(location.state),
+    () => {
+      const pending = getPendingSolarEquipment(location.state);
+      const createdSiteId = getCreatedSiteId(location.state);
+      if (!pending || !createdSiteId) return pending;
+
+      return {
+        ...pending,
+        solarData: {
+          ...pending.solarData,
+          siteId: createdSiteId,
+        },
+      };
+    },
     [location.state],
   );
   const { user } = useAuth();
@@ -268,6 +288,34 @@ const ProjectRegister = () => {
       setCurrentStep((prev) => prev - 1);
     }
   }, [currentStep, navigateToMembership]);
+
+  /** Opens site registration and preserves the current equipment draft for return. */
+  const handleAddSite = useCallback(
+    (draft: SolarPowerFormData) => {
+      const currentSolarEquipment = equipment.find(
+        (item): item is SolarEquipment => item.formType === 'solar',
+      );
+      const pendingEquipmentDraft: SolarEquipment = {
+        id: currentSolarEquipment?.id ?? `equipment-${Date.now()}`,
+        formType: 'solar',
+        solarData: draft,
+        files: currentSolarEquipment?.files ?? [],
+      };
+
+      navigate(paths.masterSiteRegister, {
+        state: createSiteRegistrationReturnState({
+          path: paths.projectRegister(siteId, projectId),
+          state: {
+            ...(enteredFromMasterDashboard
+              ? masterDashboardProjectMembershipState
+              : {}),
+            pendingEquipment: pendingEquipmentDraft,
+          },
+        }),
+      });
+    },
+    [enteredFromMasterDashboard, equipment, navigate, projectId, siteId],
+  );
 
   // ── Effects ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -588,6 +636,7 @@ const ProjectRegister = () => {
           <EquipmentRegistrationStep
             ref={equipmentStepRef}
             siteId={resolvedSiteId}
+            onAddSite={handleAddSite}
             initialEquipment={equipment.find(
               (item): item is Extract<Equipment, { formType: 'solar' }> =>
                 item.formType === 'solar',

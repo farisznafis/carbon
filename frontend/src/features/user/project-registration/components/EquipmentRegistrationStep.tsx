@@ -27,12 +27,13 @@ export type EquipmentRegistrationStepRef = {
 type EquipmentRegistrationStepProps = {
   siteId: string;
   initialEquipment?: SolarEquipment;
+  onAddSite: (draft: SolarPowerFormData) => void;
 };
 
 export const EquipmentRegistrationStep = forwardRef<
   EquipmentRegistrationStepRef,
   EquipmentRegistrationStepProps
->(({ siteId, initialEquipment }, ref) => {
+>(({ siteId, initialEquipment, onAddSite }, ref) => {
   const sitesQuery = useSitesQuery();
   const form = useForm<SolarPowerFormData>({
     defaultValues:
@@ -129,6 +130,7 @@ export const EquipmentRegistrationStep = forwardRef<
             sites={sites}
             isSiteOptionsLoading={sitesQuery.isLoading}
             siteOptionsError={siteOptionsError}
+            onAddSite={onAddSite}
           />
         </FormCard>
       </Form>

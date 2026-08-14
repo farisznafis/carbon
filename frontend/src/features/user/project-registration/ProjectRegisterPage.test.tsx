@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/api/_shared/errors';
 import type { SolarEquipment } from '@/features/user/project-registration/components/types';
@@ -76,14 +76,35 @@ const pendingEquipment: SolarEquipment = {
   files: [],
 };
 
+function SiteRegisterDestination() {
+  const location = useLocation();
+  const returnTarget = (
+    location.state as {
+      returnTarget?: { state?: { pendingEquipment?: SolarEquipment } };
+    } | null
+  )?.returnTarget;
+
+  return (
+    <div>
+      拠点追加ページ
+      <span>{returnTarget?.state?.pendingEquipment?.solarData.siteId}</span>
+    </div>
+  );
+}
+
 describe('ProjectRegisterPage', () => {
   beforeEach(() => {
     localStorage.clear();
+    Element.prototype.hasPointerCapture = vi.fn();
+    Element.prototype.setPointerCapture = vi.fn();
+    Element.prototype.releasePointerCapture = vi.fn();
+    Element.prototype.scrollIntoView = vi.fn();
     validateSiteProjectEquipment.mockReset();
     validateSiteProjectEquipment.mockResolvedValue({ statusCode: 'OK' });
   });
 
   it('opens equipment registration as the first admission step', async () => {
+    const user = userEvent.setup();
     render(
       <MemoryRouter
         initialEntries={[
@@ -98,6 +119,10 @@ describe('ProjectRegisterPage', () => {
           <Route
             path="/projects/:siteId/:projectId/register"
             element={<ProjectRegisterPage />}
+          />
+          <Route
+            path="/master/site-register"
+            element={<SiteRegisterDestination />}
           />
         </Routes>
       </MemoryRouter>,
@@ -114,9 +139,18 @@ describe('ProjectRegisterPage', () => {
     expect(screen.queryByText('ステップ 1 / 4')).not.toBeInTheDocument();
     expect(screen.getByText('対象拠点').parentElement).toHaveTextContent('*');
     expect(
+      screen.getByText('プロジェクトへの参加を申請する拠点を選択してください。'),
+    ).toBeInTheDocument();
+    expect(
       screen.getByText('確認資料：太陽光発電電力受給契約確認書')
         .parentElement,
     ).toHaveTextContent('*');
+
+    await user.click(screen.getAllByRole('combobox')[0]);
+    await user.click(screen.getByRole('option', { name: '拠点を追加' }));
+
+    expect(screen.getByText('拠点追加ページ')).toBeInTheDocument();
+    expect(screen.getByText('SITE-1')).toBeInTheDocument();
   });
 
   it('keeps the first selected file when another file input is opened', async () => {

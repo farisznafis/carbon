@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import {
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormMessage,
@@ -23,12 +24,15 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
 import type { SolarPowerFormData } from '@/lib/equipmentValidations';
+import { Plus } from 'lucide-react';
 
 const EQUIPMENT_FILE_FORMATS = '(.pdf, .csv, .jpg, .jpeg, .png)';
+const ADD_SITE_OPTION_VALUE = '__add_site__';
 
 type SolarPowerEquipmentFormProps = Readonly<{
   form: UseFormReturn<SolarPowerFormData>;
@@ -39,6 +43,8 @@ type SolarPowerEquipmentFormProps = Readonly<{
         sites: Site[];
         isSiteOptionsLoading: boolean;
         siteOptionsError: string | null;
+        /** Opens the site-registration flow from the project application form. */
+        onAddSite?: (draft: SolarPowerFormData) => void;
       }
     | {
         mode: 'edit';
@@ -155,6 +161,7 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
     ? false
     : props.isSiteOptionsLoading;
   const siteOptionsError = isEditMode ? null : props.siteOptionsError;
+  const onAddSite = isEditMode ? undefined : props.onAddSite;
   const hasBattery = form.watch('hasBattery') === 'yes';
   const hasSubsidy = form.watch('hasSubsidy') === 'yes';
 
@@ -167,13 +174,24 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
           render={({ field }) => (
             <FormItem>
               <RequiredLabel>対象拠点</RequiredLabel>
+              <FormDescription className="text-foreground">
+                プロジェクトへの参加を申請する拠点を選択してください。
+              </FormDescription>
               <Select
                 value={field.value}
-                onValueChange={field.onChange}
+                onValueChange={(value) => {
+                  if (value === ADD_SITE_OPTION_VALUE) {
+                    onAddSite?.(form.getValues());
+                    return;
+                  }
+
+                  field.onChange(value);
+                }}
                 disabled={
-                  isSiteOptionsLoading ||
-                  Boolean(siteOptionsError) ||
-                  sites.length === 0
+                  !onAddSite &&
+                  (isSiteOptionsLoading ||
+                    Boolean(siteOptionsError) ||
+                    sites.length === 0)
                 }
               >
                 <FormControl>
@@ -187,6 +205,20 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
                       {site.siteName}
                     </SelectItem>
                   ))}
+                  {onAddSite && (
+                    <>
+                      {sites.length > 0 && <SelectSeparator />}
+                      <SelectItem
+                        value={ADD_SITE_OPTION_VALUE}
+                        className="font-medium text-primary focus:text-primary"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Plus className="h-4 w-4" aria-hidden="true" />
+                          拠点を追加
+                        </span>
+                      </SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
               {siteOptionsError && (
