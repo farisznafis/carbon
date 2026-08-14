@@ -402,6 +402,7 @@ public class UserServiceImpl implements UserService {
                                          UpdateUserRequest request) {
 
         UpdateUserResponse response = new UpdateUserResponse();
+        System.out.println("UpdateUserRequest: " + request);
 
         try {
             // ── Resolve requesting user ───────────────────────────────────────
@@ -526,16 +527,19 @@ public class UserServiceImpl implements UserService {
                                      List<SiteResponse> updatedSites,
                                      UpdateUserResponse response) {
         if (isSelf) {
+            System.out.println("Handling master self update");
             // Cases 6, 8 — master editing self, cascade to all PIC sites
             handleMasterSelfUpdate(request, masterCompany, requestingUser,
                                    updatedSites, response);
 
         } else if (isSiteChange) {
+            System.out.println("Handling master site change update");
             // Case 13, 15 — master moving a user to a different site
             handleMasterEditWithSiteChange(request, masterCompany, targetUser,requestingUser,
                                               currentSite, requestedSiteId,
                                               updatedSites, response, isPIC);
         } else {
+            System.out.println("Handling master edit user update");
             // Case 5, 7— master editing a regular user, no site change
             handleMasterEditUser(request, targetUser, currentSite, updatedSites, response, isPIC);
         }
@@ -618,6 +622,7 @@ public class UserServiceImpl implements UserService {
                                       UpdateUserResponse response,boolean isPIC) {
         updateUserInfo(targetUser, request);
         
+        System.out.println("isPIC: " + isPIC);
         if(isPIC){
         updateSitePIC(currentSite, targetUser);
         Site savedSite = siteRepository.save(currentSite);
@@ -670,7 +675,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Case 15 and 13 — Master moving a user to a different site. 
-     * if the user was PIC, site PIC must become Master User, new site PIC must be assigned.
+     * if the user was PIC, site PIC must become Master User, new 
      * 
      */
     private void handleMasterEditWithSiteChange(UpdateUserRequest request,
