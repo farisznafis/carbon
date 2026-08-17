@@ -9,7 +9,6 @@ import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.response.ParticipationReviewDetailResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
-import com.kct.jcredit.core_backend.dto.response.ProjectApplicationResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectParticipationConfirmationResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002ConfirmationItemResponse;
 import com.kct.jcredit.core_backend.dto.response.PendingReviewParticipationResponse;

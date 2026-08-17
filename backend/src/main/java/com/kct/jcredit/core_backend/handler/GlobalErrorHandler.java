@@ -30,6 +30,7 @@ import com.kct.jcredit.core_backend.exception.CustomException;
 import com.kct.jcredit.core_backend.exception.DuplicateResourceException;
 import com.kct.jcredit.core_backend.exception.FileTooLargeException;
 import com.kct.jcredit.core_backend.exception.ResourceNotFoundException;
+import com.kct.jcredit.core_backend.util.JsonFieldNameResolver;
 import com.kct.jcredit.core_backend.exception.UnsupportedFileTypeException;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 
@@ -254,62 +255,12 @@ public class GlobalErrorHandler {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
+    /**
+     * Delegates to the shared resolver so this {@code @Valid} path and the
+     * project-plan service's programmatic validation emit identical error keys.
+     */
     private String resolveJsonFieldName(String fieldPath, String objectName) {
-        Class<?> targetClass = resolveClassFromObjectName(objectName);
-        if (targetClass == null) {
-            return fieldPath;
-        }
-
-        String[] pathParts = fieldPath.split("\\.");
-        Class<?> currentClass = targetClass;
-        StringBuilder jsonPath = new StringBuilder();
-
-        for (String pathPart : pathParts) {
-            String collectionSuffix = "";
-            String fieldName = pathPart;
-            int collectionStart = pathPart.indexOf('[');
-            if (collectionStart >= 0) {
-                collectionSuffix = pathPart.substring(collectionStart);
-                fieldName = pathPart.substring(0, collectionStart);
-            }
-
-            String jsonFieldName = resolveJsonFieldName(currentClass, fieldName);
-            if (jsonPath.length() > 0) {
-                jsonPath.append(".");
-            }
-            jsonPath.append(jsonFieldName).append(collectionSuffix);
-
-            Field nestedField = findField(currentClass, fieldName);
-            if (nestedField != null) {
-                currentClass = nestedField.getType();
-            }
-        }
-
-        return jsonPath.toString();
-    }
-
-    private Class<?> resolveClassFromObjectName(String objectName) {
-        String basePackage = "com.kct.jcredit.core_backend.dto.request.";
-        String className = Character.toUpperCase(objectName.charAt(0)) + objectName.substring(1);
-        try {
-            return Class.forName(basePackage + className);
-        } catch (ClassNotFoundException ex) {
-            return null;
-        }
-    }
-
-    private String resolveJsonFieldName(Class<?> targetClass, String fieldName) {
-        Field field = findField(targetClass, fieldName);
-        if (field == null) {
-            return fieldName;
-        }
-
-        JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
-        if (jsonProperty != null && !jsonProperty.value().isBlank()) {
-            return jsonProperty.value();
-        }
-
-        return fieldName;
+        return JsonFieldNameResolver.resolveByObjectName(fieldPath, objectName);
     }
 
     private Field findField(Class<?> targetClass, String fieldName) {

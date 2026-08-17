@@ -6,9 +6,16 @@ import {
 import { ApiError } from '@/api/_shared/errors';
 import type {
   SiteProjectEquipment,
+  SiteProjectEquipmentApiItem,
+  SiteProjectEquipmentApiFile,
+  SiteProjectEquipmentDetailResponse,
+  SiteEquipmentHistory,
+  SiteEquipmentHistoryApiItem,
+  SiteEquipmentListResponse,
   SiteProjectEquipmentFileType,
   SiteProjectEquipmentFileUploadResponse,
   SiteProjectEquipmentResponse,
+  SiteProjectEquipmentUpdateRequest,
   SiteProjectEquipmentValidationFile,
   SiteProjectEquipmentValidationItem,
   SiteProjectEquipmentValidationResponse,
@@ -21,6 +28,57 @@ import type {
   SiteProjectJoinRequest,
   SiteProjectJoinResponse,
 } from './types';
+
+function normalizedText(...values: unknown[]): string | null {
+  const value = values.find(
+    (candidate) =>
+      (typeof candidate === 'string' && candidate.trim().length > 0) ||
+      typeof candidate === 'number',
+  );
+
+  return value == null ? null : String(value).trim();
+}
+
+function normalizeSiteProjectEquipmentFile(
+  file: SiteProjectEquipmentApiFile,
+) {
+  return {
+    id: typeof file.id === 'number' ? file.id : null,
+    fileType: normalizedText(file.fileType, file.FileType, file.file_type),
+    fileId: normalizedText(
+      file.fileId,
+      file.FileId,
+      file.file_id,
+      file.id,
+    ),
+    s3Key: normalizedText(file.s3Key, file.S3Key, file.s3key, file.s3_key),
+    fileName: normalizedText(
+      file.fileName,
+      file.FileName,
+      file.originalName,
+    ),
+  };
+}
+
+function normalizeSiteProjectEquipment(
+  equipment: SiteProjectEquipmentApiItem,
+): SiteProjectEquipment {
+  const rawFiles = Array.isArray(equipment.files)
+    ? equipment.files
+    : Array.isArray(equipment.Files)
+      ? equipment.Files
+      : [];
+
+  return {
+    ...equipment,
+    equipmentId: equipment.equipmentId ?? equipment.id ?? null,
+    powerCondUnitCount:
+      equipment.powerCondUnitCount ?? equipment.pcsUnitCount ?? null,
+    powerCondStandby:
+      equipment.powerCondStandby ?? equipment.pcsStandby ?? null,
+    files: rawFiles.map(normalizeSiteProjectEquipmentFile),
+  };
+}
 
 export async function uploadSiteProjectEquipmentFile(
   siteId: string,
@@ -204,5 +262,98 @@ export async function getSiteProjectEquipment(
     );
   }
 
-  return Array.isArray(json?.equipments) ? json.equipments : [];
+  return Array.isArray(json?.equipments)
+    ? json.equipments.map(normalizeSiteProjectEquipment)
+    : [];
+}
+
+export async function getSiteEquipmentList(
+  siteId: string,
+): Promise<SiteProjectEquipment[]> {
+  if (!siteId) return [];
+
+  const response = await apiFetch(
+    `/site/${encodeURIComponent(siteId)}/equipment`,
+    { method: 'GET' },
+  );
+  const { data: json, rawBody } =
+    await parseJsonResponse<SiteEquipmentListResponse>(response);
+
+  if (!response.ok) {
+    const message =
+      !Array.isArray(json) && json?.message
+        ? json.message
+        : rawBody;
+    throw new Error(
+      message || `設備一覧の取得に失敗しました: HTTP ${response.status}`,
+    );
+  }
+
+  const equipments = Array.isArray(json) ? json : json?.equipments;
+  return Array.isArray(equipments)
+    ? equipments.map(normalizeSiteProjectEquipment)
+    : [];
+}
+
+export async function getSiteEquipmentById(
+  siteId: string,
+  equipmentId: number,
+): Promise<SiteProjectEquipment> {
+  return normalizeSiteProjectEquipment(
+    await apiRequest<SiteProjectEquipmentDetailResponse>(
+      `/site/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}`,
+      {
+        method: 'GET',
+        fallbackErrorMessage: '設備情報の取得に失敗しました。',
+      },
+    ),
+  );
+}
+
+export async function getSiteEquipmentHistory(
+  siteId: string,
+  equipmentId: number,
+): Promise<SiteEquipmentHistory[]> {
+  const history = await apiRequest<SiteEquipmentHistoryApiItem[]>(
+    `/site/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}/history`,
+    {
+      method: 'GET',
+      fallbackErrorMessage: '設備変更履歴の取得に失敗しました。',
+    },
+  );
+
+  return Array.isArray(history)
+    ? history.map((entry) => ({
+        id: typeof entry.id === 'number' ? entry.id : null,
+        changeDate: normalizedText(entry.changeDate),
+        previousEquipmentId:
+          typeof entry.previousEquipmentId === 'number'
+            ? entry.previousEquipmentId
+            : null,
+        monitoringStartDate: normalizedText(entry.monitoringStartDate),
+        monitoringEndDate: normalizedText(entry.monitoringEndDate),
+        isActive:
+          typeof entry.isActive === 'boolean' ? entry.isActive : null,
+        registeredBy: normalizedText(entry.registeredBy),
+        registeredAt: normalizedText(entry.registeredAt),
+        equipment: normalizeSiteProjectEquipment(entry.equipment ?? {}),
+      }))
+    : [];
+}
+
+export async function updateSiteEquipment(
+  siteId: string,
+  equipmentId: number,
+  payload: SiteProjectEquipmentUpdateRequest,
+): Promise<SiteProjectEquipment> {
+  return normalizeSiteProjectEquipment(
+    await apiRequest<SiteProjectEquipmentDetailResponse>(
+      `/site/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}`,
+      {
+        method: 'PATCH',
+        body: payload,
+        fallbackErrorMessage: '設備情報の変更に失敗しました。',
+      },
+    ),
+  );
 }

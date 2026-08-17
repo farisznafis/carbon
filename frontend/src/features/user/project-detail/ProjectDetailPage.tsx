@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState, type ReactNode } from 'react';
 import { getProjectDetails, type ProjectDetail as ProjectDetailApi } from '@/api/projects';
 import {
-  getSiteProjectEquipment,
+  getSiteEquipmentList,
   type SiteProjectEquipment,
 } from '@/api/site';
 import {
@@ -183,7 +183,7 @@ function RecentDataBar({
 }: RecentDataBarProps) {
   // If battery was not replaced (false), show 0 for battery discharge value
   const batteryDischargeValue = row.changedBattery === false ? 0 : row.ELPJ_battery_value;
-
+  
   return (
     <section className={`${projectDetailCardClassName} p-5`}>
       <div className='mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
@@ -488,7 +488,7 @@ const ProjectDetail = () => {
       try {
         setEquipmentLoading(true);
         setEquipmentError(null);
-        const rows = await getSiteProjectEquipment(siteId, projectId);
+        const rows = await getSiteEquipmentList(siteId);
         setEquipmentList(rows);
         setEquipmentHasFetched(true);
       } catch (error) {
@@ -564,7 +564,7 @@ const ProjectDetail = () => {
           label=''
           className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
         />
-
+        
         <div className='w-full space-y-7'>
           <header className='min-h-[66px] animate-slide-up'>
             <h1 className='text-foreground'>{project.name}</h1>
@@ -744,7 +744,19 @@ const ProjectDetail = () => {
                   {equipmentError}
                 </div>
               ) : equipmentList.length > 0 ? (
-                <EquipmentList equipments={equipmentList} />
+                <EquipmentList
+                  siteId={siteId}
+                  equipments={equipmentList}
+                  onEditEquipment={(equipmentId) =>
+                    navigate(
+                      paths.siteProjectEquipmentEdit(
+                        siteId,
+                        projectId,
+                        equipmentId,
+                      ),
+                    )
+                  }
+                />
               ) : (
                 <Card className={projectDetailCardClassName}>
                   <CardContent className='p-8 text-center text-foreground'>
@@ -870,3 +882,4 @@ const ProjectDetail = () => {
 };
 
 export default ProjectDetail;
+

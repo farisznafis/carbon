@@ -15,31 +15,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Eye, Wrench } from 'lucide-react';
+import { Eye, History, PencilLine, Wrench } from 'lucide-react';
 import {
-  equipmentDetailSections,
   equipmentSummaryFields,
-  formatEquipmentField,
-  type EquipmentDisplayField,
 } from '../equipmentDisplay';
 import { projectDetailCardClassName } from '../projectDetailStyles';
-
-function EquipmentField({
-  equipment,
-  field,
-}: {
-  equipment: SiteProjectEquipment;
-  field: EquipmentDisplayField;
-}) {
-  return (
-    <div className='min-w-0'>
-      <dt className='text-small text-foreground'>{field.label}</dt>
-      <dd className='mt-1 break-words font-medium text-foreground'>
-        {formatEquipmentField(equipment, field)}
-      </dd>
-    </div>
-  );
-}
+import { EquipmentDetails, EquipmentField } from './EquipmentDetails';
+import { EquipmentDocuments } from './EquipmentDocuments';
+import { EquipmentHistoryDialog } from './EquipmentHistoryDialog';
 
 function EquipmentDetailDialog({
   equipment,
@@ -61,32 +44,9 @@ function EquipmentDetailDialog({
         </DialogHeader>
 
         {equipment ? (
-          <div className='space-y-5 pb-2'>
-            {equipmentDetailSections.map((section) => {
-              const visibleFields = section.fields.filter(
-                (field) => !field.condition || field.condition(equipment),
-              );
-
-              return (
-                <section
-                  key={section.title}
-                  className='rounded-xl border border-border bg-card p-5'
-                >
-                  <h3 className='mb-4 text-large text-foreground'>
-                    {section.title}
-                  </h3>
-                  <dl className='grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3'>
-                    {visibleFields.map((field) => (
-                      <EquipmentField
-                        key={`${section.title}-${field.key}`}
-                        equipment={equipment}
-                        field={field}
-                      />
-                    ))}
-                  </dl>
-                </section>
-              );
-            })}
+          <div className='space-y-5'>
+            <EquipmentDetails equipment={equipment} />
+            <EquipmentDocuments equipment={equipment} />
           </div>
         ) : null}
       </DialogContent>
@@ -98,12 +58,22 @@ function EquipmentSummaryCard({
   equipment,
   index,
   onShowDetails,
+  onShowHistory,
+  onEdit,
 }: {
   equipment: SiteProjectEquipment;
   index: number;
   onShowDetails: (equipment: SiteProjectEquipment) => void;
+  onShowHistory: (equipmentId: number) => void;
+  onEdit: (equipmentId: number) => void;
 }) {
-  const equipmentTitle = equipment.equipmentType || `設備 ${index + 1}`;
+  const deviceNo = equipment.deviceNo?.trim();
+  const pcsManufacturer = equipment.pcsManufacturer?.trim();
+  const pcsModel = equipment.pcsModel?.trim();
+  const pcsIdentity = [pcsManufacturer, pcsModel].filter(Boolean).join(' / ');
+  const equipmentTitle =
+    deviceNo || pcsModel || pcsManufacturer || `設備 ${index + 1}`;
+  const equipmentDescription = deviceNo ? pcsIdentity : '';
 
   return (
     <Card className={projectDetailCardClassName}>
@@ -117,21 +87,48 @@ function EquipmentSummaryCard({
               <CardTitle className='break-words text-foreground'>
                 {equipmentTitle}
               </CardTitle>
-              <CardDescription className='text-table mt-1'>
-                設備ID: {equipment.equipmentId ?? '-'}
-              </CardDescription>
+              {equipmentDescription && (
+                <CardDescription className='text-table mt-1 break-words'>
+                  {equipmentDescription}
+                </CardDescription>
+              )}
             </div>
           </div>
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            className='self-start sm:self-auto'
-            onClick={() => onShowDetails(equipment)}
-          >
-            <Eye className='h-4 w-4' />
-            詳細
-          </Button>
+          <div className='flex flex-wrap gap-2 self-start sm:self-auto'>
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              onClick={() => onShowDetails(equipment)}
+            >
+              <Eye className='h-4 w-4' />
+              詳細
+            </Button>
+            {typeof equipment.equipmentId === 'number' && (
+              <>
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  onClick={() =>
+                    onShowHistory(equipment.equipmentId as number)
+                  }
+                >
+                  <History className='h-4 w-4' />
+                  変更履歴
+                </Button>
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  onClick={() => onEdit(equipment.equipmentId as number)}
+                >
+                  <PencilLine className='h-4 w-4' />
+                  設備変更
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className='px-6 pb-6'>
@@ -150,12 +147,19 @@ function EquipmentSummaryCard({
 }
 
 export function EquipmentList({
+  siteId,
   equipments,
+  onEditEquipment,
 }: {
+  siteId: string;
   equipments: SiteProjectEquipment[];
+  onEditEquipment: (equipmentId: number) => void;
 }) {
   const [selectedEquipment, setSelectedEquipment] =
     useState<SiteProjectEquipment | null>(null);
+  const [historyEquipmentId, setHistoryEquipmentId] = useState<number | null>(
+    null,
+  );
 
   return (
     <>
@@ -166,6 +170,8 @@ export function EquipmentList({
             equipment={equipment}
             index={index}
             onShowDetails={setSelectedEquipment}
+            onShowHistory={setHistoryEquipmentId}
+            onEdit={onEditEquipment}
           />
         ))}
       </div>
@@ -175,6 +181,15 @@ export function EquipmentList({
         open={selectedEquipment !== null}
         onOpenChange={(open) => {
           if (!open) setSelectedEquipment(null);
+        }}
+      />
+
+      <EquipmentHistoryDialog
+        siteId={siteId}
+        equipmentId={historyEquipmentId}
+        open={historyEquipmentId !== null}
+        onOpenChange={(open) => {
+          if (!open) setHistoryEquipmentId(null);
         }}
       />
     </>
