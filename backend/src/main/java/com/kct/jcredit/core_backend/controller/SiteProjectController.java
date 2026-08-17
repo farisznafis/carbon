@@ -10,6 +10,7 @@ import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRe
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyMethodologyValidateRequest;
 import com.kct.jcredit.core_backend.dto.response.EnR002FileResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
+import com.kct.jcredit.core_backend.dto.response.MyParticipationResponse;
 import com.kct.jcredit.core_backend.dto.response.PdfDownloadResponse;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 import com.kct.jcredit.core_backend.dto.response.ProjectJoinResponse;
@@ -186,7 +187,7 @@ public class SiteProjectController {
     }
 
     @PostMapping("/generate/{participationId}")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasAnyRole('admin','operator')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<String> generate(@PathVariable Integer participationId) {
         log.warn("generateAndProcess を手動実行します。participationId={}", participationId);
@@ -202,7 +203,7 @@ public class SiteProjectController {
     }
 
     @GetMapping("/presigned-url")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasAnyRole('admin','operator')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<String> presignedUrl(@RequestParam String s3Key) {
         log.warn("[DEBUG] Presigned URL を手動生成します。s3Key={}", s3Key);
@@ -218,7 +219,7 @@ public class SiteProjectController {
     }
 
     @PostMapping("/generate-and-get-url/{participationId}")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasAnyRole('admin','operator')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<String> generateAndGetUrl(
             @PathVariable Integer participationId,
@@ -234,5 +235,18 @@ public class SiteProjectController {
             return ResponseEntity.internalServerError()
                     .body("エラー: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/{projectId}/my-participations")
+    @PreAuthorize("hasAnyRole('master','user')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "自社の参加情報一覧取得", description = "指定プロジェクトにおける自社の参加情報一覧を取得します。")
+    public ResponseEntity<List<MyParticipationResponse>> getMyParticipations(
+            Authentication authentication,
+            @PathVariable String projectId) {
+
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+        return ResponseEntity.ok(
+                participationService.getMyParticipations(projectId, companyId));
     }
 }

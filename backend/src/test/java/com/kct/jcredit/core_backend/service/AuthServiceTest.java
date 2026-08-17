@@ -28,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import java.util.List;
 // ログ用
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -165,7 +166,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1, "alice", "123", "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1, "alice", "123", "USER",List.of())).thenReturn("jwt-token-123");
 
         // Act
         LoginResponse res = authServiceImpl.userLogin(req);
@@ -245,7 +246,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1, "alice", "123", "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1, "alice", "123", "USER", List.of())).thenReturn("jwt-token-123");
 
         // Act
         LoginResponse res = authServiceImpl.userLogin(req);
@@ -545,7 +546,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1, "alice", "123", "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1, "alice", "123", "USER", List.of())).thenReturn("jwt-token-123");
 
         // Act
         LoginResponse res = authServiceImpl.userLogin(req);
@@ -677,7 +678,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1, "alice", "123", "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1, "alice", "123", "USER", List.of())).thenReturn("jwt-token-123");
 
         // Act
         AdminLoginResponse res = authServiceImpl.operatorLogin(req);
@@ -746,7 +747,7 @@ public class AuthServiceTest {
         
 
         // トークン発行
-        when(jwtUtil.generateToken(1,   "alice", "123", "USER")).thenReturn("jwt-token-123");
+        when(jwtUtil.generateToken(1,   "alice", "123", "USER", List.of())).thenReturn("jwt-token-123");
 
         // Act
         AdminLoginResponse res = authServiceImpl.operatorLogin(req);
@@ -915,7 +916,8 @@ public class AuthServiceTest {
                 1,
                 "alice",
                 "123",
-                "USER"
+                "USER",
+                List.of()
             )
         ).thenReturn("jwt-token-123");
 
@@ -1059,7 +1061,8 @@ public class AuthServiceTest {
                 1,
                 "alice",
                 "123",
-                "USER"
+                "USER",
+                List.of()
             )
         ).thenReturn("jwt-token-123");
 

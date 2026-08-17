@@ -17,20 +17,17 @@ import {
 } from '@/api/monitoring';
 import { ApiError } from '@/api/_shared/errors';
 import { useToast } from '@/hooks/use-toast';
-import type { MonitoringData } from '@/api/monitoring';
+import {
+  getSiteEquipmentList,
+  type SiteProjectEquipment,
+} from '@/api/site';
 import { logger } from '@/lib/logger';
+import { buildMonitoringPayload } from './monitoringPayload';
 
 type MonitoringFormData = typeof formDefinitions[ProjectType]['emptyData'];
 type RouteState = {
   projectId?: string;
   siteId?: string;
-};
-
-type MonitoringPayloadContext = {
-  projectType: string;
-  projectIdValue: string;
-  siteIdValue: unknown;
-  evidenceUrls?: Partial<Record<keyof MonitoringData, string | null>>;
 };
 
 function isProjectType(value: string | undefined): value is ProjectType {
@@ -59,6 +56,7 @@ function toServerFieldErrors(errors: unknown): Record<string, string> {
   }
 
   const fieldNameMap: Record<string, string> = {
+    equipment_id: 'equipmentId',
     date_recorded: 'dateRecorded',
     elpv_value: 'ELpv_value',
     elpvr_value: 'ELpvr_value',
@@ -84,53 +82,6 @@ function toServerFieldErrors(errors: unknown): Record<string, string> {
   }, {});
 }
 
-function fileValueToString(value: unknown): string {
-  if (value instanceof File) return value.name;
-  return typeof value === 'string' ? value : '';
-}
-
-function toNumberOrNull(value: unknown): number | null {
-  if (value === '' || value == null) return null;
-
-  const numberValue = Number(value);
-  return Number.isFinite(numberValue) ? numberValue : null;
-}
-
-function buildMonitoringPayload(
-  data: MonitoringFormData,
-  context: MonitoringPayloadContext,
-): MonitoringData {
-  const currentData = asRecord(data);
-  const evidenceUrls = context.evidenceUrls ?? {};
-
-  return {
-    projectType: context.projectType,
-    projectId: context.projectIdValue,
-    siteId: context.siteIdValue ? String(context.siteIdValue) : null,
-    dateRecorded: currentData.dateRecorded ? String(currentData.dateRecorded) : null,
-    ELpv_value: toNumberOrNull(currentData.ELpv_value),
-    ELpvr_value: toNumberOrNull(currentData.ELpvr_value),
-    changedBattery: Boolean(currentData.changedBattery),
-    ELPJ_battery_value: currentData.changedBattery
-      ? toNumberOrNull(currentData.ELPJ_battery_value)
-      : null,
-    ELPJ_control_value: toNumberOrNull(currentData.ELPJ_control_value),
-    ELPJ_accuracy: toNumberOrNull(currentData.ELPJ_accuracy),
-    ELpv_evidence:
-      evidenceUrls.ELpv_evidence ?? fileValueToString(currentData.ELpv_evidence),
-    ELpvr_evidence:
-      evidenceUrls.ELpvr_evidence ?? fileValueToString(currentData.ELpvr_evidence),
-    ELPJ_battery_evidence:
-      currentData.changedBattery
-        ? evidenceUrls.ELPJ_battery_evidence ??
-          fileValueToString(currentData.ELPJ_battery_evidence)
-        : null,
-    ELPJ_control_equipment_spec_files:
-      evidenceUrls.ELPJ_control_equipment_spec_files ??
-      fileValueToString(currentData.ELPJ_control_equipment_spec_files),
-  };
-}
-
 const MonitoringRegister = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -148,7 +99,19 @@ const MonitoringRegister = () => {
   const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [serverFieldErrors, setServerFieldErrors] = useState<Record<string, string>>({});
+  const [equipmentList, setEquipmentList] = useState<SiteProjectEquipment[]>([]);
+  const [isEquipmentLoading, setIsEquipmentLoading] = useState(false);
+  const [equipmentLoadError, setEquipmentLoadError] = useState<string | null>(null);
+  const [equipmentReloadKey, setEquipmentReloadKey] = useState(0);
   const originalDataRef = useRef<MonitoringFormData | null>(null);
+
+  const routeState = (location.state || {}) as RouteState;
+  const equipmentSiteId = String(
+    routeState.siteId ??
+      new URLSearchParams(location.search).get('siteId') ??
+      asRecord(formData).siteId ??
+      '',
+  );
 
   useEffect(() => {
     if (!definition) return;
@@ -156,6 +119,41 @@ const MonitoringRegister = () => {
     setFormData(definition.emptyData);
     originalDataRef.current = definition.emptyData;
   }, [definition]);
+
+  useEffect(() => {
+    if (!equipmentSiteId || projectType !== 'solar') {
+      setEquipmentList([]);
+      setEquipmentLoadError(
+        equipmentSiteId ? null : '設備一覧を取得する拠点を特定できませんでした。',
+      );
+      return;
+    }
+
+    let isActive = true;
+    setIsEquipmentLoading(true);
+    setEquipmentLoadError(null);
+
+    void getSiteEquipmentList(equipmentSiteId)
+      .then((equipments) => {
+        if (isActive) setEquipmentList(equipments);
+      })
+      .catch((error: unknown) => {
+        if (!isActive) return;
+        setEquipmentList([]);
+        setEquipmentLoadError(
+          error instanceof Error
+            ? error.message
+            : '設備一覧の取得に失敗しました。',
+        );
+      })
+      .finally(() => {
+        if (isActive) setIsEquipmentLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [equipmentReloadKey, equipmentSiteId, projectType]);
 
   if (!definition || !projectType) {
     return (
@@ -191,10 +189,11 @@ const MonitoringRegister = () => {
 
   const handleValidateAndNext = async (values: MonitoringFormData) => {
     const { projectIdValue, siteIdValue } = getRouteValues(values);
-    const payload = buildMonitoringPayload(values, {
+    const payload = buildMonitoringPayload(asRecord(values), {
       projectType,
-      projectIdValue,
-      siteIdValue,
+      projectId: projectIdValue,
+      siteId: siteIdValue,
+      hasBattery: asRecord(values).equipmentHasBattery === true,
     });
 
     try {
@@ -228,11 +227,16 @@ const MonitoringRegister = () => {
         return;
       }
 
-      setSubmitError(
+      const message =
         error instanceof Error
           ? error.message
-          : '入力内容の確認に失敗しました。',
-      );
+          : '入力内容の確認に失敗しました。';
+      setSubmitError(message);
+      toast({
+        title: '入力内容を確認できませんでした',
+        description: message,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -283,7 +287,7 @@ const MonitoringRegister = () => {
     addUpload('ELpvr_evidence', currentData.ELpvr_evidence, (file) =>
       uploadElpvrFile(file, projectIdValue, siteIdStr, descriptionValue),
     );
-    if (currentData.changedBattery) {
+    if (currentData.equipmentHasBattery && currentData.changedBattery) {
       addUpload(
         'ELPJ_battery_evidence',
         currentData.ELPJ_battery_evidence,
@@ -335,10 +339,11 @@ const MonitoringRegister = () => {
       return;
     }
 
-    const payload = buildMonitoringPayload(formData, {
+    const payload = buildMonitoringPayload(asRecord(formData), {
       projectType,
-      projectIdValue,
-      siteIdValue,
+      projectId: projectIdValue,
+      siteId: siteIdValue,
+      hasBattery: currentData.equipmentHasBattery === true,
       evidenceUrls: uploadedMap,
     });
 
@@ -391,6 +396,10 @@ const MonitoringRegister = () => {
       value={formData}
       onChange={setFormData}
       serverErrors={serverFieldErrors}
+      equipmentList={equipmentList}
+      isEquipmentLoading={isEquipmentLoading}
+      equipmentLoadError={equipmentLoadError}
+      onEquipmentRetry={() => setEquipmentReloadKey((key) => key + 1)}
       onNext={handleValidateAndNext}
       onBack={() => navigate(-1)}
     />

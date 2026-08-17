@@ -29,7 +29,7 @@ interface PreviousValueFieldProps {
   onChange: (value: string) => void;
   previousValue?: string;
   unit?: string;
-  placeholder?: string;
+  placeholder?: string; 
   disabled?: boolean;
 }
 

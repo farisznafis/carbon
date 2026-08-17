@@ -24,4 +24,15 @@ public interface ParticipatingProjectRepository
     void updatePdfS3Key(@Param("id") Integer id, @Param("s3Key") String s3Key);
 
     Optional<ParticipatingProject> findByEquipment_Site_IdAndProject_Id(Integer siteId, Integer projectId);
+
+    List<ParticipatingProject> findByProject_Id(Integer projectId);
+
+    Optional<ParticipatingProject> findByIdAndProject_Id(Integer participationId, Integer projectId);
+
+    List<ParticipatingProject> findByEquipment_Id(Integer equipmentId);
+
+    List<ParticipatingProject> findByProject_IdAndEquipment_Site_Company_CompanyId(
+        Integer projectId, String companyId);
+
+
 }

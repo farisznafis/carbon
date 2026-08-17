@@ -93,5 +93,4 @@ public class AuthController {
         OperatingUser user = authService.createDummyOperatorUser(req);
         return ResponseEntity.ok(user);
     }
-
 }

@@ -1,221 +1,218 @@
 package com.kct.jcredit.core_backend.controller;
 
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.GetMapping;
 
-import com.kct.jcredit.core_backend.dto.response.ApplicableConditionsResponse;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.kct.jcredit.core_backend.dto.response.CorporationMasterResponse;
-import com.kct.jcredit.core_backend.dto.response.OtherOperatorProjectsResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectMasterResponse;
-import com.kct.jcredit.core_backend.dto.response.ProjectApplicationResponse;
-import com.kct.jcredit.core_backend.dto.request.ApplicableConditionsRequest;
-import com.kct.jcredit.core_backend.dto.request.OtherOperatorProjectsRequest;
-import com.kct.jcredit.core_backend.dto.request.ProjectApplicationRequest;
-import com.kct.jcredit.core_backend.service.projectplan.ApplicableConditionsService;
-import com.kct.jcredit.core_backend.service.projectplan.OtherOperatorProjectsService;
-import com.kct.jcredit.core_backend.service.projectplan.ProjectApplicationService;
+import com.kct.jcredit.core_backend.dto.projectplan.ApplicableConditionsRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.OtherOperatorProjectsRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectApplicationRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormResponse;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressResponse;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+import com.kct.jcredit.core_backend.service.projectplan.ProjectPlanAutofillService;
+import com.kct.jcredit.core_backend.service.projectplan.ProjectPlanFormService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
-import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
-
+/**
+ * Project plan (プロジェクト計画書).
+ *
+ * <p>Every page is served by one registry-driven set of endpoints, so adding a
+ * page needs a registry entry and its DTO rather than a new controller. Pages
+ * are atomic — stored only once they validate in full — which is what lets
+ * {@code /progress} say where an interrupted operator should resume.
+ */
 @RestController
 @RequestMapping("/projectplan")
-@Tag(name = "プロジェクト計画書", description = "プロジェクト計画書の自動入力情報、申請情報、適用条件を管理するAPIです。")
+@Tag(name = "プロジェクト計画書",
+        description = "プロジェクト計画書の各ページの取得・保存、入力状況、および自動入力情報を管理するAPIです。")
 @RequiredArgsConstructor
 public class ProjectPlanController {
-    private final ProjectApplicationService projectApplicationService;
-    private final OtherOperatorProjectsService otherOperatorProjectsService;
-    private final ApplicableConditionsService applicableConditionsService;
+
+    /** The page slug backing the deprecated /application endpoints. */
+    private static final String APPLICATION_SLUG = "application";
+
+    private final ProjectPlanFormService projectPlanFormService;
+    private final ProjectPlanAutofillService projectPlanAutofillService;
     private final JwtUtil jwtUtil;
 
-        @GetMapping("/autofill")
-        @PreAuthorize("hasRole('operator')")
-        @SecurityRequirement(name = "bearerAuth")
-        @Operation(summary = "法人マスタ自動入力情報取得", description = "プロジェクト計画書入力用の法人マスタ情報を取得します。")
-        public ResponseEntity<CorporationMasterResponse> getCorporationMaster(Authentication authentication) {
-        String token = authentication.getCredentials().toString();
-        CorporationMasterResponse response = projectApplicationService.getCorporationMaster(
-            jwtUtil.extractCompanyId(token),
-            jwtUtil.extractRole(token),
-            jwtUtil.extractUsername(token));
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
-        }
+    // --- Autofill (master data from PostgreSQL) ---
 
-        @GetMapping("/autofill/{projectId}")
-        @PreAuthorize("hasRole('operator')")
-        @SecurityRequirement(name = "bearerAuth")
-        @Operation(summary = "プロジェクトマスタ自動入力情報取得", description = "指定されたプロジェクトの計画書入力用マスタ情報を取得します。")
-        public ResponseEntity<ProjectMasterResponse> getProjectMaster(Authentication authentication,
-                @PathVariable String projectId) {
-        String token = authentication.getCredentials().toString();
-        ProjectMasterResponse response = projectApplicationService.getProjectMaster(
-                    projectId,
-            jwtUtil.extractCompanyId(token),
-            jwtUtil.extractRole(token),
-            jwtUtil.extractUsername(token));
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
-        }
-
-        @PostMapping("/{projectId}/application")
-        @PreAuthorize("hasRole('operator')")
-        @SecurityRequirement(name = "bearerAuth")
-        @Operation(summary = "プロジェクト申請情報登録", description = "指定されたプロジェクトの申請情報を登録します。")
-        public ResponseEntity<ProjectApplicationResponse> submitProjectApplication(Authentication authentication,
-            @PathVariable String projectId,
-            @Valid @RequestBody ProjectApplicationRequest request) {
-        String token = authentication.getCredentials().toString();
-        ProjectApplicationResponse response = projectApplicationService.submitProjectApplication(
-            projectId,
-            request,
-            jwtUtil.extractCompanyId(token),
-            jwtUtil.extractRole(token),
-            jwtUtil.extractUsername(token));
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
-        }
-
-        @PutMapping("/{projectId}/application")
-        @PreAuthorize("hasRole('operator')")
-        @SecurityRequirement(name = "bearerAuth")
-        @Operation(summary = "プロジェクト申請情報更新", description = "指定されたプロジェクトの申請情報を更新します。")
-        public ResponseEntity<ProjectApplicationResponse> updateProjectApplication(Authentication authentication,
-            @PathVariable String projectId,
-            @Valid @RequestBody ProjectApplicationRequest request) {
-        String token = authentication.getCredentials().toString();
-        ProjectApplicationResponse response = projectApplicationService.updateProjectApplication(
-            projectId,
-            request,
-            jwtUtil.extractCompanyId(token),
-            jwtUtil.extractRole(token),
-            jwtUtil.extractUsername(token));
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
-        }
-
-        @GetMapping("/{projectId}/application")
-        @PreAuthorize("hasRole('operator')")
-        @SecurityRequirement(name = "bearerAuth")
-        @Operation(summary = "プロジェクト申請情報取得", description = "指定されたプロジェクトの申請情報を取得します。")
-        public ResponseEntity<ProjectApplicationResponse> getProjectApplication(Authentication authentication,
-            @PathVariable String projectId) {
-        String token = authentication.getCredentials().toString();
-        ProjectApplicationResponse response = projectApplicationService.getProjectApplication(
-            projectId,
-            jwtUtil.extractCompanyId(token),
-            jwtUtil.extractRole(token),
-            jwtUtil.extractUsername(token));
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
-        }
-
-        @PostMapping("/{projectId}/other-operator-projects")
-        @PreAuthorize("hasRole('operator')")
-        @SecurityRequirement(name = "bearerAuth")
-        @Operation(summary = "他運営事業者プロジェクト情報登録", description = "指定されたプロジェクトの他運営事業者プロジェクト情報を登録します。")
-        public ResponseEntity<OtherOperatorProjectsResponse> submitOtherOperatorProjects(Authentication authentication,
-            @PathVariable String projectId,
-            @Valid @RequestBody OtherOperatorProjectsRequest request) {
-        String token = authentication.getCredentials().toString();
-        OtherOperatorProjectsResponse response = otherOperatorProjectsService.submitOtherOperatorProjects(
-            projectId,
-            request,
-            jwtUtil.extractCompanyId(token),
-            jwtUtil.extractRole(token),
-            jwtUtil.extractUsername(token));
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
-        }
-
-        @PutMapping("/{projectId}/other-operator-projects")
-        @PreAuthorize("hasRole('operator')")
-        @SecurityRequirement(name = "bearerAuth")
-        @Operation(summary = "他運営事業者プロジェクト情報更新", description = "指定されたプロジェクトの他運営事業者プロジェクト情報を更新します。")
-        public ResponseEntity<OtherOperatorProjectsResponse> updateOtherOperatorProjects(Authentication authentication,
-            @PathVariable String projectId,
-            @Valid @RequestBody OtherOperatorProjectsRequest request) {
-        String token = authentication.getCredentials().toString();
-        OtherOperatorProjectsResponse response = otherOperatorProjectsService.updateOtherOperatorProjects(
-            projectId,
-            request,
-            jwtUtil.extractCompanyId(token),
-            jwtUtil.extractRole(token),
-            jwtUtil.extractUsername(token));
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
-        }
-
-        @GetMapping("/{projectId}/other-operator-projects")
-        @PreAuthorize("hasRole('operator')")
-        @SecurityRequirement(name = "bearerAuth")
-        @Operation(summary = "他運営事業者プロジェクト情報取得", description = "指定されたプロジェクトの他運営事業者プロジェクト情報を取得します。")
-        public ResponseEntity<OtherOperatorProjectsResponse> getOtherOperatorProjects(Authentication authentication,
-            @PathVariable String projectId) {
-        String token = authentication.getCredentials().toString();
-        OtherOperatorProjectsResponse response = otherOperatorProjectsService.getOtherOperatorProjects(
-            projectId,
-            jwtUtil.extractCompanyId(token),
-            jwtUtil.extractRole(token),
-            jwtUtil.extractUsername(token));
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
-        }
-
-        @PostMapping("/{projectId}/applicable-conditions")
-        @PreAuthorize("hasRole('operator')")
-        @SecurityRequirement(name = "bearerAuth")
-        @Operation(summary = "適用条件情報登録", description = "指定されたプロジェクトの適用条件情報を登録します。")
-        public ResponseEntity<ApplicableConditionsResponse> submitApplicableConditions(Authentication authentication,
-            @PathVariable String projectId,
-            @Valid @RequestBody ApplicableConditionsRequest request) {
-        String token = authentication.getCredentials().toString();
-        ApplicableConditionsResponse response = applicableConditionsService.submitApplicableConditions(
-            projectId,
-            request,
-            jwtUtil.extractCompanyId(token),
-            jwtUtil.extractRole(token),
-            jwtUtil.extractUsername(token));
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
-        }
-
-        @PutMapping("/{projectId}/applicable-conditions")
-        @PreAuthorize("hasRole('operator')")
-        @SecurityRequirement(name = "bearerAuth")
-        @Operation(summary = "適用条件情報更新", description = "指定されたプロジェクトの適用条件情報を更新します。")
-        public ResponseEntity<ApplicableConditionsResponse> updateApplicableConditions(Authentication authentication,
-            @PathVariable String projectId,
-            @Valid @RequestBody ApplicableConditionsRequest request) {
-        String token = authentication.getCredentials().toString();
-        ApplicableConditionsResponse response = applicableConditionsService.updateApplicableConditions(
-            projectId,
-            request,
-            jwtUtil.extractCompanyId(token),
-            jwtUtil.extractRole(token),
-            jwtUtil.extractUsername(token));
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
-        }
-
-        @GetMapping("/{projectId}/applicable-conditions")
-        @PreAuthorize("hasRole('operator')")
-        @SecurityRequirement(name = "bearerAuth")
-        @Operation(summary = "適用条件情報取得", description = "指定されたプロジェクトの適用条件情報を取得します。")
-        public ResponseEntity<ApplicableConditionsResponse> getApplicableConditions(Authentication authentication,
-            @PathVariable String projectId) {
-        String token = authentication.getCredentials().toString();
-        ApplicableConditionsResponse response = applicableConditionsService.getApplicableConditions(
-            projectId,
-            jwtUtil.extractCompanyId(token),
-            jwtUtil.extractRole(token),
-            jwtUtil.extractUsername(token));
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
-        }
+    @GetMapping("/autofill")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "法人マスタ自動入力情報取得",
+            description = "プロジェクト計画書入力用の法人マスタ情報を取得します。")
+    public ResponseEntity<CorporationMasterResponse> getCorporationMaster(
+            Authentication authentication) {
+        String token = token(authentication);
+        return respond(projectPlanAutofillService.getCorporationMaster(
+                jwtUtil.extractCompanyId(token),
+                jwtUtil.extractRole(token),
+                jwtUtil.extractUsername(token)));
     }
+
+    @GetMapping("/autofill/{projectId}")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "プロジェクトマスタ自動入力情報取得",
+            description = "指定されたプロジェクトの計画書入力用マスタ情報を取得します。")
+    public ResponseEntity<ProjectMasterResponse> getProjectMaster(
+            Authentication authentication, @PathVariable String projectId) {
+        String token = token(authentication);
+        return respond(projectPlanAutofillService.getProjectMaster(
+                projectId,
+                jwtUtil.extractCompanyId(token),
+                jwtUtil.extractRole(token),
+                jwtUtil.extractUsername(token)));
+    }
+
+    // --- Registry-driven pages ---
+
+    @GetMapping("/{projectId}/forms/{formSlug}")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "計画書フォーム取得",
+            description = "指定ページを取得します。SQL由来の項目は readOnlyFields、"
+                    + "有/無で必須が変わる項目は conditionalFields で返却します。")
+    public ResponseEntity<ProjectPlanFormResponse> getForm(Authentication authentication,
+            @PathVariable String projectId,
+            @PathVariable String formSlug,
+            @RequestParam(name = "methodology", required = false) Integer methodology) {
+        return respond(loadForm(authentication, projectId, formSlug, methodology));
+    }
+
+    @PutMapping("/{projectId}/forms/{formSlug}")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "計画書フォーム保存",
+            description = "ページ全体を検証し、すべて有効な場合のみ保存します。"
+                    + "検証エラー時は何も保存されません。")
+    public ResponseEntity<ProjectPlanFormResponse> saveForm(Authentication authentication,
+            @PathVariable String projectId,
+            @PathVariable String formSlug,
+            @RequestParam(name = "methodology", required = false) Integer methodology,
+            @RequestBody JsonNode body) {
+        return respond(storeForm(authentication, projectId, formSlug, methodology, body));
+    }
+
+    @GetMapping("/{projectId}/progress")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "計画書入力状況取得",
+            description = "全ページの入力状況と、次に入力すべきページを返します。")
+    public ResponseEntity<ProjectPlanProgressResponse> getProgress(
+            Authentication authentication, @PathVariable String projectId) {
+        String token = token(authentication);
+        return respond(projectPlanFormService.getProgress(
+                projectId,
+                jwtUtil.extractCompanyId(token),
+                jwtUtil.extractRole(token),
+                jwtUtil.extractUsername(token)));
+    }
+
+    // --- Deprecated: the frontend still calls these ---
+    //
+    // Thin aliases for the application page. POST and PUT were already
+    // behaviourally identical — both fully validated and overwrote the item —
+    // so both map onto the single save path. Remove once the frontend moves to
+    // /forms/application.
+
+    @Deprecated(forRemoval = true)
+    @GetMapping("/{projectId}/application")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "プロジェクト申請情報取得（非推奨）",
+            description = "GET /{projectId}/forms/application を使用してください。",
+            deprecated = true)
+    public ResponseEntity<ProjectPlanFormResponse> getProjectApplication(
+            Authentication authentication, @PathVariable String projectId) {
+        return respond(loadForm(authentication, projectId, APPLICATION_SLUG, null));
+    }
+
+    @Deprecated(forRemoval = true)
+    @PostMapping("/{projectId}/application")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "プロジェクト申請情報登録（非推奨）",
+            description = "PUT /{projectId}/forms/application を使用してください。",
+            deprecated = true)
+    public ResponseEntity<ProjectPlanFormResponse> submitProjectApplication(
+            Authentication authentication,
+            @PathVariable String projectId,
+            @RequestBody JsonNode body) {
+        return respond(storeForm(authentication, projectId, APPLICATION_SLUG, null, body));
+    }
+
+    @Deprecated(forRemoval = true)
+    @PutMapping("/{projectId}/application")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "プロジェクト申請情報更新（非推奨）",
+            description = "PUT /{projectId}/forms/application を使用してください。",
+            deprecated = true)
+    public ResponseEntity<ProjectPlanFormResponse> updateProjectApplication(
+            Authentication authentication,
+            @PathVariable String projectId,
+            @RequestBody JsonNode body) {
+        return respond(storeForm(authentication, projectId, APPLICATION_SLUG, null, body));
+    }
+
+    // --- helpers ---
+
+    private ProjectPlanFormResponse loadForm(
+            Authentication authentication, String projectId, String formSlug, Integer methodology) {
+        String token = token(authentication);
+        return projectPlanFormService.getForm(
+                projectId,
+                formSlug,
+                methodology,
+                jwtUtil.extractCompanyId(token),
+                jwtUtil.extractRole(token),
+                jwtUtil.extractUsername(token));
+    }
+
+    private ProjectPlanFormResponse storeForm(
+            Authentication authentication,
+            String projectId,
+            String formSlug,
+            Integer methodology,
+            JsonNode body) {
+        String token = token(authentication);
+        return projectPlanFormService.saveForm(
+                projectId,
+                formSlug,
+                methodology,
+                body,
+                jwtUtil.extractCompanyId(token),
+                jwtUtil.extractRole(token),
+                jwtUtil.extractUsername(token));
+    }
+
+    private static String token(Authentication authentication) {
+        return authentication.getCredentials().toString();
+    }
+
+    private static <T extends BaseResponse> ResponseEntity<T> respond(T response) {
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+}

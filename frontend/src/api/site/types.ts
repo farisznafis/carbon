@@ -55,6 +55,19 @@ export type SiteDashboardMetrics = {
   jcredit?: string | null;
 };
 
+export type SiteDashboardApiData = SiteDashboardMetrics & {
+  siteId?: string | null;
+  siteName?: string | null;
+  postalCode?: string | null;
+  prefecture?: string | null;
+  municipality?: string | null;
+  blocknum?: string | null;
+  buildingName?: string | null;
+  picFirstName?: string | null;
+  picLastName?: string | null;
+  projects?: string[] | null;
+};
+
 export type SiteDashboardApiResponse = {
   statusCode: string;
   message?: string | null;
@@ -79,7 +92,7 @@ export type SiteDashboardApiResponse = {
     picFirstName?: string | null;
     picLastName?: string | null;
     projects?: string[] | null;
-    data?: SiteDashboardMetrics | null;
+    data?: SiteDashboardApiData | null;
   } | null;
 };
 
@@ -178,6 +191,7 @@ export type SiteProject = Project & {
 export type SiteProjectEquipment = {
   tempId?: string | null;
   equipmentId?: number | null;
+  siteId?: string | null;
   methodologyNumber?: string | null;
   isEligible?: boolean | null;
   equipmentOpDate?: string | null;
@@ -205,13 +219,112 @@ export type SiteProjectEquipment = {
   subsidyName?: string | null;
   subsidyAmount?: number | null;
   preProjectUnitPrice?: number | null;
+  changeDate?: string | null;
+  previousEquipmentId?: number | null;
+  evidenceDocuments?: string[] | null;
+  files?: SiteProjectEquipmentFile[] | null;
+};
+
+export type SiteProjectEquipmentFile = {
+  id?: number | null;
+  fileType?: string | null;
+  fileId?: string | null;
+  s3Key?: string | null;
+  fileName?: string | null;
+};
+
+export type SiteProjectEquipmentApiFile = SiteProjectEquipmentFile & {
+  FileType?: string | null;
+  file_type?: string | null;
+  FileId?: string | number | null;
+  file_id?: string | number | null;
+  S3Key?: string | null;
+  s3key?: string | null;
+  s3_key?: string | null;
+  FileName?: string | null;
+  originalName?: string | null;
+};
+
+export type SiteProjectEquipmentApiItem = Omit<
+  SiteProjectEquipment,
+  'equipmentId' | 'powerCondUnitCount' | 'powerCondStandby' | 'files'
+> & {
+  id?: number | null;
+  equipmentId?: number | null;
+  pcsUnitCount?: number | null;
+  powerCondUnitCount?: number | null;
+  pcsStandby?: number | null;
+  powerCondStandby?: number | null;
+  files?: SiteProjectEquipmentApiFile[] | null;
+  Files?: SiteProjectEquipmentApiFile[] | null;
 };
 
 export type SiteProjectEquipmentResponse = {
   statusCode?: string;
   message?: string | null;
   errors?: unknown;
-  equipments?: SiteProjectEquipment[] | null;
+  equipments?: SiteProjectEquipmentApiItem[] | null;
+};
+
+export type SiteEquipmentListResponse =
+  | SiteProjectEquipmentApiItem[]
+  | {
+      statusCode?: string;
+      message?: string | null;
+      errors?: unknown;
+      equipments?: SiteProjectEquipmentApiItem[] | null;
+    };
+
+export type SiteProjectEquipmentDetailResponse = SiteProjectEquipmentApiItem & {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+  siteId?: string | null;
+};
+
+export type SiteEquipmentHistoryApiItem = {
+  id?: number | null;
+  changeDate?: string | null;
+  previousEquipmentId?: number | null;
+  monitoringStartDate?: string | null;
+  monitoringEndDate?: string | null;
+  isActive?: boolean | null;
+  registeredBy?: string | null;
+  registeredAt?: string | null;
+  equipment?: SiteProjectEquipmentApiItem | null;
+};
+
+export type SiteEquipmentHistory = {
+  id: number | null;
+  changeDate: string | null;
+  previousEquipmentId: number | null;
+  monitoringStartDate: string | null;
+  monitoringEndDate: string | null;
+  isActive: boolean | null;
+  registeredBy: string | null;
+  registeredAt: string | null;
+  equipment: SiteProjectEquipment;
+};
+
+export type SiteProjectEquipmentUpdateRequest = {
+  equipmentOpDate?: string | null;
+  nominalMaxOutput?: number | null;
+  pcsManufacturer?: string | null;
+  pcsModel?: string | null;
+  pcsUnitCount?: number | null;
+  deviceNo?: string | null;
+  pcsStandby?: number | null;
+  hasBattery?: boolean | null;
+  batteryMaker?: string | null;
+  batteryModel?: string | null;
+  batteryCapacity?: number | null;
+  totalInvestment?: number | null;
+  hasSubsidy?: boolean | null;
+  subsidyName?: string | null;
+  subsidyAmount?: number | null;
+  preProjectUnitPrice?: number | null;
+  files?: SiteProjectEquipmentValidationFile[];
 };
 
 export type SiteProjectEquipmentFileType =
