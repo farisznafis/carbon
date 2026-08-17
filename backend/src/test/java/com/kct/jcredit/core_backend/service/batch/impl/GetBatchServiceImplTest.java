@@ -425,8 +425,6 @@ class GetBatchServiceImplTest {
 
             ProjectReductionResultResponse response = service.getProjectReductionResult(99);
 
-            // Perilaku saat ini: tidak ditemukan tetap "OK" dengan data null.
-            // Perlu dikonfirmasi apakah frontend bisa membedakannya dari "ada tapi kosong".
             assertThat(response.getStatusCode()).isEqualTo("OK");
             assertThat(response.getData()).isNull();
         }

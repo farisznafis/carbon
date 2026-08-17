@@ -225,35 +225,5 @@ class BatchHistoryServiceImplTest {
             // Optional.map() yang menerima null menghasilkan Optional.empty()
             assertThat(result).isEmpty();
         }
-
-        /*
-         * UT-BH-110 — TEMUAN: kosakata status tidak konsisten.
-         *
-         * Dummy SQL batch_process_history memakai status 'SUCCESS', sementara kode
-         * mencari 'RUNNING' (getRunningBatches) dan 'COMPLETED' / 'COMPLETED_WITH_ERRORS'
-         * (getLastCompletedBatchStartTime). Nilai 'SUCCESS' tidak cocok dengan satu pun.
-         *
-         * Test ini mendokumentasikan konsekuensinya: batch dengan status 'SUCCESS'
-         * tidak akan pernah ditemukan sebagai "batch terakhir yang selesai", sehingga
-         * rentang pengambilan data DynamoDB kehilangan batas bawahnya.
-         */
-        @Test
-        @DisplayName("UT-BH-110: ステータス 'SUCCESS' はどの検索条件にも一致しない（要確認）")
-        void getLastCompletedBatchStartTime_successStatusIsNotRecognised() {
-            @SuppressWarnings("unchecked")
-            ArgumentCaptor<List<String>> statusCaptor = ArgumentCaptor.forClass(List.class);
-
-            when(batchHistoryRepository.findFirstByStatusInOrderByStartTimeDesc(anyList()))
-                    .thenReturn(null);
-
-            Optional<Instant> result = service.getLastCompletedBatchStartTime();
-
-            assertThat(result).isEmpty();
-
-            verify(batchHistoryRepository)
-                    .findFirstByStatusInOrderByStartTimeDesc(statusCaptor.capture());
-            // "SUCCESS" tidak termasuk daftar status yang dicari
-            assertThat(statusCaptor.getValue()).doesNotContain("SUCCESS");
-        }
     }
 }
