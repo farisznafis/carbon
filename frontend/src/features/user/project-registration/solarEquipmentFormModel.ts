@@ -32,6 +32,7 @@ export const REQUIRED_EQUIPMENT_FILE_MESSAGE =
   '確認資料をアップロードしてください。';
 
 const API_FIELD_ALIASES: Record<string, keyof SolarPowerFormData> = {
+  '稼働開始日（電力受給開始日）': 'equipmentOpDate',
   pcsunitcount: 'powerCondUnitCount',
   pcsstandby: 'powerCondStandby',
   solar_contract: 'operationStartDateFile',

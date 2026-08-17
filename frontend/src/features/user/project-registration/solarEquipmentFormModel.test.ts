@@ -96,6 +96,23 @@ describe('mapEquipmentValidationFieldErrors', () => {
     ]);
   });
 
+  it('maps the Japanese operation-date validation key to equipmentOpDate', () => {
+    const fieldErrors = mapEquipmentValidationFieldErrors(
+      {
+        'equipment-1786949086583::稼働開始日（電力受給開始日）':
+          '未来の日付は入力できません。',
+      },
+      SOLAR_FORM_DEFAULT_VALUES,
+    );
+
+    expect(fieldErrors).toEqual([
+      {
+        fieldName: 'equipmentOpDate',
+        message: '未来の日付は入力できません。',
+      },
+    ]);
+  });
+
   it('maps Japanese PATCH file errors to their upload controls', () => {
     const fieldErrors = mapEquipmentValidationFieldErrors(
       {

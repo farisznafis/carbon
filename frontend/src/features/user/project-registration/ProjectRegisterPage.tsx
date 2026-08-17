@@ -24,6 +24,7 @@ import { DynamicAgreementsStep, type DynamicAgreementsStepRef } from "@/features
 import { ContractStep, type ContractStepRef, type ContractStepFormValues } from "@/features/user/project-registration/components/ContractStep";
 import { FinalTermsStep, type FinalTermsRef, type FinalTermsValues } from "@/features/user/project-registration/components/FinalTermsStep";
 import { CompletionStep } from "@/features/user/project-registration/components/CompletionStep";
+import { ProjectRegistrationReviewStep } from "@/features/user/project-registration/components/ProjectRegistrationReviewStep";
 import {
   EquipmentRegistrationStep,
   type EquipmentRegistrationStepRef,
@@ -55,14 +56,16 @@ import {
 import { getSolarFormSelectedFiles } from "@/features/user/project-registration/equipmentValidationMapper";
 import { createSiteRegistrationReturnState } from "@/features/master/navigation/siteRegistrationFlow";
 import type { SolarPowerFormData } from "@/lib/equipmentValidations";
+import { useSitesQuery } from "@/hooks/sites/useSitesQuery";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const TOTAL_FORM_STEPS = 4;
+const TOTAL_FORM_STEPS = 5;
 const EQUIPMENT_STEP = 1;
 const CONFIRMATION_ITEMS_STEP = 2;
 const SUSTAINABILITY_STEP = 3;
 const FINAL_AGREEMENT_STEP = 4;
+const REVIEW_STEP = 5;
 const COMPLETION_STEP = TOTAL_FORM_STEPS + 1;
 
 const PROJECT_REGISTRATION_STEPS = [
@@ -70,6 +73,7 @@ const PROJECT_REGISTRATION_STEPS = [
   { number: CONFIRMATION_ITEMS_STEP, title: "同意事項" },
   { number: SUSTAINABILITY_STEP, title: "持続可能性" },
   { number: FINAL_AGREEMENT_STEP, title: "入会規約" },
+  { number: REVIEW_STEP, title: "確認" },
 ];
 
 const confirmationItemFieldNames: Record<string, keyof AgreementFormValues> = {
@@ -207,6 +211,7 @@ const ProjectRegister = () => {
   );
   const { user } = useAuth();
   const { toast } = useToast();
+  const sitesQuery = useSitesQuery();
   const currentProject = useDashboardStore((state) => state.currentProject);
   const setCurrentProject = useDashboardStore((state) => state.setCurrentProject);
 
@@ -252,6 +257,19 @@ const ProjectRegister = () => {
   const selectedProject = projectId && currentProject?.id === projectId ? currentProject : null;
   const resolvedSiteId = siteId;
   const isCompletionStep = currentStep === COMPLETION_STEP;
+  const solarEquipments = useMemo(
+    () =>
+      equipment.filter(
+        (item): item is SolarEquipment => item.formType === 'solar',
+      ),
+    [equipment],
+  );
+  const selectedEquipmentSiteId =
+    solarEquipments.at(-1)?.solarData.siteId ?? '';
+  const selectedEquipmentSiteName =
+    sitesQuery.data?.sites.find(
+      (site) => site.siteId === selectedEquipmentSiteId,
+    )?.siteName ?? selectedEquipmentSiteId;
 
   // ── Navigation ────────────────────────────────────────────────────────────
   const navigateToDashboard = useCallback(() => {
@@ -514,11 +532,7 @@ const ProjectRegister = () => {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      const solarEquipments = equipment.filter(
-        (item): item is Extract<Equipment, { formType: 'solar' }> =>
-          item.formType === 'solar',
-      );
-      if (solarEquipments.length === 0 || !projectId || !resolvedSiteId) {
+      if (solarEquipments.length === 0 || !projectId) {
         throw new Error('登録する太陽光発電設備が見つかりません。');
       }
 
@@ -541,7 +555,7 @@ const ProjectRegister = () => {
             selectedFiles.map(
                 ({ fileType, file }) =>
                   uploadSiteProjectEquipmentFile(
-                    resolvedSiteId,
+                    solarEquipment.solarData.siteId,
                     fileType,
                     file,
                   ),
@@ -578,7 +592,7 @@ const ProjectRegister = () => {
         equipmentToRegister,
         agreementFormValues,
         contractFormValues,
-        finalStepRef.current?.getValues() ?? finalTermsValues,
+        finalTermsValues,
         {
           projectId,
           processedBy: user?.id ?? "",
@@ -620,11 +634,7 @@ const ProjectRegister = () => {
   const handleNext = async () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     if (await validateStep()) {
-      if (currentStep === FINAL_AGREEMENT_STEP) {
-        await handleSubmit();
-      } else {
-        setCurrentStep((prev) => prev + 1);
-      }
+      setCurrentStep((prev) => prev + 1);
     }
   };
 
@@ -682,6 +692,22 @@ const ProjectRegister = () => {
               }
             }}
             errors={finalTermsErrors}
+          />
+        );
+      case REVIEW_STEP:
+        return (
+          <ProjectRegistrationReviewStep
+            projectName={selectedProject.projectName}
+            siteName={selectedEquipmentSiteName}
+            equipments={solarEquipments}
+            methodologyNumber={selectedProject.methodNumber}
+            methodologyVersion={selectedProject.methodologyVersion}
+            agreementValues={agreementFormValues}
+            contractValues={contractFormValues}
+            finalTermsValues={finalTermsValues}
+            isSubmitting={isSubmitting}
+            onBack={() => setCurrentStep(FINAL_AGREEMENT_STEP)}
+            onSubmit={() => void handleSubmit()}
           />
         );
       case COMPLETION_STEP:
@@ -744,17 +770,15 @@ const ProjectRegister = () => {
 
           <div className="mx-auto w-full animate-slide-up">{renderStep()}</div>
 
-          {!isCompletionStep && (
+          {!isCompletionStep && currentStep !== REVIEW_STEP && (
             <div className="flex justify-end">
               <Button onClick={handleNext} disabled={isSubmitting}>
                 {isSubmitting
-                  ? currentStep === FINAL_AGREEMENT_STEP
-                    ? "送信中..."
-                    : "確認中..."
+                  ? "確認中..."
                   : currentStep === FINAL_AGREEMENT_STEP
-                    ? "送信"
+                    ? "確認へ"
                     : "次へ"}
-                {currentStep < FINAL_AGREEMENT_STEP && (
+                {currentStep <= FINAL_AGREEMENT_STEP && (
                   <ArrowRight className="ml-2 h-4 w-4" />
                 )}
               </Button>

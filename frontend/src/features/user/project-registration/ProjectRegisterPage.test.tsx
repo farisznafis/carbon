@@ -155,9 +155,9 @@ describe('ProjectRegisterPage', () => {
     expect(screen.getByText('太陽光発電設備の情報')).toBeInTheDocument();
     expect(screen.queryByText('入力内容の確認')).not.toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Progress' })).toHaveTextContent(
-      '設備登録同意事項持続可能性入会規約',
+      '設備登録同意事項持続可能性入会規約確認',
     );
-    expect(screen.queryByText('ステップ 1 / 4')).not.toBeInTheDocument();
+    expect(screen.queryByText('ステップ 1 / 5')).not.toBeInTheDocument();
     expect(screen.getByText('対象拠点').parentElement).toHaveTextContent('*');
     expect(
       screen.getByText('プロジェクトへの参加を申請する拠点を選択してください。'),
