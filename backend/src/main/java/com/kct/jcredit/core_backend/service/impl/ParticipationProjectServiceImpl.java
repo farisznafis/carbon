@@ -83,7 +83,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
                 List<ProjectDetailResponse> projectDetails = projects.stream()
                         .map(project -> {
-                                boolean alreadyJoined = siteProjectRelationRepository
+                                boolean alreadyJoined = siteProjectRelationRepository //TODO: change to fit youken
                                         .existsBySite_Company_CompanyIdAndProject_Id(
                                                 companyId, project.getId());
 
