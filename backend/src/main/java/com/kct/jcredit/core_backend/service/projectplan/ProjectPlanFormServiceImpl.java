@@ -22,10 +22,12 @@ import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressSummary;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressResponse.FormProgress;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+import com.kct.jcredit.core_backend.entity.Account;
 import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.enums.ProjectPlanFormStatus;
 import com.kct.jcredit.core_backend.repository.dynamodb.ProjectPlanFormRepository;
+import com.kct.jcredit.core_backend.repository.postgres.AccountRepository;
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.service.projectplan.ProjectPlanContextService.ProjectContext;
 import com.kct.jcredit.core_backend.service.projectplan.ProjectPlanContextService.ProjectContextStatus;
@@ -47,6 +49,7 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
     private final ProjectPlanFormRegistry registry;
     private final ProjectPlanFormRepository repository;
     private final OperatingUserRepository operatingUserRepository;
+    private final AccountRepository accountRepository;
     private final ObjectMapper objectMapper;
     private final Validator validator;
 
@@ -225,8 +228,10 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
         boolean exists = stored != null;
         T item = exists ? stored : definition.newInstance();
 
-        // PostgreSQL stays authoritative for autofilled fields, on every read.
-        definition.applySql(item, sqlContextFor(project));
+        // PostgreSQL stays authoritative for the fields it can supply, on every
+        // read. Only those are reported read-only: locking a field SQL left
+        // empty would make a required page impossible to complete.
+        response.setReadOnlyFields(definition.applySql(item, sqlContextFor(project), objectMapper));
         item.setPk(pk);
         item.setSk(sk);
 
@@ -308,15 +313,41 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
     }
 
     private ProjectPlanSqlContext sqlContextFor(Project project) {
-        return new ProjectPlanSqlContext(project, () -> {
-            OperatorCompany company = project == null ? null : project.getOperatorCompany();
-            if (company == null) {
-                return null;
-            }
-            return operatingUserRepository
-                    .findByCompany_IdAndRole(company.getId(), RoleConstants.MASTER)
-                    .orElse(null);
-        });
+        return new ProjectPlanSqlContext(
+                project,
+                () -> {
+                    OperatorCompany company = companyOf(project);
+                    if (company == null) {
+                        return null;
+                    }
+                    return operatingUserRepository
+                            .findByCompany_IdAndRole(company.getId(), RoleConstants.MASTER)
+                            .orElse(null);
+                },
+                () -> {
+                    OperatorCompany company = companyOf(project);
+                    if (company == null) {
+                        return null;
+                    }
+                    List<Account> accounts =
+                            accountRepository.findByOperatorCompany_IdAndIsActiveTrue(company.getId());
+                    // Only autofill when there is no doubt which account it is.
+                    // With several active accounts the holder is a business
+                    // question, and a wrong guess would be written over the
+                    // operator's own answer on every read.
+                    if (accounts.size() != 1) {
+                        if (accounts.size() > 1) {
+                            log.warn("Company {} has {} active accounts; leaving 保有者 fields to the operator",
+                                    company.getCompanyId(), accounts.size());
+                        }
+                        return null;
+                    }
+                    return accounts.get(0);
+                });
+    }
+
+    private static OperatorCompany companyOf(Project project) {
+        return project == null ? null : project.getOperatorCompany();
     }
 
     private static String statusOf(ProjectPlanFormEnvelope envelope) {
@@ -329,9 +360,13 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
                 .orElse(ProjectPlanFormStatus.COMPLETE.name());
     }
 
+    /**
+     * Page metadata that holds regardless of the project. {@code readOnlyFields}
+     * is deliberately not here: which fields are read-only depends on what
+     * PostgreSQL actually had for this project, so {@link #read} sets it.
+     */
     private static void describe(ProjectPlanFormResponse response, FormDefinition<?> definition) {
         response.setDisplayName(definition.displayName());
-        response.setReadOnlyFields(definition.readOnlyFields());
         response.setConditionalFields(definition.conditionalFields());
     }
 

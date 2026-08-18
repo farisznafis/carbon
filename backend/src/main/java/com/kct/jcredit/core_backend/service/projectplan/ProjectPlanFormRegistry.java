@@ -177,7 +177,30 @@ public class ProjectPlanFormRegistry {
                         sql("prefecture", (d, c) -> d.setPrefecture(c.company().getPrefecture())),
                         sql("city", (d, c) -> d.setCity(c.company().getMunicipality())),
                         sql("address", (d, c) -> d.setAddress(AddressFormatter.joinAddressAfterCity(
-                                c.company().getBlocknum(), c.company().getBuildingName()))))));
+                                c.company().getBlocknum(), c.company().getBuildingName()))),
+                        // Ｊ－クレジット保有者 — from the company's account. Left to the
+                        // operator when the company has no single active account.
+                        sql("holderAccountNameKana", (d, c) -> d.setHolderAccountNameKana(
+                                c.holderAccount() == null
+                                        ? null : c.holderAccount().getHolderAccountNameKana())),
+                        sql("holderAccountName", (d, c) -> d.setHolderAccountName(
+                                c.holderAccount() == null
+                                        ? null : c.holderAccount().getHolderAccountName())),
+                        sql("holderCorpNumber", (d, c) -> d.setHolderCorpNumber(
+                                c.holderAccount() == null
+                                        ? null : c.holderAccount().getHolderCorpNumber())),
+                        sql("holderPrefecture", (d, c) -> d.setHolderPrefecture(
+                                c.holderAccount() == null
+                                        ? null : c.holderAccount().getHolderPrefecture())),
+                        sql("holderCity", (d, c) -> d.setHolderCity(
+                                c.holderAccount() == null
+                                        ? null : c.holderAccount().getHolderCity())),
+                        sql("holderAddress", (d, c) -> d.setHolderAddress(
+                                c.holderAccount() == null
+                                        ? null : c.holderAccount().getHolderAddress())),
+                        sql("isHolderUndecided", (d, c) -> d.setIsHolderUndecided(
+                                c.holderAccount() == null
+                                        ? null : c.holderAccount().getIsHolderUndecided())))));
 
         register(new FormDefinition<>(
                 "applicable-methodology",

@@ -1,7 +1,10 @@
 package com.kct.jcredit.core_backend.service.projectplan;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormBase;
 import com.kct.jcredit.core_backend.validation.RequiredIf;
 
@@ -37,19 +40,43 @@ public record FormDefinition<T extends ProjectPlanFormBase>(
         return skPrefix + "#M" + index;
     }
 
-    /** Overlays every SQL-sourced field. PostgreSQL is authoritative. */
-    public void applySql(ProjectPlanFormBase target, ProjectPlanSqlContext context) {
-        if (context == null || context.company() == null) {
+    /**
+     * Overlays the SQL-sourced fields PostgreSQL can actually supply, and
+     * reports which those were so the client can render exactly those
+     * read-only.
+     *
+     * <p>Fields SQL has no value for are deliberately left alone. Overwriting
+     * them with {@code null} would erase what the operator typed on every
+     * read, and reporting them read-only anyway would leave a required field
+     * both empty and locked — a page in that state can never be saved.
+     *
+     * @return the JSON names that were filled from PostgreSQL
+     */
+    public List<String> applySql(
+            ProjectPlanFormBase target, ProjectPlanSqlContext context, ObjectMapper mapper) {
+
+        if (context == null || context.company() == null || sqlFields.isEmpty()) {
             // Nothing to overlay from; leave whatever was stored untouched.
-            return;
+            return List.of();
         }
         T typed = type.cast(target);
-        sqlFields.forEach(field -> field.apply().accept(typed, context));
-    }
 
-    /** Field names the client must render read-only. */
-    public List<String> readOnlyFields() {
-        return sqlFields.stream().map(SqlField::jsonName).toList();
+        // Run the binders against a throwaway instance to see what SQL has.
+        // ProjectPlanFormBase is @JsonInclude(NON_NULL) and no DTO initialises
+        // its fields, so a field absent from this tree is one SQL cannot fill.
+        T probe = newInstance();
+        sqlFields.forEach(field -> field.apply().accept(probe, context));
+        ObjectNode supplied = mapper.valueToTree(probe);
+
+        List<String> filled = new ArrayList<>(sqlFields.size());
+        for (SqlField<T> field : sqlFields) {
+            if (!supplied.hasNonNull(field.jsonName())) {
+                continue;
+            }
+            field.apply().accept(typed, context);
+            filled.add(field.jsonName());
+        }
+        return filled;
     }
 
     /**
