@@ -1,5 +1,6 @@
 package com.kct.jcredit.core_backend.controller;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -10,7 +11,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -20,6 +23,7 @@ import com.kct.jcredit.core_backend.dto.response.ProjectMasterResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ApplicableConditionsRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.OtherOperatorProjectsRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectApplicationRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFileResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanBatchProgressResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressResponse;
@@ -116,6 +120,31 @@ public class ProjectPlanController {
             @RequestParam(name = "methodology", required = false) Integer methodology,
             @RequestBody JsonNode body) {
         return respond(storeForm(authentication, projectId, formSlug, methodology, body));
+    }
+
+    @PostMapping(value = "/{projectId}/forms/{formSlug}/files",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "計画書添付ファイル仮アップロード",
+            description = "ファイルを一時領域に保存し、s3Key を返します。返却された s3Key を"
+                    + "該当項目に設定してページを保存すると、正式な保存先へ移動します。"
+                    + "ページが検証エラーになった場合、ファイルは移動されず一時領域で失効します。")
+    public ResponseEntity<ProjectPlanFileResponse> uploadFormFile(
+            Authentication authentication,
+            @PathVariable String projectId,
+            @PathVariable String formSlug,
+            @RequestParam(name = "fieldName") String fieldName,
+            @RequestPart("file") MultipartFile file) {
+        String token = token(authentication);
+        return respond(projectPlanFormService.uploadFormFile(
+                projectId,
+                formSlug,
+                fieldName,
+                file,
+                jwtUtil.extractCompanyId(token),
+                jwtUtil.extractRole(token),
+                jwtUtil.extractUsername(token)));
     }
 
     @GetMapping("/{projectId}/progress")

@@ -16,6 +16,7 @@ import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.constant.RoleConstants;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormBase;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormEnvelope;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFileResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanBatchProgressResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressResponse;
@@ -39,6 +40,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -50,6 +52,7 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
     private final ProjectPlanFormRepository repository;
     private final OperatingUserRepository operatingUserRepository;
     private final AccountRepository accountRepository;
+    private final ProjectPlanFileService fileService;
     private final ObjectMapper objectMapper;
     private final Validator validator;
 
@@ -279,6 +282,23 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
             return response;
         }
 
+        // The page is good, so its uploads become permanent and the payload is
+        // re-read so the stored keys are the permanent ones. Doing this after
+        // validation is what keeps a rejected page from leaving files behind:
+        // its uploads stay under tmp/ and expire.
+        JsonNode promoted = fileService.promoteUploads(body, projectId, definition.slug());
+        if (promoted != body) {
+            try {
+                payload = objectMapper.treeToValue(promoted, definition.type());
+            } catch (JsonProcessingException e) {
+                // Only text values changed, so this cannot realistically fail —
+                // but the files have already moved, so say so rather than
+                // reporting a plain bad request.
+                log.error("Promoted uploads but could not re-read page slug={}", definition.slug(), e);
+                throw new IllegalStateException("Failed to re-read project-plan page after upload promotion", e);
+            }
+        }
+
         // Keys and audit metadata are server-managed and never taken from clients.
         payload.setPk(buildPk(projectId));
         payload.setSk(definition.sk(methodologyIndex));
@@ -310,6 +330,46 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
             errors.putIfAbsent(field, violation.getMessage());
         }
         return errors;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProjectPlanFileResponse uploadFormFile(
+            String projectId,
+            String formSlug,
+            String fieldName,
+            MultipartFile file,
+            String companyId,
+            String role,
+            String username) {
+
+        ProjectPlanFileResponse response = new ProjectPlanFileResponse();
+
+        // An unknown page is refused before anything reaches S3, so a typo
+        // cannot litter the bucket with files no page will ever claim.
+        FormDefinition<?> definition = registry.bySlug(formSlug).orElse(null);
+        if (definition == null) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_FORM_NOT_DEFINED);
+            response.setTimestamp(LocalDateTime.now());
+            return response;
+        }
+
+        ProjectContext context =
+                projectPlanContextService.resolveProject(projectId, companyId, role, username);
+        if (!context.isAuthorized()) {
+            applyContextError(response, context);
+            return response;
+        }
+
+        var uploaded = fileService.uploadToTemp(projectId, formSlug, fieldName, username, file);
+        response.setS3Key(uploaded.getS3Key());
+        response.setFileId(uploaded.getFileId());
+        response.setOriginalName(uploaded.getOriginalName());
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage(ResponseConstants.MSG_FORM_SAVED);
+        response.setTimestamp(LocalDateTime.now());
+        return response;
     }
 
     private ProjectPlanSqlContext sqlContextFor(Project project) {

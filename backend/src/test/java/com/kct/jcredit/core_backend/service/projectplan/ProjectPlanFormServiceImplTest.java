@@ -59,6 +59,7 @@ class ProjectPlanFormServiceImplTest {
     @Mock private ProjectPlanFormRepository repository;
     @Mock private OperatingUserRepository operatingUserRepository;
     @Mock private AccountRepository accountRepository;
+    @Mock private ProjectPlanFileService fileService;
     @Mock private Project project;
     @Mock private OperatorCompany company;
 
@@ -76,6 +77,7 @@ class ProjectPlanFormServiceImplTest {
                 repository,
                 operatingUserRepository,
                 accountRepository,
+                fileService,
                 objectMapper,
                 validator);
 
@@ -91,6 +93,10 @@ class ProjectPlanFormServiceImplTest {
         when(project.getMethodologyVersion()).thenReturn("Ver.2.0");
 
         authorize();
+        // Pages without uploads pass through untouched; the promotion path has
+        // its own tests.
+        when(fileService.promoteUploads(any(), anyString(), anyString()))
+                .thenAnswer(call -> call.getArgument(0));
     }
 
     private void authorize() {
@@ -331,5 +337,29 @@ class ProjectPlanFormServiceImplTest {
         assertThat(response.getReadOnlyFields()).doesNotContain("projectOperatorKana");
         // The company name is present, so that one stays SQL-authoritative.
         assertThat(response.getReadOnlyFields()).contains("projectOperatorName");
+    }
+    // --- uploads follow the page, not the request ---
+
+    @Test
+    void aRejectedPageLeavesItsUploadsInTheProvisionalArea() {
+        JsonNode body = validPage(objectMapper).deepCopy();
+        ((com.fasterxml.jackson.databind.node.ObjectNode) body).remove("esgPledgeCase");
+
+        save(body);
+
+        // Same guarantee as page atomicity: a page that does not validate must
+        // move nothing, so the files expire under tmp/ instead of being
+        // stranded in permanent storage with no record pointing at them.
+        verify(fileService, never()).promoteUploads(any(), anyString(), anyString());
+        verify(repository, never()).save(any(), any());
+    }
+
+    @Test
+    void aStoredPageHasItsUploadsPromotedFirst() {
+        save(validPage(objectMapper));
+
+        var order = org.mockito.Mockito.inOrder(fileService, repository);
+        order.verify(fileService).promoteUploads(any(), eq(PROJECT_ID), eq(SLUG));
+        order.verify(repository).save(any(), any());
     }
 }
