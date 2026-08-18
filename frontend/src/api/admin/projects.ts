@@ -7,7 +7,6 @@ import type {
   CreateAdminProjectResponse,
   CreateAdminProjectPayload,
   ProjectPlanAutofillResponse,
-  ProjectPlanApplicationResponse,
   ProjectPlanBatchProgressResponse,
   ProjectPlanFileResponse,
   ProjectPlanFormResponse,
@@ -25,7 +24,6 @@ export type {
   CreateAdminProjectResponse,
   CreateAdminProjectPayload,
   ProjectPlanAutofillResponse,
-  ProjectPlanApplicationResponse,
   ProjectPlanFormProgress,
   ProjectPlanBatchProgressResponse,
   ProjectPlanFormResponse,
@@ -137,32 +135,6 @@ export async function updateAdminProjectStatus(
   return json;
 }
 
-export async function getAdminProjectPlanApplication(
-  projectId: string,
-): Promise<ProjectPlanApplicationResponse> {
-  const response = await apiFetch(
-    `/projectplan/${encodeURIComponent(projectId)}/application`,
-    {
-      method: 'GET',
-    },
-  );
-  const { data: json, rawBody } = await parseJsonResponse<ProjectPlanApplicationResponse>(response);
-
-  if (!response.ok) {
-    const message =
-      json?.message ||
-      rawBody ||
-      `Failed to load project plan application: HTTP ${response.status}`;
-    throw new ApiError(message, {
-      status: response.status,
-      payload: json,
-      rawBody,
-    });
-  }
-
-  return json ?? {};
-}
-
 export async function getProjectPlanAutofillByProject(
   projectId: string,
 ): Promise<ProjectPlanAutofillResponse> {
@@ -210,32 +182,6 @@ export async function getProjectPlanAutofillDefaults(): Promise<ProjectPlanAutof
   }
 
   return json ?? {};
-}
-
-export async function createAdminProjectPlanApplication<TPayload extends object>(
-  projectId: string,
-  payload: TPayload,
-): Promise<void> {
-  const response = await apiFetch(
-    `/projectplan/${encodeURIComponent(projectId)}/application`,
-    {
-      method: 'POST',
-      body: payload,
-    },
-  );
-  const { data: json, rawBody } = await parseJsonResponse<AdminMutationResponse>(response);
-
-  if (!response.ok) {
-    const message =
-      json?.message ||
-      rawBody ||
-      `Failed to create project plan application: HTTP ${response.status}`;
-    throw new ApiError(message, {
-      status: response.status,
-      payload: json,
-      rawBody,
-    });
-  }
 }
 
 // --- Registry-driven project plan pages (staging) ---

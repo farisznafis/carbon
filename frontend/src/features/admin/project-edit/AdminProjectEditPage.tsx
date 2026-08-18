@@ -7,12 +7,12 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 import {
-  createAdminProjectPlanApplication,
+  saveProjectPlanForm,
   getAdminProjectDetail,
-  getAdminProjectPlanApplication,
+  getProjectPlanForm,
   updateAdminProject,
   type AdminProjectDetail,
-  type ProjectPlanApplicationResponse,
+  type ProjectPlanFormResponse,
   type UpdateAdminProjectPayload,
 } from '@/api/admin';
 import { mapAdminProjectPlanApplicationPayload } from '@/api/admin/projectPayloadMapper';
@@ -76,13 +76,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 
 const resolveApplicationData = (
-  response: ProjectPlanApplicationResponse,
+  response: ProjectPlanFormResponse,
 ): AdminProjectRegisterFormInputValues['projectApplication'] => {
-  const value =
-    response.application ??
-    response.projectApplication ??
-    response.data ??
-    {};
+  // The plan endpoint returns the page under `data`; the older `application`
+  // and `projectApplication` shapes it used to fall back on were never sent.
+  const value = response.data ?? {};
 
   return (isRecord(value) ? value : {}) as AdminProjectRegisterFormInputValues['projectApplication'];
 };
@@ -346,7 +344,7 @@ export default function AdminProjectEditPage() {
 
         try {
           const applicationResponse =
-            await getAdminProjectPlanApplication(projectId);
+            await getProjectPlanForm(projectId, 'application');
 
           if (!isMounted) return;
           applicationForm.reset({
@@ -444,8 +442,9 @@ export default function AdminProjectEditPage() {
           projectBase: mapEditValuesToProjectBase(form.getValues()),
         };
 
-        await createAdminProjectPlanApplication(
+        await saveProjectPlanForm(
           projectId,
+          'application',
           mapAdminProjectPlanApplicationPayload(mergedValues),
         );
 

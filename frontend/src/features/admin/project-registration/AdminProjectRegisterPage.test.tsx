@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const adminProjectApiMocks = vi.hoisted(() => ({
   createAdminProject: vi.fn(),
-  createAdminProjectPlanApplication: vi.fn(),
   getProjectPlanAutofillByProject: vi.fn(),
   getProjectPlanAutofillDefaults: vi.fn(),
   getProjectPlanForm: vi.fn(),

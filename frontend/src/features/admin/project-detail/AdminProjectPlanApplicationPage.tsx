@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   getAdminProjectDetail,
-  getAdminProjectPlanApplication,
+  getProjectPlanForm,
   type AdminProjectDetail,
-  type ProjectPlanApplicationResponse,
+  type ProjectPlanFormResponse,
 } from '@/api/admin';
 import { PageDropdown } from '@/components/forms/shared/PageDropdown';
 import type { FieldConfig } from '@/components/forms/shared/GenericFormFields/GenericFormFields';
@@ -87,13 +87,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 
 const resolveApplicationData = (
-  response: ProjectPlanApplicationResponse,
+  response: ProjectPlanFormResponse,
 ): Record<string, unknown> => {
-  const value =
-    response.application ??
-    response.projectApplication ??
-    response.data ??
-    {};
+  // The plan endpoint returns the page under `data`; the older `application`
+  // and `projectApplication` shapes it used to fall back on were never sent.
+  const value = response.data ?? {};
 
   return isRecord(value) ? value : {};
 };
@@ -227,7 +225,7 @@ export default function AdminProjectPlanApplicationPage() {
 
         const [projectDetail, applicationResponse] = await Promise.all([
           getAdminProjectDetail(projectId),
-          getAdminProjectPlanApplication(projectId),
+          getProjectPlanForm(projectId, 'application'),
         ]);
 
         if (!isMounted) return;

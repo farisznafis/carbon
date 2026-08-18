@@ -28,10 +28,13 @@ This document describes every file under `src/api/`. It is intended for develope
 | `createAdminProject` | `POST /project` | JSON project creation body | [`CreateAdminProjectPayload`](admin/types.ts#L52); [`mapAdminProjectPayload`](admin/projectPayloadMapper.ts#L117) |
 | `updateAdminProject` | `PATCH /project/:projectId` | JSON project update body; path: `projectId` | [`UpdateAdminProjectPayload`](admin/types.ts#L118); [request implementation](admin/projects.ts#L78) |
 | `updateAdminProjectStatus` | `PATCH /project/:projectId/status` | JSON status body; path: `projectId` | [`UpdateProjectStatusPayload`](admin/types.ts#L283); [request implementation](admin/projects.ts#L98) |
-| `getAdminProjectPlanApplication` | `GET /projectplan/:projectId/application` | Path: `projectId` | [Function parameter and path](admin/projects.ts#L129) |
 | `getProjectPlanAutofillByProject` | `GET /projectplan/autofill/:projectId` | Path: `projectId` | [Function parameter and path](admin/projects.ts#L155) |
 | `getProjectPlanAutofillDefaults` | `GET /projectplan/autofill` | No request payload | [Request implementation](admin/projects.ts#L182) |
-| `createAdminProjectPlanApplication` | `POST /projectplan/:projectId/application` | JSON application body; path: `projectId` | [`CreateAdminProjectPlanApplicationPayload`](admin/types.ts#L192); [`mapAdminProjectPlanApplicationPayload`](admin/projectPayloadMapper.ts#L166); [request implementation](admin/projects.ts#L204) |
+| `getProjectPlanForm` | `GET /projectplan/:projectId/forms/:formSlug` | Path: `projectId`, `formSlug`; optional `methodology` query | [Request implementation](admin/projects.ts) |
+| `saveProjectPlanForm` | `PUT /projectplan/:projectId/forms/:formSlug` | JSON page body; path: `projectId`, `formSlug` | [Request implementation](admin/projects.ts) |
+| `uploadProjectPlanFormFile` | `POST /projectplan/:projectId/forms/:formSlug/files` | Multipart `file`; query `fieldName` | [Request implementation](admin/projects.ts) |
+| `getProjectPlanProgress` | `GET /projectplan/:projectId/progress` | Path: `projectId` | [Request implementation](admin/projects.ts) |
+| `getProjectPlanProgressBatch` | `GET /projectplan/progress` | Query `projectIds` (comma separated) | [Request implementation](admin/projects.ts) |
 
 ### Company
 
