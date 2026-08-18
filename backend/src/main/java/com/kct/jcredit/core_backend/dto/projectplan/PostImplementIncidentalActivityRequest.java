@@ -58,10 +58,19 @@ public class PostImplementIncidentalActivityRequest extends ProjectPlanFormBase 
     @JsonProperty("impact")
     private String impact;
 
-    /** モニタリング・算定方法 - 排出量の算定実施 */
-    @NotNull
+    /**
+     * モニタリング・算定方法 - 排出量の算定実施.
+     *
+     * <p>Three choices on the official form, not two: alongside 行う and
+     * 省略する there is 「排出量の算定を行う。ただし、排出量のモニタリングを省略し、
+     * 影響度により排出量を評価する。」. The DB spec flattened that to a boolean,
+     * which left the third choice with nowhere to go.
+     */
+    @NotBlank
+    @Size(max = 255)
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("monitorCalcBeingDone")
-    private Boolean monitorCalcBeingDone;
+    private String monitorCalcBeingDone;
 
     /** 排出量合計値 */
     @JsonProperty("emissionsTotalValue")
