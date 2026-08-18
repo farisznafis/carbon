@@ -49,7 +49,7 @@ public class ProjectPlanAutofillService {
             return response;
         }
 
-        if (!hasAccessToCompany(role, username, company)) {
+        if (!projectPlanContextService.canAccessCompany(role, username, company)) {
             response.setStatusCode(ResponseConstants.FORBIDDEN);
             response.setMessage(ResponseConstants.MSG_FORBIDDEN);
             return response;
@@ -113,15 +113,6 @@ public class ProjectPlanAutofillService {
         response.setData(data);
         response.setStatusCode(ResponseConstants.OK);
         return response;
-    }
-
-    private boolean hasAccessToCompany(String role, String username, OperatorCompany company) {
-        if (!RoleConstants.OPERATOR.equals(role)) {
-            return false;
-        }
-        return operatingUserRepository
-                .findByUsernameAndCompany_Id(username, company.getId())
-                .isPresent();
     }
 
     private static void applyContextError(BaseResponse response, ProjectContext context) {
