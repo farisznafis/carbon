@@ -48,6 +48,7 @@ import {
   getPlanPageForStep,
   type ProjectPlanPage,
 } from './forms/projectPlanPages';
+import type { ProjectPlanConditionalField } from '@/api/admin/types';
 import { steps } from './forms/projectSteps';
 
 type LocationState = {
@@ -122,6 +123,10 @@ export const AdminProjectRegister: React.FC = () => {
   // Fields the backend fills from SQL; rendered read-only so edits are not
   // silently overwritten on the next read.
   const [readOnlyFields, setReadOnlyFields] = useState<string[]>([]);
+  // 有/無 rules from the backend: a field only applies when its toggle matches.
+  const [conditionalFields, setConditionalFields] = useState<
+    ProjectPlanConditionalField[]
+  >([]);
   const [planProgress, setPlanProgress] = useState<{
     completed: number;
     total: number;
@@ -270,6 +275,7 @@ export const AdminProjectRegister: React.FC = () => {
         );
       }
       setReadOnlyFields(response.readOnlyFields ?? []);
+      setConditionalFields(response.conditionalFields ?? []);
     } catch (e) {
       console.warn('Failed to load project plan page', page.slug, e);
       setReadOnlyFields([]);
@@ -562,6 +568,7 @@ export const AdminProjectRegister: React.FC = () => {
               step={step}
               stepsOverride={visibleSteps}
               readOnlyFields={readOnlyFields}
+              conditionalFields={conditionalFields}
             />
 
             {submitError && (
