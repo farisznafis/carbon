@@ -51,12 +51,13 @@ class PartiCompanyControllerTest {
     @Test
     void updateCompanyReturnsServiceResponse() {
         UpdatePartiCompanyRequest request = new UpdatePartiCompanyRequest();
-        request.setCompanyId("COMP00000001");
         UpdatePartiCompanyResponse serviceResponse = new UpdatePartiCompanyResponse();
         serviceResponse.setStatusCode(ResponseConstants.OK);
-        when(companyService.updateCompany(request.getCompanyId(), request)).thenReturn(serviceResponse);
+        when(authentication.getCredentials()).thenReturn("token");
+        when(jwtUtil.extractCompanyId("token")).thenReturn("COMP00000001");
+        when(companyService.updateCompany("COMP00000001", request)).thenReturn(serviceResponse);
 
-        ResponseEntity<UpdatePartiCompanyResponse> response = controller.updateCompany(request);
+        ResponseEntity<UpdatePartiCompanyResponse> response = controller.updateCompany(authentication, request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isSameAs(serviceResponse);
