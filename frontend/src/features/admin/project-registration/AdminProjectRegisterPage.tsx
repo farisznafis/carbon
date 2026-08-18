@@ -148,7 +148,17 @@ export const AdminProjectRegister: React.FC = () => {
           methodologyVersion: 'Ver.2.0',
         },
       });
+
+      // Arriving with a project means resuming it, not starting a new one.
+      // Without this the wizard treats the id as unset and 次へ creates a
+      // duplicate project instead of updating this one.
+      if (state.project.id) {
+        void resumePlan(String(state.project.id));
+      }
     }
+    // resumePlan is stable for a given project; re-running on every render
+    // would refetch progress in a loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state?.project, form]);
 
   // Only the steps the plan API actually serves; the rest of `steps` has no
@@ -190,9 +200,30 @@ export const AdminProjectRegister: React.FC = () => {
         completed: progress.completedForms ?? 0,
         total: progress.totalForms ?? 0,
       });
+      return progress;
     } catch (e) {
       console.warn('Failed to load project plan progress', e);
+      return undefined;
     }
+  };
+
+  /**
+   * Reopens an existing project's plan where the operator left off.
+   *
+   * Seeding `createdProjectId` is what stops 次へ from creating a second
+   * project: saveProjectBase branches on it, so without it a resume would
+   * silently duplicate the record.
+   */
+  const resumePlan = async (projectId: string) => {
+    setCreatedProjectId(projectId);
+
+    const progress = await refreshProgress(projectId);
+    const nextSlug = progress?.nextIncompleteSlug ?? undefined;
+    const target = nextSlug ? getPlanPageForSlug(nextSlug)?.step : undefined;
+    if (!target) return;
+
+    setStep(target);
+    await loadPlanPage(projectId, target);
   };
 
   /**

@@ -135,6 +135,45 @@ describe('AdminProjectRegister', () => {
     );
   });
 
+  it('resumes an existing project at its first unfinished page', async () => {
+    adminProjectApiMocks.getProjectPlanProgress.mockResolvedValue({
+      totalForms: 33,
+      completedForms: 2,
+      nextIncompleteSlug: 'applicable-conditions',
+      forms: [],
+    });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/',
+            state: {
+              project: {
+                id: 'project-9',
+                projectName: '既存プロジェクト',
+                projectStatus: '準備中',
+              },
+            },
+          },
+        ]}
+      >
+        <AdminProjectRegister />
+      </MemoryRouter>,
+    );
+
+    // applicable-conditions is step 4.
+    expect(await screen.findByTestId('project-form-step')).toHaveTextContent(
+      'step-4',
+    );
+    expect(adminProjectApiMocks.getProjectPlanForm).toHaveBeenCalledWith(
+      'project-9',
+      'applicable-conditions',
+    );
+    // The whole point: resuming must not create a second project.
+    expect(adminProjectApiMocks.createAdminProject).not.toHaveBeenCalled();
+  });
+
   it('does not advance past a page the server rejected', async () => {
     const user = userEvent.setup();
     adminProjectApiMocks.saveProjectPlanForm.mockRejectedValue(
