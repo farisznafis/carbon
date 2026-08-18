@@ -74,22 +74,32 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     formKey: 'equipmentInfo',
   },
   {
+    step: 14,
+    slug: 'equipment-verification-before-new',
+    formKey: 'equipmentInfoBeforeNew',
+  },
+  {
     step: 15,
+    slug: 'equipment-verification-after',
+    formKey: 'equipmentInfoAfter',
+  },
+  {
+    step: 17,
     slug: 'obtaining-additional-assessment',
     formKey: 'obtainingAdditional',
   },
   {
-    step: 16,
+    step: 18,
     slug: 'emission-reduction-calculation-method',
     formKey: 'emissionCalc',
   },
   {
-    step: 17,
+    step: 19,
     slug: 'baseline-incidental-emission-activity',
     formKey: 'baselineIncidental',
   },
   {
-    step: 19,
+    step: 21,
     slug: 'main-activity-project-emission',
     formKey: 'mainActivity',
   },
@@ -122,7 +132,7 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     },
   },
   {
-    step: 14,
+    step: 16,
     slug: 'additional-assessment-method',
     formKey: 'additionalAssessment',
     renames: {
@@ -131,7 +141,7 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     },
   },
   {
-    step: 18,
+    step: 20,
     slug: 'post-implement-incidental-activity',
     formKey: 'postImplemental',
     renames: {
@@ -143,37 +153,37 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
   // 20/22/23 share incidentalActivitySchema, which is mainActivitySchema minus
   // `concept` — the same six fields their DTOs declare.
   {
-    step: 20,
+    step: 22,
     slug: 'incidental-activity-project-emission',
     formKey: 'incidentalActivity',
   },
-  { step: 21, slug: 'baseline-emission', formKey: 'baselineEmission' },
-  { step: 22, slug: 'main-baseline-emission', formKey: 'mainBaseline' },
+  { step: 23, slug: 'baseline-emission', formKey: 'baselineEmission' },
+  { step: 24, slug: 'main-baseline-emission', formKey: 'mainBaseline' },
   {
-    step: 23,
+    step: 25,
     slug: 'incidental-baseline-emission',
     formKey: 'incidentalEmission',
   },
-  { step: 24, slug: 'monitoring-item-plan', formKey: 'monitoringItem' },
-  { step: 25, slug: 'monitoring-method-plan', formKey: 'monitoringMethod' },
-  { step: 26, slug: 'expected-project-plan', formKey: 'expectedProject' },
+  { step: 26, slug: 'monitoring-item-plan', formKey: 'monitoringItem' },
+  { step: 27, slug: 'monitoring-method-plan', formKey: 'monitoringMethod' },
+  { step: 28, slug: 'expected-project-plan', formKey: 'expectedProject' },
   {
-    step: 27,
+    step: 29,
     slug: 'monitoring-item-plan-coefficient',
     formKey: 'monitoringItemPlanCoefficient',
   },
   {
-    step: 28,
+    step: 30,
     slug: 'monitoring-method-plan-coefficient',
     formKey: 'monitoringMethodPlanCoefficient',
   },
   {
-    step: 29,
+    step: 31,
     slug: 'expected-project-plan-coefficient',
     formKey: 'expectedProjectPlanCoefficient',
   },
   {
-    step: 30,
+    step: 32,
     slug: 'monitoring-plan',
     formKey: 'monitoringPlan',
     renames: {
@@ -183,7 +193,7 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     },
   },
   {
-    step: 31,
+    step: 33,
     slug: 'measure-specified-instrument',
     formKey: 'measureSpecified',
     renames: {
@@ -192,19 +202,19 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     },
   },
   {
-    step: 32,
+    step: 34,
     slug: 'measure-other-instruments',
     formKey: 'measureOther',
     renames: { instrumentCalibration: 'instrumentCalibrationMethodDescription' },
   },
   {
-    step: 33,
+    step: 35,
     slug: 'monitoring-method-explanation',
     formKey: 'monitoringExplanation',
     renames: { monitoringDesc: 'monitoringItemDescription' },
   },
   {
-    step: 34,
+    step: 36,
     slug: 'coefficient-measure-explanation',
     formKey: 'coefficient',
     // coefficientSchema is monitoringExplanationSchema without the diagram, so

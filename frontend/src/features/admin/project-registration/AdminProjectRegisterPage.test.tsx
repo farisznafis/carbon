@@ -256,9 +256,9 @@ describe('AdminProjectRegister', () => {
       </MemoryRouter>,
     );
 
-    // monitoring-plan is step 30, and it wins over the resume position.
+    // monitoring-plan is step 32, and it wins over the resume position.
     expect(await screen.findByTestId('project-form-step')).toHaveTextContent(
-      'step-30',
+      'step-32',
     );
   });
 
