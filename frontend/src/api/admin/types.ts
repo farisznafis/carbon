@@ -99,15 +99,6 @@ export type CreateAdminProjectResponse = {
   }>;
 };
 
-export type ProjectPlanApplicationResponse = {
-  statusCode?: string;
-  message?: string | null;
-  errors?: unknown;
-  application?: unknown;
-  projectApplication?: unknown;
-  data?: unknown;
-};
-
 export type ProjectPlanAutofillResponse = {
   statusCode?: string;
   message?: string | null;

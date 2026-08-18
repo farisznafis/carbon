@@ -20,9 +20,6 @@ import java.util.List;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.kct.jcredit.core_backend.dto.response.CorporationMasterResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectMasterResponse;
-import com.kct.jcredit.core_backend.dto.projectplan.ApplicableConditionsRequest;
-import com.kct.jcredit.core_backend.dto.projectplan.OtherOperatorProjectsRequest;
-import com.kct.jcredit.core_backend.dto.projectplan.ProjectApplicationRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFileResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanBatchProgressResponse;
@@ -38,7 +35,6 @@ import lombok.RequiredArgsConstructor;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 
 /**
  * Project plan (プロジェクト計画書).
@@ -54,9 +50,6 @@ import jakarta.validation.Valid;
         description = "プロジェクト計画書の各ページの取得・保存、入力状況、および自動入力情報を管理するAPIです。")
 @RequiredArgsConstructor
 public class ProjectPlanController {
-
-    /** The page slug backing the deprecated /application endpoints. */
-    private static final String APPLICATION_SLUG = "application";
 
     private final ProjectPlanFormService projectPlanFormService;
     private final ProjectPlanAutofillService projectPlanAutofillService;
@@ -177,53 +170,6 @@ public class ProjectPlanController {
                 jwtUtil.extractCompanyId(token),
                 jwtUtil.extractRole(token),
                 jwtUtil.extractUsername(token)));
-    }
-
-    // --- Deprecated: the frontend still calls these ---
-    //
-    // Thin aliases for the application page. POST and PUT were already
-    // behaviourally identical — both fully validated and overwrote the item —
-    // so both map onto the single save path. Remove once the frontend moves to
-    // /forms/application.
-
-    @Deprecated(forRemoval = true)
-    @GetMapping("/{projectId}/application")
-    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "プロジェクト申請情報取得（非推奨）",
-            description = "GET /{projectId}/forms/application を使用してください。",
-            deprecated = true)
-    public ResponseEntity<ProjectPlanFormResponse> getProjectApplication(
-            Authentication authentication, @PathVariable String projectId) {
-        return respond(loadForm(authentication, projectId, APPLICATION_SLUG, null));
-    }
-
-    @Deprecated(forRemoval = true)
-    @PostMapping("/{projectId}/application")
-    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "プロジェクト申請情報登録（非推奨）",
-            description = "PUT /{projectId}/forms/application を使用してください。",
-            deprecated = true)
-    public ResponseEntity<ProjectPlanFormResponse> submitProjectApplication(
-            Authentication authentication,
-            @PathVariable String projectId,
-            @RequestBody JsonNode body) {
-        return respond(storeForm(authentication, projectId, APPLICATION_SLUG, null, body));
-    }
-
-    @Deprecated(forRemoval = true)
-    @PutMapping("/{projectId}/application")
-    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "プロジェクト申請情報更新（非推奨）",
-            description = "PUT /{projectId}/forms/application を使用してください。",
-            deprecated = true)
-    public ResponseEntity<ProjectPlanFormResponse> updateProjectApplication(
-            Authentication authentication,
-            @PathVariable String projectId,
-            @RequestBody JsonNode body) {
-        return respond(storeForm(authentication, projectId, APPLICATION_SLUG, null, body));
     }
 
     // --- helpers ---
