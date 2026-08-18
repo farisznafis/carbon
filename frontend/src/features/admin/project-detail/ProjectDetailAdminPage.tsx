@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import {
   getAdminProjectDetail,
+  getProjectPlanProgress,
   type AdminProjectDetail,
 } from '@/api/admin/projects';
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
@@ -60,6 +61,12 @@ export default function ProjectDetailAdmin() {
   const [loading, setLoading] = useState(true);
   const [project, setProject] = useState<AdminProjectDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // How far the plan is filled. Best-effort: the detail page must still render
+  // if the plan API is unavailable.
+  const [planProgress, setPlanProgress] = useState<{
+    completed: number;
+    total: number;
+  } | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -74,6 +81,15 @@ export default function ProjectDetailAdmin() {
         setError(null);
 
         const result = await getAdminProjectDetail(projectId);
+
+        void getProjectPlanProgress(projectId)
+          .then((progress) =>
+            setPlanProgress({
+              completed: progress.completedForms ?? 0,
+              total: progress.totalForms ?? 0,
+            }),
+          )
+          .catch((e) => console.warn('Failed to load project plan progress', e));
         setProject(result);
       } catch (e) {
         logger.error('Error loading admin project detail:', e);
@@ -129,6 +145,12 @@ export default function ProjectDetailAdmin() {
             <CardDescription>
               プロジェクト番号: {formatValue(project.projectNumber)}
             </CardDescription>
+            {planProgress && planProgress.total > 0 && (
+              <CardDescription>
+                計画書 入力済み: {planProgress.completed} / {planProgress.total}{' '}
+                ページ
+              </CardDescription>
+            )}
           </div>
           <div className='flex flex-col gap-3 sm:flex-row'>
             <Button
