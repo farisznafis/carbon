@@ -18,6 +18,16 @@ export type MultiStepFormProps<TFormValues extends FieldValues> = {
    * operator noticing.
    */
   readOnlyFields?: ReadonlyArray<string>;
+  /**
+   * 有/無 rules from the backend. A dependent field only applies while its
+   * toggle holds the given value, so it is hidden otherwise — the server
+   * enforces the same rule via @RequiredIf.
+   */
+  conditionalFields?: ReadonlyArray<{
+    field: string;
+    when: string;
+    is: boolean;
+  }>;
 };
 
 export function MultiStepForm<TFormValues extends FieldValues>({
@@ -25,11 +35,29 @@ export function MultiStepForm<TFormValues extends FieldValues>({
   step,
   stepsOverride,
   readOnlyFields,
+  conditionalFields,
 }: Readonly<MultiStepFormProps<TFormValues>>) {
   const stepList = stepsOverride ?? steps;
   // Config names are namespaced ("projectOverview.corpNumber"); the backend
   // reports the bare field name.
   const lockedNames = new Set(readOnlyFields ?? []);
+  const rulesByField = new Map(
+    (conditionalFields ?? []).map((rule) => [rule.field, rule]),
+  );
+
+  /**
+   * Config names are namespaced ("projectApplication.emitterCode") while the
+   * backend reports bare names, so the toggle is looked up under the same
+   * prefix as the field it governs.
+   */
+  const applies = (fieldName: string) => {
+    const bare = fieldName.split('.').pop() ?? '';
+    const rule = rulesByField.get(bare);
+    if (!rule) return true;
+
+    const prefix = fieldName.slice(0, fieldName.length - bare.length);
+    return form.getValues(`${prefix}${rule.when}` as never) === rule.is;
+  };
   const current = stepList.find((s) => s.id === step);
 
   if (!current) {
@@ -44,14 +72,16 @@ export function MultiStepForm<TFormValues extends FieldValues>({
       <FormProvider {...form}>
         <DynamicFormRenderer<TFormValues>
           fields={
-            (lockedNames.size === 0
+            (lockedNames.size === 0 && rulesByField.size === 0
               ? current.fields
-              : current.fields.map((field) => {
-                  const bare = String(field.name).split(".").pop() ?? "";
-                  return lockedNames.has(bare)
-                    ? { ...field, disabled: true }
-                    : field;
-                })) as FieldConfig<TFormValues>[]
+              : current.fields
+                  .filter((field) => applies(String(field.name)))
+                  .map((field) => {
+                    const bare = String(field.name).split('.').pop() ?? '';
+                    return lockedNames.has(bare)
+                      ? { ...field, disabled: true }
+                      : field;
+                  })) as FieldConfig<TFormValues>[]
           }
         />
       </FormProvider>
