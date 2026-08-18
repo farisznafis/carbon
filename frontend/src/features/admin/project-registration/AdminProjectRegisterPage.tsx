@@ -7,11 +7,13 @@ import {
   mapAdminProjectPlanApplicationPayload,
   mapAdminProjectUpdatePayload,
   mapPlanPagePayload,
+  mapPlanPageValues,
 } from '@/api/admin/projectPayloadMapper';
 import {
   createAdminProject,
   getProjectPlanAutofillByProject,
   getProjectPlanAutofillDefaults,
+  getProjectPlanForm,
   getProjectPlanProgress,
   saveProjectPlanForm,
   updateAdminProject,
@@ -117,6 +119,9 @@ export const AdminProjectRegister: React.FC = () => {
   // Steps already saved on the server, so a returning operator can see how far
   // they got. Populated from the plan's progress endpoint.
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  // Fields the backend fills from SQL; rendered read-only so edits are not
+  // silently overwritten on the next read.
+  const [readOnlyFields, setReadOnlyFields] = useState<string[]>([]);
   const [planProgress, setPlanProgress] = useState<{
     completed: number;
     total: number;
@@ -206,6 +211,39 @@ export const AdminProjectRegister: React.FC = () => {
           page.formKey,
           page.renames,
         );
+
+  /**
+   * Pulls a stored page back into the form.
+   *
+   * Without this a page the operator already completed reopens blank while
+   * progress still reports it COMPLETE. Best-effort: a failure here must not
+   * block moving through the wizard.
+   *
+   * Also records which fields the backend fills from PostgreSQL, so the form
+   * can stop them being edited — an edit there is silently overwritten on the
+   * next read.
+   */
+  const loadPlanPage = async (projectId: string, targetStep: number) => {
+    const page = getPlanPageForStep(targetStep);
+    if (!page) return;
+
+    try {
+      const response = await getProjectPlanForm(projectId, page.slug);
+      const values = mapPlanPageValues(response.data, page.renames);
+
+      if (Object.keys(values).length > 0) {
+        form.setValue(
+          page.formKey as FieldPath<AdminProjectRegisterFormInputValues>,
+          values as never,
+          { shouldDirty: false },
+        );
+      }
+      setReadOnlyFields(response.readOnlyFields ?? []);
+    } catch (e) {
+      console.warn('Failed to load project plan page', page.slug, e);
+      setReadOnlyFields([]);
+    }
+  };
 
   /**
    * Stages one page. The server stores it only if the whole page validates, so
@@ -492,6 +530,7 @@ export const AdminProjectRegister: React.FC = () => {
               form={form}
               step={step}
               stepsOverride={visibleSteps}
+              readOnlyFields={readOnlyFields}
             />
 
             {submitError && (

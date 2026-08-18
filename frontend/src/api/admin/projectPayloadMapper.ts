@@ -320,3 +320,30 @@ export function mapPlanPagePayload(
 
   return cleanPayload(payload);
 }
+
+/**
+ * Turns a stored page back into form values — the inverse of
+ * {@link mapPlanPagePayload}.
+ *
+ * Without this a page that was saved comes back blank, because the form binds
+ * to its own field names while the backend stores the spec's.
+ */
+export function mapPlanPageValues(
+  data: Record<string, unknown> | undefined,
+  renames?: Readonly<Record<string, string>>,
+): Record<string, unknown> {
+  if (!data) return {};
+
+  const toForm: Record<string, string> = {};
+  for (const [formName, backendName] of Object.entries(renames ?? {})) {
+    toForm[backendName] = formName;
+  }
+
+  const values: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    // Server-managed metadata is not part of the form.
+    if (['pk', 'sk', 'status', 'updatedAt', 'updatedBy'].includes(key)) continue;
+    values[toForm[key] ?? key] = value;
+  }
+  return values;
+}
