@@ -18,7 +18,12 @@ import com.kct.jcredit.core_backend.validation.RequiredIf;
  * @param skPrefix        DynamoDB sort key, e.g. {@code APPLICABLE_CONDITIONS}
  * @param displayName     Japanese label shown in the wizard
  * @param order           position in the wizard
- * @param perMethodology  whether the page repeats once per 方法論 (①–⑤)
+ * @param perMethodology  whether the page repeats once per 方法論 (①–⑤).
+ *                        Designed but not usable yet: the schema stores one
+ *                        方法論 per project, so {@link ProjectPlanFormRegistry}
+ *                        rejects any page that sets this. The key scheme below
+ *                        is kept because the official form does require ①–⑤,
+ *                        so this is a pending gap rather than a dead option.
  * @param type            the page's DTO
  * @param sqlFields       fields autofilled from PostgreSQL
  */
