@@ -8,6 +8,7 @@ const adminProjectApiMocks = vi.hoisted(() => ({
   createAdminProjectPlanApplication: vi.fn(),
   getProjectPlanAutofillByProject: vi.fn(),
   getProjectPlanAutofillDefaults: vi.fn(),
+  getProjectPlanForm: vi.fn(),
   getProjectPlanProgress: vi.fn(),
   saveProjectPlanForm: vi.fn(),
   updateAdminProject: vi.fn(),
@@ -47,6 +48,10 @@ describe('AdminProjectRegister', () => {
     });
     adminProjectApiMocks.getProjectPlanAutofillByProject.mockResolvedValue({
       data: {},
+    });
+    adminProjectApiMocks.getProjectPlanForm.mockResolvedValue({
+      data: {},
+      readOnlyFields: [],
     });
     adminProjectApiMocks.getProjectPlanProgress.mockResolvedValue({
       totalForms: 3,
