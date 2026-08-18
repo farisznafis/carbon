@@ -8,7 +8,9 @@ import type {
   CreateAdminProjectPayload,
   ProjectPlanAutofillResponse,
   ProjectPlanApplicationResponse,
+  ProjectPlanBatchProgressResponse,
   ProjectPlanFormResponse,
+  ProjectPlanProgressSummary,
   ProjectPlanProgressResponse,
   ProjectStatus,
   UpdateProjectStatusPayload,
@@ -24,7 +26,9 @@ export type {
   ProjectPlanAutofillResponse,
   ProjectPlanApplicationResponse,
   ProjectPlanFormProgress,
+  ProjectPlanBatchProgressResponse,
   ProjectPlanFormResponse,
+  ProjectPlanProgressSummary,
   ProjectPlanFormStatus,
   ProjectPlanProgressResponse,
   ProjectStatus,
@@ -318,4 +322,32 @@ export async function getProjectPlanProgress(
   }
 
   return json ?? {};
+}
+
+/**
+ * Plan progress for several projects in one request.
+ *
+ * Used by list views: asking per row would be one call per project. Returns an
+ * empty map for an empty input rather than calling the API.
+ */
+export async function getProjectPlanProgressBatch(
+  projectIds: string[],
+): Promise<Map<string, ProjectPlanProgressSummary>> {
+  const ids = projectIds.filter(Boolean);
+  if (ids.length === 0) return new Map();
+
+  const query = ids.map((id) => encodeURIComponent(id)).join(',');
+  const response = await apiFetch(`/projectplan/progress?projectIds=${query}`, {
+    method: 'GET',
+  });
+  const { data: json, rawBody } =
+    await parseJsonResponse<ProjectPlanBatchProgressResponse>(response);
+
+  if (!response.ok) {
+    const message =
+      json?.message || rawBody || `Failed to load plan progress: HTTP ${response.status}`;
+    throw new ApiError(message, { status: response.status, payload: json, rawBody });
+  }
+
+  return new Map((json?.projects ?? []).map((p) => [p.projectId, p]));
 }

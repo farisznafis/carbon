@@ -176,6 +176,8 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
 
     private void validateRequiredFields(EnR002EquipmentRequest item,
                                     List<ValidationErrorDetail> errors) {
+                                        
+        if (item.getSiteId() == null)        errors.add(err(item.getTempId(),"拠点","必須項目です。"));
 
         if (item.getEquipmentOpDate() == null)
             errors.add(err(item.getTempId(),

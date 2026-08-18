@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.kct.jcredit.core_backend.dto.response.CorporationMasterResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectMasterResponse;
@@ -19,6 +21,7 @@ import com.kct.jcredit.core_backend.dto.projectplan.ApplicableConditionsRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.OtherOperatorProjectsRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectApplicationRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormResponse;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanBatchProgressResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.service.projectplan.ProjectPlanAutofillService;
@@ -125,6 +128,23 @@ public class ProjectPlanController {
         String token = token(authentication);
         return respond(projectPlanFormService.getProgress(
                 projectId,
+                jwtUtil.extractCompanyId(token),
+                jwtUtil.extractRole(token),
+                jwtUtil.extractUsername(token)));
+    }
+
+    @GetMapping("/progress")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "計画書入力状況一括取得",
+            description = "複数プロジェクトの入力状況をまとめて取得します。一覧画面用。"
+                    + "参照権限のないプロジェクトは結果から除外されます。")
+    public ResponseEntity<ProjectPlanBatchProgressResponse> getProgressForProjects(
+            Authentication authentication,
+            @RequestParam(name = "projectIds") List<String> projectIds) {
+        String token = token(authentication);
+        return respond(projectPlanFormService.getProgressForProjects(
+                projectIds,
                 jwtUtil.extractCompanyId(token),
                 jwtUtil.extractRole(token),
                 jwtUtil.extractUsername(token)));

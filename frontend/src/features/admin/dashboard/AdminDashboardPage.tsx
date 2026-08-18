@@ -26,7 +26,9 @@ import {
   type MonitoringRecordListItem,
 } from '@/api/monitoring';
 import {
+  getProjectPlanProgressBatch,
   updateAdminProjectStatus,
+  type ProjectPlanProgressSummary,
   type ProjectStatus,
 } from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
@@ -400,12 +402,47 @@ const AdminDashboard = () => {
     resetCompanyPages();
   };
 
+  // Plan progress for the rows currently on screen, fetched in one request.
+  // Best-effort: the dashboard must still render if the plan API is down, and
+  // only the visible page is asked for so the cost does not grow with the list.
+  const [planProgress, setPlanProgress] = useState<
+    ReadonlyMap<string, ProjectPlanProgressSummary>
+  >(new Map());
+
+  useEffect(() => {
+    const ids = paginatedProjects.map((project) => String(project.id));
+    if (ids.length === 0) {
+      setPlanProgress(new Map());
+      return;
+    }
+
+    let cancelled = false;
+    getProjectPlanProgressBatch(ids)
+      .then((result) => {
+        if (!cancelled) setPlanProgress(result);
+      })
+      .catch((e) => console.warn('Failed to load plan progress', e));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [paginatedProjects]);
+
   const handleEditProject = (project: Project) => {
     navigate(paths.adminProjectDetail(project.id));
   };
 
   const handleUpdateProject = (project: Project) => {
     navigate(paths.adminProjectEdit(project.id), { state: { project } });
+  };
+
+  /**
+   * Opens the plan wizard on an existing project. Passing the project is what
+   * makes it resume rather than create a new one; the wizard then jumps to its
+   * own first unfinished page, so `slug` is only a hint for later refinement.
+   */
+  const handleOpenPlan = (project: Project) => {
+    navigate(paths.adminProjectRegister, { state: { project } });
   };
 
   const handleChangeProjectStatus = async (
@@ -752,6 +789,8 @@ const AdminDashboard = () => {
                 onUpdate={handleUpdateProject}
                 onStatusChange={handleChangeProjectStatus}
                 updatingProjectStatusId={updatingProjectStatusId}
+                planProgress={planProgress}
+                onOpenPlan={handleOpenPlan}
               />
               <PaginationControls
                 currentPage={projectPage}
