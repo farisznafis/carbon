@@ -1,7 +1,12 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { useForm, FormProvider } from 'react-hook-form';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { DynamicFormField } from './DynamicFormField';
+import {
+  PlanFileUploadProvider,
+  type PlanFileUploader,
+} from './PlanFileUploadContext';
 
 type TestFormValues = {
   projectName: string;
@@ -34,5 +39,69 @@ describe('DynamicFormField', () => {
       'aria-required',
       'true',
     );
+  });
+});
+
+type FileFormValues = {
+  evidenceImg: string;
+};
+
+function FileField({
+  uploader,
+  onValue,
+}: {
+  uploader: PlanFileUploader | null;
+  onValue: (value: string) => void;
+}) {
+  const form = useForm<FileFormValues>({ defaultValues: { evidenceImg: '' } });
+  onValue(form.watch('evidenceImg'));
+
+  return (
+    <FormProvider {...form}>
+      <PlanFileUploadProvider uploader={uploader}>
+        <DynamicFormField<FileFormValues>
+          field={{ name: 'evidenceImg', label: '根拠資料', type: 'file' }}
+        />
+      </PlanFileUploadProvider>
+    </FormProvider>
+  );
+}
+
+describe('DynamicFormField file input', () => {
+  const png = () =>
+    new File(['x'], 'evidence.png', { type: 'image/png' });
+
+  it('stores the uploaded key, not the file itself', async () => {
+    const user = userEvent.setup();
+    const uploader = vi.fn().mockResolvedValue({
+      s3Key: 'tmp/projectplan/abc/evidenceImg_evidence.png',
+      originalName: 'evidence.png',
+    });
+    let latest = '';
+
+    render(<FileField uploader={uploader} onValue={(v) => (latest = v)} />);
+    await user.upload(screen.getByLabelText('根拠資料*'), png());
+
+    // The backend validates this field as text, so holding the File would send
+    // an empty object and the page could never save.
+    await waitFor(() =>
+      expect(latest).toBe('tmp/projectplan/abc/evidenceImg_evidence.png'),
+    );
+    expect(uploader).toHaveBeenCalledWith('evidenceImg', expect.any(File));
+    expect(await screen.findByText(/添付済み: evidence.png/)).toBeInTheDocument();
+  });
+
+  it('reports an upload failure instead of silently keeping the field empty', async () => {
+    const user = userEvent.setup();
+    const uploader = vi.fn().mockRejectedValue(new Error('アップロードに失敗しました。'));
+    let latest = 'untouched';
+
+    render(<FileField uploader={uploader} onValue={(v) => (latest = v)} />);
+    await user.upload(screen.getByLabelText('根拠資料*'), png());
+
+    expect(
+      await screen.findByText('アップロードに失敗しました。'),
+    ).toBeInTheDocument();
+    expect(latest).toBe('');
   });
 });

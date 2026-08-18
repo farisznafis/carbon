@@ -4,6 +4,7 @@ import type { FieldValues, UseFormReturn } from "react-hook-form";
 import type { FieldConfig } from "@/components/forms/shared/GenericFormFields/GenericFormFields";
 import { FormProvider } from "react-hook-form";
 import { DynamicFormRenderer } from "./DynamicFormRenderer";
+import { PlanFileUploadProvider, type PlanFileUploader } from "./PlanFileUploadContext";
 import { steps } from "./projectSteps";
 import { logger } from "@/lib/logger";
 import { FormSection } from '@/components/forms/form-layout';
@@ -28,6 +29,11 @@ export type MultiStepFormProps<TFormValues extends FieldValues> = {
     when: string;
     is: boolean;
   }>;
+  /**
+   * Uploads a file for the current page. Absent means file inputs fall back to
+   * holding the File itself, which no plan page can save.
+   */
+  onUploadFile?: PlanFileUploader;
 };
 
 export function MultiStepForm<TFormValues extends FieldValues>({
@@ -36,6 +42,7 @@ export function MultiStepForm<TFormValues extends FieldValues>({
   stepsOverride,
   readOnlyFields,
   conditionalFields,
+  onUploadFile,
 }: Readonly<MultiStepFormProps<TFormValues>>) {
   const stepList = stepsOverride ?? steps;
   // Config names are namespaced ("projectOverview.corpNumber"); the backend
@@ -70,6 +77,7 @@ export function MultiStepForm<TFormValues extends FieldValues>({
   return (
     <FormSection number={step} title={current.title}>
       <FormProvider {...form}>
+        <PlanFileUploadProvider uploader={onUploadFile ?? null}>
         <DynamicFormRenderer<TFormValues>
           fields={
             (lockedNames.size === 0 && rulesByField.size === 0
@@ -84,6 +92,7 @@ export function MultiStepForm<TFormValues extends FieldValues>({
                   })) as FieldConfig<TFormValues>[]
           }
         />
+        </PlanFileUploadProvider>
       </FormProvider>
     </FormSection>
   );

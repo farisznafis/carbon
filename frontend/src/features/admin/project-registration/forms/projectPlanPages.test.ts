@@ -29,7 +29,8 @@ describe('project plan page wiring', () => {
   });
 
   it('gives every plan page a wizard step to render it', () => {
-    const stepIds = new Set(steps.map((step) => step.id));
+    // steps is const-asserted, so its ids are literal types; widen to compare.
+    const stepIds = new Set<number>(steps.map((step) => step.id));
 
     PROJECT_PLAN_PAGES.forEach((page) => {
       expect(stepIds.has(page.step)).toBe(true);
