@@ -582,3 +582,15 @@ export type ProjectPlanBatchProgressResponse = {
   /** Projects the caller cannot see are omitted rather than reported. */
   projects?: ProjectPlanProgressSummary[];
 };
+
+/**
+ * A provisional upload against a project-plan page. The s3Key still points
+ * under tmp/; it becomes permanent only when that page is saved.
+ */
+export type ProjectPlanFileResponse = {
+  statusCode?: string;
+  message?: string;
+  s3Key?: string;
+  fileId?: string;
+  originalName?: string;
+};

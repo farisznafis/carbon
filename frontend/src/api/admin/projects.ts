@@ -9,6 +9,7 @@ import type {
   ProjectPlanAutofillResponse,
   ProjectPlanApplicationResponse,
   ProjectPlanBatchProgressResponse,
+  ProjectPlanFileResponse,
   ProjectPlanFormResponse,
   ProjectPlanProgressSummary,
   ProjectPlanProgressResponse,
@@ -350,4 +351,38 @@ export async function getProjectPlanProgressBatch(
   }
 
   return new Map((json?.projects ?? []).map((p) => [p.projectId, p]));
+}
+
+/**
+ * Uploads one file against a plan page, provisionally.
+ *
+ * The returned s3Key belongs in the page body; the server promotes it to its
+ * permanent location only when that page saves and validates. A page that is
+ * never saved leaves the file to expire, so nothing has to be cleaned up here.
+ */
+export async function uploadProjectPlanFormFile(
+  projectId: string,
+  formSlug: string,
+  fieldName: string,
+  file: File,
+): Promise<{ s3Key: string; originalName: string }> {
+  const form = new FormData();
+  form.append('file', file);
+
+  const response = await apiFetch(
+    `/projectplan/${encodeURIComponent(projectId)}/forms/${encodeURIComponent(
+      formSlug,
+    )}/files?fieldName=${encodeURIComponent(fieldName)}`,
+    { method: 'POST', body: form },
+  );
+  const { data: json, rawBody } =
+    await parseJsonResponse<ProjectPlanFileResponse>(response);
+
+  if (!response.ok || !json?.s3Key) {
+    const message =
+      json?.message || rawBody || `Failed to upload file: HTTP ${response.status}`;
+    throw new ApiError(message, { status: response.status, payload: json, rawBody });
+  }
+
+  return { s3Key: json.s3Key, originalName: json.originalName ?? file.name };
 }

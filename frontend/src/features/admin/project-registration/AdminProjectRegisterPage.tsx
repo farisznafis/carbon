@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm, useWatch, type FieldPath } from 'react-hook-form';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { Project } from '@/api/projects';
@@ -17,6 +17,7 @@ import {
   getProjectPlanProgress,
   saveProjectPlanForm,
   updateAdminProject,
+  uploadProjectPlanFormFile,
 } from '@/api/admin/projects';
 import { ConfirmationItem } from '@/components/feedback/Confirmation/ConfirmationItem';
 import { ConfirmationLayout } from '@/components/feedback/Confirmation/ConfirmationLayout';
@@ -441,6 +442,30 @@ export const AdminProjectRegister: React.FC = () => {
     setMode('confirm');
   };
 
+  /**
+   * Uploads a file for whichever page is open.
+   *
+   * The key comes back pointing at temporary storage and is promoted when the
+   * page saves, so an upload on a page that is never completed costs nothing.
+   */
+  const uploadPlanFile = useCallback(
+    async (fieldName: string, file: File) => {
+      const page = getPlanPageForStep(step);
+      if (!createdProjectId || !page) {
+        throw new Error('先にプロジェクトを保存してください。');
+      }
+      // Config names are namespaced and a few differ from the backend's.
+      const bare = fieldName.split('.').pop() ?? fieldName;
+      return uploadProjectPlanFormFile(
+        createdProjectId,
+        page.slug,
+        page.renames?.[bare] ?? bare,
+        file,
+      );
+    },
+    [createdProjectId, step],
+  );
+
   const handleConfirm = async () => {
     await onSubmit(form.getValues());
   };
@@ -638,6 +663,7 @@ export const AdminProjectRegister: React.FC = () => {
               stepsOverride={visibleSteps}
               readOnlyFields={readOnlyFields}
               conditionalFields={conditionalFields}
+              onUploadFile={uploadPlanFile}
             />
 
             {submitError && (

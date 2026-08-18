@@ -4,6 +4,7 @@
 // ============================================
 'use client';
 
+import { useState } from 'react';
 import { useFormContext, FieldValues, PathValue } from 'react-hook-form';
 import { FieldConfig } from '@/components/forms/shared/GenericFormFields/GenericFormFields';
 import { RequiredBadge } from '@/components/forms/shared/RequiredLabel';
@@ -11,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from '@/lib/utils';
+import { usePlanFileUploader } from './PlanFileUploadContext';
 import {
   Select,
   SelectTrigger,
@@ -204,21 +206,11 @@ export function DynamicFormField<TFormValues extends FieldValues = FieldValues>(
       )}
 
       {field.type === 'file' && (
-        <Input
-          id={fieldId}
-          type="file"
-          accept={field.accept}
-          multiple={field.multiple}
-          // {...registerProps}
-          onChange={(e) =>
-            form.setValue(
-              field.name,
-              e.target.files?.[0] as PathValue<TFormValues, typeof field.name>,
-              { shouldDirty: true, shouldValidate: true },
-            )
-          }
-          {...accessibilityProps}
+        <PlanFileInput<TFormValues>
+          field={field}
+          fieldId={fieldId}
           disabled={disabled}
+          accessibilityProps={accessibilityProps}
         />
       )}
 
@@ -227,6 +219,93 @@ export function DynamicFormField<TFormValues extends FieldValues = FieldValues>(
           {(error as { message?: unknown }).message?.toString()}
         </p>
       )}
+    </div>
+  );
+}
+
+/** The file name out of an S3 key, for showing what is currently attached. */
+function fileNameOf(value: unknown) {
+  if (typeof value !== 'string' || value === '') return null;
+  return value.split('/').pop() ?? value;
+}
+
+/**
+ * A file input that stores the uploaded key rather than the File itself.
+ *
+ * Plan pages are validated server-side as text, so the form has to hold the
+ * key the upload endpoint returns; keeping the File would send an empty object
+ * and the page could never save. Outside the plan wizard there is no uploader
+ * and the original raw-File behaviour is kept.
+ */
+function PlanFileInput<TFormValues extends FieldValues = FieldValues>({
+  field,
+  fieldId,
+  disabled,
+  accessibilityProps,
+}: {
+  field: FieldConfig<TFormValues>;
+  fieldId: string;
+  disabled?: boolean;
+  accessibilityProps: Record<string, unknown>;
+}) {
+  const form = useFormContext<TFormValues>();
+  const uploader = usePlanFileUploader();
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  // Kept from the upload so the operator sees the name they picked; a value
+  // loaded from the server only has the key, whose last segment is prefixed
+  // with the field name.
+  const [uploadedName, setUploadedName] = useState<string | null>(null);
+
+  const attached = uploadedName ?? fileNameOf(form.watch(field.name));
+
+  const handleChange = async (file: File | undefined) => {
+    if (!file) return;
+
+    if (!uploader) {
+      form.setValue(field.name, file as PathValue<TFormValues, typeof field.name>, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      return;
+    }
+
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const { s3Key, originalName } = await uploader(String(field.name), file);
+      form.setValue(field.name, s3Key as PathValue<TFormValues, typeof field.name>, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setUploadedName(originalName);
+    } catch (e) {
+      setUploadError(
+        e instanceof Error ? e.message : 'ファイルをアップロードできませんでした。',
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-1">
+      <Input
+        id={fieldId}
+        type="file"
+        accept={field.accept ?? 'image/png,image/jpeg,application/pdf'}
+        multiple={field.multiple}
+        onChange={(e) => void handleChange(e.target.files?.[0])}
+        {...accessibilityProps}
+        disabled={disabled || uploading}
+      />
+      {uploading && (
+        <p className="text-sm text-muted-foreground">アップロード中...</p>
+      )}
+      {!uploading && attached && (
+        <p className="text-sm text-muted-foreground">添付済み: {attached}</p>
+      )}
+      {uploadError && <p className="text-sm text-destructive">{uploadError}</p>}
     </div>
   );
 }
