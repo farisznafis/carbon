@@ -34,6 +34,15 @@ vi.mock('@/hooks/sites/useSitesQuery', () => ({
   }),
 }));
 
+vi.mock('@/hooks/sites/useSustainabilityCommitmentDefaultQuery', () => ({
+  useSustainabilityCommitmentDefaultQuery: () => ({
+    data: undefined,
+    isFetching: false,
+    isError: false,
+    refetch: vi.fn(),
+  }),
+}));
+
 vi.mock('@/api/site', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/site')>();
   return {
@@ -194,6 +203,7 @@ describe('ProjectRegisterPage', () => {
         </Routes>
       </MemoryRouter>,
     );
+    await screen.findByRole('button', { name: '次へ' });
     const fileInputs = container.querySelectorAll<HTMLInputElement>(
       'input[type="file"]',
     );
@@ -282,6 +292,7 @@ describe('ProjectRegisterPage', () => {
         </Routes>
       </MemoryRouter>,
     );
+    await screen.findByRole('button', { name: '次へ' });
     const fileInputs = container.querySelectorAll<HTMLInputElement>(
       'input[type="file"]',
     );

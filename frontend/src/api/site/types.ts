@@ -451,6 +451,18 @@ export type SiteProjectJoinSustainabilityCommitmentResponse = {
   timestamp?: string;
 };
 
+export type SiteProjectSustainabilityCommitmentDefaultResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+  companyName?: string | null;
+  repName?: string | null;
+  repRole?: string | null;
+  hasConsent?: boolean | null;
+  isAgreeTerms?: boolean | null;
+};
+
 export type SiteProjectFinalAgreementValidationRequest = {
   isAgreeTerms: boolean;
 };

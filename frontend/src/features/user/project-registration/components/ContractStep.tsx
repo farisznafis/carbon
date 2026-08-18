@@ -5,6 +5,7 @@ import {
 } from '@/components/forms/shared/RequiredLabel';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -39,8 +40,14 @@ export type ContractStepFormValues = {
 
 interface ContractStepProps {
   formValues: Partial<ContractStepFormValues>;
-  onValueChange: (values: Partial<ContractStepFormValues>) => void;
+  onValueChange: (
+    values: Partial<ContractStepFormValues>,
+    metadata: { isUserChange: boolean },
+  ) => void;
   errors?: Record<string, string>;
+  isDefaultLoading?: boolean;
+  defaultLoadError?: string | null;
+  onRetryDefaults?: () => void;
 }
 
 const defaultContractStepValues: ContractStepFormValues = {
@@ -51,7 +58,17 @@ const defaultContractStepValues: ContractStepFormValues = {
 };
 
 export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
-  ({ formValues, onValueChange, errors = {} }, ref) => {
+  (
+    {
+      formValues,
+      onValueChange,
+      errors = {},
+      isDefaultLoading = false,
+      defaultLoadError = null,
+      onRetryDefaults,
+    },
+    ref,
+  ) => {
     const form = useForm<ContractStepData>({
       mode: 'onChange',
       defaultValues: {
@@ -60,6 +77,7 @@ export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
       },
     });
     const watchedValues = form.watch();
+    const isDirty = form.formState.isDirty;
     const serverErrorFieldsRef = useRef<Array<keyof ContractStepFormValues>>(
       [],
     );
@@ -109,9 +127,9 @@ export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
         JSON.stringify(prevValuesRef.current) !== JSON.stringify(watchedValues)
       ) {
         prevValuesRef.current = watchedValues;
-        onValueChange(watchedValues);
+        onValueChange(watchedValues, { isUserChange: isDirty });
       }
-    }, [watchedValues, onValueChange]);
+    }, [isDirty, watchedValues, onValueChange]);
 
     return (
       <div className="space-y-4">
@@ -131,6 +149,31 @@ export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
               <p className="text-small text-foreground">
                 （プログラム型運営・管理者）　御中
               </p>
+
+              {isDefaultLoading && (
+                <p role="status" className="text-sm text-muted-foreground">
+                  登録済み情報を読み込んでいます...
+                </p>
+              )}
+
+              {defaultLoadError && (
+                <div
+                  role="alert"
+                  className="flex flex-col gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <p className="text-sm text-destructive">{defaultLoadError}</p>
+                  {onRetryDefaults && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={onRetryDefaults}
+                    >
+                      再試行
+                    </Button>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-3">
                 <FormField

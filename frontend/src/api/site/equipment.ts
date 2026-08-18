@@ -23,6 +23,7 @@ import type {
   SiteProjectConfirmationItemsValidationResponse,
   SiteProjectJoinSustainabilityCommitmentRequest,
   SiteProjectJoinSustainabilityCommitmentResponse,
+  SiteProjectSustainabilityCommitmentDefaultResponse,
   SiteProjectFinalAgreementValidationRequest,
   SiteProjectFinalAgreementValidationResponse,
   SiteProjectJoinRequest,
@@ -207,6 +208,19 @@ export async function validateSiteProjectSustainabilityCommitment(
       method: 'POST',
       body: payload,
       fallbackErrorMessage: '持続可能性約束の検証に失敗しました。',
+    },
+  );
+}
+
+/** GET /site/project/sites/{siteId}/sustainability-commitment/default — fetches Contract Step defaults. */
+export async function getSiteProjectSustainabilityCommitmentDefault(
+  siteId: string,
+): Promise<SiteProjectSustainabilityCommitmentDefaultResponse> {
+  return apiRequest<SiteProjectSustainabilityCommitmentDefaultResponse>(
+    `/site/project/sites/${encodeURIComponent(siteId)}/sustainability-commitment/default`,
+    {
+      method: 'GET',
+      fallbackErrorMessage: '持続可能性約束の初期値を取得できませんでした。',
     },
   );
 }

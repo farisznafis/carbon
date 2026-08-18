@@ -113,6 +113,22 @@ describe('mapEquipmentValidationFieldErrors', () => {
     ]);
   });
 
+  it('maps a whitespace-suffixed Japanese site key to the site selector', () => {
+    const fieldErrors = mapEquipmentValidationFieldErrors(
+      {
+        'equipment-1786956672731::拠点\r': '必須項目です。',
+      },
+      SOLAR_FORM_DEFAULT_VALUES,
+    );
+
+    expect(fieldErrors).toEqual([
+      {
+        fieldName: 'siteId',
+        message: '必須項目です。',
+      },
+    ]);
+  });
+
   it('maps Japanese PATCH file errors to their upload controls', () => {
     const fieldErrors = mapEquipmentValidationFieldErrors(
       {

@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { ApiError } from '@/api/_shared/errors';
 import { validateSiteProjectEquipment } from '@/api/site';
@@ -27,18 +27,20 @@ export type EquipmentRegistrationStepRef = {
 type EquipmentRegistrationStepProps = {
   initialEquipment?: SolarEquipment;
   onAddSite: (draft: SolarPowerFormData) => void;
+  onValueChange: (draft: SolarPowerFormData) => void;
 };
 
 export const EquipmentRegistrationStep = forwardRef<
   EquipmentRegistrationStepRef,
   EquipmentRegistrationStepProps
->(({ initialEquipment, onAddSite }, ref) => {
+>(({ initialEquipment, onAddSite, onValueChange }, ref) => {
   const sitesQuery = useSitesQuery();
   const form = useForm<SolarPowerFormData>({
     defaultValues:
       initialEquipment?.solarData ?? { ...SOLAR_FORM_DEFAULT_VALUES },
   });
   const sites = sitesQuery.data?.sites ?? EMPTY_SITE_OPTIONS;
+  const hasAppliedInitialEquipmentRef = useRef(false);
   const siteOptionsError = sitesQuery.isError
     ? sitesQuery.error instanceof Error
       ? sitesQuery.error.message
@@ -46,10 +48,19 @@ export const EquipmentRegistrationStep = forwardRef<
     : null;
 
   useEffect(() => {
-    if (initialEquipment) {
+    if (initialEquipment && !hasAppliedInitialEquipmentRef.current) {
+      hasAppliedInitialEquipmentRef.current = true;
       form.reset(initialEquipment.solarData);
     }
   }, [form, initialEquipment]);
+
+  useEffect(() => {
+    const subscription = form.watch((draft) => {
+      onValueChange(draft as SolarPowerFormData);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form, onValueChange]);
 
   useEffect(() => {
     const selectedSiteId = form.getValues('siteId');
@@ -57,7 +68,7 @@ export const EquipmentRegistrationStep = forwardRef<
     if (sites.some((site) => site.siteId === selectedSiteId)) return;
 
     // Clear stale drafts without selecting a site on the user's behalf.
-    form.setValue('siteId', '');
+    // form.setValue('siteId', '');
   }, [form, sites]);
 
   useImperativeHandle(ref, () => ({

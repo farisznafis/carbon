@@ -4,6 +4,7 @@ import {
   getSiteEquipmentHistory,
   getSiteProjectEquipment,
   getSiteProjectEquipmentPresignedUrl,
+  getSiteProjectSustainabilityCommitmentDefault,
   getSiteEquipmentList,
   joinSiteProject,
   uploadSiteProjectEquipmentFile,
@@ -21,6 +22,34 @@ import type {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+});
+
+describe('getSiteProjectSustainabilityCommitmentDefault', () => {
+  it('gets Contract Step defaults with an encoded site ID', async () => {
+    const responseBody = {
+      statusCode: 'OK',
+      companyName: 'ABC株式会社',
+      repName: '山田太郎',
+      repRole: '代表取締役',
+      hasConsent: true,
+      isAgreeTerms: true,
+    };
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(responseBody), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      getSiteProjectSustainabilityCommitmentDefault('SITE/001'),
+    ).resolves.toEqual(responseBody);
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/site/project/sites/SITE%2F001/sustainability-commitment/default',
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
 });
 
 describe('validateSiteProjectEquipment', () => {

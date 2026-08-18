@@ -32,6 +32,7 @@ export const REQUIRED_EQUIPMENT_FILE_MESSAGE =
   '確認資料をアップロードしてください。';
 
 const API_FIELD_ALIASES: Record<string, keyof SolarPowerFormData> = {
+  拠点: 'siteId',
   '稼働開始日（電力受給開始日）': 'equipmentOpDate',
   pcsunitcount: 'powerCondUnitCount',
   pcsstandby: 'powerCondStandby',
@@ -170,7 +171,8 @@ export function getEquipmentFormFieldName(
     .split('.')
     .at(-1)
     ?.split('::')
-    .at(-1);
+    .at(-1)
+    ?.trim();
   if (!fieldName) return null;
 
   return (

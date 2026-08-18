@@ -57,6 +57,19 @@ import { getSolarFormSelectedFiles } from "@/features/user/project-registration/
 import { createSiteRegistrationReturnState } from "@/features/master/navigation/siteRegistrationFlow";
 import type { SolarPowerFormData } from "@/lib/equipmentValidations";
 import { useSitesQuery } from "@/hooks/sites/useSitesQuery";
+import { useSustainabilityCommitmentDefaultQuery } from "@/hooks/sites/useSustainabilityCommitmentDefaultQuery";
+import {
+  createProjectRegistrationDraftKey,
+  deleteProjectRegistrationDraft,
+  loadProjectRegistrationDraft,
+  PROJECT_REGISTRATION_DRAFT_VERSION,
+  saveProjectRegistrationDraft,
+  type ProjectRegistrationDraft,
+} from "@/features/user/project-registration/projectRegistrationDraftStorage";
+import {
+  hasLegacyContractDraftValues,
+  mapSustainabilityCommitmentDefault,
+} from "@/features/user/project-registration/sustainabilityCommitmentDefaultMapper";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -220,12 +233,14 @@ const ProjectRegister = () => {
   const contractStepRef = useRef<ContractStepRef>(null);
   const finalStepRef = useRef<FinalTermsRef>(null);
   const equipmentStepRef = useRef<EquipmentRegistrationStepRef>(null);
+  const contractHasUserChangesRef = useRef(false);
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [currentStep, setCurrentStep] = useState(1);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isProjectLoading, setIsProjectLoading] = useState(false);
+  const [isDraftHydrated, setIsDraftHydrated] = useState(false);
   const [projectLoadError, setProjectLoadError] = useState<string | null>(null);
 
   const [agreementFormValues, setAgreementFormValues] = useState<Partial<AgreementFormValues>>({
@@ -244,6 +259,7 @@ const ProjectRegister = () => {
     representativeName: '',
     contractAgreed: false,
   });
+  const [contractHasUserChanges, setContractHasUserChanges] = useState(false);
 
   const [finalTermsValues, setFinalTermsValues] = useState<Partial<FinalTermsValues>>({
     finalTermsAgreed: false,
@@ -270,6 +286,15 @@ const ProjectRegister = () => {
     sitesQuery.data?.sites.find(
       (site) => site.siteId === selectedEquipmentSiteId,
     )?.siteName ?? selectedEquipmentSiteId;
+  const draftKey = useMemo(
+    () => createProjectRegistrationDraftKey(user?.id ?? '', siteId, projectId),
+    [projectId, siteId, user?.id],
+  );
+  const sustainabilityDefaultQuery =
+    useSustainabilityCommitmentDefaultQuery(
+      selectedEquipmentSiteId,
+      isDraftHydrated && !contractHasUserChanges,
+    );
 
   // ── Navigation ────────────────────────────────────────────────────────────
   const navigateToDashboard = useCallback(() => {
@@ -335,6 +360,26 @@ const ProjectRegister = () => {
     [enteredFromMasterDashboard, equipment, navigate, projectId, siteId],
   );
 
+  /** Keeps the currently mounted equipment form synchronized with the persistent draft. */
+  const handleEquipmentDraftChange = useCallback(
+    (solarData: SolarPowerFormData) => {
+      setEquipment((currentEquipment) => {
+        const currentSolarEquipment = currentEquipment.find(
+          (item): item is SolarEquipment => item.formType === 'solar',
+        );
+        return [
+          {
+            id: currentSolarEquipment?.id ?? `equipment-${Date.now()}`,
+            formType: 'solar',
+            solarData,
+            files: currentSolarEquipment?.files ?? [],
+          },
+        ];
+      });
+    },
+    [],
+  );
+
   // ── Effects ───────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!projectId || selectedProject?.id) return;
@@ -367,14 +412,46 @@ const ProjectRegister = () => {
   }, [projectId, selectedProject?.id, setCurrentProject, toast]);
 
   useEffect(() => {
-    const loadEquipment = () => {
-      const stored = localStorage.getItem(`project_${projectId}_equipment`);
-      const storedEquipment: Equipment[] = stored ? JSON.parse(stored) : [];
-      if (pendingEquipment) {
-        setEquipment([pendingEquipment]);
-        return;
+    let isMounted = true;
+
+    /** Restores a saved draft before rendering an editable registration step. */
+    const hydrateDraft = async () => {
+      let savedDraft: ProjectRegistrationDraft | null = null;
+      try {
+        savedDraft = await loadProjectRegistrationDraft(draftKey);
+      } catch {
+        // IndexedDB errors fall back to the previous equipment cache below.
       }
 
+      try {
+        if (!isMounted) return;
+
+        if (savedDraft) {
+          const restoredContractHasUserChanges =
+            savedDraft.contractHasUserChanges ??
+            hasLegacyContractDraftValues(savedDraft.contractFormValues);
+          setCurrentStep(
+            Math.min(Math.max(savedDraft.currentStep, EQUIPMENT_STEP), REVIEW_STEP),
+          );
+          setAgreementFormValues(savedDraft.agreementFormValues);
+          setContractFormValues(savedDraft.contractFormValues);
+          setContractHasUserChanges(restoredContractHasUserChanges);
+          contractHasUserChangesRef.current = restoredContractHasUserChanges;
+          setFinalTermsValues(savedDraft.finalTermsValues);
+        }
+
+        if (pendingEquipment) {
+          setEquipment([pendingEquipment]);
+          return;
+        }
+
+        if (savedDraft?.equipment.length) {
+          setEquipment(savedDraft.equipment);
+          return;
+        }
+
+      const stored = localStorage.getItem(`project_${projectId}_equipment`);
+      const storedEquipment: Equipment[] = stored ? JSON.parse(stored) : [];
       const latestEquipmentWithFiles = storedEquipment
         .filter(
           (item): item is Extract<Equipment, { formType: 'solar' }> =>
@@ -392,10 +469,60 @@ const ProjectRegister = () => {
           JSON.stringify(activeEquipment),
         );
       }
+      } catch {
+        // A malformed legacy cache must never block the registration form.
+      } finally {
+        if (isMounted) setIsDraftHydrated(true);
+      }
     };
 
-    loadEquipment();
-  }, [pendingEquipment, projectId]);
+    void hydrateDraft();
+    return () => {
+      isMounted = false;
+    };
+  }, [draftKey, pendingEquipment, projectId]);
+
+  useEffect(() => {
+    if (
+      !sustainabilityDefaultQuery.data ||
+      contractHasUserChangesRef.current
+    ) {
+      return;
+    }
+
+    setContractFormValues(
+      mapSustainabilityCommitmentDefault(sustainabilityDefaultQuery.data),
+    );
+  }, [sustainabilityDefaultQuery.data]);
+
+  useEffect(() => {
+    if (!isDraftHydrated || isCompletionStep) return;
+
+    const draft: ProjectRegistrationDraft = {
+      version: PROJECT_REGISTRATION_DRAFT_VERSION,
+      currentStep,
+      equipment,
+      agreementFormValues,
+      contractFormValues,
+      contractHasUserChanges,
+      finalTermsValues,
+      updatedAt: new Date().toISOString(),
+    };
+
+    void saveProjectRegistrationDraft(draftKey, draft).catch(() => {
+      // Saving a draft is best-effort and must not interrupt form input.
+    });
+  }, [
+    agreementFormValues,
+    contractFormValues,
+    contractHasUserChanges,
+    currentStep,
+    draftKey,
+    equipment,
+    finalTermsValues,
+    isCompletionStep,
+    isDraftHydrated,
+  ]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const validateStep = async (): Promise<boolean> => {
@@ -600,6 +727,9 @@ const ProjectRegister = () => {
         },
       );
       await joinSiteProject(projectId, registrationPayload);
+      void deleteProjectRegistrationDraft(draftKey).catch(() => {
+        // A cleanup failure must not turn a completed backend request into an error.
+      });
 
       const storedProjects = localStorage.getItem("appliedProjects");
       const appliedProjects = storedProjects ? JSON.parse(storedProjects) : [];
@@ -646,6 +776,7 @@ const ProjectRegister = () => {
           <EquipmentRegistrationStep
             ref={equipmentStepRef}
             onAddSite={handleAddSite}
+            onValueChange={handleEquipmentDraftChange}
             initialEquipment={equipment.find(
               (item): item is Extract<Equipment, { formType: 'solar' }> =>
                 item.formType === 'solar',
@@ -671,13 +802,28 @@ const ProjectRegister = () => {
           <ContractStep
             ref={contractStepRef}
             formValues={contractFormValues}
-            onValueChange={(values) => {
+            onValueChange={(values, metadata) => {
               setContractFormValues(values);
+              if (metadata.isUserChange) {
+                contractHasUserChangesRef.current = true;
+                setContractHasUserChanges(true);
+              }
               if (Object.keys(contractErrors).length > 0) {
                 setContractErrors({});
               }
             }}
             errors={contractErrors}
+            isDefaultLoading={
+              !contractHasUserChanges && sustainabilityDefaultQuery.isFetching
+            }
+            defaultLoadError={
+              !contractHasUserChanges && sustainabilityDefaultQuery.isError
+                ? '登録済み情報を取得できませんでした。手動で入力するか、再試行してください。'
+                : null
+            }
+            onRetryDefaults={() => {
+              void sustainabilityDefaultQuery.refetch();
+            }}
           />
         );
       case FINAL_AGREEMENT_STEP:
@@ -722,6 +868,14 @@ const ProjectRegister = () => {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <p className="text-foreground text-lg">プロジェクト情報を読み込み中...</p>
+      </div>
+    );
+  }
+
+  if (!isDraftHydrated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-foreground text-lg">入力内容を復元中...</p>
       </div>
     );
   }

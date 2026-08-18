@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SolarEquipment } from './components/types';
+import type { ContractStepFormValues } from './components/ContractStep';
 import ProjectRegisterPage from './ProjectRegisterPage';
 
 const apiMocks = vi.hoisted(() => ({
@@ -14,6 +15,14 @@ const apiMocks = vi.hoisted(() => ({
   validateSiteProjectSustainabilityCommitment: vi.fn(),
   validateSiteProjectFinalAgreement: vi.fn(),
 }));
+
+const draftStorageMocks = vi.hoisted(() => ({
+  loadProjectRegistrationDraft: vi.fn(),
+  saveProjectRegistrationDraft: vi.fn(),
+  deleteProjectRegistrationDraft: vi.fn(),
+}));
+
+const sustainabilityDefaultQueryMock = vi.hoisted(() => vi.fn());
 
 const flowEquipment: SolarEquipment = {
   id: 'equipment-review',
@@ -46,6 +55,16 @@ vi.mock('@/api/site', async (importOriginal) => ({
   ...apiMocks,
 }));
 
+vi.mock(
+  '@/features/user/project-registration/projectRegistrationDraftStorage',
+  async (importOriginal) => ({
+    ...(await importOriginal<
+      typeof import('@/features/user/project-registration/projectRegistrationDraftStorage')
+    >()),
+    ...draftStorageMocks,
+  }),
+);
+
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     user: { id: 'user-1', companyId: 'company-1', role: 'master' },
@@ -62,6 +81,10 @@ vi.mock('@/hooks/sites/useSitesQuery', () => ({
       sites: [{ siteId: 'SITE-SELECTED', siteName: '東京工場' }],
     },
   }),
+}));
+
+vi.mock('@/hooks/sites/useSustainabilityCommitmentDefaultQuery', () => ({
+  useSustainabilityCommitmentDefaultQuery: sustainabilityDefaultQueryMock,
 }));
 
 vi.mock('@/stores/dashboardStore', () => ({
@@ -122,7 +145,16 @@ vi.mock('./components/DynamicAgreementsStep', async () => {
 vi.mock('./components/ContractStep', async () => {
   const { forwardRef, useImperativeHandle } = await import('react');
   return {
-    ContractStep: forwardRef((_props, ref) => {
+    ContractStep: forwardRef<
+      unknown,
+      {
+        formValues: Partial<ContractStepFormValues>;
+        onValueChange: (
+          values: Partial<ContractStepFormValues>,
+          metadata: { isUserChange: boolean },
+        ) => void;
+      }
+    >((props, ref) => {
       useImperativeHandle(ref, () => ({
         getValues: () => ({
           businessName: 'ABC株式会社',
@@ -131,7 +163,39 @@ vi.mock('./components/ContractStep', async () => {
           contractAgreed: true,
         }),
       }));
-      return <h2>持続可能性フォーム</h2>;
+      return (
+        <div>
+          <h2>持続可能性フォーム</h2>
+          <span data-testid="contract-business-name">
+            {props.formValues.businessName ?? ''}
+          </span>
+          <span data-testid="contract-representative-name">
+            {props.formValues.representativeName ?? ''}
+          </span>
+          <span data-testid="contract-representative-position">
+            {props.formValues.representativePosition ?? ''}
+          </span>
+          <span data-testid="contract-agreed">
+            {String(props.formValues.contractAgreed === true)}
+          </span>
+          <button
+            type="button"
+            onClick={() =>
+              props.onValueChange(
+                {
+                  businessName: '',
+                  representativeName: '',
+                  representativePosition: '',
+                  contractAgreed: false,
+                },
+                { isUserChange: true },
+              )
+            }
+          >
+            契約情報を空にする
+          </button>
+        </div>
+      );
     }),
   };
 });
@@ -167,7 +231,7 @@ function renderFlow() {
 
 // Advances the mocked four input steps to the final review screen.
 async function advanceToReview(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole('button', { name: '次へ' }));
+  await user.click(await screen.findByRole('button', { name: '次へ' }));
   await screen.findByText('同意事項フォーム');
   await user.click(screen.getByRole('button', { name: '次へ' }));
   await screen.findByText('持続可能性フォーム');
@@ -193,13 +257,32 @@ describe('ProjectRegisterPage review flow', () => {
       s3Key: 'tmp/contract.pdf',
     });
     apiMocks.joinSiteProject.mockResolvedValue({ statusCode: 'OK' });
+    draftStorageMocks.loadProjectRegistrationDraft.mockReset();
+    draftStorageMocks.saveProjectRegistrationDraft.mockReset();
+    draftStorageMocks.deleteProjectRegistrationDraft.mockReset();
+    draftStorageMocks.loadProjectRegistrationDraft.mockResolvedValue(null);
+    draftStorageMocks.saveProjectRegistrationDraft.mockResolvedValue(undefined);
+    draftStorageMocks.deleteProjectRegistrationDraft.mockResolvedValue(undefined);
+    sustainabilityDefaultQueryMock.mockReset();
+    sustainabilityDefaultQueryMock.mockReturnValue({
+      data: {
+        companyName: '初期株式会社',
+        repName: '初期代表者',
+        repRole: '初期役職',
+        hasConsent: true,
+        isAgreeTerms: true,
+      },
+      isFetching: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
   });
 
   it('reviews all steps before uploading and submitting', async () => {
     const user = userEvent.setup();
     renderFlow();
 
-    expect(screen.getByRole('navigation', { name: 'Progress' })).toHaveTextContent(
+    expect(await screen.findByRole('navigation', { name: 'Progress' })).toHaveTextContent(
       '設備登録同意事項持続可能性入会規約確認',
     );
 
@@ -225,6 +308,7 @@ describe('ProjectRegisterPage review flow', () => {
         expect.any(File),
       );
       expect(apiMocks.joinSiteProject).toHaveBeenCalledTimes(1);
+      expect(draftStorageMocks.deleteProjectRegistrationDraft).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -241,6 +325,109 @@ describe('ProjectRegisterPage review flow', () => {
       expect(screen.getByRole('heading', { name: '申請内容の確認' })).toBeVisible();
       expect(screen.getByRole('button', { name: '申請する' })).toBeEnabled();
       expect(screen.getByText('contract.pdf')).toBeVisible();
+    });
+  });
+
+  it('restores the saved step, equipment values, and selected files after refresh', async () => {
+    draftStorageMocks.loadProjectRegistrationDraft.mockResolvedValueOnce({
+      version: 1,
+      currentStep: 5,
+      equipment: [flowEquipment],
+      agreementFormValues: {},
+      contractFormValues: {},
+      contractHasUserChanges: false,
+      finalTermsValues: {},
+      updatedAt: '2026-08-17T17:00:00.000Z',
+    });
+
+    renderFlow();
+
+    expect(
+      await screen.findByRole('heading', { name: '申請内容の確認' }),
+    ).toBeVisible();
+    expect(screen.getByText('東京工場')).toBeVisible();
+    expect(screen.getByText('2026-08-17')).toBeVisible();
+    expect(screen.getByText('contract.pdf')).toBeVisible();
+  });
+
+  it('prefills only Contract Step text fields from the selected site default', async () => {
+    const user = userEvent.setup();
+    renderFlow();
+
+    await user.click(await screen.findByRole('button', { name: '次へ' }));
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+    await screen.findByText('持続可能性フォーム');
+
+    expect(screen.getByTestId('contract-business-name')).toHaveTextContent(
+      '初期株式会社',
+    );
+    expect(screen.getByTestId('contract-representative-name')).toHaveTextContent(
+      '初期代表者',
+    );
+    expect(
+      screen.getByTestId('contract-representative-position'),
+    ).toHaveTextContent('初期役職');
+    expect(screen.getByTestId('contract-agreed')).toHaveTextContent('false');
+    expect(sustainabilityDefaultQueryMock).toHaveBeenCalledWith(
+      'SITE-SELECTED',
+      true,
+    );
+  });
+
+  it('keeps an explicitly cleared Contract Step draft instead of applying defaults', async () => {
+    draftStorageMocks.loadProjectRegistrationDraft.mockResolvedValueOnce({
+      version: 1,
+      currentStep: 3,
+      equipment: [flowEquipment],
+      agreementFormValues: {},
+      contractFormValues: {
+        businessName: '',
+        representativeName: '',
+        representativePosition: '',
+        contractAgreed: false,
+      },
+      contractHasUserChanges: true,
+      finalTermsValues: {},
+      updatedAt: '2026-08-18T02:00:00.000Z',
+    });
+
+    renderFlow();
+
+    await screen.findByText('持続可能性フォーム');
+    expect(screen.getByTestId('contract-business-name')).toBeEmptyDOMElement();
+    expect(screen.getByTestId('contract-representative-name')).toBeEmptyDOMElement();
+    expect(
+      screen.getByTestId('contract-representative-position'),
+    ).toBeEmptyDOMElement();
+    expect(sustainabilityDefaultQueryMock).toHaveBeenCalledWith(
+      'SITE-SELECTED',
+      false,
+    );
+  });
+
+  it('persists intentionally cleared Contract Step fields as user changes', async () => {
+    const user = userEvent.setup();
+    renderFlow();
+
+    await user.click(await screen.findByRole('button', { name: '次へ' }));
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+    await user.click(
+      await screen.findByRole('button', { name: '契約情報を空にする' }),
+    );
+
+    await waitFor(() => {
+      expect(draftStorageMocks.saveProjectRegistrationDraft).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          contractHasUserChanges: true,
+          contractFormValues: {
+            businessName: '',
+            representativeName: '',
+            representativePosition: '',
+            contractAgreed: false,
+          },
+        }),
+      );
     });
   });
 });
