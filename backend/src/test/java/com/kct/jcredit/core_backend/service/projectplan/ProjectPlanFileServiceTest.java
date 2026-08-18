@@ -108,4 +108,30 @@ class ProjectPlanFileServiceTest {
         JsonNode array = objectMapper.createArrayNode();
         assertThat(service().promoteUploads(array, PROJECT_ID, SLUG)).isSameAs(array);
     }
+    @Test
+    void aProvisionalKeyWeWouldNotPromoteIsReported() {
+        ObjectNode body = page()
+                .put("methodCollDescriptionImg", "tmp/equipments/xyz/photo.png")
+                .put("methodCollDescription", "ふつうの説明");
+
+        // Storing it would leave the page pointing at an object the bucket
+        // lifecycle rule deletes within a day, and nothing would ever say so.
+        assertThat(service().foreignTempKeys(body)).containsOnlyKeys("methodCollDescriptionImg");
+    }
+
+    @Test
+    void ourOwnProvisionalKeysAreNotReportedBecauseTheyGetPromoted() {
+        ObjectNode body = page().put("methodCollDescriptionImg", TEMP_KEY);
+
+        assertThat(service().foreignTempKeys(body)).isEmpty();
+    }
+
+    @Test
+    void permanentKeysAndPlainTextAreNotReported() {
+        ObjectNode body = page()
+                .put("methodCollDescriptionImg", PERMANENT_KEY)
+                .put("note", "tmpは一時領域です");
+
+        assertThat(service().foreignTempKeys(body)).isEmpty();
+    }
 }

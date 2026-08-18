@@ -1,5 +1,6 @@
 package com.kct.jcredit.core_backend.service.projectplan;
 
+import java.util.LinkedHashMap;
 import java.util.UUID;
 import java.util.Map;
 
@@ -90,6 +91,44 @@ public class ProjectPlanFileService {
         }
         ObjectNode copy = body.deepCopy();
         return rewrite(copy, projectId, formSlug) ? copy : body;
+    }
+
+    /**
+     * Fields holding a provisional key this service will not promote.
+     *
+     * <p>Only {@code tmp/projectplan/} keys are ours. Anything else under
+     * {@code tmp/} would be stored exactly as sent and then deleted by the
+     * bucket's lifecycle rule, leaving a saved page pointing at an object that
+     * no longer exists — silently. Better to refuse the save.
+     *
+     * <p>Checked before promotion, so a page rejected for this moves nothing.
+     *
+     * @return field name to message, empty when the page is clean
+     */
+    public Map<String, String> foreignTempKeys(JsonNode body) {
+        Map<String, String> offending = new LinkedHashMap<>();
+        collectForeignTempKeys(body, offending);
+        return offending;
+    }
+
+    private static void collectForeignTempKeys(JsonNode node, Map<String, String> offending) {
+        if (node instanceof ObjectNode object) {
+            var names = object.fieldNames();
+            while (names.hasNext()) {
+                String name = names.next();
+                JsonNode child = object.get(name);
+                if (child != null && child.isTextual()
+                        && S3FileStorage.isTemporary(child.asText())
+                        && !child.asText().startsWith(TEMP_KEY_PREFIX)) {
+                    offending.putIfAbsent(name,
+                            "アップロードされたファイルの参照が不正です。ファイルを再度アップロードしてください。");
+                } else {
+                    collectForeignTempKeys(child, offending);
+                }
+            }
+        } else if (node instanceof ArrayNode array) {
+            array.forEach(child -> collectForeignTempKeys(child, offending));
+        }
     }
 
     private boolean rewrite(JsonNode node, String projectId, String formSlug) {

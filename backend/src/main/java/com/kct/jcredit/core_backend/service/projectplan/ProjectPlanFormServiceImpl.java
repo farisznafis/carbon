@@ -282,6 +282,19 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
             return response;
         }
 
+        // A provisional key we would not promote must not be stored: the bucket
+        // expires tmp/ after a day, so the page would end up pointing at nothing
+        // with no error ever raised. Checked before promoting, so a page
+        // rejected here has moved no files.
+        Map<String, String> fileErrors = fileService.foreignTempKeys(body);
+        if (!fileErrors.isEmpty()) {
+            response.setStatusCode(ResponseConstants.VALIDATION_ERROR);
+            response.setMessage(ResponseConstants.MSG_VALIDATION_ERROR);
+            response.setErrors(fileErrors);
+            response.setTimestamp(LocalDateTime.now());
+            return response;
+        }
+
         // The page is good, so its uploads become permanent and the payload is
         // re-read so the stored keys are the permanent ones. Doing this after
         // validation is what keeps a rejected page from leaving files behind:
