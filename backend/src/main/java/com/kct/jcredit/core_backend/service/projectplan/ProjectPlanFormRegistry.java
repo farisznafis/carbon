@@ -491,12 +491,29 @@ public class ProjectPlanFormRegistry {
 
 
     private void register(FormDefinition<?> definition) {
+        rejectUnsupportedRepetition(definition);
         if (bySlug.putIfAbsent(definition.slug(), definition) != null) {
             throw new IllegalStateException("Duplicate project-plan form slug: " + definition.slug());
         }
         if (bySkPrefix.putIfAbsent(definition.skPrefix(), definition) != null) {
             throw new IllegalStateException(
                     "Duplicate project-plan form sort key: " + definition.skPrefix());
+        }
+    }
+
+    /** Package-private so the guard itself can be tested, not just its effect. */
+    static void rejectUnsupportedRepetition(FormDefinition<?> definition) {
+        if (definition.perMethodology()) {
+            // The framework can key a page by 方法論 (SK suffix #M2), but nothing
+            // can store the methodologies themselves: project holds exactly one,
+            // in method_category/method_number/method_name, all NOT NULL. A page
+            // registered as repeating would therefore collect ②–⑤ data that the
+            // project record, monitoring and credit calculation cannot represent.
+            // Enabling this needs the schema first — see the project-plan notes.
+            throw new IllegalStateException(
+                    "Page " + definition.slug() + " is registered as perMethodology, but the"
+                            + " schema stores only one 方法論 per project. Add storage for"
+                            + " 方法論 ②–⑤ before enabling repetition.");
         }
     }
 
