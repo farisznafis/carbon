@@ -88,6 +88,35 @@ public class AdminCompanyController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
+    /**
+     * Approves a pending company and provisions its master account.
+     */
+    @PostMapping("/{companyId}/approve")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "企業登録承認", description = "申請中の企業を承認し、マスターユーザーを作成します。")
+    public ResponseEntity<ApproveCompanyResponse> approveCompany(@PathVariable String companyId) {
+        ApproveCompanyResponse response = companyApprovalService.approveCompany(companyId);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    /**
+     * Rejects a pending company registration with an auditable explanation.
+     */
+    @PostMapping("/{companyId}/reject")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "企業登録却下", description = "申請中の企業登録を却下します。")
+    public ResponseEntity<RejectCompanyResponse> rejectCompany(
+            @PathVariable String companyId,
+            @RequestBody @Valid RejectCompanyRequest request) {
+        RejectCompanyResponse response = companyApprovalService.rejectCompany(
+                companyId,
+                request.getRejectionReason()
+        );
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
     @PostMapping("/{companyId}/master-setup-link/resend")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")

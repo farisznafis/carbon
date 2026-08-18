@@ -563,3 +563,22 @@ export type UpdateProjectStatusPayload = {
 };
 
 export type UpdateProjectStatusResponse = UpdateProjectStatusPayload;
+
+/** How far one project's plan is filled, for list views. */
+export type ProjectPlanProgressSummary = {
+  projectId: string;
+  totalForms: number;
+  completedForms: number;
+  /** First page not yet complete; null once everything is done. */
+  nextIncompleteSlug?: string | null;
+  /** True when the operator may pick any page instead of resuming. */
+  complete: boolean;
+};
+
+export type ProjectPlanBatchProgressResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: unknown;
+  /** Projects the caller cannot see are omitted rather than reported. */
+  projects?: ProjectPlanProgressSummary[];
+};

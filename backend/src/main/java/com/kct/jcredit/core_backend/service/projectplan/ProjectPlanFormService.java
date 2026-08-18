@@ -2,7 +2,10 @@ package com.kct.jcredit.core_backend.service.projectplan;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormResponse;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanBatchProgressResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressResponse;
+
+import java.util.List;
 
 /**
  * Serves every page of the project plan from the form registry.
@@ -32,6 +35,13 @@ public interface ProjectPlanFormService {
 
     ProjectPlanProgressResponse getProgress(
             String projectId,
+            String companyId,
+            String role,
+            String username);
+
+    /** Progress for several projects in one round trip, for list views. */
+    ProjectPlanBatchProgressResponse getProgressForProjects(
+            List<String> projectIds,
             String companyId,
             String role,
             String username);

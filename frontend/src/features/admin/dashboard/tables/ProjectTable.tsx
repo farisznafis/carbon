@@ -1,4 +1,7 @@
-import type { ProjectStatus } from '@/api/admin/projects';
+import type {
+  ProjectPlanProgressSummary,
+  ProjectStatus,
+} from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
 import { useState } from 'react';
 import {
@@ -25,6 +28,14 @@ type ProjectTableProps = {
     status: ProjectStatus,
   ) => void | Promise<void>;
   updatingProjectStatusId?: string | null;
+  /** Plan progress by project id, fetched in one batch by the parent. */
+  planProgress?: ReadonlyMap<string, ProjectPlanProgressSummary>;
+  /**
+   * Opens the plan. The second argument is the page to land on: the first
+   * unfinished one while the plan is incomplete, and undefined once it is done
+   * so the operator can choose which page to update.
+   */
+  onOpenPlan?: (project: Project, slug?: string) => void;
 };
 
 const projectStatusOptions: ProjectStatus[] = [
@@ -106,7 +117,7 @@ const projectStatusAliases: Partial<Record<string, ProjectStatus>> = {
 };
 
 const projectTableGridColumns =
-  'minmax(180px, 1.2fr) minmax(86px, 0.55fr) minmax(86px, 0.55fr) minmax(260px, 1.8fr) minmax(130px, 0.8fr) minmax(180px, 1fr)';
+  'minmax(180px, 1.2fr) minmax(86px, 0.55fr) minmax(86px, 0.55fr) minmax(260px, 1.8fr) minmax(130px, 0.8fr) minmax(120px, 0.7fr) minmax(220px, 1.2fr)';
 
 function isProjectStatus(status: string): status is ProjectStatus {
   return projectStatusOptions.includes(status as ProjectStatus);
@@ -151,6 +162,8 @@ export function ProjectTable({
   onRowClick,
   onStatusChange,
   updatingProjectStatusId,
+  planProgress,
+  onOpenPlan,
 }: ProjectTableProps) {
   const [completionProject, setCompletionProject] = useState<Project | null>(
     null,
@@ -264,30 +277,63 @@ export function ProjectTable({
       },
     },
     {
+      id: 'planProgress',
+      label: '計画書',
+      render: (project) => {
+        const progress = planProgress?.get(String(project.id));
+        // Absent while the batch is still loading, or when the plan API is
+        // unavailable — the row must still render either way.
+        if (!progress || progress.totalForms === 0) {
+          return <span className="text-sm text-muted-foreground">-</span>;
+        }
+        return (
+          <span className="text-sm">
+            {progress.completedForms} / {progress.totalForms}
+          </span>
+        );
+      },
+    },
+    {
       id: 'actions',
       label: '操作',
-      render: (project) => (
-        <div
-          className="flex justify-start gap-2"
-          onClick={(event) => event.stopPropagation()}
-          onPointerDown={(event) => event.stopPropagation()}
-        >
-          <Button
-            type="button"
-            variant="primary"
-            onClick={() => onEdit?.(project)}
+      render: (project) => {
+        const progress = planProgress?.get(String(project.id));
+        const resumeSlug = progress?.complete
+          ? undefined
+          : (progress?.nextIncompleteSlug ?? undefined);
+
+        return (
+          <div
+            className="flex justify-start gap-2"
+            onClick={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
           >
-            詳細
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onUpdate?.(project)}
-          >
-            更新
-          </Button>
-        </div>
-      ),
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => onEdit?.(project)}
+            >
+              詳細
+            </Button>
+            {onOpenPlan && progress && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenPlan(project, resumeSlug)}
+              >
+                {progress.complete ? '計画書更新' : '続きから'}
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onUpdate?.(project)}
+            >
+              更新
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 
