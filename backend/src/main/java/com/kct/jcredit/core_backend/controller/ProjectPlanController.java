@@ -92,7 +92,7 @@ public class ProjectPlanController {
     // --- Registry-driven pages ---
 
     @GetMapping("/{projectId}/forms/{formSlug}")
-    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "計画書フォーム取得",
             description = "指定ページを取得します。SQL由来の項目は readOnlyFields、"
@@ -119,7 +119,7 @@ public class ProjectPlanController {
     }
 
     @GetMapping("/{projectId}/progress")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "計画書入力状況取得",
             description = "全ページの入力状況と、次に入力すべきページを返します。")
@@ -134,7 +134,7 @@ public class ProjectPlanController {
     }
 
     @GetMapping("/progress")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "計画書入力状況一括取得",
             description = "複数プロジェクトの入力状況をまとめて取得します。一覧画面用。"
