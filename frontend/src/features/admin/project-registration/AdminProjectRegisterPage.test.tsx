@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const adminProjectApiMocks = vi.hoisted(() => ({
   createAdminProject: vi.fn(),
+  getAdminProjectDetail: vi.fn(),
   getProjectPlanAutofillByProject: vi.fn(),
   getProjectPlanAutofillDefaults: vi.fn(),
   getProjectPlanForm: vi.fn(),
@@ -42,6 +43,13 @@ describe('AdminProjectRegister', () => {
     adminProjectApiMocks.createAdminProject.mockResolvedValue([
       { id: 'project-1' },
     ]);
+    adminProjectApiMocks.getAdminProjectDetail.mockResolvedValue({
+      id: 'project-9',
+      projectName: '既存プロジェクト',
+      projectNumber: 'P9',
+      projectStatus: '準備中',
+      repLastName: '山田',
+    });
     adminProjectApiMocks.getProjectPlanAutofillDefaults.mockResolvedValue({
       data: {},
     });
@@ -294,5 +302,35 @@ describe('AdminProjectRegister', () => {
       'step-2',
     );
     expect(adminProjectApiMocks.createAdminProject).not.toHaveBeenCalled();
+  });
+  it('fills step 1 from the project record, not the list row it was opened with', async () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/',
+            state: {
+              project: {
+                id: 'project-9',
+                projectName: '既存プロジェクト',
+                projectStatus: '準備中',
+              },
+              planSlug: 'applicable-conditions',
+            },
+          },
+        ]}
+      >
+        <AdminProjectRegister />
+      </MemoryRouter>,
+    );
+
+    // The row carries a handful of fields; step 1 has far more, and all of
+    // them are required. Reading only the row left it blank and the first
+    // save was rejected field by field with nothing shown on screen.
+    await waitFor(() =>
+      expect(adminProjectApiMocks.getAdminProjectDetail).toHaveBeenCalledWith(
+        'project-9',
+      ),
+    );
   });
 });

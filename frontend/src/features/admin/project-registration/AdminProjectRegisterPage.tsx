@@ -11,6 +11,7 @@ import {
 } from '@/api/admin/projectPayloadMapper';
 import {
   createAdminProject,
+  getAdminProjectDetail,
   getProjectPlanAutofillByProject,
   getProjectPlanAutofillDefaults,
   getProjectPlanForm,
@@ -41,6 +42,7 @@ import {
   TemporaryAdminProjectAutofillButton,
 } from './forms/TemporaryAdminProjectAutofillButton';
 import { applyBackendValidationErrors } from './forms/backendValidationErrors';
+import { mapDetailToProjectBase } from './forms/projectBaseFromDetail';
 import type { AdminProjectRegisterFormInputValues } from './forms/projectFormTypes';
 import { ProjectStatusSchema } from './forms/projectBaseSchema';
 import {
@@ -149,33 +151,49 @@ export const AdminProjectRegister: React.FC = () => {
   useEffect(() => {
     if (!state?.project) return;
 
-    // Annotated so the literal fields keep the form's narrow types; a bare
-    // object literal widens them to string and no longer fits reset().
-    const projectBase: NonNullable<
-      AdminProjectRegisterFormInputValues['projectBase']
-    > = {
-      projectName: state.project.projectName,
-      projectNumber: state.project.id,
-      projectStatus: getProjectStatusValue(state.project.projectStatus),
-      methodCategory: 'EN-S',
-      methodNumber: '002',
-      methodName: '太陽光発電設備の導入',
-      methodMainEmission: 'CO2削減',
-      methodCombiFeasibility: false,
-      methodologyVersion: 'Ver.2.0',
-    };
-    form.reset({ projectBase });
+    const projectId = state.project.id ? String(state.project.id) : null;
+    let cancelled = false;
 
-    // Arriving with a project means resuming it, not starting a new one.
-    // Without this the wizard treats the id as unset and 次へ creates a
-    // duplicate project instead of updating this one.
-    if (state.project.id) {
-      // This base information came from the server, so it already counts as
-      // saved. Without the snapshot, leaving step 1 would push an update built
-      // from the placeholder values above.
-      setSavedProjectBaseSnapshot(toSnapshot(projectBase));
-      void resumePlan(String(state.project.id), state.planSlug);
-    }
+    void (async () => {
+      // Step 1 is the SQL project record. The list row this screen is opened
+      // with carries only a handful of its fields, so read the record itself —
+      // otherwise step 1 shows blank required fields and the first 次へ pushes
+      // an almost empty update that the server rejects field by field.
+      let projectBase = {
+        projectName: state.project?.projectName,
+        projectNumber: state.project?.id,
+        projectStatus: getProjectStatusValue(
+          state.project?.projectStatus ?? '',
+        ),
+      } as NonNullable<AdminProjectRegisterFormInputValues['projectBase']>;
+
+      if (projectId) {
+        try {
+          const detail = await getAdminProjectDetail(projectId);
+          if (cancelled) return;
+          projectBase = mapDetailToProjectBase(detail) as typeof projectBase;
+        } catch (e) {
+          console.warn('Failed to load the project record for step 1', e);
+        }
+      }
+      if (cancelled) return;
+
+      form.reset({ projectBase });
+
+      // Arriving with a project means resuming it, not starting a new one.
+      // Without this the wizard treats the id as unset and 次へ creates a
+      // duplicate project instead of updating this one.
+      if (projectId) {
+        // It came from the server, so it already counts as saved; without the
+        // snapshot, leaving step 1 would push a pointless update.
+        setSavedProjectBaseSnapshot(toSnapshot(projectBase));
+        void resumePlan(projectId, state.planSlug);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
     // resumePlan is stable for a given project; re-running on every render
     // would refetch progress in a loop.
     // eslint-disable-next-line react-hooks/exhaustive-deps
