@@ -8,9 +8,9 @@ const baseForm = {
   ELpvr_value: '5',
   ELPJ_control_value: '2',
   ELPJ_accuracy: '99',
-  ELpv_evidence: 'pv.pdf',
-  ELpvr_evidence: 'pvr.pdf',
-  ELPJ_control_equipment_spec_files: 'control.pdf',
+  elpv_evidence: 'pv.pdf',
+  elpvr_evidence: 'pvr.pdf',
+  elpj_control_evidence: 'control.pdf',
 };
 
 const context = {
@@ -26,7 +26,7 @@ describe('buildMonitoringPayload', () => {
         ...baseForm,
         changedBattery: true,
         ELPJ_battery_value: '8',
-        ELPJ_battery_evidence: 'battery.pdf',
+        elpj_battery_evidence: 'battery.pdf',
       },
       { ...context, hasBattery: false },
     );
@@ -34,7 +34,7 @@ describe('buildMonitoringPayload', () => {
     expect(payload.equipmentId).toBe(100);
     expect(payload).not.toHaveProperty('changedBattery');
     expect(payload).not.toHaveProperty('ELPJ_battery_value');
-    expect(payload).not.toHaveProperty('ELPJ_battery_evidence');
+    expect(payload).not.toHaveProperty('elpj_battery_evidence');
   });
 
   it('includes battery fields when the selected equipment has a changed battery', () => {
@@ -43,7 +43,7 @@ describe('buildMonitoringPayload', () => {
         ...baseForm,
         changedBattery: true,
         ELPJ_battery_value: '8',
-        ELPJ_battery_evidence: 'battery.pdf',
+        elpj_battery_evidence: 'battery.pdf',
       },
       { ...context, hasBattery: true },
     );
@@ -53,7 +53,7 @@ describe('buildMonitoringPayload', () => {
         equipmentId: 100,
         changedBattery: true,
         ELPJ_battery_value: 8,
-        ELPJ_battery_evidence: 'battery.pdf',
+        elpj_battery_evidence: 'battery.pdf',
       }),
     );
   });

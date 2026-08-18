@@ -190,8 +190,8 @@ public class MonitoringServiceImpl implements MonitoringService {
             entity.setTimeUpdated(Instant.now().toString()); // Auto-set with server time in ISO format as SK
             entity.setDateRecorded(request.getDateRecorded());
 
-            // 8) Set evidence URLs (ELpv_evidence, ELpvr_evidence, ELPJ_battery_evidence, ELPJ_control_equipment_spec_files)
-            //証拠URLを設定する（ELpv_evidence、ELpvr_evidence、ELPJ_battery_evidence、ELPJ_control_equipment_spec_files）
+            // 8) Set evidence URLs (elpv_evidence, elpvr_evidence, elpj_battery_evidence, elpj_control_evidence)
+            //証拠URLを設定する（elpv_evidence、elpvr_evidence、elpj_battery_evidence、elpj_control_evidence）
             entity.setElPvEvidenceUrl(request.getElPvEvidenceUrl());
             entity.setElPvrEvidenceUrl(request.getElPvrEvidenceUrl());
             entity.setElpjBatterySpecificationUrl(request.getElpjBatterySpecificationUrl());
@@ -826,17 +826,17 @@ public class MonitoringServiceImpl implements MonitoringService {
         Map<String, String> errors = new LinkedHashMap<>();
 
         if (isBlank(request.getElPvEvidenceUrl())) {
-            errors.put("ELpv_evidence", ResponseConstants.MSG_ELPV_EVIDENCE_REQUIRED);
+            errors.put("elpv_evidence", ResponseConstants.MSG_ELPV_EVIDENCE_REQUIRED);
         }
         if (isBlank(request.getElPvrEvidenceUrl())) {
-            errors.put("ELpvr_evidence", ResponseConstants.MSG_ELPVR_EVIDENCE_REQUIRED);
+            errors.put("elpvr_evidence", ResponseConstants.MSG_ELPVR_EVIDENCE_REQUIRED);
         }
         if (Boolean.TRUE.equals(request.getChangedBattery())
                 && isBlank(request.getElpjBatterySpecificationUrl())) {
-            errors.put("ELPJ_battery_evidence", ResponseConstants.MSG_ELPJ_BATTERY_EVIDENCE_REQUIRED);
+            errors.put("elpj_battery_evidence", ResponseConstants.MSG_ELPJ_BATTERY_EVIDENCE_REQUIRED);
         }
         if (isBlank(request.getElpjControlEvidenceUrl())) {
-            errors.put("ELPJ_control_equipment_spec_files", ResponseConstants.MSG_ELPJ_CONTROL_EVIDENCE_REQUIRED);
+            errors.put("elpj_control_evidence", ResponseConstants.MSG_ELPJ_CONTROL_EVIDENCE_REQUIRED);
         }
 
         return errors;
@@ -884,7 +884,7 @@ public class MonitoringServiceImpl implements MonitoringService {
     }
 
     /**
-     * changedBattery/ELPJ_battery_value/ELPJ_battery_evidence are only meaningful when the
+     * changedBattery/ELPJ_battery_value/elpj_battery_evidence are only meaningful when the
      * equipment this record belongs to actually has a battery (EnR002Equipment.hasBattery).
      */
     private Map<String, String> collectBatteryEligibilityErrors(
