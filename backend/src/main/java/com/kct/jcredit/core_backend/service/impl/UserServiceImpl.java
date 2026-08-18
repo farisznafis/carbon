@@ -527,19 +527,16 @@ public class UserServiceImpl implements UserService {
                                      List<SiteResponse> updatedSites,
                                      UpdateUserResponse response) {
         if (isSelf) {
-            System.out.println("Handling master self update");
             // Cases 6, 8 — master editing self, cascade to all PIC sites
             handleMasterSelfUpdate(request, masterCompany, requestingUser,
                                    updatedSites, response);
 
         } else if (isSiteChange) {
-            System.out.println("Handling master site change update");
             // Case 13, 15 — master moving a user to a different site
             handleMasterEditWithSiteChange(request, masterCompany, targetUser,requestingUser,
                                               currentSite, requestedSiteId,
                                               updatedSites, response, isPIC);
         } else {
-            System.out.println("Handling master edit user update");
             // Case 5, 7— master editing a regular user, no site change
             handleMasterEditUser(request, targetUser, currentSite, updatedSites, response, isPIC);
         }
@@ -666,6 +663,20 @@ public class UserServiceImpl implements UserService {
 
         requestingUser.setUpdatedAt(LocalDateTime.now());
         ParticipatingUser saved = userRepository.save(requestingUser);
+
+        //update company 法人 info
+        ParticipatingCompany company = requestingUser.getCompany();
+        company.setRepFirstName(request.getFirstName());
+        company.setRepFirstNameKana(request.getFirstNameKana());
+        company.setRepLastName(request.getLastName());
+        company.setRepLastNameKana(request.getLastNameKana());
+        company.setEmail(request.getEmail());
+        company.setRepPosition(request.getUserPosition());
+        company.setRepPhoneNumber(request.getPhoneNumber());
+        company.setUpdatedBy(requestingUser.getUsername());
+        company.setUpdatedAt(LocalDateTime.now());
+
+        participatingCompanyRepository.save(company);
 
         response.setStatusCode(ResponseConstants.OK);
         response.setMessage("マスターユーザー情報と関連サイトPIC情報が正常に更新されました。");
