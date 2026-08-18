@@ -4,7 +4,6 @@
 // emissions
 // monitor_calc_being_done
 // emissions_total_value
-import { MONITOR_CALC_BASELINE_OPTIONS, MONITOR_CALC_BASELINE_VALIDATION } from '@/lib/constants/select_types';
 import {
   REGEX_MESSAGES,
   REGEX_PATTERNS,
@@ -33,7 +32,7 @@ export const baselineIncidentalSchema = z.object({
     .min(1, '必須項目です')
     .regex(REGEX_PATTERNS.NUMERIC_12_1, REGEX_MESSAGES.NUMERIC_12_1),
 
-  monitorCalcBeingDone: z.enum(MONITOR_CALC_BASELINE_OPTIONS, MONITOR_CALC_BASELINE_VALIDATION),
+  monitorCalcBeingDone: z.boolean({ message: '必須項目です' }),
 
   emissionsTotalValue: z
     .string()
