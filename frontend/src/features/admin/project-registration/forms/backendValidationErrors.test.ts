@@ -23,7 +23,9 @@ describe('applyBackendValidationErrors', () => {
 
     const message = applyBackendValidationErrors(result.current, error);
 
-    expect(message).toBeNull();
+    // Reported as well as marked inline: the fields it marks belong to step 1,
+    // which the operator may not be looking at when the save is rejected.
+    expect(message).toBe('Validation failed');
     expect(
       result.current.getFieldState('projectBase.picPhoneNumber').error?.message,
     ).toBe('担当者電話番号は必須です。');
