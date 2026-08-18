@@ -59,7 +59,31 @@ function toMessage(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
-function toFieldPath(field: string): AdminProjectFieldPath | null {
+/**
+ * The plan page an error belongs to.
+ *
+ * Without it, a bare field name can only be guessed at, and the guess is wrong
+ * for every page past the second: pages carry names like `picEmail` that also
+ * exist on the project record, so their errors landed on step 1's fields and
+ * the operator saw a banner with nothing marked.
+ */
+export type PlanPageTarget = {
+  /** Form key holding this page's values, e.g. `otherProjectOperator`. */
+  formKey: string;
+  /** Form field name -> backend field name, as the page declares it. */
+  renames?: Readonly<Record<string, string>>;
+};
+
+function toFormName(backendName: string, renames?: Readonly<Record<string, string>>) {
+  if (!renames) return backendName;
+  const match = Object.entries(renames).find(([, backend]) => backend === backendName);
+  return match ? match[0] : backendName;
+}
+
+function toFieldPath(
+  field: string,
+  page?: PlanPageTarget,
+): AdminProjectFieldPath | null {
   const normalized = field
     .replace(/^\$?\./, '')
     .replace(/^project\.0\./, '')
@@ -68,6 +92,13 @@ function toFieldPath(field: string): AdminProjectFieldPath | null {
 
   if (normalized.startsWith('projectBase.') || normalized.startsWith('projectApplication.')) {
     return normalized as AdminProjectFieldPath;
+  }
+
+  // A named page wins over the project-record heuristics below: the backend
+  // reports a bare field name, and several of those names exist on both.
+  if (page) {
+    const formName = toFormName(normalized, page.renames);
+    return `${page.formKey}.${formName}` as AdminProjectFieldPath;
   }
 
   if (PROJECT_BASE_ALIASES[normalized]) {
@@ -84,12 +115,13 @@ function toFieldPath(field: string): AdminProjectFieldPath | null {
 function applyRecordErrors(
   form: AdminProjectForm,
   errors: Record<string, unknown>,
+  page?: PlanPageTarget,
 ): boolean {
   let applied = false;
 
   Object.entries(errors).forEach(([field, value]) => {
     const message = toMessage(value);
-    const path = toFieldPath(field);
+    const path = toFieldPath(field, page);
 
     if (!message || !path) return;
 
@@ -106,6 +138,7 @@ function applyRecordErrors(
 function applyArrayErrors(
   form: AdminProjectForm,
   errors: unknown[],
+  page?: PlanPageTarget,
 ): boolean {
   let applied = false;
 
@@ -123,7 +156,7 @@ function applyArrayErrors(
 
     if (typeof field !== 'string') return;
 
-    const path = toFieldPath(field);
+    const path = toFieldPath(field, page);
     const message = toMessage(error.message ?? error.messages);
 
     if (!message || !path) return;
@@ -138,9 +171,15 @@ function applyArrayErrors(
   return applied;
 }
 
+/**
+ * Marks the fields a rejected save complained about and returns its message.
+ *
+ * @param page the plan page being saved; omit for the project record itself
+ */
 export function applyBackendValidationErrors(
   form: AdminProjectForm,
   error: unknown,
+  page?: PlanPageTarget,
 ): string | null {
   if (!(error instanceof ApiError)) {
     return error instanceof Error ? error.message : null;
@@ -150,9 +189,9 @@ export function applyBackendValidationErrors(
   let applied = false;
 
   if (Array.isArray(errors)) {
-    applied = applyArrayErrors(form, errors);
+    applied = applyArrayErrors(form, errors, page);
   } else if (errors && typeof errors === 'object') {
-    applied = applyRecordErrors(form, errors as Record<string, unknown>);
+    applied = applyRecordErrors(form, errors as Record<string, unknown>, page);
   }
 
   // The message is returned even when fields were marked, because those

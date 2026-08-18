@@ -35,3 +35,61 @@ describe('applyBackendValidationErrors', () => {
     ).toBe('プロジェクト実施後排出量は必須です。');
   });
 });
+
+describe('applyBackendValidationErrors on a plan page', () => {
+  it('marks the page the operator is on, not a same-named project field', () => {
+    const { result } = renderHook(() =>
+      useForm<AdminProjectRegisterFormInputValues>(),
+    );
+    const error = new ApiError('入力内容に誤りがあります。', {
+      status: 400,
+      payload: {
+        errors: {
+          picEmail: '担当者メールアドレスは必須です。',
+          emitterCode: '特定排出者コードは必須です。',
+        },
+      },
+    });
+
+    applyBackendValidationErrors(result.current, error, {
+      formKey: 'otherProjectOperator',
+    });
+
+    // picEmail exists on the project record too. Before the page was named,
+    // it landed on projectBase and page 3 showed a banner with nothing marked.
+    expect(
+      result.current.getFieldState('otherProjectOperator.picEmail').error
+        ?.message,
+    ).toBe('担当者メールアドレスは必須です。');
+    expect(
+      result.current.getFieldState('projectBase.picEmail').error,
+    ).toBeUndefined();
+    expect(
+      result.current.getFieldState('otherProjectOperator.emitterCode').error
+        ?.message,
+    ).toBe('特定排出者コードは必須です。');
+  });
+
+  it('translates the backend name back to the form name where they differ', () => {
+    const { result } = renderHook(() =>
+      useForm<AdminProjectRegisterFormInputValues>(),
+    );
+    const error = new ApiError('入力内容に誤りがあります。', {
+      status: 400,
+      payload: {
+        errors: { energyManagFactoryNumber: '必須です。' },
+      },
+    });
+
+    applyBackendValidationErrors(result.current, error, {
+      formKey: 'otherProjectOperator',
+      renames: { energyManageFactoryNumber: 'energyManagFactoryNumber' },
+    });
+
+    expect(
+      result.current.getFieldState(
+        'otherProjectOperator.energyManageFactoryNumber',
+      ).error?.message,
+    ).toBe('必須です。');
+  });
+});

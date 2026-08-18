@@ -363,7 +363,12 @@ export const AdminProjectRegister: React.FC = () => {
       await refreshProgress(projectId);
       return true;
     } catch (e) {
-      const message = applyBackendValidationErrors(form, e);
+      // Naming the page is what puts the error on the right field: the backend
+      // reports bare names, and several of them exist on more than one page.
+      const message = applyBackendValidationErrors(form, e, {
+        formKey: page.formKey,
+        renames: page.renames,
+      });
       setSubmitError(message);
       showErrorToast(
         '保存に失敗しました',
