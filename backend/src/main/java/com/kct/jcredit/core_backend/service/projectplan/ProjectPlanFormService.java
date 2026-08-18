@@ -1,11 +1,14 @@
 package com.kct.jcredit.core_backend.service.projectplan;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFileResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanBatchProgressResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressResponse;
 
 import java.util.List;
+
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Serves every page of the project plan from the form registry.
@@ -24,6 +27,19 @@ public interface ProjectPlanFormService {
             String username);
 
     /** Validates the whole page, then stores it. Nothing is written if invalid. */
+    /**
+     * Stores one file provisionally against a page. The returned key belongs in
+     * the page body; it is promoted only when that page saves.
+     */
+    ProjectPlanFileResponse uploadFormFile(
+            String projectId,
+            String formSlug,
+            String fieldName,
+            MultipartFile file,
+            String companyId,
+            String role,
+            String username);
+
     ProjectPlanFormResponse saveForm(
             String projectId,
             String formSlug,
