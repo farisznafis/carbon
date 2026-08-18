@@ -43,6 +43,7 @@ import { applyBackendValidationErrors } from './forms/backendValidationErrors';
 import type { AdminProjectRegisterFormInputValues } from './forms/projectFormTypes';
 import { ProjectStatusSchema } from './forms/projectBaseSchema';
 import {
+  FIRST_PLAN_STEP,
   LAST_IMPLEMENTED_STEP,
   getPlanPageForSlug,
   getPlanPageForStep,
@@ -53,6 +54,11 @@ import { steps } from './forms/projectSteps';
 
 type LocationState = {
   project?: Project;
+  /**
+   * Page to open on arrival. Omitted means "resume": the wizard picks the
+   * first unfinished page itself.
+   */
+  planSlug?: string;
 };
 
 export interface AdminProjectRegisterPage {
@@ -112,6 +118,7 @@ export const AdminProjectRegister: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingProjectBase, setIsSavingProjectBase] = useState(false);
   const [isLoadingApplication, setIsLoadingApplication] = useState(false);
+  const [isLoadingPlanPage, setIsLoadingPlanPage] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
   const [savedProjectBaseSnapshot, setSavedProjectBaseSnapshot] = useState<
@@ -139,32 +146,39 @@ export const AdminProjectRegister: React.FC = () => {
   });
 
   useEffect(() => {
-    if (state?.project) {
-      form.reset({
-        projectBase: {
-          projectName: state.project.projectName,
-          projectNumber: state.project.id,
-          projectStatus: getProjectStatusValue(state.project.projectStatus),
-          methodCategory: 'EN-S',
-          methodNumber: '002',
-          methodName: '太陽光発電設備の導入',
-          methodMainEmission: 'CO2削減',
-          methodCombiFeasibility: false,
-          methodologyVersion: 'Ver.2.0',
-        },
-      });
+    if (!state?.project) return;
 
-      // Arriving with a project means resuming it, not starting a new one.
-      // Without this the wizard treats the id as unset and 次へ creates a
-      // duplicate project instead of updating this one.
-      if (state.project.id) {
-        void resumePlan(String(state.project.id));
-      }
+    // Annotated so the literal fields keep the form's narrow types; a bare
+    // object literal widens them to string and no longer fits reset().
+    const projectBase: NonNullable<
+      AdminProjectRegisterFormInputValues['projectBase']
+    > = {
+      projectName: state.project.projectName,
+      projectNumber: state.project.id,
+      projectStatus: getProjectStatusValue(state.project.projectStatus),
+      methodCategory: 'EN-S',
+      methodNumber: '002',
+      methodName: '太陽光発電設備の導入',
+      methodMainEmission: 'CO2削減',
+      methodCombiFeasibility: false,
+      methodologyVersion: 'Ver.2.0',
+    };
+    form.reset({ projectBase });
+
+    // Arriving with a project means resuming it, not starting a new one.
+    // Without this the wizard treats the id as unset and 次へ creates a
+    // duplicate project instead of updating this one.
+    if (state.project.id) {
+      // This base information came from the server, so it already counts as
+      // saved. Without the snapshot, leaving step 1 would push an update built
+      // from the placeholder values above.
+      setSavedProjectBaseSnapshot(toSnapshot(projectBase));
+      void resumePlan(String(state.project.id), state.planSlug);
     }
     // resumePlan is stable for a given project; re-running on every render
     // would refetch progress in a loop.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state?.project, form]);
+  }, [state?.project, state?.planSlug, form]);
 
   // Only the steps the plan API actually serves; the rest of `steps` has no
   // backend page yet.
@@ -213,22 +227,26 @@ export const AdminProjectRegister: React.FC = () => {
   };
 
   /**
-   * Reopens an existing project's plan where the operator left off.
+   * Reopens an existing project's plan.
    *
    * Seeding `createdProjectId` is what stops 次へ from creating a second
    * project: saveProjectBase branches on it, so without it a resume would
-   * silently duplicate the record.
+   * silently duplicate the record. It is also what lets the page-loading
+   * effect below fetch anything at all.
+   *
+   * Where it lands: the caller's page if they named one, otherwise the first
+   * unfinished page. A finished plan has neither, so it opens on the first
+   * plan page and the operator picks from the dropdown — which is the point of
+   * 計画書更新.
    */
-  const resumePlan = async (projectId: string) => {
+  const resumePlan = async (projectId: string, requestedSlug?: string) => {
     setCreatedProjectId(projectId);
 
     const progress = await refreshProgress(projectId);
-    const nextSlug = progress?.nextIncompleteSlug ?? undefined;
-    const target = nextSlug ? getPlanPageForSlug(nextSlug)?.step : undefined;
-    if (!target) return;
+    const slug = requestedSlug ?? progress?.nextIncompleteSlug ?? undefined;
+    const target = slug ? getPlanPageForSlug(slug)?.step : undefined;
 
-    setStep(target);
-    await loadPlanPage(projectId, target);
+    setStep(target ?? FIRST_PLAN_STEP);
   };
 
   /**
@@ -249,38 +267,82 @@ export const AdminProjectRegister: React.FC = () => {
         );
 
   /**
-   * Pulls a stored page back into the form.
+   * Reads one page back from the server.
    *
-   * Without this a page the operator already completed reopens blank while
-   * progress still reports it COMPLETE. Best-effort: a failure here must not
-   * block moving through the wizard.
-   *
-   * Also records which fields the backend fills from PostgreSQL, so the form
-   * can stop them being edited — an edit there is silently overwritten on the
-   * next read.
+   * Returns what the caller should apply rather than applying it itself, so a
+   * response arriving after the operator has already moved on can be dropped.
    */
-  const loadPlanPage = async (projectId: string, targetStep: number) => {
-    const page = getPlanPageForStep(targetStep);
-    if (!page) return;
-
-    try {
-      const response = await getProjectPlanForm(projectId, page.slug);
-      const values = mapPlanPageValues(response.data, page.renames);
-
-      if (Object.keys(values).length > 0) {
-        form.setValue(
-          page.formKey as FieldPath<AdminProjectRegisterFormInputValues>,
-          values as never,
-          { shouldDirty: false },
-        );
-      }
-      setReadOnlyFields(response.readOnlyFields ?? []);
-      setConditionalFields(response.conditionalFields ?? []);
-    } catch (e) {
-      console.warn('Failed to load project plan page', page.slug, e);
-      setReadOnlyFields([]);
-    }
+  const fetchPlanPage = async (projectId: string, page: ProjectPlanPage) => {
+    const response = await getProjectPlanForm(projectId, page.slug);
+    return {
+      values: mapPlanPageValues(response.data, page.renames),
+      readOnlyFields: response.readOnlyFields ?? [],
+      conditionalFields: response.conditionalFields ?? [],
+    };
   };
+
+  /**
+   * Loads the current page every time the operator moves.
+   *
+   * This is what makes the wizard usable rather than just navigable. Without
+   * it a page opens carrying the *previous* page's read-only and 有/無 rules,
+   * the fields the backend fills from PostgreSQL arrive empty, and anything
+   * already saved comes back blank — so 次へ is rejected and the operator
+   * cannot get past the page at all.
+   */
+  useEffect(() => {
+    if (!createdProjectId) return;
+
+    // Step 1 is the SQL project record, not a plan page. It has no server-side
+    // rules, and keeping the previous page's would disable the wrong inputs.
+    const page = getPlanPageForStep(step);
+    if (!page) {
+      setReadOnlyFields([]);
+      setConditionalFields([]);
+      return;
+    }
+
+    let cancelled = false;
+    setIsLoadingPlanPage(true);
+
+    fetchPlanPage(createdProjectId, page)
+      .then((loaded) => {
+        if (cancelled) return;
+
+        // Merge rather than replace: autofill has already put master-data
+        // values into this page, and a record saved before a field existed
+        // would otherwise blank it out on load.
+        if (Object.keys(loaded.values).length > 0) {
+          const key =
+            page.formKey as FieldPath<AdminProjectRegisterFormInputValues>;
+          const current = form.getValues(key) as Record<string, unknown> | undefined;
+          form.setValue(
+            key,
+            { ...(current ?? {}), ...loaded.values } as never,
+            { shouldDirty: false },
+          );
+        }
+        setReadOnlyFields(loaded.readOnlyFields);
+        setConditionalFields(loaded.conditionalFields);
+      })
+      .catch((e) => {
+        // Best-effort: a failure must not trap the operator on the page.
+        console.warn('Failed to load project plan page', page.slug, e);
+        if (cancelled) return;
+        setReadOnlyFields([]);
+        setConditionalFields([]);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingPlanPage(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // `form` is stable for the life of the component; re-running on it would
+    // refetch the page on every keystroke.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createdProjectId, step]);
 
   /**
    * Stages one page. The server stores it only if the whole page validates, so
@@ -388,9 +450,16 @@ export const AdminProjectRegister: React.FC = () => {
   const jumpToStep = async (target: number | string) => {
     const targetStep = Number(target);
 
+    // Leaving step 1 has to persist the project first — every plan page is
+    // keyed by its id. Once that is done the operator goes to the page they
+    // actually asked for, not to step 2: being able to open any page directly
+    // is what makes a finished plan freely editable.
     if (targetStep > 1 && step === 1) {
-      await goNext();
-      return;
+      const projectId =
+        createdProjectId && isProjectBaseSaved
+          ? createdProjectId
+          : await saveProjectBase();
+      if (!projectId) return;
     }
 
     setStep(() => Math.min(Math.max(targetStep, 1), maxStep));
@@ -589,7 +658,9 @@ export const AdminProjectRegister: React.FC = () => {
                   size='md'
                   className='w-full'
                   onClick={goBack}
-                  disabled={isSubmitting || isLoadingApplication}
+                  disabled={
+                    isSubmitting || isLoadingApplication || isLoadingPlanPage
+                  }
                 >
                   戻る
                 </Button>
@@ -600,15 +671,18 @@ export const AdminProjectRegister: React.FC = () => {
                 className='w-full'
                 onClick={goNext}
                 disabled={
-                  isSavingProjectBase || isLoadingApplication || isSubmitting
+                  isSavingProjectBase ||
+                  isLoadingApplication ||
+                  isLoadingPlanPage ||
+                  isSubmitting
                 }
               >
-                {step === maxStep
-                  ? '確認へ'
-                  : isSavingProjectBase
-                    ? '保存中...'
-                    : isLoadingApplication
-                      ? '読み込み中...'
+                {isSavingProjectBase
+                  ? '保存中...'
+                  : isLoadingApplication || isLoadingPlanPage
+                    ? '読み込み中...'
+                    : step === maxStep
+                      ? '確認へ'
                       : '次へ'}
               </Button>
             </FormActions>

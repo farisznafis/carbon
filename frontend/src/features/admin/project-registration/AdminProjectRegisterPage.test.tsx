@@ -199,4 +199,101 @@ describe('AdminProjectRegister', () => {
     // The page was not stored, so the operator stays on it.
     expect(screen.getByTestId('project-form-step')).toHaveTextContent('step-2');
   });
+  it('loads every page as the operator arrives on it', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <AdminProjectRegister />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+    expect(await screen.findByTestId('project-form-step')).toHaveTextContent(
+      'step-2',
+    );
+    await waitFor(() => {
+      expect(adminProjectApiMocks.getProjectPlanForm).toHaveBeenCalledWith(
+        'project-1',
+        'application',
+      );
+    });
+
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+    expect(await screen.findByTestId('project-form-step')).toHaveTextContent(
+      'step-3',
+    );
+
+    // Arriving on a page has to fetch it. Otherwise the operator sees the
+    // previous page's read-only and 有/無 rules, its master-data fields come up
+    // empty, and the save is then rejected — the page becomes a dead end.
+    await waitFor(() => {
+      expect(adminProjectApiMocks.getProjectPlanForm).toHaveBeenCalledWith(
+        'project-1',
+        'other-operator-projects',
+      );
+    });
+  });
+
+  it('opens the page the caller asked for', async () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/',
+            state: {
+              project: {
+                id: 'project-9',
+                projectName: '既存プロジェクト',
+                projectStatus: '準備中',
+              },
+              planSlug: 'monitoring-plan',
+            },
+          },
+        ]}
+      >
+        <AdminProjectRegister />
+      </MemoryRouter>,
+    );
+
+    // monitoring-plan is step 30, and it wins over the resume position.
+    expect(await screen.findByTestId('project-form-step')).toHaveTextContent(
+      'step-30',
+    );
+  });
+
+  it('opens a finished plan on its first page so any page can be updated', async () => {
+    adminProjectApiMocks.getProjectPlanProgress.mockResolvedValue({
+      totalForms: 33,
+      completedForms: 33,
+      nextIncompleteSlug: null,
+      forms: [],
+    });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/',
+            state: {
+              project: {
+                id: 'project-9',
+                projectName: '完了プロジェクト',
+                projectStatus: '準備中',
+              },
+            },
+          },
+        ]}
+      >
+        <AdminProjectRegister />
+      </MemoryRouter>,
+    );
+
+    // Nothing is unfinished, so there is no page to resume at. Landing on the
+    // first plan page — not stranded on step 1 — is what makes 計画書更新 work.
+    expect(await screen.findByTestId('project-form-step')).toHaveTextContent(
+      'step-2',
+    );
+    expect(adminProjectApiMocks.createAdminProject).not.toHaveBeenCalled();
+  });
 });

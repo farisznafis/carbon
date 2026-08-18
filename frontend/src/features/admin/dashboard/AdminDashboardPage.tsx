@@ -438,11 +438,12 @@ const AdminDashboard = () => {
 
   /**
    * Opens the plan wizard on an existing project. Passing the project is what
-   * makes it resume rather than create a new one; the wizard then jumps to its
-   * own first unfinished page, so `slug` is only a hint for later refinement.
+   * makes it resume rather than create a new one, and `planSlug` says which
+   * page to land on: the first unfinished one while the plan is incomplete,
+   * and undefined once it is done so the operator can pick a page themselves.
    */
-  const handleOpenPlan = (project: Project) => {
-    navigate(paths.adminProjectRegister, { state: { project } });
+  const handleOpenPlan = (project: Project, planSlug?: string) => {
+    navigate(paths.adminProjectRegister, { state: { project, planSlug } });
   };
 
   const handleChangeProjectStatus = async (

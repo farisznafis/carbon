@@ -227,6 +227,12 @@ export const getPlanPageForStep = (step: number): ProjectPlanPage | undefined =>
 export const getPlanPageForSlug = (slug: string): ProjectPlanPage | undefined =>
   BY_SLUG.get(slug);
 
+/** Lowest wizard step the plan API serves; step 1 is the SQL project record. */
+export const FIRST_PLAN_STEP = PROJECT_PLAN_PAGES.reduce(
+  (min, page) => Math.min(min, page.step),
+  Number.MAX_SAFE_INTEGER,
+);
+
 /** Highest wizard step the plan API currently serves. */
 export const LAST_IMPLEMENTED_STEP = PROJECT_PLAN_PAGES.reduce(
   (max, page) => Math.max(max, page.step),
