@@ -1,5 +1,6 @@
 import type { FieldPath, UseFormReturn } from 'react-hook-form';
 import { ApiError } from '@/api/_shared/errors';
+import { logger } from '@/lib/logger';
 import type { AdminProjectRegisterFormInputValues } from './projectFormTypes';
 
 type AdminProjectForm = UseFormReturn<AdminProjectRegisterFormInputValues>;
@@ -154,5 +155,12 @@ export function applyBackendValidationErrors(
     applied = applyRecordErrors(form, errors as Record<string, unknown>);
   }
 
-  return applied ? null : error.message;
+  // The message is returned even when fields were marked, because those
+  // fields may belong to a step the operator is not looking at: a project
+  // record rejected while they are several pages into the plan would
+  // otherwise show nothing but a toast that disappears.
+  if (!applied) {
+    logger.warn('Backend validation errors matched no form field', errors);
+  }
+  return error.message;
 }
