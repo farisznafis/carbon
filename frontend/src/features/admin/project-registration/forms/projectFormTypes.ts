@@ -32,6 +32,8 @@ import {
   monitoringCalcSchema, // monitoring_calculation
   dataManagementSchema, // data_management
   equipmentInfoSchema, // equipment_information_verification_method
+  equipmentInfoBeforeNewSchema, // equipment_verification_before_new
+  equipmentInfoAfterSchema, // equipment_verification_after
   monitoringItemSchema, // monitoring_item_plan
   monitoringMethodSchema, // monitoring_method_plan
   expectedProjectSchema, // expected_project_plan
@@ -63,6 +65,8 @@ export const formSchema = z.object({
   monitoringCalc: monitoringCalcSchema,
   dataManagement: dataManagementSchema, 
   equipmentInfo: equipmentInfoSchema,
+  equipmentInfoBeforeNew: equipmentInfoBeforeNewSchema,
+  equipmentInfoAfter: equipmentInfoAfterSchema,
   additionalAssessment: additionalAssessmentSchema, 
   obtainingAdditional: obtainingAdditionalSchema,
   emissionCalc: emissionCalcSchema,
