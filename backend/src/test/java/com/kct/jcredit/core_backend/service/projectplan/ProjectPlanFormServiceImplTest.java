@@ -15,13 +15,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.projectplan.ApplicableConditionsRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectOverviewRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormEnvelope;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressResponse;
+import com.kct.jcredit.core_backend.entity.Account;
 import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.enums.ProjectPlanFormStatus;
 import com.kct.jcredit.core_backend.repository.dynamodb.ProjectPlanFormRepository;
+import com.kct.jcredit.core_backend.repository.postgres.AccountRepository;
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.service.projectplan.ProjectPlanContextService.ProjectContext;
 import com.kct.jcredit.core_backend.service.projectplan.ProjectPlanContextService.ProjectContextStatus;
@@ -55,6 +58,7 @@ class ProjectPlanFormServiceImplTest {
     @Mock private ProjectPlanContextService contextService;
     @Mock private ProjectPlanFormRepository repository;
     @Mock private OperatingUserRepository operatingUserRepository;
+    @Mock private AccountRepository accountRepository;
     @Mock private Project project;
     @Mock private OperatorCompany company;
 
@@ -71,6 +75,7 @@ class ProjectPlanFormServiceImplTest {
                 new ProjectPlanFormRegistry(),
                 repository,
                 operatingUserRepository,
+                accountRepository,
                 objectMapper,
                 validator);
 
@@ -239,5 +244,92 @@ class ProjectPlanFormServiceImplTest {
 
         // They were only ever written after passing full validation.
         assertThat(response.getCompletedForms()).isEqualTo(1);
+    }
+    // --- autofill claims only the fields PostgreSQL can actually fill ---
+    //
+    // readOnlyFields drives the frontend to disable an input. Reporting a field
+    // SQL left empty would leave it blank *and* locked, and holder*/company
+    // fields are @NotBlank — such a page could never be saved by anyone.
+
+    private static final String OVERVIEW_SLUG = "project-overview";
+
+    private ProjectPlanFormResponse readOverview() {
+        return service.getForm(PROJECT_ID, OVERVIEW_SLUG, null, "C1", "operator", "u1");
+    }
+
+    private static Account account(String holderName) {
+        Account account = new Account();
+        account.setHolderAccountName(holderName);
+        account.setHolderAccountNameKana("カブシキガイシャテスト");
+        account.setHolderPrefecture("東京都");
+        account.setHolderCity("千代田区");
+        account.setHolderAddress("1-1-1");
+        account.setIsHolderUndecided(false);
+        return account;
+    }
+
+    private void storedOverview(ProjectOverviewRequest stored) {
+        when(repository.find(eq(ProjectOverviewRequest.class), anyString(), anyString()))
+                .thenReturn(Optional.ofNullable(stored));
+    }
+
+    @Test
+    void holderFieldsComeFromTheCompanysSingleActiveAccount() {
+        when(accountRepository.findByOperatorCompany_IdAndIsActiveTrue(1))
+                .thenReturn(List.of(account("Ｊクレ保有者株式会社")));
+        storedOverview(null);
+
+        ProjectPlanFormResponse response = readOverview();
+
+        ProjectOverviewRequest data = (ProjectOverviewRequest) response.getData();
+        assertThat(data.getHolderAccountName()).isEqualTo("Ｊクレ保有者株式会社");
+        assertThat(data.getHolderCity()).isEqualTo("千代田区");
+        assertThat(response.getReadOnlyFields())
+                .contains("holderAccountName", "holderCity", "isHolderUndecided");
+    }
+
+    @Test
+    void severalActiveAccountsLeaveTheHolderToTheOperator() {
+        when(accountRepository.findByOperatorCompany_IdAndIsActiveTrue(1))
+                .thenReturn(List.of(account("Ａ社"), account("Ｂ社")));
+        ProjectOverviewRequest stored = new ProjectOverviewRequest();
+        stored.setHolderAccountName("運用者が入力した保有者");
+        storedOverview(stored);
+
+        ProjectPlanFormResponse response = readOverview();
+
+        // Which account is the holder is a business question, so neither one is
+        // guessed at — and the operator's own answer survives the read.
+        ProjectOverviewRequest data = (ProjectOverviewRequest) response.getData();
+        assertThat(data.getHolderAccountName()).isEqualTo("運用者が入力した保有者");
+        assertThat(response.getReadOnlyFields()).doesNotContain("holderAccountName");
+    }
+
+    @Test
+    void noAccountLeavesTheHolderFieldsOpenRatherThanLockedAndEmpty() {
+        when(accountRepository.findByOperatorCompany_IdAndIsActiveTrue(1)).thenReturn(List.of());
+        storedOverview(null);
+
+        ProjectPlanFormResponse response = readOverview();
+
+        assertThat(response.getReadOnlyFields())
+                .doesNotContain("holderAccountName", "holderCity", "isHolderUndecided");
+    }
+
+    @Test
+    void aFieldWithNoSqlValueIsNeitherOverwrittenNorLocked() {
+        when(company.getNameFurigana()).thenReturn(null);
+        when(accountRepository.findByOperatorCompany_IdAndIsActiveTrue(1)).thenReturn(List.of());
+        ProjectOverviewRequest stored = new ProjectOverviewRequest();
+        stored.setProjectOperatorKana("カブシキガイシャテスト");
+        storedOverview(stored);
+
+        ProjectPlanFormResponse response = readOverview();
+
+        ProjectOverviewRequest data = (ProjectOverviewRequest) response.getData();
+        assertThat(data.getProjectOperatorKana()).isEqualTo("カブシキガイシャテスト");
+        assertThat(response.getReadOnlyFields()).doesNotContain("projectOperatorKana");
+        // The company name is present, so that one stays SQL-authoritative.
+        assertThat(response.getReadOnlyFields()).contains("projectOperatorName");
     }
 }
