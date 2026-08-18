@@ -63,10 +63,10 @@ function toServerFieldErrors(errors: unknown): Record<string, string> {
     elpj_battery_value: 'ELPJ_battery_value',
     elpj_control_value: 'ELPJ_control_value',
     elpj_accuracy: 'ELPJ_accuracy',
-    elpv_evidence: 'ELpv_evidence',
-    elpvr_evidence: 'ELpvr_evidence',
-    elpj_battery_evidence: 'ELPJ_battery_evidence',
-    elpj_control_equipment_spec_files: 'ELPJ_control_equipment_spec_files',
+    elpv_evidence: 'elpv_evidence',
+    elpvr_evidence: 'elpvr_evidence',
+    elpj_battery_evidence: 'elpj_battery_evidence',
+    elpj_control_equipment_spec_files: 'elpj_control_evidence
   };
 
   return Object.entries(errors as Record<string, unknown>).reduce<
@@ -281,16 +281,16 @@ const MonitoringRegister = () => {
 
     const siteIdStr = String(siteIdValue);
 
-    addUpload('ELpv_evidence', currentData.ELpv_evidence, (file) =>
+    addUpload('elpv_evidence', currentData.elpv_evidence, (file) =>
       uploadElpvFile(file, projectIdValue, siteIdStr, descriptionValue),
     );
-    addUpload('ELpvr_evidence', currentData.ELpvr_evidence, (file) =>
+    addUpload('elpvr_evidence', currentData.elpvr_evidence, (file) =>
       uploadElpvrFile(file, projectIdValue, siteIdStr, descriptionValue),
     );
     if (currentData.equipmentHasBattery && currentData.changedBattery) {
       addUpload(
-        'ELPJ_battery_evidence',
-        currentData.ELPJ_battery_evidence,
+        'elpj_battery_evidence',
+        currentData.elpj_battery_evidence,
         (file) =>
           uploadElpjBatteryFile(
             file,
@@ -301,8 +301,8 @@ const MonitoringRegister = () => {
       );
     }
     addUpload(
-      'ELPJ_control_equipment_spec_files',
-      currentData.ELPJ_control_equipment_spec_files,
+      'elpj_control_evidence',
+      currentData.elpj_control_evidence,
       (file) =>
         uploadElpjControlFile(file, projectIdValue, siteIdStr, descriptionValue),
     );

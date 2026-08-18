@@ -379,11 +379,11 @@ class MonitoringServiceImplTest {
         assertNotNull(response.getErrors());
         assertFalse(response.getErrors().isEmpty());
         assertEquals(ResponseConstants.MSG_ELPV_EVIDENCE_REQUIRED,
-                response.getErrors().get("ELpv_evidence"));
+                response.getErrors().get("elpv_evidence"));
         assertEquals(ResponseConstants.MSG_ELPVR_EVIDENCE_REQUIRED,
-                response.getErrors().get("ELpvr_evidence"));
+                response.getErrors().get("elpvr_evidence"));
         assertEquals(ResponseConstants.MSG_ELPJ_CONTROL_EVIDENCE_REQUIRED,
-                response.getErrors().get("ELPJ_control_equipment_spec_files"));
+                response.getErrors().get("elpj_control_evidence"));
 
         verify(monitoringRecordSolarRepository, never()).save(any());
     }
@@ -488,7 +488,7 @@ class MonitoringServiceImplTest {
 
         assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
         assertEquals(ResponseConstants.MSG_ELPJ_BATTERY_EVIDENCE_REQUIRED,
-                response.getErrors().get("ELPJ_battery_evidence"));
+                response.getErrors().get("elpj_battery_evidence"));
         verify(monitoringRecordSolarRepository, never()).save(any());
     }
 
@@ -1313,7 +1313,7 @@ class MonitoringServiceImplTest {
 
         assertEquals(ResponseConstants.VALIDATION_ERROR, response.getStatusCode());
         assertEquals(ResponseConstants.MSG_ELPJ_BATTERY_EVIDENCE_REQUIRED,
-                response.getErrors().get("ELPJ_battery_evidence"));
+                response.getErrors().get("elpj_battery_evidence"));
         verify(monitoringRecordSolarRepository, never()).save(any());
     }
 
@@ -1376,8 +1376,8 @@ class MonitoringServiceImplTest {
         assertEquals(ResponseConstants.MSG_ELPV_VALUE_MIN, response.getErrors().get("ELpv_value"));
         assertEquals(ResponseConstants.MSG_ELPVR_VALUE_MIN, response.getErrors().get("ELpvr_value"));
         assertEquals(ResponseConstants.MSG_ELPJ_ACCURACY_REQUIRED, response.getErrors().get("ELPJ_accuracy"));
-        assertEquals(ResponseConstants.MSG_ELPV_EVIDENCE_REQUIRED, response.getErrors().get("ELpv_evidence"));
-        assertEquals(ResponseConstants.MSG_ELPVR_EVIDENCE_REQUIRED, response.getErrors().get("ELpvr_evidence"));
+        assertEquals(ResponseConstants.MSG_ELPV_EVIDENCE_REQUIRED, response.getErrors().get("elpv_evidence"));
+        assertEquals(ResponseConstants.MSG_ELPVR_EVIDENCE_REQUIRED, response.getErrors().get("elpvr_evidence"));
         verify(monitoringRecordSolarRepository, never()).save(any());
     }
 
