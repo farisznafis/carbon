@@ -59,7 +59,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 255)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("projectOperatorNameJa")
     private String projectOperatorNameJa;
 
@@ -76,7 +76,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 100)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("corpPosition")
     private String corpPosition;
 
@@ -88,7 +88,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 10)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("prefecture")
     private String prefecture;
 
@@ -100,7 +100,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
     // Autofill folds blocknum + buildingName into address.
     @NotBlank
     @Size(max = 150)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("city")
     private String city;
 
@@ -136,7 +136,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 100)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("representativePosition")
     private String representativePosition;
 
@@ -190,7 +190,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
     private Boolean isChangePicPhoneNumber;
 
     @Size(max = 255)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("otherContactBusinessName")
     private String otherContactBusinessName;
 
@@ -198,7 +198,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
     private Boolean isChangeOtherContactBusinessName;
 
     @Size(max = 100)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("otherContactPicPosition")
     private String otherContactPicPosition;
 
@@ -238,7 +238,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 100)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("projectName")
     private String projectName;
 
@@ -262,7 +262,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 50)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("location")
     private String location;
 
@@ -293,7 +293,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 255)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("groupName")
     private String groupName;
 
