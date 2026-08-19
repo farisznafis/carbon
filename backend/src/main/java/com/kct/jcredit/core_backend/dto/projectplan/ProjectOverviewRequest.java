@@ -8,6 +8,7 @@ import com.kct.jcredit.core_backend.validation.Hankaku;
 import com.kct.jcredit.core_backend.validation.JapaneseText;
 import com.kct.jcredit.core_backend.validation.Katakana;
 import com.kct.jcredit.core_backend.validation.NumericOnly;
+import com.kct.jcredit.core_backend.validation.RequiredIf;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -26,6 +27,14 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @DynamoDbBean
+// The certification period only exists for methodologies it applies to. Ticking
+// 「認証対象期間が適用されない方法論を用いたプロジェクト」 hides these two in the
+// wizard, so an unconditional @NotBlank left the page demanding dates the
+// operator could no longer see or fill.
+@RequiredIf(field = "certTargetPeriodStart", when = "isMethodologyValid", is = false,
+        message = "認証対象期間開始日は必須です。")
+@RequiredIf(field = "certTargetPeriodEnd", when = "isMethodologyValid", is = false,
+        message = "認証対象期間終了日は必須です。")
 public class ProjectOverviewRequest extends ProjectPlanFormBase {
 
     /** プログラム型運営・管理者名（フリガナ) */
@@ -185,14 +194,12 @@ public class ProjectOverviewRequest extends ProjectPlanFormBase {
     @JsonProperty("projectConceptDiagram")
     private String projectConceptDiagram;
 
-    /** 認証対象期間（開始）(西暦年月日) */
-    @NotBlank
+    /** 認証対象期間（開始）(西暦年月日). Required only when the period applies — see @RequiredIf. */
     @DateFormat
     @JsonProperty("certTargetPeriodStart")
     private String certTargetPeriodStart;
 
-    /** 認証対象期間（終了）(西暦年月日) */
-    @NotBlank
+    /** 認証対象期間（終了）(西暦年月日). Required only when the period applies — see @RequiredIf. */
     @DateFormat
     @JsonProperty("certTargetPeriodEnd")
     private String certTargetPeriodEnd;
