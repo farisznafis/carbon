@@ -3,8 +3,8 @@ package com.kct.jcredit.core_backend.dto.projectplan;
 import java.math.BigDecimal;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kct.jcredit.core_backend.validation.JapaneseText;
 import com.kct.jcredit.core_backend.validation.DateFormat;
-import com.kct.jcredit.core_backend.validation.Hankaku;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -69,7 +69,7 @@ public class EmissionReductionPlanRequest extends ProjectPlanFormBase {
 
     /** ベースライン排出量単位 */
     @Size(max = 20)
-    @Hankaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("baselineEmissionsUnit")
     private String baselineEmissionsUnit;
 
@@ -79,7 +79,7 @@ public class EmissionReductionPlanRequest extends ProjectPlanFormBase {
 
     /** プロジェクト実施後排出量単位 */
     @Size(max = 20)
-    @Hankaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("afterImplEmissionsUnit")
     private String afterImplEmissionsUnit;
 
