@@ -181,7 +181,7 @@ public class ProjectOverviewRequest extends ProjectPlanFormBase {
     /** プロジェクト全体の概念図 */
     @NotBlank
     @Size(max = 1000)
-    @JapaneseText(allowAlphanumeric = true)
+    // Holds the uploaded file's key, not prose — no character-set rule.
     @JsonProperty("projectConceptDiagram")
     private String projectConceptDiagram;
 
