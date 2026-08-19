@@ -63,7 +63,12 @@ export function MultiStepForm<TFormValues extends FieldValues>({
     if (!rule) return true;
 
     const prefix = fieldName.slice(0, fieldName.length - bare.length);
-    return form.getValues(`${prefix}${rule.when}` as never) === rule.is;
+    const toggle = form.getValues(`${prefix}${rule.when}` as never);
+    // An unanswered toggle must not hide the field. It starts undefined, and
+    // hiding on that would leave the operator unable to reach a field the
+    // server still asks for once they answer.
+    if (typeof toggle !== 'boolean') return true;
+    return toggle === rule.is;
   };
   const current = stepList.find((s) => s.id === step);
 
