@@ -48,6 +48,12 @@ export interface FieldConfig<TFormValues extends FieldValues = FieldValues> {
   type: FieldType;
   placeholder?: string;
   required?: boolean;
+  /**
+   * Locks the input outright, for a value the form does not own — a field the
+   * server fills from its own data, say. `disabledWhen` covers the cases that
+   * depend on another answer; this one does not depend on anything.
+   */
+  disabled?: boolean;
   options?: SelectOption<unknown>[]; // for select
   //for file
   accept?: string; // MIME types or file extensions (e.g. "image/*")

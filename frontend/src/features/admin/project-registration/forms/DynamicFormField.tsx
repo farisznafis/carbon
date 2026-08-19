@@ -59,7 +59,9 @@ export function DynamicFormField<TFormValues extends FieldValues = FieldValues>(
     });
   };
 
-  const disabled = isDisabled();
+  // A flat `disabled` wins outright; disabledWhen still covers the rules that
+  // key off another field's answer.
+  const disabled = field.disabled === true || isDisabled();
   const isRequired = field.required !== false;
   const registerProps = form.register(field.name);
   const numberRegisterProps =

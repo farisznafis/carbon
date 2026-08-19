@@ -57,18 +57,38 @@ export function MultiStepForm<TFormValues extends FieldValues>({
    * backend reports bare names, so the toggle is looked up under the same
    * prefix as the field it governs.
    */
-  const applies = (fieldName: string) => {
+  /** The toggle governing a field, read from under the same namespace. */
+  const toggleFor = (fieldName: string) => {
     const bare = fieldName.split('.').pop() ?? '';
     const rule = rulesByField.get(bare);
-    if (!rule) return true;
+    if (!rule) return null;
 
     const prefix = fieldName.slice(0, fieldName.length - bare.length);
-    const toggle = form.getValues(`${prefix}${rule.when}` as never);
+    return { rule, value: form.getValues(`${prefix}${rule.when}` as never) };
+  };
+
+  const applies = (fieldName: string) => {
+    const toggle = toggleFor(fieldName);
+    if (!toggle) return true;
+
     // An unanswered toggle must not hide the field. It starts undefined, and
     // hiding on that would leave the operator unable to reach a field the
     // server still asks for once they answer.
-    if (typeof toggle !== 'boolean') return true;
-    return toggle === rule.is;
+    if (typeof toggle.value !== 'boolean') return true;
+    return toggle.value === toggle.rule.is;
+  };
+
+  /**
+   * Whether the server would actually demand this field right now.
+   *
+   * A field under a 有/無 rule is required only while its toggle holds the
+   * value the rule keys on. Shown with the toggle still unanswered, it carries
+   * no requirement yet — and marking it with the required badge sends the
+   * operator hunting for something the server is not asking for.
+   */
+  const isRequiredNow = (fieldName: string) => {
+    const toggle = toggleFor(fieldName);
+    return toggle ? toggle.value === toggle.rule.is : true;
   };
   const current = stepList.find((s) => s.id === step);
 
@@ -90,10 +110,16 @@ export function MultiStepForm<TFormValues extends FieldValues>({
               : current.fields
                   .filter((field) => applies(String(field.name)))
                   .map((field) => {
-                    const bare = String(field.name).split('.').pop() ?? '';
-                    return lockedNames.has(bare)
-                      ? { ...field, disabled: true }
-                      : field;
+                    const name = String(field.name);
+                    const bare = name.split('.').pop() ?? '';
+                    let next = field;
+                    if (lockedNames.has(bare)) {
+                      next = { ...next, disabled: true };
+                    }
+                    if (!isRequiredNow(name)) {
+                      next = { ...next, required: false };
+                    }
+                    return next;
                   })) as FieldConfig<TFormValues>[]
           }
         />

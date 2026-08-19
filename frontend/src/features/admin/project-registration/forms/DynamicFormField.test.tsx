@@ -105,3 +105,50 @@ describe('DynamicFormField file input', () => {
     expect(latest).toBe('');
   });
 });
+
+function ConfiguredField({
+  required,
+  disabled,
+}: {
+  required?: boolean;
+  disabled?: boolean;
+}) {
+  const form = useForm<TestFormValues>({ defaultValues: { projectName: '' } });
+
+  return (
+    <FormProvider {...form}>
+      <DynamicFormField<TestFormValues>
+        field={{
+          name: 'projectName',
+          label: 'プロジェクト名称',
+          type: 'text',
+          required,
+          disabled,
+        }}
+      />
+    </FormProvider>
+  );
+}
+
+describe('DynamicFormField required and disabled', () => {
+  it('drops the required marker when the field carries no requirement', () => {
+    // A field under a 有/無 rule is only required while its toggle holds the
+    // value the rule keys on; marked otherwise, the operator hunts for
+    // something the server is not asking for.
+    render(<ConfiguredField required={false} />);
+
+    expect(screen.queryByText('*')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('プロジェクト名称')).toHaveAttribute(
+      'aria-required',
+      'false',
+    );
+  });
+
+  it('locks a field the form does not own', () => {
+    // readOnlyFields sets this. It had no effect at all until FieldConfig
+    // actually carried a flat `disabled`.
+    render(<ConfiguredField disabled />);
+
+    expect(screen.getByLabelText('プロジェクト名称*')).toBeDisabled();
+  });
+});
