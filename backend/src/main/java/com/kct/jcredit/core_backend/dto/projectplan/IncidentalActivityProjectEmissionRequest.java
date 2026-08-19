@@ -51,7 +51,7 @@ public class IncidentalActivityProjectEmissionRequest extends ProjectPlanFormBas
 
     /** 単位 */
     @Size(max = 20)
-    @Hankaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("unit")
     private String unit;
 

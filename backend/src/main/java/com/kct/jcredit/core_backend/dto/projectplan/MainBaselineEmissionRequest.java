@@ -51,7 +51,7 @@ public class MainBaselineEmissionRequest extends ProjectPlanFormBase {
 
     /** 単位 */
     @Size(max = 50)
-    @Hankaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("unit")
     private String unit;
 

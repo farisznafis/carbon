@@ -39,7 +39,7 @@ public class MonitoringItemPlanRequest extends ProjectPlanFormBase {
     /** 単位 */
     @NotBlank
     @Size(max = 50)
-    @Hankaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("unit")
     private String unit;
 }
