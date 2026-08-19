@@ -45,7 +45,7 @@ public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 255)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("projectOperatorNameJa")
     private String projectOperatorNameJa;
 
@@ -56,13 +56,13 @@ public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 50)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("prefecture")
     private String prefecture;
 
     @NotBlank
     @Size(max = 50)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("city")
     private String city;
 
@@ -74,7 +74,7 @@ public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 100)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("representativePosition")
     private String representativePosition;
 
@@ -92,7 +92,7 @@ public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 100)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("picPosition")
     private String picPosition;
 
