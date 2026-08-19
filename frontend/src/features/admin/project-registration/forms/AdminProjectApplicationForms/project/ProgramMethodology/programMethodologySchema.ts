@@ -11,7 +11,7 @@ export const programMethodologySchema = z.object({
     .min(1, '必須項目です')
     .max(3000, VALIDATION_MESSAGES.MAX_CHARACTERS(3000)),
 
-  structureDiagram: z.instanceof(File).optional(),
+  structureDiagram: z.string().optional(),
 
   methodContentOfAggreement: z
     .string()

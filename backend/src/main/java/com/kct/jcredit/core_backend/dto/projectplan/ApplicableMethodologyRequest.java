@@ -78,7 +78,7 @@ public class ApplicableMethodologyRequest extends ProjectPlanFormBase {
     /** 削減活動実施前の概要図 */
     @NotBlank
     @Size(max = 1000)
-    @JapaneseText(allowAlphanumeric = true)
+    // Holds the uploaded file's key, not prose — no character-set rule.
     @JsonProperty("overviewDiagramBeforeAct")
     private String overviewDiagramBeforeAct;
 
@@ -97,7 +97,7 @@ public class ApplicableMethodologyRequest extends ProjectPlanFormBase {
     /** 削減活動実施後の概要図 */
     @NotBlank
     @Size(max = 1000)
-    @JapaneseText(allowAlphanumeric = true)
+    // Holds the uploaded file's key, not prose — no character-set rule.
     @JsonProperty("overviewDiagramAfterAct")
     private String overviewDiagramAfterAct;
 

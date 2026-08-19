@@ -24,5 +24,5 @@ export const measureSpecifiedSchema = z.object({
     .min(1, '必須項目です')
     .max(50, VALIDATION_MESSAGES.MAX_CHARACTERS(50)),
 
-  methodCollImg: z.instanceof(File),
+  methodCollImg: z.string().min(1, '必須項目です'),
 });

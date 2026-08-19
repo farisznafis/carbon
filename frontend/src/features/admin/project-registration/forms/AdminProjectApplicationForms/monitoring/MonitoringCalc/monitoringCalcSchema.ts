@@ -63,7 +63,7 @@ export const monitoringCalcSchema = z
       .max(2000, VALIDATION_MESSAGES.MAX_CHARACTERS(2000))
       .optional(),
 
-    sampleSizeAndFormulaImg: z.instanceof(File).optional(),
+    sampleSizeAndFormulaImg: z.string().optional(),
 
     dataAnalysis: z
       .string()
@@ -75,7 +75,7 @@ export const monitoringCalcSchema = z
       .max(2000, VALIDATION_MESSAGES.MAX_CHARACTERS(2000))
       .optional(),
 
-    implMethodSchedImg: z.instanceof(File).optional(),
+    implMethodSchedImg: z.string().optional(),
   })
   .refine(
     (data) => {

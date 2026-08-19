@@ -69,7 +69,10 @@ public class ProjectPlanFileService {
                 .statusCode("OK")
                 .s3Key(s3Key)
                 .fileId(fileId)
-                .originalName(sanitized)
+                // The sanitised form goes in the key; the client shows the name
+                // the operator actually chose, which for a Japanese filename
+                // sanitises down to a row of underscores.
+                .originalName(originalName(file))
                 .build();
     }
 
@@ -174,6 +177,11 @@ public class ProjectPlanFileService {
     String permanentKeyFor(String tempS3Key, String projectId, String formSlug) {
         String fileNamePart = tempS3Key.replaceAll(TEMP_KEY_PREFIX_PATTERN, "");
         return String.format(PERMANENT_KEY_FORMAT, projectId, formSlug, fileNamePart);
+    }
+
+    private static String originalName(MultipartFile file) {
+        String name = file.getOriginalFilename();
+        return name == null || name.isBlank() ? "document" : name;
     }
 
     private static String sanitizeField(String fieldName) {

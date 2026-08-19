@@ -145,7 +145,7 @@ export const projectOverviewSchema = z
       .min(1, '必須項目です')
       .max(1000, VALIDATION_MESSAGES.MAX_CHARACTERS(1000)),
     // .regex(REGEX_PATTERNS.JAPANESE_ENGLISH, REGEX_MESSAGES.JAPANESE_ENGLISH)
-    projectConceptDiagram: z.instanceof(File),
+    projectConceptDiagram: z.string().min(1, '必須項目です'),
 
     isMethodologyValid: z.boolean(),
 

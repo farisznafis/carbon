@@ -30,7 +30,7 @@ public class ProgramTypeMethodologyRequest extends ProjectPlanFormBase {
 
     /** 体制図 */
     @Size(max = 1000)
-    @JapaneseText(allowAlphanumeric = true)
+    // Holds the uploaded file's key, not prose — no character-set rule.
     @JsonProperty("structureDiagram")
     private String structureDiagram;
 
