@@ -5,6 +5,7 @@ import com.kct.jcredit.core_backend.dto.response.MonitoringRecordSolarResponse;
 import com.kct.jcredit.core_backend.dto.response.MonitoringRecordSolarListResponse;
 import com.kct.jcredit.core_backend.dto.response.FileUploadResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+import com.kct.jcredit.core_backend.dto.response.MonitoringEvidenceItemsResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 
@@ -96,6 +97,14 @@ public interface MonitoringService {
         String siteId,
         String description,
         MultipartFile file
+    );
+
+    MonitoringEvidenceItemsResponse readMonitoringEvidenceItems(
+            String username,
+            String companyId,
+            String projectId,
+            String siteId,
+            Integer equipmentId
     );
 
 }
