@@ -33,12 +33,8 @@ import {
   equipmentInfo, // equipment_information_verification_method
   equipmentInfoBeforeNew, // equipment_verification_before_new
   equipmentInfoAfter, // equipment_verification_after
-  monitoringItem, // monitoring_item_plan
-  monitoringMethod, // monitoring_method_plan
-  expectedProject, // expected_project_plan
-  monitoringItemPlanCoefficient, // monitoring_item_plan_coefficient
-  monitoringMethodPlanCoefficient, // monitoring_method_plan_coefficient
-  expectedProjectPlanCoefficient, // expected_project_plan_coefficient
+  monitoringActivityPlan, // 11.モニタリング計画（１）活動量
+  monitoringCoefficientPlan, // 11.モニタリング計画（２）係数
   monitoringPlan, // monitoring_plan
   measureSpecified, // measure_specified_instrument
   measureOther, // measure_other_instruments_overview
@@ -93,17 +89,11 @@ import {
 
 // import { incidentalEmission } from "./AdminProjectApplicationForms/EmissionCalc/IncidentalEmission";
 
-// import { monitoringItem } from "./AdminProjectApplicationForms/MonitoringPlan/MonitoringItem";
 
-// import { monitoringMethod } from "./AdminProjectApplicationForms/monitoring/MonitoringMethodPlan/MonitoringMethod";
 
-// import { expectedProject } from "./AdminProjectApplicationForms/monitoring/ExpectedProjectPlan/ExpectedProject";
 
-// import { monitoringItemPlanCoefficient } from "./AdminProjectApplicationForms/MonitoringPlan/MonitoringItemPlanCoefficient";
 
-// import { monitoringMethodPlanCoefficient } from "./AdminProjectApplicationForms/MonitoringPlan/MonitoringMethodPlanCoefficient";
 
-// import { expectedProjectPlanCoefficient } from "./AdminProjectApplicationForms/monitoring/ExpectedProjectPlanCoefficient/ExpectedProjectPlanCoefficient";
 
 // import { monitoringPlan } from "./AdminProjectApplicationForms/MonitoringPlan/MonitoringPlan";
 
@@ -189,39 +179,31 @@ export const steps = [
     title: "ベースライン排出量（付随的な排出活動）",
     fields: incidentalEmission,
   },
-  { id: 26, title: "モニタリング項目_計画", fields: monitoringItem },
-  { id: 27, title: "モニタリング方法_計画", fields: monitoringMethod },
-  { id: 28, title: "プロジェクト計画での想定", fields: expectedProject },
+  {
+    id: 26,
+    title: "モニタリング計画（１）活動量",
+    fields: monitoringActivityPlan,
+  },
+  {
+    id: 27,
+    title: "モニタリング計画（２）係数",
+    fields: monitoringCoefficientPlan,
+  },
+  { id: 28, title: "モニタリング計画（３）データの収集方法", fields: monitoringPlan },
   {
     id: 29,
-    title: "モニタリング項目_計画（係数）",
-    fields: monitoringItemPlanCoefficient,
-  },
-  {
-    id: 30,
-    title: "モニタリング方法_計画（係数）",
-    fields: monitoringMethodPlanCoefficient,
-  },
-  {
-    id: 31,
-    title: "プロジェクト計画での想定（係数）",
-    fields: expectedProjectPlanCoefficient,
-  },
-  { id: 32, title: "モニタリング計画", fields: monitoringPlan },
-  {
-    id: 33,
     title: "計量器の概要（特定計量器の場合）",
     fields: measureSpecified,
   },
   {
-    id: 34,
+    id: 30,
     title: "計量器の概要（特定計量器以外の計量器の場合）",
     fields: measureOther,
   },
   {
-    id: 35,
+    id: 31,
     title: "モニタリング方法等に関する説明",
     fields: monitoringExplanation,
   },
-  { id: 36, title: "係数の実測方法に関する説明", fields: coefficient },
+  { id: 32, title: "係数の実測方法に関する説明", fields: coefficient },
 ] as const;

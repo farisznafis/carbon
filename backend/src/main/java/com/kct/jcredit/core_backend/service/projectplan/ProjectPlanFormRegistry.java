@@ -20,20 +20,16 @@ import com.kct.jcredit.core_backend.dto.projectplan.EmissionReductionPlanRequest
 import com.kct.jcredit.core_backend.dto.projectplan.EquipmentVerificationAfterRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.EquipmentVerificationBeforeNewRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.EquipmentVerificationBeforeUpdateRequest;
-import com.kct.jcredit.core_backend.dto.projectplan.ExpectedProjectPlanCoefficientRequest;
-import com.kct.jcredit.core_backend.dto.projectplan.ExpectedProjectPlanRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.IncidentalActivityProjectEmissionRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.IncidentalBaselineEmissionRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.MainActivityProjectEmissionRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.MainBaselineEmissionRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.MeasureOtherInstrumentsRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.MeasureSpecifiedInstrumentRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.MonitoringActivityPlanRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.MonitoringCalculationRequest;
-import com.kct.jcredit.core_backend.dto.projectplan.MonitoringItemPlanCoefficientRequest;
-import com.kct.jcredit.core_backend.dto.projectplan.MonitoringItemPlanRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.MonitoringCoefficientPlanRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.MonitoringMethodExplanationRequest;
-import com.kct.jcredit.core_backend.dto.projectplan.MonitoringMethodPlanCoefficientRequest;
-import com.kct.jcredit.core_backend.dto.projectplan.MonitoringMethodPlanRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.MonitoringPlanRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.ObtainingAdditionalAssessmentRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.PostImplementIncidentalActivityRequest;
@@ -146,7 +142,7 @@ public class ProjectPlanFormRegistry {
                 "project-change-information",
                 "PROJECT_CHANGE_INFORMATION",
                 "プロジェクト計画変更情報",
-                4,
+                5,
                 false,
                 ProjectChangeInformationRequest.class,
                 List.of()));
@@ -155,7 +151,7 @@ public class ProjectPlanFormRegistry {
                 "project-plan-cover",
                 "PROJECT_PLAN_COVER",
                 "【HP公開】プロジェクト計画書表紙",
-                5,
+                6,
                 false,
                 ProjectPlanCoverRequest.class,
                 List.of(
@@ -167,7 +163,7 @@ public class ProjectPlanFormRegistry {
                 "project-overview",
                 "PROJECT_OVERVIEW",
                 "【HP公開】1.プロジェクト概要",
-                6,
+                7,
                 false,
                 ProjectOverviewRequest.class,
                 List.of(
@@ -206,7 +202,7 @@ public class ProjectPlanFormRegistry {
                 "applicable-methodology",
                 "APPLICABLE_METHODOLOGY",
                 "適用する方法論",
-                7,
+                8,
                 false,
                 ApplicableMethodologyRequest.class,
                 List.of(
@@ -218,7 +214,7 @@ public class ProjectPlanFormRegistry {
                 "program-type-methodology",
                 "PROGRAM_TYPE_METHODOLOGY",
                 "プログラム型プロジェクトの運営・管理",
-                8,
+                9,
                 false,
                 ProgramTypeMethodologyRequest.class,
                 List.of()));
@@ -227,26 +223,23 @@ public class ProjectPlanFormRegistry {
                 "emission-reduction-plan",
                 "EMISSION_REDUCTION_PLAN",
                 "排出削減計画",
-                9,
+                10,
                 false,
                 EmissionReductionPlanRequest.class,
-                List.of(
-                        sql("newMembersTotal", (d, c) -> d.setNewMembersTotal(c.project().getNewMembersTotal())),
-                        sql("cumulativeMembersTotal",
-                                (d, c) -> d.setCumulativeMembersTotal(c.project().getCumulativeMembersTotal())),
-                        sql("membersTotal", (d, c) -> d.setMembersTotal(c.project().getMembersTotal())),
-                        sql("baselineEmissions", (d, c) -> d.setBaselineEmissions(
-                                ProjectPlanSqlContext.decimal(c.project().getBaselineEmission()))),
-                        sql("afterImplEmissions", (d, c) -> d.setAfterImplEmissions(
-                                ProjectPlanSqlContext.decimal(c.project().getPostProjectEmission()))),
-                        sql("emissionReductionTotal", (d, c) -> d.setEmissionReductionTotal(
-                                ProjectPlanSqlContext.decimal(c.project().getEmissionReduction()))))));
+                // No SqlFields any more. The six that used to be here —
+                // new/cumulative/延べ会員数 and the two emission figures, plus
+                // 排出削減量の総量 — copied single aggregates off `project` into
+                // what the official sheet holds as 38 fiscal-year rows. There
+                // is no year to put a project-wide total in, and the totals are
+                // now summed from the rows the operator actually enters.
+                List.of(),
+                new EmissionReductionPlanDerivation()));
 
         register(new FormDefinition<>(
                 "monitoring-calculation",
                 "MONITORING_CALCULATION",
                 "モニタリング・算定方法",
-                10,
+                11,
                 false,
                 MonitoringCalculationRequest.class,
                 List.of()));
@@ -255,7 +248,7 @@ public class ProjectPlanFormRegistry {
                 "data-management",
                 "DATA_MANAGEMENT",
                 "データ管理・特記事項",
-                11,
+                12,
                 false,
                 DataManagementRequest.class,
                 List.of(
@@ -265,7 +258,7 @@ public class ProjectPlanFormRegistry {
                 "equipment-verification-before-update",
                 "EQUIPMENT_VERIFICATION_BEFORE_UPDATE",
                 "設備情報の収集・確認方法（実施前 - 更新）",
-                12,
+                13,
                 false,
                 EquipmentVerificationBeforeUpdateRequest.class,
                 List.of()));
@@ -274,7 +267,7 @@ public class ProjectPlanFormRegistry {
                 "equipment-verification-before-new",
                 "EQUIPMENT_VERIFICATION_BEFORE_NEW",
                 "設備情報の収集・確認方法（実施前 - 新設）",
-                13,
+                14,
                 false,
                 EquipmentVerificationBeforeNewRequest.class,
                 List.of()));
@@ -283,7 +276,7 @@ public class ProjectPlanFormRegistry {
                 "equipment-verification-after",
                 "EQUIPMENT_VERIFICATION_AFTER",
                 "設備情報の収集・確認方法（削減活動実施後）",
-                14,
+                15,
                 false,
                 EquipmentVerificationAfterRequest.class,
                 List.of()));
@@ -292,7 +285,7 @@ public class ProjectPlanFormRegistry {
                 "additional-assessment-method",
                 "ADDITIONAL_ASSESSMENT_METHOD",
                 "追加性の評価",
-                15,
+                16,
                 false,
                 AdditionalAssessmentMethodRequest.class,
                 List.of()));
@@ -301,7 +294,7 @@ public class ProjectPlanFormRegistry {
                 "obtaining-additional-assessment",
                 "OBTAINING_ADDITIONAL_ASSESSMENT",
                 "追加性評価に必要な情報の入手方法",
-                16,
+                17,
                 false,
                 ObtainingAdditionalAssessmentRequest.class,
                 List.of()));
@@ -310,7 +303,7 @@ public class ProjectPlanFormRegistry {
                 "emission-reduction-calculation-method",
                 "EMISSION_REDUCTION_CALCULATION_METHOD",
                 "排出削減量の算定方法",
-                17,
+                18,
                 false,
                 EmissionReductionCalculationMethodRequest.class,
                 List.of(
@@ -325,7 +318,7 @@ public class ProjectPlanFormRegistry {
                 "baseline-incidental-emission-activity",
                 "BASELINE_INCIDENTAL_EMISSION_ACTIVITY",
                 "ベースラインの付随的な排出活動",
-                18,
+                19,
                 false,
                 BaselineIncidentalEmissionActivityRequest.class,
                 List.of()));
@@ -334,7 +327,7 @@ public class ProjectPlanFormRegistry {
                 "post-implement-incidental-activity",
                 "POST_IMPLEMENT_INCIDENTAL_ACTIVITY",
                 "プロジェクト実施後の付随的な排出活動",
-                19,
+                20,
                 false,
                 PostImplementIncidentalActivityRequest.class,
                 List.of()));
@@ -343,7 +336,7 @@ public class ProjectPlanFormRegistry {
                 "main-activity-project-emission",
                 "MAIN_ACTIVITY_PROJECT_EMISSION",
                 "プロジェクト排出量情報（主要排出活動）",
-                20,
+                21,
                 false,
                 MainActivityProjectEmissionRequest.class,
                 List.of()));
@@ -352,7 +345,7 @@ public class ProjectPlanFormRegistry {
                 "incidental-activity-project-emission",
                 "INCIDENTAL_ACTIVITY_PROJECT_EMISSION",
                 "プロジェクト排出量情報（付随的な排出活動）",
-                21,
+                22,
                 false,
                 IncidentalActivityProjectEmissionRequest.class,
                 List.of()));
@@ -361,7 +354,7 @@ public class ProjectPlanFormRegistry {
                 "baseline-emission",
                 "BASELINE_EMISSION",
                 "ベースライン排出量の考え方",
-                22,
+                23,
                 false,
                 BaselineEmissionRequest.class,
                 List.of()));
@@ -370,7 +363,7 @@ public class ProjectPlanFormRegistry {
                 "main-baseline-emission",
                 "MAIN_BASELINE_EMISSION",
                 "ベースライン排出量（主要排出活動）",
-                23,
+                24,
                 false,
                 MainBaselineEmissionRequest.class,
                 List.of()));
@@ -379,70 +372,38 @@ public class ProjectPlanFormRegistry {
                 "incidental-baseline-emission",
                 "INCIDENTAL_BASELINE_EMISSION",
                 "ベースライン排出量（付随的な排出活動）",
-                24,
+                25,
                 false,
                 IncidentalBaselineEmissionRequest.class,
                 List.of()));
 
+        // 11.モニタリング計画 is three tables, （１）（２）（３）, and used to be
+        // seven pages: six of them were one table each cut into three by column
+        // group, which is the wrong axis — the form's unit is the row. The two
+        // below carry all nine columns per row; the third page is （３）.
         register(new FormDefinition<>(
-                "monitoring-item-plan",
-                "MONITORING_ITEM_PLAN",
-                "モニタリング項目_計画",
-                25,
-                false,
-                MonitoringItemPlanRequest.class,
-                List.of()));
-
-        register(new FormDefinition<>(
-                "monitoring-method-plan",
-                "MONITORING_METHOD_PLAN",
-                "モニタリング方法_計画",
+                "monitoring-plan-activity",
+                "MONITORING_PLAN_ACTIVITY",
+                "モニタリング計画（１）活動量",
                 26,
                 false,
-                MonitoringMethodPlanRequest.class,
+                MonitoringActivityPlanRequest.class,
                 List.of()));
 
         register(new FormDefinition<>(
-                "expected-project-plan",
-                "EXPECTED_PROJECT_PLAN",
-                "プロジェクト計画での想定",
+                "monitoring-plan-coefficient",
+                "MONITORING_PLAN_COEFFICIENT",
+                "モニタリング計画（２）係数",
                 27,
                 false,
-                ExpectedProjectPlanRequest.class,
-                List.of()));
-
-        register(new FormDefinition<>(
-                "monitoring-item-plan-coefficient",
-                "MONITORING_ITEM_PLAN_COEFFICIENT",
-                "モニタリング項目_計画（係数）",
-                28,
-                false,
-                MonitoringItemPlanCoefficientRequest.class,
-                List.of()));
-
-        register(new FormDefinition<>(
-                "monitoring-method-plan-coefficient",
-                "MONITORING_METHOD_PLAN_COEFFICIENT",
-                "モニタリング方法_計画（係数）",
-                29,
-                false,
-                MonitoringMethodPlanCoefficientRequest.class,
-                List.of()));
-
-        register(new FormDefinition<>(
-                "expected-project-plan-coefficient",
-                "EXPECTED_PROJECT_PLAN_COEFFICIENT",
-                "プロジェクト計画での想定（係数）",
-                30,
-                false,
-                ExpectedProjectPlanCoefficientRequest.class,
+                MonitoringCoefficientPlanRequest.class,
                 List.of()));
 
         register(new FormDefinition<>(
                 "monitoring-plan",
                 "MONITORING_PLAN",
-                "モニタリング計画",
-                31,
+                "モニタリング計画（３）データの収集方法",
+                28,
                 false,
                 MonitoringPlanRequest.class,
                 List.of()));
@@ -451,7 +412,7 @@ public class ProjectPlanFormRegistry {
                 "measure-specified-instrument",
                 "MEASURE_SPECIFIED_INSTRUMENT",
                 "計量器の概要（特定計量器の場合）",
-                32,
+                29,
                 false,
                 MeasureSpecifiedInstrumentRequest.class,
                 List.of()));
@@ -460,7 +421,7 @@ public class ProjectPlanFormRegistry {
                 "measure-other-instruments",
                 "MEASURE_OTHER_INSTRUMENTS",
                 "計量器の概要（特定計量器以外）",
-                33,
+                30,
                 false,
                 MeasureOtherInstrumentsRequest.class,
                 List.of()));
@@ -469,7 +430,7 @@ public class ProjectPlanFormRegistry {
                 "monitoring-method-explanation",
                 "MONITORING_METHOD_EXPLANATION",
                 "モニタリング方法等に関する説明",
-                34,
+                31,
                 false,
                 MonitoringMethodExplanationRequest.class,
                 List.of()));
@@ -478,7 +439,7 @@ public class ProjectPlanFormRegistry {
                 "coefficient-measure-explanation",
                 "COEFFICIENT_MEASURE_EXPLANATION",
                 "係数の実測方法に関する説明",
-                35,
+                32,
                 false,
                 CoefficientMeasureExplanationRequest.class,
                 List.of()));    }

@@ -1,6 +1,10 @@
 package com.kct.jcredit.core_backend.util;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -45,11 +49,46 @@ public final class JsonFieldNameResolver {
 
             Field nestedField = findField(currentClass, fieldName);
             if (nestedField != null) {
-                currentClass = nestedField.getType();
+                currentClass = nextType(nestedField, !collectionSuffix.isEmpty());
             }
         }
 
         return jsonPath.toString();
+    }
+
+    /**
+     * The type the remaining path segments are resolved against.
+     *
+     * <p>A table field is declared {@code List<EmissionReductionYearRow>}, and
+     * Bean Validation reports its violations as {@code years[3].newMembers}.
+     * Descending into {@code List} itself would lose the row type, and every
+     * name past the index would fall back to the raw property name — silently
+     * correct until a row field carries a {@code @JsonProperty}, at which point
+     * the client is handed a key for a field it does not have.
+     */
+    private static Class<?> nextType(Field field, boolean indexed) {
+        Class<?> declared = field.getType();
+        boolean container = Collection.class.isAssignableFrom(declared)
+                || Map.class.isAssignableFrom(declared);
+        if (!indexed && !container) {
+            return declared;
+        }
+
+        if (declared.isArray()) {
+            return declared.getComponentType();
+        }
+        if (!(field.getGenericType() instanceof ParameterizedType parameterized)) {
+            return declared;
+        }
+
+        Type[] arguments = parameterized.getActualTypeArguments();
+        if (arguments.length == 0) {
+            return declared;
+        }
+        // Map<K, V> keys its violations by value, so take the last argument;
+        // for a List<T> that is the only one.
+        Type element = arguments[arguments.length - 1];
+        return element instanceof Class<?> elementClass ? elementClass : declared;
     }
 
     /** Resolves using Spring's binding object name, which names a request DTO. */

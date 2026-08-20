@@ -26,7 +26,15 @@ export type FieldType =
   | "email"
   | "select"
   | "date"
-  | "file";
+  | "file"
+  /**
+   * A repeating table, holding an array of rows rather than a single value.
+   *
+   * Rendered by the project-plan wizard only — see `PlanTableField`. This
+   * component draws one control per config and has nowhere to put a row index,
+   * so it skips these rather than binding a text box to an array.
+   */
+  | "table";
 
 export interface SelectOption<T = string> {
   label: string;
@@ -58,6 +66,26 @@ export interface FieldConfig<TFormValues extends FieldValues = FieldValues> {
   //for file
   accept?: string; // MIME types or file extensions (e.g. "image/*")
   multiple?: boolean;
+
+  // --- for type: "table" ---
+  /**
+   * The columns of a repeating table. Names are row-relative (`symbol`, not
+   * `rows.0.symbol`) so one config serves every row; the renderer applies the
+   * index, and `showWhen`/`disabledWhen` inside a column resolve against
+   * sibling columns of the same row.
+   */
+  columns?: Array<FieldConfig & { width?: string }>;
+  /** Minimum rows. Rows are appended to reach it, and 削除 stops there. */
+  minRows?: number;
+  maxRows?: number;
+  /**
+   * No 行を追加 / 削除. For a table the server derives — the 年度 skeleton built
+   * from 認証対象期間 — where an added row would be discarded on the next read.
+   */
+  fixedRows?: boolean;
+  addRowLabel?: string;
+  /** Column width hint; only meaningful inside `columns`. */
+  width?: string;
 
   // show/hide logic
   showWhen?:
@@ -102,7 +130,12 @@ export function GenericFormFields<TFormValues extends FieldValues>({
 }: Readonly<GenericFormFieldsProps<TFormValues>>) {
   return (
     <>
-      {fields.map((config) => (
+      {/*
+        Tables belong to the project-plan wizard's renderer, which owns the row
+        index. Falling through to the text input below would bind it to an
+        array and silently overwrite every row with one string.
+      */}
+      {fields.filter((config) => config.type !== "table").map((config) => (
         <FormField
           key={config.name as string}
           control={form.control}
