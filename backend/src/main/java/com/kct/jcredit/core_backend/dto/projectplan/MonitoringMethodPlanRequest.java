@@ -1,7 +1,6 @@
 package com.kct.jcredit.core_backend.dto.projectplan;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kct.jcredit.core_backend.validation.Hankaku;
 import com.kct.jcredit.core_backend.validation.JapaneseText;
 
 import jakarta.validation.constraints.NotBlank;
@@ -25,7 +24,7 @@ public class MonitoringMethodPlanRequest extends ProjectPlanFormBase {
     /** 分類 */
     @NotBlank
     @Size(max = 200)
-    @Hankaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("classification")
     private String classification;
 

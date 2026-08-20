@@ -13,7 +13,6 @@ import com.kct.jcredit.core_backend.validation.Katakana;
 import com.kct.jcredit.core_backend.validation.NumericOnly;
 import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
-import com.kct.jcredit.core_backend.validation.ZenkakuWithSymbols;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -145,7 +144,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 50)
-    @ZenkakuWithSymbols
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("representativeName")
     private String representativeName;
 
@@ -154,7 +153,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 100)
-    @ZenkakuWithSymbols
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("picPosition")
     private String picPosition;
 
@@ -163,7 +162,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 50)
-    @ZenkakuWithSymbols
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("picName")
     private String picName;
 
@@ -206,7 +205,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
     private Boolean isChangeOtherContactPicPosition;
 
     @Size(max = 50)
-    @ZenkakuWithSymbols
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("otherContactsPicName")
     private String otherContactsPicName;
 

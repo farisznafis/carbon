@@ -12,7 +12,6 @@ import com.kct.jcredit.core_backend.validation.Katakana;
 import com.kct.jcredit.core_backend.validation.NumericOnly;
 import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
-import com.kct.jcredit.core_backend.validation.ZenkakuWithSymbols;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -83,7 +82,7 @@ public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 50)
-    @ZenkakuWithSymbols
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("representativeName")
     private String representativeName;
 
@@ -101,7 +100,7 @@ public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 50)
-    @ZenkakuWithSymbols
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("picName")
     private String picName;
 
