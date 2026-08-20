@@ -325,24 +325,25 @@ export type SiteEquipmentHistory = {
   equipment: SiteProjectEquipment;
 };
 
-export type SiteProjectEquipmentUpdateRequest = {
-  equipmentOpDate?: string | null;
-  nominalMaxOutput?: number | null;
-  pcsManufacturer?: string | null;
-  pcsModel?: string | null;
-  pcsUnitCount?: number | null;
-  deviceNo?: string | null;
-  pcsStandby?: number | null;
-  hasBattery?: boolean | null;
-  batteryMaker?: string | null;
-  batteryModel?: string | null;
-  batteryCapacity?: number | null;
-  totalInvestment?: number | null;
-  hasSubsidy?: boolean | null;
-  subsidyName?: string | null;
-  subsidyAmount?: number | null;
-  preProjectUnitPrice?: number | null;
-  files?: SiteProjectEquipmentValidationFile[];
+/** Complete replacement snapshot accepted by POST /sites/{siteId}/equipment/{equipmentId}/change. */
+export type SiteProjectEquipmentChangeRequest = {
+  changeDate: string;
+  nominalMaxOutput: number | null;
+  pcsManufacturer: string;
+  pcsModel: string;
+  pcsUnitCount: number | null;
+  deviceNo: string;
+  pcsStandby: number | null;
+  hasBattery: boolean | null;
+  batteryMaker: string | null;
+  batteryModel: string | null;
+  batteryCapacity: number | null;
+  totalInvestment: number | null;
+  hasSubsidy: boolean | null;
+  subsidyName: string | null;
+  subsidyAmount: number | null;
+  preProjectUnitPrice: number | null;
+  files: SiteProjectEquipmentValidationFile[];
 };
 
 export type SiteProjectEquipmentFileType =

@@ -8,7 +8,7 @@ import {
   getSiteEquipmentList,
   joinSiteProject,
   uploadSiteProjectEquipmentFile,
-  updateSiteEquipment,
+  changeSiteEquipment,
   validateSiteProjectConfirmationItems,
   validateSiteProjectEquipment,
   validateSiteProjectFinalAgreement,
@@ -17,7 +17,7 @@ import {
 import type {
   SiteProjectEquipmentValidationItem,
   SiteProjectJoinRequest,
-  SiteProjectEquipmentUpdateRequest,
+  SiteProjectEquipmentChangeRequest,
 } from './types';
 
 afterEach(() => {
@@ -90,7 +90,7 @@ describe('validateSiteProjectEquipment', () => {
   });
 });
 
-describe('site equipment read and update', () => {
+describe('site equipment read and change', () => {
   it.each([
     ['array', [{ id: 10, deviceNo: 'PV-10', hasBattery: true }]],
     [
@@ -321,7 +321,7 @@ describe('site equipment read and update', () => {
     );
   });
 
-  it('patches only the supplied equipment fields and preserves false and zero', async () => {
+  it('posts changed equipment fields while preserving false and zero', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ id: 7, hasBattery: false, pcsStandby: 0 }), {
         status: 200,
@@ -329,17 +329,32 @@ describe('site equipment read and update', () => {
       }),
     );
     vi.stubGlobal('fetch', fetchMock);
-    const payload: SiteProjectEquipmentUpdateRequest = {
+    const payload: SiteProjectEquipmentChangeRequest = {
+      changeDate: '2026-08-20',
+      nominalMaxOutput: 0,
+      pcsManufacturer: 'PCS Maker',
+      pcsModel: 'PCS-1',
+      pcsUnitCount: 0,
+      deviceNo: 'DEVICE-1',
       hasBattery: false,
       pcsStandby: 0,
+      batteryMaker: null,
+      batteryModel: null,
+      batteryCapacity: null,
+      totalInvestment: 0,
+      hasSubsidy: false,
+      subsidyName: null,
+      subsidyAmount: null,
+      preProjectUnitPrice: 0,
+      files: [],
     };
 
-    await updateSiteEquipment('SITE A', 7, payload);
+    await changeSiteEquipment('SITE A', 7, payload);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/site/SITE%20A/equipment/7',
+      '/api/site/SITE%20A/equipment/7/change',
       expect.objectContaining({
-        method: 'PATCH',
+        method: 'POST',
         body: JSON.stringify(payload),
       }),
     );

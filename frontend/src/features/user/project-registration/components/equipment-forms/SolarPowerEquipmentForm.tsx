@@ -55,6 +55,7 @@ type SolarPowerEquipmentFormProps = Readonly<{
 type FileUploadControlProps = Readonly<{
   id: string;
   label: string;
+  labelDescription?: string;
   value?: File;
   onChange: (file?: File) => void;
   required?: boolean;
@@ -64,6 +65,7 @@ type FileUploadControlProps = Readonly<{
 function FileUploadControl({
   id,
   label,
+  labelDescription,
   value,
   onChange,
   required = true,
@@ -78,6 +80,7 @@ function FileUploadControl({
       <FileSelectButton
         id={id}
         label={label}
+        labelDescription={labelDescription}
         variant="design-system-pro"
         supportedFormats={EQUIPMENT_FILE_FORMATS}
         required={required}
@@ -231,19 +234,38 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
       )}
 
       <FormSection number={1} title="太陽光発電設備の情報">
-        <FormField
-          control={form.control}
-          name="equipmentOpDate"
-          render={({ field }) => (
-            <FormItem>
-              <RequiredLabel>稼働開始日（電力受給開始日）</RequiredLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {isEditMode ? (
+          <FormField
+            control={form.control}
+            name="changeDate"
+            render={({ field }) => (
+              <FormItem>
+                <RequiredLabel>変更日</RequiredLabel>
+                <FormDescription className="text-foreground">
+                  変更後の設備のモニタリング開始日になります。
+                </FormDescription>
+                <FormControl>
+                  <Input type="date" {...field} value={field.value ?? ''} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : (
+          <FormField
+            control={form.control}
+            name="equipmentOpDate"
+            render={({ field }) => (
+              <FormItem>
+                <RequiredLabel>稼働開始日（電力受給開始日）</RequiredLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         <FormField
           control={form.control}
           name="operationStartDateFile"
@@ -252,10 +274,10 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
               <FormControl>
                 <FileUploadControl
                   id="equipment-op-date-file"
-                  label="確認資料：太陽光発電電力受給契約確認書"
+                  label="太陽光発電所・発電設備を特定できる資料"
                   value={field.value}
                   onChange={field.onChange}
-                  required={!isEditMode}
+                  required
                   existingFile={getExistingFile(existingFiles, 'solar_contract')}
                 />
               </FormControl>
@@ -293,10 +315,10 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
               <FormControl>
                 <FileUploadControl
                   id="nominal-max-output-file"
-                  label="確認資料：仕様書・カタログ"
+                  label="太陽光パネルの仕様書・カタログ"
                   value={field.value}
                   onChange={field.onChange}
-                  required={!isEditMode}
+                  required
                   existingFile={getExistingFile(existingFiles, 'panel_catalog')}
                 />
               </FormControl>
@@ -396,10 +418,10 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
               <FormControl>
                 <FileUploadControl
                   id="pcs-file"
-                  label="確認資料：仕様書・カタログ"
+                  label="パワーコンディショナーの仕様書"
                   value={field.value}
                   onChange={field.onChange}
-                  required={!isEditMode}
+                  required
                   existingFile={getExistingFile(existingFiles, 'pcs_spec')}
                 />
               </FormControl>
@@ -483,10 +505,10 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
                   <FormControl>
                     <FileUploadControl
                       id="battery-file"
-                      label="確認資料：仕様書・カタログ"
+                      label="蓄電池の仕様書・カタログ"
                       value={field.value}
                       onChange={field.onChange}
-                      required={!isEditMode}
+                      required
                       existingFile={getExistingFile(existingFiles, 'battery_catalog')}
                     />
                   </FormControl>
@@ -526,10 +548,11 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
               <FormControl>
                 <FileUploadControl
                   id="total-investment-file"
-                  label="確認資料：工事請負契約書、請求書、領収書等"
+                  label="設備の総投資額を確認できる資料"
+                  labelDescription="例：工事請負契約書、請求書、領収書など"
                   value={field.value}
                   onChange={field.onChange}
-                  required={!isEditMode}
+                  required
                   existingFile={getExistingFile(existingFiles, 'construction_invoice')}
                 />
               </FormControl>
@@ -598,10 +621,11 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
                   <FormControl>
                     <FileUploadControl
                       id="subsidy-name-file"
-                      label="確認資料：補助金交付決定通知書"
+                      label="補助金交付決定を確認できる資料"
+                      labelDescription="例：補助金交付決定通知書"
                       value={field.value}
                       onChange={field.onChange}
-                      required={!isEditMode}
+                      required
                       existingFile={getExistingFile(existingFiles, 'subsidy_notice')}
                     />
                   </FormControl>
@@ -641,10 +665,11 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
               <FormControl>
                 <FileUploadControl
                   id="pre-project-unit-price-file"
-                  label="確認資料：電力会社からの請求明細書等"
+                  label="電力購入単価を確認できる資料"
+                  labelDescription="例：電力会社の請求明細書など"
                   value={field.value}
                   onChange={field.onChange}
-                  required={!isEditMode}
+                  required
                   existingFile={getExistingFile(existingFiles, 'electricity_bill')}
                 />
               </FormControl>

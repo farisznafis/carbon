@@ -15,7 +15,7 @@ import type {
   SiteProjectEquipmentFileType,
   SiteProjectEquipmentFileUploadResponse,
   SiteProjectEquipmentResponse,
-  SiteProjectEquipmentUpdateRequest,
+  SiteProjectEquipmentChangeRequest,
   SiteProjectEquipmentValidationFile,
   SiteProjectEquipmentValidationItem,
   SiteProjectEquipmentValidationResponse,
@@ -355,16 +355,20 @@ export async function getSiteEquipmentHistory(
     : [];
 }
 
-export async function updateSiteEquipment(
+/**
+ * POST /site/{siteId}/equipment/{equipmentId}/change
+ * Registers replacement equipment while the backend preserves the previous entry as history.
+ */
+export async function changeSiteEquipment(
   siteId: string,
   equipmentId: number,
-  payload: SiteProjectEquipmentUpdateRequest,
+  payload: SiteProjectEquipmentChangeRequest,
 ): Promise<SiteProjectEquipment> {
   return normalizeSiteProjectEquipment(
     await apiRequest<SiteProjectEquipmentDetailResponse>(
-      `/site/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}`,
+      `/site/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}/change`,
       {
-        method: 'PATCH',
+        method: 'POST',
         body: payload,
         fallbackErrorMessage: '設備情報の変更に失敗しました。',
       },

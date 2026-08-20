@@ -95,9 +95,8 @@ export function EquipmentEditConfirmation({
             <FormSection number={1} title="太陽光発電設備の情報">
               <FormGrid>
                 <ConfirmationItem
-                  label="稼働開始日（電力受給開始日）"
-                  value={displayValue(current.equipmentOpDate)}
-                  originalValue={displayValue(original.equipmentOpDate)}
+                  label="変更日"
+                  value={displayValue(current.changeDate ?? '')}
                 />
                 <FileConfirmationItem
                   label="電力受給契約確認書"

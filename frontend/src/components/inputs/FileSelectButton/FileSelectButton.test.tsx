@@ -16,7 +16,9 @@ describe('FileSelectButton', () => {
         onChange={() => {}}
       />
     );
-    expect(screen.getByText('ファイルを選択')).toBeInTheDocument();
+    expect(
+      screen.getByText('ファイルを選択またはドラッグ＆ドロップ'),
+    ).toBeInTheDocument();
   });
 
   it('renders custom label', () => {
@@ -31,6 +33,25 @@ describe('FileSelectButton', () => {
     expect(screen.getByText('アップロード')).toBeInTheDocument();
   });
 
+  it('renders a description directly below the design-system label', () => {
+    render(
+      <FileSelectButton
+        id="file"
+        value={null}
+        onChange={() => {}}
+        label="確認資料"
+        labelDescription="例：請求書など"
+        variant="design-system-pro"
+      />,
+    );
+
+    const description = screen.getByText('例：請求書など');
+    expect(description).toBeInTheDocument();
+    expect(description.parentElement).toContainElement(
+      screen.getByText('確認資料'),
+    );
+  });
+
   it('calls onChange with selected file', () => {
     const handleChange = vi.fn();
     render(
@@ -41,7 +62,10 @@ describe('FileSelectButton', () => {
       />
     );
 
-    const input = screen.getByLabelText('ファイルを選択', { selector: 'input' });
+    const input = screen.getByLabelText(
+      'ファイルを選択またはドラッグ＆ドロップ',
+      { selector: 'input' },
+    );
     const file = createFile();
 
     fireEvent.change(input, {

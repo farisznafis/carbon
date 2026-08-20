@@ -11,6 +11,7 @@ type Props = {
   label?: string;
   className?: string;
   supportedFormats?: string;
+  labelDescription?: string;
   helperText?: string;
   variant?: 'default' | 'design-system-pro';
   required?: boolean;
@@ -23,6 +24,7 @@ export function FileSelectButton({
   label = 'ファイルを選択またはドラッグ＆ドロップ',
   className = '',
   supportedFormats = '(.pdf, .csv, .jpg, .jpeg, .png)',
+  labelDescription,
   helperText,
   variant = 'default',
   required = false,
@@ -71,10 +73,17 @@ export function FileSelectButton({
 
     return (
       <div className={cn('flex w-full flex-col items-start gap-2', className)}>
-        <p className="inline-flex items-center gap-1 text-small text-foreground">
-          <span>{label}</span>
-          {required && <RequiredBadge />}
-        </p>
+        <div className="space-y-1">
+          <p className="inline-flex items-center gap-1 text-small text-foreground">
+            <span>{label}</span>
+            {required && <RequiredBadge />}
+          </p>
+          {labelDescription && (
+            <p className="text-sm font-normal leading-5 text-muted-foreground">
+              {labelDescription}
+            </p>
+          )}
+        </div>
         <label
           htmlFor={id}
           onDragEnter={handleDragEnter}
