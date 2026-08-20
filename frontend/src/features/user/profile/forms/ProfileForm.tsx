@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { RequiredBadge, RequiredLabel } from '@/components/forms/shared';
+import { FormActions } from '@/components/forms/form-layout';
 import { profileFormSchema } from '@/lib/validations';
 import { useRef, useState } from 'react';
 import { useRedirectIfLoggedIn } from '@/hooks/useRedirectIfLoggedIn';
@@ -402,9 +403,10 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
           />
         </div>
 
-        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-          更新
-        </Button>
+        <FormActions
+          disabled={form.formState.isSubmitting}
+          actions={[{ id: 'submit', label: '更新', type: 'submit' }]}
+        />
       </form>
     </Form>
   );

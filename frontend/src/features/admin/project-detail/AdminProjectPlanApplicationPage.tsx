@@ -6,10 +6,10 @@ import {
   type AdminProjectDetail,
   type ProjectPlanApplicationResponse,
 } from '@/api/admin';
+import { FormActions } from '@/components/forms/form-layout';
 import { PageDropdown } from '@/components/forms/shared/PageDropdown';
 import type { FieldConfig } from '@/components/forms/shared/GenericFormFields/GenericFormFields';
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { logger } from '@/lib/logger';
 import { paths } from '@/routes/paths';
@@ -316,39 +316,37 @@ export default function AdminProjectPlanApplicationPage() {
             />
           </section>
 
-          <div className='flex items-center justify-between gap-3 pt-4'>
-            <div>
-              {step > 1 && (
-                <Button
-                  type='button'
-                  variant='outline'
-                  onClick={goBack}
-                >
-                  戻る
-                </Button>
-              )}
-            </div>
-
-            <div className='flex items-center gap-3'>
-              <Button
-                type='button'
-                variant='outline'
-                onClick={handleUpdateProject}
-                disabled={!projectId}
-              >
-                更新
-              </Button>
-
-              {step < maxStep && (
-                <Button
-                  type='button'
-                  onClick={goNext}
-                >
-                  次へ
-                </Button>
-              )}
-            </div>
-          </div>
+          <FormActions
+            className="pt-4"
+            actions={[
+              ...(step > 1
+                ? [
+                    {
+                      id: 'back',
+                      label: '戻る',
+                      variant: 'outline' as const,
+                      onClick: goBack,
+                    },
+                  ]
+                : []),
+              {
+                id: 'update',
+                label: '更新',
+                variant: 'outline',
+                onClick: handleUpdateProject,
+                disabled: !projectId,
+              },
+              ...(step < maxStep
+                ? [
+                    {
+                      id: 'next',
+                      label: '次へ',
+                      onClick: goNext,
+                    },
+                  ]
+                : []),
+            ]}
+          />
         </CardContent>
       </Card>
     </FormPageWrapper>

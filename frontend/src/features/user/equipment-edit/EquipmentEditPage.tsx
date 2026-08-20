@@ -272,25 +272,23 @@ export default function EquipmentEditPage() {
                 mode="edit"
                 existingFiles={existingFiles}
               />
-              <FormActions className="grid grid-cols-1 gap-3 pt-8 sm:grid-cols-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="md"
-                  className="w-full"
-                  onClick={navigateBack}
-                >
-                  キャンセル
-                </Button>
-                <Button
-                  type="submit"
-                  size="md"
-                  className="w-full"
-                  disabled={!hasChanges}
-                >
-                  変更内容を確認
-                </Button>
-              </FormActions>
+              <FormActions
+                className="pt-8"
+                actions={[
+                  {
+                    id: 'cancel',
+                    label: 'キャンセル',
+                    variant: 'outline',
+                    onClick: navigateBack,
+                  },
+                  {
+                    id: 'confirm',
+                    label: '変更内容を確認',
+                    type: 'submit',
+                    disabled: !hasChanges,
+                  },
+                ]}
+              />
             </FormCard>
           </form>
         </Form>

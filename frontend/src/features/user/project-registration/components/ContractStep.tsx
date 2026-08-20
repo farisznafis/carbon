@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FormActions } from '@/components/forms/form-layout';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import {
@@ -40,6 +41,9 @@ export type ContractStepFormValues = {
 
 interface ContractStepProps {
   formValues: Partial<ContractStepFormValues>;
+  isSubmitting: boolean;
+  onBack: () => void;
+  onNext: () => void;
   onValueChange: (
     values: Partial<ContractStepFormValues>,
     metadata: { isUserChange: boolean },
@@ -61,6 +65,9 @@ export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
   (
     {
       formValues,
+      isSubmitting,
+      onBack,
+      onNext,
       onValueChange,
       errors = {},
       isDefaultLoading = false,
@@ -292,6 +299,23 @@ export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
                     <FormMessage className="mt-2" />
                   </FormItem>
                 )}
+              />
+              <FormActions
+                pendingActionId={isSubmitting ? 'next' : null}
+                actions={[
+                  {
+                    id: 'back',
+                    label: '戻る',
+                    variant: 'outline',
+                    onClick: onBack,
+                  },
+                  {
+                    id: 'next',
+                    label: '次へ',
+                    pendingLabel: '確認中...',
+                    onClick: onNext,
+                  },
+                ]}
               />
             </CardContent>
           </Card>

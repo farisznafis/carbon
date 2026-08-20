@@ -52,8 +52,8 @@
  */
 
 import { ArrowLeft } from "lucide-react";
+import { FormActions } from '@/components/forms/form-layout';
 import { FormPageWrapper } from "@/components/layout/FormPageWrapper/FormPageWrapper";
-import { Button } from "@/components/ui/button";
 
 interface ConfirmationLayoutProps {
   pageName: string;
@@ -86,23 +86,30 @@ export const ConfirmationLayout = ({
     >
       <div className="space-y-4">{children}</div>
 
-      <div className="flex gap-4 justify-end pt-6">
-        <Button
-          variant="outline"
-          onClick={onBack}
-          disabled={isSubmitting}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          戻る
-        </Button>
-        <Button
-          onClick={onConfirm}
-          disabled={isSubmitting}
-          size="lg"
-        >
-          {isSubmitting ? "確定中..." : "確定"}
-        </Button>
-      </div>
+      <FormActions
+        className="pt-6"
+        disabled={isSubmitting}
+        pendingActionId={isSubmitting ? 'confirm' : null}
+        actions={[
+          {
+            id: 'back',
+            label: (
+              <>
+                <ArrowLeft className="h-4 w-4" />
+                戻る
+              </>
+            ),
+            variant: 'outline',
+            onClick: onBack,
+          },
+          {
+            id: 'confirm',
+            label: '確定',
+            pendingLabel: '確定中...',
+            onClick: onConfirm,
+          },
+        ]}
+      />
     </FormPageWrapper>
   );
 };

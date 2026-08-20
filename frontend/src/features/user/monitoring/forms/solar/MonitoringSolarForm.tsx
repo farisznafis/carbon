@@ -4,6 +4,7 @@ import { z } from 'zod';
 import type { SiteProjectEquipment } from '@/api/site';
 import { FileSelectButton } from '@/components/inputs/FileSelectButton/FileSelectButton';
 import {
+  FormActions,
   FormCard,
   FormPageContent,
   FormPageTitle,
@@ -651,14 +652,22 @@ export function MonitoringSolarForm({
                 </FormSection>
               </FormSectionStack>
 
-              <div className="flex justify-end gap-4 pt-6">
-                <Button type="button" variant="outline" onClick={onBack} size="md">
-                  キャンセル
-                </Button>
-                <Button type="submit" disabled={form.formState.isSubmitting} size="md">
-                  確認
-                </Button>
-              </div>
+              <FormActions
+                disabled={form.formState.isSubmitting}
+                actions={[
+                  {
+                    id: 'cancel',
+                    label: 'キャンセル',
+                    variant: 'outline',
+                    onClick: onBack,
+                  },
+                  {
+                    id: 'confirm',
+                    label: '確認',
+                    type: 'submit',
+                  },
+                ]}
+              />
             </FormCard>
           </form>
         </Form>

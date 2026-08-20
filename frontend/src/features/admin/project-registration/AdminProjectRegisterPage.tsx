@@ -399,42 +399,31 @@ export const AdminProjectRegister: React.FC = () => {
             )}
 
             <FormActions
-              className={
-                step > 1
-                  ? 'grid grid-cols-1 gap-3 sm:grid-cols-2'
-                  : 'grid grid-cols-1 gap-3'
+              disabled={isSubmitting}
+              pendingActionId={
+                isSavingProjectBase || isLoadingApplication ? 'next' : null
               }
-            >
-              {step > 1 && (
-                <Button
-                  type='button'
-                  variant='outline'
-                  size='md'
-                  className='w-full'
-                  onClick={goBack}
-                  disabled={isSubmitting || isLoadingApplication}
-                >
-                  戻る
-                </Button>
-              )}
-              <Button
-                type='button'
-                size='md'
-                className='w-full'
-                onClick={goNext}
-                disabled={
-                  isSavingProjectBase || isLoadingApplication || isSubmitting
-                }
-              >
-                {step === maxStep
-                  ? '確認へ'
-                  : isSavingProjectBase
+              actions={[
+                ...(step > 1
+                  ? [
+                      {
+                        id: 'back',
+                        label: '戻る',
+                        variant: 'outline' as const,
+                        onClick: goBack,
+                      },
+                    ]
+                  : []),
+                {
+                  id: 'next',
+                  label: step === maxStep ? '確認へ' : '次へ',
+                  pendingLabel: isSavingProjectBase
                     ? '保存中...'
-                    : isLoadingApplication
-                      ? '読み込み中...'
-                      : '次へ'}
-              </Button>
-            </FormActions>
+                    : '読み込み中...',
+                  onClick: goNext,
+                },
+              ]}
+            />
           </FormSectionStack>
         </FormCard>
       </FormPageContent>

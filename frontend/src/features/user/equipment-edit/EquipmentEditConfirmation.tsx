@@ -242,27 +242,23 @@ export function EquipmentEditConfirmation({
               </FormGrid>
             </FormSection>
 
-            <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="md"
-                className="w-full"
-                onClick={onBack}
-                disabled={isSubmitting}
-              >
-                戻る
-              </Button>
-              <Button
-                type="button"
-                size="md"
-                className="w-full"
-                onClick={onConfirm}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? '変更中...' : '変更する'}
-              </Button>
-            </FormActions>
+            <FormActions
+              pendingActionId={isSubmitting ? 'confirm' : null}
+              actions={[
+                {
+                  id: 'back',
+                  label: '戻る',
+                  variant: 'outline',
+                  onClick: onBack,
+                },
+                {
+                  id: 'confirm',
+                  label: '変更する',
+                  pendingLabel: '変更中...',
+                  onClick: onConfirm,
+                },
+              ]}
+            />
           </FormSectionStack>
         </FormCard>
       </FormPageContent>

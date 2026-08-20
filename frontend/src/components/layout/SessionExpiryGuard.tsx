@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { FormActions } from '@/components/forms/form-layout';
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -86,9 +85,17 @@ export const SessionExpiryGuard = () => {
           </AlertDialogDescription> */}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogAction onClick={handleReturnToLogin}>
-            もう一度ログイン
-          </AlertDialogAction>
+          <FormActions
+            context="compact"
+            className="w-full"
+            actions={[
+              {
+                id: 'login',
+                label: 'もう一度ログイン',
+                onClick: handleReturnToLogin,
+              },
+            ]}
+          />
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

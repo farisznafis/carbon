@@ -17,10 +17,10 @@ import {
 } from '@/api/admin';
 import { mapAdminProjectPlanApplicationPayload } from '@/api/admin/projectPayloadMapper';
 import type { Project } from '@/api/projects';
+import { FormActions } from '@/components/forms/form-layout';
 import { PageDropdown } from '@/components/forms/shared/PageDropdown';
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -569,34 +569,37 @@ export default function AdminProjectEditPage() {
           </Card>
         )}
 
-        <div className='flex items-center justify-between gap-3'>
-          <div>
-            {step > 1 && (
-              <Button
-                type='button'
-                variant='outline'
-                onClick={goBack}
-              >
-                戻る
-              </Button>
-            )}
-          </div>
-
-          <div className='flex items-center gap-3'>
-            <Button type='submit' disabled={submitting}>
-              {submitting ? '更新中...' : '更新'}
-            </Button>
-
-            {step < maxStep && (
-              <Button
-                type='button'
-                onClick={goNext}
-              >
-                次へ
-              </Button>
-            )}
-          </div>
-        </div>
+        <FormActions
+          disabled={submitting}
+          pendingActionId={submitting ? 'update' : null}
+          actions={[
+            ...(step > 1
+              ? [
+                  {
+                    id: 'back',
+                    label: '戻る',
+                    variant: 'outline' as const,
+                    onClick: goBack,
+                  },
+                ]
+              : []),
+            {
+              id: 'update',
+              label: '更新',
+              pendingLabel: '更新中...',
+              type: 'submit',
+            },
+            ...(step < maxStep
+              ? [
+                  {
+                    id: 'next',
+                    label: '次へ',
+                    onClick: goNext,
+                  },
+                ]
+              : []),
+          ]}
+        />
 
       </form>
     </FormPageWrapper>

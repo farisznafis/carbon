@@ -7,9 +7,8 @@ import {
     AlertDialogTitle,
     AlertDialogDescription,
     AlertDialogFooter,
-    AlertDialogCancel,
-    AlertDialogAction,
 } from '@/components/ui/alert-dialog';
+import { FormActions } from '@/components/forms/form-layout';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Trash2 } from 'lucide-react';
@@ -53,13 +52,24 @@ export function DeleteAlertDialog({
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>キャンセル</AlertDialogCancel>
-                    <AlertDialogAction
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        onClick={onDelete}
-                    >
-                        削除する
-                    </AlertDialogAction>
+                    <FormActions
+                        context="compact"
+                        className="w-full"
+                        actions={[
+                            {
+                                id: 'cancel',
+                                label: 'キャンセル',
+                                variant: 'outline',
+                                onClick: () => onOpenChange(false),
+                            },
+                            {
+                                id: 'delete',
+                                label: '削除する',
+                                variant: 'destructive',
+                                onClick: onDelete,
+                            },
+                        ]}
+                    />
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>

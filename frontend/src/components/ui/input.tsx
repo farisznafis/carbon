@@ -1,6 +1,10 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
+import {
+  DEFAULT_FORM_CONTROL_SIZE,
+  FORM_CONTROL_SIZE_CLASSES,
+} from "@/components/ui/form-control-size";
 import { cn } from "@/lib/utils";
 
 const inputVariants = cva(
@@ -8,13 +12,11 @@ const inputVariants = cva(
   {
     variants: {
       inputSize: {
-        sm: "h-10 px-3 py-2",
-        default: "h-12 px-4 py-3",
-        lg: "h-[58px] px-5 py-4",
+        ...FORM_CONTROL_SIZE_CLASSES,
       },
     },
     defaultVariants: {
-      inputSize: "default",
+      inputSize: DEFAULT_FORM_CONTROL_SIZE,
     },
   },
 );

@@ -5,8 +5,8 @@ import { z } from 'zod';
 import { ApiError } from '@/api/_shared/errors';
 import { changePassword } from '@/api/auth';
 import { PasswordInput } from '@/components/inputs';
+import { FormActions } from '@/components/forms/form-layout';
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
-import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -161,23 +161,26 @@ const PasswordChange = () => {
               </FormItem>
             )}
           />
-          <div className='flex gap-3 pt-4 justify-end'>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={() => navigate('/profile')}
-            >
-              キャンセル
-            </Button>
-            <Button
-              type='submit'
-              disabled={passwordForm.formState.isSubmitting}
-            >
-              {passwordForm.formState.isSubmitting
-                ? '更新中...'
-                : 'パスワードを変更'}
-            </Button>
-          </div>
+          <FormActions
+            className='pt-4'
+            pendingActionId={
+              passwordForm.formState.isSubmitting ? 'submit' : null
+            }
+            actions={[
+              {
+                id: 'cancel',
+                label: 'キャンセル',
+                variant: 'outline',
+                onClick: () => navigate('/profile'),
+              },
+              {
+                id: 'submit',
+                label: 'パスワードを変更',
+                pendingLabel: '更新中...',
+                type: 'submit',
+              },
+            ]}
+          />
         </form>
       </Form>
     </FormPageWrapper>

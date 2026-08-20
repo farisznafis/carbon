@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { Form, FormItem, FormField, FormControl, FormMessage } from "@/components/ui/form";
+import { FormActions } from "@/components/forms/form-layout";
 
 const FinalTermsSchema = z.object({
   finalTermsAgreed: z.boolean().refine(val => val === true, "同意してください"),
@@ -23,12 +24,18 @@ export type FinalTermsValues = {
 
 interface FinalTermsStepProps {
   formValues: Partial<FinalTermsValues>;
+  isSubmitting: boolean;
+  onBack: () => void;
+  onNext: () => void;
   onValueChange: (values: Partial<FinalTermsData>) => void;
   errors?: Record<string, string>;
 }
 
 export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
   formValues,
+  isSubmitting,
+  onBack,
+  onNext,
   onValueChange,
   errors = {},
 }, ref) => {
@@ -276,6 +283,23 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
                   <FormMessage className="mt-2" />
                 </FormItem>
               )}
+            />
+            <FormActions
+              pendingActionId={isSubmitting ? "next" : null}
+              actions={[
+                {
+                  id: "back",
+                  label: "戻る",
+                  variant: "outline",
+                  onClick: onBack,
+                },
+                {
+                  id: "next",
+                  label: "確認へ",
+                  pendingLabel: "確認中...",
+                  onClick: onNext,
+                },
+              ]}
             />
           </Form>
         </CardContent>

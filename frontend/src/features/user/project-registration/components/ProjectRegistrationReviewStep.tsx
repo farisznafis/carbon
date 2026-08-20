@@ -318,14 +318,23 @@ export function ProjectRegistrationReviewStep({
             <ConfirmationItem label="規約への同意" value={displayBoolean(finalTermsValues.finalTermsAgreed)} />
           </FormSection>
 
-          <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Button type="button" variant="outline" size="sm" className="w-full" onClick={onBack} disabled={isSubmitting}>
-              戻る
-            </Button>
-            <Button type="button" size="sm" className="w-full" onClick={onSubmit} disabled={isSubmitting}>
-              {isSubmitting ? '送信中...' : '申請する'}
-            </Button>
-          </FormActions>
+          <FormActions
+            pendingActionId={isSubmitting ? 'submit' : null}
+            actions={[
+              {
+                id: 'back',
+                label: '戻る',
+                variant: 'outline',
+                onClick: onBack,
+              },
+              {
+                id: 'submit',
+                label: '申請する',
+                pendingLabel: '送信中...',
+                onClick: onSubmit,
+              },
+            ]}
+          />
         </FormSectionStack>
       </FormCard>
     </div>

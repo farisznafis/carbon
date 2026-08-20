@@ -8,7 +8,7 @@ import {
   FormPageShell,
   WizardProgress,
 } from "@/components/forms/form-layout";
-import { ArrowRight, FileSignature } from "lucide-react";
+import { FileSignature } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { getProjectDetails } from "@/api/projects";
@@ -775,7 +775,10 @@ const ProjectRegister = () => {
         return (
           <EquipmentRegistrationStep
             ref={equipmentStepRef}
+            isSubmitting={isSubmitting}
             onAddSite={handleAddSite}
+            onBack={handleBack}
+            onNext={handleNext}
             onValueChange={handleEquipmentDraftChange}
             initialEquipment={equipment.find(
               (item): item is Extract<Equipment, { formType: 'solar' }> =>
@@ -788,6 +791,9 @@ const ProjectRegister = () => {
           <DynamicAgreementsStep
             ref={agreementsStepRef}
             formValues={agreementFormValues}
+            isSubmitting={isSubmitting}
+            onBack={handleBack}
+            onNext={handleNext}
             onValueChange={(values) => {
               setAgreementFormValues(values);
               if (Object.keys(agreementErrors).length > 0) {
@@ -802,6 +808,9 @@ const ProjectRegister = () => {
           <ContractStep
             ref={contractStepRef}
             formValues={contractFormValues}
+            isSubmitting={isSubmitting}
+            onBack={handleBack}
+            onNext={handleNext}
             onValueChange={(values, metadata) => {
               setContractFormValues(values);
               if (metadata.isUserChange) {
@@ -831,6 +840,9 @@ const ProjectRegister = () => {
           <FinalTermsStep
             ref={finalStepRef}
             formValues={finalTermsValues}
+            isSubmitting={isSubmitting}
+            onBack={handleBack}
+            onNext={handleNext}
             onValueChange={(values) => {
               setFinalTermsValues(values);
               if (Object.keys(finalTermsErrors).length > 0) {
@@ -924,20 +936,6 @@ const ProjectRegister = () => {
 
           <div className="mx-auto w-full animate-slide-up">{renderStep()}</div>
 
-          {!isCompletionStep && currentStep !== REVIEW_STEP && (
-            <div className="flex justify-end">
-              <Button onClick={handleNext} disabled={isSubmitting}>
-                {isSubmitting
-                  ? "確認中..."
-                  : currentStep === FINAL_AGREEMENT_STEP
-                    ? "確認へ"
-                    : "次へ"}
-                {currentStep <= FINAL_AGREEMENT_STEP && (
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          )}
         </div>
       </div>
     </FormPageShell>

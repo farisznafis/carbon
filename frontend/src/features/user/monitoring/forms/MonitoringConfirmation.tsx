@@ -1,12 +1,12 @@
 ﻿import { ArrowLeft } from 'lucide-react';
 import {
+  FormActions,
   FormCard,
   FormPageContent,
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
-import { Button } from '@/components/ui/button';
 import { ChangedConfirmationValue } from '@/components/feedback/Confirmation/ChangedConfirmationValue';
 import { ConfirmationItem } from './confirmationItem';
 
@@ -64,15 +64,29 @@ export function MonitoringConfirmationLayout({
               ))}
             </div>
 
-            <div className="flex justify-end gap-4 pt-4">
-              <Button variant="outline" onClick={onBack} disabled={isSubmitting} size="md">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                戻る
-              </Button>
-              <Button onClick={onConfirm} disabled={isSubmitting} size="md">
-                {isSubmitting ? '送信中...' : '確定'}
-              </Button>
-            </div>
+            <FormActions
+              className="pt-4"
+              pendingActionId={isSubmitting ? 'confirm' : null}
+              actions={[
+                {
+                  id: 'back',
+                  label: (
+                    <>
+                      <ArrowLeft className="h-4 w-4" />
+                      戻る
+                    </>
+                  ),
+                  variant: 'outline',
+                  onClick: onBack,
+                },
+                {
+                  id: 'confirm',
+                  label: '確定',
+                  pendingLabel: '送信中...',
+                  onClick: onConfirm,
+                },
+              ]}
+            />
           </div>
         </FormCard>
       </FormPageContent>

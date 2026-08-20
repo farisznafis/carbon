@@ -113,11 +113,20 @@ vi.mock('@/stores/dashboardStore', () => ({
 vi.mock('./components/EquipmentRegistrationStep', async () => {
   const { forwardRef, useImperativeHandle } = await import('react');
   return {
-    EquipmentRegistrationStep: forwardRef((_props, ref) => {
+    EquipmentRegistrationStep: forwardRef<
+      unknown,
+      { onBack: () => void; onNext: () => void }
+    >((props, ref) => {
       useImperativeHandle(ref, () => ({
         validate: async () => flowEquipment,
       }));
-      return <h2>設備登録フォーム</h2>;
+      return (
+        <div>
+          <h2>設備登録フォーム</h2>
+          <button type="button" onClick={props.onBack}>戻る</button>
+          <button type="button" onClick={props.onNext}>次へ</button>
+        </div>
+      );
     }),
   };
 });
@@ -125,7 +134,10 @@ vi.mock('./components/EquipmentRegistrationStep', async () => {
 vi.mock('./components/DynamicAgreementsStep', async () => {
   const { forwardRef, useImperativeHandle } = await import('react');
   return {
-    DynamicAgreementsStep: forwardRef((_props, ref) => {
+    DynamicAgreementsStep: forwardRef<
+      unknown,
+      { onBack: () => void; onNext: () => void }
+    >((props, ref) => {
       useImperativeHandle(ref, () => ({
         getValues: () => ({
           useRegisteredInfo: true,
@@ -137,7 +149,13 @@ vi.mock('./components/DynamicAgreementsStep', async () => {
           energyRationalizationCompliance: 'notApplicable',
         }),
       }));
-      return <h2>同意事項フォーム</h2>;
+      return (
+        <div>
+          <h2>同意事項フォーム</h2>
+          <button type="button" onClick={props.onBack}>戻る</button>
+          <button type="button" onClick={props.onNext}>次へ</button>
+        </div>
+      );
     }),
   };
 });
@@ -153,6 +171,8 @@ vi.mock('./components/ContractStep', async () => {
           values: Partial<ContractStepFormValues>,
           metadata: { isUserChange: boolean },
         ) => void;
+        onBack: () => void;
+        onNext: () => void;
       }
     >((props, ref) => {
       useImperativeHandle(ref, () => ({
@@ -194,6 +214,8 @@ vi.mock('./components/ContractStep', async () => {
           >
             契約情報を空にする
           </button>
+          <button type="button" onClick={props.onBack}>戻る</button>
+          <button type="button" onClick={props.onNext}>次へ</button>
         </div>
       );
     }),
@@ -203,11 +225,20 @@ vi.mock('./components/ContractStep', async () => {
 vi.mock('./components/FinalTermsStep', async () => {
   const { forwardRef, useImperativeHandle } = await import('react');
   return {
-    FinalTermsStep: forwardRef((_props, ref) => {
+    FinalTermsStep: forwardRef<
+      unknown,
+      { onBack: () => void; onNext: () => void }
+    >((props, ref) => {
       useImperativeHandle(ref, () => ({
         getValues: () => ({ finalTermsAgreed: true }),
       }));
-      return <h2>入会規約フォーム</h2>;
+      return (
+        <div>
+          <h2>入会規約フォーム</h2>
+          <button type="button" onClick={props.onBack}>戻る</button>
+          <button type="button" onClick={props.onNext}>確認へ</button>
+        </div>
+      );
     }),
   };
 });

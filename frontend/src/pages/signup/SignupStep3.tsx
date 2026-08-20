@@ -204,27 +204,23 @@ export const SignupStep3 = ({
           </div>
         </FormSection>
 
-        <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onBack ?? (() => setCurrentStep(2))}
-            disabled={isSubmitting}
-            className="w-full"
-          >
-            戻る
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={handleConfirm}
-            disabled={isSubmitting}
-            className="w-full"
-          >
-            {isSubmitting ? '送信中...' : confirmLabel}
-          </Button>
-        </FormActions>
+        <FormActions
+          pendingActionId={isSubmitting ? 'confirm' : null}
+          actions={[
+            {
+              id: 'back',
+              label: '戻る',
+              variant: 'outline',
+              onClick: onBack ?? (() => setCurrentStep(2)),
+            },
+            {
+              id: 'confirm',
+              label: confirmLabel,
+              pendingLabel: '送信中...',
+              onClick: handleConfirm,
+            },
+          ]}
+        />
       </FormSectionStack>
     </FormCard>
   );

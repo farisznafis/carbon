@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { ApiError } from '@/api/_shared/errors';
 import { validateSiteProjectEquipment } from '@/api/site';
-import { FormCard } from '@/components/forms/form-layout';
+import { FormActions, FormCard } from '@/components/forms/form-layout';
 import { Form } from '@/components/ui/form';
 import { SolarPowerEquipmentForm } from '@/features/user/project-registration/components/equipment-forms/SolarPowerEquipmentForm';
 import type { SolarEquipment } from '@/features/user/project-registration/components/types';
@@ -26,14 +26,17 @@ export type EquipmentRegistrationStepRef = {
 
 type EquipmentRegistrationStepProps = {
   initialEquipment?: SolarEquipment;
+  isSubmitting: boolean;
   onAddSite: (draft: SolarPowerFormData) => void;
+  onBack: () => void;
+  onNext: () => void;
   onValueChange: (draft: SolarPowerFormData) => void;
 };
 
 export const EquipmentRegistrationStep = forwardRef<
   EquipmentRegistrationStepRef,
   EquipmentRegistrationStepProps
->(({ initialEquipment, onAddSite, onValueChange }, ref) => {
+>(({ initialEquipment, isSubmitting, onAddSite, onBack, onNext, onValueChange }, ref) => {
   const sitesQuery = useSitesQuery();
   const form = useForm<SolarPowerFormData>({
     defaultValues:
@@ -133,13 +136,30 @@ export const EquipmentRegistrationStep = forwardRef<
         </p>
       </div>
       <Form {...form}>
-        <FormCard>
+        <FormCard className="space-y-8">
           <SolarPowerEquipmentForm
             form={form}
             sites={sites}
             isSiteOptionsLoading={sitesQuery.isLoading}
             siteOptionsError={siteOptionsError}
             onAddSite={onAddSite}
+          />
+          <FormActions
+            pendingActionId={isSubmitting ? 'next' : null}
+            actions={[
+              {
+                id: 'back',
+                label: '戻る',
+                variant: 'outline',
+                onClick: onBack,
+              },
+              {
+                id: 'next',
+                label: '次へ',
+                pendingLabel: '確認中...',
+                onClick: onNext,
+              },
+            ]}
           />
         </FormCard>
       </Form>
