@@ -3,7 +3,6 @@ package com.kct.jcredit.core_backend.dto.projectplan;
 import java.math.BigDecimal;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kct.jcredit.core_backend.validation.Hankaku;
 import com.kct.jcredit.core_backend.validation.JapaneseText;
 
 import jakarta.validation.constraints.NotBlank;
@@ -40,7 +39,7 @@ public class IncidentalBaselineEmissionRequest extends ProjectPlanFormBase {
     /** 記号 */
     @NotBlank
     @Size(max = 50)
-    @Hankaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("symbol")
     private String symbol;
 

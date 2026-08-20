@@ -3,7 +3,6 @@ package com.kct.jcredit.core_backend.dto.projectplan;
 import java.math.BigDecimal;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kct.jcredit.core_backend.validation.Hankaku;
 import com.kct.jcredit.core_backend.validation.JapaneseText;
 
 import jakarta.validation.constraints.NotBlank;
@@ -42,7 +41,7 @@ public class PostImplementIncidentalActivityRequest extends ProjectPlanFormBase 
     /** 温室効果ガスの種類 */
     @NotBlank
     @Size(max = 20)
-    @Hankaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("greenhouseGasType")
     private String greenhouseGasType;
 
