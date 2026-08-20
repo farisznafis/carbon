@@ -56,12 +56,13 @@ class EmissionUnitFieldValidationTest {
                 new UnitField<>("postProjectEmissionUnit",
                         EmissionReductionCalculationMethodRequest::new,
                         EmissionReductionCalculationMethodRequest::setPostProjectEmissionUnit),
-                new UnitField<>("baselineEmissionsUnit",
-                        EmissionReductionPlanRequest::new,
-                        EmissionReductionPlanRequest::setBaselineEmissionsUnit),
-                new UnitField<>("afterImplEmissionsUnit",
-                        EmissionReductionPlanRequest::new,
-                        EmissionReductionPlanRequest::setAfterImplEmissionsUnit),
+                // 4.排出削減計画's two unit fields are gone from this list on
+                // purpose. They moved onto EmissionReductionYearRow when the
+                // page became a table, and the server now sets them from the
+                // page's 単位 rather than accepting them — so there is no
+                // character-set rule left to check. The page's own unitEmission
+                // is deliberately narrower than this list (t-CO2 / kg-CO2 only),
+                // and is covered by EmissionReductionPlanDerivationTest.
                 new UnitField<>("unit",
                         BaselineEmissionRequest::new,
                         BaselineEmissionRequest::setUnit),
@@ -78,8 +79,8 @@ class EmissionUnitFieldValidationTest {
                         IncidentalBaselineEmissionRequest::new,
                         IncidentalBaselineEmissionRequest::setUnit),
                 new UnitField<>("unit",
-                        MonitoringItemPlanRequest::new,
-                        MonitoringItemPlanRequest::setUnit));
+                        MonitoringPlanRow::new,
+                        MonitoringPlanRow::setUnit));
     }
 
     @Test

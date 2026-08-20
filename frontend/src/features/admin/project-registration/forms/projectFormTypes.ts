@@ -34,12 +34,8 @@ import {
   equipmentInfoSchema, // equipment_information_verification_method
   equipmentInfoBeforeNewSchema, // equipment_verification_before_new
   equipmentInfoAfterSchema, // equipment_verification_after
-  monitoringItemSchema, // monitoring_item_plan
-  monitoringMethodSchema, // monitoring_method_plan
-  expectedProjectSchema, // expected_project_plan
-  monitoringItemPlanCoefficientSchema, // monitoring_item_plan_coefficient
-  monitoringMethodPlanCoefficientSchema, // monitoring_method_plan_coefficient
-  expectedProjectPlanCoefficientSchema, // expected_project_plan_coefficient
+  monitoringActivityPlanSchema, // 11.モニタリング計画（１）活動量
+  monitoringCoefficientPlanSchema, // 11.モニタリング計画（２）係数
   monitoringPlanSchema, // monitoring_plan
   measureSpecifiedSchema, // measure_specified_instrument
   measureOtherSchema, // measure_other_instruments_overview
@@ -77,12 +73,8 @@ export const formSchema = z.object({
   baselineEmission: mainActivitySchema,
   mainBaseline: incidentalActivitySchema,
   incidentalEmission: incidentalActivitySchema,
-  monitoringItem: monitoringItemSchema, 
-  monitoringMethod: monitoringMethodSchema,
-  expectedProject: expectedProjectSchema,
-  monitoringItemPlanCoefficient: monitoringItemSchema,
-  monitoringMethodPlanCoefficient: monitoringMethodSchema,
-  expectedProjectPlanCoefficient: expectedProjectSchema,
+  monitoringActivityPlan: monitoringActivityPlanSchema,
+  monitoringCoefficientPlan: monitoringCoefficientPlanSchema,
   monitoringPlan: monitoringPlanSchema,
   measureSpecified: measureSpecifiedSchema,
   measureOther: measureOtherSchema,

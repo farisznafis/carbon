@@ -3,9 +3,11 @@ package com.kct.jcredit.core_backend.service.projectplan;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -115,7 +117,8 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
             return response;
         }
 
-        return write(definition, projectId, methodologyIndex, body, username, response);
+        return write(
+                definition, projectId, methodologyIndex, body, context.project(), username, response);
     }
 
     @Override
@@ -234,7 +237,14 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
         // PostgreSQL stays authoritative for the fields it can supply, on every
         // read. Only those are reported read-only: locking a field SQL left
         // empty would make a required page impossible to complete.
-        response.setReadOnlyFields(definition.applySql(item, sqlContextFor(project), objectMapper));
+        ProjectPlanSqlContext sqlContext = sqlContextFor(project);
+        Set<String> readOnly = new LinkedHashSet<>(
+                definition.applySql(item, sqlContext, objectMapper));
+        // Derived values come after, so a page that both autofills and computes
+        // sees the SQL values before computing from them. Both kinds are
+        // server-owned, so the client locks them the same way.
+        readOnly.addAll(definition.applyDerivation(item, sqlContext));
+        response.setReadOnlyFields(List.copyOf(readOnly));
         item.setPk(pk);
         item.setSk(sk);
 
@@ -255,6 +265,7 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
             String projectId,
             Integer methodologyIndex,
             JsonNode body,
+            Project project,
             String username,
             ProjectPlanFormResponse response) {
 
@@ -271,6 +282,12 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
         if (payload == null) {
             payload = definition.newInstance();
         }
+
+        // Derived values are recomputed before anything is judged, so what the
+        // client sent for them never reaches validation or storage. A client
+        // posting its own 合計 has it replaced, not trusted.
+        ProjectPlanSqlContext sqlContext = sqlContextFor(project);
+        definition.applyDerivation(payload, sqlContext);
 
         // A page is all-or-nothing: nothing is persisted unless it fully validates.
         Map<String, String> errors = validate(payload);
@@ -310,6 +327,11 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
                 log.error("Promoted uploads but could not re-read page slug={}", definition.slug(), e);
                 throw new IllegalStateException("Failed to re-read project-plan page after upload promotion", e);
             }
+            // The re-read came from the request body, which never carried the
+            // derived values — recompute them or the page stores a table with
+            // no 年度 and no 合計. Idempotent, which is why applying it twice
+            // is safe.
+            definition.applyDerivation(payload, sqlContext);
         }
 
         // Keys and audit metadata are server-managed and never taken from clients.

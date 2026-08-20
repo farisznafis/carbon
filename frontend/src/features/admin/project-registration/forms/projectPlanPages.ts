@@ -164,26 +164,18 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     slug: 'incidental-baseline-emission',
     formKey: 'incidentalEmission',
   },
-  { step: 26, slug: 'monitoring-item-plan', formKey: 'monitoringItem' },
-  { step: 27, slug: 'monitoring-method-plan', formKey: 'monitoringMethod' },
-  { step: 28, slug: 'expected-project-plan', formKey: 'expectedProject' },
+  // 11.モニタリング計画 is three tables in the sheet. （１）and（２）used to be
+  // three pages each, splitting one table by column group — the wrong axis,
+  // since the form's unit is the row. Each is now one page of rows carrying all
+  // nine columns.
+  { step: 26, slug: 'monitoring-plan-activity', formKey: 'monitoringActivityPlan' },
   {
-    step: 29,
-    slug: 'monitoring-item-plan-coefficient',
-    formKey: 'monitoringItemPlanCoefficient',
+    step: 27,
+    slug: 'monitoring-plan-coefficient',
+    formKey: 'monitoringCoefficientPlan',
   },
   {
-    step: 30,
-    slug: 'monitoring-method-plan-coefficient',
-    formKey: 'monitoringMethodPlanCoefficient',
-  },
-  {
-    step: 31,
-    slug: 'expected-project-plan-coefficient',
-    formKey: 'expectedProjectPlanCoefficient',
-  },
-  {
-    step: 32,
+    step: 28,
     slug: 'monitoring-plan',
     formKey: 'monitoringPlan',
     renames: {
@@ -193,7 +185,7 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     },
   },
   {
-    step: 33,
+    step: 29,
     slug: 'measure-specified-instrument',
     formKey: 'measureSpecified',
     renames: {
@@ -202,19 +194,19 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     },
   },
   {
-    step: 34,
+    step: 30,
     slug: 'measure-other-instruments',
     formKey: 'measureOther',
     renames: { instrumentCalibration: 'instrumentCalibrationMethodDescription' },
   },
   {
-    step: 35,
+    step: 31,
     slug: 'monitoring-method-explanation',
     formKey: 'monitoringExplanation',
     renames: { monitoringDesc: 'monitoringItemDescription' },
   },
   {
-    step: 36,
+    step: 32,
     slug: 'coefficient-measure-explanation',
     formKey: 'coefficient',
     // coefficientSchema is monitoringExplanationSchema without the diagram, so

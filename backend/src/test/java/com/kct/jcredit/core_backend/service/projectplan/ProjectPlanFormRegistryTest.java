@@ -36,6 +36,23 @@ class ProjectPlanFormRegistryTest {
     }
 
     @Test
+    void ordersRunContiguouslyFromTheFirstPage() {
+        // The wizard numbers its steps from these, and its own test insists the
+        // steps are contiguous. Merging pages means renumbering everything
+        // after them by hand, and a gap here is invisible until an operator
+        // finds a step that renders nothing.
+        List<Integer> orders = registry.all().stream().map(FormDefinition::order).toList();
+
+        assertThat(orders.get(0)).isEqualTo(2);
+        for (int i = 1; i < orders.size(); i++) {
+            assertThat(orders.get(i))
+                    .as("page %s follows %s", registry.all().get(i).slug(),
+                            registry.all().get(i - 1).slug())
+                    .isEqualTo(orders.get(i - 1) + 1);
+        }
+    }
+
+    @Test
     void noPageRepeatsPerMethodologyToday() {
         assertThat(registry.all()).allSatisfy(
                 definition -> assertThat(definition.perMethodology()).isFalse());

@@ -80,6 +80,25 @@ function toFormName(backendName: string, renames?: Readonly<Record<string, strin
   return match ? match[0] : backendName;
 }
 
+/** `years[1].newMembers` — one cell of a repeating table. */
+const ROW_FIELD = /^([^.[\]]+)\[(\d+)\]\.(.+)$/;
+
+/**
+ * The backend's field name as react-hook-form addresses it.
+ *
+ * Most of the plan is tables, and Bean Validation reports a bad cell as
+ * `years[1].newMembers`. react-hook-form indexes with dots, so the brackets
+ * have to go — left as they are, `setError` creates a field literally called
+ * `years[1]` and the cell the operator has to fix is never marked.
+ */
+function toDottedPath(backendName: string, renames?: Readonly<Record<string, string>>) {
+  const row = ROW_FIELD.exec(backendName);
+  if (!row) return toFormName(backendName, renames);
+
+  const [, table, index, column] = row;
+  return `${toFormName(table, renames)}.${index}.${toFormName(column, renames)}`;
+}
+
 function toFieldPath(
   field: string,
   page?: PlanPageTarget,
@@ -97,8 +116,7 @@ function toFieldPath(
   // A named page wins over the project-record heuristics below: the backend
   // reports a bare field name, and several of those names exist on both.
   if (page) {
-    const formName = toFormName(normalized, page.renames);
-    return `${page.formKey}.${formName}` as AdminProjectFieldPath;
+    return `${page.formKey}.${toDottedPath(normalized, page.renames)}` as AdminProjectFieldPath;
   }
 
   if (PROJECT_BASE_ALIASES[normalized]) {
@@ -109,7 +127,7 @@ function toFieldPath(
     return `projectBase.${normalized}` as AdminProjectFieldPath;
   }
 
-  return `projectApplication.${normalized}` as AdminProjectFieldPath;
+  return `projectApplication.${toDottedPath(normalized)}` as AdminProjectFieldPath;
 }
 
 function applyRecordErrors(

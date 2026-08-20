@@ -93,3 +93,52 @@ describe('applyBackendValidationErrors on a plan page', () => {
     ).toBe('必須です。');
   });
 });
+
+describe('applyBackendValidationErrors on a repeating table', () => {
+  it('marks the row the server rejected, not the whole table', () => {
+    const { result } = renderHook(() =>
+      useForm<AdminProjectRegisterFormInputValues>(),
+    );
+    const error = new ApiError('入力内容に誤りがあります。', {
+      status: 400,
+      payload: {
+        errors: { 'rows[1].symbol': '記号は必須です。' },
+      },
+    });
+
+    applyBackendValidationErrors(result.current, error, { formKey: 'emissionCalc' });
+
+    // Left as `rows[1]`, setError would invent a field of that literal name;
+    // the cell the operator has to fix would never be marked.
+    expect(
+      result.current.getFieldState('emissionCalc.rows.1.symbol' as never).error
+        ?.message,
+    ).toBe('記号は必須です。');
+    expect(
+      result.current.getFieldState('emissionCalc.rows.0.symbol' as never).error,
+    ).toBeUndefined();
+  });
+
+  it('renames the table and the column independently', () => {
+    const { result } = renderHook(() =>
+      useForm<AdminProjectRegisterFormInputValues>(),
+    );
+    const error = new ApiError('入力内容に誤りがあります。', {
+      status: 400,
+      payload: {
+        errors: { 'monitorItems[0].monitorPoint': '必須です。' },
+      },
+    });
+
+    applyBackendValidationErrors(result.current, error, {
+      formKey: 'emissionCalc',
+      renames: { items: 'monitorItems', monitoringPoint: 'monitorPoint' },
+    });
+
+    expect(
+      result.current.getFieldState(
+        'emissionCalc.items.0.monitoringPoint' as never,
+      ).error?.message,
+    ).toBe('必須です。');
+  });
+});
