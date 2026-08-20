@@ -11,6 +11,8 @@ import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
 import com.kct.jcredit.core_backend.dto.response.CancelRequestDecisionResponse;
 import com.kct.jcredit.core_backend.dto.response.CancelRequestListResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+import com.kct.jcredit.core_backend.dto.response.MonitoringEvidenceItemsResponse;
+import com.kct.jcredit.core_backend.service.MonitoringService;
 import com.kct.jcredit.core_backend.service.MonitoringService;
 import com.kct.jcredit.core_backend.service.CancelRequestService;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
@@ -25,6 +27,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,7 +39,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class MonitoringController {
 
     private final MonitoringService monitoringService;
-        private final CancelRequestService cancelRequestService;
+    private final CancelRequestService cancelRequestService;
     private final JwtUtil jwtUtil;
 
     /*CompanyId validated against token for security*/
@@ -280,7 +283,28 @@ public class MonitoringController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
-    
+    //基本設計 7-2-1 証憑項目表示
+    @GetMapping("{siteId}/{projectId}/equipment/{equipmentId}/evidence-item")
+    // @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_VIEW.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "証憑項目表示",
+            description = "入力されたモニタリングデータに対して、証憑が必要な入力項目を返却します。必須区分は設備情報（蓄電池の有無）に基づいて判定されます")
+    public ResponseEntity<MonitoringEvidenceItemsResponse> readMonitoringEvidenceItems(
+            @PathVariable String projectId,
+            @PathVariable String siteId,
+            @PathVariable Integer equipmentId,
+            Authentication authentication
+    ) {
+        String username = jwtUtil.extractUsername(authentication.getCredentials().toString());
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
 
-
+        MonitoringEvidenceItemsResponse response = monitoringService.readMonitoringEvidenceItems(
+                username,
+                companyId,
+                projectId,
+                siteId,
+                equipmentId
+        );
+        return ResponseEntity.ok(response);
+    }
 }
