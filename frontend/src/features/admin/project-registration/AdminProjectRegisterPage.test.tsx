@@ -25,8 +25,18 @@ vi.mock('@/hooks/use-toast', () => ({
 }));
 
 vi.mock('./forms/ProjectMultiPageForm', () => ({
-  MultiStepForm: ({ step }: { step: number }) => (
-    <div data-testid="project-form-step">step-{step}</div>
+  MultiStepForm: ({
+    step,
+    form,
+  }: {
+    step: number;
+    form: { getValues: () => unknown };
+  }) => (
+    <>
+      <div data-testid="project-form-step">step-{step}</div>
+      {/* The real form renders inputs; the tests only need to read values. */}
+      <div data-testid="project-form-values">{JSON.stringify(form.getValues())}</div>
+    </>
   ),
 }));
 
@@ -179,6 +189,35 @@ describe('AdminProjectRegister', () => {
     );
     // The whole point: resuming must not create a second project.
     expect(adminProjectApiMocks.createAdminProject).not.toHaveBeenCalled();
+  });
+
+  it('takes the values the server computed back from the save', async () => {
+    // Pages derive things the client cannot: 合計, 年平均, 年度内の認証申請期間
+    // 日数, the 年度 skeleton itself. The server recomputes them on every save,
+    // and dropping the response left them showing whatever they were before —
+    // a 合計 only caught up when the operator navigated away and back.
+    const user = userEvent.setup();
+    adminProjectApiMocks.saveProjectPlanForm.mockResolvedValue({
+      status: 'COMPLETE',
+      data: { projectNumber: 'P-COMPUTED' },
+    });
+
+    render(
+      <MemoryRouter>
+        <AdminProjectRegister />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+    expect(await screen.findByTestId('project-form-step')).toHaveTextContent('step-2');
+
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('project-form-values')).toHaveTextContent(
+        'P-COMPUTED',
+      );
+    });
   });
 
   it('does not advance past a page the server rejected', async () => {

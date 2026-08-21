@@ -18,7 +18,9 @@ import { ABSOLUTE_EMISSION_UNITS } from '@/lib/constants/emission_helpers';
  * are still stored and still returned by the API.
  */
 const emissionReductionYearColumns: FieldConfig['columns'] = [
-  { name: 'year', label: '年度', type: 'number', required: false, width: '5rem' },
+  // Text, not number: the server derives 年度 and locks it, so a number input
+  // only adds spinner arrows that eat the width and clip "2013" to "20".
+  { name: 'year', label: '年度', type: 'text', required: false, width: '7rem' },
   {
     name: 'newMembersTotal',
     label: '新規会員数（件）',
