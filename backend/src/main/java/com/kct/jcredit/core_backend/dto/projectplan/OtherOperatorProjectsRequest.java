@@ -32,7 +32,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
         message = "特定排出者コードは必須です。")
 @RequiredIf(field = "energyActOpeNumber", when = "hasEnergyActPeriodReport", is = true,
         message = "省エネ法特定事業者番号又は特定連鎖化事業者番号は必須です。")
-@RequiredIf(field = "energyManagFactoryNumber", when = "hasEnergyActPeriodReport", is = true,
+@RequiredIf(field = "energyManageFactoryNumber", when = "hasEnergyActPeriodReport", is = true,
         message = "エネルギー管理指定工場番号は必須です。")
 public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
 
@@ -150,6 +150,6 @@ public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
     @Size(max = 50)
     @Hankaku
     @Pattern(regexp = "^[A-Za-z0-9]+$")
-    @JsonProperty("energyManagFactoryNumber")
-    private String energyManagFactoryNumber;
+    @JsonProperty("energyManageFactoryNumber")
+    private String energyManageFactoryNumber;
 }

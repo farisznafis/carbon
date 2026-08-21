@@ -1,3 +1,4 @@
+export * from './AuthorityHolderChange';
 export * from './ApplicableConditions';
 export * from './ApplicableMethodology';
 export * from './OtherProjectOperator';

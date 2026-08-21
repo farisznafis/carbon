@@ -43,6 +43,12 @@ import com.kct.jcredit.core_backend.validation.RequiredIf;
  * @param type            the page's DTO
  * @param sqlFields       fields autofilled from PostgreSQL
  * @param derivation      values the page computes; {@code null} for most pages
+ * @param optional        a page only some projects file. It stays reachable in
+ *                        the wizard but is left out of the completion count and
+ *                        skipped by {@code nextIncompleteSlug} — otherwise a
+ *                        plan that legitimately omits it can never read
+ *                        complete, and 続きから parks the operator on a page
+ *                        they must not fill in.
  */
 public record FormDefinition<T extends ProjectPlanFormBase>(
         String slug,
@@ -52,12 +58,13 @@ public record FormDefinition<T extends ProjectPlanFormBase>(
         boolean perMethodology,
         Class<T> type,
         List<SqlField<T>> sqlFields,
-        FormDerivation<T> derivation) {
+        FormDerivation<T> derivation,
+        boolean optional) {
 
     /** Separates a table's name from a field inside its rows: {@code years[].startDate}. */
     public static final String ROW_MARKER = "[]";
 
-    /** A page that computes nothing — which is all but a handful of them. */
+    /** A required page that computes nothing — which is most of them. */
     public FormDefinition(
             String slug,
             String skPrefix,
@@ -66,7 +73,20 @@ public record FormDefinition<T extends ProjectPlanFormBase>(
             boolean perMethodology,
             Class<T> type,
             List<SqlField<T>> sqlFields) {
-        this(slug, skPrefix, displayName, order, perMethodology, type, sqlFields, null);
+        this(slug, skPrefix, displayName, order, perMethodology, type, sqlFields, null, false);
+    }
+
+    /** A required page that computes some of its own values. */
+    public FormDefinition(
+            String slug,
+            String skPrefix,
+            String displayName,
+            int order,
+            boolean perMethodology,
+            Class<T> type,
+            List<SqlField<T>> sqlFields,
+            FormDerivation<T> derivation) {
+        this(slug, skPrefix, displayName, order, perMethodology, type, sqlFields, derivation, false);
     }
 
     /** Singleton pages use the bare prefix; repeated pages append the index. */

@@ -25,8 +25,8 @@ public class ProgramTypeMethodologyRequest extends ProjectPlanFormBase {
     @NotBlank
     @Size(max = 3000)
     @JapaneseText(allowAlphanumeric = true)
-    @JsonProperty("opeManagStructure")
-    private String opeManagStructure;
+    @JsonProperty("opeManageStructure")
+    private String opeManageStructure;
 
     /** 体制図 */
     @Size(max = 1000)
@@ -45,8 +45,8 @@ public class ProgramTypeMethodologyRequest extends ProjectPlanFormBase {
     @NotBlank
     @Size(max = 2000)
     @JapaneseText(allowAlphanumeric = true)
-    @JsonProperty("infoCollManagMethod")
-    private String infoCollManagMethod;
+    @JsonProperty("infoCollManageMethod")
+    private String infoCollManageMethod;
 
     @NotBlank
     @Size(max = 1000)

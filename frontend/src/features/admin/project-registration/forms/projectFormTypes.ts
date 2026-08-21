@@ -13,6 +13,7 @@ import {
   applicableConditionsSchema, // applicable_conditions
   projChangeInfoSchema, // project_change_information
   projPlanCoverSchema, // project_plan_cover
+  authorityHolderChangeSchema, // 認証権限保有主体変更届
   projectOverviewSchema, // project_overview
   applicableMethodologySchema, // applicable_methodology
   programMethodologySchema, // program_type_methodology
@@ -54,6 +55,7 @@ export const formSchema = z.object({
   appConditions: applicableConditionsSchema,
   projChangeInfo: projChangeInfoSchema,
   projPlanCover: projPlanCoverSchema,
+  authorityHolderChange: authorityHolderChangeSchema,
   projectOverview: projectOverviewSchema,
   applicableMethodology: applicableMethodologySchema,
   programMethodology: programMethodologySchema,

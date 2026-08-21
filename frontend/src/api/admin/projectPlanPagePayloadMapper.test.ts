@@ -57,13 +57,13 @@ describe('mapPlanPagePayload', () => {
       // Renamed to what the backend DTO declares.
       expect(payload.projectOperatorKana).toBe('カブシキガイシャマルマル');
       expect(payload.hasEnergyActPeriodReport).toBe(true);
-      expect(payload.energyManagFactoryNumber).toBe('0000001');
+      // No longer renamed — the DTO field was misspelled and is now aligned.
+      expect(payload.energyManageFactoryNumber).toBe('0000001');
       // Untouched where the names already agree.
       expect(payload.otherCorpNumber).toBe('9999999999999');
       // The form-side names must not reach the backend.
       expect(payload).not.toHaveProperty('projectOperatorNameKana');
       expect(payload).not.toHaveProperty('hasEnergyActReport');
-      expect(payload).not.toHaveProperty('energyManageFactoryNumber');
     });
   });
 });

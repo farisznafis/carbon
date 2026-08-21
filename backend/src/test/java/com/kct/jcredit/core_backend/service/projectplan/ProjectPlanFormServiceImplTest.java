@@ -231,11 +231,56 @@ class ProjectPlanFormServiceImplTest {
                 service.getProgress(PROJECT_ID, "C1", "operator", "u1");
 
         assertThat(response.getCompletedForms()).isEqualTo(1);
-        // Derived, not hardcoded, so registering another page does not break this.
-        assertThat(response.getTotalForms())
-                .isEqualTo(new ProjectPlanFormRegistry().all().size());
+        // Derived, not hardcoded, so registering another page does not break
+        // this. Optional pages are not part of the total.
+        assertThat(response.getTotalForms()).isEqualTo(
+                (int) new ProjectPlanFormRegistry().all().stream()
+                        .filter(definition -> !definition.optional())
+                        .count());
         // The application page is done, so the operator resumes at the next one.
         assertThat(response.getNextIncompleteSlug()).isEqualTo("other-operator-projects");
+    }
+
+    @Test
+    void anOptionalPageIsListedButNeitherCountedNorResumedInto() {
+        // 認証権限保有主体変更届 is filed only when the project's owner changes.
+        // Counted, a plan that never files it could never read complete; offered
+        // as 続きから, every operator would be parked on a form they must not
+        // fill in.
+        when(repository.findEnvelopes(PROJECT_ID)).thenReturn(List.of());
+
+        ProjectPlanProgressResponse response =
+                service.getProgress(PROJECT_ID, "C1", "operator", "u1");
+
+        assertThat(response.getForms())
+                .filteredOn(form -> "authority-holder-change".equals(form.getFormSlug()))
+                .singleElement()
+                .satisfies(form -> assertThat(form.isOptional()).isTrue());
+
+        assertThat(response.getTotalForms())
+                .isEqualTo(new ProjectPlanFormRegistry().all().size() - 1);
+        assertThat(response.getNextIncompleteSlug()).isEqualTo("application");
+    }
+
+    @Test
+    void aPlanIsCompleteEvenWithTheOptionalPageUntouched() {
+        List<ProjectPlanFormEnvelope> everyRequiredPage =
+                new ProjectPlanFormRegistry().all().stream()
+                        .filter(definition -> !definition.optional())
+                        .map(definition -> {
+                            ProjectPlanFormEnvelope envelope = new ProjectPlanFormEnvelope();
+                            envelope.setSk(definition.skPrefix());
+                            envelope.setStatus(ProjectPlanFormStatus.COMPLETE.name());
+                            return envelope;
+                        })
+                        .toList();
+        when(repository.findEnvelopes(PROJECT_ID)).thenReturn(everyRequiredPage);
+
+        ProjectPlanProgressResponse response =
+                service.getProgress(PROJECT_ID, "C1", "operator", "u1");
+
+        assertThat(response.getNextIncompleteSlug()).isNull();
+        assertThat(response.getCompletedForms()).isEqualTo(response.getTotalForms());
     }
 
     @Test
