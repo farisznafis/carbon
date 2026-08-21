@@ -23,6 +23,7 @@ import com.kct.jcredit.core_backend.dto.response.UserProfileResponse;
 import com.kct.jcredit.core_backend.dto.response.RejectCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.response.ParticipationReviewDetailResponse;
+import com.kct.jcredit.core_backend.dto.response.ParticipationReviewHistoryResponse;
 import com.kct.jcredit.core_backend.service.AdminCompanyQueryService;
 import com.kct.jcredit.core_backend.service.CompanyApprovalService;
 import com.kct.jcredit.core_backend.service.CompanyLifecycleService;
@@ -247,6 +248,16 @@ public class AdminCompanyController {
         reviewService.rejectReview(participationId, operatorUserId, request);
         return ResponseEntity.ok(BaseResponse.success("却下しました。"));
     }
+
+    @GetMapping("/{participationId}/review-history")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "審査履歴取得", description = "却下された過去の審査履歴を取得します。")
+    public ResponseEntity<List<ParticipationReviewHistoryResponse>> getReviewHistory(
+            @PathVariable Integer participationId) {
+        return ResponseEntity.ok(reviewService.getReviewHistory(participationId));
+    }
+
     
     @GetMapping("/token")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
