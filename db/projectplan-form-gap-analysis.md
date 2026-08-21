@@ -58,10 +58,15 @@ Singletons: 登録申請書, 代表以外…, 誓約書, 計画変更届, 認証
 That is 8 singleton sheets + 9 × 5 = **53**, plus 項目取得シート / 更新履歴 /
 はじめに and the three 【削除不可】 sheets.
 
-**Status:** known and deliberately blocked. `ProjectPlanFormRegistry` throws at
-startup if a page sets `perMethodology`, because `project` stores exactly one
-方法論 (`method_category` / `method_number` / `method_name`, all NOT NULL).
-Enabling it needs the schema first.
+**Status: not a gap — decided 2026-08-21.** One project applies one methodology
+on this platform. `project` stores that one (`method_category` /
+`method_number` / `method_name`, all NOT NULL), and `ProjectPlanFormRegistry`
+throws at startup if a page sets `perMethodology`, so the decision cannot be
+forgotten by accident.
+
+This costs no compliance: the form provides ①–⑤, and a project using one fills
+① and leaves ②–⑤ blank, which the form permits. A 事業者 running two
+methodologies files two projects.
 
 ### 2.1 蓄電池あり／なし is example-specific, not part of the form
 
