@@ -16,16 +16,18 @@ import com.kct.jcredit.core_backend.dto.response.ApproveCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.CompanySuspensionListResponse;
 import com.kct.jcredit.core_backend.dto.response.CompanySuspensionResponse;
 import com.kct.jcredit.core_backend.dto.response.CreateUserResponse;
+import com.kct.jcredit.core_backend.dto.response.DocuSignEnvelopeResponse;
 import com.kct.jcredit.core_backend.dto.response.UpdateUserResponse;
 import com.kct.jcredit.core_backend.dto.response.UserListResponse;
 import com.kct.jcredit.core_backend.dto.response.UserProfileResponse;
 import com.kct.jcredit.core_backend.dto.response.RejectCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.response.ParticipationReviewDetailResponse;
+import com.kct.jcredit.core_backend.dto.response.ParticipationReviewHistoryResponse;
 import com.kct.jcredit.core_backend.service.AdminCompanyQueryService;
 import com.kct.jcredit.core_backend.service.CompanyApprovalService;
 import com.kct.jcredit.core_backend.service.CompanyLifecycleService;
-import com.kct.jcredit.core_backend.service.DocuSignAuthService;
+import com.kct.jcredit.core_backend.service.DocuSignService;
 import com.kct.jcredit.core_backend.service.OperatorUserService;
 import com.kct.jcredit.core_backend.service.ParticipationReviewService;
 import com.kct.jcredit.core_backend.service.SecurityAccountService;
@@ -37,6 +39,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
 
@@ -72,7 +77,7 @@ public class AdminCompanyController {
     private final ParticipationReviewService reviewService;
     private final SecurityAccountService securityAccountService;
     private final JwtUtil jwtUtil;
-    private final DocuSignAuthService docuSignAuthService;
+    private final DocuSignService docuSignService;
 
 
     /**
@@ -243,6 +248,16 @@ public class AdminCompanyController {
         reviewService.rejectReview(participationId, operatorUserId, request);
         return ResponseEntity.ok(BaseResponse.success("却下しました。"));
     }
+
+    @GetMapping("/{participationId}/review-history")
+    @PreAuthorize("hasRole('operator')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "審査履歴取得", description = "却下された過去の審査履歴を取得します。")
+    public ResponseEntity<List<ParticipationReviewHistoryResponse>> getReviewHistory(
+            @PathVariable Integer participationId) {
+        return ResponseEntity.ok(reviewService.getReviewHistory(participationId));
+    }
+
     
     @GetMapping("/token")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
@@ -250,7 +265,7 @@ public class AdminCompanyController {
     @Operation(summary = "リンクトークン", description = "DocuSignのアクセストークンを取得します。")
     public ResponseEntity<Map<String, String>> testToken() {
         try {
-            String token = docuSignAuthService.getAccessToken();
+            String token = docuSignService.getAccessToken();
             return ResponseEntity.ok(Map.of(
                     "status", "OK",
                     "tokenPreview", token.substring(0, 20) + "..." 
@@ -341,5 +356,46 @@ public class AdminCompanyController {
             jwtUtil.extractCompanyId(authentication.getCredentials().toString())
     );
     return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @RestController
+    @RequestMapping("/test/docusign")
+    @RequiredArgsConstructor
+    public class DocuSignTestController {
+
+        private final DocuSignService docuSignService;
+
+        @GetMapping("/token")
+        public ResponseEntity<Map<String, String>> testToken() {
+            try {
+                String token = docuSignService.getAccessToken();
+                return ResponseEntity.ok(Map.of(
+                        "status", "OK",
+                        "tokenPreview", token.substring(0, 20) + "..."
+                ));
+            } catch (Exception e) {
+                return ResponseEntity.status(500).body(Map.of(
+                        "status", "ERROR",
+                        "message", e.getMessage()
+                ));
+            }
+        }
+
+        @PostMapping("/send-envelope")
+        public ResponseEntity<Map<String, String>> testSendEnvelope() throws Exception {
+            byte[] dummyPdf = Files.readAllBytes(Paths.get("C:/シャーナズ/【03】 Projek/docusign/template.pdf"));
+
+            DocuSignEnvelopeResponse result = docuSignService.sendEnvelopeForSignature(
+                    dummyPdf,
+                    "wqzdzb5506@minitts.net", 
+                    "Test Sankasha",
+                    "test_document.pdf"
+            );
+
+            return ResponseEntity.ok(Map.of(
+                    "envelopeId", result.getEnvelopeId(),
+                    "status", result.getStatus()
+            ));
+        }
     }
 }
