@@ -100,6 +100,9 @@ describe('FormActions', () => {
     );
 
     expect(screen.getByRole('button', { name: '戻る' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: '登録中...' })).toBeDisabled();
+    const pendingButton = screen.getByRole('button', { name: '登録中...' });
+    expect(pendingButton).toBeDisabled();
+    expect(pendingButton).toHaveAttribute('aria-busy', 'true');
+    expect(pendingButton.querySelector('.animate-spin')).toBeInTheDocument();
   });
 });

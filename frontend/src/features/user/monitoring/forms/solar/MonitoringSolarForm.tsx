@@ -3,6 +3,7 @@ import { useForm, type FieldPath } from 'react-hook-form';
 import { z } from 'zod';
 import type { SiteProjectEquipment } from '@/api/site';
 import { FileSelectButton } from '@/components/inputs/FileSelectButton/FileSelectButton';
+import { InlineLoader } from '@/components/feedback/loading';
 import {
   FormActions,
   FormCard,
@@ -315,6 +316,9 @@ export function MonitoringSolarForm({
                         </SelectContent>
                       </Select>
                     </FormControl>
+                    {isEquipmentLoading ? (
+                      <InlineLoader label="設備を読み込んでいます" />
+                    ) : null}
                     {equipmentLoadError ? (
                       <div className="space-y-2" role="alert">
                         <p className="text-sm text-destructive">
@@ -654,6 +658,7 @@ export function MonitoringSolarForm({
 
               <FormActions
                 disabled={form.formState.isSubmitting}
+                pendingActionId={form.formState.isSubmitting ? 'confirm' : null}
                 actions={[
                   {
                     id: 'cancel',
@@ -664,6 +669,7 @@ export function MonitoringSolarForm({
                   {
                     id: 'confirm',
                     label: '確認',
+                    pendingLabel: '確認しています...',
                     type: 'submit',
                   },
                 ]}

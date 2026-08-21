@@ -8,6 +8,10 @@ import {
 } from '@/components/forms/form-layout';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { ChangedConfirmationValue } from '@/components/feedback/Confirmation/ChangedConfirmationValue';
+import {
+  FileUploadProgress,
+  type FileUploadProgressItem,
+} from '@/components/feedback/loading';
 import { ConfirmationItem } from './confirmationItem';
 
 type ConfirmationLayoutProps = {
@@ -17,6 +21,8 @@ type ConfirmationLayoutProps = {
   onBack: () => void;
   onConfirm: () => void;
   isSubmitting?: boolean;
+  uploadItems?: FileUploadProgressItem[];
+  onRetryUpload?: (itemId: string) => void;
 };
 
 export function MonitoringConfirmationLayout({
@@ -26,6 +32,8 @@ export function MonitoringConfirmationLayout({
   onBack,
   onConfirm,
   isSubmitting,
+  uploadItems = [],
+  onRetryUpload,
 }: ConfirmationLayoutProps) {
   return (
     <FormStandalonePage>
@@ -63,6 +71,8 @@ export function MonitoringConfirmationLayout({
                 </div>
               ))}
             </div>
+
+            <FileUploadProgress items={uploadItems} onRetry={onRetryUpload} />
 
             <FormActions
               className="pt-4"

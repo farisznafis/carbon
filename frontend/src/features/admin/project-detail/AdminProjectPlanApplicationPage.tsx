@@ -7,6 +7,7 @@ import {
   type ProjectPlanApplicationResponse,
 } from '@/api/admin';
 import { FormActions } from '@/components/forms/form-layout';
+import { PageSkeleton } from '@/components/feedback/loading';
 import { PageDropdown } from '@/components/forms/shared/PageDropdown';
 import type { FieldConfig } from '@/components/forms/shared/GenericFormFields/GenericFormFields';
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
@@ -279,9 +280,7 @@ export default function AdminProjectPlanApplicationPage() {
 
   if (loading) {
     return (
-      <div className='flex min-h-screen items-center justify-center'>
-        読み込み中...
-      </div>
+      <PageSkeleton label="プロジェクト申請情報を読み込んでいます" />
     );
   }
 

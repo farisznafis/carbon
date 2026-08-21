@@ -18,6 +18,7 @@ import {
 import { mapAdminProjectPlanApplicationPayload } from '@/api/admin/projectPayloadMapper';
 import type { Project } from '@/api/projects';
 import { FormActions } from '@/components/forms/form-layout';
+import { PageSkeleton } from '@/components/feedback/loading';
 import { PageDropdown } from '@/components/forms/shared/PageDropdown';
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
@@ -476,9 +477,7 @@ export default function AdminProjectEditPage() {
 
   if (loading) {
     return (
-      <div className='flex min-h-screen items-center justify-center'>
-        読み込み中...
-      </div>
+      <PageSkeleton label="プロジェクト情報を読み込んでいます" />
     );
   }
 

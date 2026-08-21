@@ -43,6 +43,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CompanySuspendDialog } from '@/features/admin/dashboard/tables/CompanySuspendDialog';
 import { CompanySuspensionResolveDialog } from '@/features/admin/dashboard/tables/CompanySuspensionResolveDialog';
 import { useAdminCompanyDetailQuery } from '@/hooks/admin/useAdminCompanyDetailQuery';
+import { PageSkeleton, SkeletonCard, SkeletonTable } from '@/components/feedback/loading';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
 import { AdminCompanySitesTable } from './components/AdminCompanySitesTable';
@@ -139,9 +140,16 @@ function DefinitionRow({
 
 function DetailLoadingState() {
   return (
-    <div className="flex min-h-[60vh] items-center justify-center text-sm text-foreground">
-      読み込み中...
-    </div>
+    <PageSkeleton>
+      <div className="mx-auto w-full max-w-7xl space-y-6">
+        <SkeletonCard className="min-h-28" />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <SkeletonCard className="min-h-72" />
+          <SkeletonCard className="min-h-72" />
+        </div>
+        <SkeletonTable columns={5} rows={6} />
+      </div>
+    </PageSkeleton>
   );
 }
 

@@ -12,6 +12,7 @@ import { FormActions } from '@/components/forms/form-layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { PageLoadingOverlay } from '@/components/feedback/loading';
 
 interface SiteData {
   siteId: string;
@@ -201,14 +202,8 @@ const SiteDetail = () => {
   };
 
   if (loading) {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted rounded w-1/4"></div>
-          <div className="h-64 bg-muted rounded"></div>
-        </div>
-      </div>
-    );
+    // Skeleton halaman dinonaktifkan sementara sampai layout final halaman ini dipetakan.
+    return <PageLoadingOverlay message="拠点情報を読み込んでいます" />;
   }
 
   if (!site) {

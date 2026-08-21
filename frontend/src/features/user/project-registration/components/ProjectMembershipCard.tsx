@@ -3,7 +3,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { ExternalLink, LoaderCircle, MapPin } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
+import { ButtonLoader } from '@/components/feedback/loading';
 
 type ProjectMembershipStatus = 'available' | 'joined';
 
@@ -95,7 +96,7 @@ export function ProjectMembershipCard({
               onClick={() => onDownloadPdf?.(project)}
             >
               {isDownloadingPdf ? (
-                <LoaderCircle className='animate-spin' />
+                <ButtonLoader />
               ) : (
                 <ExternalLink />
               )}

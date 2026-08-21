@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDashboardStore } from "@/stores/dashboardStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PageSkeleton } from "@/components/feedback/loading";
 import {
   FormPageHeader,
   FormPageShell,
@@ -878,9 +879,7 @@ const ProjectRegister = () => {
   // ── Loading / error states ─────────────────────────────────────────────────
   if (isProjectLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-foreground text-lg">プロジェクト情報を読み込み中...</p>
-      </div>
+      <PageSkeleton label="プロジェクト情報を読み込んでいます" />
     );
   }
 

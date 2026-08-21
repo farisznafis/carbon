@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import { ButtonLoader } from '@/components/feedback/loading';
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -364,18 +365,24 @@ export function FormActions({
         </fieldset>
       ) : null}
       {actions.map(
-        ({ id, label, pendingLabel, disabled: actionDisabled, ...buttonProps }) => (
-          <Button
-            key={id}
-            type="button"
-            size={buttonSize}
-            className={cn(buttonWidthClass, authMotionClass)}
-            disabled={disabled || isPending || actionDisabled}
-            {...buttonProps}
-          >
-            {pendingActionId === id ? (pendingLabel ?? label) : label}
-          </Button>
-        ),
+        ({ id, label, pendingLabel, disabled: actionDisabled, ...buttonProps }) => {
+          const isCurrentActionPending = pendingActionId === id;
+
+          return (
+            <Button
+              key={id}
+              type="button"
+              size={buttonSize}
+              className={cn(buttonWidthClass, authMotionClass)}
+              disabled={disabled || isPending || actionDisabled}
+              aria-busy={isCurrentActionPending || undefined}
+              {...buttonProps}
+            >
+              {isCurrentActionPending ? <ButtonLoader /> : null}
+              <span>{isCurrentActionPending ? (pendingLabel ?? label) : label}</span>
+            </Button>
+          );
+        },
       )}
     </div>
   );
