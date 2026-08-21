@@ -60,10 +60,10 @@ class ProjectPlanFormRegistryTest {
 
     @Test
     void registeringARepeatingPageIsRefusedWithTheReasonWhy() {
-        // The official form repeats sections once per 方法論 ①–⑤ and the key
-        // scheme is ready for it, but project stores exactly one 方法論. Failing
-        // loudly at startup beats shipping pages that collect ②–⑤ data nothing
-        // downstream can hold.
+        // One project applies one 方法論 here, by decision. The official form
+        // offers ①–⑤ and the key scheme could serve them, so the guard is what
+        // keeps "could" from turning into pages that collect ②–⑤ data nothing
+        // downstream can hold. Failing loudly at startup is the point.
         FormDefinition<ApplicableConditionsRequest> repeating = new FormDefinition<>(
                 "repeating-page",
                 "REPEATING_PAGE",

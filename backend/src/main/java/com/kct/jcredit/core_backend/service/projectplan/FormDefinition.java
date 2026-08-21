@@ -32,11 +32,14 @@ import com.kct.jcredit.core_backend.validation.RequiredIf;
  * @param displayName     Japanese label shown in the wizard
  * @param order           position in the wizard
  * @param perMethodology  whether the page repeats once per 方法論 (①–⑤).
- *                        Designed but not usable yet: the schema stores one
- *                        方法論 per project, so {@link ProjectPlanFormRegistry}
- *                        rejects any page that sets this. The key scheme below
- *                        is kept because the official form does require ①–⑤,
- *                        so this is a pending gap rather than a dead option.
+ *                        <b>Always false, by decision, not by omission.</b> One
+ *                        project applies one methodology on this platform, so
+ *                        {@link ProjectPlanFormRegistry} refuses any page that
+ *                        sets this. The flag and the key scheme below are kept
+ *                        because the official form does provide ①–⑤ — a
+ *                        project that uses one fills ① and leaves the rest
+ *                        blank, which the form permits — and because the guard
+ *                        needs something to guard.
  * @param type            the page's DTO
  * @param sqlFields       fields autofilled from PostgreSQL
  * @param derivation      values the page computes; {@code null} for most pages

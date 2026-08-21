@@ -483,16 +483,22 @@ public class ProjectPlanFormRegistry {
     /** Package-private so the guard itself can be tested, not just its effect. */
     static void rejectUnsupportedRepetition(FormDefinition<?> definition) {
         if (definition.perMethodology()) {
-            // The framework can key a page by 方法論 (SK suffix #M2), but nothing
-            // can store the methodologies themselves: project holds exactly one,
-            // in method_category/method_number/method_name, all NOT NULL. A page
-            // registered as repeating would therefore collect ②–⑤ data that the
-            // project record, monitoring and credit calculation cannot represent.
-            // Enabling this needs the schema first — see the project-plan notes.
+            // One project applies one methodology here. That is the platform's
+            // design, not a limitation waiting to be lifted: project holds the
+            // one methodology in method_category/method_number/method_name, all
+            // NOT NULL, and monitoring, credit calculation and the PDFs all read
+            // it from there. A page registered as repeating would collect ②–⑤
+            // data that nothing downstream can represent.
+            //
+            // The official form does offer 方法論 ①–⑤, and a project using one
+            // fills ① and leaves ②–⑤ blank — which the form permits, so this
+            // costs no compliance. Enabling repetition would need a
+            // project_methodology table AND a wizard that navigates 24 repeating
+            // pages five times over; both are out of scope by decision.
             throw new IllegalStateException(
-                    "Page " + definition.slug() + " is registered as perMethodology, but the"
-                            + " schema stores only one 方法論 per project. Add storage for"
-                            + " 方法論 ②–⑤ before enabling repetition.");
+                    "Page " + definition.slug() + " is registered as perMethodology, but one"
+                            + " project applies exactly one 方法論 on this platform. If that"
+                            + " ever changes, project needs storage for 方法論 ②–⑤ first.");
         }
     }
 

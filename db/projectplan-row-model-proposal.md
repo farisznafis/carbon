@@ -399,14 +399,32 @@ a table nested inside a table row, which the renderer does not do.
 
 Tests: `SectionTenRowTest` (13). Backend set: 182 pass.
 
-### E. 方法論 ①–⑤ — blocked on schema, independent of A–D
+### E. 方法論 ①–⑤ — ❌ decided against, not building
 
-12. `project_methodology` table; `project` currently holds one methodology in
-    three NOT NULL columns.
-13. Remove the startup guard in `ProjectPlanFormRegistry`, set `perMethodology`
-    on the nine repeating sections.
-14. Also fixes the `method_number UNIQUE` question, which only exists because
-    the methodology lives on `project`.
+**One project applies one methodology on this platform.** That is the answer,
+given 2026-08-21, and it closes this stage rather than deferring it.
+
+What the form asks for, for the record: the blank workbook has 59 sheets, **45
+of them per-methodology** — nine sections × five — and `登録申請書` provides five
+slots at rows 44, 46, 48, 50 and 52. A project using one methodology fills ①
+and leaves ②–⑤ blank, which the form permits, so holding one costs no
+compliance.
+
+What it would have taken, for the record:
+
+- a `project_methodology` table — `project` holds the methodology in three
+  NOT NULL columns and monitoring, credit calculation and the participation
+  PDFs all read it from there;
+- an answer to where `method_number UNIQUE` belongs once methodology leaves
+  `project`;
+- a wizard that navigates two axes. **24 of our 31 pages sit in those nine
+  sections**, so ①–⑤ would take the wizard to 7 + 24 × 5 = **127 pages** — a
+  flat step list cannot carry that, and rebuilding the navigation is work on
+  the scale of stage A.
+
+The `perMethodology` flag, the `#M2` sort-key suffix and the startup guard all
+stay. The flag is always false by decision; the guard is what stops that from
+being forgotten, and it needs something to guard.
 
 ### F. Loose ends — any time
 
