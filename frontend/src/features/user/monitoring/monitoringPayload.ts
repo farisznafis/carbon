@@ -46,21 +46,21 @@ export function buildMonitoringPayload(
                 ELPJ_battery_value: toNumberOrNull(
                   formData.ELPJ_battery_value,
                 ),
-                ELPJ_battery_evidence:
-                  evidenceUrls.ELPJ_battery_evidence ??
-                  fileValueToString(formData.ELPJ_battery_evidence),
+                elpj_battery_evidence:
+                  evidenceUrls.elpj_battery_evidence ??
+                  fileValueToString(formData.elpj_battery_evidence),
               }
             : {}),
         }
       : {}),
     ELPJ_control_value: toNumberOrNull(formData.ELPJ_control_value),
     ELPJ_accuracy: toNumberOrNull(formData.ELPJ_accuracy),
-    ELpv_evidence:
-      evidenceUrls.ELpv_evidence ?? fileValueToString(formData.ELpv_evidence),
-    ELpvr_evidence:
-      evidenceUrls.ELpvr_evidence ?? fileValueToString(formData.ELpvr_evidence),
-    ELPJ_control_equipment_spec_files:
-      evidenceUrls.ELPJ_control_equipment_spec_files ??
-      fileValueToString(formData.ELPJ_control_equipment_spec_files),
+    elpv_evidence:
+      evidenceUrls.elpv_evidence ?? fileValueToString(formData.elpv_evidence),
+    elpvr_evidence:
+      evidenceUrls.elpvr_evidence ?? fileValueToString(formData.elpvr_evidence),
+    elpj_control_evidence:
+      evidenceUrls.elpj_control_evidence ??
+      fileValueToString(formData.elpj_control_evidence),
   };
 }
