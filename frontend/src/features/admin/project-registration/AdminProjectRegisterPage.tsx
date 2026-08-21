@@ -286,6 +286,26 @@ export const AdminProjectRegister: React.FC = () => {
         );
 
   /**
+   * Folds a page's server-side values into the form.
+   *
+   * Merge rather than replace: autofill has already put master-data values into
+   * this page, and a record saved before a field existed would otherwise blank
+   * it out.
+   */
+  const applyPageValues = (
+    page: ProjectPlanPage,
+    values: Record<string, unknown>,
+  ) => {
+    if (Object.keys(values).length === 0) return;
+
+    const key = page.formKey as FieldPath<AdminProjectRegisterFormInputValues>;
+    const current = form.getValues(key) as Record<string, unknown> | undefined;
+    form.setValue(key, { ...(current ?? {}), ...values } as never, {
+      shouldDirty: false,
+    });
+  };
+
+  /**
    * Reads one page back from the server.
    *
    * Returns what the caller should apply rather than applying it itself, so a
@@ -328,19 +348,7 @@ export const AdminProjectRegister: React.FC = () => {
       .then((loaded) => {
         if (cancelled) return;
 
-        // Merge rather than replace: autofill has already put master-data
-        // values into this page, and a record saved before a field existed
-        // would otherwise blank it out on load.
-        if (Object.keys(loaded.values).length > 0) {
-          const key =
-            page.formKey as FieldPath<AdminProjectRegisterFormInputValues>;
-          const current = form.getValues(key) as Record<string, unknown> | undefined;
-          form.setValue(
-            key,
-            { ...(current ?? {}), ...loaded.values } as never,
-            { shouldDirty: false },
-          );
-        }
+        applyPageValues(page, loaded.values);
         setReadOnlyFields(loaded.readOnlyFields);
         setConditionalFields(loaded.conditionalFields);
       })
@@ -377,7 +385,16 @@ export const AdminProjectRegister: React.FC = () => {
     if (!page) return true;
 
     try {
-      await saveProjectPlanForm(projectId, page.slug, buildPagePayload(page, values));
+      const saved = await saveProjectPlanForm(
+        projectId,
+        page.slug,
+        buildPagePayload(page, values),
+      );
+      // The server owns the derived values — 合計, 年平均, 年度内の認証申請期間
+      // 日数, the 年度 skeleton itself — and recomputes them on every save.
+      // Dropping the response left them showing whatever they were before, so
+      // a 合計 only caught up when the operator navigated away and back.
+      applyPageValues(page, mapPlanPageValues(saved.data, page.renames));
       await refreshProgress(projectId);
       return true;
     } catch (e) {
