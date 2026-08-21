@@ -69,8 +69,8 @@ type MonitoringDisplayRow = Pick<
   | 'projectId'
   | 'siteId'
   | 'dateRecorded'
-  | 'ELpv_evidence'
-  | 'ELPJ_battery_evidence'
+  | 'elpv_evidence'
+  | 'elpj_battery_evidence'
 > & {
   ELpv_value: number | null;
   ELpvr_value: number | null;
@@ -831,14 +831,14 @@ const ProjectDetail = () => {
                                 ? 'Yes'
                                 : 'No'}
                           </div>
-                          {row.ELpv_evidence && (
+                          {row.elpv_evidence && (
                             <div className='truncate'>
-                              PV Evidence: {row.ELpv_evidence}
+                              PV Evidence: {row.elpv_evidence}
                             </div>
                           )}
-                          {row.ELPJ_battery_evidence && (
+                          {row.elpj_battery_evidence && (
                             <div className='truncate'>
-                              Battery Evidence: {row.ELPJ_battery_evidence}
+                              Battery Evidence: {row.elpj_battery_evidence}
                             </div>
                           )}
                         </div>
