@@ -1,15 +1,6 @@
-// concept
-// emission_act
-// greenhouse_gas_type
-// emissions
-// monitor_calc_being_done
-// emissions_total_value
-import {
-  REGEX_MESSAGES,
-  REGEX_PATTERNS,
-  VALIDATION_MESSAGES,
-} from '@/lib/validations';
+import { VALIDATION_MESSAGES } from '@/lib/validations';
 import { z } from 'zod';
+import { baselineIncidentalActivityRowSchema } from '../sectionTenRows';
 
 export const baselineIncidentalSchema = z.object({
   concept: z
@@ -17,25 +8,8 @@ export const baselineIncidentalSchema = z.object({
     .min(1, '必須項目です')
     .max(1000, VALIDATION_MESSAGES.MAX_CHARACTERS(1000)),
 
-  emissionAct: z
-    .string()
-    .min(1, '必須項目です')
-    .max(1000, VALIDATION_MESSAGES.MAX_CHARACTERS(1000)),
+  activities: z.array(baselineIncidentalActivityRowSchema),
 
-  greenhouseGasType: z
-    .string()
-    .min(1, '必須項目です')
-    .max(20, VALIDATION_MESSAGES.MAX_CHARACTERS(20)),
-
-  emissions: z
-    .string()
-    .min(1, '必須項目です')
-    .regex(REGEX_PATTERNS.NUMERIC_12_1, REGEX_MESSAGES.NUMERIC_12_1),
-
-  monitorCalcBeingDone: z.boolean({ message: '必須項目です' }),
-
-  emissionsTotalValue: z
-    .string()
-    .regex(REGEX_PATTERNS.NUMERIC_12_1, REGEX_MESSAGES.NUMERIC_12_1)
-    .optional(),
+  // Derived server-side from the rows; never typed.
+  emissionsTotalValue: z.number().optional(),
 });

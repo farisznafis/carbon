@@ -176,8 +176,8 @@ across fifteen pages costs three times what finding it out across one does.
 
 - ~~Whether `monitoring-plan` (page 31) duplicates part of 11 or belongs to
   12.x.~~ **Answered in stage C**: it is 11（３）モニタリングデータの収集方法, and
-  it holds only that section's three header fields — the table under them is
-  still missing.
+  it already matches the blank format in full. （３）is free-form — a note, a
+  モニタリング項目 list and a フロー図 — so there is no table under it to add.
 - Whether 12.1 / 12.2 / 12.3 are row tables. The gap analysis assumed so from
   their column headers, but the rows were not counted.
 - Whether the 合計 rounding rule (小数点以下第１位, per 10.1 ※4) should be applied
@@ -335,18 +335,69 @@ was numbered one below its wizard step. `all()` sorts by order, so two pages
 sharing one had no defined relative order. Fixed; orders now run 2–32 and match
 the wizard's step ids exactly.
 
-**Still missing after this stage:** （３） has a table of its own — モニタリング項目
-/ 必要情報 / 収集する資料 / データ形態 / モニタリング対象者 / 収集時期 / 収集方法,
-at sheet rows 31+ — and `MonitoringPlanRequest` holds only （３）'s three header
-fields. That is a newly identified gap, not part of this stage; it belongs with
-stage D or F.
+**Correction — （３） needs nothing.** This stage first recorded 「（３）has a
+table of its own that no DTO holds」, from the solar example's rows 31–40
+(モニタリング項目 / 必要情報 / 収集する資料 / データ形態 / モニタリング対象者 /
+収集時期 / 収集方法). Checking the blank format instead: **11（３）ends at row
+21.** It is a heading, the note 「各削減活動におけるモニタリングデータを運営・
+管理者が収集する方法をフロー図等を用いて説明すること」, and a モニタリング項目
+label — then open space. The table is something the sample author drew inside
+that free-form space, not a structure the form defines.
 
-### D. Section 10 — eight pages
+`MonitoringPlanRequest` already matches the blank format field for field:
+モニタリング項目 (a comma-joined symbol list), the explanation, and the diagram.
+Nothing to add.
 
-11. A row list on each of 10.1, 10.2(1), 10.2(2), 10.3(1), 10.3(2), 10.4,
-    10.5(1), 10.5(2). No merging — each really is its own block in the sheet.
+The lesson is worth keeping: **the example shows one way to fill the form, the
+blank format is the form.** Reading structure out of the sample invents
+requirements J-Credit never set.
 
-Mechanical by this point.
+### D. Section 10 — eight pages ✅ done
+
+11. ✅ A row list on **seven** of the eight. No merging — each really is its own
+    block in the sheet.
+
+Two row shapes cover the section:
+
+- **`FormulaSymbolRow`** — 記号 / 定義 / 単位 / 想定値, the table under every 式.
+  Serves 10.3(1), 10.3(2), 10.4(2), 10.5(1), 10.5(2). Each of those pages held
+  one symbol, and every formula in either workbook has at least two: the solar
+  example's 式 5 is `EMPJ,S,control = ELPJ,control × CEFelectricity,t`.
+- **`BaselineIncidentalActivityRow`** / **`PostImplementIncidentalActivityRow`**
+  — 10.2's 排出活動 tables, with the 合計 beneath each now derived.
+
+**10.1 is deliberately left flat**, against the stage as written. Its table is
+`ER` / `EMBL` / `EMPJ` — three rows the sheet prints itself, symbol and 定義
+included, with only 単位 and 数値 to fill. A row list there would replace three
+named fields with three rows that can never be anything else, and would lose the
+names the rest of the code refers to them by.
+
+Two more bugs of the character-set family, both found by writing tests with the
+workbooks' own values:
+
+| Bug | Evidence |
+|---|---|
+| **`evaluationFormula` carried `@JapaneseText`**, which allows neither `=` nor `×` — so every formula in either workbook was rejected by the page meant to hold it | `ER=EMBL - EMPJ` (blank, 式 1), `EMPJ,S,control=ELPJ,control×CEFelectricity,t` (solar, 式 5) |
+| **影響度 was free text up to 1000 characters**, which is how a value above 100 got in | it is a share of 10.1's 排出削減量 (※1) and 10.3(2) applies to activities 「影響度が１％以上」. Now `BigDecimal`, 0–100 |
+
+That second one was pulled forward from stage F item 16: the 影響度合計値 the
+sheet shows underneath cannot be summed from free text, so stage D's derived
+total depended on it. Note the unit — **percentage points, 0–100**. The
+spreadsheet cell holds the raw ratio (the solar example stores 0.0407) and Excel
+renders it as 4.07% because the cell is percent-formatted; the operator reads
+and types the percentage, so that is what we store.
+
+`FormDerivation` generalised slightly: `IncidentalActivityTotalsDerivation` takes
+the row list and one `Column` per total, so 10.2(1) declares one and 10.2(2)
+declares two. An empty table gives a **null** total rather than zero — zero
+would be a claim that the operator listed no 付随的な排出活動.
+
+**Still missing:** the sheet allows several 式 blocks per sub-section, each with
+its own 式番号 and symbol table — the solar example's 10.3(2) has 式 4, 4, 5 and
+6. We hold one 式 per page, which is what the blank format shows. Fixing it means
+a table nested inside a table row, which the renderer does not do.
+
+Tests: `SectionTenRowTest` (13). Backend set: 182 pass.
 
 ### E. 方法論 ①–⑤ — blocked on schema, independent of A–D
 
@@ -360,15 +411,18 @@ Mechanical by this point.
 ### F. Loose ends — any time
 
 15. 認証権限保有主体変更届 has no page at all.
-16. 影響度 becomes numeric 0–100 (it is compared against 1% in 10.3(2)).
+16. ~~影響度 becomes numeric 0–100~~ — **done in stage D**, because the
+    影響度合計値 that stage derives cannot be summed from free text.
 17. 分類 becomes a real choice — **Ａ／Ｂ／Ｃ on 11（１）活動量 but Ⅰ／Ⅱ／Ⅲ on
     11（２）係数**, which stage C confirmed from the sheet's two ※1 notes. The
     活動量 value also selects whether 12.1 or 12.2 applies. The two tables share
     one `MonitoringPlanRow` today, so this either splits the row type or keys
     the vocabulary off the page.
-20. 11（３） has a table of its own (モニタリング項目 / 必要情報 / 収集する資料 /
-    データ形態 / モニタリング対象者 / 収集時期 / 収集方法) that no DTO holds.
-    Found in stage C.
+20. 10.1's EMBL and EMPJ are stated by the sheet to be sums — ※2 「10.5の
+    ベースライン排出量で算定した全ての排出量の総和」, ※3 the same for 10.3 —
+    so they could be derived across pages rather than typed. Found in stage D;
+    not done, because it is the first derivation that would read another page's
+    stored item.
 18. Spec typos → DTO / slug / sort-key renames. Cosmetic, but a migration.
 19. The three open questions in the section above need a human read of the
     workbook.

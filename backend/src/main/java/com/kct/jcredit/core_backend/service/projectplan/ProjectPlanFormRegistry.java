@@ -12,6 +12,7 @@ import com.kct.jcredit.core_backend.dto.projectplan.ProjectApplicationRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.AdditionalAssessmentMethodRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.ApplicableMethodologyRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.BaselineEmissionRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.BaselineIncidentalActivityRow;
 import com.kct.jcredit.core_backend.dto.projectplan.BaselineIncidentalEmissionActivityRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.CoefficientMeasureExplanationRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.DataManagementRequest;
@@ -33,6 +34,7 @@ import com.kct.jcredit.core_backend.dto.projectplan.MonitoringMethodExplanationR
 import com.kct.jcredit.core_backend.dto.projectplan.MonitoringPlanRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.ObtainingAdditionalAssessmentRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.PostImplementIncidentalActivityRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.PostImplementIncidentalActivityRow;
 import com.kct.jcredit.core_backend.dto.projectplan.ProgramTypeMethodologyRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectChangeInformationRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectOverviewRequest;
@@ -321,7 +323,13 @@ public class ProjectPlanFormRegistry {
                 19,
                 false,
                 BaselineIncidentalEmissionActivityRequest.class,
-                List.of()));
+                List.of(),
+                IncidentalActivityTotalsDerivation.of(
+                        BaselineIncidentalEmissionActivityRequest::getActivities,
+                        new IncidentalActivityTotalsDerivation.Column<>(
+                                "emissionsTotalValue",
+                                BaselineIncidentalActivityRow::getEmissions,
+                                BaselineIncidentalEmissionActivityRequest::setEmissionsTotalValue))));
 
         register(new FormDefinition<>(
                 "post-implement-incidental-activity",
@@ -330,7 +338,17 @@ public class ProjectPlanFormRegistry {
                 20,
                 false,
                 PostImplementIncidentalActivityRequest.class,
-                List.of()));
+                List.of(),
+                IncidentalActivityTotalsDerivation.of(
+                        PostImplementIncidentalActivityRequest::getActivities,
+                        new IncidentalActivityTotalsDerivation.Column<>(
+                                "emissionsTotalValue",
+                                PostImplementIncidentalActivityRow::getEmissions,
+                                PostImplementIncidentalActivityRequest::setEmissionsTotalValue),
+                        new IncidentalActivityTotalsDerivation.Column<>(
+                                "impactTotalValue",
+                                PostImplementIncidentalActivityRow::getImpact,
+                                PostImplementIncidentalActivityRequest::setImpactTotalValue))));
 
         register(new FormDefinition<>(
                 "main-activity-project-emission",

@@ -63,21 +63,11 @@ class EmissionUnitFieldValidationTest {
                 // character-set rule left to check. The page's own unitEmission
                 // is deliberately narrower than this list (t-CO2 / kg-CO2 only),
                 // and is covered by EmissionReductionPlanDerivationTest.
+                // Section 10's five 記号/定義/単位/想定値 tables all became
+                // FormulaSymbolRow, so their 単位 is one field now, not five.
                 new UnitField<>("unit",
-                        BaselineEmissionRequest::new,
-                        BaselineEmissionRequest::setUnit),
-                new UnitField<>("unit",
-                        MainActivityProjectEmissionRequest::new,
-                        MainActivityProjectEmissionRequest::setUnit),
-                new UnitField<>("unit",
-                        MainBaselineEmissionRequest::new,
-                        MainBaselineEmissionRequest::setUnit),
-                new UnitField<>("unit",
-                        IncidentalActivityProjectEmissionRequest::new,
-                        IncidentalActivityProjectEmissionRequest::setUnit),
-                new UnitField<>("unit",
-                        IncidentalBaselineEmissionRequest::new,
-                        IncidentalBaselineEmissionRequest::setUnit),
+                        FormulaSymbolRow::new,
+                        FormulaSymbolRow::setUnit),
                 new UnitField<>("unit",
                         MonitoringPlanRow::new,
                         MonitoringPlanRow::setUnit));
