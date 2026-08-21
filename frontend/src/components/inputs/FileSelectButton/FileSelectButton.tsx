@@ -79,7 +79,7 @@ export function FileSelectButton({
             {required && <RequiredBadge />}
           </p>
           {labelDescription && (
-            <p className="text-sm font-normal leading-5 text-muted-foreground">
+            <p className="text-small font-normal text-muted-foreground">
               {labelDescription}
             </p>
           )}
@@ -115,7 +115,7 @@ export function FileSelectButton({
             <span className="truncate text-base font-normal leading-7 text-foreground">
               {value?.name || 'ファイルを選択またはドラッグ＆ドロップ'}
             </span>
-            <span className="text-sm font-normal leading-5 text-foreground">
+            <span className="text-small font-normal text-foreground">
               {supportedFormats}
             </span>
           </span>
@@ -136,7 +136,7 @@ export function FileSelectButton({
           }}
         />
         {helperText && (
-          <p className="text-sm font-normal leading-5 text-foreground">
+          <p className="text-small font-normal text-foreground">
             {helperText}
           </p>
         )}

@@ -29,7 +29,7 @@ export const PageDropdown: React.FC<PageDropdownProps> = ({
 }) => (
   <div className={className}>
     {/* adjust label gap from form */}
-    <div className='block text-sm font-medium mb-2 ml-2'>
+    <div className='mb-2 ml-2 block text-small'>
       {label && <label>{label}</label>}
     </div>
     <Select
