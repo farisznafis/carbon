@@ -32,5 +32,5 @@ public class MonitoringActivityPlanRequest extends ProjectPlanFormBase {
     @Valid
     @NotEmpty
     @JsonProperty("items")
-    private List<MonitoringPlanRow> items;
+    private List<MonitoringActivityPlanRow> items;
 }

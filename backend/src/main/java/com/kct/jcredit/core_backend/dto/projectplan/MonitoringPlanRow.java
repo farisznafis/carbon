@@ -8,9 +8,8 @@ import com.kct.jcredit.core_backend.validation.JapaneseText;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * One row of 11.モニタリング計画 — of either （１）活動量 or （２）係数.
@@ -21,6 +20,15 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
  * モニタリング項目      | モニタリング方法   | プロジェクト計画での想定 | 備考
  * 記号 / 定義 / 単位    | 分類 / 概要 / 頻度 | 想定値 / 根拠            |
  * </pre>
+ *
+ * <p>分類 is <b>not</b> here. （１）活動量 uses Ａ・Ｂ・Ｃ and （２）係数 uses
+ * Ⅰ・Ⅱ・Ⅲ — the sheet carries a separate ※1 note under each table — so each
+ * concrete row declares its own, with its own permitted values. Everything else
+ * is identical, which is why this base exists at all.
+ *
+ * <p>Deliberately not {@code @DynamoDbBean}: only the concrete subclasses are.
+ * {@code TableSchema.fromBean} walks inherited getters, so the columns here are
+ * mapped on both.
  *
  * <p>We used to store those three groups as three separate pages, each its own
  * DynamoDB item with no row identifier — so nothing said which 定義 belonged to
@@ -36,10 +44,9 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
  * continuation row repeats it rather than leaving it empty, so a row still says
  * what it belongs to when read on its own.
  */
-@Data
-@NoArgsConstructor
-@DynamoDbBean
-public class MonitoringPlanRow implements ProjectPlanFormRow {
+@Getter
+@Setter
+public abstract class MonitoringPlanRow implements ProjectPlanFormRow {
 
     /** 記号. Repeated on a continuation row, so every row identifies its item. */
     @NotBlank
@@ -64,24 +71,6 @@ public class MonitoringPlanRow implements ProjectPlanFormRow {
     @Size(max = 50)
     @JsonProperty("unit")
     private String unit;
-
-    /**
-     * 分類.
-     *
-     * <p>Deliberately carries no character-set rule. （１）活動量 uses Ａ・Ｂ・Ｃ
-     * and （２）係数 uses <b>Ⅰ・Ⅱ・Ⅲ</b> — the sheet's two ※1 notes say so
-     * explicitly, and the solar example reads "B" here and "Ⅲ" on the
-     * coefficient table. {@code @JapaneseText} rejects Roman numerals
-     * (U+2160–), so the rule that was on both old DTOs made the coefficient
-     * table impossible to fill with its own official values.
-     *
-     * <p>Making this a real Ａ／Ｂ／Ｃ + Ⅰ／Ⅱ／Ⅲ choice is stage F; it also
-     * selects whether 12.1 or 12.2 applies.
-     */
-    @NotBlank
-    @Size(max = 200)
-    @JsonProperty("classification")
-    private String classification;
 
     /** 概要 */
     @NotBlank

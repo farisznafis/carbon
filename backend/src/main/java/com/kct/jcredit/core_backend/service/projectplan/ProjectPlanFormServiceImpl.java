@@ -138,7 +138,7 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
         List<FormProgress> forms = pagesOf(projectId);
 
         response.setForms(forms);
-        response.setTotalForms(forms.size());
+        response.setTotalForms(requiredCount(forms));
         response.setCompletedForms(completedCount(forms));
         response.setNextIncompleteSlug(nextIncompleteSlug(forms));
         response.setStatusCode(ResponseConstants.OK);
@@ -167,7 +167,7 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
                     List<FormProgress> forms = pagesOf(id);
                     String next = nextIncompleteSlug(forms);
                     return new ProjectPlanProgressSummary(
-                            id, forms.size(), completedCount(forms), next, next == null);
+                            id, requiredCount(forms), completedCount(forms), next, next == null);
                 })
                 .toList();
 
@@ -199,19 +199,29 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
                             definition.order(),
                             statusOf(stored),
                             stored == null ? null : stored.getUpdatedAt(),
-                            stored == null ? null : stored.getUpdatedBy());
+                            stored == null ? null : stored.getUpdatedBy(),
+                            definition.optional());
                 })
                 .toList();
     }
 
+    /** Pages the plan requires. An optional page is listed but never counted. */
+    private static int requiredCount(List<FormProgress> forms) {
+        return (int) forms.stream().filter(form -> !form.isOptional()).count();
+    }
+
     private static int completedCount(List<FormProgress> forms) {
         return (int) forms.stream()
+                .filter(form -> !form.isOptional())
                 .filter(form -> ProjectPlanFormStatus.COMPLETE.name().equals(form.getStatus()))
                 .count();
     }
 
     private static String nextIncompleteSlug(List<FormProgress> forms) {
         return forms.stream()
+                // An optional page is not "next": 続きから would park the
+                // operator on a form only some projects are meant to file.
+                .filter(form -> !form.isOptional())
                 .filter(form -> !ProjectPlanFormStatus.COMPLETE.name().equals(form.getStatus()))
                 .map(FormProgress::getFormSlug)
                 .findFirst()

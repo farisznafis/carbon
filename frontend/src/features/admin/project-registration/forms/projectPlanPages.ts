@@ -40,14 +40,21 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     renames: {
       projectOperatorNameKana: 'projectOperatorKana',
       hasEnergyActReport: 'hasEnergyActPeriodReport',
-      energyManageFactoryNumber: 'energyManagFactoryNumber',
     },
   },
   { step: 4, slug: 'applicable-conditions', formKey: 'appConditions' },
+  // Filed only when the project's owner changes, so the backend registers it
+  // optional: listed and reachable, but not counted towards completion and
+  // never offered as 続きから.
+  {
+    step: 7,
+    slug: 'authority-holder-change',
+    formKey: 'authorityHolderChange',
+  },
   { step: 5, slug: 'project-change-information', formKey: 'projChangeInfo' },
   { step: 6, slug: 'project-plan-cover', formKey: 'projPlanCover' },
   {
-    step: 7,
+    step: 8,
     slug: 'project-overview',
     formKey: 'projectOverview',
     // The spec abbreviates these; the form spells them out.
@@ -56,55 +63,46 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
       projectOperatorNameJa: 'projectOperatorName',
     },
   },
-  { step: 8, slug: 'applicable-methodology', formKey: 'applicableMethodology' },
+  { step: 9, slug: 'applicable-methodology', formKey: 'applicableMethodology' },
+  { step: 10, slug: 'program-type-methodology', formKey: 'programMethodology' },
+  { step: 11, slug: 'emission-reduction-plan', formKey: 'emissionReduction' },
   {
-    step: 9,
-    slug: 'program-type-methodology',
-    formKey: 'programMethodology',
-    // The spec truncates "Manage" to "Manag" in both column names.
-    renames: {
-      opeManageStructure: 'opeManagStructure',
-      infoCollManageMethod: 'infoCollManagMethod',
-    },
-  },
-  { step: 10, slug: 'emission-reduction-plan', formKey: 'emissionReduction' },
-  {
-    step: 13,
+    step: 14,
     slug: 'equipment-verification-before-update',
     formKey: 'equipmentInfo',
   },
   {
-    step: 14,
+    step: 15,
     slug: 'equipment-verification-before-new',
     formKey: 'equipmentInfoBeforeNew',
   },
   {
-    step: 15,
+    step: 16,
     slug: 'equipment-verification-after',
     formKey: 'equipmentInfoAfter',
   },
   {
-    step: 17,
+    step: 18,
     slug: 'obtaining-additional-assessment',
     formKey: 'obtainingAdditional',
   },
   {
-    step: 18,
+    step: 19,
     slug: 'emission-reduction-calculation-method',
     formKey: 'emissionCalc',
   },
   {
-    step: 19,
+    step: 20,
     slug: 'baseline-incidental-emission-activity',
     formKey: 'baselineIncidental',
   },
   {
-    step: 21,
+    step: 22,
     slug: 'main-activity-project-emission',
     formKey: 'mainActivity',
   },
   {
-    step: 11,
+    step: 12,
     slug: 'monitoring-calculation',
     formKey: 'monitoringCalc',
     renames: {
@@ -118,7 +116,7 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     },
   },
   {
-    step: 12,
+    step: 13,
     slug: 'data-management',
     formKey: 'dataManagement',
     renames: {
@@ -132,7 +130,7 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     },
   },
   {
-    step: 16,
+    step: 17,
     slug: 'additional-assessment-method',
     formKey: 'additionalAssessment',
     renames: {
@@ -141,7 +139,7 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     },
   },
   {
-    step: 20,
+    step: 21,
     slug: 'post-implement-incidental-activity',
     formKey: 'postImplemental',
     renames: {
@@ -153,14 +151,14 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
   // 20/22/23 share incidentalActivitySchema, which is mainActivitySchema minus
   // `concept` — the same six fields their DTOs declare.
   {
-    step: 22,
+    step: 23,
     slug: 'incidental-activity-project-emission',
     formKey: 'incidentalActivity',
   },
-  { step: 23, slug: 'baseline-emission', formKey: 'baselineEmission' },
-  { step: 24, slug: 'main-baseline-emission', formKey: 'mainBaseline' },
+  { step: 24, slug: 'baseline-emission', formKey: 'baselineEmission' },
+  { step: 25, slug: 'main-baseline-emission', formKey: 'mainBaseline' },
   {
-    step: 25,
+    step: 26,
     slug: 'incidental-baseline-emission',
     formKey: 'incidentalEmission',
   },
@@ -168,14 +166,14 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
   // three pages each, splitting one table by column group — the wrong axis,
   // since the form's unit is the row. Each is now one page of rows carrying all
   // nine columns.
-  { step: 26, slug: 'monitoring-plan-activity', formKey: 'monitoringActivityPlan' },
+  { step: 27, slug: 'monitoring-plan-activity', formKey: 'monitoringActivityPlan' },
   {
-    step: 27,
+    step: 28,
     slug: 'monitoring-plan-coefficient',
     formKey: 'monitoringCoefficientPlan',
   },
   {
-    step: 28,
+    step: 29,
     slug: 'monitoring-plan',
     formKey: 'monitoringPlan',
     renames: {
@@ -185,7 +183,7 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     },
   },
   {
-    step: 29,
+    step: 30,
     slug: 'measure-specified-instrument',
     formKey: 'measureSpecified',
     renames: {
@@ -194,19 +192,19 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     },
   },
   {
-    step: 30,
+    step: 31,
     slug: 'measure-other-instruments',
     formKey: 'measureOther',
     renames: { instrumentCalibration: 'instrumentCalibrationMethodDescription' },
   },
   {
-    step: 31,
+    step: 32,
     slug: 'monitoring-method-explanation',
     formKey: 'monitoringExplanation',
     renames: { monitoringDesc: 'monitoringItemDescription' },
   },
   {
-    step: 32,
+    step: 33,
     slug: 'coefficient-measure-explanation',
     formKey: 'coefficient',
     // coefficientSchema is monitoringExplanationSchema without the diagram, so

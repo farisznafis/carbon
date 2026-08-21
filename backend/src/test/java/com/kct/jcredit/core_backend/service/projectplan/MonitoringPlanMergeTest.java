@@ -7,8 +7,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.kct.jcredit.core_backend.dto.projectplan.MonitoringActivityPlanRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.MonitoringActivityPlanRow;
 import com.kct.jcredit.core_backend.dto.projectplan.MonitoringCoefficientPlanRequest;
-import com.kct.jcredit.core_backend.dto.projectplan.MonitoringPlanRow;
+import com.kct.jcredit.core_backend.dto.projectplan.MonitoringCoefficientPlanRow;
+
 import com.kct.jcredit.core_backend.util.JsonFieldNameResolver;
 
 import jakarta.validation.Validation;
@@ -50,7 +52,7 @@ class MonitoringPlanMergeTest {
         MonitoringActivityPlanRequest read = schema.mapToItem(stored);
 
         // Split across three pages, nothing said which 定義 went with which 分類.
-        MonitoringPlanRow first = read.getItems().get(0);
+        MonitoringActivityPlanRow first = read.getItems().get(0);
         assertThat(first.getSymbol()).isEqualTo("ELPV");
         assertThat(first.getDefinition()).startsWith("プロジェクト実施後");
         assertThat(first.getUnit()).isEqualTo("kwh/年");
@@ -85,7 +87,7 @@ class MonitoringPlanMergeTest {
 
     @Test
     void aBasisLongerThanTheOldCapIsAccepted() {
-        MonitoringPlanRow row = elpv("B");
+        MonitoringActivityPlanRow row = elpv("B");
         row.setBasis(LONG_BASIS);
         MonitoringActivityPlanRequest page = new MonitoringActivityPlanRequest();
         page.setItems(List.of(row));
@@ -97,7 +99,7 @@ class MonitoringPlanMergeTest {
     @Test
     void aSymbolWithACommaIsAccepted() {
         // The example's symbols include ELPJ,control and CEFelectricity,t.
-        MonitoringPlanRow row = elpv("C");
+        MonitoringActivityPlanRow row = elpv("C");
         row.setSymbol("ELPJ,control");
         MonitoringActivityPlanRequest page = new MonitoringActivityPlanRequest();
         page.setItems(List.of(row));
@@ -109,7 +111,7 @@ class MonitoringPlanMergeTest {
 
     @Test
     void aRowMissingItsClassificationIsReportedAgainstThatRow() {
-        MonitoringPlanRow incomplete = elpvContinuation(null);
+        MonitoringActivityPlanRow incomplete = elpvContinuation(null);
         MonitoringActivityPlanRequest page = new MonitoringActivityPlanRequest();
         page.setItems(List.of(elpv("B"), incomplete));
 
@@ -142,8 +144,12 @@ class MonitoringPlanMergeTest {
     }
 
     @Test
-    void theWizardIsFourPagesShorter() {
-        assertThat(registry.all()).hasSize(31);
+    void sectionElevenIsThreePagesNotSeven() {
+        // Counting section 11 rather than the whole wizard, so that adding a
+        // page elsewhere does not fail a test about this merge.
+        assertThat(registry.all())
+                .filteredOn(definition -> definition.slug().startsWith("monitoring-plan"))
+                .hasSize(3);
     }
 
     @Test
@@ -170,8 +176,8 @@ class MonitoringPlanMergeTest {
     }
 
     /** ELPV as the solar example's first row has it. */
-    private static MonitoringPlanRow elpv(String classification) {
-        MonitoringPlanRow row = new MonitoringPlanRow();
+    private static MonitoringActivityPlanRow elpv(String classification) {
+        MonitoringActivityPlanRow row = new MonitoringActivityPlanRow();
         row.setSymbol("ELPV");
         row.setDefinition("プロジェクト実施後の太陽光発電設備による発電電力量");
         row.setUnit("kwh/年");
@@ -185,8 +191,8 @@ class MonitoringPlanMergeTest {
     }
 
     /** The same item's second モニタリング方法: 定義 / 単位 / 根拠 / 備考 all blank. */
-    private static MonitoringPlanRow elpvContinuation(String classification) {
-        MonitoringPlanRow row = new MonitoringPlanRow();
+    private static MonitoringActivityPlanRow elpvContinuation(String classification) {
+        MonitoringActivityPlanRow row = new MonitoringActivityPlanRow();
         row.setSymbol("ELPV");
         row.setClassification(classification);
         row.setOverview("特定計量器でなく、また、業界標準規格によって検定がされていない電力量計で計測を行う。");
@@ -195,8 +201,8 @@ class MonitoringPlanMergeTest {
         return row;
     }
 
-    private static MonitoringPlanRow coefficientRow(String classification) {
-        MonitoringPlanRow row = new MonitoringPlanRow();
+    private static MonitoringCoefficientPlanRow coefficientRow(String classification) {
+        MonitoringCoefficientPlanRow row = new MonitoringCoefficientPlanRow();
         row.setSymbol("CEFelectricity,t");
         row.setDefinition("系統電力のＣＯ2排出係数");
         row.setUnit("kg-CO2/kwh");

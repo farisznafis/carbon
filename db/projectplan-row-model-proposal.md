@@ -426,7 +426,65 @@ The `perMethodology` flag, the `#M2` sort-key suffix and the startup guard all
 stay. The flag is always false by decision; the guard is what stops that from
 being forgotten, and it needs something to guard.
 
-### F. Loose ends — any time
+### F. Loose ends ✅ done
+
+15. ✅ **認証権限保有主体変更届 now has a page**, at wizard step 7 — where the
+    workbook puts the sheet, after 表紙 and before 1.プロジェクト概要. Two blocks:
+    プロジェクト登録情報 (both fields autofilled) and 所有者変更内容.
+16. ✅ 影響度 numeric — done in stage D.
+17. ✅ **分類 is a controlled choice, and the two tables do not share one.**
+18. ✅ The three misspelled JSON names are aligned.
+
+**New framework concept: an `optional` page.** はじめに rows 44–51 say to unhide
+認証権限保有主体変更届, fill it, and pick 認証権限保有主体変更 as the 申請区分 —
+so it is filed only when the owner changes. Registered as a normal page it would
+have broken two things at once: a plan that legitimately never files it could
+never read complete, and 続きから would park every operator on a form they must
+not fill in. So `FormDefinition` gained `optional`; such a page is listed and
+reachable, but left out of `totalForms` / `completedForms` and skipped by
+`nextIncompleteSlug`.
+
+Other pages are plausibly in the same category — 計画変更届 (only for 変更),
+代表以外のプログラム型運営・管理者 (only when there are others), the 参考様式
+誓約書. Not changed: flipping them alters progress for plans already in flight,
+and that is a product call.
+
+**分類 split.** `MonitoringPlanRow` is now abstract and holds the eight shared
+columns; `MonitoringActivityPlanRow` and `MonitoringCoefficientPlanRow` each add
+their own 分類 with their own permitted values — `A|B|C` against `Ⅰ|Ⅱ|Ⅲ`.
+Values are what the official example stores: half-width letters, and the Roman
+numeral characters. Sharing one free-text field meant 分類Ⅲ could be filed
+against 活動量 and nothing said otherwise.
+
+**The three misspellings** were `energyManagFactoryNumber`,
+`opeManagStructure` and `infoCollManagMethod` — all "Manage" truncated to
+"Manag" in the spec. Worth doing not for tidiness but because
+`OtherOperatorProjectsRequest` and `ProjectApplicationRequest` spelled the
+*same* field differently, and the frontend carried three rename entries to
+bridge it. Those entries are gone.
+
+### Open questions, answered
+
+- **Are 12.1 / 12.2 / 12.3 row tables?** 12.1（１）is — **two** of them,
+  ①特定計量器の場合 and ②特定計量器以外の計量器の場合, each 4 columns
+  (モニタリング項目 / 計量器の種類 / モニタリングポイント / 検定の有効期限 or
+  校正方法). `measure-specified-instrument` and `measure-other-instruments` hold
+  one row each, so **this is the same defect as section 10 and is still open.**
+  12.1（２）, 12.2 and 12.3 are free-form: a モニタリング項目 label and space for
+  a description or diagram.
+- **Should the 合計 rounding rule apply on write or on display?** On write.
+  10.1 ※4 reads 「算定結果は小数点以下第２位を四捨五入し小数点以下第１位まで
+  **記載すること**」 — it governs the recorded figure. Stage B already rounds on
+  write, and that reproduced the solar example to the digit.
+
+### Still open after F
+
+- 12.1（１）'s two tables hold one row each (above).
+- Several 式 blocks per sub-section in section 10 (stage D).
+- Making 分類Ｂ / Ｃ actually select whether 12.1 or 12.2 applies — the values
+  are constrained now, but nothing keys off them yet.
+
+### F. Loose ends — original list
 
 15. 認証権限保有主体変更届 has no page at all.
 16. ~~影響度 becomes numeric 0–100~~ — **done in stage D**, because the

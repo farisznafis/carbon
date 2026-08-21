@@ -69,8 +69,8 @@ class EmissionUnitFieldValidationTest {
                         FormulaSymbolRow::new,
                         FormulaSymbolRow::setUnit),
                 new UnitField<>("unit",
-                        MonitoringPlanRow::new,
-                        MonitoringPlanRow::setUnit));
+                        MonitoringActivityPlanRow::new,
+                        MonitoringActivityPlanRow::setUnit));
     }
 
     @Test

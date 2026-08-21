@@ -77,13 +77,13 @@ describe('applyBackendValidationErrors on a plan page', () => {
     const error = new ApiError('入力内容に誤りがあります。', {
       status: 400,
       payload: {
-        errors: { energyManagFactoryNumber: '必須です。' },
+        errors: { energyManagFactoryNo: '必須です。' },
       },
     });
 
     applyBackendValidationErrors(result.current, error, {
       formKey: 'otherProjectOperator',
-      renames: { energyManageFactoryNumber: 'energyManagFactoryNumber' },
+      renames: { energyManageFactoryNumber: 'energyManagFactoryNo' },
     });
 
     expect(

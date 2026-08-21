@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { monitoringPlanRowSchema } from '../monitoringPlanRow';
+import { monitoringCoefficientPlanRowSchema } from '../monitoringPlanRow';
 
 export const monitoringCoefficientPlanSchema = z.object({
-  items: z.array(monitoringPlanRowSchema),
+  items: z.array(monitoringCoefficientPlanRowSchema),
 });
