@@ -5,6 +5,7 @@ export * from './monitoringPlanRow';
 export * from './MonitoringActivityPlan';
 export * from './MonitoringCoefficientPlan';
 export * from './MonitoringPlan';
+export * from './measureInstrumentRow';
 export * from './MeasureSpecified';
 export * from './MeasureOther';
 export * from './MonitoringExplanation';

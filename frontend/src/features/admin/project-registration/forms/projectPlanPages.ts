@@ -182,21 +182,10 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
       methodCollDescImg: 'methodCollDescriptionImg',
     },
   },
-  {
-    step: 30,
-    slug: 'measure-specified-instrument',
-    formKey: 'measureSpecified',
-    renames: {
-      validityPeriod: 'validityPeriodOfCert',
-      methodCollImg: 'methodCollDescriptionImg',
-    },
-  },
-  {
-    step: 31,
-    slug: 'measure-other-instruments',
-    formKey: 'measureOther',
-    renames: { instrumentCalibration: 'instrumentCalibrationMethodDescription' },
-  },
+  // 12.1（１）is two tables of 計量器. Column names match the DTO exactly:
+  // mapPlanPagePayload renames only top-level keys, never inside a row.
+  { step: 30, slug: 'measure-specified-instrument', formKey: 'measureSpecified' },
+  { step: 31, slug: 'measure-other-instruments', formKey: 'measureOther' },
   {
     step: 32,
     slug: 'monitoring-method-explanation',
