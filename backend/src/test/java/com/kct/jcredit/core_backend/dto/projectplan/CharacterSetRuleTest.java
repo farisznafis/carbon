@@ -42,7 +42,7 @@ class CharacterSetRuleTest {
             "ApplicableMethodologyRequest.methodologyCategory",
             "ApplicableMethodologyRequest.methodologyNumber",
             "ApplicableMethodologyRequest.methodologyVersion",
-            "OtherOperatorProjectsRequest.energyManagFactoryNumber",
+            "OtherOperatorProjectsRequest.energyManageFactoryNumber",
             "ProjectApplicationRequest.energyManageFactoryNumber",
             "ProjectOverviewRequest.projectLocationClassificationEn",
             "ProjectPlanCoverRequest.version",

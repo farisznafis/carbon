@@ -1,28 +1,13 @@
-import {
-  VALIDATION_MESSAGES,
-} from '@/lib/validations';
+import { VALIDATION_MESSAGES } from '@/lib/validations';
 import { z } from 'zod';
+import { specifiedInstrumentRowSchema } from '../measureInstrumentRow';
 
 export const measureSpecifiedSchema = z.object({
-  monitoringItem: z
+  instruments: z.array(specifiedInstrumentRowSchema),
+
+  /** 12.1（２）— one diagram covers the whole sub-section. */
+  monitoringPointDiagram: z
     .string()
     .min(1, '必須項目です')
-    .max(200, VALIDATION_MESSAGES.MAX_CHARACTERS(200)),
-
-  instrumentType: z
-    .string()
-    .min(1, '必須項目です')
-    .max(200, VALIDATION_MESSAGES.MAX_CHARACTERS(200)),
-
-  monitoringPoint: z
-    .string()
-    .min(1, '必須項目です')
-    .max(50, VALIDATION_MESSAGES.MAX_CHARACTERS(50)),
-
-  validityPeriod: z
-    .string()
-    .min(1, '必須項目です')
-    .max(50, VALIDATION_MESSAGES.MAX_CHARACTERS(50)),
-
-  methodCollImg: z.string().min(1, '必須項目です'),
+    .max(1000, VALIDATION_MESSAGES.MAX_CHARACTERS(1000)),
 });

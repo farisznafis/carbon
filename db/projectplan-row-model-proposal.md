@@ -4,7 +4,10 @@ The gap analysis (`projectplan-form-gap-analysis.md`) found that 210 of the
 spec's 331 fields belong to tables that repeat, and that the DTOs hold one row
 each. This is the design for fixing that, and the reasoning behind each choice.
 
-Nothing here is implemented yet.
+**Status (2026-08-21): stages A, B, C, D, F and G are implemented; E was
+decided against.** The design below is kept as written so the reasoning stays
+readable; each stage's section records what actually happened, including where
+the plan turned out to be wrong. What is still open is listed at the end.
 
 ---
 
@@ -471,15 +474,49 @@ bridge it. Those entries are gone.
   校正方法). `measure-specified-instrument` and `measure-other-instruments` hold
   one row each, so **this is the same defect as section 10 and is still open.**
   12.1（２）, 12.2 and 12.3 are free-form: a モニタリング項目 label and space for
-  a description or diagram.
+  a description or diagram. **Both tables now hold rows** — see below.
 - **Should the 合計 rounding rule apply on write or on display?** On write.
   10.1 ※4 reads 「算定結果は小数点以下第２位を四捨五入し小数点以下第１位まで
   **記載すること**」 — it governs the recorded figure. Stage B already rounds on
   write, and that reproduced the solar example to the digit.
 
-### Still open after F
+### G. 12.1（１）計量器の概要 ✅ done
 
-- 12.1（１）'s two tables hold one row each (above).
+Not part of the original six stages — it came out of answering F's open
+question. The sub-section is two tables, ①特定計量器の場合 and
+②特定計量器以外の計量器の場合, sharing three columns and differing in the
+fourth (検定の有効期限 against 計量器の校正方法の説明). Each page held one 計量器
+while the solar example lists two in each.
+
+`MeasureInstrumentRow` is abstract and holds the three shared columns;
+`SpecifiedInstrumentRow` and `OtherInstrumentRow` add their own — the same
+shape as the 分類 split in F.
+
+Three things the example settled:
+
+- **計量器の校正方法の説明 is optional.** The example fills it on the first row
+  and leaves it blank on the second; required, as it was, the page would have
+  refused a table the official example itself contains.
+- **検定の有効期限 is a duration, not a date** — 「10年間」. No date format is
+  imposed on it.
+- **モニタリングポイント may be half- or full-width.** The example writes
+  `M1` on one row and `Ｍ2` on the next, and its ※1 says the value must match
+  a number in 12.1（２）.
+
+Also renamed 特定計量器's diagram field from `methodCollDescriptionImg` to
+`monitoringPointDiagram`, which is what it holds and what the sibling page
+already called it. Two more frontend rename entries went with it — and the
+column names inside a row now have to match the DTO exactly, because
+`mapPlanPagePayload` renames top-level keys only, never inside a row.
+
+Tests: `MeasureInstrumentRowTest` (5). Backend set: 196 pass.
+
+**Left alone:** both pages carry their own モニタリングポイント図示 while the
+sheet has one 12.1（２）for the whole sub-section. Which page should own it is a
+presentation question, not a data one.
+
+### Still open
+
 - Several 式 blocks per sub-section in section 10 (stage D).
 - Making 分類Ｂ / Ｃ actually select whether 12.1 or 12.2 applies — the values
   are constrained now, but nothing keys off them yet.
