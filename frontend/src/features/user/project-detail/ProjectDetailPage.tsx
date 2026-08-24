@@ -45,6 +45,12 @@ import {
 import { logger } from '@/lib/logger';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import {
+  PageSkeleton,
+  SkeletonCard,
+  SkeletonChart,
+  SkeletonMetricCard,
+} from '@/components/feedback/loading';
+import {
   dashboardPageContainerClassName,
   dashboardTabsListClassName,
   dashboardTabTriggerClassName,
@@ -509,9 +515,18 @@ const ProjectDetail = () => {
 
   if (loading) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
-        読み込み中...
-      </div>
+      <PageSkeleton className='py-8'>
+        <div className='mx-auto w-full max-w-app space-y-6'>
+          <SkeletonCard className='min-h-28' />
+          <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
+            {Array.from({ length: 4 }, (_, index) => <SkeletonMetricCard key={index} />)}
+          </div>
+          <div className='grid gap-6 lg:grid-cols-2'>
+            <SkeletonChart />
+            <SkeletonChart />
+          </div>
+        </div>
+      </PageSkeleton>
     );
   }
 

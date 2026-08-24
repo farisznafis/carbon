@@ -32,4 +32,8 @@ public interface EnR002FileUploadService {
     // Copy tmp → permanent lalu hapus tmp. Dipanggil setelah commit, memakai
     // key yang sudah tercatat di DB, jadi DB tidak pernah menunjuk ke tmp/.
     void moveToPermanent(String tempS3Key, String permanentKey);
+
+    void deletePermanentFile(String s3Key, Integer equipmentId);
+
+    String moveTempToPermanent(String tempS3Key, String siteId, Integer equipmentId);
 }

@@ -19,6 +19,7 @@ import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { ProjectDetailItem } from './ProjectDetailItem';
 import { logger } from '@/lib/logger';
 import { paths } from '@/routes/paths';
+import { PageSkeleton, SkeletonCard } from '@/components/feedback/loading';
 
 const formatValue = (value: unknown) => {
   if (value == null || value === '') return '-';
@@ -105,9 +106,12 @@ export default function ProjectDetailAdmin() {
 
   if (loading) {
     return (
-      <div className='flex min-h-screen items-center justify-center'>
-        読み込み中...
-      </div>
+      <PageSkeleton>
+        <div className='mx-auto w-full max-w-[768px] space-y-5'>
+          <SkeletonCard className='min-h-24' />
+          {Array.from({ length: 4 }, (_, index) => <SkeletonCard key={index} className='min-h-44' />)}
+        </div>
+      </PageSkeleton>
     );
   }
 

@@ -6,6 +6,7 @@ import {
   type ChartConfig,
 } from '@/components/ui/chart';
 import type { ProjectEmissionBreakdown } from '@/api/batch';
+import { SkeletonChart } from '@/components/feedback/loading';
 import { cn } from '@/lib/utils';
 import { EmissionReductionProgress } from './EmissionReductionProgress';
 import type { EmissionReductionProgressInput } from './emissionReductionProgressUtils';
@@ -71,6 +72,10 @@ export function EmissionBreakdownChart({
 }: EmissionBreakdownChartProps) {
   const chartData = createEmissionBreakdownData(data);
 
+  if (isLoading) {
+    return <SkeletonChart className={className} />;
+  }
+
   return (
     <section
       className={cn(
@@ -84,9 +89,7 @@ export function EmissionBreakdownChart({
       </h3>
 
       <div className='mt-4 flex min-h-[280px] flex-1 items-center justify-center'>
-        {isLoading ? (
-          <p className='text-subtle text-foreground'>読み込み中...</p>
-        ) : error ? (
+        {error ? (
           <p className='text-subtle text-destructive' role='alert'>
             {error}
           </p>
@@ -153,7 +156,7 @@ export function EmissionBreakdownChart({
         )}
       </div>
 
-      {!isLoading && !error ? (
+      {!error ? (
         <EmissionReductionProgress {...reductionProgress} />
       ) : null}
     </section>

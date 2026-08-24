@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form';
 import { ApiError } from '@/api/_shared/errors';
 import { validateSiteProjectEquipment } from '@/api/site';
 import {
+  FormActions,
   FormCard,
   FormPageContent,
   FormPageTitle,
@@ -353,24 +354,24 @@ export default function EquipmentFormPage() {
                   isSiteOptionsLoading={sitesQuery.isLoading}
                   siteOptionsError={siteOptionsError}
                 />
-                <div className="flex justify-end gap-4 pt-6">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCancel}
-                    disabled={isSubmitting}
-                    size="md"
-                  >
-                    キャンセル
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    size="md"
-                  >
-                    {isSubmitting ? '確認中...' : '確認'}
-                  </Button>
-                </div>
+                <FormActions
+                  className="pt-6"
+                  pendingActionId={isSubmitting ? 'confirm' : null}
+                  actions={[
+                    {
+                      id: 'cancel',
+                      label: 'キャンセル',
+                      variant: 'outline',
+                      onClick: handleCancel,
+                    },
+                    {
+                      id: 'confirm',
+                      label: '確認',
+                      pendingLabel: '確認中...',
+                      type: 'submit',
+                    },
+                  ]}
+                />
               </FormCard>
             </form>
           </Form>
@@ -381,19 +382,22 @@ export default function EquipmentFormPage() {
               noValidate
             >
               <FormCard>
-                <div className="flex justify-end gap-4 pt-6">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCancel}
-                    size="md"
-                  >
-                    キャンセル
-                  </Button>
-                  <Button type="submit" size="md">
-                    確認
-                  </Button>
-                </div>
+                <FormActions
+                  className="pt-6"
+                  actions={[
+                    {
+                      id: 'cancel',
+                      label: 'キャンセル',
+                      variant: 'outline',
+                      onClick: handleCancel,
+                    },
+                    {
+                      id: 'confirm',
+                      label: '確認',
+                      type: 'submit',
+                    },
+                  ]}
+                />
               </FormCard>
             </form>
           </Form>

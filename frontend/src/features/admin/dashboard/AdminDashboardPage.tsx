@@ -51,6 +51,8 @@ import { PendingCompanyActionDialog } from '@/features/admin/dashboard/tables/Pe
 import { PendingCompanyApplicationDetail } from '@/features/admin/dashboard/tables/PendingCompanyApplicationDetail';
 import { ProjectTable } from '@/features/admin/dashboard/tables/ProjectTable';
 import { ProjectMonitoringTable } from '@/features/admin/dashboard/tables/ProjectMonitoringTable';
+import { AdminDashboardOverview } from './AdminDashboardOverview';
+import { PageSkeleton, SkeletonTable } from '@/components/feedback/loading';
 import { useProjectsQuery } from '@/hooks/projects/useProjectsQuery';
 import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
@@ -60,6 +62,7 @@ import { useNotificationStore } from '@/stores/notificationStore';
 import { AlertTriangle, Plus } from 'lucide-react';
 
 type AdminDashboardTabValue =
+  | 'overview'
   | 'companies'
   | 'projects'
   | 'operators'
@@ -95,6 +98,7 @@ const adminDashboardTabs: Array<{
   value: AdminDashboardTabValue;
   label: string;
 }> = [
+  { value: 'overview', label: '概要' },
   { value: 'companies', label: '企業一覧・申請管理' },
   { value: 'projects', label: 'プロジェクト管理' },
   { value: 'operators', label: '運用者一覧' },
@@ -206,6 +210,9 @@ const AdminDashboard = () => {
   const loadNotifications = useNotificationStore(
     (state) => state.loadNotifications,
   );
+  const notifications = useNotificationStore((state) => state.notifications);
+  const notificationsLoading = useNotificationStore((state) => state.loading);
+  const notificationsError = useNotificationStore((state) => state.error);
 
   const {
     currentPage: projectPage,
@@ -217,8 +224,10 @@ const AdminDashboard = () => {
     setItemsPerPage: setProjectItemsPerPage,
   } = usePagination(projects);
 
-  const [companyListLoading, setCompanyListLoading] = useState(true);
-  const [companyListError, setCompanyListError] = useState<string | null>(null);
+  const [applicationCompaniesLoading, setApplicationCompaniesLoading] = useState(true);
+  const [applicationCompaniesError, setApplicationCompaniesError] = useState<string | null>(null);
+  const [participatingCompaniesLoading, setParticipatingCompaniesLoading] = useState(true);
+  const [participatingCompaniesError, setParticipatingCompaniesError] = useState<string | null>(null);
   const [cancelRequestItems, setCancelRequestItems] = useState<
     Awaited<ReturnType<typeof getMonitoringCancelRequests>>
   >([]);
@@ -281,46 +290,59 @@ const AdminDashboard = () => {
     (tab) => tab.value === requestedTab,
   )
     ? (requestedTab as AdminDashboardTabValue)
-    : 'companies';
+    : 'overview';
 
-  const reloadCompanyLists = useCallback(async () => {
-    setCompanyListLoading(true);
-    setCompanyListError(null);
+  /** Reloads the application-company list independently from participating companies. */
+  const reloadApplicationCompanies = useCallback(async () => {
+    setApplicationCompaniesLoading(true);
+    setApplicationCompaniesError(null);
 
     try {
-      const commonParams = {
+      const applications = await getAdminCompanies({
         limit: companyLimit,
-      };
-
-      const [applications, participating] = await Promise.all([
-        getAdminCompanies({
-          ...commonParams,
-          status: APPLICATION_STATUSES,
-          page: applicationPage,
-        }),
-        getAdminCompanies({
-          ...commonParams,
-          status: PARTICIPATING_STATUSES,
-          page: participatingPage,
-        }),
-      ]);
-
+        status: APPLICATION_STATUSES,
+        page: applicationPage,
+      });
       setApplicationCompanies(applications.companies);
       setApplicationPagination(applications.pagination);
-      setParticipatingCompanies(participating.companies);
-      setParticipatingPagination(participating.pagination);
     } catch (error) {
-      setCompanyListError(
+      setApplicationCompaniesError(
         getApiMessage(error, '企業一覧の取得に失敗しました。'),
       );
     } finally {
-      setCompanyListLoading(false);
+      setApplicationCompaniesLoading(false);
     }
-  }, [
-    applicationPage,
-    companyLimit,
-    participatingPage,
-  ]);
+  }, [applicationPage, companyLimit]);
+
+  /** Reloads participating companies without blocking application reviews. */
+  const reloadParticipatingCompanies = useCallback(async () => {
+    setParticipatingCompaniesLoading(true);
+    setParticipatingCompaniesError(null);
+
+    try {
+      const participating = await getAdminCompanies({
+        limit: companyLimit,
+        status: PARTICIPATING_STATUSES,
+        page: participatingPage,
+      });
+      setParticipatingCompanies(participating.companies);
+      setParticipatingPagination(participating.pagination);
+    } catch (error) {
+      setParticipatingCompaniesError(
+        getApiMessage(error, '参加企業一覧の取得に失敗しました。'),
+      );
+    } finally {
+      setParticipatingCompaniesLoading(false);
+    }
+  }, [companyLimit, participatingPage]);
+
+  /** Refreshes both company groups after a company mutation. */
+  const reloadCompanyLists = useCallback(async () => {
+    await Promise.all([
+      reloadApplicationCompanies(),
+      reloadParticipatingCompanies(),
+    ]);
+  }, [reloadApplicationCompanies, reloadParticipatingCompanies]);
 
   useEffect(() => {
     void loadNotifications();
@@ -389,8 +411,12 @@ const AdminDashboard = () => {
   }, []);
 
   useEffect(() => {
-    void reloadCompanyLists();
-  }, [reloadCompanyLists]);
+    void reloadApplicationCompanies();
+  }, [reloadApplicationCompanies]);
+
+  useEffect(() => {
+    void reloadParticipatingCompanies();
+  }, [reloadParticipatingCompanies]);
 
   const resetCompanyPages = () => {
     setApplicationPage(1);
@@ -618,7 +644,7 @@ const AdminDashboard = () => {
       });
     } catch (error) {
       setActionFieldErrors(getApiFieldErrors(error));
-      setCompanyListError(
+      setApplicationCompaniesError(
         getApiMessage(
           error,
           pendingDialogMode === 'approve'
@@ -630,22 +656,6 @@ const AdminDashboard = () => {
       setSubmitting(false);
     }
   };
-
-  if (projectsQuery.isLoading) {
-    return (
-      <div className="text-small flex min-h-screen items-center justify-center bg-background px-6 text-center text-foreground">
-        読み込み中...
-      </div>
-    );
-  }
-
-  if (projectsQuery.isError) {
-    return (
-      <div className="text-small flex min-h-screen items-center justify-center bg-background px-6 text-center text-destructive">
-        プロジェクトを取得できませんでした。
-      </div>
-    );
-  }
 
   if (detailCompany || applicationId) {
     return (
@@ -659,11 +669,13 @@ const AdminDashboard = () => {
             onReject={openRejectCompany}
           />
         ) : (
-          <div className="flex min-h-screen items-center justify-center bg-background px-6 text-small text-foreground">
-            {companyListLoading
-              ? '読み込み中...'
-              : '申請情報を取得できませんでした。'}
-          </div>
+          applicationCompaniesLoading ? (
+            <PageSkeleton />
+          ) : (
+            <div className="flex min-h-screen items-center justify-center bg-background px-6 text-small text-foreground">
+              申請情報を取得できませんでした。
+            </div>
+          )
         )}
         <PendingCompanyActionDialog
           open={pendingDialogOpen}
@@ -681,12 +693,17 @@ const AdminDashboard = () => {
   }
 
   const showApplicationSection =
-    companyListLoading || Boolean(companyListError) || applicationCompanies.length > 0;
+    applicationCompaniesLoading || Boolean(applicationCompaniesError) || applicationCompanies.length > 0;
   const showParticipatingSection =
-    !companyListError &&
-    (companyListLoading ||
+    !participatingCompaniesError &&
+    (participatingCompaniesLoading ||
       participatingCompanies.length > 0 ||
       !showApplicationSection);
+  const projectsError = projectsQuery.error instanceof Error
+    ? projectsQuery.error.message
+    : projectsQuery.isError
+      ? 'プロジェクトを取得できませんでした。'
+      : null;
 
   return (
     <div className="flex min-h-screen flex-col bg-card">
@@ -697,6 +714,32 @@ const AdminDashboard = () => {
 
         <main className={cn('flex-1 space-y-10 py-8', dashboardContainer)}>
           <TabsContent
+            value="overview"
+            className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
+          >
+            <AdminDashboardOverview
+              projects={projects}
+              projectsLoading={projectsQuery.isLoading}
+              projectsError={projectsError}
+              applications={applicationCompanies}
+              applicationTotal={applicationPagination.totalItems}
+              applicationsLoading={applicationCompaniesLoading}
+              applicationsError={applicationCompaniesError}
+              participatingCompanyTotal={participatingPagination.totalItems}
+              participatingCompaniesLoading={participatingCompaniesLoading}
+              participatingCompaniesError={participatingCompaniesError}
+              cancelRequests={cancelRequestItems}
+              cancelRequestsLoading={cancelRequestLoading}
+              cancelRequestsError={cancelRequestError}
+              batchHistory={batchHistoryItems}
+              batchHistoryLoading={batchHistoryLoading}
+              notifications={notifications}
+              notificationsLoading={notificationsLoading}
+              notificationsError={notificationsError}
+            />
+          </TabsContent>
+
+          <TabsContent
             value="companies"
             className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
@@ -705,11 +748,11 @@ const AdminDashboard = () => {
                 title="参加申請中の企業"
                 description="参加申請を受け付けた企業です。内容を確認し、承認または差し戻しを行ってください。"
               >
-                {companyListLoading ? (
-                  <AdminDashboardEmptyState>読み込み中...</AdminDashboardEmptyState>
-                ) : companyListError ? (
+                {applicationCompaniesLoading ? (
+                  <SkeletonTable columns={5} rows={6} minWidth={980} />
+                ) : applicationCompaniesError ? (
                   <AdminDashboardEmptyState>
-                    {companyListError}
+                    {applicationCompaniesError}
                   </AdminDashboardEmptyState>
                 ) : (
                   <>
@@ -739,8 +782,10 @@ const AdminDashboard = () => {
                 title="参加企業"
                 description="承認済みの参加企業です。企業情報と運用状況を確認できます。"
               >
-                {companyListLoading ? (
-                  <AdminDashboardEmptyState>読み込み中...</AdminDashboardEmptyState>
+                {participatingCompaniesLoading ? (
+                  <SkeletonTable columns={5} rows={6} minWidth={980} />
+                ) : participatingCompaniesError ? (
+                  <AdminDashboardEmptyState>{participatingCompaniesError}</AdminDashboardEmptyState>
                 ) : (
                   <>
                     <AdminCompanyApplicationsTable
@@ -784,24 +829,32 @@ const AdminDashboard = () => {
                 </Button>
               }
             >
-              <ProjectTable
-                projects={paginatedProjects}
-                onEdit={handleEditProject}
-                onUpdate={handleUpdateProject}
-                onStatusChange={handleChangeProjectStatus}
-                updatingProjectStatusId={updatingProjectStatusId}
-                planProgress={planProgress}
-                onOpenPlan={handleOpenPlan}
-              />
-              <PaginationControls
-                currentPage={projectPage}
-                totalPages={projectTotalPages}
-                totalItems={projectTotalItems}
-                itemsPerPage={projectItemsPerPage}
-                onPageChange={goToProjectPage}
-                onItemsPerPageChange={setProjectItemsPerPage}
-                className="mt-4"
-              />
+              {projectsQuery.isLoading ? (
+                <SkeletonTable columns={6} rows={6} minWidth={980} />
+              ) : projectsError ? (
+                <AdminDashboardEmptyState>{projectsError}</AdminDashboardEmptyState>
+              ) : (
+                <>
+                  <ProjectTable
+                    projects={paginatedProjects}
+                    onEdit={handleEditProject}
+                    onUpdate={handleUpdateProject}
+                    onStatusChange={handleChangeProjectStatus}
+                    updatingProjectStatusId={updatingProjectStatusId}
+                    planProgress={planProgress}
+                    onOpenPlan={handleOpenPlan}
+                  />
+                  <PaginationControls
+                    currentPage={projectPage}
+                    totalPages={projectTotalPages}
+                    totalItems={projectTotalItems}
+                    itemsPerPage={projectItemsPerPage}
+                    onPageChange={goToProjectPage}
+                    onItemsPerPageChange={setProjectItemsPerPage}
+                    className="mt-4"
+                  />
+                </>
+              )}
             </AdminDashboardSection>
           </TabsContent>
 

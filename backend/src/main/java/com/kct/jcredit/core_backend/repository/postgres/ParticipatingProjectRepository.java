@@ -33,6 +33,7 @@ public interface ParticipatingProjectRepository
 
     List<ParticipatingProject> findByProject_IdAndEquipment_Site_Company_CompanyId(
         Integer projectId, String companyId);
-
+        
+    Optional<ParticipatingProject> findByDocusignEnvelopeId(String envelopeId);
 
 }

@@ -149,6 +149,36 @@ describe('ParticipationReviewDetailPage', () => {
     ).not.toHaveProperty('rejectReason');
   });
 
+  it('starts every reviewable item with an unchecked checklist', async () => {
+    getParticipationReviewDetail.mockResolvedValue({
+      ...reviewDetail,
+      review: {
+        ...reviewDetail.review,
+        isSolarContractDoc: true,
+        isPcsSpecDoc: true,
+        isBatterySpecDoc: true,
+        isOperationStartDoc: true,
+        isGenerationDataDoc: true,
+        isReversePowerDoc: true,
+        isInvestmentProofDoc: true,
+        isApplicationCompleteCheck: true,
+        isFormsAttachCheck: true,
+        isEmissionsReductionActivityListCheck: true,
+        isOriginalSpecCheck: true,
+        isSubsidyCheck: true,
+      },
+    });
+
+    renderPage();
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: '入会届の詳細' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole('checkbox').every((checkbox) => !checkbox.hasAttribute('data-state') || checkbox.getAttribute('data-state') === 'unchecked'),
+    ).toBe(true);
+  });
+
   it('renders a non-reviewable pending item as read-only', async () => {
     getMyParticipationReviews.mockResolvedValue([]);
     renderPage();

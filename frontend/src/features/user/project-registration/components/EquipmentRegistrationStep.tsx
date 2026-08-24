@@ -1,8 +1,8 @@
-import { forwardRef, useEffect, useImperativeHandle } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { ApiError } from '@/api/_shared/errors';
 import { validateSiteProjectEquipment } from '@/api/site';
-import { FormCard } from '@/components/forms/form-layout';
+import { FormActions, FormCard } from '@/components/forms/form-layout';
 import { Form } from '@/components/ui/form';
 import { SolarPowerEquipmentForm } from '@/features/user/project-registration/components/equipment-forms/SolarPowerEquipmentForm';
 import type { SolarEquipment } from '@/features/user/project-registration/components/types';
@@ -25,20 +25,25 @@ export type EquipmentRegistrationStepRef = {
 };
 
 type EquipmentRegistrationStepProps = {
-  siteId: string;
   initialEquipment?: SolarEquipment;
+  isSubmitting: boolean;
+  onAddSite: (draft: SolarPowerFormData) => void;
+  onBack: () => void;
+  onNext: () => void;
+  onValueChange: (draft: SolarPowerFormData) => void;
 };
 
 export const EquipmentRegistrationStep = forwardRef<
   EquipmentRegistrationStepRef,
   EquipmentRegistrationStepProps
->(({ siteId, initialEquipment }, ref) => {
+>(({ initialEquipment, isSubmitting, onAddSite, onBack, onNext, onValueChange }, ref) => {
   const sitesQuery = useSitesQuery();
   const form = useForm<SolarPowerFormData>({
     defaultValues:
-      initialEquipment?.solarData ?? { ...SOLAR_FORM_DEFAULT_VALUES, siteId },
+      initialEquipment?.solarData ?? { ...SOLAR_FORM_DEFAULT_VALUES },
   });
   const sites = sitesQuery.data?.sites ?? EMPTY_SITE_OPTIONS;
+  const hasAppliedInitialEquipmentRef = useRef(false);
   const siteOptionsError = sitesQuery.isError
     ? sitesQuery.error instanceof Error
       ? sitesQuery.error.message
@@ -46,20 +51,28 @@ export const EquipmentRegistrationStep = forwardRef<
     : null;
 
   useEffect(() => {
-    if (initialEquipment) {
+    if (initialEquipment && !hasAppliedInitialEquipmentRef.current) {
+      hasAppliedInitialEquipmentRef.current = true;
       form.reset(initialEquipment.solarData);
     }
   }, [form, initialEquipment]);
 
   useEffect(() => {
-    if (sites.length === 0) return;
+    const subscription = form.watch((draft) => {
+      onValueChange(draft as SolarPowerFormData);
+    });
 
+    return () => subscription.unsubscribe();
+  }, [form, onValueChange]);
+
+  useEffect(() => {
     const selectedSiteId = form.getValues('siteId');
+    if (!selectedSiteId) return;
     if (sites.some((site) => site.siteId === selectedSiteId)) return;
 
-    const routeSite = sites.find((site) => site.siteId === siteId);
-    form.setValue('siteId', routeSite?.siteId ?? sites[0].siteId);
-  }, [form, siteId, sites]);
+    // Clear stale drafts without selecting a site on the user's behalf.
+    // form.setValue('siteId', '');
+  }, [form, sites]);
 
   useImperativeHandle(ref, () => ({
     validate: async () => {
@@ -123,12 +136,30 @@ export const EquipmentRegistrationStep = forwardRef<
         </p>
       </div>
       <Form {...form}>
-        <FormCard>
+        <FormCard className="space-y-8">
           <SolarPowerEquipmentForm
             form={form}
             sites={sites}
             isSiteOptionsLoading={sitesQuery.isLoading}
             siteOptionsError={siteOptionsError}
+            onAddSite={onAddSite}
+          />
+          <FormActions
+            pendingActionId={isSubmitting ? 'next' : null}
+            actions={[
+              {
+                id: 'back',
+                label: '戻る',
+                variant: 'outline',
+                onClick: onBack,
+              },
+              {
+                id: 'next',
+                label: '次へ',
+                pendingLabel: '確認中...',
+                onClick: onNext,
+              },
+            ]}
           />
         </FormCard>
       </Form>

@@ -158,7 +158,20 @@ export type SiteProjectApiItem = {
   createdAt?: string | null;
 };
 
+export type MyProjectParticipationApiItem = {
+  participationId: number;
+  siteId: string;
+  siteName: string;
+  status: string;
+  pdfStatus: string;
+};
+
+export type MyProjectParticipation = MyProjectParticipationApiItem;
+
 export type SiteProject = Project & {
+  participationId?: number;
+  participationStatus?: string;
+  pdfStatus?: string;
   isJoined: boolean;
   projectNumber: string;
   repFirstName?: string;
@@ -186,6 +199,11 @@ export type SiteProject = Project & {
   operatorCompanyId?: string | number;
   updatedAt?: string;
   createdAt?: string;
+};
+
+export type MembershipPdfDownload = {
+  pdfUrl: string;
+  expiresIn: number;
 };
 
 export type SiteProjectEquipment = {
@@ -307,24 +325,25 @@ export type SiteEquipmentHistory = {
   equipment: SiteProjectEquipment;
 };
 
-export type SiteProjectEquipmentUpdateRequest = {
-  equipmentOpDate?: string | null;
-  nominalMaxOutput?: number | null;
-  pcsManufacturer?: string | null;
-  pcsModel?: string | null;
-  pcsUnitCount?: number | null;
-  deviceNo?: string | null;
-  pcsStandby?: number | null;
-  hasBattery?: boolean | null;
-  batteryMaker?: string | null;
-  batteryModel?: string | null;
-  batteryCapacity?: number | null;
-  totalInvestment?: number | null;
-  hasSubsidy?: boolean | null;
-  subsidyName?: string | null;
-  subsidyAmount?: number | null;
-  preProjectUnitPrice?: number | null;
-  files?: SiteProjectEquipmentValidationFile[];
+/** Complete replacement snapshot accepted by POST /sites/{siteId}/equipment/{equipmentId}/change. */
+export type SiteProjectEquipmentChangeRequest = {
+  changeDate: string;
+  nominalMaxOutput: number | null;
+  pcsManufacturer: string;
+  pcsModel: string;
+  pcsUnitCount: number | null;
+  deviceNo: string;
+  pcsStandby: number | null;
+  hasBattery: boolean | null;
+  batteryMaker: string | null;
+  batteryModel: string | null;
+  batteryCapacity: number | null;
+  totalInvestment: number | null;
+  hasSubsidy: boolean | null;
+  subsidyName: string | null;
+  subsidyAmount: number | null;
+  preProjectUnitPrice: number | null;
+  files: SiteProjectEquipmentValidationFile[];
 };
 
 export type SiteProjectEquipmentFileType =
@@ -431,6 +450,18 @@ export type SiteProjectJoinSustainabilityCommitmentResponse = {
   message?: string | null;
   errors?: Record<string, string> | null;
   timestamp?: string;
+};
+
+export type SiteProjectSustainabilityCommitmentDefaultResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: Record<string, string> | null;
+  timestamp?: string;
+  companyName?: string | null;
+  repName?: string | null;
+  repRole?: string | null;
+  hasConsent?: boolean | null;
+  isAgreeTerms?: boolean | null;
 };
 
 export type SiteProjectFinalAgreementValidationRequest = {

@@ -6,9 +6,9 @@ import {
   getSiteData,
   getSiteProjects,
   type Site,
-  type SiteDashboardMetrics,
   type SiteProject,
 } from '@/api/site';
+import { InlineLoader, PageSkeleton, SkeletonCard } from '@/components/feedback/loading';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import {
   dashboardPageContainerClassName,
@@ -420,9 +420,11 @@ const Dashboard = () => {
     !userSiteId &&
     !refreshedSiteId;
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isSiteLoading, setIsSiteLoading] = useState(true);
+  const [isProjectsLoading, setIsProjectsLoading] = useState(true);
+  const [siteError, setSiteError] = useState<string | null>(null);
+  const [projectsError, setProjectsError] = useState<string | null>(null);
   const [site, setSite] = useState<Site | null>(null);
-  const [metrics, setMetrics] = useState<SiteDashboardMetrics | null>(null);
   const [projects, setProjects] = useState<SiteProject[]>([]);
 
   const joinedProjects = useMemo(
@@ -487,12 +489,14 @@ const Dashboard = () => {
     }
 
     if (isUserWithoutSite) {
-      setIsLoading(false);
+      setIsSiteLoading(false);
+      setIsProjectsLoading(false);
       return;
     }
 
     if (!activeSiteId) {
-      setIsLoading(false);
+      setIsSiteLoading(false);
+      setIsProjectsLoading(false);
       toast({
         title: 'エラー',
         description: 'siteId が見つかりません',
@@ -504,37 +508,38 @@ const Dashboard = () => {
     let isMounted = true;
     void loadNotifications();
 
-    const loadDashboardData = async () => {
-      try {
-        setIsLoading(true);
+    setIsSiteLoading(true);
+    setIsProjectsLoading(true);
+    setSiteError(null);
+    setProjectsError(null);
 
-        const [siteResponse, projectData] = await Promise.all([
-          getSiteData(activeSiteId),
-          getSiteProjects(activeSiteId),
-        ]);
-
+    void getSiteData(activeSiteId)
+      .then((siteResponse) => {
         if (!isMounted) return;
-
         setSite(siteResponse.site);
-        setMetrics(siteResponse.metrics);
-        setProjects(projectData);
-      } catch (error) {
-        toast({
-          title: 'エラー',
-          description:
-            error instanceof Error
-              ? error.message
-              : 'データの読み込みに失敗しました',
-          variant: 'destructive',
-        });
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
+      })
+      .catch((error: unknown) => {
+        if (!isMounted) return;
+        setSite(null);
+        setSiteError(error instanceof Error ? error.message : '拠点情報を取得できませんでした。');
+      })
+      .finally(() => {
+        if (isMounted) setIsSiteLoading(false);
+      });
 
-    void loadDashboardData();
+    void getSiteProjects(activeSiteId)
+      .then((projectData) => {
+        if (!isMounted) return;
+        setProjects(projectData);
+      })
+      .catch((error: unknown) => {
+        if (!isMounted) return;
+        setProjects([]);
+        setProjectsError(error instanceof Error ? error.message : 'プロジェクト情報を取得できませんでした。');
+      })
+      .finally(() => {
+        if (isMounted) setIsProjectsLoading(false);
+      });
 
     return () => {
       isMounted = false;
@@ -568,15 +573,7 @@ const Dashboard = () => {
   const address = site?.address || '-';
 
   if (isRefreshingUserSite) {
-    return (
-      <div className='min-h-screen bg-background py-8'>
-        <div className={pageContainer}>
-          <div className='py-16 text-center text-foreground'>
-            読み込み中...
-          </div>
-        </div>
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   if (isUserWithoutSite) {
@@ -618,21 +615,26 @@ const Dashboard = () => {
               <span className='flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-primary'>
                 <Factory className='h-6 w-6' />
               </span>
-              <h1 className='min-w-0 break-words text-4xl leading-10 text-foreground'>
-                {user?.companyName || '株式会社ABC'}
-              </h1>
+              {isSiteLoading ? (
+                <InlineLoader label="拠点情報を読み込んでいます" />
+              ) : (
+                <h1 className='min-w-0 break-words text-4xl leading-10 text-foreground'>
+                  {user?.companyName || '株式会社ABC'}
+                </h1>
+              )}
             </div>
             <dl className='ml-[60px] mt-2 grid gap-x-10 gap-y-3 sm:grid-cols-[max-content_minmax(0,1fr)]'>
               <div>
                 <dt className='text-small text-muted-foreground'>担当者</dt>
-                <dd className='mt-1 font-bold'>{picName}</dd>
+                <dd className='mt-1 font-bold'>{isSiteLoading ? <InlineLoader label="担当者を読み込んでいます" /> : picName}</dd>
               </div>
               <div className='min-w-0'>
                 <dt className='text-small text-muted-foreground'>所在地</dt>
-                <dd className='mt-1 break-words font-bold'>{address}</dd>
+                <dd className='mt-1 break-words font-bold'>{isSiteLoading ? <InlineLoader label="所在地を読み込んでいます" /> : address}</dd>
               </div>
             </dl>
           </div>
+          {siteError ? <p role='alert' className='mt-4 text-small text-destructive'>{siteError}</p> : null}
 
           {user?.role === 'master' && activeSiteId && (
             <Button
@@ -657,12 +659,12 @@ const Dashboard = () => {
             </p>
           </div>
 
-          {isLoading ? (
-            <Card className='rounded-2xl border-border'>
-              <CardContent className='p-10 text-center text-foreground'>
-                読み込み中...
-              </CardContent>
-            </Card>
+          {isProjectsLoading ? (
+            <div className='space-y-4'>
+              {Array.from({ length: 2 }, (_, index) => <SkeletonCard key={index} className='min-h-80 rounded-2xl' />)}
+            </div>
+          ) : projectsError ? (
+            <Card className='rounded-2xl border-border'><CardContent className='p-10 text-center text-destructive' role='alert'>{projectsError}</CardContent></Card>
           ) : joinedProjects.length > 0 ? (
             <div className='space-y-4'>
               {joinedProjects.map((project) => (
@@ -706,12 +708,12 @@ const Dashboard = () => {
             )}
           </div>
 
-          {isLoading ? (
-            <Card className='rounded-2xl border-border'>
-              <CardContent className='p-10 text-center text-foreground'>
-                読み込み中...
-              </CardContent>
-            </Card>
+          {isProjectsLoading ? (
+            <div className='grid gap-5 md:grid-cols-2 xl:grid-cols-4'>
+              {Array.from({ length: 4 }, (_, index) => <SkeletonCard key={index} className='min-h-72 rounded-2xl' />)}
+            </div>
+          ) : projectsError ? (
+            <Card className='rounded-2xl border-border'><CardContent className='p-10 text-center text-destructive' role='alert'>{projectsError}</CardContent></Card>
           ) : availableProjects.length > 0 ? (
             <div className='grid gap-5 md:grid-cols-2 xl:grid-cols-4'>
               {availableProjects.map((project) => (

@@ -77,17 +77,17 @@ public class RegisterMonitoringRecordSolarRequest {
 
      // Mandatory evidence files
     @NotBlank(message = "発電量（ELPV）の証憑ファイルをアップロードしてください。")
-    @JsonProperty("ELpv_evidence")
+    @JsonProperty("elpv_evidence")
     private String elPvEvidenceUrl;
     
     @NotBlank(message = "自家消費量（ELPVR）の証憑ファイルをアップロードしてください。")
-    @JsonProperty("ELpvr_evidence")
+    @JsonProperty("elpvr_evidence")
     private String elPvrEvidenceUrl;
     
-    @JsonProperty("ELPJ_battery_evidence")
+    @JsonProperty("elpj_battery_evidence")
     private String elpjBatterySpecificationUrl;
     
     @NotBlank(message = "制御機器稼働時間（ELPJ）の証憑ファイルをアップロードしてください。")
-    @JsonProperty("ELPJ_control_equipment_spec_files")
+    @JsonProperty("elpj_control_evidence")
     private String elpjControlEvidenceUrl;
 }
