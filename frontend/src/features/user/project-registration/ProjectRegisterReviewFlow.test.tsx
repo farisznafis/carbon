@@ -275,7 +275,11 @@ vi.mock('./components/FinalTermsStep', async () => {
   return {
     FinalTermsStep: forwardRef<
       unknown,
-      { onBack: () => void; onNext: () => void }
+      {
+        errors?: Record<string, string>;
+        onBack: () => void;
+        onNext: () => void;
+      }
     >((props, ref) => {
       useImperativeHandle(ref, () => ({
         getValues: () => ({ finalTermsAgreed: true }),
@@ -283,6 +287,9 @@ vi.mock('./components/FinalTermsStep', async () => {
       return (
         <div>
           <h2>入会規約フォーム</h2>
+          <span data-testid="final-terms-agreed-error">
+            {props.errors?.finalTermsAgreed ?? ''}
+          </span>
           <button type="button" onClick={props.onBack}>戻る</button>
           <button type="button" onClick={props.onNext}>確認へ</button>
         </div>
@@ -563,6 +570,36 @@ describe('ProjectRegisterPage review flow', () => {
       '同意してください。',
     );
     expect(screen.getByText('持続可能性フォーム')).toBeVisible();
+  });
+
+  it('maps the Japanese final-agreement error to the agreement checkbox', async () => {
+    const user = userEvent.setup();
+    apiMocks.validateSiteProjectFinalAgreement.mockRejectedValueOnce(
+      new ApiError('入力内容に不備があります。', {
+        status: 400,
+        payload: {
+          statusCode: 'VALIDATION_ERROR',
+          message: '入力内容に不備があります。',
+          errors: {
+            'request::同意します': '同意してください。',
+          },
+        },
+      }),
+    );
+    renderFlow();
+
+    await user.click(await screen.findByRole('button', { name: '次へ' }));
+    await screen.findByText('同意事項フォーム');
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+    await screen.findByText('持続可能性フォーム');
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+    await screen.findByText('入会規約フォーム');
+    await user.click(screen.getByRole('button', { name: '確認へ' }));
+
+    expect(
+      await screen.findByTestId('final-terms-agreed-error'),
+    ).toHaveTextContent('同意してください。');
+    expect(screen.getByText('入会規約フォーム')).toBeVisible();
   });
 
   it('restores the saved step, equipment values, and selected files after refresh', async () => {

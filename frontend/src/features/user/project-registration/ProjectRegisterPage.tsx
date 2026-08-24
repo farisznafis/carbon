@@ -141,6 +141,7 @@ const sustainabilityCommitmentFieldNames: Record<
 
 const finalAgreementFieldNames: Record<string, keyof FinalTermsValues> = {
   isAgreeTerms: "finalTermsAgreed",
+  "同意します": "finalTermsAgreed",
 };
 
 const getValidationErrorMessage = (error: unknown): string => {
