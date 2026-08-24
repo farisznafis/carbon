@@ -3,6 +3,7 @@ import type { SolarPowerFormData } from '@/lib/equipmentValidations';
 
 export const SOLAR_FORM_DEFAULT_VALUES: SolarPowerFormData = {
   siteId: '',
+  changeDate: '',
   equipmentOpDate: '',
   operationStartDateFile: undefined,
   nominalMaxOutput: '',
@@ -32,6 +33,10 @@ export const REQUIRED_EQUIPMENT_FILE_MESSAGE =
   '確認資料をアップロードしてください。';
 
 const API_FIELD_ALIASES: Record<string, keyof SolarPowerFormData> = {
+  拠点: 'siteId',
+  変更日: 'changeDate',
+  changedate: 'changeDate',
+  '稼働開始日（電力受給開始日）': 'equipmentOpDate',
   pcsunitcount: 'powerCondUnitCount',
   pcsstandby: 'powerCondStandby',
   solar_contract: 'operationStartDateFile',
@@ -169,7 +174,8 @@ export function getEquipmentFormFieldName(
     .split('.')
     .at(-1)
     ?.split('::')
-    .at(-1);
+    .at(-1)
+    ?.trim();
   if (!fieldName) return null;
 
   return (

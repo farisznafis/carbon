@@ -15,7 +15,7 @@ import type {
   SiteProjectEquipmentFileType,
   SiteProjectEquipmentFileUploadResponse,
   SiteProjectEquipmentResponse,
-  SiteProjectEquipmentUpdateRequest,
+  SiteProjectEquipmentChangeRequest,
   SiteProjectEquipmentValidationFile,
   SiteProjectEquipmentValidationItem,
   SiteProjectEquipmentValidationResponse,
@@ -23,6 +23,7 @@ import type {
   SiteProjectConfirmationItemsValidationResponse,
   SiteProjectJoinSustainabilityCommitmentRequest,
   SiteProjectJoinSustainabilityCommitmentResponse,
+  SiteProjectSustainabilityCommitmentDefaultResponse,
   SiteProjectFinalAgreementValidationRequest,
   SiteProjectFinalAgreementValidationResponse,
   SiteProjectJoinRequest,
@@ -211,6 +212,19 @@ export async function validateSiteProjectSustainabilityCommitment(
   );
 }
 
+/** GET /site/project/sites/{siteId}/sustainability-commitment/default — fetches Contract Step defaults. */
+export async function getSiteProjectSustainabilityCommitmentDefault(
+  siteId: string,
+): Promise<SiteProjectSustainabilityCommitmentDefaultResponse> {
+  return apiRequest<SiteProjectSustainabilityCommitmentDefaultResponse>(
+    `/site/project/sites/${encodeURIComponent(siteId)}/sustainability-commitment/default`,
+    {
+      method: 'GET',
+      fallbackErrorMessage: '持続可能性約束の初期値を取得できませんでした。',
+    },
+  );
+}
+
 export async function validateSiteProjectFinalAgreement(
   payload: SiteProjectFinalAgreementValidationRequest,
 ): Promise<SiteProjectFinalAgreementValidationResponse> {
@@ -341,16 +355,20 @@ export async function getSiteEquipmentHistory(
     : [];
 }
 
-export async function updateSiteEquipment(
+/**
+ * POST /site/{siteId}/equipment/{equipmentId}/change
+ * Registers replacement equipment while the backend preserves the previous entry as history.
+ */
+export async function changeSiteEquipment(
   siteId: string,
   equipmentId: number,
-  payload: SiteProjectEquipmentUpdateRequest,
+  payload: SiteProjectEquipmentChangeRequest,
 ): Promise<SiteProjectEquipment> {
   return normalizeSiteProjectEquipment(
     await apiRequest<SiteProjectEquipmentDetailResponse>(
-      `/site/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}`,
+      `/siteg/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}/change`,
       {
-        method: 'PATCH',
+        method: 'POST',
         body: payload,
         fallbackErrorMessage: '設備情報の変更に失敗しました。',
       },

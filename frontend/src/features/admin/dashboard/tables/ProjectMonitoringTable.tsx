@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { logger } from '@/lib/logger';
+import { InlineLoader, SkeletonTable } from '@/components/feedback/loading';
 import {
   formatMonitoringDate,
   formatMonitoringNumber,
@@ -240,9 +241,7 @@ export function ProjectMonitoringTable({
           </SelectContent>
         </Select>
         {projectsLoading && (
-          <p className="text-small text-foreground">
-            プロジェクトを読み込んでいます...
-          </p>
+          <InlineLoader label="プロジェクトを読み込んでいます" />
         )}
         {projectsError && (
           <p role="alert" className="text-small text-destructive">
@@ -256,9 +255,7 @@ export function ProjectMonitoringTable({
           表示するプロジェクトを選択してください。
         </div>
       ) : isLoading ? (
-        <div className="rounded-lg border border-border py-12 text-center text-small text-foreground">
-          モニタリングデータを読み込んでいます...
-        </div>
+        <SkeletonTable columns={9} rows={6} gridTemplateColumns="minmax(90px,1.1fr) minmax(70px,.8fr) repeat(5,minmax(88px,1fr)) minmax(70px,.7fr) 88px" minWidth={0} />
       ) : loadError ? (
         <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center">
           <p role="alert" className="text-small text-destructive">

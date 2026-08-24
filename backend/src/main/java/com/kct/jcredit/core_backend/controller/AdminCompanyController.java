@@ -17,6 +17,7 @@ import com.kct.jcredit.core_backend.dto.response.ApproveCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.CompanySuspensionListResponse;
 import com.kct.jcredit.core_backend.dto.response.CompanySuspensionResponse;
 import com.kct.jcredit.core_backend.dto.response.CreateUserResponse;
+import com.kct.jcredit.core_backend.dto.response.DocuSignEnvelopeResponse;
 import com.kct.jcredit.core_backend.dto.response.UpdateUserResponse;
 import com.kct.jcredit.core_backend.dto.response.UserListResponse;
 import com.kct.jcredit.core_backend.dto.response.UserProfileResponse;
@@ -27,6 +28,7 @@ import com.kct.jcredit.core_backend.dto.response.DocuSignEnvelopeResult;
 import com.kct.jcredit.core_backend.service.AdminCompanyQueryService;
 import com.kct.jcredit.core_backend.service.CompanyApprovalService;
 import com.kct.jcredit.core_backend.service.CompanyLifecycleService;
+import com.kct.jcredit.core_backend.service.DocuSignService;
 import com.kct.jcredit.core_backend.service.DocuSignService;
 import com.kct.jcredit.core_backend.service.OperatorUserService;
 import com.kct.jcredit.core_backend.service.ParticipationReviewService;
@@ -415,4 +417,45 @@ public class AdminCompanyController {
     );
     return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
+
+    @RestController
+    @RequestMapping("/test/docusign")
+    @RequiredArgsConstructor
+    public class DocuSignTestController {
+
+        private final DocuSignService docuSignService;
+
+        @GetMapping("/token")
+        public ResponseEntity<Map<String, String>> testToken() {
+            try {
+                String token = docuSignService.getAccessToken();
+                return ResponseEntity.ok(Map.of(
+                        "status", "OK",
+                        "tokenPreview", token.substring(0, 20) + "..."
+                ));
+            } catch (Exception e) {
+                return ResponseEntity.status(500).body(Map.of(
+                        "status", "ERROR",
+                        "message", e.getMessage()
+                ));
+            }
+        }
+
+    //     @PostMapping("/send-envelope")
+    //     public ResponseEntity<Map<String, String>> testSendEnvelope() throws Exception {
+    //         byte[] dummyPdf = Files.readAllBytes(Paths.get("C:/シャーナズ/【03】 Projek/docusign/template.pdf"));
+
+    //         DocuSignEnvelopeResponse result = docuSignService.sendEnvelopeForSignature(
+    //                 dummyPdf,
+    //                 "wqzdzb5506@minitts.net", 
+    //                 "Test Sankasha",
+    //                 "test_document.pdf"
+    //         );
+
+    //         return ResponseEntity.ok(Map.of(
+    //                 "envelopeId", result.getEnvelopeId(),
+    //                 "status", result.getStatus()
+    //         ));
+    //     }
+     }
 }

@@ -1,5 +1,7 @@
 import * as React from "react";
 
+import { ButtonLoader } from '@/components/feedback/loading';
+import { Button, type ButtonProps } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type FormPageShellProps = React.HTMLAttributes<HTMLDivElement> & {
@@ -268,9 +270,120 @@ export function FormGrid({
   );
 }
 
+export type FormActionContext = "standard" | "auth" | "compact";
+
+export type FormActionDefinition = Omit<
+  ButtonProps,
+  "asChild" | "children" | "className" | "size"
+> & {
+  id: string;
+  label: React.ReactNode;
+  pendingLabel?: React.ReactNode;
+};
+
+type FormActionsProps = Omit<React.HTMLAttributes<HTMLDivElement>, "children"> & {
+  actions: readonly FormActionDefinition[];
+  context?: FormActionContext;
+  disabled?: boolean;
+  leadingAction?: React.ReactNode;
+  pendingActionId?: string | null;
+};
+
+const FORM_ACTION_BUTTON_SIZE: Record<
+  FormActionContext,
+  NonNullable<ButtonProps["size"]>
+> = {
+  standard: "md",
+  auth: "lg",
+  compact: "sm",
+};
+
+const STANDARD_ACTION_GRID_CLASS: Record<number, string> = {
+  1: "grid grid-cols-1 gap-3",
+  2: "grid grid-cols-1 gap-3 sm:grid-cols-2",
+  3: "grid grid-cols-1 gap-3 sm:grid-cols-3",
+};
+
+/**
+ * Resolves the responsive action layout without generating dynamic Tailwind classes.
+ */
+function getFormActionsLayoutClass(
+  actionCount: number,
+  hasLeadingAction: boolean,
+) {
+  if (hasLeadingAction) {
+    if (actionCount === 1) {
+      return "grid grid-cols-[2.5rem_minmax(0,1fr)] gap-3";
+    }
+
+    return "grid grid-cols-[2.5rem_minmax(0,1fr)_minmax(0,1fr)] gap-3";
+  }
+
+  return STANDARD_ACTION_GRID_CLASS[Math.min(Math.max(actionCount, 1), 3)];
+}
+
+/**
+ * Renders consistent form commit actions for standard pages, auth cards, and dialogs.
+ */
 export function FormActions({
+  actions,
   className,
+  context = "standard",
+  disabled = false,
+  leadingAction,
+  pendingActionId = null,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("pt-0", className)} {...props} />;
+}: FormActionsProps) {
+  const isPending = pendingActionId !== null;
+  const buttonSize = FORM_ACTION_BUTTON_SIZE[context];
+  const buttonWidthClass = "w-full";
+  const authMotionClass =
+    context === "auth"
+      ? "transition-transform duration-300 hover:scale-[1.01] active:scale-[0.99] [@media(max-height:560px)]:h-9"
+      : undefined;
+
+  return (
+    <div
+      className={cn(
+        "pt-0",
+        getFormActionsLayoutClass(
+          actions.length,
+          Boolean(leadingAction),
+        ),
+        className,
+      )}
+      aria-busy={isPending || undefined}
+      {...props}
+    >
+      {leadingAction ? (
+        <fieldset
+          className="contents"
+          disabled={disabled || isPending}
+          aria-label="補助アクション"
+        >
+          {leadingAction}
+        </fieldset>
+      ) : null}
+      {actions.map(
+        ({ id, label, pendingLabel, disabled: actionDisabled, ...buttonProps }) => {
+          const isCurrentActionPending = pendingActionId === id;
+
+          return (
+            <Button
+              key={id}
+              type="button"
+              size={buttonSize}
+              className={cn(buttonWidthClass, authMotionClass)}
+              disabled={disabled || isPending || actionDisabled}
+              aria-busy={isCurrentActionPending || undefined}
+              {...buttonProps}
+            >
+              {isCurrentActionPending ? <ButtonLoader /> : null}
+              <span>{isCurrentActionPending ? (pendingLabel ?? label) : label}</span>
+            </Button>
+          );
+        },
+      )}
+    </div>
+  );
 }

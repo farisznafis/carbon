@@ -6,6 +6,7 @@ import {
 import { logger } from '@/lib/logger';
 import { EmissionReductionProgress } from '@/features/user/project-detail/components/EmissionReductionProgress';
 import { PROJECT_EMISSION_REDUCTION_TARGET } from '@/features/user/project-detail/components/emissionReductionProgressUtils';
+import { SkeletonChart } from '@/components/feedback/loading';
 
 type DashboardEmissionReductionProgressProps = {
   projectId: string;
@@ -57,12 +58,7 @@ export function DashboardEmissionReductionProgress({
   return (
     <div className='min-h-[280px] rounded-2xl p-5 xl:order-1 border-border border'>
       {isLoading ? (
-        <div
-          className='flex min-h-[240px] items-center justify-center text-foreground'
-          role='status'
-        >
-          読み込み中...
-        </div>
+        <SkeletonChart className='min-h-[240px] border-0 p-0 shadow-none' />
       ) : error ? (
         <div
           className='flex min-h-[240px] items-center justify-center text-center text-destructive'

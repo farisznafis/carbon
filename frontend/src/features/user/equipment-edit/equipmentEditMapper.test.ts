@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import type { SiteProjectEquipment } from '@/api/site';
 import {
   hasEquipmentEditChanges,
-  mapEquipmentEditToUpdateRequest,
+  mapEquipmentEditToChangeRequest,
   mapEquipmentToEditForm,
-  mergeEquipmentFilesForUpdate,
+  mergeEquipmentFilesForChange,
 } from './equipmentEditMapper';
 
 const equipment: SiteProjectEquipment = {
@@ -37,23 +37,39 @@ describe('equipmentEditMapper', () => {
         powerCondStandby: '1',
         hasBattery: 'yes',
         hasSubsidy: 'yes',
+        changeDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
       }),
     );
   });
 
-  it('creates a partial canonical payload and preserves zero and false', () => {
+  it('creates the complete change payload and preserves zero and false', () => {
     const original = mapEquipmentToEditForm(equipment, 'SITE-1');
     const current = {
       ...original,
+      changeDate: '2026-08-20',
       powerCondStandby: '0',
       hasBattery: 'no' as const,
       subsidyAmount: '0',
     };
 
-    expect(mapEquipmentEditToUpdateRequest(current, original)).toEqual({
+    expect(mapEquipmentEditToChangeRequest(current)).toEqual({
+      changeDate: '2026-08-20',
+      nominalMaxOutput: 25.5,
+      pcsManufacturer: 'PCS Maker',
+      pcsModel: 'PCS-1',
+      pcsUnitCount: 2,
+      deviceNo: 'DEVICE-1',
       pcsStandby: 0,
       hasBattery: false,
+      batteryMaker: null,
+      batteryModel: null,
+      batteryCapacity: null,
+      totalInvestment: 100000,
+      hasSubsidy: true,
+      subsidyName: 'GX補助金',
       subsidyAmount: 0,
+      preProjectUnitPrice: 20,
+      files: [],
     });
   });
 
@@ -61,16 +77,24 @@ describe('equipmentEditMapper', () => {
     const original = mapEquipmentToEditForm(equipment, 'SITE-1');
     const current = {
       ...original,
+      changeDate: '2026-08-20',
       hasBattery: 'no' as const,
       batteryMaker: 'Changed but hidden',
       hasSubsidy: 'no' as const,
       subsidyName: 'Changed but hidden',
     };
 
-    expect(mapEquipmentEditToUpdateRequest(current, original)).toEqual({
-      hasBattery: false,
-      hasSubsidy: false,
-    });
+    expect(mapEquipmentEditToChangeRequest(current)).toEqual(
+      expect.objectContaining({
+        hasBattery: false,
+        batteryMaker: null,
+        batteryModel: null,
+        batteryCapacity: null,
+        hasSubsidy: false,
+        subsidyName: null,
+        subsidyAmount: null,
+      }),
+    );
   });
 
   it('detects no-op and changed form values', () => {
@@ -97,7 +121,7 @@ describe('equipmentEditMapper', () => {
   });
 
   it('merges uploaded file replacements with existing file metadata', () => {
-    const files = mergeEquipmentFilesForUpdate(
+    const files = mergeEquipmentFilesForChange(
       [
         {
           fileType: 'solar_contract',
@@ -136,14 +160,14 @@ describe('equipmentEditMapper', () => {
     ]);
 
     const original = mapEquipmentToEditForm(equipment, 'SITE-1');
-    expect(mapEquipmentEditToUpdateRequest(original, original, files)).toEqual({
-      files,
-    });
+    expect(mapEquipmentEditToChangeRequest(original, files)).toEqual(
+      expect.objectContaining({ files }),
+    );
   });
 
   it('keeps existing file metadata even when no replacement is selected', () => {
     expect(
-      mergeEquipmentFilesForUpdate(
+      mergeEquipmentFilesForChange(
         [
           {
             fileType: 'pcs_spec',

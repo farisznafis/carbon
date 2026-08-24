@@ -275,7 +275,7 @@ export function SiteForm({
                   <FormItem>
                     <RequiredLabel>拠点名</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="東京本社" {...field} />
+                      <Input placeholder="東京本社" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -290,7 +290,7 @@ export function SiteForm({
                     <FormItem>
                       <RequiredLabel>拠点名カナ</RequiredLabel>
                       <FormControl>
-                        <Input inputSize="sm" placeholder="トウキョウホンシャ" {...field} />
+                        <Input placeholder="トウキョウホンシャ" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -308,7 +308,6 @@ export function SiteForm({
                     <RequiredLabel>郵便番号（ハイフン無し）</RequiredLabel>
                     <FormControl>
                       <Input
-                        inputSize="sm"
                         placeholder="1000001"
                         {...field}
                         onChange={(e) => handlePostalCodeChange(e.target.value, field.onChange)}
@@ -327,7 +326,7 @@ export function SiteForm({
                     <RequiredLabel>都道府県</RequiredLabel>
                     <Select onValueChange={field.onChange} value={field.value ?? ''}>
                       <FormControl>
-                        <SelectTrigger selectSize="sm">
+                        <SelectTrigger>
                           <SelectValue placeholder="都道府県を選択" />
                         </SelectTrigger>
                       </FormControl>
@@ -351,7 +350,7 @@ export function SiteForm({
                   <FormItem>
                     <RequiredLabel>市区町村</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="千代田区" {...field} />
+                      <Input placeholder="千代田区" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -365,7 +364,7 @@ export function SiteForm({
                   <FormItem>
                     <RequiredLabel>番地</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="1-1-1" {...field} />
+                      <Input placeholder="1-1-1" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -379,7 +378,7 @@ export function SiteForm({
                   <FormItem>
                     <RequiredLabel required={true}>建物名・部屋番号</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="東京ビル3F 305号" {...field} />
+                      <Input placeholder="東京ビル3F 305号" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -423,7 +422,7 @@ export function SiteForm({
                             }
                           >
                             <FormControl>
-                              <SelectTrigger selectSize="sm">
+                              <SelectTrigger>
                                 <SelectValue placeholder="担当者を選択してください" />
                               </SelectTrigger>
                             </FormControl>
@@ -484,14 +483,8 @@ export function SiteForm({
               </FormSection>
 
             <FormActions
-              className={
-                !isCreateMode && onDelete
-                  ? 'grid grid-cols-[40px_minmax(0,1fr)_minmax(0,1fr)] gap-3'
-                  : 'grid grid-cols-1 gap-3 sm:grid-cols-2'
-              }
-            >
-              {!isCreateMode && onDelete ? (
-                <>
+              leadingAction={
+                !isCreateMode && onDelete ? (
                   <DeleteAlertDialog
                     label="拠点"
                     open={isDeleteDialogOpen}
@@ -499,37 +492,23 @@ export function SiteForm({
                     onDelete={onDelete}
                     iconOnly
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => navigate(-1)}
-                  >
-                    キャンセル
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="md"
-                  className="w-full"
-                  onClick={() => navigate(-1)}
-                >
-                  キャンセル
-                </Button>
-              )}
-
-              <Button
-                type="submit"
-                size="md"
-                className="w-full"
-                disabled={!isDirty || disableSubmit}
-              >
-                {submitLabel}
-              </Button>
-            </FormActions>
+                ) : undefined
+              }
+              actions={[
+                {
+                  id: 'cancel',
+                  label: 'キャンセル',
+                  variant: 'outline',
+                  onClick: () => navigate(-1),
+                },
+                {
+                  id: 'submit',
+                  label: submitLabel,
+                  type: 'submit',
+                  disabled: !isDirty || disableSubmit,
+                },
+              ]}
+            />
           </FormSectionStack>
         </FormCard>
       </form>

@@ -3,12 +3,13 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDashboardStore } from "@/stores/dashboardStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PageSkeleton } from "@/components/feedback/loading";
 import {
   FormPageHeader,
   FormPageShell,
   WizardProgress,
 } from "@/components/forms/form-layout";
-import { ArrowRight, FileSignature } from "lucide-react";
+import { FileSignature } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { getProjectDetails } from "@/api/projects";
@@ -24,6 +25,7 @@ import { DynamicAgreementsStep, type DynamicAgreementsStepRef } from "@/features
 import { ContractStep, type ContractStepRef, type ContractStepFormValues } from "@/features/user/project-registration/components/ContractStep";
 import { FinalTermsStep, type FinalTermsRef, type FinalTermsValues } from "@/features/user/project-registration/components/FinalTermsStep";
 import { CompletionStep } from "@/features/user/project-registration/components/CompletionStep";
+import { ProjectRegistrationReviewStep } from "@/features/user/project-registration/components/ProjectRegistrationReviewStep";
 import {
   EquipmentRegistrationStep,
   type EquipmentRegistrationStepRef,
@@ -32,7 +34,10 @@ import {
   floatingPageBackButtonClassName,
   PageBackButton,
 } from "@/components/navigation/PageBackButton";
-import type { Equipment } from "@/features/user/project-registration/components/types";
+import type {
+  Equipment,
+  SolarEquipment,
+} from "@/features/user/project-registration/components/types";
 import type { AgreementFormValues } from "@/features/user/project-registration/components/agreementsConfig";
 import { paths } from "@/routes/paths";
 import {
@@ -45,16 +50,36 @@ import {
   mapSustainabilityCommitmentRequest,
   mapProjectJoinRequest,
 } from "@/features/user/project-registration/projectJoinMapper";
-import { getPendingSolarEquipment } from "@/features/user/project-registration/equipmentConfirmationState";
+import {
+  getCreatedSiteId,
+  getPendingSolarEquipment,
+} from "@/features/user/project-registration/equipmentConfirmationState";
 import { getSolarFormSelectedFiles } from "@/features/user/project-registration/equipmentValidationMapper";
+import { createSiteRegistrationReturnState } from "@/features/master/navigation/siteRegistrationFlow";
+import type { SolarPowerFormData } from "@/lib/equipmentValidations";
+import { useSitesQuery } from "@/hooks/sites/useSitesQuery";
+import { useSustainabilityCommitmentDefaultQuery } from "@/hooks/sites/useSustainabilityCommitmentDefaultQuery";
+import {
+  createProjectRegistrationDraftKey,
+  deleteProjectRegistrationDraft,
+  loadProjectRegistrationDraft,
+  PROJECT_REGISTRATION_DRAFT_VERSION,
+  saveProjectRegistrationDraft,
+  type ProjectRegistrationDraft,
+} from "@/features/user/project-registration/projectRegistrationDraftStorage";
+import {
+  hasLegacyContractDraftValues,
+  mapSustainabilityCommitmentDefault,
+} from "@/features/user/project-registration/sustainabilityCommitmentDefaultMapper";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const TOTAL_FORM_STEPS = 4;
+const TOTAL_FORM_STEPS = 5;
 const EQUIPMENT_STEP = 1;
 const CONFIRMATION_ITEMS_STEP = 2;
 const SUSTAINABILITY_STEP = 3;
 const FINAL_AGREEMENT_STEP = 4;
+const REVIEW_STEP = 5;
 const COMPLETION_STEP = TOTAL_FORM_STEPS + 1;
 
 const PROJECT_REGISTRATION_STEPS = [
@@ -62,7 +87,15 @@ const PROJECT_REGISTRATION_STEPS = [
   { number: CONFIRMATION_ITEMS_STEP, title: "同意事項" },
   { number: SUSTAINABILITY_STEP, title: "持続可能性" },
   { number: FINAL_AGREEMENT_STEP, title: "入会規約" },
+  { number: REVIEW_STEP, title: "確認" },
 ];
+
+const EMPTY_CONTRACT_FORM_VALUES: ContractStepFormValues = {
+  businessName: '',
+  representativePosition: '',
+  representativeName: '',
+  contractAgreed: false,
+};
 
 const confirmationItemFieldNames: Record<string, keyof AgreementFormValues> = {
   isAgreeDataUse: "useRegisteredInfo",
@@ -182,11 +215,24 @@ const ProjectRegister = () => {
   const navigate = useNavigate();
   const enteredFromMasterDashboard = isFromMasterDashboard(location.state);
   const pendingEquipment = useMemo(
-    () => getPendingSolarEquipment(location.state),
+    () => {
+      const pending = getPendingSolarEquipment(location.state);
+      const createdSiteId = getCreatedSiteId(location.state);
+      if (!pending || !createdSiteId) return pending;
+
+      return {
+        ...pending,
+        solarData: {
+          ...pending.solarData,
+          siteId: createdSiteId,
+        },
+      };
+    },
     [location.state],
   );
   const { user } = useAuth();
   const { toast } = useToast();
+  const sitesQuery = useSitesQuery();
   const currentProject = useDashboardStore((state) => state.currentProject);
   const setCurrentProject = useDashboardStore((state) => state.setCurrentProject);
 
@@ -195,12 +241,14 @@ const ProjectRegister = () => {
   const contractStepRef = useRef<ContractStepRef>(null);
   const finalStepRef = useRef<FinalTermsRef>(null);
   const equipmentStepRef = useRef<EquipmentRegistrationStepRef>(null);
+  const contractHasUserChangesRef = useRef(false);
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [currentStep, setCurrentStep] = useState(1);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isProjectLoading, setIsProjectLoading] = useState(false);
+  const [isDraftHydrated, setIsDraftHydrated] = useState(false);
   const [projectLoadError, setProjectLoadError] = useState<string | null>(null);
 
   const [agreementFormValues, setAgreementFormValues] = useState<Partial<AgreementFormValues>>({
@@ -213,12 +261,12 @@ const ProjectRegister = () => {
     energyRationalizationCompliance: '',
   });
 
-  const [contractFormValues, setContractFormValues] = useState<Partial<ContractStepFormValues>>({
-    businessName: '',
-    representativePosition: '',
-    representativeName: '',
-    contractAgreed: false,
-  });
+  const [contractFormValues, setContractFormValues] = useState<
+    Partial<ContractStepFormValues>
+  >({ ...EMPTY_CONTRACT_FORM_VALUES });
+  const [contractHasUserChanges, setContractHasUserChanges] = useState(false);
+  const [contractSiteId, setContractSiteId] = useState('');
+  const [validatedEquipmentSiteId, setValidatedEquipmentSiteId] = useState('');
 
   const [finalTermsValues, setFinalTermsValues] = useState<Partial<FinalTermsValues>>({
     finalTermsAgreed: false,
@@ -232,6 +280,28 @@ const ProjectRegister = () => {
   const selectedProject = projectId && currentProject?.id === projectId ? currentProject : null;
   const resolvedSiteId = siteId;
   const isCompletionStep = currentStep === COMPLETION_STEP;
+  const solarEquipments = useMemo(
+    () =>
+      equipment.filter(
+        (item): item is SolarEquipment => item.formType === 'solar',
+      ),
+    [equipment],
+  );
+  const selectedEquipmentSiteId =
+    solarEquipments.at(-1)?.solarData.siteId ?? '';
+  const selectedEquipmentSiteName =
+    sitesQuery.data?.sites.find(
+      (site) => site.siteId === selectedEquipmentSiteId,
+    )?.siteName ?? selectedEquipmentSiteId;
+  const draftKey = useMemo(
+    () => createProjectRegistrationDraftKey(user?.id ?? '', siteId, projectId),
+    [projectId, siteId, user?.id],
+  );
+  const sustainabilityDefaultQuery =
+    useSustainabilityCommitmentDefaultQuery(
+      validatedEquipmentSiteId,
+      isDraftHydrated && !contractHasUserChanges,
+    );
 
   // ── Navigation ────────────────────────────────────────────────────────────
   const navigateToDashboard = useCallback(() => {
@@ -269,6 +339,54 @@ const ProjectRegister = () => {
     }
   }, [currentStep, navigateToMembership]);
 
+  /** Opens site registration and preserves the current equipment draft for return. */
+  const handleAddSite = useCallback(
+    (draft: SolarPowerFormData) => {
+      const currentSolarEquipment = equipment.find(
+        (item): item is SolarEquipment => item.formType === 'solar',
+      );
+      const pendingEquipmentDraft: SolarEquipment = {
+        id: currentSolarEquipment?.id ?? `equipment-${Date.now()}`,
+        formType: 'solar',
+        solarData: draft,
+        files: currentSolarEquipment?.files ?? [],
+      };
+
+      navigate(paths.masterSiteRegister, {
+        state: createSiteRegistrationReturnState({
+          path: paths.projectRegister(siteId, projectId),
+          state: {
+            ...(enteredFromMasterDashboard
+              ? masterDashboardProjectMembershipState
+              : {}),
+            pendingEquipment: pendingEquipmentDraft,
+          },
+        }),
+      });
+    },
+    [enteredFromMasterDashboard, equipment, navigate, projectId, siteId],
+  );
+
+  /** Keeps the currently mounted equipment form synchronized with the persistent draft. */
+  const handleEquipmentDraftChange = useCallback(
+    (solarData: SolarPowerFormData) => {
+      setEquipment((currentEquipment) => {
+        const currentSolarEquipment = currentEquipment.find(
+          (item): item is SolarEquipment => item.formType === 'solar',
+        );
+        return [
+          {
+            id: currentSolarEquipment?.id ?? `equipment-${Date.now()}`,
+            formType: 'solar',
+            solarData,
+            files: currentSolarEquipment?.files ?? [],
+          },
+        ];
+      });
+    },
+    [],
+  );
+
   // ── Effects ───────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!projectId || selectedProject?.id) return;
@@ -301,14 +419,59 @@ const ProjectRegister = () => {
   }, [projectId, selectedProject?.id, setCurrentProject, toast]);
 
   useEffect(() => {
-    const loadEquipment = () => {
-      const stored = localStorage.getItem(`project_${projectId}_equipment`);
-      const storedEquipment: Equipment[] = stored ? JSON.parse(stored) : [];
-      if (pendingEquipment) {
-        setEquipment([pendingEquipment]);
-        return;
+    let isMounted = true;
+
+    /** Restores a saved draft before rendering an editable registration step. */
+    const hydrateDraft = async () => {
+      let savedDraft: ProjectRegistrationDraft | null = null;
+      try {
+        savedDraft = await loadProjectRegistrationDraft(draftKey);
+      } catch {
+        // IndexedDB errors fall back to the previous equipment cache below.
       }
 
+      try {
+        if (!isMounted) return;
+
+        if (savedDraft) {
+          const savedEquipmentSiteId = savedDraft.equipment
+            .filter(
+              (item): item is SolarEquipment => item.formType === 'solar',
+            )
+            .at(-1)?.solarData.siteId;
+          const restoredContractHasUserChanges =
+            savedDraft.contractHasUserChanges ??
+            hasLegacyContractDraftValues(savedDraft.contractFormValues);
+          setCurrentStep(
+            Math.min(Math.max(savedDraft.currentStep, EQUIPMENT_STEP), REVIEW_STEP),
+          );
+          setAgreementFormValues(savedDraft.agreementFormValues);
+          setContractFormValues(savedDraft.contractFormValues);
+          setContractHasUserChanges(restoredContractHasUserChanges);
+          contractHasUserChangesRef.current = restoredContractHasUserChanges;
+          setContractSiteId(
+            savedDraft.contractSiteId ?? savedEquipmentSiteId ?? '',
+          );
+          setValidatedEquipmentSiteId(
+            savedDraft.currentStep > EQUIPMENT_STEP
+              ? savedEquipmentSiteId ?? ''
+              : '',
+          );
+          setFinalTermsValues(savedDraft.finalTermsValues);
+        }
+
+        if (pendingEquipment) {
+          setEquipment([pendingEquipment]);
+          return;
+        }
+
+        if (savedDraft?.equipment.length) {
+          setEquipment(savedDraft.equipment);
+          return;
+        }
+
+      const stored = localStorage.getItem(`project_${projectId}_equipment`);
+      const storedEquipment: Equipment[] = stored ? JSON.parse(stored) : [];
       const latestEquipmentWithFiles = storedEquipment
         .filter(
           (item): item is Extract<Equipment, { formType: 'solar' }> =>
@@ -326,10 +489,89 @@ const ProjectRegister = () => {
           JSON.stringify(activeEquipment),
         );
       }
+      } catch {
+        // A malformed legacy cache must never block the registration form.
+      } finally {
+        if (isMounted) setIsDraftHydrated(true);
+      }
     };
 
-    loadEquipment();
-  }, [pendingEquipment, projectId]);
+    void hydrateDraft();
+    return () => {
+      isMounted = false;
+    };
+  }, [draftKey, pendingEquipment, projectId]);
+
+  useEffect(() => {
+    if (!isDraftHydrated || !selectedEquipmentSiteId) return;
+
+    if (!contractSiteId) {
+      setContractSiteId(selectedEquipmentSiteId);
+      return;
+    }
+
+    if (contractSiteId === selectedEquipmentSiteId) return;
+
+    // A newly selected site must use its own defaults instead of the previous site's draft.
+    contractHasUserChangesRef.current = false;
+    setContractHasUserChanges(false);
+    setContractFormValues({ ...EMPTY_CONTRACT_FORM_VALUES });
+    setContractErrors({});
+    setContractSiteId(selectedEquipmentSiteId);
+    setValidatedEquipmentSiteId('');
+  }, [contractSiteId, isDraftHydrated, selectedEquipmentSiteId]);
+
+  useEffect(() => {
+    if (
+      !sustainabilityDefaultQuery.data ||
+      contractHasUserChangesRef.current ||
+      contractSiteId !== selectedEquipmentSiteId ||
+      validatedEquipmentSiteId !== selectedEquipmentSiteId
+    ) {
+      return;
+    }
+
+    setContractFormValues(
+      mapSustainabilityCommitmentDefault(sustainabilityDefaultQuery.data),
+    );
+  }, [
+    contractHasUserChanges,
+    contractSiteId,
+    selectedEquipmentSiteId,
+    sustainabilityDefaultQuery.data,
+    validatedEquipmentSiteId,
+  ]);
+
+  useEffect(() => {
+    if (!isDraftHydrated || isCompletionStep) return;
+
+    const draft: ProjectRegistrationDraft = {
+      version: PROJECT_REGISTRATION_DRAFT_VERSION,
+      currentStep,
+      equipment,
+      agreementFormValues,
+      contractFormValues,
+      contractHasUserChanges,
+      contractSiteId,
+      finalTermsValues,
+      updatedAt: new Date().toISOString(),
+    };
+
+    void saveProjectRegistrationDraft(draftKey, draft).catch(() => {
+      // Saving a draft is best-effort and must not interrupt form input.
+    });
+  }, [
+    agreementFormValues,
+    contractFormValues,
+    contractHasUserChanges,
+    contractSiteId,
+    currentStep,
+    draftKey,
+    equipment,
+    finalTermsValues,
+    isCompletionStep,
+    isDraftHydrated,
+  ]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const validateStep = async (): Promise<boolean> => {
@@ -342,6 +584,7 @@ const ProjectRegister = () => {
           const validatedEquipment =
             await equipmentStepRef.current.validate();
           setEquipment([validatedEquipment]);
+          setValidatedEquipmentSiteId(validatedEquipment.solarData.siteId);
           return true;
         } catch (error) {
           toast({
@@ -466,11 +709,7 @@ const ProjectRegister = () => {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      const solarEquipments = equipment.filter(
-        (item): item is Extract<Equipment, { formType: 'solar' }> =>
-          item.formType === 'solar',
-      );
-      if (solarEquipments.length === 0 || !projectId || !resolvedSiteId) {
+      if (solarEquipments.length === 0 || !projectId) {
         throw new Error('登録する太陽光発電設備が見つかりません。');
       }
 
@@ -493,7 +732,7 @@ const ProjectRegister = () => {
             selectedFiles.map(
                 ({ fileType, file }) =>
                   uploadSiteProjectEquipmentFile(
-                    resolvedSiteId,
+                    solarEquipment.solarData.siteId,
                     fileType,
                     file,
                   ),
@@ -530,7 +769,7 @@ const ProjectRegister = () => {
         equipmentToRegister,
         agreementFormValues,
         contractFormValues,
-        finalStepRef.current?.getValues() ?? finalTermsValues,
+        finalTermsValues,
         {
           projectId,
           processedBy: user?.id ?? "",
@@ -538,6 +777,9 @@ const ProjectRegister = () => {
         },
       );
       await joinSiteProject(projectId, registrationPayload);
+      void deleteProjectRegistrationDraft(draftKey).catch(() => {
+        // A cleanup failure must not turn a completed backend request into an error.
+      });
 
       const storedProjects = localStorage.getItem("appliedProjects");
       const appliedProjects = storedProjects ? JSON.parse(storedProjects) : [];
@@ -572,11 +814,7 @@ const ProjectRegister = () => {
   const handleNext = async () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     if (await validateStep()) {
-      if (currentStep === FINAL_AGREEMENT_STEP) {
-        await handleSubmit();
-      } else {
-        setCurrentStep((prev) => prev + 1);
-      }
+      setCurrentStep((prev) => prev + 1);
     }
   };
 
@@ -587,7 +825,11 @@ const ProjectRegister = () => {
         return (
           <EquipmentRegistrationStep
             ref={equipmentStepRef}
-            siteId={resolvedSiteId}
+            isSubmitting={isSubmitting}
+            onAddSite={handleAddSite}
+            onBack={handleBack}
+            onNext={handleNext}
+            onValueChange={handleEquipmentDraftChange}
             initialEquipment={equipment.find(
               (item): item is Extract<Equipment, { formType: 'solar' }> =>
                 item.formType === 'solar',
@@ -598,7 +840,11 @@ const ProjectRegister = () => {
         return (
           <DynamicAgreementsStep
             ref={agreementsStepRef}
+            projectName={selectedProject.projectName}
             formValues={agreementFormValues}
+            isSubmitting={isSubmitting}
+            onBack={handleBack}
+            onNext={handleNext}
             onValueChange={(values) => {
               setAgreementFormValues(values);
               if (Object.keys(agreementErrors).length > 0) {
@@ -612,21 +858,46 @@ const ProjectRegister = () => {
         return (
           <ContractStep
             ref={contractStepRef}
+            methodologyNumber={selectedProject.methodNumber}
+            methodologyName={selectedProject.methodName}
+            methodologyVersion={selectedProject.methodologyVersion}
             formValues={contractFormValues}
-            onValueChange={(values) => {
+            isSubmitting={isSubmitting}
+            onBack={handleBack}
+            onNext={handleNext}
+            onValueChange={(values, metadata) => {
               setContractFormValues(values);
+              if (metadata.isUserChange) {
+                contractHasUserChangesRef.current = true;
+                setContractHasUserChanges(true);
+              }
               if (Object.keys(contractErrors).length > 0) {
                 setContractErrors({});
               }
             }}
             errors={contractErrors}
+            isDefaultLoading={
+              !contractHasUserChanges && sustainabilityDefaultQuery.isFetching
+            }
+            defaultLoadError={
+              !contractHasUserChanges && sustainabilityDefaultQuery.isError
+                ? '登録済み情報を取得できませんでした。手動で入力するか、再試行してください。'
+                : null
+            }
+            onRetryDefaults={() => {
+              void sustainabilityDefaultQuery.refetch();
+            }}
           />
         );
       case FINAL_AGREEMENT_STEP:
         return (
           <FinalTermsStep
             ref={finalStepRef}
+            projectName={selectedProject.projectName}
             formValues={finalTermsValues}
+            isSubmitting={isSubmitting}
+            onBack={handleBack}
+            onNext={handleNext}
             onValueChange={(values) => {
               setFinalTermsValues(values);
               if (Object.keys(finalTermsErrors).length > 0) {
@@ -634,6 +905,22 @@ const ProjectRegister = () => {
               }
             }}
             errors={finalTermsErrors}
+          />
+        );
+      case REVIEW_STEP:
+        return (
+          <ProjectRegistrationReviewStep
+            projectName={selectedProject.projectName}
+            siteName={selectedEquipmentSiteName}
+            equipments={solarEquipments}
+            methodologyNumber={selectedProject.methodNumber}
+            methodologyVersion={selectedProject.methodologyVersion}
+            agreementValues={agreementFormValues}
+            contractValues={contractFormValues}
+            finalTermsValues={finalTermsValues}
+            isSubmitting={isSubmitting}
+            onBack={() => setCurrentStep(FINAL_AGREEMENT_STEP)}
+            onSubmit={() => void handleSubmit()}
           />
         );
       case COMPLETION_STEP:
@@ -646,8 +933,14 @@ const ProjectRegister = () => {
   // ── Loading / error states ─────────────────────────────────────────────────
   if (isProjectLoading) {
     return (
+      <PageSkeleton label="プロジェクト情報を読み込んでいます" />
+    );
+  }
+
+  if (!isDraftHydrated) {
+    return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-foreground text-lg">プロジェクト情報を読み込み中...</p>
+        <p className="text-foreground text-lg">入力内容を復元中...</p>
       </div>
     );
   }
@@ -696,22 +989,6 @@ const ProjectRegister = () => {
 
           <div className="mx-auto w-full animate-slide-up">{renderStep()}</div>
 
-          {!isCompletionStep && (
-            <div className="flex justify-end">
-              <Button onClick={handleNext} disabled={isSubmitting}>
-                {isSubmitting
-                  ? currentStep === FINAL_AGREEMENT_STEP
-                    ? "送信中..."
-                    : "確認中..."
-                  : currentStep === FINAL_AGREEMENT_STEP
-                    ? "送信"
-                    : "次へ"}
-                {currentStep < FINAL_AGREEMENT_STEP && (
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          )}
         </div>
       </div>
     </FormPageShell>
