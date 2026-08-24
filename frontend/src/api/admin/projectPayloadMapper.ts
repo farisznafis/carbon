@@ -80,12 +80,12 @@ function normalizeProjectApplicationBooleans(
     'isChangePicPosition',
     'isChangePicName',
     'isChangePicEmail',
-    'isChangePicPhone',
+    'isChangePicPhoneNumber',
     'isChangeOtherContactBusinessName',
     'isChangeOtherContactPicPosition',
-    'isChangeOtherContactPicName',
-    'isChangeOtherContactPicEmail',
-    'isChangeOtherContactPicPhone',
+    'isChangeOtherContactsPicName',
+    'isChangeOtherContactsPicEmail',
+    'isChangeOtherContactsPicPhoneNumber',
     'isParticipatingCnAct',
   ];
 
