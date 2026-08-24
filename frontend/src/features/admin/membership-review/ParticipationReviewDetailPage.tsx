@@ -63,6 +63,17 @@ function checklistFromReview(
   );
 }
 
+/** Creates a fresh unchecked checklist for the current reviewer's decision. */
+function createEmptyChecklist(): ParticipationReviewChecklist {
+  return participationReviewChecklistFields.reduce<ParticipationReviewChecklist>(
+    (checklist, fieldName) => {
+      checklist[fieldName] = false;
+      return checklist;
+    },
+    {} as ParticipationReviewChecklist,
+  );
+}
+
 function readBackendErrors(error: unknown): FieldErrors {
   if (!(error instanceof ApiError)) return EMPTY_FIELD_ERRORS;
   const errors = error.payload?.errors;
@@ -146,15 +157,24 @@ export default function ParticipationReviewDetailPage() {
         return;
       }
 
-      setReview(detail);
-      setChecklist(checklistFromReview(detail));
-      setIsReviewable(
-        myReviews.some(
-          (candidate) =>
-            candidate.participationId === numericParticipationId &&
-            isParticipationReviewForProject(candidate, projectId, project),
-        ),
+      const isCurrentUserReviewable = myReviews.some(
+        (candidate) =>
+          candidate.participationId === numericParticipationId &&
+          isParticipationReviewForProject(candidate, projectId, project),
       );
+
+      setReview(detail);
+      setIsReviewable(isCurrentUserReviewable);
+      setChecklist(
+        isCurrentUserReviewable
+          ? createEmptyChecklist()
+          : checklistFromReview(detail),
+      );
+      setReviewerInkan('');
+      setRejectReason('');
+      setDecision(null);
+      setFieldErrors(EMPTY_FIELD_ERRORS);
+      setSubmitError(null);
     } catch (error) {
       setLoadError(
         getErrorMessage(error, '入会届の詳細取得に失敗しました。'),
