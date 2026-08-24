@@ -6,6 +6,7 @@ import com.kct.jcredit.core_backend.dto.request.CreateUserRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectCompanyRequest;
 import com.kct.jcredit.core_backend.dto.request.ResolveCompanySuspensionRequest;
 import com.kct.jcredit.core_backend.dto.request.ReviewParticipationRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.ApproveReviewRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectReviewRequest;
@@ -22,10 +23,11 @@ import com.kct.jcredit.core_backend.dto.response.UserProfileResponse;
 import com.kct.jcredit.core_backend.dto.response.RejectCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.response.ParticipationReviewDetailResponse;
+import com.kct.jcredit.core_backend.dto.response.DocuSignEnvelopeResult;
 import com.kct.jcredit.core_backend.service.AdminCompanyQueryService;
 import com.kct.jcredit.core_backend.service.CompanyApprovalService;
 import com.kct.jcredit.core_backend.service.CompanyLifecycleService;
-import com.kct.jcredit.core_backend.service.DocuSignAuthService;
+import com.kct.jcredit.core_backend.service.DocuSignService;
 import com.kct.jcredit.core_backend.service.OperatorUserService;
 import com.kct.jcredit.core_backend.service.ParticipationReviewService;
 import com.kct.jcredit.core_backend.service.SecurityAccountService;
@@ -37,7 +39,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
+
+import javax.crypto.spec.SecretKeySpec;
+
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
@@ -51,6 +60,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -72,7 +82,7 @@ public class AdminCompanyController {
     private final ParticipationReviewService reviewService;
     private final SecurityAccountService securityAccountService;
     private final JwtUtil jwtUtil;
-    private final DocuSignAuthService docuSignAuthService;
+    private final DocuSignService docuSignService;
 
 
     /**
@@ -245,15 +255,12 @@ public class AdminCompanyController {
     }
     
     @GetMapping("/token")
-    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "リンクトークン", description = "DocuSignのアクセストークンを取得します。")
     public ResponseEntity<Map<String, String>> testToken() {
         try {
-            String token = docuSignAuthService.getAccessToken();
+            String token = docuSignService.getAccessToken();
             return ResponseEntity.ok(Map.of(
                     "status", "OK",
-                    "tokenPreview", token.substring(0, 20) + "..." 
+                    "tokenPreview", token.substring(0, 20) + "..."
             ));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of(
@@ -263,7 +270,73 @@ public class AdminCompanyController {
         }
     }
 
+    @PostMapping("/send-envelope")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<Map<String, String>> testSendEnvelope() throws Exception {
 
+        byte[] dummyPdf = Files.readAllBytes(Paths.get("C:/secrets/docusign/test.pdf"));
+
+        DocuSignEnvelopeResult result = docuSignService.sendEnvelopeForSignature(
+                dummyPdf,
+                "yejacox735@prodbits.com", 
+                "Test Sankasha",
+                "test_document.pdf"
+        );
+
+        return ResponseEntity.ok(Map.of(
+                "envelopeId", result.getEnvelopeId(),
+                "status", result.getStatus()
+        ));
+    }
+
+    // @PostMapping("/envelope-completed")
+    // public ResponseEntity<Void> handleWebhook(
+    //         @RequestBody String rawPayload,
+    //         @RequestHeader(value = "X-DocuSign-Signature-1", required = false) String signature) {
+
+    //     // ⚠️ HMAC検証 — 本番運用では必須。今は開発中のため一旦ログ出力のみ
+    //     if (hmacSecret != null && !hmacSecret.isBlank()) {
+    //         boolean valid = verifyHmacSignature(rawPayload, signature, hmacSecret);
+    //         if (!valid) {
+    //             log.warn("[DocuSign Webhook] HMAC検証失敗、リクエストを拒否");
+    //             return ResponseEntity.status(401).build();
+    //         }
+    //     }
+
+    //     try {
+    //         ObjectMapper mapper = new ObjectMapper();
+    //         Map<String, Object> payload = mapper.readValue(rawPayload, Map.class);
+
+    //         String envelopeId = (String) payload.get("envelopeId");
+    //         String status = (String) payload.get("status");
+
+    //         log.info("[DocuSign Webhook] 受信。envelopeId={}, status={}", envelopeId, status);
+
+    //         if ("completed".equalsIgnoreCase(status)) {
+    //             pdfService.handleEnvelopeCompleted(envelopeId);
+    //         }
+
+    //     } catch (Exception e) {
+    //         log.error("[DocuSign Webhook] 処理失敗。error={}", e.getMessage(), e);
+    //         // Tetap return 200 supaya DocuSign tidak retry berkali-kali untuk error yang sama
+    //     }
+
+    //     return ResponseEntity.ok().build();
+    // }
+
+    // private boolean verifyHmacSignature(String payload, String signature, String secret) {
+    //     try {
+    //         Mac mac = Mac.getInstance("HmacSHA256");
+    //         mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+    //         byte[] hash = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+    //         String computed = Base64.getEncoder().encodeToString(hash);
+    //         return computed.equals(signature);
+    //     } catch (Exception e) {
+    //         log.error("HMAC verification error: {}", e.getMessage());
+    //         return false;
+    //     }
+    // }
 
     // Operator User Management
 
