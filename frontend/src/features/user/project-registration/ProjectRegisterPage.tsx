@@ -90,6 +90,13 @@ const PROJECT_REGISTRATION_STEPS = [
   { number: REVIEW_STEP, title: "確認" },
 ];
 
+const EMPTY_CONTRACT_FORM_VALUES: ContractStepFormValues = {
+  businessName: '',
+  representativePosition: '',
+  representativeName: '',
+  contractAgreed: false,
+};
+
 const confirmationItemFieldNames: Record<string, keyof AgreementFormValues> = {
   isAgreeDataUse: "useRegisteredInfo",
   isAgreeExtraData: "provideAdditionalInfo",
@@ -254,13 +261,12 @@ const ProjectRegister = () => {
     energyRationalizationCompliance: '',
   });
 
-  const [contractFormValues, setContractFormValues] = useState<Partial<ContractStepFormValues>>({
-    businessName: '',
-    representativePosition: '',
-    representativeName: '',
-    contractAgreed: false,
-  });
+  const [contractFormValues, setContractFormValues] = useState<
+    Partial<ContractStepFormValues>
+  >({ ...EMPTY_CONTRACT_FORM_VALUES });
   const [contractHasUserChanges, setContractHasUserChanges] = useState(false);
+  const [contractSiteId, setContractSiteId] = useState('');
+  const [validatedEquipmentSiteId, setValidatedEquipmentSiteId] = useState('');
 
   const [finalTermsValues, setFinalTermsValues] = useState<Partial<FinalTermsValues>>({
     finalTermsAgreed: false,
@@ -293,7 +299,7 @@ const ProjectRegister = () => {
   );
   const sustainabilityDefaultQuery =
     useSustainabilityCommitmentDefaultQuery(
-      selectedEquipmentSiteId,
+      validatedEquipmentSiteId,
       isDraftHydrated && !contractHasUserChanges,
     );
 
@@ -428,6 +434,11 @@ const ProjectRegister = () => {
         if (!isMounted) return;
 
         if (savedDraft) {
+          const savedEquipmentSiteId = savedDraft.equipment
+            .filter(
+              (item): item is SolarEquipment => item.formType === 'solar',
+            )
+            .at(-1)?.solarData.siteId;
           const restoredContractHasUserChanges =
             savedDraft.contractHasUserChanges ??
             hasLegacyContractDraftValues(savedDraft.contractFormValues);
@@ -438,6 +449,14 @@ const ProjectRegister = () => {
           setContractFormValues(savedDraft.contractFormValues);
           setContractHasUserChanges(restoredContractHasUserChanges);
           contractHasUserChangesRef.current = restoredContractHasUserChanges;
+          setContractSiteId(
+            savedDraft.contractSiteId ?? savedEquipmentSiteId ?? '',
+          );
+          setValidatedEquipmentSiteId(
+            savedDraft.currentStep > EQUIPMENT_STEP
+              ? savedEquipmentSiteId ?? ''
+              : '',
+          );
           setFinalTermsValues(savedDraft.finalTermsValues);
         }
 
@@ -484,9 +503,30 @@ const ProjectRegister = () => {
   }, [draftKey, pendingEquipment, projectId]);
 
   useEffect(() => {
+    if (!isDraftHydrated || !selectedEquipmentSiteId) return;
+
+    if (!contractSiteId) {
+      setContractSiteId(selectedEquipmentSiteId);
+      return;
+    }
+
+    if (contractSiteId === selectedEquipmentSiteId) return;
+
+    // A newly selected site must use its own defaults instead of the previous site's draft.
+    contractHasUserChangesRef.current = false;
+    setContractHasUserChanges(false);
+    setContractFormValues({ ...EMPTY_CONTRACT_FORM_VALUES });
+    setContractErrors({});
+    setContractSiteId(selectedEquipmentSiteId);
+    setValidatedEquipmentSiteId('');
+  }, [contractSiteId, isDraftHydrated, selectedEquipmentSiteId]);
+
+  useEffect(() => {
     if (
       !sustainabilityDefaultQuery.data ||
-      contractHasUserChangesRef.current
+      contractHasUserChangesRef.current ||
+      contractSiteId !== selectedEquipmentSiteId ||
+      validatedEquipmentSiteId !== selectedEquipmentSiteId
     ) {
       return;
     }
@@ -494,7 +534,13 @@ const ProjectRegister = () => {
     setContractFormValues(
       mapSustainabilityCommitmentDefault(sustainabilityDefaultQuery.data),
     );
-  }, [sustainabilityDefaultQuery.data]);
+  }, [
+    contractHasUserChanges,
+    contractSiteId,
+    selectedEquipmentSiteId,
+    sustainabilityDefaultQuery.data,
+    validatedEquipmentSiteId,
+  ]);
 
   useEffect(() => {
     if (!isDraftHydrated || isCompletionStep) return;
@@ -506,6 +552,7 @@ const ProjectRegister = () => {
       agreementFormValues,
       contractFormValues,
       contractHasUserChanges,
+      contractSiteId,
       finalTermsValues,
       updatedAt: new Date().toISOString(),
     };
@@ -517,6 +564,7 @@ const ProjectRegister = () => {
     agreementFormValues,
     contractFormValues,
     contractHasUserChanges,
+    contractSiteId,
     currentStep,
     draftKey,
     equipment,
@@ -536,6 +584,7 @@ const ProjectRegister = () => {
           const validatedEquipment =
             await equipmentStepRef.current.validate();
           setEquipment([validatedEquipment]);
+          setValidatedEquipmentSiteId(validatedEquipment.solarData.siteId);
           return true;
         } catch (error) {
           toast({
@@ -791,6 +840,7 @@ const ProjectRegister = () => {
         return (
           <DynamicAgreementsStep
             ref={agreementsStepRef}
+            projectName={selectedProject.projectName}
             formValues={agreementFormValues}
             isSubmitting={isSubmitting}
             onBack={handleBack}
@@ -808,6 +858,9 @@ const ProjectRegister = () => {
         return (
           <ContractStep
             ref={contractStepRef}
+            methodologyNumber={selectedProject.methodNumber}
+            methodologyName={selectedProject.methodName}
+            methodologyVersion={selectedProject.methodologyVersion}
             formValues={contractFormValues}
             isSubmitting={isSubmitting}
             onBack={handleBack}
@@ -840,6 +893,7 @@ const ProjectRegister = () => {
         return (
           <FinalTermsStep
             ref={finalStepRef}
+            projectName={selectedProject.projectName}
             formValues={finalTermsValues}
             isSubmitting={isSubmitting}
             onBack={handleBack}

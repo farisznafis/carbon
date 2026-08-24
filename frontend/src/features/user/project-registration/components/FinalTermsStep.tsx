@@ -23,6 +23,7 @@ export type FinalTermsValues = {
 }
 
 interface FinalTermsStepProps {
+  projectName: string;
   formValues: Partial<FinalTermsValues>;
   isSubmitting: boolean;
   onBack: () => void;
@@ -32,6 +33,7 @@ interface FinalTermsStepProps {
 }
 
 export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
+  projectName,
   formValues,
   isSubmitting,
   onBack,
@@ -39,6 +41,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
   onValueChange,
   errors = {},
 }, ref) => {
+  const resolvedProjectName = projectName.trim() || '対象プロジェクト';
 
   const form = useForm<FinalTermsData>({
       mode: "onChange",
@@ -95,18 +98,18 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2">「プログラム名」入会規約 <span className="ml-1 text-destructive">*</span></h2>
+        <h2 className="text-2xl font-bold mb-2">「{resolvedProjectName}」入会規約 <span className="ml-1 text-destructive">*</span></h2>
         <p className="text-foreground">入会規約をご確認の上、同意してください</p>
       </div>
 
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="space-y-6 pt-6">
           <div className="max-h-[600px] overflow-y-auto p-6 border rounded-lg">
             <div className="text-sm leading-relaxed space-y-6">
               <section>
                 <h3 className="font-semibold mb-2">(名称)</h3>
                 <h4 className="font-semibold mb-2">第1条</h4>
-                <p>本会の名称は、プログラム名 (以下「本会」という) とする。</p>
+                <p>本会の名称は、{resolvedProjectName} (以下「本会」という) とする。</p>
               </section>
 
               <section>
@@ -261,7 +264,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
               control={form.control}
               name="finalTermsAgreed"
               render={({ field }) => (
-                <FormItem className="mt-6 rounded-lg border border-border p-4">
+                <FormItem className="rounded-lg border border-border p-4">
                   <div className="flex items-center gap-3">
                     <FormControl>
                       <Checkbox
@@ -277,7 +280,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
                       htmlFor="finalTermsAgreed"
                       className="cursor-pointer"
                     >
-                      同意します
+                      同意する
                     </RequiredLabel>
                   </div>
                   <FormMessage className="mt-2" />

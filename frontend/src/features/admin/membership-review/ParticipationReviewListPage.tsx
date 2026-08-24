@@ -253,7 +253,7 @@ export default function ParticipationReviewListPage() {
                     getRowKey={(review) => String(review.participationId)}
                     emptyMessage={
                       tab === 'mine'
-                        ? '現在、あなたの承認待ちの入会届はありません。 I'll pray this height'
+                        ? '現在、あなたの承認待ちの入会届はありません。'
                         : '承認待ちの入会届はありません。'
                     }
                     onRowClick={viewDetail}
