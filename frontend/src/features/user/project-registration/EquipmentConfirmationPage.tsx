@@ -37,7 +37,7 @@ const displayYesNo = (value: SolarPowerFormData['hasBattery']) => {
   return '未選択';
 };
 
-const fileName = (file?: File) => file?.name ?? 'なし';
+const fileName = (file?: File | null) => file?.name ?? 'なし';
 
 function withoutLocalFiles(data: SolarPowerFormData): SolarPowerFormData {
   return {
