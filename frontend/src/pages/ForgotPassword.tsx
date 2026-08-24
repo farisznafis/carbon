@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MailCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { FormActions } from '@/components/forms/form-layout';
 import { Input } from '@/components/ui/input';
 import { AuthPageLayout } from '@/components/forms/shared/AuthPageLayout';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
@@ -56,14 +56,16 @@ const ForgotPassword = () => {
         <p role="status" className="text-sm leading-6 text-foreground sm:text-base">
           ご入力いただいたメールアドレスが登録されている場合、パスワード再設定用のリンクをお送りします。メールが届かない場合は、迷惑メールフォルダをご確認ください。
         </p>
-        <Button
-          type="button"
-          size="lg"
-          className="w-full transition-transform duration-300 hover:scale-[1.01] active:scale-[0.99]"
-          onClick={() => navigate(paths.login)}
-        >
-          ログインへ戻る
-        </Button>
+        <FormActions
+          context="auth"
+          actions={[
+            {
+              id: 'login',
+              label: 'ログインへ戻る',
+              onClick: () => navigate(paths.login),
+            },
+          ]}
+        />
       </AuthPageLayout>
     );
   }
@@ -103,14 +105,18 @@ const ForgotPassword = () => {
               </FormItem>
             )}
           />
-          <Button
-            type="submit"
-            size="lg"
-            className="w-full"
-            disabled={form.formState.isSubmitting}
-          >
-            {form.formState.isSubmitting ? '送信中...' : 'リセットリンクを送信'}
-          </Button>
+          <FormActions
+            context="auth"
+            pendingActionId={form.formState.isSubmitting ? 'submit' : null}
+            actions={[
+              {
+                id: 'submit',
+                label: 'リセットリンクを送信',
+                pendingLabel: '送信中...',
+                type: 'submit',
+              },
+            ]}
+          />
         </form>
       </Form>
     </AuthPageLayout>

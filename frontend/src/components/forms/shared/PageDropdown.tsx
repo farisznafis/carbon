@@ -18,11 +18,6 @@ export interface PageDropdownProps {
   onChange: (id: number | string) => void;
   label?: string;
   className?: string;
-  /**
-   * Steps already saved. Marked with a check so an operator returning to a
-   * part-filled plan can see how far they got. Omit for the plain list.
-   */
-  completedIds?: ReadonlyArray<number | string>;
 }
 
 export const PageDropdown: React.FC<PageDropdownProps> = ({
@@ -31,11 +26,10 @@ export const PageDropdown: React.FC<PageDropdownProps> = ({
   onChange,
   label = 'ページ',
   className = '',
-  completedIds,
 }) => (
   <div className={className}>
     {/* adjust label gap from form */}
-    <div className='block text-sm font-medium mb-2 ml-2'>
+    <div className='mb-2 ml-2 block text-small'>
       {label && <label>{label}</label>}
     </div>
     <Select
@@ -51,14 +45,6 @@ export const PageDropdown: React.FC<PageDropdownProps> = ({
             key={s.id}
             value={String(s.id)}
           >
-            {completedIds?.some((id) => String(id) === String(s.id)) && (
-              <span
-                aria-label='入力済み'
-                className='mr-1 text-green-600'
-              >
-                ✓
-              </span>
-            )}
             {s.id}. {s.title}
           </SelectItem>
         ))}

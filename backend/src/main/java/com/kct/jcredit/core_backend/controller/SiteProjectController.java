@@ -11,6 +11,7 @@ import com.kct.jcredit.core_backend.dto.request.PartiCompanyMethodologyValidateR
 import com.kct.jcredit.core_backend.dto.response.EnR002FileResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
 import com.kct.jcredit.core_backend.dto.response.MyParticipationResponse;
+import com.kct.jcredit.core_backend.dto.response.ParticipationReviewHistoryResponse;
 import com.kct.jcredit.core_backend.dto.response.PdfDownloadResponse;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 import com.kct.jcredit.core_backend.dto.response.ProjectJoinResponse;
@@ -175,7 +176,7 @@ public class SiteProjectController {
     // ─────────────────────────────────────────────────────────────
 
     @GetMapping("/participation/{participationId}/pdf")
-    @PreAuthorize("hasAnyRole('master','user')")
+    @PreAuthorize("hasAnyRole('admin','master','user') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_VIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ProjectPdfDownloadResponse> downloadPdf( 
             Authentication authentication,
@@ -249,4 +250,5 @@ public class SiteProjectController {
         return ResponseEntity.ok(
                 participationService.getMyParticipations(projectId, companyId));
     }
+
 }

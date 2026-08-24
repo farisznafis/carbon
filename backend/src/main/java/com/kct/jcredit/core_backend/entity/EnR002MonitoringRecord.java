@@ -135,7 +135,7 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
         return elpjControlValue;
     }
     
-    @DynamoDbAttribute("ELPJ_control_equipment_spec_files")
+    @DynamoDbAttribute("elpj_control_evidence")
     public String getElpjControlEquipmentSpecFiles() {
         return elpjControlEquipmentSpecFiles;
     }
@@ -150,7 +150,7 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
         return elpjAccuracy;
     }
     
-    @DynamoDbAttribute("ELPJ_battery_evidence")
+    @DynamoDbAttribute("elpj_battery_evidence")
     public String getElpjBatteryEvidence() {
         return elpjBatteryEvidence;
     }
@@ -160,7 +160,7 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
         return elPv;
     }
     
-    @DynamoDbAttribute("ELpv_evidence")
+    @DynamoDbAttribute("elpv_evidence")
     public String getElPvEvidence() {
         return elPvEvidence;
     }
@@ -170,7 +170,7 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
         return elPvr;
     }
     
-    @DynamoDbAttribute("ELpvr_evidence")
+    @DynamoDbAttribute("elpvr_evidence")
     public String getElPvrEvidence() {
         return elPvrEvidence;
     }

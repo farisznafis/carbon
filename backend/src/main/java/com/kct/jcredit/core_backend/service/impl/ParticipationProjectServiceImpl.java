@@ -32,6 +32,7 @@ import com.kct.jcredit.core_backend.service.EnR002FileUploadService;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.dynamodb.EnR002ApplicationConfirmationRepository;
 import com.kct.jcredit.core_backend.repository.dynamodb.EnR002SustainabilityCommitmentRepository;
+import com.kct.jcredit.core_backend.repository.dynamodb.ProjectParticipationConfirmationRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
 import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentFileRepository;
 import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentRepository;
@@ -42,6 +43,7 @@ import com.kct.jcredit.core_backend.repository.postgres.ParticipatingProjectRepo
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -71,6 +73,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
     private final EnR002ApplicationConfirmationRepository    confirmationRepository;
     private final EnR002SustainabilityCommitmentRepository   sustainabilityRepository;
     private final ParticipatingProjectRepository             participatingProjectRepository; 
+    private final ProjectParticipationConfirmationRepository reviewRepository;
     private final EnR002FileUploadService                    fileUploadSolarService;
     private final ParticipationProjectValidationService      validationService;
     private final ProjectParticipationPdfService  pdfService;
@@ -183,12 +186,22 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                         ResponseConstants.NOT_FOUND, "ユーザー情報が見つかりません。"));
 
         // Duplicate check — via SiteProjectRelation, BUKAN ParticipatingProject
-        boolean alreadyJoined = siteProjectRelationRepository
-                .existsBySite_IdAndProject_Id(site.getId(), project.getId());
-        if (alreadyJoined)
-                throw new CustomException(
-                        ResponseConstants.ALREADY_SUBMITTED,
+        Optional<SiteProjectRelation> existingRelation = siteProjectRelationRepository
+                .findBySite_IdAndProject_Id(site.getId(), project.getId());
+        // ⚠️ Method findBySite_IdAndProject_Id SUDAH ADA — dipakai juga di
+        //    ParticipationReviewServiceImpl.approveReview()/rejectReview(), jadi
+        //    tidak perlu ditambahkan ke repository, tinggal reuse.
+
+        if (existingRelation.isPresent()) {
+        String currentStatus = existingRelation.get().getStatus();
+
+        if ("REJECTED".equals(currentStatus)) {
+                return resubmitParticipation(existingRelation.get(), request, companyId);
+        } else {
+                throw new CustomException(ResponseConstants.ALREADY_SUBMITTED,
                         ResponseConstants.MSG_ALREADY_SUBMITTED);
+        }
+        }
 
         validationService.validateEquipment(request.getEquipment());
         validationService.validateConfirmationItems(request.getConfirmationItems());
@@ -405,6 +418,107 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 .build();
         sustainabilityRepository.save(commitment);
     }
+
+    private ProjectJoinResponse resubmitParticipation(SiteProjectRelation relation,
+                                                    EnR002JoinProjectRequest request,
+                                                    String companyId) {
+
+        validationService.validateEquipment(request.getEquipment());
+        validationService.validateConfirmationItems(request.getConfirmationItems());
+        validationService.validateSustainabilityCommitment(request.getSustainabilityCommitment());
+        validationService.validateFinalAgreement(request.getFinalAgreement());
+
+        ParticipatingProject participation = participatingProjectRepository
+                .findByEquipment_Site_IdAndProject_Id(relation.getSite().getId(), relation.getProject().getId())
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
+
+        EnR002Equipment equipment = participation.getEquipment();
+
+        // ── UPDATE equipment yang SAMA (bukan insert baru) ─────────────
+        equipment.setEquipmentOpDate(request.getEquipment().getEquipmentOpDate());
+        equipment.setNominalMaxOutput(request.getEquipment().getNominalMaxOutput());
+        equipment.setPcsManufacturer(request.getEquipment().getPcsManufacturer());
+        equipment.setPcsModel(request.getEquipment().getPcsModel());
+        equipment.setPcsUnitCount(request.getEquipment().getPcsUnitCount());
+        equipment.setDeviceNo(request.getEquipment().getDeviceNo());
+        equipment.setPcsStandby(request.getEquipment().getPcsStandby());
+        equipment.setHasBattery(request.getEquipment().getHasBattery());
+        equipment.setBatteryMaker(request.getEquipment().getBatteryMaker());
+        equipment.setBatteryModel(request.getEquipment().getBatteryModel());
+        equipment.setBatteryCapacity(request.getEquipment().getBatteryCapacity());
+        equipment.setTotalInvestment(request.getEquipment().getTotalInvestment());
+        equipment.setHasSubsidy(request.getEquipment().getHasSubsidy());
+        equipment.setSubsidyName(request.getEquipment().getSubsidyName());
+        equipment.setSubsidyAmount(request.getEquipment().getSubsidyAmount());
+        equipment.setPreProjectUnitPrice(request.getEquipment().getPreProjectUnitPrice());
+        equipmentRepository.save(equipment);
+
+        // ── Replace total file lama → file baru ─────────────────────────
+        List<EnR002EquipmentFile> oldFiles = equipmentFileRepository.findByEquipment_Id(equipment.getId());
+                oldFiles.forEach(f -> fileUploadSolarService.deletePermanentFile(f.getS3Key(), equipment.getId()));
+                equipmentFileRepository.deleteAll(oldFiles);
+
+                List<EnR002EquipmentFile> savedFiles = saveEquipmentFiles(request.getEquipment(), equipment);
+
+        // ── Reset status relation → OPEN ─────────────────────────────────
+        relation.setStatus("OPEN");
+        siteProjectRelationRepository.save(relation);
+
+        final Integer participationId = participation.getId();
+        final String sitePublicId = relation.getSite().getPublicId();
+        final Integer equipmentId = equipment.getId();
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                        savedFiles.forEach(fileEntity -> {
+                                try {
+                                String permanentKey = fileUploadSolarService.moveTempToPermanent(
+                                        fileEntity.getS3Key(), sitePublicId, equipmentId);
+                                equipmentFileRepository.updateS3Key(fileEntity.getId(), permanentKey);
+                                } catch (Exception e) {
+                                log.error("S3 move failed. fileId={}, error={}",
+                                        fileEntity.getFileId(), e.getMessage());
+                                }
+                        });
+
+                        try {
+                                saveConfirmationItems(request.getConfirmationItems(), participationId, companyId);
+                        } catch (Exception e) {
+                                log.error("ConfirmationItems save failed. error={}", e.getMessage());
+                        }
+
+                        try {
+                                saveSustainabilityCommitment(request.getSustainabilityCommitment(),
+                                        request.getFinalAgreement().getIsAgreeTerms(), participationId, companyId);
+                        } catch (Exception e) {
+                                log.error("SustainabilityCommitment save failed. error={}", e.getMessage());
+                        }
+                        }
+                }
+        );
+
+        reviewRepository.findByParticipationId(participation.getId())
+        .ifPresent(confirmation -> {
+            confirmation.setPrimaryReviewerId(null);
+            confirmation.setPrimaryApplReviewerName(null);
+            confirmation.setPrimaryApplReviewerInkan(null);
+            confirmation.setSecondaryReviewerId(null);
+            confirmation.setSecondaryApplReviewerName(null);
+            confirmation.setSecondaryApplReviewerInkan(null);
+            reviewRepository.save(confirmation);
+        });
+
+        return ProjectJoinResponse.builder()
+                .statusCode(ResponseConstants.OK)
+                .message("再申請が完了しました。")
+                .participationId(participationId)
+                .equipmentId(equipmentId)
+                .siteProjectRelationId(relation.getId())
+                .build();
+        }
 
 //     @Override
 //         public ProjectPdfDownloadResponse getPdfDownloadUrl(Integer participationId, String companyId) {

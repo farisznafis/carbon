@@ -575,10 +575,10 @@ Variant Gamma:
   "ELPJ_control_value": 12.345,
   "ELPJ_battery_value": 6.789,
   "ELPJ_accuracy": 99.85,
-  "ELpv_evidence": "site/1/project/1/elpv-evidence-new.pdf",
-  "ELpvr_evidence": "site/1/project/1/elpvr-evidence-new.pdf",
-  "ELPJ_battery_evidence": "site/1/project/1/elpj-battery-evidence-new.pdf",
-  "ELPJ_control_equipment_spec_files": "site/1/project/1/elpj-control-spec-new.pdf"
+  "elpv_evidence": "site/1/project/1/elpv-evidence-new.pdf",
+  "elpvr_evidence": "site/1/project/1/elpvr-evidence-new.pdf",
+  "elpj_battery_evidence": "site/1/project/1/elpj-battery-evidence-new.pdf",
+  "elpj_control_evidenceroject/1/elpj-control-spec-new.pdf"
 }
 ```
 

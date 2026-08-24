@@ -32,4 +32,8 @@ public class ProjectParticipationConfirmationRepository {
         return Optional.ofNullable(table().getItem(r -> r.key(
                 Key.builder().partitionValue(pk).build())));
     }
+
+    public void delete(ProjectParticipationConfirmation item) {
+        table().deleteItem(item);
+    }
 }

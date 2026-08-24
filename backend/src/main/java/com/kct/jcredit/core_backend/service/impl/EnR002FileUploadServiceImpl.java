@@ -80,4 +80,18 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
     public void moveToPermanent(String tempS3Key, String permanentKey) {
         storage.promote(tempS3Key, permanentKey);
     }
+
+    @Override
+    public void deletePermanentFile(String s3Key, Integer equipmentId) {
+        if (s3Key != null && !s3Key.isBlank()) {
+            storage.delete(s3Key);
+        }
+    }
+
+    @Override
+    public String moveTempToPermanent(String tempS3Key, String siteId, Integer equipmentId) {
+        String permanentKey = buildPermanentKey(tempS3Key, siteId, equipmentId);
+        moveToPermanent(tempS3Key, permanentKey);
+        return permanentKey;
+    }
 }

@@ -64,8 +64,10 @@ public class PartiCompanyController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "参加企業情報更新", description = "ログイン中の参加企業情報を更新します。")
     public ResponseEntity<UpdatePartiCompanyResponse> updateCompany(
+            Authentication authentication,
             @RequestBody @Valid UpdatePartiCompanyRequest request) {
-        UpdatePartiCompanyResponse response = companyService.updateCompany(request.getCompanyId(), request);
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+        UpdatePartiCompanyResponse response = companyService.updateCompany(companyId, request);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 

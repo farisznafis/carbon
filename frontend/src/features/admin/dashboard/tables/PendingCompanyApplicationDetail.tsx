@@ -1,6 +1,6 @@
 import type { AdminCompanyListItem } from '@/api/admin/pendingCompanies';
+import { FormActions } from '@/components/forms/form-layout';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
   BriefcaseBusiness,
@@ -194,19 +194,23 @@ export function PendingCompanyApplicationDetail({
             </div>
 
             {reviewMode && (
-              <div className="mt-14 flex justify-end gap-3">
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="md"
-                  onClick={() => onReject(item)}
-                >
-                  却下
-                </Button>
-                <Button type="button" size="md" onClick={() => onApprove(item)}>
-                  承認
-                </Button>
-              </div>
+              <FormActions
+                className="mt-14"
+                actions={[
+                  {
+                    id: 'reject',
+                    label: '却下',
+                    variant: 'destructive',
+                    onClick: () => onReject(item),
+                  },
+                  {
+                    id: 'approve',
+                    label: '承認',
+                    variant: 'success',
+                    onClick: () => onApprove(item),
+                  },
+                ]}
+              />
             )}
           </div>
         </div>

@@ -1,14 +1,13 @@
 import type { Project } from '@/api/projects';
 import {
   AlertDialog,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+import { FormActions } from '@/components/forms/form-layout';
 import { CheckCircle2 } from 'lucide-react';
 
 type ProjectCompletionDialogProps = {
@@ -78,16 +77,26 @@ export function ProjectCompletionDialog({
         </section>
 
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isSubmitting}>
-            キャンセル
-          </AlertDialogCancel>
-          <Button
-            type="button"
+          <FormActions
+            context="compact"
+            className="w-full"
             disabled={isSubmitting}
-            onClick={onConfirm}
-          >
-            {isSubmitting ? '変更中...' : '終了に変更する'}
-          </Button>
+            pendingActionId={isSubmitting ? 'confirm' : null}
+            actions={[
+              {
+                id: 'cancel',
+                label: 'キャンセル',
+                variant: 'outline',
+                onClick: () => onOpenChange(false),
+              },
+              {
+                id: 'confirm',
+                label: '終了に変更する',
+                pendingLabel: '変更中...',
+                onClick: onConfirm,
+              },
+            ]}
+          />
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -112,6 +112,13 @@ public class S3FileStorage {
         log.info("S3 file moved. from={}, to={}", tempS3Key, permanentKey);
     }
 
+    public void delete(String s3Key) {
+        s3Client.deleteObject(DeleteObjectRequest.builder()
+                .bucket(bucketName)
+                .key(s3Key)
+                .build());
+    }
+
     /** True when the key still points at a provisional upload. */
     public static boolean isTemporary(String s3Key) {
         return s3Key != null && s3Key.startsWith(TEMP_ROOT);

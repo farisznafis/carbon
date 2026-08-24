@@ -64,6 +64,8 @@ import lombok.RequiredArgsConstructor;
 
 import fr.opensagres.poi.xwpf.converter.pdf.PdfConverter;
 import fr.opensagres.poi.xwpf.converter.pdf.PdfOptions;
+import jakarta.validation.constraints.Pattern;
+
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -103,6 +105,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -254,7 +257,7 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
             ParticipatingProject participation) {
 
         Map<String, String> map = new LinkedHashMap<>();
-        String CHECK = "☑";
+        String CHECK = "■";
 
         String operatorNameJa  = safe(operatorCompany.getNameJa());
         String operatorRepName = safe(operatorCompany.getRepFirstName()) + safe(operatorCompany.getRepLastName());
@@ -270,42 +273,8 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         map.put("${applyDate}", formatDate(participation.getCreatedAt()));
         map.put("${h1}", safe(company.getNameFurigana()));
         map.put("${h2}", safe(company.getNameJa()));
-        // ── 印鑑欄（申請企業）─────────────────────────────────────
-        // 【現状】印鑑レス運用（Jalur C）
-        // hasConsent + isAgreeTerms + repName + repRole + timestamp が
-        // DynamoDBに記録済みのため、電子的な同意証跡としては十分と判断。
-        map.put("${h3}", "電子同意済");
+        map.put("${h3}", "");
 
-        // ─────────────────────────────────────────────────────────
-        // 【将来対応】DocuSign連携（Jalur A）
-        //
-        // 実装の流れ:
-        //   1. PDF下書き生成（現状のgenerateAndProcess()の処理）
-        //   2. DocuSign envelope作成 + 下書きPDF添付
-        //      - signer: participation.getUser().getEmail()
-        //      - 署名欄の位置指定はアンカーテキスト方式を推奨
-        //        （テンプレートに "/sig_sankasha/" 等の隠しテキストを配置）
-        //   3. DocuSignが申請者へ署名依頼メールを自動送信
-        //      （このメール送信はDocuSign側の機能。自前のメール送信は不要）
-        //   4. 署名完了 → DocuSign Connect (webhook) で通知受信
-        //      - エンドポイント: POST /webhooks/docusign/envelope-completed
-        //      - HMAC署名検証が必須（偽装リクエスト防止）
-        //   5. 署名済みPDFをDocuSign APIから取得
-        //   6. S3へ再アップロード → s3_key_pdf_membership を更新
-        //
-        // 開発環境:
-        //   Developer Sandbox は無料・無期限（月25 envelope程度）
-        //   ただしデモ環境のためテストスタンプ付き・法的効力なし
-        //   本番は有料（Starter ~$50/月〜）
-        //
-        // 必要な追加実装:
-        //   - DocuSignAuthService（OAuth 2.0 JWT Grant）
-        //   - DocuSignEnvelopeService（envelope作成・送信・取得）
-        //   - DocuSignWebhookController（完了通知受信）
-        //   - participating_project に envelope_id / signing_status カラム追加
-        //   - 再生成用の generateFinalPdf() メソッド
-        //     （下書きと署名済みで2回PDF処理が発生する）
-        // ─────────────────────────────────────────────────────────
         map.put("${h4}", safe(company.getPostalCode()));
         map.put("${h5}", buildAddress(company));
         map.put("${h6}", safe(company.getPhoneNumber()));
@@ -338,9 +307,9 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         splitDigitsToMap(map, "ebc", c.getEnergyBusinessCode(), 7);
         splitDigitsToMap(map, "fc", c.getFactoryCode(), 7);
 
-        map.put("${a14}", "○");
-        map.put("${a15}", "○");
-        map.put("${a16}", "○");
+        map.put("${a14}", "■");
+        map.put("${a15}", "■");
+        map.put("${a16}", "■");
 
         map.put("${事業者名}", safe(s.getCompanyName()));
         map.put("${代表者役職}", safe(s.getRepRole()));
@@ -371,11 +340,11 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
                 ? String.format("%,.0f", equipment.getSubsidyAmount()) : "");
         map.put("${f18}", decimal(equipment.getPreProjectUnitPrice()));
 
-        map.put("${b1}", "○");
-        map.put("${b2}", "○");
-        map.put("${b3}", "○");
-        map.put("${b4}", "○");
-        map.put("${b5}", "○");
+        map.put("${b1}", "■");
+        map.put("${b2}", "■");
+        map.put("${b3}", "■");
+        map.put("${b4}", "■");
+        map.put("${b5}", "■");
 
         map.put("${送付先アドレス}", safe(company.getEmail()));
         map.put("${送付先}", buildAddress(company)); 
@@ -447,7 +416,8 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         // 空白入りのプレースホルダーが存在する場合、正規のキー名
         // ("${h3}" 等) と一致させるための処理。これがないと
         // マップ内のキーと一致せず置換されないまま残ってしまう。
-        text = text.replaceAll("\\$\\{\\s*([^}]*?)\\s*\\}", "\\${$1}");
+
+        text = normalizePlaceholders(text);
 
         boolean changed = false;
         for (Map.Entry<String, String> entry : placeholders.entrySet()) {
@@ -516,7 +486,7 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
 
     private String safe(String v) { return v != null ? v : ""; }
     private String decimal(BigDecimal v) { return v != null ? v.toPlainString() : ""; }
-    private String boolToMark(Boolean v) { return Boolean.TRUE.equals(v) ? "○" : "×"; }
+    private String boolToMark(Boolean v) { return Boolean.TRUE.equals(v) ? "■" : "□"; }
     private String formatDate(LocalDate date) { return date != null ? date.format(JP_DATE_FORMAT) : ""; }
     private String formatDate(LocalDateTime dt) { return dt != null ? dt.toLocalDate().format(JP_DATE_FORMAT) : ""; }
     private String buildAddress(ParticipatingCompany company) {
@@ -524,4 +494,119 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
                 safe(company.getPrefecture()), safe(company.getMunicipality()),
                 safe(company.getBlocknum()), safe(company.getBuildingName()));
     }
+
+    private String normalizePlaceholders(String text) {
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\$\\s*\\{[^}]*\\}");
+        java.util.regex.Matcher matcher = pattern.matcher(text);
+        StringBuilder sb = new StringBuilder();
+
+        while (matcher.find()) {
+            String whole = matcher.group();
+            String halfWidth = toHalfWidth(whole);
+            String cleaned = halfWidth.replaceAll("\\s+", "");
+            matcher.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(cleaned));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
+    }
+
+        private String toHalfWidth(String input) {
+            StringBuilder sb = new StringBuilder();
+            for (char c : input.toCharArray()) {
+                if (c >= '\uFF01' && c <= '\uFF5E') {
+                    sb.append((char) (c - 0xFEE0)); // full-width → half-width
+                } else if (c == '\u3000') {
+                    sb.append(' '); // full-width space → half-width space
+                } else {
+                    sb.append(c);
+                }
+            }
+            return sb.toString();
+        }
+
+            // ─────────────────────────────────────────────────────────
+        // 【将来対応】DocuSign連携
+        //
+        // 実装の流れ:
+        //   1. PDF下書き生成（現状のgenerateAndProcess()の処理）
+        //   2. DocuSign envelope作成 + 下書きPDF添付
+        //      - signer: participation.getUser().getEmail()
+        //      - 署名欄の位置指定はアンカーテキスト方式を推奨
+        //        （テンプレートに "/sig_sankasha/" 等の隠しテキストを配置）
+        //   3. DocuSignが申請者へ署名依頼メールを自動送信
+        //      （このメール送信はDocuSign側の機能。自前のメール送信は不要）
+        //   4. 署名完了 → DocuSign Connect (webhook) で通知受信
+        //      - エンドポイント: POST /webhooks/docusign/envelope-completed
+        //      - HMAC署名検証が必須（偽装リクエスト防止）
+        //   5. 署名済みPDFをDocuSign APIから取得
+        //   6. S3へ再アップロード → s3_key_pdf_membership を更新
+        //
+        // 開発環境:
+        //   Developer Sandbox は無料・無期限（月25 envelope程度）
+        //   ただしデモ環境のためテストスタンプ付き・法的効力なし
+        //   本番は有料（Starter ~$50/月〜）
+        //
+        // 必要な追加実装:
+        //   - DocuSignAuthService（OAuth 2.0 JWT Grant）
+        //   - DocuSignEnvelopeService（envelope作成・送信・取得）
+        //   - DocuSignWebhookController（完了通知受信）
+        //   - participating_project に envelope_id / signing_status カラム追加
+        //   - 再生成用の generateFinalPdf() メソッド
+        //     （下書きと署名済みで2回PDF処理が発生する）
+        // ─────────────────────────────────────────────────────────
+        // @Override
+        // @Transactional
+        // public void handleEnvelopeCompleted(String envelopeId) {
+
+        //     ParticipatingProject participation = participatingProjectRepository
+        //             .findByDocusignEnvelopeId(envelopeId)
+        //             .orElseThrow(() -> new CustomException(
+        //                     ResponseConstants.NOT_FOUND, "対応する参加情報が見つかりません。envelopeId=" + envelopeId));
+
+        //     try {
+        //         byte[] signedPdfBytes = docuSignService.downloadSignedDocument(envelopeId);
+
+        //         String finalS3Key = uploadFinalToS3(signedPdfBytes,
+        //                 participation.getProject().getId(),
+        //                 participation.getEquipment().getSite().getId(),
+        //                 participation.getId());
+
+        //         participatingProjectRepository.updatePdfS3Key(participation.getId(), finalS3Key);
+
+        //         participation.setSigningStatus("COMPLETED");
+        //         participatingProjectRepository.save(participation);
+
+        //         log.info("[DocuSign] 署名済みPDF取得完了。participationId={}, s3Key={}",
+        //                 participation.getId(), finalS3Key);
+
+        //     } catch (Exception e) {
+        //         log.error("[DocuSign] 署名済みPDF取得失敗。envelopeId={}, error={}",
+        //                 envelopeId, e.getMessage(), e);
+        //         throw new RuntimeException("署名済みPDFの取得に失敗しました", e);
+        //     }
+
+        //     // ── Notifikasi — SEKARANG baru dikirim, karena PDF sudah benar-benar final ──
+        //     try {
+        //         notificationService.sendParticipationApprovedNotification(participation.getUser());
+        //     } catch (Exception e) {
+        //         log.error("Notification failed. participationId={}, error={}",
+        //                 participation.getId(), e.getMessage());
+        //     }
+        // }
+
+        // private String uploadFinalToS3(byte[] pdfBytes, Integer projectId, Integer siteId, Integer participationId) {
+        //     String s3Key = String.format("participation/%d/%d/%d/final_signed.pdf",
+        //             projectId, siteId, participationId);
+
+        //     s3Client.putObject(
+        //             PutObjectRequest.builder()
+        //                     .bucket(bucketName)
+        //                     .key(s3Key)
+        //                     .contentType("application/pdf")
+        //                     .build(),
+        //             RequestBody.fromBytes(pdfBytes));
+
+        //     log.info("Final signed PDF uploaded. participationId={}, key={}", participationId, s3Key);
+        //     return s3Key;
+        // }
 }
