@@ -6,15 +6,12 @@ import {
   mapAdminProjectPayload,
   mapAdminProjectPlanApplicationPayload,
   mapAdminProjectUpdatePayload,
-  mapApplicableConditionsPayload,
-  mapOtherOperatorProjectsPayload,
 } from '@/api/admin/projectPayloadMapper';
 import {
   createAdminProject,
+  createAdminProjectPlanApplication,
   getProjectPlanAutofillByProject,
   getProjectPlanAutofillDefaults,
-  getProjectPlanProgress,
-  saveProjectPlanForm,
   updateAdminProject,
 } from '@/api/admin/projects';
 import { ConfirmationItem } from '@/components/feedback/Confirmation/ConfirmationItem';
@@ -41,11 +38,6 @@ import {
 import { applyBackendValidationErrors } from './forms/backendValidationErrors';
 import type { AdminProjectRegisterFormInputValues } from './forms/projectFormTypes';
 import { ProjectStatusSchema } from './forms/projectBaseSchema';
-import {
-  LAST_IMPLEMENTED_STEP,
-  getFormSlugForStep,
-  getStepForFormSlug,
-} from './forms/projectPlanFormSlugs';
 import { steps } from './forms/projectSteps';
 
 type LocationState = {
@@ -114,13 +106,6 @@ export const AdminProjectRegister: React.FC = () => {
   const [savedProjectBaseSnapshot, setSavedProjectBaseSnapshot] = useState<
     string | null
   >(null);
-  // Steps already saved on the server, so a returning operator can see how far
-  // they got. Populated from the plan's progress endpoint.
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-  const [planProgress, setPlanProgress] = useState<{
-    completed: number;
-    total: number;
-  } | null>(null);
   const { state } = useLocation() as { state?: LocationState };
 
   const form = useForm<AdminProjectRegisterFormInputValues>({
@@ -146,9 +131,7 @@ export const AdminProjectRegister: React.FC = () => {
     }
   }, [state?.project, form]);
 
-  // Only the steps the plan API actually serves; the rest of `steps` has no
-  // backend page yet.
-  const visibleSteps = steps.slice(0, LAST_IMPLEMENTED_STEP);
+  const visibleSteps = steps.slice(0, 2);
   const maxStep = visibleSteps.length;
   const projectBaseValues = useWatch({
     control: form.control,
@@ -167,70 +150,6 @@ export const AdminProjectRegister: React.FC = () => {
       description: description || undefined,
       variant: 'destructive',
     });
-  };
-
-  /**
-   * Refreshes which pages are already stored. Best-effort: progress is a
-   * convenience, so a failure here must not block filling the form.
-   */
-  const refreshProgress = async (projectId: string) => {
-    try {
-      const progress = await getProjectPlanProgress(projectId);
-      const done = (progress.forms ?? [])
-        .filter((planForm) => planForm.status === 'COMPLETE')
-        .map((planForm) => getStepForFormSlug(planForm.formSlug))
-        .filter((planStep): planStep is number => planStep !== undefined);
-      setCompletedSteps(done);
-      setPlanProgress({
-        completed: progress.completedForms ?? 0,
-        total: progress.totalForms ?? 0,
-      });
-    } catch (e) {
-      console.warn('Failed to load project plan progress', e);
-    }
-  };
-
-  /**
-   * Payload mapper per wizard step. A page can only be staged once it has one,
-   * so adding a step means adding its mapper here alongside the registry entry
-   * on the backend.
-   */
-  const PAGE_PAYLOAD_MAPPERS: Record<
-    number,
-    (values: AdminProjectRegisterFormInputValues) => Record<string, unknown>
-  > = {
-    2: mapAdminProjectPlanApplicationPayload,
-    3: mapOtherOperatorProjectsPayload,
-    4: mapApplicableConditionsPayload,
-  };
-
-  /**
-   * Stages one page. The server stores it only if the whole page validates, so
-   * a rejection means nothing was persisted and the operator stays put.
-   */
-  const savePlanPage = async (
-    projectId: string,
-    targetStep: number,
-    values: AdminProjectRegisterFormInputValues,
-  ): Promise<boolean> => {
-    const slug = getFormSlugForStep(targetStep);
-    const mapPayload = PAGE_PAYLOAD_MAPPERS[targetStep];
-    if (!slug || !mapPayload) return true;
-
-    try {
-      await saveProjectPlanForm(projectId, slug, mapPayload(values));
-      await refreshProgress(projectId);
-      return true;
-    } catch (e) {
-      const message = applyBackendValidationErrors(form, e);
-      setSubmitError(message);
-      showErrorToast(
-        '保存に失敗しました',
-        message ??
-          (e instanceof Error ? e.message : 'この画面の内容を保存できませんでした。'),
-      );
-      return false;
-    }
   };
 
   const loadProjectApplication = async (projectId: string) => {
@@ -253,10 +172,6 @@ export const AdminProjectRegister: React.FC = () => {
         });
       }
 
-      // Show which pages are already stored, so a returning operator can tell
-      // how far they got before continuing.
-      await refreshProgress(projectId);
-
       setStep(2);
     } catch (e) {
       const message =
@@ -271,9 +186,7 @@ export const AdminProjectRegister: React.FC = () => {
   };
 
   const goNext = async () => {
-    // Step 1 is the SQL project record, not a page of the plan. Saving it is
-    // what yields the project id everything else is keyed by.
-    if (step === 1) {
+    if (step < maxStep) {
       const projectId =
         createdProjectId && isProjectBaseSaved
           ? createdProjectId
@@ -282,18 +195,6 @@ export const AdminProjectRegister: React.FC = () => {
       if (!projectId) return;
 
       await loadProjectApplication(projectId);
-      return;
-    }
-
-    if (!createdProjectId) return;
-
-    // Pages are atomic: only move on once this one is actually stored, so the
-    // operator can never advance past a page the server rejected.
-    const saved = await savePlanPage(createdProjectId, step, form.getValues());
-    if (!saved) return;
-
-    if (step < maxStep) {
-      setStep(step + 1);
       return;
     }
 
@@ -338,16 +239,25 @@ export const AdminProjectRegister: React.FC = () => {
         throw new Error('Project ID is required to submit project application');
       }
 
-      // Every page, including the last, was already stored on the way here —
-      // goNext will not advance past a page the server rejected. So this is a
-      // confirmation step, not another write; just re-read where things stand.
-      await refreshProgress(createdProjectId);
-
+      await createAdminProjectPlanApplication(
+        createdProjectId,
+        mapAdminProjectPlanApplicationPayload(values),
+      );
       toast({
         title: '保存しました',
-        description: 'プロジェクト計画書を保存しました。',
+        description: 'プロジェクト申請情報を保存しました。',
         variant: 'success',
       });
+    } catch (e) {
+      const message = applyBackendValidationErrors(form, e);
+      setSubmitError(message);
+      showErrorToast(
+        '保存に失敗しました',
+        message ??
+          (e instanceof Error
+            ? e.message
+            : '申請情報を保存できませんでした。'),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -469,19 +379,12 @@ export const AdminProjectRegister: React.FC = () => {
             steps={visibleSteps}
             value={step}
             onChange={jumpToStep}
-            completedIds={completedSteps}
           />
           {step === 1 && <TemporaryAdminProjectAutofillButton form={form} />}
           {step === 2 && (
             <TemporaryAdminProjectApplicationAutofillButton form={form} />
           )}
         </div>
-
-        {planProgress && planProgress.total > 0 && (
-          <p className='text-sm text-muted-foreground'>
-            入力済み: {planProgress.completed} / {planProgress.total} ページ
-          </p>
-        )}
 
         <FormCard>
           <FormSectionStack spacing='relaxed'>
@@ -496,42 +399,31 @@ export const AdminProjectRegister: React.FC = () => {
             )}
 
             <FormActions
-              className={
-                step > 1
-                  ? 'grid grid-cols-1 gap-3 sm:grid-cols-2'
-                  : 'grid grid-cols-1 gap-3'
+              disabled={isSubmitting}
+              pendingActionId={
+                isSavingProjectBase || isLoadingApplication ? 'next' : null
               }
-            >
-              {step > 1 && (
-                <Button
-                  type='button'
-                  variant='outline'
-                  size='md'
-                  className='w-full'
-                  onClick={goBack}
-                  disabled={isSubmitting || isLoadingApplication}
-                >
-                  戻る
-                </Button>
-              )}
-              <Button
-                type='button'
-                size='md'
-                className='w-full'
-                onClick={goNext}
-                disabled={
-                  isSavingProjectBase || isLoadingApplication || isSubmitting
-                }
-              >
-                {step === maxStep
-                  ? '確認へ'
-                  : isSavingProjectBase
+              actions={[
+                ...(step > 1
+                  ? [
+                      {
+                        id: 'back',
+                        label: '戻る',
+                        variant: 'outline' as const,
+                        onClick: goBack,
+                      },
+                    ]
+                  : []),
+                {
+                  id: 'next',
+                  label: step === maxStep ? '確認へ' : '次へ',
+                  pendingLabel: isSavingProjectBase
                     ? '保存中...'
-                    : isLoadingApplication
-                      ? '読み込み中...'
-                      : '次へ'}
-              </Button>
-            </FormActions>
+                    : '読み込み中...',
+                  onClick: goNext,
+                },
+              ]}
+            />
           </FormSectionStack>
         </FormCard>
       </FormPageContent>

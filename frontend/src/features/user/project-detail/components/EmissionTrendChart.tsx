@@ -12,6 +12,7 @@ import {
   type ChartConfig,
 } from '@/components/ui/chart';
 import type { EmissionTrendPoint } from '@/api/batch';
+import { SkeletonChart } from '@/components/feedback/loading';
 import { cn } from '@/lib/utils';
 
 const EMISSION_SERIES_KEY = 'y';
@@ -51,6 +52,10 @@ export function EmissionTrendChart({
   error,
   className,
 }: EmissionTrendChartProps) {
+  if (isLoading) {
+    return <SkeletonChart className={className} />;
+  }
+
   return (
     <section
       className={cn(
@@ -64,9 +69,7 @@ export function EmissionTrendChart({
       </h3>
 
       <div className='mt-4 flex min-h-[280px] flex-1 items-center justify-center'>
-        {isLoading ? (
-          <p className='text-subtle text-foreground'>読み込み中...</p>
-        ) : error ? (
+        {error ? (
           <p className='text-subtle text-destructive' role='alert'>
             {error}
           </p>
