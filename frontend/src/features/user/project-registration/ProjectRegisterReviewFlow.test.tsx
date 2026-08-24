@@ -206,6 +206,7 @@ vi.mock('./components/ContractStep', async () => {
           values: Partial<ContractStepFormValues>,
           metadata: { isUserChange: boolean },
         ) => void;
+        errors?: Record<string, string>;
         onBack: () => void;
         onNext: () => void;
       }
@@ -232,6 +233,18 @@ vi.mock('./components/ContractStep', async () => {
           </span>
           <span data-testid="contract-agreed">
             {String(props.formValues.contractAgreed === true)}
+          </span>
+          <span data-testid="contract-business-name-error">
+            {props.errors?.businessName ?? ''}
+          </span>
+          <span data-testid="contract-representative-name-error">
+            {props.errors?.representativeName ?? ''}
+          </span>
+          <span data-testid="contract-representative-position-error">
+            {props.errors?.representativePosition ?? ''}
+          </span>
+          <span data-testid="contract-agreed-error">
+            {props.errors?.contractAgreed ?? ''}
           </span>
           <button
             type="button"
@@ -510,6 +523,46 @@ describe('ProjectRegisterPage review flow', () => {
     expect(
       screen.getByTestId('energy-law-factory-number-error'),
     ).toHaveTextContent('7桁の数字を入力してください。');
+  });
+
+  it('maps every Japanese sustainability error to its contract field', async () => {
+    const user = userEvent.setup();
+    apiMocks.validateSiteProjectSustainabilityCommitment.mockRejectedValueOnce(
+      new ApiError('入力内容に不備があります。', {
+        status: 400,
+        payload: {
+          statusCode: 'VALIDATION_ERROR',
+          message: '入力内容に不備があります。',
+          errors: {
+            'request::代表者役職': '必須項目です。',
+            'request::事業者名': '必須項目です。',
+            'request::代表者名': '必須項目です。',
+            'request::同意する': '同意してください。',
+          },
+        },
+      }),
+    );
+    renderFlow();
+
+    await user.click(await screen.findByRole('button', { name: '次へ' }));
+    await screen.findByText('同意事項フォーム');
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+    await screen.findByText('持続可能性フォーム');
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+
+    expect(
+      await screen.findByTestId('contract-business-name-error'),
+    ).toHaveTextContent('必須項目です。');
+    expect(
+      screen.getByTestId('contract-representative-name-error'),
+    ).toHaveTextContent('必須項目です。');
+    expect(
+      screen.getByTestId('contract-representative-position-error'),
+    ).toHaveTextContent('必須項目です。');
+    expect(screen.getByTestId('contract-agreed-error')).toHaveTextContent(
+      '同意してください。',
+    );
+    expect(screen.getByText('持続可能性フォーム')).toBeVisible();
   });
 
   it('restores the saved step, equipment values, and selected files after refresh', async () => {

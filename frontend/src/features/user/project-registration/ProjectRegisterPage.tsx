@@ -130,9 +130,13 @@ const sustainabilityCommitmentFieldNames: Record<
   keyof ContractStepFormValues
 > = {
   companyName: "businessName",
+  "事業者名": "businessName",
   repName: "representativeName",
+  "代表者名": "representativeName",
   repRole: "representativePosition",
+  "代表者役職": "representativePosition",
   hasConsent: "contractAgreed",
+  "同意する": "contractAgreed",
 };
 
 const finalAgreementFieldNames: Record<string, keyof FinalTermsValues> = {
