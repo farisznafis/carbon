@@ -20,6 +20,7 @@ import { paths } from '@/routes/paths';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { FloatingHelpButton } from '@/features/master/help/FloatingHelpButton';
+import { PageLoadingOverlay } from '@/components/feedback/loading';
 
 const MasterDashboard = () => {
   const navigate = useNavigate();
@@ -77,11 +78,8 @@ const MasterDashboard = () => {
   const sortedSites = useMemo(() => sortSitesById(sites), [sites]);
 
   if (loading || loadingStore) {
-    return (
-      <div className="text-small flex min-h-screen items-center justify-center bg-background px-6 text-center text-foreground">
-        読み込み中...
-      </div>
-    );
+    // Skeleton dashboard non active first
+    return <PageLoadingOverlay message="ダッシュボードを読み込んでいます" />;
   }
 
   const companyName = user?.companyName ?? user?.siteName ?? '-';

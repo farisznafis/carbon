@@ -86,6 +86,7 @@ export default function UserRegister() {
           state: createSiteRegistrationFlowState(
             registrationFlowState.siteDraft,
             res.user,
+            registrationFlowState.returnTarget,
           ),
         });
         return;
@@ -113,6 +114,8 @@ export default function UserRegister() {
         replace: true,
         state: createSiteRegistrationFlowState(
           registrationFlowState.siteDraft,
+          undefined,
+          registrationFlowState.returnTarget,
         ),
       });
       return;

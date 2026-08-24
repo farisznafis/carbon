@@ -3,7 +3,9 @@ import { useForm, type FieldPath } from 'react-hook-form';
 import { z } from 'zod';
 import type { SiteProjectEquipment } from '@/api/site';
 import { FileSelectButton } from '@/components/inputs/FileSelectButton/FileSelectButton';
+import { InlineLoader } from '@/components/feedback/loading';
 import {
+  FormActions,
   FormCard,
   FormPageContent,
   FormPageTitle,
@@ -42,10 +44,10 @@ const base = {
   ELpvr_value: z.union([z.string(), z.number(), z.null()]).optional(),
   ELPJ_control_value: z.union([z.string(), z.number(), z.null()]).optional(),
   ELPJ_accuracy: z.union([z.string(), z.number(), z.null()]).optional(),
-  elpv_evidence: z.any().optional(),
-  elpvr_evidence: z.any().optional(),
-  elpj_battery_evidence: z.any().optional(),
-  elpj_control_evidence: z.any().optional(),
+  ELpv_evidence: z.any().optional(),
+  ELpvr_evidence: z.any().optional(),
+  ELPJ_battery_evidence: z.any().optional(),
+  ELPJ_control_equipment_spec_files: z.any().optional(),
   description: z.string().optional(),
 };
 
@@ -67,10 +69,10 @@ export type MonitoringSolarFormData = {
   ELPJ_battery_value?: string | number | null;
   ELPJ_control_value?: string | number | null;
   ELPJ_accuracy?: string | number | null;
-  elpv_evidence?: File | string | null;
-  elpvr_evidence?: File | string | null;
-  elpj_battery_evidence?: File | string | null;
-  elpj_control_evidence?: File | string | null;
+  ELpv_evidence?: File | string | null;
+  ELpvr_evidence?: File | string | null;
+  ELPJ_battery_evidence?: File | string | null;
+  ELPJ_control_equipment_spec_files?: File | string | null;
   description?: string;
 };
 
@@ -215,11 +217,11 @@ export function MonitoringSolarForm({
 
     form.setValue('changedBattery', null, { shouldValidate: false });
     form.setValue('ELPJ_battery_value', null, { shouldValidate: false });
-    form.setValue('elpj_battery_evidence', null, { shouldValidate: false });
+    form.setValue('ELPJ_battery_evidence', null, { shouldValidate: false });
     form.clearErrors([
       'changedBattery',
       'ELPJ_battery_value',
-      'elpj_battery_evidence',
+      'ELPJ_battery_evidence',
     ]);
   }, [equipmentHasBattery, form]);
 
@@ -314,6 +316,9 @@ export function MonitoringSolarForm({
                         </SelectContent>
                       </Select>
                     </FormControl>
+                    {isEquipmentLoading ? (
+                      <InlineLoader label="設備を読み込んでいます" />
+                    ) : null}
                     {equipmentLoadError ? (
                       <div className="space-y-2" role="alert">
                         <p className="text-sm text-destructive">
@@ -430,10 +435,10 @@ export function MonitoringSolarForm({
                           });
 
                           if (!hasBatteryChanged) {
-                            form.setValue('elpj_battery_evidence', null, {
+                            form.setValue('ELPJ_battery_evidence', null, {
                               shouldDirty: true,
                             });
-                            form.clearErrors('elpj_battery_evidence');
+                            form.clearErrors('ELPJ_battery_evidence');
                           }
                         }}
                         value={
@@ -487,7 +492,7 @@ export function MonitoringSolarForm({
               {equipmentHasBattery && isBatteryChanged ? (
                 <FormField
                   control={form.control}
-                  name="elpj_battery_evidence"
+                  name="ELPJ_battery_evidence"
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
@@ -500,7 +505,7 @@ export function MonitoringSolarForm({
                           value={(field.value as File) ?? null}
                           onChange={(file) =>
                             handleFileChange(
-                              'elpj_battery_evidence',
+                              'ELPJ_battery_evidence',
                               field.onChange,
                               file,
                               DEFAULT_EVIDENCE_FILE_EXTENSIONS,
@@ -565,7 +570,7 @@ export function MonitoringSolarForm({
                   </p>
                   <FormField
                     control={form.control}
-                    name="elpv_evidence"
+                    name="ELpv_evidence"
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
@@ -578,7 +583,7 @@ export function MonitoringSolarForm({
                             value={(field.value as File) ?? null}
                             onChange={(file) =>
                               handleFileChange(
-                                'elpv_evidence',
+                                'ELpv_evidence',
                                 field.onChange,
                                 file,
                                 ELPV_FILE_EXTENSIONS,
@@ -593,7 +598,7 @@ export function MonitoringSolarForm({
 
                   <FormField
                     control={form.control}
-                    name="elpvr_evidence"
+                    name="ELpvr_evidence"
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
@@ -606,7 +611,7 @@ export function MonitoringSolarForm({
                             value={(field.value as File) ?? null}
                             onChange={(file) =>
                               handleFileChange(
-                                'elpvr_evidence',
+                                'ELpvr_evidence',
                                 field.onChange,
                                 file,
                                 DEFAULT_EVIDENCE_FILE_EXTENSIONS,
@@ -623,7 +628,7 @@ export function MonitoringSolarForm({
 
                   <FormField
                     control={form.control}
-                    name="elpj_control_evidence"
+                    name="ELPJ_control_equipment_spec_files"
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
@@ -636,7 +641,7 @@ export function MonitoringSolarForm({
                             value={(field.value as File) ?? null}
                             onChange={(file) =>
                               handleFileChange(
-                                'elpj_control_evidence',
+                                'ELPJ_control_equipment_spec_files',
                                 field.onChange,
                                 file,
                                 DEFAULT_EVIDENCE_FILE_EXTENSIONS,
@@ -651,14 +656,24 @@ export function MonitoringSolarForm({
                 </FormSection>
               </FormSectionStack>
 
-              <div className="flex justify-end gap-4 pt-6">
-                <Button type="button" variant="outline" onClick={onBack} size="md">
-                  キャンセル
-                </Button>
-                <Button type="submit" disabled={form.formState.isSubmitting} size="md">
-                  確認
-                </Button>
-              </div>
+              <FormActions
+                disabled={form.formState.isSubmitting}
+                pendingActionId={form.formState.isSubmitting ? 'confirm' : null}
+                actions={[
+                  {
+                    id: 'cancel',
+                    label: 'キャンセル',
+                    variant: 'outline',
+                    onClick: onBack,
+                  },
+                  {
+                    id: 'confirm',
+                    label: '確認',
+                    pendingLabel: '確認しています...',
+                    type: 'submit',
+                  },
+                ]}
+              />
             </FormCard>
           </form>
         </Form>

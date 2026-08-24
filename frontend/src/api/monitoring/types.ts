@@ -12,10 +12,10 @@ export type MonitoringData = {
   ELPJ_battery_value?: number | null;
   ELPJ_control_value: number | null;
   ELPJ_accuracy: number | null;
-  elpv_evidence?: string | null;
-  elpvr_evidence?: string | null;
-  elpj_battery_evidence?: string | null;
-  elpj_control_evidence?: string | null;
+  ELpv_evidence?: string | null;
+  ELpvr_evidence?: string | null;
+  ELPJ_battery_evidence?: string | null;
+  ELPJ_control_equipment_spec_files?: string | null;
 };
 
 export interface SubmitDataResponse {
@@ -49,10 +49,10 @@ export type MonitoringRecentApiItem = {
   ELPJ_control_value?: number | string | null;
   ELPJ_accuracy?: number | string | null;
 
-  elpv_evidence?: string | null;
-  elpvr_evidence?: string | null;
-  elpj_battery_evidence?: string | null;
-  elpj_control_evidence?: string | null;
+  ELpv_evidence?: string | null;
+  ELpvr_evidence?: string | null;
+  ELPJ_battery_evidence?: string | null;
+  ELPJ_control_equipment_spec_files?: string | null;
 
   deviceId?: string | number | null;
   parameter?: string | null;
@@ -79,10 +79,10 @@ export type MonitoringRecentItem = MonitoringData & {
   ELPJ_battery_value?: number | null;
   ELPJ_control_value?: number | null;
   ELPJ_accuracy?: number | null;
-  elpv_evidence?: string | null;
-  elpvr_evidence?: string | null;
-  elpj_battery_evidence?: string | null;
-  elpj_control_evidence?: string | null;
+  ELpv_evidence?: string | null;
+  ELpvr_evidence?: string | null;
+  ELPJ_battery_evidence?: string | null;
+  ELPJ_control_equipment_spec_files?: string | null;
 };
 
 export type MonitoringRecentResponse = {

@@ -150,27 +150,23 @@ export function UserConfirmation({
               </FormSection>
             )}
 
-            <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={onBack}
-                disabled={isSubmitting}
-              >
-                戻る
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                className="w-full"
-                onClick={handleConfirm}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? '送信中...' : isCreateMode ? '登録' : '更新'}
-              </Button>
-            </FormActions>
+            <FormActions
+              pendingActionId={isSubmitting ? 'confirm' : null}
+              actions={[
+                {
+                  id: 'back',
+                  label: '戻る',
+                  variant: 'outline',
+                  onClick: onBack,
+                },
+                {
+                  id: 'confirm',
+                  label: isCreateMode ? '登録' : '更新',
+                  pendingLabel: '送信中...',
+                  onClick: handleConfirm,
+                },
+              ]}
+            />
           </FormSectionStack>
         </FormCard>
       </FormPageContent>

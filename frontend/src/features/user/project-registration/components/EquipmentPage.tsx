@@ -5,7 +5,7 @@ import { SolarPowerEquipmentForm } from "./equipment-forms/SolarPowerEquipmentFo
 import type { SolarPowerFormData } from "@/lib/equipmentValidations";
 import { FormPageWrapper } from "@/components/layout/FormPageWrapper/FormPageWrapper";
 import { Form } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
+import { FormActions } from "@/components/forms/form-layout";
 import { useSitesQuery } from "@/hooks/sites/useSitesQuery";
 //import { BatteryEquipmentForm } from "@/components/BatteryEquipmentForm";
 
@@ -56,11 +56,10 @@ export const EquipmentPage = () => {
             />
           )}
 
-          <div className="flex justify-center border-t pt-4">
-            <Button type="submit" className="w-full max-w-lg">
-              保存
-            </Button>
-          </div>
+          <FormActions
+            className="border-t pt-4"
+            actions={[{ id: "submit", label: "保存", type: "submit" }]}
+          />
         </form>
       </Form>
     </FormPageWrapper>
