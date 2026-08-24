@@ -1,12 +1,13 @@
 import { z } from 'zod';
+import {
+  PARTICIPATION_METHODOLOGIES,
+  UNKNOWN_METHODOLOGY,
+} from '@/lib/constants/methodology';
 
-export const UNKNOWN_METHODOLOGY = 'OTHER';
+export { UNKNOWN_METHODOLOGY };
 
-export const participationMethodologies = [
-  { value: 'EN-R-002', label: '太陽光発電設備の導入' },
-  { value: 'EN-S-006', label: '照明設備の導入' },
-  { value: UNKNOWN_METHODOLOGY, label: 'その他（該当する方法論が見つからない）' },
-];
+// Keeps the signup form and public homepage aligned to one methodology source of truth.
+export const participationMethodologies = PARTICIPATION_METHODOLOGIES;
 
 export const activityHasOptions = [
   { value: 'yes', label: 'あり' },
