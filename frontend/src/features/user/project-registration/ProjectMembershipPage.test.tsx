@@ -141,6 +141,49 @@ describe('ProjectMembershipPage tabs', () => {
     expect(screen.getByText('入会中のプロジェクトはありません。')).toBeVisible();
   });
 
+  it('shows the preparation guide only for available projects and opens its dialog on demand', async () => {
+    const user = userEvent.setup();
+    getSiteProjects.mockResolvedValue([
+      createProject('PROJ001', '入会可能プロジェクト', false),
+      createProject('PROJ002', '入会中プロジェクト', true),
+    ]);
+
+    renderPage();
+
+    expect(
+      await screen.findByRole('heading', {
+        name: '入会届の提出前にご準備ください',
+      }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('dialog', { name: '入会届の提出に必要なもの' }),
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', { name: '必要書類を詳しく確認' }),
+    );
+
+    expect(
+      screen.getByRole('dialog', { name: '入会届の提出に必要なもの' }),
+    ).toBeVisible();
+    expect(screen.getByText('対応ファイル形式：PDF、CSV、JPG、JPEG、PNG')).toBeVisible();
+    expect(screen.queryByText(/ファイルサイズ/)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '閉じる' }));
+    expect(
+      screen.queryByRole('dialog', { name: '入会届の提出に必要なもの' }),
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('tab', { name: /入会中のプロジェクト\s*1/ }),
+    );
+    expect(
+      screen.queryByRole('heading', {
+        name: '入会届の提出前にご準備ください',
+      }),
+    ).not.toBeInTheDocument();
+  });
+
   it('opens the membership PDF with participationId from my participations', async () => {
     const user = userEvent.setup();
     getSiteProjects.mockResolvedValue([
