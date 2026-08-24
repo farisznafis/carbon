@@ -4,8 +4,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '@/api/_shared/errors';
 import {
   getSiteEquipmentById,
-  updateSiteEquipment,
+  changeSiteEquipment,
   uploadSiteProjectEquipmentFile,
+  validateSiteProjectEquipment,
   type SiteProjectEquipmentFile,
 } from '@/api/site';
 import {
@@ -20,16 +21,20 @@ import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { SolarPowerEquipmentForm } from '@/features/user/project-registration/components/equipment-forms/SolarPowerEquipmentForm';
 import { mapEquipmentValidationFieldErrors } from '@/features/user/project-registration/solarEquipmentFormModel';
-import { getSolarFormSelectedFiles } from '@/features/user/project-registration/equipmentValidationMapper';
+import {
+  getSolarFormSelectedFiles,
+  mapSolarFormFilesForValidation,
+  mapSolarFormToEquipmentValidationItem,
+} from '@/features/user/project-registration/equipmentValidationMapper';
 import { useToast } from '@/hooks/use-toast';
 import type { SolarPowerFormData } from '@/lib/equipmentValidations';
 import { paths } from '@/routes/paths';
 import { EquipmentEditConfirmation } from './EquipmentEditConfirmation';
 import {
   hasEquipmentEditChanges,
-  mapEquipmentEditToUpdateRequest,
+  mapEquipmentEditToChangeRequest,
   mapEquipmentToEditForm,
-  mergeEquipmentFilesForUpdate,
+  mergeEquipmentFilesForChange,
 } from './equipmentEditMapper';
 
 type EquipmentEditStep = 'form' | 'confirmation';
@@ -128,14 +133,74 @@ export default function EquipmentEditPage() {
     [currentValues, originalValues],
   );
 
-  const handleReview = (values: SolarPowerFormData) => {
-    if (!originalValues || !hasEquipmentEditChanges(values, originalValues)) {
+  /** Validates the replacement snapshot through POST /site/project/equipment/validate before review. */
+  const handleReview = async (values: SolarPowerFormData) => {
+    if (!values.changeDate?.trim()) {
+      form.setError('changeDate', {
+        type: 'required',
+        message: '変更日を入力してください。',
+      });
+      return;
+    }
+
+    if (
+      !originalValues ||
+      equipmentId === null ||
+      !siteId ||
+      !hasEquipmentEditChanges(values, originalValues)
+    ) {
       return;
     }
 
     form.clearErrors();
-    setConfirmedValues(values);
-    setStep('confirmation');
+    setIsSubmitting(true);
+
+    const validationValues: SolarPowerFormData = {
+      ...values,
+      equipmentOpDate: values.changeDate,
+    };
+
+    try {
+      const validationFiles = mergeEquipmentFilesForChange(
+        existingFiles,
+        mapSolarFormFilesForValidation(values),
+      );
+      await validateSiteProjectEquipment(
+        mapSolarFormToEquipmentValidationItem(
+          validationValues,
+          `equipment-${equipmentId}`,
+          siteId,
+          validationFiles,
+        ),
+      );
+      setConfirmedValues(values);
+      setStep('confirmation');
+    } catch (error) {
+      const fieldErrors =
+        error instanceof ApiError
+          ? mapEquipmentValidationFieldErrors(
+              error.payload?.errors,
+              validationValues,
+            )
+          : [];
+
+      fieldErrors.forEach(({ fieldName, message }) => {
+        form.setError(fieldName === 'equipmentOpDate' ? 'changeDate' : fieldName, {
+          type: 'server',
+          message,
+        });
+      });
+      toast({
+        title: '変更内容を確認できませんでした',
+        description:
+          error instanceof Error
+            ? error.message
+            : '設備情報の検証に失敗しました。',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleConfirm = async () => {
@@ -157,13 +222,12 @@ export default function EquipmentEditPage() {
           uploadSiteProjectEquipmentFile(siteId, fileType, file),
         ),
       );
-      const files = mergeEquipmentFilesForUpdate(existingFiles, uploadedFiles);
-      const payload = mapEquipmentEditToUpdateRequest(
+      const files = mergeEquipmentFilesForChange(existingFiles, uploadedFiles);
+      const payload = mapEquipmentEditToChangeRequest(
         confirmedValues,
-        originalValues,
         files,
       );
-      await updateSiteEquipment(siteId, equipmentId, payload);
+      await changeSiteEquipment(siteId, equipmentId, payload);
       toast({
         title: '変更完了',
         description: '設備情報を変更しました。',
@@ -259,9 +323,9 @@ export default function EquipmentEditPage() {
       <FormPageContent className="animate-slide-up">
         <div className="space-y-3">
           <FormPageTitle>設備変更</FormPageTitle>
-          <p className="text-small text-foreground">
+          {/* <p className="text-small text-foreground">
             設備ID：{equipmentId}
-          </p>
+          </p> */}
         </div>
 
         <Form {...form}>
@@ -272,25 +336,25 @@ export default function EquipmentEditPage() {
                 mode="edit"
                 existingFiles={existingFiles}
               />
-              <FormActions className="grid grid-cols-1 gap-3 pt-8 sm:grid-cols-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="md"
-                  className="w-full"
-                  onClick={navigateBack}
-                >
-                  キャンセル
-                </Button>
-                <Button
-                  type="submit"
-                  size="md"
-                  className="w-full"
-                  disabled={!hasChanges}
-                >
-                  変更内容を確認
-                </Button>
-              </FormActions>
+              <FormActions
+                className="pt-8"
+                pendingActionId={isSubmitting ? 'confirm' : null}
+                actions={[
+                  {
+                    id: 'cancel',
+                    label: 'キャンセル',
+                    variant: 'outline',
+                    onClick: navigateBack,
+                  },
+                  {
+                    id: 'confirm',
+                    label: '変更内容を確認',
+                    pendingLabel: '確認中...',
+                    type: 'submit',
+                    disabled: !hasChanges,
+                  },
+                ]}
+              />
             </FormCard>
           </form>
         </Form>

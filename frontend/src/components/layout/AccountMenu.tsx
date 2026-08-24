@@ -74,7 +74,7 @@ export function AccountMenu({
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-72 sm:w-80">
+      <DropdownMenuContent align="end" className="w-72 sm:w-72">
         <DropdownMenuLabel className="min-w-0 font-normal sm:hidden">
           <span className="block truncate text-sm font-medium text-foreground">
             {displayName}

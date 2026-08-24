@@ -23,6 +23,7 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { FormActions } from '@/components/forms/form-layout';
 import {
   agreementsConfig,
   type AgreementFormValues,
@@ -161,6 +162,9 @@ function RadioChoice({
 
 type DynamicAgreementsStepProps = {
   formValues: Partial<AgreementFormValues>;
+  isSubmitting: boolean;
+  onBack: () => void;
+  onNext: () => void;
   onValueChange: (values: Partial<AgreementFormValues>) => void;
   errors?: Record<string, string>;
 };
@@ -172,7 +176,7 @@ export type DynamicAgreementsStepRef = {
 export const DynamicAgreementsStep = forwardRef<
   DynamicAgreementsStepRef,
   DynamicAgreementsStepProps
->(({ formValues, onValueChange, errors = {} }, ref) => {
+>(({ formValues, isSubmitting, onBack, onNext, onValueChange, errors = {} }, ref) => {
   const form = useForm<AgreementsFormValues>({
     mode: 'onChange',
     defaultValues: {
@@ -533,6 +537,23 @@ export const DynamicAgreementsStep = forwardRef<
                 )}
               />
             </AgreementCard>
+            <FormActions
+              pendingActionId={isSubmitting ? 'next' : null}
+              actions={[
+                {
+                  id: 'back',
+                  label: '戻る',
+                  variant: 'outline',
+                  onClick: onBack,
+                },
+                {
+                  id: 'next',
+                  label: '次へ',
+                  pendingLabel: '確認中...',
+                  onClick: onNext,
+                },
+              ]}
+            />
           </CardContent>
         </Card>
       </Form>
