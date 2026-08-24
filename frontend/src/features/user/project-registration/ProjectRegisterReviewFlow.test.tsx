@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '@/api/_shared/errors';
 import type { SolarEquipment } from './components/types';
 import type { ContractStepFormValues } from './components/ContractStep';
 import ProjectRegisterPage from './ProjectRegisterPage';
@@ -136,7 +137,11 @@ vi.mock('./components/DynamicAgreementsStep', async () => {
   return {
     DynamicAgreementsStep: forwardRef<
       unknown,
-      { onBack: () => void; onNext: () => void }
+      {
+        errors?: Record<string, string>;
+        onBack: () => void;
+        onNext: () => void;
+      }
     >((props, ref) => {
       useImperativeHandle(ref, () => ({
         getValues: () => ({
@@ -152,6 +157,36 @@ vi.mock('./components/DynamicAgreementsStep', async () => {
       return (
         <div>
           <h2>同意事項フォーム</h2>
+          <span data-testid="specified-emitter-code-error">
+            {props.errors?.specifiedEmitterCode ?? ''}
+          </span>
+          <span data-testid="emission-addition-agreement-error">
+            {props.errors?.emissionAdditionAgreement ?? ''}
+          </span>
+          <span data-testid="use-registered-info-error">
+            {props.errors?.useRegisteredInfo ?? ''}
+          </span>
+          <span data-testid="provide-additional-info-error">
+            {props.errors?.provideAdditionalInfo ?? ''}
+          </span>
+          <span data-testid="transfer-environmental-value-error">
+            {props.errors?.transferEnvironmentalValue ?? ''}
+          </span>
+          <span data-testid="not-registered-elsewhere-error">
+            {props.errors?.notRegisteredElsewhere ?? ''}
+          </span>
+          <span data-testid="keidanren-participation-error">
+            {props.errors?.keidanrenParticipation ?? ''}
+          </span>
+          <span data-testid="energy-law-type-error">
+            {props.errors?.energyLawType ?? ''}
+          </span>
+          <span data-testid="energy-law-business-number-error">
+            {props.errors?.energyLawBusinessNumber ?? ''}
+          </span>
+          <span data-testid="energy-law-factory-number-error">
+            {props.errors?.energyLawFactoryNumber ?? ''}
+          </span>
           <button type="button" onClick={props.onBack}>戻る</button>
           <button type="button" onClick={props.onNext}>次へ</button>
         </div>
@@ -364,6 +399,117 @@ describe('ProjectRegisterPage review flow', () => {
       expect(screen.getByRole('button', { name: '申請する' })).toBeEnabled();
       expect(screen.getByText('contract.pdf')).toBeVisible();
     });
+  });
+
+  it('shows both Japanese backend errors for specified-emitter fields', async () => {
+    const user = userEvent.setup();
+    apiMocks.validateSiteProjectConfirmationItems.mockRejectedValueOnce(
+      new ApiError('入力内容に不備があります。', {
+        status: 400,
+        payload: {
+          statusCode: 'VALIDATION_ERROR',
+          message: '入力内容に不備があります。',
+          errors: {
+            'request::調整後排出量への加算': '同意が必要です。',
+            'request::事業者コード（9桁）': '9桁の数字を入力してください。',
+          },
+        },
+      }),
+    );
+    renderFlow();
+
+    await user.click(await screen.findByRole('button', { name: '次へ' }));
+    await screen.findByText('同意事項フォーム');
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+
+    expect(
+      await screen.findByTestId('specified-emitter-code-error'),
+    ).toHaveTextContent('9桁の数字を入力してください。');
+    expect(
+      screen.getByTestId('emission-addition-agreement-error'),
+    ).toHaveTextContent('同意が必要です。');
+    expect(screen.getByText('同意事項フォーム')).toBeVisible();
+  });
+
+  it('maps every returned empty-form error to its agreement field', async () => {
+    const user = userEvent.setup();
+    apiMocks.validateSiteProjectConfirmationItems.mockRejectedValueOnce(
+      new ApiError('入力内容に不備があります。', {
+        status: 400,
+        payload: {
+          statusCode: 'VALIDATION_ERROR',
+          message: '入力内容に不備があります。',
+          errors: {
+            'request::データ利用への同意':
+              'データ利用への同意が必要です。',
+            'request::本入会届に記載された以外の情報の提供への同意':
+              '本入会届に記載された以外の情報の提供への同意が必要です。',
+            'request::経団連カーボンニュートラル行動計画への参加状況':
+              '選択してください。',
+            'request::環境価値（J-クレジット）の譲渡への同意':
+              '環境価値（J-クレジット）の譲渡への同意が必要です。',
+            'request::他のJ-クレジット制度への未登録確認':
+              '他のJ-クレジット制度への未登録確認が必要です。',
+          },
+        },
+      }),
+    );
+    renderFlow();
+
+    await user.click(await screen.findByRole('button', { name: '次へ' }));
+    await screen.findByText('同意事項フォーム');
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+
+    expect(await screen.findByTestId('use-registered-info-error')).toHaveTextContent(
+      'データ利用への同意が必要です。',
+    );
+    expect(screen.getByTestId('provide-additional-info-error')).toHaveTextContent(
+      '本入会届に記載された以外の情報の提供への同意が必要です。',
+    );
+    expect(screen.getByTestId('keidanren-participation-error')).toHaveTextContent(
+      '選択してください。',
+    );
+    expect(
+      screen.getByTestId('transfer-environmental-value-error'),
+    ).toHaveTextContent(
+      '環境価値（J-クレジット）の譲渡への同意が必要です。',
+    );
+    expect(screen.getByTestId('not-registered-elsewhere-error')).toHaveTextContent(
+      '他のJ-クレジット制度への未登録確認が必要です。',
+    );
+  });
+
+  it('maps every energy-law backend error to its conditional field', async () => {
+    const user = userEvent.setup();
+    apiMocks.validateSiteProjectConfirmationItems.mockRejectedValueOnce(
+      new ApiError('入力内容に不備があります。', {
+        status: 400,
+        payload: {
+          statusCode: 'VALIDATION_ERROR',
+          message: '入力内容に不備があります。',
+          errors: {
+            'request::事業者番号': '7桁の数字を入力してください。',
+            'request::工場等番号': '7桁の数字を入力してください。',
+            'request::第一種・第二種区分': '選択してください。',
+          },
+        },
+      }),
+    );
+    renderFlow();
+
+    await user.click(await screen.findByRole('button', { name: '次へ' }));
+    await screen.findByText('同意事項フォーム');
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+
+    expect(await screen.findByTestId('energy-law-type-error')).toHaveTextContent(
+      '選択してください。',
+    );
+    expect(
+      screen.getByTestId('energy-law-business-number-error'),
+    ).toHaveTextContent('7桁の数字を入力してください。');
+    expect(
+      screen.getByTestId('energy-law-factory-number-error'),
+    ).toHaveTextContent('7桁の数字を入力してください。');
   });
 
   it('restores the saved step, equipment values, and selected files after refresh', async () => {
