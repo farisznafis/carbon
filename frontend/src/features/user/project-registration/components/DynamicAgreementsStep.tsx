@@ -3,6 +3,7 @@ import {
   type ReactNode,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
 } from 'react';
 import { useForm } from 'react-hook-form';
@@ -26,6 +27,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { FormActions } from '@/components/forms/form-layout';
 import {
   agreementsConfig,
+  createAgreementsConfig,
   type AgreementFormValues,
 } from './agreementsConfig';
 
@@ -45,10 +47,6 @@ const defaultAgreementValues: AgreementFormValues = {
   energyLawBusinessNumber: '',
   energyLawFactoryNumber: '',
 };
-
-const agreementLabels = Object.fromEntries(
-  agreementsConfig.map((field) => [field.id, field.label]),
-) as Record<keyof AgreementFormValues, string>;
 
 const agreementOptions = Object.fromEntries(
   agreementsConfig.map((field) => [field.id, field.options ?? []]),
@@ -161,6 +159,7 @@ function RadioChoice({
 }
 
 type DynamicAgreementsStepProps = {
+  projectName: string;
   formValues: Partial<AgreementFormValues>;
   isSubmitting: boolean;
   onBack: () => void;
@@ -176,7 +175,14 @@ export type DynamicAgreementsStepRef = {
 export const DynamicAgreementsStep = forwardRef<
   DynamicAgreementsStepRef,
   DynamicAgreementsStepProps
->(({ formValues, isSubmitting, onBack, onNext, onValueChange, errors = {} }, ref) => {
+>(({ projectName, formValues, isSubmitting, onBack, onNext, onValueChange, errors = {} }, ref) => {
+  const agreementLabels = useMemo(
+    () =>
+      Object.fromEntries(
+        createAgreementsConfig(projectName).map((field) => [field.id, field.label]),
+      ) as Record<keyof AgreementFormValues, string>,
+    [projectName],
+  );
   const form = useForm<AgreementsFormValues>({
     mode: 'onChange',
     defaultValues: {

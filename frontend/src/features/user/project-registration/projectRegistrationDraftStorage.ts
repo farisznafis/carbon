@@ -14,6 +14,7 @@ export type ProjectRegistrationDraft = {
   agreementFormValues: Partial<AgreementFormValues>;
   contractFormValues: Partial<ContractStepFormValues>;
   contractHasUserChanges?: boolean;
+  contractSiteId?: string;
   finalTermsValues: Partial<FinalTermsValues>;
   updatedAt: string;
 };

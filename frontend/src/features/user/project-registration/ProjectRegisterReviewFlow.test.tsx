@@ -244,10 +244,17 @@ vi.mock('./components/FinalTermsStep', async () => {
 });
 
 // Renders the project registration route with deterministic step data.
-function renderFlow() {
+function renderFlow(
+  initialEntry:
+    | string
+    | {
+        pathname: string;
+        state?: Record<string, unknown>;
+      } = '/projects/SITE-ROUTE/PROJ-1/register',
+) {
   return render(
     <MemoryRouter
-      initialEntries={['/projects/SITE-ROUTE/PROJ-1/register']}
+      initialEntries={[initialEntry]}
       future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
     >
       <Routes>
@@ -385,6 +392,10 @@ describe('ProjectRegisterPage review flow', () => {
     const user = userEvent.setup();
     renderFlow();
 
+    expect(sustainabilityDefaultQueryMock).not.toHaveBeenCalledWith(
+      'SITE-SELECTED',
+      true,
+    );
     await user.click(await screen.findByRole('button', { name: '次へ' }));
     await user.click(screen.getByRole('button', { name: '次へ' }));
     await screen.findByText('持続可能性フォーム');
@@ -434,6 +445,59 @@ describe('ProjectRegisterPage review flow', () => {
       'SITE-SELECTED',
       false,
     );
+  });
+
+  it('uses defaults from the latest site selected in the equipment step', async () => {
+    const previousSiteEquipment: SolarEquipment = {
+      ...flowEquipment,
+      solarData: {
+        ...flowEquipment.solarData,
+        siteId: 'SITE-PREVIOUS',
+      },
+    };
+    draftStorageMocks.loadProjectRegistrationDraft.mockResolvedValueOnce({
+      version: 1,
+      currentStep: 1,
+      equipment: [previousSiteEquipment],
+      agreementFormValues: {},
+      contractFormValues: {
+        businessName: '以前の会社',
+        representativeName: '以前の代表者',
+        representativePosition: '以前の役職',
+        contractAgreed: true,
+      },
+      contractHasUserChanges: true,
+      contractSiteId: 'SITE-PREVIOUS',
+      finalTermsValues: {},
+      updatedAt: '2026-08-18T03:00:00.000Z',
+    });
+
+    renderFlow({
+      pathname: '/projects/SITE-ROUTE/PROJ-1/register',
+      state: { pendingEquipment: flowEquipment },
+    });
+
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: '次へ' }));
+    await screen.findByText('同意事項フォーム');
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+    await screen.findByText('持続可能性フォーム');
+    await waitFor(() => {
+      expect(sustainabilityDefaultQueryMock).toHaveBeenCalledWith(
+        'SITE-SELECTED',
+        true,
+      );
+      expect(screen.getByTestId('contract-business-name')).toHaveTextContent(
+        '初期株式会社',
+      );
+    });
+    expect(screen.getByTestId('contract-representative-name')).toHaveTextContent(
+      '初期代表者',
+    );
+    expect(
+      screen.getByTestId('contract-representative-position'),
+    ).toHaveTextContent('初期役職');
+    expect(screen.getByTestId('contract-agreed')).toHaveTextContent('false');
   });
 
   it('persists intentionally cleared Contract Step fields as user changes', async () => {
