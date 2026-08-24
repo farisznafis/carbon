@@ -1,4 +1,4 @@
-import type { UseFormReturn } from 'react-hook-form';
+import type { FieldPath, UseFormReturn } from 'react-hook-form';
 import type {
   Site,
   SiteProjectEquipmentFile,
@@ -29,9 +29,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { SolarPowerFormData } from '@/lib/equipmentValidations';
+import {
+  DEFAULT_UPLOAD_FILE_EXTENSIONS,
+  getUploadFileValidationError,
+} from '@/lib/uploadFileValidation';
 import { Plus } from 'lucide-react';
 
-const EQUIPMENT_FILE_FORMATS = '(.pdf, .csv, .jpg, .jpeg, .png)';
+const EQUIPMENT_FILE_ACCEPT = DEFAULT_UPLOAD_FILE_EXTENSIONS.join(',');
+const EQUIPMENT_FILE_FORMATS = `(${DEFAULT_UPLOAD_FILE_EXTENSIONS.join(', ')} / 最大10MB)`;
 const ADD_SITE_OPTION_VALUE = '__add_site__';
 
 type SolarPowerEquipmentFormProps = Readonly<{
@@ -56,8 +61,10 @@ type FileUploadControlProps = Readonly<{
   id: string;
   label: string;
   labelDescription?: string;
-  value?: File;
-  onChange: (file?: File) => void;
+  fieldName: FieldPath<SolarPowerFormData>;
+  form: UseFormReturn<SolarPowerFormData>;
+  value?: File | null;
+  onChange: (file: File | null) => void;
   required?: boolean;
   existingFile?: SiteProjectEquipmentFile | null;
 }>;
@@ -66,6 +73,8 @@ function FileUploadControl({
   id,
   label,
   labelDescription,
+  fieldName,
+  form,
   value,
   onChange,
   required = true,
@@ -79,13 +88,30 @@ function FileUploadControl({
     <div className="space-y-2">
       <FileSelectButton
         id={id}
+        accept={EQUIPMENT_FILE_ACCEPT}
         label={label}
         labelDescription={labelDescription}
         variant="design-system-pro"
         supportedFormats={EQUIPMENT_FILE_FORMATS}
         required={required}
         value={value ?? null}
-        onChange={(file) => onChange(file ?? undefined)}
+        onChange={(file) => {
+          const validationError = getUploadFileValidationError(
+            file,
+            DEFAULT_UPLOAD_FILE_EXTENSIONS,
+          );
+          if (validationError) {
+            onChange(null);
+            form.setError(fieldName, {
+              type: 'validate',
+              message: validationError,
+            });
+            return;
+          }
+
+          form.clearErrors(fieldName);
+          onChange(file);
+        }}
         helperText={
           existingFileName || required
             ? undefined
@@ -274,6 +300,8 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
               <FormControl>
                 <FileUploadControl
                   id="equipment-op-date-file"
+                  fieldName="operationStartDateFile"
+                  form={form}
                   label="太陽光発電所・発電設備を特定できる資料"
                   value={field.value}
                   onChange={field.onChange}
@@ -315,6 +343,8 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
               <FormControl>
                 <FileUploadControl
                   id="nominal-max-output-file"
+                  fieldName="nominalMaxOutputFile"
+                  form={form}
                   label="太陽光パネルの仕様書・カタログ"
                   value={field.value}
                   onChange={field.onChange}
@@ -418,6 +448,8 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
               <FormControl>
                 <FileUploadControl
                   id="pcs-file"
+                  fieldName="pcsFile"
+                  form={form}
                   label="パワーコンディショナーの仕様書"
                   value={field.value}
                   onChange={field.onChange}
@@ -505,6 +537,8 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
                   <FormControl>
                     <FileUploadControl
                       id="battery-file"
+                      fieldName="batteryFile"
+                      form={form}
                       label="蓄電池の仕様書・カタログ"
                       value={field.value}
                       onChange={field.onChange}
@@ -548,6 +582,8 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
               <FormControl>
                 <FileUploadControl
                   id="total-investment-file"
+                  fieldName="totalInvestmentFile"
+                  form={form}
                   label="設備の総投資額を確認できる資料"
                   labelDescription="例：工事請負契約書、請求書、領収書など"
                   value={field.value}
@@ -621,6 +657,8 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
                   <FormControl>
                     <FileUploadControl
                       id="subsidy-name-file"
+                      fieldName="subsidyNameFile"
+                      form={form}
                       label="補助金交付決定を確認できる資料"
                       labelDescription="例：補助金交付決定通知書"
                       value={field.value}
@@ -665,6 +703,8 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
               <FormControl>
                 <FileUploadControl
                   id="pre-project-unit-price-file"
+                  fieldName="preProjectUnitPriceFile"
+                  form={form}
                   label="電力購入単価を確認できる資料"
                   labelDescription="例：電力会社の請求明細書など"
                   value={field.value}
