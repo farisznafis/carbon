@@ -219,7 +219,7 @@ public class ProjectController {
     }
 
     @GetMapping("/{projectId}/participations/{participationId}/membership-pdf")
-    @PreAuthorize("hasAnyRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_VIEW.name()))")
+    @PreAuthorize("hasAnyRole('admin','master','user') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_VIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "入会届PDFダウンロード（管理者用）", description = "指定参加情報の入会届PDFダウンロードURLを取得します。")
     public ResponseEntity<ProjectPdfDownloadResponse> getMembershipPdf(
