@@ -12,7 +12,7 @@ import {
   type ParticipationReviewDetail,
 } from '@/api/admin';
 import { ApiError } from '@/api/_shared/errors';
-import { downloadProjectMembershipPdf } from '@/api/site';
+import { downloadProjectMembershipPdf } from '@/api/projects';
 import { FormActions, FormPageContent } from '@/components/forms/form-layout';
 import {
   floatingPageBackButtonClassName,
@@ -119,6 +119,7 @@ export default function ParticipationReviewDetailPage() {
     setIsDownloadingPdf(true);
     try {
       const { pdfUrl } = await downloadProjectMembershipPdf(
+        projectId,
         review.participationId,
       );
       downloadFromUrl(pdfUrl);

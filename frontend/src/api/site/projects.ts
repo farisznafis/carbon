@@ -1,8 +1,6 @@
 import { ApiError, getApiErrorMessage } from '../_shared/errors';
 import { apiFetch, parseJsonResponse } from '../_shared/httpClient';
-import type { ApiErrorPayload } from '../_shared/types';
 import type {
-  MembershipPdfDownload,
   MyProjectParticipation,
   MyProjectParticipationApiItem,
   SiteProject,
@@ -66,43 +64,6 @@ export async function getMyProjectParticipations(
     status: participation.status ?? '',
     pdfStatus: participation.pdfStatus ?? '',
   }));
-}
-
-// GET /site/project/participation/{participationId}/pdf
-// Requests the temporary URL used to download an approved membership PDF.
-export async function downloadProjectMembershipPdf(
-  participationId: number,
-): Promise<MembershipPdfDownload> {
-  const response = await apiFetch(
-    `/site/project/participation/${encodeURIComponent(String(participationId))}/pdf`,
-    { method: 'GET' },
-  );
-
-  const { data, rawBody } = await parseJsonResponse<
-    MembershipPdfDownload & ApiErrorPayload
-  >(response);
-
-  if (!response.ok) {
-    throw new ApiError(
-      getApiErrorMessage(
-        response,
-        data,
-        rawBody,
-        'PDFの取得に失敗しました',
-      ),
-      {
-        status: response.status,
-        payload: data,
-        rawBody,
-      },
-    );
-  }
-
-  if (!data?.pdfUrl) {
-    throw new Error('PDFのダウンロードURLが見つかりませんでした');
-  }
-
-  return { pdfUrl: data.pdfUrl, expiresIn: data.expiresIn ?? 0 };
 }
 
 export { SiteProject };

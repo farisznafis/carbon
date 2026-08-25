@@ -38,8 +38,8 @@ vi.mock('@/api/admin', async (importOriginal) => {
   };
 });
 
-vi.mock('@/api/site', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/api/site')>();
+vi.mock('@/api/projects', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/api/projects')>();
   return {
     ...actual,
     downloadProjectMembershipPdf,
@@ -249,7 +249,7 @@ describe('ParticipationReviewDetailPage', () => {
     await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
     await user.click(screen.getByRole('button', { name: 'PDFを表示' }));
 
-    expect(downloadProjectMembershipPdf).toHaveBeenCalledWith(12);
+    expect(downloadProjectMembershipPdf).toHaveBeenCalledWith('7', 12);
     expect(downloadFromUrl).toHaveBeenCalledWith(
       'https://example.com/membership.pdf',
     );

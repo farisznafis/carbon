@@ -4,9 +4,9 @@ import {
   getSiteData,
   getSiteProjects,
   getMyProjectParticipations,
-  downloadProjectMembershipPdf,
   type SiteProject,
 } from '@/api/site';
+import { downloadProjectMembershipPdf } from '@/api/projects';
 import {
   FormPageContent,
   FormPageTitle,
@@ -241,6 +241,7 @@ export default function ProjectMembershipPage() {
     setDownloadingProjectIds((current) => new Set(current).add(project.id));
     try {
       const { pdfUrl } = await downloadProjectMembershipPdf(
+        project.id,
         project.participationId,
       );
       downloadFromUrl(pdfUrl);

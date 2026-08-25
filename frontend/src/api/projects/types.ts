@@ -82,6 +82,11 @@ export interface Equipment {
   model: string;
 }
 
+export type ProjectMembershipPdfDownload = {
+  pdfUrl: string;
+  expiresIn: number;
+};
+
 export type ProjectListItem = {
   id: string;
   companyId?: string | number | null;
