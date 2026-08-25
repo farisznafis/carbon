@@ -108,7 +108,7 @@ const projectStatusAliases: Partial<Record<string, ProjectStatus>> = {
 
 const PROJECT_NAME_COLUMN_MIN_WIDTH_PX = 180;
 const projectTableRemainingGridColumns =
-  'minmax(86px, 0.55fr) minmax(86px, 0.55fr) minmax(130px, 0.75fr) minmax(130px, 0.8fr) minmax(150px, 1fr)';
+  '90px 90px minmax(170px, 1fr) 140px 150px';
 
 function isProjectStatus(status: string): status is ProjectStatus {
   return projectStatusOptions.includes(status as ProjectStatus);
@@ -317,7 +317,7 @@ export function ProjectTable({
       label: '操作',
       render: (project) => (
         <div
-          className="flex justify-start gap-2"
+          className="flex justify-end gap-2"
           onClick={(event) => event.stopPropagation()}
           onPointerDown={(event) => event.stopPropagation()}
         >

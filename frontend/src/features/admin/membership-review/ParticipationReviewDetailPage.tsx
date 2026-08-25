@@ -17,50 +17,26 @@ import {
   floatingPageBackButtonClassName,
   PageBackButton,
 } from '@/components/navigation/PageBackButton';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
-import { ParticipationReviewChecklistCard } from './ParticipationReviewChecklistCard';
+import {
+  ParticipationReviewDecisionDialog,
+  type ParticipationReviewDecision,
+  type ParticipationReviewDecisionErrors,
+} from './ParticipationReviewDecisionDialog';
 import { ParticipationReviewSections } from './ParticipationReviewSections';
 import { isParticipationReviewForProject } from './participationReviewProjectMatch';
 
-type Decision = 'approve' | 'reject';
-
-type FieldErrors = {
-  reviewerInkan: string | null;
-  rejectReason: string | null;
-  checklist: string | null;
-};
-
-const EMPTY_FIELD_ERRORS: FieldErrors = {
+const EMPTY_FIELD_ERRORS: ParticipationReviewDecisionErrors = {
   reviewerInkan: null,
   rejectReason: null,
   checklist: null,
 };
 
+/** Returns an API error message while preserving a readable fallback. */
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error && error.message ? error.message : fallback;
-}
-
-function checklistFromReview(
-  review: ParticipationReviewDetail,
-): ParticipationReviewChecklist {
-  return participationReviewChecklistFields.reduce<ParticipationReviewChecklist>(
-    (checklist, fieldName) => {
-      checklist[fieldName] = review.review[fieldName];
-      return checklist;
-    },
-    {} as ParticipationReviewChecklist,
-  );
 }
 
 /** Creates a fresh unchecked checklist for the current reviewer's decision. */
@@ -74,7 +50,10 @@ function createEmptyChecklist(): ParticipationReviewChecklist {
   );
 }
 
-function readBackendErrors(error: unknown): FieldErrors {
+/** Maps backend decision errors to the matching fields inside the dialog. */
+function readBackendErrors(
+  error: unknown,
+): ParticipationReviewDecisionErrors {
   if (!(error instanceof ApiError)) return EMPTY_FIELD_ERRORS;
   const errors = error.payload?.errors;
   if (!errors || typeof errors !== 'object' || Array.isArray(errors)) {
@@ -102,6 +81,7 @@ function readBackendErrors(error: unknown): FieldErrors {
   };
 }
 
+/** Displays an application review and coordinates its approve or reject decision. */
 export default function ParticipationReviewDetailPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -115,9 +95,10 @@ export default function ParticipationReviewDetailPage() {
   );
   const [reviewerInkan, setReviewerInkan] = useState('');
   const [rejectReason, setRejectReason] = useState('');
-  const [decision, setDecision] = useState<Decision | null>(null);
+  const [decision, setDecision] =
+    useState<ParticipationReviewDecision | null>(null);
   const [fieldErrors, setFieldErrors] =
-    useState<FieldErrors>(EMPTY_FIELD_ERRORS);
+    useState<ParticipationReviewDecisionErrors>(EMPTY_FIELD_ERRORS);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -165,11 +146,7 @@ export default function ParticipationReviewDetailPage() {
 
       setReview(detail);
       setIsReviewable(isCurrentUserReviewable);
-      setChecklist(
-        isCurrentUserReviewable
-          ? createEmptyChecklist()
-          : checklistFromReview(detail),
-      );
+      setChecklist(createEmptyChecklist());
       setReviewerInkan('');
       setRejectReason('');
       setDecision(null);
@@ -197,13 +174,13 @@ export default function ParticipationReviewDetailPage() {
     [checklist],
   );
   const hasReviewerInkan = Boolean(reviewerInkan.trim());
-  const canApprove =
-    isReviewable &&
+  const canSubmitDecision =
     hasReviewerInkan &&
     allChecklistItemsChecked &&
+    (decision !== 'reject' || Boolean(rejectReason.trim())) &&
     !isSubmitting;
-  const canReject = isReviewable && hasReviewerInkan && !isSubmitting;
 
+  /** Updates one checklist item and clears errors that it resolves. */
   const updateChecklist = (
     fieldName: ParticipationReviewChecklistField,
     checked: boolean,
@@ -215,21 +192,22 @@ export default function ParticipationReviewDetailPage() {
     setSubmitError(null);
   };
 
-  const openDecision = (nextDecision: Decision) => {
+  /** Opens the selected decision form while retaining the current review draft. */
+  const openDecision = (nextDecision: ParticipationReviewDecision) => {
     setDecision(nextDecision);
-    setRejectReason('');
     setFieldErrors(EMPTY_FIELD_ERRORS);
     setSubmitError(null);
   };
 
+  /** Closes the dialog without discarding fields entered for this participation. */
   const closeDecision = (open: boolean) => {
     if (open || isSubmitting) return;
     setDecision(null);
-    setRejectReason('');
     setFieldErrors(EMPTY_FIELD_ERRORS);
     setSubmitError(null);
   };
 
+  /** Sends the validated checklist to the selected approve or reject endpoint. */
   const submitDecision = async () => {
     if (!review || !checklist || !decision || isSubmitting) return;
 
@@ -244,7 +222,7 @@ export default function ParticipationReviewDetailPage() {
       return;
     }
 
-    if (decision === 'approve' && !allChecklistItemsChecked) {
+    if (!allChecklistItemsChecked) {
       setFieldErrors((current) => ({
         ...current,
         checklist: 'すべてのチェック項目を確認してください。',
@@ -347,8 +325,6 @@ export default function ParticipationReviewDetailPage() {
     );
   }
 
-  const isRejection = decision === 'reject';
-
   return (
     <main className="relative min-h-screen bg-background px-4 py-10 sm:px-6 lg:px-8">
       <PageBackButton
@@ -377,13 +353,41 @@ export default function ParticipationReviewDetailPage() {
 
         <ParticipationReviewSections review={review} />
 
-        <ParticipationReviewChecklistCard
+        {isReviewable && (
+          <FormActions
+            actions={[
+              {
+                id: 'reject',
+                label: '却下',
+                variant: 'destructive',
+                disabled: isSubmitting,
+                onClick: () => openDecision('reject'),
+              },
+              {
+                id: 'approve',
+                label: '承認',
+                variant: 'success',
+                disabled: isSubmitting,
+                onClick: () => openDecision('approve'),
+              },
+            ]}
+          />
+        )}
+      </FormPageContent>
+
+      {isReviewable && (
+        <ParticipationReviewDecisionDialog
+          open={Boolean(decision)}
+          decision={decision}
+          review={review}
           checklist={checklist}
           reviewerInkan={reviewerInkan}
-          readOnly={!isReviewable}
-          reviewerInkanError={fieldErrors.reviewerInkan}
-          checklistError={fieldErrors.checklist}
-          disabled={isSubmitting}
+          rejectReason={rejectReason}
+          fieldErrors={fieldErrors}
+          submitError={submitError}
+          isSubmitting={isSubmitting}
+          canSubmit={canSubmitDecision}
+          onOpenChange={closeDecision}
           onChecklistChange={updateChecklist}
           onReviewerInkanChange={(value) => {
             setReviewerInkan(value);
@@ -393,108 +397,17 @@ export default function ParticipationReviewDetailPage() {
             }));
             setSubmitError(null);
           }}
+          onRejectReasonChange={(value) => {
+            setRejectReason(value);
+            setFieldErrors((current) => ({
+              ...current,
+              rejectReason: null,
+            }));
+            setSubmitError(null);
+          }}
+          onSubmit={() => void submitDecision()}
         />
-
-        {isReviewable && (
-          <FormActions
-            actions={[
-              {
-                id: 'reject',
-                label: '却下',
-                variant: 'destructive',
-                disabled: !canReject,
-                onClick: () => openDecision('reject'),
-              },
-              {
-                id: 'approve',
-                label: '承認',
-                variant: 'success',
-                disabled: !canApprove,
-                onClick: () => openDecision('approve'),
-              },
-            ]}
-          />
-        )}
-      </FormPageContent>
-
-      <AlertDialog open={Boolean(decision)} onOpenChange={closeDecision}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              入会届を{isRejection ? '却下' : '承認'}しますか？
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              入会届ID: {review.participationId}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          {isRejection && (
-            <div className="space-y-2">
-              <Label htmlFor="reject-reason">却下理由（必須）</Label>
-              <Textarea
-                id="reject-reason"
-                value={rejectReason}
-                onChange={(event) => {
-                  setRejectReason(event.target.value);
-                  setFieldErrors((current) => ({
-                    ...current,
-                    rejectReason: null,
-                  }));
-                  setSubmitError(null);
-                }}
-                placeholder="却下理由を入力してください"
-                disabled={isSubmitting}
-                aria-invalid={Boolean(fieldErrors.rejectReason)}
-                aria-describedby={
-                  fieldErrors.rejectReason ? 'reject-reason-error' : undefined
-                }
-              />
-              {fieldErrors.rejectReason && (
-                <p
-                  id="reject-reason-error"
-                  role="alert"
-                  className="text-small text-destructive"
-                >
-                  {fieldErrors.rejectReason}
-                </p>
-              )}
-            </div>
-          )}
-
-          {submitError && (
-            <p role="alert" className="text-small text-destructive">
-              {submitError}
-            </p>
-          )}
-
-          <AlertDialogFooter>
-            <FormActions
-              context="compact"
-              className="w-full"
-              disabled={isSubmitting}
-              pendingActionId={isSubmitting ? 'confirm' : null}
-              actions={[
-                {
-                  id: 'cancel',
-                  label: 'キャンセル',
-                  variant: 'outline',
-                  onClick: () => closeDecision(false),
-                },
-                {
-                  id: 'confirm',
-                  label: isRejection ? '却下する' : '承認する',
-                  pendingLabel: '処理中...',
-                  variant: isRejection ? 'destructive' : 'success',
-                  disabled: isRejection
-                    ? !rejectReason.trim()
-                    : !allChecklistItemsChecked,
-                  onClick: () => void submitDecision(),
-                },
-              ]}
-            />
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      )}
     </main>
   );
 }

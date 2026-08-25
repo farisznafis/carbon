@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '@/api/_shared/errors';
 import { mapParticipationReviewDetail } from '@/api/admin/participationReviewMapper';
 import ParticipationReviewDetailPage from './ParticipationReviewDetailPage';
 
@@ -113,7 +114,7 @@ describe('ParticipationReviewDetailPage', () => {
     rejectParticipationReview.mockResolvedValue(undefined);
   });
 
-  it('enables approval only after reviewer inkan and every checklist item are set', async () => {
+  it('opens the approval form and enables submission only after every required field is set', async () => {
     const user = userEvent.setup();
     renderPage();
 
@@ -122,7 +123,15 @@ describe('ParticipationReviewDetailPage', () => {
     ).toBeInTheDocument();
 
     const approveButton = screen.getByRole('button', { name: '承認' });
-    expect(approveButton).toBeDisabled();
+    expect(approveButton).toBeEnabled();
+    expect(
+      screen.queryByRole('heading', { name: 'レビューチェックリスト' }),
+    ).not.toBeInTheDocument();
+
+    await user.click(approveButton);
+
+    const confirmButton = screen.getByRole('button', { name: '承認する' });
+    expect(confirmButton).toBeDisabled();
 
     await user.type(
       screen.getByRole('textbox', { name: /レビュー担当者印/ }),
@@ -132,9 +141,8 @@ describe('ParticipationReviewDetailPage', () => {
       await user.click(checkbox);
     }
 
-    expect(approveButton).toBeEnabled();
-    await user.click(approveButton);
-    await user.click(screen.getByRole('button', { name: '承認する' }));
+    expect(confirmButton).toBeEnabled();
+    await user.click(confirmButton);
 
     expect(approveParticipationReview).toHaveBeenCalledWith(
       12,
@@ -149,7 +157,8 @@ describe('ParticipationReviewDetailPage', () => {
     ).not.toHaveProperty('rejectReason');
   });
 
-  it('starts every reviewable item with an unchecked checklist', async () => {
+  it('starts every decision dialog with an unchecked checklist', async () => {
+    const user = userEvent.setup();
     getParticipationReviewDetail.mockResolvedValue({
       ...reviewDetail,
       review: {
@@ -174,9 +183,111 @@ describe('ParticipationReviewDetailPage', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: '入会届の詳細' }),
     ).toBeInTheDocument();
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+
+    await user.click(screen.getByRole('button', { name: '承認' }));
+
     expect(
-      screen.getAllByRole('checkbox').every((checkbox) => !checkbox.hasAttribute('data-state') || checkbox.getAttribute('data-state') === 'unchecked'),
+      screen
+        .getAllByRole('checkbox')
+        .every(
+          (checkbox) =>
+            !checkbox.hasAttribute('data-state') ||
+            checkbox.getAttribute('data-state') === 'unchecked',
+        ),
     ).toBe(true);
+  });
+
+  it('requires a complete rejection form and preserves its draft after closing', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
+    await user.click(screen.getByRole('button', { name: '却下' }));
+
+    const rejectButton = screen.getByRole('button', { name: '却下する' });
+    expect(rejectButton).toBeDisabled();
+
+    await user.type(
+      screen.getByRole('textbox', { name: /レビュー担当者印/ }),
+      '山田',
+    );
+    await user.type(
+      screen.getByRole('textbox', { name: /却下理由/ }),
+      '資料に不備があります。',
+    );
+    for (const checkbox of screen.getAllByRole('checkbox')) {
+      await user.click(checkbox);
+    }
+
+    expect(rejectButton).toBeEnabled();
+    await user.click(screen.getByRole('button', { name: 'キャンセル' }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('button', { name: '却下する' }),
+      ).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: '却下' }));
+    expect(
+      screen.getByRole('textbox', { name: /レビュー担当者印/ }),
+    ).toHaveValue('山田');
+    expect(screen.getByRole('textbox', { name: /却下理由/ })).toHaveValue(
+      '資料に不備があります。',
+    );
+    expect(
+      screen
+        .getAllByRole('checkbox')
+        .every((checkbox) => checkbox.getAttribute('data-state') === 'checked'),
+    ).toBe(true);
+
+    await user.click(screen.getByRole('button', { name: '却下する' }));
+
+    expect(rejectParticipationReview).toHaveBeenCalledWith(
+      12,
+      expect.objectContaining({
+        reviewerInkan: '山田',
+        rejectReason: '資料に不備があります。',
+        isSolarContractDoc: true,
+        isSubsidyCheck: true,
+      }),
+    );
+  });
+
+  it('keeps the decision dialog open and displays backend field errors', async () => {
+    const user = userEvent.setup();
+    approveParticipationReview.mockRejectedValue(
+      new ApiError('入力内容に不備があります。', {
+        status: 400,
+        payload: {
+          statusCode: 'VALIDATION_ERROR',
+          message: '入力内容に不備があります。',
+          errors: {
+            reviewerInkan: 'レビュー担当者印を確認してください。',
+          },
+        },
+      }),
+    );
+    renderPage();
+
+    await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
+    await user.click(screen.getByRole('button', { name: '承認' }));
+    await user.type(
+      screen.getByRole('textbox', { name: /レビュー担当者印/ }),
+      '山田',
+    );
+    for (const checkbox of screen.getAllByRole('checkbox')) {
+      await user.click(checkbox);
+    }
+    await user.click(screen.getByRole('button', { name: '承認する' }));
+
+    expect(
+      await screen.findByText('レビュー担当者印を確認してください。'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: '入会届を承認しますか？' }),
+    ).toBeInTheDocument();
   });
 
   it('renders a non-reviewable pending item as read-only', async () => {
@@ -193,8 +304,6 @@ describe('ParticipationReviewDetailPage', () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '承認' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '却下' })).not.toBeInTheDocument();
-    expect(screen.getAllByRole('checkbox').every((item) => item.hasAttribute('disabled'))).toBe(
-      true,
-    );
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
   });
 });
