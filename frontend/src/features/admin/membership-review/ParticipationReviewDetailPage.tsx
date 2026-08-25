@@ -12,6 +12,7 @@ import {
   type ParticipationReviewDetail,
 } from '@/api/admin';
 import { ApiError } from '@/api/_shared/errors';
+import { downloadProjectMembershipPdf } from '@/api/site';
 import { FormActions, FormPageContent } from '@/components/forms/form-layout';
 import {
   floatingPageBackButtonClassName,
@@ -20,11 +21,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
+import { downloadFromUrl } from '@/utils/download';
 import {
   ParticipationReviewDecisionDialog,
   type ParticipationReviewDecision,
   type ParticipationReviewDecisionErrors,
 } from './ParticipationReviewDecisionDialog';
+import { ParticipationReviewPdfCard } from './ParticipationReviewPdfCard';
 import { ParticipationReviewSections } from './ParticipationReviewSections';
 import { isParticipationReviewForProject } from './participationReviewProjectMatch';
 
@@ -103,10 +106,35 @@ export default function ParticipationReviewDetailPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   const returnToList = useCallback(() => {
     navigate(paths.adminProjectMembership(projectId));
   }, [navigate, projectId]);
+
+  /** Fetches a fresh membership PDF URL and opens it without leaving the review page. */
+  const handleViewMembershipPdf = async () => {
+    if (!review || isDownloadingPdf) return;
+
+    setIsDownloadingPdf(true);
+    try {
+      const { pdfUrl } = await downloadProjectMembershipPdf(
+        review.participationId,
+      );
+      downloadFromUrl(pdfUrl);
+    } catch (error) {
+      toast({
+        title: 'PDFを表示できませんでした',
+        description:
+          error instanceof Error && error.message
+            ? error.message
+            : 'しばらくしてからもう一度お試しください。',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
 
   const loadReview = useCallback(async () => {
     if (
@@ -350,6 +378,11 @@ export default function ParticipationReviewDetailPage() {
             この入会届は現在あなたのレビュー対象ではないため、閲覧のみ可能です。
           </div>
         )}
+
+        <ParticipationReviewPdfCard
+          isLoading={isDownloadingPdf}
+          onView={() => void handleViewMembershipPdf()}
+        />
 
         <ParticipationReviewSections review={review} />
 

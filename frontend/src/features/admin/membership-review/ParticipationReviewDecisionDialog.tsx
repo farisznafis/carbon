@@ -135,6 +135,7 @@ export function ParticipationReviewDecisionDialog({
                       id={checkboxId}
                       checked={checklist[fieldName]}
                       disabled={isSubmitting}
+                      aria-required="true"
                       onCheckedChange={(checked) =>
                         onChecklistChange(fieldName, checked === true)
                       }
@@ -142,9 +143,10 @@ export function ParticipationReviewDecisionDialog({
                     />
                     <Label
                       htmlFor={checkboxId}
-                      className="cursor-pointer text-small leading-5 text-foreground"
+                      className="inline-flex cursor-pointer flex-wrap items-center gap-1 text-small leading-5 text-foreground"
                     >
-                      {participationReviewChecklistLabels[fieldName]}
+                      <span>{participationReviewChecklistLabels[fieldName]}</span>
+                      <RequiredBadge />
                     </Label>
                   </div>
                 );

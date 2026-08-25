@@ -12,12 +12,18 @@ const {
   getMyParticipationReviews,
   getParticipationReviewDetail,
   rejectParticipationReview,
+  downloadProjectMembershipPdf,
+  downloadFromUrl,
+  toast,
 } = vi.hoisted(() => ({
   approveParticipationReview: vi.fn(),
   getAdminProjectDetail: vi.fn(),
   getMyParticipationReviews: vi.fn(),
   getParticipationReviewDetail: vi.fn(),
   rejectParticipationReview: vi.fn(),
+  downloadProjectMembershipPdf: vi.fn(),
+  downloadFromUrl: vi.fn(),
+  toast: vi.fn(),
 }));
 
 vi.mock('@/api/admin', async (importOriginal) => {
@@ -31,6 +37,20 @@ vi.mock('@/api/admin', async (importOriginal) => {
     rejectParticipationReview,
   };
 });
+
+vi.mock('@/api/site', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/api/site')>();
+  return {
+    ...actual,
+    downloadProjectMembershipPdf,
+  };
+});
+
+vi.mock('@/utils/download', () => ({ downloadFromUrl }));
+
+vi.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({ toast }),
+}));
 
 const reviewDetail = mapParticipationReviewDetail({
   participationId: 12,
@@ -104,6 +124,9 @@ describe('ParticipationReviewDetailPage', () => {
     getMyParticipationReviews.mockReset();
     getParticipationReviewDetail.mockReset();
     rejectParticipationReview.mockReset();
+    downloadProjectMembershipPdf.mockReset();
+    downloadFromUrl.mockReset();
+    toast.mockReset();
     getAdminProjectDetail.mockResolvedValue({
       id: '7',
       projectName: 'プロジェクトA',
@@ -112,6 +135,10 @@ describe('ParticipationReviewDetailPage', () => {
     getMyParticipationReviews.mockResolvedValue([reviewDetail]);
     approveParticipationReview.mockResolvedValue(undefined);
     rejectParticipationReview.mockResolvedValue(undefined);
+    downloadProjectMembershipPdf.mockResolvedValue({
+      pdfUrl: 'https://example.com/membership.pdf',
+      expiresIn: 300,
+    });
   });
 
   it('opens the approval form and enables submission only after every required field is set', async () => {
@@ -196,6 +223,56 @@ describe('ParticipationReviewDetailPage', () => {
             checkbox.getAttribute('data-state') === 'unchecked',
         ),
     ).toBe(true);
+  });
+
+  it('marks every checklist item as required', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
+    await user.click(screen.getByRole('button', { name: '承認' }));
+
+    const checkboxes = screen.getAllByRole('checkbox');
+    expect(checkboxes).toHaveLength(12);
+    for (const checkbox of checkboxes) {
+      expect(checkbox).toHaveAttribute('aria-required', 'true');
+      const checkboxId = checkbox.getAttribute('id');
+      const label = document.querySelector(`label[for="${checkboxId}"]`);
+      expect(label).toHaveTextContent('*');
+    }
+  });
+
+  it('gets the membership PDF and opens its temporary URL', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
+    await user.click(screen.getByRole('button', { name: 'PDFを表示' }));
+
+    expect(downloadProjectMembershipPdf).toHaveBeenCalledWith(12);
+    expect(downloadFromUrl).toHaveBeenCalledWith(
+      'https://example.com/membership.pdf',
+    );
+  });
+
+  it('keeps the page available and shows a toast when the PDF cannot be opened', async () => {
+    const user = userEvent.setup();
+    downloadProjectMembershipPdf.mockRejectedValue(
+      new Error('PDFがまだ作成されていません。'),
+    );
+    renderPage();
+
+    await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
+    await user.click(screen.getByRole('button', { name: 'PDFを表示' }));
+
+    expect(toast).toHaveBeenCalledWith({
+      title: 'PDFを表示できませんでした',
+      description: 'PDFがまだ作成されていません。',
+      variant: 'destructive',
+    });
+    expect(
+      screen.getByRole('heading', { level: 1, name: '入会届の詳細' }),
+    ).toBeInTheDocument();
   });
 
   it('requires a complete rejection form and preserves its draft after closing', async () => {
@@ -305,5 +382,6 @@ describe('ParticipationReviewDetailPage', () => {
     expect(screen.queryByRole('button', { name: '承認' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '却下' })).not.toBeInTheDocument();
     expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+    expect(screen.getByRole('button', { name: 'PDFを表示' })).toBeEnabled();
   });
 });
