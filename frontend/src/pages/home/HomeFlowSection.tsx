@@ -15,12 +15,12 @@ export function HomeFlowSection() {
       <div className="mx-auto w-full max-w-marketing space-y-8 px-4 sm:space-y-10 sm:px-6 lg:px-8 2xl:space-y-12">
         <HomeSectionHeading id="home-flow-title" title="ご利用の流れ" />
 
-        <div className="flex flex-col items-stretch gap-4 lg:flex-row lg:items-center">
+        <div className="flex flex-col items-stretch gap-4 lg:flex-row">
           {HOME_FLOW_STEPS.map((step, index) => (
             <Fragment key={step.title}>
-              <Card className="flex-1 border-border/70 shadow-app-md">
-                <CardContent className="flex h-full flex-col gap-3 p-5 2xl:gap-4 2xl:p-6">
-                  <div className="flex items-center gap-3">
+              <Card className="flex flex-1 border-border/70 shadow-app-md">
+                <CardContent className="flex flex-1 flex-col gap-3 p-5 2xl:gap-4 2xl:p-6">
+                  <div className="flex items-center gap-3 lg:min-h-14">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary font-semibold text-primary">
                       {index + 1}
                     </span>
@@ -37,7 +37,7 @@ export function HomeFlowSection() {
                       className="h-full w-full object-contain"
                     />
                   </div>
-                  <p className="text-sm leading-6 text-muted-foreground">
+                  <p className="flex-1 text-sm leading-6 text-muted-foreground">
                     {step.description}
                   </p>
                 </CardContent>

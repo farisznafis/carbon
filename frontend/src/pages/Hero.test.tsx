@@ -44,6 +44,19 @@ describe('Hero', () => {
     expect(
       screen.getAllByRole('button', { name: 'お問い合わせ（準備中）' }),
     ).toHaveLength(2);
+    expect(screen.getByText('接触')).toBeVisible();
+    expect(screen.getByText('〒100-0005')).toBeVisible();
+    expect(screen.getByText('東京都千代田区丸の内1-1-1')).toBeVisible();
+    expect(screen.getByRole('link', { name: 'info@company.com' })).toHaveAttribute(
+      'href',
+      'mailto:info@company.com',
+    );
+    expect(screen.getByRole('link', { name: '+81 70-1234-5678' })).toHaveAttribute(
+      'href',
+      'tel:+817012345678',
+    );
+    expect(screen.getByText('利用規約')).toBeVisible();
+    expect(screen.getByText('プライバシーポリシー')).toBeVisible();
   });
 
   it.each(['無料で始める', '今すぐ登録する'])(
