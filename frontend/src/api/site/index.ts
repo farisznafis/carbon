@@ -8,7 +8,6 @@ export {
   validateUpdateSite,
 } from './mutations';
 export {
-  downloadProjectMembershipPdf,
   getMyProjectParticipations,
   getSiteProjects,
 } from './projects';
@@ -60,7 +59,6 @@ export type {
   SiteProjectJoinSustainabilityCommitmentResponse,
   SiteProjectSustainabilityCommitmentDefaultResponse,
   SiteListItem,
-  MembershipPdfDownload,
   MyProjectParticipation,
   MyProjectParticipationApiItem,
   SiteProject,
