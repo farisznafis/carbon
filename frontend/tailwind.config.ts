@@ -15,7 +15,8 @@ export default {
   	},
   	extend: {
 		maxWidth: {
-			app: '75rem'
+			app: '75rem',
+			marketing: '97.5rem'
 		},
   		colors: {
   			border: 'hsl(var(--border))',
@@ -92,7 +93,8 @@ export default {
   		},
       boxShadow: {
         'app-sm': 'var(--shadow-sm)',
-        'app-md': 'var(--shadow-md)'
+        'app-md': 'var(--shadow-md)',
+        marketing: 'var(--shadow-marketing)'
       },
   		keyframes: {
   			'accordion-down': {

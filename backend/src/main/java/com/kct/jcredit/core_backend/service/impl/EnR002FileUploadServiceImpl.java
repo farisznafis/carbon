@@ -119,20 +119,24 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
     // MOVE
 
     @Override
-    public String moveTempToPermanent(String tempS3Key,
-                                       String siteId,
-                                       Integer equipmentId) {
+    public String buildPermanentKey(String tempS3Key,
+                                     String siteId,
+                                     Integer equipmentId) {
 
         String fileNamePart = tempS3Key.replaceAll(
                 "^tmp/equipments/[^/]+/", ""
         );
 
-        String permanentKey = String.format(
+        return String.format(
                 "sites/%s/equipments/%d/%s",
                 siteId,
                 equipmentId,
                 fileNamePart
         );
+    }
+
+    @Override
+    public void moveToPermanent(String tempS3Key, String permanentKey) {
 
         s3Client.copyObject(CopyObjectRequest.builder()
                 .sourceBucket(bucketName)
@@ -148,7 +152,6 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
                 .build());
 
         log.info("S3 file moved. from={}, to={}", tempS3Key, permanentKey);
-        return permanentKey;
     }
         @Override
         public void deletePermanentFile(String s3Key, Integer excludeEquipmentId) {

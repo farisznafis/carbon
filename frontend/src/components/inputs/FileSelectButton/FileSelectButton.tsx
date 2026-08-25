@@ -13,6 +13,7 @@ type Props = {
   supportedFormats?: string;
   labelDescription?: string;
   helperText?: string;
+  accept?: string;
   variant?: 'default' | 'design-system-pro';
   required?: boolean;
 };
@@ -26,6 +27,7 @@ export function FileSelectButton({
   supportedFormats = '(.pdf, .csv, .jpg, .jpeg, .png)',
   labelDescription,
   helperText,
+  accept,
   variant = 'default',
   required = false,
 }: Readonly<Props>) {
@@ -128,10 +130,12 @@ export function FileSelectButton({
         <input
           id={id}
           type="file"
+          accept={accept}
           className="hidden"
           aria-required={required}
           onChange={(e) => {
             const file = e.target.files?.[0] ?? null;
+            e.currentTarget.value = '';
             onChange(file);
           }}
         />
@@ -156,10 +160,12 @@ export function FileSelectButton({
       <input
         id={id}
         type="file"
+        accept={accept}
         className="hidden"
         aria-required={required}
         onChange={(e) => {
           const file = e.target.files?.[0] ?? null;
+          e.currentTarget.value = '';
           onChange(file);
         }}
       />

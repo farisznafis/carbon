@@ -22,11 +22,18 @@ public interface EnR002FileUploadService {
                                         String uploadedBy,
                                         MultipartFile file);
 
+    // Hitung key final dari key temp. Tidak menyentuh S3 sama sekali, supaya
+    // key ini bisa disimpan ke DB di dalam transaksi — sebelum objectnya dipindah.
     // projectId dihapus — equipment cuma butuh siteId + equipmentId
-    String moveTempToPermanent(String tempS3Key,
-                               String siteId,
-                               Integer equipmentId);
+    String buildPermanentKey(String tempS3Key,
+                             String siteId,
+                             Integer equipmentId);
 
-    // Interface
+    // Copy tmp → permanent lalu hapus tmp. Dipanggil setelah commit, memakai
+    // key yang sudah tercatat di DB, jadi DB tidak pernah menunjuk ke tmp/.
+    void moveToPermanent(String tempS3Key, String permanentKey);
+
+    // Hapus object permanent. Object yang masih dirujuk equipment lain
+    // dilewati, jadi file yang dipakai bersama tidak ikut terhapus.
     void deletePermanentFile(String s3Key, Integer excludeEquipmentId);
 }
