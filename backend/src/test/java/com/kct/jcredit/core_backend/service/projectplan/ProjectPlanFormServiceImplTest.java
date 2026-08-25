@@ -220,7 +220,9 @@ class ProjectPlanFormServiceImplTest {
                 service.getProgress(PROJECT_ID, "C1", "operator", "u1");
 
         assertThat(response.getCompletedForms()).isEqualTo(1);
-        assertThat(response.getTotalForms()).isEqualTo(3);
+        // Derived, not hardcoded, so registering another page does not break this.
+        assertThat(response.getTotalForms())
+                .isEqualTo(new ProjectPlanFormRegistry().all().size());
         // The application page is done, so the operator resumes at the next one.
         assertThat(response.getNextIncompleteSlug()).isEqualTo("other-operator-projects");
     }

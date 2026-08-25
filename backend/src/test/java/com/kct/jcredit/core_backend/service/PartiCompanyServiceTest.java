@@ -55,6 +55,7 @@ class PartiCompanyServiceTest {
         testCompany.setPhoneNumber("03-1234-5678");
         testCompany.setFax("03-1234-5679");
         testCompany.setCorpNumber("1234567890123");
+        testCompany.setPostalCode("1000001");
         testCompany.setPrefecture("東京都");
         testCompany.setMunicipality("渋谷区");
         testCompany.setBlocknum("1-1-1");
@@ -68,9 +69,17 @@ class PartiCompanyServiceTest {
         // Given
         updateRequest.setPhoneNumber("03-9999-9999");
         updateRequest.setFax("03-8888-8888");
-        updateRequest.setEmail("updated@example.com");
+        updateRequest.setNameJa("更新株式会社");
+        updateRequest.setNameFurigana("コウシンカブシキガイシャ");
+        updateRequest.setNameEn("Updated Corporation");
+        updateRequest.setCorpNumber("9876543210123");
+        updateRequest.setPostalCode("1500001");
+        updateRequest.setPrefecture("東京都");
+        updateRequest.setMunicipality("渋谷区");
+        updateRequest.setBlocknum("2-2-2");
+        updateRequest.setBuildingName("更新ビル");
 
-        when(participatingCompanyRepository.findByCompanyId(TEST_COMPANY_ID))
+        when(participatingCompanyRepository.findByCompanyIdForUpdate(TEST_COMPANY_ID))
                 .thenReturn(Optional.of(testCompany));
         when(participatingCompanyRepository.save(any(ParticipatingCompany.class)))
                 .thenReturn(testCompany);
@@ -83,12 +92,16 @@ class PartiCompanyServiceTest {
         assertThat(response.getCompany()).isNotNull();
         assertThat(response.getCompany().getPhoneNumber()).isEqualTo("03-9999-9999");
         assertThat(response.getCompany().getFax()).isEqualTo("03-8888-8888");
-        assertThat(response.getCompany().getEmail()).isEqualTo("updated@example.com");
-        assertThat(response.getCompany().getNameJA()).isEqualTo("テスト株式会社");
+        assertThat(response.getCompany().getEmail()).isEqualTo("test@example.com");
+        assertThat(response.getCompany().getNameJA()).isEqualTo("更新株式会社");
+        assertThat(response.getCompany().getNameFurigana()).isEqualTo("コウシンカブシキガイシャ");
+        assertThat(response.getCompany().getNameEN()).isEqualTo("Updated Corporation");
+        assertThat(response.getCompany().getCorpNumber()).isEqualTo("9876543210123");
+        assertThat(response.getCompany().getPostalCode()).isEqualTo("1500001");
         assertThat(response.getCompany().getAddress())
-                .isEqualTo("東京都 渋谷区 1-1-1 テストビル");
+                .isEqualTo("東京都 渋谷区 2-2-2 更新ビル");
 
-        verify(participatingCompanyRepository, times(1)).findByCompanyId(TEST_COMPANY_ID);
+        verify(participatingCompanyRepository, times(1)).findByCompanyIdForUpdate(TEST_COMPANY_ID);
         verify(participatingCompanyRepository, times(1)).save(testCompany);
     }
 
@@ -98,7 +111,7 @@ class PartiCompanyServiceTest {
         // Given
         updateRequest.setPhoneNumber("03-9999-9999");
 
-        when(participatingCompanyRepository.findByCompanyId(TEST_COMPANY_ID))
+        when(participatingCompanyRepository.findByCompanyIdForUpdate(TEST_COMPANY_ID))
                 .thenReturn(Optional.of(testCompany));
         when(participatingCompanyRepository.save(any(ParticipatingCompany.class)))
                 .thenReturn(testCompany);
@@ -121,7 +134,7 @@ class PartiCompanyServiceTest {
         // Given
         updateRequest.setFax("03-7777-7777");
 
-        when(participatingCompanyRepository.findByCompanyId(TEST_COMPANY_ID))
+        when(participatingCompanyRepository.findByCompanyIdForUpdate(TEST_COMPANY_ID))
                 .thenReturn(Optional.of(testCompany));
         when(participatingCompanyRepository.save(any(ParticipatingCompany.class)))
                 .thenReturn(testCompany);
@@ -139,12 +152,12 @@ class PartiCompanyServiceTest {
     }
 
     @Test
-    @DisplayName("正常系: メールアドレスのみ更新")
-    void updateCompany_Success_EmailOnly() {
+    @DisplayName("正常系: メールアドレスは更新対象外")
+    void updateCompany_EmailIsNotUpdated() {
         // Given
-        updateRequest.setEmail("newemail@example.com");
+        updateRequest.setPhoneNumber("03-9999-9999");
 
-        when(participatingCompanyRepository.findByCompanyId(TEST_COMPANY_ID))
+        when(participatingCompanyRepository.findByCompanyIdForUpdate(TEST_COMPANY_ID))
                 .thenReturn(Optional.of(testCompany));
         when(participatingCompanyRepository.save(any(ParticipatingCompany.class)))
                 .thenReturn(testCompany);
@@ -154,8 +167,8 @@ class PartiCompanyServiceTest {
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(ResponseConstants.OK);
-        assertThat(response.getCompany().getEmail()).isEqualTo("newemail@example.com");
-        assertThat(response.getCompany().getPhoneNumber()).isEqualTo("03-1234-5678"); // 変更なし
+        assertThat(response.getCompany().getEmail()).isEqualTo("test@example.com");
+        assertThat(response.getCompany().getPhoneNumber()).isEqualTo("03-9999-9999");
         assertThat(response.getCompany().getFax()).isEqualTo("03-1234-5679"); // 変更なし
 
         verify(participatingCompanyRepository, times(1)).save(testCompany);
@@ -166,7 +179,7 @@ class PartiCompanyServiceTest {
     void updateCompany_Success_NoUpdates() {
         // Given - すべてのフィールドがnull
 
-        when(participatingCompanyRepository.findByCompanyId(TEST_COMPANY_ID))
+        when(participatingCompanyRepository.findByCompanyIdForUpdate(TEST_COMPANY_ID))
                 .thenReturn(Optional.of(testCompany));
         when(participatingCompanyRepository.save(any(ParticipatingCompany.class)))
                 .thenReturn(testCompany);
@@ -185,6 +198,70 @@ class PartiCompanyServiceTest {
 
     
     @Test
+    @DisplayName("異常系: 企業が見つからない")
+    void updateCompany_CompanyNotFound() {
+        // Given
+        updateRequest.setPhoneNumber("03-9999-9999");
+
+        when(participatingCompanyRepository.findByCompanyIdForUpdate(TEST_COMPANY_ID))
+                .thenReturn(Optional.empty());
+
+        // When
+        UpdatePartiCompanyResponse response = partiCompanyService.updateCompany(TEST_COMPANY_ID, updateRequest);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(ResponseConstants.NOT_FOUND);
+        assertThat(response.getMessage()).isEqualTo(ResponseConstants.MSG_COMPANY_NOT_FOUND);
+        assertThat(response.getCompany()).isNull();
+
+        verify(participatingCompanyRepository, times(1)).findByCompanyIdForUpdate(TEST_COMPANY_ID);
+        verify(participatingCompanyRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("異常系: DB保存時に例外発生")
+    void updateCompany_DatabaseException() {
+        // Given
+        updateRequest.setPhoneNumber("03-9999-9999");
+
+        when(participatingCompanyRepository.findByCompanyIdForUpdate(TEST_COMPANY_ID))
+                .thenReturn(Optional.of(testCompany));
+        when(participatingCompanyRepository.save(any(ParticipatingCompany.class)))
+                .thenThrow(new RuntimeException("Database error"));
+
+        // When
+        UpdatePartiCompanyResponse response = partiCompanyService.updateCompany(TEST_COMPANY_ID, updateRequest);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(ResponseConstants.INTERNAL_SERVER_ERROR);
+        assertThat(response.getMessage()).isEqualTo(ResponseConstants.MSG_INTERNAL_ERROR);
+        assertThat(response.getCompany()).isNull();
+
+        verify(participatingCompanyRepository, times(1)).findByCompanyIdForUpdate(TEST_COMPANY_ID);
+        verify(participatingCompanyRepository, times(1)).save(testCompany);
+    }
+
+    @Test
+    @DisplayName("異常系: 法人番号が重複している")
+    void updateCompany_DuplicateCorpNumber() {
+        ParticipatingCompany anotherCompany = new ParticipatingCompany();
+        anotherCompany.setId(2);
+        anotherCompany.setCorpNumber("9876543210123");
+        updateRequest.setCorpNumber("9876543210123");
+
+        when(participatingCompanyRepository.findByCompanyIdForUpdate(TEST_COMPANY_ID))
+                .thenReturn(Optional.of(testCompany));
+        when(participatingCompanyRepository.findByCorpNumber("9876543210123"))
+                .thenReturn(Optional.of(anotherCompany));
+
+        UpdatePartiCompanyResponse response = partiCompanyService.updateCompany(TEST_COMPANY_ID, updateRequest);
+
+        assertThat(response.getStatusCode()).isEqualTo(ResponseConstants.CONFLICT);
+        assertThat(response.getMessage()).isEqualTo(ResponseConstants.MSG_CORP_NUMBER_ALREADY_USED);
+        verify(participatingCompanyRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("正常系: 住所フィールドがnullの場合の住所文字列生成")
     void updateCompany_Success_WithNullAddressFields() {
         // Given
@@ -193,9 +270,9 @@ class PartiCompanyServiceTest {
         testCompany.setBlocknum(null);
         testCompany.setBuildingName(null);
 
-        updateRequest.setEmail("test@example.com");
+        updateRequest.setPhoneNumber("03-9999-9999");
 
-        when(participatingCompanyRepository.findByCompanyId(TEST_COMPANY_ID))
+        when(participatingCompanyRepository.findByCompanyIdForUpdate(TEST_COMPANY_ID))
                 .thenReturn(Optional.of(testCompany));
         when(participatingCompanyRepository.save(any(ParticipatingCompany.class)))
                 .thenReturn(testCompany);
@@ -215,7 +292,7 @@ class PartiCompanyServiceTest {
         testCompany.setCompanyStatus(CompanyStatus.SUSPENDED);
         updateRequest.setPhoneNumber("03-9999-9999");
 
-        when(participatingCompanyRepository.findByCompanyId(TEST_COMPANY_ID))
+        when(participatingCompanyRepository.findByCompanyIdForUpdate(TEST_COMPANY_ID))
                 .thenReturn(Optional.of(testCompany));
         when(participatingCompanyRepository.save(any(ParticipatingCompany.class)))
                 .thenReturn(testCompany);
@@ -234,9 +311,9 @@ class PartiCompanyServiceTest {
         // Given
         updateRequest.setPhoneNumber("03-9999-9999");
         updateRequest.setFax("03-8888-8888");
-        updateRequest.setEmail("updated@example.com");
+        updateRequest.setPhoneNumber("03-9999-9999");
 
-        when(participatingCompanyRepository.findByCompanyId(TEST_COMPANY_ID))
+        when(participatingCompanyRepository.findByCompanyIdForUpdate(TEST_COMPANY_ID))
                 .thenReturn(Optional.of(testCompany));
         when(participatingCompanyRepository.save(any(ParticipatingCompany.class)))
                 .thenReturn(testCompany);

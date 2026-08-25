@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { CancelRequestStatusBadge } from '@/features/admin/monitoring/CancelRequestStatusBadge';
 import { formatCancelRequestDateTime } from '@/features/admin/monitoring/cancelRequestFormatters';
 import { usePagination } from '@/hooks/usePagination';
+import { SkeletonTable } from '@/components/feedback/loading';
 
 const INITIAL_ITEMS_PER_PAGE = 10;
 const cancelRequestGridColumns =
@@ -148,11 +149,7 @@ export function CancelRequestHistoryTable({
   );
 
   if (isLoading) {
-    return (
-      <div className="rounded-lg border border-border py-12 text-center text-sm text-foreground">
-        取消申請一覧を読み込んでいます...
-      </div>
-    );
+    return <SkeletonTable columns={5} rows={6} gridTemplateColumns={cancelRequestGridColumns} minWidth={980} />;
   }
 
   if (loadError) {

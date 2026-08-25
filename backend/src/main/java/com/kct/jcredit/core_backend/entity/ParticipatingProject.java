@@ -41,6 +41,13 @@ public class ParticipatingProject extends BaseEntity {
     @Column(name = "s3_key_pdf_membership")
     private String s3KeyPdfMembership;
 
+    // Entity ParticipatingProject — tambah 2 field
+    @Column(name = "docusign_envelope_id")
+    private String docusignEnvelopeId;
+
+    @Column(name = "signing_status")
+    private String signingStatus;
+
     // TIDAK ADA field company atau siteProjectRelation
     // TIDAK ADA applicantInkan — kolom ini belum ada di tabel,
     // perlu migration terpisah kalau mau ditambahkan nanti

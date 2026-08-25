@@ -1,4 +1,5 @@
 import type { ChangeEvent } from "react";
+import { Input } from '@/components/ui/input';
 
 interface StepProps {
   values: {
@@ -11,31 +12,28 @@ interface StepProps {
 
 const Step1 = ({ values, onChange }: StepProps) => (
   <div className="space-y-4">
-    <input
+    <Input
       type="text"
       name="firstName"
       value={values.firstName}
       onChange={onChange}
       placeholder="First Name"
-      className="border rounded px-3 py-2 w-full"
       required
     />
-    <input
+    <Input
       type="text"
       name="lastName"
       value={values.lastName}
       onChange={onChange}
       placeholder="Last Name"
-      className="border rounded px-3 py-2 w-full"
       required
     />
-    <input
+    <Input
       type="email"
       name="email"
       value={values.email}
       onChange={onChange}
       placeholder="Email"
-      className="border rounded px-3 py-2 w-full"
       required
     />
   </div>

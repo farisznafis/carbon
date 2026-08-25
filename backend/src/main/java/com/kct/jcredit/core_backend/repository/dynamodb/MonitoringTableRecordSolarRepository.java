@@ -444,4 +444,31 @@ public List<EnR002MonitoringRecord> findAllByProjectIdPaginated(
         
         return result;
     }
+
+        /**
+     * 指定した設備に紐づく最新のモニタリングレコードを取得する。
+     * 同一拠点に複数設備がある場合でも、対象設備のレコードのみを返す。
+     *
+     * SK（timeUpdated）の降順で走査するため、最初に一致したものが最新となる。
+     * findLatest とは異なり limit(1) を使用しない。先頭のレコードが対象設備のものとは限らないため。
+     */
+    public Optional<EnR002MonitoringRecord> findLatestByRecordIdAndEquipmentId(
+            String recordId,
+            Integer equipmentId
+    ) {
+        QueryConditional queryConditional = QueryConditional.keyEqualTo(
+            Key.builder().partitionValue(recordId).build()
+        );
+
+        PageIterable<EnR002MonitoringRecord> pages = table.query(r -> r
+            .queryConditional(queryConditional)
+            .scanIndexForward(false) // DESC
+        );
+
+        return pages.items().stream()
+            .filter(record -> Boolean.TRUE.equals(record.getIsActive()))
+            .filter(record -> equipmentId != null
+                && equipmentId.equals(record.getEquipmentID()))
+            .findFirst();
+    }
 }

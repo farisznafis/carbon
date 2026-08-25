@@ -119,12 +119,16 @@ const getStoredAuthSession = (): AuthSession => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [session, setSession] = useState<AuthSession>(getStoredAuthSession);
+  const [session, setSession] = useState<AuthSession>(EMPTY_AUTH_SESSION);
   const { user, isAuthenticated } = session;
 
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setSession(getStoredAuthSession());
+    setLoading(false);
+
+    /** Synchronizes authentication when another tab or window changes storage. */
     const synchronizeSession = () => {
       const nextSession = getStoredAuthSession();
 

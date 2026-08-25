@@ -310,7 +310,7 @@ export const SignupStep1 = ({
                   <FormItem>
                     <RequiredLabel>法人番号</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="13桁の半角数字" {...field} />
+                      <Input placeholder="13桁の半角数字" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -324,7 +324,7 @@ export const SignupStep1 = ({
                   <FormItem>
                     <RequiredLabel>法人名</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="株式会社サンプル" {...field} />
+                      <Input placeholder="株式会社サンプル" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -338,7 +338,7 @@ export const SignupStep1 = ({
                   <FormItem>
                     <RequiredLabel>法人名カナ</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="カブシキガイシャサンプル" {...field} />
+                      <Input placeholder="カブシキガイシャサンプル" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -352,7 +352,7 @@ export const SignupStep1 = ({
                   <FormItem>
                     <RequiredLabel required={false}>会社名（英語）</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="Sample Corporation" {...field} />
+                      <Input placeholder="Sample Corporation" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -366,7 +366,7 @@ export const SignupStep1 = ({
                   <FormItem>
                     <RequiredLabel>法人電話番号</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" type="tel" placeholder="半角数字ハイフン不要" {...field} />
+                      <Input type="tel" placeholder="半角数字ハイフン不要" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -384,7 +384,6 @@ export const SignupStep1 = ({
                     <div className="relative">
                       <FormControl>
                         <Input
-                          inputSize="sm"
                           maxLength={8}
                           placeholder="半角数字ハイフン不要"
                           {...field}
@@ -409,7 +408,7 @@ export const SignupStep1 = ({
                       <RequiredLabel>都道府県</RequiredLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger selectSize="sm">
+                          <SelectTrigger>
                             <SelectValue placeholder="都道府県を選択" />
                           </SelectTrigger>
                         </FormControl>
@@ -433,7 +432,7 @@ export const SignupStep1 = ({
                     <FormItem>
                       <RequiredLabel>市区町村</RequiredLabel>
                       <FormControl>
-                        <Input inputSize="sm" placeholder="千代田区" {...field} />
+                        <Input placeholder="千代田区" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -448,7 +447,7 @@ export const SignupStep1 = ({
                   <FormItem>
                     <RequiredLabel>番地</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="1-1-1" {...field} />
+                      <Input placeholder="1-1-1" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -462,7 +461,7 @@ export const SignupStep1 = ({
                   <FormItem>
                     <RequiredLabel required={true}>建物名</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="サンプルビル 3F" {...field} />
+                      <Input placeholder="サンプルビル 3F" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -479,7 +478,7 @@ export const SignupStep1 = ({
                     <FormItem>
                       <RequiredLabel>姓</RequiredLabel>
                       <FormControl>
-                        <Input inputSize="sm" placeholder="山田" {...field} />
+                        <Input placeholder="山田" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -493,7 +492,7 @@ export const SignupStep1 = ({
                     <FormItem>
                       <RequiredLabel>名</RequiredLabel>
                       <FormControl>
-                        <Input inputSize="sm" placeholder="太郎" {...field} />
+                        <Input placeholder="太郎" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -509,7 +508,7 @@ export const SignupStep1 = ({
                     <FormItem>
                       <RequiredLabel>姓（カナ）</RequiredLabel>
                       <FormControl>
-                        <Input inputSize="sm" placeholder="ヤマダ" {...field} />
+                        <Input placeholder="ヤマダ" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -523,7 +522,7 @@ export const SignupStep1 = ({
                     <FormItem>
                       <RequiredLabel>名（カナ）</RequiredLabel>
                       <FormControl>
-                        <Input inputSize="sm" placeholder="タロウ" {...field} />
+                        <Input placeholder="タロウ" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -538,7 +537,7 @@ export const SignupStep1 = ({
                   <FormItem>
                     <RequiredLabel>役職</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="部長" {...field} />
+                      <Input placeholder="部長" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -552,7 +551,7 @@ export const SignupStep1 = ({
                   <FormItem>
                     <RequiredLabel>電話番号</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" type="tel" placeholder="半角数字ハイフン不要" {...field} />
+                      <Input type="tel" placeholder="半角数字ハイフン不要" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -566,7 +565,7 @@ export const SignupStep1 = ({
                   <FormItem>
                     <RequiredLabel required={false}>FAX番号</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" type="tel" placeholder="半角数字ハイフン不要" {...field} />
+                      <Input type="tel" placeholder="半角数字ハイフン不要" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -580,7 +579,7 @@ export const SignupStep1 = ({
                   <FormItem>
                     <RequiredLabel>メールアドレス</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" type="email" placeholder="yamada.taro@tokyo-energy.co.jp" {...field} />
+                      <Input type="email" placeholder="yamada.taro@tokyo-energy.co.jp" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -588,17 +587,23 @@ export const SignupStep1 = ({
               />
             </FormSection>
 
-            <FormActions>
-              <Button
-                type="submit"
-                size="md"
-                className="w-full"
-                disabled={form.formState.isSubmitting || isValidatingCompanyInfo}
-              >
-                {isValidatingCompanyInfo && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {submitLabel}
-              </Button>
-            </FormActions>
+            <FormActions
+              disabled={form.formState.isSubmitting}
+              pendingActionId={isValidatingCompanyInfo ? 'submit' : null}
+              actions={[
+                {
+                  id: 'submit',
+                  label: submitLabel,
+                  pendingLabel: (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {submitLabel}
+                    </>
+                  ),
+                  type: 'submit',
+                },
+              ]}
+            />
           </FormSectionStack>
         </FormCard>
       </form>

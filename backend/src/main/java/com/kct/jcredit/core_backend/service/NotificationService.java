@@ -5,6 +5,8 @@ import com.kct.jcredit.core_backend.dto.response.NotificationCountResponse;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.entity.Notification;
+import com.kct.jcredit.core_backend.dto.request.InquiryRequest;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 
 public interface NotificationService {
     void sendSuspensionNotification(ParticipatingCompany company);
@@ -53,4 +55,6 @@ public interface NotificationService {
 
     void sendParticipationRejectionNotification(ParticipatingUser user, String rejectionReason);
     void sendParticipationApprovedNotification(ParticipatingUser user);
+
+    BaseResponse createInquiry(InquiryRequest request);
 }

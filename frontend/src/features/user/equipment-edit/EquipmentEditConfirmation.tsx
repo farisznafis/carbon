@@ -52,7 +52,7 @@ function FileConfirmationItem({
   fileType,
 }: {
   label: string;
-  selectedFile?: File;
+  selectedFile?: File | null;
   existingFiles: SiteProjectEquipmentFile[];
   fileType: SiteProjectEquipmentFileType;
 }) {
@@ -95,9 +95,8 @@ export function EquipmentEditConfirmation({
             <FormSection number={1} title="太陽光発電設備の情報">
               <FormGrid>
                 <ConfirmationItem
-                  label="稼働開始日（電力受給開始日）"
-                  value={displayValue(current.equipmentOpDate)}
-                  originalValue={displayValue(original.equipmentOpDate)}
+                  label="変更日"
+                  value={displayValue(current.changeDate ?? '')}
                 />
                 <FileConfirmationItem
                   label="電力受給契約確認書"
@@ -242,27 +241,23 @@ export function EquipmentEditConfirmation({
               </FormGrid>
             </FormSection>
 
-            <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="md"
-                className="w-full"
-                onClick={onBack}
-                disabled={isSubmitting}
-              >
-                戻る
-              </Button>
-              <Button
-                type="button"
-                size="md"
-                className="w-full"
-                onClick={onConfirm}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? '変更中...' : '変更する'}
-              </Button>
-            </FormActions>
+            <FormActions
+              pendingActionId={isSubmitting ? 'confirm' : null}
+              actions={[
+                {
+                  id: 'back',
+                  label: '戻る',
+                  variant: 'outline',
+                  onClick: onBack,
+                },
+                {
+                  id: 'confirm',
+                  label: '変更する',
+                  pendingLabel: '変更中...',
+                  onClick: onConfirm,
+                },
+              ]}
+            />
           </FormSectionStack>
         </FormCard>
       </FormPageContent>

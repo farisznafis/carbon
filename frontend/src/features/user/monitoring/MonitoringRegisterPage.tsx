@@ -23,11 +23,24 @@ import {
 } from '@/api/site';
 import { logger } from '@/lib/logger';
 import { buildMonitoringPayload } from './monitoringPayload';
+import type { FileUploadProgressItem } from '@/components/feedback/loading';
 
 type MonitoringFormData = typeof formDefinitions[ProjectType]['emptyData'];
 type RouteState = {
   projectId?: string;
   siteId?: string;
+};
+
+type EvidenceUploadKey =
+  | 'ELpv_evidence'
+  | 'ELpvr_evidence'
+  | 'ELPJ_battery_evidence'
+  | 'ELPJ_control_equipment_spec_files';
+
+type EvidenceUploadJob = {
+  id: EvidenceUploadKey;
+  fileName: string;
+  upload: (onProgress: (progress: number | null) => void) => Promise<string>;
 };
 
 function isProjectType(value: string | undefined): value is ProjectType {
@@ -96,7 +109,7 @@ const MonitoringRegister = () => {
     definition?.emptyData ?? formDefinitions.solar.emptyData,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
+  const [uploadItems, setUploadItems] = useState<FileUploadProgressItem[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [serverFieldErrors, setServerFieldErrors] = useState<Record<string, string>>({});
   const [equipmentList, setEquipmentList] = useState<SiteProjectEquipment[]>([]);
@@ -104,6 +117,8 @@ const MonitoringRegister = () => {
   const [equipmentLoadError, setEquipmentLoadError] = useState<string | null>(null);
   const [equipmentReloadKey, setEquipmentReloadKey] = useState(0);
   const originalDataRef = useRef<MonitoringFormData | null>(null);
+  const uploadJobsRef = useRef<EvidenceUploadJob[]>([]);
+  const uploadedEvidenceUrlsRef = useRef<Partial<Record<EvidenceUploadKey, string>>>({});
 
   const routeState = (location.state || {}) as RouteState;
   const equipmentSiteId = String(
@@ -200,6 +215,9 @@ const MonitoringRegister = () => {
       setServerFieldErrors({});
       setSubmitError(null);
       await validateMonitoringData(payload);
+      uploadJobsRef.current = [];
+      uploadedEvidenceUrlsRef.current = {};
+      setUploadItems([]);
       setFormData(values);
       setStep('confirm');
     } catch (error) {
@@ -240,111 +258,103 @@ const MonitoringRegister = () => {
     }
   };
 
-  const handleConfirm = async () => {
+  /** Builds stable upload jobs for the evidence files selected in the form. */
+  const createEvidenceUploadJobs = () => {
     const currentData = asRecord(formData);
     const { projectIdValue, siteIdValue } = getRouteValues(formData);
     const descriptionValue = String(currentData.description ?? '');
-
-    const uploadTasks: Array<{
-      key: string;
-      upload: () => Promise<string | null>;
-    }> = [];
+    const siteIdString = String(siteIdValue);
+    const jobs: EvidenceUploadJob[] = [];
 
     const addUpload = (
-      key: string,
+      id: EvidenceUploadKey,
       value: unknown,
-      upload: (file: File) => Promise<string>,
+      upload: (file: File, onProgress: (progress: number | null) => void) => Promise<string>,
     ) => {
       if (!(value instanceof File)) return;
 
-      uploadTasks.push({
-        key,
-        upload: () =>
-          upload(value)
-            .then((url) => {
-              setUploadProgress((progress) => ({
-                ...progress,
-                done: progress.done + 1,
-              }));
-              return url;
-            })
-            .catch((error: unknown) => {
-              logger.error(`${key} upload failed`, error);
-              setUploadProgress((progress) => ({
-                ...progress,
-                done: progress.done + 1,
-              }));
-              return null;
-            }),
+      jobs.push({
+        id,
+        fileName: value.name,
+        upload: (onProgress) => upload(value, onProgress),
       });
     };
 
-    const siteIdStr = String(siteIdValue);
-
-    addUpload('ELpv_evidence', currentData.ELpv_evidence, (file) =>
-      uploadElpvFile(file, projectIdValue, siteIdStr, descriptionValue),
+    addUpload('ELpv_evidence', currentData.ELpv_evidence, (file, onProgress) =>
+      uploadElpvFile(file, projectIdValue, siteIdString, descriptionValue, { onProgress }),
     );
-    addUpload('ELpvr_evidence', currentData.ELpvr_evidence, (file) =>
-      uploadElpvrFile(file, projectIdValue, siteIdStr, descriptionValue),
+    addUpload('ELpvr_evidence', currentData.ELpvr_evidence, (file, onProgress) =>
+      uploadElpvrFile(file, projectIdValue, siteIdString, descriptionValue, { onProgress }),
     );
     if (currentData.equipmentHasBattery && currentData.changedBattery) {
       addUpload(
         'ELPJ_battery_evidence',
         currentData.ELPJ_battery_evidence,
-        (file) =>
+        (file, onProgress) =>
           uploadElpjBatteryFile(
             file,
             projectIdValue,
-            siteIdStr,
+            siteIdString,
             descriptionValue,
+            { onProgress },
           ),
       );
     }
     addUpload(
       'ELPJ_control_equipment_spec_files',
       currentData.ELPJ_control_equipment_spec_files,
-      (file) =>
-        uploadElpjControlFile(file, projectIdValue, siteIdStr, descriptionValue),
+      (file, onProgress) =>
+        uploadElpjControlFile(file, projectIdValue, siteIdString, descriptionValue, { onProgress }),
     );
 
-    if (uploadTasks.length > 0 && (!projectIdValue || !siteIdValue)) {
-      setSubmitError(
-        'アップロードには projectId と siteId が必要です。プロジェクトまたはサイトを選択してください。',
-      );
-      return;
-    }
+    return jobs;
+  };
 
-    setSubmitError(null);
-    setServerFieldErrors({});
-    setUploadProgress({ done: 0, total: uploadTasks.length });
-    setIsSubmitting(true);
-
-    const uploadResults = uploadTasks.length > 0
-      ? await Promise.all(uploadTasks.map((task) => task.upload()))
-      : [];
-    const uploadedMap: Record<string, string | null> = {};
-    uploadResults.forEach((result, index) => {
-      uploadedMap[uploadTasks[index].key] = result;
-    });
-
-    const anyUploadFailed = Object.values(uploadedMap).some(
-      (value) => value == null,
+  /** Applies a partial state update to one file progress row. */
+  const updateUploadItem = (
+    itemId: EvidenceUploadKey,
+    update: Partial<FileUploadProgressItem>,
+  ) => {
+    setUploadItems((items) =>
+      items.map((item) => (item.id === itemId ? { ...item, ...update } : item)),
     );
+  };
 
-    if (anyUploadFailed) {
-      setSubmitError(
-        'ファイルのアップロードに失敗しました。再度お試しください。',
-      );
-      setIsSubmitting(false);
-      return;
+  /** Uploads one evidence file and preserves successful URLs for later retries. */
+  const runEvidenceUpload = async (job: EvidenceUploadJob) => {
+    updateUploadItem(job.id, { status: 'uploading', progress: null, errorMessage: undefined });
+
+    try {
+      const uploadedUrl = await job.upload((progress) => {
+        updateUploadItem(job.id, { status: 'uploading', progress });
+      });
+      uploadedEvidenceUrlsRef.current[job.id] = uploadedUrl;
+      updateUploadItem(job.id, { status: 'success', progress: 100 });
+      return true;
+    } catch (error) {
+      logger.error(`${job.id} upload failed`, error);
+      updateUploadItem(job.id, {
+        status: 'error',
+        progress: null,
+        errorMessage:
+          error instanceof Error && error.message
+            ? error.message
+            : 'アップロードに失敗しました。',
+      });
+      return false;
     }
+  };
 
-    const payload = buildMonitoringPayload(asRecord(formData), {
+  /** Submits monitoring data after every required evidence file is available. */
+  const submitMonitoringRecord = async () => {
+    const currentData = asRecord(formData);
+    const { projectIdValue, siteIdValue } = getRouteValues(formData);
+    const payload = buildMonitoringPayload(currentData, {
       projectType,
       projectId: projectIdValue,
       siteId: siteIdValue,
       hasBattery: currentData.equipmentHasBattery === true,
-      evidenceUrls: uploadedMap,
+      evidenceUrls: uploadedEvidenceUrlsRef.current,
     });
 
     try {
@@ -383,11 +393,73 @@ const MonitoringRegister = () => {
         return;
       }
 
-      setSubmitError(
-        'データの送信に失敗しました。しばらくしてから再度お試しください。',
-      );
+      setSubmitError('データの送信に失敗しました。しばらくしてから再度お試しください。');
       setIsSubmitting(false);
     }
+  };
+
+  /** Starts pending uploads and submits without repeating completed files. */
+  const handleConfirm = async () => {
+    const { projectIdValue, siteIdValue } = getRouteValues(formData);
+    const jobs = uploadJobsRef.current.length > 0
+      ? uploadJobsRef.current
+      : createEvidenceUploadJobs();
+
+    if (jobs.length > 0 && (!projectIdValue || !siteIdValue)) {
+      setSubmitError('アップロード対象のプロジェクトまたは拠点を確認してください。');
+      return;
+    }
+
+    if (uploadJobsRef.current.length === 0) {
+      uploadJobsRef.current = jobs;
+      setUploadItems(
+        jobs.map((job) => ({
+          id: job.id,
+          fileName: job.fileName,
+          status: 'queued',
+          progress: null,
+        })),
+      );
+    }
+
+    setSubmitError(null);
+    setServerFieldErrors({});
+    setIsSubmitting(true);
+
+    const pendingJobs = jobs.filter(
+      (job) => !uploadedEvidenceUrlsRef.current[job.id],
+    );
+    const uploadResults = await Promise.all(
+      pendingJobs.map((job) => runEvidenceUpload(job)),
+    );
+
+    if (uploadResults.some((succeeded) => !succeeded)) {
+      setSubmitError('一部のファイルをアップロードできませんでした。失敗したファイルを再試行してください。');
+      setIsSubmitting(false);
+      return;
+    }
+
+    await submitMonitoringRecord();
+  };
+
+  /** Retries only the selected file and resumes submission after all files succeed. */
+  const handleRetryUpload = async (itemId: string) => {
+    const job = uploadJobsRef.current.find((candidate) => candidate.id === itemId);
+    if (!job || isSubmitting) return;
+
+    setSubmitError(null);
+    setIsSubmitting(true);
+    const succeeded = await runEvidenceUpload(job);
+    const allUploadsComplete = uploadJobsRef.current.every(
+      (candidate) => Boolean(uploadedEvidenceUrlsRef.current[candidate.id]),
+    );
+
+    if (succeeded && allUploadsComplete) {
+      await submitMonitoringRecord();
+      return;
+    }
+
+    setIsSubmitting(false);
   };
 
   return step === 'form' ? (
@@ -406,13 +478,7 @@ const MonitoringRegister = () => {
   ) : (
     <MonitoringConfirmationLayout
       title='モニタリングデータ'
-      description={
-        submitError
-          ? submitError
-          : isSubmitting
-            ? `ファイルをアップロード中 (${uploadProgress.done}/${uploadProgress.total})`
-            : '以下の内容をご確認ください。'
-      }
+      description={submitError || (isSubmitting ? '登録処理を進めています' : '以下の内容をご確認ください。')}
       items={getConfirmationItems(
         formData,
         originalDataRef.current ?? undefined,
@@ -420,6 +486,8 @@ const MonitoringRegister = () => {
       onBack={() => setStep('form')}
       onConfirm={handleConfirm}
       isSubmitting={isSubmitting}
+      uploadItems={uploadItems}
+      onRetryUpload={(itemId) => void handleRetryUpload(itemId)}
     />
   );
 };
