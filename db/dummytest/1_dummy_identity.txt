@@ -188,13 +188,13 @@ VALUES
  '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'admin', 0, NULL, 1, FALSE, 0),
 (2, TRUE, '2026-07-02 10:00:00', '2026-07-02 10:00:00', 'operator1', 'operator1',
  'operator2', '沙奈', 'サナ', '鳥居', 'トリイ', 'operator2@creation-tech.co.jp', '03-5555-0102',
- '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'operator', 0, NULL, 1, FALSE, 0),
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'admin', 0, NULL, 1, FALSE, 0),
 (3, TRUE, '2026-07-02 10:30:00', '2026-07-02 10:30:00', 'operator1', 'operator1',
  'operator3', '結菜', 'ユナ', '加藤', 'カトウ', 'operator3@creation-tech.co.jp', '03-5555-0103',
- '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'operator', 0, NULL, 1, TRUE, 1),
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'admin', 0, NULL, 1, TRUE, 1),
 (4, TRUE, '2026-07-02 11:00:00', '2026-07-02 11:00:00', 'operator1', 'operator1',
  'operator4', '由美', 'ユミ', '森', 'モリ', 'operator4@creation-tech.co.jp', '03-5555-0104',
- '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'operator', 0, NULL, 1, FALSE, 0);
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'admin', 0, NULL, 1, FALSE, 0);
 
 -- =========================================================
 -- 5. participating_user
