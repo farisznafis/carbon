@@ -28,7 +28,7 @@ function CapabilityCard({
 }: CapabilityCardProps) {
   return (
     <Card className="h-full border-border/70 shadow-app-md">
-      <CardContent className="flex h-full min-h-56 flex-col justify-center gap-4 p-6 sm:p-8">
+      <CardContent className="flex h-full min-h-48 flex-col justify-center gap-4 p-6 sm:p-7 2xl:min-h-56 2xl:p-8">
         <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-primary">
           <Icon className="h-6 w-6" aria-hidden="true" />
         </span>
@@ -58,7 +58,7 @@ function HighlightCard({ highlight, className }: HighlightCardProps) {
     >
       <CardContent
         className={cn(
-          'flex h-full min-h-72 flex-col justify-center gap-5 p-7 sm:p-9',
+          'flex h-full min-h-60 flex-col justify-center gap-5 p-6 sm:p-7 2xl:min-h-72 2xl:p-9',
           highlight.media && 'justify-between',
         )}
       >
@@ -112,36 +112,36 @@ export function HomeBenefitsSection() {
     <section
       id={HOME_SECTION_IDS.features}
       aria-labelledby="home-features-title"
-      className="relative z-10 -mt-10 scroll-mt-20 rounded-t-3xl bg-card py-16 shadow-marketing sm:-mt-8 sm:py-20 lg:mt-0 lg:py-24"
+      className="relative z-10 -mt-10 scroll-mt-20 rounded-t-3xl bg-card py-14 shadow-marketing sm:-mt-8 sm:py-16 lg:mt-0 2xl:py-24"
     >
-      <div className="mx-auto w-full max-w-marketing space-y-10 px-4 sm:px-6 lg:space-y-12 lg:px-8">
+      <div className="mx-auto w-full max-w-marketing space-y-8 px-4 sm:space-y-10 sm:px-6 lg:px-8 2xl:space-y-12">
         <HomeSectionHeading
           id="home-features-title"
           title="このサービスでできること"
         />
 
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-5 sm:grid-cols-2 2xl:grid-cols-4">
           {HOME_CAPABILITIES.map((capability) => (
             <CapabilityCard key={capability.title} {...capability} />
           ))}
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-12">
+        <div className="grid gap-5 lg:grid-cols-2 2xl:grid-cols-12">
           <HighlightCard
             highlight={HOME_HIGHLIGHTS[0]}
-            className="lg:col-span-8"
+            className="lg:col-span-1 2xl:col-span-8"
           />
           <HighlightCard
             highlight={HOME_HIGHLIGHTS[1]}
-            className="lg:col-span-4"
+            className="lg:col-span-1 2xl:col-span-4"
           />
           <HighlightCard
             highlight={HOME_HIGHLIGHTS[2]}
-            className="lg:col-span-5"
+            className="lg:col-span-1 2xl:col-span-5"
           />
           <HighlightCard
             highlight={HOME_HIGHLIGHTS[3]}
-            className="lg:col-span-7"
+            className="lg:col-span-1 2xl:col-span-7"
           />
         </div>
       </div>
