@@ -25,19 +25,15 @@ import com.kct.jcredit.core_backend.dto.request.PartiCompanyMethodologyValidateR
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyRegisterRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectDeletionRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdatePartiCompanyRequest;
-import com.kct.jcredit.core_backend.dto.request.EmailOtpStartRequest;
-import com.kct.jcredit.core_backend.dto.request.OtpResendRequest;
-import com.kct.jcredit.core_backend.dto.request.OtpVerifyRequest;
 import com.kct.jcredit.core_backend.dto.response.DeletionRequestResponse;
-import com.kct.jcredit.core_backend.dto.response.UpdatePartiCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.OtpChallengeResponse;
+import com.kct.jcredit.core_backend.dto.response.UpdatePartiCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.response.details.PartiCompanyResponseDetails;
 import com.kct.jcredit.core_backend.service.CompanyDeletionService;
 import com.kct.jcredit.core_backend.service.CompanySecurityFlowService;
 import com.kct.jcredit.core_backend.service.PartiCompanyRegisterService;
 import com.kct.jcredit.core_backend.service.PartiCompanyService;
-import com.kct.jcredit.core_backend.service.CompanySecurityFlowService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 
@@ -46,19 +42,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 
 /**
  * Exposes participating-company self-service and signup operations.
@@ -103,19 +86,21 @@ public class PartiCompanyController {
         PartiCompanyResponseDetails response = registerService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-
+    //ワンタイムパスワード送信
     @PostMapping("/signup/email-verification/start")
     public ResponseEntity<OtpChallengeResponse> startSignupEmailVerification(
             @Valid @RequestBody EmailOtpStartRequest request) {
         return ResponseEntity.ok(companySecurityFlowService.startSignupEmailVerification(request.getEmail()));
     }
 
+    //ワンタイムパスワード再送信
     @PostMapping("/signup/email-verification/resend")
     public ResponseEntity<OtpChallengeResponse> resendSignupEmailVerification(
             @Valid @RequestBody OtpResendRequest request) {
         return ResponseEntity.ok(companySecurityFlowService.resendSignupEmailVerification(request.getChallengeId()));
     }
 
+    //ワンタイムパスワード送信→認証完了
     @PostMapping("/signup/email-verification/verify")
     public ResponseEntity<BaseResponse> verifySignupEmail(
             @Valid @RequestBody OtpVerifyRequest request) {
@@ -123,12 +108,14 @@ public class PartiCompanyController {
                 request.getChallengeId(), request.getCode()));
     }
 
+    //差し戻された会社登録申請の修正用下書きデータを取得する
     @GetMapping("/signup/revision")
     public ResponseEntity<PartiCompanyRegisterRequest> getRejectedSignupRevision(
             @RequestHeader("X-Action-Session") String actionSession) {
         return ResponseEntity.ok(companySecurityFlowService.getRevisionDraft(actionSession));
     }
 
+    //差し戻された会社登録申請を修正して再申請する
     @PutMapping("/signup/revision")
     public ResponseEntity<BaseResponse> reviseRejectedSignup(
             @RequestHeader("X-Action-Session") String actionSession,
