@@ -345,6 +345,21 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         }
+
+        @Override
+        @Transactional(readOnly = true)
+        public List<ParticipationReviewDetailResponse> getRejectedParticipations() {
+        return findRejectedParticipations().stream()
+                .map(participation -> getReviewDetail(participation.getId()))
+                .collect(Collectors.toList());
+        }
+
+        private List<ParticipatingProject> findRejectedParticipations() {
+        return siteProjectRelationRepository.findByStatus("REJECTED").stream()
+                .map(this::toParticipationOrNull)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        }
     // ─────────────────────────────────────────────────────────────
     // PRIVATE — mapping
     // ─────────────────────────────────────────────────────────────

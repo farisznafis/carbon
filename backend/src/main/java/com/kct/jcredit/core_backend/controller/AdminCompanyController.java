@@ -196,7 +196,7 @@ public class AdminCompanyController {
     // /{companyId} single-segment mapping above.
     // ─────────────────────────────────────────────────────────────
 
-    // ── LIST — (status OPEN) ───────
+    // ── LIST ALL — (status OPEN) ───────
     @GetMapping("participate/pending")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
@@ -206,7 +206,7 @@ public class AdminCompanyController {
     }
 
     // ── LIST — 
-    @GetMapping("participate/self-sign")
+    @GetMapping("participate/open")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "自分がレビュー可能な一覧取得", description = "自分がまだレビューできる入会届一覧を取得します。")
@@ -223,6 +223,15 @@ public class AdminCompanyController {
             description = "審査承認済み（入会届PDF生成済み）の一覧を取得します。")
     public ResponseEntity<List<ParticipationReviewDetailResponse>> getApprovedParticipations() {
         return ResponseEntity.ok(reviewService.getApprovedParticipations());
+    }
+
+    @GetMapping("/admin/participations/rejected")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "却下済み入会届一覧取得",
+            description = "却下され、まだ再申請されていない入会届の一覧を取得します。")
+    public ResponseEntity<List<ParticipationReviewDetailResponse>> getRejectedParticipations() {
+        return ResponseEntity.ok(reviewService.getRejectedParticipations());
     }
 
     // ── DETAIL ─────────────────────────────────────────────────
