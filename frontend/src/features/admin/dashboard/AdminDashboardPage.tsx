@@ -23,7 +23,6 @@ import {
 } from '@/api/batch';
 import {
   getMonitoringCancelRequests,
-  type MonitoringRecordListItem,
 } from '@/api/monitoring';
 import {
   updateAdminProjectStatus,
@@ -48,7 +47,6 @@ import { AdminCompanyApplicationsTable } from '@/features/admin/dashboard/tables
 import { PendingCompanyActionDialog } from '@/features/admin/dashboard/tables/PendingCompanyActionDialog';
 import { PendingCompanyApplicationDetail } from '@/features/admin/dashboard/tables/PendingCompanyApplicationDetail';
 import { ProjectTable } from '@/features/admin/dashboard/tables/ProjectTable';
-import { ProjectMonitoringTable } from '@/features/admin/dashboard/tables/ProjectMonitoringTable';
 import { AdminDashboardOverview } from './AdminDashboardOverview';
 import { PageSkeleton, SkeletonTable } from '@/components/feedback/loading';
 import { useProjectsQuery } from '@/hooks/projects/useProjectsQuery';
@@ -96,7 +94,7 @@ const adminDashboardTabs: Array<{
   value: AdminDashboardTabValue;
   label: string;
 }> = [
-  { value: 'overview', label: '概要' },
+  // { value: 'overview', label: '概要' },
   { value: 'companies', label: '企業一覧・申請管理' },
   { value: 'projects', label: 'プロジェクト管理' },
   { value: 'operators', label: '運用者一覧' },
@@ -262,9 +260,6 @@ const AdminDashboard = () => {
   const [updatingProjectStatusId, setUpdatingProjectStatusId] = useState<
     string | null
   >(null);
-  const [selectedMonitoringProjectId, setSelectedMonitoringProjectId] =
-    useState(searchParams.get('projectId') ?? '');
-
   const [pendingDialogOpen, setPendingDialogOpen] = useState(false);
   const [pendingDialogMode, setPendingDialogMode] =
     useState<PendingCompanyActionMode | null>(null);
@@ -545,33 +540,6 @@ const AdminDashboard = () => {
     });
   };
 
-  const handleMonitoringProjectChange = (projectId: string) => {
-    setSelectedMonitoringProjectId(projectId);
-    setSearchParams(
-      {
-        tab: 'monitoring',
-        projectId,
-      },
-      { replace: true },
-    );
-  };
-
-  const openMonitoringDetail = (
-    record: MonitoringRecordListItem,
-    page: number,
-    limit: number,
-  ) => {
-    if (!selectedMonitoringProjectId) return;
-
-    navigate(
-      `${paths.adminProjectMonitoringDetail(
-        selectedMonitoringProjectId,
-        record.id,
-      )}?page=${page}&limit=${limit}`,
-      { state: { monitoringRecord: record } },
-    );
-  };
-
   const handlePendingDialogOpenChange = (open: boolean) => {
     setPendingDialogOpen(open);
 
@@ -850,55 +818,6 @@ const AdminDashboard = () => {
             value="monitoring"
             className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
-            <AdminDashboardSection
-              title="モニタリングデータ一覧"
-              description="プロジェクトを選択して、登録済みのモニタリングデータを確認できます。"
-            >
-              <ErrorBoundary
-                fallback={({ resetErrorBoundary }) => (
-                  <div
-                    role="alert"
-                    className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center"
-                  >
-                    <AlertTriangle
-                      className="h-5 w-5 text-destructive"
-                      aria-hidden="true"
-                    />
-                    <p className="text-small font-medium text-foreground">
-                      モニタリングデータを表示できませんでした。
-                    </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={resetErrorBoundary}
-                    >
-                      再試行
-                    </Button>
-                  </div>
-                )}
-              >
-                <ProjectMonitoringTable
-                  projects={projects}
-                  projectsLoading={projectsQuery.isLoading}
-                  projectsError={
-                    projectsQuery.error instanceof Error
-                      ? projectsQuery.error.message
-                      : null
-                  }
-                  selectedProjectId={selectedMonitoringProjectId}
-                  initialPage={Math.max(
-                    Number(searchParams.get('monitoringPage')) || 1,
-                    1,
-                  )}
-                  initialLimit={Math.max(
-                    Number(searchParams.get('monitoringLimit')) || 10,
-                    1,
-                  )}
-                  onProjectChange={handleMonitoringProjectChange}
-                  onViewDetail={openMonitoringDetail}
-                />
-              </ErrorBoundary>
-            </AdminDashboardSection>
             <AdminDashboardSection
               title="取消一覧"
               description="取消対象のモニタリングデータを確認し、取消申請を送信できます。"
