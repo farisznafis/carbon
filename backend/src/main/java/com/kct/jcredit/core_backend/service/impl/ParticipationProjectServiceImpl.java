@@ -42,6 +42,7 @@ import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserReposit
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingProjectRepository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
@@ -211,6 +212,10 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
         EnR002Equipment savedEquipment = saveEquipment(request.getEquipment(), site);
         List<EnR002EquipmentFile> savedFiles = saveEquipmentFiles(request.getEquipment(), savedEquipment);
 
+        // Key tmp disimpan terpisah — DB sudah memegang key final sejak commit.
+        Map<String, String> tempKeyByFileId = request.getEquipment().getFiles().stream()
+                .collect(Collectors.toMap(f -> f.getFileId(), f -> f.getS3Key()));
+
         // 7. Save ParticipatingProject
         ParticipatingProject participation = saveParticipatingProject(
             project, user, savedEquipment);
@@ -224,16 +229,12 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
             public void afterCommit() {
                 savedFiles.forEach(fileEntity -> {
                     try {
-                        String permanentKey = fileUploadSolarService
-                                .moveTempToPermanent(
-                                        fileEntity.getS3Key(),
-                                        savedEquipment.getSite().getPublicId(),
-                                        savedEquipment.getId()
-                                );
-                        equipmentFileRepository.updateS3Key(fileEntity.getId(), permanentKey);
+                        fileUploadSolarService.moveToPermanent(
+                                tempKeyByFileId.get(fileEntity.getFileId()),
+                                fileEntity.getS3Key());
                     } catch (Exception e) {
-                        log.error("S3 move failed. fileId={}, error={}",
-                                fileEntity.getFileId(), e.getMessage());
+                        log.error("S3 move failed. fileId={}, s3Key={}, error={}",
+                                fileEntity.getFileId(), fileEntity.getS3Key(), e.getMessage());
                                 }
                         });
 
@@ -325,7 +326,11 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                 .equipment(saved)
                                 .fileType(f.getFileType())
                                 .fileId(f.getFileId())
-                                .s3Key(f.getS3Key())
+                                // key final, bukan key tmp — lihat submitParticipation()
+                                .s3Key(fileUploadSolarService.buildPermanentKey(
+                                        f.getS3Key(),
+                                        saved.getSite().getPublicId(),
+                                        saved.getId()))
                                 .build())
                         .collect(Collectors.toList()));
     }
@@ -451,31 +456,51 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
         // ── Replace total file lama → file baru ─────────────────────────
         List<EnR002EquipmentFile> oldFiles = equipmentFileRepository.findByEquipment_Id(equipment.getId());
-                oldFiles.forEach(f -> fileUploadSolarService.deletePermanentFile(f.getS3Key(), equipment.getId()));
-                equipmentFileRepository.deleteAll(oldFiles);
+        // Key-nya dipegang dulu; object S3 baru dihapus setelah commit, supaya
+        // rollback tidak menyisakan row DB yang menunjuk file yang sudah hilang.
+        List<String> oldS3Keys = oldFiles.stream()
+                .map(EnR002EquipmentFile::getS3Key)
+                .collect(Collectors.toList());
+        equipmentFileRepository.deleteAll(oldFiles);
 
-                List<EnR002EquipmentFile> savedFiles = saveEquipmentFiles(request.getEquipment(), equipment);
+        List<EnR002EquipmentFile> savedFiles = saveEquipmentFiles(request.getEquipment(), equipment);
+
+        // Key tmp disimpan terpisah — DB sudah memegang key final sejak commit.
+        Map<String, String> tempKeyByFileId = request.getEquipment().getFiles().stream()
+                .collect(Collectors.toMap(f -> f.getFileId(), f -> f.getS3Key()));
 
         // ── Reset status relation → OPEN ─────────────────────────────────
         relation.setStatus("OPEN");
         siteProjectRelationRepository.save(relation);
 
         final Integer participationId = participation.getId();
-        final String sitePublicId = relation.getSite().getPublicId();
         final Integer equipmentId = equipment.getId();
 
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
                         @Override
                         public void afterCommit() {
+                        // Hapus file lama dulu: key permanent-nya bisa sama persis
+                        // dengan file baru (nama file sama pada equipment yang sama),
+                        // jadi kalau dihapus setelah pemindahan, file barunya yang hilang.
+                        oldS3Keys.forEach(oldKey -> {
+                                try {
+                                        fileUploadSolarService.deletePermanentFile(oldKey, equipmentId);
+                                } catch (Exception e) {
+                                        log.error("S3 delete failed. s3Key={}, error={}",
+                                                oldKey, e.getMessage());
+                                }
+                        });
+
                         savedFiles.forEach(fileEntity -> {
                                 try {
-                                String permanentKey = fileUploadSolarService.moveTempToPermanent(
-                                        fileEntity.getS3Key(), sitePublicId, equipmentId);
-                                equipmentFileRepository.updateS3Key(fileEntity.getId(), permanentKey);
+                                        fileUploadSolarService.moveToPermanent(
+                                                tempKeyByFileId.get(fileEntity.getFileId()),
+                                                fileEntity.getS3Key());
                                 } catch (Exception e) {
-                                log.error("S3 move failed. fileId={}, error={}",
-                                        fileEntity.getFileId(), e.getMessage());
+                                        log.error("S3 move failed. fileId={}, s3Key={}, error={}",
+                                                fileEntity.getFileId(), fileEntity.getS3Key(),
+                                                e.getMessage());
                                 }
                         });
 
