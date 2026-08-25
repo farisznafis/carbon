@@ -10,16 +10,16 @@ export function HomeFlowSection() {
     <section
       id={HOME_SECTION_IDS.flow}
       aria-labelledby="home-flow-title"
-      className="relative z-20 scroll-mt-20 rounded-t-3xl bg-card py-16 shadow-marketing sm:py-20 lg:py-24"
+      className="relative z-20 scroll-mt-20 rounded-t-3xl bg-card py-14 shadow-marketing sm:py-16 2xl:py-24"
     >
-      <div className="mx-auto w-full max-w-marketing space-y-10 px-4 sm:px-6 lg:space-y-12 lg:px-8">
+      <div className="mx-auto w-full max-w-marketing space-y-8 px-4 sm:space-y-10 sm:px-6 lg:px-8 2xl:space-y-12">
         <HomeSectionHeading id="home-flow-title" title="ご利用の流れ" />
 
-        <div className="flex flex-col items-stretch gap-4 xl:flex-row xl:items-center">
+        <div className="flex flex-col items-stretch gap-4 lg:flex-row lg:items-center">
           {HOME_FLOW_STEPS.map((step, index) => (
             <Fragment key={step.title}>
               <Card className="flex-1 border-border/70 shadow-app-md">
-                <CardContent className="flex h-full flex-col gap-4 p-6">
+                <CardContent className="flex h-full flex-col gap-3 p-5 2xl:gap-4 2xl:p-6">
                   <div className="flex items-center gap-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary font-semibold text-primary">
                       {index + 1}
@@ -28,7 +28,7 @@ export function HomeFlowSection() {
                       {step.title}
                     </h3>
                   </div>
-                  <div className="aspect-square overflow-hidden rounded-xl bg-muted/60">
+                  <div className="aspect-square overflow-hidden rounded-xl bg-muted/60 lg:aspect-[4/3] 2xl:aspect-square">
                     <img
                       src={step.imageSrc}
                       alt=""
@@ -48,8 +48,8 @@ export function HomeFlowSection() {
                   className="flex shrink-0 items-center justify-center text-primary"
                   aria-hidden="true"
                 >
-                  <ArrowDown className="h-6 w-6 xl:hidden" />
-                  <ArrowRight className="hidden h-6 w-6 xl:block" />
+                  <ArrowDown className="h-6 w-6 lg:hidden" />
+                  <ArrowRight className="hidden h-6 w-6 lg:block" />
                 </div>
               ) : null}
             </Fragment>
