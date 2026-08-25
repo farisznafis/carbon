@@ -27,6 +27,13 @@ vi.mock('@/api/site', async (importOriginal) => {
     getSiteData,
     getSiteProjects,
     getMyProjectParticipations,
+  };
+});
+
+vi.mock('@/api/projects', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/api/projects')>();
+  return {
+    ...actual,
     downloadProjectMembershipPdf,
   };
 });
@@ -213,7 +220,7 @@ describe('ProjectMembershipPage tabs', () => {
     );
 
     expect(getMyProjectParticipations).toHaveBeenCalledWith('PROJ002');
-    expect(downloadProjectMembershipPdf).toHaveBeenCalledWith(84);
+    expect(downloadProjectMembershipPdf).toHaveBeenCalledWith('PROJ002', 84);
     expect(downloadFromUrl).toHaveBeenCalledWith(
       'https://example.com/membership.pdf',
     );
