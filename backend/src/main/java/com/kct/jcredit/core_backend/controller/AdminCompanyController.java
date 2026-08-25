@@ -216,6 +216,15 @@ public class AdminCompanyController {
         return ResponseEntity.ok(reviewService.getPendingReviewsByUserId(operatorUserId));
     }
 
+    @GetMapping("participations/approved")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "承認済み入会届一覧取得",
+            description = "審査承認済み（入会届PDF生成済み）の一覧を取得します。")
+    public ResponseEntity<List<ParticipationReviewDetailResponse>> getApprovedParticipations() {
+        return ResponseEntity.ok(reviewService.getApprovedParticipations());
+    }
+
     // ── DETAIL ─────────────────────────────────────────────────
     @GetMapping("participate/{participationId}")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")

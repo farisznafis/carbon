@@ -13,6 +13,7 @@ import java.util.List;
 public interface ParticipationReviewService {
     List<ParticipationReviewDetailResponse> getPendingReviews();
     List<ParticipationReviewDetailResponse> getPendingReviewsByUserId(Integer userId);
+    List<ParticipationReviewDetailResponse> getApprovedParticipations();
     ParticipationReviewDetailResponse getReviewDetail(Integer participationId);
     void approveReview(Integer participationId, Integer operatorUserId, ApproveReviewRequest request);
     void rejectReview(Integer participationId, Integer operatorUserId, RejectReviewRequest request);
