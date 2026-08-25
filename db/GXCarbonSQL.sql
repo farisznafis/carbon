@@ -470,7 +470,9 @@ CREATE TABLE participating_project (
     user_id INT NOT NULL REFERENCES participating_user(id) ON DELETE CASCADE,
     is_eligible BOOLEAN NOT NULL,
     equipment_id INT NOT NULL REFERENCES en_r002_equipment(id) ON DELETE CASCADE,
-    s3_key_pdf_membership TEXT
+    s3_key_pdf_membership TEXT,
+    docusign_envelope_id VARCHAR(255),
+    signing_status VARCHAR(50)
 );
 
 -- Record Cancel Request

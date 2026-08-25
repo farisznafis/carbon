@@ -99,17 +99,30 @@ const EMPTY_CONTRACT_FORM_VALUES: ContractStepFormValues = {
 
 const confirmationItemFieldNames: Record<string, keyof AgreementFormValues> = {
   isAgreeDataUse: "useRegisteredInfo",
+  "データ利用への同意": "useRegisteredInfo",
   isAgreeExtraData: "provideAdditionalInfo",
+  "本入会届に記載された以外の情報の提供への同意":
+    "provideAdditionalInfo",
   isAgreeTransfer: "transferEnvironmentalValue",
+  "環境価値（J-クレジット）の譲渡への同意":
+    "transferEnvironmentalValue",
   isNotRegistered: "notRegisteredElsewhere",
+  "他のJ-クレジット制度への未登録確認": "notRegisteredElsewhere",
   isKeidanrenParticipation: "keidanrenParticipation",
+  "経団連カーボンニュートラル行動計画への参加状況":
+    "keidanrenParticipation",
   isEmitter: "specifiedEmitterStatus",
   emitterCode: "specifiedEmitterCode",
+  "事業者コード（9桁）": "specifiedEmitterCode",
   isAdjustedEmissionsAdded: "emissionAdditionAgreement",
+  "調整後排出量への加算": "emissionAdditionAgreement",
   isSubjectToPeriodicReport: "energyRationalizationCompliance",
   isPeriodicReportTypeOne: "energyLawType",
+  "第一種・第二種区分": "energyLawType",
   energyBusinessCode: "energyLawBusinessNumber",
+  "事業者番号": "energyLawBusinessNumber",
   factoryCode: "energyLawFactoryNumber",
+  "工場等番号": "energyLawFactoryNumber",
 };
 
 const sustainabilityCommitmentFieldNames: Record<
@@ -117,13 +130,18 @@ const sustainabilityCommitmentFieldNames: Record<
   keyof ContractStepFormValues
 > = {
   companyName: "businessName",
+  "事業者名": "businessName",
   repName: "representativeName",
+  "代表者名": "representativeName",
   repRole: "representativePosition",
+  "代表者役職": "representativePosition",
   hasConsent: "contractAgreed",
+  "同意する": "contractAgreed",
 };
 
 const finalAgreementFieldNames: Record<string, keyof FinalTermsValues> = {
   isAgreeTerms: "finalTermsAgreed",
+  "同意します": "finalTermsAgreed",
 };
 
 const getValidationErrorMessage = (error: unknown): string => {

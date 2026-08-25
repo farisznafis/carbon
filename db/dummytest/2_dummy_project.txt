@@ -5,128 +5,90 @@
 --11. participating_project
 --12. project_files
 
+-- =========================================================================
+-- カテゴリ2: プロジェクト・入会・設備
+-- =========================================================================
+
+
 BEGIN;
 
 -- =========================================================
--- 7. PROJECT
--- public_id shortened to exactly 32 chars (was 33).
+-- 7. project  （3件。全て EN-R-002 / method_number='002'）
 -- =========================================================
-
 INSERT INTO project (
     id, is_active, created_at, updated_at, created_by, updated_by,
     project_name, project_number, project_status,
-    rep_first_name, rep_first_name_kana,
-    rep_last_name, rep_last_name_kana,
+    rep_first_name, rep_first_name_kana, rep_last_name, rep_last_name_kana,
     rep_email, rep_phone_number, rep_position,
-    pic_first_name, pic_first_name_kana,
-    pic_last_name, pic_last_name_kana,
-    pic_email, pic_phone_number, pic_position,
-    data_management_pic,
-    emission_reduction, baseline_emission, post_project_emission,
-    regional_category,
-    new_members_total, withdrawn_members, cumulative_members_total,
-    members_total,
+    pic_first_name, pic_first_name_kana, pic_last_name, pic_last_name_kana,
+    pic_email, pic_phone_number, pic_position, data_management_pic,
+    emission_reduction, baseline_emission, post_project_emission, regional_category,
+    new_members_total, withdrawn_members, cumulative_members_total, members_total,
     methodology_version, method_category, method_number,
-    method_name, method_main_emission,
-    method_combi_feasibility, method_details,
-    operator_company_id, public_id
+    method_name, method_main_emission, method_combi_feasibility, method_details,
+    operator_company_id, public_id, status_finalized_at
 )
 OVERRIDING SYSTEM VALUE
 VALUES
-(
-    1, TRUE,
-    '2026-07-07 09:00:00', '2026-07-07 09:00:00',
-    'operator1', 'operator1',
-    'ソーラーファーム東京都内太陽光発電プロジェクト',
-    'P000001',
-    'ACTIVE',
-    '健一', 'ケンイチ',
-    '伊藤', 'イトウ',
-    'ito.kenichi@solarfarm.co.jp',
-    '03-5432-1240',
-    '代表取締役',
-    '明子', 'アキコ',
-    '伊藤', 'イトウ',
-    'ito.akiko@solarfarm.co.jp',
-    '03-5432-1241',
-    '設備管理責任者',
-    'ito.akiko@solarfarm.co.jp',
-    1250.5,
-    1850.0,
-    599.5,
-    '関東',
-    4,
-    0,
-    4,
-    4,
-    'Ver.2.0',
-    'EN-R',
-    '002',
-    '太陽光発電設備の導入による排出削減',
-    '電力使用に伴う二酸化炭素排出量',
-    TRUE,
-    '東京都内の事業所に太陽光発電設備を導入し、系統電力の使用量を削減するプロジェクト。',
-    1,
-    'prj001'
-),
-(
-    2, TRUE,
-    '2026-07-08 09:00:00', '2026-07-08 09:00:00',
-    'operator1', 'operator1',
-    '関東地域自家消費型太陽光発電プロジェクト',
-    'P000002',
-    'DRAFT',
-    '拓也', 'タクヤ',
-    '熊谷', 'クマガイ',
-    'kumagai.takuya@kuma-power.co.jp',
-    '052-345-6791',
-    '代表取締役',
-    '奈緒', 'ナオ',
-    '熊谷', 'クマガイ',
-    'kumagai.nao@kuma-power.co.jp',
-    '052-345-6792',
-    '設備管理担当',
-    'kumagai.nao@kuma-power.co.jp',
-    780.0,
-    1200.0,
-    420.0,
-    '関東',
-    2,
-    0,
-    2,
-    2,
-    'Ver.2.0',
-    'EN-R',
-    '003',
-    '自家消費型太陽光発電設備の導入',
-    '事業所における購入電力使用に伴う排出量',
-    FALSE,
-    '工場および物流施設に太陽光発電設備を導入し、発電電力を施設内で自家消費するプロジェクト。',
-    1,
-    'prj002'
-);
+(1, TRUE, '2026-07-07 09:00:00', '2026-07-07 09:00:00', 'operator1', 'operator1',
+ 'GXカーボン太陽光発電プログラム型プロジェクト（第1期）', 'P000001', 'ACTIVE',
+ '真耶', 'マヤ', '増田', 'マスダ', 'masu.maya@creation-tech.co.jp', '03-5555-0101', '代表取締役',
+ '沙奈', 'サナ', '鳥居', 'トリイ', 'operator2@creation-tech.co.jp', '03-5555-0102', 'プロジェクト管理担当',
+ 'operator2@creation-tech.co.jp',
+ 1250.5, 1850.0, 599.5, '全国',
+ 3, 0, 3, 3,
+ 'Ver.3.7', 'EN-R', '002',
+ '太陽光発電設備の導入', '電力使用に伴う二酸化炭素排出量', TRUE,
+ '参加企業の各サイトに太陽光発電設備を導入し、発電電力を自家消費することで系統電力の使用量を削減するプログラム型プロジェクト。方法論EN-R-002 Ver.3.7を適用。',
+ 1, 'prj001', '2026-07-09 15:00:00'),
+(2, TRUE, '2026-07-20 09:00:00', '2026-07-20 09:00:00', 'operator1', 'operator1',
+ 'GXカーボン太陽光発電プログラム型プロジェクト（第2期）', 'P000002', 'ACTIVE',
+ '真耶', 'マヤ', '増田', 'マスダ', 'masu.maya@creation-tech.co.jp', '03-5555-0101', '代表取締役',
+ '沙奈', 'サナ', '鳥居', 'トリイ', 'operator2@creation-tech.co.jp', '03-5555-0102', 'プロジェクト管理担当',
+ 'operator2@creation-tech.co.jp',
+ 780.0, 1200.0, 420.0, '全国',
+ 2, 0, 2, 2,
+ 'Ver.3.7', 'EN-S', '004',
+ '太陽光発電設備の導入', '電力使用に伴う二酸化炭素排出量', TRUE,
+ '第1期に続く募集枠。既に第1期に参加済みのサイトも、追加設備により第2期へ重複参加が可能。方法論EN-R-003 Ver.3.7を適用。',
+ 1, 'prj002', '2026-07-23 15:00:00'),
+(3, TRUE, '2026-08-01 09:00:00', '2026-08-01 09:00:00', 'operator1', 'operator1',
+ 'GXカーボン太陽光発電プログラム型プロジェクト（第3期・準備中）', 'P000003', 'DRAFT',
+ '真耶', 'マヤ', '増田', 'マスダ', 'masu.maya@creation-tech.co.jp', '03-5555-0101', '代表取締役',
+ '沙奈', 'サナ', '鳥居', 'トリイ', 'operator2@creation-tech.co.jp', '03-5555-0102', 'プロジェクト管理担当',
+ 'operator2@creation-tech.co.jp',
+ NULL, NULL, NULL, '全国',
+ 0, 0, 0, 0,
+ 'Ver.3.7', 'EN-R', '003',
+ '太陽光発電設備の導入', '電力使用に伴う二酸化炭素排出量', TRUE,
+ '2027年度向けの募集枠。現在DRAFTのため入会申請は受け付けない（負パターン検証用）。',
+ 1, 'prj003', NULL);
 
 -- =========================================================
--- 8. SITE-PROJECT RELATION
+-- 8. site_project_relation  （多対多）
+-- サイト1 は第1期(id=1)と第2期(id=7)の両方に参加している
 -- =========================================================
-
 INSERT INTO site_project_relation (
     id, is_active, created_at, updated_at, created_by, updated_by,
     project_id, site_id, activity_start_date, status
 )
 OVERRIDING SYSTEM VALUE
 VALUES
-(1, TRUE, '2026-07-07 10:00:00', '2026-07-07 10:00:00', 'operator1', 'operator1', 1, 1, '2026-04-01', 'REVIEWED'),
-(2, TRUE, '2026-07-07 10:05:00', '2026-07-07 10:05:00', 'operator1', 'operator1', 1, 2, '2026-04-01', 'OPEN'),
-(3, TRUE, '2026-07-07 10:10:00', '2026-07-07 10:10:00', 'operator1', 'operator1', 1, 3, '2026-04-15', 'OPEN'),
-(4, TRUE, '2026-07-07 10:15:00', '2026-07-07 10:15:00', 'operator1', 'operator1', 1, 4, '2026-05-01', 'OPEN'),
-(5, TRUE, '2026-07-08 10:00:00', '2026-07-08 10:00:00', 'operator1', 'operator1', 2, 7, '2026-08-01', 'REJECTED'),
-(6, TRUE, '2026-07-08 10:05:00', '2026-07-08 10:05:00', 'operator1', 'operator1', 2, 8, '2026-08-01', 'REJECTED');
+(1, TRUE, '2026-07-07 10:00:00', '2026-07-09 15:00:00', 'ito.kenichi', 'operator3', 1, 1, '2026-04-01', 'APPROVED'),
+(2, TRUE, '2026-07-07 10:05:00', '2026-07-09 15:10:00', 'ito.kenichi', 'operator3', 1, 2, '2026-04-01', 'APPROVED'),
+(3, TRUE, '2026-07-25 10:00:00', '2026-07-25 10:00:00', 'ito.kenichi', 'ito.kenichi', 1, 3, '2026-04-15', 'OPEN'),
+(4, TRUE, '2026-07-12 10:00:00', '2026-07-14 11:00:00', 'ito.kenichi', 'operator2', 1, 5, '2026-05-01', 'REJECTED'),
+(5, TRUE, '2026-07-08 09:00:00', '2026-07-09 16:00:00', 'nakamura.sachiko', 'operator3', 1, 7, '2026-04-01', 'APPROVED'),
+(6, TRUE, '2026-07-08 10:00:00', '2026-07-09 11:00:00', 'kumagai.takuya', 'operator2', 1, 12, '2026-05-01', 'REJECTED'),
+(7, TRUE, '2026-07-21 10:00:00', '2026-07-23 15:00:00', 'ito.kenichi', 'operator3', 2, 1, '2026-08-01', 'APPROVED'),
+(8, TRUE, '2026-07-26 10:00:00', '2026-07-26 10:00:00', 'ito.kenichi', 'ito.kenichi', 2, 4, '2026-08-01', 'OPEN'),
+(9, TRUE, '2026-07-21 11:00:00', '2026-07-23 16:00:00', 'nakamura.sachiko', 'operator3', 2, 8, '2026-08-01', 'APPROVED');
 
 -- =========================================================
--- 9. EN-R002 EQUIPMENT
+-- 9. en_r002_equipment
+-- 入会申請済みのサイトにのみ設備が存在する。
+-- サイト1は設備2件（第1期用=設備1 / 第2期用=設備2）。
 -- =========================================================
-
 INSERT INTO en_r002_equipment (
     id, is_active, created_at, updated_at, created_by, updated_by,
     site_id, equipment_op_date, nominal_max_output,
@@ -137,82 +99,139 @@ INSERT INTO en_r002_equipment (
 )
 OVERRIDING SYSTEM VALUE
 VALUES
-(1, TRUE, '2026-07-07 11:00:00', '2026-07-07 11:00:00', 'ito.akiko', 'ito.akiko', 1, '2026-03-20', 49.5, '株式会社オムロン', 'KP49R', 1, 'SF-TKY-001', 0.05, TRUE, 'Tesla Japan', 'Powerwall 3', 13.5, 7800000, TRUE, '東京都自家消費型太陽光発電導入補助金', 1500000, 26.50),
-(2, TRUE, '2026-07-07 11:10:00', '2026-07-07 11:10:00', 'ito.jun', 'ito.jun', 2, '2026-03-25', 74.0, '株式会社安川電機', 'Enewell-SOL 74', 1, 'SF-TKY-002', 0.06, TRUE, 'ニチコン株式会社', 'ESS-U4M1', 16.6, 11200000, TRUE, '東京都自家消費型太陽光発電導入補助金', 2200000, 25.80),
-(3, TRUE, '2026-07-07 11:20:00', '2026-07-07 11:20:00', 'ito.akiko', 'ito.akiko', 3, '2026-04-10', 39.6, 'Huawei Technologies', 'SUN2000-40KTL', 1, 'SF-TKY-003', 0.04, FALSE, NULL, NULL, NULL, 6200000, FALSE, NULL, NULL, 27.10),
-(4, TRUE, '2026-07-07 11:30:00', '2026-07-07 11:30:00', 'ito.kenichi', 'ito.kenichi', 4, '2026-04-25', 99.0, 'Sungrow Japan', 'SG110CX', 2, 'SF-TKY-004', 0.08, TRUE, '伊藤忠商事株式会社', 'Smart Star 3', 13.16, 16800000, TRUE, '東京都中小企業向け再エネ設備補助金', 3000000, 24.90),
-(5, TRUE, '2026-07-08 11:00:00', '2026-07-08 11:00:00', 'kumagai.nao', 'kumagai.nao', 7, '2026-07-20', 110.0, 'Sungrow Japan', 'SG125CX', 2, 'KP-AIC-001', 0.10, FALSE, NULL, NULL, NULL, 18500000, FALSE, NULL, NULL, 26.20),
-(6, TRUE, '2026-07-08 11:10:00', '2026-07-08 11:10:00', 'kumagai.takuya', 'kumagai.takuya', 8, '2026-07-25', 82.5, '株式会社東芝', 'TPV-PCS082', 1, 'KP-AIC-002', 0.07, TRUE, 'オムロン株式会社', 'KP-BU98-B', 9.8, 14200000, TRUE, '愛知県再生可能エネルギー設備導入補助金', 2500000, 25.40);
+(1, TRUE, '2026-07-07 11:00:00', '2026-07-07 11:00:00', 'ito.kenichi', 'ito.kenichi',
+ 1, '2026-03-20', 49.5, '株式会社オムロン', 'KP49R', 1, 'SF-TKY-001', 0.05,
+ TRUE, 'ニチコン株式会社', 'ESS-U4M1', 13.5, 7800000, TRUE, '東京都自家消費型太陽光発電導入補助金', 1500000, 26.50),
+(2, TRUE, '2026-07-21 11:00:00', '2026-07-21 11:00:00', 'ito.kenichi', 'ito.kenichi',
+ 1, '2026-07-15', 30.0, '株式会社安川電機', 'Enewell-SOL 30', 1, 'SF-TKY-001B', 0.03,
+ FALSE, NULL, NULL, NULL, 4500000, FALSE, NULL, NULL, 26.10),
+(3, TRUE, '2026-07-07 11:10:00', '2026-07-07 11:10:00', 'ito.kenichi', 'ito.kenichi',
+ 2, '2026-03-25', 74.0, '株式会社安川電機', 'Enewell-SOL 74', 1, 'SF-TKY-002', 0.06,
+ TRUE, 'ニチコン株式会社', 'ESS-U4M1', 16.6, 11200000, FALSE, NULL, NULL, 25.80),
+(4, TRUE, '2026-07-25 11:00:00', '2026-07-25 11:00:00', 'ito.kenichi', 'ito.kenichi',
+ 3, '2026-04-10', 39.6, 'Huawei Technologies', 'SUN2000-40KTL', 1, 'SF-TKY-003', 0.04,
+ FALSE, NULL, NULL, NULL, 6200000, TRUE, '東京都中小企業向け再エネ設備補助金', 1200000, 27.10),
+(5, TRUE, '2026-07-26 11:00:00', '2026-07-26 11:00:00', 'ito.kenichi', 'ito.kenichi',
+ 4, '2026-04-25', 99.0, 'Sungrow Japan', 'SG110CX', 2, 'SF-TKY-004', 0.08,
+ TRUE, '伊藤忠商事株式会社', 'Smart Star 3', 13.16, 16800000, TRUE, '東京都中小企業向け再エネ設備補助金', 3000000, 24.90),
+(6, TRUE, '2026-07-12 11:00:00', '2026-07-12 11:00:00', 'ito.kenichi', 'ito.kenichi',
+ 5, '2026-05-10', 45.0, '株式会社オムロン', 'KP45R', 1, 'SF-TKY-005', 0.05,
+ FALSE, NULL, NULL, NULL, 6800000, FALSE, NULL, NULL, 26.40),
+(7, TRUE, '2026-07-08 11:00:00', '2026-07-08 11:00:00', 'nakamura.sachiko', 'nakamura.sachiko',
+ 7, '2026-03-28', 60.0, '株式会社東芝', 'TPV-PCS060', 1, 'EL-KNG-001', 0.05,
+ TRUE, 'オムロン株式会社', 'KP-BU98-B', 12.0, 9400000, TRUE, '神奈川県再生可能エネルギー設備導入費補助金', 1800000, 25.60),
+(8, TRUE, '2026-07-21 12:00:00', '2026-07-21 12:00:00', 'nakamura.sachiko', 'nakamura.sachiko',
+ 8, '2026-07-18', 82.5, '株式会社東芝', 'TPV-PCS082', 1, 'EL-KNG-002', 0.07,
+ FALSE, NULL, NULL, NULL, 14200000, FALSE, NULL, NULL, 25.40),
+(9, TRUE, '2026-07-08 11:30:00', '2026-07-08 11:30:00', 'kumagai.takuya', 'kumagai.takuya',
+ 12, '2026-04-15', 110.0, 'Sungrow Japan', 'SG125CX', 2, 'KP-AIC-001', 0.10,
+ FALSE, NULL, NULL, NULL, 18500000, TRUE, '愛知県再生可能エネルギー設備導入補助金', 2500000, 26.20);
 
 -- =========================================================
--- 10. EQUIPMENT FILES
+-- 10. en_r002_equipment_file
+-- 必須5種 + 蓄電池あり→BATTERY_CATALOG + 補助金あり→SUBSIDY_NOTICE
 -- =========================================================
-
 INSERT INTO en_r002_equipment_file (
     id, is_active, created_at, updated_at, created_by, updated_by,
     equipment_id, file_type, file_id, s3_key
 )
 OVERRIDING SYSTEM VALUE
 VALUES
-(1, TRUE, '2026-07-07 12:00:00', '2026-07-07 12:00:00', 'ito.akiko', 'ito.akiko', 1, 'SOLAR_CONTRACT', '94e9ecbf-8550-4794-becc-42830602554a', 'tmp/equipments/94e9ecbf-8550-4794-becc-42830602554a/solar_contract_____1_.png'),
-(2, TRUE, '2026-07-07 12:05:00', '2026-07-07 12:05:00', 'ito.akiko', 'ito.akiko', 1, 'PANEL_CATALOG', '7e2ea3d4-47e0-42c9-9941-44869c8156f3', 'tmp/equipments/7e2ea3d4-47e0-42c9-9941-44869c8156f3/panel_catalog_____1_.png'),
-(3, TRUE, '2026-07-07 12:10:00', '2026-07-07 12:10:00', 'ito.jun', 'ito.jun', 2, 'PCS_SPEC', '0c5c2415-806f-4e4e-b12e-d41b96ef59f3', 'tmp/equipments/0c5c2415-806f-4e4e-b12e-d41b96ef59f3/pcs_spec_____1_.png'),
-(4, TRUE, '2026-07-07 12:15:00', '2026-07-07 12:15:00', 'ito.akiko', 'ito.akiko', 3, 'BATTERY_CATALOG', '241f1ac0-52f7-454a-99cf-0b650784ec14', 'tmp/equipments/241f1ac0-52f7-454a-99cf-0b650784ec14/battery_catalog_____1_.png'),
-(5, TRUE, '2026-07-07 12:20:00', '2026-07-07 12:20:00', 'ito.kenichi', 'ito.kenichi', 4, 'CONSTRUCTION_INVOICE', '3a7045e5-f146-4979-a0fe-8275394628de', 'tmp/equipments/3a7045e5-f146-4979-a0fe-8275394628de/construction_invoice_____1_.png'),
-(6, TRUE, '2026-07-08 12:00:00', '2026-07-08 12:00:00', 'kumagai.nao', 'kumagai.nao', 5, 'SUBSIDY_NOTICE', '7a41d8fd-9b53-4150-a2fd-ba58140912c4', 'tmp/equipments/7a41d8fd-9b53-4150-a2fd-ba58140912c4/subsidy_notice_____1_.png'),
-(7, TRUE, '2026-07-08 12:05:00', '2026-07-08 12:05:00', 'kumagai.takuya', 'kumagai.takuya', 6, 'ELECTRICITY_BILL', '5884f1e6-708d-427f-b683-e803969e7ac7', 'tmp/equipments/5884f1e6-708d-427f-b683-e803969e7ac7/electricity_bill_____1_.png');
--- =========================================================
--- 11. PARTICIPATING PROJECT
--- Only participating_company.id = 1 is included; Project 2 has none yet.
--- =========================================================
+(1, TRUE, '2026-07-07 11:00:00', '2026-07-07 11:00:00', 'ito.kenichi', 'ito.kenichi', 1, 'SOLAR_CONTRACT', '00000001-0000-4000-8000-000000000001', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(2, TRUE, '2026-07-07 11:00:00', '2026-07-07 11:00:00', 'ito.kenichi', 'ito.kenichi', 1, 'PANEL_CATALOG', '00000002-0000-4000-8000-000000000001', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(3, TRUE, '2026-07-07 11:00:00', '2026-07-07 11:00:00', 'ito.kenichi', 'ito.kenichi', 1, 'PCS_SPEC', '00000003-0000-4000-8000-000000000001', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(4, TRUE, '2026-07-07 11:00:00', '2026-07-07 11:00:00', 'ito.kenichi', 'ito.kenichi', 1, 'BATTERY_CATALOG', '00000004-0000-4000-8000-000000000001', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(5, TRUE, '2026-07-07 11:00:00', '2026-07-07 11:00:00', 'ito.kenichi', 'ito.kenichi', 1, 'CONSTRUCTION_INVOICE', '00000005-0000-4000-8000-000000000001', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(6, TRUE, '2026-07-07 11:00:00', '2026-07-07 11:00:00', 'ito.kenichi', 'ito.kenichi', 1, 'ELECTRICITY_BILL', '00000006-0000-4000-8000-000000000001', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(7, TRUE, '2026-07-07 11:00:00', '2026-07-07 11:00:00', 'ito.kenichi', 'ito.kenichi', 1, 'SUBSIDY_NOTICE', '00000007-0000-4000-8000-000000000001', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(8, TRUE, '2026-07-21 11:00:00', '2026-07-21 11:00:00', 'ito.kenichi', 'ito.kenichi', 2, 'SOLAR_CONTRACT', '00000008-0000-4000-8000-000000000002', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(9, TRUE, '2026-07-21 11:00:00', '2026-07-21 11:00:00', 'ito.kenichi', 'ito.kenichi', 2, 'PANEL_CATALOG', '00000009-0000-4000-8000-000000000002', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(10, TRUE, '2026-07-21 11:00:00', '2026-07-21 11:00:00', 'ito.kenichi', 'ito.kenichi', 2, 'PCS_SPEC', '0000000a-0000-4000-8000-000000000002', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(11, TRUE, '2026-07-21 11:00:00', '2026-07-21 11:00:00', 'ito.kenichi', 'ito.kenichi', 2, 'CONSTRUCTION_INVOICE', '0000000b-0000-4000-8000-000000000002', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(12, TRUE, '2026-07-21 11:00:00', '2026-07-21 11:00:00', 'ito.kenichi', 'ito.kenichi', 2, 'ELECTRICITY_BILL', '0000000c-0000-4000-8000-000000000002', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(13, TRUE, '2026-07-07 11:10:00', '2026-07-07 11:10:00', 'ito.kenichi', 'ito.kenichi', 3, 'SOLAR_CONTRACT', '0000000d-0000-4000-8000-000000000003', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(14, TRUE, '2026-07-07 11:10:00', '2026-07-07 11:10:00', 'ito.kenichi', 'ito.kenichi', 3, 'PANEL_CATALOG', '0000000e-0000-4000-8000-000000000003', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(15, TRUE, '2026-07-07 11:10:00', '2026-07-07 11:10:00', 'ito.kenichi', 'ito.kenichi', 3, 'PCS_SPEC', '0000000f-0000-4000-8000-000000000003', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(16, TRUE, '2026-07-07 11:10:00', '2026-07-07 11:10:00', 'ito.kenichi', 'ito.kenichi', 3, 'BATTERY_CATALOG', '00000010-0000-4000-8000-000000000003', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(17, TRUE, '2026-07-07 11:10:00', '2026-07-07 11:10:00', 'ito.kenichi', 'ito.kenichi', 3, 'CONSTRUCTION_INVOICE', '00000011-0000-4000-8000-000000000003', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(18, TRUE, '2026-07-07 11:10:00', '2026-07-07 11:10:00', 'ito.kenichi', 'ito.kenichi', 3, 'ELECTRICITY_BILL', '00000012-0000-4000-8000-000000000003', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(19, TRUE, '2026-07-25 11:00:00', '2026-07-25 11:00:00', 'ito.kenichi', 'ito.kenichi', 4, 'SOLAR_CONTRACT', '00000013-0000-4000-8000-000000000004', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(20, TRUE, '2026-07-25 11:00:00', '2026-07-25 11:00:00', 'ito.kenichi', 'ito.kenichi', 4, 'PANEL_CATALOG', '00000014-0000-4000-8000-000000000004', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(21, TRUE, '2026-07-25 11:00:00', '2026-07-25 11:00:00', 'ito.kenichi', 'ito.kenichi', 4, 'PCS_SPEC', '00000015-0000-4000-8000-000000000004', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(22, TRUE, '2026-07-25 11:00:00', '2026-07-25 11:00:00', 'ito.kenichi', 'ito.kenichi', 4, 'CONSTRUCTION_INVOICE', '00000016-0000-4000-8000-000000000004', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(23, TRUE, '2026-07-25 11:00:00', '2026-07-25 11:00:00', 'ito.kenichi', 'ito.kenichi', 4, 'ELECTRICITY_BILL', '00000017-0000-4000-8000-000000000004', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(24, TRUE, '2026-07-25 11:00:00', '2026-07-25 11:00:00', 'ito.kenichi', 'ito.kenichi', 4, 'SUBSIDY_NOTICE', '00000018-0000-4000-8000-000000000004', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(25, TRUE, '2026-07-26 11:00:00', '2026-07-26 11:00:00', 'ito.kenichi', 'ito.kenichi', 5, 'SOLAR_CONTRACT', '00000019-0000-4000-8000-000000000005', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(26, TRUE, '2026-07-26 11:00:00', '2026-07-26 11:00:00', 'ito.kenichi', 'ito.kenichi', 5, 'PANEL_CATALOG', '0000001a-0000-4000-8000-000000000005', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(27, TRUE, '2026-07-26 11:00:00', '2026-07-26 11:00:00', 'ito.kenichi', 'ito.kenichi', 5, 'PCS_SPEC', '0000001b-0000-4000-8000-000000000005', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(28, TRUE, '2026-07-26 11:00:00', '2026-07-26 11:00:00', 'ito.kenichi', 'ito.kenichi', 5, 'BATTERY_CATALOG', '0000001c-0000-4000-8000-000000000005', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(29, TRUE, '2026-07-26 11:00:00', '2026-07-26 11:00:00', 'ito.kenichi', 'ito.kenichi', 5, 'CONSTRUCTION_INVOICE', '0000001d-0000-4000-8000-000000000005', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(30, TRUE, '2026-07-26 11:00:00', '2026-07-26 11:00:00', 'ito.kenichi', 'ito.kenichi', 5, 'ELECTRICITY_BILL', '0000001e-0000-4000-8000-000000000005', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(31, TRUE, '2026-07-26 11:00:00', '2026-07-26 11:00:00', 'ito.kenichi', 'ito.kenichi', 5, 'SUBSIDY_NOTICE', '0000001f-0000-4000-8000-000000000005', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(32, TRUE, '2026-07-12 11:00:00', '2026-07-12 11:00:00', 'ito.kenichi', 'ito.kenichi', 6, 'SOLAR_CONTRACT', '00000020-0000-4000-8000-000000000006', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(33, TRUE, '2026-07-12 11:00:00', '2026-07-12 11:00:00', 'ito.kenichi', 'ito.kenichi', 6, 'PANEL_CATALOG', '00000021-0000-4000-8000-000000000006', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(34, TRUE, '2026-07-12 11:00:00', '2026-07-12 11:00:00', 'ito.kenichi', 'ito.kenichi', 6, 'PCS_SPEC', '00000022-0000-4000-8000-000000000006', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(35, TRUE, '2026-07-12 11:00:00', '2026-07-12 11:00:00', 'ito.kenichi', 'ito.kenichi', 6, 'CONSTRUCTION_INVOICE', '00000023-0000-4000-8000-000000000006', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(36, TRUE, '2026-07-12 11:00:00', '2026-07-12 11:00:00', 'ito.kenichi', 'ito.kenichi', 6, 'ELECTRICITY_BILL', '00000024-0000-4000-8000-000000000006', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(37, TRUE, '2026-07-08 11:00:00', '2026-07-08 11:00:00', 'nakamura.sachiko', 'nakamura.sachiko', 7, 'SOLAR_CONTRACT', '00000025-0000-4000-8000-000000000007', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(38, TRUE, '2026-07-08 11:00:00', '2026-07-08 11:00:00', 'nakamura.sachiko', 'nakamura.sachiko', 7, 'PANEL_CATALOG', '00000026-0000-4000-8000-000000000007', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(39, TRUE, '2026-07-08 11:00:00', '2026-07-08 11:00:00', 'nakamura.sachiko', 'nakamura.sachiko', 7, 'PCS_SPEC', '00000027-0000-4000-8000-000000000007', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(40, TRUE, '2026-07-08 11:00:00', '2026-07-08 11:00:00', 'nakamura.sachiko', 'nakamura.sachiko', 7, 'BATTERY_CATALOG', '00000028-0000-4000-8000-000000000007', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(41, TRUE, '2026-07-08 11:00:00', '2026-07-08 11:00:00', 'nakamura.sachiko', 'nakamura.sachiko', 7, 'CONSTRUCTION_INVOICE', '00000029-0000-4000-8000-000000000007', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(42, TRUE, '2026-07-08 11:00:00', '2026-07-08 11:00:00', 'nakamura.sachiko', 'nakamura.sachiko', 7, 'ELECTRICITY_BILL', '0000002a-0000-4000-8000-000000000007', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(43, TRUE, '2026-07-08 11:00:00', '2026-07-08 11:00:00', 'nakamura.sachiko', 'nakamura.sachiko', 7, 'SUBSIDY_NOTICE', '0000002b-0000-4000-8000-000000000007', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(44, TRUE, '2026-07-21 12:00:00', '2026-07-21 12:00:00', 'nakamura.sachiko', 'nakamura.sachiko', 8, 'SOLAR_CONTRACT', '0000002c-0000-4000-8000-000000000008', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(45, TRUE, '2026-07-21 12:00:00', '2026-07-21 12:00:00', 'nakamura.sachiko', 'nakamura.sachiko', 8, 'PANEL_CATALOG', '0000002d-0000-4000-8000-000000000008', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(46, TRUE, '2026-07-21 12:00:00', '2026-07-21 12:00:00', 'nakamura.sachiko', 'nakamura.sachiko', 8, 'PCS_SPEC', '0000002e-0000-4000-8000-000000000008', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(47, TRUE, '2026-07-21 12:00:00', '2026-07-21 12:00:00', 'nakamura.sachiko', 'nakamura.sachiko', 8, 'CONSTRUCTION_INVOICE', '0000002f-0000-4000-8000-000000000008', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(48, TRUE, '2026-07-21 12:00:00', '2026-07-21 12:00:00', 'nakamura.sachiko', 'nakamura.sachiko', 8, 'ELECTRICITY_BILL', '00000030-0000-4000-8000-000000000008', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(49, TRUE, '2026-07-08 11:30:00', '2026-07-08 11:30:00', 'kumagai.takuya', 'kumagai.takuya', 9, 'SOLAR_CONTRACT', '00000031-0000-4000-8000-000000000009', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(50, TRUE, '2026-07-08 11:30:00', '2026-07-08 11:30:00', 'kumagai.takuya', 'kumagai.takuya', 9, 'PANEL_CATALOG', '00000032-0000-4000-8000-000000000009', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(51, TRUE, '2026-07-08 11:30:00', '2026-07-08 11:30:00', 'kumagai.takuya', 'kumagai.takuya', 9, 'PCS_SPEC', '00000033-0000-4000-8000-000000000009', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(52, TRUE, '2026-07-08 11:30:00', '2026-07-08 11:30:00', 'kumagai.takuya', 'kumagai.takuya', 9, 'CONSTRUCTION_INVOICE', '00000034-0000-4000-8000-000000000009', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(53, TRUE, '2026-07-08 11:30:00', '2026-07-08 11:30:00', 'kumagai.takuya', 'kumagai.takuya', 9, 'ELECTRICITY_BILL', '00000035-0000-4000-8000-000000000009', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg'),
+(54, TRUE, '2026-07-08 11:30:00', '2026-07-08 11:30:00', 'kumagai.takuya', 'kumagai.takuya', 9, 'SUBSIDY_NOTICE', '00000036-0000-4000-8000-000000000009', 's3://gx-equipments-files-dev/dummy-temp/invoice-001.jpg');
 
+-- =========================================================
+-- 11. participating_project
+-- user_id には常に「その会社の master」が入る（master のみ申請可）。
+-- DynamoDB 側の pk は "PART#{id}"。
+-- =========================================================
 INSERT INTO participating_project (
     id, is_active, created_at, updated_at, created_by, updated_by,
-    project_id, user_id, is_eligible, equipment_id,
-    s3_key_pdf_membership
+    project_id, user_id, is_eligible, equipment_id, s3_key_pdf_membership
 )
 OVERRIDING SYSTEM VALUE
 VALUES
-(1, TRUE, '2026-07-07 13:00:00', '2026-07-07 13:00:00', 'ito.kenichi', 'ito.kenichi', 1, 1, TRUE, 1, 's3://gxcarbon/participation/P000001/user-1/membership.pdf'),
-(2, TRUE, '2026-07-07 13:05:00', '2026-07-07 13:05:00', 'ito.kenichi', 'ito.kenichi', 1, 2, TRUE, 2, 's3://gxcarbon/participation/P000001/user-2/membership.pdf'),
-(3, TRUE, '2026-07-07 13:10:00', '2026-07-07 13:10:00', 'ito.kenichi', 'ito.kenichi', 1, 3, TRUE, 3, 's3://gxcarbon/participation/P000001/user-3/membership.pdf'),
-(4, TRUE, '2026-07-07 13:15:00', '2026-07-07 13:15:00', 'ito.kenichi', 'ito.kenichi', 1, 4, TRUE, 4, 's3://gxcarbon/participation/P000001/user-4/membership.pdf'),
-(5, TRUE, '2026-07-08 13:00:00', '2026-07-08 13:00:00', 'kumagai.takuya', 'kumagai.takuya', 2, 8, FALSE, 5, NULL),
-(6, TRUE, '2026-07-08 13:05:00', '2026-07-08 13:05:00', 'kumagai.nao', 'kumagai.nao', 2, 9, FALSE, 6, NULL);
+(1, TRUE, '2026-07-07 11:20:00', '2026-07-09 15:00:00', 'ito.kenichi', 'operator3', 1, 1, TRUE, 1, 's3://gxcarbon/participation/P000001/part-1/membership.pdf'),
+(2, TRUE, '2026-07-07 11:30:00', '2026-07-09 15:10:00', 'ito.kenichi', 'operator3', 1, 1, TRUE, 3, 's3://gxcarbon/participation/P000001/part-2/membership.pdf'),
+(3, TRUE, '2026-07-25 11:20:00', '2026-07-25 11:20:00', 'ito.kenichi', 'ito.kenichi', 1, 1, TRUE, 4, NULL),
+(4, TRUE, '2026-07-12 11:20:00', '2026-07-14 11:00:00', 'ito.kenichi', 'operator2', 1, 1, FALSE, 6, NULL),
+(5, TRUE, '2026-07-08 11:20:00', '2026-07-09 16:00:00', 'nakamura.sachiko', 'operator3', 1, 7, TRUE, 7, 's3://gxcarbon/participation/P000001/part-5/membership.pdf'),
+(6, TRUE, '2026-07-08 11:50:00', '2026-07-09 11:00:00', 'kumagai.takuya', 'operator2', 1, 11, FALSE, 9, NULL),
+(7, TRUE, '2026-07-21 11:20:00', '2026-07-23 15:00:00', 'ito.kenichi', 'operator3', 2, 1, TRUE, 2, 's3://gxcarbon/participation/P000002/part-7/membership.pdf'),
+(8, TRUE, '2026-07-26 11:20:00', '2026-07-26 11:20:00', 'ito.kenichi', 'ito.kenichi', 2, 1, TRUE, 5, NULL),
+(9, TRUE, '2026-07-21 12:20:00', '2026-07-23 16:00:00', 'nakamura.sachiko', 'operator3', 2, 7, TRUE, 8, 's3://gxcarbon/participation/P000002/part-9/membership.pdf');
 
 -- =========================================================
--- 12. PROJECT FILES
+-- 12. project_files
 -- =========================================================
-
 INSERT INTO project_files (
     id, is_active, created_at, updated_at, created_by, updated_by,
-    project_id, certificate_registration, report_validation,
-    report_verification
+    project_id, certificate_registration, report_validation, report_verification
 )
 OVERRIDING SYSTEM VALUE
 VALUES
-(
-    1, TRUE,
-    '2026-07-07 09:30:00', '2026-07-07 09:30:00',
-    'operator1', 'operator1',
-    1,
-    's3://gxcarbon/project/P000001/certificate-registration.pdf',
-    's3://gxcarbon/project/P000001/report-validation.pdf',
-    's3://gxcarbon/project/P000001/report-verification.pdf'
-),
-(
-    2, TRUE,
-    '2026-07-08 09:30:00', '2026-07-08 09:30:00',
-    'operator1', 'operator1',
-    2,
-    's3://gxcarbon/project/P000002/certificate-registration.pdf',
-    NULL,
-    NULL
-);
-
--- =========================================================
--- Synchronize identity sequences
--- =========================================================
+(1, TRUE, '2026-07-07 09:30:00', '2026-07-07 09:30:00', 'operator1', 'operator1', 1,
+ 's3://gxcarbon/project/P000001/certificate-registration.pdf',
+ 's3://gxcarbon/project/P000001/report-validation.pdf',
+ 's3://gxcarbon/project/P000001/report-verification.pdf'),
+(2, TRUE, '2026-07-20 09:30:00', '2026-07-20 09:30:00', 'operator1', 'operator1', 2,
+ 's3://gxcarbon/project/P000002/certificate-registration.pdf',
+ 's3://gxcarbon/project/P000002/report-validation.pdf',
+ NULL),
+(3, TRUE, '2026-08-01 09:30:00', '2026-08-01 09:30:00', 'operator1', 'operator1', 3,
+ NULL, NULL, NULL);
 
 SELECT setval(pg_get_serial_sequence('project', 'id'), (SELECT MAX(id) FROM project), TRUE);
 SELECT setval(pg_get_serial_sequence('site_project_relation', 'id'), (SELECT MAX(id) FROM site_project_relation), TRUE);

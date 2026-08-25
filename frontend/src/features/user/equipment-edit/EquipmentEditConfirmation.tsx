@@ -52,7 +52,7 @@ function FileConfirmationItem({
   fileType,
 }: {
   label: string;
-  selectedFile?: File;
+  selectedFile?: File | null;
   existingFiles: SiteProjectEquipmentFile[];
   fileType: SiteProjectEquipmentFileType;
 }) {
