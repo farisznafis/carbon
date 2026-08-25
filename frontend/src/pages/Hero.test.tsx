@@ -39,8 +39,8 @@ describe('Hero', () => {
     expect(screen.getByText('EN-S-006')).toBeVisible();
     expect(screen.queryByText('OTHER')).not.toBeInTheDocument();
     expect(
-      screen.getByRole('img', { name: 'GXダッシュボードのプレビュー' }),
-    ).toHaveAttribute('src', '/assets/hero/dashboard-preview.png');
+      screen.getByTitle('GXダッシュボードの操作イメージ'),
+    ).toHaveAttribute('src', '/assets/hero/dashboard-preview.mp4');
     expect(
       screen.getAllByRole('button', { name: 'お問い合わせ（準備中）' }),
     ).toHaveLength(2);

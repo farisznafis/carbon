@@ -54,7 +54,7 @@ export function HeroMediaFrame({ source }: HeroMediaFrameProps) {
         className="pointer-events-none absolute -right-[2%] -top-[7%] hidden h-[70%] w-[38%] rotate-[88deg] object-fill sm:block"
       />
 
-      <div className="relative mx-auto w-full max-w-[1200px] rounded-3xl border border-muted-foreground/60 bg-card p-3 shadow-app-md sm:p-6 lg:p-9">
+      <div className="relative mx-auto w-full max-w-[1200px] rounded-3xl border border-muted-foreground/60 bg-card p-3 shadow-app-md sm:p-5 lg:p-6 2xl:p-9">
         <div className="aspect-[1319/703] overflow-hidden border border-muted-foreground/60 bg-muted">
           {source.kind === 'image' ? (
             <img
@@ -90,17 +90,17 @@ export function HomeHeroSection({ signupPath }: HomeHeroSectionProps) {
   return (
     <section
       aria-labelledby="home-hero-title"
-      className="relative min-h-[calc(100dvh-4rem-1px)] overflow-hidden bg-card px-4 pb-28 pt-12 sm:px-6 sm:pb-32 sm:pt-16 lg:h-[calc(100dvh-4rem-1px)] lg:min-h-[700px] lg:px-8 lg:pb-0 lg:pt-20"
+      className="relative min-h-[calc(100dvh-4rem-1px)] overflow-hidden bg-card px-4 pb-24 pt-10 sm:px-6 sm:pb-28 sm:pt-14 lg:min-h-0 lg:px-8 lg:pb-16 lg:pt-12 2xl:h-[calc(100dvh-4rem-1px)] 2xl:min-h-[700px] 2xl:pb-0 2xl:pt-20"
     >
       <div className="mx-auto flex w-full max-w-[1340px] flex-col items-center">
         <div className="animate-slide-up flex w-full max-w-[1240px] flex-col items-center text-center motion-reduce:animate-none">
           <h1
             id="home-hero-title"
-            className="max-w-6xl text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl lg:text-5xl"
+            className="max-w-6xl text-balance text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl 2xl:text-5xl"
           >
             カーボンデータを「意思決定」に変えるプラットフォーム
           </h1>
-          <p className="mt-4 max-w-3xl text-base leading-7 text-foreground sm:text-xl">
+          <p className="mt-4 max-w-3xl text-pretty text-base leading-7 text-foreground sm:text-lg 2xl:text-xl">
             排出量・カーボンクレジット・コンプライアンスを一つの画面で管理します。
           </p>
           <Button asChild size="lg" className="mt-5 px-8">
@@ -108,7 +108,7 @@ export function HomeHeroSection({ signupPath }: HomeHeroSectionProps) {
           </Button>
         </div>
 
-        <div className="mt-12 w-full animate-slide-up motion-reduce:animate-none sm:mt-16">
+        <div className="mt-8 w-full animate-slide-up motion-reduce:animate-none sm:mt-10 2xl:mt-16">
           <HeroMediaFrame source={HERO_MEDIA_SOURCE} />
         </div>
       </div>
