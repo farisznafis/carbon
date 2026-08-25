@@ -5,9 +5,9 @@ import {
   type MonitoringRecordListItem,
 } from '@/api/monitoring';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
+import { FormActions } from '@/components/forms/form-layout';
 import {
   AlertDialog,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -369,17 +369,28 @@ export function MonitoringCancellationDialog({
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSubmitting}>
-              キャンセル
-            </AlertDialogCancel>
-            <Button
-              type='button'
-              variant='destructive'
-              disabled={!reasonText.trim() || isSubmitting}
-              onClick={handleCancelRequest}
-            >
-              {isSubmitting ? '送信中...' : '取消申請を送信'}
-            </Button>
+            <FormActions
+              context="compact"
+              className="w-full"
+              disabled={isSubmitting}
+              pendingActionId={isSubmitting ? 'confirm' : null}
+              actions={[
+                {
+                  id: 'cancel',
+                  label: 'キャンセル',
+                  variant: 'outline',
+                  onClick: closeCancelConfirmation,
+                },
+                {
+                  id: 'confirm',
+                  label: '取消申請を送信',
+                  pendingLabel: '送信中...',
+                  variant: 'destructive',
+                  disabled: !reasonText.trim(),
+                  onClick: handleCancelRequest,
+                },
+              ]}
+            />
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

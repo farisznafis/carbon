@@ -1,6 +1,6 @@
 import type { ProjectStatus } from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
-import { useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   DataGridTable,
   type DataGridTableColumn,
@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ProjectCompletionDialog } from './ProjectCompletionDialog';
+import { InlineLoader } from '@/components/feedback/loading';
 
 type ProjectTableProps = {
   projects: Project[];
@@ -105,8 +106,9 @@ const projectStatusAliases: Partial<Record<string, ProjectStatus>> = {
   INACTIVE: '終了',
 };
 
-const projectTableGridColumns =
-  'minmax(180px, 1.2fr) minmax(86px, 0.55fr) minmax(86px, 0.55fr) minmax(260px, 1.8fr) minmax(130px, 0.8fr) minmax(180px, 1fr)';
+const PROJECT_NAME_COLUMN_MIN_WIDTH_PX = 180;
+const projectTableRemainingGridColumns =
+  '90px 90px minmax(170px, 1fr) 140px 150px';
 
 function isProjectStatus(status: string): status is ProjectStatus {
   return projectStatusOptions.includes(status as ProjectStatus);
@@ -155,6 +157,42 @@ export function ProjectTable({
   const [completionProject, setCompletionProject] = useState<Project | null>(
     null,
   );
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const [projectNameColumnWidth, setProjectNameColumnWidth] = useState(
+    PROJECT_NAME_COLUMN_MIN_WIDTH_PX,
+  );
+  const projectTableGridColumns = useMemo(
+    () =>
+      `${projectNameColumnWidth}px ${projectTableRemainingGridColumns}`,
+    [projectNameColumnWidth],
+  );
+
+  useLayoutEffect(() => {
+    let isActive = true;
+
+    /** Synchronizes the shared project-name track with the widest rendered name. */
+    const updateProjectNameColumnWidth = () => {
+      if (!isActive) return;
+
+      const projectNameCells =
+        tableContainerRef.current?.querySelectorAll<HTMLElement>(
+          '[data-project-name-cell]',
+        );
+      const widestProjectName = Math.max(
+        PROJECT_NAME_COLUMN_MIN_WIDTH_PX,
+        ...Array.from(projectNameCells ?? []).map((cell) => cell.scrollWidth),
+      );
+
+      setProjectNameColumnWidth(widestProjectName);
+    };
+
+    updateProjectNameColumnWidth();
+    void document.fonts?.ready.then(updateProjectNameColumnWidth);
+
+    return () => {
+      isActive = false;
+    };
+  }, [projects]);
 
   const handleStatusChange = (project: Project, status: ProjectStatus) => {
     if (status === '終了') {
@@ -178,7 +216,10 @@ export function ProjectTable({
       sortable: true,
       sortValue: (project) => project.projectName,
       render: (project) => (
-        <span className="block truncate text-body font-bold text-foreground">
+        <span
+          data-project-name-cell
+          className="block whitespace-nowrap text-body font-bold text-foreground"
+        >
           {displayValue(project.projectName)}
         </span>
       ),
@@ -211,7 +252,10 @@ export function ProjectTable({
       sortable: true,
       sortValue: (project) => project.methodName,
       render: (project) => (
-        <span className="block truncate text-body text-foreground">
+        <span
+          className="block truncate text-body text-foreground"
+          title={displayValue(project.methodName)}
+        >
           {displayValue(project.methodName)}
         </span>
       ),
@@ -224,16 +268,18 @@ export function ProjectTable({
       render: (project) => {
         const statusColor = getProjectStatusColors(project.projectStatus);
 
+        const isUpdating = updatingProjectStatusId === project.id;
+
         return (
           <span
-            className="block min-w-0"
+            className="flex min-w-0 items-center gap-2"
             onClick={(event) => event.stopPropagation()}
             onPointerDown={(event) => event.stopPropagation()}
           >
             <Select
               value={project.projectStatus}
               disabled={
-                updatingProjectStatusId === project.id ||
+                isUpdating ||
                 isTerminalProjectStatus(project.projectStatus)
               }
               onValueChange={(value) =>
@@ -259,6 +305,9 @@ export function ProjectTable({
                 ))}
               </SelectContent>
             </Select>
+            {isUpdating ? (
+              <InlineLoader label="ステータスを更新しています" showLabel={false} />
+            ) : null}
           </span>
         );
       },
@@ -268,7 +317,7 @@ export function ProjectTable({
       label: '操作',
       render: (project) => (
         <div
-          className="flex justify-start gap-2"
+          className="flex justify-end gap-2"
           onClick={(event) => event.stopPropagation()}
           onPointerDown={(event) => event.stopPropagation()}
         >
@@ -293,15 +342,17 @@ export function ProjectTable({
 
   return (
     <>
-      <DataGridTable
-        rows={projects}
-        columns={columns}
-        gridTemplateColumns={projectTableGridColumns}
-        minWidth={980}
-        getRowKey={(project) => project.id}
-        emptyMessage="まだプロジェクトが登録されていません。"
-        onRowClick={onRowClick}
-      />
+      <div ref={tableContainerRef}>
+        <DataGridTable
+          rows={projects}
+          columns={columns}
+          gridTemplateColumns={projectTableGridColumns}
+          minWidth={980}
+          getRowKey={(project) => project.id}
+          emptyMessage="まだプロジェクトが登録されていません。"
+          onRowClick={onRowClick}
+        />
+      </div>
       <ProjectCompletionDialog
         project={completionProject}
         isSubmitting={

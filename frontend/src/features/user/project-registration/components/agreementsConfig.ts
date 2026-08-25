@@ -157,6 +157,20 @@ export const agreementsConfig: AgreementField[] = [
   },
 ];
 
+// Builds agreement labels that include the selected project's display name.
+export function createAgreementsConfig(projectName: string): AgreementField[] {
+  const resolvedProjectName = projectName.trim() || 'プログラム名';
+
+  return agreementsConfig.map((field) =>
+    field.id === 'notRegisteredElsewhere'
+      ? {
+          ...field,
+          label: field.label.replace('「プログラム名」', `「${resolvedProjectName}」`),
+        }
+      : field,
+  );
+}
+
 // Type for the form values
 export type AgreementFormValues = {
   useRegisteredInfo: boolean | null;

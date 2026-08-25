@@ -71,7 +71,6 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
                   <Input
                     type="text"
                     placeholder="例）1234567890111"
-                    className="[@media(max-height:700px)]:h-9 [@media(max-height:700px)]:py-1.5 [@media(max-height:480px)]:h-8"
                     {...field}
                   />
                 </FormControl>
@@ -92,7 +91,6 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
                   <Input
                     type="text"
                     placeholder="例）user@example.com または name_company"
-                    className="[@media(max-height:700px)]:h-9 [@media(max-height:700px)]:py-1.5 [@media(max-height:480px)]:h-8"
                     {...field}
                   />
                 </FormControl>
@@ -112,7 +110,6 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
                 <FormControl>
                   <PasswordInput
                     placeholder="パスワードを入力"
-                    className="[@media(max-height:700px)]:h-9 [@media(max-height:700px)]:py-1.5 [@media(max-height:480px)]:h-8"
                     {...field}
                   />
                 </FormControl>

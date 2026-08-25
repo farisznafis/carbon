@@ -19,7 +19,7 @@ export const ConfirmationItem = <T,>({
             <div className="text-sm font-medium text-foreground mb-1">
                 {label}
             </div>
-            <div className={isChanged ? undefined : "text-foreground"}>
+            <div className={isChanged ? undefined : "text-foreground font-bold"}>
                 {isChanged ? (
                     <ChangedConfirmationValue>
                         {String(value)}

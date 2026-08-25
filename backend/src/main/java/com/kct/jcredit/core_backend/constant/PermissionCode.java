@@ -11,6 +11,7 @@ public enum PermissionCode {
     PROJECT_UPDATE, //included
     PROJECT_STATUS_UPDATE, //included
     PROJECT_APPLICATION_OUTPUT,
+    PROJECT_VIEW, //included
 
     //participating-company management
     PARTICIPATING_COMPANY_READ, //included
@@ -20,7 +21,7 @@ public enum PermissionCode {
 
     //monitoring data management
     MONITORING_READ, //included
-    MONITORING_DELETE,
+    MONITORING_DELETE, //included
     MONITORING_CANCEL, //included
     MONITORING_BATCH_HISTORY_READ,//included
     MONITORING_BATCH_ERROR_READ, 

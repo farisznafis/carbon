@@ -15,6 +15,7 @@ import { SessionExpiryGuard } from "@/components/layout/SessionExpiryGuard";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "./contexts/ProtectedRoute";
 import { ErrorBoundary } from "@/components/feedback/ErrorBoundary";
+import { AppLoadingScreen, PageSkeleton } from '@/components/feedback/loading';
 import { isAuthPagePath, paths } from "@/routes/paths";
 import { cn } from "@/lib/utils";
 import Lenis from "lenis";
@@ -131,8 +132,11 @@ function LegacyProjectRedirect() {
 const App = () => {
   const location = useLocation();
   const isAuthPage = isAuthPagePath(location.pathname);
+  const { loading: authLoading } = useAuth();
 
   useEffect(() => {
+    if (authLoading) return;
+
     const lenis = new Lenis({
       autoRaf: true,
       autoToggle: true,
@@ -145,7 +149,11 @@ const App = () => {
     return () => {
       lenis.destroy();
     };
-  }, []);
+  }, [authLoading]);
+
+  if (authLoading) {
+    return <AppLoadingScreen />;
+  }
 
   return (
     <ErrorBoundary>
@@ -166,7 +174,7 @@ const App = () => {
             isAuthPage && 'relative overflow-hidden',
           )}
         >
-          <Suspense fallback={<div className="p-6 text-sm text-foreground">Loading...</div>}>
+          <Suspense fallback={<PageSkeleton />}>
             <Routes>
           <Route path={paths.home} element={<Index />} />
           <Route path={paths.login} element={<Login />} />

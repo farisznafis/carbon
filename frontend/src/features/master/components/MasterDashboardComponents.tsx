@@ -27,12 +27,18 @@ export function MasterDashboardHero({
 }) {
   return (
     <header className="relative overflow-hidden border-b border-border bg-background">
-      <div className={cn('relative flex-col', dashboardPageHeaderClassName)}>
-        <h1 className="max-w-5xl text-foreground">
-          {companyName}
-        </h1>
+      <div className={cn(dashboardPageHeaderClassName, 'justify-between text-left')}>
+        {/* left text */}
+        <div className="flex flex-col gap-1">
+          <span className="text-small text-muted-foreground">
+            マスターダッシュボード
+          </span>
+          <h1 className="max-w-5xl text-foreground">
+            {companyName}
+          </h1>
+        </div>
         {action && (
-          <div className="mt-5 flex w-full justify-end sm:absolute sm:bottom-4 sm:right-6 sm:mt-0 lg:right-0">
+          <div className="shrink-0">
             {action}
           </div>
         )}

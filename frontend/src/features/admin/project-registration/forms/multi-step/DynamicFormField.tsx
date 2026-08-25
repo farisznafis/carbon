@@ -7,6 +7,7 @@ import {
 } from 'react-hook-form';
 
 import type { FieldConfig } from '@/components/forms/shared/GenericFormFields/GenericFormFields';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -62,13 +63,6 @@ export function DynamicFormField<TFormValues extends FieldValues = FieldValues>(
       return matchesConditionValue(value, condition.value);
     });
 
-  const inputClasses = [
-    'w-full rounded-md border px-3 py-2 text-sm',
-    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-    'disabled:cursor-not-allowed disabled:opacity-50',
-    hasError ? 'border-destructive' : 'border-input',
-  ].join(' ');
-
   const registerProps = form.register(field.name);
   const numberRegisterProps =
     field.type === 'number'
@@ -87,43 +81,43 @@ export function DynamicFormField<TFormValues extends FieldValues = FieldValues>(
       </label>
 
       {field.type === 'text' && (
-        <input
+        <Input
           id={field.name as string}
           type="text"
           placeholder={field.placeholder}
-          className={inputClasses}
+          aria-invalid={hasError}
           {...registerProps}
           disabled={disabled}
         />
       )}
 
       {field.type === 'email' && (
-        <input
+        <Input
           id={field.name as string}
           type="email"
           placeholder={field.placeholder}
-          className={inputClasses}
+          aria-invalid={hasError}
           {...registerProps}
           disabled={disabled}
         />
       )}
 
       {field.type === 'number' && (
-        <input
+        <Input
           id={field.name as string}
           type="number"
           placeholder={field.placeholder}
-          className={inputClasses}
+          aria-invalid={hasError}
           {...numberRegisterProps}
           disabled={disabled}
         />
       )}
 
       {field.type === 'date' && (
-        <input
+        <Input
           id={field.name as string}
           type="date"
-          className={inputClasses}
+          aria-invalid={hasError}
           {...registerProps}
           disabled={disabled}
         />
@@ -153,7 +147,7 @@ export function DynamicFormField<TFormValues extends FieldValues = FieldValues>(
           }}
           disabled={disabled}
         >
-          <SelectTrigger className={inputClasses}>
+          <SelectTrigger aria-invalid={hasError}>
             <SelectValue placeholder={field.placeholder} />
           </SelectTrigger>
           <SelectContent>
@@ -182,12 +176,12 @@ export function DynamicFormField<TFormValues extends FieldValues = FieldValues>(
       )}
 
       {field.type === 'file' && (
-        <input
+        <Input
           id={field.name as string}
           type="file"
           accept={field.accept}
           multiple={field.multiple}
-          className={inputClasses}
+          aria-invalid={hasError}
           onChange={(event) => {
             const files = event.target.files;
             const value = field.multiple ? Array.from(files ?? []) : files?.[0] ?? null;

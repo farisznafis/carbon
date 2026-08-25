@@ -1,0 +1,76 @@
+PATCH /api/company
+Authorization: Bearer <master-user-access-token>
+Content-Type: application/json
+
+Request Body (JSON):
+{
+  "nameJa": "株式会社サンプル",
+  "nameFurigana": "カブシキガイシャサンプル",
+  "nameEn": "Sample Corporation",
+  "phoneNumber": "0312345678",
+  "corpNumber": "1234567890123",
+  "postalCode": "100-0001",
+  "prefecture": "東京都",
+  "municipality": "千代田区",
+  "blocknum": "千代田1-1",
+  "buildingName": "サンプルビル10階",
+  "fax": "0312345670"
+}
+
+
+Response - Success (HTTP 200):
+{
+  "statusCode": "OK",
+  "company": {
+    "id": "5678",
+    "companyId": "PC12345678",
+    "nameJA": "株式会社サンプル",
+    "nameFurigana": "カブシキガイシャサンプル",
+    "nameEN": "Sample Corporation",
+    "email": "info@example.com",
+    "phoneNumber": "0312345678",
+    "corpNumber": "1234567890123",
+    "postalCode": "100-0001",
+    "prefecture": "東京都",
+    "municipality": "千代田区",
+    "blocknum": "千代田1-1",
+    "buildingName": "サンプルビル10階",
+    "fax": "0312345670",
+    "address": "東京都 千代田区 千代田1-1 サンプルビル10階",
+    "isSuspended": false
+  }
+}
+
+ERROR RESPONSES:
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作にはログインが必要です。"
+}
+
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+}
+
+{
+  "statusCode": "BAD_REQUEST",
+  "message": "入力内容に誤りがあります。",
+  "errors": {
+    "corpNumber": "法人番号は13桁の数字で入力してください。"
+  }
+}
+
+{
+  "statusCode": "CONFLICT",
+  "message": "この法人番号は既に登録されています。"
+}
+
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する企業が見つかりませんでした。"
+}
+
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部エラーが発生しました。"
+}

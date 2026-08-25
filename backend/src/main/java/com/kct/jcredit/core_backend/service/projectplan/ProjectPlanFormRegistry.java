@@ -9,6 +9,38 @@ import java.util.Optional;
 import com.kct.jcredit.core_backend.dto.projectplan.ApplicableConditionsRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.OtherOperatorProjectsRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectApplicationRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.AdditionalAssessmentMethodRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ApplicableMethodologyRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.BaselineEmissionRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.BaselineIncidentalEmissionActivityRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.CoefficientMeasureExplanationRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.DataManagementRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.EmissionReductionCalculationMethodRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.EmissionReductionPlanRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.EquipmentVerificationAfterRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.EquipmentVerificationBeforeNewRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.EquipmentVerificationBeforeUpdateRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ExpectedProjectPlanCoefficientRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ExpectedProjectPlanRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.IncidentalActivityProjectEmissionRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.IncidentalBaselineEmissionRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.MainActivityProjectEmissionRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.MainBaselineEmissionRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.MeasureOtherInstrumentsRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.MeasureSpecifiedInstrumentRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.MonitoringCalculationRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.MonitoringItemPlanCoefficientRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.MonitoringItemPlanRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.MonitoringMethodExplanationRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.MonitoringMethodPlanCoefficientRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.MonitoringMethodPlanRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.MonitoringPlanRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ObtainingAdditionalAssessmentRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.PostImplementIncidentalActivityRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ProgramTypeMethodologyRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectChangeInformationRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectOverviewRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanCoverRequest;
 import com.kct.jcredit.core_backend.util.AddressFormatter;
 
 import org.springframework.stereotype.Component;
@@ -109,7 +141,294 @@ public class ProjectPlanFormRegistry {
                                 (d, c) -> d.setRepresentativePosition(c.company().getRepPosition())),
                         sql("representativeName",
                                 (d, c) -> d.setRepresentativeName(c.repFullName())))));
-    }
+
+        register(new FormDefinition<>(
+                "project-change-information",
+                "PROJECT_CHANGE_INFORMATION",
+                "プロジェクト計画変更情報",
+                4,
+                false,
+                ProjectChangeInformationRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "project-plan-cover",
+                "PROJECT_PLAN_COVER",
+                "【HP公開】プロジェクト計画書表紙",
+                5,
+                false,
+                ProjectPlanCoverRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "project-overview",
+                "PROJECT_OVERVIEW",
+                "【HP公開】1.プロジェクト概要",
+                6,
+                false,
+                ProjectOverviewRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "applicable-methodology",
+                "APPLICABLE_METHODOLOGY",
+                "適用する方法論",
+                7,
+                false,
+                ApplicableMethodologyRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "program-type-methodology",
+                "PROGRAM_TYPE_METHODOLOGY",
+                "プログラム型プロジェクトの運営・管理",
+                8,
+                false,
+                ProgramTypeMethodologyRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "emission-reduction-plan",
+                "EMISSION_REDUCTION_PLAN",
+                "排出削減計画",
+                9,
+                false,
+                EmissionReductionPlanRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "monitoring-calculation",
+                "MONITORING_CALCULATION",
+                "モニタリング・算定方法",
+                10,
+                false,
+                MonitoringCalculationRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "data-management",
+                "DATA_MANAGEMENT",
+                "データ管理・特記事項",
+                11,
+                false,
+                DataManagementRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "equipment-verification-before-update",
+                "EQUIPMENT_VERIFICATION_BEFORE_UPDATE",
+                "設備情報の収集・確認方法（実施前 - 更新）",
+                12,
+                false,
+                EquipmentVerificationBeforeUpdateRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "equipment-verification-before-new",
+                "EQUIPMENT_VERIFICATION_BEFORE_NEW",
+                "設備情報の収集・確認方法（実施前 - 新設）",
+                13,
+                false,
+                EquipmentVerificationBeforeNewRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "equipment-verification-after",
+                "EQUIPMENT_VERIFICATION_AFTER",
+                "設備情報の収集・確認方法（削減活動実施後）",
+                14,
+                false,
+                EquipmentVerificationAfterRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "additional-assessment-method",
+                "ADDITIONAL_ASSESSMENT_METHOD",
+                "追加性の評価",
+                15,
+                false,
+                AdditionalAssessmentMethodRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "obtaining-additional-assessment",
+                "OBTAINING_ADDITIONAL_ASSESSMENT",
+                "追加性評価に必要な情報の入手方法",
+                16,
+                false,
+                ObtainingAdditionalAssessmentRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "emission-reduction-calculation-method",
+                "EMISSION_REDUCTION_CALCULATION_METHOD",
+                "排出削減量の算定方法",
+                17,
+                false,
+                EmissionReductionCalculationMethodRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "baseline-incidental-emission-activity",
+                "BASELINE_INCIDENTAL_EMISSION_ACTIVITY",
+                "ベースラインの付随的な排出活動",
+                18,
+                false,
+                BaselineIncidentalEmissionActivityRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "post-implement-incidental-activity",
+                "POST_IMPLEMENT_INCIDENTAL_ACTIVITY",
+                "プロジェクト実施後の付随的な排出活動",
+                19,
+                false,
+                PostImplementIncidentalActivityRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "main-activity-project-emission",
+                "MAIN_ACTIVITY_PROJECT_EMISSION",
+                "プロジェクト排出量情報（主要排出活動）",
+                20,
+                false,
+                MainActivityProjectEmissionRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "incidental-activity-project-emission",
+                "INCIDENTAL_ACTIVITY_PROJECT_EMISSION",
+                "プロジェクト排出量情報（付随的な排出活動）",
+                21,
+                false,
+                IncidentalActivityProjectEmissionRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "baseline-emission",
+                "BASELINE_EMISSION",
+                "ベースライン排出量の考え方",
+                22,
+                false,
+                BaselineEmissionRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "main-baseline-emission",
+                "MAIN_BASELINE_EMISSION",
+                "ベースライン排出量（主要排出活動）",
+                23,
+                false,
+                MainBaselineEmissionRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "incidental-baseline-emission",
+                "INCIDENTAL_BASELINE_EMISSION",
+                "ベースライン排出量（付随的な排出活動）",
+                24,
+                false,
+                IncidentalBaselineEmissionRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "monitoring-item-plan",
+                "MONITORING_ITEM_PLAN",
+                "モニタリング項目_計画",
+                25,
+                false,
+                MonitoringItemPlanRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "monitoring-method-plan",
+                "MONITORING_METHOD_PLAN",
+                "モニタリング方法_計画",
+                26,
+                false,
+                MonitoringMethodPlanRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "expected-project-plan",
+                "EXPECTED_PROJECT_PLAN",
+                "プロジェクト計画での想定",
+                27,
+                false,
+                ExpectedProjectPlanRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "monitoring-item-plan-coefficient",
+                "MONITORING_ITEM_PLAN_COEFFICIENT",
+                "モニタリング項目_計画（係数）",
+                28,
+                false,
+                MonitoringItemPlanCoefficientRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "monitoring-method-plan-coefficient",
+                "MONITORING_METHOD_PLAN_COEFFICIENT",
+                "モニタリング方法_計画（係数）",
+                29,
+                false,
+                MonitoringMethodPlanCoefficientRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "expected-project-plan-coefficient",
+                "EXPECTED_PROJECT_PLAN_COEFFICIENT",
+                "プロジェクト計画での想定（係数）",
+                30,
+                false,
+                ExpectedProjectPlanCoefficientRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "monitoring-plan",
+                "MONITORING_PLAN",
+                "モニタリング計画",
+                31,
+                false,
+                MonitoringPlanRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "measure-specified-instrument",
+                "MEASURE_SPECIFIED_INSTRUMENT",
+                "計量器の概要（特定計量器の場合）",
+                32,
+                false,
+                MeasureSpecifiedInstrumentRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "measure-other-instruments",
+                "MEASURE_OTHER_INSTRUMENTS",
+                "計量器の概要（特定計量器以外）",
+                33,
+                false,
+                MeasureOtherInstrumentsRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "monitoring-method-explanation",
+                "MONITORING_METHOD_EXPLANATION",
+                "モニタリング方法等に関する説明",
+                34,
+                false,
+                MonitoringMethodExplanationRequest.class,
+                List.of()));
+
+        register(new FormDefinition<>(
+                "coefficient-measure-explanation",
+                "COEFFICIENT_MEASURE_EXPLANATION",
+                "係数の実測方法に関する説明",
+                35,
+                false,
+                CoefficientMeasureExplanationRequest.class,
+                List.of()));    }
 
     /** Type-inference helper so the lambdas above stay readable. */
     private static <T> SqlField<T> sql(
