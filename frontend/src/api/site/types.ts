@@ -201,11 +201,6 @@ export type SiteProject = Project & {
   createdAt?: string;
 };
 
-export type MembershipPdfDownload = {
-  pdfUrl: string;
-  expiresIn: number;
-};
-
 export type SiteProjectEquipment = {
   tempId?: string | null;
   equipmentId?: number | null;
