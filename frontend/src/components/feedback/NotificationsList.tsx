@@ -104,7 +104,7 @@ export function NotificationsList({
 
   if (notifications.length === 0) {
     return (
-      <div className='text-sm text-foreground'>
+      <div className='text-sm text-foreground ml-2'>
         お知らせはありません。
       </div>
     );

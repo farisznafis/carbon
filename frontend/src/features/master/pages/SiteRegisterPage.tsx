@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useDashboardStore } from '@/stores/dashboardStore';
-import { registerSite, validateCreateSite } from '@/api/site';
+import { registerSite, validateCreateSite, type Site } from '@/api/site';
 import { SiteForm, SiteFormData } from '@/features/master/forms/SiteForm';
 import { SiteConfirmation } from './SiteConfirmation';
 import { logger } from '@/lib/logger';
@@ -16,6 +17,7 @@ import {
 import {
   createSiteRegistrationFlowState,
   getSiteRegistrationFlowState,
+  getSiteRegistrationReturnTarget,
 } from '@/features/master/navigation/siteRegistrationFlow';
 import { paths } from '@/routes/paths';
 
@@ -42,9 +44,13 @@ function SiteRegister() {
   const [step, setStep] = useState<'form' | 'confirm'>('form');
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const addSite = useDashboardStore((state) => state.addSite);
   const setUsers = useDashboardStore((state) => state.setUsers);
   const registrationFlowState = getSiteRegistrationFlowState(location.state);
+  const registrationReturnTarget = getSiteRegistrationReturnTarget(
+    location.state,
+  );
   const returnedUser = registrationFlowState?.createdUser;
   const [formData, setFormData] = useState<SiteFormData>(() => ({
     ...(registrationFlowState?.siteDraft ?? emptySiteValues),
@@ -83,7 +89,11 @@ function SiteRegister() {
     setFormData(siteDraft);
     navigate(paths.masterUserRegister, {
       replace: true,
-      state: createSiteRegistrationFlowState(siteDraft),
+      state: createSiteRegistrationFlowState(
+        siteDraft,
+        undefined,
+        registrationReturnTarget ?? undefined,
+      ),
     });
   };
 
@@ -111,11 +121,30 @@ function SiteRegister() {
         : null;
       const result = await registerSite(formData, assignee);
       addSite(result.site);
+      queryClient.setQueryData<{ sites: Site[] }>(['sites'], (current) => ({
+        sites: [
+          ...(current?.sites ?? []).filter(
+            (site) => site.siteId !== result.site.siteId,
+          ),
+          result.site,
+        ],
+      }));
 
       toast({
         title: '成功',
         description: '拠点を登録しました',
       });
+
+      if (registrationReturnTarget) {
+        navigate(registrationReturnTarget.path, {
+          replace: true,
+          state: {
+            ...registrationReturnTarget.state,
+            createdSiteId: result.site.siteId,
+          },
+        });
+        return;
+      }
 
       navigate(paths.masterDashboard);
     } catch (error) {
@@ -133,6 +162,19 @@ function SiteRegister() {
     setStep('form');
   };
 
+  /** Returns to the originating form with its preserved draft when available. */
+  const handlePageBack = () => {
+    if (registrationReturnTarget) {
+      navigate(registrationReturnTarget.path, {
+        replace: true,
+        state: registrationReturnTarget.state,
+      });
+      return;
+    }
+
+    navigate(-1);
+  };
+
   if (step === 'confirm') {
     return (
       <SiteConfirmation
@@ -148,7 +190,7 @@ function SiteRegister() {
   return (
     <FormStandalonePage>
       <PageBackButton
-        onClick={() => navigate(-1)}
+        onClick={handlePageBack}
         label=''
         className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
       />

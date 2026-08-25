@@ -249,27 +249,23 @@ export default function EquipmentConfirmationPage() {
               </FormGrid>
             </FormSection>
 
-            <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={navigateBack}
-                disabled={isSubmitting}
-              >
-                戻る
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                className="w-full"
-                onClick={handleRegister}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? '登録中...' : '登録'}
-              </Button>
-            </FormActions>
+            <FormActions
+              pendingActionId={isSubmitting ? 'register' : null}
+              actions={[
+                {
+                  id: 'back',
+                  label: '戻る',
+                  variant: 'outline',
+                  onClick: navigateBack,
+                },
+                {
+                  id: 'register',
+                  label: '登録',
+                  pendingLabel: '登録中...',
+                  onClick: handleRegister,
+                },
+              ]}
+            />
           </FormSectionStack>
         </FormCard>
       </FormPageContent>

@@ -11,6 +11,7 @@ import {
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { Button } from '@/components/ui/button';
 import { BatchHistoryDetailDialog } from './BatchHistoryDetailDialog';
+import { SkeletonTable } from '@/components/feedback/loading';
 import { BatchHistoryStatusBadge } from './BatchHistoryStatusBadge';
 import { formatBatchHistoryDateTime } from './batchHistoryFormatters';
 
@@ -148,11 +149,7 @@ export function BatchHistoryTable({
   );
 
   if (isLoading) {
-    return (
-      <div className="rounded-lg border border-border py-12 text-center text-sm text-foreground">
-        バッチ履歴を読み込んでいます...
-      </div>
-    );
+    return <SkeletonTable columns={7} rows={6} gridTemplateColumns={batchHistoryGridColumns} minWidth={1120} />;
   }
 
   if (loadError) {

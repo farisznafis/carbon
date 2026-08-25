@@ -190,7 +190,7 @@ export function UserForm({
                     <FormItem>
                       <RequiredLabel>姓</RequiredLabel>
                       <FormControl>
-                        <Input inputSize="sm" placeholder="山田" {...field} />
+                        <Input placeholder="山田" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -204,7 +204,7 @@ export function UserForm({
                     <FormItem>
                       <RequiredLabel>名</RequiredLabel>
                       <FormControl>
-                        <Input inputSize="sm" placeholder="太郎" {...field} />
+                        <Input placeholder="太郎" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -218,7 +218,7 @@ export function UserForm({
                     <FormItem>
                       <RequiredLabel>姓（カナ）</RequiredLabel>
                       <FormControl>
-                        <Input inputSize="sm" placeholder="ヤマダ" {...field} />
+                        <Input placeholder="ヤマダ" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -232,7 +232,7 @@ export function UserForm({
                     <FormItem>
                       <RequiredLabel>名（カナ）</RequiredLabel>
                       <FormControl>
-                        <Input inputSize="sm" placeholder="タロウ" {...field} />
+                        <Input placeholder="タロウ" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -247,7 +247,7 @@ export function UserForm({
                   <FormItem>
                     <RequiredLabel>電話番号（ハイフン無し）</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="半角数字ハイフン不要" {...field} />
+                      <Input placeholder="半角数字ハイフン不要" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -261,7 +261,7 @@ export function UserForm({
                   <FormItem>
                     <RequiredLabel>役職</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="部長" {...field} />
+                      <Input placeholder="部長" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -278,7 +278,7 @@ export function UserForm({
                     <FormItem>
                       <RequiredLabel>社員名</RequiredLabel>
                       <FormControl>
-                        <Input inputSize="sm" placeholder="yamada_taro" {...field} />
+                        <Input placeholder="yamada_taro" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -294,7 +294,6 @@ export function UserForm({
                     <RequiredLabel>メールアドレス</RequiredLabel>
                     <FormControl>
                       <Input
-                        inputSize="sm"
                         type="email"
                         placeholder="yamada.taro@example.com"
                         {...field}
@@ -314,7 +313,6 @@ export function UserForm({
                       <RequiredLabel>パスワード</RequiredLabel>
                       <FormControl>
                         <PasswordInput
-                          inputSize="sm"
                           placeholder="パスワードを入力"
                           {...field}
                         />
@@ -348,7 +346,7 @@ export function UserForm({
                           }
                         >
                           <FormControl>
-                            <SelectTrigger selectSize="sm">
+                            <SelectTrigger>
                               <SelectValue placeholder="拠点を選択してください" />
                             </SelectTrigger>
                           </FormControl>
@@ -386,14 +384,8 @@ export function UserForm({
             )}
 
             <FormActions
-              className={
-                onDelete
-                  ? 'grid grid-cols-[40px_minmax(0,1fr)_minmax(0,1fr)] gap-3'
-                  : 'grid grid-cols-1 gap-3 sm:grid-cols-2'
-              }
-            >
-              {onDelete ? (
-                <>
+              leadingAction={
+                onDelete ? (
                   <DeleteAlertDialog
                     label="社員"
                     open={isDeleteDialogOpen}
@@ -401,37 +393,23 @@ export function UserForm({
                     onDelete={onDelete}
                     iconOnly
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="md"
-                    className="w-full"
-                    onClick={onBack}
-                  >
-                    キャンセル
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="md"
-                  className="w-full"
-                  onClick={onBack}
-                >
-                  キャンセル
-                </Button>
-              )}
-
-              <Button
-                type="submit"
-                size="md"
-                className="w-full"
-                disabled={!isTrulyDirty}
-              >
-                {submitLabel}
-              </Button>
-            </FormActions>
+                ) : undefined
+              }
+              actions={[
+                {
+                  id: 'cancel',
+                  label: 'キャンセル',
+                  variant: 'outline',
+                  onClick: onBack,
+                },
+                {
+                  id: 'submit',
+                  label: submitLabel,
+                  type: 'submit',
+                  disabled: !isTrulyDirty,
+                },
+              ]}
+            />
           </FormSectionStack>
         </FormCard>
       </form>

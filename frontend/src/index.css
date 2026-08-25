@@ -264,6 +264,47 @@ All colors MUST be HSL.
     animation: ambient-drift 16s ease-in-out infinite reverse;
   }
 
+  .loading-orbit {
+    animation: loading-orbit 1.6s ease-in-out infinite;
+  }
+
+  .loading-leaf-breathe {
+    animation: loading-leaf-breathe 2s ease-in-out infinite;
+  }
+
+  .loading-progress-indeterminate {
+    animation: loading-progress-indeterminate 1.5s ease-in-out infinite;
+  }
+
+  @keyframes loading-orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes loading-leaf-breathe {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.92;
+    }
+
+    50% {
+      transform: scale(1.04);
+      opacity: 1;
+    }
+  }
+
+  @keyframes loading-progress-indeterminate {
+    0% {
+      transform: translateX(-120%);
+    }
+
+    100% {
+      transform: translateX(320%);
+    }
+  }
+
   @keyframes ambient-drift {
     0%,
     100% {
@@ -311,6 +352,18 @@ All colors MUST be HSL.
     to {
       opacity: 1;
       transform: translateY(0) scale(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loading-orbit,
+    .loading-leaf-breathe,
+    .loading-progress-indeterminate {
+      animation: none;
+    }
+
+    .loading-progress-indeterminate {
+      transform: translateX(100%);
     }
   }
 

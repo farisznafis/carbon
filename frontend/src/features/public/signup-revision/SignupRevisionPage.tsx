@@ -6,6 +6,7 @@ import { exchangeActionLink } from '@/api/auth';
 import { ApiError } from '@/api/_shared/errors';
 import {
   FormCard,
+  FormActions,
   FormPageHeader,
   FormPageShell,
   WizardProgress,
@@ -242,9 +243,15 @@ export default function SignupRevisionPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full" onClick={() => navigate(paths.login, { replace: true })}>
-              ログインページへ
-            </Button>
+            <FormActions
+              actions={[
+                {
+                  id: 'login',
+                  label: 'ログインページへ',
+                  onClick: () => navigate(paths.login, { replace: true }),
+                },
+              ]}
+            />
           </CardContent>
         </FormCard>
       </FormPageShell>
@@ -289,9 +296,15 @@ export default function SignupRevisionPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full" onClick={() => navigate(paths.login, { replace: true })}>
-              ログインページへ
-            </Button>
+            <FormActions
+              actions={[
+                {
+                  id: 'login',
+                  label: 'ログインページへ',
+                  onClick: () => navigate(paths.login, { replace: true }),
+                },
+              ]}
+            />
           </CardContent>
         </FormCard>
       </FormPageShell>

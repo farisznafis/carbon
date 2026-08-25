@@ -2,7 +2,7 @@ import type {
   AdminCompanyAccountActionTarget,
   SuspendCompanyPayload,
 } from '@/api/admin/pendingCompanies';
-import { Button } from '@/components/ui/button';
+import { FormActions } from '@/components/forms/form-layout';
 import {
   Dialog,
   DialogContent,
@@ -82,24 +82,29 @@ export function CompanySuspendDialog({
           </div>
         </div>
 
-        <DialogFooter className="mt-8 gap-3 sm:justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            size="md"
-            onClick={() => onOpenChange(false)}
-          >
-            キャンセル
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            size="md"
-            onClick={onConfirm}
-            disabled={!canConfirm || isSubmitting}
-          >
-            アカウント停止
-          </Button>
+        <DialogFooter className="mt-8">
+          <FormActions
+            context="compact"
+            className="w-full"
+            disabled={isSubmitting}
+            pendingActionId={isSubmitting ? 'confirm' : null}
+            actions={[
+              {
+                id: 'cancel',
+                label: 'キャンセル',
+                variant: 'outline',
+                onClick: () => onOpenChange(false),
+              },
+              {
+                id: 'confirm',
+                label: 'アカウント停止',
+                pendingLabel: '処理中...',
+                variant: 'destructive',
+                disabled: !canConfirm,
+                onClick: onConfirm,
+              },
+            ]}
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

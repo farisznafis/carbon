@@ -2,6 +2,8 @@ export type YesNoValue = '' | 'yes' | 'no';
 
 export type SolarPowerFormData = {
   siteId: string;
+  /** Used only by the history-preserving equipment change flow. */
+  changeDate?: string;
   equipmentOpDate: string;
   operationStartDateFile?: File;
   nominalMaxOutput: string;

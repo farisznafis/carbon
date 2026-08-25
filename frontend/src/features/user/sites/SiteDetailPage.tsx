@@ -8,9 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, MapPin, User, Calendar, Edit, Save, X } from 'lucide-react';
+import { FormActions } from '@/components/forms/form-layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { PageLoadingOverlay } from '@/components/feedback/loading';
 
 interface SiteData {
   siteId: string;
@@ -200,14 +202,8 @@ const SiteDetail = () => {
   };
 
   if (loading) {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted rounded w-1/4"></div>
-          <div className="h-64 bg-muted rounded"></div>
-        </div>
-      </div>
-    );
+    // Skeleton halaman dinonaktifkan sementara sampai layout final halaman ini dipetakan.
+    return <PageLoadingOverlay message="拠点情報を読み込んでいます" />;
   }
 
   if (!site) {
@@ -340,16 +336,32 @@ const SiteDetail = () => {
                     </Select>
                   </div>
 
-                  <div className="flex gap-2 pt-4">
-                    <Button onClick={handleSave}>
-                      <Save className="h-4 w-4 mr-2" />
-                      保存
-                    </Button>
-                    <Button variant="outline" onClick={handleCancel}>
-                      <X className="h-4 w-4 mr-2" />
-                      キャンセル
-                    </Button>
-                  </div>
+                  <FormActions
+                    className="pt-4"
+                    actions={[
+                      {
+                        id: 'cancel',
+                        label: (
+                          <>
+                            <X className="h-4 w-4" />
+                            キャンセル
+                          </>
+                        ),
+                        variant: 'outline',
+                        onClick: handleCancel,
+                      },
+                      {
+                        id: 'save',
+                        label: (
+                          <>
+                            <Save className="h-4 w-4" />
+                            保存
+                          </>
+                        ),
+                        onClick: handleSave,
+                      },
+                    ]}
+                  />
                 </>
               ) : (
                 <>

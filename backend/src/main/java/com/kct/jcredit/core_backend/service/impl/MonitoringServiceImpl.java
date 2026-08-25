@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,6 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.request.RegisterMonitoringRecordSolarRequest;
 import com.kct.jcredit.core_backend.dto.response.FileUploadResponse;
+import com.kct.jcredit.core_backend.dto.response.MonitoringEvidenceItemResponse;
+import com.kct.jcredit.core_backend.dto.response.MonitoringEvidenceItemsResponse;
 import com.kct.jcredit.core_backend.dto.response.MonitoringRecordSolarListResponse;
 import com.kct.jcredit.core_backend.dto.response.MonitoringRecordSolarResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
@@ -31,6 +34,9 @@ import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.entity.base.PaginationDetailResponse;
+import com.kct.jcredit.core_backend.enums.EvidenceRequirement;
+import com.kct.jcredit.core_backend.enums.MonitoringEvidenceField;
+import com.kct.jcredit.core_backend.enums.EvidenceType;
 import com.kct.jcredit.core_backend.exception.FileTooLargeException;
 import com.kct.jcredit.core_backend.exception.UnsupportedFileTypeException;
 import com.kct.jcredit.core_backend.repository.dynamodb.MonitoringTableRecordSolarRepository;
@@ -41,6 +47,7 @@ import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepos
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.service.MonitoringService;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -67,6 +74,13 @@ public class MonitoringServiceImpl implements MonitoringService {
     private static final int MAX_FILE_SIZE_MB = 10;
     private static final BigDecimal MAX_PERCENT_VALUE = new BigDecimal("100.0");
     private static final ZoneId JAPAN_ZONE = ZoneId.of("Asia/Tokyo");
+    private static final String REASON_NO_BATTERY = "蓄電池なし";
+    private static final String FALLBACK_PCS_DEFAULT = "未提出の場合はデフォルト値（発電電力量×0.02kWh/kWh）で算定";
+    private static final String METHODOLOGY_NAME = "EN-R";
+    private static final String METHODOLOGY_NUMBER = "002";
+    private static final String METHODOLOGY_VERSION = "3.7";
+    private static final String STATUS_SUBMITTED = "SUBMITTED";
+    private static final String STATUS_NOT_SUBMITTED = "NOT_SUBMITTED";
     
     //太陽光発電の毎日のデータをs3に保存
     @Override
@@ -190,8 +204,8 @@ public class MonitoringServiceImpl implements MonitoringService {
             entity.setTimeUpdated(Instant.now().toString()); // Auto-set with server time in ISO format as SK
             entity.setDateRecorded(request.getDateRecorded());
 
-            // 8) Set evidence URLs (ELpv_evidence, ELpvr_evidence, ELPJ_battery_evidence, ELPJ_control_equipment_spec_files)
-            //証拠URLを設定する（ELpv_evidence、ELpvr_evidence、ELPJ_battery_evidence、ELPJ_control_equipment_spec_files）
+            // 8) Set evidence URLs (elpv_evidence, elpvr_evidence, elpj_battery_evidence, elpj_control_evidence)
+            //証拠URLを設定する（elpv_evidence、elpvr_evidence、elpj_battery_evidence、elpj_control_evidence）
             entity.setElPvEvidenceUrl(request.getElPvEvidenceUrl());
             entity.setElPvrEvidenceUrl(request.getElPvrEvidenceUrl());
             entity.setElpjBatterySpecificationUrl(request.getElpjBatterySpecificationUrl());
@@ -211,12 +225,9 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             // 11) Handle battery-related data (ELPJ_battery_value)
             // バッテリーが交換されたかを(true)安全に判定
-            entity.setChangedBattery(request.getChangedBattery());
-            if (Boolean.TRUE.equals(request.getChangedBattery())) {
-                if (request.getElpjBatteryValue() != null) {
-                    entity.setElpjBatteryValue(request.getElpjBatteryValue());
-                }
-            }
+            if (Boolean.TRUE.equals(equipment.getHasBattery())) {
+                entity.setElpjBatteryValue(request.getElpjBatteryValue());
+}
 
             // 12) Set status fields for DynamoDB (with defaults)
             // DynamoDBのステータスフィールドを設定する（デフォルト値あり）
@@ -826,18 +837,21 @@ public class MonitoringServiceImpl implements MonitoringService {
         Map<String, String> errors = new LinkedHashMap<>();
 
         if (isBlank(request.getElPvEvidenceUrl())) {
-            errors.put("ELpv_evidence", ResponseConstants.MSG_ELPV_EVIDENCE_REQUIRED);
+            errors.put("elpv_evidence", ResponseConstants.MSG_ELPV_EVIDENCE_REQUIRED);
         }
         if (isBlank(request.getElPvrEvidenceUrl())) {
-            errors.put("ELpvr_evidence", ResponseConstants.MSG_ELPVR_EVIDENCE_REQUIRED);
+            errors.put("elpvr_evidence", ResponseConstants.MSG_ELPVR_EVIDENCE_REQUIRED);
         }
         if (Boolean.TRUE.equals(request.getChangedBattery())
                 && isBlank(request.getElpjBatterySpecificationUrl())) {
-            errors.put("ELPJ_battery_evidence", ResponseConstants.MSG_ELPJ_BATTERY_EVIDENCE_REQUIRED);
+            errors.put("elpj_battery_evidence", ResponseConstants.MSG_ELPJ_BATTERY_EVIDENCE_REQUIRED);
         }
-        if (isBlank(request.getElpjControlEvidenceUrl())) {
-            errors.put("ELPJ_control_equipment_spec_files", ResponseConstants.MSG_ELPJ_CONTROL_EVIDENCE_REQUIRED);
-        }
+        // if (isBlank(request.getElpjControlEvidenceUrl())) {
+        //     errors.put("elpj_control_evidence", ResponseConstants.MSG_ELPJ_CONTROL_EVIDENCE_REQUIRED);
+        // } 
+        // ELPJ,control の証憑は任意。
+        // 未提出の場合、方法論 EN-R-002 Ver.3.7 注釈※2 に基づき
+        // 「発電電力量 × 0.02kWh/kWh」のデフォルト値で算定する（セクターによる制限なし）。
 
         return errors;
     }
@@ -861,12 +875,13 @@ public class MonitoringServiceImpl implements MonitoringService {
                 && request.getElPvr().compareTo(request.getElPv()) > 0) {
             errors.put("ELpvr_value", ResponseConstants.MSG_ELPVR_EXCEEDS_ELPV);
         }
-        if (request.getElpjControl() == null || request.getElpjControl().compareTo(BigDecimal.ZERO) < 0) {
-            errors.put("ELPJ_control_value", ResponseConstants.MSG_ELPJ_CONTROL_VALUE_MIN);
-        }
-        if (Boolean.TRUE.equals(request.getChangedBattery()) && request.getElpjBatteryValue() == null) {
-            errors.put("ELPJ_battery_value", ResponseConstants.MSG_ELPJ_BATTERY_VALUE_REQUIRED_WHEN_CHANGED);
-        }
+        if (request.getElpjControl() != null
+        && request.getElpjControl().compareTo(BigDecimal.ZERO) < 0) {
+        errors.put("ELPJ_control_value", ResponseConstants.MSG_ELPJ_CONTROL_VALUE_MIN);
+}
+        // if (Boolean.TRUE.equals(request.getChangedBattery()) && request.getElpjBatteryValue() == null) {
+        //     errors.put("ELPJ_battery_value", ResponseConstants.MSG_ELPJ_BATTERY_VALUE_REQUIRED_WHEN_CHANGED);
+        // }
         if (request.getElpjBatteryValue() != null && request.getElpjBatteryValue().compareTo(BigDecimal.ZERO) < 0) {
             errors.put("ELPJ_battery_value", ResponseConstants.MSG_ELPJ_BATTERY_VALUE_MIN);
         }
@@ -883,33 +898,38 @@ public class MonitoringServiceImpl implements MonitoringService {
         return errors;
     }
 
-    /**
-     * changedBattery/ELPJ_battery_value/ELPJ_battery_evidence are only meaningful when the
-     * equipment this record belongs to actually has a battery (EnR002Equipment.hasBattery).
+        /**
+     * 蓄電池関連項目は、設備情報（EnR002Equipment.hasBattery）を唯一の判定根拠とする。
+     * モニタリング側の changedBattery には依存しない。
+     *
+     * 蓄電池ありの場合、充放電ロス量は毎回の実測が必要となる。
+     * 方法論 EN-R-002 Ver.3.7 注釈※3 のデフォルト値（蓄電池経由率60%/70%）は
+     * 家庭部門限定であり、本プロジェクトの会員は全て事業者のため適用できない。
      */
     private Map<String, String> collectBatteryEligibilityErrors(
             RegisterMonitoringRecordSolarRequest request,
             EnR002Equipment equipment
     ) {
         Map<String, String> errors = new LinkedHashMap<>();
-
         if (equipment == null) {
             return errors;
         }
-
         if (Boolean.TRUE.equals(equipment.getHasBattery())) {
-            if (request.getChangedBattery() == null) {
-                errors.put("changedBattery", ResponseConstants.MSG_CHANGED_BATTERY_REQUIRED);
+            // 蓄電池あり: 実測値と証憑の双方が必須
+            if (request.getElpjBatteryValue() == null) {
+                errors.put("ELPJ_battery_value", ResponseConstants.MSG_ELPJ_BATTERY_VALUE_REQUIRED);
+            }
+            if (isBlank(request.getElpjBatterySpecificationUrl())) {
+                errors.put("elpj_battery_evidence", ResponseConstants.MSG_ELPJ_BATTERY_EVIDENCE_REQUIRED);
             }
         } else {
-            boolean hasBatteryData = Boolean.TRUE.equals(request.getChangedBattery())
-                    || request.getElpjBatteryValue() != null
+            // 蓄電池なし: 対象外のため、値・証憑ともに送信を許容しない
+            boolean hasBatteryData = request.getElpjBatteryValue() != null
                     || !isBlank(request.getElpjBatterySpecificationUrl());
             if (hasBatteryData) {
-                errors.put("changedBattery", ResponseConstants.MSG_BATTERY_NOT_APPLICABLE);
+                errors.put("ELPJ_battery_value", ResponseConstants.MSG_BATTERY_NOT_APPLICABLE);
             }
         }
-
         return errors;
     }
 
@@ -981,29 +1001,14 @@ public class MonitoringServiceImpl implements MonitoringService {
      * Validate file size and type, throw exceptions if invalid
      */
     private void validateFileOrThrow(MultipartFile file, String fileType) {
-        // Check size (10MB max)
         if (file.getSize() > MAX_FILE_SIZE_BYTES) {
             double actualSizeMB = file.getSize() / (1024.0 * 1024.0);
             throw new FileTooLargeException(MAX_FILE_SIZE_MB, actualSizeMB);
         }
 
-        // Validate file type and extract file extension
-        Map<String, List<String>> fileTypeToAllowedExtensions = Map.of(
-                "ELPV_EVIDENCE", Arrays.asList("pdf", "csv"),
-                "ELPVR_EVIDENCE", Arrays.asList("pdf", "png", "jpeg", "jpg"),
-                "ELPJ_BATTERY_SPECIFICATION", Arrays.asList("pdf", "png", "jpeg", "jpg"),
-                "ELPJ_CONTROL_EVIDENCE", Arrays.asList("pdf", "png", "jpeg", "jpg")
-        );
+        MonitoringEvidenceField field = MonitoringEvidenceField.fromFileType(fileType);
+        List<String> allowedExtensions = field.getAllowedExtensions();
 
-        List<String> allowedExtensions = fileTypeToAllowedExtensions.get(fileType);
-        if (allowedExtensions == null) {
-            throw new UnsupportedFileTypeException(
-                    Arrays.asList("ELPV_EVIDENCE", "ELPVR_EVIDENCE", "ELPJ_BATTERY_SPECIFICATION", "ELPJ_CONTROL_EVIDENCE"),
-                    fileType
-            );
-        }
-
-        // Get file extension
         String fileName = file.getOriginalFilename();
         String fileExtension = getFileExtension(fileName).toLowerCase();
 
@@ -1258,7 +1263,7 @@ public class MonitoringServiceImpl implements MonitoringService {
             String description,
             MultipartFile file
     ) {
-        return uploadMonitoringFileSolar(username, companyId, projectId, siteId, "ELPJ_BATTERY_SPECIFICATION", description, file);
+        return uploadMonitoringFileSolar(username, companyId, projectId, siteId, "ELPJ_BATTERY_EVIDENCE", description, file);
     }
 
     @Override
@@ -1271,6 +1276,193 @@ public class MonitoringServiceImpl implements MonitoringService {
             MultipartFile file
     ) {
         return uploadMonitoringFileSolar(username, companyId, projectId, siteId, "ELPJ_CONTROL_EVIDENCE", description, file);
+    }
+
+    @Override
+    public MonitoringEvidenceItemsResponse readMonitoringEvidenceItems(
+            String username,
+            String companyId,
+            String projectId,
+            String siteId,
+            Integer equipmentId
+    ) {
+        MonitoringEvidenceItemsResponse response = new MonitoringEvidenceItemsResponse();
+        try {
+            // 1) ユーザ取得
+            ParticipatingUser user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException(ResponseConstants.MSG_UNEXPEXTED_ERROR));
+            // ユーザが指定した会社に所属していない場合
+            if (user.getCompany() == null || !companyId.equals(user.getCompany().getCompanyId())) {
+                response.setStatusCode(ResponseConstants.FORBIDDEN);
+                response.setMessage(ResponseConstants.MSG_USER_NOT_IN_COMPANY);
+                return response;
+            }
+            // 入力情報のsiteIdから拠点情報を1件取得
+            Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
+            // 拠点情報がnullの場合
+            if (site == null) {
+                response.setStatusCode(ResponseConstants.NOT_FOUND);
+                response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
+                return response;
+            }
+            // サイトに企業が紐付いていない（データ不整合）or サイトは存在するが、別の企業のもの
+            if (site.getCompany() == null || !site.getCompany().getCompanyId().equals(companyId)) {
+                response.setStatusCode(ResponseConstants.FORBIDDEN);
+                response.setMessage(ResponseConstants.MSG_SITE_NOT_IN_COMPANY);
+                return response;
+            }
+            // プロジェクト取得
+            Project project = projectRepository.findByPublicIdWithFallback(projectId).orElse(null);
+            // プロジェクトのnullチェック
+            if (project == null) {
+                response.setStatusCode(ResponseConstants.NOT_FOUND);
+                response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
+                return response;
+            }
+            // 2) Checks: User→Site access, Project company ownership, Site-Project consistency
+            // validateResourceOwnershipがfalseだった場合
+            if (!validateResourceOwnership(user, site, project)) {
+                response.setStatusCode(ResponseConstants.FORBIDDEN);
+                response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+                return response;
+            }
+            // 3) Validate site-project relation
+            // 拠点とプロジェクトが一致しない場合
+            if (!siteProjectRelationRepository.existsByProjectAndSite(project, site)) {
+                response.setStatusCode(ResponseConstants.NOT_FOUND);
+                response.setMessage(ResponseConstants.MSG_NOT_FOUND);
+                return response;
+            }
+            // 4) 設備が存在し、対象拠点に属していることを確認する
+            EnR002Equipment equipment = equipmentRepository.findById(equipmentId).orElse(null);
+            if (equipment == null || equipment.getSite() == null
+                    || !equipment.getSite().getId().equals(site.getId())) {
+                response.setStatusCode(ResponseConstants.NOT_FOUND);
+                response.setMessage(ResponseConstants.MSG_EQUIPMENT_NOT_FOUND);
+                return response;
+            }
+
+            // 4.5) 当該設備の最新モニタリングレコードを取得する（存在しない場合は未提出として扱う）
+            String recordId = site.getPublicId() + "#" + project.getPublicId();
+            EnR002MonitoringRecord latestRecord = monitoringRecordSolarRepository
+                    .findLatestByRecordIdAndEquipmentId(recordId, equipment.getId())
+                    .orElse(null);
+
+            //  設備情報をもとに全証憑項目の必須区分を判定する
+            List<MonitoringEvidenceItemResponse> items = new ArrayList<>();
+            for (MonitoringEvidenceField field : MonitoringEvidenceField.values()) {
+                items.add(buildEvidenceItem(field, resolveEvidenceRequirement(equipment, field), latestRecord));
+            }
+
+            // 6) レスポンスの作成
+            response.setEquipmentId(equipment.getId());
+            response.setMethodologyName(METHODOLOGY_NAME);
+            response.setMethodologyNumber(METHODOLOGY_NUMBER);
+            response.setMethodologyVersion(METHODOLOGY_VERSION);
+            response.setEvidenceItems(items);
+            response.setStatusCode(ResponseConstants.OK);
+            response.setMessage(ResponseConstants.OK);
+            return response;
+        } catch (Exception e) {
+            log.error("readMonitoringEvidenceItems failed for equipmentId={}", equipmentId, e);
+            response.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR);
+            response.setMessage(ResponseConstants.MSG_INTERNAL_ERROR);
+            return response;
+        }
+    }
+ 
+    /**
+     * 証憑の必須区分を判定する。
+     *
+     * 基本設計 7.2.2（証憑ファイルアップロードの提出時バリデーション）からも本メソッドを使用すること。
+     * 表示上は必須と示されているが提出できてしまう、といった不整合を防ぐため、判定はここに一本化する。
+     *
+     * 判定根拠（方法論 EN-R-002 Ver.3.7「6．モニタリング方法」）:
+     *  - ELpv・ELpvr   : 主要排出量および ELPJ = ELpv - ELpvr の算定に必須
+     *  - ELPJ,control  : 注釈※2 により「発電電力量 × 0.02kWh/kWh」で算定してもよいため任意。
+     *                    セクターによる制限はない
+     *  - ELPJ,battery  : 蓄電池がある場合のみ算定対象（EM PJ,S,battery は IF 蓄電池あり）。
+     *                    注釈※3 のデフォルト値（蓄電池経由率60%/70%）は家庭部門限定であり、
+     *                    本プロジェクトの会員は全て事業者のため適用できない。
+     *                    よって蓄電池ありの場合は実測必須とする
+     */
+    private EvidenceRequirement resolveEvidenceRequirement(
+            EnR002Equipment equipment,
+            MonitoringEvidenceField field
+    ) {
+        switch (field) {
+            case EL_PV:
+            case EL_PVR:
+                return EvidenceRequirement.REQUIRED;
+            case EL_PJ_CONTROL:
+                return EvidenceRequirement.OPTIONAL;
+            case EL_PJ_BATTERY:
+                return Boolean.TRUE.equals(equipment.getHasBattery())
+                        ? EvidenceRequirement.REQUIRED
+                        : EvidenceRequirement.NOT_APPLICABLE;
+            default:
+                return EvidenceRequirement.NOT_APPLICABLE;
+        }
+    }
+ 
+    /**
+     * 証憑の提出が必須かどうか。
+     * OPTIONAL および NOT_APPLICABLE は false を返す。
+     * 7.2.2 の提出時バリデーション（collectMandatoryEvidenceErrors）から使用する。
+     */
+    private boolean isEvidenceMandatory(EnR002Equipment equipment, MonitoringEvidenceField field) {
+        return resolveEvidenceRequirement(equipment, field) == EvidenceRequirement.REQUIRED;
+    }
+ 
+    /**
+     * 証憑項目1件分のレスポンスを作成する。
+     * 既にモニタリングレコードが存在する場合は、提出状況と証憑のS3キーを併せて返却する。
+     */
+    private MonitoringEvidenceItemResponse buildEvidenceItem(
+            MonitoringEvidenceField field,
+            EvidenceRequirement requirement,
+            EnR002MonitoringRecord record
+    ) {
+        boolean notApplicable = requirement == EvidenceRequirement.NOT_APPLICABLE;
+        String evidenceUrl = notApplicable ? null : resolveEvidenceUrl(field, record);
+
+        return MonitoringEvidenceItemResponse.builder()
+                .fieldName(field.getFieldName())
+                .labelJa(field.getLabelJa())
+                .requirement(requirement)
+                .notApplicableReason(
+                        notApplicable && field == MonitoringEvidenceField.EL_PJ_BATTERY
+                                ? REASON_NO_BATTERY : null)
+                .fallbackNote(
+                        requirement == EvidenceRequirement.OPTIONAL
+                                && field == MonitoringEvidenceField.EL_PJ_CONTROL
+                                ? FALLBACK_PCS_DEFAULT : null)
+                .acceptedTypes(notApplicable ? List.of() : field.getAcceptedTypes())
+                .status(notApplicable ? null
+                        : (isBlank(evidenceUrl) ? STATUS_NOT_SUBMITTED : STATUS_SUBMITTED))
+                .evidenceUrl(evidenceUrl)
+                .build();
+    }
+
+    /**
+     * 項目に対応する証憑のS3キーをモニタリングレコードから取得する。
+     */
+    private String resolveEvidenceUrl(MonitoringEvidenceField field, EnR002MonitoringRecord record) {
+        if (record == null) {
+            return null;
+        }
+        switch (field) {
+            case EL_PV:
+                return record.getElPvEvidenceUrl();
+            case EL_PVR:
+                return record.getElPvrEvidenceUrl();
+            case EL_PJ_CONTROL:
+                return record.getElpjControlEvidenceUrl();
+            case EL_PJ_BATTERY:
+                return record.getElpjBatterySpecificationUrl();
+            default:
+                return null;
+        }
     }
 
 }

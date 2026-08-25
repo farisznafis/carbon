@@ -9,6 +9,7 @@ import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentHistoryResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.EnR002EquipmentFile;
+import com.kct.jcredit.core_backend.entity.ParticipatingProject;
 import com.kct.jcredit.core_backend.entity.EnR002Equipment;
 import com.kct.jcredit.core_backend.exception.CustomException;
 import com.kct.jcredit.core_backend.service.EnR002EquipmentService;
@@ -18,6 +19,7 @@ import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
 import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentFileRepository;
 import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentRepository;
+import com.kct.jcredit.core_backend.repository.postgres.ParticipatingProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.enums.EquipmentFileType;
 
@@ -47,6 +49,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
 
     private final SiteRepository                        siteRepository;
     private final SiteProjectRelationRepository          siteProjectRelationRepository;
+    private final ParticipatingProjectRepository participatingProjectRepository;
     private final EnR002EquipmentRepository              equipmentRepository;
     private final EnR002EquipmentFileRepository          equipmentFileRepository;
     private final EnR002FileUploadService                fileUploadService;
@@ -167,6 +170,20 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 .collect(Collectors.toList());
     }
 
+    private Integer resolveParticipationId(EnR002Equipment equipment) {
+    EnR002Equipment root = equipment;
+    while (root.getPreviousEquipment() != null) {
+        root = root.getPreviousEquipment();
+    }
+
+    return participatingProjectRepository
+            .findByEquipment_Id(root.getId())
+            .stream()
+            .findFirst()
+            .map(ParticipatingProject::getId)
+            .orElse(null);
+}
+
     private EnR002EquipmentResponse toResponse(EnR002Equipment e) {
         List<EnR002EquipmentFileResponse> fileResponses = equipmentFileRepository
                 .findByEquipment_Id(e.getId()).stream()
@@ -177,6 +194,13 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                         .s3Key(f.getS3Key())
                         .build())
                 .collect(Collectors.toList());
+
+        // Integer participationId = participatingProjectRepository
+        //         .findByEquipment_Id(e.getId())
+        //         .stream()
+        //         .findFirst()
+        //         .map(ParticipatingProject::getId)
+        //         .orElse(null);
 
         return EnR002EquipmentResponse.builder()
                 .id(e.getId())
@@ -197,6 +221,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 .subsidyName(e.getSubsidyName())
                 .subsidyAmount(e.getSubsidyAmount())
                 .preProjectUnitPrice(e.getPreProjectUnitPrice())
+                .participationId(resolveParticipationId(e))
                 .files(fileResponses)
                                 .build(); 
     }

@@ -57,3 +57,15 @@ export function getPendingSolarEquipment(state: unknown): SolarEquipment | null 
     ? (candidate as SolarEquipment)
     : null;
 }
+
+/** Reads the site created while temporarily leaving project registration. */
+export function getCreatedSiteId(state: unknown): string | null {
+  if (!state || typeof state !== 'object' || !('createdSiteId' in state)) {
+    return null;
+  }
+
+  const createdSiteId = (state as { createdSiteId?: unknown }).createdSiteId;
+  return typeof createdSiteId === 'string' && createdSiteId
+    ? createdSiteId
+    : null;
+}
