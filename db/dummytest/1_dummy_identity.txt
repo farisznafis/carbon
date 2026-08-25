@@ -196,6 +196,17 @@ VALUES
  'operator4', '由美', 'ユミ', '森', 'モリ', 'operator4@creation-tech.co.jp', '03-5555-0104',
  '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'admin', 0, NULL, 1, FALSE, 0);
 
+INSERT INTO operating_user_permission (operating_user_id, permission_id, created_at, created_by)
+SELECT
+    u.id AS operating_user_id,
+    p.id AS permission_id,
+    '2026-07-01 09:15:00' AS created_at,
+    'system'             AS created_by
+FROM
+    (VALUES (1), (2), (3), (4)) AS u(id)
+CROSS JOIN
+    permission p;
+
 -- =========================================================
 -- 5. participating_user
 -- master は各社1名。入会申請ができるのは master のみ。
