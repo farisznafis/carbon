@@ -155,27 +155,23 @@ export function SiteConfirmation({
                 />
               </FormSection>
 
-            <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={onBack}
-                disabled={isSubmitting}
-              >
-                戻る
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                className="w-full"
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? '送信中...' : confirmLabel}
-              </Button>
-            </FormActions>
+            <FormActions
+              pendingActionId={isSubmitting ? 'confirm' : null}
+              actions={[
+                {
+                  id: 'back',
+                  label: '戻る',
+                  variant: 'outline',
+                  onClick: onBack,
+                },
+                {
+                  id: 'confirm',
+                  label: confirmLabel,
+                  pendingLabel: '送信中...',
+                  onClick: handleSubmit,
+                },
+              ]}
+            />
           </FormSectionStack>
         </FormCard>
       </FormPageContent>

@@ -9,7 +9,7 @@ type PageBackButtonProps = {
 } & Omit<ButtonProps, 'children' | 'onClick' | 'variant'>;
 
 export const floatingPageBackButtonClassName =
-  'absolute left-4 top-10 z-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16';
+  'absolute left-4 top-6 z-10 h-12 w-12 rounded-full p-0 sm:left-8';
 
 export const PageBackButton = ({
   label = '戻る',

@@ -9,7 +9,7 @@ import {
 } from '@/api/auth';
 import { ApiError } from '@/api/_shared/errors';
 import { PasswordInput } from '@/components/inputs';
-import { Button } from '@/components/ui/button';
+import { FormActions } from '@/components/forms/form-layout';
 import {
   Card,
   CardContent,
@@ -213,13 +213,17 @@ export default function ResetPassword() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-              type="button"
-              className="w-full"
-              onClick={() => navigate(paths.forgotPassword, { replace: true })}
-            >
-              新しいリンクをリクエスト
-            </Button>
+            <FormActions
+              context="auth"
+              actions={[
+                {
+                  id: 'request',
+                  label: '新しいリンクをリクエスト',
+                  onClick: () =>
+                    navigate(paths.forgotPassword, { replace: true }),
+                },
+              ]}
+            />
           </CardContent>
         </Card>
       </div>
@@ -278,15 +282,20 @@ export default function ResetPassword() {
                   </FormItem>
                 )}
               />
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={form.formState.isSubmitting}
-              >
-                {form.formState.isSubmitting
-                  ? '設定中...'
-                  : 'パスワードを再設定'}
-              </Button>
+              <FormActions
+                context="auth"
+                pendingActionId={
+                  form.formState.isSubmitting ? 'submit' : null
+                }
+                actions={[
+                  {
+                    id: 'submit',
+                    label: 'パスワードを再設定',
+                    pendingLabel: '設定中...',
+                    type: 'submit',
+                  },
+                ]}
+              />
             </form>
           </Form>
         </CardContent>

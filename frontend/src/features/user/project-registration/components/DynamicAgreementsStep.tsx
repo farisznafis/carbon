@@ -3,6 +3,7 @@ import {
   type ReactNode,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
 } from 'react';
 import { useForm } from 'react-hook-form';
@@ -23,8 +24,10 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { FormActions } from '@/components/forms/form-layout';
 import {
   agreementsConfig,
+  createAgreementsConfig,
   type AgreementFormValues,
 } from './agreementsConfig';
 
@@ -44,10 +47,6 @@ const defaultAgreementValues: AgreementFormValues = {
   energyLawBusinessNumber: '',
   energyLawFactoryNumber: '',
 };
-
-const agreementLabels = Object.fromEntries(
-  agreementsConfig.map((field) => [field.id, field.label]),
-) as Record<keyof AgreementFormValues, string>;
 
 const agreementOptions = Object.fromEntries(
   agreementsConfig.map((field) => [field.id, field.options ?? []]),
@@ -160,7 +159,11 @@ function RadioChoice({
 }
 
 type DynamicAgreementsStepProps = {
+  projectName: string;
   formValues: Partial<AgreementFormValues>;
+  isSubmitting: boolean;
+  onBack: () => void;
+  onNext: () => void;
   onValueChange: (values: Partial<AgreementFormValues>) => void;
   errors?: Record<string, string>;
 };
@@ -172,7 +175,14 @@ export type DynamicAgreementsStepRef = {
 export const DynamicAgreementsStep = forwardRef<
   DynamicAgreementsStepRef,
   DynamicAgreementsStepProps
->(({ formValues, onValueChange, errors = {} }, ref) => {
+>(({ projectName, formValues, isSubmitting, onBack, onNext, onValueChange, errors = {} }, ref) => {
+  const agreementLabels = useMemo(
+    () =>
+      Object.fromEntries(
+        createAgreementsConfig(projectName).map((field) => [field.id, field.label]),
+      ) as Record<keyof AgreementFormValues, string>,
+    [projectName],
+  );
   const form = useForm<AgreementsFormValues>({
     mode: 'onChange',
     defaultValues: {
@@ -533,6 +543,23 @@ export const DynamicAgreementsStep = forwardRef<
                 )}
               />
             </AgreementCard>
+            <FormActions
+              pendingActionId={isSubmitting ? 'next' : null}
+              actions={[
+                {
+                  id: 'back',
+                  label: '戻る',
+                  variant: 'outline',
+                  onClick: onBack,
+                },
+                {
+                  id: 'next',
+                  label: '次へ',
+                  pendingLabel: '確認中...',
+                  onClick: onNext,
+                },
+              ]}
+            />
           </CardContent>
         </Card>
       </Form>

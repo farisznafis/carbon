@@ -19,14 +19,12 @@ import {
 } from '@/components/navigation/PageBackButton';
 import {
   AlertDialog,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -59,6 +57,17 @@ function checklistFromReview(
   return participationReviewChecklistFields.reduce<ParticipationReviewChecklist>(
     (checklist, fieldName) => {
       checklist[fieldName] = review.review[fieldName];
+      return checklist;
+    },
+    {} as ParticipationReviewChecklist,
+  );
+}
+
+/** Creates a fresh unchecked checklist for the current reviewer's decision. */
+function createEmptyChecklist(): ParticipationReviewChecklist {
+  return participationReviewChecklistFields.reduce<ParticipationReviewChecklist>(
+    (checklist, fieldName) => {
+      checklist[fieldName] = false;
       return checklist;
     },
     {} as ParticipationReviewChecklist,
@@ -148,15 +157,24 @@ export default function ParticipationReviewDetailPage() {
         return;
       }
 
-      setReview(detail);
-      setChecklist(checklistFromReview(detail));
-      setIsReviewable(
-        myReviews.some(
-          (candidate) =>
-            candidate.participationId === numericParticipationId &&
-            isParticipationReviewForProject(candidate, projectId, project),
-        ),
+      const isCurrentUserReviewable = myReviews.some(
+        (candidate) =>
+          candidate.participationId === numericParticipationId &&
+          isParticipationReviewForProject(candidate, projectId, project),
       );
+
+      setReview(detail);
+      setIsReviewable(isCurrentUserReviewable);
+      setChecklist(
+        isCurrentUserReviewable
+          ? createEmptyChecklist()
+          : checklistFromReview(detail),
+      );
+      setReviewerInkan('');
+      setRejectReason('');
+      setDecision(null);
+      setFieldErrors(EMPTY_FIELD_ERRORS);
+      setSubmitError(null);
     } catch (error) {
       setLoadError(
         getErrorMessage(error, '入会届の詳細取得に失敗しました。'),
@@ -378,26 +396,24 @@ export default function ParticipationReviewDetailPage() {
         />
 
         {isReviewable && (
-          <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Button
-              type="button"
-              variant="destructive"
-              size="md"
-              disabled={!canReject}
-              onClick={() => openDecision('reject')}
-            >
-              却下
-            </Button>
-            <Button
-              type="button"
-              size="md"
-              className="bg-success text-success-foreground hover:bg-success/90"
-              disabled={!canApprove}
-              onClick={() => openDecision('approve')}
-            >
-              承認
-            </Button>
-          </FormActions>
+          <FormActions
+            actions={[
+              {
+                id: 'reject',
+                label: '却下',
+                variant: 'destructive',
+                disabled: !canReject,
+                onClick: () => openDecision('reject'),
+              },
+              {
+                id: 'approve',
+                label: '承認',
+                variant: 'success',
+                disabled: !canApprove,
+                onClick: () => openDecision('approve'),
+              },
+            ]}
+          />
         )}
       </FormPageContent>
 
@@ -452,31 +468,30 @@ export default function ParticipationReviewDetailPage() {
           )}
 
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSubmitting}>
-              キャンセル
-            </AlertDialogCancel>
-            <Button
-              type="button"
-              variant={isRejection ? 'destructive' : 'default'}
-              className={
-                isRejection
-                  ? undefined
-                  : 'bg-success text-success-foreground hover:bg-success/90'
-              }
-              disabled={
-                isSubmitting ||
-                (isRejection
-                  ? !rejectReason.trim()
-                  : !allChecklistItemsChecked)
-              }
-              onClick={() => void submitDecision()}
-            >
-              {isSubmitting
-                ? '処理中...'
-                : isRejection
-                  ? '却下する'
-                  : '承認する'}
-            </Button>
+            <FormActions
+              context="compact"
+              className="w-full"
+              disabled={isSubmitting}
+              pendingActionId={isSubmitting ? 'confirm' : null}
+              actions={[
+                {
+                  id: 'cancel',
+                  label: 'キャンセル',
+                  variant: 'outline',
+                  onClick: () => closeDecision(false),
+                },
+                {
+                  id: 'confirm',
+                  label: isRejection ? '却下する' : '承認する',
+                  pendingLabel: '処理中...',
+                  variant: isRejection ? 'destructive' : 'success',
+                  disabled: isRejection
+                    ? !rejectReason.trim()
+                    : !allChecklistItemsChecked,
+                  onClick: () => void submitDecision(),
+                },
+              ]}
+            />
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -9,11 +9,13 @@ import type {
   SiteProjectEquipmentApiItem,
   SiteProjectEquipmentApiFile,
   SiteProjectEquipmentDetailResponse,
+  SiteEquipmentHistory,
+  SiteEquipmentHistoryApiItem,
   SiteEquipmentListResponse,
   SiteProjectEquipmentFileType,
   SiteProjectEquipmentFileUploadResponse,
   SiteProjectEquipmentResponse,
-  SiteProjectEquipmentUpdateRequest,
+  SiteProjectEquipmentChangeRequest,
   SiteProjectEquipmentValidationFile,
   SiteProjectEquipmentValidationItem,
   SiteProjectEquipmentValidationResponse,
@@ -21,6 +23,7 @@ import type {
   SiteProjectConfirmationItemsValidationResponse,
   SiteProjectJoinSustainabilityCommitmentRequest,
   SiteProjectJoinSustainabilityCommitmentResponse,
+  SiteProjectSustainabilityCommitmentDefaultResponse,
   SiteProjectFinalAgreementValidationRequest,
   SiteProjectFinalAgreementValidationResponse,
   SiteProjectJoinRequest,
@@ -209,6 +212,19 @@ export async function validateSiteProjectSustainabilityCommitment(
   );
 }
 
+/** GET /site/project/sites/{siteId}/sustainability-commitment/default — fetches Contract Step defaults. */
+export async function getSiteProjectSustainabilityCommitmentDefault(
+  siteId: string,
+): Promise<SiteProjectSustainabilityCommitmentDefaultResponse> {
+  return apiRequest<SiteProjectSustainabilityCommitmentDefaultResponse>(
+    `/site/project/sites/${encodeURIComponent(siteId)}/sustainability-commitment/default`,
+    {
+      method: 'GET',
+      fallbackErrorMessage: '持続可能性約束の初期値を取得できませんでした。',
+    },
+  );
+}
+
 export async function validateSiteProjectFinalAgreement(
   payload: SiteProjectFinalAgreementValidationRequest,
 ): Promise<SiteProjectFinalAgreementValidationResponse> {
@@ -308,16 +324,51 @@ export async function getSiteEquipmentById(
   );
 }
 
-export async function updateSiteEquipment(
+export async function getSiteEquipmentHistory(
   siteId: string,
   equipmentId: number,
-  payload: SiteProjectEquipmentUpdateRequest,
+): Promise<SiteEquipmentHistory[]> {
+  const history = await apiRequest<SiteEquipmentHistoryApiItem[]>(
+    `/site/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}/history`,
+    {
+      method: 'GET',
+      fallbackErrorMessage: '設備変更履歴の取得に失敗しました。',
+    },
+  );
+
+  return Array.isArray(history)
+    ? history.map((entry) => ({
+        id: typeof entry.id === 'number' ? entry.id : null,
+        changeDate: normalizedText(entry.changeDate),
+        previousEquipmentId:
+          typeof entry.previousEquipmentId === 'number'
+            ? entry.previousEquipmentId
+            : null,
+        monitoringStartDate: normalizedText(entry.monitoringStartDate),
+        monitoringEndDate: normalizedText(entry.monitoringEndDate),
+        isActive:
+          typeof entry.isActive === 'boolean' ? entry.isActive : null,
+        registeredBy: normalizedText(entry.registeredBy),
+        registeredAt: normalizedText(entry.registeredAt),
+        equipment: normalizeSiteProjectEquipment(entry.equipment ?? {}),
+      }))
+    : [];
+}
+
+/**
+ * POST /site/{siteId}/equipment/{equipmentId}/change
+ * Registers replacement equipment while the backend preserves the previous entry as history.
+ */
+export async function changeSiteEquipment(
+  siteId: string,
+  equipmentId: number,
+  payload: SiteProjectEquipmentChangeRequest,
 ): Promise<SiteProjectEquipment> {
   return normalizeSiteProjectEquipment(
     await apiRequest<SiteProjectEquipmentDetailResponse>(
-      `/site/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}`,
+      `/siteg/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}/change`,
       {
-        method: 'PATCH',
+        method: 'POST',
         body: payload,
         fallbackErrorMessage: '設備情報の変更に失敗しました。',
       },

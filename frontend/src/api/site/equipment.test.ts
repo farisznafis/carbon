@@ -1,12 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   getSiteEquipmentById,
+  getSiteEquipmentHistory,
   getSiteProjectEquipment,
   getSiteProjectEquipmentPresignedUrl,
+  getSiteProjectSustainabilityCommitmentDefault,
   getSiteEquipmentList,
   joinSiteProject,
   uploadSiteProjectEquipmentFile,
-  updateSiteEquipment,
+  changeSiteEquipment,
   validateSiteProjectConfirmationItems,
   validateSiteProjectEquipment,
   validateSiteProjectFinalAgreement,
@@ -15,11 +17,39 @@ import {
 import type {
   SiteProjectEquipmentValidationItem,
   SiteProjectJoinRequest,
-  SiteProjectEquipmentUpdateRequest,
+  SiteProjectEquipmentChangeRequest,
 } from './types';
 
 afterEach(() => {
   vi.unstubAllGlobals();
+});
+
+describe('getSiteProjectSustainabilityCommitmentDefault', () => {
+  it('gets Contract Step defaults with an encoded site ID', async () => {
+    const responseBody = {
+      statusCode: 'OK',
+      companyName: 'ABC株式会社',
+      repName: '山田太郎',
+      repRole: '代表取締役',
+      hasConsent: true,
+      isAgreeTerms: true,
+    };
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(responseBody), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      getSiteProjectSustainabilityCommitmentDefault('SITE/001'),
+    ).resolves.toEqual(responseBody);
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/site/project/sites/SITE%2F001/sustainability-commitment/default',
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
 });
 
 describe('validateSiteProjectEquipment', () => {
@@ -60,7 +90,7 @@ describe('validateSiteProjectEquipment', () => {
   });
 });
 
-describe('site equipment read and update', () => {
+describe('site equipment read and change', () => {
   it.each([
     ['array', [{ id: 10, deviceNo: 'PV-10', hasBattery: true }]],
     [
@@ -181,7 +211,117 @@ describe('site equipment read and update', () => {
     ]);
   });
 
-  it('patches only the supplied equipment fields and preserves false and zero', async () => {
+  it('preserves history metadata and files from a site equipment list', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify([
+          {
+            id: 1,
+            siteId: 'SITE-1',
+            changeDate: '2026-08-13',
+            previousEquipmentId: 0,
+            files: [
+              {
+                id: 20,
+                fileType: 'pcs_spec',
+                fileId: 'file-20',
+                s3Key: 'equipment/pcs.pdf',
+              },
+            ],
+          },
+        ]),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getSiteEquipmentList('SITE-1');
+
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        equipmentId: 1,
+        siteId: 'SITE-1',
+        changeDate: '2026-08-13',
+        previousEquipmentId: 0,
+        files: [
+          {
+            id: 20,
+            fileType: 'pcs_spec',
+            fileId: 'file-20',
+            s3Key: 'equipment/pcs.pdf',
+            fileName: null,
+          },
+        ],
+      }),
+    );
+  });
+
+  it('gets equipment history and normalizes nested equipment data', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify([
+          {
+            id: 31,
+            changeDate: '2026-08-13',
+            previousEquipmentId: 6,
+            monitoringStartDate: '2026-08-13',
+            monitoringEndDate: null,
+            isActive: false,
+            registeredBy: 'operator-1',
+            registeredAt: '2026-08-13T01:39:59.538Z',
+            equipment: {
+              id: 7,
+              pcsUnitCount: 0,
+              pcsStandby: 0,
+              hasBattery: false,
+              Files: [
+                {
+                  id: 21,
+                  FileType: 'pcs_spec',
+                  FileId: 'file-21',
+                  S3Key: 'equipment/pcs.pdf',
+                  FileName: 'PCS仕様書.pdf',
+                },
+              ],
+            },
+          },
+        ]),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getSiteEquipmentHistory('SITE A', 7);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/site/SITE%20A/equipment/7/history',
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        id: 31,
+        previousEquipmentId: 6,
+        isActive: false,
+        equipment: expect.objectContaining({
+          equipmentId: 7,
+          powerCondUnitCount: 0,
+          powerCondStandby: 0,
+          hasBattery: false,
+          files: [
+            {
+              id: 21,
+              fileType: 'pcs_spec',
+              fileId: 'file-21',
+              s3Key: 'equipment/pcs.pdf',
+              fileName: 'PCS仕様書.pdf',
+            },
+          ],
+        }),
+      }),
+    );
+  });
+
+  it('posts changed equipment fields while preserving false and zero', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ id: 7, hasBattery: false, pcsStandby: 0 }), {
         status: 200,
@@ -189,17 +329,32 @@ describe('site equipment read and update', () => {
       }),
     );
     vi.stubGlobal('fetch', fetchMock);
-    const payload: SiteProjectEquipmentUpdateRequest = {
+    const payload: SiteProjectEquipmentChangeRequest = {
+      changeDate: '2026-08-20',
+      nominalMaxOutput: 0,
+      pcsManufacturer: 'PCS Maker',
+      pcsModel: 'PCS-1',
+      pcsUnitCount: 0,
+      deviceNo: 'DEVICE-1',
       hasBattery: false,
       pcsStandby: 0,
+      batteryMaker: null,
+      batteryModel: null,
+      batteryCapacity: null,
+      totalInvestment: 0,
+      hasSubsidy: false,
+      subsidyName: null,
+      subsidyAmount: null,
+      preProjectUnitPrice: 0,
+      files: [],
     };
 
-    await updateSiteEquipment('SITE A', 7, payload);
+    await changeSiteEquipment('SITE A', 7, payload);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/site/SITE%20A/equipment/7',
+      '/api/site/SITE%20A/equipment/7/change',
       expect.objectContaining({
-        method: 'PATCH',
+        method: 'POST',
         body: JSON.stringify(payload),
       }),
     );

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Button } from '@/components/ui/button';
+import { FormActions } from '@/components/forms/form-layout';
 import { useRedirectIfLoggedIn } from '@/hooks/useRedirectIfLoggedIn';
 import { AuthPageLayout } from './AuthPageLayout';
 
@@ -15,7 +15,7 @@ export type LoginFormProps = {
 
 export function LoginForm({
   title = 'ログイン',
-  description = '',
+  description = 'GXデータの登録・管理を続けるにはログインしてください。',
   submitLabel = 'ログイン',
   error = null,
   isSubmitting = false,
@@ -33,14 +33,18 @@ export function LoginForm({
     >
       {children}
 
-      <Button
-        type="submit"
-        size="lg"
-        className="w-full transition-transform duration-300 hover:scale-[1.01] active:scale-[0.99] [@media(max-height:560px)]:h-9"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? 'ログイン中...' : submitLabel}
-      </Button>
+      <FormActions
+        context="auth"
+        pendingActionId={isSubmitting ? 'submit' : null}
+        actions={[
+          {
+            id: 'submit',
+            label: submitLabel,
+            pendingLabel: 'ログイン中...',
+            type: 'submit',
+          },
+        ]}
+      />
     </AuthPageLayout>
   );
 }

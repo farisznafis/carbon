@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ProjectCompletionDialog } from './ProjectCompletionDialog';
+import { InlineLoader } from '@/components/feedback/loading';
 
 type ProjectTableProps = {
   projects: Project[];
@@ -224,16 +225,18 @@ export function ProjectTable({
       render: (project) => {
         const statusColor = getProjectStatusColors(project.projectStatus);
 
+        const isUpdating = updatingProjectStatusId === project.id;
+
         return (
           <span
-            className="block min-w-0"
+            className="flex min-w-0 items-center gap-2"
             onClick={(event) => event.stopPropagation()}
             onPointerDown={(event) => event.stopPropagation()}
           >
             <Select
               value={project.projectStatus}
               disabled={
-                updatingProjectStatusId === project.id ||
+                isUpdating ||
                 isTerminalProjectStatus(project.projectStatus)
               }
               onValueChange={(value) =>
@@ -259,6 +262,9 @@ export function ProjectTable({
                 ))}
               </SelectContent>
             </Select>
+            {isUpdating ? (
+              <InlineLoader label="ステータスを更新しています" showLabel={false} />
+            ) : null}
           </span>
         );
       },

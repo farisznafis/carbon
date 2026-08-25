@@ -1,6 +1,6 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
-import { Button } from "@/components/ui/button";
+import { FormActions } from '@/components/forms/form-layout';
 import { ChangedConfirmationValue } from '@/components/feedback/Confirmation/ChangedConfirmationValue';
 
 type FullPageConfirmationModalProps = {
@@ -70,21 +70,23 @@ export function FullPageConfirmationModal({
               })}
             </dl>
 
-            <div className="mt-6 flex justify-end gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onBack}
-              >
-                Back
-              </Button>
-              <Button
-                type="button"
-                onClick={onConfirm}
-              >
-                Confirm
-              </Button>
-            </div>
+            <FormActions
+              context="compact"
+              className="mt-6"
+              actions={[
+                {
+                  id: 'back',
+                  label: 'Back',
+                  variant: 'outline',
+                  onClick: onBack,
+                },
+                {
+                  id: 'confirm',
+                  label: 'Confirm',
+                  onClick: onConfirm,
+                },
+              ]}
+            />
           </Dialog.Panel>
         </div>
       </Dialog>
