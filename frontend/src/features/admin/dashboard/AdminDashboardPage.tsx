@@ -3,7 +3,6 @@ import {
   useLocation,
   useNavigate,
   useParams,
-  useSearchParams,
 } from 'react-router-dom';
 import { ApiError } from '@/api/_shared/errors';
 import type {
@@ -32,14 +31,11 @@ import type { Project } from '@/api/projects';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 import {
+  adminPageContainerClassName,
   dashboardEmptyStateClassName,
-  dashboardPageContainerClassName,
-  dashboardPageHeaderClassName,
-  dashboardTabsListClassName,
-  dashboardTabTriggerClassName,
 } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { CancelRequestHistoryTable } from '@/features/admin/dashboard/tables/CancelRequestHistoryTable';
 import { BatchHistoryTable } from '@/features/admin/dashboard/tables/BatchHistoryTable';
@@ -52,8 +48,8 @@ import { PageSkeleton, SkeletonTable } from '@/components/feedback/loading';
 import { useProjectsQuery } from '@/hooks/projects/useProjectsQuery';
 import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
-import { cn } from '@/lib/utils';
 import { paths } from '@/routes/paths';
+import { getAdminRouteFromLegacyTab } from '@/features/admin/navigation/adminNavigationConfig';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { AlertTriangle, Plus } from 'lucide-react';
 
@@ -67,7 +63,7 @@ type AdminDashboardTabValue =
 
 type PendingCompanyActionMode = 'approve' | 'reject';
 
-const dashboardContainer = dashboardPageContainerClassName;
+const dashboardContainer = adminPageContainerClassName;
 
 const APPLICATION_STATUSES: CompanyStatus[] = ['PENDING', 'REJECTED'];
 const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
@@ -102,6 +98,27 @@ const adminDashboardTabs: Array<{
   { value: 'monitoring', label: 'モニタリングデータ管理' },
 ];
 
+/** Resolves the route-driven dashboard section while legacy tab URLs redirect. */
+function getAdminDashboardSection(
+  pathname: string,
+  legacyTab: string | null,
+): AdminDashboardTabValue {
+  if (pathname === paths.adminProjectList) return 'projects';
+  if (pathname === paths.adminCompanyList) return 'companies';
+  if (pathname === paths.adminMethodologyList) return 'methodologies';
+  if (pathname === paths.adminMonitoring) return 'monitoring';
+
+  if (
+    pathname === paths.adminDashboard &&
+    (legacyTab === 'overview' ||
+      adminDashboardTabs.some((tab) => tab.value === legacyTab))
+  ) {
+    return legacyTab as AdminDashboardTabValue;
+  }
+
+  return 'overview';
+}
+
 function isStringRecord(value: unknown): value is Record<string, string> {
   return (
     Boolean(value) &&
@@ -125,40 +142,6 @@ function getApiFieldErrors(error: unknown) {
   }
 
   return {};
-}
-
-function AdminDashboardHero() {
-  return (
-    <header className="border-b border-border bg-background">
-      <div
-        className={dashboardPageHeaderClassName}
-      >
-        <h1 className="text-foreground">
-          運営者・管理者ダッシュボード
-        </h1>
-      </div>
-    </header>
-  );
-}
-
-function AdminDashboardTabs() {
-  const triggerClassName = dashboardTabTriggerClassName;
-
-  return (
-    <div className="bg-card pt-6">
-      <TabsList className={dashboardTabsListClassName}>
-        {adminDashboardTabs.map((tab) => (
-          <TabsTrigger
-            key={tab.value}
-            value={tab.value}
-            className={triggerClassName}
-          >
-            {tab.label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </div>
-  );
 }
 
 function AdminDashboardSection({
@@ -197,7 +180,6 @@ function AdminDashboardEmptyState({ children }: { children: ReactNode }) {
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { applicationId } = useParams();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -278,12 +260,20 @@ const AdminDashboard = () => {
   );
   const [rejectReason, setRejectReason] = useState('');
 
-  const requestedTab = searchParams.get('tab');
-  const initialTab: AdminDashboardTabValue = adminDashboardTabs.some(
-    (tab) => tab.value === requestedTab,
-  )
-    ? (requestedTab as AdminDashboardTabValue)
-    : 'overview';
+  const requestedTab = new URLSearchParams(location.search).get('tab');
+  const activeSection = getAdminDashboardSection(
+    location.pathname,
+    requestedTab,
+  );
+
+  useEffect(() => {
+    if (location.pathname !== paths.adminDashboard || !requestedTab) return;
+
+    const legacyRoute = getAdminRouteFromLegacyTab(requestedTab);
+    if (legacyRoute) {
+      navigate(legacyRoute, { replace: true });
+    }
+  }, [location.pathname, navigate, requestedTab]);
 
   /** Reloads the application-company list independently from participating companies. */
   const reloadApplicationCompanies = useCallback(async () => {
@@ -636,13 +626,35 @@ const AdminDashboard = () => {
       : null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-card">
-      <AdminDashboardHero />
+    <div className="flex min-h-[calc(100dvh-5rem)] flex-col bg-background">
+      <Tabs value={activeSection} className="flex flex-1 flex-col bg-background">
+        <main className={`${dashboardContainer} flex-1 space-y-10 py-8`}>
+          {/* <TabsContent
+            value="overview"
+            className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
+          >
+            <AdminDashboardOverview
+              projects={projects}
+              projectsLoading={projectsQuery.isLoading}
+              projectsError={projectsError}
+              applications={applicationCompanies}
+              applicationTotal={applicationPagination.totalItems}
+              applicationsLoading={applicationCompaniesLoading}
+              applicationsError={applicationCompaniesError}
+              participatingCompanyTotal={participatingPagination.totalItems}
+              participatingCompaniesLoading={participatingCompaniesLoading}
+              participatingCompaniesError={participatingCompaniesError}
+              cancelRequests={cancelRequestItems}
+              cancelRequestsLoading={cancelRequestLoading}
+              cancelRequestsError={cancelRequestError}
+              batchHistory={batchHistoryItems}
+              batchHistoryLoading={batchHistoryLoading}
+              notifications={notifications}
+              notificationsLoading={notificationsLoading}
+              notificationsError={notificationsError}
+            />
+          </TabsContent> */}
 
-      <Tabs defaultValue={initialTab} className="flex flex-1 flex-col bg-card">
-        <AdminDashboardTabs />
-
-        <main className={cn('flex-1 space-y-10 py-8', dashboardContainer)}>
           <TabsContent
             value="overview"
             className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"

@@ -58,6 +58,15 @@ const EquipmentPage = lazy(() =>
 );
 const Profile = lazy(() => import("./features/user/profile/ProfilePage"));
 const AdminDashboard = lazy(() => import("./features/admin/dashboard/AdminDashboardPage"));
+const AdminOperatorList = lazy(() =>
+  import('./features/admin/operators/AdminOperatorListPage'),
+);
+const AdminOperatorRegister = lazy(() =>
+  import('./features/admin/operators/AdminOperatorRegisterPage'),
+);
+const AdminOperatorProfile = lazy(() =>
+  import('./features/admin/operators/AdminOperatorProfilePage'),
+);
 const AdminCompanyDetail = lazy(() =>
   import("./features/admin/company-detail/AdminCompanyDetailPage"),
 );
@@ -245,6 +254,43 @@ const App = () => {
             element={
               <RequireAdmin>
                 <AdminDashboard />
+              </RequireAdmin>
+            }
+          />
+          {[paths.adminProjectList, paths.adminCompanyList, paths.adminMethodologyList, paths.adminMonitoring].map(
+            (path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <RequireAdmin>
+                    <AdminDashboard />
+                  </RequireAdmin>
+                }
+              />
+            ),
+          )}
+          <Route
+            path={paths.adminOperatorList}
+            element={
+              <RequireAdmin>
+                <AdminOperatorList />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminOperatorRegister}
+            element={
+              <RequireAdmin>
+                <AdminOperatorRegister />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminOperatorProfileRoute}
+            element={
+              <RequireAdmin>
+                <AdminOperatorProfile />
               </RequireAdmin>
             }
           />

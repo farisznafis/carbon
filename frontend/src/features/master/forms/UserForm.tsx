@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { X } from 'lucide-react';
 import { ApiError } from '@/api/_shared/errors';
@@ -73,6 +73,10 @@ interface UserFormProps {
   embedded?: boolean;
   hideSiteSection?: boolean;
   hideUsernameField?: boolean;
+  requireSite?: boolean;
+  additionalSections?: ReactNode;
+  submitLabel?: string;
+  submitDisabled?: boolean;
 }
 
 export function UserForm({
@@ -89,6 +93,10 @@ export function UserForm({
   embedded = false,
   hideSiteSection = false,
   hideUsernameField = false,
+  requireSite = false,
+  additionalSections,
+  submitLabel = '確認',
+  submitDisabled = false,
 }: Readonly<UserFormProps>) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { joinableSites, getSiteById } = useDashboardStore();
@@ -162,8 +170,6 @@ export function UserForm({
       JSON.stringify(normalize(originalData))
     );
   }, [values, originalData]);
-
-  const submitLabel = '確認';
 
   const formContent = (
     <Form {...form}>
@@ -334,7 +340,7 @@ export function UserForm({
                   name="siteId"
                   render={({ field }) => (
                     <FormItem>
-                      <RequiredLabel required={false}>対象する拠点</RequiredLabel>
+                      <RequiredLabel required={requireSite}>対象する拠点</RequiredLabel>
                       <div className="flex items-center gap-2">
                         <Select
                           value={field.value ?? ''}
@@ -383,6 +389,8 @@ export function UserForm({
               </FormSection>
             )}
 
+            {additionalSections}
+
             <FormActions
               leadingAction={
                 onDelete ? (
@@ -406,7 +414,7 @@ export function UserForm({
                   id: 'submit',
                   label: submitLabel,
                   type: 'submit',
-                  disabled: !isTrulyDirty,
+                  disabled: !isTrulyDirty || submitDisabled,
                 },
               ]}
             />

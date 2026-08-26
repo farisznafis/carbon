@@ -50,7 +50,7 @@ export function AccountMenu({
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
             <User className="h-4 w-4" aria-hidden="true" />
           </span>
-          <span className="hidden min-w-0 flex-1 flex-col items-start sm:flex">
+          <span className="hidden min-w-0 flex-1 flex-col items-start lg:flex">
             <span
               className="w-full truncate text-left text-sm font-medium leading-5 text-foreground"
               title={displayName}
@@ -66,7 +66,7 @@ export function AccountMenu({
           </span>
           <ChevronDown
             className={cn(
-              'hidden h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 motion-reduce:transition-none sm:block',
+              'hidden h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 motion-reduce:transition-none lg:block',
               isOpen && 'rotate-180',
             )}
             aria-hidden="true"
@@ -75,7 +75,7 @@ export function AccountMenu({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-72 sm:w-72">
-        <DropdownMenuLabel className="min-w-0 font-normal sm:hidden">
+        <DropdownMenuLabel className="min-w-0 font-normal lg:hidden">
           <span className="block truncate text-sm font-medium text-foreground">
             {displayName}
           </span>
@@ -83,7 +83,7 @@ export function AccountMenu({
             {email}
           </span>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator className="sm:hidden" />
+        <DropdownMenuSeparator className="lg:hidden" />
         <DropdownMenuItem onSelect={onProfile} className="gap-2 py-2">
           <User className="h-4 w-4" aria-hidden="true" />
           <span>プロファイル</span>

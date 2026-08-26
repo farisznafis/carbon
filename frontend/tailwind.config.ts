@@ -16,6 +16,7 @@ export default {
   	extend: {
 		maxWidth: {
 			app: '75rem',
+			admin: '87.5rem',
 			marketing: '97.5rem'
 		},
   		colors: {

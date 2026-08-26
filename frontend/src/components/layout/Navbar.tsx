@@ -16,6 +16,7 @@ import { toast } from '@/hooks/use-toast';
 import { getHomePath } from '@/utils/getHomePath';
 import { isLoginPath, paths } from '@/routes/paths';
 import { cn } from '@/lib/utils';
+import { AdminNavigation } from '@/features/admin/navigation/AdminNavigation';
 import { AccountMenu } from './AccountMenu';
 import { useAccountIdentity } from './useAccountIdentity';
 
@@ -58,6 +59,7 @@ export const Navbar = () => {
   const isLoginPage = isLoginPath(location.pathname);
   const isAdminLoginPage =
     isLoginPage && location.pathname.startsWith(paths.adminLogin);
+  const isAdminAuthenticated = isAuthenticated && user?.role === 'admin';
 
   const handleLogout = async () => {
     const redirectPath =
@@ -101,14 +103,22 @@ export const Navbar = () => {
         className={cn(
           'w-full px-4 py-4 sm:px-6 lg:px-8',
           isAuthenticated && user && 'py-3',
+          isAdminAuthenticated && 'mx-auto max-w-admin py-4',
           isLoginPage && '[@media(max-height:480px)]:py-2',
         )}
       >
-        <div className="flex items-center justify-between">
+        <div
+          className={cn(
+            'flex items-center justify-between',
+            isAdminAuthenticated && 'grid grid-cols-[auto_1fr_auto] gap-3',
+          )}
+        >
           <Link to={linkTarget} className="flex items-center space-x-2">
             <div className="h-8 w-8 rounded-lg gradient-primary" />
             <span className="text-xl font-bold">GX</span>
           </Link>
+
+          {isAdminAuthenticated && <AdminNavigation />}
 
           <div className="flex items-center space-x-3">
             {isAuthenticated && user ? (
