@@ -149,6 +149,7 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
                 .confirmationItems(toConfirmationResponse(confirmationItems))
                 .sustainabilityCommitment(toSustainabilityResponse(sustainability))
                 .review(toReviewResponse(review))
+                .pdfStatus(participation.getS3KeyPdfMembership() != null ? "READY" : "NOT_READY")
                 .build();
     }
 
@@ -327,6 +328,36 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
                         .secondaryReviewerName(h.getSecondaryReviewerName())
                         .reviewedAt(h.getReviewedAt())
                         .build())
+                .collect(Collectors.toList());
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public List<ParticipationReviewDetailResponse> getApprovedParticipations() {
+        return findApprovedParticipations().stream()
+                .map(participation -> getReviewDetail(participation.getId()))
+                .collect(Collectors.toList());
+        }
+
+        private List<ParticipatingProject> findApprovedParticipations() {
+        return siteProjectRelationRepository.findByStatus("APPROVED").stream()
+                .map(this::toParticipationOrNull)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public List<ParticipationReviewDetailResponse> getRejectedParticipations() {
+        return findRejectedParticipations().stream()
+                .map(participation -> getReviewDetail(participation.getId()))
+                .collect(Collectors.toList());
+        }
+
+        private List<ParticipatingProject> findRejectedParticipations() {
+        return siteProjectRelationRepository.findByStatus("REJECTED").stream()
+                .map(this::toParticipationOrNull)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         }
     // ─────────────────────────────────────────────────────────────

@@ -29,4 +29,5 @@ public class ParticipationReviewDetailResponse {
     private EnR002ConfirmationItemResponse confirmationItems;
     private EnR002SustainabilityCommitmentResponse sustainabilityCommitment;
     private ProjectParticipationConfirmationResponse review;
+    private String pdfStatus;
 }
