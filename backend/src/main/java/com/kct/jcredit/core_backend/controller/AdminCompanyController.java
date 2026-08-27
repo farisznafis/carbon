@@ -225,7 +225,7 @@ public class AdminCompanyController {
         return ResponseEntity.ok(reviewService.getApprovedParticipations());
     }
 
-    @GetMapping("/admin/participations/rejected")
+    @GetMapping("participations/rejected")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "却下済み入会届一覧取得",

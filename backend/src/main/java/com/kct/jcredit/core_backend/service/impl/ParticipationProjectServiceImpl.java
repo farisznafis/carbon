@@ -8,6 +8,7 @@ import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
+import com.kct.jcredit.core_backend.dto.response.MemberTermsInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.MyParticipationResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectJoinResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
@@ -21,6 +22,7 @@ import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.entity.EnR002EquipmentFile;
 import com.kct.jcredit.core_backend.entity.EnR002SustainabilityCommitment;
+import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.ConfirmationItems;
 import com.kct.jcredit.core_backend.entity.EnR002ApplicationConfirmation;
 import com.kct.jcredit.core_backend.entity.EnR002Equipment;
@@ -55,6 +57,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 
 
@@ -155,6 +158,42 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 .repRole(company.getRepPosition())
                 .build();
     }
+
+       @Override
+        public MemberTermsInfoResponse getMemberTermsInfo(String projectId) {
+
+        Project project = projectRepository.findByPublicIdWithFallback(projectId)
+                .orElse(null);
+
+        if (project == null) {
+                return MemberTermsInfoResponse.builder()
+                        .statusCode(ResponseConstants.NOT_FOUND)
+                        .message(ResponseConstants.MSG_PROJECT_NOT_FOUND)
+                        .build();
+        }
+
+        OperatorCompany operatorCompany = project.getOperatorCompany();
+
+        String adminRepName = safe(operatorCompany.getRepFirstName())
+                + safe(operatorCompany.getRepLastName());
+
+        String effectiveDate = project.getCreatedAt() != null
+                ? project.getCreatedAt().toLocalDate().format(
+                        DateTimeFormatter.ofPattern("yyyy年MM月dd日"))
+                : "";
+
+        return MemberTermsInfoResponse.builder()
+                .statusCode(ResponseConstants.OK)
+                .projectName(safe(project.getProjectName()))
+                .operatorNameJa(safe(operatorCompany.getNameJa()))
+                .adminRepName(adminRepName)
+                .projectOverview(safe(project.getMethodName()))
+                .usagePurpose(safe(project.getMethodDetails())) 
+                .effectiveDate(effectiveDate)
+                .build();
+        }
+
+        private String safe(String v) { return v != null ? v : ""; }
 
     // ─────────────────────────────────────────────────────────────
     // SUBMIT
