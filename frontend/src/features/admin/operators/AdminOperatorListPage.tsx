@@ -62,9 +62,9 @@ function OperatorPermissionSummary({
 function OperatorInformationNote({ onClose }: Readonly<{ onClose: () => void }>) {
   return (
     <section className="flex items-start gap-3 rounded-lg border border-primary/25 bg-primary/5 p-4">
-      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-        <Info className="h-3.5 w-3.5" aria-hidden="true" />
-      </span>
+      {/* <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"> */}
+        <Info className="h-5 w-5 text-primary" aria-hidden="true" />
+      {/* </span> */}
       <div className="min-w-0 flex-1">
         <h2 className="text-sm font-bold text-primary">補足</h2>
         <p className="mt-1 text-sm leading-6 text-foreground">
@@ -256,7 +256,7 @@ export default function AdminOperatorListPage() {
             <h1 className="text-3xl font-bold leading-tight text-foreground">
               運用者管理
             </h1>
-            <p className="mt-2 text-base leading-6 text-muted-foreground">
+            <p className="mt-2 text-base leading-6 text-foreground">
               運用業務を担当するユーザーのアカウントを管理します。
             </p>
           </div>

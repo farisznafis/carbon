@@ -103,14 +103,15 @@ export const Navbar = () => {
         className={cn(
           'w-full px-4 py-4 sm:px-6 lg:px-8',
           isAuthenticated && user && 'py-3',
-          isAdminAuthenticated && 'mx-auto max-w-admin py-4',
+          isAdminAuthenticated && 'h-20 px-6 py-0',
           isLoginPage && '[@media(max-height:480px)]:py-2',
         )}
       >
         <div
           className={cn(
             'flex items-center justify-between',
-            isAdminAuthenticated && 'grid grid-cols-[auto_1fr_auto] gap-3',
+            isAdminAuthenticated &&
+              'relative h-full justify-start gap-3',
           )}
         >
           <Link to={linkTarget} className="flex items-center space-x-2">
@@ -120,7 +121,12 @@ export const Navbar = () => {
 
           {isAdminAuthenticated && <AdminNavigation />}
 
-          <div className="flex items-center space-x-3">
+          <div
+            className={cn(
+              'flex items-center space-x-3',
+              isAdminAuthenticated && 'ml-auto',
+            )}
+          >
             {isAuthenticated && user ? (
               <>
                 <Sheet>

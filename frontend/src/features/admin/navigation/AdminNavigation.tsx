@@ -28,7 +28,9 @@ function AdminNavigationLinks({ mobile = false }: AdminNavigationLinksProps) {
   return (
     <div
       className={cn(
-        mobile ? 'flex flex-col gap-1' : 'flex h-full items-stretch justify-center',
+        mobile
+          ? 'flex flex-col gap-1'
+          : 'flex h-full items-stretch justify-center gap-2 min-[1800px]:gap-4',
       )}
       aria-label="管理画面のメインナビゲーション"
     >
@@ -39,15 +41,15 @@ function AdminNavigationLinks({ mobile = false }: AdminNavigationLinksProps) {
             to={item.href}
             aria-current={isActive ? 'page' : undefined}
             className={cn(
-              'relative flex items-center whitespace-nowrap text-sm text-foreground transition-colors hover:text-primary',
+              'relative flex items-center whitespace-nowrap text-base font-normal leading-6 text-foreground transition-colors duration-200 hover:text-primary motion-reduce:transition-none',
               mobile
                 ? 'min-h-11 rounded-lg px-4 py-2'
-                : 'min-w-24 justify-center px-3 xl:min-w-28 2xl:min-w-32',
-              isActive && 'font-bold text-primary',
+                : 'h-full justify-center px-4 min-[1800px]:px-6',
+              isActive && 'text-lg font-bold leading-7 text-primary',
               mobile && isActive && 'bg-secondary/60',
               !mobile &&
                 isActive &&
-                'after:absolute after:inset-x-4 after:bottom-0 after:h-1 after:rounded-t-full after:bg-primary',
+                'after:absolute after:bottom-3 after:left-1/2 after:h-1 after:w-[71px] after:-translate-x-1/2 after:bg-primary',
             )}
           >
             {item.label}
@@ -72,7 +74,7 @@ function AdminNavigationLinks({ mobile = false }: AdminNavigationLinksProps) {
 export function AdminNavigation() {
   return (
     <>
-      <div className="hidden h-14 xl:block">
+      <div className="absolute left-1/2 hidden h-20 -translate-x-1/2 min-[1440px]:block">
         <AdminNavigationLinks />
       </div>
 
@@ -82,7 +84,7 @@ export function AdminNavigation() {
             type="button"
             variant="ghost"
             size="icon"
-            className="h-12 w-12 border border-border xl:hidden"
+            className="h-12 w-12 border border-border min-[1440px]:hidden"
             aria-label="管理メニューを開く"
           >
             <Menu className="h-5 w-5" aria-hidden="true" />
