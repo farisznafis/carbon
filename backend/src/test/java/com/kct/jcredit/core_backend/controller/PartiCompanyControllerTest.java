@@ -33,6 +33,7 @@ import com.kct.jcredit.core_backend.dto.request.EmailOtpStartRequest;
 import com.kct.jcredit.core_backend.dto.request.OtpResendRequest;
 import com.kct.jcredit.core_backend.dto.request.OtpVerifyRequest;
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyInfoValidateRequest;
+import com.kct.jcredit.core_backend.dto.request.PartiCompanyMethodologyValidateRequest;
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyRegisterRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectDeletionRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdatePartiCompanyRequest;
@@ -41,6 +42,7 @@ import com.kct.jcredit.core_backend.dto.response.OtpChallengeResponse;
 import com.kct.jcredit.core_backend.dto.response.UpdatePartiCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.dto.response.details.CompanyInfoResponse;
+import com.kct.jcredit.core_backend.dto.response.details.PartiCompanyResponseDetails;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.service.CompanyDeletionService;
 import com.kct.jcredit.core_backend.service.CompanySecurityFlowService;
@@ -86,10 +88,12 @@ public class PartiCompanyControllerTest {
 
         //リクエスト作成
         req = new UpdatePartiCompanyRequest();
-        req.setCompanyId(companyId);
+        req.setNameJa("株式会社サンプル");
+        req.setNameFurigana("カブシキガイシャサンプル");
+        req.setNameEn("Sumple Corporation");
         req.setPhoneNumber("070-1234-5678");
         req.setFax("03-1234-5679");
-        req.setEmail("corporate@company.com");
+
 
 
         // ParticipatingCompany（Entity）を作成
@@ -111,31 +115,36 @@ public class PartiCompanyControllerTest {
         res.setCompany(companyDetails);
         res.setStatusCode(ResponseConstants.OK);
 
+        
+
     }
 
     //有効なリクエストで企業情報の更新が成功する（statusCode=200）
     @Test
     @DisplayName("有効なリクエストで企業情報の更新が成功する（statusCode=200）")
     void updateCompany_Success() {
+        Authentication auth = org.mockito.Mockito.mock(Authentication.class);
+        org.mockito.Mockito.when(auth.getCredentials()).thenReturn("dummy.jwt.token");
+        
+        when(auth.getCredentials()).thenReturn("dummy.jwt.token");
 
-        when(companyService.updateCompany(companyId, req))
-            .thenReturn(res);
+        when(jwtUtil.extractCompanyId("dummy.jwt.token")).thenReturn(companyId);
+
+        when(companyService.updateCompany(companyId, req)).thenReturn(res);
 
         //テスト実行
-        ResponseEntity<UpdatePartiCompanyResponse> response = partiCompanyController.updateCompany(req);
+        ResponseEntity<UpdatePartiCompanyResponse> response = partiCompanyController.updateCompany(auth, req);
 
         UpdatePartiCompanyResponse getBody = response.getBody();
         assertNotNull(getBody);
-        assertEquals(req.getCompanyId(), getBody.getCompany().getCompanyId());
+        assertEquals(companyId, getBody.getCompany().getCompanyId());
         assertEquals(ResponseConstants.OK, getBody.getStatusCode());
 
 
         CompanyInfoResponse company = getBody.getCompany();
-        assertEquals(req.getCompanyId(), company.getCompanyId());
         assertEquals("株式会社サンプル", company.getNameJA());
         assertEquals("カブシキガイシャサンプル", company.getNameFurigana());
         assertEquals("Sumple Corporation", company.getNameEN());
-        assertEquals(req.getEmail(), company.getEmail());
         assertEquals(req.getPhoneNumber(), company.getPhoneNumber());
         assertEquals(req.getFax(), company.getFax());
         assertEquals("123467890123", company.getCorpNumber());
@@ -150,8 +159,12 @@ public class PartiCompanyControllerTest {
     @Test
     @DisplayName("レスポンスのstatusCodeに応じた適切なHTTPステータスが返る")
     void updateCompany_NOT_FOUND() {
-
+        Authentication auth = org.mockito.Mockito.mock(Authentication.class);
         
+        when(auth.getCredentials()).thenReturn("dummy.jwt.token");
+
+        when(jwtUtil.extractCompanyId("dummy.jwt.token")).thenReturn(companyId);
+
         UpdatePartiCompanyResponse res = new UpdatePartiCompanyResponse();
         res.setCompany(companyDetails);
         res.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -161,20 +174,27 @@ public class PartiCompanyControllerTest {
             .thenReturn(res);
 
         //テスト実行
-        ResponseEntity<UpdatePartiCompanyResponse> response = partiCompanyController.updateCompany(req);
+        ResponseEntity<UpdatePartiCompanyResponse> response = partiCompanyController.updateCompany(auth, req);
 
         UpdatePartiCompanyResponse getBody = response.getBody();
         assertNotNull(getBody);
-        assertEquals(req.getCompanyId(), getBody.getCompany().getCompanyId());
+        assertEquals(companyId, getBody.getCompany().getCompanyId());
         assertEquals("NOT_FOUND", getBody.getStatusCode());
         assertEquals("該当するサイトが見つかりませんでした。", res.getMessage());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(res.getMessage(), getBody.getMessage());
     }
 
     //レスポンスのstatusCodeに応じた適切なHTTPステータスが返る(INTERNAL_SERVER_ERROR)
     @Test
     @DisplayName("レスポンスのstatusCodeに応じた適切なHTTPステータスが返る(INTERNAL_SERVER_ERROR)")
     void updateCompany_INTERNAL_SERVER_ERROR() {
-        
+        Authentication auth = org.mockito.Mockito.mock(Authentication.class);
+
+        when(auth.getCredentials()).thenReturn("dummy.jwt.token");
+
+        when(jwtUtil.extractCompanyId("dummy.jwt.token")).thenReturn(companyId);
+
         UpdatePartiCompanyResponse res = new UpdatePartiCompanyResponse();
         res.setCompany(companyDetails);
         res.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR);
@@ -184,14 +204,59 @@ public class PartiCompanyControllerTest {
             .thenReturn(res);
 
         //テスト実行
-        ResponseEntity<UpdatePartiCompanyResponse> response = partiCompanyController.updateCompany(req);
+        ResponseEntity<UpdatePartiCompanyResponse> response = partiCompanyController.updateCompany(auth, req);
 
         UpdatePartiCompanyResponse getBody = response.getBody();
         assertNotNull(getBody);
-        assertEquals(req.getCompanyId(), getBody.getCompany().getCompanyId());
-        assertEquals("INTERNAL_SERVER_ERROR", getBody.getStatusCode());
-        assertEquals("サイト情報の取得中にエラーが発生しました。", res.getMessage());
+        assertEquals(companyId, getBody.getCompany().getCompanyId());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(res.getMessage(), getBody.getMessage());
     }
+
+// ========================================
+// singnup のテストケース
+// ========================================
+@Test
+@DisplayName("正しいリクエストを送ったとき HTTP 201 が返ること")
+void singnup_Success() {
+    // === Arrange（準備フェーズ）===
+
+    // リクエストの作成
+    PartiCompanyRegisterRequest request = new PartiCompanyRegisterRequest();
+    request.setEmailVerificationChallengeId(UUID.randomUUID());
+    request.setCorporateName("株式会社サンプル");
+    request.setCorporateNameKana("カブシキガイシャサンプル");
+    request.setCompanyNameEnglish("Sumple Corporation");
+
+    // モックのレスポンスを作成
+    PartiCompanyResponseDetails MockResponse =  new PartiCompanyResponseDetails("CREATED","登録申請が完了しました。","COMP00000001","PENDING");
+
+    // === モックの振る舞いを定義 ===
+    when(registerService.register(request))
+            .thenReturn(MockResponse);
+
+    // === Act（実行フェーズ）===
+    
+    ResponseEntity<PartiCompanyResponseDetails> response = 
+            partiCompanyController.signup(request);
+
+    // === Assert（検証フェーズ）===
+    
+    // レスポンスがnullでないことを確認
+    assertThat(response).isNotNull();
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+    PartiCompanyResponseDetails body = response.getBody();
+    assertThat(body).isNotNull();
+    assertThat(body.getStatusCode()).isEqualTo("CREATED");
+    assertThat(body.getMessage()).isEqualTo("登録申請が完了しました。");
+    assertThat(body.getRegistrationId()).isEqualTo("COMP00000001");
+    assertThat(body.getStatus()).isEqualTo("PENDING");
+
+    verify(registerService, times(1)).register(
+        eq(request));
+}
+
 // ========================================
 // startSignupEmailVerification のテストケース
 // ========================================
@@ -240,6 +305,46 @@ void startSignupEmailVerification_Success() {
 
     verify(companySecurityFlowService, times(1)).startSignupEmailVerification(
         eq(email));
+
+}
+
+
+@Test
+@DisplayName("レスポンスのstatusCodeに応じた適切なHTTPステータスが返る(BAD_REQUEST)")
+void startSignupEmailVerification_BAD_REQUEST() {
+    // === Arrange（準備フェーズ）===
+    
+    String email = "yamada_taro@test.com";
+
+    // リクエストの作成
+    EmailOtpStartRequest request = new EmailOtpStartRequest();
+    request.setEmail(email);
+
+    // モックのレスポンスを作成
+    OtpChallengeResponse MockResponse =  new OtpChallengeResponse();
+    MockResponse.setStatusCode(ResponseConstants.BAD_REQUEST);
+    MockResponse.setMessage(ResponseConstants.MSG_BAD_REQUEST);
+
+    // === モックの振る舞いを定義 ===
+    when(companySecurityFlowService.startSignupEmailVerification(
+            eq(request.getEmail())))
+            .thenReturn(MockResponse);
+
+    // === Act（実行フェーズ）===
+    
+    ResponseEntity<OtpChallengeResponse> response = 
+            partiCompanyController.startSignupEmailVerification(request);
+
+    // === Assert（検証フェーズ）===
+    
+    // レスポンスがnullでないことを確認
+    assertThat(response).isNotNull();
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+    OtpChallengeResponse body = response.getBody();
+    assertThat(body).isNotNull();
+    assertThat(body.getStatusCode()).isEqualTo(ResponseConstants.BAD_REQUEST);
+    assertThat(body.getMessage()).isEqualTo(ResponseConstants.MSG_BAD_REQUEST);
 
 }
 
@@ -299,6 +404,43 @@ void resendSignupEmailVerification_Success() {
 
 }
 
+@Test
+@DisplayName("レスポンスのstatusCodeに応じた適切なHTTPステータスが返る(BAD_REQUEST)")
+void resendSignupEmailVerification_BAD_REQUEST() {
+    // === Arrange（準備フェーズ）===
+    // リクエストの作成
+    OtpResendRequest request = new OtpResendRequest();
+    request.setChallengeId(UUID.randomUUID());
+
+    // モックのレスポンスを作成
+    OtpChallengeResponse MockResponse =  new OtpChallengeResponse();
+    MockResponse.setStatusCode(ResponseConstants.BAD_REQUEST);
+    MockResponse.setMessage(ResponseConstants.MSG_BAD_REQUEST);
+    MockResponse.setChallengeId(UUID.randomUUID());
+
+    // === モックの振る舞いを定義 ===
+    when(companySecurityFlowService.resendSignupEmailVerification(
+            eq(request.getChallengeId())))
+            .thenReturn(MockResponse);
+
+    // === Act（実行フェーズ）===
+    
+    ResponseEntity<OtpChallengeResponse> response = 
+            partiCompanyController.resendSignupEmailVerification(request);
+
+    // === Assert（検証フェーズ）===
+    
+    // レスポンスがnullでないことを確認
+    assertThat(response).isNotNull();
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+    OtpChallengeResponse body = response.getBody();
+    assertThat(body).isNotNull();
+    assertThat(body.getStatusCode()).isEqualTo(ResponseConstants.BAD_REQUEST);
+    assertThat(body.getMessage()).isEqualTo(ResponseConstants.MSG_BAD_REQUEST);
+}
+
+
 // ========================================
 // verifySignupEmailのテストケース
 // ========================================
@@ -348,6 +490,46 @@ void verifySignupEmail_Success() {
     System.out.println(request);
     System.out.println(response);
     System.out.println(body);
+}
+
+@Test
+@DisplayName("レスポンスのstatusCodeに応じた適切なHTTPステータスが返る(BAD_REQUEST)")
+void verifySignupEmail_BAD_REQUEST() {
+    // === Arrange（準備フェーズ）===
+    
+    String code = "123456";
+
+    // リクエストの作成
+    OtpVerifyRequest request = new OtpVerifyRequest();
+    request.setChallengeId(UUID.randomUUID());
+    request.setCode(code);
+
+    // モックのレスポンスを作成
+    BaseResponse MockResponse =  new BaseResponse();
+    MockResponse.setStatusCode(ResponseConstants.BAD_REQUEST);
+    MockResponse.setMessage(ResponseConstants.MSG_BAD_REQUEST);
+
+    // === モックの振る舞いを定義 ===
+    when(companySecurityFlowService.verifySignupEmail(
+            eq(request.getChallengeId()),
+            eq(request.getCode())))
+            .thenReturn(MockResponse);
+
+    // === Act（実行フェーズ）===
+    
+    ResponseEntity<BaseResponse> response = 
+            partiCompanyController.verifySignupEmail(request);
+
+    // === Assert（検証フェーズ）===
+    
+    // レスポンスがnullでないことを確認
+    assertThat(response).isNotNull();
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+    BaseResponse body = response.getBody();
+    assertThat(body).isNotNull();
+    assertThat(body.getStatusCode()).isEqualTo(ResponseConstants.BAD_REQUEST);
+    assertThat(body.getMessage()).isEqualTo(ResponseConstants.MSG_BAD_REQUEST);
 }
 
 // ========================================
@@ -418,6 +600,8 @@ void reviseRejectedSignup_Success() {
     verify(companySecurityFlowService).reviseRejectedSignup(actionSession,request);
 }
 
+
+
 // ========================================
 // validateSignupCompanyInfoのテストケース
 // ========================================
@@ -451,12 +635,33 @@ void validateSignupCompanyInfo_Success() {
 
     // === Assert（検証フェーズ）===
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo(mockResponse);
+    assertThat(response.getBody().getStatusCode()).isEqualTo(mockResponse.getStatusCode());
+    assertThat(response.getBody().getMessage()).isEqualTo(mockResponse.getMessage());
 
     verify(registerService).validateCompanyInfo(request);
 }
 
+// ========================================
+// validateSignupCompanyInfoのテストケース
+// ========================================
+@Test
+@DisplayName("正しいリクエストを送ったとき HTTP 200 が返ること")
+void validateSignupMethodology_Success() {
+    // === Arrange（準備フェーズ）===
+    PartiCompanyMethodologyValidateRequest request = new PartiCompanyMethodologyValidateRequest();
+    
+    // リクエストの作成
 
+    // Act
+    ResponseEntity<BaseResponse> response =
+            partiCompanyController.validateSignupMethodology(request);
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().getStatusCode()).isEqualTo(ResponseConstants.OK);
+    assertThat(response.getBody().getMessage()).isEqualTo(ResponseConstants.MSG_VALIDATION_SUCCESS);
+}
 
 // ========================================
 // createDeletionRequest のテストケース
