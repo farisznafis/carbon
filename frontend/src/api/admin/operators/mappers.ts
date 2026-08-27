@@ -6,6 +6,17 @@ import type {
   AdminOperatorProfileApiResponse,
 } from './types';
 
+const RETIRED_OPERATOR_PERMISSION_CODES = new Set(['PROJECT_VIEW']);
+
+/** Keeps non-empty API permissions while excluding retired operator permissions. */
+function isActiveOperatorPermission(permission: unknown): permission is string {
+  return (
+    typeof permission === 'string' &&
+    permission.trim().length > 0 &&
+    !RETIRED_OPERATOR_PERMISSION_CODES.has(permission)
+  );
+}
+
 /** Normalizes one operator record so UI formatters never depend on nullable API fields. */
 export function mapAdminOperator(item: AdminOperatorApiItem): AdminOperator {
   const firstName = item.firstName?.trim() ?? '';
@@ -30,10 +41,7 @@ export function mapAdminOperator(item: AdminOperatorApiItem): AdminOperator {
     siteName: item.siteName?.trim() ?? '',
     companyId: item.companyId?.trim() ?? '',
     permissions: Array.isArray(item.permissions)
-      ? item.permissions.filter(
-          (permission): permission is string =>
-            typeof permission === 'string' && permission.trim().length > 0,
-        )
+      ? item.permissions.filter(isActiveOperatorPermission)
       : [],
   };
 }

@@ -67,6 +67,9 @@ const AdminOperatorRegister = lazy(() =>
 const AdminOperatorProfile = lazy(() =>
   import('./features/admin/operators/AdminOperatorProfilePage'),
 );
+const AdminOperatorEdit = lazy(() =>
+  import('./features/admin/operators/AdminOperatorEditPage'),
+);
 const AdminCompanyDetail = lazy(() =>
   import("./features/admin/company-detail/AdminCompanyDetailPage"),
 );
@@ -291,6 +294,14 @@ const App = () => {
             element={
               <RequireAdmin>
                 <AdminOperatorProfile />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminOperatorEditRoute}
+            element={
+              <RequireAdmin>
+                <AdminOperatorEdit />
               </RequireAdmin>
             }
           />

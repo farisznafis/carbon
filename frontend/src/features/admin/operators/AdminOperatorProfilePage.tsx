@@ -1,20 +1,57 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import type { ReactNode } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import type { AdminOperator } from '@/api/admin/operators';
 import { LoadingPanel } from '@/components/feedback/loading';
 import {
   FormCard,
-  FormGrid,
   FormPageContent,
   FormPageTitle,
   FormSection,
   FormSectionStack,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import { ConfirmationItem } from '@/components/feedback/Confirmation/ConfirmationItem';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { useAdminOperatorProfileQuery } from '@/hooks/admin/useAdminOperatorsQuery';
 import { paths } from '@/routes/paths';
-import { getOperatorPermissionLabel } from './operatorPermissions';
+import { OperatorPermissionGroups } from './OperatorPermissionGroups';
+
+/** Formats a Japanese operator name in family-name-first order. */
+function formatOperatorName(operator: AdminOperator): string {
+  return [operator.lastName, operator.firstName].filter(Boolean).join(' ') || '-';
+}
+
+/** Formats the operator kana name in family-name-first order. */
+function formatOperatorKanaName(operator: AdminOperator): string {
+  return [operator.lastNameKana, operator.firstNameKana]
+    .filter(Boolean)
+    .join(' ') || '-';
+}
+
+type OperatorProfileFieldProps = {
+  label: string;
+  value: ReactNode;
+};
+
+/** Displays one read-only operator label and value within a numbered section. */
+function OperatorProfileField({
+  label,
+  value,
+}: Readonly<OperatorProfileFieldProps>) {
+  return (
+    <div className="min-w-0 space-y-1">
+      <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
+      <dd className="break-words font-medium text-foreground">{value}</dd>
+    </div>
+  );
+}
 
 /** Renders the read-only operator profile loaded from the admin-specific endpoint. */
 export default function AdminOperatorProfilePage() {
@@ -22,23 +59,44 @@ export default function AdminOperatorProfilePage() {
   const navigate = useNavigate();
   const profileQuery = useAdminOperatorProfileQuery(userId);
   const operator = profileQuery.data;
-  /** Returns from the read-only profile to the operator management list. */
-  const handleBack = () => navigate(paths.adminOperatorList);
+
+  /** Opens the edit page for the operator currently displayed. */
+  const handleEdit = () => {
+    if (operator) navigate(paths.adminOperatorEdit(operator.id));
+  };
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={handleBack}
-        label=""
-        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
-      />
       <FormPageContent>
-        <div>
-          <FormPageTitle as="h1">運用者プロファイル</FormPageTitle>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            運用者のアカウント情報と付与されている権限を確認できます。
-          </p>
-        </div>
+        <Breadcrumb>
+          <BreadcrumbList className="flex-nowrap">
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to={paths.adminOperatorList}>運用者管理</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem className="min-w-0">
+              <BreadcrumbPage className="block truncate">
+                {operator ? formatOperatorName(operator) : '運用者のプロファイル'}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <FormPageTitle as="h1">運用者のプロファイル</FormPageTitle>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
+              運用者のプロフィールと権限情報を確認します。
+            </p>
+          </div>
+          {operator ? (
+            <Button type="button" variant="outline" size="md" onClick={handleEdit}>
+              編集
+            </Button>
+          ) : null}
+        </header>
 
         {profileQuery.isLoading ? (
           <LoadingPanel message="プロファイルを読み込んでいます" />
@@ -60,39 +118,47 @@ export default function AdminOperatorProfilePage() {
         ) : (
           <FormCard>
             <FormSectionStack spacing="relaxed">
-              <FormSection number={1} title="個人情報">
-                <FormGrid>
-                  <ConfirmationItem label="姓" value={operator.lastName || '-'} />
-                  <ConfirmationItem label="名" value={operator.firstName || '-'} />
-                  <ConfirmationItem label="姓（カナ）" value={operator.lastNameKana || '-'} />
-                  <ConfirmationItem label="名（カナ）" value={operator.firstNameKana || '-'} />
-                  <ConfirmationItem label="電話番号" value={operator.phoneNumber || '-'} />
-                </FormGrid>
+              <FormSection number={1} title="基本情報">
+                <dl className="grid gap-x-10 gap-y-6 md:grid-cols-2">
+                  <OperatorProfileField
+                    label="氏名"
+                    value={formatOperatorName(operator)}
+                  />
+                  <OperatorProfileField
+                    label="氏名（カナ）"
+                    value={formatOperatorKanaName(operator)}
+                  />
+                  <OperatorProfileField
+                    label="電話番号"
+                    value={operator.phoneNumber || '-'}
+                  />
+                </dl>
               </FormSection>
 
               <FormSection number={2} title="アカウント情報">
-                <FormGrid>
-                  <ConfirmationItem label="ユーザネーム" value={operator.username || '-'} />
-                  <ConfirmationItem label="メールアドレス" value={operator.email || '-'} />
-                  <ConfirmationItem label="ロール" value="運用者" />
-                </FormGrid>
+                <dl className="grid gap-x-10 gap-y-6 md:grid-cols-2">
+                  <OperatorProfileField
+                    label="ユーザネーム"
+                    value={operator.username || '-'}
+                  />
+                  <OperatorProfileField
+                    label="メールアドレス"
+                    value={operator.email || '-'}
+                  />
+                </dl>
               </FormSection>
 
-              <FormSection number={3} title="権限">
-                {operator.permissions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">権限なし</p>
-                ) : (
-                  <ul className="grid gap-3 sm:grid-cols-2">
-                    {operator.permissions.map((permission) => (
-                      <li
-                        key={permission}
-                        className="rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground"
-                      >
-                        {getOperatorPermissionLabel(permission)}
-                      </li>
-                    ))}
-                  </ul>
+              <FormSection
+                number={3}
+                title="権限設定"
+                meta={(
+                  <span className="text-sm font-medium text-primary">
+                    {operator.permissions.length}機能
+                  </span>
                 )}
+                description="利用権限は実行できる操作を表します。"
+              >
+                <OperatorPermissionGroups permissions={operator.permissions} />
               </FormSection>
             </FormSectionStack>
           </FormCard>

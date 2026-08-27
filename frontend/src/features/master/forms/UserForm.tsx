@@ -77,6 +77,7 @@ interface UserFormProps {
   additionalSections?: ReactNode;
   submitLabel?: string;
   submitDisabled?: boolean;
+  hasExternalChanges?: boolean;
 }
 
 export function UserForm({
@@ -97,6 +98,7 @@ export function UserForm({
   additionalSections,
   submitLabel = '確認',
   submitDisabled = false,
+  hasExternalChanges = false,
 }: Readonly<UserFormProps>) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { joinableSites, getSiteById } = useDashboardStore();
@@ -165,11 +167,13 @@ export function UserForm({
       };
     };
 
-    return (
+    const hasFieldChanges = (
       JSON.stringify(normalize(values)) !==
       JSON.stringify(normalize(originalData))
     );
-  }, [values, originalData]);
+
+    return hasFieldChanges || hasExternalChanges;
+  }, [values, originalData, hasExternalChanges]);
 
   const formContent = (
     <Form {...form}>

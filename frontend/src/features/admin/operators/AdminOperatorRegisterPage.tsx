@@ -2,10 +2,7 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { ApiError } from '@/api/_shared/errors';
-import {
-  createAdminOperator,
-  type CreateAdminOperatorPayload,
-} from '@/api/admin/operators';
+import { createAdminOperator } from '@/api/admin/operators';
 import type { UserFormData } from '@/api/users';
 import {
   FormPageContent,
@@ -19,53 +16,11 @@ import { useSitesQuery } from '@/hooks/sites/useSitesQuery';
 import { toast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
 import { OperatorPermissionSection } from './OperatorPermissionSection';
-
-const EMPTY_OPERATOR_VALUES: UserFormData = {
-  username: '',
-  lastName: '',
-  firstName: '',
-  lastNameKana: '',
-  firstNameKana: '',
-  userPosition: '',
-  phoneNumber: '',
-  siteId: '',
-  email: '',
-  password: '',
-};
-
-/** Extracts a backend field message without discarding other ApiError metadata. */
-function getOperatorFieldError(error: unknown, fieldName: string): string | null {
-  if (!(error instanceof ApiError)) return null;
-  const errors = error.payload?.errors;
-  if (!errors || typeof errors !== 'object' || Array.isArray(errors)) return null;
-  const value = errors[fieldName];
-  return typeof value === 'string' ? value : null;
-}
-
-/** Maps the shared user form into POST /admin/companies/operator-user payload. */
-function mapOperatorCreatePayload(
-  values: UserFormData,
-  permissionCodes: string[],
-): CreateAdminOperatorPayload {
-  const numericSiteId = values.siteId ? Number(values.siteId) : Number.NaN;
-
-  return {
-    username: values.username.trim(),
-    firstName: values.firstName.trim(),
-    firstNameKana: values.firstNameKana.trim(),
-    lastName: values.lastName.trim(),
-    lastNameKana: values.lastNameKana.trim(),
-    email: values.email.trim(),
-    phoneNumber: String(values.phoneNumber ?? '').replace(/-/g, ''),
-    userPosition: values.userPosition?.trim() ?? '',
-    password: values.password ?? '',
-    role: 'operator',
-    permissionCodes,
-    ...(values.siteId
-      ? { siteId: Number.isFinite(numericSiteId) ? numericSiteId : values.siteId }
-      : {}),
-  };
-}
+import {
+  EMPTY_OPERATOR_VALUES,
+  getOperatorFieldError,
+  mapOperatorCreatePayload,
+} from './operatorFormModel';
 
 /** Renders the admin-specific operator registration flow using shared user fields. */
 export default function AdminOperatorRegisterPage() {

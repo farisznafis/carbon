@@ -207,11 +207,16 @@ export function FormCard({
 type FormSectionProps = Omit<React.HTMLAttributes<HTMLElement>, 'title'> & {
   number: number;
   title: React.ReactNode;
+  meta?: React.ReactNode;
+  description?: React.ReactNode;
 };
 
+/** Renders a numbered form section with optional contextual meta and description text. */
 export function FormSection({
   number,
   title,
+  meta,
+  description,
   children,
   className,
   ...props
@@ -222,7 +227,17 @@ export function FormSection({
         <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-xl font-bold text-primary">
           {number}
         </span>
-        <h3>{title}</h3>
+        <div className="min-w-0 flex-1 gap-0">
+          <div className="flex min-h-10 flex-wrap items-center gap-x-2 gap-y-1">
+            <h3>{title}</h3>
+            {meta}
+          </div>
+          {description ? (
+            <div className="text-sm leading-6 text-foreground">
+              {description}
+            </div>
+          ) : null}
+        </div>
       </div>
       <div className="space-y-6">{children}</div>
     </section>

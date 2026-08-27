@@ -4,7 +4,6 @@ export type AdminOperatorPermissionCode =
   | 'PROJECT_UPDATE'
   | 'PROJECT_STATUS_UPDATE'
   | 'PROJECT_APPLICATION_OUTPUT'
-  | 'PROJECT_VIEW'
   | 'PARTICIPATING_COMPANY_READ'
   | 'PARTICIPATING_COMPANY_APPLICATION_REVIEW'
   | 'PARTICIPATING_COMPANY_SUSPEND'
@@ -93,4 +92,16 @@ export type CreateAdminOperatorResponse = {
   statusCode?: string;
   message?: string;
   user?: AdminOperatorApiItem | null;
+};
+
+export type UpdateAdminOperatorPayload = Omit<
+  CreateAdminOperatorPayload,
+  'password' | 'role'
+>;
+
+export type UpdateAdminOperatorResponse = {
+  statusCode?: string;
+  message?: string;
+  user?: AdminOperatorApiItem | null;
+  profile?: AdminOperatorApiItem | null;
 };

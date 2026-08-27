@@ -11,6 +11,8 @@ import type {
   AdminOperatorProfileApiResponse,
   CreateAdminOperatorPayload,
   CreateAdminOperatorResponse,
+  UpdateAdminOperatorPayload,
+  UpdateAdminOperatorResponse,
 } from './types';
 
 /** Calls GET /admin/companies/operator-user to load operators for the logged-in admin company. */
@@ -57,10 +59,29 @@ export async function createAdminOperator(
   return response.user ? mapAdminOperator(response.user) : null;
 }
 
+/** Calls PATCH /admin/companies/operator-user/{userId} to update an operator profile and permissions. */
+export async function updateAdminOperator(
+  userId: string,
+  payload: UpdateAdminOperatorPayload,
+): Promise<AdminOperator | null> {
+  const response = await apiRequest<UpdateAdminOperatorResponse>(
+    `/admin/companies/operator-user/${encodeURIComponent(userId)}`,
+    {
+      method: 'PATCH',
+      body: payload,
+      fallbackErrorMessage: '運用者を更新できませんでした。',
+    },
+  );
+
+  const updatedOperator = response.user ?? response.profile;
+  return updatedOperator ? mapAdminOperator(updatedOperator) : null;
+}
+
 export type {
   AdminOperator,
   AdminOperatorApiItem,
   AdminOperatorListResponse,
   AdminOperatorPermissionCode,
   CreateAdminOperatorPayload,
+  UpdateAdminOperatorPayload,
 } from './types';

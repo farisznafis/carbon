@@ -15,7 +15,10 @@ import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -25,6 +28,7 @@ import { paths } from '@/routes/paths';
 import {
   getOperatorPermissionCategory,
   getOperatorPermissionLabel,
+  groupOperatorPermissions,
 } from './operatorPermissions';
 
 const ALL_FILTER_VALUE = '__all__';
@@ -121,14 +125,11 @@ export default function AdminOperatorListPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showInformation, setShowInformation] = useState(true);
 
-  const permissionOptions = useMemo(
+  const permissionGroups = useMemo(
     () =>
-      Array.from(
-        new Set(operators.flatMap((operator) => operator.permissions)),
-      ).sort((a, b) =>
-        getOperatorPermissionLabel(a).localeCompare(
-          getOperatorPermissionLabel(b),
-          'ja',
+      groupOperatorPermissions(
+        Array.from(
+          new Set(operators.flatMap((operator) => operator.permissions)),
         ),
       ),
     [operators],
@@ -313,11 +314,20 @@ export default function AdminOperatorListPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value={ALL_FILTER_VALUE}>すべての権限</SelectItem>
-                        {permissionOptions.map((permission) => (
-                          <SelectItem key={permission} value={permission}>
-                            {getOperatorPermissionLabel(permission)}
-                          </SelectItem>
+                        <SelectSeparator />
+                        {permissionGroups.map((group) => (
+                          <SelectGroup key={group.category}>
+                            <SelectLabel className="px-2 text-xs text-muted-foreground">
+                              {group.category}
+                            </SelectLabel>
+                            {group.permissions.map((permission) => (
+                              <SelectItem key={permission} value={permission}>
+                                {getOperatorPermissionLabel(permission)}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
                         ))}
+                        <SelectSeparator />
                         <SelectItem value={NO_PERMISSION_FILTER_VALUE}>
                           権限なし
                         </SelectItem>

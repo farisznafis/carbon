@@ -103,7 +103,7 @@ describe('AdminOperatorListPage', () => {
       name: '権限で絞り込む',
     });
     fireEvent.keyDown(permissionFilter, { key: 'Enter' });
-    fireEvent.click(screen.getByRole('option', { name: 'プロジェクト閲覧' }));
+    fireEvent.click(screen.getByRole('option', { name: 'プロジェクト参照' }));
 
     expect(screen.getByText('伊藤 健一')).toBeInTheDocument();
     expect(screen.queryByText('佐藤 花')).not.toBeInTheDocument();

@@ -3,6 +3,7 @@ import {
   createAdminOperator,
   getAdminOperatorProfile,
   getAdminOperators,
+  updateAdminOperator,
 } from './index';
 
 /** Creates a JSON response used by the operator API tests. */
@@ -33,7 +34,7 @@ describe('admin operator API', () => {
               userPosition: '担当者',
               siteId: 5,
               siteName: '東京拠点',
-              permissions: ['PROJECT_READ', 'UNKNOWN_PERMISSION'],
+              permissions: ['PROJECT_READ', 'PROJECT_VIEW', 'UNKNOWN_PERMISSION'],
             },
           ],
         }),
@@ -98,6 +99,34 @@ describe('admin operator API', () => {
       '/api/admin/companies/operator-user',
       expect.objectContaining({
         method: 'POST',
+        body: expect.stringContaining('"permissionCodes":["PROJECT_READ"]'),
+      }),
+    );
+  });
+
+  it('patches the encoded operator ID with updated profile and permissions', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ statusCode: 'OK', profile: { id: 3 } }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await updateAdminOperator('3/4', {
+      username: 'ito.kenichi',
+      firstName: '健一',
+      firstNameKana: 'ケンイチ',
+      lastName: '伊藤',
+      lastNameKana: 'イトウ',
+      email: 'ito@example.com',
+      phoneNumber: '0354321235',
+      userPosition: '担当者',
+      permissionCodes: ['PROJECT_READ'],
+      siteId: 5,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/admin/companies/operator-user/3%2F4',
+      expect.objectContaining({
+        method: 'PATCH',
         body: expect.stringContaining('"permissionCodes":["PROJECT_READ"]'),
       }),
     );
