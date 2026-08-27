@@ -40,10 +40,6 @@ import {
 const ALL_FILTER_VALUE = '__all__';
 const NO_PERMISSION_FILTER_VALUE = '__none__';
 const EMPTY_OPERATORS: AdminOperator[] = [];
-const OPERATOR_ROLE_LABELS: Readonly<Record<string, string>> = {
-  admin: '管理者',
-  operator: '運用者',
-};
 
 /** Produces the Japanese display name in surname-first order. */
 function getOperatorDisplayName(operator: AdminOperator): string {
@@ -52,11 +48,6 @@ function getOperatorDisplayName(operator: AdminOperator): string {
     operator.name ||
     '-'
   );
-}
-
-/** Converts an API role into its Japanese table and filter label. */
-function getOperatorRoleLabel(role: string): string {
-  return OPERATOR_ROLE_LABELS[role] ?? (role || '-');
 }
 
 /** Returns the longest visible label so a filter can hug its widest option. */
@@ -92,19 +83,21 @@ function HugFilterSelect({
 function OperatorPermissionSummary({
   permissions,
   configureHref,
-}: Readonly<{ permissions: string[]; configureHref: string }>) {
+}: Readonly<{ permissions: string[]; configureHref?: string }>) {
   if (permissions.length === 0) {
     return (
       <div className="space-y-1">
         <p className="text-muted-foreground">権限なし</p>
-        <Button
-          asChild
-          variant="link"
-          size="sm"
-          className="h-auto justify-start px-0 py-0"
-        >
-          <Link to={configureHref}>権限を設定 →</Link>
-        </Button>
+        {configureHref ? (
+          <Button
+            asChild
+            variant="link"
+            size="sm"
+            className="h-auto justify-start px-0 py-0"
+          >
+            <Link to={configureHref}>権限を設定 →</Link>
+          </Button>
+        ) : null}
       </div>
     );
   }
@@ -178,7 +171,6 @@ export default function AdminOperatorListPage() {
   const navigate = useNavigate();
   const operatorsQuery = useAdminOperatorsQuery();
   const operators = operatorsQuery.data?.users ?? EMPTY_OPERATORS;
-  const [roleFilter, setRoleFilter] = useState(ALL_FILTER_VALUE);
   const [permissionFilter, setPermissionFilter] = useState(ALL_FILTER_VALUE);
   const [searchTerm, setSearchTerm] = useState('');
   const [showInformation, setShowInformation] = useState(true);
@@ -191,21 +183,6 @@ export default function AdminOperatorListPage() {
         ),
       ),
     [operators],
-  );
-  const roleOptions = useMemo(
-    () =>
-      Array.from(new Set(operators.map((operator) => operator.role))).filter(
-        Boolean,
-      ),
-    [operators],
-  );
-  const longestRoleFilterLabel = useMemo(
-    () =>
-      getLongestFilterLabel([
-        'すべてのロール',
-        ...roleOptions.map(getOperatorRoleLabel),
-      ]),
-    [roleOptions],
   );
   const longestPermissionFilterLabel = useMemo(
     () =>
@@ -223,12 +200,6 @@ export default function AdminOperatorListPage() {
     const normalizedSearch = searchTerm.trim().toLocaleLowerCase('ja');
 
     return operators.filter((operator) => {
-      if (
-        roleFilter !== ALL_FILTER_VALUE &&
-        operator.role !== roleFilter
-      ) {
-        return false;
-      }
       if (
         permissionFilter === NO_PERMISSION_FILTER_VALUE &&
         operator.permissions.length > 0
@@ -254,14 +225,14 @@ export default function AdminOperatorListPage() {
 
       return searchableText.includes(normalizedSearch);
     });
-  }, [operators, permissionFilter, roleFilter, searchTerm]);
+  }, [operators, permissionFilter, searchTerm]);
 
   const pagination = usePagination(filteredOperators, { itemsPerPage: 10 });
   const { setCurrentPage } = pagination;
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [permissionFilter, roleFilter, searchTerm, setCurrentPage]);
+  }, [permissionFilter, searchTerm, setCurrentPage]);
 
   /** Navigates every add-operator CTA to the same registration route. */
   const handleAddOperator = useCallback(
@@ -306,19 +277,16 @@ export default function AdminOperatorListPage() {
         ),
       },
       {
-        id: 'role',
-        label: 'ロール',
-        sortable: true,
-        sortValue: (operator) => getOperatorRoleLabel(operator.role),
-        render: (operator) => getOperatorRoleLabel(operator.role),
-      },
-      {
         id: 'permissions',
         label: '権限',
         render: (operator) => (
           <OperatorPermissionSummary
             permissions={operator.permissions}
-            configureHref={paths.adminOperatorPermissionEdit(operator.id)}
+            configureHref={
+              operator.role === 'admin'
+                ? undefined
+                : paths.adminOperatorPermissionEdit(operator.id)
+            }
           />
         ),
       },
@@ -343,7 +311,7 @@ export default function AdminOperatorListPage() {
   return (
     <main className="min-h-[calc(100dvh-5rem)] bg-background py-8">
       <div className={`${adminPageContainerClassName} space-y-4`}>
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold leading-tight text-foreground">
               運用者管理
@@ -402,27 +370,6 @@ export default function AdminOperatorListPage() {
               <>
                 <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
-                    <HugFilterSelect longestLabel={longestRoleFilterLabel}>
-                      <Select value={roleFilter} onValueChange={setRoleFilter}>
-                        <SelectTrigger
-                          className="h-10 bg-card"
-                          aria-label="ロールで絞り込む"
-                        >
-                          <SelectValue placeholder="ロール" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={ALL_FILTER_VALUE}>
-                            すべてのロール
-                          </SelectItem>
-                          {roleOptions.map((role) => (
-                            <SelectItem key={role} value={role}>
-                              {getOperatorRoleLabel(role)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </HugFilterSelect>
-
                     <HugFilterSelect longestLabel={longestPermissionFilterLabel}>
                       <Select
                         value={permissionFilter}
@@ -479,8 +426,8 @@ export default function AdminOperatorListPage() {
                     <DataGridTable
                       rows={pagination.paginatedItems}
                       columns={columns}
-                      gridTemplateColumns="1.1fr 1fr 1.5fr 0.8fr 1.2fr 104px"
-                      minWidth={1020}
+                      gridTemplateColumns="1.1fr 1fr 1.6fr 1.2fr 104px"
+                      minWidth={880}
                       getRowKey={(operator) => operator.id}
                       emptyMessage="条件に一致する運用者はいません。"
                     />

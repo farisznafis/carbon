@@ -19,9 +19,17 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
-import { useAdminOperatorProfileQuery } from '@/hooks/admin/useAdminOperatorsQuery';
+import {
+  useAdminOperatorsQuery,
+  useAdminOperatorProfileQuery,
+} from '@/hooks/admin/useAdminOperatorsQuery';
 import { paths } from '@/routes/paths';
 import { OperatorPermissionGroups } from './OperatorPermissionGroups';
+import {
+  getOperatorRoleLabel,
+  isAdminOperatorRole,
+  resolveOperatorRole,
+} from './operatorRoles';
 
 /** Formats a Japanese operator name in family-name-first order. */
 function formatOperatorName(operator: AdminOperator): string {
@@ -58,7 +66,12 @@ export default function AdminOperatorProfilePage() {
   const { userId } = useParams();
   const navigate = useNavigate();
   const profileQuery = useAdminOperatorProfileQuery(userId);
+  const operatorsQuery = useAdminOperatorsQuery();
   const operator = profileQuery.data;
+  const effectiveRole = resolveOperatorRole(
+    operator,
+    operatorsQuery.data?.users ?? [],
+  );
 
   /** Opens the edit page for the operator currently displayed. */
   const handleEdit = () => {
@@ -145,6 +158,10 @@ export default function AdminOperatorProfilePage() {
                     label="メールアドレス"
                     value={operator.email || '-'}
                   />
+                  <OperatorProfileField
+                    label="ロール"
+                    value={getOperatorRoleLabel(effectiveRole)}
+                  />
                 </dl>
               </FormSection>
 
@@ -160,7 +177,11 @@ export default function AdminOperatorProfilePage() {
               >
                 <OperatorPermissionGroups
                   permissions={operator.permissions}
-                  configureHref={paths.adminOperatorPermissionEdit(operator.id)}
+                  configureHref={
+                    isAdminOperatorRole(effectiveRole)
+                      ? undefined
+                      : paths.adminOperatorPermissionEdit(operator.id)
+                  }
                 />
               </FormSection>
             </FormSectionStack>

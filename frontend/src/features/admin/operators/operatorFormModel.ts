@@ -34,7 +34,7 @@ export function getOperatorFieldError(
 /** Maps shared user-form fields into the common operator request fields. */
 function mapOperatorRequestFields(
   values: UserFormData,
-  permissionCodes: string[],
+  permissionCodes?: string[],
 ): UpdateAdminOperatorPayload {
   return {
     username: values.username.trim(),
@@ -44,7 +44,7 @@ function mapOperatorRequestFields(
     lastNameKana: values.lastNameKana.trim(),
     email: values.email.trim(),
     phoneNumber: String(values.phoneNumber ?? '').replace(/-/g, ''),
-    permissionCodes,
+    ...(permissionCodes ? { permissionCodes } : {}),
   };
 }
 
@@ -63,7 +63,7 @@ export function mapOperatorCreatePayload(
 /** Maps the shared user form into PATCH /admin/companies/operator-user/{userId} payload. */
 export function mapOperatorUpdatePayload(
   values: UserFormData,
-  permissionCodes: string[],
+  permissionCodes?: string[],
 ): UpdateAdminOperatorPayload {
   return mapOperatorRequestFields(values, permissionCodes);
 }

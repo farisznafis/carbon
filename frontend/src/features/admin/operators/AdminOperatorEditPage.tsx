@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { UserForm } from '@/features/master/forms/UserForm';
 import {
   adminOperatorsQueryKey,
+  useAdminOperatorsQuery,
   useAdminOperatorProfileQuery,
 } from '@/hooks/admin/useAdminOperatorsQuery';
 import { toast } from '@/hooks/use-toast';
@@ -41,6 +42,10 @@ import {
   mapOperatorToFormValues,
   mapOperatorUpdatePayload,
 } from './operatorFormModel';
+import {
+  isAdminOperatorRole,
+  resolveOperatorRole,
+} from './operatorRoles';
 
 /** Compares permission selections independent of API ordering. */
 function havePermissionChanges(
@@ -63,7 +68,13 @@ export default function AdminOperatorEditPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const profileQuery = useAdminOperatorProfileQuery(userId);
+  const operatorsQuery = useAdminOperatorsQuery();
   const operator = profileQuery.data;
+  const effectiveRole = resolveOperatorRole(
+    operator,
+    operatorsQuery.data?.users ?? [],
+  );
+  const canEditPermissions = Boolean(operator) && !isAdminOperatorRole(effectiveRole);
   const [permissionDraft, setPermissionDraft] = useState<string[] | null>(null);
   const [permissionError, setPermissionError] = useState<string | null>(null);
 
@@ -75,7 +86,11 @@ export default function AdminOperatorEditPage() {
 
   // Moves keyboard and visual focus to 権限 when opened from the profile empty state.
   useEffect(() => {
-    if (!operator || location.hash !== `#${OPERATOR_PERMISSION_SECTION_ID}`) {
+    if (
+      !operator ||
+      !canEditPermissions ||
+      location.hash !== `#${OPERATOR_PERMISSION_SECTION_ID}`
+    ) {
       return;
     }
 
@@ -84,14 +99,16 @@ export default function AdminOperatorEditPage() {
     );
     permissionSection?.focus({ preventScroll: true });
     permissionSection?.scrollIntoView({ block: 'start' });
-  }, [location.hash, operator]);
+  }, [canEditPermissions, location.hash, operator]);
 
   const formValues = useMemo(
     () => (operator ? mapOperatorToFormValues(operator) : null),
     [operator],
   );
-  const selectedPermissions = permissionDraft ?? operator?.permissions ?? [];
-  const hasPermissionChanges = operator
+  const selectedPermissions = canEditPermissions
+    ? permissionDraft ?? operator?.permissions ?? []
+    : [];
+  const hasPermissionChanges = operator && canEditPermissions
     ? havePermissionChanges(selectedPermissions, operator.permissions)
     : false;
 
@@ -102,6 +119,7 @@ export default function AdminOperatorEditPage() {
 
   /** Stores permission edits and clears any backend permission error. */
   const handlePermissionsChange = (permissions: string[]) => {
+    if (!canEditPermissions) return;
     setPermissionDraft(permissions);
     setPermissionError(null);
   };
@@ -115,15 +133,19 @@ export default function AdminOperatorEditPage() {
     try {
       await updateAdminOperator(
         userId,
-        mapOperatorUpdatePayload(values, selectedPermissions),
+        mapOperatorUpdatePayload(
+          values,
+          canEditPermissions ? selectedPermissions : undefined,
+        ),
       );
       await queryClient.invalidateQueries({ queryKey: adminOperatorsQueryKey });
       toast({ description: '運用者情報を更新しました。' });
       navigate(paths.adminOperatorProfile(userId), { replace: true });
     } catch (error) {
-      const backendPermissionError =
-        getOperatorFieldError(error, 'permissionCodes') ??
-        getOperatorFieldError(error, 'permissions');
+      const backendPermissionError = canEditPermissions
+        ? getOperatorFieldError(error, 'permissionCodes') ??
+          getOperatorFieldError(error, 'permissions')
+        : null;
       if (backendPermissionError) {
         setPermissionError(backendPermissionError);
       } else if (!(error instanceof ApiError && error.payload?.errors)) {
@@ -175,7 +197,9 @@ export default function AdminOperatorEditPage() {
         <div>
           <FormPageTitle as="h1">運用者情報の編集</FormPageTitle>
           <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
-            運用者のプロフィールと権限情報を編集します。
+            {canEditPermissions
+              ? '運用者のプロフィールと権限情報を編集します。'
+              : '管理者のプロフィール情報を編集します。'}
           </p>
         </div>
 
@@ -208,7 +232,7 @@ export default function AdminOperatorEditPage() {
             hidePositionField
             hideUsernameField
             hasExternalChanges={hasPermissionChanges}
-            additionalSections={
+            additionalSections={canEditPermissions ? (
               <OperatorPermissionSection
                 selectedPermissions={selectedPermissions}
                 onChange={handlePermissionsChange}
@@ -216,7 +240,7 @@ export default function AdminOperatorEditPage() {
                 sectionNumber={3}
                 sectionId={OPERATOR_PERMISSION_SECTION_ID}
               />
-            }
+            ) : undefined}
             submitLabel="更新する"
             embedded
           />

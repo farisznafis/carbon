@@ -94,8 +94,10 @@ export type CreateAdminOperatorResponse = {
 
 export type UpdateAdminOperatorPayload = Omit<
   CreateAdminOperatorPayload,
-  'password' | 'role'
->;
+  'password' | 'role' | 'permissionCodes'
+> & {
+  permissionCodes?: string[];
+};
 
 export type UpdateAdminOperatorResponse = {
   statusCode?: string;

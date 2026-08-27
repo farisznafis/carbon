@@ -131,4 +131,27 @@ describe('admin operator API', () => {
     expect(fetchMock.mock.calls[0]?.[1]?.body).not.toContain('userPosition');
     expect(fetchMock.mock.calls[0]?.[1]?.body).not.toContain('siteId');
   });
+
+  it('omits permissionCodes when updating an administrator profile', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ statusCode: 'OK', profile: { id: 3 } }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await updateAdminOperator('3', {
+      username: 'admin.primary',
+      firstName: '太郎',
+      firstNameKana: 'タロウ',
+      lastName: '管理',
+      lastNameKana: 'カンリ',
+      email: 'admin@example.com',
+      phoneNumber: '0354321235',
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/admin/companies/operator-user/3',
+      expect.objectContaining({ method: 'PATCH' }),
+    );
+    expect(fetchMock.mock.calls[0]?.[1]?.body).not.toContain('permissionCodes');
+  });
 });

@@ -24,6 +24,9 @@ const operator: AdminOperator = {
 };
 
 vi.mock('@/hooks/admin/useAdminOperatorsQuery', () => ({
+  useAdminOperatorsQuery: () => ({
+    data: { statusCode: 'OK', message: '', users: [operator] },
+  }),
   useAdminOperatorProfileQuery: () => ({
     data: operator,
     isLoading: false,
@@ -67,6 +70,7 @@ describe('AdminOperatorProfilePage', () => {
     expect(screen.queryByText('役職')).not.toBeInTheDocument();
     expect(screen.queryByText('担当拠点')).not.toBeInTheDocument();
     expect(screen.getByText('権限なし')).toBeInTheDocument();
+    expect(screen.getByText('運用者')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '権限を設定 →' })).toHaveAttribute(
       'href',
       '/admin/operators/2/edit#permissions',
@@ -90,6 +94,20 @@ describe('AdminOperatorProfilePage', () => {
     expect(screen.getByText('プロジェクト参照')).toBeInTheDocument();
     expect(screen.getByText('モニタリングデータ参照')).toBeInTheDocument();
     expect(screen.getByText('2件')).toBeInTheDocument();
+  });
+
+  it('keeps an admin permission state read-only', () => {
+    operator.role = 'admin';
+    operator.permissions = [];
+    renderProfilePage();
+
+    expect(screen.getByText('権限なし')).toBeInTheDocument();
+    expect(screen.getByText('管理者')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: '権限を設定 →' }),
+    ).not.toBeInTheDocument();
+
+    operator.role = 'operator';
   });
 
   it('opens the edit route from the profile header', async () => {

@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 type AccountMenuProps = {
   displayName: string;
   email: string;
-  onProfile: () => void;
+  onProfile: () => void | Promise<void>;
   onLogout: () => Promise<void>;
 };
 
@@ -84,7 +84,10 @@ export function AccountMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="lg:hidden" />
-        <DropdownMenuItem onSelect={onProfile} className="gap-2 py-2">
+        <DropdownMenuItem
+          onSelect={() => void onProfile()}
+          className="gap-2 py-2"
+        >
           <User className="h-4 w-4" aria-hidden="true" />
           <span>プロファイル</span>
         </DropdownMenuItem>

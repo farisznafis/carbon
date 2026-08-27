@@ -7,11 +7,12 @@ import {
 export const adminOperatorsQueryKey = ['admin', 'operators'] as const;
 
 /** Loads GET /admin/companies/operator-user with a reusable React Query cache. */
-export function useAdminOperatorsQuery() {
+export function useAdminOperatorsQuery(enabled = true) {
   return useQuery({
     queryKey: adminOperatorsQueryKey,
     queryFn: getAdminOperators,
     staleTime: 60_000,
+    enabled,
   });
 }
 

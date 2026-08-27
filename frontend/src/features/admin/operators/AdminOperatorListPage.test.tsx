@@ -70,10 +70,24 @@ function renderPage() {
 
 describe('AdminOperatorListPage', () => {
   beforeEach(() => {
+    operators[0].permissions = ['PROJECT_READ', 'PROJECT_UPDATE'];
     queryState.data = { statusCode: 'OK', message: '', users: operators };
     queryState.isLoading = false;
     queryState.isError = false;
     queryState.refetch.mockReset();
+  });
+
+  it('does not offer permission editing for an admin with no explicit permissions', () => {
+    operators[0].permissions = [];
+    renderPage();
+
+    expect(screen.getAllByText('権限なし')).toHaveLength(2);
+    expect(
+      screen.getAllByRole('link', { name: '権限を設定 →' }),
+    ).toHaveLength(1);
+    expect(
+      screen.getByRole('link', { name: '権限を設定 →' }),
+    ).toHaveAttribute('href', '/admin/operators/2/edit#permissions');
   });
 
   it('shows actual count, permission summary, and filters by search text', async () => {
@@ -88,9 +102,7 @@ describe('AdminOperatorListPage', () => {
       'href',
       '/admin/operators/2/edit#permissions',
     );
-    expect(screen.getByText('管理者')).toBeInTheDocument();
-    expect(screen.getByText('運用者')).toBeInTheDocument();
-    expect(screen.getByText('ロール')).toBeInTheDocument();
+    expect(screen.queryByText('ロール')).not.toBeInTheDocument();
     expect(screen.queryByText('役職')).not.toBeInTheDocument();
     expect(screen.queryByText('担当拠点')).not.toBeInTheDocument();
 
@@ -111,19 +123,6 @@ describe('AdminOperatorListPage', () => {
     });
     fireEvent.keyDown(permissionFilter, { key: 'Enter' });
     fireEvent.click(screen.getByRole('option', { name: 'プロジェクト参照' }));
-
-    expect(screen.getByText('伊藤 健一')).toBeInTheDocument();
-    expect(screen.queryByText('佐藤 花')).not.toBeInTheDocument();
-  });
-
-  it('filters operators by the role returned by the API', () => {
-    renderPage();
-
-    const roleFilter = screen.getByRole('combobox', {
-      name: 'ロールで絞り込む',
-    });
-    fireEvent.keyDown(roleFilter, { key: 'Enter' });
-    fireEvent.click(screen.getByRole('option', { name: '管理者' }));
 
     expect(screen.getByText('伊藤 健一')).toBeInTheDocument();
     expect(screen.queryByText('佐藤 花')).not.toBeInTheDocument();

@@ -30,13 +30,32 @@ function AuthenticatedNavbarContent({
   onLogout,
 }: Readonly<AuthenticatedNavbarContentProps>) {
   const navigate = useNavigate();
-  const { displayName, email } = useAccountIdentity(user);
+  const { displayName, email, resolveProfilePath } = useAccountIdentity(user);
+
+  /** Opens the matched admin operator profile without guessing an account. */
+  const handleProfile = async () => {
+    try {
+      const profilePath = await resolveProfilePath();
+      if (profilePath) {
+        navigate(profilePath);
+        return;
+      }
+    } catch {
+      // The shared message below also covers API failures while resolving the account.
+    }
+
+    toast({
+      title: 'エラー',
+      description: 'プロファイルを表示できませんでした。',
+      variant: 'destructive',
+    });
+  };
 
   return (
     <AccountMenu
       displayName={displayName}
       email={email}
-      onProfile={() => navigate(paths.profile)}
+      onProfile={handleProfile}
       onLogout={onLogout}
     />
   );
