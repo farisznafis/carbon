@@ -1,4 +1,4 @@
-url: POST /sites/{siteId}/equipment
+url: POST /site/{siteId}/{projectId}/equipment
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Content-Type: application/json
 
