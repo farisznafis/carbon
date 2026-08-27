@@ -140,7 +140,7 @@ public class SiteProjectController {
     // SUBMIT — join project
     // ─────────────────────────────────────────────────────────────
 
-    @PostMapping("/projects/{projectId}/join")
+    @PostMapping("/projects/{projectId}/join-company") 
     @PreAuthorize("hasRole('master')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ProjectJoinResponse> joinProject(
@@ -153,6 +153,26 @@ public class SiteProjectController {
 
         ProjectJoinResponse response = participationService
                 .submitParticipation(projectId, companyId, userId, request);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // JOIN SITE- connect site to already joined project
+    // ─────────────────────────────────────────────────────────────
+
+    @PostMapping("/projects/{projectId}/{siteId}/join-site") 
+    @PreAuthorize("hasRole('master')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ProjectJoinResponse> joinProjectSite(
+            Authentication authentication,
+            @PathVariable String projectId,
+            @PathVariable String siteId) {
+
+        String  companyId = extractCompanyId(authentication);
+        Integer userId    = extractUserId(authentication);
+
+        ProjectJoinResponse response = participationService
+                .joinSite(projectId, companyId, userId, siteId);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 

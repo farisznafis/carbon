@@ -408,25 +408,27 @@ public Notification createNotification(
     }
 
     @Override
-    public void sendParticipationRejectionNotification(ParticipatingUser user, String rejectionReason) {
+    public void sendParticipationRejectionNotification(ParticipatingCompany company, String rejectionReason) {
         String subject = "入会届審査結果のお知らせ";
         String body = "この度はお申し込みいただきありがとうございます。\n"
             + "誠に申し訳ございませんが、入会届の審査の結果、却下となりました。\n\n"
             + "却下理由:\n" + rejectionReason + "\n\n"
             + "内容をご確認の上、再度お申し込みいただけます。";
-        sendMail(user.getEmail(), subject, body);
-        log.info("[NOTIFICATION] Participation Rejected - userId: {}, email: {}",
-            user.getId(), user.getEmail());
+        sendMail(company.getEmail(), subject, body);
+        log.info("[NOTIFICATION] Participation Rejected - companyId: {}, email: {}",
+            company.getCompanyId(), company.getEmail());
+            //TODO: ここで通知を作成する場合は、参加企業の全ユーザーに通知を送るようにする
     }
 
     @Override
-    public void sendParticipationApprovedNotification(ParticipatingUser user) {
+    public void sendParticipationApprovedNotification(ParticipatingCompany company) {
         String subject = "入会届審査完了のお知らせ";
         String body = "入会届の審査が完了し、承認されました。\n"
             + "書類の準備が整いましたら、マイページよりダウンロードいただけます。";
-        sendMail(user.getEmail(), subject, body);
-        log.info("[NOTIFICATION] Participation Approved - userId: {}, email: {}",
-            user.getId(), user.getEmail());
+        sendMail(company.getEmail(), subject, body);
+        log.info("[NOTIFICATION] Participation Approved - companyId: {}, email: {}",
+            company.getCompanyId(), company.getEmail());
+            //TODO: ここで通知を作成する場合は、参加企業の全ユーザーに通知を送るようにする
     }
 
     @Override

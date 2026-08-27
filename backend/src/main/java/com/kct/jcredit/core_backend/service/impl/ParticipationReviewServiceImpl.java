@@ -314,8 +314,13 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
         reviewHistoryRepository.save(history);
 
         notificationService.sendParticipationRejectionNotification(
+<<<<<<< HEAD
+                participation.getCompany(), request.getRejectReason());
+    }
+=======
                 participation.getUser(), request.getRejectReason());
         }
+>>>>>>> e3f90012bd1ba1b87ebe997b05fc70b7db4915c9
 
         @Override
         public List<ParticipationReviewHistoryResponse> getReviewHistory(Integer participationId) {

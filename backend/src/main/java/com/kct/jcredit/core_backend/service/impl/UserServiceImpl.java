@@ -137,50 +137,6 @@ public class UserServiceImpl implements UserService {
         return response;
     }
 
-    //TODO: remove this since it happens via the updateUser method
-    @Override
-    @Transactional
-    public DeleteUserSiteResponse removeUserSiteConnection(DeleteUserSite request) {
-        DeleteUserSiteResponse response = new DeleteUserSiteResponse();
-
-        ParticipatingUser user = userRepository.findById(Integer.parseInt(request.getUserId())).orElse(null);
-        if (user == null) {
-            response.setStatusCode(ResponseConstants.NOT_FOUND);
-            response.setMessage(ResponseConstants.MSG_USER_NOT_FOUND);
-            return response;
-        }
-
-        Site site = siteRepository.findById(Integer.parseInt(request.getSiteId())).orElse(null);
-        if (site == null) {
-            response.setStatusCode(ResponseConstants.NOT_FOUND);
-            response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
-            return response;
-        }
-
-        user.setSite(null);
-        userRepository.save(user);
-
-        ParticipatingUser siteMaster = userRepository
-            .findByCompany_IdAndRole(site.getCompany().getId(), RoleConstants.MASTER).orElse(null);
-        if (siteMaster == null) {
-            response.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR);
-            response.setMessage(ResponseConstants.MSG_UNEXPEXTED_ERROR);
-            log.error("UserServiceImpl.removeUserSiteConnection : Master User Not Found!");
-            return response;
-        }
-
-        site.setPicEmail(siteMaster.getEmail());
-        site.setPicFirstName(siteMaster.getFirstName());
-        site.setPicFirstNameKana(siteMaster.getFirstNameKana());
-        site.setPicLastName(siteMaster.getLastName());
-        site.setPicLastNameKana(siteMaster.getLastNameKana());
-        site.setPicPhoneNumber(siteMaster.getPhoneNumber());
-        site.setPicPosition(siteMaster.getUserPosition());
-        siteRepository.save(site);
-
-        response.setStatusCode(ResponseConstants.OK);
-        return response;
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -402,6 +358,7 @@ public class UserServiceImpl implements UserService {
                                          UpdateUserRequest request) {
 
         UpdateUserResponse response = new UpdateUserResponse();
+        System.out.println("UpdateUserRequest: " + request);
 
         try {
             // ── Resolve requesting user ───────────────────────────────────────
@@ -485,7 +442,7 @@ public class UserServiceImpl implements UserService {
 
         return response;
     }
-            
+    
  // ─────────────────────────────────────────────────────────────────────────
     // TARGET USER RESOLUTION
     // ─────────────────────────────────────────────────────────────────────────
@@ -618,6 +575,7 @@ public class UserServiceImpl implements UserService {
                                       UpdateUserResponse response,boolean isPIC) {
         updateUserInfo(targetUser, request);
         
+        System.out.println("isPIC: " + isPIC);
         if(isPIC){
         updateSitePIC(currentSite, targetUser);
         Site savedSite = siteRepository.save(currentSite);
@@ -662,6 +620,20 @@ public class UserServiceImpl implements UserService {
         requestingUser.setUpdatedAt(LocalDateTime.now());
         ParticipatingUser saved = userRepository.save(requestingUser);
 
+        //update company 法人 info
+        ParticipatingCompany company = requestingUser.getCompany();
+        company.setRepFirstName(request.getFirstName());
+        company.setRepFirstNameKana(request.getFirstNameKana());
+        company.setRepLastName(request.getLastName());
+        company.setRepLastNameKana(request.getLastNameKana());
+        company.setEmail(request.getEmail());
+        company.setRepPosition(request.getUserPosition());
+        company.setRepPhoneNumber(request.getPhoneNumber());
+        company.setUpdatedBy(requestingUser.getUsername());
+        company.setUpdatedAt(LocalDateTime.now());
+
+        participatingCompanyRepository.save(company);
+
         response.setStatusCode(ResponseConstants.OK);
         response.setMessage("マスターユーザー情報と関連サイトPIC情報が正常に更新されました。");
         response.setUser(mapToUserInfoResponse(saved));
@@ -670,7 +642,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Case 15 and 13 — Master moving a user to a different site. 
-     * if the user was PIC, site PIC must become Master User, new site PIC must be assigned.
+     * if the user was PIC, site PIC must become Master User, new 
      * 
      */
     private void handleMasterEditWithSiteChange(UpdateUserRequest request,

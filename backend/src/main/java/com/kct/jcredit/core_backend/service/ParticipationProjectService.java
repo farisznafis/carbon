@@ -54,9 +54,15 @@ public interface ParticipationProjectService {
     ProjectJoinResponse submitParticipation(String projectId,
                                              String companyId,
                                              Integer userId,
-                                             EnR002JoinProjectRequest request);
+                                             EnR002JoinProjectRequest request); 
 
-        List<MyParticipationResponse> getMyParticipations(String projectId, String companyId);
+   //Join Site
+       ProjectJoinResponse joinSite(String projectId,
+                                             String companyId,
+                                             Integer userId,
+                                             String siteId);
+
+        // List<MyParticipationResponse> getMyParticipations(String projectId, String companyId);
         
         public MemberTermsInfoResponse getMemberTermsInfo(String projectId);
 
