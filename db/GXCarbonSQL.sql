@@ -457,7 +457,7 @@ CREATE TABLE participating_user (
 );
 
 -- participating_project
--- Links a project + participating_user + equipment together. Was missing
+-- Links a project + participating_company + equipment together. Was missing
 -- from the live DB entirely until migration_2026-07-27_create-participating-project.sql.
 CREATE TABLE participating_project (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -466,8 +466,10 @@ CREATE TABLE participating_project (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(100),
     updated_by VARCHAR(100),
+    status VARCHAR(20) NOT NULL
+        CHECK (status IN ('APPROVED','OPEN','REJECTED')),
     project_id INT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
-    user_id INT NOT NULL REFERENCES participating_user(id) ON DELETE CASCADE,
+    company_id INT NOT NULL REFERENCES participating_company(id) ON DELETE CASCADE,
     is_eligible BOOLEAN NOT NULL,
     equipment_id INT NOT NULL REFERENCES en_r002_equipment(id) ON DELETE CASCADE,
     s3_key_pdf_membership TEXT,

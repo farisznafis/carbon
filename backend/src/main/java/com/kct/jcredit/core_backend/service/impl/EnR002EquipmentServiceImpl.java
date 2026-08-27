@@ -8,6 +8,8 @@ import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentFileResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentHistoryResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 import com.kct.jcredit.core_backend.entity.Site;
+import com.kct.jcredit.core_backend.entity.Project;
+import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.entity.EnR002EquipmentFile;
 import com.kct.jcredit.core_backend.entity.ParticipatingProject;
 import com.kct.jcredit.core_backend.entity.EnR002Equipment;
@@ -54,11 +56,13 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
     private final EnR002EquipmentFileRepository          equipmentFileRepository;
     private final EnR002FileUploadService                fileUploadService;
     private final ParticipationProjectValidationService  validationService; 
+    private final ProjectRepository                     projectRepository;
 
     @Override
     @Transactional
     public EnR002EquipmentResponse addEquipment(String siteId,
                                                  String companyId,
+                                                 String projectId,
                                                  EnR002EquipmentRequest request) {
 
         // 1. Guard check site
@@ -67,19 +71,24 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_SITE_NOT_FOUND));
         
+        Project project = projectRepository.findByPublicId(projectId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND,
+                        "プロジェクトが見つかりません。"));
+        
         Integer siteDbId = site.getId();
 
         if (!site.getCompany().getCompanyId().equals(companyId))
             throw new CustomException(ResponseConstants.FORBIDDEN,
                     ResponseConstants.MSG_UNAUTHORIZED);
 
-        // 2. Guard check 
-        boolean hasJoinedAnyProject = siteProjectRelationRepository
-                .existsBySite_Id(siteDbId);
-        if (!hasJoinedAnyProject)
+        // 2. Guard check site-project relation
+        Optional<SiteProjectRelation> relation = siteProjectRelationRepository.findBySite_IdAndProject_Id(siteDbId, project.getId());
+        if (relation.isEmpty()) {
             throw new CustomException(
                     "SITE_NOT_JOINED",
                     "このサイトはまだプロジェクトに参加していません。先に参加登録を行ってください。");
+        }
 
         // 3. field equipment
         validationService.validateEquipment(request);

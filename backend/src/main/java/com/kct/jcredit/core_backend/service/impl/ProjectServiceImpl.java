@@ -84,11 +84,11 @@ public class ProjectServiceImpl implements ProjectService {
             return response;
         }
 
-        response.setProjects(new ArrayList<>());
-        Map<Integer, String> joinedProjectIdStatusMap = site.getSiteProjectRelations().stream()
-            .collect(Collectors.toMap(
-                rel -> rel.getProject().getId(), SiteProjectRelation::getStatus
-            ));
+        // response.setProjects(new ArrayList<>());
+        // Map<Integer, String> joinedProjectIdStatusMap = site.getSiteProjectRelations().stream()
+        //     .collect(Collectors.toMap(
+        //         rel -> rel.getProject().getId(), SiteProjectRelation::getStatus
+        //     ));
 
         List<Project> projects = projectRepository.findAll();
 
@@ -107,8 +107,8 @@ public class ProjectServiceImpl implements ProjectService {
                     .methodologyNumber(project.getMethodNumber())
                     .methodologyName(project.getMethodName())
                     .methodologyMainEmission(project.getMethodMainEmission())
-                    .isJoined(joinedProjectIdStatusMap.containsKey(project.getId()))
-                    .projectStatus(joinedProjectIdStatusMap.get(project.getId()))
+                    // .isJoined(joinedProjectIdStatusMap.containsKey(project.getId())) //TODO: update with current logic
+                    //.projectStatus(joinedProjectIdStatusMap.get(project.getId()))
                     .build();
 
             response.getProjects().add(resp);
