@@ -40,6 +40,7 @@ import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserReposit
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingProjectRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -199,7 +200,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
         // 7. Save ParticipatingProject
         ParticipatingProject participation = saveParticipatingProject(
-            project, user, savedEquipment);
+            project, user.getCompany(), savedEquipment);
 
         final Integer participationId = participation.getId();
 
@@ -274,7 +275,6 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 .site(site)
                 .project(project)
                 .activityStartDate(LocalDate.now())
-                .status("OPEN")
                 .build();
         relation.setCreatedBy(companyId);
         relation.setUpdatedBy(companyId);
@@ -317,13 +317,14 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
     }
 
     private ParticipatingProject saveParticipatingProject(Project project,
-                                                                ParticipatingUser user,
+                                                                ParticipatingCompany company,
                                                                 EnR002Equipment equipment) {
         ParticipatingProject participation = ParticipatingProject.builder()
                 .project(project)
-                .user(user)
+                .company(company)
                 .equipment(equipment)
                 .isEligible(false)
+                .status("OPEN")
                 .build();
         return participatingProjectRepository.save(participation);
         }
@@ -369,6 +370,76 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 .build();
         sustainabilityRepository.save(commitment);
     }
+
+
+        @Override
+    @Transactional
+    public  ProjectJoinResponse joinSite(String projectId,
+                                        String companyId,
+                                        Integer userId,
+                                        String siteId) {
+                        // first check that its the site has joined the project through the participating_project
+                        //get the db id for project and company
+              
+                        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+                        .map(com.kct.jcredit.core_backend.entity.Project::getId)
+                        .orElse(0);
+                        Integer companyDbId = //get the db id for company
+                        companyRepository.findByCompanyId(companyId)
+                                .map(com.kct.jcredit.core_backend.entity.ParticipatingCompany::getId)
+                                .orElse(0);
+
+                        Optional<ParticipatingProject> participationOpt = participatingProjectRepository
+                                .findByCompanyIdAndProject_Id(companyDbId, projectDbId);
+                        
+                        //if null there is no link to this project, return error
+                        if (!participationOpt.isPresent()) {
+                                throw new CustomException(
+                                ResponseConstants.NOT_FOUND,
+                                ResponseConstants.MSG_NOT_FOUND);
+                        }
+                        //if exists check the status only allow new site to join if the status is eligible
+                        if (!participationOpt.get().getStatus().equals("APPROVED")) {
+                                if(participationOpt.get().getStatus().equals("REJECTED")){
+                                        throw new CustomException(
+                                        ResponseConstants.REJECTED,
+                                        "プロジェクト参加申請が却下されました。");
+                                
+                                } else if(participationOpt.get().getStatus().equals("OPEN")){
+                                         throw new CustomException(
+                                        ResponseConstants.OPEN,
+                                        "プロジェクト参加申請が承認されるまで、サイトの参加はできません。");
+                                } else {
+                                         throw new CustomException(
+                                        ResponseConstants.FORBIDDEN,
+                                        ResponseConstants.MSG_UNAUTHORIZED);
+                                }
+                                
+                        }
+                        Site site = siteRepository
+                                .findByPublicId(siteId)
+                                .orElseThrow(() -> new CustomException(
+                                        ResponseConstants.NOT_FOUND,
+                                        ResponseConstants.MSG_SITE_NOT_FOUND));
+                        Project project = projectRepository.findByPublicIdWithFallback(projectId)
+                                .orElseThrow(() -> new CustomException(
+                                        ResponseConstants.NOT_FOUND,
+                                        ResponseConstants.MSG_PROJECT_NOT_FOUND));
+                        
+                        SiteProjectRelation relation = saveSiteProjectRelation(site, project, companyId);
+
+                        ProjectJoinResponse response = new ProjectJoinResponse();
+
+                        response.setStatusCode(ResponseConstants.OK);
+                        response.setParticipationId(participationOpt.get().getId());
+                        response.setSiteProjectRelationId(relation.getId());
+                        response.setMessage("サイトの参加が完了しました。");
+
+                        return response;
+
+
+
+        }
 
 //     @Override
 //         public ProjectPdfDownloadResponse getPdfDownloadUrl(Integer participationId, String companyId) {

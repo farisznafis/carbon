@@ -188,7 +188,7 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         // させないようにする。メールサーバー未設定の開発環境でも
         // ここでは処理が止まらない。
         try {
-            notificationService.sendParticipationApprovedNotification(participation.getUser());
+            notificationService.sendParticipationApprovedNotification(participation.getCompany());
         } catch (Exception e) {
             log.error("Notification failed, but approval & PDF generation succeeded. " +
                     "participationId={}, error={}", participationId, e.getMessage());

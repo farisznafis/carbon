@@ -295,7 +295,7 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
         siteProjectRelationRepository.save(relation);
 
         notificationService.sendParticipationRejectionNotification(
-                participation.getUser(), request.getRejectReason());
+                participation.getCompany(), request.getRejectReason());
     }
 
     // ─────────────────────────────────────────────────────────────
