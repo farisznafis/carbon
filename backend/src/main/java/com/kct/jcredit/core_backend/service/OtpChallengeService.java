@@ -5,9 +5,8 @@ import com.kct.jcredit.core_backend.config.SecurityFlowProperties;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.enums.OtpPurpose;
 import com.kct.jcredit.core_backend.exception.CustomException;
+import com.kct.jcredit.core_backend.repository.dynamodb.SecurityTempStateRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -18,10 +17,10 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class OtpChallengeService {
-    private static final String KEY_PREFIX = "security:otp:";
-    private static final String SEND_PREFIX = "security:otp-send:";
+    private static final String KEY_PREFIX = "otp#";
+    private static final String SEND_PREFIX = "otp-send#";
 
-    private final StringRedisTemplate redisTemplate;
+    private final SecurityTempStateRepository store;
     private final ObjectMapper objectMapper;
     private final SecuritySecretService secretService;
     private final SecurityFlowProperties properties;
@@ -102,31 +101,16 @@ public class OtpChallengeService {
     }
 
     private void enforceSendLimit(OtpPurpose purpose, String normalizedEmail) {
-        String key = SEND_PREFIX + purpose + ":" + secretService.hmac(normalizedEmail);
-        try {
-            Long count = redisTemplate.opsForValue().increment(key);
-            if (count != null && count == 1L) {
-                redisTemplate.expire(key, properties.getOtpSendWindow());
-            }
-            if (count != null && count > properties.getOtpMaxSends()) {
-                throw tooManyRequests();
-            }
-        } catch (DataAccessException ex) {
-            throw unavailable(ex);
+        String key = SEND_PREFIX + purpose + "#" + secretService.hmac(normalizedEmail);
+        if (store.incrementAndGet(key, properties.getOtpSendWindow()) > properties.getOtpMaxSends()) {
+            throw tooManyRequests();
         }
     }
 
     private OtpData read(UUID challengeId) {
+        String json = store.get(key(challengeId)).orElseThrow(this::invalidOtp);
         try {
-            String json = redisTemplate.opsForValue().get(key(challengeId));
-            if (json == null) {
-                throw invalidOtp();
-            }
             return objectMapper.readValue(json, OtpData.class);
-        } catch (CustomException ex) {
-            throw ex;
-        } catch (DataAccessException ex) {
-            throw unavailable(ex);
         } catch (Exception ex) {
             throw new IllegalStateException("Invalid OTP challenge payload", ex);
         }
@@ -136,30 +120,21 @@ public class OtpChallengeService {
         if (ttl == null || ttl.isNegative() || ttl.isZero()) {
             throw invalidOtp();
         }
+        String json;
         try {
-            redisTemplate.opsForValue().set(key(challengeId), objectMapper.writeValueAsString(data), ttl);
-        } catch (DataAccessException ex) {
-            throw unavailable(ex);
+            json = objectMapper.writeValueAsString(data);
         } catch (Exception ex) {
             throw new IllegalStateException("Unable to serialize OTP challenge", ex);
         }
+        store.put(key(challengeId), json, ttl);
     }
 
     private Duration remainingTtl(UUID challengeId) {
-        try {
-            Long seconds = redisTemplate.getExpire(key(challengeId));
-            return seconds == null || seconds <= 0 ? Duration.ZERO : Duration.ofSeconds(seconds);
-        } catch (DataAccessException ex) {
-            throw unavailable(ex);
-        }
+        return store.remainingTtl(key(challengeId));
     }
 
     private void delete(UUID challengeId) {
-        try {
-            redisTemplate.delete(key(challengeId));
-        } catch (DataAccessException ex) {
-            throw unavailable(ex);
-        }
+        store.delete(key(challengeId));
     }
 
     private String otpHash(OtpPurpose purpose, UUID id, String code) {
@@ -192,11 +167,6 @@ public class OtpChallengeService {
 
     private CustomException tooManyRequests() {
         return new CustomException(ResponseConstants.TOO_MANY_REQUESTS, ResponseConstants.MSG_TOO_MANY_REQUESTS);
-    }
-
-    private CustomException unavailable(Exception cause) {
-        return new CustomException(ResponseConstants.SERVICE_UNAVAILABLE,
-                ResponseConstants.MSG_SERVICE_UNAVAILABLE, cause);
     }
 
     public record IssuedOtp(UUID challengeId, String code, long expiresInSeconds,
