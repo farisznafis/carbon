@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -83,6 +83,9 @@ describe('AdminOperatorListPage', () => {
     expect(screen.getByText('2件')).toBeInTheDocument();
     expect(screen.getByText('2機能')).toBeInTheDocument();
     expect(screen.getByText('プロジェクト管理 +1')).toBeInTheDocument();
+    expect(screen.getByText('権限なし')).toBeInTheDocument();
+    expect(screen.queryByText('役職')).not.toBeInTheDocument();
+    expect(screen.queryByText('担当拠点')).not.toBeInTheDocument();
 
     await user.type(
       screen.getByPlaceholderText('氏名・ユーザー名・メールアドレスで検索'),
@@ -91,6 +94,19 @@ describe('AdminOperatorListPage', () => {
 
     expect(screen.getByText('佐藤 花')).toBeInTheDocument();
     expect(screen.queryByText('伊藤 健一')).not.toBeInTheDocument();
+  });
+
+  it('filters operators by their actual permission', () => {
+    renderPage();
+
+    const permissionFilter = screen.getByRole('combobox', {
+      name: '権限で絞り込む',
+    });
+    fireEvent.keyDown(permissionFilter, { key: 'Enter' });
+    fireEvent.click(screen.getByRole('option', { name: 'プロジェクト閲覧' }));
+
+    expect(screen.getByText('伊藤 健一')).toBeInTheDocument();
+    expect(screen.queryByText('佐藤 花')).not.toBeInTheDocument();
   });
 
   it('uses the same add route for the empty-state CTA', async () => {

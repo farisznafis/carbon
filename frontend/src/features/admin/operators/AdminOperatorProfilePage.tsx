@@ -66,7 +66,6 @@ export default function AdminOperatorProfilePage() {
                   <ConfirmationItem label="名" value={operator.firstName || '-'} />
                   <ConfirmationItem label="姓（カナ）" value={operator.lastNameKana || '-'} />
                   <ConfirmationItem label="名（カナ）" value={operator.firstNameKana || '-'} />
-                  <ConfirmationItem label="役職" value={operator.userPosition || '-'} />
                   <ConfirmationItem label="電話番号" value={operator.phoneNumber || '-'} />
                 </FormGrid>
               </FormSection>
@@ -75,14 +74,13 @@ export default function AdminOperatorProfilePage() {
                 <FormGrid>
                   <ConfirmationItem label="ユーザネーム" value={operator.username || '-'} />
                   <ConfirmationItem label="メールアドレス" value={operator.email || '-'} />
-                  <ConfirmationItem label="担当拠点" value={operator.siteName || '-'} />
                   <ConfirmationItem label="ロール" value="運用者" />
                 </FormGrid>
               </FormSection>
 
               <FormSection number={3} title="権限">
                 {operator.permissions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">権限は付与されていません。</p>
+                  <p className="text-sm text-muted-foreground">権限なし</p>
                 ) : (
                   <ul className="grid gap-3 sm:grid-cols-2">
                     {operator.permissions.map((permission) => (

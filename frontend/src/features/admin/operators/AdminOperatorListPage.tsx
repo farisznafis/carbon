@@ -22,9 +22,13 @@ import {
 import { useAdminOperatorsQuery } from '@/hooks/admin/useAdminOperatorsQuery';
 import { usePagination } from '@/hooks/usePagination';
 import { paths } from '@/routes/paths';
-import { getOperatorPermissionCategory } from './operatorPermissions';
+import {
+  getOperatorPermissionCategory,
+  getOperatorPermissionLabel,
+} from './operatorPermissions';
 
 const ALL_FILTER_VALUE = '__all__';
+const NO_PERMISSION_FILTER_VALUE = '__none__';
 const EMPTY_OPERATORS: AdminOperator[] = [];
 
 /** Produces the Japanese display name in surname-first order. */
@@ -41,7 +45,7 @@ function OperatorPermissionSummary({
   permissions,
 }: Readonly<{ permissions: string[] }>) {
   if (permissions.length === 0) {
-    return <span className="text-muted-foreground">-</span>;
+    return <span className="text-muted-foreground">権限なし</span>;
   }
 
   const primaryCategory = getOperatorPermissionCategory(permissions[0]);
@@ -113,23 +117,20 @@ export default function AdminOperatorListPage() {
   const navigate = useNavigate();
   const operatorsQuery = useAdminOperatorsQuery();
   const operators = operatorsQuery.data?.users ?? EMPTY_OPERATORS;
-  const [positionFilter, setPositionFilter] = useState(ALL_FILTER_VALUE);
-  const [siteFilter, setSiteFilter] = useState(ALL_FILTER_VALUE);
+  const [permissionFilter, setPermissionFilter] = useState(ALL_FILTER_VALUE);
   const [searchTerm, setSearchTerm] = useState('');
   const [showInformation, setShowInformation] = useState(true);
 
-  const positionOptions = useMemo(
+  const permissionOptions = useMemo(
     () =>
       Array.from(
-        new Set(operators.map((operator) => operator.userPosition).filter(Boolean)),
-      ).sort((a, b) => a.localeCompare(b, 'ja')),
-    [operators],
-  );
-  const siteOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(operators.map((operator) => operator.siteName).filter(Boolean)),
-      ).sort((a, b) => a.localeCompare(b, 'ja')),
+        new Set(operators.flatMap((operator) => operator.permissions)),
+      ).sort((a, b) =>
+        getOperatorPermissionLabel(a).localeCompare(
+          getOperatorPermissionLabel(b),
+          'ja',
+        ),
+      ),
     [operators],
   );
 
@@ -138,12 +139,16 @@ export default function AdminOperatorListPage() {
 
     return operators.filter((operator) => {
       if (
-        positionFilter !== ALL_FILTER_VALUE &&
-        operator.userPosition !== positionFilter
+        permissionFilter === NO_PERMISSION_FILTER_VALUE &&
+        operator.permissions.length > 0
       ) {
         return false;
       }
-      if (siteFilter !== ALL_FILTER_VALUE && operator.siteName !== siteFilter) {
+      if (
+        permissionFilter !== ALL_FILTER_VALUE &&
+        permissionFilter !== NO_PERMISSION_FILTER_VALUE &&
+        !operator.permissions.includes(permissionFilter)
+      ) {
         return false;
       }
       if (!normalizedSearch) return true;
@@ -158,14 +163,14 @@ export default function AdminOperatorListPage() {
 
       return searchableText.includes(normalizedSearch);
     });
-  }, [operators, positionFilter, searchTerm, siteFilter]);
+  }, [operators, permissionFilter, searchTerm]);
 
   const pagination = usePagination(filteredOperators, { itemsPerPage: 10 });
   const { setCurrentPage } = pagination;
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [positionFilter, searchTerm, setCurrentPage, siteFilter]);
+  }, [permissionFilter, searchTerm, setCurrentPage]);
 
   /** Navigates every add-operator CTA to the same registration route. */
   const handleAddOperator = useCallback(
@@ -210,25 +215,11 @@ export default function AdminOperatorListPage() {
         ),
       },
       {
-        id: 'position',
-        label: '役職',
-        sortable: true,
-        sortValue: (operator) => operator.userPosition,
-        render: (operator) => operator.userPosition || '-',
-      },
-      {
         id: 'permissions',
         label: '権限',
         render: (operator) => (
           <OperatorPermissionSummary permissions={operator.permissions} />
         ),
-      },
-      {
-        id: 'site',
-        label: '担当拠点',
-        sortable: true,
-        sortValue: (operator) => operator.siteName,
-        render: (operator) => operator.siteName || '-',
       },
       {
         id: 'action',
@@ -309,31 +300,27 @@ export default function AdminOperatorListPage() {
             ) : (
               <>
                 <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="grid gap-3 sm:grid-cols-2 lg:w-[520px]">
-                    <Select value={positionFilter} onValueChange={setPositionFilter}>
-                      <SelectTrigger className="h-10 bg-card" aria-label="役職で絞り込む">
-                        <SelectValue placeholder="役職" />
+                  <div className="w-full sm:max-w-xs">
+                    <Select
+                      value={permissionFilter}
+                      onValueChange={setPermissionFilter}
+                    >
+                      <SelectTrigger
+                        className="h-10 bg-card"
+                        aria-label="権限で絞り込む"
+                      >
+                        <SelectValue placeholder="権限" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={ALL_FILTER_VALUE}>すべての役職</SelectItem>
-                        {positionOptions.map((position) => (
-                          <SelectItem key={position} value={position}>
-                            {position}
+                        <SelectItem value={ALL_FILTER_VALUE}>すべての権限</SelectItem>
+                        {permissionOptions.map((permission) => (
+                          <SelectItem key={permission} value={permission}>
+                            {getOperatorPermissionLabel(permission)}
                           </SelectItem>
                         ))}
-                      </SelectContent>
-                    </Select>
-                    <Select value={siteFilter} onValueChange={setSiteFilter}>
-                      <SelectTrigger className="h-10 bg-card" aria-label="担当拠点で絞り込む">
-                        <SelectValue placeholder="担当拠点" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={ALL_FILTER_VALUE}>すべての担当拠点</SelectItem>
-                        {siteOptions.map((site) => (
-                          <SelectItem key={site} value={site}>
-                            {site}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value={NO_PERMISSION_FILTER_VALUE}>
+                          権限なし
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -359,8 +346,8 @@ export default function AdminOperatorListPage() {
                     <DataGridTable
                       rows={pagination.paginatedItems}
                       columns={columns}
-                      gridTemplateColumns="1.1fr 1fr 1.55fr 0.8fr 1fr 1.1fr 104px"
-                      minWidth={1180}
+                      gridTemplateColumns="1.1fr 1fr 1.6fr 1.2fr 104px"
+                      minWidth={880}
                       getRowKey={(operator) => operator.id}
                       emptyMessage="条件に一致する運用者はいません。"
                     />
