@@ -52,7 +52,13 @@ public interface ParticipationProjectService {
     ProjectJoinResponse submitParticipation(String projectId,
                                              String companyId,
                                              Integer userId,
-                                             EnR002JoinProjectRequest request);
+                                             EnR002JoinProjectRequest request); 
+
+   //Join Site
+       ProjectJoinResponse joinSite(String projectId,
+                                             String companyId,
+                                             Integer userId,
+                                             String siteId);
 
 
 

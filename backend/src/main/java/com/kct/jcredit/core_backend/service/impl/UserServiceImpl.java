@@ -137,50 +137,6 @@ public class UserServiceImpl implements UserService {
         return response;
     }
 
-    //TODO: remove this since it happens via the updateUser method
-    @Override
-    @Transactional
-    public DeleteUserSiteResponse removeUserSiteConnection(DeleteUserSite request) {
-        DeleteUserSiteResponse response = new DeleteUserSiteResponse();
-
-        ParticipatingUser user = userRepository.findById(Integer.parseInt(request.getUserId())).orElse(null);
-        if (user == null) {
-            response.setStatusCode(ResponseConstants.NOT_FOUND);
-            response.setMessage(ResponseConstants.MSG_USER_NOT_FOUND);
-            return response;
-        }
-
-        Site site = siteRepository.findById(Integer.parseInt(request.getSiteId())).orElse(null);
-        if (site == null) {
-            response.setStatusCode(ResponseConstants.NOT_FOUND);
-            response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
-            return response;
-        }
-
-        user.setSite(null);
-        userRepository.save(user);
-
-        ParticipatingUser siteMaster = userRepository
-            .findByCompany_IdAndRole(site.getCompany().getId(), RoleConstants.MASTER).orElse(null);
-        if (siteMaster == null) {
-            response.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR);
-            response.setMessage(ResponseConstants.MSG_UNEXPEXTED_ERROR);
-            log.error("UserServiceImpl.removeUserSiteConnection : Master User Not Found!");
-            return response;
-        }
-
-        site.setPicEmail(siteMaster.getEmail());
-        site.setPicFirstName(siteMaster.getFirstName());
-        site.setPicFirstNameKana(siteMaster.getFirstNameKana());
-        site.setPicLastName(siteMaster.getLastName());
-        site.setPicLastNameKana(siteMaster.getLastNameKana());
-        site.setPicPhoneNumber(siteMaster.getPhoneNumber());
-        site.setPicPosition(siteMaster.getUserPosition());
-        siteRepository.save(site);
-
-        response.setStatusCode(ResponseConstants.OK);
-        return response;
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -486,7 +442,7 @@ public class UserServiceImpl implements UserService {
 
         return response;
     }
-            
+    
  // ─────────────────────────────────────────────────────────────────────────
     // TARGET USER RESOLUTION
     // ─────────────────────────────────────────────────────────────────────────

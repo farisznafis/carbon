@@ -11,7 +11,6 @@ public enum PermissionCode {
     PROJECT_UPDATE, //included
     PROJECT_STATUS_UPDATE, //included
     PROJECT_APPLICATION_OUTPUT,
-    PROJECT_VIEW, //included
 
     //participating-company management
     PARTICIPATING_COMPANY_READ, //included
