@@ -14,6 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { RequiredLabel } from "@/components/forms/shared/RequiredLabel";
+import { FormActions } from "@/components/forms/form-layout";
 
 const schema = z.object({
   postcode: z
@@ -159,7 +160,15 @@ export function AddressForm({ defaultValues }: Readonly<AddressFormProps>) {
           )}
         />
 
-        <Button type="submit">Submit</Button>
+        <FormActions
+          actions={[
+            {
+              id: "submit",
+              label: "Submit",
+              type: "submit",
+            },
+          ]}
+        />
       </form>
     </Form>
   );

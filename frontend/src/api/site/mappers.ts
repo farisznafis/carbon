@@ -87,14 +87,23 @@ export function mapSiteListItem(item: SiteListItem): Site {
 // For GET /site/{siteId} response (dashboard.ts)
 // using apiSite from SiteDashboardApiResponse to map to Site, because the fields are more complete than SiteListItem 
 export function mapSiteDashboard(apiSite: SiteDashboardApiResponse['site']): Site { 
-  const prefectureName = apiSite.prefecture ?? apiSite.prefName ?? "";
-  const cityName = apiSite.municipality ?? apiSite.city ?? apiSite.cityName ?? "";
+  const nestedData = apiSite.data;
+  const prefectureName =
+    apiSite.prefecture ?? apiSite.prefName ?? nestedData?.prefecture ?? "";
+  const cityName =
+    apiSite.municipality ??
+    apiSite.city ??
+    apiSite.cityName ??
+    nestedData?.municipality ??
+    "";
   const blockName =
     apiSite.blocknum ??
+    nestedData?.blocknum ??
     [apiSite.town, apiSite.block ?? apiSite.blockName].filter(Boolean).join("");
-  const buildingName = apiSite.buildingName ?? "";
+  const buildingName = apiSite.buildingName ?? nestedData?.buildingName ?? "";
+  const postalCode = apiSite.postalCode ?? nestedData?.postalCode ?? "";
   const composedAddress = [
-    apiSite.postalCode ? `〒${apiSite.postalCode}` : "",
+    postalCode ? `〒${postalCode}` : "",
     prefectureName,
     cityName,
     blockName,
@@ -104,21 +113,24 @@ export function mapSiteDashboard(apiSite: SiteDashboardApiResponse['site']): Sit
     .join("");
 
   return {
-    siteId: normalizeSiteId(apiSite.siteId, apiSite.id),
-    siteName: apiSite.siteName ?? "",
-    postalCode: apiSite.postalCode ?? "",
+    siteId: normalizeSiteId(
+      apiSite.siteId || nestedData?.siteId || "",
+      apiSite.id,
+    ),
+    siteName: apiSite.siteName || nestedData?.siteName || "",
+    postalCode,
     prefectureName,
     cityName,
     blockName,
     address: apiSite.address ?? composedAddress,
     buildingName,
     picId: "",
-    picFirstName: apiSite.picFirstName ?? "",
-    picLastName: apiSite.picLastName ?? "",
+    picFirstName: apiSite.picFirstName ?? nestedData?.picFirstName ?? "",
+    picLastName: apiSite.picLastName ?? nestedData?.picLastName ?? "",
     picEmail: "",
     picPhoneNumber: "",
     picPosition: "",
     companyId: "",
-    project: apiSite.projects ?? [],
+    project: apiSite.projects ?? nestedData?.projects ?? [],
   };
 }

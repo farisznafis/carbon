@@ -1,5 +1,6 @@
 package com.kct.jcredit.core_backend.service.impl;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 
 import com.kct.jcredit.core_backend.dto.response.ParticipationReviewDetailResponse;
+import com.kct.jcredit.core_backend.dto.response.ParticipationReviewHistoryResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectParticipationConfirmationResponse;
@@ -28,6 +30,7 @@ import com.kct.jcredit.core_backend.service.ParticipationProjectValidationServic
 import com.kct.jcredit.core_backend.service.ProjectParticipationPdfService;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.entity.ParticipatingProject;
+import com.kct.jcredit.core_backend.entity.ParticipationReviewHistory;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ProjectParticipationConfirmation;
 import com.kct.jcredit.core_backend.entity.Project;
@@ -71,6 +74,7 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
     private final EnR002SustainabilityCommitmentRepository sustainabilityRepository;
     private final ProjectParticipationConfirmationRepository reviewRepository;
     private final OperatingUserRepository operatingUserRepository;
+    private final ParticipationReviewHistoryRepository reviewHistoryRepository; 
     private final ProjectParticipationPdfService pdfService;
     private final NotificationService notificationService;
 
@@ -145,6 +149,7 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
                 .confirmationItems(toConfirmationResponse(confirmationItems))
                 .sustainabilityCommitment(toSustainabilityResponse(sustainability))
                 .review(toReviewResponse(review))
+                .pdfStatus(participation.getS3KeyPdfMembership() != null ? "READY" : "NOT_READY")
                 .build();
     }
 
@@ -293,11 +298,73 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
 
         relation.setStatus("REJECTED");
         siteProjectRelationRepository.save(relation);
+        int attemptNumber = reviewHistoryRepository.countByParticipationId(participationId) + 1;
+
+        ParticipationReviewHistory history = ParticipationReviewHistory.builder()
+                .pk("PART#" + participationId)
+                .sk("ATTEMPT#" + attemptNumber)
+                .attemptNumber(attemptNumber)
+                .decision("REJECTED")
+                .rejectReason(request.getRejectReason())
+                .primaryReviewerName(confirmation.getPrimaryApplReviewerName())
+                .secondaryReviewerName(confirmation.getSecondaryApplReviewerName())
+                .reviewedByOperatorId(operatorUserId)
+                .reviewedAt(Instant.now().toString())
+                .build();
+        reviewHistoryRepository.save(history);
 
         notificationService.sendParticipationRejectionNotification(
+<<<<<<< HEAD
                 participation.getCompany(), request.getRejectReason());
     }
+=======
+                participation.getUser(), request.getRejectReason());
+        }
+>>>>>>> e3f90012bd1ba1b87ebe997b05fc70b7db4915c9
 
+        @Override
+        public List<ParticipationReviewHistoryResponse> getReviewHistory(Integer participationId) {
+        return reviewHistoryRepository.findByParticipationId(participationId).stream()
+                .map(h -> ParticipationReviewHistoryResponse.builder()
+                        .attemptNumber(h.getAttemptNumber())
+                        .decision(h.getDecision())
+                        .rejectReason(h.getRejectReason())
+                        .primaryReviewerName(h.getPrimaryReviewerName())
+                        .secondaryReviewerName(h.getSecondaryReviewerName())
+                        .reviewedAt(h.getReviewedAt())
+                        .build())
+                .collect(Collectors.toList());
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public List<ParticipationReviewDetailResponse> getApprovedParticipations() {
+        return findApprovedParticipations().stream()
+                .map(participation -> getReviewDetail(participation.getId()))
+                .collect(Collectors.toList());
+        }
+
+        private List<ParticipatingProject> findApprovedParticipations() {
+        return siteProjectRelationRepository.findByStatus("APPROVED").stream()
+                .map(this::toParticipationOrNull)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public List<ParticipationReviewDetailResponse> getRejectedParticipations() {
+        return findRejectedParticipations().stream()
+                .map(participation -> getReviewDetail(participation.getId()))
+                .collect(Collectors.toList());
+        }
+
+        private List<ParticipatingProject> findRejectedParticipations() {
+        return siteProjectRelationRepository.findByStatus("REJECTED").stream()
+                .map(this::toParticipationOrNull)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        }
     // ─────────────────────────────────────────────────────────────
     // PRIVATE — mapping
     // ─────────────────────────────────────────────────────────────

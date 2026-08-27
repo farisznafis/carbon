@@ -5,6 +5,7 @@ import com.kct.jcredit.core_backend.dto.response.EnR002FileResponse;
 import com.kct.jcredit.core_backend.dto.response.details.ValidationErrorDetail;
 import com.kct.jcredit.core_backend.enums.EquipmentFileType;
 import com.kct.jcredit.core_backend.exception.UnsupportedFileTypeException;
+import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentFileRepository;
 import com.kct.jcredit.core_backend.exception.BulkValidationException;
 
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,8 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
 
     private final S3Client s3Client;
 
+    private final EnR002EquipmentFileRepository equipmentFileRepository;
+
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
     private static final Set<String> VALID_MIME_TYPES = Set.of(
@@ -44,6 +47,8 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
             "image/jpg",
             "image/png"
     );
+
+    
 
     // UPLOAD
 
@@ -114,20 +119,24 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
     // MOVE
 
     @Override
-    public String moveTempToPermanent(String tempS3Key,
-                                       String siteId,
-                                       Integer equipmentId) {
+    public String buildPermanentKey(String tempS3Key,
+                                     String siteId,
+                                     Integer equipmentId) {
 
         String fileNamePart = tempS3Key.replaceAll(
                 "^tmp/equipments/[^/]+/", ""
         );
 
-        String permanentKey = String.format(
+        return String.format(
                 "sites/%s/equipments/%d/%s",
                 siteId,
                 equipmentId,
                 fileNamePart
         );
+    }
+
+    @Override
+    public void moveToPermanent(String tempS3Key, String permanentKey) {
 
         s3Client.copyObject(CopyObjectRequest.builder()
                 .sourceBucket(bucketName)
@@ -143,8 +152,20 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
                 .build());
 
         log.info("S3 file moved. from={}, to={}", tempS3Key, permanentKey);
-        return permanentKey;
     }
+        @Override
+        public void deletePermanentFile(String s3Key, Integer excludeEquipmentId) {
+        long referenceCount = equipmentFileRepository
+                .countByS3KeyAndEquipment_IdNot(s3Key, excludeEquipmentId);
+
+        if (referenceCount > 0) {
+                log.info("S3ファイルは他の設備から参照されているため削除しません。s3Key={}", s3Key);
+                return;
+        }
+
+        s3Client.deleteObject(DeleteObjectRequest.builder()
+                .bucket(bucketName).key(s3Key).build());
+        }
 
     // HELPER
 

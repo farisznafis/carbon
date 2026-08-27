@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState, type ReactNode } from 'react';
 import { getProjectDetails, type ProjectDetail as ProjectDetailApi } from '@/api/projects';
 import {
-  getSiteProjectEquipment,
+  getSiteEquipmentList,
   type SiteProjectEquipment,
 } from '@/api/site';
 import {
@@ -44,6 +44,12 @@ import {
 } from '@/api/batch';
 import { logger } from '@/lib/logger';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
+import {
+  PageSkeleton,
+  SkeletonCard,
+  SkeletonChart,
+  SkeletonMetricCard,
+} from '@/components/feedback/loading';
 import {
   dashboardPageContainerClassName,
   dashboardTabsListClassName,
@@ -488,7 +494,7 @@ const ProjectDetail = () => {
       try {
         setEquipmentLoading(true);
         setEquipmentError(null);
-        const rows = await getSiteProjectEquipment(siteId, projectId);
+        const rows = await getSiteEquipmentList(siteId);
         setEquipmentList(rows);
         setEquipmentHasFetched(true);
       } catch (error) {
@@ -509,9 +515,18 @@ const ProjectDetail = () => {
 
   if (loading) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
-        読み込み中...
-      </div>
+      <PageSkeleton className='py-8'>
+        <div className='mx-auto w-full max-w-app space-y-6'>
+          <SkeletonCard className='min-h-28' />
+          <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
+            {Array.from({ length: 4 }, (_, index) => <SkeletonMetricCard key={index} />)}
+          </div>
+          <div className='grid gap-6 lg:grid-cols-2'>
+            <SkeletonChart />
+            <SkeletonChart />
+          </div>
+        </div>
+      </PageSkeleton>
     );
   }
 
@@ -745,6 +760,7 @@ const ProjectDetail = () => {
                 </div>
               ) : equipmentList.length > 0 ? (
                 <EquipmentList
+                  siteId={siteId}
                   equipments={equipmentList}
                   onEditEquipment={(equipmentId) =>
                     navigate(

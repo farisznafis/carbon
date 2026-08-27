@@ -26,6 +26,7 @@ import com.kct.jcredit.core_backend.dto.request.CreateProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdateProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.ProjectUploadDocumentRequest;
 import com.kct.jcredit.core_backend.dto.response.CreateProjectResponse;
+import com.kct.jcredit.core_backend.dto.response.MemberTermsInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectCompanyListResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
@@ -65,6 +66,7 @@ public class ProjectController {
     private final JwtUtil jwtUtil;
     private final ProjectUploadDocumentService projectUploadDocumentService;
     private final ProjectMonitoringService projectMonitoringService;
+    private final ParticipationProjectService participationProjectService;
 
     @PostMapping
     @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_CREATE.name()))")
@@ -219,7 +221,7 @@ public class ProjectController {
     }
 
     @GetMapping("/{projectId}/participations/{participationId}/membership-pdf")
-    @PreAuthorize("hasAnyRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_VIEW.name()))")
+    @PreAuthorize("hasAnyRole('admin','master','user') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_VIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "入会届PDFダウンロード（管理者用）", description = "指定参加情報の入会届PDFダウンロードURLを取得します。")
     public ResponseEntity<ProjectPdfDownloadResponse> getMembershipPdf(
@@ -229,5 +231,16 @@ public class ProjectController {
         ProjectPdfDownloadResponse response = projectService
                 .getMembershipPdfForOperator(projectId, participationId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{projectId}/member-terms-info")
+    @PreAuthorize("hasAnyRole('admin','master','user') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_VIEW.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "会員規約表示用情報取得",
+           description = "会員規約ページに表示するプロジェクト・運営者情報を取得します。")
+    public ResponseEntity<MemberTermsInfoResponse> getMemberTermsInfo(
+            @PathVariable String projectId) {
+        MemberTermsInfoResponse response = participationProjectService.getMemberTermsInfo(projectId);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 }

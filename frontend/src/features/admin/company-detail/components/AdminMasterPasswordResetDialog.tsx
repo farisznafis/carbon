@@ -1,13 +1,12 @@
 import {
   AlertDialog,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+import { FormActions } from '@/components/forms/form-layout';
 
 interface AdminMasterPasswordResetDialogProps {
   open: boolean;
@@ -52,16 +51,26 @@ export function AdminMasterPasswordResetDialog({
         </dl>
 
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isSubmitting}>
-            キャンセル
-          </AlertDialogCancel>
-          <Button
-            type="button"
+          <FormActions
+            context="compact"
+            className="w-full"
             disabled={isSubmitting}
-            onClick={onConfirm}
-          >
-            {isSubmitting ? '送信中...' : '送信する'}
-          </Button>
+            pendingActionId={isSubmitting ? 'confirm' : null}
+            actions={[
+              {
+                id: 'cancel',
+                label: 'キャンセル',
+                variant: 'outline',
+                onClick: () => onOpenChange(false),
+              },
+              {
+                id: 'confirm',
+                label: '送信する',
+                pendingLabel: '送信中...',
+                onClick: onConfirm,
+              },
+            ]}
+          />
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

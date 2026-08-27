@@ -3,7 +3,9 @@ import { useForm, type FieldPath } from 'react-hook-form';
 import { z } from 'zod';
 import type { SiteProjectEquipment } from '@/api/site';
 import { FileSelectButton } from '@/components/inputs/FileSelectButton/FileSelectButton';
+import { InlineLoader } from '@/components/feedback/loading';
 import {
+  FormActions,
   FormCard,
   FormPageContent,
   FormPageTitle,
@@ -30,6 +32,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { getUploadFileValidationError } from '@/lib/uploadFileValidation';
 import { emptyFormData } from './emptyFormData';
 
 const base = {
@@ -74,9 +77,6 @@ export type MonitoringSolarFormData = {
   description?: string;
 };
 
-const MAX_UPLOAD_FILE_SIZE_BYTES = 10 * 1024 * 1024;
-const MAX_UPLOAD_FILE_SIZE_MESSAGE = 'ファイルサイズは10MB以下にしてください。';
-const FILE_TYPE_ERROR_MESSAGE = '対応していないファイル形式です。';
 const ELPV_FILE_EXTENSIONS = ['.pdf', '.csv'];
 const DEFAULT_EVIDENCE_FILE_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png'];
 
@@ -156,27 +156,15 @@ export function MonitoringSolarForm({
     file: File | null,
     allowedExtensions: string[],
   ) => {
-    if (file) {
-      const lowerFileName = file.name.toLowerCase();
-      const isAllowedFileType = allowedExtensions.some((extension) =>
-        lowerFileName.endsWith(extension),
-      );
-
-      if (!isAllowedFileType) {
-        onChange(null);
-        form.setError(fieldName, {
-          type: 'validate',
-          message: `${FILE_TYPE_ERROR_MESSAGE}（${allowedExtensions.join(', ')}）`,
-        });
-        return;
-      }
-    }
-
-    if (file && file.size > MAX_UPLOAD_FILE_SIZE_BYTES) {
+    const validationError = getUploadFileValidationError(
+      file,
+      allowedExtensions,
+    );
+    if (validationError) {
       onChange(null);
       form.setError(fieldName, {
         type: 'validate',
-        message: MAX_UPLOAD_FILE_SIZE_MESSAGE,
+        message: validationError,
       });
       return;
     }
@@ -314,6 +302,9 @@ export function MonitoringSolarForm({
                         </SelectContent>
                       </Select>
                     </FormControl>
+                    {isEquipmentLoading ? (
+                      <InlineLoader label="設備を読み込んでいます" />
+                    ) : null}
                     {equipmentLoadError ? (
                       <div className="space-y-2" role="alert">
                         <p className="text-sm text-destructive">
@@ -493,6 +484,7 @@ export function MonitoringSolarForm({
                       <FormControl>
                         <FileSelectButton
                           id="elpj-battery-file"
+                          accept={DEFAULT_EVIDENCE_FILE_EXTENSIONS.join(',')}
                           label="蓄電池エビデンス"
                           required
                           variant="design-system-pro"
@@ -571,6 +563,7 @@ export function MonitoringSolarForm({
                         <FormControl>
                           <FileSelectButton
                             id="elpv-file"
+                            accept={ELPV_FILE_EXTENSIONS.join(',')}
                             label="発電量 (ELPV) エビデンス"
                             required
                             variant="design-system-pro"
@@ -599,6 +592,7 @@ export function MonitoringSolarForm({
                         <FormControl>
                           <FileSelectButton
                             id="elpvr-file"
+                            accept={DEFAULT_EVIDENCE_FILE_EXTENSIONS.join(',')}
                             label="自家消費量 (ELPVR) エビデンス"
                             required
                             variant="design-system-pro"
@@ -629,6 +623,7 @@ export function MonitoringSolarForm({
                         <FormControl>
                           <FileSelectButton
                             id="elpj-control-file"
+                            accept={DEFAULT_EVIDENCE_FILE_EXTENSIONS.join(',')}
                             label="制御機器仕様 (ELPJ) エビデンス"
                             required
                             variant="design-system-pro"
@@ -651,14 +646,24 @@ export function MonitoringSolarForm({
                 </FormSection>
               </FormSectionStack>
 
-              <div className="flex justify-end gap-4 pt-6">
-                <Button type="button" variant="outline" onClick={onBack} size="md">
-                  キャンセル
-                </Button>
-                <Button type="submit" disabled={form.formState.isSubmitting} size="md">
-                  確認
-                </Button>
-              </div>
+              <FormActions
+                disabled={form.formState.isSubmitting}
+                pendingActionId={form.formState.isSubmitting ? 'confirm' : null}
+                actions={[
+                  {
+                    id: 'cancel',
+                    label: 'キャンセル',
+                    variant: 'outline',
+                    onClick: onBack,
+                  },
+                  {
+                    id: 'confirm',
+                    label: '確認',
+                    pendingLabel: '確認しています...',
+                    type: 'submit',
+                  },
+                ]}
+              />
             </FormCard>
           </form>
         </Form>

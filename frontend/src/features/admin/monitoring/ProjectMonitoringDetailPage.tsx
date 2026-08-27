@@ -16,6 +16,7 @@ import {
   type MonitoringRecordListItem,
 } from '@/api/monitoring';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
+import { PageSkeleton } from '@/components/feedback/loading';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
 import {
@@ -202,9 +203,7 @@ export default function ProjectMonitoringDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        読み込み中...
-      </div>
+      <PageSkeleton label="モニタリングデータを読み込んでいます" />
     );
   }
 
