@@ -5,7 +5,9 @@ import {
 } from '@/components/forms/shared/RequiredLabel';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FormActions } from '@/components/forms/form-layout';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import {
@@ -38,9 +40,21 @@ export type ContractStepFormValues = {
 };
 
 interface ContractStepProps {
+  methodologyNumber: string;
+  methodologyName: string;
+  methodologyVersion?: string;
   formValues: Partial<ContractStepFormValues>;
-  onValueChange: (values: Partial<ContractStepFormValues>) => void;
+  isSubmitting: boolean;
+  onBack: () => void;
+  onNext: () => void;
+  onValueChange: (
+    values: Partial<ContractStepFormValues>,
+    metadata: { isUserChange: boolean },
+  ) => void;
   errors?: Record<string, string>;
+  isDefaultLoading?: boolean;
+  defaultLoadError?: string | null;
+  onRetryDefaults?: () => void;
 }
 
 const defaultContractStepValues: ContractStepFormValues = {
@@ -50,8 +64,48 @@ const defaultContractStepValues: ContractStepFormValues = {
   representativeName: '',
 };
 
+// Formats the selected project's methodology without empty separators or parentheses.
+function formatMethodologyTitle(
+  methodologyNumber: string,
+  methodologyName: string,
+  methodologyVersion?: string,
+): string {
+  const methodologyReference = [methodologyNumber.trim(), methodologyVersion?.trim()]
+    .filter(Boolean)
+    .join(' ');
+  const normalizedMethodologyName = methodologyName.trim();
+
+  if (methodologyReference && normalizedMethodologyName) {
+    return `方法論${methodologyReference}（${normalizedMethodologyName}）`;
+  }
+  if (methodologyReference) return `方法論${methodologyReference}`;
+  if (normalizedMethodologyName) return `方法論（${normalizedMethodologyName}）`;
+  return '対象方法論';
+}
+
 export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
-  ({ formValues, onValueChange, errors = {} }, ref) => {
+  (
+    {
+      methodologyNumber,
+      methodologyName,
+      methodologyVersion,
+      formValues,
+      isSubmitting,
+      onBack,
+      onNext,
+      onValueChange,
+      errors = {},
+      isDefaultLoading = false,
+      defaultLoadError = null,
+      onRetryDefaults,
+    },
+    ref,
+  ) => {
+    const methodologyTitle = formatMethodologyTitle(
+      methodologyNumber,
+      methodologyName,
+      methodologyVersion,
+    );
     const form = useForm<ContractStepData>({
       mode: 'onChange',
       defaultValues: {
@@ -60,6 +114,7 @@ export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
       },
     });
     const watchedValues = form.watch();
+    const isDirty = form.formState.isDirty;
     const serverErrorFieldsRef = useRef<Array<keyof ContractStepFormValues>>(
       [],
     );
@@ -109,9 +164,9 @@ export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
         JSON.stringify(prevValuesRef.current) !== JSON.stringify(watchedValues)
       ) {
         prevValuesRef.current = watchedValues;
-        onValueChange(watchedValues);
+        onValueChange(watchedValues, { isUserChange: isDirty });
       }
-    }, [watchedValues, onValueChange]);
+    }, [isDirty, watchedValues, onValueChange]);
 
     return (
       <div className="space-y-4">
@@ -132,12 +187,37 @@ export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
                 （プログラム型運営・管理者）　御中
               </p>
 
+              {isDefaultLoading && (
+                <p role="status" className="text-sm text-muted-foreground">
+                  登録済み情報を読み込んでいます...
+                </p>
+              )}
+
+              {defaultLoadError && (
+                <div
+                  role="alert"
+                  className="flex flex-col gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <p className="text-sm text-destructive">{defaultLoadError}</p>
+                  {onRetryDefaults && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={onRetryDefaults}
+                    >
+                      再試行
+                    </Button>
+                  )}
+                </div>
+              )}
+
               <div className="space-y-3">
                 <FormField
                   control={form.control}
                   name="businessName"
                   render={({ field }) => (
-                    <FormItem className="grid gap-2 sm:grid-cols-[120px_minmax(0,1fr)] sm:items-start">
+                    <FormItem className="grid gap-2 sm:grid-cols-[120px_minmax(0,1fr)]">
                       <RequiredLabel htmlFor="businessName" className="sm:pt-3">
                         事業者名
                       </RequiredLabel>
@@ -160,7 +240,7 @@ export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
                   control={form.control}
                   name="representativeName"
                   render={({ field }) => (
-                    <FormItem className="grid gap-2 sm:grid-cols-[120px_minmax(0,1fr)] sm:items-start">
+                    <FormItem className="grid gap-2 sm:grid-cols-[120px_minmax(0,1fr)]">
                       <RequiredLabel
                         htmlFor="representativeName"
                         className="sm:pt-3"
@@ -186,7 +266,7 @@ export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
                   control={form.control}
                   name="representativePosition"
                   render={({ field }) => (
-                    <FormItem className="grid gap-2 sm:grid-cols-[120px_minmax(0,1fr)] sm:items-start">
+                    <FormItem className="grid gap-2 sm:grid-cols-[120px_minmax(0,1fr)]">
                       <RequiredLabel
                         htmlFor="representativePosition"
                         className="sm:pt-3"
@@ -211,7 +291,7 @@ export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
 
               <div className="space-y-4 text-sm leading-6 text-foreground">
                 <p>
-                  国内における地球温暖化対策のための排出削減・吸収量認証制度（Ｊ－クレジット制度）に、方法論EN-R-002（太陽光発電設備の導入）に基づくプロジェクトを登録して実施するにあたり、人間の健康と安全、自然環境、社会への影響を回避または最小化し、受け入れることができないような影響をもたらすことがないよう、環境社会配慮を行い持続可能性を確保するため、
+                  国内における地球温暖化対策のための排出削減・吸収量認証制度（Ｊ－クレジット制度）に、{methodologyTitle}に基づくプロジェクトを登録して実施するにあたり、人間の健康と安全、自然環境、社会への影響を回避または最小化し、受け入れることができないような影響をもたらすことがないよう、環境社会配慮を行い持続可能性を確保するため、
                 </p>
                 <ul className="space-y-1 pl-4">
                   <li>・エネルギーの使用の合理化及び非化石エネルギーへの転換等に関する法律</li>
@@ -249,6 +329,23 @@ export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
                     <FormMessage className="mt-2" />
                   </FormItem>
                 )}
+              />
+              <FormActions
+                pendingActionId={isSubmitting ? 'next' : null}
+                actions={[
+                  {
+                    id: 'back',
+                    label: '戻る',
+                    variant: 'outline',
+                    onClick: onBack,
+                  },
+                  {
+                    id: 'next',
+                    label: '次へ',
+                    pendingLabel: '確認中...',
+                    onClick: onNext,
+                  },
+                ]}
               />
             </CardContent>
           </Card>

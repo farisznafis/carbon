@@ -94,38 +94,44 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
         // Conditional: isEmitter
         if (Boolean.TRUE.equals(request.getIsEmitter())) {
 
-            if (request.getEmitterCode() == null
-                    || request.getEmitterCode().isBlank()
-                    || !request.getEmitterCode().matches("\\d{9}"))
+            if (request.getIsEmitter() == null)
                 errors.add(err("request",
-                        "事業者コード（9桁）",
-                        "9桁の数字を入力してください。"));
+                        "特定排出者該当",
+                        "選択してください。"));
 
-            if (!Boolean.TRUE.equals(request.getIsAdjustedEmissionsAdded()))
-                errors.add(err("request",
-                        "調整後排出量への加算",
-                        "同意が必要です。"));
+            // Conditional: isEmitter
+            if (Boolean.TRUE.equals(request.getIsEmitter())) {
+                if (request.getEmitterCode() == null
+                        || request.getEmitterCode().isBlank()
+                        || !request.getEmitterCode().matches("\\d{9}"))
+                    errors.add(err("request", "事業者コード（9桁）", "9桁の数字を入力してください。"));
+
+                if (!Boolean.TRUE.equals(request.getIsAdjustedEmissionsAdded()))
+                    errors.add(err("request", "調整後排出量への加算", "同意が必要です。"));
+            }
         }
 
         // Conditional: isSubjectToPeriodicReport
         if (Boolean.TRUE.equals(request.getIsSubjectToPeriodicReport())) {
 
-            if (request.getIsPeriodicReportTypeOne() == null)
+            if (request.getIsSubjectToPeriodicReport() == null)
                 errors.add(err("request",
-                        "第一種・第二種区分",
+                        "定期報告対象者該当",
                         "選択してください。"));
 
-            if (request.getEnergyBusinessCode() == null
-                    || !request.getEnergyBusinessCode().matches("\\d{7}"))
-                errors.add(err("request",
-                        "事業者番号",
-                        "7桁の数字を入力してください。"));
+            // Conditional: isSubjectToPeriodicReport
+            if (Boolean.TRUE.equals(request.getIsSubjectToPeriodicReport())) {
+                if (request.getIsPeriodicReportTypeOne() == null)
+                    errors.add(err("request", "第一種・第二種区分", "選択してください。"));
 
-            if (request.getFactoryCode() == null
-                    || !request.getFactoryCode().matches("\\d{7}"))
-                errors.add(err("request",
-                        "工場等番号",
-                        "7桁の数字を入力してください。"));
+                if (request.getEnergyBusinessCode() == null
+                        || !request.getEnergyBusinessCode().matches("\\d{7}"))
+                    errors.add(err("request", "事業者番号", "7桁の数字を入力してください。"));
+
+                if (request.getFactoryCode() == null
+                        || !request.getFactoryCode().matches("\\d{7}"))
+                    errors.add(err("request", "工場等番号", "7桁の数字を入力してください。"));
+            }
         }
 
         if (!errors.isEmpty()) throw new BulkValidationException(errors);

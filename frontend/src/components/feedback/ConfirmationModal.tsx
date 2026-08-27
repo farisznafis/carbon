@@ -1,7 +1,7 @@
 // components/ConfirmationModal.tsx
 import React, { useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { FormActions } from '@/components/forms/form-layout';
 
 export type Change = {
   key: string;
@@ -81,9 +81,25 @@ export default function ConfirmationModal<T extends Record<string, unknown>>({
           )}
         </div>
 
-        <DialogFooter className="mt-4 flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose}>戻る</Button>
-          <Button onClick={onConfirm} disabled={changes.length === 0}>確定</Button>
+        <DialogFooter className="mt-4">
+          <FormActions
+            context="compact"
+            className="w-full"
+            actions={[
+              {
+                id: 'back',
+                label: '戻る',
+                variant: 'outline',
+                onClick: onClose,
+              },
+              {
+                id: 'confirm',
+                label: '確定',
+                disabled: changes.length === 0,
+                onClick: onConfirm,
+              },
+            ]}
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

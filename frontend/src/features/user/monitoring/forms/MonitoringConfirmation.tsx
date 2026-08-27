@@ -1,13 +1,17 @@
 ﻿import { ArrowLeft } from 'lucide-react';
 import {
+  FormActions,
   FormCard,
   FormPageContent,
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
-import { Button } from '@/components/ui/button';
 import { ChangedConfirmationValue } from '@/components/feedback/Confirmation/ChangedConfirmationValue';
+import {
+  FileUploadProgress,
+  type FileUploadProgressItem,
+} from '@/components/feedback/loading';
 import { ConfirmationItem } from './confirmationItem';
 
 type ConfirmationLayoutProps = {
@@ -17,6 +21,8 @@ type ConfirmationLayoutProps = {
   onBack: () => void;
   onConfirm: () => void;
   isSubmitting?: boolean;
+  uploadItems?: FileUploadProgressItem[];
+  onRetryUpload?: (itemId: string) => void;
 };
 
 export function MonitoringConfirmationLayout({
@@ -26,6 +32,8 @@ export function MonitoringConfirmationLayout({
   onBack,
   onConfirm,
   isSubmitting,
+  uploadItems = [],
+  onRetryUpload,
 }: ConfirmationLayoutProps) {
   return (
     <FormStandalonePage>
@@ -64,15 +72,31 @@ export function MonitoringConfirmationLayout({
               ))}
             </div>
 
-            <div className="flex justify-end gap-4 pt-4">
-              <Button variant="outline" onClick={onBack} disabled={isSubmitting} size="md">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                戻る
-              </Button>
-              <Button onClick={onConfirm} disabled={isSubmitting} size="md">
-                {isSubmitting ? '送信中...' : '確定'}
-              </Button>
-            </div>
+            <FileUploadProgress items={uploadItems} onRetry={onRetryUpload} />
+
+            <FormActions
+              className="pt-4"
+              pendingActionId={isSubmitting ? 'confirm' : null}
+              actions={[
+                {
+                  id: 'back',
+                  label: (
+                    <>
+                      <ArrowLeft className="h-4 w-4" />
+                      戻る
+                    </>
+                  ),
+                  variant: 'outline',
+                  onClick: onBack,
+                },
+                {
+                  id: 'confirm',
+                  label: '確定',
+                  pendingLabel: '送信中...',
+                  onClick: onConfirm,
+                },
+              ]}
+            />
           </div>
         </FormCard>
       </FormPageContent>

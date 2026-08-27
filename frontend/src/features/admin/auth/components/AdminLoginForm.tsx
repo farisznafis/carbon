@@ -63,7 +63,6 @@ export function AdminLoginForm({ onSubmit }: AdminLoginFormProps) {
                   <Input
                     type="text"
                     placeholder="社員名またはメールアドレス"
-                    className="[@media(max-height:700px)]:h-9 [@media(max-height:700px)]:py-1.5 [@media(max-height:480px)]:h-8"
                     {...field}
                   />
                 </FormControl>
@@ -83,7 +82,6 @@ export function AdminLoginForm({ onSubmit }: AdminLoginFormProps) {
                 <FormControl>
                   <PasswordInput
                     placeholder="パスワードを入力"
-                    className="[@media(max-height:700px)]:h-9 [@media(max-height:700px)]:py-1.5 [@media(max-height:480px)]:h-8"
                     {...field}
                   />
                 </FormControl>
