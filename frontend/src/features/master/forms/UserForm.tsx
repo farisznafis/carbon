@@ -1,4 +1,9 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import {
+  useMemo,
+  useState,
+  type FormEventHandler,
+  type ReactNode,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import { X } from 'lucide-react';
 import { ApiError } from '@/api/_shared/errors';
@@ -72,6 +77,7 @@ interface UserFormProps {
   siteOptionsError?: string | null;
   embedded?: boolean;
   hideSiteSection?: boolean;
+  hidePositionField?: boolean;
   hideUsernameField?: boolean;
   requireSite?: boolean;
   additionalSections?: ReactNode;
@@ -93,6 +99,7 @@ export function UserForm({
   siteOptionsError = null,
   embedded = false,
   hideSiteSection = false,
+  hidePositionField = false,
   hideUsernameField = false,
   requireSite = false,
   additionalSections,
@@ -175,20 +182,26 @@ export function UserForm({
     return hasFieldChanges || hasExternalChanges;
   }, [values, originalData, hasExternalChanges]);
 
+  /** Submits validated user values and maps backend field errors back into the form. */
+  const handleValidSubmit = async (formValues: UserFormData) => {
+    onChange(formValues);
+
+    try {
+      await onNext(formValues);
+    } catch (error) {
+      applyBackendValidationErrors(error);
+    }
+  };
+
+  /** Clears stale server errors before React Hook Form decides whether a retry is valid. */
+  const handleFormSubmit: FormEventHandler<HTMLFormElement> = (event) => {
+    form.clearErrors();
+    void form.handleSubmit(handleValidSubmit)(event);
+  };
+
   const formContent = (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(async (formValues) => {
-          form.clearErrors();
-          onChange(formValues);
-
-          try {
-            await onNext(formValues);
-          } catch (error) {
-            applyBackendValidationErrors(error);
-          }
-        })}
-      >
+      <form onSubmit={handleFormSubmit}>
         <FormCard>
           <FormSectionStack spacing="relaxed">
             <FormSection number={1} title="個人情報">
@@ -264,19 +277,21 @@ export function UserForm({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="userPosition"
-                render={({ field }) => (
-                  <FormItem>
-                    <RequiredLabel>役職</RequiredLabel>
-                    <FormControl>
-                      <Input placeholder="部長" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!hidePositionField && (
+                <FormField
+                  control={form.control}
+                  name="userPosition"
+                  render={({ field }) => (
+                    <FormItem>
+                      <RequiredLabel>役職</RequiredLabel>
+                      <FormControl>
+                        <Input placeholder="部長" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </FormSection>
 
             <FormSection number={2} title="アカウント情報">
@@ -417,10 +432,12 @@ export function UserForm({
                 {
                   id: 'submit',
                   label: submitLabel,
+                  pendingLabel: '処理中...',
                   type: 'submit',
                   disabled: !isTrulyDirty || submitDisabled,
                 },
               ]}
+              pendingActionId={form.formState.isSubmitting ? 'submit' : null}
             />
           </FormSectionStack>
         </FormCard>

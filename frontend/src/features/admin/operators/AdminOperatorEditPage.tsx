@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useParams,
+} from 'react-router-dom';
 import { ApiError } from '@/api/_shared/errors';
 import { updateAdminOperator } from '@/api/admin/operators';
 import type { UserFormData } from '@/api/users';
@@ -25,10 +30,12 @@ import {
   adminOperatorsQueryKey,
   useAdminOperatorProfileQuery,
 } from '@/hooks/admin/useAdminOperatorsQuery';
-import { useSitesQuery } from '@/hooks/sites/useSitesQuery';
 import { toast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
-import { OperatorPermissionSection } from './OperatorPermissionSection';
+import {
+  OPERATOR_PERMISSION_SECTION_ID,
+  OperatorPermissionSection,
+} from './OperatorPermissionSection';
 import {
   getOperatorFieldError,
   mapOperatorToFormValues,
@@ -52,10 +59,10 @@ function formatOperatorName(lastName: string, firstName: string): string {
 /** Renders the operator edit flow backed by PATCH /admin/companies/operator-user/{userId}. */
 export default function AdminOperatorEditPage() {
   const { userId } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const profileQuery = useAdminOperatorProfileQuery(userId);
-  const sitesQuery = useSitesQuery();
   const operator = profileQuery.data;
   const [permissionDraft, setPermissionDraft] = useState<string[] | null>(null);
   const [permissionError, setPermissionError] = useState<string | null>(null);
@@ -65,6 +72,19 @@ export default function AdminOperatorEditPage() {
     setPermissionDraft(null);
     setPermissionError(null);
   }, [operator?.id]);
+
+  // Moves keyboard and visual focus to 権限 when opened from the profile empty state.
+  useEffect(() => {
+    if (!operator || location.hash !== `#${OPERATOR_PERMISSION_SECTION_ID}`) {
+      return;
+    }
+
+    const permissionSection = document.getElementById(
+      OPERATOR_PERMISSION_SECTION_ID,
+    );
+    permissionSection?.focus({ preventScroll: true });
+    permissionSection?.scrollIntoView({ block: 'start' });
+  }, [location.hash, operator]);
 
   const formValues = useMemo(
     () => (operator ? mapOperatorToFormValues(operator) : null),
@@ -184,11 +204,8 @@ export default function AdminOperatorEditPage() {
             onBack={handleBack}
             defaultValues={formValues}
             originalData={formValues}
-            siteOptions={sitesQuery.data?.sites ?? []}
-            isSiteOptionsLoading={sitesQuery.isLoading}
-            siteOptionsError={
-              sitesQuery.isError ? '担当拠点を取得できませんでした。' : null
-            }
+            hideSiteSection
+            hidePositionField
             hideUsernameField
             hasExternalChanges={hasPermissionChanges}
             additionalSections={
@@ -196,6 +213,8 @@ export default function AdminOperatorEditPage() {
                 selectedPermissions={selectedPermissions}
                 onChange={handlePermissionsChange}
                 error={permissionError}
+                sectionNumber={3}
+                sectionId={OPERATOR_PERMISSION_SECTION_ID}
               />
             }
             submitLabel="更新する"

@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import {
   getOperatorPermissionLabel,
   groupOperatorPermissions,
@@ -5,14 +7,30 @@ import {
 
 type OperatorPermissionGroupsProps = {
   permissions: readonly string[];
+  configureHref?: string;
 };
 
 /** Displays operator permissions as Figma-style category groups and compact chips. */
 export function OperatorPermissionGroups({
   permissions,
+  configureHref,
 }: Readonly<OperatorPermissionGroupsProps>) {
   if (permissions.length === 0) {
-    return <p className="text-sm text-muted-foreground">権限なし</p>;
+    return (
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">権限なし</p>
+        {configureHref ? (
+          <Button
+            asChild
+            variant="link"
+            size="sm"
+            className="h-auto justify-start px-0 py-0"
+          >
+            <Link to={configureHref}>権限を設定 →</Link>
+          </Button>
+        ) : null}
+      </div>
+    );
   }
 
   const permissionGroups = groupOperatorPermissions(permissions);

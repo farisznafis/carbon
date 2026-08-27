@@ -78,6 +78,8 @@ export const paths = {
   adminOperatorEditRoute: '/admin/operators/:userId/edit',
   adminOperatorEdit: (userId: string | number) =>
     `/admin/operators/${encodeURIComponent(String(userId))}/edit`,
+  adminOperatorPermissionEdit: (userId: string | number) =>
+    `/admin/operators/${encodeURIComponent(String(userId))}/edit#permissions`,
   adminMethodologyList: '/admin/methodologies',
   adminMonitoring: '/admin/monitoring',
   adminCompanyDetailRoute: '/admin/companies/:companyId',

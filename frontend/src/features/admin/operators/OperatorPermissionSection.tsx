@@ -7,13 +7,19 @@ type OperatorPermissionSectionProps = {
   selectedPermissions: string[];
   onChange: (permissions: string[]) => void;
   error?: string | null;
+  sectionNumber?: number;
+  sectionId?: string;
 };
+
+export const OPERATOR_PERMISSION_SECTION_ID = 'permissions';
 
 /** Renders the permission-code selection reused by the admin operator form. */
 export function OperatorPermissionSection({
   selectedPermissions,
   onChange,
   error,
+  sectionNumber = 4,
+  sectionId,
 }: Readonly<OperatorPermissionSectionProps>) {
   const groupedPermissions = OPERATOR_PERMISSION_OPTIONS.reduce(
     (groups, permission) => {
@@ -34,7 +40,13 @@ export function OperatorPermissionSection({
   };
 
   return (
-    <FormSection number={4} title="権限">
+    <FormSection
+      id={sectionId}
+      number={sectionNumber}
+      title="権限"
+      tabIndex={sectionId ? -1 : undefined}
+      className={sectionId ? 'scroll-mt-24' : undefined}
+    >
       <p className="text-sm leading-6 text-muted-foreground">
         運用者が担当する業務に必要な権限を選択してください。
       </p>

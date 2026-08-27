@@ -158,7 +158,10 @@ export default function AdminOperatorProfilePage() {
                 )}
                 description="利用権限は実行できる操作を表します。"
               >
-                <OperatorPermissionGroups permissions={operator.permissions} />
+                <OperatorPermissionGroups
+                  permissions={operator.permissions}
+                  configureHref={paths.adminOperatorPermissionEdit(operator.id)}
+                />
               </FormSection>
             </FormSectionStack>
           </FormCard>

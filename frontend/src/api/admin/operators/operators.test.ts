@@ -74,7 +74,7 @@ describe('admin operator API', () => {
     );
   });
 
-  it('posts the operator role, permission codes, and site assignment', async () => {
+  it('posts the operator account without position or site assignment', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue(jsonResponse({ statusCode: 'OK', user: { id: 3 } }));
@@ -88,11 +88,9 @@ describe('admin operator API', () => {
       lastNameKana: 'イトウ',
       email: 'ito@example.com',
       phoneNumber: '0354321235',
-      userPosition: '担当者',
       password: 'Password1',
       role: 'operator',
       permissionCodes: ['PROJECT_READ'],
-      siteId: 5,
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -102,6 +100,8 @@ describe('admin operator API', () => {
         body: expect.stringContaining('"permissionCodes":["PROJECT_READ"]'),
       }),
     );
+    expect(fetchMock.mock.calls[0]?.[1]?.body).not.toContain('userPosition');
+    expect(fetchMock.mock.calls[0]?.[1]?.body).not.toContain('siteId');
   });
 
   it('patches the encoded operator ID with updated profile and permissions', async () => {
@@ -118,9 +118,7 @@ describe('admin operator API', () => {
       lastNameKana: 'イトウ',
       email: 'ito@example.com',
       phoneNumber: '0354321235',
-      userPosition: '担当者',
       permissionCodes: ['PROJECT_READ'],
-      siteId: 5,
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -130,5 +128,7 @@ describe('admin operator API', () => {
         body: expect.stringContaining('"permissionCodes":["PROJECT_READ"]'),
       }),
     );
+    expect(fetchMock.mock.calls[0]?.[1]?.body).not.toContain('userPosition');
+    expect(fetchMock.mock.calls[0]?.[1]?.body).not.toContain('siteId');
   });
 });

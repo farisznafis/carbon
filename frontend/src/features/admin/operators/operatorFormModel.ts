@@ -31,20 +31,11 @@ export function getOperatorFieldError(
   return typeof fieldError === 'string' ? fieldError : null;
 }
 
-/** Preserves numeric site IDs while allowing backend string identifiers. */
-function normalizeOperatorSiteId(siteId?: string): string | number | undefined {
-  if (!siteId) return undefined;
-  const numericSiteId = Number(siteId);
-  return Number.isFinite(numericSiteId) ? numericSiteId : siteId;
-}
-
 /** Maps shared user-form fields into the common operator request fields. */
 function mapOperatorRequestFields(
   values: UserFormData,
   permissionCodes: string[],
 ): UpdateAdminOperatorPayload {
-  const siteId = normalizeOperatorSiteId(values.siteId);
-
   return {
     username: values.username.trim(),
     firstName: values.firstName.trim(),
@@ -53,9 +44,7 @@ function mapOperatorRequestFields(
     lastNameKana: values.lastNameKana.trim(),
     email: values.email.trim(),
     phoneNumber: String(values.phoneNumber ?? '').replace(/-/g, ''),
-    userPosition: values.userPosition?.trim() ?? '',
     permissionCodes,
-    ...(siteId !== undefined ? { siteId } : {}),
   };
 }
 

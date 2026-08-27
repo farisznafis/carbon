@@ -81,11 +81,9 @@ export type CreateAdminOperatorPayload = {
   lastNameKana: string;
   email: string;
   phoneNumber: string;
-  userPosition: string;
   password: string;
   role: 'operator';
   permissionCodes: string[];
-  siteId?: string | number;
 };
 
 export type CreateAdminOperatorResponse = {

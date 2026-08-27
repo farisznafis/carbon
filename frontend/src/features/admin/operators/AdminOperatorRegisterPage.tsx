@@ -12,7 +12,6 @@ import {
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { UserForm } from '@/features/master/forms/UserForm';
 import { adminOperatorsQueryKey } from '@/hooks/admin/useAdminOperatorsQuery';
-import { useSitesQuery } from '@/hooks/sites/useSitesQuery';
 import { toast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
 import { OperatorPermissionSection } from './OperatorPermissionSection';
@@ -26,7 +25,6 @@ import {
 export default function AdminOperatorRegisterPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const sitesQuery = useSitesQuery();
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [permissionError, setPermissionError] = useState<string | null>(null);
 
@@ -39,13 +37,8 @@ export default function AdminOperatorRegisterPage() {
     if (permissions.length > 0) setPermissionError(null);
   };
 
-  /** Creates the operator after validating the permission selection. */
+  /** Creates the operator with an optional permission selection. */
   const handleSubmit = async (values: UserFormData) => {
-    if (selectedPermissions.length === 0) {
-      setPermissionError('1つ以上の権限を選択してください。');
-      throw new Error('権限が選択されていません。');
-    }
-
     setPermissionError(null);
 
     try {
@@ -96,16 +89,14 @@ export default function AdminOperatorRegisterPage() {
           onBack={handleBack}
           defaultValues={EMPTY_OPERATOR_VALUES}
           originalData={EMPTY_OPERATOR_VALUES}
-          siteOptions={sitesQuery.data?.sites ?? []}
-          isSiteOptionsLoading={sitesQuery.isLoading}
-          siteOptionsError={
-            sitesQuery.isError ? '担当拠点を取得できませんでした。' : null
-          }
+          hideSiteSection
+          hidePositionField
           additionalSections={
             <OperatorPermissionSection
               selectedPermissions={selectedPermissions}
               onChange={handlePermissionsChange}
               error={permissionError}
+              sectionNumber={3}
             />
           }
           submitLabel="登録する"
