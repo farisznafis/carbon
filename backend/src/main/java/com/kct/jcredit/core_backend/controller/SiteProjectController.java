@@ -259,17 +259,19 @@ public class SiteProjectController {
         }
     }
 
-    @GetMapping("/{projectId}/my-participations")
-    @PreAuthorize("hasAnyRole('master','user')")
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "自社の参加情報一覧取得", description = "指定プロジェクトにおける自社の参加情報一覧を取得します。")
-    public ResponseEntity<List<MyParticipationResponse>> getMyParticipations(
-            Authentication authentication,
-            @PathVariable String projectId) {
 
-        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
-        return ResponseEntity.ok(
-                participationService.getMyParticipations(projectId, companyId));
-    }
+    //TODO:uncomment once contract is made
+    // @GetMapping("/{projectId}/my-participations")
+    // @PreAuthorize("hasAnyRole('master','user')")
+    // @SecurityRequirement(name = "bearerAuth")
+    // @Operation(summary = "自社の参加情報一覧取得", description = "指定プロジェクトにおける自社の参加情報一覧を取得します。")
+    // public ResponseEntity<List<MyParticipationResponse>> getMyParticipations(
+    //         Authentication authentication,
+    //         @PathVariable String projectId) {
+
+    //     String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+    //     return ResponseEntity.ok(
+    //             participationService.getMyParticipations(projectId, companyId));
+    // }
 
 }
