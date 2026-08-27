@@ -1,5 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Info, Plus, Search, X } from 'lucide-react';
 import type { AdminOperator } from '@/api/admin/operators';
 import {
@@ -34,6 +40,10 @@ import {
 const ALL_FILTER_VALUE = '__all__';
 const NO_PERMISSION_FILTER_VALUE = '__none__';
 const EMPTY_OPERATORS: AdminOperator[] = [];
+const OPERATOR_ROLE_LABELS: Readonly<Record<string, string>> = {
+  admin: '管理者',
+  operator: '運用者',
+};
 
 /** Produces the Japanese display name in surname-first order. */
 function getOperatorDisplayName(operator: AdminOperator): string {
@@ -44,12 +54,59 @@ function getOperatorDisplayName(operator: AdminOperator): string {
   );
 }
 
+/** Converts an API role into its Japanese table and filter label. */
+function getOperatorRoleLabel(role: string): string {
+  return OPERATOR_ROLE_LABELS[role] ?? (role || '-');
+}
+
+/** Returns the longest visible label so a filter can hug its widest option. */
+function getLongestFilterLabel(labels: readonly string[]): string {
+  return labels.reduce(
+    (longestLabel, label) =>
+      Array.from(label).length > Array.from(longestLabel).length
+        ? label
+        : longestLabel,
+    '',
+  );
+}
+
+/** Sizes a select to its longest option on desktop while keeping mobile full width. */
+function HugFilterSelect({
+  longestLabel,
+  children,
+}: Readonly<{ longestLabel: string; children: ReactNode }>) {
+  return (
+    <div className="grid w-full max-w-full sm:w-fit">
+      <span
+        aria-hidden="true"
+        className="invisible col-start-1 row-start-1 hidden whitespace-nowrap px-10 text-sm sm:block"
+      >
+        {longestLabel}
+      </span>
+      <div className="col-start-1 row-start-1 min-w-0">{children}</div>
+    </div>
+  );
+}
+
 /** Produces the two-line permission summary required by the operator table. */
 function OperatorPermissionSummary({
   permissions,
-}: Readonly<{ permissions: string[] }>) {
+  configureHref,
+}: Readonly<{ permissions: string[]; configureHref: string }>) {
   if (permissions.length === 0) {
-    return <span className="text-muted-foreground">権限なし</span>;
+    return (
+      <div className="space-y-1">
+        <p className="text-muted-foreground">権限なし</p>
+        <Button
+          asChild
+          variant="link"
+          size="sm"
+          className="h-auto justify-start px-0 py-0"
+        >
+          <Link to={configureHref}>権限を設定 →</Link>
+        </Button>
+      </div>
+    );
   }
 
   const primaryCategory = getOperatorPermissionCategory(permissions[0]);
@@ -121,6 +178,7 @@ export default function AdminOperatorListPage() {
   const navigate = useNavigate();
   const operatorsQuery = useAdminOperatorsQuery();
   const operators = operatorsQuery.data?.users ?? EMPTY_OPERATORS;
+  const [roleFilter, setRoleFilter] = useState(ALL_FILTER_VALUE);
   const [permissionFilter, setPermissionFilter] = useState(ALL_FILTER_VALUE);
   const [searchTerm, setSearchTerm] = useState('');
   const [showInformation, setShowInformation] = useState(true);
@@ -134,11 +192,43 @@ export default function AdminOperatorListPage() {
       ),
     [operators],
   );
+  const roleOptions = useMemo(
+    () =>
+      Array.from(new Set(operators.map((operator) => operator.role))).filter(
+        Boolean,
+      ),
+    [operators],
+  );
+  const longestRoleFilterLabel = useMemo(
+    () =>
+      getLongestFilterLabel([
+        'すべてのロール',
+        ...roleOptions.map(getOperatorRoleLabel),
+      ]),
+    [roleOptions],
+  );
+  const longestPermissionFilterLabel = useMemo(
+    () =>
+      getLongestFilterLabel([
+        'すべての権限',
+        '権限なし',
+        ...permissionGroups.flatMap((group) =>
+          group.permissions.map(getOperatorPermissionLabel),
+        ),
+      ]),
+    [permissionGroups],
+  );
 
   const filteredOperators = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLocaleLowerCase('ja');
 
     return operators.filter((operator) => {
+      if (
+        roleFilter !== ALL_FILTER_VALUE &&
+        operator.role !== roleFilter
+      ) {
+        return false;
+      }
       if (
         permissionFilter === NO_PERMISSION_FILTER_VALUE &&
         operator.permissions.length > 0
@@ -164,14 +254,14 @@ export default function AdminOperatorListPage() {
 
       return searchableText.includes(normalizedSearch);
     });
-  }, [operators, permissionFilter, searchTerm]);
+  }, [operators, permissionFilter, roleFilter, searchTerm]);
 
   const pagination = usePagination(filteredOperators, { itemsPerPage: 10 });
   const { setCurrentPage } = pagination;
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [permissionFilter, searchTerm, setCurrentPage]);
+  }, [permissionFilter, roleFilter, searchTerm, setCurrentPage]);
 
   /** Navigates every add-operator CTA to the same registration route. */
   const handleAddOperator = useCallback(
@@ -216,10 +306,20 @@ export default function AdminOperatorListPage() {
         ),
       },
       {
+        id: 'role',
+        label: 'ロール',
+        sortable: true,
+        sortValue: (operator) => getOperatorRoleLabel(operator.role),
+        render: (operator) => getOperatorRoleLabel(operator.role),
+      },
+      {
         id: 'permissions',
         label: '権限',
         render: (operator) => (
-          <OperatorPermissionSummary permissions={operator.permissions} />
+          <OperatorPermissionSummary
+            permissions={operator.permissions}
+            configureHref={paths.adminOperatorPermissionEdit(operator.id)}
+          />
         ),
       },
       {
@@ -301,38 +401,61 @@ export default function AdminOperatorListPage() {
             ) : (
               <>
                 <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="w-full sm:max-w-xs">
-                    <Select
-                      value={permissionFilter}
-                      onValueChange={setPermissionFilter}
-                    >
-                      <SelectTrigger
-                        className="h-10 bg-card"
-                        aria-label="権限で絞り込む"
+                  <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
+                    <HugFilterSelect longestLabel={longestRoleFilterLabel}>
+                      <Select value={roleFilter} onValueChange={setRoleFilter}>
+                        <SelectTrigger
+                          className="h-10 bg-card"
+                          aria-label="ロールで絞り込む"
+                        >
+                          <SelectValue placeholder="ロール" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={ALL_FILTER_VALUE}>
+                            すべてのロール
+                          </SelectItem>
+                          {roleOptions.map((role) => (
+                            <SelectItem key={role} value={role}>
+                              {getOperatorRoleLabel(role)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </HugFilterSelect>
+
+                    <HugFilterSelect longestLabel={longestPermissionFilterLabel}>
+                      <Select
+                        value={permissionFilter}
+                        onValueChange={setPermissionFilter}
                       >
-                        <SelectValue placeholder="権限" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={ALL_FILTER_VALUE}>すべての権限</SelectItem>
-                        <SelectSeparator />
-                        {permissionGroups.map((group) => (
-                          <SelectGroup key={group.category}>
-                            <SelectLabel className="px-2 text-xs text-muted-foreground">
-                              {group.category}
-                            </SelectLabel>
-                            {group.permissions.map((permission) => (
-                              <SelectItem key={permission} value={permission}>
-                                {getOperatorPermissionLabel(permission)}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        ))}
-                        <SelectSeparator />
-                        <SelectItem value={NO_PERMISSION_FILTER_VALUE}>
-                          権限なし
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                        <SelectTrigger
+                          className="h-10 bg-card"
+                          aria-label="権限で絞り込む"
+                        >
+                          <SelectValue placeholder="権限" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={ALL_FILTER_VALUE}>すべての権限</SelectItem>
+                          <SelectSeparator />
+                          {permissionGroups.map((group) => (
+                            <SelectGroup key={group.category}>
+                              <SelectLabel className="px-2 text-xs text-muted-foreground">
+                                {group.category}
+                              </SelectLabel>
+                              {group.permissions.map((permission) => (
+                                <SelectItem key={permission} value={permission}>
+                                  {getOperatorPermissionLabel(permission)}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          ))}
+                          <SelectSeparator />
+                          <SelectItem value={NO_PERMISSION_FILTER_VALUE}>
+                            権限なし
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </HugFilterSelect>
                   </div>
                   <div className="relative w-full lg:max-w-md">
                     <Search
@@ -356,8 +479,8 @@ export default function AdminOperatorListPage() {
                     <DataGridTable
                       rows={pagination.paginatedItems}
                       columns={columns}
-                      gridTemplateColumns="1.1fr 1fr 1.6fr 1.2fr 104px"
-                      minWidth={880}
+                      gridTemplateColumns="1.1fr 1fr 1.5fr 0.8fr 1.2fr 104px"
+                      minWidth={1020}
                       getRowKey={(operator) => operator.id}
                       emptyMessage="条件に一致する運用者はいません。"
                     />

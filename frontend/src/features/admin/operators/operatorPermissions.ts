@@ -11,6 +11,11 @@ export type OperatorPermissionGroup = {
   permissions: string[];
 };
 
+export type OperatorPermissionOptionGroup = {
+  category: string;
+  permissions: readonly OperatorPermissionOption[];
+};
+
 const FALLBACK_PERMISSION_CATEGORY = 'その他';
 
 const PERMISSION_CATEGORY_ORDER = [
@@ -70,6 +75,19 @@ export function getOperatorPermissionLabel(permission: string): string {
 /** Returns the primary permission category used by the compact list summary. */
 export function getOperatorPermissionCategory(permission: string): string {
   return PERMISSION_CATEGORY_BY_CODE.get(permission) ?? FALLBACK_PERMISSION_CATEGORY;
+}
+
+/** Groups permission options in the shared business order used by operator forms. */
+export function groupOperatorPermissionOptions(): OperatorPermissionOptionGroup[] {
+  return PERMISSION_CATEGORY_ORDER
+    .filter((category) => category !== FALLBACK_PERMISSION_CATEGORY)
+    .map((category) => ({
+      category,
+      permissions: OPERATOR_PERMISSION_OPTIONS.filter(
+        (permission) => permission.category === category,
+      ),
+    }))
+    .filter((group) => group.permissions.length > 0);
 }
 
 /** Groups API permission codes in the stable category order used by profile and filters. */

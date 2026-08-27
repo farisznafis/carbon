@@ -84,7 +84,7 @@ export function AdminNavigation() {
             type="button"
             variant="ghost"
             size="icon"
-            className="h-12 w-12 border border-border min-[1440px]:hidden"
+            className="h-11 w-11 border border-border min-[1440px]:hidden"
             aria-label="管理メニューを開く"
           >
             <Menu className="h-5 w-5" aria-hidden="true" />

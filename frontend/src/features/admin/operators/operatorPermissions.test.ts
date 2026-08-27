@@ -1,10 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import {
+  groupOperatorPermissionOptions,
   groupOperatorPermissions,
   OPERATOR_PERMISSION_OPTIONS,
 } from './operatorPermissions';
 
 describe('groupOperatorPermissions', () => {
+  it('uses the requested category order in the operator edit form', () => {
+    expect(
+      groupOperatorPermissionOptions().map((group) => group.category),
+    ).toEqual([
+      'プロジェクト管理',
+      '参加企業・申請管理',
+      'モニタリング管理',
+      '運用者管理',
+      '方法論・帳票',
+    ]);
+  });
+
   it('exposes the 19 active permissions without PROJECT_VIEW', () => {
     expect(OPERATOR_PERMISSION_OPTIONS).toHaveLength(19);
     expect(

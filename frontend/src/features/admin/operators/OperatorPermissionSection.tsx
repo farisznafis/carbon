@@ -1,7 +1,7 @@
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormSection } from '@/components/forms/form-layout';
 import { cn } from '@/lib/utils';
-import { OPERATOR_PERMISSION_OPTIONS } from './operatorPermissions';
+import { groupOperatorPermissionOptions } from './operatorPermissions';
 
 type OperatorPermissionSectionProps = {
   selectedPermissions: string[];
@@ -21,14 +21,7 @@ export function OperatorPermissionSection({
   sectionNumber = 4,
   sectionId,
 }: Readonly<OperatorPermissionSectionProps>) {
-  const groupedPermissions = OPERATOR_PERMISSION_OPTIONS.reduce(
-    (groups, permission) => {
-      const categoryPermissions = groups.get(permission.category) ?? [];
-      groups.set(permission.category, [...categoryPermissions, permission]);
-      return groups;
-    },
-    new Map<string, (typeof OPERATOR_PERMISSION_OPTIONS)[number][]>(),
-  );
+  const groupedPermissions = groupOperatorPermissionOptions();
 
   /** Adds or removes one permission code without mutating the current selection. */
   const handlePermissionChange = (permissionCode: string, checked: boolean) => {
@@ -51,11 +44,13 @@ export function OperatorPermissionSection({
         運用者が担当する業務に必要な権限を選択してください。
       </p>
       <div className="space-y-5">
-        {Array.from(groupedPermissions.entries()).map(([category, permissions]) => (
-          <fieldset key={category} className="space-y-3">
-            <legend className="text-sm font-bold text-foreground">{category}</legend>
+        {groupedPermissions.map((group) => (
+          <fieldset key={group.category} className="space-y-3">
+            <legend className="text-sm font-bold text-foreground">
+              {group.category}
+            </legend>
             <div className="grid gap-3 sm:grid-cols-2">
-              {permissions.map((permission) => {
+              {group.permissions.map((permission) => {
                 const checked = selectedPermissions.includes(permission.code);
                 return (
                   <label

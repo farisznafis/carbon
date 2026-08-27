@@ -18,9 +18,9 @@ export const ADMIN_NAVIGATION_ITEMS: readonly AdminNavigationItem[] = [
   { key: 'home', label: 'ホーム', href: paths.adminDashboard },
   { key: 'projects', label: 'プロジェクト', href: paths.adminProjectList },
   { key: 'companies', label: '企業管理', href: paths.adminCompanyList },
+  { key: 'monitoring', label: 'モニタリング管理', href: paths.adminMonitoring },
   { key: 'operators', label: '運営管理', href: paths.adminOperatorList },
   { key: 'methodologies', label: '方法論', href: paths.adminMethodologyList },
-  { key: 'monitoring', label: 'モニタリング管理', href: paths.adminMonitoring },
 ] as const;
 
 const LEGACY_TAB_NAVIGATION_MAP: Partial<

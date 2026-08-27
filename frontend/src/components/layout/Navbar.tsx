@@ -135,7 +135,7 @@ export const Navbar = () => {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="relative h-12 w-12 border border-border"
+                      className="relative h-11 w-11 border border-border"
                       aria-label="お知らせ"
                     >
                       <Bell className="h-4 w-4" />

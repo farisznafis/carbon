@@ -23,7 +23,7 @@ const operators: AdminOperator[] = [
     id: '1',
     username: 'ito.kenichi',
     name: '伊藤 健一',
-    role: 'operator',
+    role: 'admin',
     email: 'ito@example.com',
     firstName: '健一',
     firstNameKana: 'ケンイチ',
@@ -84,6 +84,13 @@ describe('AdminOperatorListPage', () => {
     expect(screen.getByText('2機能')).toBeInTheDocument();
     expect(screen.getByText('プロジェクト管理 +1')).toBeInTheDocument();
     expect(screen.getByText('権限なし')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '権限を設定 →' })).toHaveAttribute(
+      'href',
+      '/admin/operators/2/edit#permissions',
+    );
+    expect(screen.getByText('管理者')).toBeInTheDocument();
+    expect(screen.getByText('運用者')).toBeInTheDocument();
+    expect(screen.getByText('ロール')).toBeInTheDocument();
     expect(screen.queryByText('役職')).not.toBeInTheDocument();
     expect(screen.queryByText('担当拠点')).not.toBeInTheDocument();
 
@@ -104,6 +111,19 @@ describe('AdminOperatorListPage', () => {
     });
     fireEvent.keyDown(permissionFilter, { key: 'Enter' });
     fireEvent.click(screen.getByRole('option', { name: 'プロジェクト参照' }));
+
+    expect(screen.getByText('伊藤 健一')).toBeInTheDocument();
+    expect(screen.queryByText('佐藤 花')).not.toBeInTheDocument();
+  });
+
+  it('filters operators by the role returned by the API', () => {
+    renderPage();
+
+    const roleFilter = screen.getByRole('combobox', {
+      name: 'ロールで絞り込む',
+    });
+    fireEvent.keyDown(roleFilter, { key: 'Enter' });
+    fireEvent.click(screen.getByRole('option', { name: '管理者' }));
 
     expect(screen.getByText('伊藤 健一')).toBeInTheDocument();
     expect(screen.queryByText('佐藤 花')).not.toBeInTheDocument();
