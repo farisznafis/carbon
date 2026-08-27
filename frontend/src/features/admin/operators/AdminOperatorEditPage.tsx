@@ -68,7 +68,7 @@ export default function AdminOperatorEditPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const profileQuery = useAdminOperatorProfileQuery(userId);
-  const operatorsQuery = useAdminOperatorsQuery();
+  const operatorsQuery = useAdminOperatorsQuery(true, 'caller');
   const operator = profileQuery.data;
   const effectiveRole = resolveOperatorRole(
     operator,

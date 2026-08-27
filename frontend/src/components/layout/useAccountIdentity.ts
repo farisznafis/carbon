@@ -39,7 +39,7 @@ export function useAccountIdentity(user: User) {
   const profile = useProfileStore((state) => state.profile);
   const setProfile = useProfileStore((state) => state.setProfile);
   const isAdminAccount = user.role === 'admin';
-  const adminOperatorsQuery = useAdminOperatorsQuery(isAdminAccount);
+  const adminOperatorsQuery = useAdminOperatorsQuery(isAdminAccount, 'caller');
   const currentAdminOperator = useMemo(
     () =>
       findCurrentAdminOperator(

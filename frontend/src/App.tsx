@@ -15,6 +15,7 @@ import { SessionExpiryGuard } from "@/components/layout/SessionExpiryGuard";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "./contexts/ProtectedRoute";
 import { ErrorBoundary } from "@/components/feedback/ErrorBoundary";
+import { ForbiddenAccessBoundary } from '@/components/feedback/ForbiddenAccessBoundary';
 import { AppLoadingScreen, PageSkeleton } from '@/components/feedback/loading';
 import { isAuthPagePath, paths } from "@/routes/paths";
 import { cn } from "@/lib/utils";
@@ -186,8 +187,9 @@ const App = () => {
             isAuthPage && 'relative overflow-hidden',
           )}
         >
-          <Suspense fallback={<PageSkeleton />}>
-            <Routes>
+          <ForbiddenAccessBoundary>
+            <Suspense fallback={<PageSkeleton />}>
+              <Routes>
           <Route path={paths.home} element={<Index />} />
           <Route path={paths.login} element={<Login />} />
           <Route path={paths.adminLogin} element={<AdminLogin />} />
@@ -401,8 +403,9 @@ const App = () => {
               <AdminHelpFaqPage />
             }
           />
-            </Routes>
-          </Suspense>
+              </Routes>
+            </Suspense>
+          </ForbiddenAccessBoundary>
         </div>
       </div>
     </ErrorBoundary>

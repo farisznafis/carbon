@@ -3,14 +3,18 @@ import {
   getAdminOperatorProfile,
   getAdminOperators,
 } from '@/api/admin/operators';
+import type { ForbiddenHandling } from '@/api/_shared/forbiddenAccess';
 
 export const adminOperatorsQueryKey = ['admin', 'operators'] as const;
 
 /** Loads GET /admin/companies/operator-user with a reusable React Query cache. */
-export function useAdminOperatorsQuery(enabled = true) {
+export function useAdminOperatorsQuery(
+  enabled = true,
+  forbiddenHandling: ForbiddenHandling = 'page',
+) {
   return useQuery({
-    queryKey: adminOperatorsQueryKey,
-    queryFn: getAdminOperators,
+    queryKey: [...adminOperatorsQueryKey, forbiddenHandling],
+    queryFn: () => getAdminOperators({ forbiddenHandling }),
     staleTime: 60_000,
     enabled,
   });

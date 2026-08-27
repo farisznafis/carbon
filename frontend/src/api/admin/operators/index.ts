@@ -1,4 +1,5 @@
 import { apiRequest } from '@/api/_shared/httpClient';
+import type { ForbiddenHandling } from '@/api/_shared/forbiddenAccess';
 import {
   mapAdminOperator,
   mapAdminOperatorListResponse,
@@ -15,12 +16,19 @@ import type {
   UpdateAdminOperatorResponse,
 } from './types';
 
+type GetAdminOperatorsOptions = {
+  forbiddenHandling?: ForbiddenHandling;
+};
+
 /** Calls GET /admin/companies/operator-user to load operators for the logged-in admin company. */
-export async function getAdminOperators(): Promise<AdminOperatorListResponse> {
+export async function getAdminOperators(
+  options: GetAdminOperatorsOptions = {},
+): Promise<AdminOperatorListResponse> {
   const response = await apiRequest<AdminOperatorListApiResponse>(
     '/admin/companies/operator-user',
     {
       method: 'GET',
+      forbiddenHandling: options.forbiddenHandling,
       fallbackErrorMessage: '運用者一覧を取得できませんでした。',
     },
   );
