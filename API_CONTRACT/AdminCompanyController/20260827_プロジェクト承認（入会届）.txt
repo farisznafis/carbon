@@ -1,0 +1,52 @@
+POST /admin/companies/participation/{participationId}/approve
+Authorization: Bearer {token}
+Content-Type: application/json
+
+Request Body
+{
+  "reviewerInkan": "電子承認",
+  "isSolarContractDoc": true,
+  "isPcsSpecDoc": true,
+  "isBatterySpecDoc": true,
+  "isOperationStartDoc": true,
+  "isGenerationDataDoc": true,
+  "isReversePowerDoc": true,
+  "isInvestmentProofDoc": true,
+  "isApplicationCompleteCheck": true,
+  "isFormsAttachCheck": true,
+  "isEmissionsReductionActivityListCheck": true,
+  "isOriginalSpecCheck": true,
+  "isSubsidyCheck": true
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "message": "承認しました。"
+}
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "参加情報が見つかりません。"
+},
+{
+  "statusCode": "REVIEW_CLOSED",
+  "message": "このレビューは既に完了しています。"
+},
+{
+  "statusCode": "SAME_REVIEWER",
+  "message": "一次確認者と同一の担当者は二次確認者になれません。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
