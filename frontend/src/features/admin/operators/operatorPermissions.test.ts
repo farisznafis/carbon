@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ASSIGNABLE_OPERATOR_PERMISSION_OPTIONS,
+  groupAssignableOperatorPermissionOptions,
   groupOperatorPermissionOptions,
   groupOperatorPermissions,
   OPERATOR_PERMISSION_OPTIONS,
+  sanitizeAssignableOperatorPermissions,
 } from './operatorPermissions';
 
 describe('groupOperatorPermissions', () => {
@@ -25,6 +28,28 @@ describe('groupOperatorPermissions', () => {
         (permission) => permission.code === ('PROJECT_VIEW' as string),
       ),
     ).toBe(false);
+  });
+
+  it('excludes operator create and update from assignable permissions', () => {
+    expect(ASSIGNABLE_OPERATOR_PERMISSION_OPTIONS).toHaveLength(17);
+    expect(groupAssignableOperatorPermissionOptions()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          category: '運用者管理',
+          permissions: [
+            expect.objectContaining({ code: 'OPERATOR_USER_READ' }),
+          ],
+        }),
+      ]),
+    );
+    expect(
+      sanitizeAssignableOperatorPermissions([
+        'PROJECT_READ',
+        'OPERATOR_USER_CREATE',
+        'OPERATOR_USER_UPDATE',
+        'FUTURE_PERMISSION',
+      ]),
+    ).toEqual(['PROJECT_READ', 'FUTURE_PERMISSION']);
   });
 
   it('uses the stable Figma category order regardless of API order', () => {

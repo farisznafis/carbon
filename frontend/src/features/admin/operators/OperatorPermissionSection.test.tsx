@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { OPERATOR_PERMISSION_OPTIONS } from './operatorPermissions';
+import { ASSIGNABLE_OPERATOR_PERMISSION_OPTIONS } from './operatorPermissions';
 import { OperatorPermissionSection } from './OperatorPermissionSection';
 
 describe('OperatorPermissionSection', () => {
@@ -14,7 +14,9 @@ describe('OperatorPermissionSection', () => {
       />,
     );
 
-    expect(screen.getByText('選択済み 0 / 19')).toBeInTheDocument();
+    expect(screen.getByText('選択済み 0 / 17')).toBeInTheDocument();
+    expect(screen.queryByText('運用者作成')).not.toBeInTheDocument();
+    expect(screen.queryByText('運用者更新')).not.toBeInTheDocument();
     expect(
       screen.getByRole('checkbox', { name: 'すべての権限を選択' }),
     ).toBeInTheDocument();
@@ -41,7 +43,7 @@ describe('OperatorPermissionSection', () => {
     );
 
     expect(onChange).toHaveBeenCalledWith(
-      OPERATOR_PERMISSION_OPTIONS.map((permission) => permission.code),
+      ASSIGNABLE_OPERATOR_PERMISSION_OPTIONS.map((permission) => permission.code),
     );
   });
 
@@ -77,7 +79,7 @@ describe('OperatorPermissionSection', () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     const selectedPermissions = [
-      ...OPERATOR_PERMISSION_OPTIONS.map((permission) => permission.code),
+      ...ASSIGNABLE_OPERATOR_PERMISSION_OPTIONS.map((permission) => permission.code),
       'FUTURE_PERMISSION',
     ];
     render(

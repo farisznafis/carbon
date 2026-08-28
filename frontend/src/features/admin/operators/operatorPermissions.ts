@@ -17,6 +17,10 @@ export type OperatorPermissionOptionGroup = {
 };
 
 const FALLBACK_PERMISSION_CATEGORY = 'その他';
+const NON_ASSIGNABLE_OPERATOR_PERMISSION_CODES = new Set<string>([
+  'OPERATOR_USER_CREATE',
+  'OPERATOR_USER_UPDATE',
+]);
 
 const PERMISSION_CATEGORY_ORDER = [
   'プロジェクト管理',
@@ -49,6 +53,12 @@ export const OPERATOR_PERMISSION_OPTIONS: readonly OperatorPermissionOption[] = 
   { code: 'APPLICATION_FORM_READ', label: '申請書様式参照', category: '方法論・帳票' },
 ] as const;
 
+export const ASSIGNABLE_OPERATOR_PERMISSION_OPTIONS: readonly OperatorPermissionOption[] =
+  OPERATOR_PERMISSION_OPTIONS.filter(
+    (permission) =>
+      !NON_ASSIGNABLE_OPERATOR_PERMISSION_CODES.has(permission.code),
+  );
+
 const PERMISSION_CATEGORY_BY_CODE = new Map<string, string>(
   OPERATOR_PERMISSION_OPTIONS.map((permission) => [
     permission.code,
@@ -77,17 +87,43 @@ export function getOperatorPermissionCategory(permission: string): string {
   return PERMISSION_CATEGORY_BY_CODE.get(permission) ?? FALLBACK_PERMISSION_CATEGORY;
 }
 
-/** Groups permission options in the shared business order used by operator forms. */
-export function groupOperatorPermissionOptions(): OperatorPermissionOptionGroup[] {
+/** Groups the supplied permission options in the shared business order. */
+function groupPermissionOptions(
+  permissionOptions: readonly OperatorPermissionOption[],
+): OperatorPermissionOptionGroup[] {
   return PERMISSION_CATEGORY_ORDER
     .filter((category) => category !== FALLBACK_PERMISSION_CATEGORY)
     .map((category) => ({
       category,
-      permissions: OPERATOR_PERMISSION_OPTIONS.filter(
+      permissions: permissionOptions.filter(
         (permission) => permission.category === category,
       ),
     }))
     .filter((group) => group.permissions.length > 0);
+}
+
+/** Groups every known permission for filters and read-only presentation. */
+export function groupOperatorPermissionOptions(): OperatorPermissionOptionGroup[] {
+  return groupPermissionOptions(OPERATOR_PERMISSION_OPTIONS);
+}
+
+/** Groups only permissions that administrators may assign to an operator. */
+export function groupAssignableOperatorPermissionOptions(): OperatorPermissionOptionGroup[] {
+  return groupPermissionOptions(ASSIGNABLE_OPERATOR_PERMISSION_OPTIONS);
+}
+
+/** Removes operator create/update capabilities before a create or update request. */
+export function sanitizeAssignableOperatorPermissions(
+  permissionCodes: readonly string[],
+): string[] {
+  return Array.from(
+    new Set(
+      permissionCodes.filter(
+        (permissionCode) =>
+          !NON_ASSIGNABLE_OPERATOR_PERMISSION_CODES.has(permissionCode),
+      ),
+    ),
+  );
 }
 
 /** Groups API permission codes in the stable category order used by profile and filters. */

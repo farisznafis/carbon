@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { UserFormData } from '@/api/users';
-import { mapOperatorUpdatePayload } from './operatorFormModel';
+import {
+  mapOperatorCreatePayload,
+  mapOperatorUpdatePayload,
+} from './operatorFormModel';
 
 const formValues: UserFormData = {
   username: 'admin.primary',
@@ -28,6 +31,27 @@ describe('mapOperatorUpdatePayload', () => {
   it('preserves an explicit empty permission selection for an operator', () => {
     expect(mapOperatorUpdatePayload(formValues, [])).toMatchObject({
       permissionCodes: [],
+    });
+  });
+
+  it('never sends operator create or update permissions', () => {
+    expect(
+      mapOperatorUpdatePayload(formValues, [
+        'PROJECT_READ',
+        'OPERATOR_USER_CREATE',
+        'OPERATOR_USER_UPDATE',
+      ]),
+    ).toMatchObject({
+      permissionCodes: ['PROJECT_READ'],
+    });
+    expect(
+      mapOperatorCreatePayload(formValues, [
+        'PROJECT_READ',
+        'OPERATOR_USER_CREATE',
+        'OPERATOR_USER_UPDATE',
+      ]),
+    ).toMatchObject({
+      permissionCodes: ['PROJECT_READ'],
     });
   });
 });

@@ -2,14 +2,17 @@ import { useId } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormSection } from '@/components/forms/form-layout';
 import {
-  groupOperatorPermissionOptions,
+  ASSIGNABLE_OPERATOR_PERMISSION_OPTIONS,
+  groupAssignableOperatorPermissionOptions,
 } from './operatorPermissions';
 import {
   getPermissionSelectionState,
-  OPERATOR_PERMISSION_CODES,
   type PermissionSelectionState,
   updatePermissionScope,
 } from './operatorPermissionSelection';
+
+const ASSIGNABLE_OPERATOR_PERMISSION_CODES =
+  ASSIGNABLE_OPERATOR_PERMISSION_OPTIONS.map((permission) => permission.code);
 
 type OperatorPermissionSectionProps = {
   selectedPermissions: string[];
@@ -55,14 +58,14 @@ export function OperatorPermissionSection({
   sectionId,
 }: Readonly<OperatorPermissionSectionProps>) {
   const permissionSectionId = useId();
-  const groupedPermissions = groupOperatorPermissionOptions();
+  const groupedPermissions = groupAssignableOperatorPermissionOptions();
   const selectedPermissionSet = new Set(selectedPermissions);
-  const selectedPermissionCount = OPERATOR_PERMISSION_CODES.filter(
+  const selectedPermissionCount = ASSIGNABLE_OPERATOR_PERMISSION_CODES.filter(
     (permissionCode) => selectedPermissionSet.has(permissionCode),
   ).length;
   const allPermissionSelectionState = getPermissionSelectionState(
     selectedPermissionSet,
-    OPERATOR_PERMISSION_CODES,
+    ASSIGNABLE_OPERATOR_PERMISSION_CODES,
   );
 
   /** Adds or removes one permission code without mutating the current selection. */
@@ -77,7 +80,7 @@ export function OperatorPermissionSection({
     onChange(
       updatePermissionScope(
         selectedPermissions,
-        OPERATOR_PERMISSION_CODES,
+        ASSIGNABLE_OPERATOR_PERMISSION_CODES,
         checked,
       ),
     );
@@ -100,7 +103,7 @@ export function OperatorPermissionSection({
       actions={
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
           <p className="text-sm font-semibold text-primary" aria-live="polite">
-            選択済み {selectedPermissionCount} / {OPERATOR_PERMISSION_CODES.length}
+            選択済み {selectedPermissionCount} / {ASSIGNABLE_OPERATOR_PERMISSION_CODES.length}
           </p>
           <PermissionSelectAll
             checked={allPermissionSelectionState}

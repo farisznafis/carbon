@@ -5,6 +5,7 @@ import type {
   UpdateAdminOperatorPayload,
 } from '@/api/admin/operators';
 import type { UserFormData } from '@/api/users';
+import { sanitizeAssignableOperatorPermissions } from './operatorPermissions';
 
 export const EMPTY_OPERATOR_VALUES: UserFormData = {
   username: '',
@@ -44,7 +45,9 @@ function mapOperatorRequestFields(
     lastNameKana: values.lastNameKana.trim(),
     email: values.email.trim(),
     phoneNumber: String(values.phoneNumber ?? '').replace(/-/g, ''),
-    ...(permissionCodes ? { permissionCodes } : {}),
+    ...(permissionCodes
+      ? { permissionCodes: sanitizeAssignableOperatorPermissions(permissionCodes) }
+      : {}),
   };
 }
 
