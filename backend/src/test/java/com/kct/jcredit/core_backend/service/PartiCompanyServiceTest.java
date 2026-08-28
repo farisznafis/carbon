@@ -196,6 +196,7 @@ class PartiCompanyServiceTest {
         verify(participatingCompanyRepository, times(1)).save(testCompany);
     }
 
+    
     @Test
     @DisplayName("異常系: 企業が見つからない")
     void updateCompany_CompanyNotFound() {
@@ -329,5 +330,52 @@ class PartiCompanyServiceTest {
         assertThat(companyInfo.getNameEN()).isEqualTo("Test Corporation");
         assertThat(companyInfo.getCorpNumber()).isEqualTo("1234567890123");
         assertThat(companyInfo.getIsSuspended()).isFalse();
+    }
+
+
+
+
+    @Test
+    @DisplayName("異常系: 企業が見つからない")
+    void updateCompany_CompanyNotFound() {
+        // Given
+        updateRequest.setPhoneNumber("03-9999-9999");
+
+        when(participatingCompanyRepository.findByCompanyId(TEST_COMPANY_ID))
+                .thenReturn(Optional.empty());
+
+        // When
+        UpdatePartiCompanyResponse response = partiCompanyService.updateCompany(TEST_COMPANY_ID, updateRequest);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(ResponseConstants.NOT_FOUND);
+        assertThat(response.getMessage()).isEqualTo(ResponseConstants.MSG_SITE_NOT_FOUND);
+        assertThat(response.getCompany()).isNull();
+
+        verify(participatingCompanyRepository, times(1)).findByCompanyId(TEST_COMPANY_ID);
+        verify(participatingCompanyRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("異常系: DB保存時に例外発生")
+    void updateCompany_DatabaseException() {
+        // Given
+        updateRequest.setPhoneNumber("03-9999-9999");
+
+        when(participatingCompanyRepository.findByCompanyId(TEST_COMPANY_ID))
+                .thenReturn(Optional.of(testCompany));
+        when(participatingCompanyRepository.save(any(ParticipatingCompany.class)))
+                .thenThrow(new RuntimeException("Database error"));
+
+        // When
+        UpdatePartiCompanyResponse response = partiCompanyService.updateCompany(TEST_COMPANY_ID, updateRequest);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(ResponseConstants.INTERNAL_SERVER_ERROR);
+        assertThat(response.getMessage()).isEqualTo(ResponseConstants.MSG_INTERNAL_ERROR);
+        assertThat(response.getCompany()).isNull();
+
+        verify(participatingCompanyRepository, times(1)).findByCompanyId(TEST_COMPANY_ID);
+        verify(participatingCompanyRepository, times(1)).save(testCompany);
     }
 }
