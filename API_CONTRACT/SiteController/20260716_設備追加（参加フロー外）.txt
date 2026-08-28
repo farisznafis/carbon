@@ -79,5 +79,3 @@ Error Responses
   "statusCode": "SERVER_ERROR",
   "message": "サーバー内部でエラーが発生しました。"
 }
-
-
