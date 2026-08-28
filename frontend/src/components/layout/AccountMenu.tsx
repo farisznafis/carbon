@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 type AccountMenuProps = {
   displayName: string;
   email: string;
+  roleLabel: string;
   onProfile: () => void | Promise<void>;
   onLogout: () => Promise<void>;
 };
@@ -21,6 +22,7 @@ type AccountMenuProps = {
 export function AccountMenu({
   displayName,
   email,
+  roleLabel,
   onProfile,
   onLogout,
 }: Readonly<AccountMenuProps>) {
@@ -44,24 +46,24 @@ export function AccountMenu({
         <Button
           type="button"
           variant="ghost"
-          className="group h-12 w-12 gap-2 border border-border px-2 sm:px-3 lg:w-[280px]"
+          className="group h-12 w-12 gap-2 border border-border px-2 sm:px-3 lg:w-fit"
           aria-label={`アカウントメニューを開く：${displayName}`}
         >
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
             <User className="h-4 w-4" aria-hidden="true" />
           </span>
-          <span className="hidden min-w-0 flex-1 flex-col items-start lg:flex">
+          <span className="hidden min-w-0 max-w-56 flex-col items-start lg:flex">
             <span
-              className="w-full truncate text-left text-sm font-medium leading-5 text-foreground"
+              className="w-full truncate text-left text-sm font-semibold leading-5 text-foreground"
               title={displayName}
             >
               {displayName}
             </span>
             <span
-              className="w-full truncate text-left text-xs leading-4 text-muted-foreground"
-              title={email}
+              className="w-full truncate text-left text-sm leading-4 text-muted-foreground"
+              title={roleLabel}
             >
-              {email}
+              {roleLabel}
             </span>
           </span>
           <ChevronDown
@@ -74,28 +76,27 @@ export function AccountMenu({
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-72 sm:w-72">
-        <DropdownMenuLabel className="min-w-0 font-normal lg:hidden">
-          <span className="block truncate text-sm font-medium text-foreground">
+      <DropdownMenuContent align="end" className="w-80 max-w-[calc(100vw-2rem)] p-2">
+        <DropdownMenuLabel className="min-w-0 px-3 py-3 font-normal">
+          <span className="block truncate text-base font-semibold text-foreground">
             {displayName}
           </span>
-          <span className="block truncate text-xs text-muted-foreground">
+          <span className="mt-0.5 block truncate text-sm text-muted-foreground">
             {email}
           </span>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator className="lg:hidden" />
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={() => void onProfile()}
-          className="gap-2 py-2"
+          className="gap-3 px-3 py-3"
         >
           <User className="h-4 w-4" aria-hidden="true" />
           <span>プロファイル</span>
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
         <DropdownMenuItem
           disabled={isLoggingOut}
           onSelect={() => void handleLogout()}
-          className="gap-2 py-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
+          className="mt-1 gap-3 px-3 py-3 text-destructive focus:bg-destructive/10 focus:text-destructive"
         >
           <LogOut className="h-4 w-4" aria-hidden="true" />
           <span>{isLoggingOut ? 'ログアウト中...' : 'ログアウト'}</span>

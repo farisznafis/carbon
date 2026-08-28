@@ -5,6 +5,7 @@ import { findCurrentAdminOperator } from '@/features/admin/operators/currentAdmi
 import { useAdminOperatorsQuery } from '@/hooks/admin/useAdminOperatorsQuery';
 import { paths } from '@/routes/paths';
 import { useProfileStore } from '@/stores/ProfileStore';
+import { formatUserRole } from '@/utils/formatUserRole';
 
 const EMPTY_ACCOUNT_NAME = 'アカウント';
 const EMPTY_ACCOUNT_EMAIL = 'メールアドレス未設定';
@@ -87,6 +88,10 @@ export function useAccountIdentity(user: User) {
     usableText(user.companyName) ||
     emailLocalPart(email) ||
     EMPTY_ACCOUNT_NAME;
+  const accountRole =
+    usableText(
+      isAdminAccount ? currentAdminOperator?.role : profile?.role,
+    ) || usableText(user.role);
 
   /** Resolves the current profile route, refetching the operator list once when needed. */
   const resolveProfilePath = useCallback(async (): Promise<string | null> => {
@@ -112,6 +117,7 @@ export function useAccountIdentity(user: User) {
   return {
     displayName,
     email: email || EMPTY_ACCOUNT_EMAIL,
+    roleLabel: formatUserRole(accountRole),
     resolveProfilePath,
   };
 }
