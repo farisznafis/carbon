@@ -309,13 +309,16 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 }
         );
 
-        return ProjectJoinResponse.builder()
-                .statusCode(ResponseConstants.OK)
-                .message("プロジェクトへの参加が完了しました。")
-                .participationId(participationId)
-                .equipmentId(savedEquipment.getId())
-                .siteProjectRelationId(relation.getId())
-                .build();
+        ProjectJoinResponse response = ProjectJoinResponse.builder()
+        .participationId(participationId)
+        .equipmentId(savedEquipment.getId())
+        .siteProjectRelationId(relation.getId())
+        .build();
+
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage("プロジェクトへの参加が完了しました。");
+
+        return response;
         }
 
     // ─────────────────────────────────────────────────────────────
@@ -570,13 +573,17 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
             reviewRepository.save(confirmation);
         });
 
-        return ProjectJoinResponse.builder()
-                .statusCode(ResponseConstants.OK)
-                .message("再申請が完了しました。")
+        ProjectJoinResponse response = ProjectJoinResponse.builder()
                 .participationId(participationId)
                 .equipmentId(equipmentId)
                 .siteProjectRelationId(relation.getId())
                 .build();
+
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage("再申請が完了しました");
+
+        return response;
+                
         }
 
 //     @Override

@@ -2,12 +2,15 @@ package com.kct.jcredit.core_backend.dto.response;
 
 import lombok.Getter;
 import lombok.Setter;
+
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+
 import lombok.Builder;
 
 @Getter
 @Builder
 @Setter
-public class ProjectParticipationConfirmationResponse {
+public class ProjectParticipationConfirmationResponse extends BaseResponse {
     private Boolean isSolarContractDoc;
     private Boolean isPcsSpecDoc;
     private Boolean isBatterySpecDoc;
