@@ -3,7 +3,7 @@ package com.kct.jcredit.core_backend.service.impl;
 import com.kct.jcredit.core_backend.constant.PermissionCode;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.constant.RoleConstants;
-import com.kct.jcredit.core_backend.dto.request.CreateUserRequest;
+import com.kct.jcredit.core_backend.dto.request.CreateOperatorUserRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdateUserRequest;
 import com.kct.jcredit.core_backend.dto.response.CreateUserResponse;
 import com.kct.jcredit.core_backend.dto.response.UpdateUserResponse;
@@ -73,7 +73,7 @@ public class OperatorUserServiceImpl implements OperatorUserService {
 
     @Override
     @Transactional(readOnly = true)
-    public BaseResponse validateCreateOperatorUser(String companyId, String username, CreateUserRequest request) {
+    public BaseResponse validateCreateOperatorUser(String companyId, String username, CreateOperatorUserRequest request) {
         Map<String, String> errors = new LinkedHashMap<>();
         OperatorCompany company = operatorCompanyRepository.findByCompanyId(companyId).orElse(null);
         if (company == null) {
@@ -96,9 +96,6 @@ public class OperatorUserServiceImpl implements OperatorUserService {
             errors.put("username", ResponseConstants.MSG_USED_USERNAME);
         }
 
-        if (StringUtils.isNotBlank(request.getRole()) && !isSupportedRole(request.getRole())) {
-            errors.put("role", "役割は admin または operator を指定してください。");
-        }
 
         Set<String> requestedPermissionCodes = normalizePermissionCodes(request.getPermissionCodes());
         if (!requestedPermissionCodes.isEmpty()) {
@@ -118,7 +115,7 @@ public class OperatorUserServiceImpl implements OperatorUserService {
 
     @Override
     @Transactional
-    public CreateUserResponse createOperatorUser(String companyId, String username, CreateUserRequest request) {
+    public CreateUserResponse createOperatorUser(String companyId, String username, CreateOperatorUserRequest request) {
         CreateUserResponse response = new CreateUserResponse();
         OperatorCompany company = operatorCompanyRepository.findByCompanyId(companyId).orElse(null);
         if (company == null) {
@@ -170,7 +167,7 @@ public class OperatorUserServiceImpl implements OperatorUserService {
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(normalizeRole(request.getRole()))
+                .role(RoleConstants.OPERATOR)
                 .company(company)
                 .build();
         newUser.setIsActive(true);

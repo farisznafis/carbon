@@ -99,7 +99,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                         .id(project.getPublicId())
                                         .projectName(project.getProjectName())
                                         .projectNumber(project.getProjectNumber())
-                                        .isJoined(alreadyJoined)
+                                        .isCompanyJoined(alreadyJoined)
                                         .build();
                         })
                         .collect(Collectors.toList());
@@ -307,16 +307,16 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                         //         }
                         }
                 }
-        );
-
-        return ProjectJoinResponse.builder()
-                .statusCode(ResponseConstants.OK)
-                .message("プロジェクトへの参加が完了しました。")
+        );   
+        ProjectJoinResponse response =ProjectJoinResponse.builder()
                 .participationId(participationId)
                 .equipmentId(savedEquipment.getId())
                 .siteProjectRelationId(relation.getId())
                 .build();
-        }
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage("プロジェクトへの参加が完了しました。");
+        return response;
+}
 
     // ─────────────────────────────────────────────────────────────
     // PRIVATE — DB saves
@@ -555,14 +555,14 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
             confirmation.setSecondaryApplReviewerInkan(null);
             reviewRepository.save(confirmation);
         });
-
-        return ProjectJoinResponse.builder()
-                .statusCode(ResponseConstants.OK)
-                .message("再申請が完了しました。")
-                .participationId(participationId)
-                .equipmentId(equipmentId)
-                //.siteProjectRelationId() //TODO: do we really need to return this value
-                .build();
+        ProjectJoinResponse response =ProjectJoinResponse.builder()
+                                                        .participationId(participationId)
+                                                        .equipmentId(equipmentId)
+                                                        //.siteProjectRelationId() //TODO: do we really need to return this value
+                                                        .build();
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage("再申請が完了しました。");
+        return response;
         }
 
 
@@ -592,12 +592,14 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                 ResponseConstants.NOT_FOUND,
                                 ResponseConstants.MSG_NOT_FOUND);
                         }
+                        ParticipatingProject participation = participationOpt.get();
                         //if exists check the status only allow new site to join if the status is eligible
-                        if (!participationOpt.get().getStatus().equals("APPROVED")) {
+                        if (!participation.getStatus().equals("APPROVED")) {
                                 if(participationOpt.get().getStatus().equals("REJECTED")){
                                         throw new CustomException(
                                         ResponseConstants.REJECTED,
-                                        "プロジェクト参加申請が却下されました。");
+                                        "プロジェクト参加申請が却下されました。\n" + 
+                                        "お手数ですが、入会届を再申請していただけますと幸いです。");
                                 
                                 } else if(participationOpt.get().getStatus().equals("OPEN")){
                                          throw new CustomException(
@@ -622,7 +624,12 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                         
                         SiteProjectRelation relation = saveSiteProjectRelation(site, project, companyId);
 
-                        ProjectJoinResponse response = new ProjectJoinResponse();
+                        ProjectJoinResponse response = ProjectJoinResponse.builder()       
+                                                        .participationId(participation.getId())
+                                                        .equipmentId(participation.getEquipment().getId())
+                                                        .siteProjectRelationId(relation.getId())
+                                                        .partipationStatus(participation.getStatus())
+                                                        .build();
 
                         response.setStatusCode(ResponseConstants.OK);
                         response.setParticipationId(participationOpt.get().getId());
