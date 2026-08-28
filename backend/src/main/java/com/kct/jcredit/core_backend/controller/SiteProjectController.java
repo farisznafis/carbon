@@ -10,6 +10,7 @@ import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRe
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyMethodologyValidateRequest;
 import com.kct.jcredit.core_backend.dto.response.EnR002FileResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
+import com.kct.jcredit.core_backend.dto.response.MemberTermsInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.MyParticipationResponse;
 import com.kct.jcredit.core_backend.dto.response.ParticipationReviewHistoryResponse;
 import com.kct.jcredit.core_backend.dto.response.PdfDownloadResponse;
