@@ -108,12 +108,14 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
         log.info("File uploaded to S3 tmp. siteId={}, fileType={}, s3Key={}",
                  siteId, fileType.getValue(), s3Key);
 
-        return EnR002FileResponse.builder()
-                .statusCode("OK")
-                .s3Key(s3Key)
-                .fileId(fileId)
-                .originalName(sanitized)
-                .build();
+        EnR002FileResponse response = EnR002FileResponse.builder()
+        .s3Key(s3Key)
+        .fileId(fileId)
+        .originalName(sanitized)
+        .build();
+        response.setStatusCode("OK");
+
+        return response;
     }
 
     // MOVE
