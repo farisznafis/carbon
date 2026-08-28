@@ -25,6 +25,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 import { UserForm } from '@/features/master/forms/UserForm';
 import {
   adminOperatorsQueryKey,
@@ -46,6 +47,7 @@ import {
   isAdminOperatorRole,
   resolveOperatorRole,
 } from './operatorRoles';
+import { findCurrentAdminOperator } from './currentAdminOperator';
 
 /** Compares permission selections independent of API ordering. */
 function havePermissionChanges(
@@ -67,14 +69,27 @@ export default function AdminOperatorEditPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user: sessionUser } = useAuth();
   const profileQuery = useAdminOperatorProfileQuery(userId);
   const operatorsQuery = useAdminOperatorsQuery(true, 'caller');
   const operator = profileQuery.data;
+  const operatorList = operatorsQuery.data?.users ?? [];
+  const currentOperator = sessionUser
+    ? findCurrentAdminOperator(operatorList, sessionUser)
+    : null;
   const effectiveRole = resolveOperatorRole(
     operator,
-    operatorsQuery.data?.users ?? [],
+    operatorList,
   );
-  const canEditPermissions = Boolean(operator) && !isAdminOperatorRole(effectiveRole);
+  const isEditingOwnAccount = Boolean(
+    operator && currentOperator?.id === operator.id,
+  );
+  const canEditPermissions = Boolean(
+    operator &&
+    operatorsQuery.data &&
+    !isEditingOwnAccount &&
+    !isAdminOperatorRole(effectiveRole),
+  );
   const [permissionDraft, setPermissionDraft] = useState<string[] | null>(null);
   const [permissionError, setPermissionError] = useState<string | null>(null);
 

@@ -213,7 +213,7 @@ export function UserForm({
                     <FormItem>
                       <RequiredLabel>姓</RequiredLabel>
                       <FormControl>
-                        <Input placeholder="山田" {...field} />
+                        <Input placeholder="例）山田" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -227,7 +227,7 @@ export function UserForm({
                     <FormItem>
                       <RequiredLabel>名</RequiredLabel>
                       <FormControl>
-                        <Input placeholder="太郎" {...field} />
+                        <Input placeholder="例）太郎" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -241,7 +241,7 @@ export function UserForm({
                     <FormItem>
                       <RequiredLabel>姓（カナ）</RequiredLabel>
                       <FormControl>
-                        <Input placeholder="ヤマダ" {...field} />
+                        <Input placeholder="例）ヤマダ" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -255,7 +255,7 @@ export function UserForm({
                     <FormItem>
                       <RequiredLabel>名（カナ）</RequiredLabel>
                       <FormControl>
-                        <Input placeholder="タロウ" {...field} />
+                        <Input placeholder="例）タロウ" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -303,7 +303,7 @@ export function UserForm({
                     <FormItem>
                       <RequiredLabel>社員名</RequiredLabel>
                       <FormControl>
-                        <Input placeholder="yamada_taro" {...field} />
+                        <Input placeholder="例）yamada_taro" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -320,7 +320,7 @@ export function UserForm({
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="yamada.taro@example.com"
+                        placeholder="例）yamada.taro@example.com"
                         {...field}
                       />
                     </FormControl>

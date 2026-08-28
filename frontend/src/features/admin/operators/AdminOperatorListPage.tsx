@@ -30,7 +30,9 @@ import {
 } from '@/components/ui/select';
 import { useAdminOperatorsQuery } from '@/hooks/admin/useAdminOperatorsQuery';
 import { usePagination } from '@/hooks/usePagination';
+import { useAuth } from '@/contexts/AuthContext';
 import { paths } from '@/routes/paths';
+import { findCurrentAdminOperator } from './currentAdminOperator';
 import {
   getOperatorPermissionCategory,
   getOperatorPermissionLabel,
@@ -48,6 +50,17 @@ function getOperatorDisplayName(operator: AdminOperator): string {
     operator.name ||
     '-'
   );
+}
+
+/** Keeps the unsorted table order stable when editable operator fields change. */
+function compareOperatorStableOrder(
+  firstOperator: AdminOperator,
+  secondOperator: AdminOperator,
+): number {
+  return firstOperator.id.localeCompare(secondOperator.id, 'ja', {
+    numeric: true,
+    sensitivity: 'base',
+  });
 }
 
 /** Returns the longest visible label so a filter can hug its widest option. */
@@ -169,20 +182,36 @@ function OperatorEmptyState({ onAdd }: Readonly<{ onAdd: () => void }>) {
 /** Renders the API-backed operator management list and its empty state. */
 export default function AdminOperatorListPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const operatorsQuery = useAdminOperatorsQuery();
   const operators = operatorsQuery.data?.users ?? EMPTY_OPERATORS;
   const [permissionFilter, setPermissionFilter] = useState(ALL_FILTER_VALUE);
   const [searchTerm, setSearchTerm] = useState('');
   const [showInformation, setShowInformation] = useState(true);
 
+  const currentOperatorId = useMemo(
+    () =>
+      user ? findCurrentAdminOperator(operators, user)?.id ?? null : null,
+    [operators, user],
+  );
+  const manageableOperators = useMemo(
+    () =>
+      operators
+        .filter((operator) => operator.id !== currentOperatorId)
+        .sort(compareOperatorStableOrder),
+    [currentOperatorId, operators],
+  );
+
   const permissionGroups = useMemo(
     () =>
       groupOperatorPermissions(
         Array.from(
-          new Set(operators.flatMap((operator) => operator.permissions)),
+          new Set(
+            manageableOperators.flatMap((operator) => operator.permissions),
+          ),
         ),
       ),
-    [operators],
+    [manageableOperators],
   );
   const longestPermissionFilterLabel = useMemo(
     () =>
@@ -199,7 +228,7 @@ export default function AdminOperatorListPage() {
   const filteredOperators = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLocaleLowerCase('ja');
 
-    return operators.filter((operator) => {
+    return manageableOperators.filter((operator) => {
       if (
         permissionFilter === NO_PERMISSION_FILTER_VALUE &&
         operator.permissions.length > 0
@@ -225,7 +254,7 @@ export default function AdminOperatorListPage() {
 
       return searchableText.includes(normalizedSearch);
     });
-  }, [operators, permissionFilter, searchTerm]);
+  }, [manageableOperators, permissionFilter, searchTerm]);
 
   const pagination = usePagination(filteredOperators, { itemsPerPage: 10 });
   const { setCurrentPage } = pagination;
@@ -340,7 +369,7 @@ export default function AdminOperatorListPage() {
             <div className="flex items-baseline gap-4">
               <h2 className="text-2xl font-bold text-foreground">運用者一覧</h2>
               <span className="text-lg text-muted-foreground">
-                {operators.length}件
+                {manageableOperators.length}件
               </span>
             </div>
 
@@ -419,7 +448,7 @@ export default function AdminOperatorListPage() {
                   </div>
                 </div>
 
-                {operators.length === 0 ? (
+                {manageableOperators.length === 0 ? (
                   <OperatorEmptyState onAdd={handleAddOperator} />
                 ) : (
                   <div className="mt-6">

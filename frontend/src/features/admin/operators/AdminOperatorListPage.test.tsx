@@ -5,13 +5,24 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AdminOperator } from '@/api/admin/operators';
 import AdminOperatorListPage from './AdminOperatorListPage';
 
-const { queryState } = vi.hoisted(() => ({
+const { authState, queryState } = vi.hoisted(() => ({
+  authState: {
+    user: {
+      id: 'session-admin',
+      username: 'session.admin',
+      email: 'session@example.com',
+    },
+  },
   queryState: {
     data: { statusCode: 'OK', message: '', users: [] as AdminOperator[] },
     isLoading: false,
     isError: false,
     refetch: vi.fn(),
   },
+}));
+
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => authState,
 }));
 
 vi.mock('@/hooks/admin/useAdminOperatorsQuery', () => ({
@@ -70,11 +81,44 @@ function renderPage() {
 
 describe('AdminOperatorListPage', () => {
   beforeEach(() => {
+    authState.user = {
+      id: 'session-admin',
+      username: 'session.admin',
+      email: 'session@example.com',
+    };
     operators[0].permissions = ['PROJECT_READ', 'PROJECT_UPDATE'];
     queryState.data = { statusCode: 'OK', message: '', users: operators };
     queryState.isLoading = false;
     queryState.isError = false;
     queryState.refetch.mockReset();
+  });
+
+  it('does not show the signed-in account in the manageable operator list', () => {
+    authState.user = {
+      id: operators[0].id,
+      username: operators[0].username,
+      email: operators[0].email,
+    };
+    renderPage();
+
+    expect(screen.queryByText(operators[0].username)).not.toBeInTheDocument();
+    expect(screen.getByText(operators[1].username)).toBeInTheDocument();
+  });
+
+  it('uses immutable operator IDs for the default row order', () => {
+    queryState.data = {
+      statusCode: 'OK',
+      message: '',
+      users: [operators[1], operators[0]],
+    };
+    renderPage();
+
+    const firstOperator = screen.getByText(operators[0].username);
+    const secondOperator = screen.getByText(operators[1].username);
+    expect(
+      firstOperator.compareDocumentPosition(secondOperator) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it('does not offer permission editing for an admin with no explicit permissions', () => {

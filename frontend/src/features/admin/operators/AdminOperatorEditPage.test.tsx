@@ -7,10 +7,26 @@ import type { AdminOperator } from '@/api/admin/operators';
 import type { UserFormData } from '@/api/users';
 import AdminOperatorEditPage from './AdminOperatorEditPage';
 
-const { operatorState, operatorListState, updateAdminOperator } = vi.hoisted(() => ({
+const {
+  authState,
+  operatorState,
+  operatorListState,
+  updateAdminOperator,
+} = vi.hoisted(() => ({
+  authState: {
+    user: {
+      id: 'session-admin',
+      username: 'session.admin',
+      email: 'session@example.com',
+    },
+  },
   operatorState: { current: null as AdminOperator | null },
   operatorListState: { current: [] as AdminOperator[] },
   updateAdminOperator: vi.fn(),
+}));
+
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => authState,
 }));
 
 vi.mock('@/api/admin/operators', async (importOriginal) => {
@@ -108,6 +124,11 @@ function renderEditPage(initialEntry = '/admin/operators/1/edit#permissions') {
 
 describe('AdminOperatorEditPage', () => {
   beforeEach(() => {
+    authState.user = {
+      id: 'session-admin',
+      username: 'session.admin',
+      email: 'session@example.com',
+    };
     operatorState.current = { ...baseOperator };
     operatorListState.current = [{ ...baseOperator }];
     updateAdminOperator.mockReset();
@@ -132,6 +153,29 @@ describe('AdminOperatorEditPage', () => {
     operatorListState.current = [{ ...baseOperator, role: 'operator' }];
     renderEditPage('/admin/operators/1/edit');
 
-    expect(screen.getByRole('heading', { name: '権限' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: '利用権限' }),
+    ).toBeInTheDocument();
+  });
+
+  it('prevents an operator from editing their own permissions', async () => {
+    const ownOperator = { ...baseOperator, role: 'operator' as const };
+    authState.user = {
+      id: ownOperator.id,
+      username: ownOperator.username,
+      email: ownOperator.email,
+    };
+    operatorState.current = ownOperator;
+    operatorListState.current = [ownOperator];
+    renderEditPage('/admin/operators/1/edit');
+
+    expect(screen.queryByRole('heading', { name: '権限' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '更新する' }));
+
+    await waitFor(() => expect(updateAdminOperator).toHaveBeenCalledTimes(1));
+    expect(updateAdminOperator).toHaveBeenCalledWith(
+      '1',
+      expect.not.objectContaining({ permissionCodes: expect.anything() }),
+    );
   });
 });
