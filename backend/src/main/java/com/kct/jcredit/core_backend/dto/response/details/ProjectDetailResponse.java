@@ -67,7 +67,8 @@ public class ProjectDetailResponse {
     private Integer operatorCompanyId;
 
     // 参加状況（派生）
-    private Boolean isJoined;
+    private Boolean isCompanyJoined;
+    private Boolean hasSiteRelation;
 
     private LocalDateTime updatedAt;
     private LocalDateTime createdAt;

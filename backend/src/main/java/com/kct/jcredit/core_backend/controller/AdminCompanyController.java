@@ -2,7 +2,7 @@ package com.kct.jcredit.core_backend.controller;
 
 import com.kct.jcredit.core_backend.dto.request.CompanyListQuery;
 import com.kct.jcredit.core_backend.dto.request.CreateCompanySuspensionRequest;
-import com.kct.jcredit.core_backend.dto.request.CreateUserRequest;
+import com.kct.jcredit.core_backend.dto.request.CreateOperatorUserRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectCompanyRequest;
 import com.kct.jcredit.core_backend.dto.request.ResolveCompanySuspensionRequest;
 import com.kct.jcredit.core_backend.dto.request.ReviewParticipationRequest;
@@ -386,7 +386,7 @@ public class AdminCompanyController {
     @Operation(summary = "運用者ユーザー作成", description = "ログイン中の管理企業に新しい運用者ユーザーを作成します。")
     public ResponseEntity<CreateUserResponse> createUser(
             Authentication authentication,
-            @RequestBody @Valid CreateUserRequest request) {
+            @RequestBody @Valid CreateOperatorUserRequest request) {
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
         String username = jwtUtil.extractUsername(authentication.getCredentials().toString());
 
