@@ -154,18 +154,6 @@ public class SiteController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
-    @PostMapping("/{siteId}/equipment")
-    @PreAuthorize("hasAnyRole('master','user')")
-    @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<EnR002EquipmentResponse> addEquipment(
-            Authentication authentication,
-            @PathVariable String siteId,
-            @RequestBody @Valid EnR002EquipmentRequest request) {
-
-        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
-        return ResponseEntity.ok(equipmentService.addEquipment(siteId, companyId, request));
-    }
-
     @GetMapping("/{siteId}/equipment")
     @PreAuthorize("hasAnyRole('master','user')")
     @SecurityRequirement(name = "bearerAuth")
