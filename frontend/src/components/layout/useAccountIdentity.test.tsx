@@ -35,6 +35,7 @@ function IdentityHarness({ user }: { user: User }) {
   return (
     <div>
       <span>{identity.displayName}</span>
+      <span>{identity.avatarInitial ?? 'initialなし'}</span>
       <span>{identity.email}</span>
       <span>{identity.roleLabel}</span>
     </div>
@@ -87,6 +88,7 @@ describe('useAccountIdentity', () => {
     );
 
     expect(screen.getByText('管理 太郎')).toBeInTheDocument();
+    expect(screen.getByText('管')).toBeInTheDocument();
     expect(screen.getByText('admin.profile@example.com')).toBeInTheDocument();
     expect(screen.getByText('運用者')).toBeInTheDocument();
     expect(getProfile).not.toHaveBeenCalled();
@@ -154,6 +156,7 @@ describe('useAccountIdentity', () => {
     );
 
     expect(await screen.findByText('山田 太郎')).toBeInTheDocument();
+    expect(screen.getByText('山')).toBeInTheDocument();
     expect(screen.getByText('profile@example.com')).toBeInTheDocument();
     expect(screen.getByText('社員')).toBeInTheDocument();
     expect(getProfile).toHaveBeenCalledTimes(1);
@@ -166,6 +169,7 @@ describe('useAccountIdentity', () => {
 
     await waitFor(() => expect(getProfile).toHaveBeenCalledTimes(1));
     expect(screen.getByText('session-user')).toBeInTheDocument();
+    expect(screen.getByText('initialなし')).toBeInTheDocument();
     expect(screen.getByText('session@example.com')).toBeInTheDocument();
   });
 

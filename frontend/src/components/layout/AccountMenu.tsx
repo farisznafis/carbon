@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 
 type AccountMenuProps = {
   displayName: string;
+  avatarInitial: string | null;
   email: string;
   roleLabel: string;
   onProfile: () => void | Promise<void>;
@@ -21,6 +22,7 @@ type AccountMenuProps = {
 
 export function AccountMenu({
   displayName,
+  avatarInitial,
   email,
   roleLabel,
   onProfile,
@@ -49,8 +51,11 @@ export function AccountMenu({
           className="group h-12 w-12 gap-2 border border-border px-2 sm:px-3 lg:w-fit"
           aria-label={`アカウントメニューを開く：${displayName}`}
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
-            <User className="h-4 w-4" aria-hidden="true" />
+          <span
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-medium text-primary"
+            aria-hidden="true"
+          >
+            {avatarInitial ?? <User className="h-4 w-4" />}
           </span>
           <span className="hidden min-w-0 max-w-56 flex-col items-start lg:flex">
             <span

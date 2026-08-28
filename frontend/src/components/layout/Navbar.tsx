@@ -30,7 +30,13 @@ function AuthenticatedNavbarContent({
   onLogout,
 }: Readonly<AuthenticatedNavbarContentProps>) {
   const navigate = useNavigate();
-  const { displayName, email, roleLabel, resolveProfilePath } = useAccountIdentity(user);
+  const {
+    avatarInitial,
+    displayName,
+    email,
+    roleLabel,
+    resolveProfilePath,
+  } = useAccountIdentity(user);
 
   /** Opens the matched admin operator profile without guessing an account. */
   const handleProfile = async () => {
@@ -53,6 +59,7 @@ function AuthenticatedNavbarContent({
 
   return (
     <AccountMenu
+      avatarInitial={avatarInitial}
       displayName={displayName}
       email={email}
       roleLabel={roleLabel}

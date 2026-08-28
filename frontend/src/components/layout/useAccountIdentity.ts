@@ -35,6 +35,11 @@ function emailLocalPart(email: string) {
   return email.split('@')[0]?.trim() || '';
 }
 
+/** Extracts one Unicode-safe initial from a real person name. */
+function getNameInitial(name: string): string | null {
+  return Array.from(name.trim())[0] ?? null;
+}
+
 /** Resolves navbar identity and the role-aware profile destination for one session. */
 export function useAccountIdentity(user: User) {
   const profile = useProfileStore((state) => state.profile);
@@ -75,13 +80,16 @@ export function useAccountIdentity(user: User) {
     isAdminAccount ? currentAdminOperator?.firstName : profile?.firstName,
   );
   const fullName = [lastName, firstName].filter(Boolean).join(' ');
+  const identityName =
+    fullName ||
+    usableText(currentAdminOperator?.name) ||
+    usableText(user.name);
   const email =
     usableText(
       isAdminAccount ? currentAdminOperator?.email : profile?.email,
     ) || usableText(user.email);
   const displayName =
-    fullName ||
-    usableText(currentAdminOperator?.name) ||
+    identityName ||
     usableText(currentAdminOperator?.username) ||
     usableText(user.name) ||
     usableText(user.username) ||
@@ -116,6 +124,7 @@ export function useAccountIdentity(user: User) {
 
   return {
     displayName,
+    avatarInitial: getNameInitial(identityName),
     email: email || EMPTY_ACCOUNT_EMAIL,
     roleLabel: formatUserRole(accountRole),
     resolveProfilePath,

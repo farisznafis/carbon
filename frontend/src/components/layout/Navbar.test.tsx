@@ -34,6 +34,7 @@ vi.mock('@/hooks/useNotifications', () => ({
 
 vi.mock('./useAccountIdentity', () => ({
   useAccountIdentity: () => ({
+    avatarInitial: '山',
     displayName: '山田 太郎',
     email: 'taro@example.com',
     roleLabel: '運用者',
@@ -104,6 +105,7 @@ describe('Navbar account menu', () => {
       name: 'アカウントメニューを開く：山田 太郎',
     });
     expect(trigger).toHaveTextContent('山田 太郎');
+    expect(trigger).toHaveTextContent('山');
     expect(trigger).toHaveTextContent('運用者');
     expect(trigger).not.toHaveTextContent('taro@example.com');
     expect(screen.queryByRole('button', { name: 'ログアウト' })).toBeNull();
