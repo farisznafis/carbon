@@ -3,8 +3,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { FormSection } from '@/components/forms/form-layout';
 import {
   groupOperatorPermissionOptions,
-  OPERATOR_PERMISSION_OPTIONS,
 } from './operatorPermissions';
+import {
+  getPermissionSelectionState,
+  OPERATOR_PERMISSION_CODES,
+  type PermissionSelectionState,
+  updatePermissionScope,
+} from './operatorPermissionSelection';
 
 type OperatorPermissionSectionProps = {
   selectedPermissions: string[];
@@ -15,43 +20,6 @@ type OperatorPermissionSectionProps = {
 };
 
 export const OPERATOR_PERMISSION_SECTION_ID = 'permissions';
-
-const ALL_PERMISSION_CODES = OPERATOR_PERMISSION_OPTIONS.map(
-  (permission) => permission.code,
-);
-
-type PermissionSelectionState = boolean | 'indeterminate';
-
-/** Returns the checkbox state for a permission scope, including partial selection. */
-function getPermissionSelectionState(
-  selectedPermissions: ReadonlySet<string>,
-  permissionCodes: readonly string[],
-): PermissionSelectionState {
-  const selectedCount = permissionCodes.filter((permissionCode) =>
-    selectedPermissions.has(permissionCode),
-  ).length;
-
-  if (selectedCount === 0) return false;
-  if (selectedCount === permissionCodes.length) return true;
-  return 'indeterminate';
-}
-
-/** Updates only the requested permission scope while preserving unknown backend permissions. */
-function updatePermissionScope(
-  selectedPermissions: readonly string[],
-  permissionCodes: readonly string[],
-  checked: boolean,
-): string[] {
-  const permissionCodeSet = new Set(permissionCodes);
-
-  if (checked) {
-    return Array.from(new Set([...selectedPermissions, ...permissionCodes]));
-  }
-
-  return selectedPermissions.filter(
-    (permissionCode) => !permissionCodeSet.has(permissionCode),
-  );
-}
 
 type PermissionSelectAllProps = {
   checked: PermissionSelectionState;
@@ -89,12 +57,12 @@ export function OperatorPermissionSection({
   const permissionSectionId = useId();
   const groupedPermissions = groupOperatorPermissionOptions();
   const selectedPermissionSet = new Set(selectedPermissions);
-  const selectedPermissionCount = ALL_PERMISSION_CODES.filter((permissionCode) =>
-    selectedPermissionSet.has(permissionCode),
+  const selectedPermissionCount = OPERATOR_PERMISSION_CODES.filter(
+    (permissionCode) => selectedPermissionSet.has(permissionCode),
   ).length;
   const allPermissionSelectionState = getPermissionSelectionState(
     selectedPermissionSet,
-    ALL_PERMISSION_CODES,
+    OPERATOR_PERMISSION_CODES,
   );
 
   /** Adds or removes one permission code without mutating the current selection. */
@@ -109,7 +77,7 @@ export function OperatorPermissionSection({
     onChange(
       updatePermissionScope(
         selectedPermissions,
-        ALL_PERMISSION_CODES,
+        OPERATOR_PERMISSION_CODES,
         checked,
       ),
     );
@@ -132,7 +100,7 @@ export function OperatorPermissionSection({
       actions={
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
           <p className="text-sm font-semibold text-primary" aria-live="polite">
-            選択済み {selectedPermissionCount} / {ALL_PERMISSION_CODES.length}
+            選択済み {selectedPermissionCount} / {OPERATOR_PERMISSION_CODES.length}
           </p>
           <PermissionSelectAll
             checked={allPermissionSelectionState}

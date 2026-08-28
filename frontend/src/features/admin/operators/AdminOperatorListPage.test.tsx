@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -159,17 +159,46 @@ describe('AdminOperatorListPage', () => {
     expect(screen.queryByText('伊藤 健一')).not.toBeInTheDocument();
   });
 
-  it('filters operators by their actual permission', () => {
+  it('requires every selected permission when filtering operators', async () => {
+    const user = userEvent.setup();
+    queryState.data = {
+      statusCode: 'OK',
+      message: '',
+      users: [
+        ...operators,
+        {
+          ...operators[0],
+          id: '3',
+          username: 'project.reader',
+          name: '閲覧 一郎',
+          firstName: '一郎',
+          lastName: '閲覧',
+          email: 'reader@example.com',
+          role: 'operator',
+          permissions: ['PROJECT_READ'],
+        },
+      ],
+    };
     renderPage();
 
     const permissionFilter = screen.getByRole('combobox', {
       name: '権限で絞り込む',
     });
-    fireEvent.keyDown(permissionFilter, { key: 'Enter' });
-    fireEvent.click(screen.getByRole('option', { name: 'プロジェクト参照' }));
+    await user.click(permissionFilter);
+    await user.click(
+      screen.getByRole('checkbox', { name: 'すべての権限を選択' }),
+    );
+
+    expect(screen.getByText('佐藤 花')).toBeInTheDocument();
+    expect(screen.queryByText('伊藤 健一')).not.toBeInTheDocument();
+    expect(screen.queryByText('閲覧 一郎')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('checkbox', { name: 'プロジェクト参照' }));
+    await user.click(screen.getByRole('checkbox', { name: 'プロジェクト更新' }));
 
     expect(screen.getByText('伊藤 健一')).toBeInTheDocument();
     expect(screen.queryByText('佐藤 花')).not.toBeInTheDocument();
+    expect(screen.queryByText('閲覧 一郎')).not.toBeInTheDocument();
   });
 
   it('uses the same add route for the empty-state CTA', async () => {
