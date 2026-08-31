@@ -9,7 +9,10 @@ import {
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
+import {
+  PageBackButton,
+  floatingPageBackButtonClassName,
+} from '@/components/navigation/PageBackButton';
 import { UserForm } from '@/features/master/forms/UserForm';
 import { adminOperatorsQueryKey } from '@/hooks/admin/useAdminOperatorsQuery';
 import { toast } from '@/hooks/use-toast';
@@ -73,7 +76,8 @@ export default function AdminOperatorRegisterPage() {
       <PageBackButton
         onClick={handleBack}
         label=""
-        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
+        aria-label="運用者一覧に戻る"
+        className={floatingPageBackButtonClassName}
       />
       <FormPageContent>
         <div>

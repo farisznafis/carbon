@@ -31,6 +31,7 @@ import {
   matchesOperatorPermissionFilter,
   type OperatorPermissionFilterValue,
 } from './operatorPermissionFilterModel';
+import { getOperatorRoleLabel } from './operatorRoles';
 
 const EMPTY_OPERATORS: AdminOperator[] = [];
 
@@ -238,6 +239,13 @@ export default function AdminOperatorListPage() {
         ),
       },
       {
+        id: 'role',
+        label: 'ロール',
+        sortable: true,
+        sortValue: (operator) => getOperatorRoleLabel(operator.role),
+        render: (operator) => getOperatorRoleLabel(operator.role),
+      },
+      {
         id: 'permissions',
         label: '権限',
         render: (operator) => (
@@ -358,8 +366,8 @@ export default function AdminOperatorListPage() {
                     <DataGridTable
                       rows={pagination.paginatedItems}
                       columns={columns}
-                      gridTemplateColumns="1.1fr 1fr 1.6fr 1.2fr 104px"
-                      minWidth={880}
+                      gridTemplateColumns="1.1fr 1fr 1.6fr 0.7fr 1.2fr 104px"
+                      minWidth={1040}
                       getRowKey={(operator) => operator.id}
                       emptyMessage="条件に一致する運用者はいません。"
                     />

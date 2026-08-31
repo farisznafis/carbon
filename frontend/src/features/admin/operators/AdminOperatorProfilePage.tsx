@@ -11,6 +11,10 @@ import {
   FormStandalonePage,
 } from '@/components/forms/form-layout';
 import {
+  PageBackButton,
+  floatingPageBackButtonClassName,
+} from '@/components/navigation/PageBackButton';
+import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -73,6 +77,9 @@ export default function AdminOperatorProfilePage() {
     operatorsQuery.data?.users ?? [],
   );
 
+  /** Returns to the operator list from the profile page. */
+  const handleBack = () => navigate(paths.adminOperatorList);
+
   /** Opens the edit page for the operator currently displayed. */
   const handleEdit = () => {
     if (operator) navigate(paths.adminOperatorEdit(operator.id));
@@ -80,6 +87,12 @@ export default function AdminOperatorProfilePage() {
 
   return (
     <FormStandalonePage>
+      <PageBackButton
+        onClick={handleBack}
+        label=""
+        aria-label="運用者一覧に戻る"
+        className={floatingPageBackButtonClassName}
+      />
       <FormPageContent>
         <Breadcrumb>
           <BreadcrumbList className="flex-nowrap">

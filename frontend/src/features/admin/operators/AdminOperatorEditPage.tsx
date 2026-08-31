@@ -17,6 +17,10 @@ import {
   FormStandalonePage,
 } from '@/components/forms/form-layout';
 import {
+  PageBackButton,
+  floatingPageBackButtonClassName,
+} from '@/components/navigation/PageBackButton';
+import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -179,6 +183,12 @@ export default function AdminOperatorEditPage() {
 
   return (
     <FormStandalonePage>
+      <PageBackButton
+        onClick={handleBack}
+        label=""
+        aria-label="運用者プロファイルに戻る"
+        className={floatingPageBackButtonClassName}
+      />
       <FormPageContent>
         <Breadcrumb>
           <BreadcrumbList className="flex-nowrap">

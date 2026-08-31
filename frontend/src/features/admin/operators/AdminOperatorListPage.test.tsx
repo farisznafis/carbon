@@ -146,7 +146,12 @@ describe('AdminOperatorListPage', () => {
       'href',
       '/admin/operators/2/edit#permissions',
     );
-    expect(screen.queryByText('ロール')).not.toBeInTheDocument();
+    expect(screen.getByText('ロール')).toBeInTheDocument();
+    expect(screen.getByText('管理者')).toBeInTheDocument();
+    expect(screen.getByText('運用者')).toBeInTheDocument();
+    expect(screen.getByText('操作').parentElement).toHaveStyle({
+      gridTemplateColumns: '1.1fr 1fr 1.6fr 0.7fr 1.2fr 104px',
+    });
     expect(screen.queryByText('役職')).not.toBeInTheDocument();
     expect(screen.queryByText('担当拠点')).not.toBeInTheDocument();
 
