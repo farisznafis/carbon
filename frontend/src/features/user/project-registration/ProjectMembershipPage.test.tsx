@@ -53,14 +53,16 @@ vi.mock('@/stores/dashboardStore', () => ({
 function createProject(
   id: string,
   projectName: string,
-  isJoined: boolean,
+  isCompanyJoined: boolean,
+  hasSiteRelation = isCompanyJoined,
 ): SiteProject {
   return {
     id,
     projectName,
     projectNumber: id,
     projectStatus: '実施中',
-    isJoined,
+    isCompanyJoined,
+    hasSiteRelation,
     methodName: '方法論',
     methodNumber: '001',
     methodMainEmission: 'CO2',
@@ -101,7 +103,7 @@ describe('ProjectMembershipPage tabs', () => {
     const user = userEvent.setup();
     getSiteProjects.mockResolvedValue([
       createProject('PROJ001', '入会可能プロジェクト', false),
-      createProject('PROJ002', '入会中プロジェクト', true),
+      createProject('PROJ002', '入会中プロジェクト', true, false),
     ]);
 
     renderPage();

@@ -168,10 +168,10 @@ export default function ProjectMembershipPage() {
       ]);
 
       // participationId comes from GET /site/project/{projectId}/my-participations.
-      // The project list supplies the IDs and remains the source for joined status.
+      // The project list supplies the IDs and remains the source for company membership status.
       const projectsWithParticipation = await Promise.all(
         siteProjects.map(async (project) => {
-          if (!project.isJoined) return project;
+          if (!project.isCompanyJoined) return project;
 
           const participations = await getMyProjectParticipations(project.id);
           const participation = participations.find(
@@ -207,11 +207,11 @@ export default function ProjectMembershipPage() {
   }, [loadMembershipData]);
 
   const availableProjects = useMemo(
-    () => projects.filter((project) => !project.isJoined),
+    () => projects.filter((project) => !project.isCompanyJoined),
     [projects],
   );
   const joinedProjects = useMemo(
-    () => projects.filter((project) => project.isJoined),
+    () => projects.filter((project) => project.isCompanyJoined),
     [projects],
   );
 

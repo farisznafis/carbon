@@ -37,7 +37,8 @@ export type AdminProjectDetail = {
   methodCombiFeasibility: boolean;
   methodDetails: string;
   operatorCompanyId: string;
-  isJoined: boolean | null;
+  isCompanyJoined: boolean | null;
+  hasSiteRelation: boolean | null;
   updatedAt: string;
   createdAt: string;
 };

@@ -14,7 +14,7 @@ const PARTICIPATION_DECISION_BASE_PATH =
 
 export async function getMyParticipationReviews() {
   const response = await apiRequest<unknown>(
-    `${PARTICIPATION_REVIEW_BASE_PATH}/self-sign`,
+    `${PARTICIPATION_REVIEW_BASE_PATH}/open`,
     { fallbackErrorMessage: 'レビュー可能な入会届一覧の取得に失敗しました。' },
   );
 

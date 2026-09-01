@@ -153,7 +153,8 @@ export type SiteProjectApiItem = {
   methodCombiFeasibility?: boolean | null;
   methodDetails?: string | null;
   operatorCompanyId?: number | null;
-  isJoined?: boolean | null;
+  isCompanyJoined?: boolean | null;
+  hasSiteRelation?: boolean | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 };
@@ -172,7 +173,8 @@ export type SiteProject = Project & {
   participationId?: number;
   participationStatus?: string;
   pdfStatus?: string;
-  isJoined: boolean;
+  isCompanyJoined: boolean;
+  hasSiteRelation: boolean;
   projectNumber: string;
   repFirstName?: string;
   repFirstNameKana?: string;
