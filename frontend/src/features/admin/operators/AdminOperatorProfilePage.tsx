@@ -112,7 +112,7 @@ export default function AdminOperatorProfilePage() {
 
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <FormPageTitle as="h1">運用者のプロファイル</FormPageTitle>
+            <FormPageTitle as="h2">運用者のプロファイル</FormPageTitle>
             <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
               運用者のプロフィールと権限情報を確認します。
             </p>
