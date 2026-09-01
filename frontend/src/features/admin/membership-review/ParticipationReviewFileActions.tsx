@@ -104,7 +104,7 @@ export function ParticipationReviewFileActions({
         )}
         表示
       </Button>
-      <Button
+      {/* <Button
         type="button"
         variant="outline"
         size="sm"
@@ -118,7 +118,7 @@ export function ParticipationReviewFileActions({
           <Download />
         )}
         ダウンロード
-      </Button>
+      </Button> */}
     </div>
   );
 }

@@ -44,6 +44,7 @@ All colors MUST be HSL.
     --radius: 0.75rem;
     --shadow-sm: 0 1px 2px hsl(193.3 12.7% 13.9% / 0.06), 0 1px 1px hsl(193.3 12.7% 13.9% / 0.04);
     --shadow-md: 0 10px 24px hsl(193.3 12.7% 13.9% / 0.08), 0 2px 8px hsl(193.3 12.7% 13.9% / 0.05);
+    --shadow-marketing: 0 0 64px hsl(193.3 12.7% 13.9% / 0.16);
 
     /* Semantic feedback. */
     --success: 117.2 17.3% 48.8%;
@@ -119,7 +120,6 @@ All colors MUST be HSL.
     --chart-5: 340 75% 55%;
   }
 }
-
 @layer base {
   * {
     @apply border-border;
@@ -173,7 +173,6 @@ All colors MUST be HSL.
   }
 
 }
-
 @layer utilities {
   .password-input-hide-native-toggle::-ms-reveal,
   .password-input-hide-native-toggle::-ms-clear {
@@ -367,67 +366,4 @@ All colors MUST be HSL.
     }
   }
 
-}
-
-/* Blob Movement for Hero Section */
-/* ─── Blob base ──────────────────────────────────────────────────────────── */
-.blob {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(80px);
-  opacity: 0.35;
-  will-change: transform, border-radius;
-}
-
-/* Blob 1 – large green, drifts top-left → bottom-right */
-.blob-1 {
-  width: 520px;
-  height: 520px;
-  background: radial-gradient(circle, #4ade80, #16a34a);
-  top: -120px;
-  left: -140px;
-  animation: drift1 18s ease-in-out infinite;
-}
-
-/* Blob 2 – medium teal, drifts bottom-right → top-left */
-.blob-2 {
-  width: 380px;
-  height: 380px;
-  background: radial-gradient(circle, #2dd4bf, #0d9488);
-  bottom: -80px;
-  right: -100px;
-  animation: drift2 22s ease-in-out infinite;
-}
-
-/* Blob 3 – small accent, orbits center */
-.blob-3 {
-  width: 280px;
-  height: 280px;
-  background: radial-gradient(circle, #86efac, #4ade80);
-  top: 40%;
-  left: 55%;
-  animation: drift3 26s ease-in-out infinite;
-}
-
-/* ─── Keyframes ──────────────────────────────────────────────────────────── */
-@keyframes drift1 {
-  0%   { transform: translate(0px,   0px)   scale(1);    border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%; }
-  33%  { transform: translate(80px,  60px)  scale(1.08); border-radius: 40% 60% 30% 70% / 60% 40% 70% 30%; }
-  66%  { transform: translate(30px,  110px) scale(0.95); border-radius: 70% 30% 50% 50% / 30% 70% 40% 60%; }
-  100% { transform: translate(0px,   0px)   scale(1);    border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%; }
-}
-
-@keyframes drift2 {
-  0%   { transform: translate(0px,    0px)   scale(1);    border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%; }
-  33%  { transform: translate(-70px, -50px)  scale(1.1);  border-radius: 30% 70% 60% 40% / 40% 60% 30% 70%; }
-  66%  { transform: translate(-20px, -100px) scale(0.92); border-radius: 60% 40% 70% 30% / 50% 50% 60% 40%; }
-  100% { transform: translate(0px,    0px)   scale(1);    border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%; }
-}
-
-@keyframes drift3 {
-  0%   { transform: translate(0px,  0px)  scale(1);    border-radius: 40% 60% 50% 50% / 50% 50% 60% 40%; }
-  25%  { transform: translate(50px, 40px) scale(1.12); border-radius: 60% 40% 30% 70% / 40% 70% 30% 60%; }
-  50%  { transform: translate(-30px,80px) scale(0.9);  border-radius: 70% 30% 60% 40% / 60% 30% 70% 40%; }
-  75%  { transform: translate(60px,-30px) scale(1.05); border-radius: 30% 70% 40% 60% / 50% 40% 60% 50%; }
-  100% { transform: translate(0px,  0px)  scale(1);    border-radius: 40% 60% 50% 50% / 50% 50% 60% 40%; }
 }
