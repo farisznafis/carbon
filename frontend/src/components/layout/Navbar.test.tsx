@@ -5,12 +5,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { User } from '@/api/users';
 import { Navbar } from './Navbar';
 
-const { authState, logout } = vi.hoisted(() => ({
+const { authState, logout, resolveProfilePath } = vi.hoisted(() => ({
   authState: {
     isAuthenticated: true,
     user: null as User | null,
   },
   logout: vi.fn(),
+  resolveProfilePath: vi.fn(),
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
@@ -33,8 +34,11 @@ vi.mock('@/hooks/useNotifications', () => ({
 
 vi.mock('./useAccountIdentity', () => ({
   useAccountIdentity: () => ({
+    avatarInitial: '山',
     displayName: '山田 太郎',
     email: 'taro@example.com',
+    roleLabel: '運用者',
+    resolveProfilePath,
   }),
 }));
 
@@ -48,6 +52,10 @@ function renderNavbar() {
       <Routes>
         <Route path="/dashboard" element={<div>Dashboard page</div>} />
         <Route path="/profile" element={<div>Profile page</div>} />
+        <Route
+          path="/admin/operators/:userId"
+          element={<div>Admin operator profile page</div>}
+        />
         <Route path="/admin/login" element={<div>Admin login page</div>} />
         <Route path="/" element={<div>Home page</div>} />
       </Routes>
@@ -59,6 +67,8 @@ describe('Navbar account menu', () => {
   beforeEach(() => {
     logout.mockReset();
     logout.mockResolvedValue(undefined);
+    resolveProfilePath.mockReset();
+    resolveProfilePath.mockResolvedValue('/profile');
     authState.isAuthenticated = true;
     authState.user = {
       id: 'USER-1',
@@ -66,6 +76,25 @@ describe('Navbar account menu', () => {
       role: 'user',
       siteId: 'SITE-1',
     };
+  });
+
+  it('opens the matched operator profile for an admin dashboard account', async () => {
+    const user = userEvent.setup();
+    authState.user = { ...authState.user!, role: 'admin' };
+    resolveProfilePath.mockResolvedValue('/admin/operators/7');
+    renderNavbar();
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'アカウントメニューを開く：山田 太郎',
+      }),
+    );
+    await user.click(screen.getByRole('menuitem', { name: 'プロファイル' }));
+
+    expect(resolveProfilePath).toHaveBeenCalledTimes(1);
+    expect(
+      await screen.findByText('Admin operator profile page'),
+    ).toBeInTheDocument();
   });
 
   it('replaces separate actions with one identity trigger and navigates to profile', async () => {
@@ -76,10 +105,13 @@ describe('Navbar account menu', () => {
       name: 'アカウントメニューを開く：山田 太郎',
     });
     expect(trigger).toHaveTextContent('山田 太郎');
-    expect(trigger).toHaveTextContent('taro@example.com');
+    expect(trigger).toHaveTextContent('山');
+    expect(trigger).toHaveTextContent('運用者');
+    expect(trigger).not.toHaveTextContent('taro@example.com');
     expect(screen.queryByRole('button', { name: 'ログアウト' })).toBeNull();
 
     await user.click(trigger);
+    expect(screen.getByText('taro@example.com')).toBeInTheDocument();
     await user.click(screen.getByRole('menuitem', { name: 'プロファイル' }));
     expect(await screen.findByText('Profile page')).toBeInTheDocument();
   });

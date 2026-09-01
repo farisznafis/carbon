@@ -133,11 +133,6 @@ const MasterDashboard = () => {
                           state: { user: selectedUser },
                         })
                       }
-                      onEdit={(selectedUser) =>
-                        navigate(paths.userEdit(selectedUser.id), {
-                          state: { user: selectedUser },
-                        })
-                      }
                     />
                   ))}
                 </div>

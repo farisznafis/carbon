@@ -125,11 +125,9 @@ export function SiteDashboardCard({
 export function UserDashboardCard({
   user,
   onProfile,
-  onEdit,
 }: {
   user: UserList;
   onProfile: (user: UserList) => void;
-  onEdit: (user: UserList) => void;
 }) {
   const fullName = formatPersonName(user.lastName, user.firstName);
   const isDisconnectedFromSite =
@@ -189,23 +187,14 @@ export function UserDashboardCard({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 border-t border-border md:w-[128px] md:shrink-0 md:grid-cols-1 md:border-l md:border-t-0">
+      <div className="flex items-center justify-end border-t border-border p-4 md:w-[152px] md:shrink-0 md:justify-center md:border-l md:border-t-0">
         <Button
           type="button"
+          variant="outline"
           size="sm"
           onClick={() => onProfile(user)}
-          className="h-full w-full rounded-none px-4 py-4 shadow-none"
         >
           プロファイル
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => onEdit(user)}
-          className="h-full w-full rounded-none bg-card px-4 py-4 text-primary shadow-none hover:bg-secondary/60 hover:text-primary"
-        >
-          更新
         </Button>
       </div>
     </article>

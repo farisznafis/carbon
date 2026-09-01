@@ -24,7 +24,7 @@ export async function downloadProjectMembershipPdf(
 ): Promise<ProjectMembershipPdfDownload> {
   const response = await apiFetch(
     `/project/${encodeURIComponent(projectId)}/participations/${encodeURIComponent(String(participationId))}/membership-pdf`,
-    { method: 'GET' },
+    { method: 'GET', forbiddenHandling: 'caller' },
   );
   const { data, rawBody } = await parseJsonResponse<
     ProjectMembershipPdfDownload & ApiErrorPayload

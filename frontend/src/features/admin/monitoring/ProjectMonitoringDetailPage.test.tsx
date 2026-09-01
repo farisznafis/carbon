@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MonitoringRecordListItem } from '@/api/monitoring';
@@ -133,5 +133,41 @@ describe('ProjectMonitoringDetailPage', () => {
     expect(screen.getByText('エビデンス情報')).toBeInTheDocument();
     expect(screen.getByText('30 kWh')).toBeInTheDocument();
     expect(getAdminProjectMonitoringRecords).not.toHaveBeenCalled();
+  });
+
+  it('returns to the project detail instead of the admin dashboard', async () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/admin/projects/PROJ0123/monitoring/MON0001',
+            search: '?page=2&limit=20',
+            state: { monitoringRecord: record },
+          },
+        ]}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <Routes>
+          <Route
+            path="/admin/projects/:projectId/monitoring/:monitoringId"
+            element={<ProjectMonitoringDetailPage />}
+          />
+          <Route
+            path="/admin/projects/:projectId"
+            element={<div>プロジェクト詳細へ戻りました</div>}
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: 'モニタリングデータ一覧へ戻る',
+      }),
+    );
+
+    expect(
+      await screen.findByText('プロジェクト詳細へ戻りました'),
+    ).toBeInTheDocument();
   });
 });
