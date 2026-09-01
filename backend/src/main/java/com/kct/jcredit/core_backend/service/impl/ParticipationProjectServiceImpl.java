@@ -341,7 +341,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 .nominalMaxOutput(req.getNominalMaxOutput())
                 .pcsManufacturer(req.getPcsManufacturer())
                 .pcsModel(req.getPcsModel())
-                .pcsUnitCount(req.getPcsUnitCount())
+                // .pcsUnitCount(req.getPcsUnitCount())
                 .deviceNo(req.getDeviceNo())
                 .pcsStandby(req.getPcsStandby())
                 .hasBattery(req.getHasBattery())
@@ -465,7 +465,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
         equipment.setNominalMaxOutput(request.getEquipment().getNominalMaxOutput());
         equipment.setPcsManufacturer(request.getEquipment().getPcsManufacturer());
         equipment.setPcsModel(request.getEquipment().getPcsModel());
-        equipment.setPcsUnitCount(request.getEquipment().getPcsUnitCount());
+        // equipment.setPcsUnitCount(request.getEquipment().getPcsUnitCount());
         equipment.setDeviceNo(request.getEquipment().getDeviceNo());
         equipment.setPcsStandby(request.getEquipment().getPcsStandby());
         equipment.setHasBattery(request.getEquipment().getHasBattery());

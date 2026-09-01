@@ -322,7 +322,7 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         map.put("${f4}", decimal(equipment.getNominalMaxOutput()));
         map.put("${f5}", safe(equipment.getPcsManufacturer()));
         map.put("${f6}", safe(equipment.getPcsModel()));
-        map.put("${f7}", equipment.getPcsUnitCount() != null ? String.valueOf(equipment.getPcsUnitCount()) : "");
+        // map.put("${f7}", equipment.getPcsUnitCount() != null ? String.valueOf(equipment.getPcsUnitCount()) : "");
         map.put("${f8}", safe(equipment.getDeviceNo()));
         map.put("${f9}", decimal(equipment.getPcsStandby()));
 
