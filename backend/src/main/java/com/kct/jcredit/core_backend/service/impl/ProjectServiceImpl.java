@@ -244,6 +244,8 @@ public class ProjectServiceImpl implements ProjectService {
         if (request.getMethodName() != null) project.setMethodName(request.getMethodName());
         if (request.getMethodMainEmission() != null) project.setMethodMainEmission(request.getMethodMainEmission());
         if (request.getMethodCombiFeasibility() != null) project.setMethodCombiFeasibility(request.getMethodCombiFeasibility());
+        if (request.getStartedAt() != null) project.setStartedAt(request.getStartedAt());
+        if (request.getUsePurpose() != null) project.setUsePurpose(request.getUsePurpose());
         if (request.getMethodDetails() != null) project.setMethodDetails(request.getMethodDetails());
 
         project.setUpdatedBy(request.getProcessedBy());
@@ -285,6 +287,8 @@ public class ProjectServiceImpl implements ProjectService {
         if (req.getMethodName() != null) detailResponse.setMethodologyName(project.getMethodName());
         if (req.getMethodMainEmission() != null) detailResponse.setMethodologyMainEmission(project.getMethodMainEmission());
         if (req.getMethodCombiFeasibility() != null) detailResponse.setMethodCombiFeasibility(project.getMethodCombiFeasibility());
+        if (req.getStartedAt() != null) detailResponse.setStartedAt(project.getStartedAt());
+        if (req.getUsePurpose() != null) detailResponse.setUsePurpose(project.getUsePurpose());
         if (req.getMethodDetails() != null) detailResponse.setMethodDetails(project.getMethodDetails());
 
         return detailResponse;
@@ -329,6 +333,8 @@ public class ProjectServiceImpl implements ProjectService {
                     .methodologyName(p.getMethodName())
                     .methodologyMainEmission(p.getMethodMainEmission())
                     .methodCombiFeasibility(p.getMethodCombiFeasibility())
+                    .usePurpose(p.getUsePurpose())
+                    .startedAt(p.getStartedAt())
                     .methodDetails(p.getMethodDetails())
                     .operatorCompanyId(
                             p.getOperatorCompany() != null ? p.getOperatorCompany().getId() : null
@@ -399,6 +405,8 @@ public class ProjectServiceImpl implements ProjectService {
             .methodName(projectDto.getMethodName())
             .methodMainEmission(projectDto.getMethodMainEmission())
             .methodCombiFeasibility(projectDto.getMethodCombiFeasibility())
+            .usePurpose(projectDto.getUsePurpose())
+            .startedAt(projectDto.getStartedAt())
             .methodDetails(projectDto.getMethodDetails())
             .operatorCompany(operatorCompany)
             .build();
@@ -487,6 +495,8 @@ public class ProjectServiceImpl implements ProjectService {
             .methodologyName(project.getMethodName())
             .methodologyMainEmission(project.getMethodMainEmission())
             .methodCombiFeasibility(project.getMethodCombiFeasibility())
+            .usePurpose(project.getUsePurpose())
+            .startedAt(project.getStartedAt())
             .methodDetails(project.getMethodDetails())
             .operatorCompanyId(project.getOperatorCompany().getId())
             .createdAt(project.getCreatedAt())
