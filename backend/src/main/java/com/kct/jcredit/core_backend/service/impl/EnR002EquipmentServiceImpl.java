@@ -349,7 +349,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
         equipmentFileRepository.saveAll(inheritedFiles);
 
         // ── 6. save new files ───────────────────────────────────────
-        //     s3Key yang disimpan sudah key final; object S3 dipindah setelah commit.
+        //    save new files to DB with permanent key, but move S3 object after commit
         List<EnR002EquipmentFile> newFilesToMove = new ArrayList<>();
         Map<String, String> tempKeyByFileId = new java.util.HashMap<>();
         if (request.getFiles() != null) {
