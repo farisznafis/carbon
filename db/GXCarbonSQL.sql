@@ -513,7 +513,6 @@ CREATE TABLE site_project_relation (
     project_id INT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
     site_id INT NOT NULL REFERENCES site(id) ON DELETE CASCADE,
     activity_start_date DATE NOT NULL,
-    status VARCHAR(100) NOT NULL,
     deleted_at TIMESTAMP,
     deleted_by VARCHAR(100),
     CONSTRAINT uq_site_project_relation_project_site UNIQUE (project_id, site_id)
