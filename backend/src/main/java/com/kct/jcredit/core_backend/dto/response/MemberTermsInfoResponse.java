@@ -15,6 +15,6 @@ public class MemberTermsInfoResponse {
     private String operatorNameJa;
     private String adminRepName;
     private String projectOverview;
-    private String usagePurpose;
+    private String usePurpose;
     private Instant startedAt;
 }
