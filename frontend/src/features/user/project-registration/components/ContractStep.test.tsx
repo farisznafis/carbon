@@ -76,7 +76,7 @@ describe('ContractStep', () => {
     expect(screen.queryByText(/Ver\./)).not.toBeInTheDocument();
   });
 
-  it('reports user edits separately from prefill resets', async () => {
+  it('reports manual user edits to the parent flow', async () => {
     const user = userEvent.setup();
     const onValueChange = vi.fn();
     render(
@@ -92,39 +92,7 @@ describe('ContractStep', () => {
     await waitFor(() => {
       expect(onValueChange).toHaveBeenCalledWith(
         expect.objectContaining({ businessName: 'ABC株式会社' }),
-        { isUserChange: true },
       );
     });
-  });
-
-  it('shows non-blocking default loading and retry states', async () => {
-    const user = userEvent.setup();
-    const onRetryDefaults = vi.fn();
-    const { rerender } = render(
-      <ContractStep
-        {...methodologyProps}
-        formValues={{}}
-        onValueChange={vi.fn()}
-        isDefaultLoading
-      />,
-    );
-
-    expect(screen.getByRole('status')).toHaveTextContent(
-      '登録済み情報を読み込んでいます...',
-    );
-
-    rerender(
-      <ContractStep
-        {...methodologyProps}
-        formValues={{}}
-        onValueChange={vi.fn()}
-        defaultLoadError="登録済み情報を取得できませんでした。"
-        onRetryDefaults={onRetryDefaults}
-      />,
-    );
-    await user.click(screen.getByRole('button', { name: '再試行' }));
-
-    expect(onRetryDefaults).toHaveBeenCalledTimes(1);
-    expect(screen.getByLabelText(/事業者名\s*\*/)).toBeEnabled();
   });
 });

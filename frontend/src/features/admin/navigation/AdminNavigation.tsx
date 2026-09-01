@@ -45,7 +45,7 @@ function AdminNavigationLinks({ mobile = false }: AdminNavigationLinksProps) {
               mobile
                 ? 'min-h-11 rounded-lg px-4 py-2'
                 : 'h-full justify-center px-4 min-[1800px]:px-6',
-              isActive && 'text-lg font-bold leading-7 text-primary',
+              isActive && 'font-bold text-primary',
               mobile && isActive && 'bg-secondary/60',
               !mobile &&
                 isActive &&
