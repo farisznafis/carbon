@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import type { Site } from '@/api/site';
 import type { UserList } from '@/api/users';
 import { deleteUser, updateUser, validateUpdateUser } from '@/api/users/mutations';
@@ -9,13 +9,33 @@ import {
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
+import {
+  PageBackButton,
+  floatingPageBackButtonClassName,
+} from '@/components/navigation/PageBackButton';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import { formatPersonName } from '@/features/master/components/masterDashboardUtils';
 import { UserForm, UserFormData } from '@/features/master/forms/UserForm';
 import UserConfirmation from '@/features/master/pages/UserConfirmation';
 import { toast } from '@/hooks/use-toast';
 import { useSitesQuery } from '@/hooks/sites/useSitesQuery';
 import { logger } from '@/lib/logger';
+import { paths } from '@/routes/paths';
 import { useDashboardStore } from '@/stores/dashboardStore';
+import { getHomePath } from '@/utils/getHomePath';
+
+type UserEditLocationState = {
+  mode?: 'edit' | 'profile';
+  returnTo?: string;
+  user?: UserList;
+};
 
 const mapUserToForm = (user: UserList | undefined): UserFormData => {
   const userWithPosition = user as
@@ -62,15 +82,31 @@ export default function UserEdit() {
   const queryClient = useQueryClient();
   const location = useLocation();
   const { id } = useParams();
-  const initialUser = useDashboardStore((state) => state.getUser(id));
+  const locationState = location.state as UserEditLocationState | null;
+  const storedUser = useDashboardStore((state) => state.getUser(id));
+  const routedUser =
+    locationState?.user?.id === id ? locationState.user : undefined;
+  const initialUser = storedUser ?? routedUser;
   const { editUser, editSite, deleteUserStore, setSites } = useDashboardStore();
   const sitesQuery = useSitesQuery();
   const [formData, setFormData] = useState<UserFormData>(() =>
     mapUserToForm(initialUser),
   );
   const mode: 'edit' | 'profile' =
-    location.state?.mode === 'profile' ? 'profile' : 'edit';
+    locationState?.mode === 'profile' ? 'profile' : 'edit';
   const isMasterUser = initialUser?.role === 'master';
+  const formattedUserName = formatPersonName(
+    initialUser?.lastName,
+    initialUser?.firstName,
+  );
+  const accountName =
+    formattedUserName === '-'
+      ? initialUser?.username || 'ユーザー'
+      : formattedUserName;
+  const dashboardPath =
+    mode === 'profile' ? getHomePath(initialUser) : paths.masterDashboard;
+  const profilePath =
+    mode === 'profile' || !id ? paths.profile : paths.masterUserProfile(id);
 
   useEffect(() => {
     if (sitesQuery.data?.sites) {
@@ -150,7 +186,10 @@ export default function UserEdit() {
         description: '社員を更新しました',
       });
 
-      navigate('/master/dashboard');
+      navigate(
+        locationState?.returnTo ??
+          (mode === 'profile' ? paths.profile : paths.masterDashboard),
+      );
     } catch (error) {
       logger.error('Error updating user:', error);
       toast({
@@ -198,6 +237,11 @@ export default function UserEdit() {
   };
 
   const handleFormBack = () => {
+    if (mode === 'profile') {
+      navigate(paths.profile);
+      return;
+    }
+
     navigate(-1);
   };
 
@@ -224,13 +268,43 @@ export default function UserEdit() {
       <PageBackButton
         onClick={handleFormBack}
         label=""
-        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
+        aria-label={mode === 'profile' ? 'プロファイルに戻る' : '社員管理に戻る'}
+        className={floatingPageBackButtonClassName}
       />
 
       <FormPageContent>
-        <FormPageTitle>
-          {mode === 'profile' ? 'プロファイル編集' : '社員更新'}
-        </FormPageTitle>
+        <Breadcrumb>
+          <BreadcrumbList className="flex-nowrap">
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to={dashboardPath}>ダッシュボード</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem className="min-w-0">
+              <BreadcrumbLink asChild>
+                <Link className="block max-w-48 truncate" to={profilePath}>
+                  {accountName}
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>更新</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        <div>
+          <FormPageTitle as="h2">
+            {mode === 'profile' ? 'プロファイルの編集' : '社員情報の編集'}
+          </FormPageTitle>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
+            {mode === 'profile'
+              ? '登録されている個人情報とアカウント情報を編集します。'
+              : '社員の個人情報とアカウント情報を編集します。'}
+          </p>
+        </div>
 
         <UserForm
           mode={mode}

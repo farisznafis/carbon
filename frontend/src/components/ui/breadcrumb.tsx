@@ -56,7 +56,12 @@ const BreadcrumbLink = React.forwardRef<
   return (
     <Comp
       ref={ref}
-      className={cn('underline-offset-4 transition-colors duration-200 hover:text-primary hover:underline focus-visible:text-primary focus-visible:underline focus-visible:outline-none', className)}
+      className={cn(
+        'border-b border-transparent text-foreground transition-colors duration-200',
+        'hover:border-primary hover:text-primary',
+        'focus-visible:border-primary focus-visible:text-primary focus-visible:outline-none',
+        className,
+      )}
       {...props}
     />
   );
@@ -72,7 +77,7 @@ const BreadcrumbPage = React.forwardRef<
     role='link'
     aria-disabled='true'
     aria-current='page'
-    className={cn('font-normal text-foreground', className)}
+    className={cn('border-b border-transparent font-normal text-foreground', className)}
     {...props}
   />
 ));

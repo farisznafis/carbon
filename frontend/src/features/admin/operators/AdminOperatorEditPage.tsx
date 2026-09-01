@@ -220,7 +220,7 @@ export default function AdminOperatorEditPage() {
         </Breadcrumb>
 
         <div>
-          <FormPageTitle as="h1">運用者情報の編集</FormPageTitle>
+          <FormPageTitle as="h2">運用者情報の編集</FormPageTitle>
           <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
             {canEditPermissions
               ? '運用者のプロフィールと権限情報を編集します。'
