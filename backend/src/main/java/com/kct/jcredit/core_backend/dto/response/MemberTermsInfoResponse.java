@@ -1,5 +1,7 @@
 package com.kct.jcredit.core_backend.dto.response;
 
+import java.time.Instant;
+
 import lombok.Builder;
 import lombok.Getter;
 
@@ -13,6 +15,6 @@ public class MemberTermsInfoResponse {
     private String operatorNameJa;
     private String adminRepName;
     private String projectOverview;
-    private String usagePurpose;
-    private String effectiveDate;
+    private String usePurpose;
+    private Instant startedAt;
 }

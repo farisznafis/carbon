@@ -5,32 +5,27 @@ import {
   type MonitoringRecordListItem,
   type MonitoringRecordListResult,
 } from '@/api/monitoring';
-import type { Project } from '@/api/projects';
 import {
   DataGridTable,
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
+import { SkeletonTable } from '@/components/feedback/loading';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { logger } from '@/lib/logger';
-import { InlineLoader, SkeletonTable } from '@/components/feedback/loading';
 import {
   formatMonitoringDate,
   formatMonitoringNumber,
   formatMonitoringValue,
-} from '@/features/admin/monitoring/monitoringRecordDisplay';
+} from './monitoringRecordDisplay';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
+const MONITORING_TABLE_MIN_WIDTH = 920;
+const MONITORING_TABLE_COLUMNS =
+  'minmax(90px,1.1fr) minmax(70px,.8fr) repeat(5,minmax(88px,1fr)) minmax(70px,.7fr) 88px';
 
 const EMPTY_RESULT: MonitoringRecordListResult = {
   items: [],
@@ -45,13 +40,9 @@ const EMPTY_RESULT: MonitoringRecordListResult = {
 };
 
 type ProjectMonitoringTableProps = {
-  projects: Project[];
-  projectsLoading: boolean;
-  projectsError: string | null;
-  selectedProjectId: string;
+  projectId: string;
   initialPage?: number;
   initialLimit?: number;
-  onProjectChange: (projectId: string) => void;
   onViewDetail: (
     record: MonitoringRecordListItem,
     page: number,
@@ -59,14 +50,11 @@ type ProjectMonitoringTableProps = {
   ) => void;
 };
 
+/** Displays monitoring records for the project supplied by the project-detail route. */
 export function ProjectMonitoringTable({
-  projects,
-  projectsLoading,
-  projectsError,
-  selectedProjectId,
+  projectId,
   initialPage = DEFAULT_PAGE,
   initialLimit = DEFAULT_LIMIT,
-  onProjectChange,
   onViewDetail,
 }: ProjectMonitoringTableProps) {
   const [page, setPage] = useState(initialPage);
@@ -76,19 +64,13 @@ export function ProjectMonitoringTable({
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  /** Fetches GET /monitoring/{projectId}/list for the active pagination state. */
   const loadMonitoringRecords = useCallback(async () => {
-    if (!selectedProjectId) {
-      setResult(EMPTY_RESULT);
-      setLoadError(null);
-      setIsLoading(false);
-      return;
-    }
-
     try {
       setIsLoading(true);
       setLoadError(null);
       const nextResult = await getAdminProjectMonitoringRecords({
-        projectId: selectedProjectId,
+        projectId,
         page,
         limit,
       });
@@ -104,7 +86,7 @@ export function ProjectMonitoringTable({
     } finally {
       setIsLoading(false);
     }
-  }, [limit, page, selectedProjectId]);
+  }, [limit, page, projectId]);
 
   useEffect(() => {
     void loadMonitoringRecords();
@@ -119,20 +101,6 @@ export function ProjectMonitoringTable({
         render: (record) => formatMonitoringDate(record.dateRecorded),
         sortValue: (record) => record.dateRecorded,
       },
-      // {
-      //   id: 'siteID',
-      //   label: '拠点ID',
-      //   sortable: true,
-      //   render: (record) => formatMonitoringValue(record.siteId),
-      //   sortValue: (record) => record.siteId,
-      // },
-      // {
-      //   id: 'participatingUserID',
-      //   label: '参加ユーザID',
-      //   sortable: true,
-      //   render: (record) => formatMonitoringValue(record.participatingUserId),
-      //   sortValue: (record) => record.participatingUserId,
-      // },
       {
         id: 'methodologyType',
         label: '方法論',
@@ -208,54 +176,15 @@ export function ProjectMonitoringTable({
     [limit, onViewDetail, page],
   );
 
-  const handleProjectChange = (projectId: string) => {
-    setPage(DEFAULT_PAGE);
-    setLimit(DEFAULT_LIMIT);
-    setResult(EMPTY_RESULT);
-    onProjectChange(projectId);
-  };
-
   return (
     <div className="space-y-4">
-      <div className="max-w-md space-y-2">
-        <label
-          htmlFor="monitoring-project-select"
-          className="text-body font-medium text-foreground"
-        >
-          プロジェクト
-        </label>
-        <Select
-          value={selectedProjectId}
-          onValueChange={handleProjectChange}
-          disabled={projectsLoading || Boolean(projectsError)}
-        >
-          <SelectTrigger id="monitoring-project-select">
-            <SelectValue placeholder="プロジェクトを選択してください" />
-          </SelectTrigger>
-          <SelectContent>
-            {projects.map((project) => (
-              <SelectItem key={project.id} value={String(project.id)}>
-                {project.projectName || String(project.id)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {projectsLoading && (
-          <InlineLoader label="プロジェクトを読み込んでいます" />
-        )}
-        {projectsError && (
-          <p role="alert" className="text-small text-destructive">
-            {projectsError}
-          </p>
-        )}
-      </div>
-
-      {!selectedProjectId ? (
-        <div className="rounded-lg border border-dashed border-border bg-muted/20 px-6 py-10 text-center text-small text-foreground">
-          表示するプロジェクトを選択してください。
-        </div>
-      ) : isLoading ? (
-        <SkeletonTable columns={9} rows={6} gridTemplateColumns="minmax(90px,1.1fr) minmax(70px,.8fr) repeat(5,minmax(88px,1fr)) minmax(70px,.7fr) 88px" minWidth={0} />
+      {isLoading ? (
+        <SkeletonTable
+          columns={9}
+          rows={6}
+          gridTemplateColumns={MONITORING_TABLE_COLUMNS}
+          minWidth={MONITORING_TABLE_MIN_WIDTH}
+        />
       ) : loadError ? (
         <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center">
           <p role="alert" className="text-small text-destructive">
@@ -275,8 +204,8 @@ export function ProjectMonitoringTable({
           <DataGridTable
             rows={result.items}
             columns={columns}
-            gridTemplateColumns="minmax(90px,1.1fr) minmax(70px,.8fr) repeat(5,minmax(88px,1fr)) minmax(70px,.7fr) 88px"
-            minWidth={0}
+            gridTemplateColumns={MONITORING_TABLE_COLUMNS}
+            minWidth={MONITORING_TABLE_MIN_WIDTH}
             getRowKey={(record) => `${record.id}:${record.timeUpdated}`}
             emptyMessage="モニタリングデータはありません。"
           />

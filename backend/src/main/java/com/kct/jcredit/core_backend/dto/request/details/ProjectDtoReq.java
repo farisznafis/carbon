@@ -1,6 +1,9 @@
 package com.kct.jcredit.core_backend.dto.request.details;
 
 import com.kct.jcredit.core_backend.validation.ValidEmail;
+
+import java.time.Instant;
+
 import com.kct.jcredit.core_backend.validation.AnyCharacter;
 import com.kct.jcredit.core_backend.validation.Katakana;
 import com.kct.jcredit.core_backend.validation.PhoneNumber;
@@ -10,6 +13,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -37,6 +41,10 @@ public class ProjectDtoReq {
     @Size(max = 10, message = "プロジェクトステータスは10文字以内で入力してください。")
     @Zenkaku(message = "プロジェクトステータスは全角文字で入力してください。")
     private String projectStatus;
+
+    @NotNull(message = "開始日時は必須です。")
+    @PastOrPresent(message = "開始日時は未来の日時を指定できません。")
+    private Instant startedAt;
 
     @NotNull(message = "ベースライン排出量は必須です。")
     @DecimalMin(value = "0", message = "ベースライン排出量は0以上で入力してください。")
@@ -172,6 +180,10 @@ public class ProjectDtoReq {
     @NotBlank(message = "方法論詳細は必須です。")
     @Size(max = 1000, message = "方法論詳細は1000文字以内で入力してください。")
     private String methodDetails;
+
+    @NotBlank(message = "利用目的は必須です。")
+    @Size(max = 1000, message = "利用目的は1000文字以内で入力してください。")
+    private String usePurpose;
 
     @NotBlank(message = "運営会社IDは必須です。")
     private String operatorCompanyId;
