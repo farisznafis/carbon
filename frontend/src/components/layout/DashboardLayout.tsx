@@ -3,6 +3,9 @@ import { cn } from '@/lib/utils';
 export const dashboardPageContainerClassName =
   'mx-auto w-full max-w-app px-4 sm:px-6 lg:px-0';
 
+export const adminPageContainerClassName =
+  'mx-auto w-full max-w-admin px-4 sm:px-6 lg:px-8';
+
 export const dashboardTabsListClassName =
   'mx-auto flex h-auto w-fit max-w-full flex-wrap items-center justify-center gap-2 rounded-none bg-transparent p-0';
 

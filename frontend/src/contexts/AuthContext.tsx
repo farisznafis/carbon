@@ -30,6 +30,7 @@ type AdminLoginResponse = {
   admin?: {
     id?: string | number | null;
     username?: string | null;
+    name?: string | null;
     email?: string | null;
     role?: User['role'];
     companyId?: string | null;
@@ -205,7 +206,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const adminUser: User = {
           id: adminSource?.id ? String(adminSource.id) : 'admin',
-          email: adminSource?.email ?? (data.admin?.username) ?? '',
+          email: adminSource?.email ?? '',
+          username: adminSource?.username ?? undefined,
+          name: adminSource?.name ?? undefined,
           role: 'admin',
           companyId: adminSource?.companyId ?? undefined,
           siteId: adminSource?.siteId ? String(adminSource.siteId) : '',
