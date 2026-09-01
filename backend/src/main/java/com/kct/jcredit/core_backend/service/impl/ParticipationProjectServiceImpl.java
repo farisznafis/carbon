@@ -188,8 +188,8 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 .operatorNameJa(safe(operatorCompany.getNameJa()))
                 .adminRepName(adminRepName)
                 .projectOverview(safe(project.getMethodName()))
-                .usagePurpose(safe(project.getMethodDetails())) 
-                .effectiveDate(effectiveDate)
+                .usagePurpose(safe(project.getUsePurpose()))
+                .startedAt(project.getStartedAt())
                 .build();
         }
 
