@@ -33,7 +33,10 @@ public interface EnR002FileUploadService {
     // key yang sudah tercatat di DB, jadi DB tidak pernah menunjuk ke tmp/.
     void moveToPermanent(String tempS3Key, String permanentKey);
 
+    // Hapus object permanent.
     void deletePermanentFile(String s3Key, Integer equipmentId);
 
+    // buildPermanentKey + moveToPermanent dalam satu panggilan, untuk pemakaian
+    // di luar transaksi yang tidak perlu mencatat key ke DB lebih dulu.
     String moveTempToPermanent(String tempS3Key, String siteId, Integer equipmentId);
 }
