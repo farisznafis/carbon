@@ -58,7 +58,6 @@ import { getSolarFormSelectedFiles } from "@/features/user/project-registration/
 import { createSiteRegistrationReturnState } from "@/features/master/navigation/siteRegistrationFlow";
 import type { SolarPowerFormData } from "@/lib/equipmentValidations";
 import { useSitesQuery } from "@/hooks/sites/useSitesQuery";
-import { useSustainabilityCommitmentDefaultQuery } from "@/hooks/sites/useSustainabilityCommitmentDefaultQuery";
 import {
   createProjectRegistrationDraftKey,
   deleteProjectRegistrationDraft,
@@ -67,10 +66,6 @@ import {
   saveProjectRegistrationDraft,
   type ProjectRegistrationDraft,
 } from "@/features/user/project-registration/projectRegistrationDraftStorage";
-import {
-  hasLegacyContractDraftValues,
-  mapSustainabilityCommitmentDefault,
-} from "@/features/user/project-registration/sustainabilityCommitmentDefaultMapper";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -259,7 +254,6 @@ const ProjectRegister = () => {
   const contractStepRef = useRef<ContractStepRef>(null);
   const finalStepRef = useRef<FinalTermsRef>(null);
   const equipmentStepRef = useRef<EquipmentRegistrationStepRef>(null);
-  const contractHasUserChangesRef = useRef(false);
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [currentStep, setCurrentStep] = useState(1);
@@ -282,9 +276,6 @@ const ProjectRegister = () => {
   const [contractFormValues, setContractFormValues] = useState<
     Partial<ContractStepFormValues>
   >({ ...EMPTY_CONTRACT_FORM_VALUES });
-  const [contractHasUserChanges, setContractHasUserChanges] = useState(false);
-  const [contractSiteId, setContractSiteId] = useState('');
-  const [validatedEquipmentSiteId, setValidatedEquipmentSiteId] = useState('');
 
   const [finalTermsValues, setFinalTermsValues] = useState<Partial<FinalTermsValues>>({
     finalTermsAgreed: false,
@@ -315,11 +306,6 @@ const ProjectRegister = () => {
     () => createProjectRegistrationDraftKey(user?.id ?? '', siteId, projectId),
     [projectId, siteId, user?.id],
   );
-  const sustainabilityDefaultQuery =
-    useSustainabilityCommitmentDefaultQuery(
-      validatedEquipmentSiteId,
-      isDraftHydrated && !contractHasUserChanges,
-    );
 
   // ── Navigation ────────────────────────────────────────────────────────────
   const navigateToDashboard = useCallback(() => {
@@ -452,29 +438,11 @@ const ProjectRegister = () => {
         if (!isMounted) return;
 
         if (savedDraft) {
-          const savedEquipmentSiteId = savedDraft.equipment
-            .filter(
-              (item): item is SolarEquipment => item.formType === 'solar',
-            )
-            .at(-1)?.solarData.siteId;
-          const restoredContractHasUserChanges =
-            savedDraft.contractHasUserChanges ??
-            hasLegacyContractDraftValues(savedDraft.contractFormValues);
           setCurrentStep(
             Math.min(Math.max(savedDraft.currentStep, EQUIPMENT_STEP), REVIEW_STEP),
           );
           setAgreementFormValues(savedDraft.agreementFormValues);
           setContractFormValues(savedDraft.contractFormValues);
-          setContractHasUserChanges(restoredContractHasUserChanges);
-          contractHasUserChangesRef.current = restoredContractHasUserChanges;
-          setContractSiteId(
-            savedDraft.contractSiteId ?? savedEquipmentSiteId ?? '',
-          );
-          setValidatedEquipmentSiteId(
-            savedDraft.currentStep > EQUIPMENT_STEP
-              ? savedEquipmentSiteId ?? ''
-              : '',
-          );
           setFinalTermsValues(savedDraft.finalTermsValues);
         }
 
@@ -521,46 +489,6 @@ const ProjectRegister = () => {
   }, [draftKey, pendingEquipment, projectId]);
 
   useEffect(() => {
-    if (!isDraftHydrated || !selectedEquipmentSiteId) return;
-
-    if (!contractSiteId) {
-      setContractSiteId(selectedEquipmentSiteId);
-      return;
-    }
-
-    if (contractSiteId === selectedEquipmentSiteId) return;
-
-    // A newly selected site must use its own defaults instead of the previous site's draft.
-    contractHasUserChangesRef.current = false;
-    setContractHasUserChanges(false);
-    setContractFormValues({ ...EMPTY_CONTRACT_FORM_VALUES });
-    setContractErrors({});
-    setContractSiteId(selectedEquipmentSiteId);
-    setValidatedEquipmentSiteId('');
-  }, [contractSiteId, isDraftHydrated, selectedEquipmentSiteId]);
-
-  useEffect(() => {
-    if (
-      !sustainabilityDefaultQuery.data ||
-      contractHasUserChangesRef.current ||
-      contractSiteId !== selectedEquipmentSiteId ||
-      validatedEquipmentSiteId !== selectedEquipmentSiteId
-    ) {
-      return;
-    }
-
-    setContractFormValues(
-      mapSustainabilityCommitmentDefault(sustainabilityDefaultQuery.data),
-    );
-  }, [
-    contractHasUserChanges,
-    contractSiteId,
-    selectedEquipmentSiteId,
-    sustainabilityDefaultQuery.data,
-    validatedEquipmentSiteId,
-  ]);
-
-  useEffect(() => {
     if (!isDraftHydrated || isCompletionStep) return;
 
     const draft: ProjectRegistrationDraft = {
@@ -569,8 +497,6 @@ const ProjectRegister = () => {
       equipment,
       agreementFormValues,
       contractFormValues,
-      contractHasUserChanges,
-      contractSiteId,
       finalTermsValues,
       updatedAt: new Date().toISOString(),
     };
@@ -581,8 +507,6 @@ const ProjectRegister = () => {
   }, [
     agreementFormValues,
     contractFormValues,
-    contractHasUserChanges,
-    contractSiteId,
     currentStep,
     draftKey,
     equipment,
@@ -602,7 +526,6 @@ const ProjectRegister = () => {
           const validatedEquipment =
             await equipmentStepRef.current.validate();
           setEquipment([validatedEquipment]);
-          setValidatedEquipmentSiteId(validatedEquipment.solarData.siteId);
           return true;
         } catch (error) {
           toast({
@@ -883,28 +806,13 @@ const ProjectRegister = () => {
             isSubmitting={isSubmitting}
             onBack={handleBack}
             onNext={handleNext}
-            onValueChange={(values, metadata) => {
+            onValueChange={(values) => {
               setContractFormValues(values);
-              if (metadata.isUserChange) {
-                contractHasUserChangesRef.current = true;
-                setContractHasUserChanges(true);
-              }
               if (Object.keys(contractErrors).length > 0) {
                 setContractErrors({});
               }
             }}
             errors={contractErrors}
-            isDefaultLoading={
-              !contractHasUserChanges && sustainabilityDefaultQuery.isFetching
-            }
-            defaultLoadError={
-              !contractHasUserChanges && sustainabilityDefaultQuery.isError
-                ? '登録済み情報を取得できませんでした。手動で入力するか、再試行してください。'
-                : null
-            }
-            onRetryDefaults={() => {
-              void sustainabilityDefaultQuery.refetch();
-            }}
           />
         );
       case FINAL_AGREEMENT_STEP:

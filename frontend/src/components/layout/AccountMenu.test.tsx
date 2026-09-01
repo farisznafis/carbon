@@ -11,8 +11,10 @@ describe('AccountMenu', () => {
 
     render(
       <AccountMenu
+        avatarInitial="山"
         displayName="山田 太郎"
         email="taro@example.com"
+        roleLabel="運用者"
         onProfile={onProfile}
         onLogout={onLogout}
       />,
@@ -22,9 +24,14 @@ describe('AccountMenu', () => {
       name: 'アカウントメニューを開く：山田 太郎',
     });
     expect(trigger).toHaveTextContent('山田 太郎');
-    expect(trigger).toHaveTextContent('taro@example.com');
+    expect(trigger).toHaveTextContent('運用者');
+    expect(trigger).toHaveTextContent('山');
+    expect(trigger.querySelectorAll('svg')).toHaveLength(1);
+    expect(trigger).not.toHaveTextContent('taro@example.com');
 
     await user.click(trigger);
+    expect(screen.getByText('taro@example.com')).toBeInTheDocument();
+    expect(screen.getAllByText('山田 太郎')).toHaveLength(2);
     await user.click(screen.getByRole('menuitem', { name: 'プロファイル' }));
     expect(onProfile).toHaveBeenCalledTimes(1);
 
@@ -39,18 +46,20 @@ describe('AccountMenu', () => {
 
     render(
       <AccountMenu
+        avatarInitial={null}
         displayName="管理者"
         email="admin@example.com"
+        roleLabel="管理者"
         onProfile={vi.fn()}
         onLogout={onLogout}
       />,
     );
 
-    await user.click(
-      screen.getByRole('button', {
-        name: 'アカウントメニューを開く：管理者',
-      }),
-    );
+    const fallbackTrigger = screen.getByRole('button', {
+      name: 'アカウントメニューを開く：管理者',
+    });
+    expect(fallbackTrigger.querySelectorAll('svg')).toHaveLength(2);
+    await user.click(fallbackTrigger);
     const logoutItem = screen.getByRole('menuitem', { name: 'ログアウト' });
     await user.click(logoutItem);
 
