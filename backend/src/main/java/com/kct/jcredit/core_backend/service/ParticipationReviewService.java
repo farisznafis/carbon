@@ -19,4 +19,5 @@ public interface ParticipationReviewService {
     void approveReview(Integer participationId, Integer operatorUserId, ApproveReviewRequest request);
     void rejectReview(Integer participationId, Integer operatorUserId, RejectReviewRequest request);
     public List<ParticipationReviewHistoryResponse> getReviewHistory(Integer participationId);
+    List<ParticipationReviewDetailResponse> getParticipationsByProject(String projectId);
 }

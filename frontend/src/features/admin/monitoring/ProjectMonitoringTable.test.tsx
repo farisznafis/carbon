@@ -3,24 +3,11 @@ import {
   getAdminProjectMonitoringRecords,
   type MonitoringRecordListItem,
 } from '@/api/monitoring';
-import type { Project } from '@/api/projects';
 import { ProjectMonitoringTable } from './ProjectMonitoringTable';
 
 vi.mock('@/api/monitoring', () => ({
   getAdminProjectMonitoringRecords: vi.fn(),
 }));
-
-const project: Project = {
-  id: 'PROJ0007',
-  projectName: '太陽光発電プロジェクト',
-  projectStatus: 'ACTIVE',
-  methodologyVersion: '1.0',
-  methodCategory: 'EN-R',
-  methodNumber: '002',
-  methodName: '太陽光発電設備の導入',
-  methodMainEmission: '排出削減活動',
-  methodCombiFeasibility: false,
-};
 
 const monitoringRecord: MonitoringRecordListItem = {
   id: 'monitoring-1',
@@ -49,41 +36,19 @@ const monitoringRecord: MonitoringRecordListItem = {
   methodologyType: 'EN-R',
 };
 
-const defaultProps = {
-  projects: [project],
-  projectsLoading: false,
-  projectsError: null,
-  onProjectChange: vi.fn(),
-  onViewDetail: vi.fn(),
-};
-
 describe('ProjectMonitoringTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('does not request monitoring data before a project is selected', () => {
-    render(
-      <ProjectMonitoringTable
-        {...defaultProps}
-        selectedProjectId=""
-      />,
-    );
-
-    expect(
-      screen.getByText('表示するプロジェクトを選択してください。'),
-    ).toBeInTheDocument();
-    expect(getAdminProjectMonitoringRecords).not.toHaveBeenCalled();
-  });
-
-  it('loads the selected project monitoring data and opens its detail', async () => {
+  it('loads records directly from the project-detail route context', async () => {
     vi.mocked(getAdminProjectMonitoringRecords).mockResolvedValue({
       items: [monitoringRecord],
       pagination: {
-        page: 1,
-        limit: 10,
+        page: 2,
+        limit: 20,
         totalItems: 1,
-        totalPages: 1,
+        totalPages: 2,
         nextPageToken: null,
         hasMore: false,
       },
@@ -92,20 +57,24 @@ describe('ProjectMonitoringTable', () => {
 
     render(
       <ProjectMonitoringTable
-        {...defaultProps}
-        selectedProjectId="PROJ0007"
+        projectId="PROJ0007"
+        initialPage={2}
+        initialLimit={20}
         onViewDetail={onViewDetail}
       />,
     );
 
     expect(await screen.findByText('120 kWh')).toBeInTheDocument();
+    expect(
+      screen.queryByText('プロジェクトを選択してください'),
+    ).not.toBeInTheDocument();
     expect(getAdminProjectMonitoringRecords).toHaveBeenCalledWith({
       projectId: 'PROJ0007',
-      page: 1,
-      limit: 10,
+      page: 2,
+      limit: 20,
     });
 
     fireEvent.click(screen.getByRole('button', { name: '詳細' }));
-    expect(onViewDetail).toHaveBeenCalledWith(monitoringRecord, 1, 10);
+    expect(onViewDetail).toHaveBeenCalledWith(monitoringRecord, 2, 20);
   });
 });

@@ -15,6 +15,7 @@ import { SessionExpiryGuard } from "@/components/layout/SessionExpiryGuard";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "./contexts/ProtectedRoute";
 import { ErrorBoundary } from "@/components/feedback/ErrorBoundary";
+import { ForbiddenAccessBoundary } from '@/components/feedback/ForbiddenAccessBoundary';
 import { AppLoadingScreen, PageSkeleton } from '@/components/feedback/loading';
 import { isAuthPagePath, paths } from "@/routes/paths";
 import { cn } from "@/lib/utils";
@@ -58,6 +59,18 @@ const EquipmentPage = lazy(() =>
 );
 const Profile = lazy(() => import("./features/user/profile/ProfilePage"));
 const AdminDashboard = lazy(() => import("./features/admin/dashboard/AdminDashboardPage"));
+const AdminOperatorList = lazy(() =>
+  import('./features/admin/operators/AdminOperatorListPage'),
+);
+const AdminOperatorRegister = lazy(() =>
+  import('./features/admin/operators/AdminOperatorRegisterPage'),
+);
+const AdminOperatorProfile = lazy(() =>
+  import('./features/admin/operators/AdminOperatorProfilePage'),
+);
+const AdminOperatorEdit = lazy(() =>
+  import('./features/admin/operators/AdminOperatorEditPage'),
+);
 const AdminCompanyDetail = lazy(() =>
   import("./features/admin/company-detail/AdminCompanyDetailPage"),
 );
@@ -174,8 +187,9 @@ const App = () => {
             isAuthPage && 'relative overflow-hidden',
           )}
         >
-          <Suspense fallback={<PageSkeleton />}>
-            <Routes>
+          <ForbiddenAccessBoundary>
+            <Suspense fallback={<PageSkeleton />}>
+              <Routes>
           <Route path={paths.home} element={<Index />} />
           <Route path={paths.login} element={<Login />} />
           <Route path={paths.adminLogin} element={<AdminLogin />} />
@@ -245,6 +259,51 @@ const App = () => {
             element={
               <RequireAdmin>
                 <AdminDashboard />
+              </RequireAdmin>
+            }
+          />
+          {[paths.adminProjectList, paths.adminCompanyList, paths.adminMethodologyList, paths.adminMonitoring].map(
+            (path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <RequireAdmin>
+                    <AdminDashboard />
+                  </RequireAdmin>
+                }
+              />
+            ),
+          )}
+          <Route
+            path={paths.adminOperatorList}
+            element={
+              <RequireAdmin>
+                <AdminOperatorList />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminOperatorRegister}
+            element={
+              <RequireAdmin>
+                <AdminOperatorRegister />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminOperatorProfileRoute}
+            element={
+              <RequireAdmin>
+                <AdminOperatorProfile />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminOperatorEditRoute}
+            element={
+              <RequireAdmin>
+                <AdminOperatorEdit />
               </RequireAdmin>
             }
           />
@@ -344,8 +403,9 @@ const App = () => {
               <AdminHelpFaqPage />
             }
           />
-            </Routes>
-          </Suspense>
+              </Routes>
+            </Suspense>
+          </ForbiddenAccessBoundary>
         </div>
       </div>
     </ErrorBoundary>

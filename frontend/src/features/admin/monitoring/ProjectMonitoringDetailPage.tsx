@@ -129,6 +129,7 @@ function DetailSection({
   );
 }
 
+/** Displays one monitoring record within its parent project's admin context. */
 export default function ProjectMonitoringDetailPage() {
   const { projectId, monitoringId } = useParams();
   const navigate = useNavigate();
@@ -188,16 +189,19 @@ export default function ProjectMonitoringDetailPage() {
     }
   }, [loadMonitoringRecord, record]);
 
+  /** Returns to the current project's monitoring list with its pagination restored. */
   const returnToList = () => {
     if (!projectId) {
       navigate(paths.adminDashboard);
       return;
     }
 
+    const projectDetailSearchParams = new URLSearchParams({
+      monitoringPage: String(page),
+      monitoringLimit: String(limit),
+    });
     navigate(
-      `${paths.adminDashboard}?tab=monitoring&projectId=${encodeURIComponent(
-        projectId,
-      )}&monitoringPage=${page}&monitoringLimit=${limit}`,
+      `${paths.adminProjectDetail(projectId)}?${projectDetailSearchParams.toString()}#monitoring-data`,
     );
   };
 

@@ -127,7 +127,7 @@ export async function getSiteProjectEquipmentPresignedUrl(
 
   const response = await apiFetch(
     `/site/project/presigned-url?s3Key=${encodeURIComponent(normalizedS3Key)}`,
-    { method: 'GET' },
+    { method: 'GET', forbiddenHandling: 'caller' },
   );
   const { data, rawBody } = await parseJsonResponse<unknown>(response);
 
@@ -332,6 +332,7 @@ export async function getSiteEquipmentHistory(
     `/site/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}/history`,
     {
       method: 'GET',
+      forbiddenHandling: 'caller',
       fallbackErrorMessage: '設備変更履歴の取得に失敗しました。',
     },
   );

@@ -196,6 +196,18 @@ public class AdminCompanyController {
     // /{companyId} single-segment mapping above.
     // ─────────────────────────────────────────────────────────────
 
+
+    @GetMapping("participate/project/{projectId}")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "プロジェクト別入会届一覧取得",
+            description = "指定プロジェクトに紐づく入会届を、ステータスを問わず参加企業別に全件取得します。")
+    public ResponseEntity<List<ParticipationReviewDetailResponse>> getParticipationsByProject(
+            @PathVariable String projectId) {
+
+        return ResponseEntity.ok(reviewService.getParticipationsByProject(projectId));
+    }
+
     // ── LIST ALL — (status OPEN) ───────
     @GetMapping("participate/pending")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
