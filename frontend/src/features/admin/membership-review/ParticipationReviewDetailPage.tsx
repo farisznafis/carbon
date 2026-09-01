@@ -28,6 +28,7 @@ import {
   type ParticipationReviewDecisionErrors,
 } from './ParticipationReviewDecisionDialog';
 import { ParticipationReviewPdfCard } from './ParticipationReviewPdfCard';
+import { isParticipationReviewApproved } from './participationReviewDisplay';
 import { ParticipationReviewSections } from './ParticipationReviewSections';
 import { isParticipationReviewForProject } from './participationReviewProjectMatch';
 
@@ -380,10 +381,12 @@ export default function ParticipationReviewDetailPage() {
           </div>
         )}
 
-        <ParticipationReviewPdfCard
-          isLoading={isDownloadingPdf}
-          onView={() => void handleViewMembershipPdf()}
-        />
+        {isParticipationReviewApproved(review) && (
+          <ParticipationReviewPdfCard
+            isLoading={isDownloadingPdf}
+            onView={() => void handleViewMembershipPdf()}
+          />
+        )}
 
         <ParticipationReviewSections review={review} />
 

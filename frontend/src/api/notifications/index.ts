@@ -101,6 +101,7 @@ export async function getNotifications(
     `/notification/list?${searchParams.toString()}`,
     {
       method: 'GET',
+      forbiddenHandling: 'caller',
       fallbackErrorMessage: 'Failed to fetch notifications',
     },
   );
@@ -116,6 +117,7 @@ export async function getUnreadNotificationCount(): Promise<number> {
     '/notification/count',
     {
       method: 'GET',
+      forbiddenHandling: 'caller',
       fallbackErrorMessage: 'Failed to fetch unread notification count',
     },
   );
