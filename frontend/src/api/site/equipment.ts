@@ -243,7 +243,7 @@ export async function joinSiteProject(
   payload: SiteProjectJoinRequest,
 ): Promise<SiteProjectJoinResponse> {
   return apiRequest<SiteProjectJoinResponse>(
-    `/site/project/projects/${encodeURIComponent(projectId)}/join`,
+    `/site/project/projects/${encodeURIComponent(projectId)}/join-company`,
     {
       method: 'POST',
       body: payload,

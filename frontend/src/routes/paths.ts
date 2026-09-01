@@ -66,6 +66,8 @@ export const paths = {
 
   profile: '/profile',
   passwordChange: '/password-change',
+  passwordChangeForUser: (userId: string | number) =>
+    `/password-change?userId=${encodeURIComponent(String(userId))}`,
 
   adminDashboard: '/admin/dashboard',
   adminProjectList: '/admin/projects',
