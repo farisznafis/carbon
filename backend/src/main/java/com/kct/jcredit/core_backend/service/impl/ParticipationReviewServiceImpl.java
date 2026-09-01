@@ -68,6 +68,8 @@ import java.util.Objects;
 public class ParticipationReviewServiceImpl implements ParticipationReviewService {
 
     private final ParticipatingProjectRepository participatingProjectRepository;
+    private final ProjectRepository projectRepository;
+    private final SiteProjectRelationRepository siteProjectRelationRepository;
     private final EnR002EquipmentFileRepository equipmentFileRepository;
     private final EnR002ApplicationConfirmationRepository confirmationItemsRepository;
     private final EnR002SustainabilityCommitmentRepository sustainabilityRepository;
@@ -335,6 +337,20 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
 
         private List<ParticipatingProject> findRejectedParticipations() {
                 return participatingProjectRepository.findByStatus("REJECTED");
+        }
+        
+        @Override
+        @Transactional(readOnly = true)
+        public List<ParticipationReviewDetailResponse> getParticipationsByProject(String projectId) {
+
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+                .map(Project::getId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND, ResponseConstants.MSG_PROJECT_NOT_FOUND));
+
+        return participatingProjectRepository.findByProject_Id(projectDbId).stream()
+                .map(p -> getReviewDetail(p.getId()))
+                .collect(Collectors.toList());
         }
     // ─────────────────────────────────────────────────────────────
     // PRIVATE — mapping

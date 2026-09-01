@@ -26,7 +26,7 @@ public interface ParticipatingProjectRepository
     Optional<ParticipatingProject> findByEquipment_Site_IdAndProject_Id(Integer siteId, Integer projectId);
 
     List<ParticipatingProject> findByProject_Id(Integer projectId);
-
+    
     Optional<ParticipatingProject> findByIdAndProject_Id(Integer participationId, Integer projectId);
 
     Optional<ParticipatingProject> findByCompanyIdAndProject_Id(Integer participatingCompanyId, Integer projectId);
