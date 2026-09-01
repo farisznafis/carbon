@@ -45,9 +45,6 @@ public class DocuSignServiceImpl implements DocuSignService {
 
     private static final long JWT_EXPIRY_SECONDS = 3600;
 
-    // ═════════════════════════════════════════════════════════════
-    // AUTH — bagian ini SAMA PERSIS dengan kode lama kamu
-    // ═════════════════════════════════════════════════════════════
 
     @Override
     public String getAccessToken() throws Exception {
@@ -168,7 +165,7 @@ public class DocuSignServiceImpl implements DocuSignService {
     }
 
     // ═════════════════════════════════════════════════════════════
-    // ENVELOPE — INI YANG BELUM PERNAH MASUK ke file lama kamu
+    // ENVELOPE — this part is new and specific to DocuSign envelope handling
     // ═════════════════════════════════════════════════════════════
 
     @Override
@@ -251,11 +248,11 @@ public class DocuSignServiceImpl implements DocuSignService {
             ResponseEntity<byte[]> response = restTemplate.exchange(
                     url, HttpMethod.GET, request, byte[].class);
 
-            log.info("[DocuSign] Dokumen final berhasil diunduh. envelopeId={}", envelopeId);
+            log.info("[DocuSign] Final document downloaded. envelopeId={}", envelopeId);
             return response.getBody();
 
         } catch (Exception e) {
-            log.error("[DocuSign] Gagal download dokumen final. envelopeId={}, error={}",
+            log.error("[DocuSign] Failed to download final document. envelopeId={}, error={}",
                     envelopeId, e.getMessage(), e);
             throw new RuntimeException("DocuSign署名済み文書の取得に失敗しました", e);
         }
