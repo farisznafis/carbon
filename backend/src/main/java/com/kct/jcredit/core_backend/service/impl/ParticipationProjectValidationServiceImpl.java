@@ -204,10 +204,10 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
                     "型式",
                     "必須項目です。"));
 
-        if (item.getPcsUnitCount() == null || item.getPcsUnitCount() < 1)
-            errors.add(err(item.getTempId(),
-                    "導入台数 (台)",
-                    "1以上の数値を入力してください。"));
+        // if (item.getPcsUnitCount() == null || item.getPcsUnitCount() < 1)
+        //     errors.add(err(item.getTempId(),
+        //             "導入台数 (台)",
+        //             "1以上の数値を入力してください。"));
 
         if (item.getDeviceNo() == null || item.getDeviceNo().isBlank())
             errors.add(err(item.getTempId(),
@@ -524,8 +524,8 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
             if (e.getPcsModel() == null || e.getPcsModel().isBlank())
                 errors.add(err(tempId, "型式", "必須項目です。"));
 
-            if (e.getPcsUnitCount() == null || e.getPcsUnitCount() < 1)
-                errors.add(err(tempId, "導入台数 (台)", "1以上の数値を入力してください。"));
+            // if (e.getPcsUnitCount() == null || e.getPcsUnitCount() < 1)
+            //     errors.add(err(tempId, "導入台数 (台)", "1以上の数値を入力してください。"));
 
             if (e.getDeviceNo() == null || e.getDeviceNo().isBlank())
                 errors.add(err(tempId, "機器固有番号（製造番号）", "必須項目です。"));

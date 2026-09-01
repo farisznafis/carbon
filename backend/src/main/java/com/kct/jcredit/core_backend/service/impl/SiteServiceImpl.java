@@ -419,7 +419,7 @@ public class SiteServiceImpl implements SiteService {
                     .nominalMaxOutput(equipment.getNominalMaxOutput())
                     .pcsManufacturer(equipment.getPcsManufacturer())
                     .pcsModel(equipment.getPcsModel())
-                    .pcsUnitCount(equipment.getPcsUnitCount())
+                    // .pcsUnitCount(equipment.getPcsUnitCount())
                     .deviceNo(equipment.getDeviceNo())
                     .pcsStandby(equipment.getPcsStandby())
                     .hasBattery(equipment.getHasBattery())

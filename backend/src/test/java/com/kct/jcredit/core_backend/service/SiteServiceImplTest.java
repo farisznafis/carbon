@@ -167,7 +167,7 @@ class SiteServiceImplTest {
                 .nominalMaxOutput(new BigDecimal("49.5"))
                 .pcsManufacturer("株式会社オムロン")
                 .pcsModel("KP49R")
-                .pcsUnitCount(1)
+                // .pcsUnitCount(1)
                 .deviceNo("SF-TKY-001")
                 .pcsStandby(new BigDecimal("0.05"))
                 .hasBattery(true)

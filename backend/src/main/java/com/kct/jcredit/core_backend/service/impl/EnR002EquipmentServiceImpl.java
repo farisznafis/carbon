@@ -100,7 +100,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
         equipment.setNominalMaxOutput(request.getNominalMaxOutput());
         equipment.setPcsManufacturer(request.getPcsManufacturer());
         equipment.setPcsModel(request.getPcsModel());
-        equipment.setPcsUnitCount(request.getPcsUnitCount());
+        // equipment.setPcsUnitCount(request.getPcsUnitCount());
         equipment.setDeviceNo(request.getDeviceNo());
         equipment.setPcsStandby(request.getPcsStandby());
         equipment.setHasBattery(request.getHasBattery());
@@ -218,7 +218,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 .nominalMaxOutput(e.getNominalMaxOutput())
                 .pcsManufacturer(e.getPcsManufacturer())
                 .pcsModel(e.getPcsModel())
-                .pcsUnitCount(e.getPcsUnitCount())
+                // .pcsUnitCount(e.getPcsUnitCount())
                 .deviceNo(e.getDeviceNo())
                 .pcsStandby(e.getPcsStandby())
                 .hasBattery(e.getHasBattery())
@@ -306,7 +306,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 .nominalMaxOutput(inherit(request.getNominalMaxOutput(), oldEquipment.getNominalMaxOutput()))
                 .pcsManufacturer(inherit(request.getPcsManufacturer(), oldEquipment.getPcsManufacturer()))
                 .pcsModel(inherit(request.getPcsModel(), oldEquipment.getPcsModel()))
-                .pcsUnitCount(inherit(request.getPcsUnitCount(), oldEquipment.getPcsUnitCount()))
+                // .pcsUnitCount(inherit(request.getPcsUnitCount(), oldEquipment.getPcsUnitCount()))
                 .deviceNo(inherit(request.getDeviceNo(), oldEquipment.getDeviceNo()))
                 .pcsStandby(inherit(request.getPcsStandby(), oldEquipment.getPcsStandby()))
                 .hasBattery(inherit(request.getHasBattery(), oldEquipment.getHasBattery()))
