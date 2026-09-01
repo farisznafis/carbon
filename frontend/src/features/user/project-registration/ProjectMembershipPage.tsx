@@ -3,10 +3,8 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   getSiteData,
   getSiteProjects,
-  getMyProjectParticipations,
   type SiteProject,
 } from '@/api/site';
-import { downloadProjectMembershipPdf } from '@/api/projects';
 import {
   FormPageContent,
   FormPageTitle,
@@ -35,8 +33,6 @@ import {
 } from '@/features/user/project-registration/projectMembershipNavigation';
 import { paths } from '@/routes/paths';
 import { useDashboardStore } from '@/stores/dashboardStore';
-import { downloadFromUrl } from '@/utils/download';
-import { useToast } from '@/hooks/use-toast';
 
 // Keeps the preparation checklist content structured and easy to maintain in one place.
 const MEMBERSHIP_PREPARATION_SECTIONS = [
@@ -85,8 +81,6 @@ type MembershipSectionProps = Readonly<{
   status: 'available' | 'joined';
   emptyMessage: string;
   onJoin?: (project: SiteProject) => void;
-  onDownloadPdf?: (project: SiteProject) => void;
-  downloadingProjectIds?: ReadonlySet<string>;
   beforeProjectList?: ReactNode;
 }>;
 
@@ -97,8 +91,6 @@ function MembershipSection({
   status,
   emptyMessage,
   onJoin,
-  onDownloadPdf,
-  downloadingProjectIds,
   beforeProjectList,
 }: MembershipSectionProps) {
   return (
@@ -117,8 +109,6 @@ function MembershipSection({
               project={project}
               status={status}
               onJoin={onJoin}
-              onDownloadPdf={onDownloadPdf}
-              isDownloadingPdf={downloadingProjectIds?.has(project.id)}
             />
           ))}
         </div>
@@ -137,7 +127,6 @@ export default function ProjectMembershipPage() {
   const { siteId = '' } = useParams<{ siteId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const enteredFromMasterDashboard = isFromMasterDashboard(location.state);
   const setCurrentProject = useDashboardStore(
     (state) => state.setCurrentProject,
@@ -147,9 +136,6 @@ export default function ProjectMembershipPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [isPreparationDialogOpen, setIsPreparationDialogOpen] = useState(false);
-  const [downloadingProjectIds, setDownloadingProjectIds] = useState<Set<string>>(
-    () => new Set(),
-  );
 
   const loadMembershipData = useCallback(async () => {
     if (!siteId) {
@@ -167,30 +153,8 @@ export default function ProjectMembershipPage() {
         getSiteProjects(siteId),
       ]);
 
-      // participationId comes from GET /site/project/{projectId}/my-participations.
-      // The project list supplies the IDs and remains the source for company membership status.
-      const projectsWithParticipation = await Promise.all(
-        siteProjects.map(async (project) => {
-          if (!project.isCompanyJoined) return project;
-
-          const participations = await getMyProjectParticipations(project.id);
-          const participation = participations.find(
-            (candidate) => candidate.siteId === siteId,
-          );
-
-          return participation
-            ? {
-                ...project,
-                participationId: participation.participationId,
-                participationStatus: participation.status,
-                pdfStatus: participation.pdfStatus,
-              }
-            : project;
-        }),
-      );
-
       setSiteName(siteData.site?.siteName ?? '');
-      setProjects(projectsWithParticipation);
+      setProjects(siteProjects);
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -230,37 +194,6 @@ export default function ProjectMembershipPage() {
   // Opens the general preparation guide without selecting or changing a project.
   const handleOpenPreparationDialog = () => {
     setIsPreparationDialogOpen(true);
-  };
-
-  const handleDownloadPdf = async (project: SiteProject) => {
-    if (
-      project.participationId == null ||
-      downloadingProjectIds.has(project.id)
-    ) return;
-
-    setDownloadingProjectIds((current) => new Set(current).add(project.id));
-    try {
-      const { pdfUrl } = await downloadProjectMembershipPdf(
-        project.id,
-        project.participationId,
-      );
-      downloadFromUrl(pdfUrl);
-    } catch (error) {
-      toast({
-        title: 'PDFを表示できませんでした',
-        description:
-          error instanceof Error && error.message
-            ? error.message
-            : 'しばらくしてからもう一度お試しください。',
-        variant: 'destructive',
-      });
-    } finally {
-      setDownloadingProjectIds((current) => {
-        const next = new Set(current);
-        next.delete(project.id);
-        return next;
-      });
-    }
   };
 
   const handleBack = () => {
@@ -363,12 +296,10 @@ export default function ProjectMembershipPage() {
 
               <TabsContent value="joined" className="mt-6">
                 <MembershipSection
-                  description="この拠点が現在入会しているプロジェクトです。再度入会届を提出する必要はありません。"
+                  description="この企業が現在入会しているプロジェクトです。再度入会届を提出する必要はありません。"
                   projects={joinedProjects}
                   status="joined"
                   emptyMessage="入会中のプロジェクトはありません。"
-                  onDownloadPdf={(project) => void handleDownloadPdf(project)}
-                  downloadingProjectIds={downloadingProjectIds}
                 />
               </TabsContent>
             </Tabs>

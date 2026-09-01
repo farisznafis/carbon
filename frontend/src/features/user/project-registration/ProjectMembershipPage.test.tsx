@@ -9,15 +9,11 @@ const {
   getSiteData,
   getSiteProjects,
   getMyProjectParticipations,
-  downloadProjectMembershipPdf,
-  downloadFromUrl,
 } =
   vi.hoisted(() => ({
     getSiteData: vi.fn(),
     getSiteProjects: vi.fn(),
     getMyProjectParticipations: vi.fn(),
-    downloadProjectMembershipPdf: vi.fn(),
-    downloadFromUrl: vi.fn(),
   }));
 
 vi.mock('@/api/site', async (importOriginal) => {
@@ -29,20 +25,6 @@ vi.mock('@/api/site', async (importOriginal) => {
     getMyProjectParticipations,
   };
 });
-
-vi.mock('@/api/projects', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/api/projects')>();
-  return {
-    ...actual,
-    downloadProjectMembershipPdf,
-  };
-});
-
-vi.mock('@/utils/download', () => ({ downloadFromUrl }));
-
-vi.mock('@/hooks/use-toast', () => ({
-  useToast: () => ({ toast: vi.fn() }),
-}));
 
 vi.mock('@/stores/dashboardStore', () => ({
   useDashboardStore: (
@@ -90,13 +72,10 @@ describe('ProjectMembershipPage tabs', () => {
     getSiteData.mockReset();
     getSiteProjects.mockReset();
     getMyProjectParticipations.mockReset();
-    downloadProjectMembershipPdf.mockReset();
-    downloadFromUrl.mockReset();
     getSiteData.mockResolvedValue({
       site: { siteId: 'site001', siteName: '東京拠点' },
       metrics: null,
     });
-    getMyProjectParticipations.mockResolvedValue([]);
   });
 
   it('shows available projects by default and switches to joined projects', async () => {
@@ -193,38 +172,23 @@ describe('ProjectMembershipPage tabs', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('opens the membership PDF with participationId from my participations', async () => {
+  it('uses the project list flags without requesting participation details', async () => {
     const user = userEvent.setup();
     getSiteProjects.mockResolvedValue([
-      createProject('PROJ002', '入会中プロジェクト', true),
+      createProject('PROJ002', '入会中プロジェクト', true, false),
     ]);
-    getMyProjectParticipations.mockResolvedValue([
-      {
-        participationId: 84,
-        siteId: 'site001',
-        siteName: '東京拠点',
-        status: 'APPROVED',
-        pdfStatus: 'READY',
-      },
-    ]);
-    downloadProjectMembershipPdf.mockResolvedValue({
-      pdfUrl: 'https://example.com/membership.pdf',
-      expiresIn: 300,
-    });
 
     renderPage();
 
     await user.click(
       await screen.findByRole('tab', { name: /入会中のプロジェクト\s*1/ }),
     );
-    await user.click(
-      screen.getByRole('button', { name: 'PDFを表示' }),
-    );
-
-    expect(getMyProjectParticipations).toHaveBeenCalledWith('PROJ002');
-    expect(downloadProjectMembershipPdf).toHaveBeenCalledWith('PROJ002', 84);
-    expect(downloadFromUrl).toHaveBeenCalledWith(
-      'https://example.com/membership.pdf',
-    );
+    expect(
+      screen.getByRole('heading', { name: '入会中プロジェクト' }),
+    ).toBeVisible();
+    expect(getMyProjectParticipations).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole('button', { name: 'PDFを表示' }),
+    ).not.toBeInTheDocument();
   });
 });

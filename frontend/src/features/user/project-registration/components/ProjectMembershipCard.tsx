@@ -82,16 +82,14 @@ export function ProjectMembershipCard({
           </div>
         </dl>
 
-        {showsJoinedState && (
+        {showsJoinedState && onDownloadPdf && (
           <div className='mt-6 sm:ml-auto'>
             <Button
               type='button'
               variant='outline'
               size='md'
               disabled={
-                project.participationId == null ||
-                !onDownloadPdf ||
-                isDownloadingPdf
+                project.participationId == null || isDownloadingPdf
               }
               onClick={() => onDownloadPdf?.(project)}
             >
