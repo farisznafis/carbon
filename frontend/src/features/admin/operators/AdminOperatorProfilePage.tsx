@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { AdminOperator } from '@/api/admin/operators';
+import { ProfileDetailField } from '@/components/data-display/ProfileDetailField';
 import { LoadingPanel } from '@/components/feedback/loading';
 import {
   FormCard,
@@ -45,24 +45,6 @@ function formatOperatorKanaName(operator: AdminOperator): string {
   return [operator.lastNameKana, operator.firstNameKana]
     .filter(Boolean)
     .join(' ') || '-';
-}
-
-type OperatorProfileFieldProps = {
-  label: string;
-  value: ReactNode;
-};
-
-/** Displays one read-only operator label and value within a numbered section. */
-function OperatorProfileField({
-  label,
-  value,
-}: Readonly<OperatorProfileFieldProps>) {
-  return (
-    <div className="min-w-0 space-y-1">
-      <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
-      <dd className="break-words font-medium text-foreground">{value}</dd>
-    </div>
-  );
 }
 
 /** Renders the read-only operator profile loaded from the admin-specific endpoint. */
@@ -146,15 +128,15 @@ export default function AdminOperatorProfilePage() {
             <FormSectionStack spacing="relaxed">
               <FormSection number={1} title="基本情報">
                 <dl className="grid gap-x-10 gap-y-6 md:grid-cols-2">
-                  <OperatorProfileField
+                  <ProfileDetailField
                     label="氏名"
                     value={formatOperatorName(operator)}
                   />
-                  <OperatorProfileField
+                  <ProfileDetailField
                     label="氏名（カナ）"
                     value={formatOperatorKanaName(operator)}
                   />
-                  <OperatorProfileField
+                  <ProfileDetailField
                     label="電話番号"
                     value={operator.phoneNumber || '-'}
                   />
@@ -163,15 +145,15 @@ export default function AdminOperatorProfilePage() {
 
               <FormSection number={2} title="アカウント情報">
                 <dl className="grid gap-x-10 gap-y-6 md:grid-cols-2">
-                  <OperatorProfileField
+                  <ProfileDetailField
                     label="ユーザネーム"
                     value={operator.username || '-'}
                   />
-                  <OperatorProfileField
+                  <ProfileDetailField
                     label="メールアドレス"
                     value={operator.email || '-'}
                   />
-                  <OperatorProfileField
+                  <ProfileDetailField
                     label="ロール"
                     value={getOperatorRoleLabel(effectiveRole)}
                   />
