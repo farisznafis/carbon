@@ -414,7 +414,6 @@ CREATE TABLE en_r002_equipment (
     nominal_max_output DECIMAL(10,1) NOT NULL,
     pcs_manufacturer VARCHAR(100) NOT NULL,
     pcs_model VARCHAR(50) NOT NULL,
-    pcs_unit_count INT,
     device_no VARCHAR(100) NOT NULL,
     pcs_standby DECIMAL(8,2) NOT NULL,
     has_battery BOOLEAN NOT NULL,

@@ -121,7 +121,7 @@ VALUES
 INSERT INTO en_r002_equipment (
     id, is_active, created_at, updated_at, created_by, updated_by,
     site_id, equipment_op_date, nominal_max_output,
-    pcs_manufacturer, pcs_model, pcs_unit_count, device_no,
+    pcs_manufacturer, pcs_model, device_no,
     pcs_standby, has_battery, battery_maker, battery_model,
     battery_capacity, total_investment, has_subsidy, subsidy_name,
     subsidy_amount, pre_project_unit_price
@@ -129,31 +129,31 @@ INSERT INTO en_r002_equipment (
 OVERRIDING SYSTEM VALUE
 VALUES
 (1, TRUE, '2026-07-07 11:00:00', '2026-07-07 11:00:00', 'ito.kenichi', 'ito.kenichi',
- 1, '2026-03-20', 49.5, '株式会社オムロン', 'KP49R', 1, 'SF-TKY-001', 0.05,
+ 1, '2026-03-20', 49.5, '株式会社オムロン', 'KP49R', 'SF-TKY-001', 0.05,
  TRUE, 'ニチコン株式会社', 'ESS-U4M1', 13.5, 7800000, TRUE, '東京都自家消費型太陽光発電導入補助金', 1500000, 26.50),
 (2, TRUE, '2026-07-07 11:10:00', '2026-07-07 11:10:00', 'ito.kenichi', 'ito.kenichi',
- 2, '2026-03-25', 74.0, '株式会社安川電機', 'Enewell-SOL 74', 1, 'SF-TKY-002', 0.06,
+ 2, '2026-03-25', 74.0, '株式会社安川電機', 'Enewell-SOL 74', 'SF-TKY-002', 0.06,
  TRUE, 'ニチコン株式会社', 'ESS-U4M1', 16.6, 11200000, FALSE, NULL, NULL, 25.80),
 (3, TRUE, '2026-07-25 11:00:00', '2026-07-25 11:00:00', 'ito.kenichi', 'ito.kenichi',
- 3, '2026-04-10', 39.6, 'Huawei Technologies', 'SUN2000-40KTL', 1, 'SF-TKY-003', 0.04,
+ 3, '2026-04-10', 39.6, 'Huawei Technologies', 'SUN2000-40KTL', 'SF-TKY-003', 0.04,
  FALSE, NULL, NULL, NULL, 6200000, TRUE, '東京都中小企業向け再エネ設備補助金', 1200000, 27.10),
 (4, TRUE, '2026-07-12 11:00:00', '2026-07-12 11:00:00', 'ito.kenichi', 'ito.kenichi',
- 5, '2026-05-10', 45.0, '株式会社オムロン', 'KP45R', 1, 'SF-TKY-005', 0.05,
+ 5, '2026-05-10', 45.0, '株式会社オムロン', 'KP45R', 'SF-TKY-005', 0.05,
  FALSE, NULL, NULL, NULL, 6800000, FALSE, NULL, NULL, 26.40),
 (5, TRUE, '2026-07-08 11:00:00', '2026-07-08 11:00:00', 'nakamura.sachiko', 'nakamura.sachiko',
- 7, '2026-03-28', 60.0, '株式会社東芝', 'TPV-PCS060', 1, 'EL-KNG-001', 0.05,
+ 7, '2026-03-28', 60.0, '株式会社東芝', 'TPV-PCS060', 'EL-KNG-001', 0.05,
  TRUE, 'オムロン株式会社', 'KP-BU98-B', 12.0, 9400000, TRUE, '神奈川県再生可能エネルギー設備導入費補助金', 1800000, 25.60),
 (6, TRUE, '2026-07-08 11:30:00', '2026-07-08 11:30:00', 'nakamura.sachiko', 'nakamura.sachiko',
- 8, '2026-04-05', 82.5, '株式会社東芝', 'TPV-PCS082', 1, 'EL-KNG-002', 0.07,
+ 8, '2026-04-05', 82.5, '株式会社東芝', 'TPV-PCS082', 'EL-KNG-002', 0.07,
  FALSE, NULL, NULL, NULL, 14200000, FALSE, NULL, NULL, 25.40),
 (7, TRUE, '2026-07-08 12:00:00', '2026-07-08 12:00:00', 'kumagai.takuya', 'kumagai.takuya',
- 12, '2026-04-15', 110.0, 'Sungrow Japan', 'SG125CX', 2, 'KP-AIC-001', 0.10,
+ 12, '2026-04-15', 110.0, 'Sungrow Japan', 'SG125CX', 'KP-AIC-001', 0.10,
  FALSE, NULL, NULL, NULL, 18500000, TRUE, '愛知県再生可能エネルギー設備導入補助金', 2500000, 26.20),
 (8, TRUE, '2026-07-21 11:00:00', '2026-07-21 11:00:00', 'ito.kenichi', 'ito.kenichi',
- 1, '2026-07-15', 30.0, '株式会社安川電機', 'Enewell-SOL 30', 1, 'SF-TKY-001B', 0.03,
+ 1, '2026-07-15', 30.0, '株式会社安川電機', 'Enewell-SOL 30', 'SF-TKY-001B', 0.03,
  FALSE, NULL, NULL, NULL, 4500000, FALSE, NULL, NULL, 26.10),
 (9, TRUE, '2026-07-26 11:00:00', '2026-07-26 11:00:00', 'ito.kenichi', 'ito.kenichi',
- 4, '2026-04-25', 99.0, 'Sungrow Japan', 'SG110CX', 2, 'SF-TKY-004', 0.08,
+ 4, '2026-04-25', 99.0, 'Sungrow Japan', 'SG110CX', 'SF-TKY-004', 0.08,
  TRUE, '伊藤忠商事株式会社', 'Smart Star 3', 13.16, 16800000, TRUE, '東京都中小企業向け再エネ設備補助金', 3000000, 24.90);
 
 -- =========================================================
@@ -236,19 +236,16 @@ INSERT INTO participating_project (
 OVERRIDING SYSTEM VALUE
 VALUES
 (1, TRUE, '2026-07-07 11:20:00', '2026-07-09 15:00:00', 'ito.kenichi', 'admin3', 'APPROVED', 1, 1, TRUE, 1, 's3://gxcarbon/participation/P000001/part-1/membership.pdf', 'env-00000001-01-01', 'COMPLETED'),
-(2, TRUE, '2026-07-07 11:30:00', '2026-07-09 15:10:00', 'ito.kenichi', 'admin3', 'APPROVED', 1, 1, TRUE, 2, 's3://gxcarbon/participation/P000001/part-2/membership.pdf', 'env-00000002-01-02', 'COMPLETED'),
-(3, TRUE, '2026-07-25 11:20:00', '2026-07-25 11:20:00', 'ito.kenichi', 'ito.kenichi', 'OPEN', 1, 1, TRUE, 3, NULL, NULL, NULL),
-(4, TRUE, '2026-07-12 11:20:00', '2026-07-14 11:00:00', 'ito.kenichi', 'admin2', 'REJECTED', 1, 1, FALSE, 4, NULL, NULL, NULL),
 (5, TRUE, '2026-07-08 11:20:00', '2026-07-09 16:00:00', 'nakamura.sachiko', 'admin3', 'APPROVED', 1, 2, TRUE, 5, 's3://gxcarbon/participation/P000001/part-5/membership.pdf', 'env-00000005-01-05', 'COMPLETED'),
-(6, TRUE, '2026-07-08 11:50:00', '2026-07-09 16:10:00', 'nakamura.sachiko', 'admin3', 'APPROVED', 1, 2, TRUE, 6, 's3://gxcarbon/participation/P000001/part-6/membership.pdf', 'env-00000006-01-06', 'COMPLETED'),
 (7, TRUE, '2026-07-08 12:20:00', '2026-07-09 11:00:00', 'kumagai.takuya', 'admin2', 'REJECTED', 1, 3, FALSE, 7, NULL, NULL, NULL),
-(8, TRUE, '2026-07-21 11:20:00', '2026-07-23 15:00:00', 'ito.kenichi', 'admin3', 'APPROVED', 2, 1, TRUE, 8, 's3://gxcarbon/participation/P000002/part-8/membership.pdf', 'env-00000008-02-08', 'COMPLETED'),
-(9, TRUE, '2026-07-26 11:20:00', '2026-07-26 11:20:00', 'ito.kenichi', 'ito.kenichi', 'OPEN', 2, 1, TRUE, 9, NULL, NULL, NULL);
+(8, TRUE, '2026-07-21 11:20:00', '2026-07-23 15:00:00', 'ito.kenichi', 'admin3', 'APPROVED', 2, 1, TRUE, 8, 's3://gxcarbon/participation/P000002/part-8/membership.pdf', 'env-00000008-02-08', 'COMPLETED');
+
 
 -- =========================================================
 -- 12. project_files
 -- 募集中(P000004-6)は登録通知書のみ。DRAFT(P000003)は全てNULL。
 -- =========================================================
+
 INSERT INTO project_files (
     id, is_active, created_at, updated_at, created_by, updated_by,
     project_id, certificate_registration, report_validation, report_verification
