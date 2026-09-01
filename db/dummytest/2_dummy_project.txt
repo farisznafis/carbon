@@ -26,7 +26,8 @@ INSERT INTO project (
     new_members_total, withdrawn_members, cumulative_members_total, members_total,
     methodology_version, method_category, method_number,
     method_name, method_main_emission, method_combi_feasibility, method_details,
-    operator_company_id, public_id, status_finalized_at
+    operator_company_id, public_id, status_finalized_at,
+    started_at, use_purpose
 )
 OVERRIDING SYSTEM VALUE
 VALUES
@@ -40,7 +41,8 @@ VALUES
  'Ver.3.7', 'EN-R', '002',
  '太陽光発電設備の導入', '電力使用に伴う二酸化炭素排出量', TRUE,
  '参加企業の各サイトに太陽光発電設備を導入し、発電電力を自家消費することで系統電力の使用量を削減するプログラム型プロジェクト。方法論EN-R-002 Ver.3.7を適用。',
- 1, 'prj001', '2026-07-09 15:00:00'),
+ 1, 'prj001', '2026-07-09 15:00:00',
+ '2026-07-07 09:00:00', '太陽光発電設備の導入による自家消費促進及び系統電力削減を目的とする。'),
 (2, TRUE, '2026-07-20 09:00:00', '2026-07-20 09:00:00', 'operator1', 'operator1',
  'GXカーボン太陽光発電プログラム型プロジェクト（第2期）', 'P000002', 'ACTIVE',
  '真耶', 'マヤ', '増田', 'マスダ', 'masu.maya@creation-tech.co.jp', '03-5555-0101', '代表取締役',
@@ -51,7 +53,8 @@ VALUES
  'Ver.3.7', 'EN-S', '004',
  '太陽光発電設備の導入', '電力使用に伴う二酸化炭素排出量', TRUE,
  '第1期に続く募集枠。既に第1期に参加済みのサイトも、追加設備により第2期へ重複参加が可能。方法論EN-R-003 Ver.3.7を適用。',
- 1, 'prj002', '2026-07-23 15:00:00'),
+ 1, 'prj002', '2026-07-23 15:00:00',
+ '2026-07-20 09:00:00', '第1期に続く追加設備導入による温室効果ガス排出量の削減を目的とする。'),
 (3, TRUE, '2026-08-01 09:00:00', '2026-08-01 09:00:00', 'operator1', 'operator1',
  'GXカーボン太陽光発電プログラム型プロジェクト（第3期・準備中）', 'P000003', 'DRAFT',
  '真耶', 'マヤ', '増田', 'マスダ', 'masu.maya@creation-tech.co.jp', '03-5555-0101', '代表取締役',
@@ -62,7 +65,8 @@ VALUES
  'Ver.3.7', 'EN-R', '003',
  '太陽光発電設備の導入', '電力使用に伴う二酸化炭素排出量', TRUE,
  '2027年度向けの募集枠。現在DRAFTのため入会申請は受け付けない（負パターン検証用）。',
- 1, 'prj003', NULL);
+ 1, 'prj003', NULL,
+ '2026-08-01 09:00:00', '2027年度募集に向けた太陽光発電設備導入の準備を目的とする。');
 
 -- =========================================================
 -- 8. site_project_relation  （多対多）

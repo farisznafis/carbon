@@ -199,6 +199,7 @@ CREATE TABLE project (
     is_active BOOLEAN NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    project_started_at TIMESTAMP,
     created_by VARCHAR(100),
     updated_by VARCHAR(100),
     project_name VARCHAR(100) NOT NULL,
@@ -235,6 +236,7 @@ CREATE TABLE project (
     method_main_emission VARCHAR(255) NOT NULL,
     method_combi_feasibility BOOLEAN NOT NULL,
     method_details VARCHAR(1000) NOT NULL,
+    use_purpose VARCHAR(1000) NOT NULL,
     operator_company_id INT NOT NULL REFERENCES operator_company(id),
     public_id VARCHAR(32) NOT NULL UNIQUE,
     status_finalized_at TIMESTAMP
