@@ -144,6 +144,10 @@ public class ResponseConstants {
     public static final String MSG_EMAIL_OTP_SETTING_UPDATED = "メールログイン認証設定を更新しました。";
     public static final String MSG_OTP_CODE_SENT = "認証コードを送信しました。";
 
+    // User invitation
+    public static final String MSG_USER_INVITATION_SENT = "招待メールを送信しました。";
+    public static final String MSG_USER_INVITATION_COMPLETED = "アカウントを作成しました。ログインしてください。";
+
     public static final String MSG_PAYMENT_FAILED = "支払いに失敗しました。";
     public static final String MSG_PAYMENT_DECLINED = "カード情報が無効です。";
 

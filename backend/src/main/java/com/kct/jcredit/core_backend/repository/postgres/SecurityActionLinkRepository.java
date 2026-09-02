@@ -30,6 +30,13 @@ public interface SecurityActionLinkRepository extends JpaRepository<SecurityActi
             SecurityActionPurpose purpose,
             List<SecurityActionStatus> statuses);
 
+    List<SecurityActionLink> findBySubjectTypeAndSubjectIdAndPurposeAndStatusInAndInviteEmailIgnoreCase(
+            SecurityActionSubjectType subjectType,
+            Integer subjectId,
+            SecurityActionPurpose purpose,
+            List<SecurityActionStatus> statuses,
+            String inviteEmail);
+
     @Modifying
     @Query("delete from SecurityActionLink l where l.status in :statuses and " +
             "coalesce(l.consumedAt, l.revokedAt, l.expiresAt) < :cutoff")
