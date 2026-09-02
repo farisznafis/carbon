@@ -98,38 +98,55 @@ public class ProjectServiceImpl implements ProjectService {
         List<Project> projects = projectRepository.findAll();
         //get DB key for company
         
-         Integer companyDbId = participatingCompanyRepository.findByCompanyId(companyId)
-                                .map(com.kct.jcredit.core_backend.entity.ParticipatingCompany::getId)
-                                .orElse(0);
+        Integer companyDbId = participatingCompanyRepository.findByCompanyId(companyId)
+            .map(ParticipatingCompany::getId)
+            .orElseThrow(() -> new CustomException(
+                    ResponseConstants.NOT_FOUND, "会社情報が見つかりません。"));
+
+
         Integer siteDbId = site.getId();
-        for (Project project : projects) {
-            boolean participation = participatingProjectRepository.findByCompanyIdAndProject_Id(companyDbId, project.getId()).isPresent();
-            boolean siteJoined = siteProjectRelationRepository.existsBySite_IdAndProject_Id(siteDbId, project.getId());
-            ProjectDetailResponse resp = ProjectDetailResponse.builder()
-                    .id(project.getPublicId())
-                    .projectName(project.getProjectName())
-                    .emissionReduction(project.getEmissionReduction() != null ?
-                            String.valueOf(project.getEmissionReduction()) : "0")
-                    .baselineEmission(project.getBaselineEmission() != null ?
-                            String.valueOf(project.getBaselineEmission()) : "0")
-                    .postProjectEmission(project.getPostProjectEmission() != null ?
-                            String.valueOf(project.getPostProjectEmission()) : "0")
-                    .regionalCategory(project.getRegionalCategory())
-                    .methodologyVersion(project.getMethodologyVersion())
-                    .methodologyNumber(project.getMethodNumber())
-                    .methodologyName(project.getMethodName())
-                    .methodologyMainEmission(project.getMethodMainEmission())
-                    .isCompanyJoined(participation) 
-                    .hasSiteRelation(siteJoined)
-                    .projectStatus(project.getProjectStatus())
-                    .build();
 
-            response.getProjects().add(resp);
-        }
+        List<ProjectDetailResponse> projectDetails = projects.stream()
+                .map(project -> {
+
+                    Optional<ParticipatingProject> participationOpt = participatingProjectRepository
+                            .findByCompanyIdAndProject_Id(companyDbId, project.getId());
+
+                    boolean siteJoined = siteProjectRelationRepository
+                            .existsBySite_IdAndProject_Id(siteDbId, project.getId());
+
+                    return ProjectDetailResponse.builder()
+                            .id(project.getPublicId())
+                            .projectName(project.getProjectName())
+                            .projectNumber(project.getProjectNumber())
+                            .emissionReduction(project.getEmissionReduction() != null
+                                    ? String.valueOf(project.getEmissionReduction()) : "0")
+                            .baselineEmission(project.getBaselineEmission() != null
+                                    ? String.valueOf(project.getBaselineEmission()) : "0")
+                            .postProjectEmission(project.getPostProjectEmission() != null
+                                    ? String.valueOf(project.getPostProjectEmission()) : "0")
+                            .regionalCategory(project.getRegionalCategory())
+                            .methodologyVersion(project.getMethodologyVersion())
+                            .methodologyNumber(project.getMethodNumber())
+                            .methodologyName(project.getMethodName())
+                            .methodologyMainEmission(project.getMethodMainEmission())
+                            .projectStatus(project.getProjectStatus())
+                            .isCompanyJoined(participationOpt.isPresent())
+                            .participationStatus(participationOpt
+                                    .map(ParticipatingProject::getStatus)
+                                    .orElse(null))
+                            .pdfStatus(participationOpt
+                                    .map(p -> p.getS3KeyPdfMembership() != null ? "READY" : "NOT_READY")
+                                    .orElse(null))
+                            .hasSiteRelation(siteJoined)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
         response.setStatusCode(ResponseConstants.OK);
-
+        response.setProjects(projectDetails);
         return response;
-    }
+        }
 
     @Override
     @Transactional
