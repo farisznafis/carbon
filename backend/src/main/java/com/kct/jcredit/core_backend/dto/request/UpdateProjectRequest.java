@@ -1,6 +1,9 @@
 package com.kct.jcredit.core_backend.dto.request;
 
 import com.kct.jcredit.core_backend.validation.ValidEmail;
+
+import java.time.Instant;
+
 import com.kct.jcredit.core_backend.dto.request.base.BaseRequest;
 import com.kct.jcredit.core_backend.validation.Hankaku;
 import com.kct.jcredit.core_backend.validation.Katakana;
@@ -83,6 +86,10 @@ public class UpdateProjectRequest extends BaseRequest{
     private String methodMainEmission;
 
     private Boolean methodCombiFeasibility;
+
+    private String usePurpose;
+
+    private Instant startedAt;
 
     @Size(max = 1000, message = "方法論詳細は1000文字以内で入力してください。")
     private String methodDetails;

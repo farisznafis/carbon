@@ -68,6 +68,20 @@ export const paths = {
   passwordChange: '/password-change',
 
   adminDashboard: '/admin/dashboard',
+  adminProjectList: '/admin/projects',
+  adminCompanyList: '/admin/companies',
+  adminOperatorList: '/admin/operators',
+  adminOperatorRegister: '/admin/operators/new',
+  adminOperatorProfileRoute: '/admin/operators/:userId',
+  adminOperatorProfile: (userId: string | number) =>
+    `/admin/operators/${encodeURIComponent(String(userId))}`,
+  adminOperatorEditRoute: '/admin/operators/:userId/edit',
+  adminOperatorEdit: (userId: string | number) =>
+    `/admin/operators/${encodeURIComponent(String(userId))}/edit`,
+  adminOperatorPermissionEdit: (userId: string | number) =>
+    `/admin/operators/${encodeURIComponent(String(userId))}/edit#permissions`,
+  adminMethodologyList: '/admin/methodologies',
+  adminMonitoring: '/admin/monitoring',
   adminCompanyDetailRoute: '/admin/companies/:companyId',
   adminCompanyDetail: (companyId: string | number) =>
     `/admin/companies/${companyId}`,

@@ -7,6 +7,7 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.response.EnR002FileResponse;
 import com.kct.jcredit.core_backend.service.storage.S3FileStorage;
 
@@ -65,8 +66,7 @@ public class ProjectPlanFileService {
         log.info("Project-plan file uploaded to tmp. projectId={}, slug={}, s3Key={}",
                 projectId, formSlug, s3Key);
 
-        return EnR002FileResponse.builder()
-                .statusCode("OK")
+        EnR002FileResponse response = EnR002FileResponse.builder()
                 .s3Key(s3Key)
                 .fileId(fileId)
                 // The sanitised form goes in the key; the client shows the name
@@ -74,6 +74,8 @@ public class ProjectPlanFileService {
                 // sanitises down to a row of underscores.
                 .originalName(originalName(file))
                 .build();
+        response.setStatusCode(ResponseConstants.OK);
+        return response;
     }
 
     /**

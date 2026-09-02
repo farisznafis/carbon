@@ -11,5 +11,5 @@ public interface DocuSignService {
     DocuSignEnvelopeResult sendEnvelopeForSignature(byte[] pdfBytes, String signerEmail,
                                                      String signerName, String documentName);
 
-    byte[] downloadSignedDocument(String envelopeId);  // ← pastikan baris ini ADA
+    byte[] downloadSignedDocument(String envelopeId); 
 }

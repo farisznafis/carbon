@@ -1,6 +1,28 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { FormActions } from './form-layout';
+import { FormActions, FormSection } from './form-layout';
+
+describe('FormSection', () => {
+  it('renders an icon marker without changing numbered section support', () => {
+    const { rerender } = render(
+      <FormSection icon={<span aria-hidden="true">U</span>} title="個人情報">
+        <p>内容</p>
+      </FormSection>,
+    );
+
+    expect(screen.getByText('U')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '個人情報' })).toBeInTheDocument();
+
+    rerender(
+      <FormSection number={1} title="基本情報">
+        <p>内容</p>
+      </FormSection>,
+    );
+
+    expect(screen.getByText('1')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '基本情報' })).toBeInTheDocument();
+  });
+});
 
 describe('FormActions', () => {
   it('renders one standard action at full width with the md size', () => {

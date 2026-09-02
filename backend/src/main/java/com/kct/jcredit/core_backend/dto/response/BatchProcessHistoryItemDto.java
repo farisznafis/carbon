@@ -1,6 +1,8 @@
 package com.kct.jcredit.core_backend.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BatchProcessHistoryItemDto {
+public class BatchProcessHistoryItemDto extends BaseResponse{
     
     private Integer id;
     

@@ -2,7 +2,7 @@ package com.kct.jcredit.core_backend.controller;
 
 import com.kct.jcredit.core_backend.dto.request.CompanyListQuery;
 import com.kct.jcredit.core_backend.dto.request.CreateCompanySuspensionRequest;
-import com.kct.jcredit.core_backend.dto.request.CreateUserRequest;
+import com.kct.jcredit.core_backend.dto.request.CreateOperatorUserRequest;
 import com.kct.jcredit.core_backend.dto.request.RejectCompanyRequest;
 import com.kct.jcredit.core_backend.dto.request.ResolveCompanySuspensionRequest;
 import com.kct.jcredit.core_backend.dto.request.ReviewParticipationRequest;
@@ -225,7 +225,19 @@ public class AdminCompanyController {
     // /{companyId} single-segment mapping above.
     // ─────────────────────────────────────────────────────────────
 
-    // ── LIST — (status OPEN) ───────
+
+    @GetMapping("participate/project/{projectId}")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "プロジェクト別入会届一覧取得",
+            description = "指定プロジェクトに紐づく入会届を、ステータスを問わず参加企業別に全件取得します。")
+    public ResponseEntity<List<ParticipationReviewDetailResponse>> getParticipationsByProject(
+            @PathVariable String projectId) {
+
+        return ResponseEntity.ok(reviewService.getParticipationsByProject(projectId));
+    }
+
+    // ── LIST ALL — (status OPEN) ───────
     @GetMapping("participate/pending")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
@@ -235,7 +247,7 @@ public class AdminCompanyController {
     }
 
     // ── LIST — 
-    @GetMapping("participate/self-sign")
+    @GetMapping("participate/open")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "自分がレビュー可能な一覧取得", description = "自分がまだレビューできる入会届一覧を取得します。")
@@ -243,6 +255,24 @@ public class AdminCompanyController {
             Authentication authentication) {
         Integer operatorUserId = jwtUtil.extractUserId(authentication.getCredentials().toString());
         return ResponseEntity.ok(reviewService.getPendingReviewsByUserId(operatorUserId));
+    }
+
+    @GetMapping("participations/approved")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "承認済み入会届一覧取得",
+            description = "審査承認済み（入会届PDF生成済み）の一覧を取得します。")
+    public ResponseEntity<List<ParticipationReviewDetailResponse>> getApprovedParticipations() {
+        return ResponseEntity.ok(reviewService.getApprovedParticipations());
+    }
+
+    @GetMapping("participations/rejected")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_COMPANY_APPLICATION_REVIEW.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "却下済み入会届一覧取得",
+            description = "却下され、まだ再申請されていない入会届の一覧を取得します。")
+    public ResponseEntity<List<ParticipationReviewDetailResponse>> getRejectedParticipations() {
+        return ResponseEntity.ok(reviewService.getRejectedParticipations());
     }
 
     // ── DETAIL ─────────────────────────────────────────────────
@@ -397,7 +427,7 @@ public class AdminCompanyController {
     @Operation(summary = "運用者ユーザー作成", description = "ログイン中の管理企業に新しい運用者ユーザーを作成します。")
     public ResponseEntity<CreateUserResponse> createUser(
             Authentication authentication,
-            @RequestBody @Valid CreateUserRequest request) {
+            @RequestBody @Valid CreateOperatorUserRequest request) {
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
         String username = jwtUtil.extractUsername(authentication.getCredentials().toString());
 

@@ -23,8 +23,6 @@ const draftStorageMocks = vi.hoisted(() => ({
   deleteProjectRegistrationDraft: vi.fn(),
 }));
 
-const sustainabilityDefaultQueryMock = vi.hoisted(() => vi.fn());
-
 const flowEquipment: SolarEquipment = {
   id: 'equipment-review',
   formType: 'solar',
@@ -82,10 +80,6 @@ vi.mock('@/hooks/sites/useSitesQuery', () => ({
       sites: [{ siteId: 'SITE-SELECTED', siteName: '東京工場' }],
     },
   }),
-}));
-
-vi.mock('@/hooks/sites/useSustainabilityCommitmentDefaultQuery', () => ({
-  useSustainabilityCommitmentDefaultQuery: sustainabilityDefaultQueryMock,
 }));
 
 vi.mock('@/stores/dashboardStore', () => ({
@@ -202,10 +196,7 @@ vi.mock('./components/ContractStep', async () => {
       unknown,
       {
         formValues: Partial<ContractStepFormValues>;
-        onValueChange: (
-          values: Partial<ContractStepFormValues>,
-          metadata: { isUserChange: boolean },
-        ) => void;
+        onValueChange: (values: Partial<ContractStepFormValues>) => void;
         errors?: Record<string, string>;
         onBack: () => void;
         onNext: () => void;
@@ -249,15 +240,12 @@ vi.mock('./components/ContractStep', async () => {
           <button
             type="button"
             onClick={() =>
-              props.onValueChange(
-                {
-                  businessName: '',
-                  representativeName: '',
-                  representativePosition: '',
-                  contractAgreed: false,
-                },
-                { isUserChange: true },
-              )
+              props.onValueChange({
+                businessName: '',
+                representativeName: '',
+                representativePosition: '',
+                contractAgreed: false,
+              })
             }
           >
             契約情報を空にする
@@ -356,19 +344,6 @@ describe('ProjectRegisterPage review flow', () => {
     draftStorageMocks.loadProjectRegistrationDraft.mockResolvedValue(null);
     draftStorageMocks.saveProjectRegistrationDraft.mockResolvedValue(undefined);
     draftStorageMocks.deleteProjectRegistrationDraft.mockResolvedValue(undefined);
-    sustainabilityDefaultQueryMock.mockReset();
-    sustainabilityDefaultQueryMock.mockReturnValue({
-      data: {
-        companyName: '初期株式会社',
-        repName: '初期代表者',
-        repRole: '初期役職',
-        hasConsent: true,
-        isAgreeTerms: true,
-      },
-      isFetching: false,
-      isError: false,
-      refetch: vi.fn(),
-    });
   });
 
   it('reviews all steps before uploading and submitting', async () => {
@@ -609,7 +584,6 @@ describe('ProjectRegisterPage review flow', () => {
       equipment: [flowEquipment],
       agreementFormValues: {},
       contractFormValues: {},
-      contractHasUserChanges: false,
       finalTermsValues: {},
       updatedAt: '2026-08-17T17:00:00.000Z',
     });
@@ -624,47 +598,18 @@ describe('ProjectRegisterPage review flow', () => {
     expect(screen.getByText('contract.pdf')).toBeVisible();
   });
 
-  it('prefills only Contract Step text fields from the selected site default', async () => {
-    const user = userEvent.setup();
-    renderFlow();
-
-    expect(sustainabilityDefaultQueryMock).not.toHaveBeenCalledWith(
-      'SITE-SELECTED',
-      true,
-    );
-    await user.click(await screen.findByRole('button', { name: '次へ' }));
-    await user.click(screen.getByRole('button', { name: '次へ' }));
-    await screen.findByText('持続可能性フォーム');
-
-    expect(screen.getByTestId('contract-business-name')).toHaveTextContent(
-      '初期株式会社',
-    );
-    expect(screen.getByTestId('contract-representative-name')).toHaveTextContent(
-      '初期代表者',
-    );
-    expect(
-      screen.getByTestId('contract-representative-position'),
-    ).toHaveTextContent('初期役職');
-    expect(screen.getByTestId('contract-agreed')).toHaveTextContent('false');
-    expect(sustainabilityDefaultQueryMock).toHaveBeenCalledWith(
-      'SITE-SELECTED',
-      true,
-    );
-  });
-
-  it('keeps an explicitly cleared Contract Step draft instead of applying defaults', async () => {
+  it('restores manually entered Contract Step values from the saved draft', async () => {
     draftStorageMocks.loadProjectRegistrationDraft.mockResolvedValueOnce({
       version: 1,
       currentStep: 3,
       equipment: [flowEquipment],
       agreementFormValues: {},
       contractFormValues: {
-        businessName: '',
-        representativeName: '',
-        representativePosition: '',
-        contractAgreed: false,
+        businessName: '入力済み株式会社',
+        representativeName: '入力済み代表者',
+        representativePosition: '入力済み役職',
+        contractAgreed: true,
       },
-      contractHasUserChanges: true,
       finalTermsValues: {},
       updatedAt: '2026-08-18T02:00:00.000Z',
     });
@@ -672,71 +617,19 @@ describe('ProjectRegisterPage review flow', () => {
     renderFlow();
 
     await screen.findByText('持続可能性フォーム');
-    expect(screen.getByTestId('contract-business-name')).toBeEmptyDOMElement();
-    expect(screen.getByTestId('contract-representative-name')).toBeEmptyDOMElement();
-    expect(
-      screen.getByTestId('contract-representative-position'),
-    ).toBeEmptyDOMElement();
-    expect(sustainabilityDefaultQueryMock).toHaveBeenCalledWith(
-      'SITE-SELECTED',
-      false,
+    expect(screen.getByTestId('contract-business-name')).toHaveTextContent(
+      '入力済み株式会社',
     );
-  });
-
-  it('uses defaults from the latest site selected in the equipment step', async () => {
-    const previousSiteEquipment: SolarEquipment = {
-      ...flowEquipment,
-      solarData: {
-        ...flowEquipment.solarData,
-        siteId: 'SITE-PREVIOUS',
-      },
-    };
-    draftStorageMocks.loadProjectRegistrationDraft.mockResolvedValueOnce({
-      version: 1,
-      currentStep: 1,
-      equipment: [previousSiteEquipment],
-      agreementFormValues: {},
-      contractFormValues: {
-        businessName: '以前の会社',
-        representativeName: '以前の代表者',
-        representativePosition: '以前の役職',
-        contractAgreed: true,
-      },
-      contractHasUserChanges: true,
-      contractSiteId: 'SITE-PREVIOUS',
-      finalTermsValues: {},
-      updatedAt: '2026-08-18T03:00:00.000Z',
-    });
-
-    renderFlow({
-      pathname: '/projects/SITE-ROUTE/PROJ-1/register',
-      state: { pendingEquipment: flowEquipment },
-    });
-
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: '次へ' }));
-    await screen.findByText('同意事項フォーム');
-    await user.click(screen.getByRole('button', { name: '次へ' }));
-    await screen.findByText('持続可能性フォーム');
-    await waitFor(() => {
-      expect(sustainabilityDefaultQueryMock).toHaveBeenCalledWith(
-        'SITE-SELECTED',
-        true,
-      );
-      expect(screen.getByTestId('contract-business-name')).toHaveTextContent(
-        '初期株式会社',
-      );
-    });
     expect(screen.getByTestId('contract-representative-name')).toHaveTextContent(
-      '初期代表者',
+      '入力済み代表者',
     );
     expect(
       screen.getByTestId('contract-representative-position'),
-    ).toHaveTextContent('初期役職');
-    expect(screen.getByTestId('contract-agreed')).toHaveTextContent('false');
+    ).toHaveTextContent('入力済み役職');
+    expect(screen.getByTestId('contract-agreed')).toHaveTextContent('true');
   });
 
-  it('persists intentionally cleared Contract Step fields as user changes', async () => {
+  it('persists intentionally cleared Contract Step fields in the draft', async () => {
     const user = userEvent.setup();
     renderFlow();
 
@@ -750,7 +643,6 @@ describe('ProjectRegisterPage review flow', () => {
       expect(draftStorageMocks.saveProjectRegistrationDraft).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          contractHasUserChanges: true,
           contractFormValues: {
             businessName: '',
             representativeName: '',

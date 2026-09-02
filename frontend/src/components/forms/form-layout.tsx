@@ -205,13 +205,22 @@ export function FormCard({
 }
 
 type FormSectionProps = Omit<React.HTMLAttributes<HTMLElement>, 'title'> & {
-  number: number;
+  number?: number;
+  icon?: React.ReactNode;
   title: React.ReactNode;
+  meta?: React.ReactNode;
+  description?: React.ReactNode;
+  actions?: React.ReactNode;
 };
 
+/** Renders a numbered form section with optional contextual meta, description, and header actions. */
 export function FormSection({
   number,
+  icon,
   title,
+  meta,
+  description,
+  actions,
   children,
   className,
   ...props
@@ -219,10 +228,27 @@ export function FormSection({
   return (
     <section className={cn("space-y-4", className)} {...props}>
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-xl font-bold text-primary">
-          {number}
-        </span>
-        <h3>{title}</h3>
+        {number != null || icon ? (
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-xl font-bold text-primary">
+            {icon ?? number}
+          </span>
+        ) : null}
+        <div className="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between sm:gap-4">
+          <div className="min-w-0">
+            <div className="flex min-h-10 flex-wrap items-center gap-x-2 gap-y-1">
+              <h3>{title}</h3>
+              {meta}
+            </div>
+            {description ? (
+              <div className="text-sm leading-6 text-foreground">
+                {description}
+              </div>
+            ) : null}
+          </div>
+          {actions ? (
+            <div className="mt-3 shrink-0 sm:mt-0">{actions}</div>
+          ) : null}
+        </div>
       </div>
       <div className="space-y-6">{children}</div>
     </section>

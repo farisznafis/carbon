@@ -8,7 +8,8 @@ import com.kct.jcredit.core_backend.dto.request.EnR002ConfirmationItemRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
-import com.kct.jcredit.core_backend.dto.response.MyParticipationResponse;
+import com.kct.jcredit.core_backend.dto.response.MemberTermsInfoResponse;
+
 import com.kct.jcredit.core_backend.dto.response.ProjectJoinResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectPdfDownloadResponse;
@@ -21,6 +22,7 @@ import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.entity.EnR002EquipmentFile;
 import com.kct.jcredit.core_backend.entity.EnR002SustainabilityCommitment;
+import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.ConfirmationItems;
 import com.kct.jcredit.core_backend.entity.EnR002ApplicationConfirmation;
 import com.kct.jcredit.core_backend.entity.EnR002Equipment;
@@ -55,6 +57,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 
 
@@ -88,7 +91,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
                 List<ProjectDetailResponse> projectDetails = projects.stream()
                         .map(project -> {
-                                boolean alreadyJoined = siteProjectRelationRepository
+                                boolean alreadyJoined = siteProjectRelationRepository //TODO: change to fit youken
                                         .existsBySite_Company_CompanyIdAndProject_Id(
                                                 companyId, project.getId());
 
@@ -96,7 +99,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                         .id(project.getPublicId())
                                         .projectName(project.getProjectName())
                                         .projectNumber(project.getProjectNumber())
-                                        .isJoined(alreadyJoined)
+                                        .isCompanyJoined(alreadyJoined)
                                         .build();
                         })
                         .collect(Collectors.toList());
@@ -128,7 +131,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                         .buildingName(site.getBuildingName())
                                         .picFirstName(site.getPicFirstName())
                                         .picLastName(site.getPicLastName())
-                                        .alreadyInProject(alreadyInProject) // uncomment — field baru di SiteResponse
+                                        .alreadyInProject(alreadyInProject) 
                                         .build();
                         })
                         .collect(Collectors.toList());
@@ -155,6 +158,42 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 .repRole(company.getRepPosition())
                 .build();
     }
+
+       @Override
+        public MemberTermsInfoResponse getMemberTermsInfo(String projectId) {
+
+        Project project = projectRepository.findByPublicIdWithFallback(projectId)
+                .orElse(null);
+
+        if (project == null) {
+                return MemberTermsInfoResponse.builder()
+                        .statusCode(ResponseConstants.NOT_FOUND)
+                        .message(ResponseConstants.MSG_PROJECT_NOT_FOUND)
+                        .build();
+        }
+
+        OperatorCompany operatorCompany = project.getOperatorCompany();
+
+        String adminRepName = safe(operatorCompany.getRepFirstName())
+                + safe(operatorCompany.getRepLastName());
+
+        String effectiveDate = project.getCreatedAt() != null
+                ? project.getCreatedAt().toLocalDate().format(
+                        DateTimeFormatter.ofPattern("yyyy年MM月dd日"))
+                : "";
+
+        return MemberTermsInfoResponse.builder()
+                .statusCode(ResponseConstants.OK)
+                .projectName(safe(project.getProjectName()))
+                .operatorNameJa(safe(operatorCompany.getNameJa()))
+                .adminRepName(adminRepName)
+                .projectOverview(safe(project.getMethodName()))
+                .usePurpose(safe(project.getUsePurpose()))
+                .startedAt(project.getStartedAt())
+                .build();
+        }
+
+        private String safe(String v) { return v != null ? v : ""; }
 
     // ─────────────────────────────────────────────────────────────
     // SUBMIT
@@ -185,18 +224,15 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND, "ユーザー情報が見つかりません。"));
 
-        // Duplicate check — via SiteProjectRelation, BUKAN ParticipatingProject
-        Optional<SiteProjectRelation> existingRelation = siteProjectRelationRepository
-                .findBySite_IdAndProject_Id(site.getId(), project.getId());
-        // ⚠️ Method findBySite_IdAndProject_Id SUDAH ADA — dipakai juga di
-        //    ParticipationReviewServiceImpl.approveReview()/rejectReview(), jadi
-        //    tidak perlu ditambahkan ke repository, tinggal reuse.
 
-        if (existingRelation.isPresent()) {
-        String currentStatus = existingRelation.get().getStatus();
+        Optional<ParticipatingProject> existingParticipation = participatingProjectRepository
+                .findByEquipment_Site_IdAndProject_Id(site.getId(), project.getId());
+
+        if (existingParticipation.isPresent()) {
+        String currentStatus = existingParticipation.get().getStatus();
 
         if ("REJECTED".equals(currentStatus)) {
-                return resubmitParticipation(existingRelation.get(), request, companyId);
+                return resubmitParticipation(existingParticipation.get(), request, companyId);
         } else {
                 throw new CustomException(ResponseConstants.ALREADY_SUBMITTED,
                         ResponseConstants.MSG_ALREADY_SUBMITTED);
@@ -218,7 +254,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
         // 7. Save ParticipatingProject
         ParticipatingProject participation = saveParticipatingProject(
-            project, user, savedEquipment);
+            project, user.getCompany(), savedEquipment);
 
         final Integer participationId = participation.getId();
 
@@ -268,16 +304,16 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                         //         }
                         }
                 }
-        );
-
-        return ProjectJoinResponse.builder()
-                .statusCode(ResponseConstants.OK)
-                .message("プロジェクトへの参加が完了しました。")
+        );   
+        ProjectJoinResponse response =ProjectJoinResponse.builder()
                 .participationId(participationId)
                 .equipmentId(savedEquipment.getId())
                 .siteProjectRelationId(relation.getId())
                 .build();
-        }
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage("プロジェクトへの参加が完了しました。");
+        return response;
+}
 
     // ─────────────────────────────────────────────────────────────
     // PRIVATE — DB saves
@@ -289,7 +325,6 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 .site(site)
                 .project(project)
                 .activityStartDate(LocalDate.now())
-                .status("OPEN")
                 .build();
         relation.setCreatedBy(companyId);
         relation.setUpdatedBy(companyId);
@@ -303,7 +338,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 .nominalMaxOutput(req.getNominalMaxOutput())
                 .pcsManufacturer(req.getPcsManufacturer())
                 .pcsModel(req.getPcsModel())
-                .pcsUnitCount(req.getPcsUnitCount())
+                // .pcsUnitCount(req.getPcsUnitCount())
                 .deviceNo(req.getDeviceNo())
                 .pcsStandby(req.getPcsStandby())
                 .hasBattery(req.getHasBattery())
@@ -336,46 +371,39 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
     }
 
     private ParticipatingProject saveParticipatingProject(Project project,
-                                                                ParticipatingUser user,
+                                                                ParticipatingCompany company,
                                                                 EnR002Equipment equipment) {
         ParticipatingProject participation = ParticipatingProject.builder()
                 .project(project)
-                .user(user)
+                .company(company)
                 .equipment(equipment)
                 .isEligible(false)
+                .status("OPEN")
                 .build();
         return participatingProjectRepository.save(participation);
         }
 
-        @Override
-        public List<MyParticipationResponse> getMyParticipations(String projectId, String companyId) {
+//      @Override
+//      public List<MyParticipationResponse> getMyParticipations(String projectId, String companyId) {
 
-        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
-                .map(Project::getId)
-                .orElseThrow(() -> new CustomException(
-                        ResponseConstants.NOT_FOUND, ResponseConstants.MSG_PROJECT_NOT_FOUND));
+//         Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+//                 .map(Project::getId)
+//                 .orElseThrow(() -> new CustomException(
+//                         ResponseConstants.NOT_FOUND, ResponseConstants.MSG_PROJECT_NOT_FOUND));
 
-        List<ParticipatingProject> participations = participatingProjectRepository
-                .findByProject_IdAndEquipment_Site_Company_CompanyId(projectDbId, companyId);
-
-        return participations.stream()
-                .map(p -> {
-                        Site site = p.getEquipment().getSite();
-
-                        SiteProjectRelation relation = siteProjectRelationRepository
-                                .findBySite_IdAndProject_Id(site.getId(), projectDbId)
-                                .orElse(null);
-
-                        return MyParticipationResponse.builder()
-                                .participationId(p.getId())
-                                .siteId(site.getPublicId())
-                                .siteName(site.getSiteName())
-                                .status(relation != null ? relation.getStatus() : null)
-                                .pdfStatus(p.getS3KeyPdfMembership() != null ? "READY" : "NOT_READY")
-                                .build();
-                })
-                .collect(Collectors.toList());
-        }
+//         List<ParticipatingProject> participations = participatingProjectRepository
+//                 .findByProject_IdAndEquipment_Site_Company_CompanyId(projectDbId, companyId);                
+        
+//         return participations.stream()
+//                 .filter(p -> "APPROVED".equals(p.getStatus()))
+//                 .map(p -> MyParticipationResponse.builder()
+//                 .participationId(p.getId())
+//                 .siteId(p.getSiteId())
+//                 .siteName(p.get)
+//                 .status(p.getStatus())
+//                 .pdfStatus(p.getS3KeyPdfMembership)
+//                 .build())
+//         .collect(Collectors.toList());
 
     // ─────────────────────────────────────────────────────────────
     // PRIVATE — DynamoDB saves
@@ -406,7 +434,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
     private void saveSustainabilityCommitment(EnR002SustainabilityCommitmentRequest req,
                                                Boolean isAgreeTerms,
                                                Integer participationId, String companyId) {
-        EnR002SustainabilityCommitment commitment = EnR002SustainabilityCommitment.builder() // ← nama entity DynamoDB
+        EnR002SustainabilityCommitment commitment = EnR002SustainabilityCommitment.builder() 
                 .pk("PART#" + participationId)
                 .companyName(req.getCompanyName())
                 .repName(req.getRepName())
@@ -419,7 +447,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
         sustainabilityRepository.save(commitment);
     }
 
-    private ProjectJoinResponse resubmitParticipation(SiteProjectRelation relation,
+    private ProjectJoinResponse resubmitParticipation(ParticipatingProject participation,
                                                     EnR002JoinProjectRequest request,
                                                     String companyId) {
 
@@ -427,12 +455,6 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
         validationService.validateConfirmationItems(request.getConfirmationItems());
         validationService.validateSustainabilityCommitment(request.getSustainabilityCommitment());
         validationService.validateFinalAgreement(request.getFinalAgreement());
-
-        ParticipatingProject participation = participatingProjectRepository
-                .findByEquipment_Site_IdAndProject_Id(relation.getSite().getId(), relation.getProject().getId())
-                .orElseThrow(() -> new CustomException(
-                        ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
-
         EnR002Equipment equipment = participation.getEquipment();
 
         // ── UPDATE equipment yang SAMA (bukan insert baru) ─────────────
@@ -440,7 +462,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
         equipment.setNominalMaxOutput(request.getEquipment().getNominalMaxOutput());
         equipment.setPcsManufacturer(request.getEquipment().getPcsManufacturer());
         equipment.setPcsModel(request.getEquipment().getPcsModel());
-        equipment.setPcsUnitCount(request.getEquipment().getPcsUnitCount());
+        // equipment.setPcsUnitCount(request.getEquipment().getPcsUnitCount());
         equipment.setDeviceNo(request.getEquipment().getDeviceNo());
         equipment.setPcsStandby(request.getEquipment().getPcsStandby());
         equipment.setHasBattery(request.getEquipment().getHasBattery());
@@ -454,10 +476,8 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
         equipment.setPreProjectUnitPrice(request.getEquipment().getPreProjectUnitPrice());
         equipmentRepository.save(equipment);
 
-        // ── Replace total file lama → file baru ─────────────────────────
+        // ── Replace ─────────────────────────
         List<EnR002EquipmentFile> oldFiles = equipmentFileRepository.findByEquipment_Id(equipment.getId());
-        // Key-nya dipegang dulu; object S3 baru dihapus setelah commit, supaya
-        // rollback tidak menyisakan row DB yang menunjuk file yang sudah hilang.
         List<String> oldS3Keys = oldFiles.stream()
                 .map(EnR002EquipmentFile::getS3Key)
                 .collect(Collectors.toList());
@@ -465,13 +485,13 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
         List<EnR002EquipmentFile> savedFiles = saveEquipmentFiles(request.getEquipment(), equipment);
 
-        // Key tmp disimpan terpisah — DB sudah memegang key final sejak commit.
+        // Key tmp 
         Map<String, String> tempKeyByFileId = request.getEquipment().getFiles().stream()
                 .collect(Collectors.toMap(f -> f.getFileId(), f -> f.getS3Key()));
 
         // ── Reset status relation → OPEN ─────────────────────────────────
-        relation.setStatus("OPEN");
-        siteProjectRelationRepository.save(relation);
+        participation.setStatus("OPEN");
+        participatingProjectRepository.save(participation);
 
         final Integer participationId = participation.getId();
         final Integer equipmentId = equipment.getId();
@@ -480,9 +500,6 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 new TransactionSynchronization() {
                         @Override
                         public void afterCommit() {
-                        // Hapus file lama dulu: key permanent-nya bisa sama persis
-                        // dengan file baru (nama file sama pada equipment yang sama),
-                        // jadi kalau dihapus setelah pemindahan, file barunya yang hilang.
                         oldS3Keys.forEach(oldKey -> {
                                 try {
                                         fileUploadSolarService.deletePermanentFile(oldKey, equipmentId);
@@ -530,14 +547,124 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
             confirmation.setSecondaryApplReviewerInkan(null);
             reviewRepository.save(confirmation);
         });
+        ProjectJoinResponse response =ProjectJoinResponse.builder()
+                                                        .participationId(participationId)
+                                                        .equipmentId(equipmentId)
+                                                        //.siteProjectRelationId() //TODO: do we really need to return this value
+                                                        .build();
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage("再申請が完了しました。");
+        return response;
+        }
 
-        return ProjectJoinResponse.builder()
-                .statusCode(ResponseConstants.OK)
-                .message("再申請が完了しました。")
-                .participationId(participationId)
-                .equipmentId(equipmentId)
-                .siteProjectRelationId(relation.getId())
+        @Override
+        public ProjectPdfDownloadResponse getMembershipPdfByCompany(String projectId, String companyId) {
+
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+                .map(Project::getId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND, ResponseConstants.MSG_PROJECT_NOT_FOUND));
+
+        Integer companyDbId = companyRepository.findByCompanyId(companyId)
+                .map(ParticipatingCompany::getId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND, "会社情報が見つかりません。"));
+
+        ParticipatingProject participation = participatingProjectRepository
+                .findByCompanyIdAndProject_Id(companyDbId, projectDbId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
+
+        String s3Key = participation.getS3KeyPdfMembership();
+        if (s3Key == null || s3Key.isBlank()) {
+                throw new CustomException("PDF_NOT_READY",
+                        "PDFはまだ準備できていません。審査完了までしばらくお待ちください。");
+        }
+
+        String presignedUrl = pdfService.generatePresignedUrl(s3Key);
+
+        return ProjectPdfDownloadResponse.builder()
+                .pdfUrl(presignedUrl)
+                .expiresIn(900)
                 .build();
+        }
+
+
+
+        @Override
+        @Transactional
+    public  ProjectJoinResponse joinSite(String projectId,
+                                        String companyId,
+                                        Integer userId,
+                                        String siteId) {
+                        // first check that its the site has joined the project through the participating_project
+                        //get the db id for project and company
+              
+                        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+                        .map(com.kct.jcredit.core_backend.entity.Project::getId)
+                        .orElse(0);
+                        Integer companyDbId = //get the db id for company
+                        companyRepository.findByCompanyId(companyId)
+                                .map(com.kct.jcredit.core_backend.entity.ParticipatingCompany::getId)
+                                .orElse(0);
+
+                        Optional<ParticipatingProject> participationOpt = participatingProjectRepository
+                                .findByCompanyIdAndProject_Id(companyDbId, projectDbId);
+                        
+                        //if null there is no link to this project, return error
+                        if (!participationOpt.isPresent()) {
+                                throw new CustomException(
+                                ResponseConstants.NOT_FOUND,
+                                ResponseConstants.MSG_NOT_FOUND);
+                        }
+                        ParticipatingProject participation = participationOpt.get();
+                        //if exists check the status only allow new site to join if the status is eligible
+                        if (!participation.getStatus().equals("APPROVED")) {
+                                if(participationOpt.get().getStatus().equals("REJECTED")){
+                                        throw new CustomException(
+                                        ResponseConstants.REJECTED,
+                                        "プロジェクト参加申請が却下されました。\n" + 
+                                        "お手数ですが、入会届を再申請していただけますと幸いです。");
+                                
+                                } else if(participationOpt.get().getStatus().equals("OPEN")){
+                                         throw new CustomException(
+                                        ResponseConstants.OPEN,
+                                        "プロジェクト参加申請が承認されるまで、サイトの参加はできません。");
+                                } else {
+                                         throw new CustomException(
+                                        ResponseConstants.FORBIDDEN,
+                                        ResponseConstants.MSG_UNAUTHORIZED);
+                                }
+                                
+                        }
+                        Site site = siteRepository
+                                .findByPublicId(siteId)
+                                .orElseThrow(() -> new CustomException(
+                                        ResponseConstants.NOT_FOUND,
+                                        ResponseConstants.MSG_SITE_NOT_FOUND));
+                        Project project = projectRepository.findByPublicIdWithFallback(projectId)
+                                .orElseThrow(() -> new CustomException(
+                                        ResponseConstants.NOT_FOUND,
+                                        ResponseConstants.MSG_PROJECT_NOT_FOUND));
+                        
+                        SiteProjectRelation relation = saveSiteProjectRelation(site, project, companyId);
+
+                        ProjectJoinResponse response = ProjectJoinResponse.builder()       
+                                                        .participationId(participation.getId())
+                                                        .equipmentId(participation.getEquipment().getId())
+                                                        .siteProjectRelationId(relation.getId())
+                                                        .partipationStatus(participation.getStatus())
+                                                        .build();
+
+                        response.setStatusCode(ResponseConstants.OK);
+                        response.setParticipationId(participationOpt.get().getId());
+                        response.setSiteProjectRelationId(relation.getId());
+                        response.setMessage("サイトの参加が完了しました。");
+
+                        return response;
+
+
+
         }
 
 //     @Override

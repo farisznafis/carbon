@@ -7,13 +7,14 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DeletionRequestResponse {
-    private String statusCode;
-    private String message;
+public class DeletionRequestResponse extends BaseResponse{
+
     private Integer requestId;
     private String companyId;
     private String companyName;

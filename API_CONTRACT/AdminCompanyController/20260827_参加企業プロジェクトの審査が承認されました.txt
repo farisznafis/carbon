@@ -1,0 +1,38 @@
+GET /admin/companies/participations/approved
+Authorization: Bearer {token}
+
+Response - Success (HTTP 200)
+[
+  {
+    "participationId": 5,
+    "projectId": 1,
+    "siteId": 3,
+    "projectName": "関東地域自家消費型太陽光発電プロジェクト",
+    "siteName": "渋谷区オフィス拠点A",
+    "companyName": "株式会社ソーラーファーム",
+    "submittedAt": "2026-08-20T10:00:00",
+    "equipment": { "...": "1番と同一構造" },
+    "confirmationItems": { "...": "1番と同一構造" },
+    "sustainabilityCommitment": { "...": "1番と同一構造" },
+    "review": {
+      "primaryApplReviewerName": "田中一郎",
+      "secondaryApplReviewerName": "鈴木花子",
+      "...": "その他チェック項目"
+    },
+    "pdfStatus": "READY"
+  }
+]
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

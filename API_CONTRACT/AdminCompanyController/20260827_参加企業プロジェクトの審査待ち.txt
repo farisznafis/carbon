@@ -1,0 +1,83 @@
+GET /admin/companies/participate/pending
+Authorization: Bearer {token}
+構造は ParticipationReviewDetailResponse の配列です。既に他の運営者 （一次確認者）が承認済みで、二次確認者を待っている案件も含まれます （review.primaryApplReviewerName が入っている状態）。
+
+Response - Success (HTTP 200)
+[
+  {
+    "participationId": 5,
+    "projectId": 1,
+    "siteId": 3,
+    "projectName": "関東地域自家消費型太陽光発電プロジェクト",
+    "siteName": "渋谷区オフィス拠点A",
+    "companyName": "株式会社ソーラーファーム",
+    "submittedAt": "2026-08-20T10:00:00",
+    "equipment": {
+      "id": 12,
+      "siteId": "site001",
+      "equipmentOpDate": "2026-03-20",
+      "nominalMaxOutput": 50.0,
+      "pcsManufacturer": "株式会社テスト製作所",
+      "pcsModel": "TP-100",
+      "pcsUnitCount": 1,
+      "deviceNo": "DEV-TEST-001",
+      "pcsStandby": 0.05,
+      "hasBattery": true,
+      "batteryMaker": "テストバッテリー株式会社",
+      "batteryModel": "TB-500",
+      "batteryCapacity": 13.5,
+      "totalInvestment": 5000000,
+      "hasSubsidy": true,
+      "subsidyName": "東京都自家消費型太陽光発電導入補助金",
+      "subsidyAmount": 1000000,
+      "preProjectUnitPrice": 27.5,
+      "files": [
+        {
+          "id": 20,
+          "fileType": "solar_contract",
+          "fileId": "de178ad5-82df-483a-b87a-d70398a249db",
+          "s3Key": "sites/site001/equipments/12/solar_contract.png"
+        }
+      ]
+    },
+    "confirmationItems": {
+      "isAgreeDataUse": true,
+      "isAgreeExtraData": true,
+      "isAgreeTransfer": true,
+      "isNotRegistered": true,
+      "isKeidanrenParticipation": true,
+      "isEmitter": true,
+      "emitterCode": "123456789",
+      "isAdjustedEmissionsAdded": true,
+      "isSubjectToPeriodicReport": true,
+      "isPeriodicReportTypeOne": true,
+      "energyBusinessCode": "1234567",
+      "factoryCode": "1234567"
+    },
+    "sustainabilityCommitment": {
+      "companyName": "株式会社ソーラーファーム",
+      "repName": "山田太郎",
+      "repRole": "代表取締役",
+      "hasConsent": true,
+      "isAgreeTerms": true
+    },
+    "review": null,
+    "pdfStatus": "NOT_READY"
+  }
+]
+
+
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

@@ -9,6 +9,7 @@ import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @NoArgsConstructor
@@ -22,6 +23,7 @@ public class BaseResponse {
 
     /**
      * Legacy constructor for backward compatibility.
+     * レガシーコンストラクターは後方互換性のためのものです。
      */
     public BaseResponse(String statusCode, String message, Map<String, String> errors) {
         this.statusCode = statusCode;
@@ -32,6 +34,7 @@ public class BaseResponse {
 
     /**
      * Creates a success response with the given message.
+     * 指定されたメッセージで成功のレスポンスを作る。
      */
     public static BaseResponse success(String message) {
         BaseResponse response = new BaseResponse();
@@ -43,6 +46,7 @@ public class BaseResponse {
 
     /**
      * Creates an error response with the given status code and message.
+     * 指定されたステータスコードとメッセージでエラー応答を作る。
      */
     public static BaseResponse error(String statusCode, String message) {
         BaseResponse response = new BaseResponse();
@@ -54,6 +58,7 @@ public class BaseResponse {
 
     /**
      * Creates an error response with field-level validation errors.
+     * フィールドレベルのバリデーションエラーを含むエラーレスポンスを作る。
      */
     public static BaseResponse validationError(Map<String, String> fieldErrors) {
         BaseResponse response = new BaseResponse();

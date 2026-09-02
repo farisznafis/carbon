@@ -97,6 +97,15 @@ const reviewDetail = mapParticipationReviewDetail({
   },
 });
 
+const approvedReviewDetail = {
+  ...reviewDetail,
+  review: {
+    ...reviewDetail.review,
+    primaryApplReviewerName: '一次確認者',
+    secondaryApplReviewerName: '二次確認者',
+  },
+};
+
 function renderPage() {
   return render(
     <MemoryRouter
@@ -244,6 +253,8 @@ describe('ParticipationReviewDetailPage', () => {
 
   it('gets the membership PDF and opens its temporary URL', async () => {
     const user = userEvent.setup();
+    getParticipationReviewDetail.mockResolvedValue(approvedReviewDetail);
+    getMyParticipationReviews.mockResolvedValue([]);
     renderPage();
 
     await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
@@ -255,8 +266,28 @@ describe('ParticipationReviewDetailPage', () => {
     );
   });
 
+  it('does not show the PDF after only the primary approval', async () => {
+    getParticipationReviewDetail.mockResolvedValue({
+      ...reviewDetail,
+      review: {
+        ...reviewDetail.review,
+        primaryApplReviewerName: '一次確認者',
+        secondaryApplReviewerName: '',
+      },
+    });
+    renderPage();
+
+    await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
+
+    expect(
+      screen.queryByRole('button', { name: 'PDFを表示' }),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps the page available and shows a toast when the PDF cannot be opened', async () => {
     const user = userEvent.setup();
+    getParticipationReviewDetail.mockResolvedValue(approvedReviewDetail);
+    getMyParticipationReviews.mockResolvedValue([]);
     downloadProjectMembershipPdf.mockRejectedValue(
       new Error('PDFがまだ作成されていません。'),
     );
@@ -382,6 +413,8 @@ describe('ParticipationReviewDetailPage', () => {
     expect(screen.queryByRole('button', { name: '承認' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '却下' })).not.toBeInTheDocument();
     expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
-    expect(screen.getByRole('button', { name: 'PDFを表示' })).toBeEnabled();
+    expect(
+      screen.queryByRole('button', { name: 'PDFを表示' }),
+    ).not.toBeInTheDocument();
   });
 });

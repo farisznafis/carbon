@@ -3,7 +3,6 @@ import {
   useLocation,
   useNavigate,
   useParams,
-  useSearchParams,
 } from 'react-router-dom';
 import { ApiError } from '@/api/_shared/errors';
 import type {
@@ -23,7 +22,6 @@ import {
 } from '@/api/batch';
 import {
   getMonitoringCancelRequests,
-  type MonitoringRecordListItem,
 } from '@/api/monitoring';
 import {
   getProjectPlanProgressBatch,
@@ -35,14 +33,11 @@ import type { Project } from '@/api/projects';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 import {
+  adminPageContainerClassName,
   dashboardEmptyStateClassName,
-  dashboardPageContainerClassName,
-  dashboardPageHeaderClassName,
-  dashboardTabsListClassName,
-  dashboardTabTriggerClassName,
 } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { CancelRequestHistoryTable } from '@/features/admin/dashboard/tables/CancelRequestHistoryTable';
 import { BatchHistoryTable } from '@/features/admin/dashboard/tables/BatchHistoryTable';
@@ -50,14 +45,13 @@ import { AdminCompanyApplicationsTable } from '@/features/admin/dashboard/tables
 import { PendingCompanyActionDialog } from '@/features/admin/dashboard/tables/PendingCompanyActionDialog';
 import { PendingCompanyApplicationDetail } from '@/features/admin/dashboard/tables/PendingCompanyApplicationDetail';
 import { ProjectTable } from '@/features/admin/dashboard/tables/ProjectTable';
-import { ProjectMonitoringTable } from '@/features/admin/dashboard/tables/ProjectMonitoringTable';
 import { AdminDashboardOverview } from './AdminDashboardOverview';
 import { PageSkeleton, SkeletonTable } from '@/components/feedback/loading';
 import { useProjectsQuery } from '@/hooks/projects/useProjectsQuery';
 import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
-import { cn } from '@/lib/utils';
 import { paths } from '@/routes/paths';
+import { getAdminRouteFromLegacyTab } from '@/features/admin/navigation/adminNavigationConfig';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { AlertTriangle, Plus } from 'lucide-react';
 
@@ -71,7 +65,7 @@ type AdminDashboardTabValue =
 
 type PendingCompanyActionMode = 'approve' | 'reject';
 
-const dashboardContainer = dashboardPageContainerClassName;
+const dashboardContainer = adminPageContainerClassName;
 
 const APPLICATION_STATUSES: CompanyStatus[] = ['PENDING', 'REJECTED'];
 const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
@@ -98,13 +92,34 @@ const adminDashboardTabs: Array<{
   value: AdminDashboardTabValue;
   label: string;
 }> = [
-  { value: 'overview', label: '概要' },
+  // { value: 'overview', label: '概要' },
   { value: 'companies', label: '企業一覧・申請管理' },
   { value: 'projects', label: 'プロジェクト管理' },
   { value: 'operators', label: '運用者一覧' },
   { value: 'methodologies', label: '方法論一覧' },
   { value: 'monitoring', label: 'モニタリングデータ管理' },
 ];
+
+/** Resolves the route-driven dashboard section while legacy tab URLs redirect. */
+function getAdminDashboardSection(
+  pathname: string,
+  legacyTab: string | null,
+): AdminDashboardTabValue {
+  if (pathname === paths.adminProjectList) return 'projects';
+  if (pathname === paths.adminCompanyList) return 'companies';
+  if (pathname === paths.adminMethodologyList) return 'methodologies';
+  if (pathname === paths.adminMonitoring) return 'monitoring';
+
+  if (
+    pathname === paths.adminDashboard &&
+    (legacyTab === 'overview' ||
+      adminDashboardTabs.some((tab) => tab.value === legacyTab))
+  ) {
+    return legacyTab as AdminDashboardTabValue;
+  }
+
+  return 'overview';
+}
 
 function isStringRecord(value: unknown): value is Record<string, string> {
   return (
@@ -129,40 +144,6 @@ function getApiFieldErrors(error: unknown) {
   }
 
   return {};
-}
-
-function AdminDashboardHero() {
-  return (
-    <header className="border-b border-border bg-background">
-      <div
-        className={dashboardPageHeaderClassName}
-      >
-        <h1 className="text-foreground">
-          運営者・管理者ダッシュボード
-        </h1>
-      </div>
-    </header>
-  );
-}
-
-function AdminDashboardTabs() {
-  const triggerClassName = dashboardTabTriggerClassName;
-
-  return (
-    <div className="bg-card pt-6">
-      <TabsList className={dashboardTabsListClassName}>
-        {adminDashboardTabs.map((tab) => (
-          <TabsTrigger
-            key={tab.value}
-            value={tab.value}
-            className={triggerClassName}
-          >
-            {tab.label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </div>
-  );
 }
 
 function AdminDashboardSection({
@@ -201,7 +182,6 @@ function AdminDashboardEmptyState({ children }: { children: ReactNode }) {
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { applicationId } = useParams();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -264,9 +244,6 @@ const AdminDashboard = () => {
   const [updatingProjectStatusId, setUpdatingProjectStatusId] = useState<
     string | null
   >(null);
-  const [selectedMonitoringProjectId, setSelectedMonitoringProjectId] =
-    useState(searchParams.get('projectId') ?? '');
-
   const [pendingDialogOpen, setPendingDialogOpen] = useState(false);
   const [pendingDialogMode, setPendingDialogMode] =
     useState<PendingCompanyActionMode | null>(null);
@@ -285,12 +262,20 @@ const AdminDashboard = () => {
   );
   const [rejectReason, setRejectReason] = useState('');
 
-  const requestedTab = searchParams.get('tab');
-  const initialTab: AdminDashboardTabValue = adminDashboardTabs.some(
-    (tab) => tab.value === requestedTab,
-  )
-    ? (requestedTab as AdminDashboardTabValue)
-    : 'overview';
+  const requestedTab = new URLSearchParams(location.search).get('tab');
+  const activeSection = getAdminDashboardSection(
+    location.pathname,
+    requestedTab,
+  );
+
+  useEffect(() => {
+    if (location.pathname !== paths.adminDashboard || !requestedTab) return;
+
+    const legacyRoute = getAdminRouteFromLegacyTab(requestedTab);
+    if (legacyRoute) {
+      navigate(legacyRoute, { replace: true });
+    }
+  }, [location.pathname, navigate, requestedTab]);
 
   /** Reloads the application-company list independently from participating companies. */
   const reloadApplicationCompanies = useCallback(async () => {
@@ -583,33 +568,6 @@ const AdminDashboard = () => {
     });
   };
 
-  const handleMonitoringProjectChange = (projectId: string) => {
-    setSelectedMonitoringProjectId(projectId);
-    setSearchParams(
-      {
-        tab: 'monitoring',
-        projectId,
-      },
-      { replace: true },
-    );
-  };
-
-  const openMonitoringDetail = (
-    record: MonitoringRecordListItem,
-    page: number,
-    limit: number,
-  ) => {
-    if (!selectedMonitoringProjectId) return;
-
-    navigate(
-      `${paths.adminProjectMonitoringDetail(
-        selectedMonitoringProjectId,
-        record.id,
-      )}?page=${page}&limit=${limit}`,
-      { state: { monitoringRecord: record } },
-    );
-  };
-
   const handlePendingDialogOpenChange = (open: boolean) => {
     setPendingDialogOpen(open);
 
@@ -706,13 +664,35 @@ const AdminDashboard = () => {
       : null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-card">
-      <AdminDashboardHero />
+    <div className="flex min-h-[calc(100dvh-5rem)] flex-col bg-background">
+      <Tabs value={activeSection} className="flex flex-1 flex-col bg-background">
+        <main className={`${dashboardContainer} flex-1 space-y-10 py-8`}>
+          {/* <TabsContent
+            value="overview"
+            className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
+          >
+            <AdminDashboardOverview
+              projects={projects}
+              projectsLoading={projectsQuery.isLoading}
+              projectsError={projectsError}
+              applications={applicationCompanies}
+              applicationTotal={applicationPagination.totalItems}
+              applicationsLoading={applicationCompaniesLoading}
+              applicationsError={applicationCompaniesError}
+              participatingCompanyTotal={participatingPagination.totalItems}
+              participatingCompaniesLoading={participatingCompaniesLoading}
+              participatingCompaniesError={participatingCompaniesError}
+              cancelRequests={cancelRequestItems}
+              cancelRequestsLoading={cancelRequestLoading}
+              cancelRequestsError={cancelRequestError}
+              batchHistory={batchHistoryItems}
+              batchHistoryLoading={batchHistoryLoading}
+              notifications={notifications}
+              notificationsLoading={notificationsLoading}
+              notificationsError={notificationsError}
+            />
+          </TabsContent> */}
 
-      <Tabs defaultValue={initialTab} className="flex flex-1 flex-col bg-card">
-        <AdminDashboardTabs />
-
-        <main className={cn('flex-1 space-y-10 py-8', dashboardContainer)}>
           <TabsContent
             value="overview"
             className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
@@ -890,55 +870,6 @@ const AdminDashboard = () => {
             value="monitoring"
             className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
-            <AdminDashboardSection
-              title="モニタリングデータ一覧"
-              description="プロジェクトを選択して、登録済みのモニタリングデータを確認できます。"
-            >
-              <ErrorBoundary
-                fallback={({ resetErrorBoundary }) => (
-                  <div
-                    role="alert"
-                    className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center"
-                  >
-                    <AlertTriangle
-                      className="h-5 w-5 text-destructive"
-                      aria-hidden="true"
-                    />
-                    <p className="text-small font-medium text-foreground">
-                      モニタリングデータを表示できませんでした。
-                    </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={resetErrorBoundary}
-                    >
-                      再試行
-                    </Button>
-                  </div>
-                )}
-              >
-                <ProjectMonitoringTable
-                  projects={projects}
-                  projectsLoading={projectsQuery.isLoading}
-                  projectsError={
-                    projectsQuery.error instanceof Error
-                      ? projectsQuery.error.message
-                      : null
-                  }
-                  selectedProjectId={selectedMonitoringProjectId}
-                  initialPage={Math.max(
-                    Number(searchParams.get('monitoringPage')) || 1,
-                    1,
-                  )}
-                  initialLimit={Math.max(
-                    Number(searchParams.get('monitoringLimit')) || 10,
-                    1,
-                  )}
-                  onProjectChange={handleMonitoringProjectChange}
-                  onViewDetail={openMonitoringDetail}
-                />
-              </ErrorBoundary>
-            </AdminDashboardSection>
             <AdminDashboardSection
               title="取消一覧"
               description="取消対象のモニタリングデータを確認し、取消申請を送信できます。"
