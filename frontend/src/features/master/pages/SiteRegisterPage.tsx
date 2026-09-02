@@ -15,11 +15,10 @@ import {
   FormStandalonePage,
 } from '@/components/forms/form-layout';
 import {
-  createSiteRegistrationFlowState,
-  getSiteRegistrationFlowState,
   getSiteRegistrationReturnTarget,
 } from '@/features/master/navigation/siteRegistrationFlow';
 import { paths } from '@/routes/paths';
+import { UserInvitationDialog } from '@/features/master/user-invitations/UserInvitationDialog';
 
 const emptySiteValues: SiteFormData = {
   siteName: '',
@@ -42,32 +41,20 @@ const emptySiteValues: SiteFormData = {
 
 function SiteRegister() {
   const [step, setStep] = useState<'form' | 'confirm'>('form');
+  const [isInvitationDialogOpen, setIsInvitationDialogOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const addSite = useDashboardStore((state) => state.addSite);
   const setUsers = useDashboardStore((state) => state.setUsers);
-  const registrationFlowState = getSiteRegistrationFlowState(location.state);
   const registrationReturnTarget = getSiteRegistrationReturnTarget(
     location.state,
   );
-  const returnedUser = registrationFlowState?.createdUser;
-  const [formData, setFormData] = useState<SiteFormData>(() => ({
-    ...(registrationFlowState?.siteDraft ?? emptySiteValues),
-    userId:
-      returnedUser?.id ?? registrationFlowState?.siteDraft.userId ?? '',
-  }));
+  const [formData, setFormData] = useState<SiteFormData>(emptySiteValues);
   const usersQuery = useUsersQuery();
   const availableUsers = useMemo(
-    () => {
-      const fetchedUsers = usersQuery.data?.users ?? [];
-
-      return returnedUser &&
-        !fetchedUsers.some((user) => user.id === returnedUser.id)
-        ? [...fetchedUsers, returnedUser]
-        : fetchedUsers;
-    },
-    [returnedUser, usersQuery.data?.users],
+    () => usersQuery.data?.users ?? [],
+    [usersQuery.data?.users],
   );
   const selectableUsers = useMemo(
     () =>
@@ -85,16 +72,10 @@ function SiteRegister() {
     }
   }, [availableUsers, setUsers, usersQuery.data?.users]);
 
+  /** Preserves the site draft and opens the invitation without creating a user inline. */
   const handleAddUser = (siteDraft: SiteFormData) => {
     setFormData(siteDraft);
-    navigate(paths.masterUserRegister, {
-      replace: true,
-      state: createSiteRegistrationFlowState(
-        siteDraft,
-        undefined,
-        registrationReturnTarget ?? undefined,
-      ),
-    });
+    setIsInvitationDialogOpen(true);
   };
 
   const handleDraftSubmit = async (values: SiteFormData) => {
@@ -205,9 +186,9 @@ function SiteRegister() {
           defaultValues={formData}
           originalData={emptySiteValues}
           userOptions={selectableUsers}
-          isUserOptionsLoading={usersQuery.isLoading && !returnedUser}
+          isUserOptionsLoading={usersQuery.isLoading}
           userOptionsError={
-            usersQuery.isError && !returnedUser
+            usersQuery.isError
               ? '責任者候補を取得できませんでした'
               : null
           }
@@ -216,6 +197,10 @@ function SiteRegister() {
           embedded
         />
       </FormPageContent>
+      <UserInvitationDialog
+        open={isInvitationDialogOpen}
+        onOpenChange={setIsInvitationDialogOpen}
+      />
     </FormStandalonePage>
   );
 }

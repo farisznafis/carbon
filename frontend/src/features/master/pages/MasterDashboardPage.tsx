@@ -21,6 +21,7 @@ import { useNotificationStore } from '@/stores/notificationStore';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { FloatingHelpButton } from '@/features/master/help/FloatingHelpButton';
 import { PageLoadingOverlay } from '@/components/feedback/loading';
+import { UserInvitationDialog } from '@/features/master/user-invitations/UserInvitationDialog';
 
 const MasterDashboard = () => {
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ const MasterDashboard = () => {
 
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isInvitationDialogOpen, setIsInvitationDialogOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -117,8 +119,7 @@ const MasterDashboard = () => {
               title="社員"
               description="行をクリックすると、プロファイル詳細へ移動できます。"
               addLabel="社員を追加"
-              onAdd={() => navigate(paths.masterUserRegister)}
-              addDisabled={users.length > 49}
+              onAdd={() => setIsInvitationDialogOpen(true)}
             >
               {errorMessage ? (
                 <DashboardEmptyState>{errorMessage}</DashboardEmptyState>
@@ -174,6 +175,10 @@ const MasterDashboard = () => {
           </TabsContent>
         </main>
       </Tabs>
+      <UserInvitationDialog
+        open={isInvitationDialogOpen}
+        onOpenChange={setIsInvitationDialogOpen}
+      />
       <FloatingHelpButton context="master-dashboard" />
     </div>
   );

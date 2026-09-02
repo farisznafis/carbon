@@ -31,11 +31,13 @@ const Signup = lazy(() => import("./pages/Signup"));
 const SignupRevision = lazy(() =>
   import("./features/public/signup-revision/SignupRevisionPage"),
 );
+const UserInvitation = lazy(() =>
+  import('./features/public/user-invitation/UserInvitationPage'),
+);
 const ProjectDetail = lazy(() => import("./features/user/project-detail/ProjectDetailPage"));
 const MonitoringRegister = lazy(() => import("./features/user/monitoring/MonitoringRegisterPage"));
 const SiteRegister = lazy(() => import("./features/master/pages/SiteRegisterPage"));
 const SiteEdit = lazy(() => import("./features/master/pages/SiteEditPage"));
-const UserRegister = lazy(() => import("./features/master/pages/UserRegisterPage"));
 const UserEdit = lazy(() => import("./features/master/pages/UserEditPage"));
 const MasterUserProfile = lazy(() => import("./features/master/pages/MasterUserProfilePage"));
 const SiteDetail = lazy(() => import("./features/user/sites/SiteDetailPage"));
@@ -197,11 +199,11 @@ const App = () => {
           <Route path={paths.resetPassword} element={<ResetPassword />} />
           <Route path={paths.signup} element={<Signup />} />
           <Route path={paths.signupRevision} element={<SignupRevision />} />
+          <Route path={paths.userInvitation} element={<UserInvitation />} />
           <Route element={<ProtectedRoute />}>
             <Route path={paths.masterDashboard} element={<MasterDashboard />} />
             <Route path={paths.masterSiteRegister} element={<SiteRegister />} />
             <Route path={paths.masterSiteEditRoute} element={<SiteEdit />} />
-            <Route path={paths.masterUserRegister} element={<UserRegister />} />
             <Route path={paths.masterUserProfileRoute} element={<MasterUserProfile />} />
             <Route path={paths.userEditRoute} element={<UserEdit />} />
             <Route path={paths.userDashboard} element={<Dashboard />} />
