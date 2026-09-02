@@ -71,6 +71,8 @@ public class ProjectDetailResponse {
     // 参加状況（派生）
     private Boolean isCompanyJoined;
     private Boolean hasSiteRelation;
+    private String participationStatus;
+    private String pdfStatus;
 
     private LocalDateTime updatedAt;
     private LocalDateTime createdAt;
