@@ -9,7 +9,7 @@ import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
 import com.kct.jcredit.core_backend.dto.response.MemberTermsInfoResponse;
-import com.kct.jcredit.core_backend.dto.response.MyParticipationResponse;
+
 import com.kct.jcredit.core_backend.dto.response.ProjectJoinResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectPdfDownloadResponse;
@@ -131,7 +131,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                         .buildingName(site.getBuildingName())
                                         .picFirstName(site.getPicFirstName())
                                         .picLastName(site.getPicLastName())
-                                        .alreadyInProject(alreadyInProject) // uncomment — field baru di SiteResponse
+                                        .alreadyInProject(alreadyInProject) 
                                         .build();
                         })
                         .collect(Collectors.toList());
@@ -224,12 +224,9 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND, "ユーザー情報が見つかりません。"));
 
-        // Duplicate check — via SiteProjectRelation, BUKAN ParticipatingProject
+
         Optional<ParticipatingProject> existingParticipation = participatingProjectRepository
                 .findByEquipment_Site_IdAndProject_Id(site.getId(), project.getId());
-        // ⚠️ Method findBySite_IdAndProject_Id SUDAH ADA — dipakai juga di
-        //    ParticipationReviewServiceImpl.approveReview()/rejectReview(), jadi
-        //    tidak perlu ditambahkan ke repository, tinggal reuse.
 
         if (existingParticipation.isPresent()) {
         String currentStatus = existingParticipation.get().getStatus();
@@ -437,7 +434,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
     private void saveSustainabilityCommitment(EnR002SustainabilityCommitmentRequest req,
                                                Boolean isAgreeTerms,
                                                Integer participationId, String companyId) {
-        EnR002SustainabilityCommitment commitment = EnR002SustainabilityCommitment.builder() // ← nama entity DynamoDB
+        EnR002SustainabilityCommitment commitment = EnR002SustainabilityCommitment.builder() 
                 .pk("PART#" + participationId)
                 .companyName(req.getCompanyName())
                 .repName(req.getRepName())
@@ -479,10 +476,8 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
         equipment.setPreProjectUnitPrice(request.getEquipment().getPreProjectUnitPrice());
         equipmentRepository.save(equipment);
 
-        // ── Replace total file lama → file baru ─────────────────────────
+        // ── Replace ─────────────────────────
         List<EnR002EquipmentFile> oldFiles = equipmentFileRepository.findByEquipment_Id(equipment.getId());
-        // Key-nya dipegang dulu; object S3 baru dihapus setelah commit, supaya
-        // rollback tidak menyisakan row DB yang menunjuk file yang sudah hilang.
         List<String> oldS3Keys = oldFiles.stream()
                 .map(EnR002EquipmentFile::getS3Key)
                 .collect(Collectors.toList());
@@ -490,7 +485,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
         List<EnR002EquipmentFile> savedFiles = saveEquipmentFiles(request.getEquipment(), equipment);
 
-        // Key tmp disimpan terpisah — DB sudah memegang key final sejak commit.
+        // Key tmp 
         Map<String, String> tempKeyByFileId = request.getEquipment().getFiles().stream()
                 .collect(Collectors.toMap(f -> f.getFileId(), f -> f.getS3Key()));
 
@@ -505,9 +500,6 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 new TransactionSynchronization() {
                         @Override
                         public void afterCommit() {
-                        // Hapus file lama dulu: key permanent-nya bisa sama persis
-                        // dengan file baru (nama file sama pada equipment yang sama),
-                        // jadi kalau dihapus setelah pemindahan, file barunya yang hilang.
                         oldS3Keys.forEach(oldKey -> {
                                 try {
                                         fileUploadSolarService.deletePermanentFile(oldKey, equipmentId);
@@ -565,9 +557,42 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
         return response;
         }
 
+        @Override
+        public ProjectPdfDownloadResponse getMembershipPdfByCompany(String projectId, String companyId) {
+
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+                .map(Project::getId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND, ResponseConstants.MSG_PROJECT_NOT_FOUND));
+
+        Integer companyDbId = companyRepository.findByCompanyId(companyId)
+                .map(ParticipatingCompany::getId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND, "会社情報が見つかりません。"));
+
+        ParticipatingProject participation = participatingProjectRepository
+                .findByCompanyIdAndProject_Id(companyDbId, projectDbId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
+
+        String s3Key = participation.getS3KeyPdfMembership();
+        if (s3Key == null || s3Key.isBlank()) {
+                throw new CustomException("PDF_NOT_READY",
+                        "PDFはまだ準備できていません。審査完了までしばらくお待ちください。");
+        }
+
+        String presignedUrl = pdfService.generatePresignedUrl(s3Key);
+
+        return ProjectPdfDownloadResponse.builder()
+                .pdfUrl(presignedUrl)
+                .expiresIn(900)
+                .build();
+        }
+
+
 
         @Override
-    @Transactional
+        @Transactional
     public  ProjectJoinResponse joinSite(String projectId,
                                         String companyId,
                                         Integer userId,
