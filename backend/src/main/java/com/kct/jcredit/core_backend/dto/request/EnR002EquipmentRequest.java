@@ -47,10 +47,10 @@ public class EnR002EquipmentRequest {
     @NotBlank
     private String pcsModel;
 
-    // 台数 — minimal 1
-    @NotNull
-    @Min(1)
-    private Integer pcsUnitCount;
+    // // 台数 — minimal 1
+    // @NotNull
+    // @Min(1)
+    // private Integer pcsUnitCount;
 
     // 機器固有番号（製造番号）
     @NotBlank

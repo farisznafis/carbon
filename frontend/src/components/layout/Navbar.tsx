@@ -16,6 +16,7 @@ import { toast } from '@/hooks/use-toast';
 import { getHomePath } from '@/utils/getHomePath';
 import { isLoginPath, paths } from '@/routes/paths';
 import { cn } from '@/lib/utils';
+import { AdminNavigation } from '@/features/admin/navigation/AdminNavigation';
 import { AccountMenu } from './AccountMenu';
 import { useAccountIdentity } from './useAccountIdentity';
 
@@ -29,13 +30,40 @@ function AuthenticatedNavbarContent({
   onLogout,
 }: Readonly<AuthenticatedNavbarContentProps>) {
   const navigate = useNavigate();
-  const { displayName, email } = useAccountIdentity(user);
+  const {
+    avatarInitial,
+    displayName,
+    email,
+    roleLabel,
+    resolveProfilePath,
+  } = useAccountIdentity(user);
+
+  /** Opens the matched admin operator profile without guessing an account. */
+  const handleProfile = async () => {
+    try {
+      const profilePath = await resolveProfilePath();
+      if (profilePath) {
+        navigate(profilePath);
+        return;
+      }
+    } catch {
+      // The shared message below also covers API failures while resolving the account.
+    }
+
+    toast({
+      title: 'エラー',
+      description: 'プロファイルを表示できませんでした。',
+      variant: 'destructive',
+    });
+  };
 
   return (
     <AccountMenu
+      avatarInitial={avatarInitial}
       displayName={displayName}
       email={email}
-      onProfile={() => navigate(paths.profile)}
+      roleLabel={roleLabel}
+      onProfile={handleProfile}
       onLogout={onLogout}
     />
   );
@@ -58,6 +86,7 @@ export const Navbar = () => {
   const isLoginPage = isLoginPath(location.pathname);
   const isAdminLoginPage =
     isLoginPage && location.pathname.startsWith(paths.adminLogin);
+  const isAdminAuthenticated = isAuthenticated && user?.role === 'admin';
 
   const handleLogout = async () => {
     const redirectPath =
@@ -101,16 +130,30 @@ export const Navbar = () => {
         className={cn(
           'w-full px-4 py-4 sm:px-6 lg:px-8',
           isAuthenticated && user && 'py-3',
+          isAdminAuthenticated && 'h-20 px-6 py-0',
           isLoginPage && '[@media(max-height:480px)]:py-2',
         )}
       >
-        <div className="flex items-center justify-between">
+        <div
+          className={cn(
+            'flex items-center justify-between',
+            isAdminAuthenticated &&
+              'relative h-full justify-start gap-3',
+          )}
+        >
           <Link to={linkTarget} className="flex items-center space-x-2">
             <div className="h-8 w-8 rounded-lg gradient-primary" />
             <span className="text-xl font-bold">GX</span>
           </Link>
 
-          <div className="flex items-center space-x-3">
+          {isAdminAuthenticated && <AdminNavigation />}
+
+          <div
+            className={cn(
+              'flex items-center space-x-3',
+              isAdminAuthenticated && 'ml-auto',
+            )}
+          >
             {isAuthenticated && user ? (
               <>
                 <Sheet>
@@ -119,7 +162,7 @@ export const Navbar = () => {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="relative h-12 w-12 border border-border"
+                      className="relative h-11 w-11 border border-border"
                       aria-label="お知らせ"
                     >
                       <Bell className="h-4 w-4" />

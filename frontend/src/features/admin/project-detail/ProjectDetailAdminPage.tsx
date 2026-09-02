@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { FileText } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { AlertTriangle, FileText } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import type { MonitoringRecordListItem } from '@/api/monitoring';
 import {
   getAdminProjectDetail,
   getProjectPlanProgress,
@@ -20,12 +21,19 @@ import { ProjectDetailItem } from './ProjectDetailItem';
 import { logger } from '@/lib/logger';
 import { paths } from '@/routes/paths';
 import { PageSkeleton, SkeletonCard } from '@/components/feedback/loading';
+import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
+import { ProjectMonitoringTable } from '@/features/admin/monitoring/ProjectMonitoringTable';
 
+const DEFAULT_MONITORING_PAGE = 1;
+const DEFAULT_MONITORING_LIMIT = 10;
+
+/** Converts nullable project-detail values into display-safe text. */
 const formatValue = (value: unknown) => {
   if (value == null || value === '') return '-';
   return String(value);
 };
 
+/** Formats numeric project-detail values while preserving zero. */
 const formatNumber = (value: unknown) => {
   if (value == null || value === '') return '-';
   const numberValue = typeof value === 'number' ? value : Number(value);
@@ -34,6 +42,19 @@ const formatNumber = (value: unknown) => {
     : '-';
 };
 
+/** Reads a positive integer query parameter or returns its fallback. */
+function getPositiveIntegerSearchParam(
+  searchParams: URLSearchParams,
+  key: string,
+  fallback: number,
+) {
+  const parsedValue = Number(searchParams.get(key));
+  return Number.isFinite(parsedValue) && parsedValue > 0
+    ? parsedValue
+    : fallback;
+}
+
+/** Renders a consistent card for each project-detail information group. */
 function DetailSection({
   title,
   description,
@@ -56,9 +77,11 @@ function DetailSection({
   );
 }
 
+/** Displays one admin project and its project-scoped monitoring records. */
 export default function ProjectDetailAdmin() {
   const { projectId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [project, setProject] = useState<AdminProjectDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -68,8 +91,35 @@ export default function ProjectDetailAdmin() {
     completed: number;
     total: number;
   } | null>(null);
+  const monitoringPage = getPositiveIntegerSearchParam(
+    searchParams,
+    'monitoringPage',
+    DEFAULT_MONITORING_PAGE,
+  );
+  const monitoringLimit = getPositiveIntegerSearchParam(
+    searchParams,
+    'monitoringLimit',
+    DEFAULT_MONITORING_LIMIT,
+  );
+
+  /** Opens a monitoring record while retaining the list pagination context. */
+  const openMonitoringDetail = useCallback(
+    (record: MonitoringRecordListItem, page: number, limit: number) => {
+      if (!projectId) return;
+
+      navigate(
+        `${paths.adminProjectMonitoringDetail(
+          projectId,
+          record.id,
+        )}?page=${page}&limit=${limit}`,
+        { state: { monitoringRecord: record } },
+      );
+    },
+    [navigate, projectId],
+  );
 
   useEffect(() => {
+    /** Fetches GET /project/{projectId} for the selected project. */
     const load = async () => {
       if (!projectId) {
         setError('projectId が見つかりません。');
@@ -180,6 +230,48 @@ export default function ProjectDetailAdmin() {
             </Button>
           </div>
         </CardHeader>
+      </Card>
+
+      <Card id='monitoring-data' className='scroll-mt-24'>
+        <CardHeader>
+          <CardTitle>モニタリングデータ一覧</CardTitle>
+          <CardDescription>
+            このプロジェクトに登録されたモニタリングデータを確認できます。
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ErrorBoundary
+            fallback={({ resetErrorBoundary }) => (
+              <div
+                role='alert'
+                className='flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center'
+              >
+                <AlertTriangle
+                  className='h-5 w-5 text-destructive'
+                  aria-hidden='true'
+                />
+                <p className='text-small font-medium text-foreground'>
+                  モニタリングデータを表示できませんでした。
+                </p>
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={resetErrorBoundary}
+                >
+                  再試行
+                </Button>
+              </div>
+            )}
+          >
+            <ProjectMonitoringTable
+              key={projectId}
+              projectId={projectId}
+              initialPage={monitoringPage}
+              initialLimit={monitoringLimit}
+              onViewDetail={openMonitoringDetail}
+            />
+          </ErrorBoundary>
+        </CardContent>
       </Card>
 
       <DetailSection

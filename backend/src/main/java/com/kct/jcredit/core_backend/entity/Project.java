@@ -1,12 +1,12 @@
 package com.kct.jcredit.core_backend.entity;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import com.kct.jcredit.core_backend.entity.base.BaseEntity;
 
 import jakarta.persistence.*;
-import jakarta.persistence.PrePersist;
 import lombok.*;
 
 @Entity
@@ -119,6 +119,12 @@ public class Project extends BaseEntity {
 
     @Column(name = "method_combi_feasibility", nullable = false)
     private Boolean methodCombiFeasibility;
+
+    @Column(name = "project_started_at", nullable = false)
+    private Instant startedAt;
+
+    @Column(name = "use_purpose", nullable = false, length = 500)
+    private String usePurpose;
 
     @Column(name = "method_details", nullable = false, length = 1000)
     private String methodDetails;

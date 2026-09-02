@@ -34,15 +34,6 @@ vi.mock('@/hooks/sites/useSitesQuery', () => ({
   }),
 }));
 
-vi.mock('@/hooks/sites/useSustainabilityCommitmentDefaultQuery', () => ({
-  useSustainabilityCommitmentDefaultQuery: () => ({
-    data: undefined,
-    isFetching: false,
-    isError: false,
-    refetch: vi.fn(),
-  }),
-}));
-
 vi.mock('@/api/site', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/site')>();
   return {
@@ -172,7 +163,7 @@ describe('ProjectRegisterPage', () => {
       screen.getByText('プロジェクトへの参加を申請する拠点を選択してください。'),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('確認資料：太陽光発電電力受給契約確認書')
+      (await screen.findByText('太陽光発電所・発電設備を特定できる資料'))
         .parentElement,
     ).toHaveTextContent('*');
 

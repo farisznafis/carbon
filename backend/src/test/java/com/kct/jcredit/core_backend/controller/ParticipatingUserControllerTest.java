@@ -160,47 +160,6 @@ class ParticipatingUserControllerTest {
     }
 
     @Test
-    @DisplayName("ユーザと拠点のつながりを切ることができること")
-    void testDeleteUserSite_Success() {
-        try (MockedStatic<ResponseUtil> mockedResponseUtil = mockStatic(ResponseUtil.class)) {
-                // === テストデータの準備 ===
-                // リクエストオブジェクトを作成し、削除対象のユーザIDと拠点IDを設定
-                // Arrange
-                DeleteUserSite request = new DeleteUserSite();
-                        request.setUserId("123");
-                        request.setSiteId("456");
-
-                // サービス層から返却される期待レスポンスをモック作成
-                DeleteUserSiteResponse mockResponse = new DeleteUserSiteResponse();
-                        mockResponse.setStatusCode(ResponseConstants.OK);
-                        mockResponse.setMessage("ユーザーと拠点の紐付けを削除しました");
-
-                // === モックの振る舞いを定義 ===
-                // userServiceのメソッド呼び出しに対してモックレスポンスを返却
-                when(userService.removeUserSiteConnection(any(DeleteUserSite.class))).thenReturn(mockResponse);
-                // ResponseUtilのスタティックメソッドをモック化し、HTTPステータスを返却
-                mockedResponseUtil.when(() -> ResponseUtil.getHttpStatus(ResponseConstants.OK))
-                                .thenReturn(HttpStatus.OK);
-
-                // === テスト対象メソッドの実行 ===
-                ResponseEntity<DeleteUserSiteResponse> response = 
-                        participatingUserController.deleteUserSite(request);
-
-                // === 検証 ===
-                // レスポンスが正常に返却されることを確認
-                assertThat(response).isNotNull();
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-                // レスポンスボディの内容を検証
-                assertThat(response.getBody()).isNotNull();
-                assertThat(response.getBody().getStatusCode()).isEqualTo(ResponseConstants.OK);
-                assertThat(response.getBody().getMessage()).isEqualTo("ユーザーと拠点の紐付けを削除しました");
-
-                // サービスメソッドが1回呼ばれたことを確認
-                verify(userService, times(1)).removeUserSiteConnection(any(DeleteUserSite.class));
-        }
-    }
-
-    @Test
     @DisplayName("ユーザ更新が正常に行われること")
     void testUpdateUser_Success() {
         try (MockedStatic<ResponseUtil> mockedResponseUtil = mockStatic(ResponseUtil.class)) {

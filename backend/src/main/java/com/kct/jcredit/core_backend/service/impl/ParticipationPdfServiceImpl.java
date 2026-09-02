@@ -191,7 +191,7 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         // させないようにする。メールサーバー未設定の開発環境でも
         // ここでは処理が止まらない。
         try {
-            notificationService.sendParticipationApprovedNotification(participation.getUser());
+            notificationService.sendParticipationApprovedNotification(participation.getCompany());
         } catch (Exception e) {
             log.error("Notification failed, but approval & PDF generation succeeded. " +
                     "participationId={}, error={}", participationId, e.getMessage());
@@ -322,7 +322,7 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
         map.put("${f4}", decimal(equipment.getNominalMaxOutput()));
         map.put("${f5}", safe(equipment.getPcsManufacturer()));
         map.put("${f6}", safe(equipment.getPcsModel()));
-        map.put("${f7}", equipment.getPcsUnitCount() != null ? String.valueOf(equipment.getPcsUnitCount()) : "");
+        // map.put("${f7}", equipment.getPcsUnitCount() != null ? String.valueOf(equipment.getPcsUnitCount()) : "");
         map.put("${f8}", safe(equipment.getDeviceNo()));
         map.put("${f9}", decimal(equipment.getPcsStandby()));
 

@@ -28,11 +28,14 @@ public class ParticipatingProject extends BaseEntity {
     private Project project;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private ParticipatingUser user;
+    @JoinColumn(name = "company_id", nullable = false)
+    private ParticipatingCompany company;
 
     @Column(name = "is_eligible", nullable = false)
     private Boolean isEligible;
+
+    @Column(name = "status", nullable = false)
+    private String status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "equipment_id", nullable = false)

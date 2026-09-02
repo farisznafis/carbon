@@ -67,8 +67,9 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class ParticipationReviewServiceImpl implements ParticipationReviewService {
 
-    private final SiteProjectRelationRepository siteProjectRelationRepository;
     private final ParticipatingProjectRepository participatingProjectRepository;
+    private final ProjectRepository projectRepository;
+    private final SiteProjectRelationRepository siteProjectRelationRepository;
     private final EnR002EquipmentFileRepository equipmentFileRepository;
     private final EnR002ApplicationConfirmationRepository confirmationItemsRepository;
     private final EnR002SustainabilityCommitmentRepository sustainabilityRepository;
@@ -105,10 +106,7 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
     }
 
     private List<ParticipatingProject> findPendingParticipations() {
-        return siteProjectRelationRepository.findByStatus("OPEN").stream()
-                .map(this::toParticipationOrNull)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        return participatingProjectRepository.findByStatus("OPEN");
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -149,6 +147,7 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
                 .confirmationItems(toConfirmationResponse(confirmationItems))
                 .sustainabilityCommitment(toSustainabilityResponse(sustainability))
                 .review(toReviewResponse(review))
+                .pdfStatus(participation.getS3KeyPdfMembership() != null ? "READY" : "NOT_READY")
                 .build();
     }
 
@@ -170,16 +169,9 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
 
-        SiteProjectRelation relation = siteProjectRelationRepository
-                .findBySite_IdAndProject_Id(
-                        participation.getEquipment().getSite().getId(),
-                        participation.getProject().getId())
-                .orElseThrow(() -> new CustomException(
-                        ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
-
-        if (!"OPEN".equals(relation.getStatus())) {
-            throw new CustomException("REVIEW_CLOSED", "このレビューは既に完了しています。");
-        }
+        if (!"OPEN".equals(participation.getStatus())) {
+                throw new CustomException("REVIEW_CLOSED", "このレビューは既に完了しています。");
+                }
 
         ProjectParticipationConfirmation confirmation = reviewRepository
                 .findByParticipationId(participationId)
@@ -221,11 +213,10 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
 
         reviewRepository.save(confirmation);
 
-        if (!isPrimarySlotEmpty) {
-            // submission SECONDARY → kedua reviewer approve
-            relation.setStatus("APPROVED");
-            siteProjectRelationRepository.save(relation);
-            pdfService.generateAndProcess(participationId);
+       if (!isPrimarySlotEmpty) {
+        participation.setStatus("APPROVED");
+        participatingProjectRepository.save(participation);
+        pdfService.generateAndProcess(participationId);
         }
         // else: submission PRIMARY, status tetap OPEN menunggu secondary
     }
@@ -248,14 +239,7 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
 
-        SiteProjectRelation relation = siteProjectRelationRepository
-                .findBySite_IdAndProject_Id(
-                        participation.getEquipment().getSite().getId(),
-                        participation.getProject().getId())
-                .orElseThrow(() -> new CustomException(
-                        ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
-
-        if (!"OPEN".equals(relation.getStatus())) {
+        if (!"OPEN".equals(participation.getStatus())) {
             throw new CustomException("REVIEW_CLOSED", "このレビューは既に完了しています。");
         }
 
@@ -295,8 +279,9 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
 
         reviewRepository.save(confirmation);
 
-        relation.setStatus("REJECTED");
-        siteProjectRelationRepository.save(relation);
+        participation.setStatus("REJECTED");
+        participatingProjectRepository.save(participation);
+
         int attemptNumber = reviewHistoryRepository.countByParticipationId(participationId) + 1;
 
         ParticipationReviewHistory history = ParticipationReviewHistory.builder()
@@ -313,8 +298,8 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
         reviewHistoryRepository.save(history);
 
         notificationService.sendParticipationRejectionNotification(
-                participation.getUser(), request.getRejectReason());
-        }
+                participation.getCompany(), request.getRejectReason());
+    }
 
         @Override
         public List<ParticipationReviewHistoryResponse> getReviewHistory(Integer participationId) {
@@ -329,15 +314,47 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
                         .build())
                 .collect(Collectors.toList());
         }
+
+        @Override
+        @Transactional(readOnly = true)
+        public List<ParticipationReviewDetailResponse> getApprovedParticipations() {
+        return findApprovedParticipations().stream()
+                .map(participation -> getReviewDetail(participation.getId()))
+                .collect(Collectors.toList());
+        }
+
+        private List<ParticipatingProject> findApprovedParticipations() {
+                return participatingProjectRepository.findByStatus("APPROVED");
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public List<ParticipationReviewDetailResponse> getRejectedParticipations() {
+        return findRejectedParticipations().stream()
+                .map(participation -> getReviewDetail(participation.getId()))
+                .collect(Collectors.toList());
+        }
+
+        private List<ParticipatingProject> findRejectedParticipations() {
+                return participatingProjectRepository.findByStatus("REJECTED");
+        }
+        
+        @Override
+        @Transactional(readOnly = true)
+        public List<ParticipationReviewDetailResponse> getParticipationsByProject(String projectId) {
+
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+                .map(Project::getId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND, ResponseConstants.MSG_PROJECT_NOT_FOUND));
+
+        return participatingProjectRepository.findByProject_Id(projectDbId).stream()
+                .map(p -> getReviewDetail(p.getId()))
+                .collect(Collectors.toList());
+        }
     // ─────────────────────────────────────────────────────────────
     // PRIVATE — mapping
     // ─────────────────────────────────────────────────────────────
-
-    private ParticipatingProject toParticipationOrNull(SiteProjectRelation relation) {
-        return participatingProjectRepository
-                .findByEquipment_Site_IdAndProject_Id(relation.getSite().getId(), relation.getProject().getId())
-                .orElse(null);
-    }
 
     private EnR002EquipmentResponse toEquipmentResponse(EnR002Equipment equipment, List<EnR002EquipmentFile> files) {
         List<EnR002EquipmentFileResponse> fileResponses = files.stream()
@@ -356,7 +373,7 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
                 .nominalMaxOutput(equipment.getNominalMaxOutput())
                 .pcsManufacturer(equipment.getPcsManufacturer())
                 .pcsModel(equipment.getPcsModel())
-                .pcsUnitCount(equipment.getPcsUnitCount())
+                // .pcsUnitCount(equipment.getPcsUnitCount())
                 .deviceNo(equipment.getDeviceNo())
                 .pcsStandby(equipment.getPcsStandby())
                 .hasBattery(equipment.getHasBattery())

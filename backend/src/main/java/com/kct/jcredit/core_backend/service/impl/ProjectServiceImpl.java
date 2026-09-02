@@ -23,8 +23,10 @@ import com.kct.jcredit.core_backend.exception.CustomException;
 import com.kct.jcredit.core_backend.exception.ResourceNotFoundException;
 import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingProjectRepository;
+import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
+import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
 import com.kct.jcredit.core_backend.service.ProjectParticipationPdfService;
 import com.kct.jcredit.core_backend.service.ProjectService;
 import com.kct.jcredit.core_backend.util.ProjectSpecification;
@@ -50,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -59,8 +62,10 @@ public class ProjectServiceImpl implements ProjectService {
     private final SiteRepository siteRepository;
     private final ProjectRepository projectRepository;
     private final OperatorCompanyRepository operatorCompanyRepository;
+    private final ParticipatingCompanyRepository participatingCompanyRepository;
     private final ParticipatingProjectRepository participatingProjectRepository; 
     private final ProjectParticipationPdfService pdfService;  
+    private final SiteProjectRelationRepository siteProjectRelationRepository;
     
     
 
@@ -84,15 +89,22 @@ public class ProjectServiceImpl implements ProjectService {
             return response;
         }
 
-        response.setProjects(new ArrayList<>());
-        Map<Integer, String> joinedProjectIdStatusMap = site.getSiteProjectRelations().stream()
-            .collect(Collectors.toMap(
-                rel -> rel.getProject().getId(), SiteProjectRelation::getStatus
-            ));
-
+        // response.setProjects(new ArrayList<>());
+        // Map<Integer, String> joinedProjectIdStatusMap = site.getSiteProjectRelations().stream()
+        //     .collect(Collectors.toMap(
+        //         rel -> rel.getProject().getId(), SiteProjectRelation::getStatus
+        //     ));
+        
         List<Project> projects = projectRepository.findAll();
-
+        //get DB key for company
+        
+         Integer companyDbId = participatingCompanyRepository.findByCompanyId(companyId)
+                                .map(com.kct.jcredit.core_backend.entity.ParticipatingCompany::getId)
+                                .orElse(0);
+        Integer siteDbId = site.getId();
         for (Project project : projects) {
+            boolean participation = participatingProjectRepository.findByCompanyIdAndProject_Id(companyDbId, project.getId()).isPresent();
+            boolean siteJoined = siteProjectRelationRepository.existsBySite_IdAndProject_Id(siteDbId, project.getId());
             ProjectDetailResponse resp = ProjectDetailResponse.builder()
                     .id(project.getPublicId())
                     .projectName(project.getProjectName())
@@ -107,8 +119,9 @@ public class ProjectServiceImpl implements ProjectService {
                     .methodologyNumber(project.getMethodNumber())
                     .methodologyName(project.getMethodName())
                     .methodologyMainEmission(project.getMethodMainEmission())
-                    .isJoined(joinedProjectIdStatusMap.containsKey(project.getId()))
-                    .projectStatus(joinedProjectIdStatusMap.get(project.getId()))
+                    .isCompanyJoined(participation) 
+                    .hasSiteRelation(siteJoined)
+                    .projectStatus(project.getProjectStatus())
                     .build();
 
             response.getProjects().add(resp);
@@ -231,6 +244,8 @@ public class ProjectServiceImpl implements ProjectService {
         if (request.getMethodName() != null) project.setMethodName(request.getMethodName());
         if (request.getMethodMainEmission() != null) project.setMethodMainEmission(request.getMethodMainEmission());
         if (request.getMethodCombiFeasibility() != null) project.setMethodCombiFeasibility(request.getMethodCombiFeasibility());
+        if (request.getStartedAt() != null) project.setStartedAt(request.getStartedAt());
+        if (request.getUsePurpose() != null) project.setUsePurpose(request.getUsePurpose());
         if (request.getMethodDetails() != null) project.setMethodDetails(request.getMethodDetails());
 
         project.setUpdatedBy(request.getProcessedBy());
@@ -272,6 +287,8 @@ public class ProjectServiceImpl implements ProjectService {
         if (req.getMethodName() != null) detailResponse.setMethodologyName(project.getMethodName());
         if (req.getMethodMainEmission() != null) detailResponse.setMethodologyMainEmission(project.getMethodMainEmission());
         if (req.getMethodCombiFeasibility() != null) detailResponse.setMethodCombiFeasibility(project.getMethodCombiFeasibility());
+        if (req.getStartedAt() != null) detailResponse.setStartedAt(project.getStartedAt());
+        if (req.getUsePurpose() != null) detailResponse.setUsePurpose(project.getUsePurpose());
         if (req.getMethodDetails() != null) detailResponse.setMethodDetails(project.getMethodDetails());
 
         return detailResponse;
@@ -316,11 +333,13 @@ public class ProjectServiceImpl implements ProjectService {
                     .methodologyName(p.getMethodName())
                     .methodologyMainEmission(p.getMethodMainEmission())
                     .methodCombiFeasibility(p.getMethodCombiFeasibility())
+                    .usePurpose(p.getUsePurpose())
+                    .startedAt(p.getStartedAt())
                     .methodDetails(p.getMethodDetails())
                     .operatorCompanyId(
                             p.getOperatorCompany() != null ? p.getOperatorCompany().getId() : null
                     )
-                    .isJoined(false) // or set from your own logic
+                    .isCompanyJoined(null) // not needed for this
                     .build()
                 )
             .collect(Collectors.toList());
@@ -386,6 +405,8 @@ public class ProjectServiceImpl implements ProjectService {
             .methodName(projectDto.getMethodName())
             .methodMainEmission(projectDto.getMethodMainEmission())
             .methodCombiFeasibility(projectDto.getMethodCombiFeasibility())
+            .usePurpose(projectDto.getUsePurpose())
+            .startedAt(projectDto.getStartedAt())
             .methodDetails(projectDto.getMethodDetails())
             .operatorCompany(operatorCompany)
             .build();
@@ -474,6 +495,8 @@ public class ProjectServiceImpl implements ProjectService {
             .methodologyName(project.getMethodName())
             .methodologyMainEmission(project.getMethodMainEmission())
             .methodCombiFeasibility(project.getMethodCombiFeasibility())
+            .usePurpose(project.getUsePurpose())
+            .startedAt(project.getStartedAt())
             .methodDetails(project.getMethodDetails())
             .operatorCompanyId(project.getOperatorCompany().getId())
             .createdAt(project.getCreatedAt())

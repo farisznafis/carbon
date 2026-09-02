@@ -46,16 +46,6 @@ public class ParticipatingUserController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
-    @DeleteMapping("/site")
-    @PreAuthorize("hasAnyRole('master')")
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "参加企業ユーザー拠点紐付け削除", description = "指定された参加企業ユーザーと拠点の紐付けを削除します。")
-    public ResponseEntity<DeleteUserSiteResponse> deleteUserSite(DeleteUserSite request) {
-
-        DeleteUserSiteResponse response = userService.removeUserSiteConnection(request);
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
-    }
-
     @PostMapping("/invitations")
     @PreAuthorize("hasAnyRole('master')")
     @SecurityRequirement(name = "bearerAuth")

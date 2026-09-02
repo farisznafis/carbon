@@ -8,6 +8,8 @@ import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentFileResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentHistoryResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
 import com.kct.jcredit.core_backend.entity.Site;
+import com.kct.jcredit.core_backend.entity.Project;
+import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.entity.EnR002EquipmentFile;
 import com.kct.jcredit.core_backend.entity.ParticipatingProject;
 import com.kct.jcredit.core_backend.entity.EnR002Equipment;
@@ -54,11 +56,13 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
     private final EnR002EquipmentFileRepository          equipmentFileRepository;
     private final EnR002FileUploadService                fileUploadService;
     private final ParticipationProjectValidationService  validationService; 
+    private final ProjectRepository                     projectRepository;
 
     @Override
     @Transactional
     public EnR002EquipmentResponse addEquipment(String siteId,
                                                  String companyId,
+                                                 String projectId,
                                                  EnR002EquipmentRequest request) {
 
         // 1. Guard check site
@@ -67,19 +71,24 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                         ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_SITE_NOT_FOUND));
         
+        Project project = projectRepository.findByPublicId(projectId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND,
+                        "プロジェクトが見つかりません。"));
+        
         Integer siteDbId = site.getId();
 
         if (!site.getCompany().getCompanyId().equals(companyId))
             throw new CustomException(ResponseConstants.FORBIDDEN,
                     ResponseConstants.MSG_UNAUTHORIZED);
 
-        // 2. Guard check 
-        boolean hasJoinedAnyProject = siteProjectRelationRepository
-                .existsBySite_Id(siteDbId);
-        if (!hasJoinedAnyProject)
+        // 2. Guard check site-project relation
+        Optional<SiteProjectRelation> relation = siteProjectRelationRepository.findBySite_IdAndProject_Id(siteDbId, project.getId());
+        if (relation.isEmpty()) {
             throw new CustomException(
                     "SITE_NOT_JOINED",
                     "このサイトはまだプロジェクトに参加していません。先に参加登録を行ってください。");
+        }
 
         // 3. field equipment
         validationService.validateEquipment(request);
@@ -91,7 +100,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
         equipment.setNominalMaxOutput(request.getNominalMaxOutput());
         equipment.setPcsManufacturer(request.getPcsManufacturer());
         equipment.setPcsModel(request.getPcsModel());
-        equipment.setPcsUnitCount(request.getPcsUnitCount());
+        // equipment.setPcsUnitCount(request.getPcsUnitCount());
         equipment.setDeviceNo(request.getDeviceNo());
         equipment.setPcsStandby(request.getPcsStandby());
         equipment.setHasBattery(request.getHasBattery());
@@ -209,7 +218,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 .nominalMaxOutput(e.getNominalMaxOutput())
                 .pcsManufacturer(e.getPcsManufacturer())
                 .pcsModel(e.getPcsModel())
-                .pcsUnitCount(e.getPcsUnitCount())
+                // .pcsUnitCount(e.getPcsUnitCount())
                 .deviceNo(e.getDeviceNo())
                 .pcsStandby(e.getPcsStandby())
                 .hasBattery(e.getHasBattery())
@@ -297,7 +306,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
                 .nominalMaxOutput(inherit(request.getNominalMaxOutput(), oldEquipment.getNominalMaxOutput()))
                 .pcsManufacturer(inherit(request.getPcsManufacturer(), oldEquipment.getPcsManufacturer()))
                 .pcsModel(inherit(request.getPcsModel(), oldEquipment.getPcsModel()))
-                .pcsUnitCount(inherit(request.getPcsUnitCount(), oldEquipment.getPcsUnitCount()))
+                // .pcsUnitCount(inherit(request.getPcsUnitCount(), oldEquipment.getPcsUnitCount()))
                 .deviceNo(inherit(request.getDeviceNo(), oldEquipment.getDeviceNo()))
                 .pcsStandby(inherit(request.getPcsStandby(), oldEquipment.getPcsStandby()))
                 .hasBattery(inherit(request.getHasBattery(), oldEquipment.getHasBattery()))
@@ -340,7 +349,7 @@ public class EnR002EquipmentServiceImpl implements EnR002EquipmentService {
         equipmentFileRepository.saveAll(inheritedFiles);
 
         // ── 6. save new files ───────────────────────────────────────
-        //     s3Key yang disimpan sudah key final; object S3 dipindah setelah commit.
+        //    save new files to DB with permanent key, but move S3 object after commit
         List<EnR002EquipmentFile> newFilesToMove = new ArrayList<>();
         Map<String, String> tempKeyByFileId = new java.util.HashMap<>();
         if (request.getFiles() != null) {

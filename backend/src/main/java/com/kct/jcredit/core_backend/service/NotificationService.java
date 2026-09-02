@@ -53,8 +53,8 @@ public interface NotificationService {
             String subject,
             String body);
 
-    void sendParticipationRejectionNotification(ParticipatingUser user, String rejectionReason);
-    void sendParticipationApprovedNotification(ParticipatingUser user);
+    void sendParticipationRejectionNotification(ParticipatingCompany company, String rejectionReason);
+    void sendParticipationApprovedNotification(ParticipatingCompany company);
 
     BaseResponse createInquiry(InquiryRequest request);
 }
