@@ -39,7 +39,22 @@ public class SecurityActionLinkService {
     @Transactional
     public IssuedActionLink issue(SecurityActionPurpose purpose, SecurityActionSubjectType subjectType,
                                   Integer subjectId, String createdBy) {
-        revokeActive(subjectType, subjectId, purpose);
+        return issue(purpose, subjectType, subjectId, createdBy, null, null);
+    }
+
+    /**
+     * Issues a link carrying invitation details.
+     *
+     * <p>When {@code inviteEmail} is set the revocation that precedes the new link is narrowed to
+     * links for that same address. A subject can therefore hold several live invitations at once,
+     * which is what lets one company invite more than one person; re-inviting an address still
+     * supersedes its earlier invitation.
+     */
+    @Transactional
+    public IssuedActionLink issue(SecurityActionPurpose purpose, SecurityActionSubjectType subjectType,
+                                  Integer subjectId, String createdBy,
+                                  String inviteEmail, Integer inviteSiteId) {
+        revokeActive(subjectType, subjectId, purpose, inviteEmail);
         repository.flush();
         String rawToken = secretService.newActionToken();
         SecurityActionLink link = SecurityActionLink.builder()
@@ -54,6 +69,8 @@ public class SecurityActionLinkService {
                 .expiresAt(LocalDateTime.now().plus(linkTtl(purpose)))
                 .createdAt(LocalDateTime.now())
                 .createdBy(createdBy == null || createdBy.isBlank() ? "system" : createdBy)
+                .inviteEmail(inviteEmail)
+                .inviteSiteId(inviteSiteId)
                 .build();
         repository.save(link);
         return new IssuedActionLink(link.getId(), rawToken, link.getExpiresAt(),
@@ -130,14 +147,18 @@ public class SecurityActionLinkService {
     }
 
     private void revokeActive(SecurityActionSubjectType subjectType, Integer subjectId,
-                              SecurityActionPurpose purpose) {
+                              SecurityActionPurpose purpose, String inviteEmail) {
         LocalDateTime now = LocalDateTime.now();
-        repository.findBySubjectTypeAndSubjectIdAndPurposeAndStatusIn(subjectType, subjectId, purpose, ACTIVE)
-                .forEach(link -> {
-                    link.setStatus(SecurityActionStatus.REVOKED);
-                    link.setRevokedAt(now);
-                    repository.save(link);
-                });
+        List<SecurityActionLink> active = inviteEmail == null
+                ? repository.findBySubjectTypeAndSubjectIdAndPurposeAndStatusIn(
+                        subjectType, subjectId, purpose, ACTIVE)
+                : repository.findBySubjectTypeAndSubjectIdAndPurposeAndStatusInAndInviteEmailIgnoreCase(
+                        subjectType, subjectId, purpose, ACTIVE, inviteEmail);
+        active.forEach(link -> {
+            link.setStatus(SecurityActionStatus.REVOKED);
+            link.setRevokedAt(now);
+            repository.save(link);
+        });
     }
 
     private Duration linkTtl(SecurityActionPurpose purpose) {
@@ -145,6 +166,7 @@ public class SecurityActionLinkService {
             case MASTER_ACCOUNT_SETUP -> properties.getMasterSetupLinkTtl();
             case REJECTED_SIGNUP_REVISION -> properties.getRevisionLinkTtl();
             case PASSWORD_RESET -> properties.getPasswordResetLinkTtl();
+            case USER_INVITATION -> properties.getUserInvitationLinkTtl();
         };
     }
 
@@ -153,6 +175,7 @@ public class SecurityActionLinkService {
             case MASTER_ACCOUNT_SETUP -> properties.getMasterSetupSessionTtl();
             case REJECTED_SIGNUP_REVISION -> properties.getRevisionSessionTtl();
             case PASSWORD_RESET -> properties.getPasswordResetSessionTtl();
+            case USER_INVITATION -> properties.getUserInvitationSessionTtl();
         };
     }
 
@@ -161,6 +184,7 @@ public class SecurityActionLinkService {
             case MASTER_ACCOUNT_SETUP -> "/account/setup";
             case REJECTED_SIGNUP_REVISION -> "/signup/revision";
             case PASSWORD_RESET -> "/reset-password";
+            case USER_INVITATION -> "/user/invitation";
         };
         return properties.getFrontendBaseUrl().replaceAll("/+$", "") + path + "#token=" + rawToken;
     }
