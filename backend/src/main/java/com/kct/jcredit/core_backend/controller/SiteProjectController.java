@@ -193,19 +193,20 @@ public class SiteProjectController {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // PDF GENERATION (debug/manual trigger endpoints)
+    // PDF SERVICES
     // ─────────────────────────────────────────────────────────────
 
-    @GetMapping("/participation/{participationId}/pdf")
+    @GetMapping("/{projectId}/membership-pdf")
     @PreAuthorize("hasAnyRole('admin','master','user') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_VIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<ProjectPdfDownloadResponse> downloadPdf( 
+    @Operation(summary = "入会届PDFダウンロード（自社用）",
+            description = "プロジェクトIDのみで、自社の入会届PDFダウンロードURLを取得します。")
+    public ResponseEntity<ProjectPdfDownloadResponse> getMembershipPdfByCompany(
             Authentication authentication,
-            @PathVariable Integer participationId) {
+            @PathVariable String projectId) {
 
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
-        ProjectPdfDownloadResponse response = pdfService.getPdfDownloadUrl(participationId, companyId); // ← ganti tipe
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(participationService.getMembershipPdfByCompany(projectId, companyId));
     }
 
     @PostMapping("/generate/{participationId}")
