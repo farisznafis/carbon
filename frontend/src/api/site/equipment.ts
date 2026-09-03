@@ -75,8 +75,6 @@ function normalizeSiteProjectEquipment(
   return {
     ...equipment,
     equipmentId: equipment.equipmentId ?? equipment.id ?? null,
-    powerCondUnitCount:
-      equipment.powerCondUnitCount ?? equipment.pcsUnitCount ?? null,
     powerCondStandby:
       equipment.powerCondStandby ?? equipment.pcsStandby ?? null,
     files: rawFiles.map(normalizeSiteProjectEquipmentFile),

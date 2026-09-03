@@ -386,25 +386,6 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
               </FormItem>
             )}
           />
-          {/* <FormField
-            control={form.control}
-            name="powerCondUnitCount"
-            render={({ field }) => (
-              <FormItem>
-                <RequiredLabel>導入台数 (台)</RequiredLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="1"
-                    placeholder="数値を入力"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          /> */}
           <FormField
             control={form.control}
             name="deviceNo"

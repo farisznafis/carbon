@@ -99,7 +99,6 @@ export function mapSolarFormToEquipmentValidationItem(
     nominalMaxOutput: validationNumber(formData.nominalMaxOutput),
     pcsManufacturer: validationString(formData.pcsManufacturer),
     pcsModel: validationString(formData.pcsModel),
-    pcsUnitCount: validationNumber(formData.powerCondUnitCount),
     deviceNo: validationString(formData.deviceNo),
     pcsStandby: validationNumber(formData.powerCondStandby),
     hasBattery,
@@ -123,15 +122,19 @@ export function mapSolarFormToEquipmentValidationItem(
   };
 }
 
-/** Maps confirmed solar form values to the create-equipment contract without the retired PCS unit count. */
+/** Maps confirmed solar form values to the create-equipment contract. */
 export function mapSolarFormToEquipmentCreateRequest(
   formData: SolarPowerFormData,
   tempId: string,
   siteId: string,
   files: SiteProjectEquipmentValidationFile[],
 ): SiteProjectEquipmentCreateRequest {
-  const { pcsUnitCount: _pcsUnitCount, ...payload } =
-    mapSolarFormToEquipmentValidationItem(formData, tempId, siteId, files);
+  const payload = mapSolarFormToEquipmentValidationItem(
+    formData,
+    tempId,
+    siteId,
+    files,
+  );
 
   return {
     ...payload,

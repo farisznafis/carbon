@@ -235,7 +235,6 @@ export default function EquipmentConfirmationPage() {
               <FormGrid>
                 <ConfirmationItem label="メーカー" value={displayValue(data.pcsManufacturer)} />
                 <ConfirmationItem label="型式" value={displayValue(data.pcsModel)} />
-                <ConfirmationItem label="導入台数" value={displayValue(data.powerCondUnitCount)} />
                 <ConfirmationItem label="機器固有番号" value={displayValue(data.deviceNo)} />
                 <ConfirmationItem label="夜間待機電力 (W)" value={displayValue(data.powerCondStandby)} />
                 <ConfirmationItem label="確認資料" value={fileName(data.pcsFile)} />

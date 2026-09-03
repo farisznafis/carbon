@@ -213,7 +213,6 @@ export type SiteProjectEquipment = {
   nominalMaxOutput?: number | null;
   pcsManufacturer?: string | null;
   pcsModel?: string | null;
-  powerCondUnitCount?: number | null;
   deviceNo?: string | null;
   powerCondStandby?: number | null;
   hasBattery?: boolean | null;
@@ -262,12 +261,10 @@ export type SiteProjectEquipmentApiFile = SiteProjectEquipmentFile & {
 
 export type SiteProjectEquipmentApiItem = Omit<
   SiteProjectEquipment,
-  'equipmentId' | 'powerCondUnitCount' | 'powerCondStandby' | 'files'
+  'equipmentId' | 'powerCondStandby' | 'files'
 > & {
   id?: number | null;
   equipmentId?: number | null;
-  pcsUnitCount?: number | null;
-  powerCondUnitCount?: number | null;
   pcsStandby?: number | null;
   powerCondStandby?: number | null;
   files?: SiteProjectEquipmentApiFile[] | null;
@@ -328,7 +325,6 @@ export type SiteProjectEquipmentChangeRequest = {
   nominalMaxOutput: number | null;
   pcsManufacturer: string;
   pcsModel: string;
-  pcsUnitCount: number | null;
   deviceNo: string;
   pcsStandby: number | null;
   hasBattery: boolean | null;
@@ -366,7 +362,6 @@ export type SiteProjectEquipmentValidationItem = {
   nominalMaxOutput: number | null;
   pcsManufacturer: string | null;
   pcsModel: string | null;
-  pcsUnitCount: number | null;
   deviceNo: string | null;
   pcsStandby: number | null;
   hasBattery: boolean | null;

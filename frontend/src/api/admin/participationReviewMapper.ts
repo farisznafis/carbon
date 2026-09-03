@@ -63,7 +63,6 @@ function mapEquipment(value: unknown): ParticipationReviewEquipment {
     nominalMaxOutput: asNumber(equipment.nominalMaxOutput),
     pcsManufacturer: asText(equipment.pcsManufacturer),
     pcsModel: asText(equipment.pcsModel),
-    pcsUnitCount: asNumber(equipment.pcsUnitCount),
     deviceNo: asText(equipment.deviceNo),
     pcsStandby: asNumber(equipment.pcsStandby),
     hasBattery: asBoolean(equipment.hasBattery),
