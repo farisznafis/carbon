@@ -13,6 +13,7 @@ import lombok.EqualsAndHashCode;
 public class UserInvitationPrefillResponse extends BaseResponse {
     private String email;
     private String companyName;
-    private Integer siteId;
+    // Public id, matching what clients send when the invitation is created.
+    private String siteId;
     private String siteName;
 }

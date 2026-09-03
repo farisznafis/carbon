@@ -14,6 +14,6 @@ public class UserInvitationRequest {
     @Size(max = 254, message = "メールアドレスは254文字以内で入力してください。")
     private String email;
 
-    // サイトID（任意）
-    private Integer siteId;
+    // 拠点の公開ID（任意）。数値IDでも受け付けます。
+    private String siteId;
 }

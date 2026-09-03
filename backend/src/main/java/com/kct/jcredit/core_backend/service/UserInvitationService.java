@@ -60,15 +60,15 @@ public class UserInvitationService {
     // ---------------------------------------------------------------- master side
 
     @Transactional
-    public BaseResponse invite(String companyId, String actor, String email, Integer siteId) {
+    public BaseResponse invite(String companyId, String actor, String email, String sitePublicId) {
         requireFeature();
         String normalizedEmail = normalizeEmail(email);
         rateLimitService.require("user-invitation", normalizedEmail, 3, Duration.ofHours(1));
 
         ParticipatingCompany company = requireCompany(companyId);
-        Site site = resolveSite(company, siteId);
+        Site site = resolveSiteByPublicId(company, sitePublicId);
         requireEmailAvailable(normalizedEmail);
-        requireCapacity(company, siteId);
+        requireCapacity(company, site == null ? null : site.getId());
 
         issueAndSend(company, site, normalizedEmail, actor);
         return BaseResponse.success(ResponseConstants.MSG_USER_INVITATION_SENT);
@@ -94,7 +94,7 @@ public class UserInvitationService {
         response.setTimestamp(LocalDateTime.now());
         response.setEmail(link.getInviteEmail());
         response.setCompanyName(company.getNameJa());
-        response.setSiteId(site == null ? null : site.getId());
+        response.setSiteId(site == null ? null : site.getPublicId());
         response.setSiteName(site == null ? null : site.getSiteName());
         return response;
     }
@@ -113,7 +113,7 @@ public class UserInvitationService {
         }
 
         String normalizedEmail = normalizeEmail(link.getInviteEmail());
-        Site site = resolveSite(company, link.getInviteSiteId());
+        Site site = resolveSiteById(company, link.getInviteSiteId());
 
         // Re-checked here, not only at invite time: several invitations can be outstanding at once,
         // so availability and capacity are only truly known at the moment the account is created.
@@ -176,13 +176,32 @@ public class UserInvitationService {
                         ResponseConstants.MSG_COMPANY_NOT_FOUND));
     }
 
-    private Site resolveSite(ParticipatingCompany company, Integer siteId) {
+    /**
+     * Resolves the site a master picked. Clients identify sites by their public id, so this accepts
+     * that as well as the numeric id, via the same fallback the rest of the API uses.
+     */
+    private Site resolveSiteByPublicId(ParticipatingCompany company, String sitePublicId) {
+        if (sitePublicId == null || sitePublicId.isBlank()) {
+            return null;
+        }
+        Site site = siteRepository.findByPublicIdWithFallback(sitePublicId.trim())
+                .orElseThrow(() -> new CustomException(ResponseConstants.NOT_FOUND,
+                        ResponseConstants.MSG_SITE_NOT_FOUND));
+        return requireOwnedByCompany(company, site);
+    }
+
+    /** Resolves the site recorded on the invitation, which is always stored as the numeric id. */
+    private Site resolveSiteById(ParticipatingCompany company, Integer siteId) {
         if (siteId == null) {
             return null;
         }
         Site site = siteRepository.findById(siteId)
                 .orElseThrow(() -> new CustomException(ResponseConstants.NOT_FOUND,
                         ResponseConstants.MSG_SITE_NOT_FOUND));
+        return requireOwnedByCompany(company, site);
+    }
+
+    private Site requireOwnedByCompany(ParticipatingCompany company, Site site) {
         if (!company.getCompanyId().equals(site.getCompany().getCompanyId())) {
             throw new CustomException(ResponseConstants.FORBIDDEN, ResponseConstants.MSG_FORBIDDEN);
         }
