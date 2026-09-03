@@ -40,6 +40,8 @@ class UserInvitationServiceTest {
     private static final String COMPANY_ID = "1234567890";
     private static final Integer COMPANY_PK = 7;
     private static final Integer SITE_ID = 42;
+    // Real shape: SITE + 16 random base62 chars, so it can never be parsed back into a numeric id.
+    private static final String SITE_PUBLIC_ID = "SITEa8Kd93jFnQ2xLp0w";
 
     private final List<SecurityActionLink> links = new ArrayList<>();
 
@@ -64,6 +66,7 @@ class UserInvitationServiceTest {
 
         site = Site.builder().siteName("東京工場").company(company).build();
         site.setId(SITE_ID);
+        site.setPublicId(SITE_PUBLIC_ID);
 
         actionLinkRepository = mock(SecurityActionLinkRepository.class);
         userRepository = mock(ParticipatingUserRepository.class);
@@ -79,6 +82,7 @@ class UserInvitationServiceTest {
         when(companyRepository.findById(COMPANY_PK)).thenReturn(Optional.of(company));
         when(companyRepository.findByIdForUpdate(COMPANY_PK)).thenReturn(Optional.of(company));
         when(siteRepository.findById(SITE_ID)).thenReturn(Optional.of(site));
+        when(siteRepository.findByPublicIdWithFallback(SITE_PUBLIC_ID)).thenReturn(Optional.of(site));
         when(userRepository.existsByEmailIgnoreCase(anyString())).thenReturn(false);
         when(userRepository.countByCompany_Id(anyInt())).thenReturn(0L);
         when(userRepository.countByCompany_IdAndSite_Id(anyInt(), anyInt())).thenReturn(0L);
@@ -115,8 +119,8 @@ class UserInvitationServiceTest {
 
     @Test
     void invitingTwoDifferentAddressesLeavesBothInvitationsLive() {
-        service.invite(COMPANY_ID, "master1", "first@example.test", SITE_ID);
-        service.invite(COMPANY_ID, "master1", "second@example.test", SITE_ID);
+        service.invite(COMPANY_ID, "master1", "first@example.test", SITE_PUBLIC_ID);
+        service.invite(COMPANY_ID, "master1", "second@example.test", SITE_PUBLIC_ID);
 
         assertThat(links).hasSize(2);
         assertThat(links).allMatch(link -> link.getStatus() == SecurityActionStatus.PENDING);
@@ -124,8 +128,8 @@ class UserInvitationServiceTest {
 
     @Test
     void invitingTheSameAddressAgainSupersedesTheEarlierInvitation() {
-        service.invite(COMPANY_ID, "master1", "again@example.test", SITE_ID);
-        service.invite(COMPANY_ID, "master1", "again@example.test", SITE_ID);
+        service.invite(COMPANY_ID, "master1", "again@example.test", SITE_PUBLIC_ID);
+        service.invite(COMPANY_ID, "master1", "again@example.test", SITE_PUBLIC_ID);
 
         assertThat(links).hasSize(2);
         assertThat(links.get(0).getStatus()).isEqualTo(SecurityActionStatus.REVOKED);
@@ -136,7 +140,7 @@ class UserInvitationServiceTest {
     void invitingAnAddressThatAlreadyHasAnAccountIsRejected() {
         when(userRepository.existsByEmailIgnoreCase("taken@example.test")).thenReturn(true);
 
-        assertThatThrownBy(() -> service.invite(COMPANY_ID, "master1", "taken@example.test", SITE_ID))
+        assertThatThrownBy(() -> service.invite(COMPANY_ID, "master1", "taken@example.test", SITE_PUBLIC_ID))
                 .isInstanceOf(CustomException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ResponseConstants.USED_EMAIL);
     }
@@ -145,14 +149,14 @@ class UserInvitationServiceTest {
     void invitingIntoAFullSiteIsRejected() {
         when(userRepository.countByCompany_IdAndSite_Id(COMPANY_PK, SITE_ID)).thenReturn(5L);
 
-        assertThatThrownBy(() -> service.invite(COMPANY_ID, "master1", "late@example.test", SITE_ID))
+        assertThatThrownBy(() -> service.invite(COMPANY_ID, "master1", "late@example.test", SITE_PUBLIC_ID))
                 .isInstanceOf(CustomException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ResponseConstants.LIMIT_EXCEEDED);
     }
 
     @Test
     void completingCreatesTheUserWithTheInvitedAddressNotOneTheInviteeChose() {
-        service.invite(COMPANY_ID, "master1", "Invitee@Example.test", SITE_ID);
+        service.invite(COMPANY_ID, "master1", "Invitee@Example.test", SITE_PUBLIC_ID);
         SecurityActionLink link = links.get(0);
         stubSession(link);
 
@@ -170,7 +174,7 @@ class UserInvitationServiceTest {
 
     @Test
     void completingIsRejectedWhenTheAddressGotTakenInTheMeantime() {
-        service.invite(COMPANY_ID, "master1", "racer@example.test", SITE_ID);
+        service.invite(COMPANY_ID, "master1", "racer@example.test", SITE_PUBLIC_ID);
         stubSession(links.get(0));
         when(userRepository.existsByEmailIgnoreCase("racer@example.test")).thenReturn(true);
 
@@ -181,7 +185,7 @@ class UserInvitationServiceTest {
 
     @Test
     void completingIsRejectedWhenTheSiteFilledUpAfterTheInvitationWasSent() {
-        service.invite(COMPANY_ID, "master1", "slow@example.test", SITE_ID);
+        service.invite(COMPANY_ID, "master1", "slow@example.test", SITE_PUBLIC_ID);
         stubSession(links.get(0));
         when(userRepository.countByCompany_IdAndSite_Id(COMPANY_PK, SITE_ID)).thenReturn(5L);
 
