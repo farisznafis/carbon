@@ -21,6 +21,7 @@ import {
 } from '@/components/forms/form-layout';
 import { RequiredLabel } from '@/components/forms/shared';
 import { PasswordInput } from '@/components/inputs';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   CardContent,
@@ -37,12 +38,18 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
 
 const INVITATION_PURPOSE = 'USER_INVITATION';
 const INVALID_INVITATION_STATUS = 'INVALID_OR_EXPIRED_TOKEN';
+const INVITATION_READONLY_DESCRIPTION_ID = 'invitation-readonly-note';
+
+type InvitationReadonlyItemProps = {
+  label: string;
+  value: string;
+  breakAll?: boolean;
+};
 
 type InvitationPageState =
   | 'loading'
@@ -61,6 +68,28 @@ const emptyInvitationForm: CompleteUserInvitationPayload = {
   userPosition: '',
   password: '',
 };
+
+/** Renders one label-value pair inside the immutable invitation summary. */
+function InvitationReadonlyItem({
+  label,
+  value,
+  breakAll = false,
+}: Readonly<InvitationReadonlyItemProps>) {
+  return (
+    <div className="grid gap-1 py-4 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-6">
+      <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
+      <dd
+        className={
+          breakAll
+            ? 'break-all text-sm font-semibold text-foreground'
+            : 'break-words text-sm font-semibold text-foreground'
+        }
+      >
+        {value}
+      </dd>
+    </div>
+  );
+}
 
 /** Reads the one-time invitation token exclusively from the URL fragment. */
 function readInvitationToken(): string | null {
@@ -363,7 +392,7 @@ export default function UserInvitationPage() {
         <FormPageHeader
           icon={<UserRound className="h-6 w-6" />}
           title="アカウント登録"
-          description="招待されたアカウント情報を入力してください。"
+          description="招待情報を確認し、個人情報とログイン情報を入力してください。"
         />
 
         <Form {...form}>
@@ -376,39 +405,36 @@ export default function UserInvitationPage() {
                 <FormSection
                   icon={<Building2 className="h-5 w-5" />}
                   title="招待情報"
+                  meta={<Badge variant="secondary">変更不可</Badge>}
+                  description={
+                    <div id={INVITATION_READONLY_DESCRIPTION_ID}>
+                      <span className="block">
+                        招待リンクから自動入力されています。内容は変更できません。
+                      </span>
+                      <span className="block">
+                        内容に誤りがある場合は、招待元のマスターにお問い合わせください。
+                      </span>
+                    </div>
+                  }
                 >
-                  <FormGrid>
-                    <div className="space-y-2">
-                      <Label htmlFor="invitation-readonly-email" className="text-small">
-                        メールアドレス
-                      </Label>
-                      <Input
-                        id="invitation-readonly-email"
-                        value={invitationContext.email}
-                        readOnly
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="invitation-company-name" className="text-small">
-                        企業名
-                      </Label>
-                      <Input
-                        id="invitation-company-name"
-                        value={invitationContext.companyName}
-                        readOnly
-                      />
-                    </div>
-                  </FormGrid>
-                  <div className="space-y-2">
-                    <Label htmlFor="invitation-site-name" className="text-small">
-                      拠点名
-                    </Label>
-                    <Input
-                      id="invitation-site-name"
-                      value={invitationContext.siteName || '指定なし'}
-                      readOnly
+                  <dl
+                    aria-describedby={INVITATION_READONLY_DESCRIPTION_ID}
+                    className="divide-y divide-border rounded-lg border border-border bg-muted/30 px-4"
+                  >
+                    <InvitationReadonlyItem
+                      label="メールアドレス"
+                      value={invitationContext.email}
+                      breakAll
                     />
-                  </div>
+                    {/* <InvitationReadonlyItem
+                      label="企業名"
+                      value={invitationContext.companyName}
+                    /> */}
+                    <InvitationReadonlyItem
+                      label="拠点名"
+                      value={invitationContext.siteName || '指定なし'}
+                    />
+                  </dl>
                 </FormSection>
 
                 <FormSection
@@ -423,7 +449,7 @@ export default function UserInvitationPage() {
                         <FormItem>
                           <RequiredLabel>姓</RequiredLabel>
                           <FormControl>
-                            <Input aria-label="姓" placeholder="山田" {...field} />
+                            <Input aria-label="姓" placeholder="例）山田" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -436,7 +462,7 @@ export default function UserInvitationPage() {
                         <FormItem>
                           <RequiredLabel>名</RequiredLabel>
                           <FormControl>
-                            <Input aria-label="名" placeholder="太郎" {...field} />
+                            <Input aria-label="名" placeholder="例）太郎" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -451,7 +477,7 @@ export default function UserInvitationPage() {
                           <FormControl>
                             <Input
                               aria-label="姓（カナ）"
-                              placeholder="ヤマダ"
+                              placeholder="例）ヤマダ"
                               {...field}
                             />
                           </FormControl>
@@ -471,7 +497,7 @@ export default function UserInvitationPage() {
                           <FormControl>
                             <Input
                               aria-label="名（カナ）"
-                              placeholder="タロウ"
+                              placeholder="例）タロウ"
                               {...field}
                             />
                           </FormControl>
@@ -494,7 +520,7 @@ export default function UserInvitationPage() {
                           <Input
                             aria-label="電話番号（ハイフン無し）"
                             inputMode="numeric"
-                            placeholder="09012345678"
+                            placeholder="例）09012345678"
                             {...field}
                           />
                         </FormControl>
@@ -509,7 +535,7 @@ export default function UserInvitationPage() {
                       <FormItem>
                         <RequiredLabel>役職</RequiredLabel>
                         <FormControl>
-                          <Input aria-label="役職" placeholder="部長" {...field} />
+                          <Input aria-label="役職" placeholder="例）部長" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -530,7 +556,7 @@ export default function UserInvitationPage() {
                         <FormControl>
                           <Input
                             aria-label="ユーザーネーム"
-                            placeholder="yamada_taro"
+                            placeholder="例）yamada_taro"
                             {...field}
                           />
                         </FormControl>

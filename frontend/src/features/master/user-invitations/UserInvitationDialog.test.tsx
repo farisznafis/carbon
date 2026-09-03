@@ -90,6 +90,7 @@ describe('UserInvitationDialog', () => {
       'invitee@example.com',
     );
     await user.click(screen.getByRole('combobox', { name: '拠点（任意）' }));
+    expect(screen.getByTestId('invitation-site-separator')).toBeVisible();
     await user.click(screen.getByRole('option', { name: '東京拠点' }));
     await user.click(
       screen.getByRole('button', { name: '招待メールを送信' }),

@@ -78,6 +78,7 @@ describe('UserInvitationPage', () => {
   });
 
   it('exchanges and clears the fragment once while showing readonly context', async () => {
+    const user = userEvent.setup();
     renderInvitationPage({ strict: true });
 
     expect(
@@ -89,11 +90,40 @@ describe('UserInvitationPage', () => {
       'invitation-action-session',
     );
     expect(window.location.hash).toBe('');
-    expect(screen.getByDisplayValue('invitee@example.com')).toHaveAttribute(
-      'readonly',
+    expect(
+      screen.getByText(
+        '招待情報を確認し、個人情報とログイン情報を入力してください。',
+      ),
+    ).toBeVisible();
+    expect(screen.getByText('変更不可')).toBeVisible();
+    expect(
+      screen.getByText(
+        '招待リンクから自動入力されています。内容は変更できません。',
+      ),
+    ).toBeVisible();
+    expect(
+      screen.getByText(
+        '内容に誤りがある場合は、招待元の管理者にお問い合わせください。',
+      ),
+    ).toBeVisible();
+
+    const invitationSummary = screen.getByText('メールアドレス').closest('dl');
+    expect(invitationSummary).toBeInTheDocument();
+    expect(invitationSummary).toHaveAttribute(
+      'aria-describedby',
+      'invitation-readonly-note',
     );
-    expect(screen.getByDisplayValue('GX株式会社')).toHaveAttribute('readonly');
-    expect(screen.getByDisplayValue('東京拠点')).toHaveAttribute('readonly');
+    expect(screen.getByText('invitee@example.com').tagName).toBe('DD');
+    expect(screen.getByText('GX株式会社').tagName).toBe('DD');
+    expect(screen.getByText('東京拠点').tagName).toBe('DD');
+    expect(
+      screen.queryByDisplayValue('invitee@example.com'),
+    ).not.toBeInTheDocument();
+
+    const lastNameInput = screen.getByLabelText('姓');
+    expect(lastNameInput).not.toHaveAttribute('readonly');
+    await user.type(lastNameInput, '山田');
+    expect(lastNameInput).toHaveValue('山田');
   });
 
   it('submits only the account fields and redirects to login', async () => {

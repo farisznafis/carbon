@@ -17,6 +17,7 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -224,6 +225,10 @@ export function UserInvitationDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={NO_SITE_VALUE}>拠点を指定しない</SelectItem>
+                <SelectSeparator
+                  data-testid="invitation-site-separator"
+                  aria-hidden="true"
+                />
                 {(sitesQuery.data?.sites ?? []).map((site) => (
                   <SelectItem key={site.siteId} value={site.siteId}>
                     {site.siteName}
