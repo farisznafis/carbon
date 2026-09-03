@@ -1,0 +1,156 @@
+//モニタリングデータの削除。運営者専用（admin または権限を持つ operator）。
+//
+//【重要】これは物理削除（削除）であり、取消ではない。実行するとデータは復元できない。
+//モニタリングの取消申請とは別機能。取消は /api/monitoring/cancel-requests を参照。
+//
+//削除対象は「認証対象期間終了から2年が経過した」モニタリングデータ。
+//保持年数は app.monitoring.retention.retention-years で設定（現在: 2年）。
+//
+//必要権限:
+//  抽出・履歴 : admin、または MONITORING_READ を持つ operator
+//  削除実行   : admin、または MONITORING_DELETE を持つ operator
+
+
+■ 削除対象データ抽出（プロジェクト・拠点単位のサマリ）
+
+GET /api/admin/monitoring-data/deletion-candidates
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "totalProjects": 2,
+  "totalRecords": 1250,
+  "candidates": [
+    {
+      "projectId": 1,
+      "projectPublicId": "PRJ00000001",
+      "projectName": "ABC太陽光発電プロジェクト",
+      "siteId": 3,
+      "sitePublicId": "SITEa8Kd93jFnQ2xLp0w",
+      "statusFinalizedAt": "2024-08-31T00:00:00",   //認証対象期間の終了日時
+      "candidateRecordCount": 830,
+      "oldestDateRecorded": "2023-04-01",
+      "newestDateRecorded": "2024-08-31"
+    }
+  ]
+}
+
+//該当データがない場合も HTTP 200。totalProjects / totalRecords は 0、candidates は空配列。
+
+
+■ 削除対象データ明細取得（レコード単位）
+
+GET /api/admin/monitoring-data/deletion-candidates/{projectPublicId}?sitePublicId=SITEa8Kd93jFnQ2xLp0w
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+//sitePublicId はクエリパラメータ。必須。
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "projectId": 1,
+  "projectPublicId": "PRJ00000001",
+  "siteId": 3,
+  "sitePublicId": "SITEa8Kd93jFnQ2xLp0w",
+  "totalRecords": 830,
+  "records": [
+    {
+      "monitoringRecordId": "MON-20230401-0001",
+      "recordTimeUpdated": "2023-04-01T09:15:00",
+      "dateRecorded": "2023-04-01"
+    }
+  ]
+}
+
+
+■ 削除実行
+
+POST /api/admin/monitoring-data/deletion
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body (JSON): //複数プロジェクトをまとめて削除できる
+{
+  "projectPublicIds": ["PRJ00000001", "PRJ00000002"]
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "deletedCount": 1250,
+  "failedCount": 0,
+  "executedAt": "2026-09-02T16:47:37",
+  "executedBy": "operator1"
+}
+
+//部分的に失敗しても HTTP 200 を返す。failedCount が 0 より大きい場合は
+//一部のレコードが削除されていないため、削除履歴で failureReason を確認すること。
+//削除したレコードは1件ずつ削除履歴に記録される。
+
+
+■ 削除履歴取得
+
+GET /api/admin/monitoring-data/deletion-history?projectId=1&page=1&limit=20
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+//projectId : 任意。指定しない場合は全プロジェクトが対象
+//page      : 任意。既定値 1、1以上
+//limit     : 任意。既定値 20、1〜100
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "history": [
+    {
+      "id": 501,
+      "monitoringRecordId": "MON-20230401-0001",
+      "recordTimeUpdated": "2023-04-01T09:15:00",
+      "dateRecorded": "2023-04-01",
+      "projectId": 1,
+      "siteId": 3,
+      "result": "SUCCESS",              //SUCCESS または FAILURE
+      "failureReason": null,            //FAILURE のときのみ内容が入る
+      "deletedAt": "2026-09-02T16:47:37",
+      "deletedBy": "operator1"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "totalItems": 1250,
+    "totalPages": 63,
+    "hasMore": true
+  }
+}
+
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスすることができません。"
+                                        //MONITORING_DELETE 権限がない operator が削除を実行した場合など
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当するプロジェクトが見つかりませんでした。"
+},
+{
+  "statusCode": "VALIDATION_ERROR",
+  "errors": {
+    "projectPublicIds": "削除対象のプロジェクトを指定してください。"
+  }
+},
+{
+  "statusCode": "BAD_REQUEST",
+  "message": "表示件数は100以下で指定してください。"
+                                        //page が1未満、limit が1未満または100超の場合
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
