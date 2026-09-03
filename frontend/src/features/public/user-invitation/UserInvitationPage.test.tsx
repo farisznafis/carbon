@@ -1,5 +1,5 @@
 import { StrictMode } from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -98,12 +98,12 @@ describe('UserInvitationPage', () => {
     expect(screen.getByText('変更不可')).toBeVisible();
     expect(
       screen.getByText(
-        '招待リンクから自動入力されています。内容は変更できません。',
+        /招待リンクから自動入力されています。内容は変更できません。/,
       ),
     ).toBeVisible();
     expect(
       screen.getByText(
-        '内容に誤りがある場合は、招待元の管理者にお問い合わせください。',
+        /内容に誤りがある場合は、招待元のマスターにお問い合わせください。/,
       ),
     ).toBeVisible();
 
@@ -114,7 +114,6 @@ describe('UserInvitationPage', () => {
       'invitation-readonly-note',
     );
     expect(screen.getByText('invitee@example.com').tagName).toBe('DD');
-    expect(screen.getByText('GX株式会社').tagName).toBe('DD');
     expect(screen.getByText('東京拠点').tagName).toBe('DD');
     expect(
       screen.queryByDisplayValue('invitee@example.com'),
@@ -149,6 +148,10 @@ describe('UserInvitationPage', () => {
       screen.getByLabelText('パスワード'),
       'Strong-password-123',
     );
+    await user.type(
+      screen.getByLabelText('パスワード（確認）'),
+      'Strong-password-123',
+    );
     await user.click(screen.getByRole('button', { name: '登録する' }));
 
     await waitFor(() => {
@@ -169,10 +172,35 @@ describe('UserInvitationPage', () => {
     expect(completeUserInvitationMock.mock.calls[0]?.[1]).not.toHaveProperty(
       'email',
     );
+    expect(completeUserInvitationMock.mock.calls[0]?.[1]).not.toHaveProperty(
+      'passwordConfirmation',
+    );
     expect(await screen.findByText('ログイン画面')).toBeVisible();
     expect(toastMock).toHaveBeenCalledWith(
       expect.objectContaining({ variant: 'success' }),
     );
+  });
+
+  it('reports password matching live and blocks a mismatched confirmation', async () => {
+    const user = userEvent.setup();
+    renderInvitationPage();
+
+    const passwordInput = await screen.findByLabelText('パスワード');
+    const confirmationInput = screen.getByLabelText('パスワード（確認）');
+
+    expect(
+      screen.getByText('確認のため、パスワードをもう一度入力してください。'),
+    ).toBeVisible();
+
+    await user.type(passwordInput, 'Strong-password-123');
+    await user.type(confirmationInput, 'Strong-password-12');
+    expect(screen.getByText('パスワードが一致していません。')).toBeVisible();
+
+    await user.click(screen.getByRole('button', { name: '登録する' }));
+    expect(completeUserInvitationMock).not.toHaveBeenCalled();
+
+    await user.type(confirmationInput, '3');
+    expect(screen.getByText('パスワードが一致しています。')).toBeVisible();
   });
 
   it('submits empty values and maps backend validation errors verbatim', async () => {
@@ -207,6 +235,59 @@ describe('UserInvitationPage', () => {
       screen.getByText('パスワードは15文字以上で入力してください。'),
     ).toBeVisible();
     expect(screen.getByText('入力内容に不備があります。')).toBeVisible();
+  });
+
+  it('processes a new invitation token opened in the same tab', async () => {
+    exchangeActionLinkMock
+      .mockRejectedValueOnce(
+        new ApiError('アクセスできません。', {
+          status: 401,
+          payload: { statusCode: 'INVALID_OR_EXPIRED_TOKEN' },
+        }),
+      )
+      .mockResolvedValueOnce({
+        statusCode: 'OK',
+        actionSessionToken: 'fresh-action-session',
+        purpose: 'USER_INVITATION',
+        expiresInSeconds: 3600,
+      });
+    getUserInvitationContextMock.mockResolvedValueOnce({
+      email: 'fresh-invitee@example.com',
+      companyName: 'GX株式会社',
+      siteId: null,
+      siteName: '',
+    });
+    renderInvitationPage();
+
+    await waitFor(() => {
+      expect(exchangeActionLinkMock).toHaveBeenCalledWith('email-link-token');
+    });
+    expect(
+      await screen.findByRole('heading', {
+        name: '招待リンクを利用できません',
+      }),
+    ).toBeVisible();
+
+    act(() => {
+      window.history.pushState(
+        window.history.state,
+        '',
+        '/user/invitation#token=fresh-email-link-token',
+      );
+      window.dispatchEvent(new Event('hashchange'));
+    });
+
+    await waitFor(() => {
+      expect(exchangeActionLinkMock).toHaveBeenNthCalledWith(
+        2,
+        'fresh-email-link-token',
+      );
+    });
+    expect(getUserInvitationContextMock).toHaveBeenCalledWith(
+      'fresh-action-session',
+    );
+    expect(await screen.findByText('fresh-invitee@example.com')).toBeVisible();
+    expect(window.location.hash).toBe('');
   });
 
   it('distinguishes invalid links from a disabled feature', async () => {

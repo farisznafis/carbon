@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useForm, type UseFormSetError } from 'react-hook-form';
-import { AlertCircle, Building2, Loader2, LockKeyhole, UserRound } from 'lucide-react';
+import { useForm, useWatch, type UseFormSetError } from 'react-hook-form';
+import {
+  AlertCircle,
+  Building2,
+  CheckCircle2,
+  CircleAlert,
+  Loader2,
+  LockKeyhole,
+  UserRound,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ApiError } from '@/api/_shared/errors';
 import { exchangeActionLink } from '@/api/auth';
@@ -51,6 +59,12 @@ type InvitationReadonlyItemProps = {
   breakAll?: boolean;
 };
 
+type UserInvitationFormValues = CompleteUserInvitationPayload & {
+  passwordConfirmation: string;
+};
+
+type PasswordConfirmationState = 'idle' | 'match' | 'mismatch';
+
 type InvitationPageState =
   | 'loading'
   | 'form'
@@ -58,7 +72,7 @@ type InvitationPageState =
   | 'unavailable'
   | 'load-error';
 
-const emptyInvitationForm: CompleteUserInvitationPayload = {
+const emptyInvitationForm: UserInvitationFormValues = {
   username: '',
   firstName: '',
   firstNameKana: '',
@@ -67,6 +81,7 @@ const emptyInvitationForm: CompleteUserInvitationPayload = {
   phoneNumber: '',
   userPosition: '',
   password: '',
+  passwordConfirmation: '',
 };
 
 /** Renders one label-value pair inside the immutable invitation summary. */
@@ -88,6 +103,47 @@ function InvitationReadonlyItem({
         {value}
       </dd>
     </div>
+  );
+}
+
+/** Resolves the live password confirmation state without validating password policy. */
+function getPasswordConfirmationState(
+  password: string,
+  passwordConfirmation: string,
+): PasswordConfirmationState {
+  if (!passwordConfirmation) return 'idle';
+  return password === passwordConfirmation ? 'match' : 'mismatch';
+}
+
+/** Announces the current password match state while the user types. */
+function PasswordConfirmationStatus({
+  state,
+}: Readonly<{ state: PasswordConfirmationState }>) {
+  if (state === 'idle') {
+    return (
+      <FormDescription aria-live="polite">
+        確認のため、パスワードをもう一度入力してください。
+      </FormDescription>
+    );
+  }
+
+  const isMatch = state === 'match';
+  const StatusIcon = isMatch ? CheckCircle2 : CircleAlert;
+
+  return (
+    <p
+      aria-live="polite"
+      className={
+        isMatch
+          ? 'flex items-center gap-1.5 text-sm text-success'
+          : 'flex items-center gap-1.5 text-sm text-destructive'
+      }
+    >
+      <StatusIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+      {isMatch
+        ? 'パスワードが一致しています。'
+        : 'パスワードが一致していません。'}
+    </p>
   );
 }
 
@@ -130,7 +186,7 @@ function toInvitationFieldMessage(value: unknown): string {
 /** Applies backend validation messages to fields with exactly matching request keys. */
 function applyInvitationFieldErrors(
   error: ApiError,
-  setError: UseFormSetError<CompleteUserInvitationPayload>,
+  setError: UseFormSetError<UserInvitationFormValues>,
 ): boolean {
   const errors = error.payload?.errors;
   if (!errors || typeof errors !== 'object' || Array.isArray(errors)) {
@@ -206,7 +262,7 @@ function InvitationStateCard({
 export default function UserInvitationPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const initializationStartedRef = useRef(false);
+  const processedInvitationTokenRef = useRef<string | null>(null);
   const submitStartedRef = useRef(false);
   const actionSessionTokenRef = useRef<string | null>(null);
   const [pageState, setPageState] = useState<InvitationPageState>('loading');
@@ -214,19 +270,34 @@ export default function UserInvitationPage() {
     useState<UserInvitationContext | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const form = useForm<CompleteUserInvitationPayload>({
+  const form = useForm<UserInvitationFormValues>({
     defaultValues: emptyInvitationForm,
   });
+  const clearFormErrors = form.clearErrors;
+  const resetForm = form.reset;
+  const password = useWatch({ control: form.control, name: 'password' });
+  const passwordConfirmation = useWatch({
+    control: form.control,
+    name: 'passwordConfirmation',
+  });
+  const passwordConfirmationState = getPasswordConfirmationState(
+    password,
+    passwordConfirmation,
+  );
 
   /** Loads immutable invitation information after the action link is exchanged. */
   const loadInvitationContext = useCallback(
-    async (actionSessionToken: string) => {
+    async (actionSessionToken: string, invitationToken: string) => {
       try {
         const context = await getUserInvitationContext(actionSessionToken);
+        if (processedInvitationTokenRef.current !== invitationToken) return;
+
         setInvitationContext(context);
         setFormError(null);
         setPageState('form');
       } catch (error) {
+        if (processedInvitationTokenRef.current !== invitationToken) return;
+
         if (isInvalidInvitation(error)) {
           actionSessionTokenRef.current = null;
           setPageState('invalid');
@@ -249,36 +320,55 @@ export default function UserInvitationPage() {
     [],
   );
 
-  useEffect(() => {
-    if (initializationStartedRef.current) return;
-    initializationStartedRef.current = true;
-
+  /** Exchanges each newly supplied fragment token once, including same-tab hash navigation. */
+  const processInvitationToken = useCallback(() => {
     const invitationToken = readInvitationToken();
+
+    if (!invitationToken) {
+      if (!processedInvitationTokenRef.current) {
+        setPageState('invalid');
+      }
+      return;
+    }
+
+    if (processedInvitationTokenRef.current === invitationToken) return;
+    processedInvitationTokenRef.current = invitationToken;
+
     window.history.replaceState(
       window.history.state,
       '',
       paths.userInvitation,
     );
-
-    if (!invitationToken) {
-      setPageState('invalid');
-      return;
-    }
+    actionSessionTokenRef.current = null;
+    submitStartedRef.current = false;
+    setInvitationContext(null);
+    setFormError(null);
+    setPageState('loading');
+    clearFormErrors();
+    resetForm(emptyInvitationForm);
 
     void exchangeActionLink(invitationToken)
       .then((response) => {
+        if (processedInvitationTokenRef.current !== invitationToken) return;
+
         if (
           response.purpose !== INVITATION_PURPOSE ||
           !response.actionSessionToken
         ) {
+          actionSessionTokenRef.current = null;
           setPageState('invalid');
           return;
         }
 
         actionSessionTokenRef.current = response.actionSessionToken;
-        return loadInvitationContext(response.actionSessionToken);
+        return loadInvitationContext(
+          response.actionSessionToken,
+          invitationToken,
+        );
       })
       .catch((error: unknown) => {
+        if (processedInvitationTokenRef.current !== invitationToken) return;
+
         actionSessionTokenRef.current = null;
         if (error instanceof ApiError && error.status === 404) {
           setPageState('unavailable');
@@ -296,19 +386,44 @@ export default function UserInvitationPage() {
         );
         setPageState('load-error');
       });
-  }, [loadInvitationContext]);
+  }, [clearFormErrors, loadInvitationContext, resetForm]);
+
+  useEffect(() => {
+    /** Reprocesses the invitation when a new fragment is opened in this tab. */
+    const handleInvitationHashChange = () => processInvitationToken();
+
+    processInvitationToken();
+    window.addEventListener('hashchange', handleInvitationHashChange);
+
+    return () => {
+      window.removeEventListener('hashchange', handleInvitationHashChange);
+    };
+  }, [processInvitationToken]);
 
   /** Submits unvalidated form values and renders backend validation verbatim. */
-  const handleSubmit = async (values: CompleteUserInvitationPayload) => {
+  const handleSubmit = async (values: UserInvitationFormValues) => {
     const actionSessionToken = actionSessionTokenRef.current;
     if (!actionSessionToken || submitStartedRef.current) return;
+
+    if (values.password !== values.passwordConfirmation) {
+      form.setError('passwordConfirmation', {
+        type: 'validate',
+        message: 'パスワードが一致していません。',
+      });
+      return;
+    }
+
+    const { passwordConfirmation: _passwordConfirmation, ...payload } = values;
 
     submitStartedRef.current = true;
     setFormError(null);
     form.clearErrors();
 
     try {
-      const response = await completeUserInvitation(actionSessionToken, values);
+      const response = await completeUserInvitation(
+        actionSessionToken,
+        payload,
+      );
       actionSessionTokenRef.current = null;
       toast({
         title: 'アカウント登録が完了しました。',
@@ -410,10 +525,11 @@ export default function UserInvitationPage() {
                     <div id={INVITATION_READONLY_DESCRIPTION_ID}>
                       <span className="block">
                         招待リンクから自動入力されています。内容は変更できません。
-                      </span>
-                      <span className="block">
                         内容に誤りがある場合は、招待元のマスターにお問い合わせください。
                       </span>
+                      {/* <span className="block"> */}
+                        {/* 内容に誤りがある場合は、招待元のマスターにお問い合わせください。 */}
+                      {/* </span> */}
                     </div>
                   }
                 >
@@ -573,6 +689,7 @@ export default function UserInvitationPage() {
                         <FormControl>
                           <PasswordInput
                             aria-label="パスワード"
+                            autoComplete="new-password"
                             placeholder="パスワードを入力"
                             {...field}
                           />
@@ -580,6 +697,35 @@ export default function UserInvitationPage() {
                         <FormDescription>
                           15～64文字。大文字・小文字・数字をそれぞれ1文字以上含めてください。
                         </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="passwordConfirmation"
+                    render={({ field, fieldState }) => (
+                      <FormItem>
+                        <RequiredLabel>パスワード（確認）</RequiredLabel>
+                        <FormControl>
+                          <PasswordInput
+                            aria-label="パスワード（確認）"
+                            aria-invalid={
+                              fieldState.invalid ||
+                              passwordConfirmationState === 'mismatch'
+                            }
+                            autoComplete="new-password"
+                            placeholder="パスワードを再入力"
+                            {...field}
+                            onChange={(event) => {
+                              field.onChange(event);
+                              form.clearErrors('passwordConfirmation');
+                            }}
+                          />
+                        </FormControl>
+                        <PasswordConfirmationStatus
+                          state={passwordConfirmationState}
+                        />
                         <FormMessage />
                       </FormItem>
                     )}
