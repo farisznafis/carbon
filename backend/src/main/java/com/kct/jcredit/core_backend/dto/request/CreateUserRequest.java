@@ -1,5 +1,6 @@
 package com.kct.jcredit.core_backend.dto.request;
 
+import com.kct.jcredit.core_backend.validation.ValidSecurityPassword;
 import com.kct.jcredit.core_backend.validation.ValidEmail;
 import com.kct.jcredit.core_backend.validation.ValidUsername;
 import com.kct.jcredit.core_backend.validation.Katakana;
@@ -78,9 +79,7 @@ public class CreateUserRequest {
     // パスワード
    
     @NotBlank(message = "パスワードを入力してください。")
-    @Size(min = 8, max = 255, message = "パスワードは8文字以上255文字以内で入力してください。")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d@$!%*?&]{8,}$",
-             message = "パスワードは大文字、小文字、数字をそれぞれ1文字以上含む必要があります。")
+    @ValidSecurityPassword
     private String password;
     
 @Pattern(regexp = "^(admin|operator)$", message = "役割は 'admin' または 'operator' を指定してください。")
