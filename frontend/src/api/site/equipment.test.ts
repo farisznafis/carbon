@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  addSiteProjectEquipment,
   getSiteEquipmentById,
   getSiteEquipmentHistory,
   getSiteProjectEquipment,
@@ -15,6 +16,7 @@ import {
   validateSiteProjectSustainabilityCommitment,
 } from './equipment';
 import type {
+  SiteProjectEquipmentCreateRequest,
   SiteProjectEquipmentValidationItem,
   SiteProjectJoinRequest,
   SiteProjectEquipmentChangeRequest,
@@ -82,6 +84,50 @@ describe('validateSiteProjectEquipment', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/site/project/equipment/validate',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    );
+  });
+});
+
+describe('addSiteProjectEquipment', () => {
+  it('posts confirmed equipment to the encoded site and project endpoint', async () => {
+    const responseBody = { statusCode: '200', equipmentId: 12 };
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(responseBody), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const payload: SiteProjectEquipmentCreateRequest = {
+      tempId: 'temp-1',
+      siteId: 'SITE/1',
+      equipmentOpDate: '2026-09-03',
+      nominalMaxOutput: 10,
+      pcsManufacturer: 'Maker',
+      pcsModel: 'Model',
+      deviceNo: 'DEVICE-01',
+      pcsStandby: 2,
+      hasBattery: false,
+      batteryMaker: null,
+      batteryModel: null,
+      batteryCapacity: null,
+      totalInvestment: 1000,
+      hasSubsidy: false,
+      subsidyName: null,
+      subsidyAmount: null,
+      preProjectUnitPrice: 30,
+      files: [],
+    };
+
+    await expect(
+      addSiteProjectEquipment('SITE/1', 'PROJECT/1', payload),
+    ).resolves.toEqual(responseBody);
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/site/SITE%2F1/PROJECT%2F1/equipment',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(payload),
@@ -577,7 +623,7 @@ describe('joinSiteProject', () => {
     await joinSiteProject('PROJ0002', payload);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/site/project/projects/PROJ0002/join',
+      '/api/site/project/projects/PROJ0002/join-company',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(payload),

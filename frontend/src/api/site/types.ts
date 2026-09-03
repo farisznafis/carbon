@@ -381,6 +381,32 @@ export type SiteProjectEquipmentValidationItem = {
   files: SiteProjectEquipmentValidationFile[];
 };
 
+/** Request accepted by POST /site/{siteId}/{projectId}/equipment. */
+export type SiteProjectEquipmentCreateRequest = {
+  tempId: string;
+  siteId: string;
+  equipmentOpDate: string | null;
+  nominalMaxOutput: number | null;
+  pcsManufacturer: string | null;
+  pcsModel: string | null;
+  deviceNo: string | null;
+  pcsStandby: number | null;
+  hasBattery: boolean | null;
+  batteryMaker: string | null;
+  batteryModel: string | null;
+  batteryCapacity: number | null;
+  totalInvestment: number | null;
+  hasSubsidy: boolean | null;
+  subsidyName: string | null;
+  subsidyAmount: number | null;
+  preProjectUnitPrice: number | null;
+  files: SiteProjectEquipmentValidationFile[];
+};
+
+/** Response returned after adding equipment to an existing site project. */
+export type SiteProjectEquipmentCreateResponse =
+  SiteProjectEquipmentDetailResponse;
+
 export type SiteProjectEquipmentValidationResponse = {
   statusCode?: string;
   message?: string | null;

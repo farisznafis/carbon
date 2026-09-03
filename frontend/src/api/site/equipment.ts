@@ -15,6 +15,8 @@ import type {
   SiteProjectEquipmentFileType,
   SiteProjectEquipmentFileUploadResponse,
   SiteProjectEquipmentResponse,
+  SiteProjectEquipmentCreateRequest,
+  SiteProjectEquipmentCreateResponse,
   SiteProjectEquipmentChangeRequest,
   SiteProjectEquipmentValidationFile,
   SiteProjectEquipmentValidationItem,
@@ -281,6 +283,22 @@ export async function getSiteProjectEquipment(
     : [];
 }
 
+/** POST /site/{siteId}/{projectId}/equipment — adds equipment to an existing site project. */
+export async function addSiteProjectEquipment(
+  siteId: string,
+  projectId: string,
+  payload: SiteProjectEquipmentCreateRequest,
+): Promise<SiteProjectEquipmentCreateResponse> {
+  return apiRequest<SiteProjectEquipmentCreateResponse>(
+    `/site/${encodeURIComponent(siteId)}/${encodeURIComponent(projectId)}/equipment`,
+    {
+      method: 'POST',
+      body: payload,
+      fallbackErrorMessage: '設備情報の登録に失敗しました。',
+    },
+  );
+}
+
 export async function getSiteEquipmentList(
   siteId: string,
 ): Promise<SiteProjectEquipment[]> {
@@ -367,7 +385,7 @@ export async function changeSiteEquipment(
 ): Promise<SiteProjectEquipment> {
   return normalizeSiteProjectEquipment(
     await apiRequest<SiteProjectEquipmentDetailResponse>(
-      `/siteg/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}/change`,
+      `/site/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}/change`,
       {
         method: 'POST',
         body: payload,

@@ -208,7 +208,6 @@ export function getMissingEquipmentRequiredFieldErrors(
     'nominalMaxOutput',
     'pcsManufacturer',
     'pcsModel',
-    'powerCondUnitCount',
     'deviceNo',
     'powerCondStandby',
     'hasBattery',

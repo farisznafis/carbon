@@ -130,11 +130,11 @@ export function EquipmentEditConfirmation({
                   value={displayValue(current.pcsModel)}
                   originalValue={displayValue(original.pcsModel)}
                 />
-                <ConfirmationItem
+                {/* <ConfirmationItem
                   label="導入台数 (台)"
                   value={displayValue(current.powerCondUnitCount)}
                   originalValue={displayValue(original.powerCondUnitCount)}
-                />
+                /> */}
                 <ConfirmationItem
                   label="機器固有番号（製造番号）"
                   value={displayValue(current.deviceNo)}

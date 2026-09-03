@@ -386,7 +386,7 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
               </FormItem>
             )}
           />
-          <FormField
+          {/* <FormField
             control={form.control}
             name="powerCondUnitCount"
             render={({ field }) => (
@@ -404,7 +404,7 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
                 <FormMessage />
               </FormItem>
             )}
-          />
+          /> */}
           <FormField
             control={form.control}
             name="deviceNo"

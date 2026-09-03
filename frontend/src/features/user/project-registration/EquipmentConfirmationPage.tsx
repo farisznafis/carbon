@@ -14,6 +14,7 @@ import { ConfirmationItem } from '@/components/feedback/Confirmation/Confirmatio
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
 import {
+  addSiteProjectEquipment,
   uploadSiteProjectEquipmentFile,
   type SiteProjectEquipmentValidationFile,
 } from '@/api/site';
@@ -23,7 +24,10 @@ import {
   type EquipmentConfirmationState,
 } from '@/features/user/project-registration/equipmentConfirmationState';
 import { masterDashboardProjectMembershipState } from '@/features/user/project-registration/projectMembershipNavigation';
-import { getSolarFormSelectedFiles } from '@/features/user/project-registration/equipmentValidationMapper';
+import {
+  getSolarFormSelectedFiles,
+  mapSolarFormToEquipmentCreateRequest,
+} from '@/features/user/project-registration/equipmentValidationMapper';
 import { useSitesQuery } from '@/hooks/sites/useSitesQuery';
 import { useToast } from '@/hooks/use-toast';
 import type { SolarPowerFormData } from '@/lib/equipmentValidations';
@@ -99,6 +103,7 @@ export default function EquipmentConfirmationPage() {
           ? masterDashboardProjectMembershipState
           : {}),
         returnTo: confirmationState?.returnTo,
+        submissionMode: confirmationState?.submissionMode,
         equipmentDraft: data,
       },
     });
@@ -114,11 +119,36 @@ export default function EquipmentConfirmationPage() {
           uploadSiteProjectEquipmentFile(data.siteId, fileType, file),
         ),
       );
+
+      if (confirmationState.submissionMode === 'create') {
+        const equipmentSiteId = data.siteId.trim() || siteId;
+        const payload = mapSolarFormToEquipmentCreateRequest(
+          data,
+          confirmationState.equipmentId,
+          equipmentSiteId,
+          uploadedFiles,
+        );
+        await addSiteProjectEquipment(equipmentSiteId, projectId, payload);
+
+        navigate(
+          confirmationState.returnTo ??
+            `${paths.siteProjectDetail(siteId, projectId)}?tab=equipment`,
+          { replace: true },
+        );
+        return;
+      }
+
       const pendingEquipment = saveEquipment(
         projectId,
         confirmationState,
         uploadedFiles,
       );
+
+      if (confirmationState.returnTo) {
+        navigate(confirmationState.returnTo, { replace: true });
+        return;
+      }
+
       navigate(paths.projectRegister(siteId, projectId), {
         replace: true,
         state: {
