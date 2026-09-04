@@ -5,7 +5,15 @@ import com.kct.jcredit.core_backend.dto.response.MonitoringDataDeletionHistoryLi
 import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionCandidateListResponse;
 import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionCandidateRecordListResponse;
 import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionExecutionResponse;
+import com.kct.jcredit.core_backend.dto.response.PeriodSummaryResponse;
+import com.kct.jcredit.core_backend.dto.response.ProjectGroupResponse;
+import com.kct.jcredit.core_backend.dto.response.RowDetailActivityResponse;
+import com.kct.jcredit.core_backend.dto.response.RowSummaryActivityResponse;
+import com.kct.jcredit.core_backend.service.EnR002IndividualActivityService;
 import com.kct.jcredit.core_backend.service.MonitoringDataDeletionService;
+import com.kct.jcredit.core_backend.service.impl.EnR002IndividualActivityServiceImpl.CompanyKobetsuKatsudoRequest;
+import com.kct.jcredit.core_backend.service.impl.EnR002IndividualActivityServiceImpl.PageResponse;
+import com.kct.jcredit.core_backend.service.impl.EnR002IndividualActivityServiceImpl.RowsQueryRequest;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 
@@ -16,6 +24,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,6 +51,7 @@ public class AdminMonitoringController {
 
     private final MonitoringDataDeletionService monitoringDataDeletionService;
     private final JwtUtil jwtUtil;
+    private final EnR002IndividualActivityService individualActivityService;
 
     @GetMapping("/deletion-candidates")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
@@ -92,5 +103,48 @@ public class AdminMonitoringController {
         MonitoringDataDeletionHistoryListResponse response =
                 monitoringDataDeletionService.findDeletionHistory(projectId, page, limit);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @GetMapping("/projects/{projectId}/kobetsu-katsudo/periods")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    public List<PeriodSummaryResponse> getPeriods(
+            @PathVariable String projectId,
+            Authentication authentication) {
+        return individualActivityService.getPeriods(projectId, authentication.getName());
+    }
+ 
+    @GetMapping("/projects/{projectId}/kobetsu-katsudo/periods/{periodId}/rows")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    public PageResponse<RowSummaryActivityResponse> getRowsForPeriod(
+            @PathVariable String projectId,
+            @PathVariable String periodId,
+            @RequestParam(required = false) String companyId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            Authentication authentication) {
+        RowsQueryRequest request = RowsQueryRequest.of(companyId, page, size);
+        return individualActivityService.getRowsForPeriod(projectId, periodId, request, authentication.getName());
+    }
+ 
+    @GetMapping("/companies/{companyId}/kobetsu-katsudo")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    public List<ProjectGroupResponse> getRowsForCompany(
+            @PathVariable String companyId,
+            @RequestParam(required = false) String projectId,
+            Authentication authentication) {
+        CompanyKobetsuKatsudoRequest request = CompanyKobetsuKatsudoRequest.of(projectId);
+        return individualActivityService.getRowsForCompany(companyId, request, authentication.getName());
+    }
+ 
+    @GetMapping("/kobetsu-katsudo/rows/{rowKey}")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    public RowDetailActivityResponse getRowDetail(
+            @PathVariable String rowKey,
+            Authentication authentication) {
+        return individualActivityService.getRowDetail(rowKey, authentication.getName());
     }
 }

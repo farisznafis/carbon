@@ -37,4 +37,8 @@ public interface EnR002EquipmentFileRepository extends JpaRepository<EnR002Equip
     void softDeleteByCompanyId(@Param("companyId") String companyId, @Param("deletedBy") String deletedBy);
 
     long countByS3KeyAndEquipment_IdNot(String s3Key, Integer equipmentId);
+
+    List<EnR002EquipmentFile> findByEquipmentId(Integer equipmentId);
+    
+    long countByEquipmentId(Integer equipmentId);
 }

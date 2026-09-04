@@ -14,6 +14,7 @@ import com.kct.jcredit.core_backend.dto.response.details.ProjectDetailResponse;
 import com.kct.jcredit.core_backend.dto.response.UpdateProjectStatusResponse;
 import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
+import com.kct.jcredit.core_backend.entity.OperatingUser;
 import com.kct.jcredit.core_backend.entity.ParticipatingProject;
 import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.entity.Site;
@@ -26,6 +27,7 @@ import com.kct.jcredit.core_backend.repository.postgres.ParticipatingProjectRepo
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
+import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
 import com.kct.jcredit.core_backend.service.ProjectParticipationPdfService;
 import com.kct.jcredit.core_backend.service.ProjectService;
@@ -39,6 +41,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,6 +69,7 @@ public class ProjectServiceImpl implements ProjectService {
     private final ParticipatingProjectRepository participatingProjectRepository; 
     private final ProjectParticipationPdfService pdfService;  
     private final SiteProjectRelationRepository siteProjectRelationRepository;
+    private final OperatingUserRepository userRepository;
     
     
 
@@ -698,5 +702,36 @@ public class ProjectServiceImpl implements ProjectService {
                 .pdfUrl(presignedUrl)
                 .expiresIn(900)
                 .build();
+    }
+
+    @Override
+    public void assertProject(String projectId, String currentUserId) {
+        if (!hasProjectAccess(projectId, currentUserId)) {
+            throw new AccessDeniedException(
+                    "User " + currentUserId + " does not have access to project " + projectId);
+        }
+    }
+
+    @Override
+    public boolean hasProjectAccess(String projectId, String currentUserId) {
+        OperatingUser user = userRepository.findByUsername(currentUserId)
+                .orElseThrow(() -> new AccessDeniedException("User not found: " + currentUserId));
+
+        if (isAdmin(user)) {
+            return true;
+        }
+
+        Project project = projectRepository.findByPublicId(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("Project not found: " + projectId));
+
+        if (project.getOperatorCompany() == null || user.getCompany() == null) {
+            return false;
+        }
+
+        return project.getOperatorCompany().getId().equals(user.getCompany().getId());
+    }
+
+    private boolean isAdmin(OperatingUser user) {
+        return "ADMIN".equals(user.getRole()); 
     }
 }
