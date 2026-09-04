@@ -118,3 +118,14 @@ export type ProjectListResponse = {
     hasMore: boolean;
   };
 };
+
+export type ProjectMemberTermsInfo = {
+  statusCode: string;
+  message: string | null;
+  projectName: string;
+  operatorNameJa: string;
+  adminRepName: string;
+  projectOverview: string;
+  usePurpose: string;
+  startedAt: string;
+};

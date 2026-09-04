@@ -12,7 +12,11 @@ import {
 import { FileSignature } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { getProjectDetails } from "@/api/projects";
+import { 
+  getProjectDetails,
+  getProjectMemberTermsInfo,
+  type ProjectMemberTermsInfo,
+} from "@/api/projects";
 import {
   joinSiteProject,
   uploadSiteProjectEquipmentFile,

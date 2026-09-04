@@ -405,7 +405,7 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
             render={({ field }) => (
               <FormItem>
                 <RequiredLabel>
-                  夜間待機電力（1台あたり） (W)
+                  夜間待機電力 (W)
                 </RequiredLabel>
                 <FormControl>
                   <Input

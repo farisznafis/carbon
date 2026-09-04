@@ -14,6 +14,7 @@ import type {
   ProjectDetailResponse,
   ProjectListResponse,
   ProjectMembershipPdfDownload,
+  ProjectMemberTermsInfo,
 } from './types';
 
 // GET /project/{projectId}/participations/{participationId}/membership-pdf
@@ -88,4 +89,32 @@ export async function getProjects(): Promise<Project[]> {
   }
 
   return json.projects.map(mapProjectListItem);
+}
+
+export async function getProjectMemberTermsInfo(
+  projectId: string,
+): Promise<ProjectMemberTermsInfo> {
+  const response = await apiFetch(
+    `/project/${encodeURIComponent(projectId)}/member-terms-info`,
+    {
+      method: 'GET',
+    },
+  );
+
+  const { data, rawBody } =
+    await parseJsonResponse<ProjectMemberTermsInfo>(response);
+
+  if (!response.ok) {
+    throw new Error(
+      data?.message ||
+        rawBody ||
+        '入会規約情報の取得に失敗しました',
+    );
+  }
+
+  if (!data) {
+    throw new Error('入会規約情報が見つかりませんでした');
+  }
+
+  return data;
 }
