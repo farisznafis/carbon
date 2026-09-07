@@ -91,6 +91,7 @@ export async function getProjects(): Promise<Project[]> {
   return json.projects.map(mapProjectListItem);
 }
 
+/** GET /project/{projectId}/member-terms-info — loads project-specific membership terms text. */
 export async function getProjectMemberTermsInfo(
   projectId: string,
 ): Promise<ProjectMemberTermsInfo> {
@@ -114,6 +115,10 @@ export async function getProjectMemberTermsInfo(
 
   if (!data) {
     throw new Error('入会規約情報が見つかりませんでした');
+  }
+
+  if (Number.isNaN(Date.parse(data.startedAt))) {
+    throw new Error('入会規約の施行日が正しくありません');
   }
 
   return data;
