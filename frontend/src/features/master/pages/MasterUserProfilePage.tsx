@@ -119,6 +119,12 @@ export default function MasterUserProfilePage() {
     });
   };
 
+  /** Opens password change for the employee currently displayed. */
+  const handlePasswordChange = () => {
+    if (!userId) return;
+    navigate(paths.passwordChangeForUser(userId));
+  };
+
   return (
     <FormStandalonePage>
       <PageBackButton
@@ -168,7 +174,11 @@ export default function MasterUserProfilePage() {
             読み込み中...
           </div>
         ) : (
-          <ProfileInfoCards profile={profile} company={company} />
+          <ProfileInfoCards
+            profile={profile}
+            company={company}
+            onPasswordChange={handlePasswordChange}
+          />
         )}
       </FormPageContent>
     </FormStandalonePage>

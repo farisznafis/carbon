@@ -6,12 +6,12 @@ export const paths = {
   resetPassword: '/reset-password',
   signup: '/signup',
   signupRevision: '/signup/revision',
+  userInvitation: '/user/invitation',
 
   masterDashboard: '/master/dashboard',
   masterSiteRegister: '/master/site-register',
   masterSiteEditRoute: '/master/site-edit/:siteId',
   masterSiteEdit: (siteId: string) => `/master/site-edit/${siteId}`,
-  masterUserRegister: '/master/user-register',
   masterUserProfileRoute: '/master/users/:userId/profile',
   masterUserProfile: (userId: string | number) =>
     `/master/users/${userId}/profile`,
@@ -66,6 +66,8 @@ export const paths = {
 
   profile: '/profile',
   passwordChange: '/password-change',
+  passwordChangeForUser: (userId: string | number) =>
+    `/password-change?userId=${encodeURIComponent(String(userId))}`,
 
   adminDashboard: '/admin/dashboard',
   adminProjectList: '/admin/projects',

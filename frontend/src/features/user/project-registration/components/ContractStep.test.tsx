@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ContractStep } from './ContractStep';
 
 const methodologyProps = {
+  operatorName: '株式会社ABC・山田太郎',
   methodologyNumber: '003',
   methodologyName: '自家消費型太陽光発電設備の導入',
   methodologyVersion: 'Ver.2.0',
@@ -34,6 +35,9 @@ describe('ContractStep', () => {
     expect(
       screen.getByText(/方法論003 Ver\.2\.0（自家消費型太陽光発電設備の導入）/),
     ).toBeVisible();
+    expect(
+      screen.getByText(/株式会社ABC・山田太郎\s*御中/),
+    ).toBeVisible();
   });
 
   it('shows backend validation messages on the matching controls', async () => {
@@ -63,6 +67,7 @@ describe('ContractStep', () => {
   it('omits the methodology version when the project does not provide one', () => {
     render(
       <ContractStep
+        operatorName="株式会社ABC・山田太郎"
         methodologyNumber="003"
         methodologyName="自家消費型太陽光発電設備の導入"
         formValues={{}}

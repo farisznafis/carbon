@@ -75,9 +75,16 @@ This document describes every file under `src/api/`. It is intended for develope
 | API function | Method and endpoint | Request data | Payload location |
 | --- | --- | --- | --- |
 | `getUsers` | `GET /user` | No request payload | [Request implementation](users/list.ts#L11) |
-| `registerUser` | `POST /user` | JSON user creation body | [`RegisterUserPayload`](users/mutations.ts#L5); [`UserFormData`](users/types.ts#L51); [payload mapping](users/mutations.ts#L55) |
 | `updateUser` | `PATCH /user` | JSON user update body, including `userId` | [`UpdateUserPayload`](users/mutations.ts#L22); [`UserFormData`](users/types.ts#L51); [payload mapping](users/mutations.ts#L84) |
 | `deleteUser` | `DELETE /user/:userId` | Path: `userId`; no request body | [Function parameter and path](users/mutations.ts#L163) |
+
+### User invitations
+
+| API function | Method and endpoint | Request data | Payload location |
+| --- | --- | --- | --- |
+| `createUserInvitation` | `POST /user/invitations` | Email and optional `siteId` | [`CreateUserInvitationPayload`](user-invitations/types.ts); [request implementation](user-invitations/requests.ts) |
+| `getUserInvitationContext` | `GET /auth/invitation` | `X-Action-Session` header | [`UserInvitationContext`](user-invitations/types.ts); [request implementation](user-invitations/requests.ts) |
+| `completeUserInvitation` | `POST /auth/invitation/complete` | Account fields and `X-Action-Session` header | [`CompleteUserInvitationPayload`](user-invitations/types.ts); [request implementation](user-invitations/requests.ts) |
 
 ### Notifications
 
@@ -400,7 +407,7 @@ This document describes every file under `src/api/`. It is intended for develope
 ### `users/index.ts`
 
 - **Purpose:** Public barrel for user API.
-- **Main exports:** `getUsers`, `registerUser`, `updateUser`, `deleteUser`, and user/company types.
+- **Main exports:** `getUsers`, `updateUser`, `deleteUser`, and user/company types.
 - **Boundary:** Public users module entrypoint.
 - **Notes:** Company mutation APIs live in `company`, not `users`.
 
@@ -420,8 +427,8 @@ This document describes every file under `src/api/`. It is intended for develope
 
 ### `users/mutations.ts`
 
-- **Purpose:** User create, update, and delete API calls.
-- **Main exports:** `registerUser`, `updateUser`, `deleteUser`.
+- **Purpose:** User update and delete API calls.
+- **Main exports:** `updateUser`, `deleteUser`.
 - **Boundary:** User mutations only.
 
 ### `users/types.ts`

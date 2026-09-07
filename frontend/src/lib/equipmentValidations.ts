@@ -10,7 +10,6 @@ export type SolarPowerFormData = {
   nominalMaxOutputFile?: File | null;
   pcsManufacturer: string;
   pcsModel: string;
-  powerCondUnitCount: string;
   deviceNo: string;
   powerCondStandby: string;
   pcsFile?: File | null;

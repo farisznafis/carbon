@@ -22,6 +22,10 @@ vi.mock('@/api/admin', async (importOriginal) => {
   };
 });
 
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({ user: { role: 'admin' } }),
+}));
+
 function makeReview(
   participationId: number,
   projectId: number,
@@ -98,6 +102,32 @@ describe('ParticipationReviewListPage', () => {
       screen.getByText(
         '他の管理者の承認待ちを含む、最終承認前の入会届をすべて表示しています。',
       ),
+    ).toBeInTheDocument();
+  });
+
+  it('renders the shared 404 page when a page-loading request fails', async () => {
+    getMyParticipationReviews.mockRejectedValueOnce(new Error('gateway error'));
+
+    render(
+      <MemoryRouter
+        initialEntries={['/admin/projects/7/memberships']}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <Routes>
+          <Route
+            path="/admin/projects/:projectId/memberships"
+            element={<ParticipationReviewListPage />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByRole('heading', { name: 'ページが見つかりません' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('gateway error')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'ホームに戻る' }),
     ).toBeInTheDocument();
   });
 });
