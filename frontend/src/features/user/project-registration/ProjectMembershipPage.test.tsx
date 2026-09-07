@@ -9,11 +9,15 @@ const {
   getSiteData,
   getSiteProjects,
   getMyProjectParticipations,
+  downloadProjectMembershipPdf,
+  downloadFromUrl,
 } =
   vi.hoisted(() => ({
     getSiteData: vi.fn(),
     getSiteProjects: vi.fn(),
     getMyProjectParticipations: vi.fn(),
+    downloadProjectMembershipPdf: vi.fn(),
+    downloadFromUrl: vi.fn(),
   }));
 
 vi.mock('@/api/site', async (importOriginal) => {
@@ -25,6 +29,20 @@ vi.mock('@/api/site', async (importOriginal) => {
     getMyProjectParticipations,
   };
 });
+
+vi.mock('@/api/projects', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/api/projects')>();
+  return {
+    ...actual,
+    downloadProjectMembershipPdf,
+  };
+});
+
+vi.mock('@/utils/download', () => ({ downloadFromUrl }));
+
+vi.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({ toast: vi.fn() }),
+}));
 
 vi.mock('@/stores/dashboardStore', () => ({
   useDashboardStore: (
@@ -68,13 +86,19 @@ function renderPage() {
 }
 
 describe('ProjectMembershipPage tabs', () => {
-  beforeEach(() => {
+beforeEach(() => {
     getSiteData.mockReset();
     getSiteProjects.mockReset();
     getMyProjectParticipations.mockReset();
+    downloadProjectMembershipPdf.mockReset();
+    downloadFromUrl.mockReset();
     getSiteData.mockResolvedValue({
       site: { siteId: 'site001', siteName: '東京拠点' },
       metrics: null,
+    });
+    downloadProjectMembershipPdf.mockResolvedValue({
+      pdfUrl: 'https://example.com/membership.pdf',
+      expiresIn: 300,
     });
   });
 
@@ -172,7 +196,7 @@ describe('ProjectMembershipPage tabs', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('uses the project list flags without requesting participation details', async () => {
+it('uses the project list flags without requesting participation details', async () => {
     const user = userEvent.setup();
     getSiteProjects.mockResolvedValue([
       createProject('PROJ002', '入会中プロジェクト', true, false),
@@ -187,8 +211,31 @@ describe('ProjectMembershipPage tabs', () => {
       screen.getByRole('heading', { name: '入会中プロジェクト' }),
     ).toBeVisible();
     expect(getMyProjectParticipations).not.toHaveBeenCalled();
+  });
+
+  it('opens the membership PDF for a joined project from the joined tab', async () => {
+    const user = userEvent.setup();
+    getSiteProjects.mockResolvedValue([
+      createProject('PROJ001', '入会可能プロジェクト', false),
+      createProject('PROJ002', '入会中プロジェクト', true, false),
+    ]);
+
+    renderPage();
+
+    await screen.findByRole('heading', { name: '入会可能プロジェクト' });
     expect(
       screen.queryByRole('button', { name: 'PDFを表示' }),
     ).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('tab', { name: /入会中のプロジェクト\s*1/ }),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'PDFを表示' }));
+
+    expect(downloadProjectMembershipPdf).toHaveBeenCalledWith('PROJ002');
+    expect(downloadFromUrl).toHaveBeenCalledWith(
+      'https://example.com/membership.pdf',
+    );
   });
 });

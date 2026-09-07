@@ -279,7 +279,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
               </section>
 
               <section className="mt-8">
-                <h3 className="font-semibold mb-2">附　則</h3>
+                <h3 className="font-semibold mb-2">附則</h3>
                 <p>本規約は、{formattedStartedAt}から施行する。</p>
               </section>
             </div>

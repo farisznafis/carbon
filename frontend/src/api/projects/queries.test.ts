@@ -95,7 +95,7 @@ describe('getProjectMemberTermsInfo', () => {
 });
 
 describe('downloadProjectMembershipPdf', () => {
-  it('gets a presigned PDF URL using encoded project and participation IDs', async () => {
+  it('gets a presigned PDF URL using an encoded project ID', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -107,10 +107,10 @@ describe('downloadProjectMembershipPdf', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    const result = await downloadProjectMembershipPdf('PROJ/001', 42);
+    const result = await downloadProjectMembershipPdf('PROJ/001');
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/project/PROJ%2F001/participations/42/membership-pdf',
+      '/api/site/project/PROJ%2F001/membership-pdf',
       expect.objectContaining({ method: 'GET' }),
     );
     expect(result).toEqual({
@@ -131,7 +131,7 @@ describe('downloadProjectMembershipPdf', () => {
     );
 
     await expect(
-      downloadProjectMembershipPdf('PROJ001', 7),
+      downloadProjectMembershipPdf('PROJ001'),
     ).rejects.toThrow('PDFのダウンロードURLが見つかりませんでした');
   });
 
@@ -149,9 +149,7 @@ describe('downloadProjectMembershipPdf', () => {
       ),
     );
 
-    await expect(
-      downloadProjectMembershipPdf('PROJ001', 7),
-    ).rejects.toEqual(
+    await expect(downloadProjectMembershipPdf('PROJ001')).rejects.toEqual(
       expect.objectContaining<ApiError>({
         name: 'ApiError',
         status: 409,

@@ -17,14 +17,13 @@ import type {
   ProjectMemberTermsInfo,
 } from './types';
 
-// GET /project/{projectId}/participations/{participationId}/membership-pdf
+// GET /site/project/{projectId}/membership-pdf
 /** Requests the temporary membership PDF URL shared by master and admin views. */
 export async function downloadProjectMembershipPdf(
   projectId: string,
-  participationId: number,
 ): Promise<ProjectMembershipPdfDownload> {
   const response = await apiFetch(
-    `/project/${encodeURIComponent(projectId)}/participations/${encodeURIComponent(String(participationId))}/membership-pdf`,
+    `/site/project/${encodeURIComponent(projectId)}/membership-pdf`,
     { method: 'GET', forbiddenHandling: 'caller' },
   );
   const { data, rawBody } = await parseJsonResponse<

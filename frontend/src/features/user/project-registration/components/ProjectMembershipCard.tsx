@@ -84,13 +84,11 @@ export function ProjectMembershipCard({
 
         {showsJoinedState && onDownloadPdf && (
           <div className='mt-6 sm:ml-auto'>
-            <Button
+<Button
               type='button'
               variant='outline'
               size='md'
-              disabled={
-                project.participationId == null || isDownloadingPdf
-              }
+              disabled={isDownloadingPdf}
               onClick={() => onDownloadPdf?.(project)}
             >
               {isDownloadingPdf ? (
