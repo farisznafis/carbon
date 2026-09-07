@@ -951,8 +951,6 @@ const ProjectRegister = () => {
             onSubmit={() => void handleSubmit()}
           />
         );
-      case COMPLETION_STEP:
-        return <CompletionStep onNavigateToDashboard={navigateToDashboard} />;
       default:
         return null;
     }
@@ -985,6 +983,17 @@ const ProjectRegister = () => {
           </CardContent>
         </Card>
       </div>
+    );
+  }
+
+  // Renders the success screen as a centered completion card without the form header.
+  if (isCompletionStep) {
+    return (
+      <FormPageShell className="flex min-h-[calc(100dvh-4rem-1px)] items-center py-8">
+        <div className="w-full animate-slide-up">
+          <CompletionStep onNavigateToDashboard={navigateToDashboard} />
+        </div>
+      </FormPageShell>
     );
   }
 
