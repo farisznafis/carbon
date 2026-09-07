@@ -645,7 +645,7 @@ const Dashboard = () => {
                 <InlineLoader label="拠点情報を読み込んでいます" />
               ) : (
                 <h1 className='min-w-0 break-words text-4xl leading-10 text-foreground'>
-                  {user?.companyName || '株式会社ABC'}
+                  {site?.siteName || '株式会社ABC'}
                 </h1>
               )}
             </div>
