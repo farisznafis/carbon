@@ -46,7 +46,7 @@ export type {
 export { getProfile, getUserProfileById } from "./profile";
 export type { ProfileViewModel } from "./profile";
 
-export { deleteUser, getUsers, registerUser, updateUser } from "./users";
+export { deleteUser, getUsers, updateUser } from "./users";
 export type {
   Company,
   User,
@@ -55,6 +55,19 @@ export type {
   UserProfile,
   UserProfileResponse,
 } from "./users";
+
+export {
+  completeUserInvitation,
+  createUserInvitation,
+  getUserInvitationContext,
+} from './user-invitations';
+export type {
+  CompleteUserInvitationPayload,
+  CompleteUserInvitationResponse,
+  CreateUserInvitationPayload,
+  CreateUserInvitationResponse,
+  UserInvitationContext,
+} from './user-invitations';
 
 export { updateCompany, validateSignupCompanyInfo } from "./company";
 export type {

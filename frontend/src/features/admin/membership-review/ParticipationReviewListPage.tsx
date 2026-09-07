@@ -14,6 +14,7 @@ import {
   floatingPageBackButtonClassName,
   PageBackButton,
 } from '@/components/navigation/PageBackButton';
+import { NotFoundPage } from '@/components/feedback/NotFoundPage';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,10 +40,7 @@ const REVIEW_TAB_DESCRIPTIONS: Record<ReviewTab, string> = {
     '他の管理者の承認待ちを含む、最終承認前の入会届をすべて表示しています。',
 };
 
-function getErrorMessage(error: unknown, fallback: string) {
-  return error instanceof Error && error.message ? error.message : fallback;
-}
-
+/** Displays the project-scoped participation review list. */
 export default function ParticipationReviewListPage() {
   const navigate = useNavigate();
   const { projectId = '' } = useParams();
@@ -52,17 +50,18 @@ export default function ParticipationReviewListPage() {
     ParticipationReviewDetail[]
   >([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [hasLoadError, setHasLoadError] = useState(false);
 
+  /** Loads both review scopes and switches failures to the shared 404 state. */
   const loadReviews = useCallback(async () => {
     if (!projectId) {
-      setLoadError('プロジェクトIDが指定されていません。');
+      setHasLoadError(true);
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
-    setLoadError(null);
+    setHasLoadError(false);
 
     try {
       const [mine, pending] = await Promise.all([
@@ -72,10 +71,8 @@ export default function ParticipationReviewListPage() {
 
       setMyReviews(mine);
       setPendingReviews(pending);
-    } catch (error) {
-      setLoadError(
-        getErrorMessage(error, '入会届一覧の取得に失敗しました。'),
-      );
+    } catch {
+      setHasLoadError(true);
     } finally {
       setIsLoading(false);
     }
@@ -186,6 +183,10 @@ export default function ParticipationReviewListPage() {
 
   const returnToProject = () => navigate(paths.adminProjectDetail(projectId));
 
+  if (hasLoadError) {
+    return <NotFoundPage />;
+  }
+
   return (
     <main className="relative min-h-screen bg-background px-4 py-10 sm:px-6 lg:px-8">
       <PageBackButton
@@ -229,19 +230,6 @@ export default function ParticipationReviewListPage() {
               {isLoading ? (
                 <div className="rounded-xl border border-border bg-card py-12 text-center text-small text-foreground">
                   入会届一覧を読み込んでいます...
-                </div>
-              ) : loadError ? (
-                <div className="space-y-4 rounded-xl border border-destructive/30 bg-destructive/5 p-8 text-center">
-                  <p role="alert" className="text-small text-destructive">
-                    {loadError}
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => void loadReviews()}
-                  >
-                    再試行
-                  </Button>
                 </div>
               ) : (
                 <>

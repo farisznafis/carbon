@@ -71,7 +71,7 @@ describe('participation review API', () => {
     const detail = await getParticipationReviewDetail(12);
 
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
-      '/api/admin/companies/participate/self-sign',
+      '/api/admin/companies/participate/open',
       '/api/admin/companies/participate/pending',
       '/api/admin/companies/participate/12',
     ]);

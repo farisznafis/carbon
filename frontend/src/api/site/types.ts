@@ -153,7 +153,8 @@ export type SiteProjectApiItem = {
   methodCombiFeasibility?: boolean | null;
   methodDetails?: string | null;
   operatorCompanyId?: number | null;
-  isJoined?: boolean | null;
+  isCompanyJoined?: boolean | null;
+  hasSiteRelation?: boolean | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 };
@@ -172,7 +173,8 @@ export type SiteProject = Project & {
   participationId?: number;
   participationStatus?: string;
   pdfStatus?: string;
-  isJoined: boolean;
+  isCompanyJoined: boolean;
+  hasSiteRelation: boolean;
   projectNumber: string;
   repFirstName?: string;
   repFirstNameKana?: string;
@@ -211,7 +213,6 @@ export type SiteProjectEquipment = {
   nominalMaxOutput?: number | null;
   pcsManufacturer?: string | null;
   pcsModel?: string | null;
-  powerCondUnitCount?: number | null;
   deviceNo?: string | null;
   powerCondStandby?: number | null;
   hasBattery?: boolean | null;
@@ -260,12 +261,10 @@ export type SiteProjectEquipmentApiFile = SiteProjectEquipmentFile & {
 
 export type SiteProjectEquipmentApiItem = Omit<
   SiteProjectEquipment,
-  'equipmentId' | 'powerCondUnitCount' | 'powerCondStandby' | 'files'
+  'equipmentId' | 'powerCondStandby' | 'files'
 > & {
   id?: number | null;
   equipmentId?: number | null;
-  pcsUnitCount?: number | null;
-  powerCondUnitCount?: number | null;
   pcsStandby?: number | null;
   powerCondStandby?: number | null;
   files?: SiteProjectEquipmentApiFile[] | null;
@@ -326,7 +325,6 @@ export type SiteProjectEquipmentChangeRequest = {
   nominalMaxOutput: number | null;
   pcsManufacturer: string;
   pcsModel: string;
-  pcsUnitCount: number | null;
   deviceNo: string;
   pcsStandby: number | null;
   hasBattery: boolean | null;
@@ -364,7 +362,6 @@ export type SiteProjectEquipmentValidationItem = {
   nominalMaxOutput: number | null;
   pcsManufacturer: string | null;
   pcsModel: string | null;
-  pcsUnitCount: number | null;
   deviceNo: string | null;
   pcsStandby: number | null;
   hasBattery: boolean | null;
@@ -378,6 +375,32 @@ export type SiteProjectEquipmentValidationItem = {
   preProjectUnitPrice: number | null;
   files: SiteProjectEquipmentValidationFile[];
 };
+
+/** Request accepted by POST /site/{siteId}/{projectId}/equipment. */
+export type SiteProjectEquipmentCreateRequest = {
+  tempId: string;
+  siteId: string;
+  equipmentOpDate: string | null;
+  nominalMaxOutput: number | null;
+  pcsManufacturer: string | null;
+  pcsModel: string | null;
+  deviceNo: string | null;
+  pcsStandby: number | null;
+  hasBattery: boolean | null;
+  batteryMaker: string | null;
+  batteryModel: string | null;
+  batteryCapacity: number | null;
+  totalInvestment: number | null;
+  hasSubsidy: boolean | null;
+  subsidyName: string | null;
+  subsidyAmount: number | null;
+  preProjectUnitPrice: number | null;
+  files: SiteProjectEquipmentValidationFile[];
+};
+
+/** Response returned after adding equipment to an existing site project. */
+export type SiteProjectEquipmentCreateResponse =
+  SiteProjectEquipmentDetailResponse;
 
 export type SiteProjectEquipmentValidationResponse = {
   statusCode?: string;

@@ -10,7 +10,8 @@ const joinedProject = {
   projectName: '太陽光発電プロジェクト',
   projectNumber: 'P001',
   projectStatus: '実施中',
-  isJoined: true,
+  isCompanyJoined: true,
+  hasSiteRelation: true,
   regionalCategory: '関東',
   methodNumber: '003',
   methodologyVersion: 'Ver.2.0',
@@ -73,18 +74,14 @@ describe('ProjectMembershipCard', () => {
     expect(onDownloadPdf).toHaveBeenCalledWith(joinedProject);
   });
 
-  it('disables download while the participation ID is unavailable', () => {
+  it('hides the PDF action when no download handler is provided', () => {
     render(
-      <ProjectMembershipCard
-        project={{ ...joinedProject, participationId: undefined }}
-        status="joined"
-        onDownloadPdf={vi.fn()}
-      />,
+      <ProjectMembershipCard project={joinedProject} status="joined" />,
     );
 
     expect(
-      screen.getByRole('button', { name: 'PDFを表示' }),
-    ).toBeDisabled();
+      screen.queryByRole('button', { name: 'PDFを表示' }),
+    ).not.toBeInTheDocument();
   });
 
   it('disables download while the PDF request is running', () => {

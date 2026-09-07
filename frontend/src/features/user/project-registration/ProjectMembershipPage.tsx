@@ -3,7 +3,6 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   getSiteData,
   getSiteProjects,
-  getMyProjectParticipations,
   type SiteProject,
 } from '@/api/site';
 import { downloadProjectMembershipPdf } from '@/api/projects';
@@ -86,7 +85,7 @@ type MembershipSectionProps = Readonly<{
   emptyMessage: string;
   onJoin?: (project: SiteProject) => void;
   onDownloadPdf?: (project: SiteProject) => void;
-  downloadingProjectIds?: ReadonlySet<string>;
+  isDownloadingPdf?: (project: SiteProject) => boolean;
   beforeProjectList?: ReactNode;
 }>;
 
@@ -98,7 +97,7 @@ function MembershipSection({
   emptyMessage,
   onJoin,
   onDownloadPdf,
-  downloadingProjectIds,
+  isDownloadingPdf,
   beforeProjectList,
 }: MembershipSectionProps) {
   return (
@@ -118,7 +117,7 @@ function MembershipSection({
               status={status}
               onJoin={onJoin}
               onDownloadPdf={onDownloadPdf}
-              isDownloadingPdf={downloadingProjectIds?.has(project.id)}
+              isDownloadingPdf={isDownloadingPdf?.(project) ?? false}
             />
           ))}
         </div>
@@ -167,30 +166,8 @@ export default function ProjectMembershipPage() {
         getSiteProjects(siteId),
       ]);
 
-      // participationId comes from GET /site/project/{projectId}/my-participations.
-      // The project list supplies the IDs and remains the source for joined status.
-      const projectsWithParticipation = await Promise.all(
-        siteProjects.map(async (project) => {
-          if (!project.isJoined) return project;
-
-          const participations = await getMyProjectParticipations(project.id);
-          const participation = participations.find(
-            (candidate) => candidate.siteId === siteId,
-          );
-
-          return participation
-            ? {
-                ...project,
-                participationId: participation.participationId,
-                participationStatus: participation.status,
-                pdfStatus: participation.pdfStatus,
-              }
-            : project;
-        }),
-      );
-
       setSiteName(siteData.site?.siteName ?? '');
-      setProjects(projectsWithParticipation);
+      setProjects(siteProjects);
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -207,11 +184,11 @@ export default function ProjectMembershipPage() {
   }, [loadMembershipData]);
 
   const availableProjects = useMemo(
-    () => projects.filter((project) => !project.isJoined),
+    () => projects.filter((project) => !project.isCompanyJoined),
     [projects],
   );
   const joinedProjects = useMemo(
-    () => projects.filter((project) => project.isJoined),
+    () => projects.filter((project) => project.isCompanyJoined),
     [projects],
   );
 
@@ -232,18 +209,13 @@ export default function ProjectMembershipPage() {
     setIsPreparationDialogOpen(true);
   };
 
+  // Opens the membership PDF for a joined project without leaving the page.
   const handleDownloadPdf = async (project: SiteProject) => {
-    if (
-      project.participationId == null ||
-      downloadingProjectIds.has(project.id)
-    ) return;
+    if (downloadingProjectIds.has(project.id)) return;
 
     setDownloadingProjectIds((current) => new Set(current).add(project.id));
     try {
-      const { pdfUrl } = await downloadProjectMembershipPdf(
-        project.id,
-        project.participationId,
-      );
+      const { pdfUrl } = await downloadProjectMembershipPdf(project.id);
       downloadFromUrl(pdfUrl);
     } catch (error) {
       toast({
@@ -363,12 +335,14 @@ export default function ProjectMembershipPage() {
 
               <TabsContent value="joined" className="mt-6">
                 <MembershipSection
-                  description="この拠点が現在入会しているプロジェクトです。再度入会届を提出する必要はありません。"
+                  description="この企業が現在入会しているプロジェクトです。再度入会届を提出する必要はありません。"
                   projects={joinedProjects}
                   status="joined"
                   emptyMessage="入会中のプロジェクトはありません。"
                   onDownloadPdf={(project) => void handleDownloadPdf(project)}
-                  downloadingProjectIds={downloadingProjectIds}
+                  isDownloadingPdf={(project) =>
+                    downloadingProjectIds.has(project.id)
+                  }
                 />
               </TabsContent>
             </Tabs>

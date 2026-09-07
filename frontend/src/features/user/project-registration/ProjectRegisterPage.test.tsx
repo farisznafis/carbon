@@ -6,7 +6,8 @@ import { ApiError } from '@/api/_shared/errors';
 import type { SolarEquipment } from '@/features/user/project-registration/components/types';
 import ProjectRegisterPage from './ProjectRegisterPage';
 
-const { validateSiteProjectEquipment } = vi.hoisted(() => ({
+const { getProjectMemberTermsInfo, validateSiteProjectEquipment } = vi.hoisted(() => ({
+  getProjectMemberTermsInfo: vi.fn(),
   validateSiteProjectEquipment: vi.fn(),
 }));
 const setCurrentProject = vi.fn();
@@ -39,6 +40,14 @@ vi.mock('@/api/site', async (importOriginal) => {
   return {
     ...actual,
     validateSiteProjectEquipment,
+  };
+});
+
+vi.mock('@/api/projects', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/api/projects')>();
+  return {
+    ...actual,
+    getProjectMemberTermsInfo,
   };
 });
 
@@ -101,6 +110,17 @@ describe('ProjectRegisterPage', () => {
     Element.prototype.scrollIntoView = vi.fn();
     validateSiteProjectEquipment.mockReset();
     validateSiteProjectEquipment.mockResolvedValue({ statusCode: 'OK' });
+    getProjectMemberTermsInfo.mockReset();
+    getProjectMemberTermsInfo.mockResolvedValue({
+      statusCode: 'OK',
+      message: '',
+      projectName: 'Solar Project',
+      operatorNameJa: '株式会社ABC',
+      adminRepName: '山田太郎',
+      projectOverview: '太陽光発電設備の導入',
+      usePurpose: '地域脱炭素施策',
+      startedAt: '2026-09-03T01:05:12.040Z',
+    });
   });
 
   it('asks the user to select a site instead of selecting the route site', async () => {

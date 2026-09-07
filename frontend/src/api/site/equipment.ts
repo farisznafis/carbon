@@ -15,6 +15,8 @@ import type {
   SiteProjectEquipmentFileType,
   SiteProjectEquipmentFileUploadResponse,
   SiteProjectEquipmentResponse,
+  SiteProjectEquipmentCreateRequest,
+  SiteProjectEquipmentCreateResponse,
   SiteProjectEquipmentChangeRequest,
   SiteProjectEquipmentValidationFile,
   SiteProjectEquipmentValidationItem,
@@ -73,8 +75,6 @@ function normalizeSiteProjectEquipment(
   return {
     ...equipment,
     equipmentId: equipment.equipmentId ?? equipment.id ?? null,
-    powerCondUnitCount:
-      equipment.powerCondUnitCount ?? equipment.pcsUnitCount ?? null,
     powerCondStandby:
       equipment.powerCondStandby ?? equipment.pcsStandby ?? null,
     files: rawFiles.map(normalizeSiteProjectEquipmentFile),
@@ -243,7 +243,7 @@ export async function joinSiteProject(
   payload: SiteProjectJoinRequest,
 ): Promise<SiteProjectJoinResponse> {
   return apiRequest<SiteProjectJoinResponse>(
-    `/site/project/projects/${encodeURIComponent(projectId)}/join`,
+    `/site/project/projects/${encodeURIComponent(projectId)}/join-company`,
     {
       method: 'POST',
       body: payload,
@@ -279,6 +279,22 @@ export async function getSiteProjectEquipment(
   return Array.isArray(json?.equipments)
     ? json.equipments.map(normalizeSiteProjectEquipment)
     : [];
+}
+
+/** POST /site/{siteId}/{projectId}/equipment — adds equipment to an existing site project. */
+export async function addSiteProjectEquipment(
+  siteId: string,
+  projectId: string,
+  payload: SiteProjectEquipmentCreateRequest,
+): Promise<SiteProjectEquipmentCreateResponse> {
+  return apiRequest<SiteProjectEquipmentCreateResponse>(
+    `/site/${encodeURIComponent(siteId)}/${encodeURIComponent(projectId)}/equipment`,
+    {
+      method: 'POST',
+      body: payload,
+      fallbackErrorMessage: '設備情報の登録に失敗しました。',
+    },
+  );
 }
 
 export async function getSiteEquipmentList(
@@ -367,7 +383,7 @@ export async function changeSiteEquipment(
 ): Promise<SiteProjectEquipment> {
   return normalizeSiteProjectEquipment(
     await apiRequest<SiteProjectEquipmentDetailResponse>(
-      `/siteg/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}/change`,
+      `/site/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}/change`,
       {
         method: 'POST',
         body: payload,
