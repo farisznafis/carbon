@@ -44,21 +44,21 @@ public interface EnR002IndividualActivityService {
  
     /**
      * GET /projects/{projectId}/kobetsu-katsudo/periods/{periodId}/rows
-     * periodId = id batch (row CLOSED) atau literal "current" (row RUNNING).
+     * periodId = id batch (row CLOSED) 
      */
     PageResponse<RowSummaryActivityResponse> getRowsForPeriod(
             String projectId, String periodId, RowsQueryRequest request, String currentUserId);
  
     /**
      * GET /companies/{companyId}/kobetsu-katsudo
-     * Project yang bukan tanggung jawab currentUserId (OPERATOR) otomatis tidak muncul di hasil.
+     * for explisit operator also
      */
     List<ProjectGroupResponse> getRowsForCompany(
             String companyId, CompanyKobetsuKatsudoRequest request, String currentUserId);
  
     /**
      * GET /kobetsu-katsudo/rows/{rowKey}
-     * Endpoint bersama, dipanggil baik dari hasil #getRowsForPeriod maupun #getRowsForCompany.
+     * getter for row detail, including all the information about the row, its project, and its company.
      */
     RowDetailActivityResponse getRowDetail(String rowKey, String currentUserId);
 }
