@@ -25,8 +25,11 @@ const Hero = () => {
       <HomeBenefitsSection />
       <HomeFlowSection />
       <HomeMethodsSection />
-      <HomeFaqSection />
-      <HomeCtaSection signupPath={paths.signup} />
+      <HomeFaqSection contactPath={paths.contact} />
+      <HomeCtaSection
+        signupPath={paths.signup}
+        contactPath={paths.contact}
+      />
       <HomeFooter />
     </div>
   );
