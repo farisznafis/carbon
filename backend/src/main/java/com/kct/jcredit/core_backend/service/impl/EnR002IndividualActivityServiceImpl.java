@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,6 +48,7 @@ import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepo
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
+import com.kct.jcredit.core_backend.repository.dynamodb.EnR002ApplicationConfirmationRepository;
 import com.kct.jcredit.core_backend.repository.dynamodb.MonitoringTableRecordSolarRepository;
 import com.kct.jcredit.core_backend.service.ProjectService;
 import com.kct.jcredit.core_backend.service.batch.calculator.SolarEmissionsCalculator;
@@ -70,6 +72,7 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
     private final MonitoringTableRecordSolarRepository monitoringTableRecordSolarRepository;
     private final ProjectService projectService;
     private final SolarEmissionsCalculator solarEmissionsCalculator;
+    private final EnR002ApplicationConfirmationRepository applicationConfirmationRepository;
  
     public EnR002IndividualActivityServiceImpl(
             ProjectRepository projectRepository,
@@ -82,7 +85,8 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
             BatchProcessHistoryRepository batchProcessHistoryRepository,
             MonitoringTableRecordSolarRepository monitoringTableRecordSolarRepository,
             ProjectService projectService,
-            SolarEmissionsCalculator solarEmissionsCalculator) {
+            SolarEmissionsCalculator solarEmissionsCalculator,
+            EnR002ApplicationConfirmationRepository applicationConfirmationRepository) {
         this.projectRepository = projectRepository;
         this.participatingProjectRepository = participatingProjectRepository;
         this.participatingCompanyRepository = participatingCompanyRepository;
@@ -94,6 +98,7 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
         this.monitoringTableRecordSolarRepository = monitoringTableRecordSolarRepository;
         this.projectService = projectService;
         this.solarEmissionsCalculator = solarEmissionsCalculator;
+        this.applicationConfirmationRepository = applicationConfirmationRepository;
     }
  
     // ============================================================
@@ -186,7 +191,7 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
     public List<ProjectGroupResponse> getRowsForCompany(
             String companyPublicId, CompanyKobetsuKatsudoRequest request, String currentUserId) {
         ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(companyPublicId)
-                .orElseThrow(() -> new IllegalArgumentException("Company tidak ditemukan: " + companyPublicId));
+                .orElseThrow(() -> new IllegalArgumentException("Not found: " + companyPublicId));
  
         List<ParticipatingProject> participations = request.projectId() != null
                 ? participatingProjectRepository.findByCompanyIdAndProject_Id(
@@ -286,7 +291,7 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
         LocalDateTime end = toLocalDateTime(result.getEndTime());
         List<EnR002MonitoringRecord> records = monitoringTableRecordSolarRepository
         .findByRecordIdAndEquipmentIdAndDateRecordedBetween(
-                buildRecordId(site, project, equipment.getId()),
+                buildRecordId(site, project),
                 equipment.getId(),          
                 formatSk(start), formatSk(end));
  
@@ -314,7 +319,8 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
         LocalDateTime periodStart = resolveRunningPeriodStart(project.getId(), equipment);
         List<EnR002MonitoringRecord> records = monitoringTableRecordSolarRepository
                 .findByRecordIdAndEquipmentIdAndDateRecordedAfter(
-                        buildRecordId(site, project, equipment.getId()), equipment.getId(),
+                        buildRecordId(site, project),
+                        equipment.getId(),
                         formatSk(periodStart));
  
         BigDecimal liveEr = null;
@@ -347,7 +353,7 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
         LocalDateTime periodStart = resolveRunningPeriodStart(project.getId(), equipment);
         List<EnR002MonitoringRecord> records = monitoringTableRecordSolarRepository
                 .findByRecordIdAndEquipmentIdAndDateRecordedAfter(
-                        buildRecordId(site, project, equipment.getId()),
+                        buildRecordId(site, project),
                         equipment.getId(),
                         formatSk(periodStart));
  
@@ -371,9 +377,9 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
                 .orElse(equipment.getEquipmentOpDate().atStartOfDay());
     }
  
-    private String buildRecordId(Site site, Project project, Integer equipmentId) {
-        return site.getPublicId() + "#" + project.getPublicId() + "#" + equipmentId;
-    }
+    private String buildRecordId(Site site, Project project) {
+        return site.getPublicId() + "#" + project.getId();
+        }
  
     // formatSk: 
     private String formatSk(LocalDateTime dateTime) {
@@ -400,16 +406,28 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
     // ============================================================
  
     private RowDetailActivityResponse.SiteInfo buildSiteInfo(
-            Site site, ParticipatingCompany company, ParticipatingProject participation) {
+                Site site, ParticipatingCompany company, ParticipatingProject participation) {
+
+        RowDetailActivityResponse.BusinessOperatorFlags flags = null;
+        if (participation != null) {
+                flags = applicationConfirmationRepository.findByParticipationId(participation.getId())
+                        .map(c -> new RowDetailActivityResponse.BusinessOperatorFlags(
+                                c.getIsKeidanrenParticipation(),
+                                c.getIsPeriodicReportTypeOne(), 
+                                c.getIsEmitter(),
+                                c.getEmitterCode()))
+                        .orElse(null);
+        }
+
         return new RowDetailActivityResponse.SiteInfo(
                 site.getPublicId(),
                 company != null ? company.getCompanyId() : null,
                 company != null ? company.getNameJa() : null,
                 formatAddress(site),
-                participation != null ? participation.getCreatedAt().toLocalDate() : null
-                // TODO: createdAt as 入会申込日 
+                participation != null ? participation.getCreatedAt().toLocalDate() : null,
+                flags
         );
-    }
+        }
  
     private RowDetailActivityResponse.EquipmentInfo buildEquipmentInfo(EnR002Equipment equipment) {
         String effectiveTo = equipmentRepository.findByPreviousEquipmentId(equipment.getId())
@@ -458,8 +476,13 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
     }
  
     private RowDetailActivityResponse.MonitoringInfo buildMonitoringInfo(List<EnR002MonitoringRecord> records) {
-        EnR002MonitoringRecord first = records.isEmpty() ? null : records.get(0);
-        EnR002MonitoringRecord last = records.isEmpty() ? null : records.get(records.size() - 1);
+        List<EnR002MonitoringRecord> sorted = records.stream()
+        .filter(r -> r.getDateRecorded() != null)
+        .sorted(Comparator.comparing(EnR002MonitoringRecord::getDateRecorded))
+        .toList();
+        
+        EnR002MonitoringRecord first = sorted.isEmpty() ? null : sorted.get(0);
+        EnR002MonitoringRecord last = sorted.isEmpty() ? null : sorted.get(sorted.size() - 1);
  
         List<RowDetailActivityResponse.FileRef> files = records.stream()
                 .flatMap(r -> List.of(
@@ -541,10 +564,10 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
     boolean hasRequiredFiles = equipmentFileRepository.countByEquipmentId(equipment.getId()) > 0;
     boolean hasMonitoring = !(end == null
             ? monitoringTableRecordSolarRepository.findByRecordIdAndEquipmentIdAndDateRecordedAfter(
-                    buildRecordId(equipment.getSite(), project, equipment.getId()),
+                    buildRecordId(equipment.getSite(), project),
                     equipment.getId(), formatSk(start))
             : monitoringTableRecordSolarRepository.findByRecordIdAndEquipmentIdAndDateRecordedBetween(
-                    buildRecordId(equipment.getSite(), project, equipment.getId()),
+                    buildRecordId(equipment.getSite(), project),
                     equipment.getId(), formatSk(start), formatSk(end)))
             .isEmpty();
 

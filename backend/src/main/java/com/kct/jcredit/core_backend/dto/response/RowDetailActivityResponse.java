@@ -4,7 +4,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
- 
+
+import com.kct.jcredit.core_backend.dto.response.RowDetailActivityResponse.ComputedResult;
+import com.kct.jcredit.core_backend.dto.response.RowDetailActivityResponse.EquipmentInfo;
+import com.kct.jcredit.core_backend.dto.response.RowDetailActivityResponse.MonitoringInfo;
 import com.kct.jcredit.core_backend.enums.PeriodStatus;
 
 /**
@@ -27,7 +30,8 @@ public record RowDetailActivityResponse(
             String companyId,
             String companyName,
             String address,
-            LocalDate membershipApplicationDate
+            LocalDate membershipApplicationDate,
+            BusinessOperatorFlags businessOperatorFlags
             // TODO: businessOperatorFlags (Carbon Neutral Plan / 省エネ法 / 温対法) belum disertakan --
             //   sumber tabelnya belum ketemu di skema yang sudah dikonfirmasi, lihat kontrak API
     ) {}
@@ -41,6 +45,13 @@ public record RowDetailActivityResponse(
             String meterClass,          // TODO: 分類B/C -- tidak ada kolomnya di EN_R002_equipment
             BigDecimal errorRatePercent // TODO: 最大誤差率(%) -- tidak ada kolomnya di EN_R002_equipment
     ) {}
+
+    public record BusinessOperatorFlags(
+                Boolean carbonNeutralActionPlan,      // カーボンニュートラル行動計画
+                Boolean energySavingActSpecifiedOperator,  // 省エネ法特定事業者
+                Boolean warmingActSpecifiedEmitter,   // 温対法特定排出者
+                String emitterCode                    // 温対法の特定排出者コード 
+        ) {}
 
     public record BatteryInfo(
             String manufacturer,
