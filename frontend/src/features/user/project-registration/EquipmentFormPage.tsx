@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import {
   useLocation,
   useNavigate,
@@ -56,6 +56,8 @@ const OTHER_FORM_DEFAULT_VALUES: OtherEquipmentFormData = {
 
 const EMPTY_SITE_OPTIONS: never[] = [];
 
+type EquipmentSubmissionMode = 'draft' | 'create';
+
 function getInternalReturnPath(state: unknown): string | null {
   if (!state || typeof state !== 'object' || !('returnTo' in state)) {
     return null;
@@ -65,6 +67,15 @@ function getInternalReturnPath(state: unknown): string | null {
   return typeof returnTo === 'string' && returnTo.startsWith('/')
     ? returnTo
     : null;
+}
+
+/** Reads whether confirmation should create equipment immediately or keep a membership draft. */
+function getEquipmentSubmissionMode(state: unknown): EquipmentSubmissionMode {
+  if (!state || typeof state !== 'object') return 'draft';
+
+  return (state as { submissionMode?: unknown }).submissionMode === 'create'
+    ? 'create'
+    : 'draft';
 }
 
 function getStringValue(
@@ -145,6 +156,7 @@ export default function EquipmentFormPage() {
   const [searchParams] = useSearchParams();
   const equipmentId = searchParams.get('equipmentId');
   const returnPath = getInternalReturnPath(location.state);
+  const submissionMode = getEquipmentSubmissionMode(location.state);
   const enteredFromMasterDashboard = isFromMasterDashboard(location.state);
   const equipmentDraft = getSolarEquipmentDraft(location.state);
   const { toast } = useToast();
@@ -269,6 +281,7 @@ export default function EquipmentFormPage() {
           isEdit: Boolean(equipmentId),
           formData: data,
           returnTo: returnPath ?? undefined,
+          submissionMode,
           fromMasterDashboard: enteredFromMasterDashboard,
         },
       });
@@ -303,6 +316,12 @@ export default function EquipmentFormPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  /** Resubmits current values without letting stale backend field errors block the request. */
+  const handleSolarFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void submitSolarEquipment(solarForm.getValues());
   };
 
   const submitOtherEquipment = (data: OtherEquipmentFormData) => {
@@ -344,7 +363,7 @@ export default function EquipmentFormPage() {
         {formType === 'solar' ? (
           <Form {...solarForm}>
             <form
-              onSubmit={solarForm.handleSubmit(submitSolarEquipment)}
+              onSubmit={handleSolarFormSubmit}
               noValidate
             >
               <FormCard>

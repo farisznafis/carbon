@@ -47,11 +47,42 @@ vi.mock('@/api/site', async (importOriginal) => {
 });
 
 vi.mock('@/features/master/forms/SiteForm', () => ({
-  SiteForm: ({ onNext }: { onNext: (values: SiteFormData) => Promise<void> }) => (
-    <button type="button" onClick={() => void onNext(siteFormData)}>
-      入力を確認
-    </button>
+  SiteForm: ({
+    onNext,
+    onAddUser,
+    defaultValues,
+  }: {
+    onNext: (values: SiteFormData) => Promise<void>;
+    onAddUser?: (values: SiteFormData) => void;
+    defaultValues: SiteFormData;
+  }) => (
+    <div>
+      <span data-testid="site-draft-name">{defaultValues.siteName}</span>
+      <button type="button" onClick={() => void onNext(siteFormData)}>
+        入力を確認
+      </button>
+      <button type="button" onClick={() => onAddUser?.(siteFormData)}>
+        社員を追加
+      </button>
+    </div>
   ),
+}));
+
+vi.mock('@/features/master/user-invitations/UserInvitationDialog', () => ({
+  UserInvitationDialog: ({
+    open,
+    onOpenChange,
+  }: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+  }) =>
+    open ? (
+      <div role="dialog" aria-label="社員を招待">
+        <button type="button" onClick={() => onOpenChange(false)}>
+          招待を閉じる
+        </button>
+      </div>
+    ) : null,
 }));
 
 vi.mock('./SiteConfirmation', () => ({
@@ -150,5 +181,39 @@ describe('SiteRegister return flow', () => {
         sites: [createdSite],
       });
     });
+  });
+
+  it('keeps the site draft when invitation dialog opens and closes', async () => {
+    const user = userEvent.setup();
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter
+          initialEntries={['/master/site-register']}
+          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+        >
+          <Routes>
+            <Route path="/master/site-register" element={<SiteRegister />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: '社員を追加' }));
+    expect(
+      screen.getByRole('dialog', { name: '社員を招待' }),
+    ).toBeVisible();
+    expect(screen.getByTestId('site-draft-name')).toHaveTextContent(
+      siteFormData.siteName,
+    );
+
+    await user.click(screen.getByRole('button', { name: '招待を閉じる' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByTestId('site-draft-name')).toHaveTextContent(
+      siteFormData.siteName,
+    );
   });
 });

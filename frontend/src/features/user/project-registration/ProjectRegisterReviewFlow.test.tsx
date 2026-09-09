@@ -17,6 +17,10 @@ const apiMocks = vi.hoisted(() => ({
   validateSiteProjectFinalAgreement: vi.fn(),
 }));
 
+const projectApiMocks = vi.hoisted(() => ({
+  getProjectMemberTermsInfo: vi.fn(),
+}));
+
 const draftStorageMocks = vi.hoisted(() => ({
   loadProjectRegistrationDraft: vi.fn(),
   saveProjectRegistrationDraft: vi.fn(),
@@ -52,6 +56,11 @@ const flowEquipment: SolarEquipment = {
 vi.mock('@/api/site', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/site')>()),
   ...apiMocks,
+}));
+
+vi.mock('@/api/projects', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/projects')>()),
+  ...projectApiMocks,
 }));
 
 vi.mock(
@@ -195,6 +204,7 @@ vi.mock('./components/ContractStep', async () => {
     ContractStep: forwardRef<
       unknown,
       {
+        operatorName: string;
         formValues: Partial<ContractStepFormValues>;
         onValueChange: (values: Partial<ContractStepFormValues>) => void;
         errors?: Record<string, string>;
@@ -213,6 +223,7 @@ vi.mock('./components/ContractStep', async () => {
       return (
         <div>
           <h2>持続可能性フォーム</h2>
+          <span data-testid="contract-operator-name">{props.operatorName}</span>
           <span data-testid="contract-business-name">
             {props.formValues.businessName ?? ''}
           </span>
@@ -264,6 +275,11 @@ vi.mock('./components/FinalTermsStep', async () => {
     FinalTermsStep: forwardRef<
       unknown,
       {
+        projectName: string;
+        operatorName: string;
+        projectOverview: string;
+        usePurpose: string;
+        startedAt: string;
         errors?: Record<string, string>;
         onBack: () => void;
         onNext: () => void;
@@ -275,6 +291,11 @@ vi.mock('./components/FinalTermsStep', async () => {
       return (
         <div>
           <h2>入会規約フォーム</h2>
+          <span data-testid="terms-project-name">{props.projectName}</span>
+          <span data-testid="terms-operator-name">{props.operatorName}</span>
+          <span data-testid="terms-project-overview">{props.projectOverview}</span>
+          <span data-testid="terms-use-purpose">{props.usePurpose}</span>
+          <span data-testid="terms-started-at">{props.startedAt}</span>
           <span data-testid="final-terms-agreed-error">
             {props.errors?.finalTermsAgreed ?? ''}
           </span>
@@ -311,13 +332,17 @@ function renderFlow(
 }
 
 // Advances the mocked four input steps to the final review screen.
-async function advanceToReview(user: ReturnType<typeof userEvent.setup>) {
+async function advanceToReview(
+  user: ReturnType<typeof userEvent.setup>,
+  onFinalTermsVisible?: () => void,
+) {
   await user.click(await screen.findByRole('button', { name: '次へ' }));
   await screen.findByText('同意事項フォーム');
   await user.click(screen.getByRole('button', { name: '次へ' }));
   await screen.findByText('持続可能性フォーム');
   await user.click(screen.getByRole('button', { name: '次へ' }));
   await screen.findByText('入会規約フォーム');
+  onFinalTermsVisible?.();
   await user.click(screen.getByRole('button', { name: '確認へ' }));
   await screen.findByRole('heading', { name: '申請内容の確認' });
 }
@@ -327,6 +352,17 @@ describe('ProjectRegisterPage review flow', () => {
     localStorage.clear();
     window.scrollTo = vi.fn();
     Object.values(apiMocks).forEach((apiMock) => apiMock.mockReset());
+    projectApiMocks.getProjectMemberTermsInfo.mockReset();
+    projectApiMocks.getProjectMemberTermsInfo.mockResolvedValue({
+      statusCode: 'OK',
+      message: '',
+      projectName: '動的プロジェクト名',
+      operatorNameJa: '株式会社ABC',
+      adminRepName: '山田太郎',
+      projectOverview: '動的プロジェクト概要',
+      usePurpose: '地域脱炭素施策',
+      startedAt: '2026-09-03T01:05:12.040Z',
+    });
     apiMocks.validateSiteProjectEquipment.mockResolvedValue({ statusCode: 'OK' });
     apiMocks.validateSiteProjectConfirmationItems.mockResolvedValue({ statusCode: 'OK' });
     apiMocks.validateSiteProjectSustainabilityCommitment.mockResolvedValue({ statusCode: 'OK' });
@@ -354,7 +390,27 @@ describe('ProjectRegisterPage review flow', () => {
       '設備登録同意事項持続可能性入会規約確認',
     );
 
-    await advanceToReview(user);
+    await advanceToReview(user, () => {
+      expect(projectApiMocks.getProjectMemberTermsInfo).toHaveBeenCalledTimes(1);
+      expect(projectApiMocks.getProjectMemberTermsInfo).toHaveBeenCalledWith(
+        'PROJ-1',
+      );
+      expect(screen.getByTestId('terms-project-name')).toHaveTextContent(
+        '動的プロジェクト名',
+      );
+      expect(screen.getByTestId('terms-operator-name')).toHaveTextContent(
+        '株式会社ABC・山田太郎',
+      );
+      expect(screen.getByTestId('terms-project-overview')).toHaveTextContent(
+        '動的プロジェクト概要',
+      );
+      expect(screen.getByTestId('terms-use-purpose')).toHaveTextContent(
+        '地域脱炭素施策',
+      );
+      expect(screen.getByTestId('terms-started-at')).toHaveTextContent(
+        '2026-09-03T01:05:12.040Z',
+      );
+    });
 
     expect(
       await screen.findByRole('heading', { name: '申請内容の確認' }),
@@ -627,6 +683,73 @@ describe('ProjectRegisterPage review flow', () => {
       screen.getByTestId('contract-representative-position'),
     ).toHaveTextContent('入力済み役職');
     expect(screen.getByTestId('contract-agreed')).toHaveTextContent('true');
+  });
+
+  it('shows a loading state instead of static terms placeholders', async () => {
+    projectApiMocks.getProjectMemberTermsInfo.mockReturnValueOnce(
+      new Promise(() => undefined),
+    );
+    draftStorageMocks.loadProjectRegistrationDraft.mockResolvedValueOnce({
+      version: 1,
+      currentStep: 3,
+      equipment: [flowEquipment],
+      agreementFormValues: {},
+      contractFormValues: {},
+      finalTermsValues: {},
+      updatedAt: '2026-09-03T02:00:00.000Z',
+    });
+
+    renderFlow();
+
+    expect(
+      await screen.findByRole('status', {
+        name: '入会規約情報を読み込んでいます',
+      }),
+    ).toBeVisible();
+    expect(document.body).not.toHaveTextContent('プログラム型運営・管理者名');
+    expect(document.body).not.toHaveTextContent('プロジェクト概要');
+    expect(document.body).not.toHaveTextContent('YYYY年MM月DD');
+  });
+
+  it('blocks only a dependent step and retries member terms loading', async () => {
+    const user = userEvent.setup();
+    projectApiMocks.getProjectMemberTermsInfo.mockRejectedValueOnce(
+      new Error('入会規約情報の取得に失敗しました'),
+    );
+    draftStorageMocks.loadProjectRegistrationDraft.mockResolvedValueOnce({
+      version: 1,
+      currentStep: 3,
+      equipment: [flowEquipment],
+      agreementFormValues: {},
+      contractFormValues: {},
+      finalTermsValues: {},
+      updatedAt: '2026-09-03T02:00:00.000Z',
+    });
+
+    renderFlow();
+
+    expect(
+      await screen.findByText('入会規約情報の取得に失敗しました'),
+    ).toBeVisible();
+    expect(screen.queryByText('持続可能性フォーム')).not.toBeInTheDocument();
+
+    projectApiMocks.getProjectMemberTermsInfo.mockResolvedValueOnce({
+      statusCode: 'OK',
+      message: '',
+      projectName: '再取得プロジェクト',
+      operatorNameJa: '再取得運営者',
+      adminRepName: '再取得代表者',
+      projectOverview: '再取得概要',
+      usePurpose: '再取得利用目的',
+      startedAt: '2026-09-04T00:00:00.000Z',
+    });
+    await user.click(screen.getByRole('button', { name: '再読み込み' }));
+
+    expect(await screen.findByText('持続可能性フォーム')).toBeVisible();
+    expect(screen.getByTestId('contract-operator-name')).toHaveTextContent(
+      '再取得運営者・再取得代表者',
+    );
+    expect(projectApiMocks.getProjectMemberTermsInfo).toHaveBeenCalledTimes(2);
   });
 
   it('persists intentionally cleared Contract Step fields in the draft', async () => {

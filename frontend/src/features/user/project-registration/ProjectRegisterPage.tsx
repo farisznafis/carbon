@@ -3,8 +3,9 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDashboardStore } from "@/stores/dashboardStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PageSkeleton } from "@/components/feedback/loading";
+import { LoadingPanel, PageSkeleton } from "@/components/feedback/loading";
 import {
+  FormActions,
   FormPageHeader,
   FormPageShell,
   WizardProgress,
@@ -12,7 +13,11 @@ import {
 import { FileSignature } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { getProjectDetails } from "@/api/projects";
+import { 
+  getProjectDetails,
+  getProjectMemberTermsInfo,
+  type ProjectMemberTermsInfo,
+} from "@/api/projects";
 import {
   joinSiteProject,
   uploadSiteProjectEquipmentFile,
@@ -254,6 +259,7 @@ const ProjectRegister = () => {
   const contractStepRef = useRef<ContractStepRef>(null);
   const finalStepRef = useRef<FinalTermsRef>(null);
   const equipmentStepRef = useRef<EquipmentRegistrationStepRef>(null);
+  const memberTermsRequestIdRef = useRef(0);
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [currentStep, setCurrentStep] = useState(1);
@@ -262,6 +268,12 @@ const ProjectRegister = () => {
   const [isProjectLoading, setIsProjectLoading] = useState(false);
   const [isDraftHydrated, setIsDraftHydrated] = useState(false);
   const [projectLoadError, setProjectLoadError] = useState<string | null>(null);
+  const [memberTermsInfo, setMemberTermsInfo] =
+    useState<ProjectMemberTermsInfo | null>(null);
+  const [isMemberTermsLoading, setIsMemberTermsLoading] = useState(true);
+  const [memberTermsLoadError, setMemberTermsLoadError] = useState<string | null>(
+    null,
+  );
 
   const [agreementFormValues, setAgreementFormValues] = useState<Partial<AgreementFormValues>>({
     useRegisteredInfo: null,
@@ -302,6 +314,16 @@ const ProjectRegister = () => {
     sitesQuery.data?.sites.find(
       (site) => site.siteId === selectedEquipmentSiteId,
     )?.siteName ?? selectedEquipmentSiteId;
+  const memberTermsOperatorName = useMemo(
+    () =>
+      memberTermsInfo
+        ? [memberTermsInfo.operatorNameJa, memberTermsInfo.adminRepName]
+            .map((name) => name.trim())
+            .filter(Boolean)
+            .join('・')
+        : '',
+    [memberTermsInfo],
+  );
   const draftKey = useMemo(
     () => createProjectRegistrationDraftKey(user?.id ?? '', siteId, projectId),
     [projectId, siteId, user?.id],
@@ -342,6 +364,38 @@ const ProjectRegister = () => {
       setCurrentStep((prev) => prev - 1);
     }
   }, [currentStep, navigateToMembership]);
+
+  /** Loads the project-specific text shared by the sustainability and final-terms steps. */
+  const loadMemberTermsInfo = useCallback(async () => {
+    const requestId = memberTermsRequestIdRef.current + 1;
+    memberTermsRequestIdRef.current = requestId;
+    setMemberTermsInfo(null);
+    setMemberTermsLoadError(null);
+    setIsMemberTermsLoading(true);
+
+    if (!projectId) {
+      setMemberTermsLoadError('入会規約情報が見つかりませんでした');
+      setIsMemberTermsLoading(false);
+      return;
+    }
+
+    try {
+      const termsInfo = await getProjectMemberTermsInfo(projectId);
+      if (memberTermsRequestIdRef.current !== requestId) return;
+      setMemberTermsInfo(termsInfo);
+    } catch (error) {
+      if (memberTermsRequestIdRef.current !== requestId) return;
+      setMemberTermsLoadError(
+        error instanceof Error
+          ? error.message
+          : '入会規約情報の取得に失敗しました',
+      );
+    } finally {
+      if (memberTermsRequestIdRef.current === requestId) {
+        setIsMemberTermsLoading(false);
+      }
+    }
+  }, [projectId]);
 
   /** Opens site registration and preserves the current equipment draft for return. */
   const handleAddSite = useCallback(
@@ -421,6 +475,14 @@ const ProjectRegister = () => {
     loadProject();
     return () => { isMounted = false; };
   }, [projectId, selectedProject?.id, setCurrentProject, toast]);
+
+  useEffect(() => {
+    void loadMemberTermsInfo();
+
+    return () => {
+      memberTermsRequestIdRef.current += 1;
+    };
+  }, [loadMemberTermsInfo]);
 
   useEffect(() => {
     let isMounted = true;
@@ -761,6 +823,41 @@ const ProjectRegister = () => {
 
   // ── Render steps ──────────────────────────────────────────────────────────
   const renderStep = () => {
+    const requiresMemberTerms =
+      currentStep === SUSTAINABILITY_STEP ||
+      currentStep === FINAL_AGREEMENT_STEP;
+
+    if (requiresMemberTerms && isMemberTermsLoading) {
+      return <LoadingPanel message="入会規約情報を読み込んでいます" />;
+    }
+
+    if (requiresMemberTerms && (!memberTermsInfo || memberTermsLoadError)) {
+      return (
+        <Card className="rounded-lg border-border shadow-none">
+          <CardContent className="space-y-5 p-6 text-center sm:p-10">
+            <p className="text-destructive">
+              {memberTermsLoadError || '入会規約情報を取得できませんでした'}
+            </p>
+            <FormActions
+              actions={[
+                {
+                  id: 'back',
+                  label: '戻る',
+                  variant: 'outline',
+                  onClick: handleBack,
+                },
+                {
+                  id: 'retry',
+                  label: '再読み込み',
+                  onClick: () => void loadMemberTermsInfo(),
+                },
+              ]}
+            />
+          </CardContent>
+        </Card>
+      );
+    }
+
     switch (currentStep) {
       case EQUIPMENT_STEP:
         return (
@@ -799,6 +896,7 @@ const ProjectRegister = () => {
         return (
           <ContractStep
             ref={contractStepRef}
+            operatorName={memberTermsOperatorName}
             methodologyNumber={selectedProject.methodNumber}
             methodologyName={selectedProject.methodName}
             methodologyVersion={selectedProject.methodologyVersion}
@@ -819,7 +917,11 @@ const ProjectRegister = () => {
         return (
           <FinalTermsStep
             ref={finalStepRef}
-            projectName={selectedProject.projectName}
+            projectName={memberTermsInfo.projectName}
+            operatorName={memberTermsOperatorName}
+            projectOverview={memberTermsInfo.projectOverview}
+            usePurpose={memberTermsInfo.usePurpose}
+            startedAt={memberTermsInfo.startedAt}
             formValues={finalTermsValues}
             isSubmitting={isSubmitting}
             onBack={handleBack}
@@ -849,8 +951,6 @@ const ProjectRegister = () => {
             onSubmit={() => void handleSubmit()}
           />
         );
-      case COMPLETION_STEP:
-        return <CompletionStep onNavigateToDashboard={navigateToDashboard} />;
       default:
         return null;
     }
@@ -883,6 +983,17 @@ const ProjectRegister = () => {
           </CardContent>
         </Card>
       </div>
+    );
+  }
+
+  // Renders the success screen as a centered completion card without the form header.
+  if (isCompletionStep) {
+    return (
+      <FormPageShell className="flex min-h-[calc(100dvh-4rem-1px)] items-center py-8">
+        <div className="w-full animate-slide-up">
+          <CompletionStep onNavigateToDashboard={navigateToDashboard} />
+        </div>
+      </FormPageShell>
     );
   }
 

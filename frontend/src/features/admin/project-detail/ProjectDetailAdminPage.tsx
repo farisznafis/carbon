@@ -364,10 +364,29 @@ export default function ProjectDetailAdmin() {
         title='管理情報'
         description='管理用のメタ情報を確認できます。'
       >
-        <ProjectDetailItem label='運営会社ID' value={formatValue(project.operatorCompanyId)} />
         <ProjectDetailItem
-          label='参加状態'
-          value={project.isJoined == null ? '-' : project.isJoined ? '参加中' : '未参加'}
+          label='運営会社ID'
+          value={formatValue(project.operatorCompanyId)}
+        />
+        <ProjectDetailItem
+          label='企業入会状態'
+          value={
+            project.isCompanyJoined == null
+              ? '-'
+              : project.isCompanyJoined
+                ? '入会済み'
+                : '未入会'
+          }
+        />
+        <ProjectDetailItem
+          label='拠点関連状態'
+          value={
+            project.hasSiteRelation == null
+              ? '-'
+              : project.hasSiteRelation
+                ? '関連あり'
+                : '関連なし'
+          }
         />
         <ProjectDetailItem label='作成日' value={formatValue(project.createdAt)} />
         <ProjectDetailItem label='更新日' value={formatValue(project.updatedAt)} />
