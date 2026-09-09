@@ -55,7 +55,8 @@ export interface ProjectDetail {
   methodCombiFeasibility: boolean;
   methodDetails: string;
   operatorCompanyId: number;
-  isJoined: boolean | null;
+  isCompanyJoined: boolean | null;
+  hasSiteRelation: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -116,4 +117,15 @@ export type ProjectListResponse = {
     nextPageToken: string | null;
     hasMore: boolean;
   };
+};
+
+export type ProjectMemberTermsInfo = {
+  statusCode: string;
+  message: string | null;
+  projectName: string;
+  operatorNameJa: string;
+  adminRepName: string;
+  projectOverview: string;
+  usePurpose: string;
+  startedAt: string;
 };

@@ -18,8 +18,10 @@ import org.springframework.data.jpa.repository.Modifying;
 
 public interface ParticipatingProjectRepository
         extends JpaRepository<ParticipatingProject, Integer> {
+
     @Modifying
     @Transactional
+    
     @Query("UPDATE ParticipatingProject p SET p.s3KeyPdfMembership = :s3Key WHERE p.id = :id")
     void updatePdfS3Key(@Param("id") Integer id, @Param("s3Key") String s3Key);
 
@@ -40,4 +42,5 @@ public interface ParticipatingProjectRepository
         
     Optional<ParticipatingProject> findByDocusignEnvelopeId(String envelopeId);
 
+        List<ParticipatingProject> findByEquipment_Site_Company_Id(Integer companyId);
 }

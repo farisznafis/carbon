@@ -1,9 +1,12 @@
 package com.kct.jcredit.core_backend.repository.postgres;
 
+import com.kct.jcredit.core_backend.dto.response.PeriodSummaryResponse;
 import com.kct.jcredit.core_backend.entity.EnR002ReductionResult;
 
 import java.time.LocalDate;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
@@ -52,4 +55,19 @@ public interface EnR002ReductionResultRepository extends JpaRepository<EnR002Red
     Optional<EnR002ReductionResult> findTopByProjectIdAndSiteIdAndEquipmentIdOrderByBatchIdDesc(
         Integer projectId, Integer siteId, Integer equipmentId
     );
+
+    //  List<PeriodSummaryResponse> countByProjectIdAndBatchId (Integer projectId, Integer batchId);
+        long countByProjectIdAndBatchId(Integer projectId, Integer batchId);
+
+    Page<EnR002ReductionResult> findByProjectIdAndBatchId(Integer projectId, Integer batchId, Pageable pageable);
+    @Query("""
+        SELECT r FROM EnR002ReductionResult r
+        JOIN EnR002Equipment e ON e.id = r.equipmentId
+        WHERE r.projectId = :projectId AND r.batchId = :batchId AND e.site.company.companyId = :companyId
+        """)
+    Page<EnR002ReductionResult> findByProjectIdAndBatchIdAndCompanyId(
+            @Param("projectId") Integer projectId,
+            @Param("batchId") Integer batchId,
+            @Param("companyId") String companyId,
+            Pageable pageable);
 }

@@ -35,7 +35,6 @@ export type ParticipationReviewEquipment = {
   nominalMaxOutput: number | null;
   pcsManufacturer: string;
   pcsModel: string;
-  pcsUnitCount: number | null;
   deviceNo: string;
   pcsStandby: number | null;
   hasBattery: boolean | null;

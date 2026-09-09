@@ -119,10 +119,7 @@ export default function ParticipationReviewDetailPage() {
 
     setIsDownloadingPdf(true);
     try {
-      const { pdfUrl } = await downloadProjectMembershipPdf(
-        projectId,
-        review.participationId,
-      );
+      const { pdfUrl } = await downloadProjectMembershipPdf(projectId);
       downloadFromUrl(pdfUrl);
     } catch (error) {
       toast({

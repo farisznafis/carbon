@@ -3,6 +3,7 @@ import type { SiteProjectEquipmentValidationFile } from '@/api/site';
 import type { SolarPowerFormData } from '@/lib/equipmentValidations';
 import {
   mapSolarFormFilesForValidation,
+  mapSolarFormToEquipmentCreateRequest,
   mapSolarFormToEquipmentValidationItem,
 } from './equipmentValidationMapper';
 
@@ -149,6 +150,32 @@ describe('mapSolarFormToEquipmentValidationItem', () => {
       subsidyName: null,
       subsidyAmount: null,
     });
+  });
+});
+
+describe('mapSolarFormToEquipmentCreateRequest', () => {
+  it('omits the retired PCS unit count from the create request', () => {
+    const result = mapSolarFormToEquipmentCreateRequest(
+      baseFormData,
+      'temp-create',
+      'SITE4f83ac050b20d755',
+      [uploadedFile],
+    );
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        tempId: 'temp-create',
+        siteId: 'SITE4f83ac050b20d755',
+        equipmentOpDate: '2026-07-17',
+        batteryMaker: null,
+        batteryModel: null,
+        batteryCapacity: null,
+        subsidyName: null,
+        subsidyAmount: null,
+        files: [uploadedFile],
+      }),
+    );
+    expect(result).not.toHaveProperty('pcsUnitCount');
   });
 });
 

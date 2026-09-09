@@ -210,7 +210,6 @@ describe('getMissingEquipmentRequiredFieldErrors', () => {
       'nominalMaxOutput',
       'pcsManufacturer',
       'pcsModel',
-      'powerCondUnitCount',
       'deviceNo',
       'powerCondStandby',
       'hasBattery',
