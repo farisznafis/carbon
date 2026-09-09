@@ -4,10 +4,14 @@ import { Button } from '@/components/ui/button';
 
 type HomeCtaSectionProps = Readonly<{
   signupPath: string;
+  contactPath: string;
 }>;
 
 /** Renders the final registration call-to-action from the Figma homepage. */
-export function HomeCtaSection({ signupPath }: HomeCtaSectionProps) {
+export function HomeCtaSection({
+  signupPath,
+  contactPath,
+}: HomeCtaSectionProps) {
   return (
     <section className="bg-card px-4 py-14 sm:px-6 sm:py-16 lg:px-8 2xl:py-24">
       <div className="mx-auto grid w-full max-w-marketing overflow-hidden rounded-3xl bg-primary shadow-marketing lg:grid-cols-[minmax(0,1fr)_18rem] 2xl:grid-cols-[minmax(0,1fr)_22rem]">
@@ -29,14 +33,15 @@ export function HomeCtaSection({ signupPath }: HomeCtaSectionProps) {
               </Link>
             </Button>
             <Button
-              type="button"
+              asChild
               size="lg"
               variant="outline"
-              disabled
               className="border-primary-foreground/70 bg-transparent text-primary-foreground"
             >
-              <Mail aria-hidden="true" />
-              お問い合わせ（準備中）
+              <Link to={contactPath}>
+                <Mail aria-hidden="true" />
+                お問い合わせ
+              </Link>
             </Button>
           </div>
         </div>

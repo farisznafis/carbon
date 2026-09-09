@@ -15,6 +15,7 @@ function renderHero() {
       <Routes>
         <Route path="/" element={<Hero />} />
         <Route path="/signup" element={<div>signup destination</div>} />
+        <Route path="/contact" element={<div>contact destination</div>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -41,9 +42,8 @@ describe('Hero', () => {
     expect(
       screen.getByTitle('GXダッシュボードの操作イメージ'),
     ).toHaveAttribute('src', '/assets/hero/dashboard-preview.mp4');
-    expect(
-      screen.getAllByRole('button', { name: 'お問い合わせ（準備中）' }),
-    ).toHaveLength(2);
+    expect(screen.queryByText(/お問い合わせ（準備中）/)).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'お問い合わせ' })).toHaveLength(2);
     expect(screen.getByText('接触')).toBeVisible();
     expect(screen.getByText('〒100-0005')).toBeVisible();
     expect(screen.getByText('東京都千代田区丸の内1-1-1')).toBeVisible();
@@ -70,6 +70,19 @@ describe('Hero', () => {
       expect(await screen.findByText('signup destination')).toBeVisible();
     },
   );
+
+  it('navigates to the public contact page from both inquiry CTAs', async () => {
+    const user = userEvent.setup();
+    renderHero();
+
+    const inquiryLinks = screen.getAllByRole('link', { name: 'お問い合わせ' });
+    inquiryLinks.forEach((link) => {
+      expect(link).toHaveAttribute('href', '/contact');
+    });
+    await user.click(inquiryLinks[0]);
+
+    expect(await screen.findByText('contact destination')).toBeVisible();
+  });
 
   it('uses accessible internal anchors and expands FAQ content', async () => {
     const user = userEvent.setup();
