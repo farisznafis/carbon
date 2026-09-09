@@ -36,6 +36,7 @@ const PARTICIPATION_STATUS_ORDER: Record<
   REJECTED: 1,
   OPEN: 2,
 };
+const DISPLAYABLE_PROJECT_STATUSES = new Set(['ACTIVE', '作成済み']);
 
 /** Sorts projects by membership UX priority without mutating API data. */
 function sortProjectsByParticipationStatus(
@@ -48,6 +49,11 @@ function sortProjectsByParticipationStatus(
       (PARTICIPATION_STATUS_ORDER[secondProject.participationStatus ?? ''] ??
         Number.MAX_SAFE_INTEGER),
   );
+}
+
+/** Returns whether a project status is eligible for the site dashboard. */
+function isDisplayableSiteProject(project: SiteProject): boolean {
+  return DISPLAYABLE_PROJECT_STATUSES.has(project.projectStatus);
 }
 
 function formatNumber(value?: string | number | null) {
@@ -485,24 +491,28 @@ const Dashboard = () => {
     () => sortProjectsByParticipationStatus(projects),
     [projects],
   );
+  const displayableProjects = useMemo(
+    () => sortedProjects.filter(isDisplayableSiteProject),
+    [sortedProjects],
+  );
 
   const companyJoinedProjects = useMemo(
     () =>
-      sortedProjects.filter(
+      displayableProjects.filter(
         (project) =>
           project.isCompanyJoined || project.participationStatus === 'OPEN',
       ),
-    [sortedProjects],
+    [displayableProjects],
   );
   const availableProjects = useMemo(
     () =>
-      sortedProjects.filter(
+      displayableProjects.filter(
         (project) =>
           project.participationStatus !== 'OPEN' &&
           !project.isCompanyJoined &&
           !project.hasSiteRelation,
       ),
-    [sortedProjects],
+    [displayableProjects],
   );
 
   useEffect(() => {
