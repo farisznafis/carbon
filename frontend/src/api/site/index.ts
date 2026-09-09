@@ -65,6 +65,7 @@ export type {
   MyProjectParticipation,
   MyProjectParticipationApiItem,
   SiteProject,
+  SiteProjectParticipationStatus,
   SiteProjectsApiResponse,
   SitesResponse,
 } from './types';

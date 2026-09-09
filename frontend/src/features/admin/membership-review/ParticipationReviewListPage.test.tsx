@@ -1,24 +1,28 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import {
+  MemoryRouter,
+  Route,
+  Routes,
+  useLocation,
+} from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mapParticipationReviewDetail } from '@/api/admin/participationReviewMapper';
 import ParticipationReviewListPage from './ParticipationReviewListPage';
 
-const {
-  getMyParticipationReviews,
-  getPendingParticipationReviews,
-} = vi.hoisted(() => ({
-  getMyParticipationReviews: vi.fn(),
-  getPendingParticipationReviews: vi.fn(),
-}));
+const { getAdminProjectDetail, getParticipationReviewsByStatus } = vi.hoisted(
+  () => ({
+    getAdminProjectDetail: vi.fn(),
+    getParticipationReviewsByStatus: vi.fn(),
+  }),
+);
 
 vi.mock('@/api/admin', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/admin')>();
   return {
     ...actual,
-    getMyParticipationReviews,
-    getPendingParticipationReviews,
+    getAdminProjectDetail,
+    getParticipationReviewsByStatus,
   };
 });
 
@@ -26,6 +30,7 @@ vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ user: { role: 'admin' } }),
 }));
 
+/** Creates a mapped membership review for list-page scenarios. */
 function makeReview(
   participationId: number,
   projectId: number,
@@ -50,77 +55,92 @@ function makeReview(
   });
 }
 
+/** Exposes the current location so status-query navigation can be asserted. */
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
+}
+
+/** Renders the project-scoped membership list with its detail destination. */
+function renderPage(initialEntry = '/admin/projects/7/memberships') {
+  return render(
+    <MemoryRouter
+      initialEntries={[initialEntry]}
+      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+    >
+      <LocationProbe />
+      <Routes>
+        <Route
+          path="/admin/projects/:projectId/memberships"
+          element={<ParticipationReviewListPage />}
+        />
+        <Route
+          path="/admin/projects/:projectId/memberships/:participationId"
+          element={<div>detail page</div>}
+        />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
 describe('ParticipationReviewListPage', () => {
   beforeEach(() => {
-    getMyParticipationReviews.mockReset();
-    getPendingParticipationReviews.mockReset();
-    getMyParticipationReviews.mockResolvedValue([
-      makeReview(1, 7, '自分の対象会社'),
-      makeReview(2, 8, '別プロジェクト会社'),
-    ]);
-    getPendingParticipationReviews.mockResolvedValue([
-      makeReview(1, 7, '自分の対象会社'),
-      makeReview(3, 7, '全件のみの会社', '一次確認者'),
-      makeReview(4, 8, '別プロジェクト会社'),
-    ]);
+    getAdminProjectDetail.mockReset();
+    getParticipationReviewsByStatus.mockReset();
+    getAdminProjectDetail.mockResolvedValue({
+      id: '7',
+      projectName: 'プロジェクト7',
+    });
+    getParticipationReviewsByStatus.mockResolvedValue({
+      OPEN: [
+        makeReview(1, 7, '承認待ち会社'),
+        makeReview(2, 8, '別プロジェクト会社'),
+      ],
+      APPROVED: [makeReview(3, 7, '承認済み会社', '一次確認者')],
+      REJECTED: [makeReview(4, 7, '却下会社')],
+    });
   });
 
-  it('renders the complete API lists and switches between mine and pending', async () => {
+  it('filters every status to the route project and switches among three tabs', async () => {
     const user = userEvent.setup();
-    render(
-      <MemoryRouter
-        initialEntries={['/admin/projects/7/memberships']}
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-      >
-        <Routes>
-          <Route
-            path="/admin/projects/:projectId/memberships"
-            element={<ParticipationReviewListPage />}
-          />
-        </Routes>
-      </MemoryRouter>,
+    renderPage();
+
+    expect(await screen.findByText('承認待ち会社')).toBeInTheDocument();
+    expect(screen.queryByText('別プロジェクト会社')).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '承認待ち（1）' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '承認済み（1）' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '却下（1）' })).toBeInTheDocument();
+    expect(screen.getByText('一次確認待ち')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: '承認済み（1）' }));
+    expect(screen.getByText('承認済み会社')).toBeInTheDocument();
+    expect(screen.getByText('承認済み')).toBeInTheDocument();
+    expect(screen.getByTestId('location')).toHaveTextContent(
+      '/admin/projects/7/memberships?status=APPROVED',
     );
 
-    expect(await screen.findByText('自分の対象会社')).toBeInTheDocument();
-    expect(screen.getByText('別プロジェクト会社')).toBeInTheDocument();
-    expect(screen.queryByText('全件のみの会社')).not.toBeInTheDocument();
-    expect(screen.getAllByText('一次確認待ち')).toHaveLength(2);
-    expect(
-      screen.getByText(
-        'あなたがまだ承認していない、対応が必要な入会届を表示しています。',
-      ),
-    ).toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole('tab', { name: '承認待ち全件（3）' }),
+    await user.click(screen.getByRole('button', { name: '詳細' }));
+    expect(screen.getByTestId('location')).toHaveTextContent(
+      '/admin/projects/7/memberships/3?status=APPROVED',
     );
+  });
 
-    expect(screen.getByText('全件のみの会社')).toBeInTheDocument();
-    expect(screen.getByText('二次確認待ち')).toBeInTheDocument();
-    expect(screen.getByText('別プロジェクト会社')).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        '他の管理者の承認待ちを含む、最終承認前の入会届をすべて表示しています。',
-      ),
-    ).toBeInTheDocument();
+  it('restores a rejected tab directly from the status query', async () => {
+    renderPage('/admin/projects/7/memberships?status=REJECTED');
+
+    expect(await screen.findByText('却下会社')).toBeInTheDocument();
+    expect(screen.getByText('却下')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '却下（1）' })).toHaveAttribute(
+      'data-state',
+      'active',
+    );
   });
 
   it('renders the shared 404 page when a page-loading request fails', async () => {
-    getMyParticipationReviews.mockRejectedValueOnce(new Error('gateway error'));
-
-    render(
-      <MemoryRouter
-        initialEntries={['/admin/projects/7/memberships']}
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-      >
-        <Routes>
-          <Route
-            path="/admin/projects/:projectId/memberships"
-            element={<ParticipationReviewListPage />}
-          />
-        </Routes>
-      </MemoryRouter>,
+    getParticipationReviewsByStatus.mockRejectedValueOnce(
+      new Error('gateway error'),
     );
+    renderPage();
 
     expect(
       await screen.findByRole('heading', { name: 'ページが見つかりません' }),

@@ -31,6 +31,18 @@ export type NotificationListResult = {
   pagination: NotificationPagination | null;
 };
 
+export type InquiryRequest = {
+  companyName: string;
+  name: string;
+  email: string;
+  content: string;
+};
+
+export type InquiryResponse = {
+  statusCode: string;
+  message: string;
+};
+
 type NotificationResponseItem = {
   id?: string | number | null;
   notificationId?: string | number | null;
@@ -147,4 +159,16 @@ export async function deleteNotification(
       fallbackErrorMessage: 'Failed to delete notification',
     },
   );
+}
+
+/** POST /notification/inquiry — sends a public inquiry from the contact page. */
+export async function createInquiry(
+  inquiry: InquiryRequest,
+): Promise<InquiryResponse> {
+  return apiRequest<InquiryResponse>('/notification/inquiry', {
+    method: 'POST',
+    auth: false,
+    body: inquiry,
+    fallbackErrorMessage: 'お問い合わせを送信できませんでした',
+  });
 }

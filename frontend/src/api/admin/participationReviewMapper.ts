@@ -149,6 +149,7 @@ export function mapParticipationReviewDetail(
       review.sustainabilityCommitment,
     ),
     review: mapReview(review.review),
+    pdfStatus: asText(review.pdfStatus),
   };
 }
 
