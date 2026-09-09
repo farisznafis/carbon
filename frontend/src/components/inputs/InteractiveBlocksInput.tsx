@@ -65,7 +65,18 @@ export function InteractiveBlocksInput({
           maxLength={1}
           type="text"
           inputMode="numeric"
-          className="w-10 h-12 text-center border rounded text-xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="
+            h-12 w-10
+            rounded border border-input
+            bg-card
+            text-center text-xl font-bold
+            transition-colors
+            focus:border-primary
+            focus:outline-none
+            focus:ring-2
+            focus:ring-ring
+            focus:ring-offset-1
+          "
         />
       ))}
     </div>
