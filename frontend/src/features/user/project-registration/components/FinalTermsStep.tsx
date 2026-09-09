@@ -24,6 +24,10 @@ export type FinalTermsValues = {
 
 interface FinalTermsStepProps {
   projectName: string;
+  operatorName: string;
+  projectOverview: string;
+  usePurpose: string;
+  startedAt: string;
   formValues: Partial<FinalTermsValues>;
   isSubmitting: boolean;
   onBack: () => void;
@@ -32,8 +36,30 @@ interface FinalTermsStepProps {
   errors?: Record<string, string>;
 }
 
+/** Formats the project terms start timestamp as a zero-padded Japanese date in JST. */
+function formatMemberTermsStartedAt(startedAt: string): string {
+  const date = new Date(startedAt);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const dateParts = new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const valueByType = Object.fromEntries(
+    dateParts.map(({ type, value }) => [type, value]),
+  );
+
+  return `${valueByType.year}年${valueByType.month}月${valueByType.day}日`;
+}
+
 export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
   projectName,
+  operatorName,
+  projectOverview,
+  usePurpose,
+  startedAt,
   formValues,
   isSubmitting,
   onBack,
@@ -41,7 +67,8 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
   onValueChange,
   errors = {},
 }, ref) => {
-  const resolvedProjectName = projectName.trim() || '対象プロジェクト';
+  const resolvedProjectName = projectName.trim();
+  const formattedStartedAt = formatMemberTermsStartedAt(startedAt);
 
   const form = useForm<FinalTermsData>({
       mode: "onChange",
@@ -115,13 +142,13 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
               <section>
                 <h3 className="font-semibold mb-2">(目的)</h3>
                 <h4 className="font-semibold mb-2">第2条</h4>
-                <p>本会は、プログラム型運営・管理者名が実施する「プロジェクト概要」の一環として、会員が太陽光発電設備を使用することで削減された温室効果ガス排出量を、国内における地球温暖化対策のための排出削減・吸収量認証制度 (以下「Ｊ－クレジット制度」という) 実施要綱 (平成25年4月17日経済産業省、環境省、農林水産省策定) に基づきＪ－クレジットとしてＪ－クレジット制度認証委員会 (Ｊ－クレジット制度を管理する経済産業省、環境省、農林水産省が共同で設置した、Ｊ－クレジットの認証を行う委員会) より認証を受けることで、環境価値の「見える化」を図るとともに、創出されたＪ－クレジットをプログラム型運営・管理者名における利用目的に利用することを目的とする。</p>
+                <p>本会は、{operatorName}が実施する「{projectOverview}」の一環として、会員が太陽光発電設備を使用することで削減された温室効果ガス排出量を、国内における地球温暖化対策のための排出削減・吸収量認証制度 (以下「Ｊ－クレジット制度」という) 実施要綱 (平成25年4月17日経済産業省、環境省、農林水産省策定) に基づきＪ－クレジットとしてＪ－クレジット制度認証委員会 (Ｊ－クレジット制度を管理する経済産業省、環境省、農林水産省が共同で設置した、Ｊ－クレジットの認証を行う委員会) より認証を受けることで、環境価値の「見える化」を図るとともに、創出されたＪ－クレジットを{operatorName}における{usePurpose}に利用することを目的とする。</p>
               </section>
 
               <section>
                 <h3 className="font-semibold mb-2">(運営・管理)</h3>
                 <h4 className="font-semibold mb-2">第3条</h4>
-                <p>本会の運営・管理はプログラム型運営・管理者名 (以下「運営・管理者」という) が行う。</p>
+                <p>本会の運営・管理は{operatorName} (以下「運営・管理者」という) が行う。</p>
               </section>
 
               <section>
@@ -143,7 +170,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
 
               <section>
                 <h4 className="font-semibold mb-2">第3条の3</h4>
-                <p>運営・管理者として必要な事務はプログラム型運営・管理者名において行う。</p>
+                <p>運営・管理者として必要な事務は{operatorName}において行う。</p>
               </section>
 
               <section>
@@ -170,8 +197,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
               <section>
                 <h3 className="font-semibold mb-2">(Ｊ－クレジット売却益の取り扱い)</h3>
                 <h4 className="font-semibold mb-2">第5条</h4>
-                <p>Ｊ－クレジットの売買による売却益は、利用目的に活用することとする。</p>
-                <p className="mt-1 text-small font-normal text-foreground">※利用目的は、プロジェクトにおける活用予定・実際の活用方法に応じてご修正ください。</p>
+                <p>Ｊ－クレジットの売買による売却益は、{usePurpose}に活用することとする。</p>
               </section>
 
               <section>
@@ -253,8 +279,8 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
               </section>
 
               <section className="mt-8">
-                <h3 className="font-semibold mb-2">附　則</h3>
-                <p>本規約は、YYYY年MM月DD (プロジェクト登録申請日) から施行する。</p>
+                <h3 className="font-semibold mb-2">附則</h3>
+                <p>本規約は、{formattedStartedAt}から施行する。</p>
               </section>
             </div>
           </div>

@@ -149,10 +149,6 @@ export function ProjectRegistrationReviewStep({
                       value={displayText(equipment.solarData.pcsModel)}
                     />
                     <ConfirmationItem
-                      label="PCS導入台数"
-                      value={displayText(equipment.solarData.powerCondUnitCount)}
-                    />
-                    <ConfirmationItem
                       label="機器固有番号"
                       value={displayText(equipment.solarData.deviceNo)}
                     />

@@ -732,6 +732,7 @@ const ProjectDetail = () => {
                       onClick={() =>
                         navigate(paths.projectEquipment(siteId, projectId), {
                           state: {
+                            submissionMode: 'create',
                             returnTo: `${paths.siteProjectDetail(
                               siteId,
                               projectId,

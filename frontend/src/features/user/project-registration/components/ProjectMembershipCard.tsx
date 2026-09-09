@@ -30,7 +30,7 @@ export function ProjectMembershipCard({
   onDownloadPdf,
   isDownloadingPdf = false,
 }: ProjectMembershipCardProps) {
-  const isJoined = status === 'joined';
+  const showsJoinedState = status === 'joined';
 
   return (
     <Card className='h-full rounded-lg border-border bg-card shadow-none'>
@@ -50,12 +50,12 @@ export function ProjectMembershipCard({
           <Badge
             className={cn(
               'shrink-0 border-transparent',
-              isJoined
+              showsJoinedState
                 ? 'bg-success/15 text-success hover:bg-success/15'
                 : 'bg-warning/15 text-warning hover:bg-warning/15',
             )}
           >
-            {isJoined ? '参加中' : '未参加'}
+            {showsJoinedState ? '参加中' : '未参加'}
           </Badge>
         </div>
 
@@ -82,17 +82,13 @@ export function ProjectMembershipCard({
           </div>
         </dl>
 
-        {isJoined && (
+        {showsJoinedState && onDownloadPdf && (
           <div className='mt-6 sm:ml-auto'>
-            <Button
+<Button
               type='button'
               variant='outline'
               size='md'
-              disabled={
-                project.participationId == null ||
-                !onDownloadPdf ||
-                isDownloadingPdf
-              }
+              disabled={isDownloadingPdf}
               onClick={() => onDownloadPdf?.(project)}
             >
               {isDownloadingPdf ? (
@@ -105,7 +101,7 @@ export function ProjectMembershipCard({
           </div>
         )}
 
-        {!isJoined && onJoin && (
+        {!showsJoinedState && onJoin && (
           <div className='mt-6 sm:ml-auto sm:min-w-56'>
             <Button
               type='button'

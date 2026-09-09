@@ -306,7 +306,6 @@ describe('EquipmentEditPage', () => {
                   message: '入力内容に誤りがあります。',
                    errors: {
                      'equipment-7::変更日': '変更日を確認してください。',
-                     'equipment-7::pcsUnitCount': '導入台数を確認してください。',
                    },
                 }),
                 { status: 400, headers: { 'Content-Type': 'application/json' } },
@@ -317,19 +316,14 @@ describe('EquipmentEditPage', () => {
               }),
         ),
     );
-    const { container } = renderPage(fetchMock);
+    renderPage(fetchMock);
 
     await screen.findByRole('heading', { name: '設備変更' });
-    const countInput = container.querySelector<HTMLInputElement>(
-      '[name="powerCondUnitCount"]',
-    );
-    fireEvent.change(countInput!, { target: { value: '3' } });
     fireEvent.click(screen.getByRole('button', { name: '変更内容を確認' }));
 
     expect(
-      await screen.findByText('導入台数を確認してください。'),
+      await screen.findByText('変更日を確認してください。'),
     ).toBeInTheDocument();
-    expect(screen.getByText('変更日を確認してください。')).toBeInTheDocument();
     expect(screen.queryByText('設備変更の確認')).not.toBeInTheDocument();
     expect(
       fetchMock.mock.calls.some(([url]) =>

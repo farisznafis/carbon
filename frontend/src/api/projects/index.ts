@@ -1,6 +1,7 @@
 export {
   downloadProjectMembershipPdf,
   getProjectDetails,
+  getProjectMemberTermsInfo,
   getProjects,
 } from './queries';
 export type {
@@ -12,4 +13,5 @@ export type {
   ProjectListItem,
   ProjectListResponse,
   ProjectMembershipPdfDownload,
+  ProjectMemberTermsInfo,
 } from './types';

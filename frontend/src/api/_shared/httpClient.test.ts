@@ -69,4 +69,25 @@ describe('apiRequest forbidden handling', () => {
     expect(onPageForbidden).not.toHaveBeenCalled();
     window.removeEventListener(PAGE_FORBIDDEN_EVENT, onPageForbidden);
   });
+
+  it('uses a safe fallback instead of exposing an HTML infrastructure error', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response('<!DOCTYPE html><html><body>gateway error</body></html>', {
+          status: 502,
+          headers: { 'Content-Type': 'text/html; charset=utf-8' },
+        }),
+      ),
+    );
+
+    await expect(
+      apiRequest('/admin/companies/participate/open', {
+        fallbackErrorMessage: '入会届一覧の取得に失敗しました。',
+      }),
+    ).rejects.toMatchObject({
+      status: 502,
+      message: '入会届一覧の取得に失敗しました。: HTTP 502',
+    });
+  });
 });

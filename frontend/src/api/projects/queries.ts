@@ -14,16 +14,16 @@ import type {
   ProjectDetailResponse,
   ProjectListResponse,
   ProjectMembershipPdfDownload,
+  ProjectMemberTermsInfo,
 } from './types';
 
-// GET /project/{projectId}/participations/{participationId}/membership-pdf
+// GET /site/project/{projectId}/membership-pdf
 /** Requests the temporary membership PDF URL shared by master and admin views. */
 export async function downloadProjectMembershipPdf(
   projectId: string,
-  participationId: number,
 ): Promise<ProjectMembershipPdfDownload> {
   const response = await apiFetch(
-    `/project/${encodeURIComponent(projectId)}/participations/${encodeURIComponent(String(participationId))}/membership-pdf`,
+    `/site/project/${encodeURIComponent(projectId)}/membership-pdf`,
     { method: 'GET', forbiddenHandling: 'caller' },
   );
   const { data, rawBody } = await parseJsonResponse<
@@ -88,4 +88,37 @@ export async function getProjects(): Promise<Project[]> {
   }
 
   return json.projects.map(mapProjectListItem);
+}
+
+/** GET /project/{projectId}/member-terms-info — loads project-specific membership terms text. */
+export async function getProjectMemberTermsInfo(
+  projectId: string,
+): Promise<ProjectMemberTermsInfo> {
+  const response = await apiFetch(
+    `/project/${encodeURIComponent(projectId)}/member-terms-info`,
+    {
+      method: 'GET',
+    },
+  );
+
+  const { data, rawBody } =
+    await parseJsonResponse<ProjectMemberTermsInfo>(response);
+
+  if (!response.ok) {
+    throw new Error(
+      data?.message ||
+        rawBody ||
+        '入会規約情報の取得に失敗しました',
+    );
+  }
+
+  if (!data) {
+    throw new Error('入会規約情報が見つかりませんでした');
+  }
+
+  if (Number.isNaN(Date.parse(data.startedAt))) {
+    throw new Error('入会規約の施行日が正しくありません');
+  }
+
+  return data;
 }

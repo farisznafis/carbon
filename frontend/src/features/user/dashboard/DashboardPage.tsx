@@ -305,12 +305,15 @@ function ProjectStatus({ joined }: { joined: boolean }) {
   );
 }
 
+// Renders a company-joined project and adapts its action to the current site's relation.
 function JoinedProjectCard({
   project,
-  onDetail,
+  requiresSiteParticipation,
+  onAction,
 }: {
   project: SiteProject;
-  onDetail: () => void;
+  requiresSiteParticipation: boolean;
+  onAction: () => void;
 }) {
   return (
     <Card className='rounded-2xl border-border bg-card shadow-none'>
@@ -322,8 +325,19 @@ function JoinedProjectCard({
           <h3 className='text-foreground'>{project.projectName}</h3>
         </div>
 
-        <div className='grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]'>
-          <div className='space-y-4 xl:order-2'>
+        <div
+          className={cn(
+            'grid gap-6',
+            !requiresSiteParticipation &&
+              'xl:grid-cols-[minmax(0,1fr)_400px]',
+          )}
+        >
+          <div
+            className={cn(
+              'space-y-4',
+              !requiresSiteParticipation && 'xl:order-2',
+            )}
+          >
             <div className='rounded-2xl border border-border bg-transparent p-5'>
               <dl className='space-y-4'>
                 <div>
@@ -355,13 +369,17 @@ function JoinedProjectCard({
               type='button'
               size='md'
               className='w-full text-base'
-              onClick={onDetail}
+              onClick={onAction}
             >
-              プロジェクト詳細
+              {requiresSiteParticipation
+                ? 'プロジェクト参加'
+                : 'プロジェクト詳細'}
             </Button>
           </div>
 
-          <DashboardEmissionReductionProgress projectId={project.id} />
+          {!requiresSiteParticipation && (
+            <DashboardEmissionReductionProgress projectId={project.id} />
+          )}
         </div>
       </CardContent>
     </Card>
@@ -427,12 +445,16 @@ const Dashboard = () => {
   const [site, setSite] = useState<Site | null>(null);
   const [projects, setProjects] = useState<SiteProject[]>([]);
 
-  const joinedProjects = useMemo(
-    () => projects.filter((project) => project.isJoined),
+  const companyJoinedProjects = useMemo(
+    () => projects.filter((project) => project.isCompanyJoined),
     [projects],
   );
   const availableProjects = useMemo(
-    () => projects.filter((project) => !project.isJoined),
+    () =>
+      projects.filter(
+        (project) =>
+          !project.isCompanyJoined && !project.hasSiteRelation,
+      ),
     [projects],
   );
 
@@ -557,15 +579,19 @@ const Dashboard = () => {
     setCurrentProject(null);
   }, [setCurrentProject]);
 
+  // Opens the detail page for a project already related to the current site.
   const handleOpenProject = (project: SiteProject) => {
-    navigate(
-      `/sites/${encodeURIComponent(activeSiteId)}/projects/${project.id}`,
-      {
-        state: {
-          siteName: site?.siteName ?? '',
-        },
+    navigate(paths.siteProjectDetail(activeSiteId, project.id), {
+      state: {
+        siteName: site?.siteName ?? '',
       },
-    );
+    });
+  };
+
+  // Opens the existing registration flow to add this project to the current site.
+  const handleParticipateProject = (project: SiteProject) => {
+    setCurrentProject(project);
+    navigate(paths.projectRegister(activeSiteId, project.id));
   };
 
   const picName =
@@ -619,7 +645,7 @@ const Dashboard = () => {
                 <InlineLoader label="拠点情報を読み込んでいます" />
               ) : (
                 <h1 className='min-w-0 break-words text-4xl leading-10 text-foreground'>
-                  {user?.companyName || '株式会社ABC'}
+                  {site?.siteName || '株式会社ABC'}
                 </h1>
               )}
             </div>
@@ -655,7 +681,7 @@ const Dashboard = () => {
           <div className='mb-6'>
             <h2 className='text-foreground'>入会中のプロジェクト</h2>
             <p className='text-small mt-2 text-foreground'>
-              この拠点が現在参加しているプロジェクトです。進捗や排出量の詳細を確認できます。
+              企業が入会済みのプロジェクトです。拠点に設備が登録されている場合は、進捗や排出量の詳細を確認できます。
             </p>
           </div>
 
@@ -665,13 +691,18 @@ const Dashboard = () => {
             </div>
           ) : projectsError ? (
             <Card className='rounded-2xl border-border'><CardContent className='p-10 text-center text-destructive' role='alert'>{projectsError}</CardContent></Card>
-          ) : joinedProjects.length > 0 ? (
+          ) : companyJoinedProjects.length > 0 ? (
             <div className='space-y-4'>
-              {joinedProjects.map((project) => (
+              {companyJoinedProjects.map((project) => (
                 <JoinedProjectCard
                   key={project.id}
                   project={project}
-                  onDetail={() => handleOpenProject(project)}
+                  requiresSiteParticipation={!project.hasSiteRelation}
+                  onAction={() =>
+                    project.hasSiteRelation
+                      ? handleOpenProject(project)
+                      : handleParticipateProject(project)
+                  }
                 />
               ))}
             </div>
