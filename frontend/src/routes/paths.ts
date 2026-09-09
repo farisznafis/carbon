@@ -99,15 +99,16 @@ export const paths = {
   adminProjectDetailRoute: '/admin/projects/:projectId',
   adminProjectDetail: (projectId: string) => `/admin/projects/${projectId}`,
   adminProjectMembershipRoute: '/admin/projects/:projectId/memberships',
-  adminProjectMembership: (projectId: string) =>
-    `/admin/projects/${projectId}/memberships`,
+  adminProjectMembership: (projectId: string, status?: string) =>
+    `/admin/projects/${projectId}/memberships${status ? `?status=${encodeURIComponent(status)}` : ''}`,
   adminProjectMembershipDetailRoute:
     '/admin/projects/:projectId/memberships/:participationId',
   adminProjectMembershipDetail: (
     projectId: string,
     participationId: string | number,
+    status?: string,
   ) =>
-    `/admin/projects/${projectId}/memberships/${participationId}`,
+    `/admin/projects/${projectId}/memberships/${participationId}${status ? `?status=${encodeURIComponent(status)}` : ''}`,
   adminProjectMonitoringDetailRoute:
     '/admin/projects/:projectId/monitoring/:monitoringId',
   adminProjectMonitoringDetail: (

@@ -23,6 +23,7 @@ import { participationReviewChecklistLabels } from './participationReviewDisplay
 export type ParticipationReviewDecision = 'approve' | 'reject';
 
 export type ParticipationReviewDecisionErrors = {
+  reviewerName: string | null;
   reviewerInkan: string | null;
   rejectReason: string | null;
   checklist: string | null;
@@ -33,6 +34,7 @@ type ParticipationReviewDecisionDialogProps = {
   decision: ParticipationReviewDecision | null;
   review: ParticipationReviewDetail;
   checklist: ParticipationReviewChecklist;
+  reviewerName: string;
   reviewerInkan: string;
   rejectReason: string;
   fieldErrors: ParticipationReviewDecisionErrors;
@@ -44,6 +46,7 @@ type ParticipationReviewDecisionDialogProps = {
     fieldName: ParticipationReviewChecklistField,
     checked: boolean,
   ) => void;
+  onReviewerNameChange: (value: string) => void;
   onReviewerInkanChange: (value: string) => void;
   onRejectReasonChange: (value: string) => void;
   onSubmit: () => void;
@@ -57,6 +60,7 @@ export function ParticipationReviewDecisionDialog({
   decision,
   review,
   checklist,
+  reviewerName,
   reviewerInkan,
   rejectReason,
   fieldErrors,
@@ -65,6 +69,7 @@ export function ParticipationReviewDecisionDialog({
   canSubmit,
   onOpenChange,
   onChecklistChange,
+  onReviewerNameChange,
   onReviewerInkanChange,
   onRejectReasonChange,
   onSubmit,
@@ -80,7 +85,7 @@ export function ParticipationReviewDecisionDialog({
             入会届を{isRejection ? '却下' : '承認'}しますか？
           </DialogTitle>
           <DialogDescription>
-            すべての項目を確認し、レビュー担当者印を入力してください。
+            すべての項目を確認し、レビュー担当者名と担当者印を入力してください。
           </DialogDescription>
         </DialogHeader>
 
@@ -163,6 +168,37 @@ export function ParticipationReviewDecisionDialog({
           <section className="space-y-5" aria-label="レビュー情報">
             <div className="space-y-2">
               <Label
+                htmlFor="reviewer-name"
+                className="inline-flex items-center gap-1"
+              >
+                レビュー担当者名
+                <RequiredBadge />
+              </Label>
+              <Input
+                id="reviewer-name"
+                value={reviewerName}
+                onChange={(event) => onReviewerNameChange(event.target.value)}
+                placeholder="レビュー担当者名を入力"
+                disabled={isSubmitting}
+                aria-required="true"
+                aria-invalid={Boolean(fieldErrors.reviewerName)}
+                aria-describedby={
+                  fieldErrors.reviewerName ? 'reviewer-name-error' : undefined
+                }
+              />
+              {fieldErrors.reviewerName && (
+                <p
+                  id="reviewer-name-error"
+                  role="alert"
+                  className="text-small text-destructive"
+                >
+                  {fieldErrors.reviewerName}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label
                 htmlFor="reviewer-inkan"
                 className="inline-flex items-center gap-1"
               >
@@ -175,6 +211,7 @@ export function ParticipationReviewDecisionDialog({
                 onChange={(event) => onReviewerInkanChange(event.target.value)}
                 placeholder="レビュー担当者印を入力"
                 disabled={isSubmitting}
+                aria-required="true"
                 aria-invalid={Boolean(fieldErrors.reviewerInkan)}
                 aria-describedby={
                   fieldErrors.reviewerInkan ? 'reviewer-inkan-error' : undefined
@@ -211,6 +248,7 @@ export function ParticipationReviewDecisionDialog({
                   }
                   placeholder="却下理由を入力してください"
                   disabled={isSubmitting}
+                  aria-required="true"
                   aria-invalid={Boolean(fieldErrors.rejectReason)}
                   aria-describedby={
                     fieldErrors.rejectReason ? 'reject-reason-error' : undefined

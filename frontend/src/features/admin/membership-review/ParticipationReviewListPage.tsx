@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
-  getMyParticipationReviews,
-  getPendingParticipationReviews,
+  getAdminProjectDetail,
+  getParticipationReviewsByStatus,
   type ParticipationReviewDetail,
+  type ParticipationReviewStatus,
 } from '@/api/admin';
 import {
   DataGridTable,
@@ -27,32 +28,75 @@ import { formatAdminCompanyDateTime } from '@/features/admin/company-detail/comp
 import { usePagination } from '@/hooks/usePagination';
 import { paths } from '@/routes/paths';
 import { getParticipationReviewStage } from './participationReviewDisplay';
+import { isParticipationReviewForProject } from './participationReviewProjectMatch';
 
 const INITIAL_ITEMS_PER_PAGE = 10;
 const REVIEW_GRID_COLUMNS =
   'minmax(180px, 1fr) minmax(180px, 1fr) minmax(190px, 0.9fr) minmax(150px, 0.75fr) minmax(110px, 0.5fr)';
 
-type ReviewTab = 'mine' | 'pending';
-
-const REVIEW_TAB_DESCRIPTIONS: Record<ReviewTab, string> = {
-  mine: 'あなたがまだ承認していない、対応が必要な入会届を表示しています。',
-  pending:
-    '他の管理者の承認待ちを含む、最終承認前の入会届をすべて表示しています。',
+const REVIEW_STATUSES: ParticipationReviewStatus[] = [
+  'OPEN',
+  'APPROVED',
+  'REJECTED',
+];
+const EMPTY_REVIEWS_BY_STATUS: Record<
+  ParticipationReviewStatus,
+  ParticipationReviewDetail[]
+> = {
+  OPEN: [],
+  APPROVED: [],
+  REJECTED: [],
 };
+const REVIEW_STATUS_CONTENT: Record<
+  ParticipationReviewStatus,
+  { label: string; description: string; emptyMessage: string }
+> = {
+  OPEN: {
+    label: '承認待ち',
+    description: '管理者の承認を待っている入会届を表示しています。',
+    emptyMessage: '承認待ちの入会届はありません。',
+  },
+  APPROVED: {
+    label: '承認済み',
+    description: '2名の管理者による承認が完了した入会届を表示しています。',
+    emptyMessage: '承認済みの入会届はありません。',
+  },
+  REJECTED: {
+    label: '却下',
+    description: '管理者によって却下された入会届を表示しています。',
+    emptyMessage: '却下された入会届はありません。',
+  },
+};
+
+/** Resolves the membership status query to a supported tab. */
+function resolveReviewStatus(value: string | null): ParticipationReviewStatus {
+  return REVIEW_STATUSES.includes(value as ParticipationReviewStatus)
+    ? (value as ParticipationReviewStatus)
+    : 'OPEN';
+}
+
+/** Returns the badge text shown for a row in the selected status tab. */
+function getStatusBadgeLabel(
+  status: ParticipationReviewStatus,
+  review: ParticipationReviewDetail,
+): string {
+  if (status === 'OPEN') return getParticipationReviewStage(review);
+  return REVIEW_STATUS_CONTENT[status].label;
+}
 
 /** Displays the project-scoped participation review list. */
 export default function ParticipationReviewListPage() {
   const navigate = useNavigate();
   const { projectId = '' } = useParams();
-  const [activeTab, setActiveTab] = useState<ReviewTab>('mine');
-  const [myReviews, setMyReviews] = useState<ParticipationReviewDetail[]>([]);
-  const [pendingReviews, setPendingReviews] = useState<
-    ParticipationReviewDetail[]
-  >([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeStatus = resolveReviewStatus(searchParams.get('status'));
+  const [reviewsByStatus, setReviewsByStatus] = useState<
+    Record<ParticipationReviewStatus, ParticipationReviewDetail[]>
+  >(EMPTY_REVIEWS_BY_STATUS);
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoadError, setHasLoadError] = useState(false);
 
-  /** Loads both review scopes and switches failures to the shared 404 state. */
+  /** Loads each status and keeps only memberships that belong to the route project. */
   const loadReviews = useCallback(async () => {
     if (!projectId) {
       setHasLoadError(true);
@@ -64,13 +108,22 @@ export default function ParticipationReviewListPage() {
     setHasLoadError(false);
 
     try {
-      const [mine, pending] = await Promise.all([
-        getMyParticipationReviews(),
-        getPendingParticipationReviews(),
+      const [project, statusReviews] = await Promise.all([
+        getAdminProjectDetail(projectId),
+        getParticipationReviewsByStatus(),
       ]);
 
-      setMyReviews(mine);
-      setPendingReviews(pending);
+      setReviewsByStatus({
+        OPEN: statusReviews.OPEN.filter((review) =>
+          isParticipationReviewForProject(review, projectId, project),
+        ),
+        APPROVED: statusReviews.APPROVED.filter((review) =>
+          isParticipationReviewForProject(review, projectId, project),
+        ),
+        REJECTED: statusReviews.REJECTED.filter((review) =>
+          isParticipationReviewForProject(review, projectId, project),
+        ),
+      });
     } catch {
       setHasLoadError(true);
     } finally {
@@ -82,7 +135,7 @@ export default function ParticipationReviewListPage() {
     void loadReviews();
   }, [loadReviews]);
 
-  const activeReviews = activeTab === 'mine' ? myReviews : pendingReviews;
+  const activeReviews = reviewsByStatus[activeStatus];
   const {
     currentPage,
     totalPages,
@@ -99,12 +152,13 @@ export default function ParticipationReviewListPage() {
     (review: ParticipationReviewDetail) => {
       navigate(
         paths.adminProjectMembershipDetail(
-          String(review.projectId),
+          projectId,
           review.participationId,
+          activeStatus,
         ),
       );
     },
-    [navigate],
+    [activeStatus, navigate, projectId],
   );
 
   const columns = useMemo<
@@ -145,16 +199,22 @@ export default function ParticipationReviewListPage() {
         ),
       },
       {
-        id: 'stage',
-        label: 'レビュー段階',
+        id: 'status',
+        label: 'ステータス',
         sortable: true,
-        sortValue: getParticipationReviewStage,
+        sortValue: (review) => getStatusBadgeLabel(activeStatus, review),
         render: (review) => (
           <Badge
-            variant="outline"
-            className="border-primary/30 bg-primary/5 text-primary"
+            variant={activeStatus === 'REJECTED' ? 'destructive' : 'outline'}
+            className={
+              activeStatus === 'APPROVED'
+                ? 'border-success/30 bg-success/10 text-success'
+                : activeStatus === 'OPEN'
+                  ? 'border-primary/30 bg-primary/5 text-primary'
+                  : undefined
+            }
           >
-            {getParticipationReviewStage(review)}
+            {getStatusBadgeLabel(activeStatus, review)}
           </Badge>
         ),
       },
@@ -178,7 +238,7 @@ export default function ParticipationReviewListPage() {
         ),
       },
     ],
-    [viewDetail],
+    [activeStatus, viewDetail],
   );
 
   const returnToProject = () => navigate(paths.adminProjectDetail(projectId));
@@ -205,26 +265,29 @@ export default function ParticipationReviewListPage() {
         </header>
 
         <Tabs
-          value={activeTab}
+          value={activeStatus}
           onValueChange={(value) => {
-            setActiveTab(value as ReviewTab);
+            const nextStatus = resolveReviewStatus(value);
+            const nextSearchParams = new URLSearchParams(searchParams);
+            nextSearchParams.set('status', nextStatus);
+            setSearchParams(nextSearchParams);
             goToPage(1);
           }}
           className="space-y-5"
         >
-          <TabsList className="grid h-auto w-full grid-cols-2 sm:w-fit">
-            <TabsTrigger value="mine">
-              自分の承認待ち（{myReviews.length}）
-            </TabsTrigger>
-            <TabsTrigger value="pending">
-              承認待ち全件（{pendingReviews.length}）
-            </TabsTrigger>
+          <TabsList className="grid h-auto w-full grid-cols-3 sm:w-fit">
+            {REVIEW_STATUSES.map((status) => (
+              <TabsTrigger key={status} value={status}>
+                {REVIEW_STATUS_CONTENT[status].label}（
+                {reviewsByStatus[status].length}）
+              </TabsTrigger>
+            ))}
           </TabsList>
 
-          {(['mine', 'pending'] as const).map((tab) => (
-            <TabsContent key={tab} value={tab} className="space-y-4">
+          {REVIEW_STATUSES.map((status) => (
+            <TabsContent key={status} value={status} className="space-y-4">
               <p className="text-small text-foreground">
-                {REVIEW_TAB_DESCRIPTIONS[tab]}
+                {REVIEW_STATUS_CONTENT[status].description}
               </p>
 
               {isLoading ? (
@@ -239,11 +302,7 @@ export default function ParticipationReviewListPage() {
                     gridTemplateColumns={REVIEW_GRID_COLUMNS}
                     minWidth={930}
                     getRowKey={(review) => String(review.participationId)}
-                    emptyMessage={
-                      tab === 'mine'
-                        ? '現在、あなたの承認待ちの入会届はありません。'
-                        : '承認待ちの入会届はありません。'
-                    }
+                    emptyMessage={REVIEW_STATUS_CONTENT[status].emptyMessage}
                     onRowClick={viewDetail}
                   />
                   <PaginationControls
