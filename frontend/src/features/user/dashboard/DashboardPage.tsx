@@ -36,7 +36,7 @@ const PARTICIPATION_STATUS_ORDER: Record<
   REJECTED: 1,
   OPEN: 2,
 };
-const DISPLAYABLE_PROJECT_STATUSES = new Set(['ACTIVE', '作成済み']);
+// const DISPLAYABLE_PROJECT_STATUSES = new Set(['ACTIVE', '作成済み']);
 
 /** Sorts projects by membership UX priority without mutating API data. */
 function sortProjectsByParticipationStatus(
@@ -52,9 +52,9 @@ function sortProjectsByParticipationStatus(
 }
 
 /** Returns whether a project status is eligible for the site dashboard. */
-function isDisplayableSiteProject(project: SiteProject): boolean {
-  return DISPLAYABLE_PROJECT_STATUSES.has(project.projectStatus);
-}
+// function isDisplayableSiteProject(project: SiteProject): boolean {
+//   return DISPLAYABLE_PROJECT_STATUSES.has(project.projectStatus);
+// }
 
 function formatNumber(value?: string | number | null) {
   if (value === null || value === undefined || value === '') return '-';
@@ -487,33 +487,59 @@ const Dashboard = () => {
   const [projectsError, setProjectsError] = useState<string | null>(null);
   const [site, setSite] = useState<Site | null>(null);
   const [projects, setProjects] = useState<SiteProject[]>([]);
+
   const sortedProjects = useMemo(
     () => sortProjectsByParticipationStatus(projects),
     [projects],
   );
-  const displayableProjects = useMemo(
-    () => sortedProjects.filter(isDisplayableSiteProject),
-    [sortedProjects],
-  );
 
   const companyJoinedProjects = useMemo(
     () =>
-      displayableProjects.filter(
+      sortedProjects.filter(
         (project) =>
-          project.isCompanyJoined || project.participationStatus === 'OPEN',
+          project.projectStatus === '作成済み' &&
+          (project.isCompanyJoined || project.participationStatus === 'OPEN'),
       ),
-    [displayableProjects],
+    [sortedProjects],
   );
   const availableProjects = useMemo(
     () =>
-      displayableProjects.filter(
+      sortedProjects.filter(
         (project) =>
           project.participationStatus !== 'OPEN' &&
           !project.isCompanyJoined &&
           !project.hasSiteRelation,
       ),
-    [displayableProjects],
+    [sortedProjects],
   );
+  
+  // const sortedProjects = useMemo(
+  //   () => sortProjectsByParticipationStatus(projects),
+  //   [projects],
+  // );
+  // const displayableProjects = useMemo(
+  //   () => sortedProjects.filter(isDisplayableSiteProject),
+  //   [sortedProjects],
+  // );
+
+  // const companyJoinedProjects = useMemo(
+  //   () =>
+  //     displayableProjects.filter(
+  //       (project) =>
+  //         project.isCompanyJoined || project.participationStatus === 'OPEN',
+  //     ),
+  //   [displayableProjects],
+  // );
+  // const availableProjects = useMemo(
+  //   () =>
+  //     displayableProjects.filter(
+  //       (project) =>
+  //         project.participationStatus !== 'OPEN' &&
+  //         !project.isCompanyJoined &&
+  //         !project.hasSiteRelation,
+  //     ),
+  //   [displayableProjects],
+  // );
 
   useEffect(() => {
     if (
