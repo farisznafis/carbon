@@ -1,4 +1,5 @@
 import { LifeBuoy } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import {
   Accordion,
   AccordionContent,
@@ -10,8 +11,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { HOME_FAQ_ITEMS, HOME_SECTION_IDS } from './homeContent';
 import { HomeSectionHeading } from './HomeSectionHeading';
 
-/** Renders the homepage FAQ and clearly marks unavailable contact navigation. */
-export function HomeFaqSection() {
+type HomeFaqSectionProps = Readonly<{
+  contactPath: string;
+}>;
+
+/** Renders the homepage FAQ and its contact-page entry point. */
+export function HomeFaqSection({ contactPath }: HomeFaqSectionProps) {
   return (
     <section
       id={HOME_SECTION_IDS.faq}
@@ -33,11 +38,11 @@ export function HomeFaqSection() {
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold">解決しない場合はこちら</h3>
                 <p className="text-sm leading-6 text-muted-foreground">
-                  お問い合わせ窓口は現在準備中です。公開後、このページからご案内します。
+                  サービスに関するご質問や導入のご相談は、お問い合わせフォームからご連絡ください。
                 </p>
               </div>
-              <Button type="button" variant="outline" disabled>
-                お問い合わせ（準備中）
+              <Button asChild variant="outline">
+                <Link to={contactPath}>お問い合わせ</Link>
               </Button>
             </CardContent>
           </Card>

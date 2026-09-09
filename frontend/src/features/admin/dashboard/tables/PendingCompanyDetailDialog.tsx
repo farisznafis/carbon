@@ -30,7 +30,7 @@ function ListValue({ items }: { items: string[] }) {
   return (
     <div className="flex flex-wrap gap-2">
       {items.map((item) => (
-        <span key={item} className="rounded-md border bg-white px-2 py-1 text-sm font-medium">
+        <span key={item} className="rounded-md border bg-card px-2 py-1 text-sm font-medium">
           {item}
         </span>
       ))}
@@ -51,7 +51,7 @@ function DetailSection({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-lg border bg-slate-50 p-4">
+    <div className="rounded-lg border bg-muted p-4">
       <h3 className="mb-4 text-sm font-bold">{title}</h3>
       {children}
     </div>
@@ -139,15 +139,15 @@ export function PendingCompanyDetailDialog({
             <DetailSection title="方法論詳細">
               <div className="space-y-2">
                 {item.methodologies.map((methodology, idx) => (
-                  <div key={idx} className="overflow-hidden rounded-lg border bg-white">
+                  <div key={idx} className="overflow-hidden rounded-lg border bg-card">
                     <button
                       type="button"
                       onClick={() => toggleAccordion(idx)}
-                      className="flex w-full items-center justify-between p-3 transition-colors hover:bg-slate-100"
+                      className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted"
                     >
                       <div className="flex flex-1 items-center gap-3 text-left">
                         <span className="text-sm font-semibold">{methodology.methodology}</span>
-                        <span className="rounded bg-blue-100 px-2 py-1 text-xs text-blue-700">
+                        <span className="rounded bg-accent px-2 py-1 text-xs font-medium text-accent-foreground">
                           {methodology.hasSubsidy
                             ? `補助金: ${methodology.subsidyName || '未設定'}`
                             : '補助金なし'}
@@ -161,7 +161,7 @@ export function PendingCompanyDetailDialog({
                     </button>
 
                     {expandedIndex === idx && (
-                      <div className="space-y-4 border-t bg-slate-50 p-3">
+                      <div className="space-y-4 border-t bg-muted p-3">
                         {methodology.remarks && <FieldRow label="備考" value={methodology.remarks} />}
 
                         {methodology.equipmentItems && methodology.equipmentItems.length > 0 && (
@@ -169,7 +169,7 @@ export function PendingCompanyDetailDialog({
                             <p className="mb-3 text-xs font-bold text-foreground">設備情報</p>
                             <div className="space-y-3">
                               {methodology.equipmentItems.map((equipment, eIdx) => (
-                                <div key={eIdx} className="rounded border border-slate-200 bg-white p-3">
+                                <div key={eIdx} className="rounded border border-border bg-card p-3">
                                   <div className="grid grid-cols-1 gap-3 text-xs md:grid-cols-2">
                                     <FieldRow label="設置日" value={equipment.installationDate} />
                                     <FieldRow label="メーカー" value={equipment.manufacturer} />
