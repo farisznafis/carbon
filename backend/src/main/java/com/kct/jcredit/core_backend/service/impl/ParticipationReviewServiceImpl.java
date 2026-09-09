@@ -159,10 +159,15 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
     @Transactional
     public void approveReview(Integer participationId, Integer operatorUserId, ApproveReviewRequest request) {
 
-        OperatingUser operator = operatingUserRepository.findById(operatorUserId)
-                .orElseThrow(() -> new CustomException(
-                        ResponseConstants.NOT_FOUND, "オペレーター情報が見つかりません。"));
-        String operatorName = operator.getFirstName() + operator.getLastName();
+        // OperatingUser operator = operatingUserRepository.findById(operatorUserId)
+        //         .orElseThrow(() -> new CustomException(
+        //                 ResponseConstants.NOT_FOUND, "オペレーター情報が見つかりません。"));
+        // String operatorName = operator.getFirstName() + operator.getLastName();
+
+        boolean operatorExists = operatingUserRepository.existsById(operatorUserId);
+                if (!operatorExists) {
+                        throw new CustomException(ResponseConstants.NOT_FOUND, "オペレーター情報が見つかりません。");
+                }
 
         ParticipatingProject participation = participatingProjectRepository
                 .findById(participationId)
@@ -201,14 +206,24 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
         confirmation.setIsOriginalSpecCheck(request.getIsOriginalSpecCheck());
         confirmation.setIsSubsidyCheck(request.getIsSubsidyCheck());
 
+        // if (isPrimarySlotEmpty) {
+        //     confirmation.setPrimaryApplReviewerName(operatorName);
+        //     confirmation.setPrimaryApplReviewerInkan(request.getReviewerInkan());
+        //     confirmation.setPrimaryReviewerId(operatorUserId);
+        // } else {
+        //     confirmation.setSecondaryApplReviewerName(operatorName);
+        //     confirmation.setSecondaryApplReviewerInkan(request.getReviewerInkan());
+        //     confirmation.setSecondaryReviewerId(operatorUserId);
+        // }
+
         if (isPrimarySlotEmpty) {
-            confirmation.setPrimaryApplReviewerName(operatorName);
-            confirmation.setPrimaryApplReviewerInkan(request.getReviewerInkan());
-            confirmation.setPrimaryReviewerId(operatorUserId);
+                confirmation.setPrimaryApplReviewerName(request.getReviewerName()); 
+                confirmation.setPrimaryApplReviewerInkan(request.getReviewerInkan());
+                confirmation.setPrimaryReviewerId(operatorUserId); 
         } else {
-            confirmation.setSecondaryApplReviewerName(operatorName);
-            confirmation.setSecondaryApplReviewerInkan(request.getReviewerInkan());
-            confirmation.setSecondaryReviewerId(operatorUserId);
+                confirmation.setSecondaryApplReviewerName(request.getReviewerName());
+                confirmation.setSecondaryApplReviewerInkan(request.getReviewerInkan());
+                confirmation.setSecondaryReviewerId(operatorUserId);    
         }
 
         reviewRepository.save(confirmation);
