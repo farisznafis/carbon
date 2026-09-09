@@ -10,11 +10,20 @@ type StatusBadgeProps = Readonly<{
 }>;
 
 const statusBadgeToneClassNames: Record<StatusBadgeTone, string> = {
-  success: 'border-emerald-200 bg-emerald-50 text-emerald-800',
-  warning: 'border-amber-200 bg-amber-50 text-amber-800',
-  danger: 'border-red-200 bg-red-50 text-red-800',
-  info: 'border-blue-200 bg-blue-50 text-blue-800',
-  neutral: 'border-border bg-muted text-foreground',
+  success:
+    'border-success-border bg-success-subtle text-success-strong',
+
+  warning:
+    'border-warning-border bg-warning-subtle text-warning-strong',
+
+  danger:
+    'border-destructive-border bg-destructive-subtle text-destructive-strong',
+
+  info:
+    'border-info-border bg-info-subtle text-info-strong',
+
+  neutral:
+    'border-border bg-secondary text-secondary-foreground',
 };
 
 export function StatusBadge({

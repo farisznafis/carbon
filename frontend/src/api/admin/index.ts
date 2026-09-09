@@ -22,9 +22,12 @@ export {
 } from './projects';
 export {
   approveParticipationReview,
-  getMyParticipationReviews,
+  downloadAdminParticipationMembershipPdf,
+  getApprovedParticipationReviews,
+  getOpenParticipationReviews,
   getParticipationReviewDetail,
-  getPendingParticipationReviews,
+  getParticipationReviewsByStatus,
+  getRejectedParticipationReviews,
   rejectParticipationReview,
   participationReviewChecklistFields,
 } from './participationReviews';
@@ -71,6 +74,7 @@ export type {
   ParticipationReviewChecklist,
   ParticipationReviewChecklistField,
   ParticipationReviewDetail,
+  ParticipationReviewStatus,
   ParticipationReviewEquipment,
   ParticipationReviewFile,
   ParticipationReviewState,

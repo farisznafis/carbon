@@ -1,4 +1,5 @@
 import {
+  createInquiry,
   deleteNotification,
   getNotifications,
   getUnreadNotificationCount,
@@ -100,5 +101,37 @@ describe('notification API', () => {
       '/api/notification/12/delete',
       expect.objectContaining({ method: 'PATCH' }),
     );
+  });
+
+  it('sends a public inquiry without authentication headers', async () => {
+    const responseBody = {
+      statusCode: 'OK',
+      message: 'お問い合わせを受け付けました。',
+    };
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(responseBody), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const inquiry = {
+      companyName: '株式会社ソーラーファーム',
+      name: '田中 太郎',
+      email: 'info@company.com',
+      content: '導入について相談したいです。',
+    };
+
+    await expect(createInquiry(inquiry)).resolves.toEqual(responseBody);
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/notification/inquiry',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(inquiry),
+      }),
+    );
+    const requestOptions = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(new Headers(requestOptions.headers).has('Authorization')).toBe(false);
   });
 });

@@ -1,18 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   approveParticipationReview,
+  downloadAdminParticipationMembershipPdf,
   getAdminProjectDetail,
-  getMyParticipationReviews,
+  getOpenParticipationReviews,
   getParticipationReviewDetail,
   participationReviewChecklistFields,
   rejectParticipationReview,
   type ParticipationReviewChecklist,
   type ParticipationReviewChecklistField,
   type ParticipationReviewDetail,
+  type ParticipationReviewStatus,
 } from '@/api/admin';
 import { ApiError } from '@/api/_shared/errors';
-import { downloadProjectMembershipPdf } from '@/api/projects';
 import { FormActions, FormPageContent } from '@/components/forms/form-layout';
 import {
   floatingPageBackButtonClassName,
@@ -33,10 +34,35 @@ import { ParticipationReviewSections } from './ParticipationReviewSections';
 import { isParticipationReviewForProject } from './participationReviewProjectMatch';
 
 const EMPTY_FIELD_ERRORS: ParticipationReviewDecisionErrors = {
+  reviewerName: null,
   reviewerInkan: null,
   rejectReason: null,
   checklist: null,
 };
+
+const REVIEW_STATUSES: ParticipationReviewStatus[] = [
+  'OPEN',
+  'APPROVED',
+  'REJECTED',
+];
+
+/** Reads a supported membership status without trusting arbitrary query values. */
+function readReviewStatus(value: string | null): ParticipationReviewStatus | null {
+  return REVIEW_STATUSES.includes(value as ParticipationReviewStatus)
+    ? (value as ParticipationReviewStatus)
+    : null;
+}
+
+/** Returns the read-only notice that corresponds to the membership status. */
+function getReadOnlyReviewMessage(status: ParticipationReviewStatus): string {
+  if (status === 'APPROVED') {
+    return 'この入会届は承認済みです。申請内容とPDFを閲覧できます。';
+  }
+  if (status === 'REJECTED') {
+    return 'この入会届は却下されています。申請内容のみ閲覧できます。';
+  }
+  return 'この入会届は現在あなたのレビュー対象ではないため、閲覧のみ可能です。';
+}
 
 /** Returns an API error message while preserving a readable fallback. */
 function getErrorMessage(error: unknown, fallback: string) {
@@ -76,6 +102,7 @@ function readBackendErrors(
     )?.[1] ?? null;
 
   return {
+    reviewerName: findError('reviewerName'),
     reviewerInkan: findError('reviewerInkan'),
     rejectReason: findError('rejectReason'),
     checklist:
@@ -90,6 +117,8 @@ export default function ParticipationReviewDetailPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { projectId = '', participationId = '' } = useParams();
+  const [searchParams] = useSearchParams();
+  const requestedStatus = readReviewStatus(searchParams.get('status'));
   const numericParticipationId = Number(participationId);
 
   const [review, setReview] = useState<ParticipationReviewDetail | null>(null);
@@ -97,6 +126,7 @@ export default function ParticipationReviewDetailPage() {
   const [checklist, setChecklist] = useState<ParticipationReviewChecklist | null>(
     null,
   );
+  const [reviewerName, setReviewerName] = useState('');
   const [reviewerInkan, setReviewerInkan] = useState('');
   const [rejectReason, setRejectReason] = useState('');
   const [decision, setDecision] =
@@ -110,8 +140,8 @@ export default function ParticipationReviewDetailPage() {
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   const returnToList = useCallback(() => {
-    navigate(paths.adminProjectMembership(projectId));
-  }, [navigate, projectId]);
+    navigate(paths.adminProjectMembership(projectId, requestedStatus ?? 'OPEN'));
+  }, [navigate, projectId, requestedStatus]);
 
   /** Fetches a fresh membership PDF URL and opens it without leaving the review page. */
   const handleViewMembershipPdf = async () => {
@@ -119,7 +149,10 @@ export default function ParticipationReviewDetailPage() {
 
     setIsDownloadingPdf(true);
     try {
-      const { pdfUrl } = await downloadProjectMembershipPdf(projectId);
+      const { pdfUrl } = await downloadAdminParticipationMembershipPdf(
+        projectId,
+        review.participationId,
+      );
       downloadFromUrl(pdfUrl);
     } catch (error) {
       toast({
@@ -151,10 +184,14 @@ export default function ParticipationReviewDetailPage() {
     setLoadError(null);
 
     try {
-      const [project, detail, myReviews] = await Promise.all([
+      const openReviewsRequest =
+        requestedStatus === 'APPROVED' || requestedStatus === 'REJECTED'
+          ? Promise.resolve([])
+          : getOpenParticipationReviews();
+      const [project, detail, openReviews] = await Promise.all([
         getAdminProjectDetail(projectId),
         getParticipationReviewDetail(numericParticipationId),
-        getMyParticipationReviews(),
+        openReviewsRequest,
       ]);
 
       if (!isParticipationReviewForProject(detail, projectId, project)) {
@@ -165,15 +202,19 @@ export default function ParticipationReviewDetailPage() {
         return;
       }
 
-      const isCurrentUserReviewable = myReviews.some(
+      const isCurrentUserReviewable = openReviews.some(
         (candidate) =>
           candidate.participationId === numericParticipationId &&
           isParticipationReviewForProject(candidate, projectId, project),
       );
 
       setReview(detail);
-      setIsReviewable(isCurrentUserReviewable);
+      setIsReviewable(
+        (requestedStatus === null || requestedStatus === 'OPEN') &&
+          isCurrentUserReviewable,
+      );
       setChecklist(createEmptyChecklist());
+      setReviewerName('');
       setReviewerInkan('');
       setRejectReason('');
       setDecision(null);
@@ -186,7 +227,7 @@ export default function ParticipationReviewDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [numericParticipationId, projectId]);
+  }, [numericParticipationId, projectId, requestedStatus]);
 
   useEffect(() => {
     void loadReview();
@@ -200,8 +241,10 @@ export default function ParticipationReviewDetailPage() {
       ),
     [checklist],
   );
+  const hasReviewerName = Boolean(reviewerName.trim());
   const hasReviewerInkan = Boolean(reviewerInkan.trim());
   const canSubmitDecision =
+    hasReviewerName &&
     hasReviewerInkan &&
     allChecklistItemsChecked &&
     (decision !== 'reject' || Boolean(rejectReason.trim())) &&
@@ -238,8 +281,17 @@ export default function ParticipationReviewDetailPage() {
   const submitDecision = async () => {
     if (!review || !checklist || !decision || isSubmitting) return;
 
+    const trimmedReviewerName = reviewerName.trim();
     const trimmedInkan = reviewerInkan.trim();
     const trimmedRejectReason = rejectReason.trim();
+
+    if (!trimmedReviewerName) {
+      setFieldErrors((current) => ({
+        ...current,
+        reviewerName: 'レビュー担当者名を入力してください。',
+      }));
+      return;
+    }
 
     if (!trimmedInkan) {
       setFieldErrors((current) => ({
@@ -271,6 +323,7 @@ export default function ParticipationReviewDetailPage() {
 
     try {
       const commonPayload = {
+        reviewerName: trimmedReviewerName,
         reviewerInkan: trimmedInkan,
         ...checklist,
       };
@@ -352,6 +405,10 @@ export default function ParticipationReviewDetailPage() {
     );
   }
 
+  const reviewStatus =
+    requestedStatus ??
+    (isParticipationReviewApproved(review) ? 'APPROVED' : 'OPEN');
+
   return (
     <main className="relative min-h-screen bg-background px-4 py-10 sm:px-6 lg:px-8">
       <PageBackButton
@@ -374,11 +431,11 @@ export default function ParticipationReviewDetailPage() {
             role="status"
             className="rounded-xl border border-border bg-muted/30 px-5 py-4 text-small text-foreground"
           >
-            この入会届は現在あなたのレビュー対象ではないため、閲覧のみ可能です。
+            {getReadOnlyReviewMessage(reviewStatus)}
           </div>
         )}
 
-        {isParticipationReviewApproved(review) && (
+        {reviewStatus === 'APPROVED' && (
           <ParticipationReviewPdfCard
             isLoading={isDownloadingPdf}
             onView={() => void handleViewMembershipPdf()}
@@ -415,6 +472,7 @@ export default function ParticipationReviewDetailPage() {
           decision={decision}
           review={review}
           checklist={checklist}
+          reviewerName={reviewerName}
           reviewerInkan={reviewerInkan}
           rejectReason={rejectReason}
           fieldErrors={fieldErrors}
@@ -423,6 +481,14 @@ export default function ParticipationReviewDetailPage() {
           canSubmit={canSubmitDecision}
           onOpenChange={closeDecision}
           onChecklistChange={updateChecklist}
+          onReviewerNameChange={(value) => {
+            setReviewerName(value);
+            setFieldErrors((current) => ({
+              ...current,
+              reviewerName: null,
+            }));
+            setSubmitError(null);
+          }}
           onReviewerInkanChange={(value) => {
             setReviewerInkan(value);
             setFieldErrors((current) => ({
