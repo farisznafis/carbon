@@ -252,6 +252,20 @@ export async function joinSiteProject(
   );
 }
 
+/** POST /site/project/projects/{projectId}/{siteId}/join-site — relates an existing company site to a project. */
+export async function joinProjectSite(
+  projectId: string,
+  siteId: string,
+): Promise<SiteProjectJoinResponse> {
+  return apiRequest<SiteProjectJoinResponse>(
+    `/site/project/projects/${encodeURIComponent(projectId)}/${encodeURIComponent(siteId)}/join-site`,
+    {
+      method: 'POST',
+      fallbackErrorMessage: '拠点のプロジェクト参加に失敗しました。',
+    },
+  );
+}
+
 export async function getSiteProjectEquipment(
   siteId: string,
   projectId: string,

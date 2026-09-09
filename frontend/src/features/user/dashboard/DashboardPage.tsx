@@ -5,6 +5,7 @@ import { getProfile } from '@/api/profile';
 import {
   getSiteData,
   getSiteProjects,
+  joinProjectSite,
   type Site,
   type SiteProject,
   type SiteProjectParticipationStatus,
@@ -17,6 +18,15 @@ import {
 } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { storage, storageKeys } from '@/lib/storage';
@@ -487,6 +497,8 @@ const Dashboard = () => {
   const [projectsError, setProjectsError] = useState<string | null>(null);
   const [site, setSite] = useState<Site | null>(null);
   const [projects, setProjects] = useState<SiteProject[]>([]);
+  const [projectToJoin, setProjectToJoin] = useState<SiteProject | null>(null);
+  const [isJoiningProject, setIsJoiningProject] = useState(false);
 
   const sortedProjects = useMemo(
     () => sortProjectsByParticipationStatus(projects),
@@ -671,10 +683,58 @@ const Dashboard = () => {
     });
   };
 
-  // Opens the existing registration flow to add this project to the current site.
+  // Opens the confirmation dialog before relating the current site to the project.
   const handleParticipateProject = (project: SiteProject) => {
-    setCurrentProject(project);
-    navigate(paths.projectRegister(activeSiteId, project.id));
+    setProjectToJoin(project);
+  };
+
+  /** Prevents dismissing the join confirmation while its request is running. */
+  const handleJoinDialogOpenChange = (open: boolean) => {
+    if (!open && !isJoiningProject) setProjectToJoin(null);
+  };
+
+  /** Relates the active site to the selected project and refreshes dashboard data. */
+  const handleConfirmProjectJoin = async () => {
+    if (!projectToJoin || !activeSiteId || isJoiningProject) return;
+
+    setIsJoiningProject(true);
+
+    try {
+      await joinProjectSite(projectToJoin.id, activeSiteId);
+      setCurrentProject(projectToJoin);
+      setProjects((currentProjects) =>
+        currentProjects.map((project) =>
+          project.id === projectToJoin.id
+            ? { ...project, hasSiteRelation: true }
+            : project,
+        ),
+      );
+      setProjectToJoin(null);
+      toast({
+        title: 'プロジェクトに参加しました',
+        description:
+          'プロジェクト詳細の確認や設備の追加・管理ができるようになりました。',
+      });
+
+      try {
+        setProjects(await getSiteProjects(activeSiteId));
+      } catch (error) {
+        toast({
+          title: '最新のプロジェクト情報を取得できませんでした',
+          description:
+            error instanceof Error ? error.message : undefined,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'プロジェクトに参加できませんでした',
+        description: error instanceof Error ? error.message : undefined,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsJoiningProject(false);
+    }
   };
 
   const picName =
@@ -846,6 +906,36 @@ const Dashboard = () => {
           )}
         </div>
       </section>
+      <AlertDialog
+        open={Boolean(projectToJoin)}
+        onOpenChange={handleJoinDialogOpenChange}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>プロジェクトに参加しますか？</AlertDialogTitle>
+            <AlertDialogDescription className='space-y-2'>
+              <span className='block font-medium text-foreground'>
+                {projectToJoin?.projectName}
+              </span>
+              <span className='block'>
+                参加後は、プロジェクト詳細の確認、設備の追加・管理、モニタリングデータの登録などができるようになります。
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isJoiningProject}>
+              キャンセル
+            </AlertDialogCancel>
+            <Button
+              type='button'
+              disabled={isJoiningProject}
+              onClick={() => void handleConfirmProjectJoin()}
+            >
+              {isJoiningProject ? '参加中...' : '参加する'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <FloatingHelpButton context='site-dashboard' />
     </div>
   );

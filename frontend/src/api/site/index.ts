@@ -19,6 +19,7 @@ export {
   getSiteEquipmentById,
   getSiteEquipmentHistory,
   getSiteProjectSustainabilityCommitmentDefault,
+  joinProjectSite,
   joinSiteProject,
   uploadSiteProjectEquipmentFile,
   changeSiteEquipment,
