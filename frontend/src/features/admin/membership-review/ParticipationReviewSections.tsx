@@ -92,9 +92,6 @@ export function ParticipationReviewSections({
           <DetailField label="PCS型式">
             {displayParticipationValue(equipment.pcsModel)}
           </DetailField>
-          <DetailField label="PCS導入台数">
-            {displayParticipationValue(equipment.pcsUnitCount)}
-          </DetailField>
           <DetailField label="機器固有番号">
             {displayParticipationValue(equipment.deviceNo)}
           </DetailField>

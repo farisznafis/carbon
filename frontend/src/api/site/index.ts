@@ -12,6 +12,7 @@ export {
   getSiteProjects,
 } from './projects';
 export {
+  addSiteProjectEquipment,
   getSiteProjectEquipmentPresignedUrl,
   getSiteProjectEquipment,
   getSiteEquipmentList,
@@ -40,6 +41,8 @@ export type {
   SiteEquipmentHistory,
   SiteEquipmentHistoryApiItem,
   SiteProjectEquipmentResponse,
+  SiteProjectEquipmentCreateRequest,
+  SiteProjectEquipmentCreateResponse,
   SiteEquipmentListResponse,
   SiteProjectEquipmentChangeRequest,
   SiteProjectEquipmentFileType,

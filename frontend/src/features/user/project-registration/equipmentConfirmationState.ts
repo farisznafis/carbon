@@ -6,6 +6,7 @@ export type EquipmentConfirmationState = {
   isEdit: boolean;
   formData: SolarPowerFormData;
   returnTo?: string;
+  submissionMode: 'draft' | 'create';
   fromMasterDashboard: boolean;
 };
 
@@ -29,6 +30,7 @@ export function getEquipmentConfirmationState(
     formData: candidate.formData,
     returnTo:
       typeof candidate.returnTo === 'string' ? candidate.returnTo : undefined,
+    submissionMode: candidate.submissionMode === 'create' ? 'create' : 'draft',
     fromMasterDashboard: candidate.fromMasterDashboard === true,
   };
 }

@@ -22,7 +22,8 @@ describe('getSiteProjects', () => {
                 projectName: '太陽光発電プロジェクト',
                 projectNumber: 'P001',
                 projectStatus: '実施中',
-                isJoined: true,
+                isCompanyJoined: true,
+                hasSiteRelation: false,
               },
             ],
           }),
@@ -36,7 +37,8 @@ describe('getSiteProjects', () => {
     expect(projects[0]).toEqual(
       expect.objectContaining({
         id: 'PROJ/001',
-        isJoined: true,
+        isCompanyJoined: true,
+        hasSiteRelation: false,
       }),
     );
   });

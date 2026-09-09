@@ -21,11 +21,31 @@ export class ApiError extends Error {
   }
 }
 
+/** Detects an HTML error document so infrastructure pages are not exposed in UI. */
+function isHtmlErrorResponse(response: Response, rawBody: string): boolean {
+  const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
+  const normalizedBody = rawBody.trimStart().toLowerCase();
+
+  return (
+    contentType.includes('text/html') ||
+    normalizedBody.startsWith('<!doctype html') ||
+    normalizedBody.startsWith('<html')
+  );
+}
+
+/** Resolves a safe backend error message without rendering raw HTML responses. */
 export function getApiErrorMessage(
   response: Response,
   payload: ApiErrorPayload | null,
   rawBody: string,
   fallbackMessage: string,
 ): string {
-  return payload?.message || rawBody || `${fallbackMessage}: HTTP ${response.status}`;
+  if (payload?.message) return payload.message;
+
+  const normalizedBody = rawBody.trim();
+  if (normalizedBody && !isHtmlErrorResponse(response, normalizedBody)) {
+    return normalizedBody;
+  }
+
+  return `${fallbackMessage}: HTTP ${response.status}`;
 }

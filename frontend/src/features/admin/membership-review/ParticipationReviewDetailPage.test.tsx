@@ -260,7 +260,7 @@ describe('ParticipationReviewDetailPage', () => {
     await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
     await user.click(screen.getByRole('button', { name: 'PDFを表示' }));
 
-    expect(downloadProjectMembershipPdf).toHaveBeenCalledWith('7', 12);
+    expect(downloadProjectMembershipPdf).toHaveBeenCalledWith('7');
     expect(downloadFromUrl).toHaveBeenCalledWith(
       'https://example.com/membership.pdf',
     );

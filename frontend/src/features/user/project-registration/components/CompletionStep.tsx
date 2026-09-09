@@ -1,5 +1,11 @@
-import { Button } from "@/components/ui/button";
-import { CheckCircle } from "lucide-react";
+import { FormActions, FormCard } from "@/components/forms/form-layout";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { CheckCircle2 } from "lucide-react";
 
 interface CompletionStepProps {
   readonly onNavigateToDashboard: () => void;
@@ -7,24 +13,28 @@ interface CompletionStepProps {
 
 export function CompletionStep({ onNavigateToDashboard }: CompletionStepProps) {
   return (
-    <div className="space-y-6 text-center py-12">
-      <div className="flex justify-center">
-        <div className="rounded-full bg-success/10 p-6">
-          <CheckCircle className="h-16 w-16 text-success" />
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-3xl font-bold mb-4">申請完了</h2>
-        <p className="text-lg text-foreground mb-2">プロジェクト参加申請が完了しました</p>
-        <p className="text-foreground">審査結果は後日メールにてお知らせいたします</p>
-      </div>
-
-      <div className="pt-8">
-        <Button onClick={onNavigateToDashboard} size="lg">
-          ダッシュボードに戻る
-        </Button>
-      </div>
-    </div>
+    <FormCard className="mx-auto w-full max-w-lg">
+      <CardHeader className="px-0 pt-0">
+        <CheckCircle2
+          className="mb-2 h-9 w-9 text-primary"
+          aria-hidden="true"
+        />
+        <CardTitle>申請完了</CardTitle>
+        <CardDescription className="leading-6">
+          プロジェクト参加申請が完了しました。審査結果は後日メールにてお知らせいたします。
+        </CardDescription>
+      </CardHeader>
+      {/* <CardContent className="px-0 pb-0">
+        <FormActions
+          actions={[
+            {
+              id: "dashboard",
+              label: "ダッシュボードに戻る",
+              onClick: onNavigateToDashboard,
+            },
+          ]}
+        />
+      </CardContent> */}
+    </FormCard>
   );
 }

@@ -39,6 +39,7 @@ export type ContractStepFormValues = {
 };
 
 interface ContractStepProps {
+  operatorName: string;
   methodologyNumber: string;
   methodologyName: string;
   methodologyVersion?: string;
@@ -79,6 +80,7 @@ function formatMethodologyTitle(
 export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
   (
     {
+      operatorName,
       methodologyNumber,
       methodologyName,
       methodologyVersion,
@@ -173,7 +175,7 @@ export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
           <Card className="rounded-lg">
             <CardContent className="space-y-6 p-5 sm:p-8">
               <p className="text-small text-foreground">
-                （プログラム型運営・管理者）　御中
+                {operatorName}　御中
               </p>
 
               <div className="space-y-3">
