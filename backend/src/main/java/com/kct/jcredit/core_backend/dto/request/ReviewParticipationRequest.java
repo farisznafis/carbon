@@ -29,6 +29,9 @@ public class ReviewParticipationRequest {
 
     @NotBlank
     private String reviewerInkan;
+    
+    @NotBlank
+    private String reviewerName;
 
     @NotNull private Boolean isSolarContractDoc;
     @NotNull private Boolean isPcsSpecDoc;

@@ -130,7 +130,7 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
     private static final String TEMPLATE_PATH = "/templates/participate_solar.docx";
     private static final DateTimeFormatter JP_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy年MM月dd日");
 
-    @Value("${app.pdf.japanese-font-path:C:/Windows/Fonts/msgothic.ttc,0}")
+    @Value("${app.pdf.japanese-font-path:}")
     private String japaneseFontPath;
 
     @Override

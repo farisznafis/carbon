@@ -11,6 +11,8 @@ public class ApproveReviewRequest {
 
     @NotBlank
     private String reviewerInkan;
+    @NotBlank
+    private String reviewerName;
 
     @NotNull private Boolean isSolarContractDoc;
     @NotNull private Boolean isPcsSpecDoc;
