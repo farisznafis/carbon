@@ -96,7 +96,7 @@ export default function ParticipationReviewListPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoadError, setHasLoadError] = useState(false);
 
-  /** Loads each status and keeps only memberships that belong to the route project. */
+  /** Loads all membership statuses without comparing incompatible public and internal project IDs. */
   const loadReviews = useCallback(async () => {
     if (!projectId) {
       setHasLoadError(true);
@@ -107,8 +107,7 @@ export default function ParticipationReviewListPage() {
     setIsLoading(true);
     setHasLoadError(false);
 
-    try {
-      const [project, statusReviews] = await Promise.all([
+    try {const [project, statusReviews] = await Promise.all([
         getAdminProjectDetail(projectId),
         getParticipationReviewsByStatus(),
       ]);
@@ -124,6 +123,7 @@ export default function ParticipationReviewListPage() {
           isParticipationReviewForProject(review, projectId, project),
         ),
       });
+      // setReviewsByStatus(await getParticipationReviewsByStatus());
     } catch {
       setHasLoadError(true);
     } finally {
@@ -153,12 +153,14 @@ export default function ParticipationReviewListPage() {
       navigate(
         paths.adminProjectMembershipDetail(
           projectId,
+          // String(review.projectId),
           review.participationId,
           activeStatus,
         ),
       );
     },
     [activeStatus, navigate, projectId],
+    // [activeStatus, navigate],
   );
 
   const columns = useMemo<
