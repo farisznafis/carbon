@@ -388,14 +388,30 @@ CREATE TABLE project_files (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(100),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR(100),
-    project_id INT NOT NULL UNIQUE REFERENCES project(id) ON UPDATE CASCADE ON DELETE CASCADE,
-    certificate_registration TEXT,
-    report_validation TEXT,
-    report_verification TEXT
+    project_id INT NOT NULL REFERENCES project(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    deleted_at TIMESTAMP,
+    deleted_by VARCHAR(100),
+    file_type VARCHAR(30) NOT NULL CHECK (file_type IN (
+        'PROJECT_PLAN',
+        'VALIDATION_REPORT',
+        'REGISTRATION_RESULT',
+        'MONITORING_REPORT',
+        'ACTIVITY_RESULT_LIST',
+        'VERIFICATION_REPORT',
+        'CERTIFICATION_RESULT',
+        'VVB_QUERY_SHEET',
+        'ADDITIONAL_MATERIAL'
+    )),
+    s3_key TEXT NOT NULL,
+    original_file_name VARCHAR(255),
+    owned_by BOOLEAN NOT NULL
 );
+
+CREATE INDEX idx_project_files_project_id ON project_files(project_id);
+CREATE INDEX idx_project_files_project_id_file_type ON project_files(project_id, file_type);
 
 -- en_r002_equipment
 CREATE TABLE en_r002_equipment (
