@@ -375,28 +375,38 @@ VALUES
 
 -- =========================================================
 -- 12. project_files
--- ACTIVE(募集中)のプロジェクトは登録通知書のみ存在（プロジェクト自体の登録は
--- 完了しているため）。検証・実績報告書はまだ発生しない（参加者ゼロのため）。
--- DRAFT は何も発行されていない。
+-- ACTIVE(募集中)のプロジェクトは登録通知(REGISTRATION_RESULT)のみ存在（プロジェクト自体の登録は
+-- 完了しているため）。検証報告書・実績報告リストはまだ発生しない（参加者ゼロのため）。
+-- DRAFT(project_id=3)は何もアップロードされていないため行自体が存在しない。
+-- 新スキーマは1行=1ファイルなので、旧データの6プロジェクト分から
+-- ファイルが存在する5プロジェクト分=5行に変わる（project_id 3はスキップ）。
 -- =========================================================
 INSERT INTO project_files (
     id, is_active, created_at, updated_at, created_by, updated_by,
-    project_id, certificate_registration, report_validation, report_verification
+    project_id, deleted_at, deleted_by, file_type, s3_key, original_file_name, owned_by
 )
 OVERRIDING SYSTEM VALUE
 VALUES
 (1, TRUE, '2026-07-07 09:30:00', '2026-07-07 09:30:00', 'admin1', 'admin1', 1,
- 's3://gxcarbon/project/P000001/certificate-registration.pdf', NULL, NULL),
+ NULL, NULL, 'REGISTRATION_RESULT',
+ 'projects/P000001/review-documents/registration_result/certificate-registration.pdf',
+ 'certificate-registration.pdf', FALSE),
 (2, TRUE, '2026-07-20 09:30:00', '2026-07-20 09:30:00', 'admin1', 'admin1', 2,
- 's3://gxcarbon/project/P000002/certificate-registration.pdf', NULL, NULL),
-(3, TRUE, '2026-08-01 09:30:00', '2026-08-01 09:30:00', 'admin1', 'admin1', 3,
- NULL, NULL, NULL),
-(4, TRUE, '2026-08-03 09:30:00', '2026-08-03 09:30:00', 'admin1', 'admin1', 4,
- 's3://gxcarbon/project/P000004/certificate-registration.pdf', NULL, NULL),
-(5, TRUE, '2026-08-04 09:30:00', '2026-08-04 09:30:00', 'admin1', 'admin1', 5,
- 's3://gxcarbon/project/P000005/certificate-registration.pdf', NULL, NULL),
-(6, TRUE, '2026-08-05 09:30:00', '2026-08-05 09:30:00', 'admin1', 'admin1', 6,
- 's3://gxcarbon/project/P000006/certificate-registration.pdf', NULL, NULL);
+ NULL, NULL, 'REGISTRATION_RESULT',
+ 'projects/P000002/review-documents/registration_result/certificate-registration.pdf',
+ 'certificate-registration.pdf', FALSE),
+(3, TRUE, '2026-08-03 09:30:00', '2026-08-03 09:30:00', 'admin1', 'admin1', 4,
+ NULL, NULL, 'REGISTRATION_RESULT',
+ 'projects/P000004/review-documents/registration_result/certificate-registration.pdf',
+ 'certificate-registration.pdf', FALSE),
+(4, TRUE, '2026-08-04 09:30:00', '2026-08-04 09:30:00', 'admin1', 'admin1', 5,
+ NULL, NULL, 'REGISTRATION_RESULT',
+ 'projects/P000005/review-documents/registration_result/certificate-registration.pdf',
+ 'certificate-registration.pdf', FALSE),
+(5, TRUE, '2026-08-05 09:30:00', '2026-08-05 09:30:00', 'admin1', 'admin1', 6,
+ NULL, NULL, 'REGISTRATION_RESULT',
+ 'projects/P000006/review-documents/registration_result/certificate-registration.pdf',
+ 'certificate-registration.pdf', FALSE);
 
 -- =========================================================
 -- 13. company_suspension

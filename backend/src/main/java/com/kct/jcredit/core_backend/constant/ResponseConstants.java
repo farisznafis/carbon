@@ -168,5 +168,10 @@ public class ResponseConstants {
     public static final String MSG_FORM_SAVED = "フォームを保存しました。";
     public static final String MSG_PROGRESS_RETRIEVED = "入力状況を取得しました。";
 
+    // --- Project file upload ---
+        public static final String MSG_FILE_UPLOADED = "ファイルをアップロードしました。";
+        public static final String MSG_FILE_NOT_FOUND = "ファイルが見つかりません。";
+        public static final String MSG_FILE_DELETED = "ファイルを削除しました。";
+
     private ResponseConstants() {}
 }
