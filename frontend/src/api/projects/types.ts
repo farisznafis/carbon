@@ -96,6 +96,7 @@ export type ProjectListItem = {
   siteName?: string | null;
   projectName: string;
   projectStatus: string;
+  emissionReduction?: number | string | null;
   methodologyCategory: string;
   methodologyNumber: string;
   methodologyName: string;

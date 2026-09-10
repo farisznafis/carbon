@@ -73,7 +73,7 @@ export default function CancelRequestDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const returnToList = useCallback(() => {
-    navigate(`${paths.adminDashboard}?tab=monitoring`);
+    navigate(`${paths.adminDashboard}?panel=cancel`);
   }, [navigate]);
 
   const loadCancelRequest = useCallback(async () => {

@@ -28,7 +28,6 @@ const Hero = () => {
       <HomeFaqSection contactPath={paths.contact} />
       <HomeCtaSection
         signupPath={paths.signup}
-        contactPath={paths.contact}
       />
       <HomeFooter />
     </div>
