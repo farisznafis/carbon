@@ -13,7 +13,9 @@ import type {
 import {
   approveAdminCompany,
   getAdminCompanies,
+  getOpenParticipationReviews,
   rejectAdminCompany,
+  type ParticipationReviewDetail,
 } from '@/api/admin';
 import {
   getBatchHistory,
@@ -31,7 +33,6 @@ import {
 } from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
-import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 import {
   adminPageContainerClassName,
   dashboardEmptyStateClassName,
@@ -39,29 +40,28 @@ import {
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { CancelRequestHistoryTable } from '@/features/admin/dashboard/tables/CancelRequestHistoryTable';
-import { BatchHistoryTable } from '@/features/admin/dashboard/tables/BatchHistoryTable';
 import { AdminCompanyApplicationsTable } from '@/features/admin/dashboard/tables/AdminCompanyApplicationsTable';
 import { PendingCompanyActionDialog } from '@/features/admin/dashboard/tables/PendingCompanyActionDialog';
 import { PendingCompanyApplicationDetail } from '@/features/admin/dashboard/tables/PendingCompanyApplicationDetail';
 import { ProjectTable } from '@/features/admin/dashboard/tables/ProjectTable';
-import { AdminDashboardOverview } from './AdminDashboardOverview';
+import {
+  AdminDashboardOverview,
+  type AdminHomePanel,
+} from './AdminDashboardOverview';
 import { PageSkeleton, SkeletonTable } from '@/components/feedback/loading';
 import { useProjectsQuery } from '@/hooks/projects/useProjectsQuery';
 import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
 import { paths } from '@/routes/paths';
 import { getAdminRouteFromLegacyTab } from '@/features/admin/navigation/adminNavigationConfig';
-import { useNotificationStore } from '@/stores/notificationStore';
-import { AlertTriangle, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 type AdminDashboardTabValue =
   | 'overview'
   | 'companies'
   | 'projects'
   | 'operators'
-  | 'methodologies'
-  | 'monitoring';
+  | 'methodologies';
 
 type PendingCompanyActionMode = 'approve' | 'reject';
 
@@ -69,6 +69,7 @@ const dashboardContainer = adminPageContainerClassName;
 
 const APPLICATION_STATUSES: CompanyStatus[] = ['PENDING', 'REJECTED'];
 const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
+const HOME_APPLICATION_SUMMARY_LIMIT = 3;
 
 const DEFAULT_PAGINATION: Pagination = {
   page: 1,
@@ -97,7 +98,6 @@ const adminDashboardTabs: Array<{
   { value: 'projects', label: 'プロジェクト管理' },
   { value: 'operators', label: '運用者一覧' },
   { value: 'methodologies', label: '方法論一覧' },
-  { value: 'monitoring', label: 'モニタリングデータ管理' },
 ];
 
 /** Resolves the route-driven dashboard section while legacy tab URLs redirect. */
@@ -108,8 +108,6 @@ function getAdminDashboardSection(
   if (pathname === paths.adminProjectList) return 'projects';
   if (pathname === paths.adminCompanyList) return 'companies';
   if (pathname === paths.adminMethodologyList) return 'methodologies';
-  if (pathname === paths.adminMonitoring) return 'monitoring';
-
   if (
     pathname === paths.adminDashboard &&
     (legacyTab === 'overview' ||
@@ -187,12 +185,6 @@ const AdminDashboard = () => {
   const { user } = useAuth();
   const projectsQuery = useProjectsQuery();
   const projects = projectsQuery.data ?? [];
-  const loadNotifications = useNotificationStore(
-    (state) => state.loadNotifications,
-  );
-  const notifications = useNotificationStore((state) => state.notifications);
-  const notificationsLoading = useNotificationStore((state) => state.loading);
-  const notificationsError = useNotificationStore((state) => state.error);
 
   const {
     currentPage: projectPage,
@@ -224,9 +216,27 @@ const AdminDashboard = () => {
   const [batchHistoryError, setBatchHistoryError] = useState<string | null>(
     null,
   );
+  const [openMembershipReviews, setOpenMembershipReviews] = useState<
+    ParticipationReviewDetail[]
+  >([]);
+  const [openMembershipReviewsError, setOpenMembershipReviewsError] = useState<
+    string | null
+  >(null);
   const [applicationCompanies, setApplicationCompanies] = useState<
     AdminCompanyListItem[]
   >([]);
+  const [homePendingApplications, setHomePendingApplications] = useState<
+    AdminCompanyListItem[]
+  >([]);
+  const [homePendingApplicationTotal, setHomePendingApplicationTotal] = useState(0);
+  const [homePendingApplicationsLoading, setHomePendingApplicationsLoading] = useState(true);
+  const [homePendingApplicationsError, setHomePendingApplicationsError] = useState<string | null>(null);
+  const [homeRejectedApplications, setHomeRejectedApplications] = useState<
+    AdminCompanyListItem[]
+  >([]);
+  const [homeRejectedApplicationTotal, setHomeRejectedApplicationTotal] = useState(0);
+  const [homeRejectedApplicationsLoading, setHomeRejectedApplicationsLoading] = useState(true);
+  const [homeRejectedApplicationsError, setHomeRejectedApplicationsError] = useState<string | null>(null);
   const [participatingCompanies, setParticipatingCompanies] = useState<
     AdminCompanyListItem[]
   >([]);
@@ -263,6 +273,11 @@ const AdminDashboard = () => {
   const [rejectReason, setRejectReason] = useState('');
 
   const requestedTab = new URLSearchParams(location.search).get('tab');
+  const requestedPanel = new URLSearchParams(location.search).get('panel');
+  const activePanel: AdminHomePanel | null =
+    requestedPanel === 'cancel' || requestedPanel === 'batch'
+      ? requestedPanel
+      : null;
   const activeSection = getAdminDashboardSection(
     location.pathname,
     requestedTab,
@@ -287,6 +302,8 @@ const AdminDashboard = () => {
         limit: companyLimit,
         status: APPLICATION_STATUSES,
         page: applicationPage,
+        sort: 'createdAt',
+        sortOrder: 'desc',
       });
       setApplicationCompanies(applications.companies);
       setApplicationPagination(applications.pagination);
@@ -329,9 +346,93 @@ const AdminDashboard = () => {
     ]);
   }, [reloadApplicationCompanies, reloadParticipatingCompanies]);
 
+  /** Loads the latest PENDING applications and their actual API total for Home. */
+  const reloadHomePendingApplications = useCallback(async () => {
+    setHomePendingApplicationsLoading(true);
+    setHomePendingApplicationsError(null);
+    setHomePendingApplications([]);
+    setHomePendingApplicationTotal(0);
+
+    try {
+      const response = await getAdminCompanies({
+        status: 'PENDING',
+        page: 1,
+        limit: HOME_APPLICATION_SUMMARY_LIMIT,
+        sort: 'createdAt',
+        sortOrder: 'desc',
+      });
+      setHomePendingApplications(response.companies);
+      setHomePendingApplicationTotal(response.pagination.totalItems);
+    } catch (error) {
+      setHomePendingApplicationsError(
+        getApiMessage(error, '確認待ちの企業申請を取得できませんでした。'),
+      );
+    } finally {
+      setHomePendingApplicationsLoading(false);
+    }
+  }, []);
+
+  /** Loads the latest REJECTED applications and their actual API total for Home. */
+  const reloadHomeRejectedApplications = useCallback(async () => {
+    setHomeRejectedApplicationsLoading(true);
+    setHomeRejectedApplicationsError(null);
+    setHomeRejectedApplications([]);
+    setHomeRejectedApplicationTotal(0);
+
+    try {
+      const response = await getAdminCompanies({
+        status: 'REJECTED',
+        page: 1,
+        limit: HOME_APPLICATION_SUMMARY_LIMIT,
+        sort: 'createdAt',
+        sortOrder: 'desc',
+      });
+      setHomeRejectedApplications(response.companies);
+      setHomeRejectedApplicationTotal(response.pagination.totalItems);
+    } catch (error) {
+      setHomeRejectedApplicationsError(
+        getApiMessage(error, '却下済みの企業申請を取得できませんでした。'),
+      );
+    } finally {
+      setHomeRejectedApplicationsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    void loadNotifications();
-  }, [loadNotifications]);
+    if (location.pathname !== paths.adminDashboard) return;
+
+    void reloadHomePendingApplications();
+    void reloadHomeRejectedApplications();
+  }, [
+    location.pathname,
+    reloadHomePendingApplications,
+    reloadHomeRejectedApplications,
+  ]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    /** Loads OPEN membership reviews used to prioritize the project table. */
+    const preloadOpenMembershipReviews = async () => {
+      setOpenMembershipReviewsError(null);
+
+      try {
+        const reviews = await getOpenParticipationReviews();
+        if (isActive) setOpenMembershipReviews(reviews);
+      } catch (error) {
+        if (!isActive) return;
+        setOpenMembershipReviewsError(
+          getApiMessage(error, '入会届の優先順位を取得できませんでした。'),
+        );
+      }
+    };
+
+    void preloadOpenMembershipReviews();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   useEffect(() => {
     let isActive = true;
@@ -536,6 +637,16 @@ const AdminDashboard = () => {
     setDetailReviewMode(true);
   };
 
+  /** Opens actionable applications in review mode and historical ones read-only. */
+  const openHomeCompanyApplication = (item: AdminCompanyListItem) => {
+    if (item.status === 'PENDING') {
+      openCompanyReview(item);
+      return;
+    }
+
+    openCompanyDetails(item);
+  };
+
   const closeCompanyDetail = () => {
     setDetailCompany(null);
     setDetailReviewMode(false);
@@ -568,6 +679,21 @@ const AdminDashboard = () => {
     });
   };
 
+  /** Opens or closes a Home monitoring panel while keeping it addressable by URL. */
+  const handleHomePanelChange = (panel: AdminHomePanel | null) => {
+    if (panel) {
+      navigate(`${paths.adminDashboard}?panel=${panel}`);
+      return;
+    }
+
+    navigate(paths.adminDashboard, { replace: true });
+  };
+
+  /** Opens the OPEN membership list for the selected project. */
+  const openProjectMemberships = (project: Project) => {
+    navigate(paths.adminProjectMembership(project.id, 'OPEN'));
+  };
+
   const handlePendingDialogOpenChange = (open: boolean) => {
     setPendingDialogOpen(open);
 
@@ -590,7 +716,15 @@ const AdminDashboard = () => {
       } else {
         await rejectAdminCompany(selectedCompany.companyId, rejectReason);
       }
-      await reloadCompanyLists();
+      await Promise.all([
+        reloadCompanyLists(),
+        ...(location.pathname === paths.adminDashboard
+          ? [
+              reloadHomePendingApplications(),
+              reloadHomeRejectedApplications(),
+            ]
+          : []),
+      ]);
       handlePendingDialogOpenChange(false);
       closeCompanyDetail();
       toast({
@@ -675,10 +809,19 @@ const AdminDashboard = () => {
               projects={projects}
               projectsLoading={projectsQuery.isLoading}
               projectsError={projectsError}
-              applications={applicationCompanies}
+              openMembershipReviews={openMembershipReviews}
+              openMembershipReviewsError={openMembershipReviewsError}
               applicationTotal={applicationPagination.totalItems}
               applicationsLoading={applicationCompaniesLoading}
               applicationsError={applicationCompaniesError}
+              pendingApplications={homePendingApplications}
+              pendingApplicationTotal={homePendingApplicationTotal}
+              pendingApplicationsLoading={homePendingApplicationsLoading}
+              pendingApplicationsError={homePendingApplicationsError}
+              rejectedApplications={homeRejectedApplications}
+              rejectedApplicationTotal={homeRejectedApplicationTotal}
+              rejectedApplicationsLoading={homeRejectedApplicationsLoading}
+              rejectedApplicationsError={homeRejectedApplicationsError}
               participatingCompanyTotal={participatingPagination.totalItems}
               participatingCompaniesLoading={participatingCompaniesLoading}
               participatingCompaniesError={participatingCompaniesError}
@@ -686,10 +829,16 @@ const AdminDashboard = () => {
               cancelRequestsLoading={cancelRequestLoading}
               cancelRequestsError={cancelRequestError}
               batchHistory={batchHistoryItems}
+              batchHistoryPagination={batchHistoryPagination}
               batchHistoryLoading={batchHistoryLoading}
-              notifications={notifications}
-              notificationsLoading={notificationsLoading}
-              notificationsError={notificationsError}
+              batchHistoryError={batchHistoryError}
+              activePanel={activePanel}
+              onPanelChange={handleHomePanelChange}
+              onOpenProjectMembership={openProjectMemberships}
+              onOpenCompanyApplication={openHomeCompanyApplication}
+              onOpenCancelRequest={openCancelRequestDetail}
+              onNavigateProjects={() => navigate(paths.adminProjectList)}
+              onNavigateCompanies={() => navigate(paths.adminCompanyList)}
             />
           </TabsContent> */}
 
@@ -701,10 +850,19 @@ const AdminDashboard = () => {
               projects={projects}
               projectsLoading={projectsQuery.isLoading}
               projectsError={projectsError}
-              applications={applicationCompanies}
+              openMembershipReviews={openMembershipReviews}
+              openMembershipReviewsError={openMembershipReviewsError}
               applicationTotal={applicationPagination.totalItems}
               applicationsLoading={applicationCompaniesLoading}
               applicationsError={applicationCompaniesError}
+              pendingApplications={homePendingApplications}
+              pendingApplicationTotal={homePendingApplicationTotal}
+              pendingApplicationsLoading={homePendingApplicationsLoading}
+              pendingApplicationsError={homePendingApplicationsError}
+              rejectedApplications={homeRejectedApplications}
+              rejectedApplicationTotal={homeRejectedApplicationTotal}
+              rejectedApplicationsLoading={homeRejectedApplicationsLoading}
+              rejectedApplicationsError={homeRejectedApplicationsError}
               participatingCompanyTotal={participatingPagination.totalItems}
               participatingCompaniesLoading={participatingCompaniesLoading}
               participatingCompaniesError={participatingCompaniesError}
@@ -712,10 +870,16 @@ const AdminDashboard = () => {
               cancelRequestsLoading={cancelRequestLoading}
               cancelRequestsError={cancelRequestError}
               batchHistory={batchHistoryItems}
+              batchHistoryPagination={batchHistoryPagination}
               batchHistoryLoading={batchHistoryLoading}
-              notifications={notifications}
-              notificationsLoading={notificationsLoading}
-              notificationsError={notificationsError}
+              batchHistoryError={batchHistoryError}
+              activePanel={activePanel}
+              onPanelChange={handleHomePanelChange}
+              onOpenProjectMembership={openProjectMemberships}
+              onOpenCompanyApplication={openHomeCompanyApplication}
+              onOpenCancelRequest={openCancelRequestDetail}
+              onNavigateProjects={() => navigate(paths.adminProjectList)}
+              onNavigateCompanies={() => navigate(paths.adminCompanyList)}
             />
           </TabsContent>
 
@@ -866,62 +1030,6 @@ const AdminDashboard = () => {
             </AdminDashboardSection>
           </TabsContent>
 
-          <TabsContent
-            value="monitoring"
-            className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
-          >
-            <AdminDashboardSection
-              title="取消一覧"
-              description="取消対象のモニタリングデータを確認し、取消申請を送信できます。"
-            >
-              <ErrorBoundary
-                fallback={({ resetErrorBoundary }) => (
-                  <div
-                    role="alert"
-                    className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center"
-                  >
-                    <AlertTriangle
-                      className="h-5 w-5 text-destructive"
-                      aria-hidden="true"
-                    />
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-foreground">
-                        モニタリングデータを表示できませんでした。
-                      </p>
-                      <p className="text-subtle text-foreground">
-                        もう一度お試しください。
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={resetErrorBoundary}
-                    >
-                      再試行
-                    </Button>
-                  </div>
-                )}
-              >
-                <CancelRequestHistoryTable
-                  initialRequests={cancelRequestItems}
-                  initialLoading={cancelRequestLoading}
-                  initialLoadError={cancelRequestError}
-                  onViewRequest={openCancelRequestDetail}
-                />
-              </ErrorBoundary>
-            </AdminDashboardSection>
-            <AdminDashboardSection
-              title="バッチ履歴"
-              description="バッチ処理の実行状況と処理履歴を確認できます。"
-            >
-              <BatchHistoryTable
-                initialItems={batchHistoryItems}
-                initialPagination={batchHistoryPagination}
-                initialLoading={batchHistoryLoading}
-                initialLoadError={batchHistoryError}
-              />
-            </AdminDashboardSection>
-          </TabsContent>
         </main>
       </Tabs>
 

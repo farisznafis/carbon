@@ -5,8 +5,7 @@ export type AdminNavigationKey =
   | 'projects'
   | 'companies'
   | 'operators'
-  | 'methodologies'
-  | 'monitoring';
+  | 'methodologies';
 
 export type AdminNavigationItem = {
   key: AdminNavigationKey;
@@ -18,7 +17,6 @@ export const ADMIN_NAVIGATION_ITEMS: readonly AdminNavigationItem[] = [
   { key: 'home', label: 'ホーム', href: paths.adminDashboard },
   { key: 'projects', label: 'プロジェクト', href: paths.adminProjectList },
   { key: 'companies', label: '企業管理', href: paths.adminCompanyList },
-  { key: 'monitoring', label: 'モニタリング管理', href: paths.adminMonitoring },
   { key: 'operators', label: '運営管理', href: paths.adminOperatorList },
   { key: 'methodologies', label: '方法論', href: paths.adminMethodologyList },
 ] as const;
@@ -31,7 +29,7 @@ const LEGACY_TAB_NAVIGATION_MAP: Partial<
   companies: 'companies',
   operators: 'operators',
   methodologies: 'methodologies',
-  monitoring: 'monitoring',
+  monitoring: 'home',
 };
 
 /** Resolves the active admin navigation item for list and nested detail routes. */
@@ -74,7 +72,7 @@ export function getActiveAdminNavigationKey(
     pathname === paths.adminMonitoring ||
     pathname.startsWith('/admin/monitoring/')
   ) {
-    return 'monitoring';
+    return 'home';
   }
 
   return null;
@@ -82,6 +80,8 @@ export function getActiveAdminNavigationKey(
 
 /** Converts a legacy dashboard tab into its new route while preserving old bookmarks. */
 export function getAdminRouteFromLegacyTab(tab: string | null): string | null {
+  if (tab === 'monitoring') return `${paths.adminDashboard}?panel=cancel`;
+
   const key = tab ? LEGACY_TAB_NAVIGATION_MAP[tab] : undefined;
   return ADMIN_NAVIGATION_ITEMS.find((item) => item.key === key)?.href ?? null;
 }

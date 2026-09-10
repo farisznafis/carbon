@@ -8,20 +8,20 @@ import ParticipationReviewDetailPage from './ParticipationReviewDetailPage';
 
 const {
   approveParticipationReview,
+  downloadAdminParticipationMembershipPdf,
   getAdminProjectDetail,
-  getMyParticipationReviews,
+  getOpenParticipationReviews,
   getParticipationReviewDetail,
   rejectParticipationReview,
-  downloadProjectMembershipPdf,
   downloadFromUrl,
   toast,
 } = vi.hoisted(() => ({
   approveParticipationReview: vi.fn(),
+  downloadAdminParticipationMembershipPdf: vi.fn(),
   getAdminProjectDetail: vi.fn(),
-  getMyParticipationReviews: vi.fn(),
+  getOpenParticipationReviews: vi.fn(),
   getParticipationReviewDetail: vi.fn(),
   rejectParticipationReview: vi.fn(),
-  downloadProjectMembershipPdf: vi.fn(),
   downloadFromUrl: vi.fn(),
   toast: vi.fn(),
 }));
@@ -31,18 +31,11 @@ vi.mock('@/api/admin', async (importOriginal) => {
   return {
     ...actual,
     approveParticipationReview,
+    downloadAdminParticipationMembershipPdf,
     getAdminProjectDetail,
-    getMyParticipationReviews,
+    getOpenParticipationReviews,
     getParticipationReviewDetail,
     rejectParticipationReview,
-  };
-});
-
-vi.mock('@/api/projects', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/api/projects')>();
-  return {
-    ...actual,
-    downloadProjectMembershipPdf,
   };
 });
 
@@ -106,10 +99,14 @@ const approvedReviewDetail = {
   },
 };
 
-function renderPage() {
+/** Renders the review detail with an optional explicit status query. */
+function renderPage(status?: 'OPEN' | 'APPROVED' | 'REJECTED') {
+  const statusQuery = status ? `?status=${status}` : '';
   return render(
     <MemoryRouter
-      initialEntries={['/admin/projects/7/memberships/12']}
+      initialEntries={[
+        `/admin/projects/7/memberships/12${statusQuery}`,
+      ]}
       future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
     >
       <Routes>
@@ -129,11 +126,11 @@ function renderPage() {
 describe('ParticipationReviewDetailPage', () => {
   beforeEach(() => {
     approveParticipationReview.mockReset();
+    downloadAdminParticipationMembershipPdf.mockReset();
     getAdminProjectDetail.mockReset();
-    getMyParticipationReviews.mockReset();
+    getOpenParticipationReviews.mockReset();
     getParticipationReviewDetail.mockReset();
     rejectParticipationReview.mockReset();
-    downloadProjectMembershipPdf.mockReset();
     downloadFromUrl.mockReset();
     toast.mockReset();
     getAdminProjectDetail.mockResolvedValue({
@@ -141,10 +138,10 @@ describe('ParticipationReviewDetailPage', () => {
       projectName: 'プロジェクトA',
     });
     getParticipationReviewDetail.mockResolvedValue(reviewDetail);
-    getMyParticipationReviews.mockResolvedValue([reviewDetail]);
+    getOpenParticipationReviews.mockResolvedValue([reviewDetail]);
     approveParticipationReview.mockResolvedValue(undefined);
     rejectParticipationReview.mockResolvedValue(undefined);
-    downloadProjectMembershipPdf.mockResolvedValue({
+    downloadAdminParticipationMembershipPdf.mockResolvedValue({
       pdfUrl: 'https://example.com/membership.pdf',
       expiresIn: 300,
     });
@@ -177,12 +174,18 @@ describe('ParticipationReviewDetailPage', () => {
       await user.click(checkbox);
     }
 
+    expect(confirmButton).toBeDisabled();
+    await user.type(
+      screen.getByRole('textbox', { name: /レビュー担当者名/ }),
+      '山田 太郎',
+    );
     expect(confirmButton).toBeEnabled();
     await user.click(confirmButton);
 
     expect(approveParticipationReview).toHaveBeenCalledWith(
       12,
       expect.objectContaining({
+        reviewerName: '山田 太郎',
         reviewerInkan: '山田',
         isSolarContractDoc: true,
         isSubsidyCheck: true,
@@ -254,13 +257,18 @@ describe('ParticipationReviewDetailPage', () => {
   it('gets the membership PDF and opens its temporary URL', async () => {
     const user = userEvent.setup();
     getParticipationReviewDetail.mockResolvedValue(approvedReviewDetail);
-    getMyParticipationReviews.mockResolvedValue([]);
-    renderPage();
+    getOpenParticipationReviews.mockResolvedValue([]);
+    renderPage('APPROVED');
 
     await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
+    expect(screen.queryByRole('button', { name: '承認' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '却下' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'PDFを表示' }));
 
-    expect(downloadProjectMembershipPdf).toHaveBeenCalledWith('7');
+    expect(downloadAdminParticipationMembershipPdf).toHaveBeenCalledWith(
+      '7',
+      12,
+    );
     expect(downloadFromUrl).toHaveBeenCalledWith(
       'https://example.com/membership.pdf',
     );
@@ -275,7 +283,7 @@ describe('ParticipationReviewDetailPage', () => {
         secondaryApplReviewerName: '',
       },
     });
-    renderPage();
+    renderPage('OPEN');
 
     await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
 
@@ -287,11 +295,11 @@ describe('ParticipationReviewDetailPage', () => {
   it('keeps the page available and shows a toast when the PDF cannot be opened', async () => {
     const user = userEvent.setup();
     getParticipationReviewDetail.mockResolvedValue(approvedReviewDetail);
-    getMyParticipationReviews.mockResolvedValue([]);
-    downloadProjectMembershipPdf.mockRejectedValue(
+    getOpenParticipationReviews.mockResolvedValue([]);
+    downloadAdminParticipationMembershipPdf.mockRejectedValue(
       new Error('PDFがまだ作成されていません。'),
     );
-    renderPage();
+    renderPage('APPROVED');
 
     await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
     await user.click(screen.getByRole('button', { name: 'PDFを表示' }));
@@ -317,6 +325,10 @@ describe('ParticipationReviewDetailPage', () => {
     expect(rejectButton).toBeDisabled();
 
     await user.type(
+      screen.getByRole('textbox', { name: /レビュー担当者名/ }),
+      '山田 太郎',
+    );
+    await user.type(
       screen.getByRole('textbox', { name: /レビュー担当者印/ }),
       '山田',
     );
@@ -339,6 +351,9 @@ describe('ParticipationReviewDetailPage', () => {
 
     await user.click(screen.getByRole('button', { name: '却下' }));
     expect(
+      screen.getByRole('textbox', { name: /レビュー担当者名/ }),
+    ).toHaveValue('山田 太郎');
+    expect(
       screen.getByRole('textbox', { name: /レビュー担当者印/ }),
     ).toHaveValue('山田');
     expect(screen.getByRole('textbox', { name: /却下理由/ })).toHaveValue(
@@ -355,6 +370,7 @@ describe('ParticipationReviewDetailPage', () => {
     expect(rejectParticipationReview).toHaveBeenCalledWith(
       12,
       expect.objectContaining({
+        reviewerName: '山田 太郎',
         reviewerInkan: '山田',
         rejectReason: '資料に不備があります。',
         isSolarContractDoc: true,
@@ -372,7 +388,8 @@ describe('ParticipationReviewDetailPage', () => {
           statusCode: 'VALIDATION_ERROR',
           message: '入力内容に不備があります。',
           errors: {
-            reviewerInkan: 'レビュー担当者印を確認してください。',
+            'request::reviewerName':
+              'レビュー担当者名を確認してください。',
           },
         },
       }),
@@ -381,6 +398,10 @@ describe('ParticipationReviewDetailPage', () => {
 
     await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
     await user.click(screen.getByRole('button', { name: '承認' }));
+    await user.type(
+      screen.getByRole('textbox', { name: /レビュー担当者名/ }),
+      '山田 太郎',
+    );
     await user.type(
       screen.getByRole('textbox', { name: /レビュー担当者印/ }),
       '山田',
@@ -391,20 +412,20 @@ describe('ParticipationReviewDetailPage', () => {
     await user.click(screen.getByRole('button', { name: '承認する' }));
 
     expect(
-      await screen.findByText('レビュー担当者印を確認してください。'),
+      await screen.findByText('レビュー担当者名を確認してください。'),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { name: '入会届を承認しますか？' }),
     ).toBeInTheDocument();
   });
 
-  it('renders a non-reviewable pending item as read-only', async () => {
-    getMyParticipationReviews.mockResolvedValue([]);
-    renderPage();
+  it('renders a rejected item as read-only without PDF actions', async () => {
+    getOpenParticipationReviews.mockResolvedValue([]);
+    renderPage('REJECTED');
 
     expect(
       await screen.findByText(
-        'この入会届は現在あなたのレビュー対象ではないため、閲覧のみ可能です。',
+        'この入会届は却下されています。申請内容のみ閲覧できます。',
       ),
     ).toBeInTheDocument();
     expect(

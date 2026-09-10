@@ -23,6 +23,7 @@ import Lenis from "lenis";
 import "lenis/dist/lenis.css";
 
 const Index = lazy(() => import("./pages/Index"));
+const Inquiry = lazy(() => import('./features/public/inquiry/InquiryPage'));
 const Login = lazy(() => import("./pages/Login"));
 const AdminLogin = lazy(() => import("./features/admin/auth/AdminLoginPage"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
@@ -193,6 +194,7 @@ const App = () => {
             <Suspense fallback={<PageSkeleton />}>
               <Routes>
           <Route path={paths.home} element={<Index />} />
+          <Route path={paths.contact} element={<Inquiry />} />
           <Route path={paths.login} element={<Login />} />
           <Route path={paths.adminLogin} element={<AdminLogin />} />
           <Route path={paths.forgotPassword} element={<ForgotPassword />} />
@@ -264,7 +266,7 @@ const App = () => {
               </RequireAdmin>
             }
           />
-          {[paths.adminProjectList, paths.adminCompanyList, paths.adminMethodologyList, paths.adminMonitoring].map(
+          {[paths.adminProjectList, paths.adminCompanyList, paths.adminMethodologyList].map(
             (path) => (
               <Route
                 key={path}
@@ -277,6 +279,14 @@ const App = () => {
               />
             ),
           )}
+          <Route
+            path={paths.adminMonitoring}
+            element={
+              <RequireAdmin>
+                <Navigate to={`${paths.adminDashboard}?panel=cancel`} replace />
+              </RequireAdmin>
+            }
+          />
           <Route
             path={paths.adminOperatorList}
             element={

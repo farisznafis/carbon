@@ -116,6 +116,11 @@ export type SiteProjectsApiResponse = {
   } | null;
 };
 
+export type SiteProjectParticipationStatus =
+  | 'OPEN'
+  | 'APPROVED'
+  | 'REJECTED';
+
 export type SiteProjectApiItem = {
   id: string;
   projectName: string;
@@ -153,6 +158,9 @@ export type SiteProjectApiItem = {
   methodCombiFeasibility?: boolean | null;
   methodDetails?: string | null;
   operatorCompanyId?: number | null;
+  participationId?: number | null;
+  participationStatus?: SiteProjectParticipationStatus | null;
+  pdfStatus?: string | null;
   isCompanyJoined?: boolean | null;
   hasSiteRelation?: boolean | null;
   updatedAt?: string | null;
@@ -171,7 +179,7 @@ export type MyProjectParticipation = MyProjectParticipationApiItem;
 
 export type SiteProject = Project & {
   participationId?: number;
-  participationStatus?: string;
+  participationStatus?: SiteProjectParticipationStatus;
   pdfStatus?: string;
   isCompanyJoined: boolean;
   hasSiteRelation: boolean;

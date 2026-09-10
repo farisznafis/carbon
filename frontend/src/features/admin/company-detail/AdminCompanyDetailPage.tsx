@@ -663,7 +663,7 @@ export default function AdminCompanyDetailPage() {
           <Card
             className={
               isSuspended
-                ? 'border-emerald-200 bg-emerald-50/40'
+                ? 'border-success-border bg-success-subtle/40'
                 : 'border-destructive/40'
             }
           >
@@ -730,7 +730,7 @@ export default function AdminCompanyDetailPage() {
                     <Button
                       type="button"
                       size="sm"
-                      className="bg-emerald-600 text-white hover:bg-emerald-700"
+                      variant="success"
                       onClick={() => void handleOpenResolveDialog()}
                     >
                       {dangerZoneActionLabel}
