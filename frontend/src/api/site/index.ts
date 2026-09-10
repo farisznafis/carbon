@@ -19,6 +19,7 @@ export {
   getSiteEquipmentById,
   getSiteEquipmentHistory,
   getSiteProjectSustainabilityCommitmentDefault,
+  joinProjectSite,
   joinSiteProject,
   uploadSiteProjectEquipmentFile,
   changeSiteEquipment,
@@ -65,6 +66,7 @@ export type {
   MyProjectParticipation,
   MyProjectParticipationApiItem,
   SiteProject,
+  SiteProjectParticipationStatus,
   SiteProjectsApiResponse,
   SitesResponse,
 } from './types';

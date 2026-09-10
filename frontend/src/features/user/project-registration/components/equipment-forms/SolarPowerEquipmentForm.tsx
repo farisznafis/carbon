@@ -7,6 +7,7 @@ import type {
 import { RequiredLabel } from '@/components/forms/shared';
 import { PresignedFileLink } from '@/components/files/PresignedFileLink';
 import { FileSelectButton } from '@/components/inputs/FileSelectButton/FileSelectButton';
+import { GroupedNumberInput } from '@/components/inputs/GroupedNumberInput';
 import {
   FormGrid,
   FormSection,
@@ -323,10 +324,8 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
             <FormItem>
               <RequiredLabel>公称最大出力 (kW)</RequiredLabel>
               <FormControl>
-                <Input
-                  type="number"
-                  min="0"
-                  step="any"
+                <GroupedNumberInput
+                  allowDecimal
                   placeholder="数値を入力"
                   {...field}
                 />
@@ -408,10 +407,8 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
                   夜間待機電力 (W)
                 </RequiredLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="any"
+                  <GroupedNumberInput
+                    allowDecimal
                     placeholder="数値を入力"
                     {...field}
                   />
@@ -497,10 +494,8 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
                   <FormItem>
                     <RequiredLabel>容量 (kWh)</RequiredLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="any"
+                      <GroupedNumberInput
+                        allowDecimal
                         placeholder="数値を入力"
                         {...field}
                       />
@@ -543,10 +538,7 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
             <FormItem>
               <RequiredLabel>設備の総投資額 (円)</RequiredLabel>
               <FormControl>
-                <Input
-                  type="number"
-                  min="0"
-                  step="1"
+                <GroupedNumberInput
                   placeholder="数値を入力"
                   {...field}
                 />
@@ -617,10 +609,8 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
                   <FormItem>
                     <RequiredLabel>補助金額 (円)</RequiredLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="any"
+                      <GroupedNumberInput
+                        allowDecimal
                         placeholder="数値を入力"
                         {...field}
                       />
@@ -664,10 +654,8 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
                 プロジェクト実施前の電力購入単価 (円/kWh)
               </RequiredLabel>
               <FormControl>
-                <Input
-                  type="number"
-                  min="0"
-                  step="any"
+                <GroupedNumberInput
+                  allowDecimal
                   placeholder="数値を入力"
                   {...field}
                 />

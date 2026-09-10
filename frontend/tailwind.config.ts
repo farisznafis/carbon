@@ -15,9 +15,9 @@ export default {
   	},
   	extend: {
 		maxWidth: {
-			app: '75rem',
-			admin: '87.5rem',
-			marketing: '97.5rem'
+		  app: '77.5rem',      // 1240
+			admin: '100rem',     // 1600
+			marketing: '97.5rem' // 1560
 		},
   		colors: {
   			border: 'hsl(var(--border))',
@@ -31,16 +31,13 @@ export default {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			primary: {
-  				DEFAULT: 'hsl(var(--primary))',
-  				foreground: 'hsl(var(--primary-foreground))'
-  			},
+					DEFAULT: 'hsl(var(--primary))',
+					foreground: 'hsl(var(--primary-foreground))',
+					strong: 'hsl(var(--primary-strong))',
+				},
   			secondary: {
   				DEFAULT: 'hsl(var(--secondary))',
   				foreground: 'hsl(var(--secondary-foreground))'
-  			},
-  			destructive: {
-  				DEFAULT: 'hsl(var(--destructive))',
-  				foreground: 'hsl(var(--destructive-foreground))'
   			},
   			muted: {
   				DEFAULT: 'hsl(var(--muted))',
@@ -51,13 +48,41 @@ export default {
   				foreground: 'hsl(var(--accent-foreground))'
   			},
   			success: {
-  				DEFAULT: 'hsl(var(--success))',
-  				foreground: 'hsl(var(--success-foreground))'
-  			},
-  			warning: {
-  				DEFAULT: 'hsl(var(--warning))',
-  				foreground: 'hsl(var(--warning-foreground))'
-  			},
+					DEFAULT: 'hsl(var(--success))',
+					foreground: 'hsl(var(--success-foreground))',
+					subtle: 'hsl(var(--success-subtle))',
+					strong: 'hsl(var(--success-strong))',
+					border: 'hsl(var(--success-border))',
+				},
+
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					foreground: 'hsl(var(--warning-foreground))',
+					subtle: 'hsl(var(--warning-subtle))',
+					strong: 'hsl(var(--warning-strong))',
+					border: 'hsl(var(--warning-border))',
+				},
+
+				destructive: {
+					DEFAULT: 'hsl(var(--destructive))',
+					foreground: 'hsl(var(--destructive-foreground))',
+					subtle: 'hsl(var(--destructive-subtle))',
+					strong: 'hsl(var(--destructive-strong))',
+					border: 'hsl(var(--danger-border))',
+				},
+
+				info: {
+					DEFAULT: 'hsl(var(--info))',
+					foreground: 'hsl(var(--info-foreground))',
+					subtle: 'hsl(var(--info-subtle))',
+					strong: 'hsl(var(--info-strong))',
+					border: 'hsl(var(--info-border))',
+				},
+
+				purple: {
+					DEFAULT: 'hsl(var(--purple))',
+					subtle: 'hsl(var(--purple-subtle))',
+				},
   			popover: {
   				DEFAULT: 'hsl(var(--popover))',
   				foreground: 'hsl(var(--popover-foreground))'
