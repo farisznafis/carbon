@@ -12,6 +12,7 @@ import {
   applicableConditions, // applicable_conditions
   projChangeInfo, // project_change_information
   projPlanCover, // project_plan_cover
+  authorityHolderChange, // 認証権限保有主体変更届
   projectOverviewFields, // project_overview
   applicableMethodology, // applicable_methodology
   programMethodology, // program_type_methodology
@@ -31,12 +32,10 @@ import {
   monitoringCalc, // monitoring_calculation
   dataManagement, // data_management
   equipmentInfo, // equipment_information_verification_method
-  monitoringItem, // monitoring_item_plan
-  monitoringMethod, // monitoring_method_plan
-  expectedProject, // expected_project_plan
-  monitoringItemPlanCoefficient, // monitoring_item_plan_coefficient
-  monitoringMethodPlanCoefficient, // monitoring_method_plan_coefficient
-  expectedProjectPlanCoefficient, // expected_project_plan_coefficient
+  equipmentInfoBeforeNew, // equipment_verification_before_new
+  equipmentInfoAfter, // equipment_verification_after
+  monitoringActivityPlan, // 11.モニタリング計画（１）活動量
+  monitoringCoefficientPlan, // 11.モニタリング計画（２）係数
   monitoringPlan, // monitoring_plan
   measureSpecified, // measure_specified_instrument
   measureOther, // measure_other_instruments_overview
@@ -91,17 +90,11 @@ import {
 
 // import { incidentalEmission } from "./AdminProjectApplicationForms/EmissionCalc/IncidentalEmission";
 
-// import { monitoringItem } from "./AdminProjectApplicationForms/MonitoringPlan/MonitoringItem";
 
-// import { monitoringMethod } from "./AdminProjectApplicationForms/monitoring/MonitoringMethodPlan/MonitoringMethod";
 
-// import { expectedProject } from "./AdminProjectApplicationForms/monitoring/ExpectedProjectPlan/ExpectedProject";
 
-// import { monitoringItemPlanCoefficient } from "./AdminProjectApplicationForms/MonitoringPlan/MonitoringItemPlanCoefficient";
 
-// import { monitoringMethodPlanCoefficient } from "./AdminProjectApplicationForms/MonitoringPlan/MonitoringMethodPlanCoefficient";
 
-// import { expectedProjectPlanCoefficient } from "./AdminProjectApplicationForms/monitoring/ExpectedProjectPlanCoefficient/ExpectedProjectPlanCoefficient";
 
 // import { monitoringPlan } from "./AdminProjectApplicationForms/MonitoringPlan/MonitoringPlan";
 
@@ -126,90 +119,97 @@ export const steps = [
   { id: 6, title: "【HP公開】プロジェクト計画書表紙", fields: projPlanCover },
   {
     id: 7,
+    title: "認証権限保有主体変更届（所有者を変更する方のみ提出）",
+    fields: authorityHolderChange,
+  },
+  {
+    id: 8,
     title: "【HP公開】1.プロジェクト概要",
     fields: projectOverviewFields,
   },
-  { id: 8, title: "適用方法論", fields: applicableMethodology },
+  { id: 9, title: "適用方法論", fields: applicableMethodology },
   {
-    id: 9,
+    id: 10,
     title: "プログラム型プロジェクトの運営・管理_方法論",
     fields: programMethodology,
   },
-  { id: 10, title: "排出削減計画", fields: emissionReduction },
-  { id: 11, title: "モニタリング・算定方法", fields: monitoringCalc },
-  { id: 12, title: "データ管理・特記事項_方法論", fields: dataManagement },
+  { id: 11, title: "排出削減計画", fields: emissionReduction },
+  { id: 12, title: "モニタリング・算定方法", fields: monitoringCalc },
+  { id: 13, title: "データ管理・特記事項_方法論", fields: dataManagement },
   {
-    id: 13,
+    id: 14,
     title: "設備情報の収集・確認方法_方法論（実施前 - 更新）",
     fields: equipmentInfo,
   },
-  { id: 14, title: "追加性の評価_方法論", fields: additionalAssessment },
   {
     id: 15,
+    title: "設備情報の収集・確認方法_方法論（実施前 - 新設）",
+    fields: equipmentInfoBeforeNew,
+  },
+  {
+    id: 16,
+    title: "設備情報の収集・確認方法_方法論（削減活動実施後）",
+    fields: equipmentInfoAfter,
+  },
+  { id: 17, title: "追加性の評価_方法論", fields: additionalAssessment },
+  {
+    id: 18,
     title: "追加性評価に必要な情報の入手方法",
     fields: obtainingAdditional,
   },
-  { id: 16, title: "排出削減量の算定方法_方法論", fields: emissionCalc },
+  { id: 19, title: "排出削減量の算定方法_方法論", fields: emissionCalc },
   {
-    id: 17,
+    id: 20,
     title: "ベースラインの付随的な排出活動",
     fields: baselineIncidental,
   },
   {
-    id: 18,
+    id: 21,
     title: "プロジェクト実施後の付随的な排出活動",
     fields: postImplemental,
   },
   {
-    id: 19,
+    id: 22,
     title: "プロジェクト排出量情報（主要排出活動）",
     fields: mainActivity,
   },
   {
-    id: 20,
+    id: 23,
     title: "プロジェクト排出量情報（付随的な排出活動）",
     fields: incidentalActivity,
   },
-  { id: 21, title: "ベースライン排出量の考え方", fields: baselineEmission },
-  { id: 22, title: "ベースライン排出量（主要排出活動）", fields: mainBaseline },
+  { id: 24, title: "ベースライン排出量の考え方", fields: baselineEmission },
+  { id: 25, title: "ベースライン排出量（主要排出活動）", fields: mainBaseline },
   {
-    id: 23,
+    id: 26,
     title: "ベースライン排出量（付随的な排出活動）",
     fields: incidentalEmission,
   },
-  { id: 24, title: "モニタリング項目_計画", fields: monitoringItem },
-  { id: 25, title: "モニタリング方法_計画", fields: monitoringMethod },
-  { id: 26, title: "プロジェクト計画での想定", fields: expectedProject },
   {
     id: 27,
-    title: "モニタリング項目_計画（係数）",
-    fields: monitoringItemPlanCoefficient,
+    title: "モニタリング計画（１）活動量",
+    fields: monitoringActivityPlan,
   },
   {
     id: 28,
-    title: "モニタリング方法_計画（係数）",
-    fields: monitoringMethodPlanCoefficient,
+    title: "モニタリング計画（２）係数",
+    fields: monitoringCoefficientPlan,
   },
+  { id: 29, title: "モニタリング計画（３）データの収集方法", fields: monitoringPlan },
   {
-    id: 29,
-    title: "プロジェクト計画での想定（係数）",
-    fields: expectedProjectPlanCoefficient,
-  },
-  { id: 30, title: "モニタリング計画", fields: monitoringPlan },
-  {
-    id: 31,
+    id: 30,
     title: "計量器の概要（特定計量器の場合）",
     fields: measureSpecified,
   },
   {
-    id: 32,
+    id: 31,
     title: "計量器の概要（特定計量器以外の計量器の場合）",
     fields: measureOther,
   },
   {
-    id: 33,
+    id: 32,
     title: "モニタリング方法等に関する説明",
     fields: monitoringExplanation,
   },
-  { id: 34, title: "係数の実測方法に関する説明", fields: coefficient },
+  { id: 33, title: "係数の実測方法に関する説明", fields: coefficient },
 ] as const;
