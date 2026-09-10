@@ -5,15 +5,12 @@ import com.kct.jcredit.core_backend.dto.response.MonitoringDataDeletionHistoryLi
 import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionCandidateListResponse;
 import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionCandidateRecordListResponse;
 import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionExecutionResponse;
-import com.kct.jcredit.core_backend.dto.response.PeriodSummaryResponse;
-import com.kct.jcredit.core_backend.dto.response.ProjectGroupResponse;
-import com.kct.jcredit.core_backend.dto.response.RowDetailActivityResponse;
-import com.kct.jcredit.core_backend.dto.response.RowSummaryActivityResponse;
 import com.kct.jcredit.core_backend.service.EnR002IndividualActivityService;
 import com.kct.jcredit.core_backend.service.MonitoringDataDeletionService;
-import com.kct.jcredit.core_backend.service.impl.EnR002IndividualActivityServiceImpl.CompanyKobetsuKatsudoRequest;
-import com.kct.jcredit.core_backend.service.impl.EnR002IndividualActivityServiceImpl.PageResponse;
-import com.kct.jcredit.core_backend.service.impl.EnR002IndividualActivityServiceImpl.RowsQueryRequest;
+import com.kct.jcredit.core_backend.dto.response.CompanyActivityGroupResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002IndividualActivityDetailResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002IndividualActivityRowResponse;
+import com.kct.jcredit.core_backend.service.EnR002IndividualActivityService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 
@@ -105,46 +102,37 @@ public class AdminMonitoringController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
-    @GetMapping("/projects/{projectId}/kobetsu-katsudo/periods")
+    //Individual Activity
+
+    /** Lists every reportable equipment of one project. */
+    @GetMapping("/projects/{projectId}/individual-activity/rows")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
-    public List<PeriodSummaryResponse> getPeriods(
+    public List<EnR002IndividualActivityRowResponse> getRowsByProject(
             @PathVariable String projectId,
-            Authentication authentication) {
-        return individualActivityService.getPeriods(projectId, authentication.getName());
-    }
- 
-    @GetMapping("/projects/{projectId}/kobetsu-katsudo/periods/{periodId}/rows")
-    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
-    @SecurityRequirement(name = "bearerAuth")
-    public PageResponse<RowSummaryActivityResponse> getRowsForPeriod(
-            @PathVariable String projectId,
-            @PathVariable String periodId,
             @RequestParam(required = false) String companyId,
-            @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size,
             Authentication authentication) {
-        RowsQueryRequest request = RowsQueryRequest.of(companyId, page, size);
-        return individualActivityService.getRowsForPeriod(projectId, periodId, request, authentication.getName());
+        return individualActivityService.getRowsByProject(projectId, companyId, authentication.getName());
     }
  
-    @GetMapping("/companies/{companyId}/kobetsu-katsudo")
+    /** Lists one member company's equipment, grouped by project. */
+    @GetMapping("/companies/{companyId}/individual-activity")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
-    public List<ProjectGroupResponse> getRowsForCompany(
+    public List<CompanyActivityGroupResponse> getRowsByCompany(
             @PathVariable String companyId,
             @RequestParam(required = false) String projectId,
             Authentication authentication) {
-        CompanyKobetsuKatsudoRequest request = CompanyKobetsuKatsudoRequest.of(projectId);
-        return individualActivityService.getRowsForCompany(companyId, request, authentication.getName());
+        return individualActivityService.getRowsByCompany(companyId, projectId, authentication.getName());
     }
  
-    @GetMapping("/kobetsu-katsudo/rows/{rowKey}")
+    /** Full detail of one row, reached from either of the two listings above. */
+    @GetMapping("/individual-activity/rows/{equipmentId}")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
-    public RowDetailActivityResponse getRowDetail(
-            @PathVariable String rowKey,
+    public EnR002IndividualActivityDetailResponse getRowDetail(
+            @PathVariable Integer equipmentId,
             Authentication authentication) {
-        return individualActivityService.getRowDetail(rowKey, authentication.getName());
+        return individualActivityService.getRowDetail(equipmentId, authentication.getName());
     }
 }

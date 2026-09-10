@@ -1,0 +1,52 @@
+GET /project/{projectId}/files?fileType={fileType}
+Authorization: Bearer {token}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "message": null,
+  "files": [
+    {
+      "id": 15,
+      "fileType": "PROJECT_PLAN",
+      "ownedByKanrisha": true,
+      "originalFileName": "project_plan_v1.4.0_final.xlsx",
+      "uploadedBy": "operator1",
+      "uploadedAt": "2026-09-10T14:20:00"
+    },
+    {
+      "id": 9,
+      "fileType": "PROJECT_PLAN",
+      "ownedByKanrisha": true,
+      "originalFileName": "project_plan_v1.4.0_draft.xlsx",
+      "uploadedBy": "operator1",
+      "uploadedAt": "2026-09-02T10:05:00"
+    },
+    {
+      "id": 3,
+      "fileType": "REGISTRATION_RESULT",
+      "ownedByKanrisha": false,
+      "originalFileName": "certificate-registration.pdf",
+      "uploadedBy": "admin1",
+      "uploadedAt": "2026-07-07T09:30:00"
+    }
+  ]
+}
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "プロジェクトが見つかりません。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

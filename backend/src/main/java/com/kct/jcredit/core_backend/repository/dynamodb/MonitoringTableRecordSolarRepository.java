@@ -485,10 +485,7 @@ public List<EnR002MonitoringRecord> findAllByProjectIdPaginated(
                 .collect(Collectors.toList());
     }
 
-/**
- * Sama seperti di atas, tapi buat row RUNNING -- ambil semua record SETELAH suatu tanggal
- * (belum ada batas akhir, karena periodenya masih berjalan).
- */
+
 public List<EnR002MonitoringRecord> findByRecordIdAndEquipmentIdAndDateRecordedAfter(
         String recordId, Integer equipmentId, String afterSk) {
     QueryConditional qc = QueryConditional.sortGreaterThan(
