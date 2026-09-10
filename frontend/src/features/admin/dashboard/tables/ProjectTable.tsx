@@ -3,8 +3,12 @@ import type {
   ProjectStatus,
 } from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
-import { useState, type KeyboardEvent, type ReactNode } from 'react';
-import { ClipboardList, FileText, Paperclip } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowRight } from 'lucide-react';
+import {
+  DataGridTable,
+  type DataGridTableColumn,
+} from '@/components/data-display/DataGridTable';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -13,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
 import { ProjectCompletionDialog } from './ProjectCompletionDialog';
 
 type ProjectTableProps = {
@@ -35,6 +38,9 @@ type ProjectTableProps = {
    */
   onOpenPlan?: (project: Project, slug?: string) => void;
 };
+
+const projectTableGridColumns =
+  'minmax(240px,1.6fr) minmax(104px,.45fr) minmax(104px,.45fr) minmax(200px,1.1fr) minmax(160px,.8fr) minmax(150px,.7fr) minmax(184px,.85fr)';
 
 const projectStatusOptions: ProjectStatus[] = [
   '作成済み',
@@ -150,37 +156,12 @@ function displayValue(value: unknown) {
   return String(value);
 }
 
-/**
- * 方法論区分・番号・名 on one line under the project name. Blanks are dropped so
- * a partially filled project does not render dangling separators.
- */
-function methodologySummary(project: Project) {
-  return [project.methodCategory, project.methodNumber, project.methodName]
-    .map((part) => (part ?? '').toString().trim())
-    .filter(Boolean)
-    .join(' • ');
-}
-
-/** One labelled cell of the panel along the bottom of a card. */
-function ProjectCardFact({
-  icon,
-  label,
-  children,
-}: {
-  icon: ReactNode;
-  label: string;
-  children: ReactNode;
-}) {
+/** Plain single-line cell for the methodology columns. */
+function TextCell({ value }: { value: unknown }) {
   return (
-    <div className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3">
-      <span className="shrink-0 text-muted-foreground" aria-hidden="true">
-        {icon}
-      </span>
-      <div className="min-w-0 space-y-1">
-        <p className="text-subtle text-muted-foreground">{label}</p>
-        {children}
-      </div>
-    </div>
+    <span className="block truncate text-body text-foreground">
+      {displayValue(value)}
+    </span>
   );
 }
 
@@ -213,63 +194,101 @@ export function ProjectTable({
     setCompletionProject(null);
   };
 
-  const handleCardKeyDown = (
-    event: KeyboardEvent<HTMLDivElement>,
-    project: Project,
-  ) => {
-    if (!onRowClick) return;
-
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      onRowClick(project);
-    }
+  /**
+   * Controls sit inside a clickable row, so their clicks must not also trigger
+   * the row's own click.
+   */
+  const stopRowActivation = {
+    onClick: (event: { stopPropagation: () => void }) =>
+      event.stopPropagation(),
+    onPointerDown: (event: { stopPropagation: () => void }) =>
+      event.stopPropagation(),
   };
 
-  const renderCard = (project: Project) => {
-    const progress = planProgress?.get(String(project.id));
-    const resumeSlug = progress?.complete
-      ? undefined
-      : (progress?.nextIncompleteSlug ?? undefined);
-    const statusColor = getProjectStatusColors(project.projectStatus);
-    const summary = methodologySummary(project);
+  const columns: DataGridTableColumn<Project>[] = [
+    {
+      id: 'projectName',
+      label: 'プロジェクト名',
+      sortable: true,
+      sortValue: (project) => project.projectName,
+      render: (project) => (
+        <span className="block truncate text-body font-bold text-foreground">
+          {displayValue(project.projectName)}
+        </span>
+      ),
+    },
+    {
+      id: 'methodCategory',
+      label: '方法論区分',
+      sortable: true,
+      sortValue: (project) => project.methodCategory,
+      render: (project) => <TextCell value={project.methodCategory} />,
+    },
+    {
+      id: 'methodNumber',
+      label: '方法論番号',
+      sortable: true,
+      sortValue: (project) => project.methodNumber,
+      render: (project) => <TextCell value={project.methodNumber} />,
+    },
+    {
+      id: 'methodName',
+      label: '方法論名',
+      sortable: true,
+      sortValue: (project) => project.methodName,
+      render: (project) => <TextCell value={project.methodName} />,
+    },
+    {
+      id: 'planProgress',
+      label: '作成の進捗状況',
+      render: (project) => {
+        const progress = planProgress?.get(String(project.id));
 
-    return (
-      <div
-        role={onRowClick ? 'button' : undefined}
-        tabIndex={onRowClick ? 0 : undefined}
-        onClick={() => onRowClick?.(project)}
-        onKeyDown={(event) => handleCardKeyDown(event, project)}
-        className={cn(
-          'rounded-xl border border-border bg-card',
-          onRowClick && 'cursor-pointer transition hover:bg-muted/30',
-        )}
-      >
-        <div className="flex flex-wrap items-start gap-3 px-5 py-4">
-          <span
-            className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground"
-            aria-hidden="true"
-          >
-            <FileText className="h-4 w-4" />
-          </span>
+        // Absent while the batch is still loading, or when the plan API is
+        // unavailable — the row must still render either way.
+        if (!progress || progress.totalForms === 0) {
+          return <span className="text-body text-muted-foreground">-</span>;
+        }
 
-          <div className="min-w-0 flex-1">
-            <h3 className="truncate text-body font-bold text-foreground">
-              {displayValue(project.projectName)}
-            </h3>
-            {summary && (
-              <p className="mt-1 truncate text-subtle text-muted-foreground">
-                {summary}
-              </p>
+        const resumeSlug = progress.complete
+          ? undefined
+          : (progress.nextIncompleteSlug ?? undefined);
+
+        return (
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="whitespace-nowrap text-body text-foreground">
+              <span className="font-bold">{progress.completedForms}</span>
+              <span className="text-muted-foreground">
+                /{progress.totalForms}
+              </span>
+            </span>
+            {onOpenPlan && (
+              <span {...stopRowActivation}>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="h-auto gap-1 px-0 text-table font-bold"
+                  onClick={() => onOpenPlan(project, resumeSlug)}
+                >
+                  {progress.complete ? '計画書更新' : '続きから'}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </span>
             )}
           </div>
+        );
+      },
+    },
+    {
+      id: 'projectStatus',
+      label: 'ステータス',
+      sortable: true,
+      sortValue: (project) => project.projectStatus,
+      render: (project) => {
+        const statusColor = getProjectStatusColors(project.projectStatus);
 
-          {/* Controls sit inside the card, so their clicks must not also
-              trigger the card's own row click. */}
-          <div
-            className="flex flex-wrap items-center gap-2"
-            onClick={(event) => event.stopPropagation()}
-            onPointerDown={(event) => event.stopPropagation()}
-          >
+        return (
+          <span className="block min-w-0" {...stopRowActivation}>
             <Select
               value={project.projectStatus}
               disabled={
@@ -281,7 +300,7 @@ export function ProjectTable({
               }
             >
               <SelectTrigger
-                className="h-9 w-[150px] rounded-full border px-4 text-table font-bold shadow-none focus:ring-1"
+                className="h-8 w-full rounded-full border px-3 text-table font-bold shadow-none focus:ring-1"
                 style={{
                   backgroundColor: statusColor.bg,
                   color: statusColor.text,
@@ -299,85 +318,48 @@ export function ProjectTable({
                 ))}
               </SelectContent>
             </Select>
-
-            <Button
-              type="button"
-              variant="primary"
-              onClick={() => onEdit?.(project)}
-            >
-              詳細
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onUpdate?.(project)}
-            >
-              更新
-            </Button>
-          </div>
-        </div>
-
-        <div className="mx-5 mb-4 flex items-stretch rounded-lg border border-border bg-muted/30">
-          <ProjectCardFact
-            icon={<ClipboardList className="h-5 w-5" />}
-            label="計画書"
+          </span>
+        );
+      },
+    },
+    {
+      id: 'actions',
+      label: '操作',
+      render: (project) => (
+        <div
+          className="flex flex-wrap justify-start gap-2"
+          {...stopRowActivation}
+        >
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => onEdit?.(project)}
           >
-            {progress && progress.totalForms > 0 ? (
-              <p className="text-body text-foreground">
-                <span className="font-bold">{progress.completedForms}</span>
-                <span className="text-muted-foreground">
-                  {' '}
-                  / {progress.totalForms}
-                </span>
-              </p>
-            ) : (
-              // Absent while the batch is still loading, or when the plan API
-              // is unavailable — the card must still render either way.
-              <p className="text-body text-muted-foreground">-</p>
-            )}
-          </ProjectCardFact>
-
-          <div className="my-3 w-px shrink-0 bg-border" aria-hidden="true" />
-
-          <ProjectCardFact
-            icon={<Paperclip className="h-5 w-5" />}
-            label="操作"
+            詳細
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onUpdate?.(project)}
           >
-            <div
-              onClick={(event) => event.stopPropagation()}
-              onPointerDown={(event) => event.stopPropagation()}
-            >
-              {onOpenPlan && progress ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenPlan(project, resumeSlug)}
-                >
-                  {progress.complete ? '計画書更新' : '続きから'}
-                </Button>
-              ) : (
-                <p className="text-body text-muted-foreground">-</p>
-              )}
-            </div>
-          </ProjectCardFact>
+            更新
+          </Button>
         </div>
-      </div>
-    );
-  };
+      ),
+    },
+  ];
 
   return (
     <>
-      {projects.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card px-5 py-8 text-center text-small text-foreground">
-          まだプロジェクトが登録されていません。
-        </div>
-      ) : (
-        <ul className="space-y-4">
-          {projects.map((project) => (
-            <li key={project.id}>{renderCard(project)}</li>
-          ))}
-        </ul>
-      )}
+      <DataGridTable
+        rows={projects}
+        columns={columns}
+        gridTemplateColumns={projectTableGridColumns}
+        minWidth={1240}
+        getRowKey={(project) => project.id}
+        emptyMessage="まだプロジェクトが登録されていません。"
+        onRowClick={onRowClick}
+      />
       <ProjectCompletionDialog
         project={completionProject}
         isSubmitting={
