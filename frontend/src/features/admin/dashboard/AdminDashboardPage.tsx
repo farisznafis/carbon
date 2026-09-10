@@ -67,6 +67,7 @@ const dashboardContainer = adminPageContainerClassName;
 
 const APPLICATION_STATUSES: CompanyStatus[] = ['PENDING', 'REJECTED'];
 const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
+const HOME_APPLICATION_SUMMARY_LIMIT = 3;
 
 const DEFAULT_PAGINATION: Pagination = {
   page: 1,
@@ -222,6 +223,18 @@ const AdminDashboard = () => {
   const [applicationCompanies, setApplicationCompanies] = useState<
     AdminCompanyListItem[]
   >([]);
+  const [homePendingApplications, setHomePendingApplications] = useState<
+    AdminCompanyListItem[]
+  >([]);
+  const [homePendingApplicationTotal, setHomePendingApplicationTotal] = useState(0);
+  const [homePendingApplicationsLoading, setHomePendingApplicationsLoading] = useState(true);
+  const [homePendingApplicationsError, setHomePendingApplicationsError] = useState<string | null>(null);
+  const [homeRejectedApplications, setHomeRejectedApplications] = useState<
+    AdminCompanyListItem[]
+  >([]);
+  const [homeRejectedApplicationTotal, setHomeRejectedApplicationTotal] = useState(0);
+  const [homeRejectedApplicationsLoading, setHomeRejectedApplicationsLoading] = useState(true);
+  const [homeRejectedApplicationsError, setHomeRejectedApplicationsError] = useState<string | null>(null);
   const [participatingCompanies, setParticipatingCompanies] = useState<
     AdminCompanyListItem[]
   >([]);
@@ -330,6 +343,69 @@ const AdminDashboard = () => {
       reloadParticipatingCompanies(),
     ]);
   }, [reloadApplicationCompanies, reloadParticipatingCompanies]);
+
+  /** Loads the latest PENDING applications and their actual API total for Home. */
+  const reloadHomePendingApplications = useCallback(async () => {
+    setHomePendingApplicationsLoading(true);
+    setHomePendingApplicationsError(null);
+    setHomePendingApplications([]);
+    setHomePendingApplicationTotal(0);
+
+    try {
+      const response = await getAdminCompanies({
+        status: 'PENDING',
+        page: 1,
+        limit: HOME_APPLICATION_SUMMARY_LIMIT,
+        sort: 'createdAt',
+        sortOrder: 'desc',
+      });
+      setHomePendingApplications(response.companies);
+      setHomePendingApplicationTotal(response.pagination.totalItems);
+    } catch (error) {
+      setHomePendingApplicationsError(
+        getApiMessage(error, '確認待ちの企業申請を取得できませんでした。'),
+      );
+    } finally {
+      setHomePendingApplicationsLoading(false);
+    }
+  }, []);
+
+  /** Loads the latest REJECTED applications and their actual API total for Home. */
+  const reloadHomeRejectedApplications = useCallback(async () => {
+    setHomeRejectedApplicationsLoading(true);
+    setHomeRejectedApplicationsError(null);
+    setHomeRejectedApplications([]);
+    setHomeRejectedApplicationTotal(0);
+
+    try {
+      const response = await getAdminCompanies({
+        status: 'REJECTED',
+        page: 1,
+        limit: HOME_APPLICATION_SUMMARY_LIMIT,
+        sort: 'createdAt',
+        sortOrder: 'desc',
+      });
+      setHomeRejectedApplications(response.companies);
+      setHomeRejectedApplicationTotal(response.pagination.totalItems);
+    } catch (error) {
+      setHomeRejectedApplicationsError(
+        getApiMessage(error, '却下済みの企業申請を取得できませんでした。'),
+      );
+    } finally {
+      setHomeRejectedApplicationsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (location.pathname !== paths.adminDashboard) return;
+
+    void reloadHomePendingApplications();
+    void reloadHomeRejectedApplications();
+  }, [
+    location.pathname,
+    reloadHomePendingApplications,
+    reloadHomeRejectedApplications,
+  ]);
 
   useEffect(() => {
     let isActive = true;
@@ -523,6 +599,16 @@ const AdminDashboard = () => {
     setDetailReviewMode(true);
   };
 
+  /** Opens actionable applications in review mode and historical ones read-only. */
+  const openHomeCompanyApplication = (item: AdminCompanyListItem) => {
+    if (item.status === 'PENDING') {
+      openCompanyReview(item);
+      return;
+    }
+
+    openCompanyDetails(item);
+  };
+
   const closeCompanyDetail = () => {
     setDetailCompany(null);
     setDetailReviewMode(false);
@@ -592,7 +678,15 @@ const AdminDashboard = () => {
       } else {
         await rejectAdminCompany(selectedCompany.companyId, rejectReason);
       }
-      await reloadCompanyLists();
+      await Promise.all([
+        reloadCompanyLists(),
+        ...(location.pathname === paths.adminDashboard
+          ? [
+              reloadHomePendingApplications(),
+              reloadHomeRejectedApplications(),
+            ]
+          : []),
+      ]);
       handlePendingDialogOpenChange(false);
       closeCompanyDetail();
       toast({
@@ -679,10 +773,17 @@ const AdminDashboard = () => {
               projectsError={projectsError}
               openMembershipReviews={openMembershipReviews}
               openMembershipReviewsError={openMembershipReviewsError}
-              applications={applicationCompanies}
               applicationTotal={applicationPagination.totalItems}
               applicationsLoading={applicationCompaniesLoading}
               applicationsError={applicationCompaniesError}
+              pendingApplications={homePendingApplications}
+              pendingApplicationTotal={homePendingApplicationTotal}
+              pendingApplicationsLoading={homePendingApplicationsLoading}
+              pendingApplicationsError={homePendingApplicationsError}
+              rejectedApplications={homeRejectedApplications}
+              rejectedApplicationTotal={homeRejectedApplicationTotal}
+              rejectedApplicationsLoading={homeRejectedApplicationsLoading}
+              rejectedApplicationsError={homeRejectedApplicationsError}
               participatingCompanyTotal={participatingPagination.totalItems}
               participatingCompaniesLoading={participatingCompaniesLoading}
               participatingCompaniesError={participatingCompaniesError}
@@ -696,7 +797,7 @@ const AdminDashboard = () => {
               activePanel={activePanel}
               onPanelChange={handleHomePanelChange}
               onOpenProjectMembership={openProjectMemberships}
-              onOpenCompanyApplication={openCompanyReview}
+              onOpenCompanyApplication={openHomeCompanyApplication}
               onOpenCancelRequest={openCancelRequestDetail}
               onNavigateProjects={() => navigate(paths.adminProjectList)}
               onNavigateCompanies={() => navigate(paths.adminCompanyList)}
@@ -713,10 +814,17 @@ const AdminDashboard = () => {
               projectsError={projectsError}
               openMembershipReviews={openMembershipReviews}
               openMembershipReviewsError={openMembershipReviewsError}
-              applications={applicationCompanies}
               applicationTotal={applicationPagination.totalItems}
               applicationsLoading={applicationCompaniesLoading}
               applicationsError={applicationCompaniesError}
+              pendingApplications={homePendingApplications}
+              pendingApplicationTotal={homePendingApplicationTotal}
+              pendingApplicationsLoading={homePendingApplicationsLoading}
+              pendingApplicationsError={homePendingApplicationsError}
+              rejectedApplications={homeRejectedApplications}
+              rejectedApplicationTotal={homeRejectedApplicationTotal}
+              rejectedApplicationsLoading={homeRejectedApplicationsLoading}
+              rejectedApplicationsError={homeRejectedApplicationsError}
               participatingCompanyTotal={participatingPagination.totalItems}
               participatingCompaniesLoading={participatingCompaniesLoading}
               participatingCompaniesError={participatingCompaniesError}
@@ -730,7 +838,7 @@ const AdminDashboard = () => {
               activePanel={activePanel}
               onPanelChange={handleHomePanelChange}
               onOpenProjectMembership={openProjectMemberships}
-              onOpenCompanyApplication={openCompanyReview}
+              onOpenCompanyApplication={openHomeCompanyApplication}
               onOpenCancelRequest={openCancelRequestDetail}
               onNavigateProjects={() => navigate(paths.adminProjectList)}
               onNavigateCompanies={() => navigate(paths.adminCompanyList)}

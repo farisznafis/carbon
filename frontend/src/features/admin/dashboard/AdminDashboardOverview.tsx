@@ -1,8 +1,9 @@
-import { ArrowRight, Building2, ClipboardCheck, FolderKanban, RotateCcw } from 'lucide-react';
+import { ArrowRight, Building2, CheckCircle2, ClipboardCheck, FolderKanban, RotateCcw } from 'lucide-react';
 import type { AdminCompanyListItem, ParticipationReviewDetail } from '@/api/admin';
 import type { BatchHistoryItem, BatchHistoryPagination } from '@/api/batch';
 import type { MonitoringCancelRequestListItem } from '@/api/monitoring';
 import type { Project } from '@/api/projects';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 import { SkeletonList, SkeletonMetricCard } from '@/components/feedback/loading';
 import { Button } from '@/components/ui/button';
@@ -25,10 +26,17 @@ type AdminDashboardOverviewProps = {
   projectsError: string | null;
   openMembershipReviews: ParticipationReviewDetail[];
   openMembershipReviewsError: string | null;
-  applications: AdminCompanyListItem[];
   applicationTotal: number;
   applicationsLoading: boolean;
   applicationsError: string | null;
+  pendingApplications: AdminCompanyListItem[];
+  pendingApplicationTotal: number;
+  pendingApplicationsLoading: boolean;
+  pendingApplicationsError: string | null;
+  rejectedApplications: AdminCompanyListItem[];
+  rejectedApplicationTotal: number;
+  rejectedApplicationsLoading: boolean;
+  rejectedApplicationsError: string | null;
   participatingCompanyTotal: number;
   participatingCompaniesLoading: boolean;
   participatingCompaniesError: string | null;
@@ -92,43 +100,95 @@ function compareNewestFirst(leftValue: string, rightValue: string) {
   return (Number.isNaN(rightTime) ? 0 : rightTime) - (Number.isNaN(leftTime) ? 0 : leftTime);
 }
 
-/** Renders the latest pending company applications. */
-function CompanyApplicationSummary({ applications, loading, error, onOpen, onOpenAll }: Readonly<{
-  applications: AdminCompanyListItem[];
-  loading: boolean;
-  error: string | null;
+/** Renders actionable applications first and fills remaining rows with recent history. */
+function CompanyApplicationSummary({
+  pendingApplications,
+  pendingTotal,
+  pendingLoading,
+  pendingError,
+  rejectedApplications,
+  rejectedTotal,
+  rejectedLoading,
+  rejectedError,
+  onOpen,
+  onOpenAll,
+}: Readonly<{
+  pendingApplications: AdminCompanyListItem[];
+  pendingTotal: number;
+  pendingLoading: boolean;
+  pendingError: string | null;
+  rejectedApplications: AdminCompanyListItem[];
+  rejectedTotal: number;
+  rejectedLoading: boolean;
+  rejectedError: string | null;
   onOpen: (company: AdminCompanyListItem) => void;
   onOpenAll: () => void;
 }>) {
-  const pendingApplications = applications
-    .filter((company) => company.status === 'PENDING')
-    .sort((left, right) => compareNewestFirst(left.createdAt, right.createdAt))
-    .slice(0, 3);
+  const recentApplications = [
+    ...[...pendingApplications]
+      .sort((left, right) => compareNewestFirst(left.createdAt, right.createdAt)),
+    ...[...rejectedApplications]
+      .sort((left, right) => compareNewestFirst(left.createdAt, right.createdAt)),
+  ].slice(0, 3);
+  const isLoading = pendingLoading || rejectedLoading;
+  const hasError = Boolean(pendingError || rejectedError);
 
   return (
-    <Card className="rounded-xl border-border shadow-app-sm">
+    <Card className="min-h-72 rounded-xl border-border shadow-app-sm">
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle>企業申請</CardTitle>
         <Button type="button" variant="ghost" size="sm" onClick={onOpenAll} className="text-primary-strong">すべて見る <ArrowRight /></Button>
       </CardHeader>
-      <CardContent>
-        {loading ? <SkeletonList items={3} /> : error ? (
-          <p role="alert" className="py-6 text-center text-small text-destructive">{error}</p>
-        ) : pendingApplications.length === 0 ? (
-          <p className="py-6 text-center text-small text-foreground">確認が必要な企業申請はありません。</p>
-        ) : (
-          <ul className="divide-y divide-border">
-            {pendingApplications.map((company) => (
-              <li key={company.id ?? company.companyId} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <p className="truncate text-body font-bold text-foreground">{company.nameJA || '企業名未登録'}</p>
-                  <p className="mt-1 text-subtle text-foreground">受付日 {formatAdminCompanyDateTime(company.createdAt) || '—'}</p>
-                </div>
-                <Button type="button" variant="link" size="sm" onClick={() => onOpen(company)}>確認 <ArrowRight /></Button>
-              </li>
-            ))}
-          </ul>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-lg border border-border bg-muted/20 px-4 py-3">
+            <p className="text-subtle text-muted-foreground">確認待ち</p>
+            <p className="mt-1 text-xl font-bold text-foreground">{pendingLoading || pendingError ? '—' : `${pendingTotal.toLocaleString('ja-JP')}件`}</p>
+          </div>
+          <div className="rounded-lg border border-border bg-muted/20 px-4 py-3">
+            <p className="text-subtle text-muted-foreground">却下</p>
+            <p className="mt-1 text-xl font-bold text-foreground">{rejectedLoading || rejectedError ? '—' : `${rejectedTotal.toLocaleString('ja-JP')}件`}</p>
+          </div>
+        </div>
+
+        {!pendingLoading && !pendingError && pendingTotal === 0 && (
+          <div className="flex items-center gap-2 rounded-lg border border-success-border bg-success-subtle px-4 py-3 text-small text-success-strong">
+            <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+            現在、確認が必要な企業申請はありません。
+          </div>
         )}
+
+        {hasError && (
+          <div className="space-y-1" role="alert">
+            {pendingError && <p className="text-subtle text-destructive">{pendingError}</p>}
+            {rejectedError && <p className="text-subtle text-destructive">{rejectedError}</p>}
+          </div>
+        )}
+
+        {isLoading ? <SkeletonList items={3} /> : recentApplications.length > 0 ? (
+          <ul className="divide-y divide-border">
+            {recentApplications.map((company) => {
+              const isPending = company.status === 'PENDING';
+
+              return (
+                <li key={company.id ?? company.companyId} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-body font-bold text-foreground">{company.nameJA || '企業名未登録'}</p>
+                      <StatusBadge tone={isPending ? 'warning' : 'danger'}>{isPending ? '申請受付' : '却下'}</StatusBadge>
+                    </div>
+                    <p className="mt-1 text-subtle text-muted-foreground">受付日 {formatAdminCompanyDateTime(company.createdAt) || '—'}</p>
+                  </div>
+                  <Button type="button" variant="link" size="sm" onClick={() => onOpen(company)}>
+                    {isPending ? '確認' : '詳細'} <ArrowRight />
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
+        ) : !hasError ? (
+          <p className="py-3 text-center text-small text-muted-foreground">企業申請の履歴はありません。</p>
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -255,7 +315,18 @@ export function AdminDashboardOverview(props: Readonly<AdminDashboardOverviewPro
               <AdminProjectStatusTable projects={props.projects} openReviews={props.openMembershipReviews} projectsLoading={props.projectsLoading} projectsError={props.projectsError} openReviewsError={props.openMembershipReviewsError} onOpenMembership={props.onOpenProjectMembership} />
             </CardContent>
           </Card>
-          <CompanyApplicationSummary applications={props.applications} loading={props.applicationsLoading} error={props.applicationsError} onOpen={props.onOpenCompanyApplication} onOpenAll={props.onNavigateCompanies} />
+          <CompanyApplicationSummary
+            pendingApplications={props.pendingApplications}
+            pendingTotal={props.pendingApplicationTotal}
+            pendingLoading={props.pendingApplicationsLoading}
+            pendingError={props.pendingApplicationsError}
+            rejectedApplications={props.rejectedApplications}
+            rejectedTotal={props.rejectedApplicationTotal}
+            rejectedLoading={props.rejectedApplicationsLoading}
+            rejectedError={props.rejectedApplicationsError}
+            onOpen={props.onOpenCompanyApplication}
+            onOpenAll={props.onNavigateCompanies}
+          />
         </div>
         <div className="space-y-6">
           <CancelRequestSummary requests={props.cancelRequests} loading={props.cancelRequestsLoading} error={props.cancelRequestsError} onOpenPanel={() => props.onPanelChange('cancel')} onOpenRequest={props.onOpenCancelRequest} />
