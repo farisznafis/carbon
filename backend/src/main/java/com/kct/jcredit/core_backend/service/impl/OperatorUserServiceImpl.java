@@ -221,7 +221,7 @@ public class OperatorUserServiceImpl implements OperatorUserService {
 
     @Override
     @Transactional
-    public UpdateUserResponse updateUser(String companyId, String username, UpdateUserRequest request) {
+    public UpdateUserResponse updateUser(String companyId, String username, UpdateUserRequest request, String role, Integer currentId) {
         UpdateUserResponse response = new UpdateUserResponse();
         if (request.getUserId() == null) {
             response.setStatusCode(ResponseConstants.BAD_REQUEST);
@@ -239,23 +239,18 @@ public class OperatorUserServiceImpl implements OperatorUserService {
         boolean changed = false;
         changed |= updateBaseFields(targetUser, request);
 
-        // if (StringUtils.isNotBlank(request.getRole())) {
-        //     String newRole = normalizeRole(request.getRole());
-        //     if (!StringUtils.equals(newRole, targetUser.getRole())) {
-        //         targetUser.setRole(newRole);
-        //         changed = true;
-        //     }
-        // }
-
-        if (request.getPermissionCodes() != null) {
-            Set<Permission> resolvedPermissions = resolvePermissions(request.getPermissionCodes());
-            if (resolvedPermissions == null) {
-                response.setStatusCode(ResponseConstants.BAD_REQUEST);
-                response.setMessage("指定された権限コードに不正な値が含まれています。");
-                return response;
+        if(role != null && role.equalsIgnoreCase(RoleConstants.ADMIN)) {
+        
+            if (request.getPermissionCodes() != null) {
+                Set<Permission> resolvedPermissions = resolvePermissions(request.getPermissionCodes());
+                if (resolvedPermissions == null) {
+                    response.setStatusCode(ResponseConstants.BAD_REQUEST);
+                    response.setMessage("指定された権限コードに不正な値が含まれています。");
+                    return response;
+                }
+                targetUser.replacePermissions(resolvedPermissions);
+                changed = true;
             }
-            targetUser.replacePermissions(resolvedPermissions);
-            changed = true;
         }
 
         if (changed) {
