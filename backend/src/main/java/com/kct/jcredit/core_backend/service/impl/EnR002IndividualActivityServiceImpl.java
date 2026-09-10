@@ -19,6 +19,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.kct.jcredit.core_backend.enums.ReportReadiness;
 import com.kct.jcredit.core_backend.enums.EligibilityStatus;
@@ -203,8 +204,8 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
                 Boolean.TRUE.equals(equipment.getHasBattery()),
                 toEligibilityStatus(participation),
                 resolveReadiness(equipment, window),
-                window.latest().map(EnR002ReductionResult::getElPv).orElse(null),
-                window.latest().map(EnR002ReductionResult::getElPvr).orElse(null)
+                null, // SOURCE MISSING: 事業者区分 — manual judgement // window.latest().map(EnR002ReductionResult::getElPv).orElse(null),
+                null // SOURCE MISSING: 事業者コード — manual judgement // window.latest().map(EnR002ReductionResult::getElPvr).orElse(null) 
         );
     }
  
@@ -250,7 +251,7 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
             // to J-Credit. The column is not in the schema yet — until it is added, every row
             // is treated as a first-time report and the 開始日 block stays zero.
             Optional<EnR002ReductionResult> lastReported = results.stream()
-                    .filter(r -> Boolean.TRUE.equals(r.getIsReported()))
+                    .filter(null) //.filter(r -> Boolean.TRUE.equals(r.getIsReported()))
                     .max(BY_BATCH);
  
             return new ReportingWindow(lastReported, results.stream().max(BY_BATCH));
@@ -387,8 +388,8 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
                 .map(r -> new EnR002IndividualActivityDetailResponse.MonitoringPoint(
                         r.getProcessingDate(),
                         null, // SOURCE MISSING: 検針日 — only one date column exists on the record
-                        r.getElPv(),
-                        r.getElPvr()))
+                        null, //r.getElPv(),
+                        null)) //r.getElPvr()))
                 .orElseGet(() -> new EnR002IndividualActivityDetailResponse.MonitoringPoint(
                         null, null, BigDecimal.ZERO, BigDecimal.ZERO));
     }
