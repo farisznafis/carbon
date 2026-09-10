@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ProjectCompletionDialog } from './ProjectCompletionDialog';
+import { formatProjectDateTime } from '../projectStatusPresentation';
 
 type ProjectTableProps = {
   projects: Project[];
@@ -40,7 +41,7 @@ type ProjectTableProps = {
 };
 
 const projectTableGridColumns =
-  'minmax(240px,1.6fr) minmax(104px,.45fr) minmax(104px,.45fr) minmax(200px,1.1fr) minmax(160px,.8fr) minmax(150px,.7fr) minmax(184px,.85fr)';
+  'minmax(240px,1.6fr) minmax(104px,.45fr) minmax(104px,.45fr) minmax(200px,1.1fr) minmax(160px,.8fr) minmax(150px,.7fr) minmax(170px,.75fr) minmax(184px,.85fr)';
 
 const projectStatusOptions: ProjectStatus[] = [
   '作成済み',
@@ -324,6 +325,17 @@ export function ProjectTable({
       },
     },
     {
+      id: 'updatedAt',
+      label: '最終更新',
+      sortable: true,
+      sortValue: (project) => project.updatedAt ?? project.createdAt,
+      render: (project) => (
+        <span className="block whitespace-nowrap text-body text-foreground">
+          {formatProjectDateTime(project.updatedAt ?? project.createdAt)}
+        </span>
+      ),
+    },
+    {
       id: 'actions',
       label: '操作',
       render: (project) => (
@@ -356,7 +368,7 @@ export function ProjectTable({
         rows={projects}
         columns={columns}
         gridTemplateColumns={projectTableGridColumns}
-        minWidth={1240}
+        minWidth={1390}
         getRowKey={(project) => project.id}
         emptyMessage="まだプロジェクトが登録されていません。"
         onRowClick={onRowClick}

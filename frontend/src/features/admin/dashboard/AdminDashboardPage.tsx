@@ -4,6 +4,7 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom';
+import { useRef } from 'react';
 import { ApiError } from '@/api/_shared/errors';
 import type {
   AdminCompanyListItem,
@@ -38,6 +39,15 @@ import {
   dashboardEmptyStateClassName,
 } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { AdminCompanyApplicationsTable } from '@/features/admin/dashboard/tables/AdminCompanyApplicationsTable';
@@ -48,13 +58,18 @@ import {
   AdminDashboardOverview,
   type AdminHomePanel,
 } from './AdminDashboardOverview';
+import { AdminProjectOverviewCards } from './AdminProjectOverviewCards';
+import {
+  normalizeProjectStatus,
+  PROJECT_STATUS_PRESENTATIONS,
+} from './projectStatusPresentation';
 import { PageSkeleton, SkeletonTable } from '@/components/feedback/loading';
 import { useProjectsQuery } from '@/hooks/projects/useProjectsQuery';
 import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
 import { paths } from '@/routes/paths';
 import { getAdminRouteFromLegacyTab } from '@/features/admin/navigation/adminNavigationConfig';
-import { Plus } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 
 type AdminDashboardTabValue =
   | 'overview'
@@ -70,6 +85,7 @@ const dashboardContainer = adminPageContainerClassName;
 const APPLICATION_STATUSES: CompanyStatus[] = ['PENDING', 'REJECTED'];
 const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
 const HOME_APPLICATION_SUMMARY_LIMIT = 3;
+const ALL_PROJECT_FILTER = 'ALL';
 
 const DEFAULT_PAGINATION: Pagination = {
   page: 1,
@@ -144,6 +160,28 @@ function getApiFieldErrors(error: unknown) {
   return {};
 }
 
+/** Builds a stable filter value from one project's methodology identity. */
+function getProjectMethodologyFilterValue(project: Project) {
+  return `${project.methodNumber}::${project.methodName}`;
+}
+
+/** Builds the human-readable methodology option shown in the filter. */
+function getProjectMethodologyFilterLabel(project: Project) {
+  return [project.methodNumber, project.methodName].filter(Boolean).join(' ');
+}
+
+/** Checks whether a project matches the normalized free-text query. */
+function matchesProjectSearch(project: Project, normalizedQuery: string) {
+  if (!normalizedQuery) return true;
+
+  return [
+    project.projectName,
+    project.methodCategory,
+    project.methodNumber,
+    project.methodName,
+  ].some((field) => field.toLocaleLowerCase('ja-JP').includes(normalizedQuery));
+}
+
 function AdminDashboardSection({
   title,
   description,
@@ -184,17 +222,7 @@ const AdminDashboard = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const projectsQuery = useProjectsQuery();
-  const projects = projectsQuery.data ?? [];
-
-  const {
-    currentPage: projectPage,
-    totalPages: projectTotalPages,
-    totalItems: projectTotalItems,
-    itemsPerPage: projectItemsPerPage,
-    paginatedItems: paginatedProjects,
-    goToPage: goToProjectPage,
-    setItemsPerPage: setProjectItemsPerPage,
-  } = usePagination(projects);
+  const projects = useMemo(() => projectsQuery.data ?? [], [projectsQuery.data]);
 
   const [applicationCompaniesLoading, setApplicationCompaniesLoading] = useState(true);
   const [applicationCompaniesError, setApplicationCompaniesError] = useState<string | null>(null);
@@ -254,6 +282,16 @@ const AdminDashboard = () => {
   const [updatingProjectStatusId, setUpdatingProjectStatusId] = useState<
     string | null
   >(null);
+  const [projectStatusFilter, setProjectStatusFilter] = useState(
+    ALL_PROJECT_FILTER,
+  );
+  const [projectMethodologyFilter, setProjectMethodologyFilter] = useState(
+    ALL_PROJECT_FILTER,
+  );
+  const [projectSearchQuery, setProjectSearchQuery] = useState('');
+  const [showIncompleteProjectsOnly, setShowIncompleteProjectsOnly] =
+    useState(false);
+  const projectListHeadingRef = useRef<HTMLHeadingElement>(null);
   const [pendingDialogOpen, setPendingDialogOpen] = useState(false);
   const [pendingDialogMode, setPendingDialogMode] =
     useState<PendingCompanyActionMode | null>(null);
@@ -514,31 +552,132 @@ const AdminDashboard = () => {
     resetCompanyPages();
   };
 
-  // Plan progress for the rows currently on screen, fetched in one request.
-  // Best-effort: the dashboard must still render if the plan API is down, and
-  // only the visible page is asked for so the cost does not grow with the list.
   const [planProgress, setPlanProgress] = useState<
     ReadonlyMap<string, ProjectPlanProgressSummary>
   >(new Map());
+  const [planProgressLoading, setPlanProgressLoading] = useState(false);
+  const [planProgressError, setPlanProgressError] = useState<string | null>(
+    null,
+  );
 
+  /** Loads progress for all projects so overview and incomplete filtering stay accurate. */
   useEffect(() => {
-    const ids = paginatedProjects.map((project) => String(project.id));
+    const ids = projects.map((project) => String(project.id));
     if (ids.length === 0) {
       setPlanProgress(new Map());
+      setPlanProgressLoading(false);
+      setPlanProgressError(null);
       return;
     }
 
     let cancelled = false;
+    setPlanProgressLoading(true);
+    setPlanProgressError(null);
     getProjectPlanProgressBatch(ids)
       .then((result) => {
         if (!cancelled) setPlanProgress(result);
       })
-      .catch((e) => console.warn('Failed to load plan progress', e));
+      .catch((error) => {
+        if (cancelled) return;
+        setPlanProgress(new Map());
+        setPlanProgressError(
+          getApiMessage(error, 'プロジェクトの作成進捗を取得できませんでした。'),
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setPlanProgressLoading(false);
+      });
 
     return () => {
       cancelled = true;
     };
-  }, [paginatedProjects]);
+  }, [projects]);
+
+  const projectMethodologyOptions = useMemo(() => {
+    const optionMap = new Map<string, string>();
+    projects.forEach((project) => {
+      const value = getProjectMethodologyFilterValue(project);
+      const label = getProjectMethodologyFilterLabel(project);
+      if (label) optionMap.set(value, label);
+    });
+
+    return [...optionMap.entries()]
+      .map(([value, label]) => ({ value, label }))
+      .sort((left, right) => left.label.localeCompare(right.label, 'ja-JP'));
+  }, [projects]);
+
+  const filteredProjects = useMemo(() => {
+    const normalizedQuery = projectSearchQuery
+      .trim()
+      .toLocaleLowerCase('ja-JP');
+
+    return projects.filter((project) => {
+      const matchesStatus =
+        projectStatusFilter === ALL_PROJECT_FILTER ||
+        normalizeProjectStatus(project.projectStatus) === projectStatusFilter;
+      const matchesMethodology =
+        projectMethodologyFilter === ALL_PROJECT_FILTER ||
+        getProjectMethodologyFilterValue(project) ===
+          projectMethodologyFilter;
+      const progress = planProgress.get(String(project.id));
+      const matchesIncomplete =
+        !showIncompleteProjectsOnly ||
+        Boolean(progress && !progress.complete && progress.totalForms > 0);
+
+      return (
+        matchesStatus &&
+        matchesMethodology &&
+        matchesIncomplete &&
+        matchesProjectSearch(project, normalizedQuery)
+      );
+    });
+  }, [
+    planProgress,
+    projectMethodologyFilter,
+    projectSearchQuery,
+    projectStatusFilter,
+    projects,
+    showIncompleteProjectsOnly,
+  ]);
+
+  const {
+    currentPage: projectPage,
+    totalPages: projectTotalPages,
+    totalItems: projectTotalItems,
+    itemsPerPage: projectItemsPerPage,
+    paginatedItems: paginatedProjects,
+    goToPage: goToProjectPage,
+    setCurrentPage: setProjectPage,
+    setItemsPerPage: setProjectItemsPerPage,
+  } = usePagination(filteredProjects);
+
+  const hasActiveProjectFilters =
+    projectStatusFilter !== ALL_PROJECT_FILTER ||
+    projectMethodologyFilter !== ALL_PROJECT_FILTER ||
+    projectSearchQuery.trim().length > 0 ||
+    showIncompleteProjectsOnly;
+
+  /** Resets the project list to its unfiltered first page. */
+  const handleResetProjectFilters = () => {
+    setProjectStatusFilter(ALL_PROJECT_FILTER);
+    setProjectMethodologyFilter(ALL_PROJECT_FILTER);
+    setProjectSearchQuery('');
+    setShowIncompleteProjectsOnly(false);
+    setProjectPage(1);
+  };
+
+  /** Activates the incomplete-project view and moves focus to the project list. */
+  const handleShowAllInProgressProjects = () => {
+    setShowIncompleteProjectsOnly(true);
+    setProjectPage(1);
+    window.requestAnimationFrame(() => {
+      projectListHeadingRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+      projectListHeadingRef.current?.focus({ preventScroll: true });
+    });
+  };
 
   const handleEditProject = (project: Project) => {
     navigate(paths.adminProjectDetail(project.id));
@@ -973,32 +1112,152 @@ const AdminDashboard = () => {
                 </Button>
               }
             >
-              {projectsQuery.isLoading ? (
-                <SkeletonTable columns={7} rows={6} minWidth={1240} />
-              ) : projectsError ? (
-                <AdminDashboardEmptyState>{projectsError}</AdminDashboardEmptyState>
-              ) : (
-                <>
-                  <ProjectTable
-                    projects={paginatedProjects}
-                    onEdit={handleEditProject}
-                    onUpdate={handleUpdateProject}
-                    onStatusChange={handleChangeProjectStatus}
-                    updatingProjectStatusId={updatingProjectStatusId}
-                    planProgress={planProgress}
-                    onOpenPlan={handleOpenPlan}
-                  />
-                  <PaginationControls
-                    currentPage={projectPage}
-                    totalPages={projectTotalPages}
-                    totalItems={projectTotalItems}
-                    itemsPerPage={projectItemsPerPage}
-                    onPageChange={goToProjectPage}
-                    onItemsPerPageChange={setProjectItemsPerPage}
-                    className="mt-4"
-                  />
-                </>
-              )}
+              <div className="space-y-6">
+                <AdminProjectOverviewCards
+                  projects={projects}
+                  projectsLoading={projectsQuery.isLoading}
+                  projectsError={projectsError}
+                  planProgress={planProgress}
+                  planProgressLoading={planProgressLoading}
+                  planProgressError={planProgressError}
+                  onOpenPlan={handleOpenPlan}
+                  onShowAllInProgress={handleShowAllInProgressProjects}
+                />
+
+                <Card className="rounded-xl border-border shadow-app-sm">
+                  <CardHeader>
+                    <div className="flex flex-wrap items-baseline gap-3">
+                      <CardTitle
+                        ref={projectListHeadingRef}
+                        tabIndex={-1}
+                        className="scroll-mt-24 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        プロジェクト一覧
+                      </CardTitle>
+                      <span className="text-body font-medium text-muted-foreground">
+                        {projectTotalItems.toLocaleString('ja-JP')}件
+                      </span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-5">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                        <Select
+                          value={projectStatusFilter}
+                          onValueChange={(value) => {
+                            setProjectStatusFilter(value);
+                            setProjectPage(1);
+                          }}
+                        >
+                          <SelectTrigger className="w-full sm:w-44">
+                            <SelectValue placeholder="ステータス" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={ALL_PROJECT_FILTER}>
+                              すべてのステータス
+                            </SelectItem>
+                            {PROJECT_STATUS_PRESENTATIONS.map(
+                              (presentation) => (
+                                <SelectItem
+                                  key={presentation.status}
+                                  value={presentation.status}
+                                >
+                                  {presentation.status}
+                                </SelectItem>
+                              ),
+                            )}
+                          </SelectContent>
+                        </Select>
+
+                        <Select
+                          value={projectMethodologyFilter}
+                          onValueChange={(value) => {
+                            setProjectMethodologyFilter(value);
+                            setProjectPage(1);
+                          }}
+                        >
+                          <SelectTrigger className="w-full sm:w-64">
+                            <SelectValue placeholder="方法論" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={ALL_PROJECT_FILTER}>
+                              すべての方法論
+                            </SelectItem>
+                            {projectMethodologyOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        {showIncompleteProjectsOnly && (
+                          <span className="inline-flex min-h-10 items-center rounded-md bg-muted px-3 text-small font-medium text-foreground">
+                            作成中のみ
+                          </span>
+                        )}
+
+                        {hasActiveProjectFilters && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={handleResetProjectFilters}
+                          >
+                            リセット
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="relative w-full lg:max-w-sm">
+                        <Search
+                          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                          aria-hidden="true"
+                        />
+                        <Input
+                          type="search"
+                          value={projectSearchQuery}
+                          onChange={(event) => {
+                            setProjectSearchQuery(event.target.value);
+                            setProjectPage(1);
+                          }}
+                          placeholder="プロジェクト名・方法論で検索"
+                          aria-label="プロジェクトを検索"
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+
+                    {projectsQuery.isLoading ? (
+                      <SkeletonTable columns={8} rows={6} minWidth={1390} />
+                    ) : projectsError ? (
+                      <AdminDashboardEmptyState>
+                        {projectsError}
+                      </AdminDashboardEmptyState>
+                    ) : (
+                      <>
+                        <ProjectTable
+                          projects={paginatedProjects}
+                          onEdit={handleEditProject}
+                          onUpdate={handleUpdateProject}
+                          onStatusChange={handleChangeProjectStatus}
+                          updatingProjectStatusId={updatingProjectStatusId}
+                          planProgress={planProgress}
+                          onOpenPlan={handleOpenPlan}
+                        />
+                        <PaginationControls
+                          currentPage={projectPage}
+                          totalPages={projectTotalPages}
+                          totalItems={projectTotalItems}
+                          itemsPerPage={projectItemsPerPage}
+                          onPageChange={goToProjectPage}
+                          onItemsPerPageChange={setProjectItemsPerPage}
+                          className="mt-4"
+                        />
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </AdminDashboardSection>
           </TabsContent>
 
