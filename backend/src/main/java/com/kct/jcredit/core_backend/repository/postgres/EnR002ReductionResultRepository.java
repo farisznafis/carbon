@@ -1,6 +1,5 @@
 package com.kct.jcredit.core_backend.repository.postgres;
 
-import com.kct.jcredit.core_backend.dto.response.PeriodSummaryResponse;
 import com.kct.jcredit.core_backend.entity.EnR002ReductionResult;
 
 import java.time.LocalDate;
@@ -70,4 +69,22 @@ public interface EnR002ReductionResultRepository extends JpaRepository<EnR002Red
             @Param("batchId") Integer batchId,
             @Param("companyId") String companyId,
             Pageable pageable);
+
+
+    // loadReportingWindows() で使用
+    List<EnR002ReductionResult> findByProjectIdAndIsActiveTrue(Integer projectId);
+
+    // loadReportingWindow() で使用
+    List<EnR002ReductionResult> findByProjectIdAndEquipmentIdAndIsActiveTrue(
+        Integer projectId, Integer equipmentId
+    );
+
+        /**
+     * Finds the processing date of the last battery emissions calculation for a site.
+     * Returns the most recent date where empjSBattery > 0.
+     * 
+     * @param projectId Project ID
+     * @param siteId Site ID
+     * @return Optional containing last battery calculation date, or empty if none found
+     */
 }

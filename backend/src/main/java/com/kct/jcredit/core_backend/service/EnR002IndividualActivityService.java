@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.kct.jcredit.core_backend.dto.response.EnR002IndividualActivityDetailResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002IndividualActivityRowResponse;
+import com.kct.jcredit.core_backend.entity.EnR002ReductionResult;
 import com.kct.jcredit.core_backend.dto.response.CompanyActivityGroupResponse;
 import com.kct.jcredit.core_backend.service.EnR002IndividualActivityService;
 
