@@ -711,47 +711,40 @@ export const AdminProjectRegister: React.FC = () => {
             )}
 
             <FormActions
-              className={
-                step > 1
-                  ? 'grid grid-cols-1 gap-3 sm:grid-cols-2'
-                  : 'grid grid-cols-1 gap-3'
-              }
-            >
-              {step > 1 && (
-                <Button
-                  type='button'
-                  variant='outline'
-                  size='md'
-                  className='w-full'
-                  onClick={goBack}
-                  disabled={
-                    isSubmitting || isLoadingApplication || isLoadingPlanPage
-                  }
-                >
-                  戻る
-                </Button>
-              )}
-              <Button
-                type='button'
-                size='md'
-                className='w-full'
-                onClick={goNext}
-                disabled={
-                  isSavingProjectBase ||
-                  isLoadingApplication ||
-                  isLoadingPlanPage ||
-                  isSubmitting
-                }
-              >
-                {isSavingProjectBase
-                  ? '保存中...'
-                  : isLoadingApplication || isLoadingPlanPage
-                    ? '読み込み中...'
-                    : step === maxStep
-                      ? '確認へ'
-                      : '次へ'}
-              </Button>
-            </FormActions>
+              actions={[
+                ...(step > 1
+                  ? [
+                      {
+                        id: 'back',
+                        label: '戻る',
+                        variant: 'outline' as const,
+                        onClick: goBack,
+                        disabled:
+                          isSubmitting ||
+                          isLoadingApplication ||
+                          isLoadingPlanPage,
+                      },
+                    ]
+                  : []),
+                {
+                  id: 'next',
+                  label:
+                    isSavingProjectBase
+                      ? '保存中...'
+                      : isLoadingApplication || isLoadingPlanPage
+                        ? '読み込み中...'
+                        : step === maxStep
+                          ? '確認へ'
+                          : '次へ',
+                  onClick: goNext,
+                  disabled:
+                    isSavingProjectBase ||
+                    isLoadingApplication ||
+                    isLoadingPlanPage ||
+                    isSubmitting,
+                },
+              ]}
+            />
           </FormSectionStack>
         </FormCard>
       </FormPageContent>
