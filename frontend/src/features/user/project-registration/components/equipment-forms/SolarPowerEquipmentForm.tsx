@@ -324,10 +324,8 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
             <FormItem>
               <RequiredLabel>公称最大出力 (kW)</RequiredLabel>
               <FormControl>
-                <Input
-                  type="number"
-                  min="0"
-                  step="any"
+                <GroupedNumberInput
+                  allowDecimal
                   placeholder="数値を入力"
                   {...field}
                 />
@@ -409,10 +407,8 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
                   夜間待機電力 (W)
                 </RequiredLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="any"
+                  <GroupedNumberInput
+                    allowDecimal
                     placeholder="数値を入力"
                     {...field}
                   />
@@ -498,10 +494,8 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
                   <FormItem>
                     <RequiredLabel>容量 (kWh)</RequiredLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="any"
+                      <GroupedNumberInput
+                        allowDecimal
                         placeholder="数値を入力"
                         {...field}
                       />

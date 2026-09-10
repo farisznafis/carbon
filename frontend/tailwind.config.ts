@@ -15,9 +15,9 @@ export default {
   	},
   	extend: {
 		maxWidth: {
-			app: '75rem',
-			admin: '87.5rem',
-			marketing: '97.5rem'
+		  app: '77.5rem',      // 1240
+			admin: '100rem',     // 1600
+			marketing: '97.5rem' // 1560
 		},
   		colors: {
   			border: 'hsl(var(--border))',

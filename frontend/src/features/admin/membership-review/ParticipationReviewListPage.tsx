@@ -27,7 +27,6 @@ import {
 import { formatAdminCompanyDateTime } from '@/features/admin/company-detail/companyDetailDisplay';
 import { usePagination } from '@/hooks/usePagination';
 import { paths } from '@/routes/paths';
-import { getParticipationReviewStage } from './participationReviewDisplay';
 import { isParticipationReviewForProject } from './participationReviewProjectMatch';
 
 const INITIAL_ITEMS_PER_PAGE = 10;
@@ -80,7 +79,11 @@ function getStatusBadgeLabel(
   status: ParticipationReviewStatus,
   review: ParticipationReviewDetail,
 ): string {
-  if (status === 'OPEN') return getParticipationReviewStage(review);
+  if (status === 'OPEN') {
+    return review.review.primaryApplReviewerName.trim()
+      ? '二次確認待ち'
+      : '一次確認待ち';
+  }
   return REVIEW_STATUS_CONTENT[status].label;
 }
 

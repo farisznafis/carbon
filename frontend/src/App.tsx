@@ -266,7 +266,7 @@ const App = () => {
               </RequireAdmin>
             }
           />
-          {[paths.adminProjectList, paths.adminCompanyList, paths.adminMethodologyList, paths.adminMonitoring].map(
+          {[paths.adminProjectList, paths.adminCompanyList, paths.adminMethodologyList].map(
             (path) => (
               <Route
                 key={path}
@@ -279,6 +279,14 @@ const App = () => {
               />
             ),
           )}
+          <Route
+            path={paths.adminMonitoring}
+            element={
+              <RequireAdmin>
+                <Navigate to={`${paths.adminDashboard}?panel=cancel`} replace />
+              </RequireAdmin>
+            }
+          />
           <Route
             path={paths.adminOperatorList}
             element={
