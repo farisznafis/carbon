@@ -32,9 +32,10 @@ type HomeHeroSectionProps = Readonly<{
 
 const HERO_MEDIA_SOURCE: HeroMediaSource = {
   kind: 'video',
-  src: '/assets/hero/dashboard-preview.mp4',
+  src: '/assets/hero/dashboard-carbonzero.mp4',
+  // src: '/assets/hero/dashboard-carbonzero.gif',
   label: 'GXダッシュボードの操作イメージ',
-  poster: '/assets/hero/dashboard-preview.png',
+  // poster: '/assets/hero/dashboard-preview.png',
 };
 
 /** Renders the responsive Figma media frame for either an image/GIF or video. */

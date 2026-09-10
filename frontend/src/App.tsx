@@ -87,6 +87,9 @@ const AdminProjectRegister = lazy(() =>
   })),
 );
 const ProjectDetailAdmin = lazy(() => import("./features/admin/project-detail/ProjectDetailAdminPage"));
+const AdminProjectInformation = lazy(() =>
+  import('./features/admin/project-detail/AdminProjectInformationPage'),
+);
 const AdminProjectPlanApplication = lazy(() =>
   import("./features/admin/project-detail/AdminProjectPlanApplicationPage"),
 );
@@ -356,6 +359,14 @@ const App = () => {
             element={
               <RequireAdmin>
                 <ProjectDetailAdmin />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminProjectInformationRoute}
+            element={
+              <RequireAdmin>
+                <AdminProjectInformation />
               </RequireAdmin>
             }
           />
