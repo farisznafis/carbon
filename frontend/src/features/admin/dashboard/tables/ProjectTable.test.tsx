@@ -19,51 +19,7 @@ const activeProject: Project = {
   methodCombiFeasibility: false,
 };
 
-describe('ProjectTable', () => {
-  it('shows the complete project name and truncates the methodology name instead', () => {
-    const shortProjectName = '短いプロジェクト';
-    const projectName =
-      'GXカーボン太陽光発電プログラム長期プロジェクト';
-    const methodName =
-      '太陽光発電設備の導入に関する非常に長い方法論名称';
-
-    render(
-      <ProjectTable
-        projects={[
-          { ...activeProject, projectName: shortProjectName },
-          {
-            ...activeProject,
-            id: 'PROJ0002',
-            projectName,
-            methodName,
-          },
-        ]}
-      />,
-    );
-
-    const headerGrid = screen
-      .getByText('プロジェクト名')
-      .closest<HTMLDivElement>('[style*="grid-template-columns"]');
-    const shortProjectRow = screen
-      .getByText(shortProjectName)
-      .closest<HTMLDivElement>('[style*="grid-template-columns"]');
-    const longProjectRow = screen
-      .getByText(projectName)
-      .closest<HTMLDivElement>('[style*="grid-template-columns"]');
-
-    expect(headerGrid).not.toBeNull();
-    expect(shortProjectRow?.style.gridTemplateColumns).toBe(
-      headerGrid?.style.gridTemplateColumns,
-    );
-    expect(longProjectRow?.style.gridTemplateColumns).toBe(
-      headerGrid?.style.gridTemplateColumns,
-    );
-    expect(screen.getByText(projectName)).toHaveClass('whitespace-nowrap');
-    expect(screen.getByText(projectName)).not.toHaveClass('truncate');
-    expect(screen.getByText(methodName)).toHaveClass('truncate');
-    expect(screen.getByText(methodName)).toHaveAttribute('title', methodName);
-  });
-
+describe('ProjectTable completion confirmation', () => {
   it('asks for confirmation before changing a project to completion', async () => {
     const user = userEvent.setup();
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
@@ -87,6 +43,7 @@ describe('ProjectTable', () => {
       await screen.findByText('ステータスを「終了」に変更しますか？'),
     ).toBeInTheDocument();
     expect(screen.getByText('ABC株式会社')).toBeInTheDocument();
+    expect(screen.getByText('東京工場')).toBeInTheDocument();
     expect(screen.getAllByText('太陽光発電プロジェクト')).toHaveLength(2);
 
     await user.click(

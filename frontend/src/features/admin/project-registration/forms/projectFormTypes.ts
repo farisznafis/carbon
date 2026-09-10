@@ -13,6 +13,7 @@ import {
   applicableConditionsSchema, // applicable_conditions
   projChangeInfoSchema, // project_change_information
   projPlanCoverSchema, // project_plan_cover
+  authorityHolderChangeSchema, // 認証権限保有主体変更届
   projectOverviewSchema, // project_overview
   applicableMethodologySchema, // applicable_methodology
   programMethodologySchema, // program_type_methodology
@@ -32,12 +33,10 @@ import {
   monitoringCalcSchema, // monitoring_calculation
   dataManagementSchema, // data_management
   equipmentInfoSchema, // equipment_information_verification_method
-  monitoringItemSchema, // monitoring_item_plan
-  monitoringMethodSchema, // monitoring_method_plan
-  expectedProjectSchema, // expected_project_plan
-  monitoringItemPlanCoefficientSchema, // monitoring_item_plan_coefficient
-  monitoringMethodPlanCoefficientSchema, // monitoring_method_plan_coefficient
-  expectedProjectPlanCoefficientSchema, // expected_project_plan_coefficient
+  equipmentInfoBeforeNewSchema, // equipment_verification_before_new
+  equipmentInfoAfterSchema, // equipment_verification_after
+  monitoringActivityPlanSchema, // 11.モニタリング計画（１）活動量
+  monitoringCoefficientPlanSchema, // 11.モニタリング計画（２）係数
   monitoringPlanSchema, // monitoring_plan
   measureSpecifiedSchema, // measure_specified_instrument
   measureOtherSchema, // measure_other_instruments_overview
@@ -56,6 +55,7 @@ export const formSchema = z.object({
   appConditions: applicableConditionsSchema,
   projChangeInfo: projChangeInfoSchema,
   projPlanCover: projPlanCoverSchema,
+  authorityHolderChange: authorityHolderChangeSchema,
   projectOverview: projectOverviewSchema,
   applicableMethodology: applicableMethodologySchema,
   programMethodology: programMethodologySchema,
@@ -63,6 +63,8 @@ export const formSchema = z.object({
   monitoringCalc: monitoringCalcSchema,
   dataManagement: dataManagementSchema, 
   equipmentInfo: equipmentInfoSchema,
+  equipmentInfoBeforeNew: equipmentInfoBeforeNewSchema,
+  equipmentInfoAfter: equipmentInfoAfterSchema,
   additionalAssessment: additionalAssessmentSchema, 
   obtainingAdditional: obtainingAdditionalSchema,
   emissionCalc: emissionCalcSchema,
@@ -73,12 +75,8 @@ export const formSchema = z.object({
   baselineEmission: mainActivitySchema,
   mainBaseline: incidentalActivitySchema,
   incidentalEmission: incidentalActivitySchema,
-  monitoringItem: monitoringItemSchema, 
-  monitoringMethod: monitoringMethodSchema,
-  expectedProject: expectedProjectSchema,
-  monitoringItemPlanCoefficient: monitoringItemSchema,
-  monitoringMethodPlanCoefficient: monitoringMethodSchema,
-  expectedProjectPlanCoefficient: expectedProjectSchema,
+  monitoringActivityPlan: monitoringActivityPlanSchema,
+  monitoringCoefficientPlan: monitoringCoefficientPlanSchema,
   monitoringPlan: monitoringPlanSchema,
   measureSpecified: measureSpecifiedSchema,
   measureOther: measureOtherSchema,
@@ -88,9 +86,13 @@ export const formSchema = z.object({
 
 export type FormValues = z.output<typeof formSchema>;
 
+// Steps reachable from the registration wizard. Every key after projectBase is
+// one page of the plan, staged to the backend independently.
 export const adminProjectRegisterSchema = z.object({
   projectBase: projectBaseSchema,
   projectApplication: projectApplicationSchema,
+  otherProjectOperator: otherProjectOperatorSchema,
+  appConditions: applicableConditionsSchema,
 });
 
 export type AdminProjectRegisterFormInputValues = z.input<typeof adminProjectRegisterSchema>;

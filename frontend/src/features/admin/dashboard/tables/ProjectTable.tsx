@@ -1,6 +1,10 @@
-import type { ProjectStatus } from '@/api/admin/projects';
+import type {
+  ProjectPlanProgressSummary,
+  ProjectStatus,
+} from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import {
   DataGridTable,
   type DataGridTableColumn,
@@ -14,7 +18,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ProjectCompletionDialog } from './ProjectCompletionDialog';
-import { InlineLoader } from '@/components/feedback/loading';
 
 type ProjectTableProps = {
   projects: Project[];
@@ -26,7 +29,18 @@ type ProjectTableProps = {
     status: ProjectStatus,
   ) => void | Promise<void>;
   updatingProjectStatusId?: string | null;
+  /** Plan progress by project id, fetched in one batch by the parent. */
+  planProgress?: ReadonlyMap<string, ProjectPlanProgressSummary>;
+  /**
+   * Opens the plan. The second argument is the page to land on: the first
+   * unfinished one while the plan is incomplete, and undefined once it is done
+   * so the operator can choose which page to update.
+   */
+  onOpenPlan?: (project: Project, slug?: string) => void;
 };
+
+const projectTableGridColumns =
+  'minmax(240px,1.6fr) minmax(104px,.45fr) minmax(104px,.45fr) minmax(200px,1.1fr) minmax(160px,.8fr) minmax(150px,.7fr) minmax(184px,.85fr)';
 
 const projectStatusOptions: ProjectStatus[] = [
   '作成済み',
@@ -106,10 +120,6 @@ const projectStatusAliases: Partial<Record<string, ProjectStatus>> = {
   INACTIVE: '終了',
 };
 
-const PROJECT_NAME_COLUMN_MIN_WIDTH_PX = 180;
-const projectTableRemainingGridColumns =
-  '90px 90px minmax(170px, 1fr) 140px 150px';
-
 function isProjectStatus(status: string): status is ProjectStatus {
   return projectStatusOptions.includes(status as ProjectStatus);
 }
@@ -146,6 +156,15 @@ function displayValue(value: unknown) {
   return String(value);
 }
 
+/** Plain single-line cell for the methodology columns. */
+function TextCell({ value }: { value: unknown }) {
+  return (
+    <span className="block truncate text-body text-foreground">
+      {displayValue(value)}
+    </span>
+  );
+}
+
 export function ProjectTable({
   projects,
   onEdit,
@@ -153,46 +172,12 @@ export function ProjectTable({
   onRowClick,
   onStatusChange,
   updatingProjectStatusId,
+  planProgress,
+  onOpenPlan,
 }: ProjectTableProps) {
   const [completionProject, setCompletionProject] = useState<Project | null>(
     null,
   );
-  const tableContainerRef = useRef<HTMLDivElement>(null);
-  const [projectNameColumnWidth, setProjectNameColumnWidth] = useState(
-    PROJECT_NAME_COLUMN_MIN_WIDTH_PX,
-  );
-  const projectTableGridColumns = useMemo(
-    () =>
-      `${projectNameColumnWidth}px ${projectTableRemainingGridColumns}`,
-    [projectNameColumnWidth],
-  );
-
-  useLayoutEffect(() => {
-    let isActive = true;
-
-    /** Synchronizes the shared project-name track with the widest rendered name. */
-    const updateProjectNameColumnWidth = () => {
-      if (!isActive) return;
-
-      const projectNameCells =
-        tableContainerRef.current?.querySelectorAll<HTMLElement>(
-          '[data-project-name-cell]',
-        );
-      const widestProjectName = Math.max(
-        PROJECT_NAME_COLUMN_MIN_WIDTH_PX,
-        ...Array.from(projectNameCells ?? []).map((cell) => cell.scrollWidth),
-      );
-
-      setProjectNameColumnWidth(widestProjectName);
-    };
-
-    updateProjectNameColumnWidth();
-    void document.fonts?.ready.then(updateProjectNameColumnWidth);
-
-    return () => {
-      isActive = false;
-    };
-  }, [projects]);
 
   const handleStatusChange = (project: Project, status: ProjectStatus) => {
     if (status === '終了') {
@@ -209,6 +194,17 @@ export function ProjectTable({
     setCompletionProject(null);
   };
 
+  /**
+   * Controls sit inside a clickable row, so their clicks must not also trigger
+   * the row's own click.
+   */
+  const stopRowActivation = {
+    onClick: (event: { stopPropagation: () => void }) =>
+      event.stopPropagation(),
+    onPointerDown: (event: { stopPropagation: () => void }) =>
+      event.stopPropagation(),
+  };
+
   const columns: DataGridTableColumn<Project>[] = [
     {
       id: 'projectName',
@@ -216,10 +212,7 @@ export function ProjectTable({
       sortable: true,
       sortValue: (project) => project.projectName,
       render: (project) => (
-        <span
-          data-project-name-cell
-          className="block whitespace-nowrap text-body font-bold text-foreground"
-        >
+        <span className="block truncate text-body font-bold text-foreground">
           {displayValue(project.projectName)}
         </span>
       ),
@@ -229,36 +222,62 @@ export function ProjectTable({
       label: '方法論区分',
       sortable: true,
       sortValue: (project) => project.methodCategory,
-      render: (project) => (
-        <span className="block truncate text-body text-foreground">
-          {displayValue(project.methodCategory)}
-        </span>
-      ),
+      render: (project) => <TextCell value={project.methodCategory} />,
     },
     {
       id: 'methodNumber',
       label: '方法論番号',
       sortable: true,
       sortValue: (project) => project.methodNumber,
-      render: (project) => (
-        <span className="block truncate text-body text-foreground">
-          {displayValue(project.methodNumber)}
-        </span>
-      ),
+      render: (project) => <TextCell value={project.methodNumber} />,
     },
     {
       id: 'methodName',
       label: '方法論名',
       sortable: true,
       sortValue: (project) => project.methodName,
-      render: (project) => (
-        <span
-          className="block truncate text-body text-foreground"
-          title={displayValue(project.methodName)}
-        >
-          {displayValue(project.methodName)}
-        </span>
-      ),
+      render: (project) => <TextCell value={project.methodName} />,
+    },
+    {
+      id: 'planProgress',
+      label: '作成の進捗状況',
+      render: (project) => {
+        const progress = planProgress?.get(String(project.id));
+
+        // Absent while the batch is still loading, or when the plan API is
+        // unavailable — the row must still render either way.
+        if (!progress || progress.totalForms === 0) {
+          return <span className="text-body text-muted-foreground">-</span>;
+        }
+
+        const resumeSlug = progress.complete
+          ? undefined
+          : (progress.nextIncompleteSlug ?? undefined);
+
+        return (
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="whitespace-nowrap text-body text-foreground">
+              <span className="font-bold">{progress.completedForms}</span>
+              <span className="text-muted-foreground">
+                /{progress.totalForms}
+              </span>
+            </span>
+            {onOpenPlan && (
+              <span {...stopRowActivation}>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="h-auto gap-1 px-0 text-table font-bold"
+                  onClick={() => onOpenPlan(project, resumeSlug)}
+                >
+                  {progress.complete ? '計画書更新' : '続きから'}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       id: 'projectStatus',
@@ -268,18 +287,12 @@ export function ProjectTable({
       render: (project) => {
         const statusColor = getProjectStatusColors(project.projectStatus);
 
-        const isUpdating = updatingProjectStatusId === project.id;
-
         return (
-          <span
-            className="flex min-w-0 items-center gap-2"
-            onClick={(event) => event.stopPropagation()}
-            onPointerDown={(event) => event.stopPropagation()}
-          >
+          <span className="block min-w-0" {...stopRowActivation}>
             <Select
               value={project.projectStatus}
               disabled={
-                isUpdating ||
+                updatingProjectStatusId === project.id ||
                 isTerminalProjectStatus(project.projectStatus)
               }
               onValueChange={(value) =>
@@ -305,9 +318,6 @@ export function ProjectTable({
                 ))}
               </SelectContent>
             </Select>
-            {isUpdating ? (
-              <InlineLoader label="ステータスを更新しています" showLabel={false} />
-            ) : null}
           </span>
         );
       },
@@ -317,9 +327,8 @@ export function ProjectTable({
       label: '操作',
       render: (project) => (
         <div
-          className="flex justify-end gap-2"
-          onClick={(event) => event.stopPropagation()}
-          onPointerDown={(event) => event.stopPropagation()}
+          className="flex flex-wrap justify-start gap-2"
+          {...stopRowActivation}
         >
           <Button
             type="button"
@@ -342,17 +351,15 @@ export function ProjectTable({
 
   return (
     <>
-      <div ref={tableContainerRef}>
-        <DataGridTable
-          rows={projects}
-          columns={columns}
-          gridTemplateColumns={projectTableGridColumns}
-          minWidth={980}
-          getRowKey={(project) => project.id}
-          emptyMessage="まだプロジェクトが登録されていません。"
-          onRowClick={onRowClick}
-        />
-      </div>
+      <DataGridTable
+        rows={projects}
+        columns={columns}
+        gridTemplateColumns={projectTableGridColumns}
+        minWidth={1240}
+        getRowKey={(project) => project.id}
+        emptyMessage="まだプロジェクトが登録されていません。"
+        onRowClick={onRowClick}
+      />
       <ProjectCompletionDialog
         project={completionProject}
         isSubmitting={

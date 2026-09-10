@@ -1,9 +1,12 @@
-import { z } from "zod";
-import { measureSpecifiedSchema } from "../MeasureSpecified/measureSpecifiedSchema";
+import { VALIDATION_MESSAGES } from '@/lib/validations';
+import { z } from 'zod';
+import { otherInstrumentRowSchema } from '../measureInstrumentRow';
 
-export const measureOtherSchema = measureSpecifiedSchema
-    .omit({ validityPeriod: true, methodCollImg: true }) //remove methodCollImg once inserted
-    .extend({
-        instrumentCalibration: z.string(),
-        monitoringPointDiagram: z.instanceof(File)
-    })
+export const measureOtherSchema = z.object({
+  instruments: z.array(otherInstrumentRowSchema),
+
+  monitoringPointDiagram: z
+    .string()
+    .min(1, '必須項目です')
+    .max(1000, VALIDATION_MESSAGES.MAX_CHARACTERS(1000)),
+});

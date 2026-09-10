@@ -80,12 +80,12 @@ function normalizeProjectApplicationBooleans(
     'isChangePicPosition',
     'isChangePicName',
     'isChangePicEmail',
-    'isChangePicPhone',
+    'isChangePicPhoneNumber',
     'isChangeOtherContactBusinessName',
     'isChangeOtherContactPicPosition',
-    'isChangeOtherContactPicName',
-    'isChangeOtherContactPicEmail',
-    'isChangeOtherContactPicPhone',
+    'isChangeOtherContactsPicName',
+    'isChangeOtherContactsPicEmail',
+    'isChangeOtherContactsPicPhoneNumber',
     'isParticipatingCnAct',
   ];
 
@@ -283,4 +283,67 @@ export function mapAdminProjectUpdatePayload(
     methodCombiFeasibility: Boolean(projectBase.methodCombiFeasibility),
     methodDetails: toStringValue(projectBase.methodDetails) ?? '',
   };
+}
+
+/** Backend @DateFormat expects yyyy-MM-dd; the form holds a Date for date pickers. */
+function toDateString(value: unknown): string | undefined {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime())
+      ? undefined
+      : value.toISOString().slice(0, 10);
+  }
+  return toStringValue(value);
+}
+
+/**
+ * Maps one project-plan page's form values onto its backend payload.
+ *
+ * Field names line up with the backend DTO for most pages, so the default is a
+ * pass-through; the few that disagree declare a rename map in
+ * `projectPlanPages.ts` rather than getting a bespoke mapper.
+ *
+ * Dates are normalised because the pickers hold Date objects while the backend
+ * @DateFormat expects yyyy-MM-dd.
+ */
+export function mapPlanPagePayload(
+  values: Record<string, unknown>,
+  formKey: string,
+  renames?: Readonly<Record<string, string>>,
+): Record<string, unknown> {
+  const page = (values[formKey] ?? {}) as Record<string, unknown>;
+  const payload: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(page)) {
+    const target = renames?.[key] ?? key;
+    payload[target] = value instanceof Date ? toDateString(value) : value;
+  }
+
+  return cleanPayload(payload);
+}
+
+/**
+ * Turns a stored page back into form values — the inverse of
+ * {@link mapPlanPagePayload}.
+ *
+ * Without this a page that was saved comes back blank, because the form binds
+ * to its own field names while the backend stores the spec's.
+ */
+export function mapPlanPageValues(
+  data: Record<string, unknown> | undefined,
+  renames?: Readonly<Record<string, string>>,
+): Record<string, unknown> {
+  if (!data) return {};
+
+  const toForm: Record<string, string> = {};
+  for (const [formName, backendName] of Object.entries(renames ?? {})) {
+    toForm[backendName] = formName;
+  }
+
+  const values: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    // Server-managed metadata is not part of the form.
+    if (['pk', 'sk', 'status', 'updatedAt', 'updatedBy'].includes(key)) continue;
+    values[toForm[key] ?? key] = value;
+  }
+  return values;
 }
