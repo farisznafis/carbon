@@ -974,7 +974,7 @@ const AdminDashboard = () => {
               }
             >
               {projectsQuery.isLoading ? (
-                <SkeletonTable columns={6} rows={6} minWidth={980} />
+                <SkeletonTable columns={7} rows={6} minWidth={1240} />
               ) : projectsError ? (
                 <AdminDashboardEmptyState>{projectsError}</AdminDashboardEmptyState>
               ) : (
