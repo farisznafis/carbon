@@ -7,24 +7,25 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.Optional;
  
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.kct.jcredit.core_backend.enums.CompletenessStatus;
+import com.kct.jcredit.core_backend.enums.ReportReadiness;
 import com.kct.jcredit.core_backend.enums.EligibilityStatus;
-import com.kct.jcredit.core_backend.enums.PeriodStatus;
-import com.kct.jcredit.core_backend.dto.response.RowDetailActivityResponse;
-import com.kct.jcredit.core_backend.dto.response.RowSummaryActivityResponse;
-import com.kct.jcredit.core_backend.dto.response.PeriodSummaryResponse;
-import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
-import com.kct.jcredit.core_backend.dto.response.ProjectGroupResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002IndividualActivityDetailResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002IndividualActivityRowResponse;
+import com.kct.jcredit.core_backend.dto.response.CompanyActivityGroupResponse;
 
 import com.kct.jcredit.core_backend.service.EnR002IndividualActivityService;
 
@@ -47,6 +48,7 @@ import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepo
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
+import com.kct.jcredit.core_backend.repository.dynamodb.EnR002ApplicationConfirmationRepository;
 import com.kct.jcredit.core_backend.repository.dynamodb.MonitoringTableRecordSolarRepository;
 import com.kct.jcredit.core_backend.service.ProjectService;
 import com.kct.jcredit.core_backend.service.batch.calculator.SolarEmissionsCalculator;
@@ -55,9 +57,13 @@ import com.kct.jcredit.core_backend.service.batch.calculator.SolarEmissionsCalcu
 
 
 @Service
+@Transactional(readOnly = true)
 public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActivityService {
  
-    private static final ZoneId ZONE = ZoneId.of("Asia/Tokyo"); 
+    private static final ZoneId ZONE = ZoneId.of("Asia/Tokyo");
+ 
+    /** Address prefix check for the 日本国内で実施 requirement. */
+    private static final String JP_PREFECTURE_SUFFIX_PATTERN = ".*[都道府県].*";
  
     private final ProjectRepository projectRepository;
     private final ParticipatingProjectRepository participatingProjectRepository;
@@ -65,11 +71,8 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
     private final EnR002EquipmentRepository equipmentRepository;
     private final EnR002EquipmentFileRepository equipmentFileRepository;
     private final EnR002ReductionResultRepository reductionResultRepository;
-    private final EnR002ReductionResultTotalRepository reductionResultTotalRepository;
-    private final BatchProcessHistoryRepository batchProcessHistoryRepository;
-    private final MonitoringTableRecordSolarRepository monitoringTableRecordSolarRepository;
+    private final EnR002ApplicationConfirmationRepository applicationConfirmationRepository;
     private final ProjectService projectService;
-    private final SolarEmissionsCalculator solarEmissionsCalculator;
  
     public EnR002IndividualActivityServiceImpl(
             ProjectRepository projectRepository,
@@ -78,591 +81,381 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
             EnR002EquipmentRepository equipmentRepository,
             EnR002EquipmentFileRepository equipmentFileRepository,
             EnR002ReductionResultRepository reductionResultRepository,
-            EnR002ReductionResultTotalRepository reductionResultTotalRepository,
-            BatchProcessHistoryRepository batchProcessHistoryRepository,
-            MonitoringTableRecordSolarRepository monitoringTableRecordSolarRepository,
-            ProjectService projectService,
-            SolarEmissionsCalculator solarEmissionsCalculator) {
+            EnR002ApplicationConfirmationRepository applicationConfirmationRepository,
+            ProjectService projectService) {
         this.projectRepository = projectRepository;
         this.participatingProjectRepository = participatingProjectRepository;
         this.participatingCompanyRepository = participatingCompanyRepository;
         this.equipmentRepository = equipmentRepository;
         this.equipmentFileRepository = equipmentFileRepository;
         this.reductionResultRepository = reductionResultRepository;
-        this.reductionResultTotalRepository = reductionResultTotalRepository;
-        this.batchProcessHistoryRepository = batchProcessHistoryRepository;
-        this.monitoringTableRecordSolarRepository = monitoringTableRecordSolarRepository;
+        this.applicationConfirmationRepository = applicationConfirmationRepository;
         this.projectService = projectService;
-        this.solarEmissionsCalculator = solarEmissionsCalculator;
     }
  
-    // ============================================================
-    // 1. periods
-    // ============================================================
+    // ------------------------------------------------------------------
+    // Public API
+    // ------------------------------------------------------------------
  
     @Override
-    public List<PeriodSummaryResponse> getPeriods(String projectPublicId, String currentUserId) {
+    public List<EnR002IndividualActivityRowResponse> getRowsByProject(
+            String projectPublicId, String companyIdFilter, String currentUserId) {
+ 
         projectService.assertProject(projectPublicId, currentUserId);
         Project project = resolveProject(projectPublicId);
-        Integer projectId = project.getId();
  
-        List<EnR002ReductionResultTotal> closedTotals =
-                reductionResultTotalRepository.findByProjectIdOrderByEndTimeAsc(projectId);
+        List<ParticipatingProject> participations = companyIdFilter != null
+                ? participatingProjectRepository.findByProject_IdAndEquipment_Site_Company_CompanyId(
+                        project.getId(), companyIdFilter)
+                : participatingProjectRepository.findByProject_Id(project.getId());
  
-        List<PeriodSummaryResponse> result = new ArrayList<>();
-        for (EnR002ReductionResultTotal total : closedTotals) {
-            BatchProcessHistory job = batchProcessHistoryRepository.findById(total.getBatchId()).orElse(null);
- 
-            long rowCount = reductionResultRepository.countByProjectIdAndBatchId(projectId, total.getBatchId());
- 
-            result.add(new PeriodSummaryResponse(
-                    String.valueOf(total.getBatchId()),
-                    PeriodStatus.CLOSED,
-                    toLocalDate(total.getStartTime()),
-                    toLocalDate(total.getEndTime()),
-                    job != null ? toLocalDateTime(job.getEndTime()) : null,
-                    total.getEr(),
-                    rowCount
-            ));
-        }
- 
-        LocalDate runningStart = closedTotals.isEmpty()
-                ? equipmentRepository.findEarliestOperationDateByProjectId(projectId)
-                : toLocalDate(closedTotals.get(closedTotals.size() - 1).getEndTime()).plusDays(1);
- 
-        long runningRowCount = participatingProjectRepository.findByProject_Id(projectId).stream()
-                .filter(this::isActiveParticipation)
-                .count();
- 
-        if (runningRowCount > 0) {
-            result.add(new PeriodSummaryResponse(
-                    "current", PeriodStatus.RUNNING, runningStart, null, null, null, runningRowCount
-            ));
-        }
- 
-        return result;
+        return buildRows(project, participations);
     }
- 
-    // ============================================================
-    // 2. rows 
-    // ============================================================
  
     @Override
-    public PageResponse<RowSummaryActivityResponse> getRowsForPeriod(
-            String projectPublicId, String periodId, RowsQueryRequest request, String currentUserId) {
-        projectService.assertProject(projectPublicId, currentUserId);
-        Project project = resolveProject(projectPublicId);
-        Integer projectId = project.getId();
-        Pageable pageable = PageRequest.of(request.page(), request.size());
+    public List<CompanyActivityGroupResponse> getRowsByCompany(
+            String companyId, String projectPublicIdFilter, String currentUserId) {
  
-        if ("current".equals(periodId)) {
-            List<ParticipatingProject> participations = request.companyId() != null
-                    ? participatingProjectRepository.findByProject_IdAndEquipment_Site_Company_CompanyId(
-                            projectId, request.companyId())
-                    : participatingProjectRepository.findByProject_Id(projectId);
+        ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(companyId)
+                .orElseThrow(() -> new IllegalArgumentException("Company not found: " + companyId));
  
-            List<RowSummaryActivityResponse> rows = participations.stream()
-                    .filter(this::isActiveParticipation)
-                    .map(this::buildRunningRowSummary)
-                    .collect(Collectors.toList());
+        List<ParticipatingProject> participations =
+                participatingProjectRepository.findByEquipment_Site_Company_Id(company.getId());
  
-            return PageResponse.from(paginateInMemory(rows, pageable));
-        }
+        // Silently drop projects outside the current user's scope, and apply the optional filter.
+        Map<Project, List<ParticipatingProject>> byProject = participations.stream()
+                .filter(p -> matchesProjectFilter(p, projectPublicIdFilter))
+                .filter(p -> projectService.hasProjectAccess(p.getProject().getPublicId(), currentUserId))
+                .collect(Collectors.groupingBy(
+                        ParticipatingProject::getProject,
+                        LinkedHashMap::new,
+                        Collectors.toList()));
  
-        Integer batchId = Integer.valueOf(periodId); 
-        Page<EnR002ReductionResult> resultsPage = request.companyId() != null
-                ? reductionResultRepository.findByProjectIdAndBatchIdAndCompanyId(
-                        projectId, batchId, request.companyId(), pageable)
-                : reductionResultRepository.findByProjectIdAndBatchId(projectId, batchId, pageable);
- 
-        return PageResponse.from(resultsPage.map(this::buildClosedRowSummary));
+        return byProject.entrySet().stream()
+                .map(entry -> new CompanyActivityGroupResponse(
+                        entry.getKey().getPublicId(),
+                        entry.getKey().getProjectNumber(),
+                        buildRows(entry.getKey(), entry.getValue())))
+                .toList();
     }
- 
-    // ============================================================
-    // 3. rows per company
-    // ============================================================
  
     @Override
-    public List<ProjectGroupResponse> getRowsForCompany(
-            String companyPublicId, CompanyKobetsuKatsudoRequest request, String currentUserId) {
-        ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(companyPublicId)
-                .orElseThrow(() -> new IllegalArgumentException("Company tidak ditemukan: " + companyPublicId));
+    public EnR002IndividualActivityDetailResponse getRowDetail(Integer equipmentId, String currentUserId) {
+        EnR002Equipment equipment = equipmentRepository.findById(equipmentId)
+                .orElseThrow(() -> new IndividualActivityNotFoundException(equipmentId));
  
-        List<ParticipatingProject> participations = request.projectId() != null
-                ? participatingProjectRepository.findByCompanyIdAndProject_Id(
-                        company.getId(), resolveProject(request.projectId()).getId())
-                        .map(List::of).orElse(List.of())
-                : participatingProjectRepository.findByEquipment_Site_Company_Id(company.getId());
- 
-        Map<Integer, List<ParticipatingProject>> byProject = participations.stream()
-                .filter(p -> projectService.hasProjectAccess(
-                        String.valueOf(p.getProject().getId()), currentUserId))
-                .collect(Collectors.groupingBy(p -> p.getProject().getId()));
- 
-        List<ProjectGroupResponse> groups = new ArrayList<>();
-        for (Map.Entry<Integer, List<ParticipatingProject>> entry : byProject.entrySet()) {
-            Project project = entry.getValue().get(0).getProject();
-            List<PeriodSummaryResponse> periods = getPeriods(project.getPublicId(), currentUserId);
- 
-            List<ProjectGroupResponse.PeriodGroup> periodGroups = new ArrayList<>();
-            for (PeriodSummaryResponse period : periods) {
-                RowsQueryRequest rowsRequest = RowsQueryRequest.of(companyPublicId, 0, 1000);
-                PageResponse<RowSummaryActivityResponse> rows =
-                        getRowsForPeriod(project.getPublicId(), period.periodId(), rowsRequest, currentUserId);
- 
-                periodGroups.add(new ProjectGroupResponse.PeriodGroup(
-                        period.periodId(), period.periodStatus(),
-                        period.periodStartDate(), period.periodEndDate(),
-                        rows.items()
-                ));
-            }
- 
-            groups.add(new ProjectGroupResponse(project.getPublicId(), resolveProjectName(project), periodGroups));
-        }
-        return groups;
-    }
- 
-    // ============================================================
-    // 4. detail 1 row
-    // ============================================================
- 
-    @Override
-    public RowDetailActivityResponse getRowDetail(String rowKey, String currentUserId) {
-        DecodedRowKey decoded = decodeRowKey(rowKey);
- 
-        if (decoded.type() == PeriodStatus.CLOSED) {
-            EnR002ReductionResult result = reductionResultRepository.findById(decoded.id())
-                    .orElseThrow(() -> new RowNotFoundException(rowKey));
-            projectService.assertProject(String.valueOf(result.getProjectId()), currentUserId);
-            return buildClosedRowDetail(result);
-        }
- 
-        ParticipatingProject participation = participatingProjectRepository.findById(decoded.id())
-                .orElseThrow(() -> new RowNotFoundException(rowKey));
-        projectService.assertProject(String.valueOf(participation.getProject().getId()), currentUserId);
-        return buildRunningRowDetail(participation);
-    }
- 
-    // ============================================================
-    // Row builder -- CLOSED
-    // ============================================================
- 
-    private RowSummaryActivityResponse buildClosedRowSummary(EnR002ReductionResult result) {
-        EnR002Equipment equipment = equipmentRepository.findById(result.getEquipmentId())
-                .orElseThrow(() -> new IllegalStateException("Equipment hilang untuk reduction_result " + result.getId()));
-        Site site = equipment.getSite();
-        Project project = projectRepository.findById(result.getProjectId())
-        .orElseThrow(() -> new IllegalStateException("Project: " + result.getProjectId()));
-        ParticipatingCompany company = site.getCompany();
         ParticipatingProject participation = participatingProjectRepository
-                .findByEquipment_Site_IdAndProject_Id(site.getId(), project.getId())
-                .orElse(null);
+                .findByEquipment_Id(equipmentId).stream()
+                .findFirst()
+                .orElseThrow(() -> new IndividualActivityNotFoundException(equipmentId));
  
-        return new RowSummaryActivityResponse(
-                encodeRowKey(PeriodStatus.CLOSED, result.getId()),
-                PeriodStatus.CLOSED,
+        Project project = participation.getProject();
+        projectService.assertProject(project.getPublicId(), currentUserId);
+ 
+        ReportingWindow window = loadReportingWindow(project.getId(), equipment);
+ 
+        return new EnR002IndividualActivityDetailResponse(
+                equipment.getId(),
+                buildMemberInfo(equipment, participation),
+                buildEquipmentInfo(equipment),
+                buildAdditionalityInfo(equipment),
+                buildRegistrationRequirements(equipment, participation),
+                buildMonitoringInfo(window)
+        );
+    }
+ 
+    // ------------------------------------------------------------------
+    // Row assembly
+    // ------------------------------------------------------------------
+ 
+    /**
+     * Builds every row of one project in a fixed number of queries: the reduction
+     * results for the whole project are fetched once and grouped in memory, rather
+     * than queried per equipment.
+     */
+    private List<EnR002IndividualActivityRowResponse> buildRows(
+            Project project, List<ParticipatingProject> participations) {
+ 
+        if (participations.isEmpty()) {
+            return List.of();
+        }
+ 
+        Map<Integer, ReportingWindow> windowsByEquipment = loadReportingWindows(project.getId());
+ 
+        return participations.stream()
+                .map(participation -> toRow(participation, windowsByEquipment))
+                .toList();
+    }
+ 
+    private EnR002IndividualActivityRowResponse toRow(
+            ParticipatingProject participation, Map<Integer, ReportingWindow> windowsByEquipment) {
+ 
+        EnR002Equipment equipment = participation.getEquipment();
+        Site site = equipment.getSite();
+        ParticipatingCompany company = site.getCompany();
+        ReportingWindow window = windowsByEquipment.getOrDefault(equipment.getId(), ReportingWindow.empty());
+ 
+        return new EnR002IndividualActivityRowResponse(
+                equipment.getId(),
                 company != null ? company.getCompanyId() : null,
                 company != null ? company.getNameJa() : null,
                 site.getPublicId(),
                 formatAddress(site),
                 Boolean.TRUE.equals(equipment.getHasBattery()),
-                mapEligibility(participation),
-                computeCompletenessStatus(equipment, project, toLocalDateTime(result.getStartTime()), toLocalDateTime(result.getEndTime())),
-                result.getEr()
+                toEligibilityStatus(participation),
+                resolveReadiness(equipment, window),
+                null, // SOURCE MISSING: 事業者区分 — manual judgement // window.latest().map(EnR002ReductionResult::getElPv).orElse(null),
+                null // SOURCE MISSING: 事業者コード — manual judgement // window.latest().map(EnR002ReductionResult::getElPvr).orElse(null) 
         );
     }
  
-    private RowDetailActivityResponse buildClosedRowDetail(EnR002ReductionResult result) {
-        EnR002Equipment equipment = equipmentRepository.findById(result.getEquipmentId()).orElseThrow();
-        Site site = equipment.getSite();
-        Project project = projectRepository.findById(result.getProjectId())
-                .orElseThrow(() -> new IllegalStateException("Project: " + result.getProjectId()));
-        ParticipatingCompany company = site.getCompany();
-        ParticipatingProject participation = participatingProjectRepository
-                .findByEquipment_Site_IdAndProject_Id(site.getId(), project.getId())
-                .orElse(null);
+    // ------------------------------------------------------------------
+    // Reporting window — the two monitoring column blocks of 別紙10-1
+    // ------------------------------------------------------------------
  
-        LocalDateTime start = toLocalDateTime(result.getStartTime());
-        LocalDateTime end = toLocalDateTime(result.getEndTime());
-        List<EnR002MonitoringRecord> records = monitoringTableRecordSolarRepository
-        .findByRecordIdAndEquipmentIdAndDateRecordedBetween(
-                buildRecordId(site, project, equipment.getId()),
-                equipment.getId(),          
-                formatSk(start), formatSk(end));
- 
-        return new RowDetailActivityResponse(
-                encodeRowKey(PeriodStatus.CLOSED, result.getId()),
-                PeriodStatus.CLOSED,
-                false,
-                buildSiteInfo(site, company, participation),
-                buildEquipmentInfo(equipment),
-                buildMonitoringInfo(records),
-                buildComputedResult(result, null)
-        );
+    /**
+     * Loads, for every equipment in a project, the pair of reduction results that fill
+     * the 開始日 and 終了日 blocks: the last result already submitted to J-Credit and
+     * the most recent result overall.
+     */
+    private Map<Integer, ReportingWindow> loadReportingWindows(Integer projectId) {
+        return reductionResultRepository.findByProjectIdAndIsActiveTrue(projectId).stream()
+                .collect(Collectors.groupingBy(
+                        EnR002ReductionResult::getEquipmentId,
+                        Collectors.collectingAndThen(Collectors.toList(), ReportingWindow::from)));
     }
  
-    // ============================================================
-    // Row builder -- RUNNING
-    // ============================================================
+    private ReportingWindow loadReportingWindow(Integer projectId, EnR002Equipment equipment) {
+        return ReportingWindow.from(
+                reductionResultRepository.findByProjectIdAndEquipmentIdAndIsActiveTrue(
+                        projectId, equipment.getId()));
+    }
  
-    private RowSummaryActivityResponse buildRunningRowSummary(ParticipatingProject participation) {
-        EnR002Equipment equipment = participation.getEquipment();
-        Site site = equipment.getSite();
-        Project project = participation.getProject();
-        ParticipatingCompany company = site.getCompany();
+    /**
+     * The 開始日 / 終了日 pair for one equipment.
+     *
+     * @param lastReported the newest result already submitted to J-Credit; empty for a
+     *                     first-time report, in which case the 開始日 block is reported as zero
+     * @param latest       the newest result of any kind, filling the 終了日 block
+     */
+    private record ReportingWindow(
+            Optional<EnR002ReductionResult> lastReported,
+            Optional<EnR002ReductionResult> latest) {
  
-        LocalDateTime periodStart = resolveRunningPeriodStart(project.getId(), equipment);
-        List<EnR002MonitoringRecord> records = monitoringTableRecordSolarRepository
-                .findByRecordIdAndEquipmentIdAndDateRecordedAfter(
-                        buildRecordId(site, project, equipment.getId()), equipment.getId(),
-                        formatSk(periodStart));
+        private static final Comparator<EnR002ReductionResult> BY_BATCH =
+                Comparator.comparing(EnR002ReductionResult::getBatchId,
+                        Comparator.nullsFirst(Comparator.naturalOrder()));
  
-        BigDecimal liveEr = null;
-        if (!records.isEmpty()) {
-            EnR002ReductionResult preview = computeLivePreview(
-                    project.getId(), site.getId(), records);
-            liveEr = preview != null ? preview.getEr() : null;
+        static ReportingWindow from(List<EnR002ReductionResult> results) {
+            // SOURCE PENDING: `isReported` marks the batch result that was actually submitted
+            // to J-Credit. The column is not in the schema yet — until it is added, every row
+            // is treated as a first-time report and the 開始日 block stays zero.
+            Optional<EnR002ReductionResult> lastReported = results.stream()
+                    .filter(null) //.filter(r -> Boolean.TRUE.equals(r.getIsReported()))
+                    .max(BY_BATCH);
+ 
+            return new ReportingWindow(lastReported, results.stream().max(BY_BATCH));
         }
  
-        return new RowSummaryActivityResponse(
-                encodeRowKey(PeriodStatus.RUNNING, participation.getId()),
-                PeriodStatus.RUNNING,
+        static ReportingWindow empty() {
+            return new ReportingWindow(Optional.empty(), Optional.empty());
+        }
+    }
+ 
+    // ------------------------------------------------------------------
+    // Detail section builders
+    // ------------------------------------------------------------------
+ 
+    private EnR002IndividualActivityDetailResponse.MemberInfo buildMemberInfo(
+            EnR002Equipment equipment, ParticipatingProject participation) {
+ 
+        Site site = equipment.getSite();
+        ParticipatingCompany company = site.getCompany();
+ 
+        return new EnR002IndividualActivityDetailResponse.MemberInfo(
                 company != null ? company.getCompanyId() : null,
                 company != null ? company.getNameJa() : null,
                 site.getPublicId(),
                 formatAddress(site),
-                Boolean.TRUE.equals(equipment.getHasBattery()),
-                mapEligibility(participation),
-                computeCompletenessStatus(equipment, project, periodStart, null),
-                liveEr
+                // The 入会届 has no explicit application-date field, so the record's creation
+                // timestamp stands in for it. Confirm this is acceptable for reporting.
+                participation.getCreatedAt().toLocalDate(),
+                toEligibilityStatus(participation),
+                loadBusinessOperatorFlags(participation)
         );
     }
  
-    private RowDetailActivityResponse buildRunningRowDetail(ParticipatingProject participation) {
-        EnR002Equipment equipment = participation.getEquipment();
-        Site site = equipment.getSite();
-        Project project = participation.getProject();
-        ParticipatingCompany company = site.getCompany();
+    private EnR002IndividualActivityDetailResponse.BusinessOperatorFlags loadBusinessOperatorFlags(
+            ParticipatingProject participation) {
  
-        LocalDateTime periodStart = resolveRunningPeriodStart(project.getId(), equipment);
-        List<EnR002MonitoringRecord> records = monitoringTableRecordSolarRepository
-                .findByRecordIdAndEquipmentIdAndDateRecordedAfter(
-                        buildRecordId(site, project, equipment.getId()),
-                        equipment.getId(),
-                        formatSk(periodStart));
- 
-        EnR002ReductionResult preview = computeLivePreview(
-                project.getId(), site.getId(), records);
- 
-        return new RowDetailActivityResponse(
-                encodeRowKey(PeriodStatus.RUNNING, participation.getId()),
-                PeriodStatus.RUNNING,
-                true,
-                buildSiteInfo(site, company, participation),
-                buildEquipmentInfo(equipment),
-                buildMonitoringInfo(records),
-                buildComputedResult(null, new LivePreview(periodStart, preview))
-        );
-    }
- 
-    private LocalDateTime resolveRunningPeriodStart(Integer projectId, EnR002Equipment equipment) {
-        return reductionResultTotalRepository.findTopByProjectIdOrderByEndTimeDesc(projectId)
-                .map(t -> toLocalDateTime(t.getEndTime()).plusDays(1))
-                .orElse(equipment.getEquipmentOpDate().atStartOfDay());
-    }
- 
-    private String buildRecordId(Site site, Project project, Integer equipmentId) {
-        return site.getPublicId() + "#" + project.getPublicId() + "#" + equipmentId;
-    }
- 
-    // formatSk: 
-    private String formatSk(LocalDateTime dateTime) {
-        return dateTime.toString();
-    }
- 
-    private EnR002ReductionResult computeLivePreview(
-            Integer projectId, Integer siteId, List<EnR002MonitoringRecord> records) {
-        if (records.isEmpty()) {
-            return null;
-        }
-        try {
-            List<EnR002ReductionResult> results = solarEmissionsCalculator.calculateEmissions(
-                    projectId, siteId, null, records, LocalDate.now(ZONE));
-            return results.isEmpty() ? null : results.get(0);
-        } catch (Exception e) {
-            // TODO: fail logic
-            return null;
-        }
-    }
- 
-    // ============================================================
-    // Sub-builder
-    // ============================================================
- 
-    private RowDetailActivityResponse.SiteInfo buildSiteInfo(
-            Site site, ParticipatingCompany company, ParticipatingProject participation) {
-        return new RowDetailActivityResponse.SiteInfo(
-                site.getPublicId(),
-                company != null ? company.getCompanyId() : null,
-                company != null ? company.getNameJa() : null,
-                formatAddress(site),
-                participation != null ? participation.getCreatedAt().toLocalDate() : null
-                // TODO: createdAt as 入会申込日 
-        );
-    }
- 
-    private RowDetailActivityResponse.EquipmentInfo buildEquipmentInfo(EnR002Equipment equipment) {
-        String effectiveTo = equipmentRepository.findByPreviousEquipmentId(equipment.getId())
-                .map(next -> next.getChangeDate().toString())
+        return applicationConfirmationRepository.findByParticipationId(participation.getId())
+                .map(confirmation -> new EnR002IndividualActivityDetailResponse.BusinessOperatorFlags(
+                        confirmation.getIsKeidanrenParticipation(),
+                        // AMBIGUOUS: 省エネ法特定事業者 may map to isPeriodicReportTypeOne or to
+                        // isSubjectToPeriodicReport. Confirm with whoever designed the 入会届 form.
+                        confirmation.getIsPeriodicReportTypeOne(),
+                        confirmation.getIsEmitter(),
+                        confirmation.getEmitterCode()))
                 .orElse(null);
+    }
  
-        RowDetailActivityResponse.BatteryInfo battery = Boolean.TRUE.equals(equipment.getHasBattery())
-                ? new RowDetailActivityResponse.BatteryInfo(
-                        equipment.getBatteryMaker(),
-                        equipment.getBatteryModel(),
-                        equipment.getBatteryCapacity(),
-                        null, // TODO: 充電効率(%) -- no coloumn
-                        null  // TODO: 放電効率(%) -- no  coloumn
-                  )
-                : null;
+    private EnR002IndividualActivityDetailResponse.EquipmentInfo buildEquipmentInfo(EnR002Equipment equipment) {
+        List<EnR002IndividualActivityDetailResponse.FileRef> files =
+                equipmentFileRepository.findByEquipmentId(equipment.getId()).stream()
+                        .map(file -> new EnR002IndividualActivityDetailResponse.FileRef(
+                                file.getFileType().name(), file.getS3Key()))
+                        .toList();
  
-        return new RowDetailActivityResponse.EquipmentInfo(
-                String.valueOf(equipment.getId()),
-                equipment.getChangeDate() != null ? equipment.getChangeDate() : equipment.getEquipmentOpDate(),
-                effectiveTo,
-                equipment.getEquipmentOpDate(),
-                new RowDetailActivityResponse.PcsInfo(
+        return new EnR002IndividualActivityDetailResponse.EquipmentInfo(
+                new EnR002IndividualActivityDetailResponse.PcsInfo(
                         equipment.getPcsManufacturer(),
                         equipment.getPcsModel(),
                         // equipment.getPcsUnitCount(),
                         equipment.getDeviceNo(),
                         equipment.getPcsStandby(),
-                        null, // TODO: 分類B/C (meterClass) -- no coloumn
-                        null  // TODO: 最大誤差率(%) -- no oloumn
+                        null, // SOURCE MISSING: 分類B/C
+                        null  // SOURCE MISSING: 最大誤差率(%)
                 ),
                 equipment.getNominalMaxOutput(),
-                battery,
-                null, // TODO: ICT機器 消費電力(kW) -- no coloumn
-                new RowDetailActivityResponse.InvestmentInfo(
-                        equipment.getTotalInvestment(),
-                        Boolean.TRUE.equals(equipment.getHasSubsidy()),
-                        equipment.getSubsidyName(),
-                        equipment.getSubsidyAmount(),
-                        null, // TODO: 補助金交付団体 -- no coloumn
-                        equipment.getPreProjectUnitPrice()
-                ),
-                equipmentFileRepository.findByEquipmentId(equipment.getId()).stream()
-                        .map(f -> new RowDetailActivityResponse.FileRef(f.getFileType().name(), f.getS3Key()))
-                        .collect(Collectors.toList())
-        );
-    }
- 
-    private RowDetailActivityResponse.MonitoringInfo buildMonitoringInfo(List<EnR002MonitoringRecord> records) {
-        EnR002MonitoringRecord first = records.isEmpty() ? null : records.get(0);
-        EnR002MonitoringRecord last = records.isEmpty() ? null : records.get(records.size() - 1);
- 
-        List<RowDetailActivityResponse.FileRef> files = records.stream()
-                .flatMap(r -> List.of(
-                        new RowDetailActivityResponse.FileRef("ELPV_EVIDENCE", r.getElPvEvidence()),
-                        new RowDetailActivityResponse.FileRef("ELPVR_EVIDENCE", r.getElPvrEvidence())
-                ).stream())
-                .filter(f -> f.url() != null)
-                .collect(Collectors.toList());
- 
-        return new RowDetailActivityResponse.MonitoringInfo(
-                null, // TODO: samplingStatus -- no coloumn
-                null, // TODO: meteringPosition (A/B) -- no coloumn
-                null, // TODO: monitoring method -- no coloumn
-                first != null ? new RowDetailActivityResponse.MonitoringPoint(
-                        parseSk(first), first.getElPv(), first.getElPvr()) : null,
-                last != null ? new RowDetailActivityResponse.MonitoringPoint(
-                        parseSk(last), last.getElPv(), last.getElPvr()) : null,
+                buildBatteryInfo(equipment),
+                null, // SOURCE MISSING: ICT機器 消費電力(kW)
+                equipment.getEquipmentOpDate(),
+                equipment.getChangeDate() != null ? equipment.getChangeDate() : equipment.getEquipmentOpDate(),
+                resolveEffectiveTo(equipment),
                 files
         );
     }
  
-    private RowDetailActivityResponse.ComputedResult buildComputedResult(
-            EnR002ReductionResult closedResult, LivePreview livePreview) {
- 
-        EnR002ReductionResult effective = closedResult != null
-                ? closedResult
-                : (livePreview != null ? livePreview.result() : null);
- 
-        LocalDate start = closedResult != null
-                ? toLocalDate(closedResult.getStartTime())
-                : (livePreview != null ? livePreview.periodStart().toLocalDate() : null);
-        LocalDate end = closedResult != null ? toLocalDate(closedResult.getEndTime()) : null;
-        String endReason = closedResult != null ? "PROJECT_DEFAULT" : null;
-        // TODO: closedResult -- cant find endReason in DB, but API contract requires it. Confirm with API team.
- 
-        RowDetailActivityResponse.EmissionBreakdown breakdown = effective != null
-                ? new RowDetailActivityResponse.EmissionBreakdown(
-                        effective.getEmpj(), effective.getElpj(), effective.getEmbl(), effective.getElbl())
-                : null;
- 
-        return new RowDetailActivityResponse.ComputedResult(
-                new RowDetailActivityResponse.CertificationPeriod(start, end, endReason),
-                effective != null ? effective.getEr() : null,
-                breakdown,
-                new RowDetailActivityResponse.EligibilityChecklist(
-                        null, null, null // TODO: confirmation of eligibility checklist fields -- not found in DB
-                )
+    private EnR002IndividualActivityDetailResponse.BatteryInfo buildBatteryInfo(EnR002Equipment equipment) {
+        if (!Boolean.TRUE.equals(equipment.getHasBattery())) {
+            return null;
+        }
+        return new EnR002IndividualActivityDetailResponse.BatteryInfo(
+                equipment.getBatteryMaker(),
+                equipment.getBatteryModel(),
+                equipment.getBatteryCapacity(),
+                null, // SOURCE MISSING: 充電効率(%)
+                null  // SOURCE MISSING: 放電効率(%)
         );
     }
  
-    // ============================================================
-    // Helper methods
-    // ============================================================
+    private EnR002IndividualActivityDetailResponse.AdditionalityInfo buildAdditionalityInfo(EnR002Equipment equipment) {
+        return new EnR002IndividualActivityDetailResponse.AdditionalityInfo(
+                equipment.getTotalInvestment(),
+                equipment.getSubsidyAmount(),
+                equipment.getSubsidyName(),
+                null, // SOURCE MISSING: 補助金交付団体
+                equipment.getPreProjectUnitPrice()
+        );
+    }
+ 
+    private EnR002IndividualActivityDetailResponse.RegistrationRequirements buildRegistrationRequirements(
+            EnR002Equipment equipment, ParticipatingProject participation) {
+ 
+        LocalDate applicationDate = participation.getCreatedAt().toLocalDate();
+        LocalDate operationDate = equipment.getEquipmentOpDate();
+ 
+        return new EnR002IndividualActivityDetailResponse.RegistrationRequirements(
+                isJapaneseAddress(equipment.getSite()),
+                isWithinTwoYears(applicationDate, operationDate),
+                null, // SOURCE MISSING: 追加性を有する — manual judgement
+                null  // SOURCE MISSING: 削減活動の二重登録が無い — handled outside this system
+        );
+    }
+ 
+    private EnR002IndividualActivityDetailResponse.MonitoringInfo buildMonitoringInfo(ReportingWindow window) {
+        return new EnR002IndividualActivityDetailResponse.MonitoringInfo(
+                null, // SOURCE MISSING: サンプリング
+                null, // SOURCE MISSING: 発電電力量のモニタリング位置 (A/B)
+                null, // SOURCE MISSING: モニタリング方法 (発電量)
+                null, // SOURCE MISSING: モニタリング方法 (売電量)
+                toMonitoringPoint(window.lastReported()),
+                toMonitoringPoint(window.latest()),
+                // Monitoring evidence lives on the DynamoDB records rather than on the batch
+                // result, so it is not resolved here. Add a lookup once the UI needs the files.
+                List.of()
+        );
+    }
+ 
+    /**
+     * Maps a batch result to one monitoring column block. An empty result means the member
+     * has never been reported before, which 別紙10-1 expects to be filled with zeros.
+     */
+    private EnR002IndividualActivityDetailResponse.MonitoringPoint toMonitoringPoint(
+            Optional<EnR002ReductionResult> result) {
+ 
+        return result
+                .map(r -> new EnR002IndividualActivityDetailResponse.MonitoringPoint(
+                        r.getProcessingDate(),
+                        null, // SOURCE MISSING: 検針日 — only one date column exists on the record
+                        null, //r.getElPv(),
+                        null)) //r.getElPvr()))
+                .orElseGet(() -> new EnR002IndividualActivityDetailResponse.MonitoringPoint(
+                        null, null, BigDecimal.ZERO, BigDecimal.ZERO));
+    }
+ 
+    // ------------------------------------------------------------------
+    // Small helpers
+    // ------------------------------------------------------------------
  
     private Project resolveProject(String publicId) {
         return projectRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new IllegalArgumentException("Project tidak ditemukan: " + publicId));
+                .orElseThrow(() -> new IllegalArgumentException("Project not found: " + publicId));
     }
  
-    private boolean isActiveParticipation(ParticipatingProject p) {
-        // TODO: confrmation of what "active" means -- currently assuming status ACTIVE means active
-        return "ACTIVE".equals(p.getStatus());
+    private boolean matchesProjectFilter(ParticipatingProject participation, String projectPublicIdFilter) {
+        return projectPublicIdFilter == null
+                || projectPublicIdFilter.equals(participation.getProject().getPublicId());
     }
  
-    private LocalDate toLocalDate(Instant instant) {
-        return instant == null ? null : instant.atZone(ZONE).toLocalDate();
-    }
- 
-    private LocalDateTime toLocalDateTime(Instant instant) {
-        return instant == null ? null : instant.atZone(ZONE).toLocalDateTime();
-    }
- 
-    private LocalDateTime parseSk(EnR002MonitoringRecord record) {
-        return LocalDateTime.parse(record.getDateRecorded()); // TODO: samakan format parse dgn formatSk()
-    }
- 
-    private CompletenessStatus computeCompletenessStatus(
-        EnR002Equipment equipment, Project project, LocalDateTime start, LocalDateTime end) {
-    boolean hasRequiredFiles = equipmentFileRepository.countByEquipmentId(equipment.getId()) > 0;
-    boolean hasMonitoring = !(end == null
-            ? monitoringTableRecordSolarRepository.findByRecordIdAndEquipmentIdAndDateRecordedAfter(
-                    buildRecordId(equipment.getSite(), project, equipment.getId()),
-                    equipment.getId(), formatSk(start))
-            : monitoringTableRecordSolarRepository.findByRecordIdAndEquipmentIdAndDateRecordedBetween(
-                    buildRecordId(equipment.getSite(), project, equipment.getId()),
-                    equipment.getId(), formatSk(start), formatSk(end)))
-            .isEmpty();
-
-    if (hasRequiredFiles && hasMonitoring) {
-        return end == null ? CompletenessStatus.IN_PROGRESS : CompletenessStatus.COMPLETE;
-    }
-    return end == null ? CompletenessStatus.IN_PROGRESS : CompletenessStatus.MISSING_FILES;
-}
- 
-    private EligibilityStatus mapEligibility(ParticipatingProject participation) {
+    private EligibilityStatus toEligibilityStatus(ParticipatingProject participation) {
         if (participation == null || participation.getIsEligible() == null) {
             return EligibilityStatus.PENDING;
         }
         return participation.getIsEligible() ? EligibilityStatus.ELIGIBLE : EligibilityStatus.NOT_ELIGIBLE;
     }
  
+    private ReportReadiness resolveReadiness(EnR002Equipment equipment, ReportingWindow window) {
+        if (window.latest().isEmpty()) {
+            return ReportReadiness.NO_BATCH_RESULT;
+        }
+        // Readiness currently means "at least one evidence file exists". Tighten this once the
+        // required file types per equipment configuration are confirmed.
+        boolean hasEvidence = equipmentFileRepository.countByEquipmentId(equipment.getId()) > 0;
+        return hasEvidence ? ReportReadiness.READY : ReportReadiness.MISSING_EVIDENCE;
+    }
+ 
+    private LocalDate resolveEffectiveTo(EnR002Equipment equipment) {
+        // The successor version's change date is where this version stops being valid.
+        return equipmentRepository.findByPreviousEquipmentId(equipment.getId())
+                .map(EnR002Equipment::getChangeDate)
+                .orElse(null);
+    }
+ 
+    private boolean isJapaneseAddress(Site site) {
+        String prefecture = site.getPrefecture();
+        return prefecture != null && prefecture.matches(JP_PREFECTURE_SUFFIX_PATTERN);
+    }
+ 
+    private boolean isWithinTwoYears(LocalDate applicationDate, LocalDate operationDate) {
+        if (applicationDate == null || operationDate == null) {
+            return false;
+        }
+        return !operationDate.isBefore(applicationDate.minusYears(2));
+    }
+ 
     private String formatAddress(Site site) {
-        return String.join(" ",
-                nullToEmpty(site.getPrefecture()),
-                nullToEmpty(site.getMunicipality()),
-                nullToEmpty(site.getBlocknum()),
-                nullToEmpty(site.getBuildingName())
-        ).trim();
+        return java.util.stream.Stream.of(
+                        site.getPrefecture(), site.getMunicipality(),
+                        site.getBlocknum(), site.getBuildingName())
+                .filter(part -> part != null && !part.isBlank())
+                .collect(Collectors.joining(" "));
     }
  
-    private String nullToEmpty(String s) {
-        return s == null ? "" : s;
-    }
- 
-    private String resolveProjectName(Project project) {
-        return null; // TODO: field nama project belum dikonfirmasi (projectNumber? field lain?)
-    }
- 
-    private <T> Page<T> paginateInMemory(List<T> all, Pageable pageable) {
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), all.size());
-        List<T> content = start >= all.size() ? List.of() : all.subList(start, end);
-        return new PageImpl<>(content, pageable, all.size());
-    }
- 
-    // ============================================================
-    // rowKey encode/decode -- encode Integer, bukan String
-    // ============================================================
- 
-    private String encodeRowKey(PeriodStatus type, Integer id) {
-        String raw = type.name() + ":" + id;
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(raw.getBytes());
-    }
- 
-    private DecodedRowKey decodeRowKey(String rowKey) {
-        String raw;
-        try {
-            raw = new String(Base64.getUrlDecoder().decode(rowKey));
-        } catch (IllegalArgumentException e) {
-            throw new RowNotFoundException(rowKey);
-        }
-        String[] parts = raw.split(":", 2);
-        if (parts.length != 2) {
-            throw new RowNotFoundException(rowKey);
-        }
-        try {
-            return new DecodedRowKey(PeriodStatus.valueOf(parts[0]), Integer.valueOf(parts[1]));
-        } catch (NumberFormatException e) {
-            throw new RowNotFoundException(rowKey);
-        }
-    }
- 
-    private record DecodedRowKey(PeriodStatus type, Integer id) {}
-    private record LivePreview(LocalDateTime periodStart, EnR002ReductionResult result) {}
- 
-    // ============================================================
-    // helper classes for request/response
-    // ============================================================
- 
-    public record RowsQueryRequest(String companyId, int page, int size) {
-        private static final int DEFAULT_SIZE = 20;
-        private static final int MAX_SIZE = 100;
- 
-        public RowsQueryRequest {
-            if (page < 0) {
-                page = 0;
-            }
-            if (size <= 0) {
-                size = DEFAULT_SIZE;
-            }
-            if (size > MAX_SIZE) {
-                size = MAX_SIZE;
-            }
-        }
- 
-        public static RowsQueryRequest of(String companyId, Integer page, Integer size) {
-            return new RowsQueryRequest(
-                    companyId,
-                    page == null ? 0 : page,
-                    size == null ? DEFAULT_SIZE : size
-            );
-        }
-    }
- 
-    public record CompanyKobetsuKatsudoRequest(String projectId) {
-        public static CompanyKobetsuKatsudoRequest of(String projectId) {
-            return new CompanyKobetsuKatsudoRequest(projectId);
-        }
-    }
- 
-    public record PageResponse<T>(List<T> items, int page, int size, long totalItems) {
-        public static <T> PageResponse<T> from(Page<T> springPage) {
-            return new PageResponse<>(
-                    springPage.getContent(), springPage.getNumber(),
-                    springPage.getSize(), springPage.getTotalElements()
-            );
-        }
-    }
- 
-    public static class RowNotFoundException extends RuntimeException {
-        public RowNotFoundException(String rowKey) {
-            super("Row not found: " + rowKey);
+    /** Thrown when an equipment id does not resolve to a reportable row. */
+    public static class IndividualActivityNotFoundException extends RuntimeException {
+        public IndividualActivityNotFoundException(Integer equipmentId) {
+            super("No individual activity row found for equipment: " + equipmentId);
         }
     }
 }
- 
