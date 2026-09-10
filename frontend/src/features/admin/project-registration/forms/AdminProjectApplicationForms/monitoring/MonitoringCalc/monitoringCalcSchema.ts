@@ -31,7 +31,7 @@ export const monitoringCalcSchema = z
       .max(1000, VALIDATION_MESSAGES.MAX_CHARACTERS(1000))
       .optional(),
 
-    isUseSampling: z.enum(IS_USE_SAMPLING_OPTIONS, IS_USE_SAMPLING_VALIDATION),
+    isUseSampling: z.boolean({ message: '必須項目です' }),
 
     samplingMethod: z
       .string()
@@ -63,7 +63,7 @@ export const monitoringCalcSchema = z
       .max(2000, VALIDATION_MESSAGES.MAX_CHARACTERS(2000))
       .optional(),
 
-    sampleSizeAndFormulaImg: z.instanceof(File).optional(),
+    sampleSizeAndFormulaImg: z.string().optional(),
 
     dataAnalysis: z
       .string()
@@ -75,7 +75,7 @@ export const monitoringCalcSchema = z
       .max(2000, VALIDATION_MESSAGES.MAX_CHARACTERS(2000))
       .optional(),
 
-    implMethodSchedImg: z.instanceof(File).optional(),
+    implMethodSchedImg: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -95,8 +95,8 @@ export const monitoringCalcSchema = z
       ) {
         return false;
       }
-      // Conditional: sampling fields required if isUseSampling is not 'サンプリングを利用しない'
-      if (data.isUseSampling !== 'サンプリングを利用しない') {
+      // Conditional: the sampling fields are only required when sampling is used
+      if (data.isUseSampling === true) {
         if (
           !data.samplingMethod ||
           !data.samplingPurpose ||

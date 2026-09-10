@@ -7,7 +7,11 @@ import type {
   CreateAdminProjectResponse,
   CreateAdminProjectPayload,
   ProjectPlanAutofillResponse,
-  ProjectPlanApplicationResponse,
+  ProjectPlanBatchProgressResponse,
+  ProjectPlanFileResponse,
+  ProjectPlanFormResponse,
+  ProjectPlanProgressSummary,
+  ProjectPlanProgressResponse,
   ProjectStatus,
   UpdateProjectStatusPayload,
   UpdateProjectStatusResponse,
@@ -20,7 +24,12 @@ export type {
   CreateAdminProjectResponse,
   CreateAdminProjectPayload,
   ProjectPlanAutofillResponse,
-  ProjectPlanApplicationResponse,
+  ProjectPlanFormProgress,
+  ProjectPlanBatchProgressResponse,
+  ProjectPlanFormResponse,
+  ProjectPlanProgressSummary,
+  ProjectPlanFormStatus,
+  ProjectPlanProgressResponse,
   ProjectStatus,
   UpdateProjectStatusPayload,
   UpdateProjectStatusResponse,
@@ -126,32 +135,6 @@ export async function updateAdminProjectStatus(
   return json;
 }
 
-export async function getAdminProjectPlanApplication(
-  projectId: string,
-): Promise<ProjectPlanApplicationResponse> {
-  const response = await apiFetch(
-    `/projectplan/${encodeURIComponent(projectId)}/application`,
-    {
-      method: 'GET',
-    },
-  );
-  const { data: json, rawBody } = await parseJsonResponse<ProjectPlanApplicationResponse>(response);
-
-  if (!response.ok) {
-    const message =
-      json?.message ||
-      rawBody ||
-      `Failed to load project plan application: HTTP ${response.status}`;
-    throw new ApiError(message, {
-      status: response.status,
-      payload: json,
-      rawBody,
-    });
-  }
-
-  return json ?? {};
-}
-
 export async function getProjectPlanAutofillByProject(
   projectId: string,
 ): Promise<ProjectPlanAutofillResponse> {
@@ -201,28 +184,151 @@ export async function getProjectPlanAutofillDefaults(): Promise<ProjectPlanAutof
   return json ?? {};
 }
 
-export async function createAdminProjectPlanApplication<TPayload extends object>(
+// --- Registry-driven project plan pages (staging) ---
+//
+// One pair of endpoints serves every page. A page is persisted only when it
+// validates in full, so the progress endpoint can say exactly where an
+// operator who stopped partway should resume.
+
+function projectPlanFormPath(projectId: string, formSlug: string, methodology?: number) {
+  const base = `/projectplan/${encodeURIComponent(projectId)}/forms/${encodeURIComponent(formSlug)}`;
+  return methodology === undefined ? base : `${base}?methodology=${methodology}`;
+}
+
+export async function getProjectPlanForm(
   projectId: string,
-  payload: TPayload,
-): Promise<void> {
-  const response = await apiFetch(
-    `/projectplan/${encodeURIComponent(projectId)}/application`,
-    {
-      method: 'POST',
-      body: payload,
-    },
-  );
-  const { data: json, rawBody } = await parseJsonResponse<AdminMutationResponse>(response);
+  formSlug: string,
+  methodology?: number,
+): Promise<ProjectPlanFormResponse> {
+  const response = await apiFetch(projectPlanFormPath(projectId, formSlug, methodology), {
+    method: 'GET',
+  });
+  const { data: json, rawBody } = await parseJsonResponse<ProjectPlanFormResponse>(response);
 
   if (!response.ok) {
     const message =
-      json?.message ||
-      rawBody ||
-      `Failed to create project plan application: HTTP ${response.status}`;
+      json?.message || rawBody || `Failed to load project plan form: HTTP ${response.status}`;
     throw new ApiError(message, {
       status: response.status,
       payload: json,
       rawBody,
     });
   }
+
+  return json ?? {};
+}
+
+/**
+ * Saves one page. Rejects with an ApiError carrying field errors when the page
+ * is incomplete — nothing is stored in that case.
+ */
+export async function saveProjectPlanForm<TPayload extends object>(
+  projectId: string,
+  formSlug: string,
+  payload: TPayload,
+  methodology?: number,
+): Promise<ProjectPlanFormResponse> {
+  const response = await apiFetch(projectPlanFormPath(projectId, formSlug, methodology), {
+    method: 'PUT',
+    body: payload,
+  });
+  const { data: json, rawBody } = await parseJsonResponse<ProjectPlanFormResponse>(response);
+
+  if (!response.ok) {
+    const message =
+      json?.message || rawBody || `Failed to save project plan form: HTTP ${response.status}`;
+    throw new ApiError(message, {
+      status: response.status,
+      payload: json,
+      rawBody,
+    });
+  }
+
+  return json ?? {};
+}
+
+export async function getProjectPlanProgress(
+  projectId: string,
+): Promise<ProjectPlanProgressResponse> {
+  const response = await apiFetch(
+    `/projectplan/${encodeURIComponent(projectId)}/progress`,
+    {
+      method: 'GET',
+    },
+  );
+  const { data: json, rawBody } = await parseJsonResponse<ProjectPlanProgressResponse>(response);
+
+  if (!response.ok) {
+    const message =
+      json?.message || rawBody || `Failed to load project plan progress: HTTP ${response.status}`;
+    throw new ApiError(message, {
+      status: response.status,
+      payload: json,
+      rawBody,
+    });
+  }
+
+  return json ?? {};
+}
+
+/**
+ * Plan progress for several projects in one request.
+ *
+ * Used by list views: asking per row would be one call per project. Returns an
+ * empty map for an empty input rather than calling the API.
+ */
+export async function getProjectPlanProgressBatch(
+  projectIds: string[],
+): Promise<Map<string, ProjectPlanProgressSummary>> {
+  const ids = projectIds.filter(Boolean);
+  if (ids.length === 0) return new Map();
+
+  const query = ids.map((id) => encodeURIComponent(id)).join(',');
+  const response = await apiFetch(`/projectplan/progress?projectIds=${query}`, {
+    method: 'GET',
+  });
+  const { data: json, rawBody } =
+    await parseJsonResponse<ProjectPlanBatchProgressResponse>(response);
+
+  if (!response.ok) {
+    const message =
+      json?.message || rawBody || `Failed to load plan progress: HTTP ${response.status}`;
+    throw new ApiError(message, { status: response.status, payload: json, rawBody });
+  }
+
+  return new Map((json?.projects ?? []).map((p) => [p.projectId, p]));
+}
+
+/**
+ * Uploads one file against a plan page, provisionally.
+ *
+ * The returned s3Key belongs in the page body; the server promotes it to its
+ * permanent location only when that page saves and validates. A page that is
+ * never saved leaves the file to expire, so nothing has to be cleaned up here.
+ */
+export async function uploadProjectPlanFormFile(
+  projectId: string,
+  formSlug: string,
+  fieldName: string,
+  file: File,
+): Promise<{ s3Key: string; originalName: string }> {
+  const form = new FormData();
+  form.append('file', file);
+
+  const response = await apiFetch(
+    `/projectplan/${encodeURIComponent(projectId)}/forms/${encodeURIComponent(
+      formSlug,
+    )}/files?fieldName=${encodeURIComponent(fieldName)}`,
+    { method: 'POST', body: form },
+  );
+  const { data: json, rawBody } =
+    await parseJsonResponse<ProjectPlanFileResponse>(response);
+
+  if (!response.ok || !json?.s3Key) {
+    const message =
+      json?.message || rawBody || `Failed to upload file: HTTP ${response.status}`;
+    throw new ApiError(message, { status: response.status, payload: json, rawBody });
+  }
+
+  return { s3Key: json.s3Key, originalName: json.originalName ?? file.name };
 }

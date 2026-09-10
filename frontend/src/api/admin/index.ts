@@ -13,10 +13,10 @@ export {
 } from './pendingCompanies';
 export {
   createAdminProject,
-  createAdminProjectPlanApplication,
   getAdminProjectDetail,
-  getAdminProjectPlanApplication,
   getProjectPlanAutofillByProject,
+  getProjectPlanForm,
+  saveProjectPlanForm,
   getProjectPlanAutofillDefaults,
   updateAdminProject,
 } from './projects';
@@ -65,7 +65,7 @@ export type {
   SuspendCompanyPayload,
   SuspensionReasonCode,
   ProjectPlanAutofillResponse,
-  ProjectPlanApplicationResponse,
+  ProjectPlanFormResponse,
   UpdateAdminProjectPayload,
 } from './types';
 export type {

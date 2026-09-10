@@ -16,9 +16,11 @@ export const IS_DESIGNATED_EMITTERS = [
   { label: '特定排出者である', value: true },
   { label: '特定排出者でない', value: false },
 ];
+// 排出量の算定実施有無 — the backend stores this as a boolean, so the value is the
+// boolean and the Japanese stays in the label.
 export const MONITOR_CALC_BASELINES = [
-  { label: '排出量の算定を行う', value: '排出量の算定を行う' },
-  { label: '排出量の算定を行わない', value: '排出量の算定を行わない' },
+  { label: '排出量の算定を行う', value: true },
+  { label: '排出量の算定を行わない', value: false },
 ];
 export const MONITOR_CALC_POSTS = [
   { label: '排出量の算定を行う', value: '排出量の算定を行う' },
@@ -30,25 +32,27 @@ export const MONITOR_CALC_POSTS = [
       '排出量の算定を行う。ただし、排出量のモニタリングを省略し、影響度により排出量を評価する。',
   },
 ];
+// 再妥当性確認要否 — the backend stores this as a boolean, so the value is the
+// boolean and the Japanese stays in the label.
 export const IS_NEED_REVALIDATIONS = [
   {
     label: '必要（妥当性確認報告書を添付）',
-    value: '必要（妥当性確認報告書を添付）',
+    value: true,
   },
-  { label: '不要（確認書を添付）', value: '不要（確認書を添付）' },
+  { label: '不要（確認書を添付）', value: false },
 ];
+// 実施者削減活動有無 — the backend stores this as a boolean, so the value is the
+// boolean and the Japanese stays in the label.
 export const REDUCTION_ACTIVITY_INCLUDED = [
   {
     label:
       'カーボンニュートラル行動計画に参加する削減活動の実施者による削減活動を含む',
-    value:
-      'カーボンニュートラル行動計画に参加する削減活動の実施者による削減活動を含む',
+    value: true,
   },
   {
     label:
       'カーボンニュートラル行動計画に参加する削減活動の実施者による削減活動を含まない',
-    value:
-      'カーボンニュートラル行動計画に参加する削減活動の実施者による削減活動を含まない',
+    value: false,
   },
 ];
 export const IS_STANDARD_MONITORS = [
@@ -56,17 +60,23 @@ export const IS_STANDARD_MONITORS = [
   { label: '付随的排出量のモニタリング・算定は実施しない。', value: '付随的排出量のモニタリング・算定は実施しない。' },
   { label: 'その他（以下に確認方法をご記入ください。）', value: 'その他（以下に確認方法をご記入ください。）' },
 ];
+// サンプリングの利用有無 — the backend stores this as a boolean, so the value is the
+// boolean and the Japanese stays in the label.
 export const IS_USE_SAMPLING = [
-  { label: 'サンプリングを利用する', value: 'サンプリングを利用する' },
-  { label: 'サンプリングを利用しない', value: 'サンプリングを利用しない' },
+  { label: 'サンプリングを利用する', value: true },
+  { label: 'サンプリングを利用しない', value: false },
 ];
+// 類似制度へプロジェクトを登録有無 — the backend stores this as a boolean, so the value is the
+// boolean and the Japanese stays in the label.
 export const IS_SIMILAR = [
-  { label: '登録している', value: '登録している' },
-  { label: '登録していない', value: '登録していない' },
+  { label: '登録している', value: true },
+  { label: '登録していない', value: false },
 ];
+// 法令等の義務履行有無 — the backend stores this as a boolean, so the value is the
+// boolean and the Japanese stays in the label.
 export const IS_INDEPENDENT_OF_LEGALS = [
-  { label: '法令等の義務履行によるものである。', value: '法令等の義務履行によるものである。' },
-  { label: '法令等の義務履行によるものではない。', value: '法令等の義務履行によるものではない。' },
+  { label: '法令等の義務履行によるものである。', value: true },
+  { label: '法令等の義務履行によるものではない。', value: false },
 ];
 
 export type Select_Req = (typeof SELECTS_REQUIRED)[number];

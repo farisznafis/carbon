@@ -52,7 +52,7 @@ export const applicableMethodologySchema = z.object({
     .min(1, '必須項目です')
     .max(100, VALIDATION_MESSAGES.MAX_CHARACTERS(100)),
 
-  overviewDiagramBeforeAct: z.instanceof(File),
+  overviewDiagramBeforeAct: z.string().min(1, '必須項目です'),
 
   fuelTypeAfterImpl: z
     .string()
@@ -64,7 +64,7 @@ export const applicableMethodologySchema = z.object({
     .min(1, '必須項目です')
     .max(100, VALIDATION_MESSAGES.MAX_CHARACTERS(100)),
 
-  overviewDiagramAfterAct: z.instanceof(File),
+  overviewDiagramAfterAct: z.string().min(1, '必須項目です'),
 
   reductionActivityMethodCondition: z
     .string()

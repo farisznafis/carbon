@@ -2,7 +2,6 @@ import {
   REVIEWER_NAME_OPTIONS,
   REVIEWER_NAME_VALIDATION,
 } from '@/lib/constants/reviewer_names';
-import { IS_NEED_REVALIDATION_OPTIONS, IS_NEED_REVALIDATION_VALIDATION } from '@/lib/constants/select_types';
 import { z } from 'zod';
 
 export const projChangeInfoSchema = z.object({
@@ -24,7 +23,7 @@ export const projChangeInfoSchema = z.object({
     .min(1, '必須項目です')
     .max(1000, '文字列は最大1000文字までです'),
 
-  isNeedRevalidation: z.enum(IS_NEED_REVALIDATION_OPTIONS, IS_NEED_REVALIDATION_VALIDATION),
+  isNeedRevalidation: z.boolean({ message: '必須項目です' }),
 
   reviewerName: z.enum(REVIEWER_NAME_OPTIONS, REVIEWER_NAME_VALIDATION),
 

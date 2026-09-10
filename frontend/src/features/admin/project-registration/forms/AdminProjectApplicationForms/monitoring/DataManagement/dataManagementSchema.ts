@@ -1,5 +1,4 @@
 import {
-  IS_INDEPENDENT_OF_LEGAL_OPTIONS,
   IS_SIMILAR_OPTIONS,
   IS_SIMILAR_VALIDATION,
   SELECT_TYPE_REQUIRED_VALIDATION,
@@ -51,7 +50,7 @@ export const dataManagementSchema = z
       // .regex(REGEX_PATTERNS.JAPANESE_ONLY, REGEX_MESSAGES.JAPANESE_ONLY)
       .optional(),
 
-    isSimilar: z.enum(IS_SIMILAR_OPTIONS, IS_SIMILAR_VALIDATION),
+    isSimilar: z.boolean({ message: '必須項目です' }),
 
     similarSystemName: z
       .string()
@@ -64,15 +63,12 @@ export const dataManagementSchema = z
 
     similarSystemPeriodEnd: z.coerce.date().optional(),
 
-    isIndependentofLegal: z.enum(
-      IS_INDEPENDENT_OF_LEGAL_OPTIONS,
-      SELECT_TYPE_REQUIRED_VALIDATION,
-    ),
+    isIndependentofLegal: z.boolean({ message: '必須項目です' }),
   })
   .refine(
-    // make sure if isSimilar is 登録している, similarSystemName, similarSystemPeriodStart, similarSystemPeriodEnd are required
+    // 類似制度に登録している場合のみ、制度名と期間が要る
     (data) => {
-      if (data.isSimilar === '登録している') {
+      if (data.isSimilar === true) {
         return (
           data.similarSystemName &&
           data.similarSystemPeriodStart &&

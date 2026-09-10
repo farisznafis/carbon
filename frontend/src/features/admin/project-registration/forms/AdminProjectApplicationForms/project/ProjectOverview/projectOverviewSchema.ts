@@ -9,7 +9,6 @@ import {
 } from '@/lib/constants/prefectures';
 import { z } from 'zod';
 import {
-  REDUCTION_ACTIVITY_INCLUDED_OPTIONS,
   REDUCTION_ACTIVITY_INCLUDED_VALIDATION,
 } from '@/lib/constants/select_types';
 
@@ -77,10 +76,7 @@ export const projectOverviewSchema = z
       .regex(REGEX_PATTERNS.FULLWIDTH_ORI, REGEX_MESSAGES.FULLWIDTH_ORI)
       .optional(),
 
-    reductionActivityIncluded: z.enum(
-      REDUCTION_ACTIVITY_INCLUDED_OPTIONS,
-      REDUCTION_ACTIVITY_INCLUDED_VALIDATION,
-    ),
+    reductionActivityIncluded: z.boolean({ message: '必須項目です' }),
 
     cnActParticipationDetails: z
       .string()
@@ -149,7 +145,7 @@ export const projectOverviewSchema = z
       .min(1, '必須項目です')
       .max(1000, VALIDATION_MESSAGES.MAX_CHARACTERS(1000)),
     // .regex(REGEX_PATTERNS.JAPANESE_ENGLISH, REGEX_MESSAGES.JAPANESE_ENGLISH)
-    projectConceptDiagram: z.instanceof(File),
+    projectConceptDiagram: z.string().min(1, '必須項目です'),
 
     isMethodologyValid: z.boolean(),
 
@@ -171,11 +167,12 @@ export const projectOverviewSchema = z
   })
   .refine(
     (data) => {
-      // if reductionActivityIncluded is カーボンニュート..., cnActParticipationDetails is required
-      if (
-        data.reductionActivityIncluded ===
-        'カーボンニュートラル行動計画に参加する削減活動の実施者による削減活動を含まない'
-      ) {
+      // The confirmation method is what explains how participation was
+      // checked, so it is required exactly when such activities are included.
+      // This used to trigger on 含まない, the same branch as the rule below
+      // that requires the field to be empty — between them the page could not
+      // be saved at all once 含まない was picked.
+      if (data.reductionActivityIncluded === true) {
         return (
           data.cnActParticipationDetails &&
           data.cnActParticipationDetails.trim().length > 0
@@ -191,11 +188,8 @@ export const projectOverviewSchema = z
   )
   .refine(
     (data) => {
-      // if reductionActivityIncluded is カーボンニュート..., cnActParticipationDetails is required
-      if (
-        data.reductionActivityIncluded ===
-        'カーボンニュートラル行動計画に参加する削減活動の実施者による削減活動を含まない'
-      ) {
+      // Nothing to explain when no such activity is included.
+      if (data.reductionActivityIncluded === false) {
         return !data.cnActParticipationDetails;
       }
       // if isMethodologyValid is false, certTargetPeriodStart, certTargetPeriodEnd and certTargetPeriodYears are required

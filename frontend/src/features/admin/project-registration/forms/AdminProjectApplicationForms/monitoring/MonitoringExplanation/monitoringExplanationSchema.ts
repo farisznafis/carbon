@@ -18,5 +18,5 @@ export const monitoringExplanationSchema = z.object({
     .min(1, '必須項目です')
     .max(1000, VALIDATION_MESSAGES.MAX_CHARACTERS(1000)),
 
-  monitoringPointDiagram: z.instanceof(File),
+  monitoringPointDiagram: z.string().min(1, '必須項目です'),
 });
