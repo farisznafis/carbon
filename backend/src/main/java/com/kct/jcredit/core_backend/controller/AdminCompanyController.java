@@ -407,7 +407,7 @@ public class AdminCompanyController {
     }
 
     @PatchMapping("/operator-user/{userId}")
-    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).OPERATOR_USER_UPDATE.name()))")
+    @PreAuthorize("hasAnyRole('operator', 'admin')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "運用者ユーザー更新", description = "運用者ユーザーの基本情報と権限を更新します。")
     public ResponseEntity<UpdateUserResponse> updateOperatorUser(
@@ -416,9 +416,18 @@ public class AdminCompanyController {
             @RequestBody @Valid UpdateUserRequest request) {
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
         String username = jwtUtil.extractUsername(authentication.getCredentials().toString());
+        String role = jwtUtil.extractRole(authentication.getCredentials().toString());
+        Integer currentId = jwtUtil.extractUserId(authentication.getCredentials().toString());
+
+        boolean isAdmin = "admin".equalsIgnoreCase(role);
+        boolean isSelf = currentId.equals(userId);
+
+    if (!isAdmin && !isSelf) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+    }
         request.setUserId(userId);
 
-        UpdateUserResponse response = operatorUserService.updateUser(companyId, username, request);
+        UpdateUserResponse response = operatorUserService.updateUser(companyId, username, request, role, currentId);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
