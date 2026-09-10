@@ -13,8 +13,22 @@ import { isParticipationReviewForProject } from '@/features/admin/membership-rev
 import { usePagination } from '@/hooks/usePagination';
 
 const PROJECT_STATUS_PAGE_SIZE = 5;
+const DUMMY_REDUCTION_BARS = [
+  { value: 320, segments: 10 },
+  { value: 160, segments: 4 },
+  { value: 90, segments: 3 },
+  { value: 20, segments: 1 },
+  { value: 10, segments: 1, compact: true },
+] as const;
 const projectStatusGridColumns =
-  'minmax(240px,1.5fr) minmax(120px,.7fr) minmax(210px,1fr) minmax(96px,.45fr)';
+  'minmax(240px,1.45fr) minmax(120px,.65fr) minmax(260px,1.15fr) minmax(96px,.4fr)';
+
+type ProjectStatusRow = {
+  project: Project;
+  reductionValue: number;
+  reductionSegments: number;
+  compactReductionBar: boolean;
+};
 
 type AdminProjectStatusTableProps = {
   projects: Project[];
@@ -33,11 +47,6 @@ function getProjectStatusTone(status: string) {
   if (['REJECTED', '却下', 'ENDED', 'INACTIVE', '終了'].includes(normalizedStatus)) return 'danger' as const;
   if (['CREATED', '作成済み'].includes(normalizedStatus)) return 'neutral' as const;
   return 'warning' as const;
-}
-
-/** Formats the actual project reduction returned by the API. */
-function formatEmissionReduction(value: number | undefined) {
-  return value === undefined ? '—' : `${value.toLocaleString('ja-JP')} t-CO₂`;
 }
 
 /** Counts OPEN membership reviews that belong to one project. */
@@ -86,14 +95,28 @@ export function AdminProjectStatusTable({
     itemsPerPage: PROJECT_STATUS_PAGE_SIZE,
   });
 
-  const columns = useMemo<DataGridTableColumn<Project>[]>(
+  const projectRows = useMemo<ProjectStatusRow[]>(
+    () => paginatedItems.map((project, index) => {
+      const reductionBar = DUMMY_REDUCTION_BARS[index % DUMMY_REDUCTION_BARS.length];
+
+      return {
+        project,
+        reductionValue: reductionBar.value,
+        reductionSegments: reductionBar.segments,
+        compactReductionBar: 'compact' in reductionBar && reductionBar.compact,
+      };
+    }),
+    [paginatedItems],
+  );
+
+  const columns = useMemo<DataGridTableColumn<ProjectStatusRow>[]>(
     () => [
       {
         id: 'projectName',
         label: 'プロジェクト名',
         sortable: true,
-        sortValue: (project) => project.projectName,
-        render: (project) => (
+        sortValue: (row) => row.project.projectName,
+        render: ({ project }) => (
           <div className="min-w-0">
             <p className="truncate text-body font-bold text-foreground">
               {project.projectName}
@@ -110,8 +133,8 @@ export function AdminProjectStatusTable({
         id: 'status',
         label: 'ステータス',
         sortable: true,
-        sortValue: (project) => project.projectStatus,
-        render: (project) => (
+        sortValue: (row) => row.project.projectStatus,
+        render: ({ project }) => (
           <StatusBadge tone={getProjectStatusTone(project.projectStatus)}>
             {project.projectStatus || '—'}
           </StatusBadge>
@@ -121,22 +144,32 @@ export function AdminProjectStatusTable({
         id: 'reduction',
         label: '削減量（t-CO₂）',
         sortable: true,
-        sortValue: (project) => project.emissionReduction,
-        render: (project) => (
-          <div className="space-y-2">
-            <p className="text-body font-bold text-foreground">
-              {formatEmissionReduction(project.emissionReduction)}
-            </p>
-            <div className="flex h-5 items-center rounded-full bg-muted/60 px-3">
-              <span className="text-[11px] text-muted-foreground">グラフ準備中</span>
+        sortValue: (row) => row.reductionValue,
+        render: (row) => (
+          <div className="flex min-w-0 items-center gap-3">
+            <div
+              className="flex h-6 shrink-0 overflow-hidden"
+              aria-hidden="true"
+            >
+              {Array.from({ length: row.reductionSegments }, (_, segmentIndex) => (
+                <span
+                  key={segmentIndex}
+                  className={row.compactReductionBar
+                    ? 'w-1.5 bg-primary'
+                    : 'w-4 border-r border-primary-foreground/70 bg-primary last:border-r-0'}
+                />
+              ))}
             </div>
+            <span className="whitespace-nowrap text-body text-muted-foreground">
+              {row.reductionValue.toLocaleString('ja-JP')} t-CO₂
+            </span>
           </div>
         ),
       },
       {
         id: 'action',
         label: '操作',
-        render: (project) => (
+        render: ({ project }) => (
           <Button
             type="button"
             variant="outline"
@@ -171,11 +204,11 @@ export function AdminProjectStatusTable({
         </p>
       )}
       <DataGridTable
-        rows={paginatedItems}
+        rows={projectRows}
         columns={columns}
         gridTemplateColumns={projectStatusGridColumns}
-        minWidth={760}
-        getRowKey={(project) => project.id}
+        minWidth={820}
+        getRowKey={(row) => row.project.id}
         emptyMessage="登録済みのプロジェクトはありません。"
       />
       <PaginationControls

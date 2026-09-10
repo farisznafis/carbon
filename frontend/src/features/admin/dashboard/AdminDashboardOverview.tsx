@@ -76,8 +76,8 @@ function MetricCard({ label, value, description, icon, loading, error, onClick }
           )}
           <p className="mt-3 text-subtle text-foreground">{description}</p>
         </div>
-        <div className="flex flex-col items-end gap-4">
-          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-primary" aria-hidden="true">{icon}</span>
+        <div className="flex flex-col items-end gap-8">
+          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-primary" aria-hidden="true">{icon}</span>
           <Button type="button" variant="ghost" size="sm" onClick={onClick} className="px-1 text-primary-strong">確認 <ArrowRight /></Button>
         </div>
       </CardContent>
@@ -241,7 +241,7 @@ export function AdminDashboardOverview(props: Readonly<AdminDashboardOverviewPro
         <h1 className="text-foreground">ホーム</h1>
         <p className="text-body text-foreground">主要な登録状況と対応件数を確認できます。</p>
       </header>
-      <section aria-label="主要な登録状況" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section aria-label="主要な登録状況" className="grid gap-4 sm:grid-cols-2 min-[1100px]:grid-cols-4">
         <MetricCard label="プロジェクト" value={props.projects.length} description="登録済みプロジェクト" icon={<FolderKanban />} loading={props.projectsLoading} error={props.projectsError} onClick={props.onNavigateProjects} />
         <MetricCard label="参加企業" value={props.participatingCompanyTotal} description="稼働中・一時停止中" icon={<Building2 />} loading={props.participatingCompaniesLoading} error={props.participatingCompaniesError} onClick={props.onNavigateCompanies} />
         <MetricCard label="企業申請" value={props.applicationTotal} description="申請中・却下" icon={<ClipboardCheck />} loading={props.applicationsLoading} error={props.applicationsError} onClick={props.onNavigateCompanies} />
