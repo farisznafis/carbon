@@ -2,6 +2,7 @@
 import { getProjectDetails, type ProjectDetail as ProjectDetailApi } from '@/api/projects';
 import {
   getSiteEquipmentList,
+  getSiteProjectEquipment,
   type SiteProjectEquipment,
 } from '@/api/site';
 import {
@@ -494,7 +495,7 @@ const ProjectDetail = () => {
       try {
         setEquipmentLoading(true);
         setEquipmentError(null);
-        const rows = await getSiteEquipmentList(siteId);
+        const rows = await getSiteProjectEquipment(siteId, projectId);
         setEquipmentList(rows);
         setEquipmentHasFetched(true);
       } catch (error) {
@@ -511,7 +512,17 @@ const ProjectDetail = () => {
   }, [equipmentHasFetched, projectId, siteId, tab]);
 
   const monitoringRows: MonitoringDisplayRow[] =
-    recentMonitoring.length > 0 ? recentMonitoring : [fallbackMonitoringRow];
+  recentMonitoring.length > 0
+    ? recentMonitoring.map((row) => ({
+        ...row,
+        ELpv_value: row.ELpv_value ?? null,
+        ELpvr_value: row.ELpvr_value ?? null,
+        ELPJ_battery_value: row.ELPJ_battery_value ?? null,
+        ELPJ_accuracy: row.ELPJ_accuracy ?? null,
+        ELPJ_control_value: row.ELPJ_control_value ?? null,
+        changedBattery: row.changedBattery ?? null,
+      }))
+    : [fallbackMonitoringRow];
 
   if (loading) {
     return (
