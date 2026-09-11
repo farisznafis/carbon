@@ -20,7 +20,6 @@ export type HomeCapability = Readonly<{
 export type HomeFlowStep = Readonly<{
   title: string;
   description: string;
-  imageSrc: string;
 }>;
 
 export type HomeFaqItem = Readonly<{
@@ -43,6 +42,10 @@ export const HOME_SECTION_IDS = {
   methods: 'methods',
   faq: 'faq',
 } as const;
+
+/* =========================================================
+   CAPABILITIES
+   ========================================================= */
 
 export const HOME_CAPABILITIES: readonly HomeCapability[] = [
   {
@@ -79,32 +82,56 @@ export const HOME_CAPABILITIES: readonly HomeCapability[] = [
   },
 ];
 
+/* =========================================================
+   BUSINESS FLOW
+   ========================================================= */
+
 export const HOME_FLOW_STEPS: readonly HomeFlowStep[] = [
   {
-    title: '企業・拠点を登録',
+    title: '企業・拠点登録',
     description:
-      '企業情報を登録し、プロジェクトに参加する拠点と担当者の情報を準備します。',
-    imageSrc: '/assets/home/flow-emissions.png',
+      '企業情報と、プロジェクトに参加する拠点・担当者の情報を登録します。',
   },
   {
-    title: 'プロジェクト入会届を提出',
+    title: 'プロジェクト選択',
     description:
-      '参加するプロジェクトを選び、設備情報・確認資料・同意事項を入力して申請します。',
-    imageSrc: '/assets/home/flow-offset.png',
+      '参加可能なプロジェクトを確認し、自社・拠点に合うプロジェクトを選択します。',
   },
   {
-    title: '設備・モニタリングデータを登録',
+    title: '入会届',
     description:
-      '承認後、対象設備を選択して発電量や電力使用量などの実績データを登録します。',
-    imageSrc: '/assets/home/flow-offset.png',
+      '必要事項や同意事項を入力し、プロジェクトへの入会届を提出します。',
   },
   {
-    title: '削減量・申請状況を確認',
+    title: '設備登録',
     description:
-      'ダッシュボードで削減実績、申請状況、通知を確認し、必要な対応へ進みます。',
-    imageSrc: '/assets/home/flow-offset.png',
+      '承認後、プロジェクトの対象となる設備情報を登録します。',
+  },
+  {
+    title: '証憑管理',
+    description:
+      '設備や申請に必要な確認資料・証憑を登録し、まとめて管理します。',
+  },
+  {
+    title: 'モニタリング',
+    description:
+      '電力使用量や発電量など、設備に紐づく実績データを登録します。',
+  },
+  {
+    title: '削減量の可視化',
+    description:
+      '登録されたデータから削減実績やプロジェクトの進捗を確認します。',
+  },
+  {
+    title: '意思決定',
+    description:
+      '実績・進捗・対応状況を確認し、次に必要なアクションを判断します。',
   },
 ];
+
+/* =========================================================
+   FAQ
+   ========================================================= */
 
 export const HOME_FAQ_ITEMS: readonly HomeFaqItem[] = [
   {
@@ -126,6 +153,10 @@ export const HOME_FAQ_ITEMS: readonly HomeFaqItem[] = [
       '証憑は対象の設備や申請に紐づけて管理され、確認画面や履歴から必要な情報を参照できます。',
   },
 ];
+
+/* =========================================================
+   CONTACT / LEGAL
+   ========================================================= */
 
 export const HOME_CONTACT_DETAILS: HomeContactDetails = {
   postalCode: '〒100-0005',

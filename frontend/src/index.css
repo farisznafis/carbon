@@ -76,8 +76,8 @@ All colors MUST be HSL.
       ========================================================= */
 
     /* Brand / action */
-    --primary: var(--blue-500);
-    --primary-strong: var(--blue-600);
+    --primary: var(--blue-600);
+    --primary-strong: var(--blue-700);
     --primary-foreground: var(--neutral-0);
 
     /*

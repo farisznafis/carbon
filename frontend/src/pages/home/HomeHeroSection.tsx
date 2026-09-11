@@ -141,6 +141,7 @@ export function HomeHeroSection({
       aria-labelledby="home-hero-title"
       className="
         relative
+        min-h-[calc(100dvh-64px)]
         overflow-hidden
         bg-gradient-to-b
         from-card
@@ -182,7 +183,6 @@ export function HomeHeroSection({
           pt-14
           sm:px-6
           sm:pt-20
-          lg:min-h-[715px]
           lg:grid-cols-[minmax(0,0.82fr)_minmax(520px,1.18fr)]
           lg:gap-12
           lg:px-8
