@@ -101,9 +101,9 @@ export function DataGridTable<T>({
   };
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-card">
+    <div className='overflow-x-auto rounded-xl border border-border bg-card'>
       <div
-        className="grid gap-4 border-b border-border bg-muted/40 px-5 py-3 text-table font-bold text-foreground"
+        className='grid gap-4 border-b border-border bg-muted/40 px-5 py-3 text-table font-bold text-foreground'
         style={{ ...gridStyle, minWidth }}
       >
         {columns.map((column) => {
@@ -117,15 +117,15 @@ export function DataGridTable<T>({
           return column.sortable ? (
             <Button
               key={column.id}
-              type="button"
-              variant="ghost"
+              type='button'
+              variant='ghost'
               onClick={() => handleHeaderClick(column)}
               className={cn(
                 'h-auto justify-start gap-1 p-0 text-table font-bold text-foreground hover:bg-transparent hover:text-primary',
                 column.className,
               )}
             >
-              <span className="truncate">{column.label}</span>
+              <span className='truncate'>{column.label}</span>
               <SortIcon
                 className={cn(
                   'h-3.5 w-3.5 shrink-0',
@@ -134,7 +134,13 @@ export function DataGridTable<T>({
               />
             </Button>
           ) : (
-            <span key={column.id} className={column.className}>
+            <span
+              key={column.id}
+              className={cn(
+                'truncate text-table font-bold text-foreground',
+                column.className,
+              )}
+            >
               {column.label}
             </span>
           );
@@ -142,7 +148,7 @@ export function DataGridTable<T>({
       </div>
 
       {sortedRows.length === 0 ? (
-        <div className="px-5 py-8 text-center text-small text-foreground">
+        <div className='px-5 py-8 text-center text-small text-foreground'>
           {emptyMessage}
         </div>
       ) : (
@@ -160,7 +166,10 @@ export function DataGridTable<T>({
             style={{ ...gridStyle, minWidth }}
           >
             {columns.map((column) => (
-              <div key={column.id} className={cn('min-w-0', column.className)}>
+              <div
+                key={column.id}
+                className={cn('min-w-0', column.className)}
+              >
                 {column.render(row)}
               </div>
             ))}

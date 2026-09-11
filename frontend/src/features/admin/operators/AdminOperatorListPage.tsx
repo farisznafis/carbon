@@ -1,9 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Info, Plus, Search, X } from 'lucide-react';
 import type { AdminOperator } from '@/api/admin/operators';
@@ -23,9 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { paths } from '@/routes/paths';
 import { findCurrentAdminOperator } from './currentAdminOperator';
 import { getOperatorPermissionCategory } from './operatorPermissions';
-import {
-  OperatorPermissionFilter,
-} from './OperatorPermissionFilter';
+import { OperatorPermissionFilter } from './OperatorPermissionFilter';
 import {
   createAllOperatorPermissionFilterValue,
   matchesOperatorPermissionFilter,
@@ -62,14 +55,14 @@ function OperatorPermissionSummary({
 }: Readonly<{ permissions: string[]; configureHref?: string }>) {
   if (permissions.length === 0) {
     return (
-      <div className="space-y-1">
-        <p className="text-muted-foreground">権限なし</p>
+      <div className='space-y-1'>
+        <p className='text-muted-foreground'>権限なし</p>
         {configureHref ? (
           <Button
             asChild
-            variant="link"
-            size="sm"
-            className="h-auto justify-start px-0 py-0"
+            variant='link'
+            size='sm'
+            className='h-auto justify-start px-0 py-0'
           >
             <Link to={configureHref}>権限を設定 →</Link>
           </Button>
@@ -82,9 +75,9 @@ function OperatorPermissionSummary({
   const remainingCount = permissions.length - 1;
 
   return (
-    <div className="space-y-0.5">
-      <p className="font-medium text-foreground">{permissions.length}機能</p>
-      <p className="truncate text-xs text-muted-foreground">
+    <div className='space-y-0.5'>
+      <p className='font-medium text-foreground'>{permissions.length}機能</p>
+      <p className='truncate text-xs text-muted-foreground'>
         {primaryCategory}
         {remainingCount > 0 ? ` +${remainingCount}` : ''}
       </p>
@@ -93,27 +86,35 @@ function OperatorPermissionSummary({
 }
 
 /** Renders the dismissible informational note shown above the operator list. */
-function OperatorInformationNote({ onClose }: Readonly<{ onClose: () => void }>) {
+function OperatorInformationNote({
+  onClose,
+}: Readonly<{ onClose: () => void }>) {
   return (
-    <section className="flex items-start gap-3 rounded-lg border border-primary/25 bg-primary/5 p-4">
+    <section className='flex items-start gap-3 rounded-lg border border-primary/25 bg-primary/5 p-4'>
       {/* <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"> */}
-        <Info className="h-5 w-5 text-primary" aria-hidden="true" />
+      <Info
+        className='h-5 w-5 text-primary'
+        aria-hidden='true'
+      />
       {/* </span> */}
-      <div className="min-w-0 flex-1">
-        <h2 className="text-sm font-bold text-primary">補足</h2>
-        <p className="mt-1 text-sm leading-6 text-foreground">
+      <div className='min-w-0 flex-1'>
+        <h2 className='text-sm font-bold text-primary'>補足</h2>
+        <p className='mt-1 text-sm leading-6 text-foreground'>
           運用者は、管理者から付与された権限の範囲内で日常の運用業務を行います。
         </p>
       </div>
       <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="-mr-2 -mt-2 h-8 w-8 shrink-0"
+        type='button'
+        variant='ghost'
+        size='icon'
+        className='-mr-2 -mt-2 h-8 w-8 shrink-0'
         onClick={onClose}
-        aria-label="補足を閉じる"
+        aria-label='補足を閉じる'
       >
-        <X className="h-4 w-4" aria-hidden="true" />
+        <X
+          className='h-4 w-4'
+          aria-hidden='true'
+        />
       </Button>
     </section>
   );
@@ -122,20 +123,31 @@ function OperatorInformationNote({ onClose }: Readonly<{ onClose: () => void }>)
 /** Renders the Figma empty state while retaining the surrounding list surface. */
 function OperatorEmptyState({ onAdd }: Readonly<{ onAdd: () => void }>) {
   return (
-    <div className="flex flex-col items-center px-6 py-14 text-center sm:py-16">
-      <span className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-secondary text-primary">
-        <Plus className="h-8 w-8" aria-hidden="true" />
+    <div className='flex flex-col items-center px-6 py-14 text-center sm:py-16'>
+      <span className='flex h-[72px] w-[72px] items-center justify-center rounded-full bg-secondary text-primary'>
+        <Plus
+          className='h-8 w-8'
+          aria-hidden='true'
+        />
       </span>
-      <h3 className="mt-6 text-2xl font-bold text-foreground">
+      <h3 className='mt-6 text-2xl font-bold text-foreground'>
         運用者がまだ登録されていません
       </h3>
-      <p className="mt-3 max-w-lg text-base leading-7 text-muted-foreground">
+      <p className='mt-3 max-w-lg text-base leading-7 text-muted-foreground'>
         運用者は、管理者から付与された権限の範囲内で
-        <br className="hidden sm:block" />
+        <br className='hidden sm:block' />
         日常の運用業務を行うユーザーです。
       </p>
-      <Button type="button" size="md" className="mt-8" onClick={onAdd}>
-        <Plus className="h-4 w-4" aria-hidden="true" />
+      <Button
+        type='button'
+        size='md'
+        className='mt-8'
+        onClick={onAdd}
+      >
+        <Plus
+          className='h-4 w-4'
+          aria-hidden='true'
+        />
         最初の運用者を追加
       </Button>
     </div>
@@ -157,7 +169,7 @@ export default function AdminOperatorListPage() {
 
   const currentOperatorId = useMemo(
     () =>
-      user ? findCurrentAdminOperator(operators, user)?.id ?? null : null,
+      user ? (findCurrentAdminOperator(operators, user)?.id ?? null) : null,
     [operators, user],
   );
   const manageableOperators = useMemo(
@@ -172,7 +184,9 @@ export default function AdminOperatorListPage() {
     const normalizedSearch = searchTerm.trim().toLocaleLowerCase('ja');
 
     return manageableOperators.filter((operator) => {
-      if (!matchesOperatorPermissionFilter(operator.permissions, permissionFilter)) {
+      if (
+        !matchesOperatorPermissionFilter(operator.permissions, permissionFilter)
+      ) {
         return false;
       }
       if (!normalizedSearch) return true;
@@ -217,7 +231,7 @@ export default function AdminOperatorListPage() {
         sortable: true,
         sortValue: getOperatorDisplayName,
         render: (operator) => (
-          <span className="font-medium text-foreground">
+          <span className='font-medium text-foreground'>
             {getOperatorDisplayName(operator)}
           </span>
         ),
@@ -235,7 +249,7 @@ export default function AdminOperatorListPage() {
         sortable: true,
         sortValue: (operator) => operator.email,
         render: (operator) => (
-          <span className="break-all">{operator.email || '-'}</span>
+          <span className='break-all'>{operator.email || '-'}</span>
         ),
       },
       {
@@ -264,9 +278,9 @@ export default function AdminOperatorListPage() {
         label: '操作',
         render: (operator) => (
           <Button
-            type="button"
-            variant="outline"
-            size="sm"
+            type='button'
+            variant='outline'
+            size='sm'
             onClick={() => handleViewProfile(operator)}
           >
             プロファイル
@@ -278,24 +292,25 @@ export default function AdminOperatorListPage() {
   );
 
   return (
-    <main className="min-h-[calc(100dvh-5rem)] bg-background py-8">
+    <main className='min-h-[calc(100dvh-5rem)] bg-background py-8'>
       <div className={`${adminPageContainerClassName} space-y-4`}>
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <header className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
           <div>
-            <h1 className="text-3xl font-bold leading-tight text-foreground">
-              運用者管理
-            </h1>
-            <p className="mt-2 text-base leading-6 text-foreground">
+            <h1 className='text-foreground'>運用者管理</h1>
+            <p className='mt-2 text-base text-foreground'>
               運用業務を担当するユーザーのアカウントを管理します。
             </p>
           </div>
           <Button
-            type="button"
-            size="md"
-            className="self-start sm:self-auto"
+            type='button'
+            size='md'
+            className='self-start sm:self-auto'
             onClick={handleAddOperator}
           >
-            <Plus className="h-4 w-4" aria-hidden="true" />
+            <Plus
+              className='h-4 w-4'
+              aria-hidden='true'
+            />
             運用者を追加
           </Button>
         </header>
@@ -304,32 +319,32 @@ export default function AdminOperatorListPage() {
           <OperatorInformationNote onClose={() => setShowInformation(false)} />
         )}
 
-        <Card className="rounded-lg border-border bg-card shadow-app-sm">
-          <CardContent className="p-5 sm:p-7 lg:px-9">
-            <div className="flex items-baseline gap-4">
-              <h2 className="text-2xl font-bold text-foreground">運用者一覧</h2>
-              <span className="text-lg text-muted-foreground">
+        <Card className='rounded-lg border-border bg-card shadow-app-sm'>
+          <CardContent className='p-5 sm:p-7 lg:px-9'>
+            <div className='flex items-baseline gap-4'>
+              <h2 className='text-2xl font-bold text-foreground'>運用者一覧</h2>
+              <span className='text-lg text-muted-foreground'>
                 {manageableOperators.length}件
               </span>
             </div>
 
             {operatorsQuery.isLoading ? (
               <LoadingPanel
-                className="mt-6 min-h-72 border-0 bg-transparent"
-                message="運用者一覧を読み込んでいます"
+                className='mt-6 min-h-72 border-0 bg-transparent'
+                message='運用者一覧を読み込んでいます'
               />
             ) : operatorsQuery.isError ? (
               <div
-                role="alert"
-                className="mt-6 flex min-h-56 flex-col items-center justify-center gap-4 rounded-lg border border-border bg-background p-6 text-center"
+                role='alert'
+                className='mt-6 flex min-h-56 flex-col items-center justify-center gap-4 rounded-lg border border-border bg-background p-6 text-center'
               >
-                <p className="text-sm text-foreground">
+                <p className='text-sm text-foreground'>
                   運用者一覧を表示できませんでした。
                 </p>
                 <Button
-                  type="button"
-                  variant="outline"
-                  size="md"
+                  type='button'
+                  variant='outline'
+                  size='md'
                   onClick={() => operatorsQuery.refetch()}
                 >
                   再試行
@@ -337,24 +352,24 @@ export default function AdminOperatorListPage() {
               </div>
             ) : (
               <>
-                <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
+                <div className='mt-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
+                  <div className='flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto'>
                     <OperatorPermissionFilter
                       value={permissionFilter}
                       onChange={setPermissionFilter}
                     />
                   </div>
-                  <div className="relative w-full lg:max-w-md">
+                  <div className='relative w-full lg:max-w-md'>
                     <Search
-                      className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                      aria-hidden="true"
+                      className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground'
+                      aria-hidden='true'
                     />
                     <Input
-                      type="search"
+                      type='search'
                       value={searchTerm}
                       onChange={(event) => setSearchTerm(event.target.value)}
-                      placeholder="氏名・ユーザー名・メールアドレスで検索"
-                      className="h-10 bg-card pl-9"
+                      placeholder='氏名・ユーザー名・メールアドレスで検索'
+                      className='h-10 bg-card pl-9'
                     />
                   </div>
                 </div>
@@ -362,14 +377,14 @@ export default function AdminOperatorListPage() {
                 {manageableOperators.length === 0 ? (
                   <OperatorEmptyState onAdd={handleAddOperator} />
                 ) : (
-                  <div className="mt-6">
+                  <div className='mt-6'>
                     <DataGridTable
                       rows={pagination.paginatedItems}
                       columns={columns}
-                      gridTemplateColumns="1.1fr 1fr 1.6fr 0.7fr 1.2fr 104px"
+                      gridTemplateColumns='1.1fr 1fr 1.6fr 0.7fr 1.2fr 104px'
                       minWidth={1040}
                       getRowKey={(operator) => operator.id}
-                      emptyMessage="条件に一致する運用者はいません。"
+                      emptyMessage='条件に一致する運用者はいません。'
                     />
                     <PaginationControls
                       currentPage={pagination.currentPage}
@@ -379,7 +394,7 @@ export default function AdminOperatorListPage() {
                       rowsPerPageOptions={[10, 20, 50]}
                       onPageChange={pagination.goToPage}
                       onItemsPerPageChange={pagination.setItemsPerPage}
-                      className="mt-4"
+                      className='mt-4'
                     />
                   </div>
                 )}

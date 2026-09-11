@@ -297,9 +297,8 @@ export function AdminDashboardOverview(props: Readonly<AdminDashboardOverviewPro
   return (
     <div className="space-y-8">
       <header className="space-y-2">
-        <p className="text-small font-bold text-primary-strong">運用者ホーム</p>
         <h1 className="text-foreground">ホーム</h1>
-        <p className="text-body text-foreground">主要な登録状況と対応件数を確認できます。</p>
+        <p className="mt-2 text-base text-foreground">運用業務を担当するユーザーのアカウントを管理します。</p>
       </header>
       <section aria-label="主要な登録状況" className="grid gap-4 sm:grid-cols-2 min-[1100px]:grid-cols-4">
         <MetricCard label="プロジェクト" value={props.projects.length} description="登録済みプロジェクト" icon={<FolderKanban />} loading={props.projectsLoading} error={props.projectsError} onClick={props.onNavigateProjects} />
