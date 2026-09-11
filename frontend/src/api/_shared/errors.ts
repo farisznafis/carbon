@@ -21,6 +21,11 @@ export class ApiError extends Error {
   }
 }
 
+/** Detects a backend authorization denial without relying on translated messages. */
+export function isForbiddenApiError(error: unknown): error is ApiError {
+  return error instanceof ApiError && error.status === 403;
+}
+
 /** Detects an HTML error document so infrastructure pages are not exposed in UI. */
 function isHtmlErrorResponse(response: Response, rawBody: string): boolean {
   const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';

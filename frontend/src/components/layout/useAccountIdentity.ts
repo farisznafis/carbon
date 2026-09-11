@@ -1,11 +1,7 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect } from 'react';
 import { getProfile, type ProfileViewModel } from '@/api/profile';
 import type { User } from '@/api/users';
-import { findCurrentAdminOperator } from '@/features/admin/operators/currentAdminOperator';
-import {
-  useAdminOperatorsQuery,
-  useAdminOperatorProfileQuery,
-} from '@/hooks/admin/useAdminOperatorsQuery';
+import { useCurrentAdminOperatorProfileQuery } from '@/hooks/admin/useCurrentAdminOperatorProfileQuery';
 import { paths } from '@/routes/paths';
 import { useProfileStore } from '@/stores/ProfileStore';
 import { formatUserRole } from '@/utils/formatUserRole';
@@ -43,40 +39,16 @@ function getNameInitial(name: string): string | null {
   return Array.from(name.trim())[0] ?? null;
 }
 
-/** Rejects the legacy admin-login placeholder before building a detail endpoint. */
-function getSessionOperatorId(userId: string): string | null {
-  const normalizedId = userId.trim();
-  return normalizedId && normalizedId.toLocaleLowerCase('en-US') !== 'admin'
-    ? normalizedId
-    : null;
-}
-
 /** Resolves navbar identity and the role-aware profile destination for one session. */
 export function useAccountIdentity(user: User) {
   const profile = useProfileStore((state) => state.profile);
   const setProfile = useProfileStore((state) => state.setProfile);
   const isAdminAccount = user.role === 'admin';
-  const sessionOperatorId = getSessionOperatorId(user.id);
-  const needsOperatorIdResolution = isAdminAccount && !sessionOperatorId;
-  const adminOperatorsQuery = useAdminOperatorsQuery(
-    needsOperatorIdResolution,
-    'caller',
+  const adminOperatorProfileQuery = useCurrentAdminOperatorProfileQuery(
+    user,
+    isAdminAccount,
   );
-  const matchedOperator = useMemo(
-    () =>
-      findCurrentAdminOperator(
-        adminOperatorsQuery.data?.users ?? [],
-        user,
-      ),
-    [adminOperatorsQuery.data?.users, user],
-  );
-  const resolvedOperatorId = sessionOperatorId ?? matchedOperator?.id;
-  const adminOperatorProfileQuery = useAdminOperatorProfileQuery(
-    resolvedOperatorId,
-    isAdminAccount && Boolean(resolvedOperatorId),
-    'caller',
-  );
-  const currentAdminOperator = adminOperatorProfileQuery.data;
+  const currentAdminOperator = adminOperatorProfileQuery.operator;
 
   useEffect(() => {
     if (isAdminAccount || profile) return;
@@ -132,29 +104,14 @@ export function useAccountIdentity(user: User) {
       return paths.adminOperatorProfile(currentAdminOperator.id);
     }
 
-    if (resolvedOperatorId) {
-      const refreshedProfile = await adminOperatorProfileQuery.refetch();
-      return refreshedProfile.data
-        ? paths.adminOperatorProfile(refreshedProfile.data.id)
-        : null;
-    }
-
-    const refreshedOperators = await adminOperatorsQuery.refetch();
-    const refreshedOperator = findCurrentAdminOperator(
-      refreshedOperators.data?.users ?? [],
-      user,
-    );
-
+    const refreshedOperator = await adminOperatorProfileQuery.refetch();
     return refreshedOperator
       ? paths.adminOperatorProfile(refreshedOperator.id)
       : null;
   }, [
     adminOperatorProfileQuery,
-    adminOperatorsQuery,
     currentAdminOperator,
     isAdminAccount,
-    resolvedOperatorId,
-    user,
   ]);
 
   return {

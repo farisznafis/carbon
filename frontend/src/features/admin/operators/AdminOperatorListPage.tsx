@@ -25,6 +25,7 @@ import {
   type OperatorPermissionFilterValue,
 } from './operatorPermissionFilterModel';
 import { getOperatorRoleLabel } from './operatorRoles';
+import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 
 const EMPTY_OPERATORS: AdminOperator[] = [];
 
@@ -158,6 +159,7 @@ function OperatorEmptyState({ onAdd }: Readonly<{ onAdd: () => void }>) {
 export default function AdminOperatorListPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const permissions = useAdminPermissions();
   const operatorsQuery = useAdminOperatorsQuery();
   const operators = operatorsQuery.data?.users ?? EMPTY_OPERATORS;
   const [permissionFilter, setPermissionFilter] =
@@ -212,8 +214,8 @@ export default function AdminOperatorListPage() {
 
   /** Navigates every add-operator CTA to the same registration route. */
   const handleAddOperator = useCallback(
-    () => navigate(paths.adminOperatorRegister),
-    [navigate],
+    () => permissions.guardAction('OPERATOR_USER_CREATE', () => navigate(paths.adminOperatorRegister)),
+    [navigate, permissions],
   );
 
   /** Opens the admin-specific read-only profile for one operator. */

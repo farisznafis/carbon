@@ -17,6 +17,8 @@ import { CancelRequestHistoryTable } from '@/features/admin/dashboard/tables/Can
 import { formatBatchHistoryDateTime } from '@/features/admin/dashboard/tables/batchHistoryFormatters';
 import { CancelRequestStatusBadge } from '@/features/admin/monitoring/CancelRequestStatusBadge';
 import { formatCancelRequestDateTime } from '@/features/admin/monitoring/cancelRequestFormatters';
+import type { AdminOperatorPermissionCode } from '@/api/admin/operators';
+import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
 
 export type AdminHomePanel = 'cancel' | 'batch';
 
@@ -54,6 +56,12 @@ type AdminDashboardOverviewProps = {
   onOpenCancelRequest: (request: MonitoringCancelRequestListItem) => void;
   onNavigateProjects: () => void;
   onNavigateCompanies: () => void;
+  onNavigateApplications: () => void;
+  canReadProjects: boolean;
+  canReadCompanies: boolean;
+  canReviewCompanies: boolean;
+  canCancelMonitoring: boolean;
+  canReadBatchHistory: boolean;
 };
 
 type MetricCardProps = {
@@ -64,10 +72,12 @@ type MetricCardProps = {
   loading: boolean;
   error: string | null;
   onClick: () => void;
+  permissionGranted: boolean;
+  requiredPermission: AdminOperatorPermissionCode;
 };
 
 /** Renders one independently loading metric card. */
-function MetricCard({ label, value, description, icon, loading, error, onClick }: Readonly<MetricCardProps>) {
+function MetricCard({ label, value, description, icon, loading, error, onClick, permissionGranted, requiredPermission }: Readonly<MetricCardProps>) {
   if (loading) return <SkeletonMetricCard />;
 
   return (
@@ -75,7 +85,13 @@ function MetricCard({ label, value, description, icon, loading, error, onClick }
       <CardContent className="flex min-h-36 items-start justify-between gap-4 p-5">
         <div className="min-w-0">
           <p className="text-small text-foreground">{label}</p>
-          {error ? (
+          {!permissionGranted ? (
+            <PermissionDeniedNotice
+              permission={requiredPermission}
+              compact
+              className="mt-3"
+            />
+          ) : error ? (
             <p role="alert" className="mt-3 text-small text-destructive">取得できませんでした</p>
           ) : (
             <p className="mt-3 text-3xl font-bold leading-none text-foreground">
@@ -112,6 +128,7 @@ function CompanyApplicationSummary({
   rejectedError,
   onOpen,
   onOpenAll,
+  permissionGranted,
 }: Readonly<{
   pendingApplications: AdminCompanyListItem[];
   pendingTotal: number;
@@ -123,6 +140,7 @@ function CompanyApplicationSummary({
   rejectedError: string | null;
   onOpen: (company: AdminCompanyListItem) => void;
   onOpenAll: () => void;
+  permissionGranted: boolean;
 }>) {
   const recentApplications = [
     ...[...pendingApplications]
@@ -140,6 +158,10 @@ function CompanyApplicationSummary({
         <Button type="button" variant="ghost" size="sm" onClick={onOpenAll} className="text-primary-strong">すべて見る <ArrowRight /></Button>
       </CardHeader>
       <CardContent className="space-y-4">
+        {!permissionGranted ? (
+          <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
+        ) : (
+          <>
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-lg border border-border bg-muted/20 px-4 py-3">
             <p className="text-subtle text-muted-foreground">確認待ち</p>
@@ -189,18 +211,21 @@ function CompanyApplicationSummary({
         ) : !hasError ? (
           <p className="py-3 text-center text-small text-muted-foreground">企業申請の履歴はありません。</p>
         ) : null}
+          </>
+        )}
       </CardContent>
     </Card>
   );
 }
 
 /** Renders a compact cancellation summary that opens the full table dialog. */
-function CancelRequestSummary({ requests, loading, error, onOpenPanel, onOpenRequest }: Readonly<{
+function CancelRequestSummary({ requests, loading, error, onOpenPanel, onOpenRequest, permissionGranted }: Readonly<{
   requests: MonitoringCancelRequestListItem[];
   loading: boolean;
   error: string | null;
   onOpenPanel: () => void;
   onOpenRequest: (request: MonitoringCancelRequestListItem) => void;
+  permissionGranted: boolean;
 }>) {
   const pendingRequests = requests
     .filter((request) => request.status.toUpperCase() === 'PENDING')
@@ -213,7 +238,9 @@ function CancelRequestSummary({ requests, loading, error, onOpenPanel, onOpenReq
         <Button type="button" variant="ghost" size="sm" onClick={onOpenPanel} className="text-primary-strong">すべて見る <ArrowRight /></Button>
       </CardHeader>
       <CardContent>
-        {loading ? <SkeletonList items={2} /> : error ? (
+        {!permissionGranted ? (
+          <PermissionDeniedNotice permission="MONITORING_CANCEL" />
+        ) : loading ? <SkeletonList items={2} /> : error ? (
           <p role="alert" className="py-6 text-center text-small text-destructive">{error}</p>
         ) : pendingRequests.length === 0 ? (
           <p className="py-6 text-center text-small text-foreground">未処理の取消依頼はありません。</p>
@@ -236,11 +263,12 @@ function CancelRequestSummary({ requests, loading, error, onOpenPanel, onOpenReq
 }
 
 /** Renders the newest batch execution summary. */
-function BatchHistorySummary({ items, loading, error, onOpenPanel }: Readonly<{
+function BatchHistorySummary({ items, loading, error, onOpenPanel, permissionGranted }: Readonly<{
   items: BatchHistoryItem[];
   loading: boolean;
   error: string | null;
   onOpenPanel: () => void;
+  permissionGranted: boolean;
 }>) {
   const latestBatch = [...items].sort((left, right) => compareNewestFirst(left.start_time, right.start_time))[0];
 
@@ -251,7 +279,9 @@ function BatchHistorySummary({ items, loading, error, onOpenPanel }: Readonly<{
         <Button type="button" variant="ghost" size="sm" onClick={onOpenPanel} className="text-primary-strong">履歴を見る <ArrowRight /></Button>
       </CardHeader>
       <CardContent>
-        {loading ? <SkeletonList items={1} /> : error ? (
+        {!permissionGranted ? (
+          <PermissionDeniedNotice permission="MONITORING_BATCH_HISTORY_READ" />
+        ) : loading ? <SkeletonList items={1} /> : error ? (
           <p role="alert" className="py-6 text-center text-small text-destructive">{error}</p>
         ) : !latestBatch ? (
           <p className="py-6 text-center text-small text-foreground">バッチ処理履歴はありません。</p>
@@ -293,6 +323,11 @@ function MonitoringDialogs({ activePanel, onPanelChange, cancelRequests, cancelR
 /** Renders the Figma-aligned Admin Home from independent existing data sources. */
 export function AdminDashboardOverview(props: Readonly<AdminDashboardOverviewProps>) {
   const pendingCancelCount = props.cancelRequests.filter((request) => request.status.toUpperCase() === 'PENDING').length;
+  const permittedActivePanel =
+    (props.activePanel === 'cancel' && props.canCancelMonitoring) ||
+    (props.activePanel === 'batch' && props.canReadBatchHistory)
+      ? props.activePanel
+      : null;
 
   return (
     <div className="space-y-8">
@@ -301,17 +336,21 @@ export function AdminDashboardOverview(props: Readonly<AdminDashboardOverviewPro
         <p className="mt-2 text-base text-foreground">運用業務を担当するユーザーのアカウントを管理します。</p>
       </header>
       <section aria-label="主要な登録状況" className="grid gap-4 sm:grid-cols-2 min-[1100px]:grid-cols-4">
-        <MetricCard label="プロジェクト" value={props.projects.length} description="登録済みプロジェクト" icon={<FolderKanban />} loading={props.projectsLoading} error={props.projectsError} onClick={props.onNavigateProjects} />
-        <MetricCard label="参加企業" value={props.participatingCompanyTotal} description="稼働中・一時停止中" icon={<Building2 />} loading={props.participatingCompaniesLoading} error={props.participatingCompaniesError} onClick={props.onNavigateCompanies} />
-        <MetricCard label="企業申請" value={props.applicationTotal} description="申請中・却下" icon={<ClipboardCheck />} loading={props.applicationsLoading} error={props.applicationsError} onClick={props.onNavigateCompanies} />
-        <MetricCard label="取消依頼" value={pendingCancelCount} description="確認待ちの取消依頼" icon={<RotateCcw />} loading={props.cancelRequestsLoading} error={props.cancelRequestsError} onClick={() => props.onPanelChange('cancel')} />
+        <MetricCard label="プロジェクト" value={props.projects.length} description="登録済みプロジェクト" icon={<FolderKanban />} loading={props.canReadProjects && props.projectsLoading} error={props.projectsError} onClick={props.onNavigateProjects} permissionGranted={props.canReadProjects} requiredPermission="PROJECT_READ" />
+        <MetricCard label="参加企業" value={props.participatingCompanyTotal} description="稼働中・一時停止中" icon={<Building2 />} loading={props.canReadCompanies && props.participatingCompaniesLoading} error={props.participatingCompaniesError} onClick={props.onNavigateCompanies} permissionGranted={props.canReadCompanies} requiredPermission="PARTICIPATING_COMPANY_READ" />
+        <MetricCard label="企業申請" value={props.applicationTotal} description="申請中・却下" icon={<ClipboardCheck />} loading={props.canReviewCompanies && props.applicationsLoading} error={props.applicationsError} onClick={props.onNavigateApplications} permissionGranted={props.canReviewCompanies} requiredPermission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
+        <MetricCard label="取消依頼" value={pendingCancelCount} description="確認待ちの取消依頼" icon={<RotateCcw />} loading={props.canCancelMonitoring && props.cancelRequestsLoading} error={props.cancelRequestsError} onClick={() => props.onPanelChange('cancel')} permissionGranted={props.canCancelMonitoring} requiredPermission="MONITORING_CANCEL" />
       </section>
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.85fr)]">
         <div className="space-y-6">
           <Card className="rounded-xl border-border shadow-app-sm">
             <CardHeader><CardTitle>プロジェクト一覧</CardTitle><p className="text-subtle text-foreground">確認が必要な入会届が多いプロジェクトから表示します。</p></CardHeader>
             <CardContent>
-              <AdminProjectStatusTable projects={props.projects} openReviews={props.openMembershipReviews} projectsLoading={props.projectsLoading} projectsError={props.projectsError} openReviewsError={props.openMembershipReviewsError} onOpenMembership={props.onOpenProjectMembership} />
+              {props.canReadProjects ? (
+                <AdminProjectStatusTable projects={props.projects} openReviews={props.openMembershipReviews} projectsLoading={props.projectsLoading} projectsError={props.projectsError} openReviewsError={props.openMembershipReviewsError} onOpenMembership={props.onOpenProjectMembership} />
+              ) : (
+                <PermissionDeniedNotice permission="PROJECT_READ" />
+              )}
             </CardContent>
           </Card>
           <CompanyApplicationSummary
@@ -324,15 +363,16 @@ export function AdminDashboardOverview(props: Readonly<AdminDashboardOverviewPro
             rejectedLoading={props.rejectedApplicationsLoading}
             rejectedError={props.rejectedApplicationsError}
             onOpen={props.onOpenCompanyApplication}
-            onOpenAll={props.onNavigateCompanies}
+            onOpenAll={props.onNavigateApplications}
+            permissionGranted={props.canReviewCompanies}
           />
         </div>
         <div className="space-y-6">
-          <CancelRequestSummary requests={props.cancelRequests} loading={props.cancelRequestsLoading} error={props.cancelRequestsError} onOpenPanel={() => props.onPanelChange('cancel')} onOpenRequest={props.onOpenCancelRequest} />
-          <BatchHistorySummary items={props.batchHistory} loading={props.batchHistoryLoading} error={props.batchHistoryError} onOpenPanel={() => props.onPanelChange('batch')} />
+          <CancelRequestSummary requests={props.cancelRequests} loading={props.cancelRequestsLoading} error={props.cancelRequestsError} onOpenPanel={() => props.onPanelChange('cancel')} onOpenRequest={props.onOpenCancelRequest} permissionGranted={props.canCancelMonitoring} />
+          <BatchHistorySummary items={props.batchHistory} loading={props.batchHistoryLoading} error={props.batchHistoryError} onOpenPanel={() => props.onPanelChange('batch')} permissionGranted={props.canReadBatchHistory} />
         </div>
       </div>
-      <MonitoringDialogs activePanel={props.activePanel} onPanelChange={props.onPanelChange} cancelRequests={props.cancelRequests} cancelRequestsLoading={props.cancelRequestsLoading} cancelRequestsError={props.cancelRequestsError} batchHistory={props.batchHistory} batchHistoryPagination={props.batchHistoryPagination} batchHistoryLoading={props.batchHistoryLoading} batchHistoryError={props.batchHistoryError} onOpenCancelRequest={props.onOpenCancelRequest} />
+      <MonitoringDialogs activePanel={permittedActivePanel} onPanelChange={props.onPanelChange} cancelRequests={props.cancelRequests} cancelRequestsLoading={props.cancelRequestsLoading} cancelRequestsError={props.cancelRequestsError} batchHistory={props.batchHistory} batchHistoryPagination={props.batchHistoryPagination} batchHistoryLoading={props.batchHistoryLoading} batchHistoryError={props.batchHistoryError} onOpenCancelRequest={props.onOpenCancelRequest} />
     </div>
   );
 }

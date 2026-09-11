@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { paths } from '@/routes/paths';
+import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 
 type AdminProjectDetailLayoutProps = {
   projectId: string;
@@ -44,9 +45,13 @@ export function AdminProjectDetailLayout({
   children,
 }: Readonly<AdminProjectDetailLayoutProps>) {
   const navigate = useNavigate();
+  const permissions = useAdminPermissions();
 
   /** Opens the existing project edit flow from either read-only project page. */
-  const handleEdit = () => navigate(paths.adminProjectEdit(projectId));
+  const handleEdit = () =>
+    permissions.guardAction('PROJECT_UPDATE', () =>
+      navigate(paths.adminProjectEdit(projectId)),
+    );
 
   return (
     <FormStandalonePage>

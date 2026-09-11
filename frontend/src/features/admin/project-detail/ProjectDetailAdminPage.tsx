@@ -9,6 +9,7 @@ import {
   UsersRound,
 } from 'lucide-react';
 import type { AdminProjectDetail } from '@/api/admin/projects';
+import { isForbiddenApiError } from '@/api/_shared/errors';
 import type { MonitoringRecordListItem } from '@/api/monitoring';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 import { PageSkeleton, SkeletonCard } from '@/components/feedback/loading';
@@ -24,6 +25,8 @@ import {
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { ProjectMonitoringTable } from '@/features/admin/monitoring/ProjectMonitoringTable';
+import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
+import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
 import {
   useAdminProjectDetailQuery,
   useAdminProjectPlanProgressQuery,
@@ -293,6 +296,7 @@ export default function ProjectDetailAdmin() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const permissions = useAdminPermissions();
   const projectQuery = useAdminProjectDetailQuery(projectId);
   const progressQuery = useAdminProjectPlanProgressQuery(projectId);
   const project = projectQuery.data;
@@ -332,6 +336,18 @@ export default function ProjectDetailAdmin() {
           ))}
         </div>
       </PageSkeleton>
+    );
+  }
+
+  if (isForbiddenApiError(projectQuery.error)) {
+    return (
+      <main className="mx-auto w-full max-w-admin px-4 py-10 sm:px-6">
+        <header className="mb-6">
+          <h1 className="text-3xl font-bold text-foreground">プロジェクト詳細</h1>
+          <p className="mt-2 text-muted-foreground">登録済みプロジェクトの情報を確認します。</p>
+        </header>
+        <PermissionDeniedNotice permission="PROJECT_READ" />
+      </main>
     );
   }
 
@@ -407,7 +423,11 @@ export default function ProjectDetailAdmin() {
           description="計画書の入力内容・関連資料を確認します。"
           icon={<FileText className="h-5 w-5" />}
           ariaLabel="プロジェクト計画書を開く"
-          onClick={() => navigate(paths.adminProjectPlan(projectId))}
+          onClick={() =>
+            permissions.guardAction('PROJECT_READ', () =>
+              navigate(paths.adminProjectPlan(projectId)),
+            )
+          }
         />
         <ProjectNavigationCard
           title="モニタリングデータ報告書"
@@ -415,7 +435,9 @@ export default function ProjectDetailAdmin() {
           icon={<BarChart3 className="h-5 w-5" />}
           ariaLabel="モニタリングデータ報告書を開く"
           onClick={() =>
-            navigate(paths.adminProjectMonitoringReport(projectId))
+            permissions.guardAction('MONITORING_READ', () =>
+              navigate(paths.adminProjectMonitoringReport(projectId)),
+            )
           }
         />
         <ProjectNavigationCard
@@ -423,7 +445,12 @@ export default function ProjectDetailAdmin() {
           description="このプロジェクトへの入会申請と審査状況を確認します。"
           icon={<UsersRound className="h-5 w-5" />}
           ariaLabel="入会届一覧を開く"
-          onClick={() => navigate(paths.adminProjectMembership(projectId))}
+          onClick={() =>
+            permissions.guardAction(
+              'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+              () => navigate(paths.adminProjectMembership(projectId)),
+            )
+          }
         />
       </section>
 
@@ -435,7 +462,9 @@ export default function ProjectDetailAdmin() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ErrorBoundary
+          {!permissions.hasPermission('MONITORING_READ') ? (
+            <PermissionDeniedNotice permission="MONITORING_READ" />
+          ) : <ErrorBoundary
             fallback={({ resetErrorBoundary }) => (
               <div
                 role="alert"
@@ -465,7 +494,7 @@ export default function ProjectDetailAdmin() {
               initialLimit={monitoringLimit}
               onViewDetail={openMonitoringDetail}
             />
-          </ErrorBoundary>
+          </ErrorBoundary>}
         </CardContent>
       </Card>
     </AdminProjectDetailLayout>

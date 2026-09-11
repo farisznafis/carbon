@@ -5,7 +5,7 @@ import {
   useParams,
 } from 'react-router-dom';
 import { useRef } from 'react';
-import { ApiError } from '@/api/_shared/errors';
+import { ApiError, isForbiddenApiError } from '@/api/_shared/errors';
 import type {
   AdminCompanyListItem,
   CompanyStatus,
@@ -70,6 +70,8 @@ import { usePagination } from '@/hooks/usePagination';
 import { paths } from '@/routes/paths';
 import { getAdminRouteFromLegacyTab } from '@/features/admin/navigation/adminNavigationConfig';
 import { Plus, Search } from 'lucide-react';
+import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
+import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
 
 type AdminDashboardTabValue =
   | 'overview'
@@ -86,6 +88,7 @@ const APPLICATION_STATUSES: CompanyStatus[] = ['PENDING', 'REJECTED'];
 const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
 const HOME_APPLICATION_SUMMARY_LIMIT = 3;
 const ALL_PROJECT_FILTER = 'ALL';
+const FORBIDDEN_SECTION_ERROR = '__FORBIDDEN_SECTION__';
 
 const DEFAULT_PAGINATION: Pagination = {
   page: 1,
@@ -147,6 +150,7 @@ function isStringRecord(value: unknown): value is Record<string, string> {
 }
 
 function getApiMessage(error: unknown, fallback: string) {
+  if (isForbiddenApiError(error)) return FORBIDDEN_SECTION_ERROR;
   if (error instanceof ApiError) return error.message || fallback;
   if (error instanceof Error) return error.message || fallback;
   return fallback;
@@ -221,7 +225,21 @@ const AdminDashboard = () => {
   const { applicationId } = useParams();
   const { toast } = useToast();
   const { user } = useAuth();
-  const projectsQuery = useProjectsQuery();
+  const adminPermissions = useAdminPermissions();
+  const canReadProjects = adminPermissions.hasPermission('PROJECT_READ');
+  const canReadCompanies = adminPermissions.hasPermission(
+    'PARTICIPATING_COMPANY_READ',
+  );
+  const canReviewCompanies = adminPermissions.hasPermission(
+    'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+  );
+  const canCancelMonitoring = adminPermissions.hasPermission(
+    'MONITORING_CANCEL',
+  );
+  const canReadBatchHistory = adminPermissions.hasPermission(
+    'MONITORING_BATCH_HISTORY_READ',
+  );
+  const projectsQuery = useProjectsQuery(canReadProjects);
   const projects = useMemo(() => projectsQuery.data ?? [], [projectsQuery.data]);
 
   const [applicationCompaniesLoading, setApplicationCompaniesLoading] = useState(true);
@@ -332,6 +350,13 @@ const AdminDashboard = () => {
 
   /** Reloads the application-company list independently from participating companies. */
   const reloadApplicationCompanies = useCallback(async () => {
+    if (!canReviewCompanies) {
+      setApplicationCompanies([]);
+      setApplicationCompaniesLoading(false);
+      setApplicationCompaniesError(null);
+      return;
+    }
+
     setApplicationCompaniesLoading(true);
     setApplicationCompaniesError(null);
 
@@ -352,10 +377,17 @@ const AdminDashboard = () => {
     } finally {
       setApplicationCompaniesLoading(false);
     }
-  }, [applicationPage, companyLimit]);
+  }, [applicationPage, canReviewCompanies, companyLimit]);
 
   /** Reloads participating companies without blocking application reviews. */
   const reloadParticipatingCompanies = useCallback(async () => {
+    if (!canReadCompanies) {
+      setParticipatingCompanies([]);
+      setParticipatingCompaniesLoading(false);
+      setParticipatingCompaniesError(null);
+      return;
+    }
+
     setParticipatingCompaniesLoading(true);
     setParticipatingCompaniesError(null);
 
@@ -374,7 +406,7 @@ const AdminDashboard = () => {
     } finally {
       setParticipatingCompaniesLoading(false);
     }
-  }, [companyLimit, participatingPage]);
+  }, [canReadCompanies, companyLimit, participatingPage]);
 
   /** Refreshes both company groups after a company mutation. */
   const reloadCompanyLists = useCallback(async () => {
@@ -386,6 +418,14 @@ const AdminDashboard = () => {
 
   /** Loads the latest PENDING applications and their actual API total for Home. */
   const reloadHomePendingApplications = useCallback(async () => {
+    if (!canReviewCompanies) {
+      setHomePendingApplications([]);
+      setHomePendingApplicationTotal(0);
+      setHomePendingApplicationsLoading(false);
+      setHomePendingApplicationsError(null);
+      return;
+    }
+
     setHomePendingApplicationsLoading(true);
     setHomePendingApplicationsError(null);
     setHomePendingApplications([]);
@@ -408,10 +448,18 @@ const AdminDashboard = () => {
     } finally {
       setHomePendingApplicationsLoading(false);
     }
-  }, []);
+  }, [canReviewCompanies]);
 
   /** Loads the latest REJECTED applications and their actual API total for Home. */
   const reloadHomeRejectedApplications = useCallback(async () => {
+    if (!canReviewCompanies) {
+      setHomeRejectedApplications([]);
+      setHomeRejectedApplicationTotal(0);
+      setHomeRejectedApplicationsLoading(false);
+      setHomeRejectedApplicationsError(null);
+      return;
+    }
+
     setHomeRejectedApplicationsLoading(true);
     setHomeRejectedApplicationsError(null);
     setHomeRejectedApplications([]);
@@ -434,7 +482,7 @@ const AdminDashboard = () => {
     } finally {
       setHomeRejectedApplicationsLoading(false);
     }
-  }, []);
+  }, [canReviewCompanies]);
 
   useEffect(() => {
     if (location.pathname !== paths.adminDashboard) return;
@@ -448,6 +496,12 @@ const AdminDashboard = () => {
   ]);
 
   useEffect(() => {
+    if (!canReadProjects || !canReviewCompanies) {
+      setOpenMembershipReviews([]);
+      setOpenMembershipReviewsError(null);
+      return;
+    }
+
     let isActive = true;
 
     /** Loads OPEN membership reviews used to prioritize the project table. */
@@ -470,9 +524,16 @@ const AdminDashboard = () => {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [canReadProjects, canReviewCompanies]);
 
   useEffect(() => {
+    if (!canCancelMonitoring) {
+      setCancelRequestItems([]);
+      setCancelRequestLoading(false);
+      setCancelRequestError(null);
+      return;
+    }
+
     let isActive = true;
 
     const preloadCancelRequests = async () => {
@@ -500,9 +561,16 @@ const AdminDashboard = () => {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [canCancelMonitoring]);
 
   useEffect(() => {
+    if (!canReadBatchHistory) {
+      setBatchHistoryItems([]);
+      setBatchHistoryLoading(false);
+      setBatchHistoryError(null);
+      return;
+    }
+
     let isActive = true;
 
     const preloadBatchHistory = async () => {
@@ -532,7 +600,7 @@ const AdminDashboard = () => {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [canReadBatchHistory]);
 
   useEffect(() => {
     void reloadApplicationCompanies();
@@ -562,6 +630,13 @@ const AdminDashboard = () => {
 
   /** Loads progress for all projects so overview and incomplete filtering stay accurate. */
   useEffect(() => {
+    if (!canReadProjects) {
+      setPlanProgress(new Map());
+      setPlanProgressLoading(false);
+      setPlanProgressError(null);
+      return;
+    }
+
     const ids = projects.map((project) => String(project.id));
     if (ids.length === 0) {
       setPlanProgress(new Map());
@@ -591,7 +666,7 @@ const AdminDashboard = () => {
     return () => {
       cancelled = true;
     };
-  }, [projects]);
+  }, [canReadProjects, projects]);
 
   const projectMethodologyOptions = useMemo(() => {
     const optionMap = new Map<string, string>();
@@ -680,11 +755,15 @@ const AdminDashboard = () => {
   };
 
   const handleEditProject = (project: Project) => {
-    navigate(paths.adminProjectDetail(project.id));
+    adminPermissions.guardAction('PROJECT_READ', () => {
+      navigate(paths.adminProjectDetail(project.id));
+    });
   };
 
   const handleUpdateProject = (project: Project) => {
-    navigate(paths.adminProjectEdit(project.id), { state: { project } });
+    adminPermissions.guardAction('PROJECT_UPDATE', () => {
+      navigate(paths.adminProjectEdit(project.id), { state: { project } });
+    });
   };
 
   /**
@@ -694,7 +773,9 @@ const AdminDashboard = () => {
    * and undefined once it is done so the operator can pick a page themselves.
    */
   const handleOpenPlan = (project: Project, planSlug?: string) => {
-    navigate(paths.adminProjectRegister, { state: { project, planSlug } });
+    adminPermissions.guardAction('PROJECT_UPDATE', () => {
+      navigate(paths.adminProjectRegister, { state: { project, planSlug } });
+    });
   };
 
   const handleChangeProjectStatus = async (
@@ -702,6 +783,10 @@ const AdminDashboard = () => {
     status: ProjectStatus,
   ) => {
     if (project.projectStatus === status || updatingProjectStatusId) return;
+    if (!adminPermissions.hasPermission('PROJECT_STATUS_UPDATE')) {
+      adminPermissions.guardAction('PROJECT_STATUS_UPDATE', () => undefined);
+      return;
+    }
 
     setUpdatingProjectStatusId(project.id);
     try {
@@ -752,6 +837,15 @@ const AdminDashboard = () => {
   }, [applicationId, detailCompany, routeApplicationCompany]);
 
   const openCompanyDetails = (item: AdminCompanyListItem) => {
+    const requiredPermission =
+      item.status === 'ACTIVE' || item.status === 'SUSPENDED'
+        ? 'PARTICIPATING_COMPANY_READ'
+        : 'PARTICIPATING_COMPANY_APPLICATION_REVIEW';
+    if (!adminPermissions.hasPermission(requiredPermission)) {
+      adminPermissions.guardAction(requiredPermission, () => undefined);
+      return;
+    }
+
     if (item.status === 'ACTIVE' || item.status === 'SUSPENDED') {
       navigate(paths.adminCompanyDetail(item.companyId));
       return;
@@ -767,6 +861,18 @@ const AdminDashboard = () => {
   };
 
   const openCompanyReview = (item: AdminCompanyListItem) => {
+    if (
+      !adminPermissions.hasPermission(
+        'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+      )
+    ) {
+      adminPermissions.guardAction(
+        'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+        () => undefined,
+      );
+      return;
+    }
+
     if (item.id) {
       navigate(paths.adminApplicationDetail(item.id), {
         state: { company: item, reviewMode: true },
@@ -795,6 +901,18 @@ const AdminDashboard = () => {
   };
 
   const openApproveCompany = (item: AdminCompanyListItem) => {
+    if (
+      !adminPermissions.hasPermission(
+        'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+      )
+    ) {
+      adminPermissions.guardAction(
+        'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+        () => undefined,
+      );
+      return;
+    }
+
     setSelectedCompany(item);
     setPendingDialogMode('approve');
     setRejectReason('');
@@ -803,6 +921,18 @@ const AdminDashboard = () => {
   };
 
   const openRejectCompany = (item: AdminCompanyListItem) => {
+    if (
+      !adminPermissions.hasPermission(
+        'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+      )
+    ) {
+      adminPermissions.guardAction(
+        'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+        () => undefined,
+      );
+      return;
+    }
+
     setSelectedCompany(item);
     setPendingDialogMode('reject');
     setRejectReason('');
@@ -813,15 +943,23 @@ const AdminDashboard = () => {
   const openCancelRequestDetail = (
     request: Awaited<ReturnType<typeof getMonitoringCancelRequests>>[number],
   ) => {
-    navigate(paths.adminCancelRequestDetail(request.id), {
-      state: { cancelRequest: request },
+    adminPermissions.guardAction('MONITORING_CANCEL', () => {
+      navigate(paths.adminCancelRequestDetail(request.id), {
+        state: { cancelRequest: request },
+      });
     });
   };
 
   /** Opens or closes a Home monitoring panel while keeping it addressable by URL. */
   const handleHomePanelChange = (panel: AdminHomePanel | null) => {
     if (panel) {
-      navigate(`${paths.adminDashboard}?panel=${panel}`);
+      const requiredPermission =
+        panel === 'cancel'
+          ? 'MONITORING_CANCEL'
+          : 'MONITORING_BATCH_HISTORY_READ';
+      adminPermissions.guardAction(requiredPermission, () => {
+        navigate(`${paths.adminDashboard}?panel=${panel}`);
+      });
       return;
     }
 
@@ -830,7 +968,10 @@ const AdminDashboard = () => {
 
   /** Opens the OPEN membership list for the selected project. */
   const openProjectMemberships = (project: Project) => {
-    navigate(paths.adminProjectMembership(project.id, 'OPEN'));
+    adminPermissions.guardAction(
+      'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+      () => navigate(paths.adminProjectMembership(project.id, 'OPEN')),
+    );
   };
 
   const handlePendingDialogOpenChange = (open: boolean) => {
@@ -888,6 +1029,21 @@ const AdminDashboard = () => {
     }
   };
 
+  if (
+    applicationId &&
+    (!canReviewCompanies || applicationCompaniesError === FORBIDDEN_SECTION_ERROR)
+  ) {
+    return (
+      <main className={`${dashboardContainer} space-y-6 py-8`}>
+        <header>
+          <h1 className="text-3xl font-bold text-foreground">企業申請詳細</h1>
+          <p className="mt-2 text-muted-foreground">企業申請の内容を確認します。</p>
+        </header>
+        <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
+      </main>
+    );
+  }
+
   if (detailCompany || applicationId) {
     return (
       <>
@@ -935,6 +1091,18 @@ const AdminDashboard = () => {
     : projectsQuery.isError
       ? 'プロジェクトを取得できませんでした。'
       : null;
+  const projectSectionAllowed = canReadProjects && !isForbiddenApiError(projectsQuery.error);
+  const applicationSectionAllowed =
+    canReviewCompanies &&
+    applicationCompaniesError !== FORBIDDEN_SECTION_ERROR &&
+    homePendingApplicationsError !== FORBIDDEN_SECTION_ERROR &&
+    homeRejectedApplicationsError !== FORBIDDEN_SECTION_ERROR;
+  const participatingSectionAllowed =
+    canReadCompanies && participatingCompaniesError !== FORBIDDEN_SECTION_ERROR;
+  const cancelSectionAllowed =
+    canCancelMonitoring && cancelRequestError !== FORBIDDEN_SECTION_ERROR;
+  const batchSectionAllowed =
+    canReadBatchHistory && batchHistoryError !== FORBIDDEN_SECTION_ERROR;
 
   return (
     <div className="flex min-h-[calc(100dvh-5rem)] flex-col bg-background">
@@ -976,8 +1144,28 @@ const AdminDashboard = () => {
               onOpenProjectMembership={openProjectMemberships}
               onOpenCompanyApplication={openHomeCompanyApplication}
               onOpenCancelRequest={openCancelRequestDetail}
-              onNavigateProjects={() => navigate(paths.adminProjectList)}
-              onNavigateCompanies={() => navigate(paths.adminCompanyList)}
+              onNavigateProjects={() =>
+                adminPermissions.guardAction('PROJECT_READ', () =>
+                  navigate(paths.adminProjectList),
+                )
+              }
+              onNavigateCompanies={() =>
+                adminPermissions.guardAction(
+                  'PARTICIPATING_COMPANY_READ',
+                  () => navigate(paths.adminCompanyList),
+                )
+              }
+              onNavigateApplications={() =>
+                adminPermissions.guardAction(
+                  'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+                  () => navigate(paths.adminCompanyList),
+                )
+              }
+              canReadProjects={projectSectionAllowed}
+              canReadCompanies={participatingSectionAllowed}
+              canReviewCompanies={applicationSectionAllowed}
+              canCancelMonitoring={cancelSectionAllowed}
+              canReadBatchHistory={batchSectionAllowed}
             />
           </TabsContent> */}
 
@@ -1017,8 +1205,28 @@ const AdminDashboard = () => {
               onOpenProjectMembership={openProjectMemberships}
               onOpenCompanyApplication={openHomeCompanyApplication}
               onOpenCancelRequest={openCancelRequestDetail}
-              onNavigateProjects={() => navigate(paths.adminProjectList)}
-              onNavigateCompanies={() => navigate(paths.adminCompanyList)}
+              onNavigateProjects={() =>
+                adminPermissions.guardAction('PROJECT_READ', () =>
+                  navigate(paths.adminProjectList),
+                )
+              }
+              onNavigateCompanies={() =>
+                adminPermissions.guardAction(
+                  'PARTICIPATING_COMPANY_READ',
+                  () => navigate(paths.adminCompanyList),
+                )
+              }
+              onNavigateApplications={() =>
+                adminPermissions.guardAction(
+                  'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+                  () => navigate(paths.adminCompanyList),
+                )
+              }
+              canReadProjects={projectSectionAllowed}
+              canReadCompanies={participatingSectionAllowed}
+              canReviewCompanies={applicationSectionAllowed}
+              canCancelMonitoring={cancelSectionAllowed}
+              canReadBatchHistory={batchSectionAllowed}
             />
           </TabsContent>
 
@@ -1026,12 +1234,14 @@ const AdminDashboard = () => {
             value="companies"
             className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
-            {showApplicationSection && (
+            {(!canReviewCompanies || showApplicationSection) && (
               <AdminDashboardSection
                 title="参加申請中の企業"
                 description="参加申請を受け付けた企業です。内容を確認し、承認または差し戻しを行ってください。"
               >
-                {applicationCompaniesLoading ? (
+                {!applicationSectionAllowed ? (
+                  <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
+                ) : applicationCompaniesLoading ? (
                   <SkeletonTable columns={5} rows={6} minWidth={980} />
                 ) : applicationCompaniesError ? (
                   <AdminDashboardEmptyState>
@@ -1060,12 +1270,14 @@ const AdminDashboard = () => {
               </AdminDashboardSection>
             )}
 
-            {showParticipatingSection && (
+            {(!participatingSectionAllowed || showParticipatingSection) && (
               <AdminDashboardSection
                 title="参加企業"
                 description="承認済みの参加企業です。企業情報と運用状況を確認できます。"
               >
-                {participatingCompaniesLoading ? (
+                {!participatingSectionAllowed ? (
+                  <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_READ" />
+                ) : participatingCompaniesLoading ? (
                   <SkeletonTable columns={5} rows={6} minWidth={980} />
                 ) : participatingCompaniesError ? (
                   <AdminDashboardEmptyState>{participatingCompaniesError}</AdminDashboardEmptyState>
@@ -1104,7 +1316,11 @@ const AdminDashboard = () => {
                 <Button
                   type="button"
                   size="md"
-                  onClick={() => navigate('/admin/project-register')}
+                  onClick={() =>
+                    adminPermissions.guardAction('PROJECT_CREATE', () =>
+                      navigate(paths.adminProjectRegister),
+                    )
+                  }
                   className="self-start sm:self-auto"
                 >
                   <Plus className="h-4 w-4" />
@@ -1112,7 +1328,9 @@ const AdminDashboard = () => {
                 </Button>
               }
             >
-              <div className="space-y-6">
+              {!projectSectionAllowed ? (
+                <PermissionDeniedNotice permission="PROJECT_READ" />
+              ) : <div className="space-y-6">
                 <AdminProjectOverviewCards
                   projects={projects}
                   projectsLoading={projectsQuery.isLoading}
@@ -1257,7 +1475,7 @@ const AdminDashboard = () => {
                     )}
                   </CardContent>
                 </Card>
-              </div>
+              </div>}
             </AdminDashboardSection>
           </TabsContent>
 
@@ -1277,16 +1495,33 @@ const AdminDashboard = () => {
 
           <TabsContent
             value="methodologies"
-            className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
+            className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
             <AdminDashboardSection
               title="方法論一覧"
               description="利用可能な方法論の一覧をここで管理できるようにします。"
             >
-              <AdminDashboardEmptyState>
-                表示できる方法論データがありません。
-              </AdminDashboardEmptyState>
+              {adminPermissions.hasPermission('METHODOLOGY_READ') ? (
+                <AdminDashboardEmptyState>
+                  表示できる方法論データがありません。
+                </AdminDashboardEmptyState>
+              ) : (
+                <PermissionDeniedNotice permission="METHODOLOGY_READ" />
+              )}
             </AdminDashboardSection>
+
+            {/* <AdminDashboardSection
+              title="申請書様式"
+              description="申請に使用する帳票様式を確認します。"
+            >
+              {adminPermissions.hasPermission('APPLICATION_FORM_READ') ? (
+                <AdminDashboardEmptyState>
+                  表示できる申請書様式データがありません。
+                </AdminDashboardEmptyState>
+              ) : (
+                <PermissionDeniedNotice permission="APPLICATION_FORM_READ" />
+              )}
+            </AdminDashboardSection> */}
           </TabsContent>
 
         </main>
