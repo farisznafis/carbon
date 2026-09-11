@@ -242,6 +242,16 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
         participation.setStatus("APPROVED");
         participatingProjectRepository.save(participation);
         pdfService.generateAndProcess(participationId);
+        try {
+                notificationService.createNotificationForParticipatingCompany(
+                        "入会届審査完了のお知らせ",
+                        "入会届の審査が完了し、承認されました。マイページから書類をダウンロードできます。",
+                        participation.getCompany().getId(),
+                        null);
+        } catch (Exception e) {
+                log.error("Approval notification failed. participationId={}, error={}",
+                        participationId, e.getMessage());
+        }
         }
         // else: submission PRIMARY, status tetap OPEN menunggu secondary
     }
@@ -324,6 +334,18 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
 
         notificationService.sendParticipationRejectionNotification(
                 participation.getCompany(), request.getRejectReason());
+
+        try {
+            notificationService.createNotificationForParticipatingCompany(
+                    "入会届審査結果のお知らせ",
+                    "入会届の審査の結果、却下となりました。内容をご確認の上、再度申請してください。\n"
+                            + "却下理由: " + request.getRejectReason(),
+                    participation.getCompany().getId(),
+                    null);
+        } catch (Exception e) {
+            log.error("Rejection notification failed. participationId={}, error={}",
+                    participationId, e.getMessage());
+        }
     }
 
         @Override
