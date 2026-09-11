@@ -173,7 +173,7 @@ export function HomeHeroSection({
           mx-auto
           grid
           w-full
-          max-w-app
+          max-w-page
           grid-cols-1
           items-center
           gap-10

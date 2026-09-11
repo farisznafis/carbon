@@ -12,7 +12,7 @@ export function HomeFlowSection() {
       aria-labelledby="home-flow-title"
       className="relative z-20 scroll-mt-20 rounded-t-3xl bg-card py-14 shadow-marketing sm:py-16 2xl:py-24"
     >
-      <div className="mx-auto w-full max-w-marketing space-y-8 px-4 sm:space-y-10 sm:px-6 lg:px-8 2xl:space-y-12">
+      <div className="mx-auto w-full max-w-page space-y-8 px-4 sm:space-y-10 sm:px-6 lg:px-8 2xl:space-y-12">
         <HomeSectionHeading id="home-flow-title" title="ご利用の流れ" />
 
         <div className="flex flex-col items-stretch gap-4 lg:flex-row">

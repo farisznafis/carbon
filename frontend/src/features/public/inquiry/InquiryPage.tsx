@@ -159,7 +159,7 @@ export default function InquiryPage() {
 
   return (
     <main className="min-h-[calc(100dvh-4rem-1px)] bg-background px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-20 xl:py-24">
-      <div className="mx-auto grid w-full max-w-marketing items-stretch justify-center gap-10 lg:grid-cols-[minmax(20rem,30rem)_minmax(0,45rem)] lg:gap-14 xl:gap-[7.5rem]">
+      <div className="mx-auto grid w-full max-w-page items-stretch justify-center gap-10 lg:grid-cols-[minmax(20rem,30rem)_minmax(0,45rem)] lg:gap-14 xl:gap-[7.5rem]">
         <InquiryInformationCard />
 
         <Card className="w-full max-w-[45rem] self-stretch rounded-xl border-0 shadow-app-md lg:min-h-[42.25rem]">

@@ -17,7 +17,8 @@ export default {
 		maxWidth: {
 		  app: '77.5rem',      // 1240
 			admin: '100rem',     // 1600
-			marketing: '97.5rem' // 1560
+			marketing: '97.5rem', // 1560
+			page: '100rem'
 		},
   		colors: {
   			border: 'hsl(var(--border))',
