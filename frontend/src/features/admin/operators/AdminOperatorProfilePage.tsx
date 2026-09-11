@@ -23,16 +23,12 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
-import {
-  useAdminOperatorsQuery,
-  useAdminOperatorProfileQuery,
-} from '@/hooks/admin/useAdminOperatorsQuery';
+import { useAdminOperatorProfileQuery } from '@/hooks/admin/useAdminOperatorsQuery';
 import { paths } from '@/routes/paths';
 import { OperatorPermissionGroups } from './OperatorPermissionGroups';
 import {
   getOperatorRoleLabel,
   isAdminOperatorRole,
-  resolveOperatorRole,
 } from './operatorRoles';
 
 /** Formats a Japanese operator name in family-name-first order. */
@@ -52,12 +48,8 @@ export default function AdminOperatorProfilePage() {
   const { userId } = useParams();
   const navigate = useNavigate();
   const profileQuery = useAdminOperatorProfileQuery(userId);
-  const operatorsQuery = useAdminOperatorsQuery(true, 'caller');
   const operator = profileQuery.data;
-  const effectiveRole = resolveOperatorRole(
-    operator,
-    operatorsQuery.data?.users ?? [],
-  );
+  const effectiveRole = operator?.role ?? '';
 
   /** Returns to the operator list from the profile page. */
   const handleBack = () => navigate(paths.adminOperatorList);

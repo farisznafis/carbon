@@ -26,6 +26,8 @@ interface AuthContextType {
 
 type AdminLoginResponse = {
   token: string;
+  id?: string | number | null;
+  userId?: string | number | null;
   user?: Partial<User>;
   admin?: {
     id?: string | number | null;
@@ -203,9 +205,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         )) as AdminLoginResponse;
 
         const adminSource = data.admin ?? data.user ?? null;
+        const accountId = adminSource?.id ?? data.userId ?? data.id;
 
         const adminUser: User = {
-          id: adminSource?.id ? String(adminSource.id) : 'admin',
+          id: accountId === null || accountId === undefined
+            ? 'admin'
+            : String(accountId),
           email: adminSource?.email ?? '',
           username: adminSource?.username ?? undefined,
           name: adminSource?.name ?? undefined,
