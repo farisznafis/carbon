@@ -185,13 +185,15 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
                         .build());
 
         boolean isPrimarySlotEmpty = confirmation.getPrimaryReviewerId() == null;
+        if(!isPrimarySlotEmpty){
+                if (confirmation.getPrimaryReviewerId().equals(operatorUserId)) {
+                        throw new CustomException("SAME_REVIEWER", "一次確認者と同一の担当者は二次確認者になれません。");
+                }
+                if (confirmation.getSecondaryReviewerId() != null) {
+                        throw new CustomException("REVIEW_CLOSED", "レビューは既に2名によって完了しています。");
+                }
+        }
 
-        if (!isPrimarySlotEmpty && confirmation.getSecondaryReviewerId() != null) {
-            throw new CustomException("REVIEW_CLOSED", "レビューは既に2名によって完了しています。");
-        }
-        if (!isPrimarySlotEmpty && confirmation.getPrimaryReviewerId().equals(operatorUserId)) {
-            throw new CustomException("SAME_REVIEWER", "一次確認者と同一の担当者は二次確認者になれません。");
-        }
 
         confirmation.setIsSolarContractDoc(request.getIsSolarContractDoc());
         confirmation.setIsPcsSpecDoc(request.getIsPcsSpecDoc());
@@ -227,6 +229,14 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
         }
 
         reviewRepository.save(confirmation);
+
+        if (isPrimarySlotEmpty) {
+                notificationService.createNotificationForAllOperatingUsers(
+                        "二次確認が必要な入会届があります",
+                        "一次確認が完了しました。別の担当者が入会届の二次確認を行ってください。\n"
+                                + "企業: " + participation.getCompany().getNameJa() + "\n"
+                                + "プロジェクト: " + participation.getProject().getProjectName());
+        }
 
        if (!isPrimarySlotEmpty) {
         participation.setStatus("APPROVED");
