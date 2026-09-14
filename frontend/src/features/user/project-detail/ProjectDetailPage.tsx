@@ -1,9 +1,9 @@
 ﻿import { useEffect, useState, type ReactNode } from 'react';
-import { getProjectDetails, type ProjectDetail as ProjectDetailApi } from '@/api/projects';
 import {
-  getSiteProjectEquipment,
-  type SiteProjectEquipment,
-} from '@/api/site';
+  getProjectDetails,
+  type ProjectDetail as ProjectDetailApi,
+} from '@/api/projects';
+import { getSiteProjectEquipment, type SiteProjectEquipment } from '@/api/site';
 import {
   useLocation,
   useParams,
@@ -43,7 +43,10 @@ import {
   type ProjectEmissionBreakdown,
 } from '@/api/batch';
 import { logger } from '@/lib/logger';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
+import {
+  PageBackButton,
+  // floatingPageBackButtonClassName,
+} from '@/components/navigation/PageBackButton';
 import {
   PageSkeleton,
   SkeletonCard,
@@ -52,6 +55,7 @@ import {
 } from '@/components/feedback/loading';
 import {
   dashboardWidePageContainerClassName,
+  dashboardPageContainerClassName,
   dashboardTabsListClassName,
   dashboardTabTriggerClassName,
 } from '@/components/layout/DashboardLayout';
@@ -135,12 +139,7 @@ type ProjectDetailNavigationState = {
 
 function ProjectDetailTabs() {
   return (
-    <TabsList
-      className={cn(
-        dashboardTabsListClassName,
-        'mx-0 justify-start',
-      )}
-    >
+    <TabsList className={cn(dashboardTabsListClassName, 'mx-0 justify-start')}>
       <TabsTrigger
         value='overview'
         className={dashboardTabTriggerClassName}
@@ -202,14 +201,10 @@ function ProjectMetaItem({
         className,
       )}
     >
-      <span className='mt-0.5 shrink-0 text-muted-foreground'>
-        {icon}
-      </span>
+      <span className='mt-0.5 shrink-0 text-muted-foreground'>{icon}</span>
 
       <div className='min-w-0'>
-        <p className='text-small text-muted-foreground'>
-          {label}
-        </p>
+        <p className='text-small text-muted-foreground'>{label}</p>
 
         <div className='mt-1 break-words font-bold text-foreground'>
           {value || '-'}
@@ -234,9 +229,7 @@ function SummaryMetric({
 }: SummaryMetricProps) {
   return (
     <div className='min-w-0 bg-card px-5 py-5 sm:px-6 sm:py-6'>
-      <p className='text-small text-muted-foreground'>
-        {label}
-      </p>
+      <p className='text-small text-muted-foreground'>{label}</p>
 
       <div className='mt-2 flex flex-wrap items-baseline gap-x-1.5'>
         <span
@@ -249,9 +242,7 @@ function SummaryMetric({
         </span>
 
         {unit && value !== '-' ? (
-          <span className='text-small text-muted-foreground'>
-            {unit}
-          </span>
+          <span className='text-small text-muted-foreground'>{unit}</span>
         ) : null}
       </div>
     </div>
@@ -265,18 +256,11 @@ type MonitoringMetricProps = {
   unit?: string;
 };
 
-function MonitoringMetric({
-  icon,
-  label,
-  value,
-  unit,
-}: MonitoringMetricProps) {
+function MonitoringMetric({ icon, label, value, unit }: MonitoringMetricProps) {
   return (
     <div className='min-w-0 bg-card px-4 py-5'>
       <div className='flex min-w-0 items-center gap-2'>
-        <span className='shrink-0 text-primary'>
-          {icon}
-        </span>
+        <span className='shrink-0 text-primary'>{icon}</span>
 
         <span className='truncate text-table font-bold text-foreground'>
           {label}
@@ -289,9 +273,7 @@ function MonitoringMetric({
         </span>
 
         {unit && value !== '-' ? (
-          <span className='text-table text-muted-foreground'>
-            {unit}
-          </span>
+          <span className='text-table text-muted-foreground'>{unit}</span>
         ) : null}
       </div>
     </div>
@@ -302,26 +284,15 @@ type RecentDataBarProps = {
   row: MonitoringDisplayRow;
 };
 
-function RecentDataBar({
-  row,
-}: RecentDataBarProps) {
+function RecentDataBar({ row }: RecentDataBarProps) {
   const batteryDischargeValue =
-    row.changedBattery === false
-      ? 0
-      : row.ELPJ_battery_value;
+    row.changedBattery === false ? 0 : row.ELPJ_battery_value;
 
   return (
-    <section
-      className={cn(
-        projectDetailCardClassName,
-        'overflow-hidden',
-      )}
-    >
+    <section className={cn(projectDetailCardClassName, 'overflow-hidden')}>
       <div className='flex flex-col gap-3 border-b border-border px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6'>
         <div>
-          <p className='text-small text-muted-foreground'>
-            最新モニタリング
-          </p>
+          <p className='text-small text-muted-foreground'>最新モニタリング</p>
 
           <h2 className='mt-1 text-xl font-bold text-foreground'>
             モニタリング状況
@@ -416,7 +387,9 @@ const ProjectDetail = () => {
   );
   const [recentLoading, setRecentLoading] = useState(false);
   const [recentHasFetched, setRecentHasFetched] = useState(false);
-  const [equipmentList, setEquipmentList] = useState<SiteProjectEquipment[]>([]);
+  const [equipmentList, setEquipmentList] = useState<SiteProjectEquipment[]>(
+    [],
+  );
   const [equipmentLoading, setEquipmentLoading] = useState(false);
   const [equipmentHasFetched, setEquipmentHasFetched] = useState(false);
   const [equipmentError, setEquipmentError] = useState<string | null>(null);
@@ -567,17 +540,11 @@ const ProjectDetail = () => {
           createdDate: result.createdAt ?? '',
           location: siteName,
 
-          emissionReduction: toNumberOrNull(
-            result.emissionReduction,
-          ),
+          emissionReduction: toNumberOrNull(result.emissionReduction),
 
-          baselineEmission: toNumberOrNull(
-            result.baselineEmission,
-          ),
+          baselineEmission: toNumberOrNull(result.baselineEmission),
 
-          postProjectEmission: toNumberOrNull(
-            result.postProjectEmission,
-          ),
+          postProjectEmission: toNumberOrNull(result.postProjectEmission),
         });
       } catch (error) {
         logger.error('Error loading project detail:', error);
@@ -645,17 +612,17 @@ const ProjectDetail = () => {
   }, [equipmentHasFetched, projectId, siteId, tab]);
 
   const monitoringRows: MonitoringDisplayRow[] =
-  recentMonitoring.length > 0
-    ? recentMonitoring.map((row) => ({
-        ...row,
-        ELpv_value: row.ELpv_value ?? null,
-        ELpvr_value: row.ELpvr_value ?? null,
-        ELPJ_battery_value: row.ELPJ_battery_value ?? null,
-        ELPJ_accuracy: row.ELPJ_accuracy ?? null,
-        ELPJ_control_value: row.ELPJ_control_value ?? null,
-        changedBattery: row.changedBattery ?? null,
-      }))
-    : [fallbackMonitoringRow];
+    recentMonitoring.length > 0
+      ? recentMonitoring.map((row) => ({
+          ...row,
+          ELpv_value: row.ELpv_value ?? null,
+          ELpvr_value: row.ELpvr_value ?? null,
+          ELPJ_battery_value: row.ELPJ_battery_value ?? null,
+          ELPJ_accuracy: row.ELPJ_accuracy ?? null,
+          ELPJ_control_value: row.ELPJ_control_value ?? null,
+          changedBattery: row.changedBattery ?? null,
+        }))
+      : [fallbackMonitoringRow];
 
   if (loading) {
     return (
@@ -663,7 +630,9 @@ const ProjectDetail = () => {
         <div className='mx-auto w-full max-w-page space-y-6'>
           <SkeletonCard className='min-h-28' />
           <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
-            {Array.from({ length: 4 }, (_, index) => <SkeletonMetricCard key={index} />)}
+            {Array.from({ length: 4 }, (_, index) => (
+              <SkeletonMetricCard key={index} />
+            ))}
           </div>
           <div className='grid gap-6 lg:grid-cols-2'>
             <SkeletonChart />
@@ -687,9 +656,11 @@ const ProjectDetail = () => {
           <CardContent className='flex gap-3'>
             <Button
               onClick={() =>
-                navigate(siteId ? `/sites/${siteId}/dashboard` : '/master/dashboard')
+                navigate(
+                  siteId ? `/sites/${siteId}/dashboard` : '/master/dashboard',
+                )
               }
-              >
+            >
               <ArrowLeft className='h-4 w-4 mr-2' />
               ダッシュボードへ戻る
             </Button>
@@ -699,7 +670,7 @@ const ProjectDetail = () => {
                   state: { projectId, siteId },
                 })
               }
-              >
+            >
               <ArrowRight className='h-4 w-4 mr-2' />
               モニタリング登録へ
             </Button>
@@ -708,25 +679,20 @@ const ProjectDetail = () => {
       </div>
     );
   }
-  
+
   const effectiveBaselineEmission =
-    projectBaselineEmission ??
-    project.baselineEmission;
+    projectBaselineEmission ?? project.baselineEmission;
 
   const effectivePostProjectEmission =
-    projectTotalEmission ??
-    project.postProjectEmission;
+    projectTotalEmission ?? project.postProjectEmission;
 
   const calculatedReduction =
-    effectiveBaselineEmission !== null &&
-    effectivePostProjectEmission !== null
-      ? effectiveBaselineEmission -
-        effectivePostProjectEmission
+    effectiveBaselineEmission !== null && effectivePostProjectEmission !== null
+      ? effectiveBaselineEmission - effectivePostProjectEmission
       : null;
 
   const effectiveEmissionReduction =
-    project.emissionReduction ??
-    calculatedReduction;
+    project.emissionReduction ?? calculatedReduction;
 
   const reductionRate = calculateReductionRate(
     effectiveBaselineEmission,
@@ -739,9 +705,18 @@ const ProjectDetail = () => {
       .join(' / ') || '-';
   return (
     <div className='relative min-h-screen bg-background py-6 sm:py-8'>
-      <div className={dashboardWidePageContainerClassName}>
+      <PageBackButton
+        onClick={() => {
+          if (siteId) {
+            navigate(`/sites/${siteId}/dashboard`);
+          } else {
+            navigate(-1);
+          }
+        }}
+        placement='floating'
+      />
+      <div className={dashboardPageContainerClassName}>
         <div className='space-y-6'>
-
           {/* =========================
               PROJECT HEADER
           ========================== */}
@@ -754,30 +729,14 @@ const ProjectDetail = () => {
             <div className='px-5 py-6 sm:px-7 sm:py-7'>
               <div className='flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between'>
                 <div className='flex min-w-0 items-start gap-4'>
-                  <PageBackButton
-                    onClick={() => {
-                      if (siteId) {
-                        navigate(`/sites/${siteId}/dashboard`);
-                      } else {
-                        navigate(-1);
-                      }
-                    }}
-                    label=''
-                    className='mt-0.5 h-10 w-10 shrink-0 rounded-full p-0'
-                  />
-
                   <div className='min-w-0'>
                     <div className='mb-3 flex flex-wrap items-center gap-2'>
                       <StatusBadge
                         tone={
-                          project.status === 'active'
-                            ? 'success'
-                            : 'neutral'
+                          project.status === 'active' ? 'success' : 'neutral'
                         }
                       >
-                        {project.status === 'active'
-                          ? '実施中'
-                          : '停止中'}
+                        {project.status === 'active' ? '実施中' : '停止中'}
                       </StatusBadge>
 
                       <span className='inline-flex rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground'>
@@ -803,9 +762,7 @@ const ProjectDetail = () => {
                     variant='outline'
                     size='md'
                     disabled={!siteId || !projectId}
-                    onClick={() =>
-                      setMonitoringCancellationOpen(true)
-                    }
+                    onClick={() => setMonitoringCancellationOpen(true)}
                   >
                     取消一覧
                   </Button>
@@ -860,9 +817,7 @@ const ProjectDetail = () => {
           <Tabs
             defaultValue='overview'
             value={tab}
-            onValueChange={(value) =>
-              setTab(value as ProjectDetailTabValue)
-            }
+            onValueChange={(value) => setTab(value as ProjectDetailTabValue)}
             className='space-y-6'
           >
             <div className='-m-1 overflow-x-auto p-1'>
@@ -892,35 +847,26 @@ const ProjectDetail = () => {
                 </div>
 
                 <Card
-                  className={cn(
-                    projectDetailCardClassName,
-                    'overflow-hidden',
-                  )}
+                  className={cn(projectDetailCardClassName, 'overflow-hidden')}
                 >
                   <CardContent className='p-0'>
                     <div className='grid gap-px bg-border sm:grid-cols-2 xl:grid-cols-4'>
                       <SummaryMetric
                         label='削減量'
-                        value={formatNumber(
-                          effectiveEmissionReduction,
-                        )}
+                        value={formatNumber(effectiveEmissionReduction)}
                         unit='tCO₂'
                         emphasis
                       />
 
                       <SummaryMetric
                         label='ベースライン排出量'
-                        value={formatNumber(
-                          effectiveBaselineEmission,
-                        )}
+                        value={formatNumber(effectiveBaselineEmission)}
                         unit='tCO₂'
                       />
 
                       <SummaryMetric
                         label='プロジェクト実施後排出量'
-                        value={formatNumber(
-                          effectivePostProjectEmission,
-                        )}
+                        value={formatNumber(effectivePostProjectEmission)}
                         unit='tCO₂'
                       />
 
@@ -929,12 +875,9 @@ const ProjectDetail = () => {
                         value={
                           reductionRate === null
                             ? '-'
-                            : reductionRate.toLocaleString(
-                                'ja-JP',
-                                {
-                                  maximumFractionDigits: 1,
-                                },
-                              )
+                            : reductionRate.toLocaleString('ja-JP', {
+                                maximumFractionDigits: 1,
+                              })
                         }
                         unit='%'
                       />
@@ -966,7 +909,6 @@ const ProjectDetail = () => {
                 </div>
 
                 <div className='space-y-6'>
-
                   <div className='grid grid-cols-1 gap-6 xl:grid-cols-2'>
                     <EmissionBreakdownChart
                       data={emissionBreakdown}
@@ -978,13 +920,11 @@ const ProjectDetail = () => {
                     <EmissionReductionProgressCard
                       baselineEmission={projectBaselineEmission}
                       projectEmission={projectTotalEmission}
-                      targetReduction={
-                        PROJECT_EMISSION_REDUCTION_TARGET
-                      }
+                      targetReduction={PROJECT_EMISSION_REDUCTION_TARGET}
                       className={projectDetailCardClassName}
                     />
                   </div>
-                    <EmissionTrendChart
+                  <EmissionTrendChart
                     data={emissionTrend}
                     isLoading={emissionTrendLoading}
                     error={emissionTrendError}
@@ -1024,24 +964,17 @@ const ProjectDetail = () => {
                   className='shrink-0'
                   disabled={!siteId || !projectId}
                   onClick={() =>
-                    navigate(
-                      paths.projectEquipment(
-                        siteId,
-                        projectId,
-                      ),
-                      {
-                        state: {
-                          submissionMode: 'create',
-                          returnTo:
-                            `${paths.siteProjectDetail(
-                              siteId,
-                              projectId,
-                            )}?${new URLSearchParams({
-                              tab: 'equipment',
-                            })}`,
-                        },
+                    navigate(paths.projectEquipment(siteId, projectId), {
+                      state: {
+                        submissionMode: 'create',
+                        returnTo: `${paths.siteProjectDetail(
+                          siteId,
+                          projectId,
+                        )}?${new URLSearchParams({
+                          tab: 'equipment',
+                        })}`,
                       },
-                    )
+                    })
                   }
                 >
                   <Plus className='h-4 w-4' />
@@ -1099,4 +1032,3 @@ const ProjectDetail = () => {
 };
 
 export default ProjectDetail;
-

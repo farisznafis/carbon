@@ -14,6 +14,7 @@ import { storage, storageKeys } from '@/lib/storage';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useProfileStore } from '@/stores/ProfileStore';
+import { queryClient } from '@/lib/queryClient';
 
 interface AuthContextType {
   user: User | null;
@@ -28,9 +29,15 @@ type AdminLoginResponse = {
   token: string;
   id?: string | number | null;
   userId?: string | number | null;
-  user?: Partial<User>;
+  operatorId?: string | number | null;
+  user?: Partial<User> & {
+    userId?: string | number | null;
+    operatorId?: string | number | null;
+  };
   admin?: {
     id?: string | number | null;
+    userId?: string | number | null;
+    operatorId?: string | number | null;
     username?: string | null;
     name?: string | null;
     email?: string | null;
@@ -58,6 +65,7 @@ const transientSessionKeys = [
 ];
 
 const clearTransientSessionState = () => {
+  queryClient.clear();
   storage.removeMany(transientSessionKeys);
   useDashboardStore.getState().resetDashboard();
   useNotificationStore.getState().clearNotifications();
@@ -76,6 +84,7 @@ const setSessionExpiry = () => {
 };
 
 const clearStoredSession = () => {
+  queryClient.clear();
   storage.removeMany([
     storageKeys.authToken,
     storageKeys.user,
@@ -89,6 +98,20 @@ const clearStoredSession = () => {
   useNotificationStore.getState().clearNotifications();
   useProfileStore.getState().clearProfile();
 };
+
+/** Compares every stable account identifier so placeholder IDs cannot retain another login. */
+function isSameAuthSession(
+  currentSession: AuthSession,
+  nextSession: AuthSession,
+): boolean {
+  return (
+    currentSession.isAuthenticated === nextSession.isAuthenticated &&
+    currentSession.user?.id === nextSession.user?.id &&
+    currentSession.user?.username === nextSession.user?.username &&
+    currentSession.user?.email === nextSession.user?.email &&
+    currentSession.user?.companyId === nextSession.user?.companyId
+  );
+}
 
 const isStoredSessionExpired = () => {
   const hasToken = !!storage.get(storageKeys.authToken);
@@ -136,13 +159,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const nextSession = getStoredAuthSession();
 
       setSession((currentSession) => {
-        if (
-          currentSession.user?.id === nextSession.user?.id &&
-          currentSession.isAuthenticated === nextSession.isAuthenticated
-        ) {
+        if (isSameAuthSession(currentSession, nextSession)) {
           return currentSession;
         }
 
+        queryClient.clear();
         return nextSession;
       });
     };
@@ -205,7 +226,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         )) as AdminLoginResponse;
 
         const adminSource = data.admin ?? data.user ?? null;
-        const accountId = adminSource?.id ?? data.userId ?? data.id;
+        const accountId =
+          adminSource?.operatorId ??
+          adminSource?.userId ??
+          adminSource?.id ??
+          data.user?.operatorId ??
+          data.user?.userId ??
+          data.user?.id ??
+          data.operatorId ??
+          data.userId ??
+          data.id;
 
         const adminUser: User = {
           id: accountId === null || accountId === undefined

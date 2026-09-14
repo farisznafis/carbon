@@ -381,19 +381,19 @@ export default function ProjectDetailAdmin() {
     <AdminProjectDetailLayout
       projectId={projectId}
       projectName={project.projectName}
-      title="プロジェクト詳細"
+      title={formatProjectDetailValue(project.projectName)}
       description="登録済みプロジェクトの進捗、排出量、関連データを確認します。"
       backTo={paths.adminProjectList}
       backLabel="プロジェクト管理に戻る"
     >
-      <section aria-label="プロジェクト識別情報" className="space-y-1">
+      {/* <section aria-label="プロジェクト識別情報" className="space-y-1">
         <h2 className="break-words text-2xl font-bold text-foreground">
           {formatProjectDetailValue(project.projectName)}
         </h2>
         <p className="text-small text-muted-foreground">
           プロジェクト番号：{formatProjectDetailValue(project.projectNumber)}
         </p>
-      </section>
+      </section> */}
 
       <section
         aria-label="プロジェクトサマリ"

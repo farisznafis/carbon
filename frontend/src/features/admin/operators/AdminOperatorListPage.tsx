@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Info, Plus, Search, X } from 'lucide-react';
 import type { AdminOperator } from '@/api/admin/operators';
+import { isForbiddenApiError } from '@/api/_shared/errors';
 import {
   DataGridTable,
   type DataGridTableColumn,
@@ -26,6 +27,7 @@ import {
 } from './operatorPermissionFilterModel';
 import { getOperatorRoleLabel } from './operatorRoles';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
+import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
 
 const EMPTY_OPERATORS: AdminOperator[] = [];
 
@@ -160,7 +162,8 @@ export default function AdminOperatorListPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const permissions = useAdminPermissions();
-  const operatorsQuery = useAdminOperatorsQuery();
+  const canReadOperators = permissions.hasPermission('OPERATOR_USER_READ');
+  const operatorsQuery = useAdminOperatorsQuery(canReadOperators, 'caller');
   const operators = operatorsQuery.data?.users ?? EMPTY_OPERATORS;
   const [permissionFilter, setPermissionFilter] =
     useState<OperatorPermissionFilterValue>(
@@ -330,7 +333,17 @@ export default function AdminOperatorListPage() {
               </span>
             </div>
 
-            {operatorsQuery.isLoading ? (
+            {!canReadOperators ? (
+              <PermissionDeniedNotice
+                permission='OPERATOR_USER_READ'
+                className='mt-6 min-h-32'
+              />
+            ) : isForbiddenApiError(operatorsQuery.error) ? (
+              <PermissionDeniedNotice
+                permission='OPERATOR_USER_READ'
+                className='mt-6 min-h-32'
+              />
+            ) : operatorsQuery.isLoading ? (
               <LoadingPanel
                 className='mt-6 min-h-72 border-0 bg-transparent'
                 message='運用者一覧を読み込んでいます'

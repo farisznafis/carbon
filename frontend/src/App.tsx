@@ -295,10 +295,8 @@ const App = () => {
           <Route
             path={paths.adminOperatorList}
             element={
-                  <RequireAdmin>
-                    <AdminPermissionRoute permission="OPERATOR_USER_READ" title="運用者管理" description="登録済み運用者のアカウント情報を確認します。">
-                      <AdminOperatorList />
-                    </AdminPermissionRoute>
+              <RequireAdmin>
+                <AdminOperatorList />
               </RequireAdmin>
             }
           />

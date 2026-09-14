@@ -101,12 +101,11 @@ export function HomeBenefitsSection() {
         {/* Main capability area */}
         <div
           className="
-            mt-12
+            mt-8
             grid
             overflow-hidden
             border-y
             border-background/15
-            lg:mt-16
             lg:grid-cols-[0.82fr_1.18fr]
           "
         >

@@ -1387,7 +1387,7 @@ const AdminDashboard = () => {
                           </SelectContent>
                         </Select>
 
-                        <Select
+                        {/* <Select
                           value={projectMethodologyFilter}
                           onValueChange={(value) => {
                             setProjectMethodologyFilter(value);
@@ -1407,7 +1407,7 @@ const AdminDashboard = () => {
                               </SelectItem>
                             ))}
                           </SelectContent>
-                        </Select>
+                        </Select> */}
 
                         {showIncompleteProjectsOnly && (
                           <span className="inline-flex min-h-10 items-center rounded-md bg-muted px-3 text-small font-medium text-foreground">
