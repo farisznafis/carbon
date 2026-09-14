@@ -31,6 +31,7 @@ import com.kct.jcredit.core_backend.service.ParticipationProjectService;
 import com.kct.jcredit.core_backend.service.ParticipationProjectValidationService;
 import com.kct.jcredit.core_backend.service.ProjectParticipationPdfService;
 import com.kct.jcredit.core_backend.service.EnR002FileUploadService;
+import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.dynamodb.EnR002ApplicationConfirmationRepository;
 import com.kct.jcredit.core_backend.repository.dynamodb.EnR002SustainabilityCommitmentRepository;
@@ -79,7 +80,8 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
     private final ProjectParticipationConfirmationRepository reviewRepository;
     private final EnR002FileUploadService                    fileUploadSolarService;
     private final ParticipationProjectValidationService      validationService;
-    private final ProjectParticipationPdfService  pdfService;
+    private final ProjectParticipationPdfService             pdfService;
+        private final NotificationService                    notificationService;
 
     // ─────────────────────────────────────────────────────────────
     // BROWSE
@@ -291,6 +293,21 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                         participationId, e.getMessage());
                         }
 
+                        try {
+                                notificationService.createNotification(
+                                        "入会届申請完了のお知らせ",
+                                        "入会届の提出が完了しました。運営事務局による二重承認をお待ちください。",
+                                        userId,
+                                        null);
+                                notificationService.createNotificationForAllOperatingUsers(
+                                        "新しい入会届が提出されました",
+                                        "新しい入会届が提出されました。内容を確認し、二重承認を行ってください。\n"
+                                                + "プロジェクト: " + project.getProjectName());
+                        } catch (Exception e) {
+                                log.error("Participation notification creation failed. participationId={}, error={}",
+                                        participationId, e.getMessage());
+                        }
+
                         // try {
                         //         String pdfS3Key = pdfService.createAndUpload(
                         //                 request.getEquipment(),
@@ -312,6 +329,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 .build();
         response.setStatusCode(ResponseConstants.OK);
         response.setMessage("プロジェクトへの参加が完了しました。");
+
         return response;
 }
 

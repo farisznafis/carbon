@@ -647,6 +647,7 @@ export function MonitoringSolarForm({
               </FormSectionStack>
 
               <FormActions
+                className="mt-8"
                 disabled={form.formState.isSubmitting}
                 pendingActionId={form.formState.isSubmitting ? 'confirm' : null}
                 actions={[

@@ -188,16 +188,16 @@ VALUES
  'admin1', '真耶', 'マヤ', '増田', 'マスダ', 'admin1@creation-tech.co.jp', '03-5555-0101',
  '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'admin', 0, NULL, 1, FALSE, 0),
 (2, TRUE, '2026-07-02 10:00:00', '2026-07-02 10:00:00', 'admin1', 'admin1',
- 'admin2', '沙奈', 'サナ', '鳥居', 'トリイ', 'admin2@creation-tech.co.jp', '03-5555-0102',
- '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'admin', 0, NULL, 1, FALSE, 0),
+ 'operator1', '沙奈', 'サナ', '鳥居', 'トリイ', 'admin2@creation-tech.co.jp', '03-5555-0102',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'operator', 0, NULL, 1, FALSE, 0),
 (3, TRUE, '2026-07-02 10:30:00', '2026-07-02 10:30:00', 'admin1', 'admin1',
- 'admin3', '結菜', 'ユナ', '加藤', 'カトウ', 'admin3@creation-tech.co.jp', '03-5555-0103',
- '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'admin', 0, NULL, 1, TRUE, 1),
+ 'operator2', '結菜', 'ユナ', '加藤', 'カトウ', 'admin3@creation-tech.co.jp', '03-5555-0103',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'operator', 0, NULL, 1, TRUE, 1),
 (4, TRUE, '2026-07-02 11:00:00', '2026-07-02 11:00:00', 'admin1', 'admin1',
- 'operator1', '由美', 'ユミ', '森', 'モリ', 'operator1@creation-tech.co.jp', '03-5555-0104',
+ 'operator3', '由美', 'ユミ', '森', 'モリ', 'operator1@creation-tech.co.jp', '03-5555-0104',
  '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'operator', 0, NULL, 1, FALSE, 0),
 (5, TRUE, '2026-07-02 11:30:00', '2026-07-02 11:30:00', 'admin1', 'admin1',
- 'operator2', '誠', 'マコト', '小林', 'コバヤシ', 'operator2@creation-tech.co.jp', '03-5555-0105',
+ 'operator4', '誠', 'マコト', '小林', 'コバヤシ', 'operator2@creation-tech.co.jp', '03-5555-0105',
  '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'operator', 0, NULL, 1, FALSE, 0);
 
 -- =========================================================
