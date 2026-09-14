@@ -19,7 +19,7 @@ export function HomeMethodsSection() {
       aria-labelledby="home-methods-title"
       className="scroll-mt-20 border-y border-border bg-background py-14 sm:py-16 2xl:py-24"
     >
-      <div className="mx-auto w-full max-w-marketing space-y-8 px-4 sm:space-y-10 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-page space-y-8 px-4 sm:space-y-10 sm:px-6 lg:px-8">
         <HomeSectionHeading
           id="home-methods-title"
           title="初期対応方法論"

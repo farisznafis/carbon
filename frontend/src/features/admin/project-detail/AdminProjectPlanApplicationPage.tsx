@@ -15,6 +15,7 @@ import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWra
 import { Card, CardContent } from '@/components/ui/card';
 import { logger } from '@/lib/logger';
 import { paths } from '@/routes/paths';
+import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 import { steps } from '@/features/admin/project-registration/forms/projectSteps';
 import type { FormValues } from '@/features/admin/project-registration/forms/projectFormTypes';
 
@@ -150,6 +151,7 @@ function InformationGrid({
 export default function AdminProjectPlanApplicationPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
+  const permissions = useAdminPermissions();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(true);
   const [values, setValues] = useState<ProjectPlanDisplayValues>({});
@@ -216,7 +218,9 @@ export default function AdminProjectPlanApplicationPage() {
   const handleUpdateProject = () => {
     if (!projectId) return;
 
-    navigate(`${paths.adminProjectEdit(projectId)}?page=${step}`);
+    permissions.guardAction('PROJECT_UPDATE', () =>
+      navigate(`${paths.adminProjectEdit(projectId)}?page=${step}`),
+    );
   };
 
   const currentStep = visibleSteps.find((item) => item.id === step) ?? visibleSteps[0];

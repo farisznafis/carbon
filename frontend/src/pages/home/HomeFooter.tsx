@@ -18,7 +18,7 @@ export function HomeFooter() {
 
   return (
     <footer className="border-t border-border bg-muted/70">
-      <div className="mx-auto w-full max-w-marketing px-4 py-10 sm:px-6 sm:py-12 lg:px-8 2xl:py-16">
+      <div className="mx-auto w-full max-w-page px-4 py-10 sm:px-6 sm:py-12 lg:px-8 2xl:py-16">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_1fr] lg:gap-16 2xl:gap-24">
           <div className="max-w-sm space-y-4">
             <div className="flex items-center gap-2">

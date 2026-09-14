@@ -7,17 +7,26 @@ import { getHomePath } from '@/utils/getHomePath';
 
 type ForbiddenAccessPageProps = {
   onReturnHome?: () => void;
+  actionLabel?: string;
+  onAction?: () => void;
 };
 
 /** Displays the shared in-content warning for a page-level 403 response. */
 export function ForbiddenAccessPage({
   onReturnHome,
+  actionLabel = 'ホームに戻る',
+  onAction,
 }: Readonly<ForbiddenAccessPageProps>) {
   const navigate = useNavigate();
   const { user } = useAuth();
 
   /** Returns to the role-appropriate home page from the access warning. */
   const handleReturnHome = () => {
+    if (onAction) {
+      onAction();
+      return;
+    }
+
     onReturnHome?.();
     navigate(getHomePath(user), { replace: true });
   };
@@ -38,7 +47,7 @@ export function ForbiddenAccessPage({
             必要な場合は管理者にお問い合わせください。
           </p>
           <Button type="button" className="mt-8 w-full" onClick={handleReturnHome}>
-            ホームに戻る
+            {actionLabel}
           </Button>
         </CardContent>
       </Card>

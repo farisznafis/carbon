@@ -23,7 +23,7 @@ export function HomeFaqSection({ contactPath }: HomeFaqSectionProps) {
       aria-labelledby="home-faq-title"
       className="scroll-mt-20 bg-card py-14 sm:py-16 2xl:py-24"
     >
-      <div className="mx-auto grid w-full max-w-marketing gap-8 px-4 sm:gap-10 sm:px-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-center lg:px-8 2xl:gap-16">
+      <div className="mx-auto grid w-full max-w-page gap-8 px-4 sm:gap-10 sm:px-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-center lg:px-8 2xl:gap-16">
         <div className="space-y-8">
           <HomeSectionHeading
             id="home-faq-title"
@@ -54,7 +54,7 @@ export function HomeFaqSection({ contactPath }: HomeFaqSectionProps) {
               <AccordionTrigger className="py-5 text-left text-base font-semibold leading-7 hover:no-underline sm:text-lg 2xl:py-6">
                 {faq.question}
               </AccordionTrigger>
-              <AccordionContent className="pb-5 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7 2xl:pb-6">
+              <AccordionContent className="pb-5 text-sm leading-6 text-neutral-800 sm:text-base sm:leading-7 2xl:pb-6">
                 {faq.answer}
               </AccordionContent>
             </AccordionItem>

@@ -23,6 +23,8 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
 import { downloadFromUrl } from '@/utils/download';
+import { isForbiddenApiError } from '@/api/_shared/errors';
+import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
 import {
   ParticipationReviewDecisionDialog,
   type ParticipationReviewDecision,
@@ -135,6 +137,7 @@ export default function ParticipationReviewDetailPage() {
     useState<ParticipationReviewDecisionErrors>(EMPTY_FIELD_ERRORS);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [hasPermissionError, setHasPermissionError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
@@ -182,6 +185,7 @@ export default function ParticipationReviewDetailPage() {
 
     setIsLoading(true);
     setLoadError(null);
+    setHasPermissionError(false);
 
     try {
       const openReviewsRequest =
@@ -221,6 +225,7 @@ export default function ParticipationReviewDetailPage() {
       setFieldErrors(EMPTY_FIELD_ERRORS);
       setSubmitError(null);
     } catch (error) {
+      setHasPermissionError(isForbiddenApiError(error));
       setLoadError(
         getErrorMessage(error, '入会届の詳細取得に失敗しました。'),
       );
@@ -372,6 +377,15 @@ export default function ParticipationReviewDetailPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background px-6 text-small text-foreground">
         入会届の詳細を読み込んでいます...
+      </main>
+    );
+  }
+
+  if (hasPermissionError) {
+    return (
+      <main className="mx-auto w-full max-w-[960px] space-y-6 px-4 py-10 sm:px-6">
+        <header><h1>入会届の詳細</h1><p className="mt-2 text-small text-foreground">申請内容と確認資料を確認します。</p></header>
+        <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
       </main>
     );
   }

@@ -4,11 +4,25 @@ export interface LoginResponse {
   token: string;
   id?: string | number | null;
   userId?: string | number | null;
+  operatorId?: string | number | null;
   user?: {
     id?: string | number | null;
     userId?: string | number | null;
+    operatorId?: string | number | null;
     email?: string | null;
     username?: string | null;
+  } | null;
+  admin?: {
+    id?: string | number | null;
+    userId?: string | number | null;
+    operatorId?: string | number | null;
+    email?: string | null;
+    username?: string | null;
+    name?: string | null;
+    role?: string | null;
+    companyId?: string | null;
+    siteId?: string | number | null;
+    siteName?: string | null;
   } | null;
   companyName: string;
   siteId?: string | number | null;
