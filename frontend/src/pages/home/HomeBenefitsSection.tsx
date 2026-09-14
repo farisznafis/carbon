@@ -30,7 +30,7 @@ export function HomeBenefitsSection() {
         relative
         scroll-mt-20
         overflow-hidden
-        bg-[linear-gradient(130deg,hsl(var(--blue-900)),hsl(var(--blue-800))_70%,hsl(var(--blue-700)))]
+        surface-brand-dark
         py-16
         sm:py-20
         lg:py-24
