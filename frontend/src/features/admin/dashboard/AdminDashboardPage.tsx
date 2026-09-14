@@ -88,6 +88,10 @@ const APPLICATION_STATUSES: CompanyStatus[] = ['PENDING', 'REJECTED'];
 const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
 const HOME_APPLICATION_SUMMARY_LIMIT = 3;
 const ALL_PROJECT_FILTER = 'ALL';
+const IN_PROGRESS_PROJECT_STATUS = '準備中';
+const PROJECT_STATUS_FILTER_OPTIONS = PROJECT_STATUS_PRESENTATIONS.filter(
+  ({ status }) => status !== IN_PROGRESS_PROJECT_STATUS,
+);
 const FORBIDDEN_SECTION_ERROR = '__FORBIDDEN_SECTION__';
 
 const DEFAULT_PAGINATION: Pagination = {
@@ -182,6 +186,7 @@ function matchesProjectSearch(project: Project, normalizedQuery: string) {
     project.projectName,
     project.methodCategory,
     project.methodNumber,
+    project.methodologyVersion,
     project.methodName,
   ].some((field) => field.toLocaleLowerCase('ja-JP').includes(normalizedQuery));
 }
@@ -307,8 +312,6 @@ const AdminDashboard = () => {
     ALL_PROJECT_FILTER,
   );
   const [projectSearchQuery, setProjectSearchQuery] = useState('');
-  const [showIncompleteProjectsOnly, setShowIncompleteProjectsOnly] =
-    useState(false);
   const projectListHeadingRef = useRef<HTMLHeadingElement>(null);
   const [pendingDialogOpen, setPendingDialogOpen] = useState(false);
   const [pendingDialogMode, setPendingDialogMode] =
@@ -694,25 +697,18 @@ const AdminDashboard = () => {
         projectMethodologyFilter === ALL_PROJECT_FILTER ||
         getProjectMethodologyFilterValue(project) ===
           projectMethodologyFilter;
-      const progress = planProgress.get(String(project.id));
-      const matchesIncomplete =
-        !showIncompleteProjectsOnly ||
-        Boolean(progress && !progress.complete && progress.totalForms > 0);
 
       return (
         matchesStatus &&
         matchesMethodology &&
-        matchesIncomplete &&
         matchesProjectSearch(project, normalizedQuery)
       );
     });
   }, [
-    planProgress,
     projectMethodologyFilter,
     projectSearchQuery,
     projectStatusFilter,
     projects,
-    showIncompleteProjectsOnly,
   ]);
 
   const {
@@ -726,24 +722,11 @@ const AdminDashboard = () => {
     setItemsPerPage: setProjectItemsPerPage,
   } = usePagination(filteredProjects);
 
-  const hasActiveProjectFilters =
-    projectStatusFilter !== ALL_PROJECT_FILTER ||
-    projectMethodologyFilter !== ALL_PROJECT_FILTER ||
-    projectSearchQuery.trim().length > 0 ||
-    showIncompleteProjectsOnly;
-
-  /** Resets the project list to its unfiltered first page. */
-  const handleResetProjectFilters = () => {
-    setProjectStatusFilter(ALL_PROJECT_FILTER);
+  /** Filters the table by the API's in-progress status and moves focus to the result list. */
+  const handleShowAllInProgressProjects = () => {
+    setProjectStatusFilter(IN_PROGRESS_PROJECT_STATUS);
     setProjectMethodologyFilter(ALL_PROJECT_FILTER);
     setProjectSearchQuery('');
-    setShowIncompleteProjectsOnly(false);
-    setProjectPage(1);
-  };
-
-  /** Activates the incomplete-project view and moves focus to the project list. */
-  const handleShowAllInProgressProjects = () => {
-    setShowIncompleteProjectsOnly(true);
     setProjectPage(1);
     window.requestAnimationFrame(() => {
       projectListHeadingRef.current?.scrollIntoView({
@@ -757,12 +740,6 @@ const AdminDashboard = () => {
   const handleEditProject = (project: Project) => {
     adminPermissions.guardAction('PROJECT_READ', () => {
       navigate(paths.adminProjectDetail(project.id));
-    });
-  };
-
-  const handleUpdateProject = (project: Project) => {
-    adminPermissions.guardAction('PROJECT_UPDATE', () => {
-      navigate(paths.adminProjectEdit(project.id), { state: { project } });
     });
   };
 
@@ -1368,22 +1345,24 @@ const AdminDashboard = () => {
                           }}
                         >
                           <SelectTrigger className="w-full sm:w-44">
-                            <SelectValue placeholder="ステータス" />
+                            {projectStatusFilter === IN_PROGRESS_PROJECT_STATUS ? (
+                              <span>{IN_PROGRESS_PROJECT_STATUS}</span>
+                            ) : (
+                              <SelectValue placeholder="ステータス" />
+                            )}
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value={ALL_PROJECT_FILTER}>
                               すべてのステータス
                             </SelectItem>
-                            {PROJECT_STATUS_PRESENTATIONS.map(
-                              (presentation) => (
-                                <SelectItem
-                                  key={presentation.status}
-                                  value={presentation.status}
-                                >
-                                  {presentation.status}
-                                </SelectItem>
-                              ),
-                            )}
+                            {PROJECT_STATUS_FILTER_OPTIONS.map((presentation) => (
+                              <SelectItem
+                                key={presentation.status}
+                                value={presentation.status}
+                              >
+                                {presentation.status}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
 
@@ -1408,22 +1387,6 @@ const AdminDashboard = () => {
                             ))}
                           </SelectContent>
                         </Select> */}
-
-                        {showIncompleteProjectsOnly && (
-                          <span className="inline-flex min-h-10 items-center rounded-md bg-muted px-3 text-small font-medium text-foreground">
-                            作成中のみ
-                          </span>
-                        )}
-
-                        {hasActiveProjectFilters && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={handleResetProjectFilters}
-                          >
-                            リセット
-                          </Button>
-                        )}
                       </div>
 
                       <div className="relative w-full lg:max-w-sm">
@@ -1456,7 +1419,6 @@ const AdminDashboard = () => {
                         <ProjectTable
                           projects={paginatedProjects}
                           onEdit={handleEditProject}
-                          onUpdate={handleUpdateProject}
                           onStatusChange={handleChangeProjectStatus}
                           updatingProjectStatusId={updatingProjectStatusId}
                           planProgress={planProgress}
