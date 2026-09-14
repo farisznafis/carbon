@@ -20,6 +20,8 @@ export function mapProjectListItem(item: ProjectListItem): Project {
     projectName: item.projectName,
     projectStatus: item.projectStatus as Project['projectStatus'],
     emissionReduction: normalizeOptionalNumber(item.emissionReduction),
+    updatedAt: item.updatedAt ?? null,
+    createdAt: item.createdAt ?? null,
     methodCategory: item.methodologyCategory,
     methodNumber: item.methodologyNumber,
     methodName: item.methodologyName,

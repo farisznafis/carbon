@@ -7,27 +7,25 @@ type HomeCtaSectionProps = Readonly<{
 }>;
 
 /** Renders the final registration call-to-action on the public homepage. */
-export function HomeCtaSection({
-  signupPath,
-}: HomeCtaSectionProps) {
+export function HomeCtaSection({ signupPath }: HomeCtaSectionProps) {
   return (
-    <section className="bg-card px-4 py-14 sm:px-6 sm:py-16 lg:px-8 2xl:py-24">
+    <section className='bg-card px-4 py-14 sm:px-6 sm:py-16 lg:px-8 2xl:py-24'>
       <div
-        className="
+        className='
           relative
           mx-auto
           w-full
-          max-w-marketing
+          max-w-page
           overflow-hidden
           rounded-3xl
-          bg-[linear-gradient(130deg,hsl(var(--neutral-900)),hsl(var(--blue-900))_70%,hsl(var(--blue-800)))]
+          bg-[linear-gradient(130deg,hsl(var(--blue-900)),hsl(var(--blue-700))_70%,hsl(var(--blue-600)))]
           shadow-marketing
-        "
+        '
       >
         {/* Decorative brand ring */}
         <div
-          aria-hidden="true"
-          className="
+          aria-hidden='true'
+          className='
             pointer-events-none
             absolute
             -right-24
@@ -37,11 +35,11 @@ export function HomeCtaSection({
             rounded-full
             border-[50px]
             border-[hsl(var(--blue-400)/0.12)]
-          "
+          '
         />
 
         <div
-          className="
+          className='
             relative
             z-10
             flex
@@ -53,22 +51,22 @@ export function HomeCtaSection({
             lg:items-center
             lg:justify-between
             2xl:p-12
-          "
+          '
         >
-          <div className="max-w-3xl">
+          <div className='max-w-3xl'>
             <p
-              className="
+              className='
                 mb-2
                 text-small
                 font-semibold
                 text-[hsl(var(--blue-200))]
-              "
+              '
             >
               プロジェクト参加
             </p>
 
             <h2
-              className="
+              className='
                 text-balance
                 text-3xl
                 font-bold
@@ -76,20 +74,20 @@ export function HomeCtaSection({
                 tracking-tight
                 text-white
                 sm:text-4xl
-              "
+              '
             >
               プロジェクト参加を、もっとかんたんに
             </h2>
 
             <p
-              className="
+              className='
                 mt-4
                 max-w-2xl
                 text-base
                 leading-7
                 text-white/80
                 sm:text-lg
-              "
+              '
             >
               参加可能なプロジェクトの確認から入会届の提出まで、
               オンラインでスムーズに進められます。
@@ -98,9 +96,9 @@ export function HomeCtaSection({
 
           <Button
             asChild
-            size="lg"
-            variant="outline"
-            className="
+            size='lg'
+            variant='outline'
+            className='
               shrink-0
               border-white
               bg-white
@@ -108,11 +106,11 @@ export function HomeCtaSection({
               hover:border-[hsl(var(--blue-50))]
               hover:bg-[hsl(var(--blue-50))]
               hover:text-primary-strong
-            "
+            '
           >
             <Link to={signupPath}>
               今すぐ登録する
-              <ArrowRight aria-hidden="true" />
+              <ArrowRight aria-hidden='true' />
             </Link>
           </Button>
         </div>

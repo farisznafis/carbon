@@ -7,6 +7,8 @@ export interface Project {
   projectName: string;
   projectStatus: string;
   emissionReduction?: number;
+  updatedAt?: string | null;
+  createdAt?: string | null;
   baselineEmissions?: number;
   postProjectEmission?: number;
   methodologyVersion: string;
@@ -97,6 +99,8 @@ export type ProjectListItem = {
   projectName: string;
   projectStatus: string;
   emissionReduction?: number | string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
   methodologyCategory: string;
   methodologyNumber: string;
   methodologyName: string;

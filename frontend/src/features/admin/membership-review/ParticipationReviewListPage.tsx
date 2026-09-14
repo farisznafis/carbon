@@ -28,6 +28,8 @@ import { formatAdminCompanyDateTime } from '@/features/admin/company-detail/comp
 import { usePagination } from '@/hooks/usePagination';
 import { paths } from '@/routes/paths';
 import { isParticipationReviewForProject } from './participationReviewProjectMatch';
+import { isForbiddenApiError } from '@/api/_shared/errors';
+import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
 
 const INITIAL_ITEMS_PER_PAGE = 10;
 const REVIEW_GRID_COLUMNS =
@@ -98,6 +100,7 @@ export default function ParticipationReviewListPage() {
   >(EMPTY_REVIEWS_BY_STATUS);
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoadError, setHasLoadError] = useState(false);
+  const [hasPermissionError, setHasPermissionError] = useState(false);
 
   /** Loads all membership statuses without comparing incompatible public and internal project IDs. */
   const loadReviews = useCallback(async () => {
@@ -109,6 +112,7 @@ export default function ParticipationReviewListPage() {
 
     setIsLoading(true);
     setHasLoadError(false);
+    setHasPermissionError(false);
 
     try {const [project, statusReviews] = await Promise.all([
         getAdminProjectDetail(projectId),
@@ -127,7 +131,8 @@ export default function ParticipationReviewListPage() {
         ),
       });
       // setReviewsByStatus(await getParticipationReviewsByStatus());
-    } catch {
+    } catch (error) {
+      setHasPermissionError(isForbiddenApiError(error));
       setHasLoadError(true);
     } finally {
       setIsLoading(false);
@@ -247,6 +252,15 @@ export default function ParticipationReviewListPage() {
   );
 
   const returnToProject = () => navigate(paths.adminProjectDetail(projectId));
+
+  if (hasPermissionError) {
+    return (
+      <main className="mx-auto w-full max-w-[1120px] space-y-6 px-4 py-10 sm:px-6">
+        <header><h1>入会届一覧</h1><p className="mt-2 text-small text-foreground">レビュー対象となる入会届を確認します。</p></header>
+        <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
+      </main>
+    );
+  }
 
   if (hasLoadError) {
     return <NotFoundPage />;
