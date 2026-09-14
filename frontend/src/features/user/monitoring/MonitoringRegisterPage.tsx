@@ -80,6 +80,7 @@ function toServerFieldErrors(errors: unknown): Record<string, string> {
     elpvr_evidence: 'ELpvr_evidence',
     elpj_battery_evidence: 'ELPJ_battery_evidence',
     elpj_control_equipment_spec_files: 'ELPJ_control_equipment_spec_files',
+    elpj_control_evidence: 'ELPJ_control_equipment_spec_files',
   };
 
   return Object.entries(errors as Record<string, unknown>).reduce<

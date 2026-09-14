@@ -20,6 +20,10 @@ type GetAdminOperatorsOptions = {
   forbiddenHandling?: ForbiddenHandling;
 };
 
+type GetAdminOperatorProfileOptions = {
+  forbiddenHandling?: ForbiddenHandling;
+};
+
 /** Calls GET /admin/companies/operator-user to load operators for the logged-in admin company. */
 export async function getAdminOperators(
   options: GetAdminOperatorsOptions = {},
@@ -39,11 +43,18 @@ export async function getAdminOperators(
 /** Calls GET /admin/companies/operator-user/{userId} for a single operator profile. */
 export async function getAdminOperatorProfile(
   userId: string,
+  options: GetAdminOperatorProfileOptions = {},
 ): Promise<AdminOperator> {
+  const normalizedUserId = userId.trim();
+  if (!normalizedUserId || normalizedUserId.toLocaleLowerCase('en-US') === 'admin') {
+    throw new Error('運用者IDを特定できませんでした。');
+  }
+
   const response = await apiRequest<AdminOperatorProfileApiResponse>(
-    `/admin/companies/operator-user/${encodeURIComponent(userId)}`,
+    `/admin/companies/operator-user/${encodeURIComponent(normalizedUserId)}`,
     {
       method: 'GET',
+      forbiddenHandling: options.forbiddenHandling,
       fallbackErrorMessage: '運用者のプロファイルを取得できませんでした。',
     },
   );

@@ -1,10 +1,6 @@
 import { BASE_URL, getAuthHeaders } from '../config';
 import { ApiError, getApiErrorMessage } from './errors';
-import {
-  getCurrentBrowserRouteKey,
-  reportPageForbidden,
-  type ForbiddenHandling,
-} from './forbiddenAccess';
+import type { ForbiddenHandling } from './forbiddenAccess';
 import type { ApiErrorPayload } from './types';
 
 type ApiBody = BodyInit | object | null | undefined;
@@ -61,28 +57,13 @@ function createHeaders(options: ApiFetchOptions, hasJsonBody: boolean): Headers 
 export async function apiFetch(path: string, options: ApiFetchOptions = {}): Promise<Response> {
   const hasJsonBody = isPlainJsonBody(options.body);
   const body = hasJsonBody ? JSON.stringify(options.body) : options.body;
-  const { forbiddenHandling, ...requestOptions } = options;
-  const requestRouteKey = getCurrentBrowserRouteKey();
+  const { forbiddenHandling: _forbiddenHandling, ...requestOptions } = options;
 
   const response = await fetch(`${BASE_URL}${path}`, {
     ...requestOptions,
     body: body as BodyInit | null | undefined,
     headers: createHeaders(options, hasJsonBody),
   });
-
-  const requestMethod = (options.method ?? 'GET').toUpperCase();
-  const isAdminPage =
-    typeof window !== 'undefined' &&
-    window.location.pathname.startsWith('/admin');
-
-  if (
-    response.status === 403 &&
-    requestMethod === 'GET' &&
-    forbiddenHandling !== 'caller' &&
-    isAdminPage
-  ) {
-    reportPageForbidden({ requestPath: path, routeKey: requestRouteKey });
-  }
 
   return response;
 }

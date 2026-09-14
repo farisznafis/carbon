@@ -1,7 +1,9 @@
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowRight, Pause, Play } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 
-/** Defines the supported static/GIF and video sources for the hero preview. */
 export type HeroMediaSource =
   | {
       kind: 'image';
@@ -23,92 +25,236 @@ type HomeHeroSectionProps = Readonly<{
   signupPath: string;
 }>;
 
-/** Central replacement point for the homepage GIF, image, or video preview. */
-// const HERO_MEDIA_SOURCE: HeroMediaSource = {
-//   kind: 'image',
-//   src: '/assets/hero/dashboard-preview.png',
-//   alt: 'GXダッシュボードのプレビュー',
-// };
-
 const HERO_MEDIA_SOURCE: HeroMediaSource = {
   kind: 'video',
-  src: '/assets/hero/dashboard-preview.mp4',
-  label: 'GXダッシュボードの操作イメージ',
-  poster: '/assets/hero/dashboard-preview.png',
+  src: '/assets/hero/dashboard-carbonzero.mp4',
+  label: 'Carbon Zeroのプロダクトイメージを表現したモーション映像',
 };
 
-/** Renders the responsive Figma media frame for either an image/GIF or video. */
+/**
+ * Hero media preview.
+ * Uses the shared Carbon design-system tokens for
+ * border, radius, shadow, color, and interaction states.
+ */
 export function HeroMediaFrame({ source }: HeroMediaFrameProps) {
-  return (
-    <div className="relative mx-auto w-full max-w-[1340px]">
-      <img
-        src="/assets/hero/glow-left.svg"
-        alt=""
-        aria-hidden="true"
-        className="pointer-events-none absolute -left-[5%] -top-[12%] hidden h-[68%] w-[45%] -rotate-[15deg] object-fill sm:block"
-      />
-      <img
-        src="/assets/hero/glow-right.svg"
-        alt=""
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-[2%] -top-[7%] hidden h-[70%] w-[38%] rotate-[88deg] object-fill sm:block"
-      />
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-      <div className="relative mx-auto w-full max-w-[1200px] rounded-3xl border border-muted-foreground/60 bg-card p-3 shadow-app-md sm:p-5 lg:p-6 2xl:p-9">
-        <div className="aspect-[1319/703] overflow-hidden border border-muted-foreground/60 bg-muted">
-          {source.kind === 'image' ? (
-            <img
-              src={source.src}
-              alt={source.alt}
-              loading="eager"
-              decoding="async"
-              className="h-full w-full object-cover object-top"
-            />
-          ) : (
-            <video
-              src={source.src}
-              poster={source.poster}
-              title={source.label}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              className="h-full w-full object-cover object-top"
+  const toggleVideo = async () => {
+    const video = videoRef.current;
+
+    if (!video) return;
+
+    if (video.paused) {
+      await video.play();
+    } else {
+      video.pause();
+    }
+  };
+
+  return (
+    <div className="relative">
+      <div
+        className="
+          relative
+          aspect-[4/5]
+          overflow-hidden
+          rounded-lg
+          border
+          border-border
+          bg-foreground
+          shadow-app-md
+          sm:aspect-[16/10]
+          lg:min-h-[490px]
+        "
+      >
+        {source.kind === 'image' ? (
+          <img
+            src={source.src}
+            alt={source.alt}
+            loading="eager"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <video
+            ref={videoRef}
+            src={source.src}
+            poster={source.poster}
+            title={source.label}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            className="h-full w-full object-cover object-top"
+          >
+            お使いのブラウザは動画の再生に対応していません。
+          </video>
+        )}
+
+        {/* Subtle overlay for visual depth. */}
+        <div
+          aria-hidden="true"
+          className="
+            pointer-events-none
+            absolute
+            inset-0
+            bg-gradient-to-b
+            from-transparent
+            via-transparent
+            to-foreground/20
+          "
+        />
+
+        {source.kind === 'video' ? (
+          <div className="absolute right-4 top-4 z-10">
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              onClick={toggleVideo}
+              aria-label={isPlaying ? '動画を一時停止' : '動画を再生'}
+              className="backdrop-blur-sm"
             >
-              お使いのブラウザは動画の再生に対応していません。
-            </video>
-          )}
-        </div>
+              {isPlaying ? (
+                <Pause aria-hidden="true" />
+              ) : (
+                <Play aria-hidden="true" />
+              )}
+            </Button>
+          </div>
+        ) : null}
       </div>
     </div>
   );
 }
 
-/** Renders the viewport-height homepage hero and its intentionally clipped preview. */
-export function HomeHeroSection({ signupPath }: HomeHeroSectionProps) {
+export function HomeHeroSection({
+  signupPath,
+}: HomeHeroSectionProps) {
   return (
     <section
+      id="top"
       aria-labelledby="home-hero-title"
-      className="relative min-h-[calc(100dvh-4rem-1px)] overflow-hidden bg-card px-4 pb-24 pt-10 sm:px-6 sm:pb-28 sm:pt-14 lg:min-h-0 lg:px-8 lg:pb-16 lg:pt-12 2xl:h-[calc(100dvh-4rem-1px)] 2xl:min-h-[700px] 2xl:pb-0 2xl:pt-20"
+      className="
+        relative
+        min-h-[calc(100dvh-64px)]
+        overflow-hidden
+        bg-gradient-to-b
+        from-card
+        via-card
+        to-accent/30
+      "
     >
-      <div className="mx-auto flex w-full max-w-[1340px] flex-col items-center">
-        <div className="animate-slide-up flex w-full max-w-[1240px] flex-col items-center text-center motion-reduce:animate-none">
+      {/* Subtle decorative background element. */}
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          -right-[180px]
+          top-0
+          hidden
+          h-[620px]
+          w-[620px]
+          rounded-full
+          border
+          border-primary/10
+          lg:block
+        "
+      />
+
+      <div
+        className="
+          relative
+          z-10
+          mx-auto
+          grid
+          w-full
+          max-w-page
+          grid-cols-1
+          items-center
+          gap-10
+          px-4
+          pb-10
+          pt-14
+          sm:px-6
+          sm:pt-20
+          lg:grid-cols-[minmax(0,0.82fr)_minmax(520px,1.18fr)]
+          lg:gap-12
+          lg:px-8
+          lg:py-[72px]
+          xl:gap-[72px]
+        "
+      >
+        {/* Left: message and CTA */}
+        <div className="animate-slide-up motion-reduce:animate-none">
           <h1
             id="home-hero-title"
-            className="max-w-6xl text-balance text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl 2xl:text-5xl"
+            className="
+              max-w-[720px]
+              text-4xl
+              font-bold
+              leading-tight
+              tracking-tight
+              text-foreground
+              sm:text-5xl
+              lg:text-6xl
+            "
           >
-            カーボンデータを「意思決定」に変えるプラットフォーム
+            カーボンデータを、
+            <span className="whitespace-nowrap text-primary">
+              「意思決定」
+            </span>
+            に変える。
           </h1>
-          <p className="mt-4 max-w-3xl text-pretty text-base leading-7 text-foreground sm:text-lg 2xl:text-xl">
-            排出量・カーボンクレジット・コンプライアンスを一つの画面で管理します。
+
+          <p
+            className="
+              mt-6
+              max-w-xl
+              text-base
+              leading-7
+              text-muted-foreground
+              sm:text-lg
+            "
+          >
+            排出量、拠点、設備、証憑、モニタリング。
+            <br className="hidden sm:block" />
+            分散しがちなJ-クレジット業務を、
+            判断につながるひとつの運用へ。
           </p>
-          <Button asChild size="lg" className="mt-5 px-8">
-            <Link to={signupPath}>無料で始める</Link>
-          </Button>
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="w-full sm:w-auto"
+            >
+              <a href="#features">
+                機能を見る
+              </a>
+            </Button>
+
+            <Button
+              asChild
+              size="lg"
+              className="w-full sm:w-auto"
+            >
+              <Link to={signupPath}>
+                無料ではじめる
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
         </div>
 
-        <div className="mt-8 w-full animate-slide-up motion-reduce:animate-none sm:mt-10 2xl:mt-16">
+        {/* Right: product video */}
+        <div className="animate-slide-up motion-reduce:animate-none">
           <HeroMediaFrame source={HERO_MEDIA_SOURCE} />
         </div>
       </div>

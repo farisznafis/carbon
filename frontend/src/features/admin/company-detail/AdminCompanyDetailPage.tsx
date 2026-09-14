@@ -21,7 +21,7 @@ import {
   sendAdminCompanyPasswordResetLink,
   suspendAdminCompany,
 } from '@/api/admin';
-import { ApiError } from '@/api/_shared/errors';
+import { ApiError, isForbiddenApiError } from '@/api/_shared/errors';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import {
   floatingPageBackButtonClassName,
@@ -46,6 +46,8 @@ import { useAdminCompanyDetailQuery } from '@/hooks/admin/useAdminCompanyDetailQ
 import { PageSkeleton, SkeletonCard, SkeletonTable } from '@/components/feedback/loading';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
+import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
+import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
 import { AdminCompanySitesTable } from './components/AdminCompanySitesTable';
 import { AdminCompanyUsersTable } from './components/AdminCompanyUsersTable';
 import { AdminMasterPasswordResetDialog } from './components/AdminMasterPasswordResetDialog';
@@ -197,6 +199,7 @@ export default function AdminCompanyDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const permissions = useAdminPermissions();
   const companyDetailQuery = useAdminCompanyDetailQuery(companyId);
 
   const [submitting, setSubmitting] = useState(false);
@@ -246,6 +249,7 @@ export default function AdminCompanyDetailPage() {
   };
 
   const handleOpenSuspendDialog = () => {
+    if (!permissions.guardAction('PARTICIPATING_COMPANY_SUSPEND', () => undefined)) return;
     if (isOwnCompany) {
       toast({
         title: 'このアカウントは停止できません',
@@ -258,6 +262,7 @@ export default function AdminCompanyDetailPage() {
   };
 
   const handleConfirmSuspend = async () => {
+    if (!permissions.guardAction('PARTICIPATING_COMPANY_SUSPEND', () => undefined)) return;
     if (!actionTarget) return;
     setSubmitting(true);
     setFieldErrors({});
@@ -292,6 +297,7 @@ export default function AdminCompanyDetailPage() {
   };
 
   const handleOpenResolveDialog = async () => {
+    if (!permissions.guardAction('PARTICIPATING_COMPANY_SUSPEND', () => undefined)) return;
     if (!actionTarget) return;
     setResolveDialogOpen(true);
     setResolveLoading(true);
@@ -316,6 +322,7 @@ export default function AdminCompanyDetailPage() {
   };
 
   const handleConfirmResolve = async () => {
+    if (!permissions.guardAction('PARTICIPATING_COMPANY_SUSPEND', () => undefined)) return;
     if (!actionTarget || selectedSuspensionId === null) return;
     const suspension = activeSuspensions.find((s) => s.id === selectedSuspensionId);
     if (!suspension) return;
@@ -353,6 +360,7 @@ export default function AdminCompanyDetailPage() {
   };
 
   const handleConfirmPasswordReset = async () => {
+    if (!permissions.guardAction('MASTER_USER_PASSWORD_RESET', () => undefined)) return;
     if (!detail?.masterAccount) return;
 
     setPasswordResetSubmitting(true);
@@ -389,6 +397,18 @@ export default function AdminCompanyDetailPage() {
   }
 
   if (companyDetailQuery.isLoading) return <DetailLoadingState />;
+
+  if (isForbiddenApiError(companyDetailQuery.error)) {
+    return (
+      <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
+        <header className="mb-6">
+          <h1 className="text-3xl font-bold text-foreground">参加企業詳細</h1>
+          <p className="mt-2 text-muted-foreground">参加企業の登録情報を確認します。</p>
+        </header>
+        <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_READ" />
+      </main>
+    );
+  }
 
   if (!detail || companyDetailQuery.isError) {
     return (
@@ -571,7 +591,11 @@ export default function AdminCompanyDetailPage() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => setPasswordResetDialogOpen(true)}
+                      onClick={() =>
+                        permissions.guardAction('MASTER_USER_PASSWORD_RESET', () =>
+                          setPasswordResetDialogOpen(true),
+                        )
+                      }
                     >
                       <KeyRound />
                       パスワードリセット

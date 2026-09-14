@@ -59,11 +59,10 @@ export function EmissionTrendChart({
   return (
     <section
       className={cn(
-        'flex h-full min-h-[360px] flex-col rounded-2xl border border-border bg-card p-5 shadow-app-sm',
+        'flex min-h-[380px] flex-col rounded-2xl border border-border bg-card p-5 shadow-app-sm',
         className,
       )}
-      aria-labelledby='emission-trend-title'
-    >
+>
       <h3 id='emission-trend-title' className='leading-8 text-foreground'>
         プロジェクト実施後排出量の推移
       </h3>
@@ -84,7 +83,7 @@ export function EmissionTrendChart({
             </p>
             <ChartContainer
               config={emissionTrendChartConfig}
-              className='h-[230px] w-full aspect-auto'
+              className='h-[320px] w-full aspect-auto'
             >
               <LineChart
                 accessibilityLayer
