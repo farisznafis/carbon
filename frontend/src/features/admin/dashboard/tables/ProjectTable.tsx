@@ -40,7 +40,7 @@ type ProjectTableProps = {
 };
 
 const projectTableGridColumns =
-  'minmax(300px,1.6fr) minmax(100px,.5fr) minmax(300px,1.35fr) minmax(170px,.8fr) minmax(150px,.7fr) minmax(170px,.75fr) minmax(104px,.45fr)';
+  'minmax(240px,1.6fr) minmax(100px,.5fr) minmax(240px,1.35fr) minmax(160px,.8fr) minmax(140px,.7fr) minmax(155px,.75fr) minmax(88px,.4fr)';
 
 const projectStatusOptions: ProjectStatus[] = [
   '作成済み',
@@ -387,6 +387,7 @@ export function ProjectTable({
     {
       id: 'actions',
       label: '操作',
+      // sticky: 'right',
       render: (project) => (
         <div
           className="flex justify-start"

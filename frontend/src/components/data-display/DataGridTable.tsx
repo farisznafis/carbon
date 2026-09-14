@@ -9,8 +9,11 @@ export type DataGridTableColumn<T> = {
   label: string;
   sortable?: boolean;
   className?: string;
+  sticky?: 'left' | 'right';
   render: (row: T) => ReactNode;
-  sortValue?: (row: T) => string | number | null | undefined;
+  sortValue?: (
+    row: T,
+  ) => string | number | null | undefined;
 };
 
 type SortDirection = 'asc' | 'desc';
@@ -47,6 +50,62 @@ function compareSortValues(
         });
 
   return direction === 'asc' ? result : -result;
+}
+
+function getStickyHeaderClass(
+  sticky: DataGridTableColumn<unknown>['sticky'],
+) {
+  if (sticky === 'right') {
+    return [
+      'sticky right-0 z-20',
+      'self-stretch',
+      'border-l border-border',
+      'bg-muted',
+      'pl-4',
+    ].join(' ');
+  }
+
+  if (sticky === 'left') {
+    return [
+      'sticky left-0 z-20',
+      'self-stretch',
+      'border-r border-border',
+      'bg-muted',
+      'pr-4',
+    ].join(' ');
+  }
+
+  return undefined;
+}
+
+function getStickyCellClass(
+  sticky: DataGridTableColumn<unknown>['sticky'],
+) {
+  if (sticky === 'right') {
+    return [
+      'sticky right-0 z-10',
+      'self-stretch',
+      'flex items-center',
+      'border-l border-border',
+      'bg-card',
+      'pl-4',
+      'group-hover:bg-muted',
+    ].join(' ');
+  }
+
+  if (sticky === 'left') {
+    return [
+      'sticky left-0 z-10',
+      'self-stretch',
+      'flex items-center',
+      'border-r border-border',
+      'bg-card',
+      'pr-4',
+      'group-hover:bg-muted',
+    ].join(' ');
+  }
+
+  return undefined;
 }
 
 export function DataGridTable<T>({
@@ -121,7 +180,9 @@ export function DataGridTable<T>({
               variant='ghost'
               onClick={() => handleHeaderClick(column)}
               className={cn(
-                'h-auto justify-start gap-1 p-0 text-table font-bold text-foreground hover:bg-transparent hover:text-primary',
+                'h-auto justify-start gap-1 p-0 text-table font-bold text-foreground hover:text-primary',
+                getStickyHeaderClass(column.sticky),
+                !column.sticky && 'hover:bg-transparent',
                 column.className,
               )}
             >
@@ -138,6 +199,7 @@ export function DataGridTable<T>({
               key={column.id}
               className={cn(
                 'truncate text-table font-bold text-foreground',
+                getStickyHeaderClass(column.sticky),
                 column.className,
               )}
             >
@@ -160,15 +222,20 @@ export function DataGridTable<T>({
             onClick={() => onRowClick?.(row)}
             onKeyDown={(event) => handleRowKeyDown(event, row)}
             className={cn(
-              'grid min-h-[60px] items-center gap-4 border-b border-border px-5 py-3 last:border-b-0',
-              onRowClick && 'cursor-pointer transition hover:bg-muted/40',
+              'group grid min-h-[60px] items-center gap-4 border-b border-border px-5 py-3 last:border-b-0',
+              onRowClick &&
+                'cursor-pointer transition hover:bg-muted/40',
             )}
             style={{ ...gridStyle, minWidth }}
           >
             {columns.map((column) => (
               <div
                 key={column.id}
-                className={cn('min-w-0', column.className)}
+                className={cn(
+                  'min-w-0',
+                  getStickyCellClass(column.sticky),
+                  column.className,
+                )}
               >
                 {column.render(row)}
               </div>
