@@ -21,10 +21,15 @@ export function useAdminOperatorsQuery(
 }
 
 /** Loads GET /admin/companies/operator-user/{userId} for direct profile routes. */
-export function useAdminOperatorProfileQuery(userId?: string) {
+export function useAdminOperatorProfileQuery(
+  userId?: string,
+  enabled = true,
+  forbiddenHandling: ForbiddenHandling = 'page',
+) {
   return useQuery({
-    queryKey: [...adminOperatorsQueryKey, userId],
-    queryFn: () => getAdminOperatorProfile(userId ?? ''),
-    enabled: Boolean(userId),
+    queryKey: [...adminOperatorsQueryKey, 'profile', userId, forbiddenHandling],
+    queryFn: () =>
+      getAdminOperatorProfile(userId ?? '', { forbiddenHandling }),
+    enabled: enabled && Boolean(userId),
   });
 }

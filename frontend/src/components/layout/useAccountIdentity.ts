@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect } from 'react';
 import { getProfile, type ProfileViewModel } from '@/api/profile';
 import type { User } from '@/api/users';
-import { findCurrentAdminOperator } from '@/features/admin/operators/currentAdminOperator';
-import { useAdminOperatorsQuery } from '@/hooks/admin/useAdminOperatorsQuery';
+import { useCurrentAdminOperatorProfileQuery } from '@/hooks/admin/useCurrentAdminOperatorProfileQuery';
 import { paths } from '@/routes/paths';
 import { useProfileStore } from '@/stores/ProfileStore';
 import { formatUserRole } from '@/utils/formatUserRole';
@@ -45,15 +44,11 @@ export function useAccountIdentity(user: User) {
   const profile = useProfileStore((state) => state.profile);
   const setProfile = useProfileStore((state) => state.setProfile);
   const isAdminAccount = user.role === 'admin';
-  const adminOperatorsQuery = useAdminOperatorsQuery(isAdminAccount, 'caller');
-  const currentAdminOperator = useMemo(
-    () =>
-      findCurrentAdminOperator(
-        adminOperatorsQuery.data?.users ?? [],
-        user,
-      ),
-    [adminOperatorsQuery.data?.users, user],
+  const adminOperatorProfileQuery = useCurrentAdminOperatorProfileQuery(
+    user,
+    isAdminAccount,
   );
+  const currentAdminOperator = adminOperatorProfileQuery.operator;
 
   useEffect(() => {
     if (isAdminAccount || profile) return;
@@ -101,26 +96,23 @@ export function useAccountIdentity(user: User) {
       isAdminAccount ? currentAdminOperator?.role : profile?.role,
     ) || usableText(user.role);
 
-  /** Resolves the current profile route, refetching the operator list once when needed. */
+  /** Resolves the current profile route from the signed-in operator detail. */
   const resolveProfilePath = useCallback(async (): Promise<string | null> => {
     if (!isAdminAccount) return paths.profile;
 
-    const cachedOperator = findCurrentAdminOperator(
-      adminOperatorsQuery.data?.users ?? [],
-      user,
-    );
-    if (cachedOperator) return paths.adminOperatorProfile(cachedOperator.id);
+    if (currentAdminOperator) {
+      return paths.adminOperatorProfile(currentAdminOperator.id);
+    }
 
-    const refreshedOperators = await adminOperatorsQuery.refetch();
-    const refreshedOperator = findCurrentAdminOperator(
-      refreshedOperators.data?.users ?? [],
-      user,
-    );
-
+    const refreshedOperator = await adminOperatorProfileQuery.refetch();
     return refreshedOperator
       ? paths.adminOperatorProfile(refreshedOperator.id)
       : null;
-  }, [adminOperatorsQuery, isAdminAccount, user]);
+  }, [
+    adminOperatorProfileQuery,
+    currentAdminOperator,
+    isAdminAccount,
+  ]);
 
   return {
     displayName,

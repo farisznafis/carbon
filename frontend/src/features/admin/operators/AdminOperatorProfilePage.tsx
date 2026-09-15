@@ -1,5 +1,6 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { AdminOperator } from '@/api/admin/operators';
+import { isForbiddenApiError } from '@/api/_shared/errors';
 import { ProfileDetailField } from '@/components/data-display/ProfileDetailField';
 import { LoadingPanel } from '@/components/feedback/loading';
 import {
@@ -23,16 +24,14 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
-import {
-  useAdminOperatorsQuery,
-  useAdminOperatorProfileQuery,
-} from '@/hooks/admin/useAdminOperatorsQuery';
+import { useAdminOperatorProfileQuery } from '@/hooks/admin/useAdminOperatorsQuery';
 import { paths } from '@/routes/paths';
+import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
+import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
 import { OperatorPermissionGroups } from './OperatorPermissionGroups';
 import {
   getOperatorRoleLabel,
   isAdminOperatorRole,
-  resolveOperatorRole,
 } from './operatorRoles';
 
 /** Formats a Japanese operator name in family-name-first order. */
@@ -51,20 +50,21 @@ function formatOperatorKanaName(operator: AdminOperator): string {
 export default function AdminOperatorProfilePage() {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const permissions = useAdminPermissions();
   const profileQuery = useAdminOperatorProfileQuery(userId);
-  const operatorsQuery = useAdminOperatorsQuery(true, 'caller');
   const operator = profileQuery.data;
-  const effectiveRole = resolveOperatorRole(
-    operator,
-    operatorsQuery.data?.users ?? [],
-  );
+  const effectiveRole = operator?.role ?? '';
 
   /** Returns to the operator list from the profile page. */
   const handleBack = () => navigate(paths.adminOperatorList);
 
   /** Opens the edit page for the operator currently displayed. */
   const handleEdit = () => {
-    if (operator) navigate(paths.adminOperatorEdit(operator.id));
+    if (operator) {
+      permissions.guardAction('OPERATOR_USER_UPDATE', () =>
+        navigate(paths.adminOperatorEdit(operator.id)),
+      );
+    }
   };
 
   return (
@@ -108,6 +108,8 @@ export default function AdminOperatorProfilePage() {
 
         {profileQuery.isLoading ? (
           <LoadingPanel message="プロファイルを読み込んでいます" />
+        ) : isForbiddenApiError(profileQuery.error) && userId !== permissions.operatorId ? (
+          <PermissionDeniedNotice permission="OPERATOR_USER_READ" />
         ) : profileQuery.isError || !operator ? (
           <FormCard className="text-center">
             <p className="text-sm text-foreground">
