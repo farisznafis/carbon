@@ -271,7 +271,7 @@ function InProgressProjectSummary({
                           {project.projectName}
                         </p>
                         <p className="mt-1 text-subtle text-muted-foreground">
-                          ステップ {progress.completedForms} / {progress.totalForms}
+                          入力済み {progress.completedForms} / {progress.totalForms} ページ
                         </p>
                       </div>
                       <Button

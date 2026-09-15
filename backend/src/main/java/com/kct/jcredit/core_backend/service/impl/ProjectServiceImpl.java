@@ -31,6 +31,7 @@ import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
 import com.kct.jcredit.core_backend.service.ProjectParticipationPdfService;
 import com.kct.jcredit.core_backend.service.ProjectService;
+import com.kct.jcredit.core_backend.util.ParticipationSelection;
 import com.kct.jcredit.core_backend.util.ProjectSpecification;
 
 import lombok.RequiredArgsConstructor;
@@ -114,8 +115,8 @@ public class ProjectServiceImpl implements ProjectService {
         List<ProjectDetailResponse> projectDetails = projects.stream()
                 .map(project -> {
 
-                    Optional<ParticipatingProject> participationOpt = participatingProjectRepository
-                            .findByCompanyIdAndProject_Id(companyDbId, project.getId());
+                    List<ParticipatingProject> participations = participatingProjectRepository
+                            .findByCompanyIdAndProject_IdOrderByIdAsc(companyDbId, project.getId());
 
                     boolean siteJoined = siteProjectRelationRepository
                             .existsBySite_IdAndProject_Id(siteDbId, project.getId());
@@ -136,13 +137,11 @@ public class ProjectServiceImpl implements ProjectService {
                             .methodologyName(project.getMethodName())
                             .methodologyMainEmission(project.getMethodMainEmission())
                             .projectStatus(project.getProjectStatus())
-                            .isCompanyJoined(participationOpt.isPresent())
-                            .participationStatus(participationOpt
+                            .isCompanyJoined(!participations.isEmpty())
+                            .participationStatus(ParticipationSelection.preferred(participations)
                                     .map(ParticipatingProject::getStatus)
                                     .orElse(null))
-                            .pdfStatus(participationOpt
-                                    .map(p -> p.getS3KeyPdfMembership() != null ? "READY" : "NOT_READY")
-                                    .orElse(null))
+                            .pdfStatus(ParticipationSelection.pdfStatus(participations))
                             .hasSiteRelation(siteJoined)
                             .build();
                 })
