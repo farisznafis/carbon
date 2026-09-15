@@ -29,6 +29,7 @@ import {
 import { getOperatorRoleLabel } from './operatorRoles';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
+import { NoticeBanner } from '@/components/feedback/NoticeBanner';
 
 const EMPTY_OPERATORS: AdminOperator[] = [];
 
@@ -86,41 +87,6 @@ function OperatorPermissionSummary({
         {remainingCount > 0 ? ` +${remainingCount}` : ''}
       </p>
     </div>
-  );
-}
-
-/** Renders the dismissible informational note shown above the operator list. */
-function OperatorInformationNote({
-  onClose,
-}: Readonly<{ onClose: () => void }>) {
-  return (
-    <section className='flex items-start gap-3 rounded-lg border border-primary/25 bg-primary/5 p-4'>
-      {/* <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"> */}
-      <Info
-        className='h-5 w-5 text-primary'
-        aria-hidden='true'
-      />
-      {/* </span> */}
-      <div className='min-w-0 flex-1'>
-        <h2 className='text-sm font-bold text-primary'>補足</h2>
-        <p className='mt-1 text-sm leading-6 text-foreground'>
-          運用者は、管理者から付与された権限の範囲内で日常の運用業務を行います。
-        </p>
-      </div>
-      <Button
-        type='button'
-        variant='ghost'
-        size='icon'
-        className='-mr-2 -mt-2 h-8 w-8 shrink-0'
-        onClick={onClose}
-        aria-label='補足を閉じる'
-      >
-        <X
-          className='h-4 w-4'
-          aria-hidden='true'
-        />
-      </Button>
-    </section>
   );
 }
 
@@ -312,7 +278,15 @@ export default function AdminOperatorListPage() {
         />
 
         {showInformation && (
-          <OperatorInformationNote onClose={() => setShowInformation(false)} />
+          <NoticeBanner
+            tone='info'
+            title='補足'
+            onClose={() =>
+              setShowInformation(false)
+            }
+          >
+            運用者は、管理者から付与された権限の範囲内で日常の運用業務を行います。
+          </NoticeBanner>
         )}
 
         <AdminTableCard

@@ -40,7 +40,6 @@ import {
 } from '@/components/layout/DashboardLayout';
 import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import { AdminTableCard } from '@/components/layout/AdminTableCard';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -74,6 +73,7 @@ import { getAdminRouteFromLegacyTab } from '@/features/admin/navigation/adminNav
 import { Plus, Search, TriangleAlert } from 'lucide-react';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
+import { NoticeBanner } from '@/components/feedback/NoticeBanner';
 
 type AdminDashboardTabValue =
   | 'overview'
@@ -1200,13 +1200,12 @@ const AdminDashboard = () => {
               description="参加申請を受け付けた企業です。内容を確認し、承認または差し戻しを行ってください。"
               notice={
                 applicationSectionAllowed ? (
-                  <Alert className="border-warning-border bg-warning-subtle text-warning-foreground [&>svg]:text-warning-foreground">
-                    <TriangleAlert className="h-4 w-4" aria-hidden="true" />
-                    <AlertTitle>管理者による対応が必要です</AlertTitle>
-                    <AlertDescription>
-                      ステータスが「申請受付」の企業について、申請内容を確認し、承認または差し戻しを行ってください。
-                    </AlertDescription>
-                  </Alert>
+                  <NoticeBanner
+                    tone='warning'
+                    title='管理者による対応が必要です'
+                  >
+                    ステータスが「申請受付」の企業について、申請内容を確認し、承認または差し戻しを行ってください。
+                  </NoticeBanner>
                 ) : undefined
               }
               footer={
