@@ -126,6 +126,28 @@ class ProjectPlanFileServiceTest {
         assertThat(service().foreignTempKeys(body)).isEmpty();
     }
 
+    // --- viewing stored files ---
+
+    @Test
+    void aStoredKeyOfThisProjectMayBeViewed() {
+        assertThat(service().isStoredFileOf(PERMANENT_KEY, PROJECT_ID)).isTrue();
+    }
+
+    @Test
+    void keysOutsideThisProjectsPlanMayNotBeViewed() {
+        // Another project whose id merely starts the same way.
+        assertThat(service().isStoredFileOf(
+                "projects/PROJ12/plan/monitoring-plan/x.png", PROJECT_ID)).isFalse();
+        // Unsaved, and possibly someone else's.
+        assertThat(service().isStoredFileOf(TEMP_KEY, PROJECT_ID)).isFalse();
+        // This project, but not its plan.
+        assertThat(service().isStoredFileOf(
+                "projects/PROJ1/equipments/photo.png", PROJECT_ID)).isFalse();
+        // The prefix alone names no object.
+        assertThat(service().isStoredFileOf("projects/PROJ1/plan/", PROJECT_ID)).isFalse();
+        assertThat(service().isStoredFileOf(null, PROJECT_ID)).isFalse();
+    }
+
     @Test
     void permanentKeysAndPlainTextAreNotReported() {
         ObjectNode body = page()

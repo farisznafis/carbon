@@ -44,6 +44,13 @@ export const otherProjectOperatorSchema = z
       // .regex(REGEX_PATTERNS.NUMERIC_13_DIGITS, REGEX_MESSAGES.NUMERIC_13_DIGITS)
       .optional(),
 
+    /** 郵便番号 — fills the 本社所在地 fields; not on the official sheet */
+    postalCode: z
+      .string()
+      .regex(/^\d{7}$/, '郵便番号はハイフンなしの7桁の数字で入力してください')
+      .optional()
+      .or(z.literal('')),
+
     /** 本社所在地（登記上の本店所在地） */ //maybe import from other schema
     prefecture: z.enum(PREFECTURE_OPTIONS, PREFECTURE_VALIDATION),
 
@@ -64,7 +71,7 @@ export const otherProjectOperatorSchema = z
       .min(1, '必須項目です')
       .max(100, VALIDATION_MESSAGES.MAX_CHARACTERS(100)),
 
-    isChangeRepresentativePosition: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION),
+    isChangeRepresentativePosition: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     /** 代表者氏名 */
     representativeName: z
@@ -72,21 +79,21 @@ export const otherProjectOperatorSchema = z
       .min(1, '必須項目です')
       .max(50, VALIDATION_MESSAGES.MAX_CHARACTERS(50)),
 
-    isChangeRepresentativeName: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION),
+    isChangeRepresentativeName: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     picPosition: z
       .string()
       .min(1, '必須項目です')
       .max(100, VALIDATION_MESSAGES.MAX_CHARACTERS(100)),
 
-    isChangePicPosition: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION),
+    isChangePicPosition: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     picName: z
       .string()
       .min(1, '必須項目です')
       .max(50, VALIDATION_MESSAGES.MAX_CHARACTERS(50)),
 
-    isChangePicName: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION),
+    isChangePicName: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     picEmail: z
       .string()
@@ -94,15 +101,15 @@ export const otherProjectOperatorSchema = z
       .min(1, '必須項目です')
       .max(254, VALIDATION_MESSAGES.MAX_CHARACTERS(254)),
 
-    isChangePicEmail: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION),
+    isChangePicEmail: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     picPhoneNumber: z
       .string()
       .min(1, '必須項目です')
-      .max(20, VALIDATION_MESSAGES.MAX_NUMBERS(20)),
-    // .regex(/^[0-9+\-\s]+$/, "電話番号の形式で入力してください")
+      .max(20, VALIDATION_MESSAGES.MAX_NUMBERS(20))
+      .regex(REGEX_PATTERNS.PHONE_NUMBER_DIGITS, REGEX_MESSAGES.PHONE_NUMBER_DIGITS),
 
-    isChangePicPhoneNumber: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION),
+    isChangePicPhoneNumber: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     /** 特定排出者であるか */
     isDesignatedEmitter: z.boolean(IS_DESIGNATED_EMITTER_VALIDATION),

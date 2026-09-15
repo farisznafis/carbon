@@ -1,5 +1,6 @@
 package com.kct.jcredit.core_backend.service.projectplan;
 
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.UUID;
 import java.util.Map;
@@ -34,7 +35,9 @@ public class ProjectPlanFileService {
     private static final String TEMP_KEY_FORMAT = S3FileStorage.TEMP_ROOT + "projectplan/%s/%s_%s";
     private static final String TEMP_KEY_PREFIX = S3FileStorage.TEMP_ROOT + "projectplan/";
     private static final String TEMP_KEY_PREFIX_PATTERN = "^" + TEMP_KEY_PREFIX + "[^/]+/";
-    private static final String PERMANENT_KEY_FORMAT = "projects/%s/plan/%s/%s";
+    private static final String PERMANENT_KEY_PREFIX_FORMAT = "projects/%s/plan/";
+    private static final String PERMANENT_KEY_FORMAT = PERMANENT_KEY_PREFIX_FORMAT + "%s/%s";
+    static final Duration DOWNLOAD_URL_VALIDITY = Duration.ofMinutes(15);
 
     private final S3FileStorage storage;
 
@@ -134,6 +137,27 @@ public class ProjectPlanFileService {
         } else if (node instanceof ArrayNode array) {
             array.forEach(child -> collectForeignTempKeys(child, offending));
         }
+    }
+
+    /**
+     * Whether a key is a stored attachment of this project's plan.
+     *
+     * <p>The download endpoint takes the key from the client, so this is what
+     * stops it being used to read any object in the bucket: another project's
+     * plan, an equipment photo, or a provisional upload nobody has saved.
+     */
+    public boolean isStoredFileOf(String s3Key, String projectId) {
+        if (s3Key == null || projectId == null || projectId.isBlank()) {
+            return false;
+        }
+        String prefix = String.format(PERMANENT_KEY_PREFIX_FORMAT, projectId);
+        // {slug}/{file} must follow; the prefix alone names no object.
+        return s3Key.startsWith(prefix) && s3Key.substring(prefix.length()).contains("/");
+    }
+
+    /** A short-lived URL to view one stored attachment. Check ownership first. */
+    public String downloadUrl(String s3Key) {
+        return storage.presignGet(s3Key, DOWNLOAD_URL_VALIDITY);
     }
 
     private boolean rewrite(JsonNode node, String projectId, String formSlug) {

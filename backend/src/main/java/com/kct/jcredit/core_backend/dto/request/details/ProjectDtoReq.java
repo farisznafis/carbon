@@ -5,6 +5,7 @@ import com.kct.jcredit.core_backend.validation.ValidEmail;
 import java.time.Instant;
 
 import com.kct.jcredit.core_backend.validation.AnyCharacter;
+import com.kct.jcredit.core_backend.validation.JapaneseText;
 import com.kct.jcredit.core_backend.validation.Katakana;
 import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
@@ -29,7 +30,10 @@ public class ProjectDtoReq {
 
     @NotBlank(message = "プロジェクト名は必須です。")
     @Size(max = 100, message = "プロジェクト名は100文字以内で入力してください。")
-    @AnyCharacter
+    // Not @AnyCharacter: 計画書 page 2 copies this name read-only and only
+    // accepts Japanese, Latin letters, digits and a few symbols.
+    @JapaneseText(allowAlphanumeric = true,
+            message = "プロジェクト名は日本語・英数字と許可された記号で入力してください。")
     private String projectName;
 
     @NotBlank(message = "プロジェクト番号は必須です。")

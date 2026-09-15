@@ -37,10 +37,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
 import { MultiStepForm } from './forms/ProjectMultiPageForm';
-import {
-  TemporaryAdminProjectApplicationAutofillButton,
-  TemporaryAdminProjectAutofillButton,
-} from './forms/TemporaryAdminProjectAutofillButton';
+import { TemporaryAdminProjectAutofillButton } from './forms/TemporaryAdminProjectAutofillButton';
 import { applyBackendValidationErrors } from './forms/backendValidationErrors';
 import { mapDetailToProjectBase } from './forms/projectBaseFromDetail';
 import type { AdminProjectRegisterFormInputValues } from './forms/projectFormTypes';
@@ -50,10 +47,23 @@ import {
   LAST_IMPLEMENTED_STEP,
   getPlanPageForSlug,
   getPlanPageForStep,
+  readOnlyFieldsInFormNames,
+  rulesInFormNames,
   type ProjectPlanPage,
 } from './forms/projectPlanPages';
 import type { ProjectPlanConditionalField } from '@/api/admin/types';
 import { steps } from './forms/projectSteps';
+import {
+  adjacentStepId,
+  clampStepId,
+  stepsForApplicationCategory,
+} from './forms/applicationCategory';
+
+/**
+ * Only the steps the plan API serves — the rest of `steps` has no backend page
+ * yet — and of those, only what a プロジェクト登録 files.
+ */
+const visibleSteps = stepsForApplicationCategory(steps.slice(0, LAST_IMPLEMENTED_STEP));
 
 type LocationState = {
   project?: Project;
@@ -199,10 +209,7 @@ export const AdminProjectRegister: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state?.project, state?.planSlug, form]);
 
-  // Only the steps the plan API actually serves; the rest of `steps` has no
-  // backend page yet.
-  const visibleSteps = steps.slice(0, LAST_IMPLEMENTED_STEP);
-  const maxStep = visibleSteps.length;
+  const maxStep = visibleSteps[visibleSteps.length - 1].id;
   const projectBaseValues = useWatch({
     control: form.control,
     name: 'projectBase',
@@ -265,7 +272,7 @@ export const AdminProjectRegister: React.FC = () => {
     const slug = requestedSlug ?? progress?.nextIncompleteSlug ?? undefined;
     const target = slug ? getPlanPageForSlug(slug)?.step : undefined;
 
-    setStep(target ?? FIRST_PLAN_STEP);
+    setStep(clampStepId(visibleSteps, target ?? FIRST_PLAN_STEP));
   };
 
   /**
@@ -313,10 +320,12 @@ export const AdminProjectRegister: React.FC = () => {
    */
   const fetchPlanPage = async (projectId: string, page: ProjectPlanPage) => {
     const response = await getProjectPlanForm(projectId, page.slug);
+    // The values are renamed to form names below, so the rules about them must
+    // be too, or a rule on a renamed field silently never applies.
     return {
       values: mapPlanPageValues(response.data, page.renames),
-      readOnlyFields: response.readOnlyFields ?? [],
-      conditionalFields: response.conditionalFields ?? [],
+      readOnlyFields: readOnlyFieldsInFormNames(response.readOnlyFields ?? [], page.renames),
+      conditionalFields: rulesInFormNames(response.conditionalFields ?? [], page.renames),
     };
   };
 
@@ -329,6 +338,12 @@ export const AdminProjectRegister: React.FC = () => {
    * already saved comes back blank — so 次へ is rejected and the operator
    * cannot get past the page at all.
    */
+  // The banner belongs to the page whose save failed. Moving to another page —
+  // by 次へ after a successful save, or through the dropdown — leaves it behind.
+  useEffect(() => {
+    setSubmitError(null);
+  }, [step]);
+
   useEffect(() => {
     if (!createdProjectId) return;
 
@@ -384,6 +399,12 @@ export const AdminProjectRegister: React.FC = () => {
     const page = getPlanPageForStep(targetStep);
     if (!page) return true;
 
+    // A previous rejection's banner and field marks describe values the
+    // operator may since have fixed. Left in place, a save that succeeds
+    // carries them onto the next page; one that fails again sets fresh ones.
+    setSubmitError(null);
+    form.clearErrors(page.formKey as FieldPath<AdminProjectRegisterFormInputValues>);
+
     try {
       const saved = await saveProjectPlanForm(
         projectId,
@@ -423,10 +444,16 @@ export const AdminProjectRegister: React.FC = () => {
         getProjectPlanAutofillDefaults(),
         getProjectPlanAutofillByProject(projectId),
       ]);
-      const projectApplication = {
-        ...getAutofillData(defaultsResponse),
-        ...getAutofillData(projectResponse),
-      } as AdminProjectRegisterFormInputValues['projectApplication'];
+      // Autofill speaks the backend's names; restate them in the form's, or
+      // the value sits under a key no input is bound to and the input stays
+      // empty while the hidden copy is what gets sent.
+      const projectApplication = mapPlanPageValues(
+        {
+          ...getAutofillData(defaultsResponse),
+          ...getAutofillData(projectResponse),
+        },
+        getPlanPageForStep(2)?.renames,
+      ) as AdminProjectRegisterFormInputValues['projectApplication'];
 
       if (Object.keys(projectApplication).length > 0) {
         form.setValue('projectApplication', projectApplication, {
@@ -474,7 +501,7 @@ export const AdminProjectRegister: React.FC = () => {
     if (!saved) return;
 
     if (step < maxStep) {
-      setStep(step + 1);
+      setStep(adjacentStepId(visibleSteps, step, 1));
       return;
     }
 
@@ -510,7 +537,8 @@ export const AdminProjectRegister: React.FC = () => {
     await onSubmit(form.getValues());
   };
 
-  const goBack = () => setStep((currentStep) => Math.max(currentStep - 1, 1));
+  const goBack = () =>
+    setStep((currentStep) => adjacentStepId(visibleSteps, currentStep, -1));
 
   const jumpToStep = async (target: number | string) => {
     const targetStep = Number(target);
@@ -527,12 +555,11 @@ export const AdminProjectRegister: React.FC = () => {
       if (!projectId) return;
     }
 
-    setStep(() => Math.min(Math.max(targetStep, 1), maxStep));
+    setStep(clampStepId(visibleSteps, targetStep));
   };
 
   const jumpToConfirmationStep = async (target: number | string) => {
-    const targetStep = Number(target);
-    setConfirmationStep(() => Math.min(Math.max(targetStep, 1), maxStep));
+    setConfirmationStep(clampStepId(visibleSteps, Number(target)));
   };
 
   const backToForm = () => {
@@ -684,9 +711,6 @@ export const AdminProjectRegister: React.FC = () => {
             completedIds={completedSteps}
           />
           {step === 1 && <TemporaryAdminProjectAutofillButton form={form} />}
-          {step === 2 && (
-            <TemporaryAdminProjectApplicationAutofillButton form={form} />
-          )}
         </div>
 
         {planProgress && planProgress.total > 0 && (

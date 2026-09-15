@@ -1,5 +1,5 @@
 -- ============================================================================
--- GXCarbon schema — 2026-08-07
+-- GXCarbon schema — 2026-09-08
 -- Complete, code-accurate baseline: matches every @Entity in
 -- src/main/java/com/kct/jcredit/core_backend/entity/ as of this date.
 -- Intended for setting up a fresh database from scratch (DROP + CREATE),
@@ -19,6 +19,7 @@
 --   - migration_2026-07-27_create-participating-project.sql
 --   - monitoring_data_deletion_ddl.sql (monitoring_data_deletion_history,
 --     project.status_finalized_at)
+--   - the USER_INVITATION purpose and its two columns on security_action_link
 --
 -- operating_user.role: correct set is ('admin','operator'); the live DB's
 -- operating_user_role_check currently allows ('operator','user') instead,
@@ -151,11 +152,12 @@ CREATE TABLE batch_process_history (
     claimed_at TIMESTAMP
 );
 
--- Security Action Link (master-setup / password-reset / signup-revision links)
+-- Security Action Link (master-setup / password-reset / signup-revision /
+-- user-invitation links)
 CREATE TABLE security_action_link (
     id UUID PRIMARY KEY,
     purpose VARCHAR(40) NOT NULL
-        CHECK (purpose IN ('MASTER_ACCOUNT_SETUP','REJECTED_SIGNUP_REVISION','PASSWORD_RESET')),
+        CHECK (purpose IN ('MASTER_ACCOUNT_SETUP','REJECTED_SIGNUP_REVISION','PASSWORD_RESET','USER_INVITATION')),
     subject_type VARCHAR(30) NOT NULL
         CHECK (subject_type IN ('COMPANY','PARTICIPATING_USER','OPERATING_USER')),
     subject_id INT NOT NULL,
@@ -171,7 +173,13 @@ CREATE TABLE security_action_link (
     revoked_at TIMESTAMP,
     last_delivery_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by VARCHAR(100) NOT NULL
+    created_by VARCHAR(100) NOT NULL,
+    -- USER_INVITATION only: the address the master invited and the site the
+    -- invitee will be attached to. invite_site_id is a plain id, not a FK —
+    -- this infrastructure table is deliberately kept out of the domain graph,
+    -- and the site is re-resolved (and may legitimately be gone) at redemption.
+    invite_email VARCHAR(254),
+    invite_site_id INT
 );
 
 -- Account

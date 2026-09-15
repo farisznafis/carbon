@@ -1,6 +1,7 @@
 package com.kct.jcredit.core_backend.service.projectplan;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFileDownloadResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFileResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanBatchProgressResponse;
@@ -36,6 +37,17 @@ public interface ProjectPlanFormService {
             String formSlug,
             String fieldName,
             MultipartFile file,
+            String companyId,
+            String role,
+            String username);
+
+    /**
+     * A short-lived URL to view a file stored on one of this project's pages.
+     * Keys belonging to anything else are refused.
+     */
+    ProjectPlanFileDownloadResponse getFileDownloadUrl(
+            String projectId,
+            String s3Key,
             String companyId,
             String role,
             String username);

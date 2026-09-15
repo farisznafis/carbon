@@ -83,9 +83,18 @@ public final class ProjectPlanSqlContext {
         return user == null ? null : user.getEmail();
     }
 
+    /**
+     * 担当者電話番号, digits only. Stored numbers may carry hyphens
+     * ({@code 03-5432-1234}) that {@code @PhoneNumber} rejects, and the field is
+     * read-only on the page, so an unnormalized copy could never be saved.
+     */
     public String masterPhoneNumber() {
         OperatingUser user = masterUser();
-        return user == null ? null : user.getPhoneNumber();
+        return user == null ? null : normalizePhoneNumber(user.getPhoneNumber());
+    }
+
+    public static String normalizePhoneNumber(String phoneNumber) {
+        return phoneNumber == null ? null : phoneNumber.replaceAll("[\\s\\-－ー‐]", "");
     }
 
     /** 方法論コード, e.g. {@code EN-R-002}. Null-tolerant on both halves. */

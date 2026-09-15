@@ -175,8 +175,8 @@ export function mapAdminProjectPlanApplicationPayload(
     projectApplication.hasEnergyActPeriodReport === true;
   const energyActOperationNumber = shouldSendEnergyActNumbers
     ? firstStringValue(
-        projectApplication.energyActOperationNumber,
         projectApplication.energyActOpeNumber,
+        projectApplication.energyActOperationNumber,
       ) ?? NOT_APPLICABLE_ENERGY_ACT_NUMBER
     : NOT_APPLICABLE_ENERGY_ACT_NUMBER;
   const energyManageFactoryNumber = shouldSendEnergyActNumbers
@@ -189,10 +189,13 @@ export function mapAdminProjectPlanApplicationPayload(
   return cleanPayload({
     ...projectApplication,
     applicationCategory: normalizeApplicationCategory(projectApplication.applicationCategory),
-    isUsingExamCostSupport: projectApplication.isUsingExamCostSupport ?? projectApplication.isUsingCostSupport,
+    // Where the form and the DTO spell a field differently, the form's name
+    // comes first: that is the input the operator edits, and a DTO-named copy
+    // left over from autofill must not silently win over their correction.
+    isUsingExamCostSupport: projectApplication.isUsingCostSupport ?? projectApplication.isUsingExamCostSupport,
     projectOperatorKana: projectApplication.projectOperatorKana,
-    projectOperatorNameJa: projectApplication.projectOperatorNameJa ?? projectApplication.projectOperatorJa,
-    projectOperatorNameEn: projectApplication.projectOperatorNameEn ?? projectApplication.projectOperatorEn,
+    projectOperatorNameJa: firstStringValue(projectApplication.projectOperatorJa, projectApplication.projectOperatorNameJa),
+    projectOperatorNameEn: firstStringValue(projectApplication.projectOperatorEn, projectApplication.projectOperatorNameEn),
     corpNumber: projectApplication.corpNumber,
     corpPosition: projectApplication.corpPosition,
     corpName: projectApplication.corpName,
@@ -217,20 +220,20 @@ export function mapAdminProjectPlanApplicationPayload(
       joinName(projectBase.picLastName, projectBase.picFirstName),
     ),
     picEmail: firstStringValue(projectApplication.picEmail, projectBase.picEmail),
-    picPhoneNumber: firstStringValue(projectApplication.picPhoneNumber, projectApplication.picPhone, projectBase.picPhoneNumber),
+    picPhoneNumber: firstStringValue(projectApplication.picPhone, projectApplication.picPhoneNumber, projectBase.picPhoneNumber),
     projectNumber: firstStringValue(projectApplication.projectNumber, projectBase.projectNumber),
     projectName: firstStringValue(projectApplication.projectName, projectBase.projectName),
     methodologyCategory: firstStringValue(projectApplication.methodologyCategory, projectBase.methodCategory),
     methodologyNumber: firstStringValue(projectApplication.methodologyNumber, projectBase.methodNumber),
     methodology: firstStringValue(projectApplication.methodology, projectBase.methodName),
     locationEn: firstStringValue(
-      projectApplication.locationEn,
       projectApplication.SaaS,
+      projectApplication.locationEn,
       projectApplication.location,
     ),
     regionalCategory: firstStringValue(
-      projectApplication.regionalCategory,
       projectApplication.regionCategory,
+      projectApplication.regionalCategory,
       projectBase.regionalCategory,
     ),
     groupName: projectApplication.groupName,
