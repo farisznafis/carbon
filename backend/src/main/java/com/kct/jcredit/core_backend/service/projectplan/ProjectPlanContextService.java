@@ -45,15 +45,6 @@ public class ProjectPlanContextService {
             return ProjectContext.notFound();
         }
 
-        // admin and operator are both roles of operating_user, both with a
-        // NOT NULL company_id, so the company checks below scope them equally.
-        // Rejecting admin here made every plan endpoint forbidden to the admin
-        // dashboard even where @PreAuthorize allowed it. Other roles (user,
-        // master) still have no business in the plan.
-        if (!RoleConstants.OPERATOR.equals(role) && !RoleConstants.ADMIN.equals(role)) {
-            return ProjectContext.forbidden();
-        }
-
         OperatorCompany projectCompany = project.getOperatorCompany();
         if (projectCompany == null
                 || companyId == null
@@ -61,14 +52,36 @@ public class ProjectPlanContextService {
             return ProjectContext.forbidden();
         }
 
-        boolean userBelongsToCompany = operatingUserRepository
-                .findByUsernameAndCompany_Id(username, projectCompany.getId())
-                .isPresent();
-        if (!userBelongsToCompany) {
+        if (!canAccessCompany(role, username, projectCompany)) {
             return ProjectContext.forbidden();
         }
 
         return ProjectContext.authorized(project);
+    }
+
+    /**
+     * Whether this caller may work on an operator company's plan data.
+     *
+     * <p>admin and operator are both roles of operating_user, both with a NOT
+     * NULL company_id, so the same membership check scopes them equally. Other
+     * roles (user, master) have no business in the plan.
+     *
+     * <p>Public and shared on purpose: this check used to be duplicated in
+     * {@link ProjectPlanAutofillService}, and the copies diverged — admin was
+     * allowed here and still refused there, so the corporation autofill
+     * endpoint returned 403 while the project one returned 200 for the same
+     * caller.
+     */
+    public boolean canAccessCompany(String role, String username, OperatorCompany company) {
+        if (company == null) {
+            return false;
+        }
+        if (!RoleConstants.OPERATOR.equals(role) && !RoleConstants.ADMIN.equals(role)) {
+            return false;
+        }
+        return operatingUserRepository
+                .findByUsernameAndCompany_Id(username, company.getId())
+                .isPresent();
     }
 
     public enum ProjectContextStatus {

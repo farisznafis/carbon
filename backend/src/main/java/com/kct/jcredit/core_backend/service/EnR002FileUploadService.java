@@ -29,6 +29,10 @@ public interface EnR002FileUploadService {
     // Copy tmp → permanent 
     void moveToPermanent(String tempS3Key, String permanentKey);
 
-    // delete file from S3 permanent
-    void deletePermanentFile(String s3Key, Integer excludeEquipmentId);
+    // Hapus object permanent.
+    void deletePermanentFile(String s3Key, Integer equipmentId);
+
+    // buildPermanentKey + moveToPermanent dalam satu panggilan, untuk pemakaian
+    // di luar transaksi yang tidak perlu mencatat key ke DB lebih dulu.
+    String moveTempToPermanent(String tempS3Key, String siteId, Integer equipmentId);
 }

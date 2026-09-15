@@ -12,7 +12,6 @@ import com.kct.jcredit.core_backend.validation.Katakana;
 import com.kct.jcredit.core_backend.validation.NumericOnly;
 import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
-import com.kct.jcredit.core_backend.validation.ZenkakuWithSymbols;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -33,7 +32,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
         message = "特定排出者コードは必須です。")
 @RequiredIf(field = "energyActOpeNumber", when = "hasEnergyActPeriodReport", is = true,
         message = "省エネ法特定事業者番号又は特定連鎖化事業者番号は必須です。")
-@RequiredIf(field = "energyManagFactoryNumber", when = "hasEnergyActPeriodReport", is = true,
+@RequiredIf(field = "energyManageFactoryNumber", when = "hasEnergyActPeriodReport", is = true,
         message = "エネルギー管理指定工場番号は必須です。")
 public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
 
@@ -45,7 +44,7 @@ public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 255)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("projectOperatorNameJa")
     private String projectOperatorNameJa;
 
@@ -54,15 +53,22 @@ public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
     @JsonProperty("otherCorpNumber")
     private String otherCorpNumber;
 
+    // Not on the official sheet, which asks for 都道府県 / 市区町村 / 以降 only.
+    // Kept so the lookup that fills those three shows what it was given when
+    // the page is reopened; nothing is derived from it on the server.
+    @Pattern(regexp = "^[0-9]{7}$", message = "郵便番号はハイフンなしの7桁の数字で入力してください。")
+    @JsonProperty("postalCode")
+    private String postalCode;
+
     @NotBlank
     @Size(max = 50)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("prefecture")
     private String prefecture;
 
     @NotBlank
     @Size(max = 50)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("city")
     private String city;
 
@@ -74,7 +80,7 @@ public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 100)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("representativePosition")
     private String representativePosition;
 
@@ -83,7 +89,7 @@ public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 50)
-    @ZenkakuWithSymbols
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("representativeName")
     private String representativeName;
 
@@ -92,7 +98,7 @@ public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 100)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("picPosition")
     private String picPosition;
 
@@ -101,7 +107,7 @@ public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 50)
-    @ZenkakuWithSymbols
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("picName")
     private String picName;
 
@@ -151,6 +157,6 @@ public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
     @Size(max = 50)
     @Hankaku
     @Pattern(regexp = "^[A-Za-z0-9]+$")
-    @JsonProperty("energyManagFactoryNumber")
-    private String energyManagFactoryNumber;
+    @JsonProperty("energyManageFactoryNumber")
+    private String energyManageFactoryNumber;
 }

@@ -13,7 +13,6 @@ import com.kct.jcredit.core_backend.validation.Katakana;
 import com.kct.jcredit.core_backend.validation.NumericOnly;
 import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
-import com.kct.jcredit.core_backend.validation.ZenkakuWithSymbols;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -59,7 +58,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 255)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("projectOperatorNameJa")
     private String projectOperatorNameJa;
 
@@ -76,7 +75,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 100)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("corpPosition")
     private String corpPosition;
 
@@ -88,7 +87,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 10)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("prefecture")
     private String prefecture;
 
@@ -100,7 +99,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
     // Autofill folds blocknum + buildingName into address.
     @NotBlank
     @Size(max = 150)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("city")
     private String city;
 
@@ -136,7 +135,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 100)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("representativePosition")
     private String representativePosition;
 
@@ -145,7 +144,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 50)
-    @ZenkakuWithSymbols
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("representativeName")
     private String representativeName;
 
@@ -154,7 +153,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 100)
-    @ZenkakuWithSymbols
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("picPosition")
     private String picPosition;
 
@@ -163,7 +162,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 50)
-    @ZenkakuWithSymbols
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("picName")
     private String picName;
 
@@ -190,7 +189,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
     private Boolean isChangePicPhoneNumber;
 
     @Size(max = 255)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("otherContactBusinessName")
     private String otherContactBusinessName;
 
@@ -198,7 +197,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
     private Boolean isChangeOtherContactBusinessName;
 
     @Size(max = 100)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("otherContactPicPosition")
     private String otherContactPicPosition;
 
@@ -206,7 +205,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
     private Boolean isChangeOtherContactPicPosition;
 
     @Size(max = 50)
-    @ZenkakuWithSymbols
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("otherContactsPicName")
     private String otherContactsPicName;
 
@@ -238,7 +237,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 100)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("projectName")
     private String projectName;
 
@@ -262,7 +261,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 50)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("location")
     private String location;
 
@@ -283,9 +282,11 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
     // 地域区分 per the official 【削除不可】プルダウン用 sheet: 九州・沖縄 is a SINGLE
     // value, not two. The previous pattern split it and so rejected the value
     // autofilled from project.regional_category, making the page unsavable for
-    // any project in that region.
+    // any project in that region. 全国 is accepted for the same reason: the
+    // project table's CHECK constraint and the project form both allow it, and
+    // this field is filled read-only from project.regional_category.
     @Pattern(
-        regexp = "^(北海道|東北|関東|中部|近畿|中国|四国|九州・沖縄)$",
+        regexp = "^(北海道|東北|関東|中部|近畿|中国|四国|九州・沖縄|全国)$",
         message = "地域区分の値が不正です。"
     )
     @JsonProperty("regionalCategory")
@@ -293,7 +294,7 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 255)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("groupName")
     private String groupName;
 

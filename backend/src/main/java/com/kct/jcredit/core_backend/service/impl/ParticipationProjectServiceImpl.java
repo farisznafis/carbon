@@ -43,6 +43,7 @@ import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingProjectRepository;
+import com.kct.jcredit.core_backend.util.ParticipationSelection;
 
 import java.util.List;
 import java.util.Map;
@@ -588,13 +589,20 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND, "会社情報が見つかりません。"));
 
-        ParticipatingProject participation = participatingProjectRepository
-                .findByCompanyIdAndProject_Id(companyDbId, projectDbId)
-                .orElseThrow(() -> new CustomException(
-                        ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
+        List<ParticipatingProject> participations = participatingProjectRepository
+                .findByCompanyIdAndProject_IdOrderByIdAsc(companyDbId, projectDbId);
+        if (participations.isEmpty()) {
+                throw new CustomException(
+                        ResponseConstants.NOT_FOUND, "参加情報が見つかりません。");
+        }
 
-        String s3Key = participation.getS3KeyPdfMembership();
-        if (s3Key == null || s3Key.isBlank()) {
+        // the company has one row per equipment, any of them may carry the membership PDF
+        String s3Key = participations.stream()
+                .map(ParticipatingProject::getS3KeyPdfMembership)
+                .filter(key -> key != null && !key.isBlank())
+                .findFirst()
+                .orElse(null);
+        if (s3Key == null) {
                 throw new CustomException("PDF_NOT_READY",
                         "PDFはまだ準備できていません。審査完了までしばらくお待ちください。");
         }
@@ -626,25 +634,29 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                 .map(com.kct.jcredit.core_backend.entity.ParticipatingCompany::getId)
                                 .orElse(0);
 
-                        Optional<ParticipatingProject> participationOpt = participatingProjectRepository
-                                .findByCompanyIdAndProject_Id(companyDbId, projectDbId);
+                        List<ParticipatingProject> participations = participatingProjectRepository
+                                .findByCompanyIdAndProject_IdOrderByIdAsc(companyDbId, projectDbId);
                         
-                        //if null there is no link to this project, return error
-                        if (!participationOpt.isPresent()) {
+                        //if empty there is no link to this project, return error
+                        if (participations.isEmpty()) {
                                 throw new CustomException(
                                 ResponseConstants.NOT_FOUND,
                                 ResponseConstants.MSG_NOT_FOUND);
                         }
-                        ParticipatingProject participation = participationOpt.get();
+                        //one row per equipment, so judge on the most permissive status the company holds
+                        ParticipatingProject participation = ParticipationSelection.preferred(participations)
+                                .orElseThrow(() -> new CustomException(
+                                        ResponseConstants.NOT_FOUND,
+                                        ResponseConstants.MSG_NOT_FOUND));
                         //if exists check the status only allow new site to join if the status is eligible
                         if (!participation.getStatus().equals("APPROVED")) {
-                                if(participationOpt.get().getStatus().equals("REJECTED")){
+                                if(participation.getStatus().equals("REJECTED")){
                                         throw new CustomException(
                                         ResponseConstants.REJECTED,
                                         "プロジェクト参加申請が却下されました。\n" + 
                                         "お手数ですが、入会届を再申請していただけますと幸いです。");
                                 
-                                } else if(participationOpt.get().getStatus().equals("OPEN")){
+                                } else if(participation.getStatus().equals("OPEN")){
                                          throw new CustomException(
                                         ResponseConstants.OPEN,
                                         "プロジェクト参加申請が承認されるまで、サイトの参加はできません。");
@@ -675,7 +687,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                                         .build();
 
                         response.setStatusCode(ResponseConstants.OK);
-                        response.setParticipationId(participationOpt.get().getId());
+                        response.setParticipationId(participation.getId());
                         response.setSiteProjectRelationId(relation.getId());
                         response.setMessage("サイトの参加が完了しました。");
 

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormBase;
 import com.kct.jcredit.core_backend.validation.DateFormat;
 import com.kct.jcredit.core_backend.validation.HankakuWithSymbols;
-import com.kct.jcredit.core_backend.validation.Zenkaku;
+import com.kct.jcredit.core_backend.validation.JapaneseText;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -32,7 +32,7 @@ public class ApplicableConditionsRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 100)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("esgPledgeCase")
     private String esgPledgeCase;
 
@@ -43,23 +43,23 @@ public class ApplicableConditionsRequest extends ProjectPlanFormBase {
 
     @NotBlank
     @Size(max = 255)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("businessName")
     private String businessName;
 
     @NotBlank
     @Size(max = 100)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("representativePosition")
     private String representativePosition;
 
     @Size(max = 50)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("representativeName")
     private String representativeName;
 
     @Size(max = 255)
-    @Zenkaku
+    @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("regulation")
     private String regulation;
 }
