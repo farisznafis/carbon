@@ -61,7 +61,8 @@ public class ProjectPlanAutofillService {
 
         CorporationMasterData data = CorporationMasterData.builder()
                 .corpNumber(company.getCorpNumber())
-                .corpName(company.getNameJa())
+                // 法人代表者の氏名 — the representative, matching the plan page.
+                .corpName(buildFullName(company.getRepLastName(), company.getRepFirstName()))
                 .corpPosition(company.getRepPosition())
                 .prefecture(company.getPrefecture())
                 .city(company.getMunicipality())
@@ -75,7 +76,9 @@ public class ProjectPlanAutofillService {
                         ? null
                         : buildFullName(operatorUser.getLastName(), operatorUser.getFirstName()))
                 .picEmail(operatorUser == null ? null : operatorUser.getEmail())
-                .picPhoneNumber(operatorUser == null ? null : operatorUser.getPhoneNumber())
+                .picPhoneNumber(operatorUser == null
+                        ? null
+                        : ProjectPlanSqlContext.normalizePhoneNumber(operatorUser.getPhoneNumber()))
                 .build();
 
         response.setData(data);

@@ -6,6 +6,7 @@ import java.time.Instant;
 
 import com.kct.jcredit.core_backend.dto.request.base.BaseRequest;
 import com.kct.jcredit.core_backend.validation.Hankaku;
+import com.kct.jcredit.core_backend.validation.JapaneseText;
 import com.kct.jcredit.core_backend.validation.Katakana;
 import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
@@ -23,7 +24,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateProjectRequest extends BaseRequest{
-    @ZenkakuWithSymbols
+    // Same rule as create and as 計画書 page 2, which copies this value
+    // read-only: project names may contain Latin letters and digits ("GX…").
+    @Size(max = 100, message = "プロジェクト名は100文字以内で入力してください。")
+    @JapaneseText(allowAlphanumeric = true,
+            message = "プロジェクト名は日本語・英数字と許可された記号で入力してください。")
     private String projectName;
 
     @DecimalMin("0")

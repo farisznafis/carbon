@@ -15,8 +15,8 @@ Response - Success (HTTP 200)
   "statusCode": "OK",
   "data": {
     "corpNumber": "1234567890123",
-    "corpName": "ABC株式会社",
-    "corpPosition": "本社",
+    "corpName": "山田 太郎",
+    "corpPosition": "代表取締役",
     "prefecture": "東京都",
     "city": "千代田区",
     "address": "千代田1-1-1",
@@ -25,7 +25,7 @@ Response - Success (HTTP 200)
     "picPosition": "担当者",
     "picName": "佐藤 花子",
     "picEmail": "sato@test.com",
-    "picPhoneNumber": "03-1234-5678"
+    "picPhoneNumber": "0312345678"
   }
 }
 

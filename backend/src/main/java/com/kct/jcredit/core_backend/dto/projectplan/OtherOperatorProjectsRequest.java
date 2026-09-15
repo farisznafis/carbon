@@ -53,6 +53,13 @@ public class OtherOperatorProjectsRequest extends ProjectPlanFormBase {
     @JsonProperty("otherCorpNumber")
     private String otherCorpNumber;
 
+    // Not on the official sheet, which asks for 都道府県 / 市区町村 / 以降 only.
+    // Kept so the lookup that fills those three shows what it was given when
+    // the page is reopened; nothing is derived from it on the server.
+    @Pattern(regexp = "^[0-9]{7}$", message = "郵便番号はハイフンなしの7桁の数字で入力してください。")
+    @JsonProperty("postalCode")
+    private String postalCode;
+
     @NotBlank
     @Size(max = 50)
     @JapaneseText(allowAlphanumeric = true)

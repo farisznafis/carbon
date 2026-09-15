@@ -124,6 +124,41 @@ class ProjectPlanFormBaseTest {
     }
 
     @Test
+    void projectNameWithLatinLettersIsAcceptedOnCreateUpdateAndPage2() {
+        String name = "GXカーボン太陽光発電プログラム型プロジェクト";
+
+        var update = new com.kct.jcredit.core_backend.dto.request.UpdateProjectRequest();
+        update.setProjectName(name);
+        var create = new com.kct.jcredit.core_backend.dto.request.details.ProjectDtoReq();
+        create.setProjectName(name);
+        ProjectApplicationRequest page2 = new ProjectApplicationRequest();
+        page2.setProjectName(name);
+
+        assertThat(fieldsWithErrors(update)).doesNotContain("projectName");
+        assertThat(fieldsWithErrors(create)).doesNotContain("projectName");
+        assertThat(fieldsWithErrors(page2)).doesNotContain("projectName");
+    }
+
+    @Test
+    void regionalCategoryAcceptsNationwideAllowedByTheProjectTable() {
+        ProjectApplicationRequest request = new ProjectApplicationRequest();
+        request.setRegionalCategory("全国");
+
+        assertThat(fieldsWithErrors(request)).doesNotContain("regionalCategory");
+    }
+
+    @Test
+    void masterPhoneNumberIsNormalizedToDigitsForThePhoneNumberRule() {
+        ProjectApplicationRequest request = new ProjectApplicationRequest();
+        request.setPicPhoneNumber(
+                com.kct.jcredit.core_backend.service.projectplan.ProjectPlanSqlContext
+                        .normalizePhoneNumber("03-5432-1234"));
+
+        assertThat(request.getPicPhoneNumber()).isEqualTo("0354321234");
+        assertThat(fieldsWithErrors(request)).doesNotContain("picPhoneNumber");
+    }
+
+    @Test
     void regionalCategoryRejectsKyushuAndOkinawaSeparately() {
         for (String invalid : List.of("九州", "沖縄")) {
             ProjectApplicationRequest request = new ProjectApplicationRequest();

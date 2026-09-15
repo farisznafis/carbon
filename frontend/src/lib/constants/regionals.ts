@@ -10,6 +10,7 @@ export const REGIONALS = [
   { label: "中国", value: "中国" },
   { label: "四国", value: "四国" },
   { label: "九州・沖縄", value: "九州・沖縄" },
+  { label: "全国", value: "全国" },
 ];
 
 export type Regional = (typeof REGIONALS)[number];
@@ -24,6 +25,7 @@ export const REGIONAL_OPTIONS = [
   "中国", // Chugoku
   "四国", // Shikoku
   "九州・沖縄", // Kyushu・Okinawa
+  "全国", // Nationwide
 ] as const;
 
 export const REGIONAL_VALIDATION = {

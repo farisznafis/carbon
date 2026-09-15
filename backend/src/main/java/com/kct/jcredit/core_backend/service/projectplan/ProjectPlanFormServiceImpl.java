@@ -18,6 +18,7 @@ import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.constant.RoleConstants;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormBase;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormEnvelope;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFileDownloadResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFileResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanBatchProgressResponse;
@@ -413,6 +414,41 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
         response.setOriginalName(uploaded.getOriginalName());
         response.setStatusCode(ResponseConstants.OK);
         response.setMessage(ResponseConstants.MSG_FORM_SAVED);
+        response.setTimestamp(LocalDateTime.now());
+        return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProjectPlanFileDownloadResponse getFileDownloadUrl(
+            String projectId,
+            String s3Key,
+            String companyId,
+            String role,
+            String username) {
+
+        ProjectPlanFileDownloadResponse response = new ProjectPlanFileDownloadResponse();
+
+        ProjectContext context =
+                projectPlanContextService.resolveProject(projectId, companyId, role, username);
+        if (!context.isAuthorized()) {
+            applyContextError(response, context);
+            return response;
+        }
+
+        // The key comes from the client. Signing whatever it names would let a
+        // caller authorised for one project read any object in the bucket.
+        if (!fileService.isStoredFileOf(s3Key, projectId)) {
+            response.setStatusCode(ResponseConstants.BAD_REQUEST);
+            response.setMessage(ResponseConstants.MSG_BAD_REQUEST);
+            response.setErrors(Map.of("s3Key", "このプロジェクト計画書のファイルではありません。"));
+            response.setTimestamp(LocalDateTime.now());
+            return response;
+        }
+
+        response.setUrl(fileService.downloadUrl(s3Key));
+        response.setExpiresIn(ProjectPlanFileService.DOWNLOAD_URL_VALIDITY.toSeconds());
+        response.setStatusCode(ResponseConstants.OK);
         response.setTimestamp(LocalDateTime.now());
         return response;
     }

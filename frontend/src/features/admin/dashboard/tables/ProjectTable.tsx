@@ -299,7 +299,7 @@ export function ProjectTable({
             <span className="whitespace-nowrap text-body text-foreground">
               <span className="font-bold">{progress.completedForms}</span>
               <span className="text-foreground">
-                /{progress.totalForms}
+                /{progress.totalForms} ページ
               </span>
             </span>
             {onOpenPlan && (

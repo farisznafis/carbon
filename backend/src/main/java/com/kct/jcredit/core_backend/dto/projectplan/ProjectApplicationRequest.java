@@ -282,9 +282,11 @@ public class ProjectApplicationRequest extends ProjectPlanFormBase {
     // 地域区分 per the official 【削除不可】プルダウン用 sheet: 九州・沖縄 is a SINGLE
     // value, not two. The previous pattern split it and so rejected the value
     // autofilled from project.regional_category, making the page unsavable for
-    // any project in that region.
+    // any project in that region. 全国 is accepted for the same reason: the
+    // project table's CHECK constraint and the project form both allow it, and
+    // this field is filled read-only from project.regional_category.
     @Pattern(
-        regexp = "^(北海道|東北|関東|中部|近畿|中国|四国|九州・沖縄)$",
+        regexp = "^(北海道|東北|関東|中部|近畿|中国|四国|九州・沖縄|全国)$",
         message = "地域区分の値が不正です。"
     )
     @JsonProperty("regionalCategory")

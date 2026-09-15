@@ -72,6 +72,16 @@ class ProjectPlanAutofillServiceTest {
     }
 
     @Test
+    void corpNameIsTheRepresentativeNotTheCompany() {
+        // 法人代表者の役職・氏名 on the official 登録申請書.
+        when(company.getNameJa()).thenReturn("株式会社グリーンエナジー");
+        when(company.getRepLastName()).thenReturn("山田");
+        when(company.getRepFirstName()).thenReturn("太郎");
+
+        assertThat(asRole(RoleConstants.ADMIN).getData().getCorpName()).isEqualTo("山田 太郎");
+    }
+
+    @Test
     void anAdminOfTheCompanyGetsItToo() {
         assertThat(asRole(RoleConstants.ADMIN).getStatusCode())
                 .isEqualTo(ResponseConstants.OK);

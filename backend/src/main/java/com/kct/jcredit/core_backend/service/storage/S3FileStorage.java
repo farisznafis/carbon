@@ -2,6 +2,7 @@ package com.kct.jcredit.core_backend.service.storage;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,7 +21,10 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 /**
  * The S3 mechanics shared by every two-phase upload: validate, put under
@@ -54,9 +58,11 @@ public class S3FileStorage {
     private String bucketName;
 
     private final S3Client s3Client;
+    private final S3Presigner s3Presigner;
 
-    public S3FileStorage(S3Client s3Client) {
+    public S3FileStorage(S3Client s3Client, S3Presigner s3Presigner) {
         this.s3Client = s3Client;
+        this.s3Presigner = s3Presigner;
     }
 
     /**
@@ -110,6 +116,22 @@ public class S3FileStorage {
                 .build());
 
         log.info("S3 file moved. from={}, to={}", tempS3Key, permanentKey);
+    }
+
+    /**
+     * A short-lived GET URL for one object. The caller decides whether the
+     * requester may see that key; this only signs.
+     */
+    public String presignGet(String s3Key, Duration validFor) {
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(validFor)
+                .getObjectRequest(GetObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(s3Key)
+                        .build())
+                .build();
+
+        return s3Presigner.presignGetObject(presignRequest).url().toString();
     }
 
     public void delete(String s3Key) {

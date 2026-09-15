@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.projectplan.ApplicableConditionsRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectOverviewRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFileDownloadResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormEnvelope;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressResponse;
@@ -186,6 +187,48 @@ class ProjectPlanFormServiceImplTest {
         verify(repository, never()).save(any(), any());
     }
 
+    // --- viewing attachments ---
+
+    private static final String STORED_KEY = "projects/PROJ1/plan/monitoring-plan/img_plan.png";
+
+    @Test
+    void aStoredAttachmentOfThisProjectGetsASignedUrl() {
+        when(fileService.isStoredFileOf(STORED_KEY, PROJECT_ID)).thenReturn(true);
+        when(fileService.downloadUrl(STORED_KEY)).thenReturn("https://signed.example/img");
+
+        ProjectPlanFileDownloadResponse response =
+                service.getFileDownloadUrl(PROJECT_ID, STORED_KEY, "C1", "operator", "u1");
+
+        assertThat(response.getStatusCode()).isEqualTo(ResponseConstants.OK);
+        assertThat(response.getUrl()).isEqualTo("https://signed.example/img");
+        assertThat(response.getExpiresIn()).isEqualTo(900L);
+    }
+
+    @Test
+    void aKeyThatIsNotThisProjectsPlanFileIsNeverSigned() {
+        when(fileService.isStoredFileOf(anyString(), anyString())).thenReturn(false);
+
+        ProjectPlanFileDownloadResponse response = service.getFileDownloadUrl(
+                PROJECT_ID, "projects/OTHER/plan/x/y.png", "C1", "operator", "u1");
+
+        assertThat(response.getStatusCode()).isEqualTo(ResponseConstants.BAD_REQUEST);
+        assertThat(response.getErrors()).containsKey("s3Key");
+        verify(fileService, never()).downloadUrl(anyString());
+    }
+
+    @Test
+    void aCallerWhoCannotSeeTheProjectGetsNoUrl() {
+        when(contextService.resolveProject(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new ProjectContext(ProjectContextStatus.FORBIDDEN, null));
+        when(fileService.isStoredFileOf(anyString(), anyString())).thenReturn(true);
+
+        ProjectPlanFileDownloadResponse response =
+                service.getFileDownloadUrl(PROJECT_ID, STORED_KEY, "C1", "operator", "u1");
+
+        assertThat(response.getStatusCode()).isEqualTo(ResponseConstants.FORBIDDEN);
+        verify(fileService, never()).downloadUrl(anyString());
+    }
+
     // --- reads ---
 
     @Test
@@ -252,13 +295,14 @@ class ProjectPlanFormServiceImplTest {
         ProjectPlanProgressResponse response =
                 service.getProgress(PROJECT_ID, "C1", "operator", "u1");
 
+        // 計画変更届 likewise: a プロジェクト登録 never files it.
         assertThat(response.getForms())
-                .filteredOn(form -> "authority-holder-change".equals(form.getFormSlug()))
-                .singleElement()
-                .satisfies(form -> assertThat(form.isOptional()).isTrue());
+                .filteredOn(form -> form.isOptional())
+                .extracting(form -> form.getFormSlug())
+                .containsExactlyInAnyOrder("authority-holder-change", "project-change-information");
 
         assertThat(response.getTotalForms())
-                .isEqualTo(new ProjectPlanFormRegistry().all().size() - 1);
+                .isEqualTo(new ProjectPlanFormRegistry().all().size() - 2);
         assertThat(response.getNextIncompleteSlug()).isEqualTo("application");
     }
 

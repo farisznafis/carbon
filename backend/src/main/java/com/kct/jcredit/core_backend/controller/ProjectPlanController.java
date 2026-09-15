@@ -20,6 +20,7 @@ import java.util.List;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.kct.jcredit.core_backend.dto.response.CorporationMasterResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectMasterResponse;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFileDownloadResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFileResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanBatchProgressResponse;
@@ -135,6 +136,25 @@ public class ProjectPlanController {
                 formSlug,
                 fieldName,
                 file,
+                jwtUtil.extractCompanyId(token),
+                jwtUtil.extractRole(token),
+                jwtUtil.extractUsername(token)));
+    }
+
+    @GetMapping("/{projectId}/files/download-url")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "計画書添付ファイル表示URL取得",
+            description = "保存済みページの添付ファイルを表示するための署名付きURL（15分有効）を返します。"
+                    + "指定プロジェクトの計画書ファイル以外の s3Key は拒否します。")
+    public ResponseEntity<ProjectPlanFileDownloadResponse> getFileDownloadUrl(
+            Authentication authentication,
+            @PathVariable String projectId,
+            @RequestParam(name = "s3Key") String s3Key) {
+        String token = token(authentication);
+        return respond(projectPlanFormService.getFileDownloadUrl(
+                projectId,
+                s3Key,
                 jwtUtil.extractCompanyId(token),
                 jwtUtil.extractRole(token),
                 jwtUtil.extractUsername(token)));

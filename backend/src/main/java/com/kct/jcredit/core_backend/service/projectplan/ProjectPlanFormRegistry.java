@@ -76,7 +76,9 @@ public class ProjectPlanFormRegistry {
                                 (d, c) -> d.setProjectOperatorNameEn(c.company().getNameEn())),
                         sql("corpNumber", (d, c) -> d.setCorpNumber(c.company().getCorpNumber())),
                         sql("corpPosition", (d, c) -> d.setCorpPosition(c.company().getRepPosition())),
-                        sql("corpName", (d, c) -> d.setCorpName(c.company().getNameJa())),
+                        // 法人代表者の役職・氏名 on the official sheet: a person, not
+                        // the company. It used to be filled with company.name_ja.
+                        sql("corpName", (d, c) -> d.setCorpName(c.repFullName())),
                         sql("prefecture", (d, c) -> d.setPrefecture(c.company().getPrefecture())),
                         sql("city", (d, c) -> d.setCity(c.company().getMunicipality())),
                         // 市区町村以降の住所: the company record splits this across two
@@ -113,7 +115,8 @@ public class ProjectPlanFormRegistry {
                                 (d, c) -> d.setMethodologyNumber(c.project().getMethodNumber())),
                         sql("methodology", (d, c) -> d.setMethodology(c.project().getMethodName())),
                         sql("regionalCategory",
-                                (d, c) -> d.setRegionalCategory(c.project().getRegionalCategory())))));
+                                (d, c) -> d.setRegionalCategory(c.project().getRegionalCategory()))),
+                ApplicationCategoryDerivation.application()));
 
         register(new FormDefinition<>(
                 "other-operator-projects",
@@ -122,7 +125,8 @@ public class ProjectPlanFormRegistry {
                 3,
                 false,
                 OtherOperatorProjectsRequest.class,
-                List.of()));
+                List.of(),
+                ApplicationCategoryDerivation.otherOperators()));
 
         register(new FormDefinition<>(
                 "applicable-conditions",
@@ -141,6 +145,10 @@ public class ProjectPlanFormRegistry {
                         sql("representativeName",
                                 (d, c) -> d.setRepresentativeName(c.repFullName())))));
 
+        // 計画変更届 is filed only with a プロジェクト計画変更. Every plan is a
+        // プロジェクト登録 until plans are versioned (see
+        // ApplicationCategoryDerivation), so it is optional like
+        // 認証権限保有主体変更届: reachable, never counted, never 続きから.
         register(new FormDefinition<>(
                 "project-change-information",
                 "PROJECT_CHANGE_INFORMATION",
@@ -148,7 +156,9 @@ public class ProjectPlanFormRegistry {
                 5,
                 false,
                 ProjectChangeInformationRequest.class,
-                List.of()));
+                List.of(),
+                null,
+                true));
 
         register(new FormDefinition<>(
                 "project-plan-cover",
