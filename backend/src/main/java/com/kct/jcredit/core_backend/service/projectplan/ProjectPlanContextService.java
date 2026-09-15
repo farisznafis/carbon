@@ -13,8 +13,9 @@ import org.springframework.stereotype.Service;
 /**
  * Resolves the PostgreSQL project context shared by project-plan forms.
  *
- * The context is authorized only when the project belongs to the requesting
- * operator company and the requesting username is registered in that company.
+ * The context is authorized only when the caller is an admin or operator,
+ * the project belongs to their operator company, and their username is
+ * registered in that company.
  * Missing project data and denied access are returned explicitly so callers can
  * preserve the existing API response contract.
  */
@@ -26,7 +27,7 @@ public class ProjectPlanContextService {
     private final OperatingUserRepository operatingUserRepository;
 
     /**
-     * Loads a project and verifies that the requesting operator may access it.
+     * Loads a project and verifies that the requesting user may access it.
      *
      * @param projectId project identifier from the endpoint
      * @param companyId operator company identifier from the authenticated token
@@ -44,7 +45,12 @@ public class ProjectPlanContextService {
             return ProjectContext.notFound();
         }
 
-        if (!RoleConstants.OPERATOR.equals(role)) {
+        // admin and operator are both roles of operating_user, both with a
+        // NOT NULL company_id, so the company checks below scope them equally.
+        // Rejecting admin here made every plan endpoint forbidden to the admin
+        // dashboard even where @PreAuthorize allowed it. Other roles (user,
+        // master) still have no business in the plan.
+        if (!RoleConstants.OPERATOR.equals(role) && !RoleConstants.ADMIN.equals(role)) {
             return ProjectContext.forbidden();
         }
 
