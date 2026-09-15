@@ -3,9 +3,11 @@ package com.kct.jcredit.core_backend.service.projectplan;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -16,16 +18,20 @@ import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.constant.RoleConstants;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormBase;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormEnvelope;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFileDownloadResponse;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFileResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanBatchProgressResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressSummary;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressResponse.FormProgress;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+import com.kct.jcredit.core_backend.entity.Account;
 import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.enums.ProjectPlanFormStatus;
 import com.kct.jcredit.core_backend.repository.dynamodb.ProjectPlanFormRepository;
+import com.kct.jcredit.core_backend.repository.postgres.AccountRepository;
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.service.projectplan.ProjectPlanContextService.ProjectContext;
 import com.kct.jcredit.core_backend.service.projectplan.ProjectPlanContextService.ProjectContextStatus;
@@ -37,6 +43,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -47,6 +54,8 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
     private final ProjectPlanFormRegistry registry;
     private final ProjectPlanFormRepository repository;
     private final OperatingUserRepository operatingUserRepository;
+    private final AccountRepository accountRepository;
+    private final ProjectPlanFileService fileService;
     private final ObjectMapper objectMapper;
     private final Validator validator;
 
@@ -109,7 +118,8 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
             return response;
         }
 
-        return write(definition, projectId, methodologyIndex, body, username, response);
+        return write(
+                definition, projectId, methodologyIndex, body, context.project(), username, response);
     }
 
     @Override
@@ -129,7 +139,7 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
         List<FormProgress> forms = pagesOf(projectId);
 
         response.setForms(forms);
-        response.setTotalForms(forms.size());
+        response.setTotalForms(requiredCount(forms));
         response.setCompletedForms(completedCount(forms));
         response.setNextIncompleteSlug(nextIncompleteSlug(forms));
         response.setStatusCode(ResponseConstants.OK);
@@ -158,7 +168,7 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
                     List<FormProgress> forms = pagesOf(id);
                     String next = nextIncompleteSlug(forms);
                     return new ProjectPlanProgressSummary(
-                            id, forms.size(), completedCount(forms), next, next == null);
+                            id, requiredCount(forms), completedCount(forms), next, next == null);
                 })
                 .toList();
 
@@ -190,19 +200,29 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
                             definition.order(),
                             statusOf(stored),
                             stored == null ? null : stored.getUpdatedAt(),
-                            stored == null ? null : stored.getUpdatedBy());
+                            stored == null ? null : stored.getUpdatedBy(),
+                            definition.optional());
                 })
                 .toList();
     }
 
+    /** Pages the plan requires. An optional page is listed but never counted. */
+    private static int requiredCount(List<FormProgress> forms) {
+        return (int) forms.stream().filter(form -> !form.isOptional()).count();
+    }
+
     private static int completedCount(List<FormProgress> forms) {
         return (int) forms.stream()
+                .filter(form -> !form.isOptional())
                 .filter(form -> ProjectPlanFormStatus.COMPLETE.name().equals(form.getStatus()))
                 .count();
     }
 
     private static String nextIncompleteSlug(List<FormProgress> forms) {
         return forms.stream()
+                // An optional page is not "next": 続きから would park the
+                // operator on a form only some projects are meant to file.
+                .filter(form -> !form.isOptional())
                 .filter(form -> !ProjectPlanFormStatus.COMPLETE.name().equals(form.getStatus()))
                 .map(FormProgress::getFormSlug)
                 .findFirst()
@@ -225,8 +245,17 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
         boolean exists = stored != null;
         T item = exists ? stored : definition.newInstance();
 
-        // PostgreSQL stays authoritative for autofilled fields, on every read.
-        definition.applySql(item, sqlContextFor(project));
+        // PostgreSQL stays authoritative for the fields it can supply, on every
+        // read. Only those are reported read-only: locking a field SQL left
+        // empty would make a required page impossible to complete.
+        ProjectPlanSqlContext sqlContext = sqlContextFor(project);
+        Set<String> readOnly = new LinkedHashSet<>(
+                definition.applySql(item, sqlContext, objectMapper));
+        // Derived values come after, so a page that both autofills and computes
+        // sees the SQL values before computing from them. Both kinds are
+        // server-owned, so the client locks them the same way.
+        readOnly.addAll(definition.applyDerivation(item, sqlContext));
+        response.setReadOnlyFields(List.copyOf(readOnly));
         item.setPk(pk);
         item.setSk(sk);
 
@@ -247,6 +276,7 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
             String projectId,
             Integer methodologyIndex,
             JsonNode body,
+            Project project,
             String username,
             ProjectPlanFormResponse response) {
 
@@ -264,6 +294,12 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
             payload = definition.newInstance();
         }
 
+        // Derived values are recomputed before anything is judged, so what the
+        // client sent for them never reaches validation or storage. A client
+        // posting its own 合計 has it replaced, not trusted.
+        ProjectPlanSqlContext sqlContext = sqlContextFor(project);
+        definition.applyDerivation(payload, sqlContext);
+
         // A page is all-or-nothing: nothing is persisted unless it fully validates.
         Map<String, String> errors = validate(payload);
         if (!errors.isEmpty()) {
@@ -272,6 +308,41 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
             response.setErrors(errors);
             response.setTimestamp(LocalDateTime.now());
             return response;
+        }
+
+        // A provisional key we would not promote must not be stored: the bucket
+        // expires tmp/ after a day, so the page would end up pointing at nothing
+        // with no error ever raised. Checked before promoting, so a page
+        // rejected here has moved no files.
+        Map<String, String> fileErrors = fileService.foreignTempKeys(body);
+        if (!fileErrors.isEmpty()) {
+            response.setStatusCode(ResponseConstants.VALIDATION_ERROR);
+            response.setMessage(ResponseConstants.MSG_VALIDATION_ERROR);
+            response.setErrors(fileErrors);
+            response.setTimestamp(LocalDateTime.now());
+            return response;
+        }
+
+        // The page is good, so its uploads become permanent and the payload is
+        // re-read so the stored keys are the permanent ones. Doing this after
+        // validation is what keeps a rejected page from leaving files behind:
+        // its uploads stay under tmp/ and expire.
+        JsonNode promoted = fileService.promoteUploads(body, projectId, definition.slug());
+        if (promoted != body) {
+            try {
+                payload = objectMapper.treeToValue(promoted, definition.type());
+            } catch (JsonProcessingException e) {
+                // Only text values changed, so this cannot realistically fail —
+                // but the files have already moved, so say so rather than
+                // reporting a plain bad request.
+                log.error("Promoted uploads but could not re-read page slug={}", definition.slug(), e);
+                throw new IllegalStateException("Failed to re-read project-plan page after upload promotion", e);
+            }
+            // The re-read came from the request body, which never carried the
+            // derived values — recompute them or the page stores a table with
+            // no 年度 and no 合計. Idempotent, which is why applying it twice
+            // is safe.
+            definition.applyDerivation(payload, sqlContext);
         }
 
         // Keys and audit metadata are server-managed and never taken from clients.
@@ -307,16 +378,117 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
         return errors;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ProjectPlanFileResponse uploadFormFile(
+            String projectId,
+            String formSlug,
+            String fieldName,
+            MultipartFile file,
+            String companyId,
+            String role,
+            String username) {
+
+        ProjectPlanFileResponse response = new ProjectPlanFileResponse();
+
+        // An unknown page is refused before anything reaches S3, so a typo
+        // cannot litter the bucket with files no page will ever claim.
+        FormDefinition<?> definition = registry.bySlug(formSlug).orElse(null);
+        if (definition == null) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_FORM_NOT_DEFINED);
+            response.setTimestamp(LocalDateTime.now());
+            return response;
+        }
+
+        ProjectContext context =
+                projectPlanContextService.resolveProject(projectId, companyId, role, username);
+        if (!context.isAuthorized()) {
+            applyContextError(response, context);
+            return response;
+        }
+
+        var uploaded = fileService.uploadToTemp(projectId, formSlug, fieldName, username, file);
+        response.setS3Key(uploaded.getS3Key());
+        response.setFileId(uploaded.getFileId());
+        response.setOriginalName(uploaded.getOriginalName());
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage(ResponseConstants.MSG_FORM_SAVED);
+        response.setTimestamp(LocalDateTime.now());
+        return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProjectPlanFileDownloadResponse getFileDownloadUrl(
+            String projectId,
+            String s3Key,
+            String companyId,
+            String role,
+            String username) {
+
+        ProjectPlanFileDownloadResponse response = new ProjectPlanFileDownloadResponse();
+
+        ProjectContext context =
+                projectPlanContextService.resolveProject(projectId, companyId, role, username);
+        if (!context.isAuthorized()) {
+            applyContextError(response, context);
+            return response;
+        }
+
+        // The key comes from the client. Signing whatever it names would let a
+        // caller authorised for one project read any object in the bucket.
+        if (!fileService.isStoredFileOf(s3Key, projectId)) {
+            response.setStatusCode(ResponseConstants.BAD_REQUEST);
+            response.setMessage(ResponseConstants.MSG_BAD_REQUEST);
+            response.setErrors(Map.of("s3Key", "このプロジェクト計画書のファイルではありません。"));
+            response.setTimestamp(LocalDateTime.now());
+            return response;
+        }
+
+        response.setUrl(fileService.downloadUrl(s3Key));
+        response.setExpiresIn(ProjectPlanFileService.DOWNLOAD_URL_VALIDITY.toSeconds());
+        response.setStatusCode(ResponseConstants.OK);
+        response.setTimestamp(LocalDateTime.now());
+        return response;
+    }
+
     private ProjectPlanSqlContext sqlContextFor(Project project) {
-        return new ProjectPlanSqlContext(project, () -> {
-            OperatorCompany company = project == null ? null : project.getOperatorCompany();
-            if (company == null) {
-                return null;
-            }
-            return operatingUserRepository
-                    .findByCompany_IdAndRole(company.getId(), RoleConstants.MASTER)
-                    .orElse(null);
-        });
+        return new ProjectPlanSqlContext(
+                project,
+                () -> {
+                    OperatorCompany company = companyOf(project);
+                    if (company == null) {
+                        return null;
+                    }
+                    return operatingUserRepository
+                            .findByCompany_IdAndRole(company.getId(), RoleConstants.MASTER)
+                            .orElse(null);
+                },
+                () -> {
+                    OperatorCompany company = companyOf(project);
+                    if (company == null) {
+                        return null;
+                    }
+                    List<Account> accounts =
+                            accountRepository.findByOperatorCompany_IdAndIsActiveTrue(company.getId());
+                    // Only autofill when there is no doubt which account it is.
+                    // With several active accounts the holder is a business
+                    // question, and a wrong guess would be written over the
+                    // operator's own answer on every read.
+                    if (accounts.size() != 1) {
+                        if (accounts.size() > 1) {
+                            log.warn("Company {} has {} active accounts; leaving 保有者 fields to the operator",
+                                    company.getCompanyId(), accounts.size());
+                        }
+                        return null;
+                    }
+                    return accounts.get(0);
+                });
+    }
+
+    private static OperatorCompany companyOf(Project project) {
+        return project == null ? null : project.getOperatorCompany();
     }
 
     private static String statusOf(ProjectPlanFormEnvelope envelope) {
@@ -329,9 +501,13 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
                 .orElse(ProjectPlanFormStatus.COMPLETE.name());
     }
 
+    /**
+     * Page metadata that holds regardless of the project. {@code readOnlyFields}
+     * is deliberately not here: which fields are read-only depends on what
+     * PostgreSQL actually had for this project, so {@link #read} sets it.
+     */
     private static void describe(ProjectPlanFormResponse response, FormDefinition<?> definition) {
         response.setDisplayName(definition.displayName());
-        response.setReadOnlyFields(definition.readOnlyFields());
         response.setConditionalFields(definition.conditionalFields());
     }
 

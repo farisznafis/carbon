@@ -30,6 +30,11 @@ type AdminProjectDetailLayoutProps = {
   currentBreadcrumb?: string;
   backTo: string;
   backLabel: string;
+  /**
+   * Where 更新 leads. Defaults to the project edit flow; the plan page sends
+   * the operator to the wizard page they are reading instead.
+   */
+  onEdit?: () => void;
   children: ReactNode;
 };
 
@@ -42,15 +47,16 @@ export function AdminProjectDetailLayout({
   currentBreadcrumb,
   backTo,
   backLabel,
+  onEdit,
   children,
 }: Readonly<AdminProjectDetailLayoutProps>) {
   const navigate = useNavigate();
   const permissions = useAdminPermissions();
 
-  /** Opens the existing project edit flow from either read-only project page. */
+  /** Opens the edit flow for the read-only page being shown. */
   const handleEdit = () =>
     permissions.guardAction('PROJECT_UPDATE', () =>
-      navigate(paths.adminProjectEdit(projectId)),
+      onEdit ? onEdit() : navigate(paths.adminProjectEdit(projectId)),
     );
 
   return (
