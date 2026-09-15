@@ -65,7 +65,7 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
             render={({ field }) => (
               <FormItem className="[@media(max-height:700px)]:space-y-1">
                 <FormLabel className="[@media(max-heigght:700px)]:text-sm [@media(max-height:700px)]:leading-5">
-                  社員ID
+                  企業ID
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -123,7 +123,7 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
               to={paths.forgotPassword}
               className="text-sm font-medium text-foreground hover:text-primary"
             >
-              社員IDまたはパスワードをお忘れの方
+              企業IDまたはパスワードをお忘れの方
             </Link>
           </div>
         </LoginForm>

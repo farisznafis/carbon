@@ -376,7 +376,7 @@ function CancelRequestSummary({
       <CardHeader className='flex-row items-start justify-between space-y-0'>
         <div>
           <CardTitle>取消一覧</CardTitle>
-          <p className='mt-2 text-subtle text-foreground'>
+          <p className='mt-2 text-sm text-foreground'>
             未処理 {pendingRequests.length.toLocaleString('ja-JP')}件
           </p>
         </div>

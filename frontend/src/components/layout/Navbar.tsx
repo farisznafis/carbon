@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Bell, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -76,9 +77,11 @@ export const Navbar = () => {
     loading: notificationsLoading,
     error: notificationsError,
     unreadCount,
+    loadNotifications,
     markAsRead,
     deleteNotification,
   } = useNotifications();
+  const loadedAdminNotificationSessionRef = useRef<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -87,6 +90,28 @@ export const Navbar = () => {
   const isAdminLoginPage =
     isLoginPage && location.pathname.startsWith(paths.adminLogin);
   const isAdminAuthenticated = isAuthenticated && user?.role === 'admin';
+  const adminNotificationSessionKey = isAdminAuthenticated
+    ? `${user.id}:${user.email}`
+    : null;
+
+  /** Loads navbar notifications once for each authenticated admin account. */
+  useEffect(() => {
+    if (!adminNotificationSessionKey) {
+      loadedAdminNotificationSessionRef.current = null;
+      return;
+    }
+
+    if (
+      loadedAdminNotificationSessionRef.current ===
+        adminNotificationSessionKey ||
+      typeof loadNotifications !== 'function'
+    ) {
+      return;
+    }
+
+    loadedAdminNotificationSessionRef.current = adminNotificationSessionKey;
+    void loadNotifications();
+  }, [adminNotificationSessionKey, loadNotifications]);
 
   const handleLogout = async () => {
     const redirectPath =
