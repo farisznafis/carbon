@@ -17,7 +17,9 @@ import com.kct.jcredit.core_backend.constant.RoleConstants;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormBase;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormEnvelope;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormResponse;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanBatchProgressResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressResponse;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressSummary;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressResponse.FormProgress;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.entity.OperatorCompany;
@@ -124,6 +126,53 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
             return response;
         }
 
+        List<FormProgress> forms = pagesOf(projectId);
+
+        response.setForms(forms);
+        response.setTotalForms(forms.size());
+        response.setCompletedForms(completedCount(forms));
+        response.setNextIncompleteSlug(nextIncompleteSlug(forms));
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage(ResponseConstants.MSG_PROGRESS_RETRIEVED);
+        response.setTimestamp(LocalDateTime.now());
+        return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProjectPlanBatchProgressResponse getProgressForProjects(
+            List<String> projectIds, String companyId, String role, String username) {
+
+        ProjectPlanBatchProgressResponse response = new ProjectPlanBatchProgressResponse();
+
+        List<ProjectPlanProgressSummary> summaries = (projectIds == null ? List.<String>of() : projectIds)
+                .stream()
+                .distinct()
+                .filter(id -> id != null && !id.isBlank())
+                // Skip rather than fail: one project the caller cannot see must
+                // not blank out progress for the whole list.
+                .filter(id -> projectPlanContextService
+                        .resolveProject(id, companyId, role, username)
+                        .isAuthorized())
+                .map(id -> {
+                    List<FormProgress> forms = pagesOf(id);
+                    String next = nextIncompleteSlug(forms);
+                    return new ProjectPlanProgressSummary(
+                            id, forms.size(), completedCount(forms), next, next == null);
+                })
+                .toList();
+
+        response.setProjects(summaries);
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage(ResponseConstants.MSG_PROGRESS_RETRIEVED);
+        response.setTimestamp(LocalDateTime.now());
+        return response;
+    }
+
+    // --- progress helpers, shared by the single and batch endpoints ---
+
+    /** Every registered page with its stored status for one project. */
+    private List<FormProgress> pagesOf(String projectId) {
         Map<String, ProjectPlanFormEnvelope> storedBySlug =
                 repository.findEnvelopes(buildPk(projectId)).stream()
                         .filter(envelope -> registry.bySortKey(envelope.getSk()).isPresent())
@@ -132,7 +181,7 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
                                 Function.identity(),
                                 (first, second) -> first));
 
-        List<FormProgress> forms = registry.all().stream()
+        return registry.all().stream()
                 .map(definition -> {
                     ProjectPlanFormEnvelope stored = storedBySlug.get(definition.slug());
                     return new FormProgress(
@@ -144,23 +193,20 @@ public class ProjectPlanFormServiceImpl implements ProjectPlanFormService {
                             stored == null ? null : stored.getUpdatedBy());
                 })
                 .toList();
+    }
 
-        String nextIncomplete = forms.stream()
+    private static int completedCount(List<FormProgress> forms) {
+        return (int) forms.stream()
+                .filter(form -> ProjectPlanFormStatus.COMPLETE.name().equals(form.getStatus()))
+                .count();
+    }
+
+    private static String nextIncompleteSlug(List<FormProgress> forms) {
+        return forms.stream()
                 .filter(form -> !ProjectPlanFormStatus.COMPLETE.name().equals(form.getStatus()))
                 .map(FormProgress::getFormSlug)
                 .findFirst()
                 .orElse(null);
-
-        response.setForms(forms);
-        response.setTotalForms(forms.size());
-        response.setCompletedForms((int) forms.stream()
-                .filter(form -> ProjectPlanFormStatus.COMPLETE.name().equals(form.getStatus()))
-                .count());
-        response.setNextIncompleteSlug(nextIncomplete);
-        response.setStatusCode(ResponseConstants.OK);
-        response.setMessage(ResponseConstants.MSG_PROGRESS_RETRIEVED);
-        response.setTimestamp(LocalDateTime.now());
-        return response;
     }
 
     // --- typed helpers: capture the registry's wildcard once ---

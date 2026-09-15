@@ -1,5 +1,7 @@
 package com.kct.jcredit.core_backend.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -18,6 +20,7 @@ import com.kct.jcredit.core_backend.dto.response.ProjectMasterResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ApplicableConditionsRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.OtherOperatorProjectsRequest;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectApplicationRequest;
+import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanBatchProgressResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanFormResponse;
 import com.kct.jcredit.core_backend.dto.projectplan.ProjectPlanProgressResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
@@ -89,7 +92,7 @@ public class ProjectPlanController {
     // --- Registry-driven pages ---
 
     @GetMapping("/{projectId}/forms/{formSlug}")
-    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "計画書フォーム取得",
             description = "指定ページを取得します。SQL由来の項目は readOnlyFields、"
@@ -116,7 +119,7 @@ public class ProjectPlanController {
     }
 
     @GetMapping("/{projectId}/progress")
-    @PreAuthorize("hasRole('operator')")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "計画書入力状況取得",
             description = "全ページの入力状況と、次に入力すべきページを返します。")
@@ -125,6 +128,23 @@ public class ProjectPlanController {
         String token = token(authentication);
         return respond(projectPlanFormService.getProgress(
                 projectId,
+                jwtUtil.extractCompanyId(token),
+                jwtUtil.extractRole(token),
+                jwtUtil.extractUsername(token)));
+    }
+
+    @GetMapping("/progress")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "計画書入力状況一括取得",
+            description = "複数プロジェクトの入力状況をまとめて取得します。一覧画面用。"
+                    + "参照権限のないプロジェクトは結果から除外されます。")
+    public ResponseEntity<ProjectPlanBatchProgressResponse> getProgressForProjects(
+            Authentication authentication,
+            @RequestParam(name = "projectIds") List<String> projectIds) {
+        String token = token(authentication);
+        return respond(projectPlanFormService.getProgressForProjects(
+                projectIds,
                 jwtUtil.extractCompanyId(token),
                 jwtUtil.extractRole(token),
                 jwtUtil.extractUsername(token)));
