@@ -98,6 +98,9 @@ export const paths = {
   adminProjectRegister: '/admin/project-register',
   adminProjectDetailRoute: '/admin/projects/:projectId',
   adminProjectDetail: (projectId: string) => `/admin/projects/${projectId}`,
+  adminProjectInformationRoute: '/admin/projects/:projectId/information',
+  adminProjectInformation: (projectId: string) =>
+    `/admin/projects/${encodeURIComponent(projectId)}/information`,
   adminProjectMembershipRoute: '/admin/projects/:projectId/memberships',
   adminProjectMembership: (projectId: string, status?: string) =>
     `/admin/projects/${projectId}/memberships${status ? `?status=${encodeURIComponent(status)}` : ''}`,

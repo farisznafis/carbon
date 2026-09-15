@@ -15,7 +15,9 @@ import { SessionExpiryGuard } from "@/components/layout/SessionExpiryGuard";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "./contexts/ProtectedRoute";
 import { ErrorBoundary } from "@/components/feedback/ErrorBoundary";
-import { ForbiddenAccessBoundary } from '@/components/feedback/ForbiddenAccessBoundary';
+import { AdminPermissionProvider } from '@/features/admin/permissions/AdminPermissionContext';
+import { AdminBusinessAccessBoundary } from '@/features/admin/permissions/AdminBusinessAccessBoundary';
+import { AdminPermissionRoute } from '@/features/admin/permissions/AdminPermissionRoute';
 import { AppLoadingScreen, PageSkeleton } from '@/components/feedback/loading';
 import { isAuthPagePath, paths } from "@/routes/paths";
 import { cn } from "@/lib/utils";
@@ -87,6 +89,9 @@ const AdminProjectRegister = lazy(() =>
   })),
 );
 const ProjectDetailAdmin = lazy(() => import("./features/admin/project-detail/ProjectDetailAdminPage"));
+const AdminProjectInformation = lazy(() =>
+  import('./features/admin/project-detail/AdminProjectInformationPage'),
+);
 const AdminProjectPlanApplication = lazy(() =>
   import("./features/admin/project-detail/AdminProjectPlanApplicationPage"),
 );
@@ -107,7 +112,7 @@ const AdminHelpFaqPage = lazy(() => import("./features/master/help/AdminHelpFaqP
 function RequireAdmin({ children }: { children: JSX.Element }) {
   const { isAuthenticated, user } = useAuth();
   return isAuthenticated && user?.role === 'admin'
-    ? children
+    ? <AdminBusinessAccessBoundary>{children}</AdminBusinessAccessBoundary>
     : <Navigate to={paths.adminLogin} replace />;
 }
 
@@ -173,6 +178,7 @@ const App = () => {
 
   return (
     <ErrorBoundary>
+      <AdminPermissionProvider>
       <div
         className={cn(
           'flex flex-col bg-background text-foreground',
@@ -190,7 +196,6 @@ const App = () => {
             isAuthPage && 'relative overflow-hidden',
           )}
         >
-          <ForbiddenAccessBoundary>
             <Suspense fallback={<PageSkeleton />}>
               <Routes>
           <Route path={paths.home} element={<Index />} />
@@ -298,24 +303,30 @@ const App = () => {
           <Route
             path={paths.adminOperatorRegister}
             element={
-              <RequireAdmin>
-                <AdminOperatorRegister />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="OPERATOR_USER_CREATE" title="運用者追加" description="新しい運用者を登録します。">
+                      <AdminOperatorRegister />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminOperatorProfileRoute}
             element={
-              <RequireAdmin>
-                <AdminOperatorProfile />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="OPERATOR_USER_READ" title="運用者プロフィール" description="運用者の登録情報を確認します。" allowSelfOperator>
+                      <AdminOperatorProfile />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminOperatorEditRoute}
             element={
-              <RequireAdmin>
-                <AdminOperatorEdit />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="OPERATOR_USER_UPDATE" title="運用者更新" description="運用者の登録情報を更新します。">
+                      <AdminOperatorEdit />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
@@ -330,80 +341,110 @@ const App = () => {
           <Route
             path={paths.adminCompanyDetailRoute}
             element={
-              <RequireAdmin>
-                <AdminCompanyDetail />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="PARTICIPATING_COMPANY_READ" title="参加企業詳細" description="参加企業の登録情報を確認します。">
+                      <AdminCompanyDetail />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminCancelRequestDetailRoute}
             element={
-              <RequireAdmin>
-                <AdminCancelRequestDetail />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="MONITORING_CANCEL" title="取消依頼詳細" description="取消依頼の内容を確認します。">
+                      <AdminCancelRequestDetail />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminProjectRegister}
             element={
-              <RequireAdmin>
-                <AdminProjectRegister />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="PROJECT_CREATE" title="プロジェクト追加" description="新しいプロジェクトを登録します。">
+                      <AdminProjectRegister />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminProjectDetailRoute}
             element={
-              <RequireAdmin>
-                <ProjectDetailAdmin />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="PROJECT_READ" title="プロジェクト詳細" description="登録済みプロジェクトの進捗、排出量、関連データを確認します。">
+                      <ProjectDetailAdmin />
+                    </AdminPermissionRoute>
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminProjectInformationRoute}
+            element={
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="PROJECT_READ" title="プロジェクト詳細情報" description="登録済みプロジェクトの詳細情報を確認します。">
+                      <AdminProjectInformation />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminProjectMembershipRoute}
             element={
-              <RequireAdmin>
-                <AdminParticipationReviewList />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" title="入会届一覧" description="レビュー対象となる入会届を確認します。">
+                      <AdminParticipationReviewList />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminProjectMembershipDetailRoute}
             element={
-              <RequireAdmin>
-                <AdminParticipationReviewDetail />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" title="入会届詳細" description="入会届の内容と審査状況を確認します。">
+                      <AdminParticipationReviewDetail />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminProjectMonitoringDetailRoute}
             element={
-              <RequireAdmin>
-                <AdminProjectMonitoringDetail />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="MONITORING_READ" title="モニタリングデータ詳細" description="登録されたモニタリングデータを確認します。">
+                      <AdminProjectMonitoringDetail />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminProjectEditRoute}
             element={
-              <RequireAdmin>
-                <AdminProjectEdit />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="PROJECT_UPDATE" title="プロジェクト更新" description="登録済みプロジェクトの情報を更新します。">
+                      <AdminProjectEdit />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminProjectPlanRoute}
             element={
-              <RequireAdmin>
-                <AdminProjectPlanApplication />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="PROJECT_READ" title="プロジェクト計画書" description="計画書の入力内容と関連資料を確認します。">
+                      <AdminProjectPlanApplication />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminProjectMonitoringReportRoute}
             element={
-              <RequireAdmin>
-                <AdminMonitoringReport />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="MONITORING_READ" title="モニタリングデータ報告書" description="モニタリング結果の報告書を確認します。">
+                      <AdminMonitoringReport />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
@@ -417,9 +458,9 @@ const App = () => {
           />
               </Routes>
             </Suspense>
-          </ForbiddenAccessBoundary>
         </div>
       </div>
+      </AdminPermissionProvider>
     </ErrorBoundary>
   );
 };
