@@ -79,6 +79,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public ProjectListInfoResponse getProjectsBySiteIdAndCompanyId(String siteId, String companyId) {
         ProjectListInfoResponse response = new ProjectListInfoResponse();
+        response.setProjects(new ArrayList<>());
 
         Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
         if (site == null) {
