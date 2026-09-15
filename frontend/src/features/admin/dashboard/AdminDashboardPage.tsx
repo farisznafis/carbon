@@ -90,9 +90,6 @@ const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
 const HOME_APPLICATION_SUMMARY_LIMIT = 3;
 const ALL_PROJECT_FILTER = 'ALL';
 const IN_PROGRESS_PROJECT_STATUS = '準備中';
-const PROJECT_STATUS_FILTER_OPTIONS = PROJECT_STATUS_PRESENTATIONS.filter(
-  ({ status }) => status !== IN_PROGRESS_PROJECT_STATUS,
-);
 const FORBIDDEN_SECTION_ERROR = '__FORBIDDEN_SECTION__';
 
 const DEFAULT_PAGINATION: Pagination = {
@@ -1348,17 +1345,13 @@ const AdminDashboard = () => {
                           }}
                         >
                           <SelectTrigger className="w-full sm:w-44">
-                            {projectStatusFilter === IN_PROGRESS_PROJECT_STATUS ? (
-                              <span>{IN_PROGRESS_PROJECT_STATUS}</span>
-                            ) : (
-                              <SelectValue placeholder="ステータス" />
-                            )}
+                            <SelectValue placeholder="ステータス" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value={ALL_PROJECT_FILTER}>
                               すべてのステータス
                             </SelectItem>
-                            {PROJECT_STATUS_FILTER_OPTIONS.map((presentation) => (
+                            {PROJECT_STATUS_PRESENTATIONS.map((presentation) => (
                               <SelectItem
                                 key={presentation.status}
                                 value={presentation.status}

@@ -54,6 +54,11 @@ const projectStatusOptions: ProjectStatus[] = [
   '終了',
 ];
 
+const NON_EDITABLE_PROJECT_STATUS: ProjectStatus = '準備中';
+const editableProjectStatusOptions = projectStatusOptions.filter(
+  (status) => status !== NON_EDITABLE_PROJECT_STATUS,
+);
+
 const statusColors: Record<
   ProjectStatus,
   { bg: string; text: string; border: string }
@@ -138,12 +143,22 @@ function getProjectStatusColors(status: Project['projectStatus']) {
 function getStatusOptions(currentStatus: string): string[] {
   if (
     !currentStatus ||
-    projectStatusOptions.includes(currentStatus as ProjectStatus)
+    editableProjectStatusOptions.includes(currentStatus as ProjectStatus)
   ) {
-    return projectStatusOptions;
+    return editableProjectStatusOptions;
   }
 
-  return [currentStatus, ...projectStatusOptions];
+  return [currentStatus, ...editableProjectStatusOptions];
+}
+
+/** Checks whether the current API status must remain read-only in the table. */
+function isNonEditableProjectStatus(status: string) {
+  const normalizedStatus = status.trim();
+  return (
+    normalizedStatus === NON_EDITABLE_PROJECT_STATUS ||
+    projectStatusAliases[normalizedStatus.toUpperCase()] ===
+      NON_EDITABLE_PROJECT_STATUS
+  );
 }
 
 function isTerminalProjectStatus(status: string) {
@@ -337,6 +352,9 @@ export function ProjectTable({
       sortValue: (project) => project.projectStatus,
       render: (project) => {
         const statusColor = getProjectStatusColors(project.projectStatus);
+        const statusIsReadOnly = isNonEditableProjectStatus(
+          project.projectStatus,
+        );
 
         return (
           <span className="block min-w-0" {...stopRowActivation}>
@@ -344,6 +362,7 @@ export function ProjectTable({
               value={project.projectStatus}
               disabled={
                 updatingProjectStatusId === project.id ||
+                statusIsReadOnly ||
                 isTerminalProjectStatus(project.projectStatus)
               }
               onValueChange={(value) =>
@@ -357,7 +376,11 @@ export function ProjectTable({
                   color: statusColor.text,
                   borderColor: statusColor.border,
                 }}
-                title="ステータスを変更"
+                title={
+                  statusIsReadOnly
+                    ? '準備中のステータスは変更できません'
+                    : 'ステータスを変更'
+                }
               >
                 <SelectValue />
               </SelectTrigger>
