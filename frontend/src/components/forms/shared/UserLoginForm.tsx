@@ -123,7 +123,7 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
               to={paths.forgotPassword}
               className="text-sm font-medium text-foreground hover:text-primary"
             >
-              企業IDまたはパスワードをお忘れの方
+              社員IDまたはパスワードをお忘れの方
             </Link>
           </div>
         </LoginForm>

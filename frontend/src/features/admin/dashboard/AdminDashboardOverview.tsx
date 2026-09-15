@@ -15,6 +15,8 @@ import type { MonitoringCancelRequestListItem } from '@/api/monitoring';
 import type { Project } from '@/api/projects';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
+import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
+import { AdminTableCard } from '@/components/layout/AdminTableCard';
 import {
   SkeletonList,
   SkeletonMetricCard,
@@ -70,6 +72,7 @@ type AdminDashboardOverviewProps = {
   batchHistoryError: string | null;
   activePanel: AdminHomePanel | null;
   onPanelChange: (panel: AdminHomePanel | null) => void;
+  onOpenProjectDetail: (project: Project) => void;
   onOpenProjectMembership: (project: Project) => void;
   onOpenCompanyApplication: (company: AdminCompanyListItem) => void;
   onOpenCancelRequest: (request: MonitoringCancelRequestListItem) => void;
@@ -100,7 +103,7 @@ function MetricCard({
   label,
   value,
   description,
-  icon,
+  // icon,
   loading,
   error,
   onClick,
@@ -113,30 +116,23 @@ function MetricCard({
 
   return (
     <Card className="h-full rounded-xl border-border shadow-app-sm">
-      <CardContent className="flex h-full min-h-[190px] flex-col p-5">
-
+      <CardContent
+        className="
+          grid h-full min-h-[150px]
+          grid-rows-[auto_1fr_auto]
+          gap-y-3
+          p-5
+        "
+      >
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <p className="text-body font-bold text-foreground">
             {label}
           </p>
-
-          <span
-            className="
-              flex h-10 w-10 shrink-0
-              items-center justify-center
-              rounded-lg
-              bg-accent
-              text-primary
-            "
-            aria-hidden="true"
-          >
-            {icon}
-          </span>
         </div>
 
         {/* KPI value / permission state */}
-        <div className="mt-5">
+        <div className="flex min-w-0 items-center">
           {!permissionGranted ? (
             <PermissionDeniedNotice
               permission={requiredPermission}
@@ -147,6 +143,7 @@ function MetricCard({
             <div
               role="alert"
               className="
+                w-full
                 rounded-lg
                 border border-destructive/30
                 bg-destructive/5
@@ -157,12 +154,12 @@ function MetricCard({
               取得できませんでした
             </div>
           ) : (
-            <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-bold leading-none tabular-nums text-foreground">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-4xl font-bold leading-none tracking-tight tabular-nums text-foreground">
                 {value.toLocaleString('ja-JP')}
               </span>
 
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-base font-semibold text-foreground">
                 件
               </span>
             </div>
@@ -170,13 +167,7 @@ function MetricCard({
         </div>
 
         {/* Footer */}
-        <div
-          className="
-            mt-auto
-            flex items-center justify-between gap-3
-            pt-4
-          "
-        >
+        <div className="flex items-center justify-between gap-3">
           <p className="min-w-0 truncate text-subtle text-foreground">
             {description}
           </p>
@@ -192,7 +183,6 @@ function MetricCard({
             <ArrowRight />
           </Button>
         </div>
-
       </CardContent>
     </Card>
   );
@@ -597,12 +587,10 @@ export function AdminDashboardOverview(
 
   return (
     <div className='space-y-8'>
-      <header className='space-y-2'>
-        <h1 className='text-foreground'>ホーム</h1>
-        <p className='mt-2 text-base text-foreground'>
-          運用業務を担当するユーザーのアカウントを管理します。
-        </p>
-      </header>
+      <AdminPageHeader
+        title="ホーム"
+        description="運用業務を担当するユーザーのアカウントを管理します。"
+      />
       <section
         aria-label="主要な登録状況"
         className="
@@ -660,28 +648,25 @@ export function AdminDashboardOverview(
       </section>
       <div className='grid items-start gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.85fr)]'>
         <div className='space-y-6'>
-          <Card className='rounded-xl border-border shadow-app-sm'>
-            <CardHeader>
-              <CardTitle>プロジェクト一覧</CardTitle>
-              <p className='text-subtle text-foreground'>
-                確認が必要な入会届が多いプロジェクトから表示します。
-              </p>
-            </CardHeader>
-            <CardContent>
-              {props.canReadProjects ? (
-                <AdminProjectStatusTable
-                  projects={props.projects}
-                  openReviews={props.openMembershipReviews}
-                  projectsLoading={props.projectsLoading}
-                  projectsError={props.projectsError}
-                  openReviewsError={props.openMembershipReviewsError}
-                  onOpenMembership={props.onOpenProjectMembership}
-                />
-              ) : (
-                <PermissionDeniedNotice permission='PROJECT_READ' />
-              )}
-            </CardContent>
-          </Card>
+          <AdminTableCard
+            title='プロジェクト一覧'
+            count={props.projects.length}
+            description='確認が必要な入会届が多いプロジェクトから表示します。'
+          >
+            {props.canReadProjects ? (
+              <AdminProjectStatusTable
+                projects={props.projects}
+                openReviews={props.openMembershipReviews}
+                projectsLoading={props.projectsLoading}
+                projectsError={props.projectsError}
+                openReviewsError={props.openMembershipReviewsError}
+                onOpenProjectDetail={props.onOpenProjectDetail}
+                onOpenMembership={props.onOpenProjectMembership}
+              />
+            ) : (
+              <PermissionDeniedNotice permission='PROJECT_READ' />
+            )}
+          </AdminTableCard>
           <CompanyApplicationSummary
             pendingApplications={props.pendingApplications}
             pendingTotal={props.pendingApplicationTotal}

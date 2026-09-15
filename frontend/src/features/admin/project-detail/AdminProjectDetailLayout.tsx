@@ -71,7 +71,12 @@ export function AdminProjectDetailLayout({
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem className="min-w-0">
-              {currentBreadcrumb ? (
+              <BreadcrumbLink asChild>
+                <BreadcrumbPage className="block max-w-40 truncate sm:max-w-72">
+                  プロジェクト詳細
+                </BreadcrumbPage>
+              </BreadcrumbLink>
+              {/* {currentBreadcrumb ? (
                 <BreadcrumbLink asChild>
                   <Link
                     to={paths.adminProjectDetail(projectId)}
@@ -84,7 +89,7 @@ export function AdminProjectDetailLayout({
                 <BreadcrumbPage className="block max-w-40 truncate sm:max-w-72">
                   {projectName}
                 </BreadcrumbPage>
-              )}
+              )} */}
             </BreadcrumbItem>
             {currentBreadcrumb ? (
               <>
