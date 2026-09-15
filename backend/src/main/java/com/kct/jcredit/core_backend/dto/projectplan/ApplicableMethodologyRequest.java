@@ -49,8 +49,15 @@ public class ApplicableMethodologyRequest extends ProjectPlanFormBase {
     @JsonProperty("projectType")
     private String projectType;
 
-    /** 各削減活動への更新／新設プロジェクトの適用の考え方 */
-    @NotBlank
+    /**
+     * 各削減活動への更新／新設プロジェクトの適用の考え方.
+     *
+     * <p>Does not apply when プロジェクトタイプ is 更新プロジェクトのみを対象とする,
+     * where the wizard hides it — an unconditional @NotBlank then demanded a
+     * field the operator could not see. The condition keys on a string, which
+     * @RequiredIf cannot express yet, so it is enforced in the frontend schema
+     * for now.
+     */
     @Size(max = 1000)
     @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("approachDetails")
@@ -78,7 +85,7 @@ public class ApplicableMethodologyRequest extends ProjectPlanFormBase {
     /** 削減活動実施前の概要図 */
     @NotBlank
     @Size(max = 1000)
-    @JapaneseText(allowAlphanumeric = true)
+    // Holds the uploaded file's key, not prose — no character-set rule.
     @JsonProperty("overviewDiagramBeforeAct")
     private String overviewDiagramBeforeAct;
 
@@ -97,7 +104,7 @@ public class ApplicableMethodologyRequest extends ProjectPlanFormBase {
     /** 削減活動実施後の概要図 */
     @NotBlank
     @Size(max = 1000)
-    @JapaneseText(allowAlphanumeric = true)
+    // Holds the uploaded file's key, not prose — no character-set rule.
     @JsonProperty("overviewDiagramAfterAct")
     private String overviewDiagramAfterAct;
 

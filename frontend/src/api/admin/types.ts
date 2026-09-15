@@ -139,6 +139,8 @@ export type ProjectPlanFormProgress = {
   status: ProjectPlanFormStatus;
   updatedAt?: string | null;
   updatedBy?: string | null;
+  /** Filed only when it applies; not counted towards completion. */
+  optional?: boolean;
 };
 
 export type ProjectPlanProgressResponse = {
@@ -585,4 +587,14 @@ export type ProjectPlanFileResponse = {
   s3Key?: string;
   fileId?: string;
   originalName?: string;
+};
+
+/** A short-lived URL to view a file stored on a saved plan page. */
+export type ProjectPlanFileDownloadResponse = {
+  statusCode?: string;
+  message?: string;
+  errors?: Record<string, string>;
+  url?: string;
+  /** Seconds until `url` stops working. */
+  expiresIn?: number;
 };

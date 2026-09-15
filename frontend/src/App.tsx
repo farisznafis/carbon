@@ -133,6 +133,28 @@ function RequireMaster({ children }: { children: JSX.Element }) {
   return <Navigate to={fallbackPath} replace />;
 }
 
+/**
+ * The registration wizard serves two jobs. Opened bare it creates a project;
+ * opened with a project in its state it edits that project's plan — which is
+ * what 計画書更新 and the plan page's 更新 do, both already guarded by
+ * PROJECT_UPDATE. Demanding PROJECT_CREATE for the second would turn away an
+ * operator allowed to edit a plan but not to start new projects.
+ */
+function AdminProjectRegisterRoute() {
+  const { state } = useLocation() as { state?: { project?: unknown } };
+  const isEditingExistingPlan = Boolean(state?.project);
+
+  return isEditingExistingPlan ? (
+    <AdminPermissionRoute permission="PROJECT_UPDATE" title="プロジェクト計画書更新" description="登録済みプロジェクトの計画書を更新します。">
+      <AdminProjectRegister />
+    </AdminPermissionRoute>
+  ) : (
+    <AdminPermissionRoute permission="PROJECT_CREATE" title="プロジェクト追加" description="新しいプロジェクトを登録します。">
+      <AdminProjectRegister />
+    </AdminPermissionRoute>
+  );
+}
+
 function LegacyDashboardRedirect() {
   const { siteId } = useParams();
   return <Navigate to={paths.siteDashboard(siteId ?? "")} replace />;
@@ -362,9 +384,7 @@ const App = () => {
             path={paths.adminProjectRegister}
             element={
                   <RequireAdmin>
-                    <AdminPermissionRoute permission="PROJECT_CREATE" title="プロジェクト追加" description="新しいプロジェクトを登録します。">
-                      <AdminProjectRegister />
-                    </AdminPermissionRoute>
+                    <AdminProjectRegisterRoute />
               </RequireAdmin>
             }
           />

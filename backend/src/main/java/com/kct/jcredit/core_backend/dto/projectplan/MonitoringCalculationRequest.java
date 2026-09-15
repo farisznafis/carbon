@@ -34,13 +34,29 @@ public class MonitoringCalculationRequest extends ProjectPlanFormBase {
     @JsonProperty("actMonitoringItems")
     private String actMonitoringItems;
 
-    /** 全削減活動においてモニタリング・算定を実施する排出活動の確認 */
-    @NotNull
-    @JsonProperty("isStandardMonitorCalcEmissionAct")
-    private Boolean isStandardMonitorCalcEmissionAct;
-
-    /** その他（モニタリング・算定を実施する排出活動の確認方法） */
+    /**
+     * 全削減活動においてモニタリング・算定を実施する排出活動の確認.
+     *
+     * <p>Three choices, not two — 統一する, 付随的排出量は実施しない, and
+     * 「その他（以下に確認方法をご記入ください。）」, whose free text is the
+     * {@code otherMethod} field just below. A boolean could not express the
+     * third, which is why that field had no reachable trigger.
+     */
     @NotBlank
+    @Size(max = 255)
+    @JapaneseText(allowAlphanumeric = true)
+    @JsonProperty("isStandardMonitorCalcEmissionAct")
+    private String isStandardMonitorCalcEmissionAct;
+
+    /**
+     * その他（モニタリング・算定を実施する排出活動の確認方法）.
+     *
+     * <p>Only required when the choice above is その他, so it cannot carry an
+     * unconditional @NotBlank — that made this page impossible to save for the
+     * other two choices. @RequiredIf compares a boolean toggle and cannot yet
+     * express a three-way choice, so for now the rule lives in the frontend
+     * schema alone.
+     */
     @Size(max = 1000)
     @JapaneseText(allowAlphanumeric = true)
     @JsonProperty("otherMethod")

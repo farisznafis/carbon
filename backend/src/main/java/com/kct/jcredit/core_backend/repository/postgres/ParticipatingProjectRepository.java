@@ -31,7 +31,8 @@ public interface ParticipatingProjectRepository
     
     Optional<ParticipatingProject> findByIdAndProject_Id(Integer participationId, Integer projectId);
 
-    Optional<ParticipatingProject> findByCompanyIdAndProject_Id(Integer participatingCompanyId, Integer projectId);
+    // A company joins a project once per equipment, so this pair can match several rows.
+    List<ParticipatingProject> findByCompanyIdAndProject_IdOrderByIdAsc(Integer participatingCompanyId, Integer projectId);
 
     List<ParticipatingProject> findByEquipment_Id(Integer equipmentId);
 

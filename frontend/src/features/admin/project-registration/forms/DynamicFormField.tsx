@@ -4,7 +4,7 @@
 // ============================================
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useFormContext, FieldValues, Path, PathValue } from 'react-hook-form';
 import { FieldConfig } from '@/components/forms/shared/GenericFormFields/GenericFormFields';
 import { RequiredBadge } from '@/components/forms/shared/RequiredLabel';
@@ -12,8 +12,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from '@/lib/utils';
+import { lookupPostalCode, normalizePostalCode } from '@/lib/postalCode';
 import { usePlanFileUploader } from './PlanFileUploadContext';
 import { PlanTableField } from './PlanTableField';
+import { joinPersonName, splitPersonName, type PersonNameParts } from './personName';
 import {
   Select,
   SelectTrigger,
@@ -269,6 +271,27 @@ export function FieldControl<TFormValues extends FieldValues = FieldValues>({
         </div>
       );
 
+    case 'postalCode':
+      return (
+        <PostalCodeInput<TFormValues>
+          field={field}
+          name={name}
+          fieldId={fieldId}
+          disabled={disabled}
+          accessibilityProps={accessibilityProps}
+        />
+      );
+
+    case 'personName':
+      return (
+        <PersonNameInput<TFormValues>
+          name={name}
+          fieldId={fieldId}
+          disabled={disabled}
+          accessibilityProps={accessibilityProps}
+        />
+      );
+
     case 'file':
       return (
         <PlanFileInput<TFormValues>
@@ -292,6 +315,185 @@ export function FieldControl<TFormValues extends FieldValues = FieldValues>({
         />
       );
   }
+}
+
+/**
+ * 郵便番号 that fills 都道府県 / 市区町村 / 以降 as soon as it has seven digits.
+ *
+ * The three address fields stay the official sheet's own, and stay editable:
+ * the lookup only gets the operator as far as 町域, and they add 番地・建物名.
+ * 以降 is filled only while it is empty or still holds what an earlier lookup
+ * put there, so correcting the code never wipes a typed 番地.
+ */
+function PostalCodeInput<TFormValues extends FieldValues = FieldValues>({
+  field,
+  name,
+  fieldId,
+  disabled,
+  accessibilityProps,
+}: {
+  field: FieldConfig<TFormValues>;
+  name: Path<TFormValues>;
+  fieldId: string;
+  disabled: boolean;
+  accessibilityProps: Record<string, unknown>;
+}) {
+  const form = useFormContext<TFormValues>();
+  const [status, setStatus] = useState<
+    { kind: 'idle' } | { kind: 'searching' } | { kind: 'filled' } | { kind: 'error'; message: string }
+  >({ kind: 'idle' });
+  const lastFilledTown = useRef<string | null>(null);
+  const pending = useRef<AbortController | null>(null);
+
+  useEffect(() => () => pending.current?.abort(), []);
+
+  const sibling = (relative: string) => {
+    const path = String(name);
+    const parent = path.includes('.') ? path.slice(0, path.lastIndexOf('.') + 1) : '';
+    return `${parent}${relative}` as Path<TFormValues>;
+  };
+
+  const set = (relative: string, value: string) =>
+    form.setValue(sibling(relative), value as PathValue<TFormValues, Path<TFormValues>>, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+
+  const handleChange = async (raw: string) => {
+    form.setValue(name, raw as PathValue<TFormValues, typeof name>, { shouldDirty: true });
+
+    const digits = normalizePostalCode(raw);
+    const targets = field.addressFields;
+    if (!digits || !targets) {
+      setStatus({ kind: 'idle' });
+      return;
+    }
+    // Stored as the seven digits, whatever was typed around them.
+    form.setValue(name, digits as PathValue<TFormValues, typeof name>, { shouldDirty: true });
+
+    pending.current?.abort();
+    const controller = new AbortController();
+    pending.current = controller;
+    setStatus({ kind: 'searching' });
+
+    try {
+      const address = await lookupPostalCode(digits, controller.signal);
+      if (!address) {
+        setStatus({ kind: 'error', message: '該当する住所が見つかりません。住所を直接入力してください。' });
+        return;
+      }
+
+      set(targets.prefecture, address.prefecture);
+      set(targets.city, address.city);
+
+      const current = String(form.getValues(sibling(targets.address)) ?? '');
+      if (current.trim() === '' || current === lastFilledTown.current) {
+        set(targets.address, address.town);
+        lastFilledTown.current = address.town;
+      }
+      setStatus({ kind: 'filled' });
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') return;
+      setStatus({ kind: 'error', message: '住所を取得できませんでした。住所を直接入力してください。' });
+    }
+  };
+
+  const value = form.watch(name);
+
+  return (
+    <div className="space-y-1">
+      <Input
+        id={fieldId}
+        type="text"
+        inputMode="numeric"
+        autoComplete="postal-code"
+        placeholder={field.placeholder ?? '1000005'}
+        maxLength={8}
+        value={value === null || value === undefined ? '' : String(value)}
+        onChange={(e) => void handleChange(e.target.value)}
+        {...accessibilityProps}
+        disabled={disabled}
+      />
+      {status.kind === 'searching' && (
+        <p className="text-sm text-muted-foreground">住所を検索中...</p>
+      )}
+      {status.kind === 'filled' && (
+        <p className="text-sm text-muted-foreground">
+          住所を入力しました。番地・建物名を追記してください。
+        </p>
+      )}
+      {status.kind === 'error' && <p className="text-sm text-destructive">{status.message}</p>}
+    </div>
+  );
+}
+
+/**
+ * 姓 and 名 side by side, kept in the form as the single 氏名 the plan stores.
+ *
+ * The parts live in local state rather than being re-split from the value on
+ * every keystroke: with 姓 still empty, "太郎" typed into 名 would otherwise
+ * come back as a 姓. The value is only re-split when it changes from outside —
+ * loaded from the server, say.
+ */
+function PersonNameInput<TFormValues extends FieldValues = FieldValues>({
+  name,
+  fieldId,
+  disabled,
+  accessibilityProps,
+}: {
+  name: Path<TFormValues>;
+  fieldId: string;
+  disabled: boolean;
+  accessibilityProps: Record<string, unknown>;
+}) {
+  const form = useFormContext<TFormValues>();
+  const value = form.watch(name);
+  const [parts, setParts] = useState<PersonNameParts>(() => splitPersonName(value));
+
+  useEffect(() => {
+    const current = typeof value === 'string' ? value : '';
+    if (current.trim() !== joinPersonName(parts)) {
+      setParts(splitPersonName(current));
+    }
+    // Only an outside change to the value should re-split it; `parts` changing
+    // is this input's own typing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  const update = (next: PersonNameParts) => {
+    setParts(next);
+    form.setValue(name, joinPersonName(next) as PathValue<TFormValues, typeof name>, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
+
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <Input
+        id={fieldId}
+        type="text"
+        placeholder="姓（例: 山田）"
+        aria-label="姓"
+        value={parts.lastName}
+        onChange={(e) => update({ ...parts, lastName: e.target.value })}
+        onBlur={() => form.trigger(name)}
+        {...accessibilityProps}
+        disabled={disabled}
+      />
+      <Input
+        id={`${fieldId}-first`}
+        type="text"
+        placeholder="名（例: 太郎）"
+        aria-label="名"
+        value={parts.firstName}
+        onChange={(e) => update({ ...parts, firstName: e.target.value })}
+        onBlur={() => form.trigger(name)}
+        {...accessibilityProps}
+        disabled={disabled}
+      />
+    </div>
+  );
 }
 
 /** The file name out of an S3 key, for showing what is currently attached. */
