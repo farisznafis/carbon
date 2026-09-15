@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import {
   getAdminProjectDetail,
   getParticipationReviewsByStatus,
@@ -30,6 +35,7 @@ import { paths } from '@/routes/paths';
 import { isParticipationReviewForProject } from './participationReviewProjectMatch';
 import { isForbiddenApiError } from '@/api/_shared/errors';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
+import { resolveAdminProjectNavigationState } from '@/features/admin/navigation/adminProjectNavigation';
 
 const INITIAL_ITEMS_PER_PAGE = 10;
 const REVIEW_GRID_COLUMNS =
@@ -91,9 +97,11 @@ function getStatusBadgeLabel(
 
 /** Displays the project-scoped participation review list. */
 export default function ParticipationReviewListPage() {
+  const location = useLocation();
   const navigate = useNavigate();
   const { projectId = '' } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigationState = resolveAdminProjectNavigationState(location.state);
   const activeStatus = resolveReviewStatus(searchParams.get('status'));
   const [reviewsByStatus, setReviewsByStatus] = useState<
     Record<ParticipationReviewStatus, ParticipationReviewDetail[]>
@@ -165,9 +173,10 @@ export default function ParticipationReviewListPage() {
           review.participationId,
           activeStatus,
         ),
+        { state: navigationState },
       );
     },
-    [activeStatus, navigate, projectId],
+    [activeStatus, navigate, navigationState, projectId],
     // [activeStatus, navigate],
   );
 
@@ -251,7 +260,9 @@ export default function ParticipationReviewListPage() {
     [activeStatus, viewDetail],
   );
 
-  const returnToProject = () => navigate(paths.adminProjectDetail(projectId));
+  /** Returns to Admin Home when this list was opened from its project summary table. */
+  const returnToProject = () =>
+    navigate(navigationState?.returnTo ?? paths.adminProjectDetail(projectId));
 
   if (hasPermissionError) {
     return (

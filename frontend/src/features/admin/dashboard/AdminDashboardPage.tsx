@@ -38,8 +38,9 @@ import {
   adminPageContainerClassName,
   dashboardEmptyStateClassName,
 } from '@/components/layout/DashboardLayout';
+import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
+import { AdminTableCard } from '@/components/layout/AdminTableCard';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -69,9 +70,11 @@ import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
 import { paths } from '@/routes/paths';
 import { getAdminRouteFromLegacyTab } from '@/features/admin/navigation/adminNavigationConfig';
-import { Plus, Search } from 'lucide-react';
+import { adminHomeProjectNavigationState } from '@/features/admin/navigation/adminProjectNavigation';
+import { Plus, Search, TriangleAlert } from 'lucide-react';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
+import { NoticeBanner } from '@/components/feedback/NoticeBanner';
 
 type AdminDashboardTabValue =
   | 'overview'
@@ -89,9 +92,6 @@ const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
 const HOME_APPLICATION_SUMMARY_LIMIT = 3;
 const ALL_PROJECT_FILTER = 'ALL';
 const IN_PROGRESS_PROJECT_STATUS = '準備中';
-const PROJECT_STATUS_FILTER_OPTIONS = PROJECT_STATUS_PRESENTATIONS.filter(
-  ({ status }) => status !== IN_PROGRESS_PROJECT_STATUS,
-);
 const FORBIDDEN_SECTION_ERROR = '__FORBIDDEN_SECTION__';
 
 const DEFAULT_PAGINATION: Pagination = {
@@ -204,13 +204,12 @@ function AdminDashboardSection({
 }) {
   return (
     <section className="space-y-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-2">
-          <h2 className="text-foreground">{title}</h2>
-          <p className="text-subtle text-foreground">{description}</p>
-        </div>
-        {action}
-      </div>
+      <AdminPageHeader
+        title={title}
+        description={description}
+        action={action}
+        headingAs="h2"
+      />
       {children}
     </section>
   );
@@ -671,19 +670,6 @@ const AdminDashboard = () => {
     };
   }, [canReadProjects, projects]);
 
-  const projectMethodologyOptions = useMemo(() => {
-    const optionMap = new Map<string, string>();
-    projects.forEach((project) => {
-      const value = getProjectMethodologyFilterValue(project);
-      const label = getProjectMethodologyFilterLabel(project);
-      if (label) optionMap.set(value, label);
-    });
-
-    return [...optionMap.entries()]
-      .map(([value, label]) => ({ value, label }))
-      .sort((left, right) => left.label.localeCompare(right.label, 'ja-JP'));
-  }, [projects]);
-
   const filteredProjects = useMemo(() => {
     const normalizedQuery = projectSearchQuery
       .trim()
@@ -740,6 +726,15 @@ const AdminDashboard = () => {
   const handleEditProject = (project: Project) => {
     adminPermissions.guardAction('PROJECT_READ', () => {
       navigate(paths.adminProjectDetail(project.id));
+    });
+  };
+
+  /** Opens project detail while preserving Admin Home as the contextual back destination. */
+  const openHomeProjectDetail = (project: Project) => {
+    adminPermissions.guardAction('PROJECT_READ', () => {
+      navigate(paths.adminProjectDetail(project.id), {
+        state: adminHomeProjectNavigationState,
+      });
     });
   };
 
@@ -947,7 +942,10 @@ const AdminDashboard = () => {
   const openProjectMemberships = (project: Project) => {
     adminPermissions.guardAction(
       'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
-      () => navigate(paths.adminProjectMembership(project.id, 'OPEN')),
+      () =>
+        navigate(paths.adminProjectMembership(project.id, 'OPEN'), {
+          state: adminHomeProjectNavigationState,
+        }),
     );
   };
 
@@ -1056,13 +1054,6 @@ const AdminDashboard = () => {
     );
   }
 
-  const showApplicationSection =
-    applicationCompaniesLoading || Boolean(applicationCompaniesError) || applicationCompanies.length > 0;
-  const showParticipatingSection =
-    !participatingCompaniesError &&
-    (participatingCompaniesLoading ||
-      participatingCompanies.length > 0 ||
-      !showApplicationSection);
   const projectsError = projectsQuery.error instanceof Error
     ? projectsQuery.error.message
     : projectsQuery.isError
@@ -1118,6 +1109,7 @@ const AdminDashboard = () => {
               batchHistoryError={batchHistoryError}
               activePanel={activePanel}
               onPanelChange={handleHomePanelChange}
+              onOpenProjectDetail={openHomeProjectDetail}
               onOpenProjectMembership={openProjectMemberships}
               onOpenCompanyApplication={openHomeCompanyApplication}
               onOpenCancelRequest={openCancelRequestDetail}
@@ -1179,6 +1171,7 @@ const AdminDashboard = () => {
               batchHistoryError={batchHistoryError}
               activePanel={activePanel}
               onPanelChange={handleHomePanelChange}
+              onOpenProjectDetail={openHomeProjectDetail}
               onOpenProjectMembership={openProjectMemberships}
               onOpenCompanyApplication={openHomeCompanyApplication}
               onOpenCancelRequest={openCancelRequestDetail}
@@ -1211,100 +1204,119 @@ const AdminDashboard = () => {
             value="companies"
             className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
-            {(!canReviewCompanies || showApplicationSection) && (
-              <AdminDashboardSection
-                title="参加申請中の企業"
-                description="参加申請を受け付けた企業です。内容を確認し、承認または差し戻しを行ってください。"
-              >
-                {!applicationSectionAllowed ? (
-                  <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
-                ) : applicationCompaniesLoading ? (
-                  <SkeletonTable columns={5} rows={6} minWidth={980} />
-                ) : applicationCompaniesError ? (
-                  <AdminDashboardEmptyState>
-                    {applicationCompaniesError}
-                  </AdminDashboardEmptyState>
-                ) : (
-                  <>
-                    <AdminCompanyApplicationsTable
-                      items={applicationCompanies}
-                      emptyMessage="参加申請中の企業はありません。"
-                      onDetails={openCompanyDetails}
-                      onReview={openCompanyReview}
-                    />
-                    <PaginationControls
-                      currentPage={applicationPagination.page}
-                      totalPages={applicationPagination.totalPages}
-                      totalItems={applicationPagination.totalItems}
-                      itemsPerPage={companyLimit}
-                      rowsPerPageOptions={[10, 20, 50, 100]}
-                      onPageChange={setApplicationPage}
-                      onItemsPerPageChange={handleCompanyLimitChange}
-                      className="mt-4"
-                    />
-                  </>
-                )}
-              </AdminDashboardSection>
-            )}
+            <AdminPageHeader
+              title="企業管理"
+              description="参加申請の確認と参加企業の情報を管理します。"
+            />
 
-            {(!participatingSectionAllowed || showParticipatingSection) && (
-              <AdminDashboardSection
-                title="参加企業"
-                description="承認済みの参加企業です。企業情報と運用状況を確認できます。"
-              >
-                {!participatingSectionAllowed ? (
-                  <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_READ" />
-                ) : participatingCompaniesLoading ? (
-                  <SkeletonTable columns={5} rows={6} minWidth={980} />
-                ) : participatingCompaniesError ? (
-                  <AdminDashboardEmptyState>{participatingCompaniesError}</AdminDashboardEmptyState>
-                ) : (
-                  <>
-                    <AdminCompanyApplicationsTable
-                      items={participatingCompanies}
-                      emptyMessage="参加企業はありません。"
-                      onDetails={openCompanyDetails}
-                      onReview={openCompanyReview}
-                    />
-                    <PaginationControls
-                      currentPage={participatingPagination.page}
-                      totalPages={participatingPagination.totalPages}
-                      totalItems={participatingPagination.totalItems}
-                      itemsPerPage={companyLimit}
-                      rowsPerPageOptions={[10, 20, 50, 100]}
-                      onPageChange={setParticipatingPage}
-                      onItemsPerPageChange={handleCompanyLimitChange}
-                      className="mt-4"
-                    />
-                  </>
-                )}
-              </AdminDashboardSection>
-            )}
+            <AdminTableCard
+              title="参加申請中の企業"
+              count={applicationPagination.totalItems}
+              description="参加申請を受け付けた企業です。内容を確認し、承認または差し戻しを行ってください。"
+              notice={
+                applicationSectionAllowed ? (
+                  <NoticeBanner
+                    tone='warning'
+                    title='管理者による対応が必要です'
+                  >
+                    ステータスが「申請受付」の企業について、申請内容を確認し、承認または差し戻しを行ってください。
+                  </NoticeBanner>
+                ) : undefined
+              }
+              footer={
+                applicationSectionAllowed &&
+                !applicationCompaniesLoading &&
+                !applicationCompaniesError ? (
+                  <PaginationControls
+                    currentPage={applicationPagination.page}
+                    totalPages={applicationPagination.totalPages}
+                    totalItems={applicationPagination.totalItems}
+                    itemsPerPage={companyLimit}
+                    rowsPerPageOptions={[10, 20, 50, 100]}
+                    onPageChange={setApplicationPage}
+                    onItemsPerPageChange={handleCompanyLimitChange}
+                  />
+                ) : undefined
+              }
+            >
+              {!applicationSectionAllowed ? (
+                <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
+              ) : applicationCompaniesLoading ? (
+                <SkeletonTable columns={5} rows={6} minWidth={980} />
+              ) : applicationCompaniesError ? (
+                <AdminDashboardEmptyState>
+                  {applicationCompaniesError}
+                </AdminDashboardEmptyState>
+              ) : (
+                <AdminCompanyApplicationsTable
+                  items={applicationCompanies}
+                  emptyMessage="参加申請中の企業はありません。"
+                  onDetails={openCompanyDetails}
+                  onReview={openCompanyReview}
+                />
+              )}
+            </AdminTableCard>
+
+            <AdminTableCard
+              title="参加企業"
+              count={participatingPagination.totalItems}
+              description="承認済みの参加企業です。企業情報と運用状況を確認できます。"
+              footer={
+                participatingSectionAllowed &&
+                !participatingCompaniesLoading &&
+                !participatingCompaniesError ? (
+                  <PaginationControls
+                    currentPage={participatingPagination.page}
+                    totalPages={participatingPagination.totalPages}
+                    totalItems={participatingPagination.totalItems}
+                    itemsPerPage={companyLimit}
+                    rowsPerPageOptions={[10, 20, 50, 100]}
+                    onPageChange={setParticipatingPage}
+                    onItemsPerPageChange={handleCompanyLimitChange}
+                  />
+                ) : undefined
+              }
+            >
+              {!participatingSectionAllowed ? (
+                <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_READ" />
+              ) : participatingCompaniesLoading ? (
+                <SkeletonTable columns={5} rows={6} minWidth={980} />
+              ) : participatingCompaniesError ? (
+                <AdminDashboardEmptyState>{participatingCompaniesError}</AdminDashboardEmptyState>
+              ) : (
+                <AdminCompanyApplicationsTable
+                  items={participatingCompanies}
+                  emptyMessage="参加企業はありません。"
+                  onDetails={openCompanyDetails}
+                  onReview={openCompanyReview}
+                />
+              )}
+            </AdminTableCard>
           </TabsContent>
 
           <TabsContent
             value="projects"
             className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
-            <AdminDashboardSection
-              title="プロジェクト管理"
-              description="登録済みプロジェクトの詳細確認、更新、ステータス変更を行えます。"
-              action={
-                <Button
-                  type="button"
-                  size="md"
-                  onClick={() =>
-                    adminPermissions.guardAction('PROJECT_CREATE', () =>
-                      navigate(paths.adminProjectRegister),
-                    )
-                  }
-                  className="self-start sm:self-auto"
-                >
-                  <Plus className="h-4 w-4" />
-                  プロジェクトを追加
-                </Button>
-              }
-            >
+            <section className="space-y-4">
+              <AdminPageHeader
+                title="プロジェクト管理"
+                description="登録済みプロジェクトの詳細確認、更新、ステータス変更を行えます。"
+                action={
+                  <Button
+                    type="button"
+                    size="md"
+                    onClick={() =>
+                      adminPermissions.guardAction('PROJECT_CREATE', () =>
+                        navigate(paths.adminProjectRegister),
+                      )
+                    }
+                  >
+                    <Plus className="h-4 w-4" />
+                    プロジェクトを追加
+                  </Button>
+                }
+              />
               {!projectSectionAllowed ? (
                 <PermissionDeniedNotice permission="PROJECT_READ" />
               ) : <div className="space-y-6">
@@ -1319,126 +1331,87 @@ const AdminDashboard = () => {
                   onShowAllInProgress={handleShowAllInProgressProjects}
                 />
 
-                <Card className="rounded-xl border-border shadow-app-sm">
-                  <CardHeader>
-                    <div className="flex flex-wrap items-baseline gap-3">
-                      <CardTitle
-                        ref={projectListHeadingRef}
-                        tabIndex={-1}
-                        className="scroll-mt-24 outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        プロジェクト一覧
-                      </CardTitle>
-                      <span className="text-body font-medium text-muted-foreground">
-                        {projectTotalItems.toLocaleString('ja-JP')}件
-                      </span>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-5">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                        <Select
-                          value={projectStatusFilter}
-                          onValueChange={(value) => {
-                            setProjectStatusFilter(value);
-                            setProjectPage(1);
-                          }}
-                        >
-                          <SelectTrigger className="w-full sm:w-44">
-                            {projectStatusFilter === IN_PROGRESS_PROJECT_STATUS ? (
-                              <span>{IN_PROGRESS_PROJECT_STATUS}</span>
-                            ) : (
-                              <SelectValue placeholder="ステータス" />
-                            )}
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value={ALL_PROJECT_FILTER}>
-                              すべてのステータス
-                            </SelectItem>
-                            {PROJECT_STATUS_FILTER_OPTIONS.map((presentation) => (
-                              <SelectItem
-                                key={presentation.status}
-                                value={presentation.status}
-                              >
-                                {presentation.status}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-
-                        {/* <Select
-                          value={projectMethodologyFilter}
-                          onValueChange={(value) => {
-                            setProjectMethodologyFilter(value);
-                            setProjectPage(1);
-                          }}
-                        >
-                          <SelectTrigger className="w-full sm:w-64">
-                            <SelectValue placeholder="方法論" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value={ALL_PROJECT_FILTER}>
-                              すべての方法論
-                            </SelectItem>
-                            {projectMethodologyOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select> */}
-                      </div>
-
-                      <div className="relative w-full lg:max-w-sm">
-                        <Search
-                          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                          aria-hidden="true"
-                        />
-                        <Input
-                          type="search"
-                          value={projectSearchQuery}
-                          onChange={(event) => {
-                            setProjectSearchQuery(event.target.value);
-                            setProjectPage(1);
-                          }}
-                          placeholder="プロジェクト名・方法論で検索"
-                          aria-label="プロジェクトを検索"
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-
-                    {projectsQuery.isLoading ? (
-                      <SkeletonTable columns={8} rows={6} minWidth={1390} />
-                    ) : projectsError ? (
-                      <AdminDashboardEmptyState>
-                        {projectsError}
-                      </AdminDashboardEmptyState>
-                    ) : (
-                      <>
-                        <ProjectTable
-                          projects={paginatedProjects}
-                          onEdit={handleEditProject}
-                          onStatusChange={handleChangeProjectStatus}
-                          updatingProjectStatusId={updatingProjectStatusId}
-                          planProgress={planProgress}
-                          onOpenPlan={handleOpenPlan}
-                        />
-                        <PaginationControls
-                          currentPage={projectPage}
-                          totalPages={projectTotalPages}
-                          totalItems={projectTotalItems}
-                          itemsPerPage={projectItemsPerPage}
-                          onPageChange={goToProjectPage}
-                          onItemsPerPageChange={setProjectItemsPerPage}
-                          className="mt-4"
-                        />
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
+                <AdminTableCard
+                  title="プロジェクト一覧"
+                  count={projectTotalItems}
+                  headingRef={projectListHeadingRef}
+                  filters={
+                    <Select
+                      value={projectStatusFilter}
+                      onValueChange={(value) => {
+                        setProjectStatusFilter(value);
+                        setProjectPage(1);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="ステータス" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ALL_PROJECT_FILTER}>
+                          すべてのステータス
+                        </SelectItem>
+                        {PROJECT_STATUS_PRESENTATIONS.map((presentation) => (
+                          <SelectItem
+                            key={presentation.status}
+                            value={presentation.status}
+                          >
+                            {presentation.status}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  }
+                  search={
+                    <>
+                      <Search
+                        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                        aria-hidden="true"
+                      />
+                      <Input
+                        type="search"
+                        value={projectSearchQuery}
+                        onChange={(event) => {
+                          setProjectSearchQuery(event.target.value);
+                          setProjectPage(1);
+                        }}
+                        placeholder="プロジェクト名・方法論で検索"
+                        aria-label="プロジェクトを検索"
+                        className="h-10 bg-card pl-9"
+                      />
+                    </>
+                  }
+                  footer={
+                    !projectsQuery.isLoading && !projectsError ? (
+                      <PaginationControls
+                        currentPage={projectPage}
+                        totalPages={projectTotalPages}
+                        totalItems={projectTotalItems}
+                        itemsPerPage={projectItemsPerPage}
+                        onPageChange={goToProjectPage}
+                        onItemsPerPageChange={setProjectItemsPerPage}
+                      />
+                    ) : undefined
+                  }
+                >
+                  {projectsQuery.isLoading ? (
+                    <SkeletonTable columns={8} rows={6} minWidth={1390} />
+                  ) : projectsError ? (
+                    <AdminDashboardEmptyState>
+                      {projectsError}
+                    </AdminDashboardEmptyState>
+                  ) : (
+                    <ProjectTable
+                      projects={paginatedProjects}
+                      onEdit={handleEditProject}
+                      onStatusChange={handleChangeProjectStatus}
+                      updatingProjectStatusId={updatingProjectStatusId}
+                      planProgress={planProgress}
+                      onOpenPlan={handleOpenPlan}
+                    />
+                  )}
+                </AdminTableCard>
               </div>}
-            </AdminDashboardSection>
+            </section>
           </TabsContent>
 
           <TabsContent
@@ -1459,10 +1432,11 @@ const AdminDashboard = () => {
             value="methodologies"
             className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
-            <AdminDashboardSection
-              title="方法論一覧"
-              description="利用可能な方法論の一覧をここで管理できるようにします。"
-            >
+            <section className="space-y-4">
+              <AdminPageHeader
+                title="方法論一覧"
+                description="利用可能な方法論の一覧をここで管理できるようにします。"
+              />
               {adminPermissions.hasPermission('METHODOLOGY_READ') ? (
                 <AdminDashboardEmptyState>
                   表示できる方法論データがありません。
@@ -1470,7 +1444,7 @@ const AdminDashboard = () => {
               ) : (
                 <PermissionDeniedNotice permission="METHODOLOGY_READ" />
               )}
-            </AdminDashboardSection>
+            </section>
 
             {/* <AdminDashboardSection
               title="申請書様式"

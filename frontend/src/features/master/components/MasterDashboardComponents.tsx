@@ -70,6 +70,7 @@ export function DashboardSection({
   addLabel,
   onAdd,
   addDisabled,
+  showAddAction = true,
   children,
 }: {
   title: string;
@@ -77,6 +78,7 @@ export function DashboardSection({
   addLabel: string;
   onAdd: () => void;
   addDisabled?: boolean;
+  showAddAction?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -88,26 +90,53 @@ export function DashboardSection({
             {description}
           </p>
         </div>
-        <Button
-          type="button"
-          size="md"
-          onClick={onAdd}
-          disabled={addDisabled}
-          className="self-start sm:self-auto"
-        >
-          <Plus className="h-4 w-4" />
-          {addLabel}
-        </Button>
+        {showAddAction && (
+          <Button
+            type="button"
+            size="md"
+            onClick={onAdd}
+            disabled={addDisabled}
+            className="self-start sm:self-auto"
+          >
+            <Plus className="h-4 w-4" />
+            {addLabel}
+          </Button>
+        )}
       </div>
       {children}
     </section>
   );
 }
 
-export function DashboardEmptyState({ children }: { children: ReactNode }) {
+/** Renders either a simple dashboard message or a structured onboarding empty state. */
+export function DashboardEmptyState({
+  title,
+  description,
+  action,
+  children,
+}: {
+  title?: string;
+  description?: string;
+  action?: ReactNode;
+  children?: ReactNode;
+}) {
   return (
-    <div className={dashboardEmptyStateClassName}>
-      {children}
+    <div
+      className={cn(
+        dashboardEmptyStateClassName,
+        'flex flex-col items-center justify-center',
+      )}
+    >
+      {title && <h3 className="text-base font-semibold text-foreground">{title}</h3>}
+      {description && (
+        <p className={cn('max-w-2xl text-muted-foreground', title && 'mt-2')}>
+          {description}
+        </p>
+      )}
+      {children && (
+        <div className={cn((title || description) && 'mt-2')}>{children}</div>
+      )}
+      {action && <div className="mt-5">{action}</div>}
     </div>
   );
 }
