@@ -1,5 +1,10 @@
 import { useCallback } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import {
   AlertTriangle,
   ArrowRight,
@@ -27,6 +32,7 @@ import { Progress } from '@/components/ui/progress';
 import { ProjectMonitoringTable } from '@/features/admin/monitoring/ProjectMonitoringTable';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
+import { resolveAdminProjectNavigationState } from '@/features/admin/navigation/adminProjectNavigation';
 import {
   useAdminProjectDetailQuery,
   useAdminProjectPlanProgressQuery,
@@ -293,6 +299,7 @@ function ProjectNavigationCard({
 
 /** Displays one admin project overview and its project-scoped monitoring records. */
 export default function ProjectDetailAdmin() {
+  const location = useLocation();
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -300,6 +307,9 @@ export default function ProjectDetailAdmin() {
   const projectQuery = useAdminProjectDetailQuery(projectId);
   const progressQuery = useAdminProjectPlanProgressQuery(projectId);
   const project = projectQuery.data;
+  const navigationState = resolveAdminProjectNavigationState(location.state);
+  const projectDetailReturnTo =
+    navigationState?.returnTo ?? paths.adminProjectList;
   const monitoringPage = getPositiveIntegerSearchParam(
     searchParams,
     'monitoringPage',
@@ -365,8 +375,10 @@ export default function ProjectDetailAdmin() {
           </CardHeader>
           <CardContent>
             <PageBackButton
-              onClick={() => navigate(paths.adminProjectList)}
-              aria-label="プロジェクト管理に戻る"
+              onClick={() => navigate(projectDetailReturnTo)}
+              aria-label={
+                navigationState ? 'ホームに戻る' : 'プロジェクト管理に戻る'
+              }
             />
           </CardContent>
         </Card>
@@ -383,8 +395,10 @@ export default function ProjectDetailAdmin() {
       projectName={project.projectName}
       title={formatProjectDetailValue(project.projectName)}
       description="登録済みプロジェクトの進捗、排出量、関連データを確認します。"
-      backTo={paths.adminProjectList}
-      backLabel="プロジェクト管理に戻る"
+      backTo={projectDetailReturnTo}
+      backLabel={
+        navigationState ? 'ホームに戻る' : 'プロジェクト管理に戻る'
+      }
     >
       {/* <section aria-label="プロジェクト識別情報" className="space-y-1">
         <h2 className="break-words text-2xl font-bold text-foreground">

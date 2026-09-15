@@ -70,6 +70,7 @@ import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
 import { paths } from '@/routes/paths';
 import { getAdminRouteFromLegacyTab } from '@/features/admin/navigation/adminNavigationConfig';
+import { adminHomeProjectNavigationState } from '@/features/admin/navigation/adminProjectNavigation';
 import { Plus, Search, TriangleAlert } from 'lucide-react';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
@@ -728,6 +729,15 @@ const AdminDashboard = () => {
     });
   };
 
+  /** Opens project detail while preserving Admin Home as the contextual back destination. */
+  const openHomeProjectDetail = (project: Project) => {
+    adminPermissions.guardAction('PROJECT_READ', () => {
+      navigate(paths.adminProjectDetail(project.id), {
+        state: adminHomeProjectNavigationState,
+      });
+    });
+  };
+
   /**
    * Opens the plan wizard on an existing project. Passing the project is what
    * makes it resume rather than create a new one, and `planSlug` says which
@@ -932,7 +942,10 @@ const AdminDashboard = () => {
   const openProjectMemberships = (project: Project) => {
     adminPermissions.guardAction(
       'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
-      () => navigate(paths.adminProjectMembership(project.id, 'OPEN')),
+      () =>
+        navigate(paths.adminProjectMembership(project.id, 'OPEN'), {
+          state: adminHomeProjectNavigationState,
+        }),
     );
   };
 
@@ -1096,7 +1109,7 @@ const AdminDashboard = () => {
               batchHistoryError={batchHistoryError}
               activePanel={activePanel}
               onPanelChange={handleHomePanelChange}
-              onOpenProjectDetail={handleEditProject}
+              onOpenProjectDetail={openHomeProjectDetail}
               onOpenProjectMembership={openProjectMemberships}
               onOpenCompanyApplication={openHomeCompanyApplication}
               onOpenCancelRequest={openCancelRequestDetail}
@@ -1158,7 +1171,7 @@ const AdminDashboard = () => {
               batchHistoryError={batchHistoryError}
               activePanel={activePanel}
               onPanelChange={handleHomePanelChange}
-              onOpenProjectDetail={handleEditProject}
+              onOpenProjectDetail={openHomeProjectDetail}
               onOpenProjectMembership={openProjectMemberships}
               onOpenCompanyApplication={openHomeCompanyApplication}
               onOpenCancelRequest={openCancelRequestDetail}

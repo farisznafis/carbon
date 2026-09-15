@@ -37,26 +37,30 @@ export function AdminTableCard({
     >
       <CardContent className="p-5 sm:p-7 lg:px-9">
         <div>
-          <div className="flex flex-wrap items-baseline gap-4">
+          <div className="flex flex-wrap items-baseline gap-3">
             <h2
               ref={headingRef}
               tabIndex={headingRef ? -1 : undefined}
               className={cn(
-                'text-2xl font-bold text-foreground',
+                'text-xl font-bold leading-7 text-foreground',
                 headingRef &&
                   'scroll-mt-24 outline-none focus-visible:ring-2 focus-visible:ring-ring',
               )}
             >
               {title}
             </h2>
+
             {count !== undefined && (
-              <span className="text-lg text-muted-foreground">
+              <span className="text-sm font-medium text-foreground">
                 {count.toLocaleString('ja-JP')}件
               </span>
             )}
           </div>
+
           {description && (
-            <div className="mt-2 text-base text-foreground">{description}</div>
+            <div className="mt-1.5 text-sm leading-6 text-foreground">
+              {description}
+            </div>
           )}
         </div>
 

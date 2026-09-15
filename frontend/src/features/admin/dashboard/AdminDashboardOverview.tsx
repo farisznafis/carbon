@@ -16,6 +16,7 @@ import type { Project } from '@/api/projects';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
+import { AdminTableCard } from '@/components/layout/AdminTableCard';
 import {
   SkeletonList,
   SkeletonMetricCard,
@@ -647,29 +648,25 @@ export function AdminDashboardOverview(
       </section>
       <div className='grid items-start gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.85fr)]'>
         <div className='space-y-6'>
-          <Card className='rounded-xl border-border shadow-app-sm'>
-            <CardHeader>
-              <CardTitle>プロジェクト一覧</CardTitle>
-              <p className='text-subtle text-foreground'>
-                確認が必要な入会届が多いプロジェクトから表示します。
-              </p>
-            </CardHeader>
-            <CardContent>
-              {props.canReadProjects ? (
-                <AdminProjectStatusTable
-                  projects={props.projects}
-                  openReviews={props.openMembershipReviews}
-                  projectsLoading={props.projectsLoading}
-                  projectsError={props.projectsError}
-                  openReviewsError={props.openMembershipReviewsError}
-                  onOpenProjectDetail={props.onOpenProjectDetail}
-                  onOpenMembership={props.onOpenProjectMembership}
-                />
-              ) : (
-                <PermissionDeniedNotice permission='PROJECT_READ' />
-              )}
-            </CardContent>
-          </Card>
+          <AdminTableCard
+            title='プロジェクト一覧'
+            count={props.projects.length}
+            description='確認が必要な入会届が多いプロジェクトから表示します。'
+          >
+            {props.canReadProjects ? (
+              <AdminProjectStatusTable
+                projects={props.projects}
+                openReviews={props.openMembershipReviews}
+                projectsLoading={props.projectsLoading}
+                projectsError={props.projectsError}
+                openReviewsError={props.openMembershipReviewsError}
+                onOpenProjectDetail={props.onOpenProjectDetail}
+                onOpenMembership={props.onOpenProjectMembership}
+              />
+            ) : (
+              <PermissionDeniedNotice permission='PROJECT_READ' />
+            )}
+          </AdminTableCard>
           <CompanyApplicationSummary
             pendingApplications={props.pendingApplications}
             pendingTotal={props.pendingApplicationTotal}

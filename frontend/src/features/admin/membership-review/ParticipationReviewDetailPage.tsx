@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import {
   approveParticipationReview,
   downloadAdminParticipationMembershipPdf,
@@ -25,6 +30,7 @@ import { paths } from '@/routes/paths';
 import { downloadFromUrl } from '@/utils/download';
 import { isForbiddenApiError } from '@/api/_shared/errors';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
+import { resolveAdminProjectNavigationState } from '@/features/admin/navigation/adminProjectNavigation';
 import {
   ParticipationReviewDecisionDialog,
   type ParticipationReviewDecision,
@@ -116,10 +122,12 @@ function readBackendErrors(
 
 /** Displays an application review and coordinates its approve or reject decision. */
 export default function ParticipationReviewDetailPage() {
+  const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { projectId = '', participationId = '' } = useParams();
   const [searchParams] = useSearchParams();
+  const navigationState = resolveAdminProjectNavigationState(location.state);
   const requestedStatus = readReviewStatus(searchParams.get('status'));
   const numericParticipationId = Number(participationId);
 
@@ -143,8 +151,10 @@ export default function ParticipationReviewDetailPage() {
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   const returnToList = useCallback(() => {
-    navigate(paths.adminProjectMembership(projectId, requestedStatus ?? 'OPEN'));
-  }, [navigate, projectId, requestedStatus]);
+    navigate(paths.adminProjectMembership(projectId, requestedStatus ?? 'OPEN'), {
+      state: navigationState,
+    });
+  }, [navigate, navigationState, projectId, requestedStatus]);
 
   /** Fetches a fresh membership PDF URL and opens it without leaving the review page. */
   const handleViewMembershipPdf = async () => {
