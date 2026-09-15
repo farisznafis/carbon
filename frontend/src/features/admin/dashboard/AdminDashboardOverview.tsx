@@ -101,7 +101,7 @@ function MetricCard({
   label,
   value,
   description,
-  icon,
+  // icon,
   loading,
   error,
   onClick,
@@ -114,30 +114,23 @@ function MetricCard({
 
   return (
     <Card className="h-full rounded-xl border-border shadow-app-sm">
-      <CardContent className="flex h-full min-h-[190px] flex-col p-5">
-
+      <CardContent
+        className="
+          grid h-full min-h-[150px]
+          grid-rows-[auto_1fr_auto]
+          gap-y-3
+          p-5
+        "
+      >
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <p className="text-body font-bold text-foreground">
             {label}
           </p>
-
-          <span
-            className="
-              flex h-10 w-10 shrink-0
-              items-center justify-center
-              rounded-lg
-              bg-accent
-              text-primary
-            "
-            aria-hidden="true"
-          >
-            {icon}
-          </span>
         </div>
 
         {/* KPI value / permission state */}
-        <div className="mt-5">
+        <div className="flex min-w-0 items-center">
           {!permissionGranted ? (
             <PermissionDeniedNotice
               permission={requiredPermission}
@@ -148,6 +141,7 @@ function MetricCard({
             <div
               role="alert"
               className="
+                w-full
                 rounded-lg
                 border border-destructive/30
                 bg-destructive/5
@@ -158,12 +152,12 @@ function MetricCard({
               取得できませんでした
             </div>
           ) : (
-            <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-bold leading-none tabular-nums text-foreground">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-4xl font-bold leading-none tracking-tight tabular-nums text-foreground">
                 {value.toLocaleString('ja-JP')}
               </span>
 
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-base font-semibold text-foreground">
                 件
               </span>
             </div>
@@ -171,13 +165,7 @@ function MetricCard({
         </div>
 
         {/* Footer */}
-        <div
-          className="
-            mt-auto
-            flex items-center justify-between gap-3
-            pt-4
-          "
-        >
+        <div className="flex items-center justify-between gap-3">
           <p className="min-w-0 truncate text-subtle text-foreground">
             {description}
           </p>
@@ -193,7 +181,6 @@ function MetricCard({
             <ArrowRight />
           </Button>
         </div>
-
       </CardContent>
     </Card>
   );
