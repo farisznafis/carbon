@@ -71,6 +71,7 @@ type AdminDashboardOverviewProps = {
   batchHistoryError: string | null;
   activePanel: AdminHomePanel | null;
   onPanelChange: (panel: AdminHomePanel | null) => void;
+  onOpenProjectDetail: (project: Project) => void;
   onOpenProjectMembership: (project: Project) => void;
   onOpenCompanyApplication: (company: AdminCompanyListItem) => void;
   onOpenCancelRequest: (request: MonitoringCancelRequestListItem) => void;
@@ -661,6 +662,7 @@ export function AdminDashboardOverview(
                   projectsLoading={props.projectsLoading}
                   projectsError={props.projectsError}
                   openReviewsError={props.openMembershipReviewsError}
+                  onOpenProjectDetail={props.onOpenProjectDetail}
                   onOpenMembership={props.onOpenProjectMembership}
                 />
               ) : (

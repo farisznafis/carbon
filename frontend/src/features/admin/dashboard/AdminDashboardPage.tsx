@@ -1096,6 +1096,7 @@ const AdminDashboard = () => {
               batchHistoryError={batchHistoryError}
               activePanel={activePanel}
               onPanelChange={handleHomePanelChange}
+              onOpenProjectDetail={handleEditProject}
               onOpenProjectMembership={openProjectMemberships}
               onOpenCompanyApplication={openHomeCompanyApplication}
               onOpenCancelRequest={openCancelRequestDetail}
@@ -1157,6 +1158,7 @@ const AdminDashboard = () => {
               batchHistoryError={batchHistoryError}
               activePanel={activePanel}
               onPanelChange={handleHomePanelChange}
+              onOpenProjectDetail={handleEditProject}
               onOpenProjectMembership={openProjectMemberships}
               onOpenCompanyApplication={openHomeCompanyApplication}
               onOpenCancelRequest={openCancelRequestDetail}

@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { ProjectCompletionDialog } from './ProjectCompletionDialog';
 import { formatProjectDateTime } from '../projectStatusPresentation';
+import { cn } from '@/lib/utils';
 
 type ProjectTableProps = {
   projects: Project[];
@@ -194,7 +195,7 @@ function MethodologyIdentityCell({
 
   return (
     <div className="min-w-0 leading-5">
-      <div className="font-bold text-foreground">
+      <div className="font-medium text-foreground">
         {methodologyId || '-'}
       </div>
 
@@ -370,7 +371,10 @@ export function ProjectTable({
               }
             >
               <SelectTrigger
-                className="h-8 w-full rounded-full border px-3 text-table font-bold shadow-none focus:ring-1"
+                className={cn(
+                  'h-8 w-full rounded-full border px-3 text-table font-bold shadow-none focus:ring-1',
+                  statusIsReadOnly && '[&>svg]:hidden',
+                )}
                 style={{
                   backgroundColor: statusColor.bg,
                   color: statusColor.text,
