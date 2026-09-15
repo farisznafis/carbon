@@ -3,7 +3,6 @@ import {
   useState,
 } from 'react';
 import {
-  ArrowLeft,
   CheckCircle2,
   Mail,
 } from 'lucide-react';
@@ -11,7 +10,7 @@ import {
   useForm,
   type UseFormSetError,
 } from 'react-hook-form';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { ApiError } from '@/api/_shared/errors';
 import {
@@ -23,7 +22,6 @@ import {
   FormGrid,
 } from '@/components/forms/form-layout';
 import { RequiredLabel } from '@/components/forms/shared';
-import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -36,6 +34,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
 import { HomeFooter } from '@/pages/home/HomeFooter';
+import {
+  PageBackButton,
+  floatingPageBackButtonClassName,
+} from '@/components/navigation/PageBackButton';
 
 const SUCCESS_REDIRECT_DELAY_MS = 3_000;
 
@@ -346,6 +348,9 @@ function InquirySuccess({
 export default function InquiryPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const handleBack = () => {
+    navigate(paths.home);
+  };
 
   const [
     successMessage,
@@ -429,6 +434,7 @@ export default function InquiryPage() {
       >
         <section
           className="
+          
             mx-auto
             flex
             min-h-[calc(100dvh-4rem-1px)]
@@ -444,24 +450,12 @@ export default function InquiryPage() {
             lg:py-20
           "
         >
-          <div className="mb-6">
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="-ml-3"
-            >
-              <Link to={paths.home}>
-                <ArrowLeft
-                  className="h-4 w-4"
-                  aria-hidden="true"
-                />
-
-                ホームに戻る
-              </Link>
-            </Button>
-          </div>
-
+          {/* <PageBackButton
+            onClick={handleBack}
+            label=""
+            aria-label="ホームに戻る"
+            className={floatingPageBackButtonClassName}
+          /> */}
           <div
             className="
               overflow-hidden

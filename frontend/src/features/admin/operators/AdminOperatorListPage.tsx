@@ -9,6 +9,7 @@ import {
 } from '@/components/data-display';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { LoadingPanel } from '@/components/feedback/loading';
+import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import { adminPageContainerClassName } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -299,26 +300,16 @@ export default function AdminOperatorListPage() {
   return (
     <main className='min-h-[calc(100dvh-5rem)] bg-background py-8'>
       <div className={`${adminPageContainerClassName} space-y-4`}>
-        <header className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-          <div>
-            <h1 className='text-foreground'>運用者管理</h1>
-            <p className='mt-2 text-base text-foreground'>
-              運用業務を担当するユーザーのアカウントを管理します。
-            </p>
-          </div>
-          <Button
-            type='button'
-            size='md'
-            className='self-start sm:self-auto'
-            onClick={handleAddOperator}
-          >
-            <Plus
-              className='h-4 w-4'
-              aria-hidden='true'
-            />
-            運用者を追加
-          </Button>
-        </header>
+        <AdminPageHeader
+          title="運用者管理"
+          description="運用業務を担当するユーザーのアカウントを管理します。"
+          action={
+            <Button type="button" size="md" onClick={handleAddOperator}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              運用者を追加
+            </Button>
+          }
+        />
 
         {showInformation && (
           <OperatorInformationNote onClose={() => setShowInformation(false)} />

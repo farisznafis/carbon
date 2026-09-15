@@ -286,8 +286,7 @@ All colors MUST be HSL.
   }
 
   h1 {
-    font-size: 32px;
-    line-height: 38px;
+    @apply text-page-title;
   }
 
   h2 {

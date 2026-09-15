@@ -15,6 +15,7 @@ import type { MonitoringCancelRequestListItem } from '@/api/monitoring';
 import type { Project } from '@/api/projects';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
+import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import {
   SkeletonList,
   SkeletonMetricCard,
@@ -597,12 +598,10 @@ export function AdminDashboardOverview(
 
   return (
     <div className='space-y-8'>
-      <header className='space-y-2'>
-        <h1 className='text-foreground'>ホーム</h1>
-        <p className='mt-2 text-base text-foreground'>
-          運用業務を担当するユーザーのアカウントを管理します。
-        </p>
-      </header>
+      <AdminPageHeader
+        title="ホーム"
+        description="運用業務を担当するユーザーのアカウントを管理します。"
+      />
       <section
         aria-label="主要な登録状況"
         className="

@@ -38,6 +38,7 @@ import {
   adminPageContainerClassName,
   dashboardEmptyStateClassName,
 } from '@/components/layout/DashboardLayout';
+import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -204,13 +205,12 @@ function AdminDashboardSection({
 }) {
   return (
     <section className="space-y-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-2">
-          <h2 className="text-foreground">{title}</h2>
-          <p className="text-subtle text-foreground">{description}</p>
-        </div>
-        {action}
-      </div>
+      <AdminPageHeader
+        title={title}
+        description={description}
+        action={action}
+        headingAs="h2"
+      />
       {children}
     </section>
   );
@@ -1211,41 +1211,44 @@ const AdminDashboard = () => {
             value="companies"
             className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
-            {(!canReviewCompanies || showApplicationSection) && (
-              <AdminDashboardSection
+            <section className="space-y-4">
+              <AdminPageHeader
                 title="参加申請中の企業"
                 description="参加申請を受け付けた企業です。内容を確認し、承認または差し戻しを行ってください。"
-              >
-                {!applicationSectionAllowed ? (
-                  <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
-                ) : applicationCompaniesLoading ? (
-                  <SkeletonTable columns={5} rows={6} minWidth={980} />
-                ) : applicationCompaniesError ? (
-                  <AdminDashboardEmptyState>
-                    {applicationCompaniesError}
-                  </AdminDashboardEmptyState>
-                ) : (
-                  <>
-                    <AdminCompanyApplicationsTable
-                      items={applicationCompanies}
-                      emptyMessage="参加申請中の企業はありません。"
-                      onDetails={openCompanyDetails}
-                      onReview={openCompanyReview}
-                    />
-                    <PaginationControls
-                      currentPage={applicationPagination.page}
-                      totalPages={applicationPagination.totalPages}
-                      totalItems={applicationPagination.totalItems}
-                      itemsPerPage={companyLimit}
-                      rowsPerPageOptions={[10, 20, 50, 100]}
-                      onPageChange={setApplicationPage}
-                      onItemsPerPageChange={handleCompanyLimitChange}
-                      className="mt-4"
-                    />
-                  </>
-                )}
-              </AdminDashboardSection>
-            )}
+              />
+              {(!canReviewCompanies || showApplicationSection) && (
+                <div>
+                  {!applicationSectionAllowed ? (
+                    <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
+                  ) : applicationCompaniesLoading ? (
+                    <SkeletonTable columns={5} rows={6} minWidth={980} />
+                  ) : applicationCompaniesError ? (
+                    <AdminDashboardEmptyState>
+                      {applicationCompaniesError}
+                    </AdminDashboardEmptyState>
+                  ) : (
+                    <>
+                      <AdminCompanyApplicationsTable
+                        items={applicationCompanies}
+                        emptyMessage="参加申請中の企業はありません。"
+                        onDetails={openCompanyDetails}
+                        onReview={openCompanyReview}
+                      />
+                      <PaginationControls
+                        currentPage={applicationPagination.page}
+                        totalPages={applicationPagination.totalPages}
+                        totalItems={applicationPagination.totalItems}
+                        itemsPerPage={companyLimit}
+                        rowsPerPageOptions={[10, 20, 50, 100]}
+                        onPageChange={setApplicationPage}
+                        onItemsPerPageChange={handleCompanyLimitChange}
+                        className="mt-4"
+                      />
+                    </>
+                  )}
+                </div>
+              )}
+            </section>
 
             {(!participatingSectionAllowed || showParticipatingSection) && (
               <AdminDashboardSection
@@ -1286,25 +1289,25 @@ const AdminDashboard = () => {
             value="projects"
             className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
-            <AdminDashboardSection
-              title="プロジェクト管理"
-              description="登録済みプロジェクトの詳細確認、更新、ステータス変更を行えます。"
-              action={
-                <Button
-                  type="button"
-                  size="md"
-                  onClick={() =>
-                    adminPermissions.guardAction('PROJECT_CREATE', () =>
-                      navigate(paths.adminProjectRegister),
-                    )
-                  }
-                  className="self-start sm:self-auto"
-                >
-                  <Plus className="h-4 w-4" />
-                  プロジェクトを追加
-                </Button>
-              }
-            >
+            <section className="space-y-4">
+              <AdminPageHeader
+                title="プロジェクト管理"
+                description="登録済みプロジェクトの詳細確認、更新、ステータス変更を行えます。"
+                action={
+                  <Button
+                    type="button"
+                    size="md"
+                    onClick={() =>
+                      adminPermissions.guardAction('PROJECT_CREATE', () =>
+                        navigate(paths.adminProjectRegister),
+                      )
+                    }
+                  >
+                    <Plus className="h-4 w-4" />
+                    プロジェクトを追加
+                  </Button>
+                }
+              />
               {!projectSectionAllowed ? (
                 <PermissionDeniedNotice permission="PROJECT_READ" />
               ) : <div className="space-y-6">
@@ -1438,7 +1441,7 @@ const AdminDashboard = () => {
                   </CardContent>
                 </Card>
               </div>}
-            </AdminDashboardSection>
+            </section>
           </TabsContent>
 
           <TabsContent
@@ -1459,10 +1462,11 @@ const AdminDashboard = () => {
             value="methodologies"
             className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
-            <AdminDashboardSection
-              title="方法論一覧"
-              description="利用可能な方法論の一覧をここで管理できるようにします。"
-            >
+            <section className="space-y-4">
+              <AdminPageHeader
+                title="方法論一覧"
+                description="利用可能な方法論の一覧をここで管理できるようにします。"
+              />
               {adminPermissions.hasPermission('METHODOLOGY_READ') ? (
                 <AdminDashboardEmptyState>
                   表示できる方法論データがありません。
@@ -1470,7 +1474,7 @@ const AdminDashboard = () => {
               ) : (
                 <PermissionDeniedNotice permission="METHODOLOGY_READ" />
               )}
-            </AdminDashboardSection>
+            </section>
 
             {/* <AdminDashboardSection
               title="申請書様式"
