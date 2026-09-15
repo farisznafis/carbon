@@ -832,7 +832,7 @@ const ProjectDetail = () => {
               className='m-0 space-y-7'
             >
               {/* Reduction KPI */}
-              <section aria-labelledby='reduction-summary-title'>
+              {/* <section aria-labelledby='reduction-summary-title'>
                 <div className='mb-4'>
                   <h2
                     id='reduction-summary-title'
@@ -884,7 +884,7 @@ const ProjectDetail = () => {
                     </div>
                   </CardContent>
                 </Card>
-              </section>
+              </section> */}
 
               {/* Latest monitoring */}
               {recentLoading ? (
@@ -941,8 +941,8 @@ const ProjectDetail = () => {
               value='equipment'
               className='m-0 space-y-6'
             >
-              <section className='flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
-                <div className='flex items-start gap-3'>
+              <section className='flex flex-col gap-4 sm:flex-row sm:items-center'>
+                <div className='flex items-center gap-3'>
                   <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary'>
                     <PackageCheck className='h-5 w-5' />
                   </span>

@@ -117,7 +117,7 @@ export async function getProjectMemberTermsInfo(
   }
 
   if (Number.isNaN(Date.parse(data.startedAt))) {
-    throw new Error('入会規約の施行日が正しくありません');
+    throw new Error('入会規約の開始日時が不正です');
   }
 
   return data;
