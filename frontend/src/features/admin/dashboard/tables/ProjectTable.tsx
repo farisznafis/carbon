@@ -66,47 +66,47 @@ const statusColors: Record<
 > = {
   作成済み: {
     bg: '#F1F5F9',
-    text: '#475569',
+    text: '#465467',
     border: '#CBD5E1',
   },
   準備中: {
     bg: '#FEF3C7',
-    text: '#92400E',
+    text: '#8A3908',
     border: '#FCD34D',
   },
   変更中: {
     bg: '#DBEAFE',
-    text: '#1D4ED8',
+    text: '#0C3CC3',
     border: '#93C5FD',
   },
   妥当性確認処理: {
     bg: '#E0E7FF',
-    text: '#4338CA',
+    text: '#3D32C0',
     border: '#A5B4FC',
   },
   却下: {
     bg: '#FEE2E2',
-    text: '#B91C1C',
+    text: '#9B0909',
     border: '#FCA5A5',
   },
   実施中: {
     bg: '#DCFCE7',
-    text: '#15803D',
+    text: '#006024',
     border: '#86EFAC',
   },
   検証中: {
     bg: '#CCFBF1',
-    text: '#0F766E',
+    text: '#005B54',
     border: '#5EEAD4',
   },
   クレジット申請中: {
     bg: '#F3E8FF',
-    text: '#7E22CE',
+    text: '#6F13BF',
     border: '#D8B4FE',
   },
   終了: {
     bg: '#E5E7EB',
-    text: '#374151',
+    text: '#000000',
     border: '#D1D5DB',
   },
 };

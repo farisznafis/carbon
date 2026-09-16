@@ -1,4 +1,4 @@
-import { Wind } from 'lucide-react';
+import { SolarPanel } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   PARTICIPATION_METHODOLOGIES,
@@ -36,7 +36,7 @@ export function HomeMethodsSection() {
             >
               <CardContent className="flex items-center gap-5 p-6 sm:p-7">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <Wind className="h-6 w-6" aria-hidden="true" />
+                  <SolarPanel className="h-6 w-6" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
                   <p className="text-base font-semibold leading-6 text-primary">
