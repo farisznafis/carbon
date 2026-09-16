@@ -210,7 +210,7 @@ export function HomeBenefitsSection() {
                           ${
                             isActive
                               ? 'text-background'
-                              : 'text-background/80'
+                              : 'text-background'
                           }
                         `}
                       >
@@ -223,7 +223,7 @@ export function HomeBenefitsSection() {
                           block
                           text-sm
                           leading-6
-                          text-background/50
+                          text-background
                         "
                       >
                         {capability.summary}
@@ -290,7 +290,7 @@ export function HomeBenefitsSection() {
                 max-w-2xl
                 text-sm
                 leading-7
-                text-background/60
+                text-background
                 sm:text-base
               "
             >

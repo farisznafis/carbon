@@ -79,7 +79,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   {
     name: 'projectApplication.corpName',
     label: '法人代表者の氏名',
-    type: 'personName',
+    type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
       value: '認証権限保有主体変更',
@@ -203,7 +203,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   {
     name: 'projectApplication.representativeName',
     label: '代表者の氏名',
-    type: 'personName',
+    type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
       value: '認証権限保有主体変更',
@@ -241,7 +241,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   {
     name: 'projectApplication.picName',
     label: '申請責任者の氏名',
-    type: 'personName',
+    type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
       value: '認証権限保有主体変更',
@@ -336,7 +336,7 @@ export const projectApplication: FieldConfig<FormValues>[] = [
   {
     name: 'projectApplication.otherContactsPicName',
     label: '（その他連絡先）責任者氏名',
-    type: 'personName',
+    type: 'text',
     hideWhen: {
       field: 'projectApplication.applicationCategory',
       value: '認証権限保有主体変更',

@@ -77,20 +77,6 @@ export function HomeFlowSection() {
               登録から削減量の可視化まで。一本の運用線でつなぐ。
             </p>
           </div>
-
-          <p
-            className='
-              max-w-xl
-              text-sm
-              leading-7
-              text-muted-foreground
-              sm:text-base
-            '
-          >
-            企業・拠点の登録からプロジェクトへの参加、
-            設備・証憑・モニタリングデータの管理、
-            削減量の確認までをひとつの流れで進められます。
-          </p>
         </div>
 
         {/* =====================================================

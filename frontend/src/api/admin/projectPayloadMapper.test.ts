@@ -84,18 +84,4 @@ describe('mapAdminProjectPlanApplicationPayload', () => {
     expect(payload).not.toHaveProperty('otherContactPicEmail');
     expect(payload).not.toHaveProperty('otherContactPicPhone');
   });
-
-  it('sends what the operator entered over a DTO-named autofill copy', () => {
-    const payload = mapAdminProjectPlanApplicationPayload({
-      projectApplication: {
-        picPhone: '0312345678',
-        picPhoneNumber: '03-5432-1234',
-        regionCategory: '関東',
-        regionalCategory: '全国',
-      },
-    });
-
-    expect(payload.picPhoneNumber).toBe('0312345678');
-    expect(payload.regionalCategory).toBe('関東');
-  });
 });

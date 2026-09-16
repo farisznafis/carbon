@@ -7,13 +7,14 @@ import { ForbiddenAccessPage } from '@/components/feedback/ForbiddenAccessPage';
 import { paths } from '@/routes/paths';
 import { useAdminPermissions } from './useAdminPermissions';
 
-/** Protects admin business routes while keeping self-profile available. */
+/** Protects admin business routes while keeping self-profile flows available. */
 export function AdminBusinessAccessBoundary({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const permissions = useAdminPermissions();
   const selfProfilePath = permissions.operatorId ? paths.adminOperatorProfile(permissions.operatorId) : null;
-  const isSelfProfile = selfProfilePath === location.pathname;
+  const selfEditPath = permissions.operatorId ? paths.adminOperatorEdit(permissions.operatorId) : null;
+  const isSelfProfileFlow = selfProfilePath === location.pathname || selfEditPath === location.pathname;
 
   if (permissions.isLoading) return <LoadingPanel message="権限情報を読み込んでいます" />;
 
@@ -31,7 +32,7 @@ export function AdminBusinessAccessBoundary({ children }: { children: ReactNode 
     );
   }
 
-  if (!permissions.hasAnyPermission && !isSelfProfile) {
+  if (!permissions.hasAnyPermission && !isSelfProfileFlow) {
     return (
       <ForbiddenAccessPage
         actionLabel="プロファイルを見る"
