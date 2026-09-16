@@ -324,7 +324,7 @@ const App = () => {
             path={paths.adminOperatorEditRoute}
             element={
                   <RequireAdmin>
-                    <AdminPermissionRoute permission="OPERATOR_USER_UPDATE" title="運用者更新" description="運用者の登録情報を更新します。">
+                    <AdminPermissionRoute permission="OPERATOR_USER_UPDATE" title="運用者更新" description="運用者の登録情報を更新します。" allowSelfOperator>
                       <AdminOperatorEdit />
                     </AdminPermissionRoute>
               </RequireAdmin>
