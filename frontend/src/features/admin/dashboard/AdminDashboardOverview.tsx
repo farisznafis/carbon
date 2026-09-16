@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import {
   ArrowRight,
   Building2,
@@ -45,6 +46,37 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { toast } from '@/hooks/use-toast';
 
 export type AdminHomePanel = 'cancel' | 'batch';
+
+/** Tracks an element's rendered height so adjacent desktop content can align to it. */
+function useElementHeight<TElement extends HTMLElement>() {
+  const elementRef = useRef<TElement>(null);
+  const [height, setHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    const element = elementRef.current;
+
+    if (!element) return;
+
+    /** Stores a rounded height to avoid updates caused only by sub-pixel changes. */
+    const updateHeight = () => {
+      const nextHeight = Math.ceil(element.getBoundingClientRect().height);
+      setHeight((currentHeight) =>
+        currentHeight === nextHeight ? currentHeight : nextHeight,
+      );
+    };
+
+    updateHeight();
+
+    if (typeof ResizeObserver === 'undefined') return;
+
+    const resizeObserver = new ResizeObserver(updateHeight);
+    resizeObserver.observe(element);
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  return { elementRef, height };
+}
 
 type AdminDashboardOverviewProps = {
   projects: Project[];
@@ -637,6 +669,8 @@ function MonitoringDialogs({
 export function AdminDashboardOverview(
   props: Readonly<AdminDashboardOverviewProps>,
 ) {
+  const { elementRef: mainColumnRef, height: mainColumnHeight } =
+    useElementHeight<HTMLDivElement>();
   const pendingCancelCount = props.cancelRequests.filter(
     (request) => request.status.toUpperCase() === 'PENDING',
   ).length;
@@ -645,6 +679,12 @@ export function AdminDashboardOverview(
     (props.activePanel === 'batch' && props.canReadBatchHistory)
       ? props.activePanel
       : null;
+  const alignedSidebarStyle =
+    mainColumnHeight > 0
+      ? ({
+          '--admin-home-main-column-height': `${mainColumnHeight}px`,
+        } as CSSProperties)
+      : undefined;
 
   return (
     <div className='space-y-8'>
@@ -707,8 +747,8 @@ export function AdminDashboardOverview(
           requiredPermission='MONITORING_CANCEL'
         />
       </section>
-      <div className='grid items-stretch gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.85fr)]'>
-        <div className='min-w-0 space-y-6'>
+      <div className='grid items-start gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.85fr)]'>
+        <div ref={mainColumnRef} className='min-w-0 space-y-6'>
           <AdminTableCard
             title='プロジェクト一覧'
             count={props.projects.length}
@@ -742,7 +782,10 @@ export function AdminDashboardOverview(
             permissionGranted={props.canReviewCompanies}
           />
         </div>
-        <div className='flex min-w-0 flex-col gap-6 xl:h-full xl:min-h-0'>
+        <div
+          style={alignedSidebarStyle}
+          className='flex min-w-0 flex-col gap-6 xl:h-[var(--admin-home-main-column-height)] xl:min-h-0 xl:max-h-[var(--admin-home-main-column-height)] xl:overflow-hidden'
+        >
           <CancelRequestSummary
             requests={props.cancelRequests}
             loading={props.cancelRequestsLoading}
