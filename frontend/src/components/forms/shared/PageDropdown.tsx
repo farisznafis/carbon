@@ -48,9 +48,7 @@ export const PageDropdown: React.FC<PageDropdownProps> = ({
             key={s.id}
             value={String(s.id)}
           >
-            {/* No number: which pages apply depends on the 申請区分, so the
-                official sheet numbers have gaps that read as missing pages. */}
-            {s.title}
+            {s.id}. {s.title}
             {completedIds.includes(s.id) && (
               <span
                 className='ml-2 text-muted-foreground'

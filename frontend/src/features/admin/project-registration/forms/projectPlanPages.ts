@@ -32,18 +32,6 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     step: 2,
     slug: 'application',
     formKey: 'projectApplication',
-    // The payload itself is built by mapAdminProjectPlanApplicationPayload;
-    // these are what put a rejected field's error, a loaded value and a
-    // read-only rule on the input the operator actually sees.
-    renames: {
-      isUsingCostSupport: 'isUsingExamCostSupport',
-      projectOperatorJa: 'projectOperatorNameJa',
-      projectOperatorEn: 'projectOperatorNameEn',
-      energyActOpeNumber: 'energyActOperationNumber',
-      picPhone: 'picPhoneNumber',
-      SaaS: 'locationEn',
-      regionCategory: 'regionalCategory',
-    },
   },
   {
     step: 3,
@@ -213,57 +201,6 @@ export const PROJECT_PLAN_PAGES: ReadonlyArray<ProjectPlanPage> = [
     renames: { monitoringDesc: 'monitoringItemDescription' },
   },
 ];
-
-/** Separates a table's name from a column inside its rows: `years[].startDate`. */
-const ROW_MARKER = '[]';
-
-/**
- * Restates a backend field name in the form's name for that page.
- *
- * `renames` covers top-level keys only, so a row-relative name renames its
- * table and keeps its column.
- */
-export function toFormFieldName(
-  backendName: string,
-  renames?: Readonly<Record<string, string>>,
-): string {
-  if (!renames) return backendName;
-
-  const toForm = new Map(Object.entries(renames).map(([form, backend]) => [backend, form]));
-  const [table, column] = backendName.split(`${ROW_MARKER}.`);
-  const formTable = toForm.get(table) ?? table;
-  return column === undefined ? formTable : `${formTable}${ROW_MARKER}.${column}`;
-}
-
-/**
- * A page's 有/無 rules, in form field names.
- *
- * The server names both the field and its toggle by its own names, while the
- * form holds values under its own. Untranslated, a rule on a renamed field is
- * never found and a renamed toggle reads as unanswered — either way the field
- * never hides (step 3's 省エネ法 numbers stayed visible with 定期報告 無).
- */
-export function rulesInFormNames<T extends { field: string; when: string }>(
-  rules: ReadonlyArray<T>,
-  renames?: Readonly<Record<string, string>>,
-): T[] {
-  return rules.map((rule) => ({
-    ...rule,
-    field: toFormFieldName(rule.field, renames),
-    when: toFormFieldName(rule.when, renames),
-  }));
-}
-
-/**
- * The fields the server fills from SQL, in form field names. Untranslated, a
- * renamed one is left editable and the edit is overwritten on the next read.
- */
-export function readOnlyFieldsInFormNames(
-  fields: ReadonlyArray<string>,
-  renames?: Readonly<Record<string, string>>,
-): string[] {
-  return fields.map((name) => toFormFieldName(name, renames));
-}
 
 const BY_STEP: ReadonlyMap<number, ProjectPlanPage> = new Map(
   PROJECT_PLAN_PAGES.map((page) => [page.step, page]),

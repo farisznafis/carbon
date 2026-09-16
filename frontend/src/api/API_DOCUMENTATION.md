@@ -33,7 +33,6 @@ This document describes every file under `src/api/`. It is intended for develope
 | `getProjectPlanForm` | `GET /projectplan/:projectId/forms/:formSlug` | Path: `projectId`, `formSlug`; optional `methodology` query | [Request implementation](admin/projects.ts) |
 | `saveProjectPlanForm` | `PUT /projectplan/:projectId/forms/:formSlug` | JSON page body; path: `projectId`, `formSlug` | [Request implementation](admin/projects.ts) |
 | `uploadProjectPlanFormFile` | `POST /projectplan/:projectId/forms/:formSlug/files` | Multipart `file`; query `fieldName` | [Request implementation](admin/projects.ts) |
-| `getProjectPlanFileDownloadUrl` | `GET /projectplan/:projectId/files/download-url` | Path: `projectId`; query `s3Key` (must be `projects/{projectId}/plan/…`, else 400). Returns `url` valid 15 min (`expiresIn` seconds) | [Request implementation](admin/projects.ts) |
 | `getProjectPlanProgress` | `GET /projectplan/:projectId/progress` | Path: `projectId` | [Request implementation](admin/projects.ts) |
 | `getProjectPlanProgressBatch` | `GET /projectplan/progress` | Query `projectIds` (comma separated) | [Request implementation](admin/projects.ts) |
 

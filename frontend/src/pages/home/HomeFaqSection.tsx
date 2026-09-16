@@ -32,9 +32,9 @@ export function HomeFaqSection({ contactPath }: HomeFaqSectionProps) {
           />
           <Card className="max-w-xl border-border/70 shadow-app-md">
             <CardContent className="space-y-5 p-6">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-primary">
+              {/* <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-primary">
                 <LifeBuoy className="h-5 w-5" aria-hidden="true" />
-              </span>
+              </span> */}
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold">解決しない場合はこちら</h3>
                 <p className="text-sm leading-6 text-muted-foreground">

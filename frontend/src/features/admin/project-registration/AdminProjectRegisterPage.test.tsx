@@ -42,6 +42,7 @@ vi.mock('./forms/ProjectMultiPageForm', () => ({
 
 vi.mock('./forms/TemporaryAdminProjectAutofillButton', () => ({
   TemporaryAdminProjectAutofillButton: () => null,
+  TemporaryAdminProjectApplicationAutofillButton: () => null,
 }));
 
 import { AdminProjectRegister } from './AdminProjectRegisterPage';
@@ -243,32 +244,6 @@ describe('AdminProjectRegister', () => {
 
     // The page was not stored, so the operator stays on it.
     expect(screen.getByTestId('project-form-step')).toHaveTextContent('step-2');
-  });
-  it('drops a rejected save’s error once the page is fixed and saved', async () => {
-    const user = userEvent.setup();
-
-    render(
-      <MemoryRouter>
-        <AdminProjectRegister />
-      </MemoryRouter>,
-    );
-
-    await user.click(screen.getByRole('button', { name: '次へ' }));
-    expect(await screen.findByTestId('project-form-step')).toHaveTextContent(
-      'step-2',
-    );
-
-    adminProjectApiMocks.saveProjectPlanForm.mockRejectedValueOnce(
-      new Error('入力内容に誤りがあります。'),
-    );
-    await user.click(screen.getByRole('button', { name: '次へ' }));
-    expect(await screen.findByText('入力内容に誤りがあります。')).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: '次へ' }));
-    await waitFor(() => {
-      expect(screen.getByTestId('project-form-step')).not.toHaveTextContent('step-2');
-    });
-    expect(screen.queryByText('入力内容に誤りがあります。')).not.toBeInTheDocument();
   });
   it('loads every page as the operator arrives on it', async () => {
     const user = userEvent.setup();
