@@ -1,6 +1,5 @@
 import { FieldConfig } from '@/components/forms/shared/GenericFormFields/GenericFormFields';
 import { FormValues } from '@/features/admin/project-registration/forms/projectFormTypes';
-import { PREFECTURES } from '@/lib/constants/prefectures';
 import {
   IS_DESIGNATED_EMITTERS,
   SELECTS_REQUIRED,
@@ -28,19 +27,9 @@ export const otherProjectOperator: FieldConfig<FormValues>[] = [
   },
   { name: field('otherCorpNumber'), label: '法人番号', type: 'text' },
   {
-    // Not on the official sheet: a shortcut that fills the three 本社所在地
-    // fields below, which are what the sheet actually asks for.
-    name: field('postalCode'),
-    label: '本社所在地（郵便番号・ハイフンなし）',
-    type: 'postalCode',
-    required: false,
-    addressFields: { prefecture: 'prefecture', city: 'city', address: 'address' },
-  },
-  {
     name: field('prefecture'),
     label: '本社所在地（都道府県）',
-    type: 'select',
-    options: PREFECTURES,
+    type: 'text',
   },
   { name: field('city'), label: '本社所在地（市区町村）', type: 'text' },
   {
@@ -65,7 +54,7 @@ export const otherProjectOperator: FieldConfig<FormValues>[] = [
   {
     name: field('representativeName'),
     label: '代表者氏名',
-    type: 'personName',
+    type: 'text',
   },
 
   {
@@ -87,7 +76,7 @@ export const otherProjectOperator: FieldConfig<FormValues>[] = [
     options: SELECTS_REQUIRED,
   },
 
-  { name: field('picName'), label: '責任者氏名', type: 'personName' },
+  { name: field('picName'), label: '責任者氏名', type: 'text' },
 
   {
     name: field('isChangePicName'),

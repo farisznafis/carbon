@@ -8,7 +8,6 @@ import type {
   CreateAdminProjectPayload,
   ProjectPlanAutofillResponse,
   ProjectPlanBatchProgressResponse,
-  ProjectPlanFileDownloadResponse,
   ProjectPlanFileResponse,
   ProjectPlanFormResponse,
   ProjectPlanProgressSummary,
@@ -298,35 +297,6 @@ export async function getProjectPlanProgressBatch(
   }
 
   return new Map((json?.projects ?? []).map((p) => [p.projectId, p]));
-}
-
-/**
- * A short-lived URL to view a file stored on a saved plan page.
- *
- * Asked for on click rather than with the page: the URL expires, and most
- * visits never open the attachment. A refusal is the caller's to show — it must
- * not replace the page the operator is reading.
- */
-export async function getProjectPlanFileDownloadUrl(
-  projectId: string,
-  s3Key: string,
-): Promise<string> {
-  const response = await apiFetch(
-    `/projectplan/${encodeURIComponent(projectId)}/files/download-url?s3Key=${encodeURIComponent(
-      s3Key,
-    )}`,
-    { method: 'GET', forbiddenHandling: 'caller' },
-  );
-  const { data: json, rawBody } =
-    await parseJsonResponse<ProjectPlanFileDownloadResponse>(response);
-
-  if (!response.ok || !json?.url) {
-    const message =
-      json?.message || rawBody || `Failed to get file URL: HTTP ${response.status}`;
-    throw new ApiError(message, { status: response.status, payload: json, rawBody });
-  }
-
-  return json.url;
 }
 
 /**

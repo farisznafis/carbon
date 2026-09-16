@@ -90,7 +90,7 @@ export const projectBaseSchema = z.object({
     .string()
     .min(8, "必須項目です")
     .max(20, "文字列は最大20文字までです")
-    .regex(REGEX_PATTERNS.PHONE_NUMBER_DIGITS, REGEX_MESSAGES.PHONE_NUMBER_DIGITS),
+    .regex(REGEX_PATTERNS.PHONE_NUMBER, REGEX_MESSAGES.PHONE_NUMBER),
   repPosition: z
     .string()
     .min(1, "必須項目です")
@@ -132,7 +132,7 @@ export const projectBaseSchema = z.object({
     .string()
     .min(8, "必須項目です")
     .max(20, "文字列は最大20文字までです")
-    .regex(REGEX_PATTERNS.PHONE_NUMBER_DIGITS, REGEX_MESSAGES.PHONE_NUMBER_DIGITS),
+    .regex(REGEX_PATTERNS.PHONE_NUMBER, REGEX_MESSAGES.PHONE_NUMBER),
   picPosition: z
     .string()
     .min(1, "必須項目です")

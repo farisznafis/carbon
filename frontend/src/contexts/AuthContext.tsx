@@ -11,6 +11,7 @@ import * as authApi from '@/api/auth';
 import type { User } from '@/api/users';
 import { logger } from '@/lib/logger';
 import { storage, storageKeys } from '@/lib/storage';
+import { getJwtUserId } from '@/lib/jwt';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useProfileStore } from '@/stores/ProfileStore';
@@ -55,6 +56,7 @@ type AuthSession = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const SESSION_DURATION_MS = 60 * 60 * 1000;
+const LEGACY_ADMIN_SESSION_ID = 'admin';
 const transientSessionKeys = [
   storageKeys.sites,
   storageKeys.users,
@@ -125,6 +127,24 @@ const EMPTY_AUTH_SESSION: AuthSession = {
   isAuthenticated: false,
 };
 
+/** Normalizes an operator ID and ignores the legacy placeholder value. */
+function normalizeAdminOperatorId(
+  operatorId: string | number | null | undefined,
+): string | null {
+  if (operatorId === null || operatorId === undefined) return null;
+
+  const normalizedOperatorId = String(operatorId).trim();
+  return normalizedOperatorId &&
+    normalizedOperatorId.toLocaleLowerCase('en-US') !== LEGACY_ADMIN_SESSION_ID
+    ? normalizedOperatorId
+    : null;
+}
+
+/** Returns whether an admin session still uses the legacy placeholder ID. */
+function needsAdminSessionIdMigration(user: User): boolean {
+  return user.role === 'admin' && !normalizeAdminOperatorId(user.id);
+}
+
 const getStoredAuthSession = (): AuthSession => {
   const token = storage.get(storageKeys.authToken);
   const storedUser = storage.getJson<User>(storageKeys.user);
@@ -136,6 +156,21 @@ const getStoredAuthSession = (): AuthSession => {
     }
 
     return EMPTY_AUTH_SESSION;
+  }
+
+  if (needsAdminSessionIdMigration(storedUser)) {
+    const jwtUserId = getJwtUserId(token);
+    if (!jwtUserId) {
+      clearStoredSession();
+      return EMPTY_AUTH_SESSION;
+    }
+
+    const migratedUser = { ...storedUser, id: jwtUserId };
+    storage.setJson(storageKeys.user, migratedUser);
+    return {
+      user: migratedUser,
+      isAuthenticated: true,
+    };
   }
 
   return {
@@ -226,21 +261,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         )) as AdminLoginResponse;
 
         const adminSource = data.admin ?? data.user ?? null;
-        const accountId =
-          adminSource?.operatorId ??
-          adminSource?.userId ??
-          adminSource?.id ??
-          data.user?.operatorId ??
-          data.user?.userId ??
-          data.user?.id ??
-          data.operatorId ??
-          data.userId ??
-          data.id;
+        const accountId = [
+          adminSource?.operatorId,
+          adminSource?.userId,
+          adminSource?.id,
+          data.user?.operatorId,
+          data.user?.userId,
+          data.user?.id,
+          data.operatorId,
+          data.userId,
+          data.id,
+          getJwtUserId(data.token),
+        ]
+          .map(normalizeAdminOperatorId)
+          .find((candidateId): candidateId is string => Boolean(candidateId));
+
+        if (!accountId) {
+          throw new Error(
+            'ログイン情報から運用者IDを取得できませんでした。管理者にお問い合わせください。',
+          );
+        }
 
         const adminUser: User = {
-          id: accountId === null || accountId === undefined
-            ? 'admin'
-            : String(accountId),
+          id: accountId,
           email: adminSource?.email ?? '',
           username: adminSource?.username ?? undefined,
           name: adminSource?.name ?? undefined,

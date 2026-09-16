@@ -179,7 +179,7 @@ export const projectApplicationSchema = z
       .string()
       .min(1, '必須項目です')
       .max(20, VALIDATION_MESSAGES.MAX_CHARACTERS(20))
-      .regex(REGEX_PATTERNS.PHONE_NUMBER_DIGITS, REGEX_MESSAGES.PHONE_NUMBER_DIGITS)
+      .regex(REGEX_PATTERNS.PHONE_NUMBER, REGEX_MESSAGES.PHONE_NUMBER)
       .optional(),
 
     isChangePicPhoneNumber: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
@@ -227,7 +227,7 @@ export const projectApplicationSchema = z
     otherContactsPicPhoneNumber: z
       .string()
       .max(20, VALIDATION_MESSAGES.MAX_CHARACTERS(20))
-      .regex(REGEX_PATTERNS.PHONE_NUMBER_DIGITS, REGEX_MESSAGES.PHONE_NUMBER_DIGITS)
+      .regex(REGEX_PATTERNS.PHONE_NUMBER, REGEX_MESSAGES.PHONE_NUMBER)
       .optional(),
 
     isChangeOtherContactsPicPhoneNumber: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),

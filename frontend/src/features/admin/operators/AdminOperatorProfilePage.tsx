@@ -60,11 +60,17 @@ export default function AdminOperatorProfilePage() {
 
   /** Opens the edit page for the operator currently displayed. */
   const handleEdit = () => {
-    if (operator) {
-      permissions.guardAction('OPERATOR_USER_UPDATE', () =>
-        navigate(paths.adminOperatorEdit(operator.id)),
-      );
+    if (!operator) return;
+
+    /** Navigates to the selected operator's edit form. */
+    const openEditPage = () => navigate(paths.adminOperatorEdit(operator.id));
+
+    if (operator.id === permissions.operatorId) {
+      openEditPage();
+      return;
     }
+
+    permissions.guardAction('OPERATOR_USER_UPDATE', openEditPage);
   };
 
   return (

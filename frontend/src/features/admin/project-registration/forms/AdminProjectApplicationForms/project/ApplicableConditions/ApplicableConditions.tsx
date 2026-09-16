@@ -31,7 +31,7 @@ export const applicableConditions: FieldConfig<FormValues>[] = [
   {
     name: 'appConditions.representativeName',
     label: '代表者氏名',
-    type: 'personName',
+    type: 'text',
   },
   { name: 'appConditions.regulation', label: '適用規則', type: 'text' },
 ];
