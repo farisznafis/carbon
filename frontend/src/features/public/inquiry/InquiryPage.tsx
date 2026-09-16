@@ -1,26 +1,11 @@
-import {
-  useEffect,
-  useState,
-} from 'react';
-import {
-  CheckCircle2,
-  Mail,
-} from 'lucide-react';
-import {
-  useForm,
-  type UseFormSetError,
-} from 'react-hook-form';
+import { useEffect, useState } from 'react';
+import { CheckCircle2, Mail } from 'lucide-react';
+import { useForm, type UseFormSetError } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 
 import { ApiError } from '@/api/_shared/errors';
-import {
-  createInquiry,
-  type InquiryRequest,
-} from '@/api/notifications';
-import {
-  FormActions,
-  FormGrid,
-} from '@/components/forms/form-layout';
+import { createInquiry, type InquiryRequest } from '@/api/notifications';
+import { FormActions, FormGrid } from '@/components/forms/form-layout';
 import { RequiredLabel } from '@/components/forms/shared';
 import {
   Form,
@@ -41,8 +26,7 @@ import {
 
 const SUCCESS_REDIRECT_DELAY_MS = 3_000;
 
-const DEFAULT_SUCCESS_MESSAGE =
-  'お問い合わせありがとうございます。';
+const DEFAULT_SUCCESS_MESSAGE = 'お問い合わせありがとうございます。';
 
 const INQUIRY_FIELDS = new Set<keyof InquiryRequest>([
   'companyName',
@@ -51,39 +35,27 @@ const INQUIRY_FIELDS = new Set<keyof InquiryRequest>([
   'content',
 ]);
 
-function getInquiryFieldName(
-  path: string,
-): keyof InquiryRequest | null {
+function getInquiryFieldName(path: string): keyof InquiryRequest | null {
   const fieldName = path
     .split(/::|[.[\]]/)
     .filter(Boolean)
     .at(-1);
 
-  return fieldName &&
-    INQUIRY_FIELDS.has(fieldName as keyof InquiryRequest)
+  return fieldName && INQUIRY_FIELDS.has(fieldName as keyof InquiryRequest)
     ? (fieldName as keyof InquiryRequest)
     : null;
 }
 
-function getInquiryErrorMessage(
-  error: unknown,
-): string {
+function getInquiryErrorMessage(error: unknown): string {
   if (typeof error === 'string') {
     return error;
   }
 
   if (Array.isArray(error)) {
-    return error
-      .map(getInquiryErrorMessage)
-      .filter(Boolean)
-      .join('\n');
+    return error.map(getInquiryErrorMessage).filter(Boolean).join('\n');
   }
 
-  if (
-    error &&
-    typeof error === 'object' &&
-    'message' in error
-  ) {
+  if (error && typeof error === 'object' && 'message' in error) {
     return getInquiryErrorMessage(error.message);
   }
 
@@ -100,36 +72,28 @@ function applyInquiryFieldErrors(
 
   const errors = error.payload?.errors;
 
-  if (
-    !errors ||
-    typeof errors !== 'object' ||
-    Array.isArray(errors)
-  ) {
+  if (!errors || typeof errors !== 'object' || Array.isArray(errors)) {
     return false;
   }
 
   let hasMappedError = false;
 
-  Object.entries(errors).forEach(
-    ([path, value]) => {
-      const fieldName =
-        getInquiryFieldName(path);
+  Object.entries(errors).forEach(([path, value]) => {
+    const fieldName = getInquiryFieldName(path);
 
-      const message =
-        getInquiryErrorMessage(value);
+    const message = getInquiryErrorMessage(value);
 
-      if (!fieldName || !message) {
-        return;
-      }
+    if (!fieldName || !message) {
+      return;
+    }
 
-      setError(fieldName, {
-        type: 'server',
-        message,
-      });
+    setError(fieldName, {
+      type: 'server',
+      message,
+    });
 
-      hasMappedError = true;
-    },
-  );
+    hasMappedError = true;
+  });
 
   return hasMappedError;
 }
@@ -137,7 +101,7 @@ function applyInquiryFieldErrors(
 function InquiryInformationPanel() {
   return (
     <aside
-      className="
+      className='
         surface-brand-dark
         relative
         overflow-hidden
@@ -147,11 +111,11 @@ function InquiryInformationPanel() {
         sm:py-12
         lg:px-12
         lg:py-14
-      "
+      '
     >
       <div
-        aria-hidden="true"
-        className="
+        aria-hidden='true'
+        className='
           pointer-events-none
           absolute
           -bottom-32
@@ -161,12 +125,12 @@ function InquiryInformationPanel() {
           rounded-full
           border
           border-brand-dark
-        "
+        '
       />
 
       <div
-        aria-hidden="true"
-        className="
+        aria-hidden='true'
+        className='
           pointer-events-none
           absolute
           -bottom-20
@@ -176,21 +140,21 @@ function InquiryInformationPanel() {
           rounded-full
           border
           border-brand-dark
-        "
+        '
       />
 
       <div
-        className="
+        className='
           relative
           z-10
           flex
           h-full
           flex-col
-        "
+        '
       >
         <div>
           <h1
-            className="
+            className='
               text-brand-dark
               mt-6
               text-3xl
@@ -198,44 +162,40 @@ function InquiryInformationPanel() {
               leading-tight
               tracking-tight
               sm:text-4xl
-            "
+            '
           >
             お問い合わせ
           </h1>
           <p
-            className="
+            className='
               text-brand-dark-muted
               mt-5
               max-w-sm
               text-sm
               leading-7
-            "
+            '
           >
-            サービスについてのご質問や
-            <br />
-            導入のご相談はこちらから。
+            サービスについてのご質問や導入のご相談はこちらから。
           </p>
         </div>
 
         <div
-          className="
+          className='
             mt-12
             border-t
             border-brand-dark
             pt-7
             lg:mt-auto
-          "
+          '
         >
           <p
-            className="
+            className='
               text-brand-dark-muted
               text-sm
               leading-7
-            "
+            '
           >
-            通常、3営業日以内に
-            <br />
-            担当者よりご返信します。
+            通常、3営業日以内に担当者よりご返信します。
           </p>
         </div>
       </div>
@@ -252,8 +212,8 @@ function InquirySuccess({
 }>) {
   return (
     <div
-      role="status"
-      className="
+      role='status'
+      className='
         flex
         min-h-[460px]
         flex-col
@@ -261,10 +221,10 @@ function InquirySuccess({
         justify-center
         px-4
         text-center
-      "
+      '
     >
       <span
-        className="
+        className='
           flex
           h-16
           w-16
@@ -273,28 +233,28 @@ function InquirySuccess({
           rounded-full
           bg-accent
           text-primary
-        "
+        '
       >
         <CheckCircle2
-          className="h-8 w-8"
-          aria-hidden="true"
+          className='h-8 w-8'
+          aria-hidden='true'
         />
       </span>
 
       <p
-        className="
+        className='
           mt-7
           text-xs
           font-bold
           tracking-widest
           text-primary
-        "
+        '
       >
         THANK YOU
       </p>
 
       <h2
-        className="
+        className='
           mt-3
           text-2xl
           font-bold
@@ -302,37 +262,37 @@ function InquirySuccess({
           tracking-tight
           text-foreground
           sm:text-3xl
-        "
+        '
       >
         お問い合わせを受け付けました。
       </h2>
 
       <p
-        className="
+        className='
           mt-5
           max-w-md
           text-sm
           leading-7
           text-muted-foreground
           sm:text-base
-        "
+        '
       >
         {message}
       </p>
 
       <p
-        className="
+        className='
           mt-2
           text-sm
           text-muted-foreground
-        "
+        '
       >
         3秒後にホームへ戻ります。
       </p>
 
       <FormActions
-        context="auth"
-        className="mt-8 w-full sm:w-fit"
+        context='auth'
+        className='mt-8 w-full sm:w-fit'
         actions={[
           {
             id: 'home',
@@ -352,10 +312,7 @@ export default function InquiryPage() {
     navigate(paths.home);
   };
 
-  const [
-    successMessage,
-    setSuccessMessage,
-  ] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const form = useForm<InquiryRequest>({
     defaultValues: {
@@ -382,33 +339,22 @@ export default function InquiryPage() {
     };
   }, [navigate, successMessage]);
 
-  const handleSubmit = async (
-    inquiry: InquiryRequest,
-  ) => {
+  const handleSubmit = async (inquiry: InquiryRequest) => {
     form.clearErrors();
 
     try {
-      const response =
-        await createInquiry(inquiry);
+      const response = await createInquiry(inquiry);
 
-      setSuccessMessage(
-        response.message?.trim() ||
-          DEFAULT_SUCCESS_MESSAGE,
-      );
+      setSuccessMessage(response.message?.trim() || DEFAULT_SUCCESS_MESSAGE);
     } catch (error) {
-      const hasFieldErrors =
-        applyInquiryFieldErrors(
-          error,
-          form.setError,
-        );
+      const hasFieldErrors = applyInquiryFieldErrors(error, form.setError);
 
       if (hasFieldErrors) {
         return;
       }
 
       toast({
-        title:
-          'お問い合わせを送信できませんでした',
+        title: 'お問い合わせを送信できませんでした',
         description:
           error instanceof Error
             ? error.message
@@ -427,14 +373,13 @@ export default function InquiryPage() {
   return (
     <>
       <main
-        className="
+        className='
           bg-background
           text-foreground
-        "
+        '
       >
         <section
-          className="
-          
+          className='
             mx-auto
             flex
             min-h-[calc(100dvh-4rem-1px)]
@@ -443,12 +388,11 @@ export default function InquiryPage() {
             flex-col
             justify-center
             px-4
-            py-12
+            pb-16
+            pt-8
             sm:px-6
-            sm:py-16
             lg:px-8
-            lg:py-20
-          "
+          '
         >
           {/* <PageBackButton
             onClick={handleBack}
@@ -457,7 +401,7 @@ export default function InquiryPage() {
             className={floatingPageBackButtonClassName}
           /> */}
           <div
-            className="
+            className='
               overflow-hidden
               rounded-lg
               border
@@ -466,90 +410,84 @@ export default function InquiryPage() {
               shadow-app-md
               lg:grid
               lg:grid-cols-[0.36fr_0.64fr]
-            "
+            '
           >
             <InquiryInformationPanel />
 
             <div
-              className="
+              className='
                 px-5
                 py-10
                 sm:px-10
                 sm:py-12
                 lg:px-14
                 lg:py-14
-              "
+              '
             >
               {successMessage !== null ? (
                 <InquirySuccess
                   message={successMessage}
-                  onReturnHome={
-                    handleReturnHome
-                  }
+                  onReturnHome={handleReturnHome}
                 />
               ) : (
                 <Form {...form}>
                   <form
                     noValidate
-                    onSubmit={form.handleSubmit(
-                      handleSubmit,
-                    )}
+                    onSubmit={form.handleSubmit(handleSubmit)}
                   >
                     <div
-                      className="
+                      className='
                         border-b
                         border-border
                         pb-7
-                      "
+                      '
                     >
                       <h2
-                        className="
+                        className='
                           text-xl
                           font-bold
                           tracking-tight
                           text-foreground
-                        "
+                        '
                       >
                         お問い合わせフォーム
                       </h2>
 
                       <p
-                        className="
+                        className='
                           mt-2
                           text-sm
                           text-muted-foreground
-                        "
+                        '
                       >
                         すべての項目をご入力ください。
                       </p>
                     </div>
 
                     <div
-                      className="
+                      className='
                         mt-8
                         space-y-6
-                      "
+                      '
                     >
                       <FormGrid
                         columns={2}
-                        className="
+                        className='
                           gap-6
-                        "
+                        '
                       >
                         <FormField
                           control={form.control}
-                          name="companyName"
+                          name='companyName'
                           render={({ field }) => (
                             <FormItem>
-                              <RequiredLabel>
-                                会社名
-                              </RequiredLabel>
+                              <RequiredLabel>会社名</RequiredLabel>
 
                               <FormControl>
                                 <Input
-                                  autoComplete="organization"
-                                  placeholder="例）株式会社ソーラーファーム"
-                                  aria-required="true"
+                                  autoComplete='organization'
+                                  placeholder='例）株式会社ソーラーファーム'
+                                  aria-required='true'
                                   {...field}
                                 />
                               </FormControl>
@@ -561,18 +499,16 @@ export default function InquiryPage() {
 
                         <FormField
                           control={form.control}
-                          name="name"
+                          name='name'
                           render={({ field }) => (
                             <FormItem>
-                              <RequiredLabel>
-                                お名前
-                              </RequiredLabel>
+                              <RequiredLabel>お名前</RequiredLabel>
 
                               <FormControl>
                                 <Input
-                                  autoComplete="name"
-                                  placeholder="例）田中 太郎"
-                                  aria-required="true"
+                                  autoComplete='name'
+                                  placeholder='例）田中 太郎'
+                                  aria-required='true'
                                   {...field}
                                 />
                               </FormControl>
@@ -585,19 +521,17 @@ export default function InquiryPage() {
 
                       <FormField
                         control={form.control}
-                        name="email"
+                        name='email'
                         render={({ field }) => (
                           <FormItem>
-                            <RequiredLabel>
-                              メールアドレス
-                            </RequiredLabel>
+                            <RequiredLabel>メールアドレス</RequiredLabel>
 
                             <FormControl>
                               <Input
-                                type="email"
-                                autoComplete="email"
-                                placeholder="例）info@company.com"
-                                aria-required="true"
+                                type='email'
+                                autoComplete='email'
+                                placeholder='例）info@company.com'
+                                aria-required='true'
                                 {...field}
                               />
                             </FormControl>
@@ -609,21 +543,19 @@ export default function InquiryPage() {
 
                       <FormField
                         control={form.control}
-                        name="content"
+                        name='content'
                         render={({ field }) => (
                           <FormItem>
-                            <RequiredLabel>
-                              お問い合わせ内容
-                            </RequiredLabel>
+                            <RequiredLabel>お問い合わせ内容</RequiredLabel>
 
                             <FormControl>
                               <Textarea
-                                placeholder="お問い合わせ内容をご入力ください。"
-                                className="
+                                placeholder='お問い合わせ内容をご入力ください。'
+                                className='
                                   min-h-48
                                   resize-y
-                                "
-                                aria-required="true"
+                                '
+                                aria-required='true'
                                 {...field}
                               />
                             </FormControl>
@@ -635,64 +567,30 @@ export default function InquiryPage() {
                     </div>
 
                     <div
-                      className="
+                      className='
                         mt-8
-                        border-t
-                        border-border
-                        pt-6
-                      "
+                      '
                     >
                       <div
-                        className="
+                        className='
                           flex
-                          flex-col
-                          gap-5
-                          sm:flex-row
-                          sm:items-center
-                          sm:justify-between
-                        "
+                          justify-end
+                        '
                       >
-                        <p
-                          className="
-                            flex
-                            items-center
-                            gap-2
-                            text-sm
-                            leading-6
-                            text-muted-foreground
-                          "
-                        >
-                          <Mail
-                            className="
-                              
-                              h-4
-                              w-4
-                              text-primary
-                            "
-                            aria-hidden="true"
-                          />
-
-                          内容を確認のうえ、担当者よりご連絡します。
-                        </p>
-
                         <FormActions
-                          context="auth"
-                          className="
+                          context='auth'
+                          className='
                             w-full
                             sm:w-fit
-                          "
+                          '
                           pendingActionId={
-                            form.formState
-                              .isSubmitting
-                              ? 'submit'
-                              : null
+                            form.formState.isSubmitting ? 'submit' : null
                           }
                           actions={[
                             {
                               id: 'submit',
                               label: '送信する',
-                              pendingLabel:
-                                '送信中...',
+                              pendingLabel: '送信中...',
                               type: 'submit',
                             },
                           ]}

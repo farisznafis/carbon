@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import {
   ArrowRight,
   Building2,
@@ -15,6 +16,7 @@ import type { MonitoringCancelRequestListItem } from '@/api/monitoring';
 import type { Project } from '@/api/projects';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
+import { NotificationsList } from '@/components/feedback/NotificationsList';
 import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import { AdminTableCard } from '@/components/layout/AdminTableCard';
 import {
@@ -40,8 +42,41 @@ import { CancelRequestStatusBadge } from '@/features/admin/monitoring/CancelRequ
 import { formatCancelRequestDateTime } from '@/features/admin/monitoring/cancelRequestFormatters';
 import type { AdminOperatorPermissionCode } from '@/api/admin/operators';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
+import { useNotifications } from '@/hooks/useNotifications';
+import { toast } from '@/hooks/use-toast';
 
 export type AdminHomePanel = 'cancel' | 'batch';
+
+/** Tracks an element's rendered height so adjacent desktop content can align to it. */
+function useElementHeight<TElement extends HTMLElement>() {
+  const elementRef = useRef<TElement>(null);
+  const [height, setHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    const element = elementRef.current;
+
+    if (!element) return;
+
+    /** Stores a rounded height to avoid updates caused only by sub-pixel changes. */
+    const updateHeight = () => {
+      const nextHeight = Math.ceil(element.getBoundingClientRect().height);
+      setHeight((currentHeight) =>
+        currentHeight === nextHeight ? currentHeight : nextHeight,
+      );
+    };
+
+    updateHeight();
+
+    if (typeof ResizeObserver === 'undefined') return;
+
+    const resizeObserver = new ResizeObserver(updateHeight);
+    resizeObserver.observe(element);
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  return { elementRef, height };
+}
 
 type AdminDashboardOverviewProps = {
   projects: Project[];
@@ -376,7 +411,7 @@ function CancelRequestSummary({
       <CardHeader className='flex-row items-start justify-between space-y-0'>
         <div>
           <CardTitle>取消一覧</CardTitle>
-          <p className='mt-2 text-subtle text-foreground'>
+          <p className='mt-2 text-sm text-foreground'>
             未処理 {pendingRequests.length.toLocaleString('ja-JP')}件
           </p>
         </div>
@@ -499,6 +534,64 @@ function BatchHistorySummary({
   );
 }
 
+/** Renders the notification feed from the shared navbar store without refetching it. */
+function NotificationSummary() {
+  const {
+    notifications,
+    loading,
+    error,
+    markAsRead,
+    deleteNotification,
+  } = useNotifications();
+
+  /** Marks one notification as read and keeps failures local to this card. */
+  const handleMarkAsRead = async (
+    notificationId: Parameters<typeof markAsRead>[0],
+  ) => {
+    try {
+      await markAsRead(notificationId);
+    } catch {
+      toast({
+        title: 'エラー',
+        description: '通知を既読にできませんでした。',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  /** Deletes one notification and keeps failures local to this card. */
+  const handleDeleteNotification = async (
+    notificationId: Parameters<typeof deleteNotification>[0],
+  ) => {
+    try {
+      await deleteNotification(notificationId);
+    } catch {
+      toast({
+        title: 'エラー',
+        description: '通知を削除できませんでした。',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  return (
+    <Card className='rounded-xl border-border shadow-app-sm xl:flex xl:min-h-0 xl:flex-1 xl:flex-col xl:overflow-hidden'>
+      <CardHeader className='shrink-0'>
+        <CardTitle>お知らせ</CardTitle>
+      </CardHeader>
+      <CardContent className='min-h-0 xl:flex-1 xl:overflow-y-auto'>
+        <NotificationsList
+          notifications={notifications}
+          loading={loading}
+          error={error}
+          onMarkAsRead={handleMarkAsRead}
+          onDelete={handleDeleteNotification}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
 /** Renders URL-driven monitoring dialogs using the existing full table components. */
 function MonitoringDialogs({
   activePanel,
@@ -576,6 +669,8 @@ function MonitoringDialogs({
 export function AdminDashboardOverview(
   props: Readonly<AdminDashboardOverviewProps>,
 ) {
+  const { elementRef: mainColumnRef, height: mainColumnHeight } =
+    useElementHeight<HTMLDivElement>();
   const pendingCancelCount = props.cancelRequests.filter(
     (request) => request.status.toUpperCase() === 'PENDING',
   ).length;
@@ -584,6 +679,12 @@ export function AdminDashboardOverview(
     (props.activePanel === 'batch' && props.canReadBatchHistory)
       ? props.activePanel
       : null;
+  const alignedSidebarStyle =
+    mainColumnHeight > 0
+      ? ({
+          '--admin-home-main-column-height': `${mainColumnHeight}px`,
+        } as CSSProperties)
+      : undefined;
 
   return (
     <div className='space-y-8'>
@@ -647,7 +748,7 @@ export function AdminDashboardOverview(
         />
       </section>
       <div className='grid items-start gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.85fr)]'>
-        <div className='space-y-6'>
+        <div ref={mainColumnRef} className='min-w-0 space-y-6'>
           <AdminTableCard
             title='プロジェクト一覧'
             count={props.projects.length}
@@ -681,7 +782,10 @@ export function AdminDashboardOverview(
             permissionGranted={props.canReviewCompanies}
           />
         </div>
-        <div className='space-y-6'>
+        <div
+          style={alignedSidebarStyle}
+          className='flex min-w-0 flex-col gap-6 xl:h-[var(--admin-home-main-column-height)] xl:min-h-0 xl:max-h-[var(--admin-home-main-column-height)] xl:overflow-hidden'
+        >
           <CancelRequestSummary
             requests={props.cancelRequests}
             loading={props.cancelRequestsLoading}
@@ -697,6 +801,7 @@ export function AdminDashboardOverview(
             onOpenPanel={() => props.onPanelChange('batch')}
             permissionGranted={props.canReadBatchHistory}
           />
+          <NotificationSummary />
         </div>
       </div>
       <MonitoringDialogs

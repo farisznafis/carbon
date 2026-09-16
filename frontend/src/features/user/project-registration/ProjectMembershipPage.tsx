@@ -36,6 +36,10 @@ import { paths } from '@/routes/paths';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { downloadFromUrl } from '@/utils/download';
 import { useToast } from '@/hooks/use-toast';
+import {
+  dashboardTabsListClassName,
+  dashboardTabTriggerClassName,
+} from '@/components/layout/DashboardLayout';
 
 // Keeps the preparation checklist content structured and easy to maintain in one place.
 const MEMBERSHIP_PREPARATION_SECTIONS = [
@@ -281,22 +285,49 @@ export default function ProjectMembershipPage() {
         ) : (
           <>
             <Tabs defaultValue="available">
-              <TabsList className="grid h-auto w-full grid-cols-2 justify-start sm:inline-flex sm:h-10 sm:w-auto">
+              <TabsList className={dashboardTabsListClassName}>
                 <TabsTrigger
                   value="available"
-                  className="min-w-0 flex-col gap-0.5 px-2 sm:flex-row sm:gap-0 sm:px-3"
+                  className={`${dashboardTabTriggerClassName} group min-w-[240px] gap-2`}
                 >
-                  入会可能なプロジェクト
-                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground sm:ml-1.5">
+                  <span>入会可能なプロジェクト</span>
+
+                  <span
+                    className="
+                      inline-flex min-w-6 items-center justify-center
+                      rounded-full bg-secondary
+                      px-2 py-0.5
+                      text-xs font-semibold
+                      text-secondary-foreground
+                      transition-colors
+
+                      group-data-[state=active]:bg-primary-foreground/20
+                      group-data-[state=active]:text-primary-foreground
+                    "
+                  >
                     {availableProjects.length}
                   </span>
                 </TabsTrigger>
+
                 <TabsTrigger
                   value="joined"
-                  className="min-w-0 flex-col gap-0.5 px-2 sm:flex-row sm:gap-0 sm:px-3"
+                  className={`${dashboardTabTriggerClassName} group min-w-[240px] gap-2`}
                 >
-                  入会中のプロジェクト
-                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground sm:ml-1.5">
+                  <span>入会中のプロジェクト</span>
+
+                  <span
+                    className="
+                      inline-flex min-w-6 items-center justify-center
+                      rounded-full bg-secondary
+                      px-2 py-0.5
+                      text-xs font-semibold
+                      text-secondary-foreground
+                      transition-colors
+
+                      group-data-[state=active]:bg-primary-foreground/20
+                      group-data-[state=active]:text-primary-foreground
+                    "
+                  >
                     {joinedProjects.length}
                   </span>
                 </TabsTrigger>

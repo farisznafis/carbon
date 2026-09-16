@@ -1,10 +1,6 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import type { User } from '@/api/users';
-import { findCurrentAdminOperator } from '@/features/admin/operators/currentAdminOperator';
-import {
-  useAdminOperatorsQuery,
-  useAdminOperatorProfileQuery,
-} from './useAdminOperatorsQuery';
+import { useAdminOperatorProfileQuery } from './useAdminOperatorsQuery';
 
 /** Rejects the legacy admin-login placeholder before building a detail endpoint. */
 function getSessionOperatorId(userId: string): string | null {
@@ -14,75 +10,40 @@ function getSessionOperatorId(userId: string): string | null {
     : null;
 }
 
-/** Loads the signed-in admin/operator profile while supporting legacy sessions without an ID. */
+/** Loads the signed-in admin/operator profile directly from its session ID. */
 export function useCurrentAdminOperatorProfileQuery(
   user: User | null,
   enabled = true,
 ) {
   const isAdminPortalSession = user?.role === 'admin';
   const sessionOperatorId = user ? getSessionOperatorId(user.id) : null;
-  const needsOperatorIdResolution =
-    enabled && isAdminPortalSession && !sessionOperatorId;
-  const operatorsQuery = useAdminOperatorsQuery(
-    needsOperatorIdResolution,
-    'caller',
-  );
-  const matchedOperator = useMemo(
-    () =>
-      user
-        ? findCurrentAdminOperator(operatorsQuery.data?.users ?? [], user)
-        : null,
-    [operatorsQuery.data?.users, user],
-  );
-  const resolvedOperatorId = sessionOperatorId ?? matchedOperator?.id;
   const profileQuery = useAdminOperatorProfileQuery(
-    resolvedOperatorId,
-    enabled && isAdminPortalSession && Boolean(resolvedOperatorId),
+    sessionOperatorId ?? undefined,
+    enabled && isAdminPortalSession && Boolean(sessionOperatorId),
     'caller',
   );
 
-  /** Retries ID resolution first and then refreshes the resolved detail profile. */
+  /** Refreshes the signed-in operator profile without requesting the operator list. */
   const refetch = useCallback(async () => {
-    if (!user || !isAdminPortalSession) return null;
+    if (!user || !isAdminPortalSession || !sessionOperatorId) return null;
+    return (await profileQuery.refetch()).data ?? null;
+  }, [isAdminPortalSession, profileQuery, sessionOperatorId, user]);
 
-    let operatorId = resolvedOperatorId;
-    if (!operatorId) {
-      const refreshedOperators = await operatorsQuery.refetch();
-      operatorId = findCurrentAdminOperator(
-        refreshedOperators.data?.users ?? [],
-        user,
-      )?.id;
-    }
-
-    if (!operatorId) return null;
-    if (operatorId === resolvedOperatorId) {
-      return (await profileQuery.refetch()).data ?? null;
-    }
-
-    return matchedOperator ?? null;
-  }, [
-    isAdminPortalSession,
-    matchedOperator,
-    operatorsQuery,
-    profileQuery,
-    resolvedOperatorId,
-    user,
-  ]);
+  const hasInvalidAdminSession =
+    enabled && Boolean(isAdminPortalSession) && !sessionOperatorId;
 
   return {
     operator: profileQuery.data,
-    resolvedOperatorId,
+    resolvedOperatorId: sessionOperatorId,
     isLoading:
       enabled &&
       Boolean(isAdminPortalSession) &&
-      (needsOperatorIdResolution
-        ? operatorsQuery.isLoading ||
-          Boolean(resolvedOperatorId && profileQuery.isLoading)
-        : profileQuery.isLoading),
+      Boolean(sessionOperatorId) &&
+      profileQuery.isLoading,
     isError:
       enabled &&
       Boolean(isAdminPortalSession) &&
-      (operatorsQuery.isError || profileQuery.isError),
+      (hasInvalidAdminSession || profileQuery.isError),
     refetch,
   };
 }

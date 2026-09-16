@@ -29,8 +29,8 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
 import { UserForm } from '@/features/master/forms/UserForm';
+import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 import {
   adminOperatorsQueryKey,
   useAdminOperatorsQuery,
@@ -51,7 +51,6 @@ import {
   isAdminOperatorRole,
   resolveOperatorRole,
 } from './operatorRoles';
-import { findCurrentAdminOperator } from './currentAdminOperator';
 
 /** Compares permission selections independent of API ordering. */
 function havePermissionChanges(
@@ -73,20 +72,17 @@ export default function AdminOperatorEditPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user: sessionUser } = useAuth();
+  const permissions = useAdminPermissions();
+  const isEditingOwnAccount = Boolean(
+    userId && permissions.operatorId && userId === permissions.operatorId,
+  );
   const profileQuery = useAdminOperatorProfileQuery(userId);
-  const operatorsQuery = useAdminOperatorsQuery(true, 'caller');
+  const operatorsQuery = useAdminOperatorsQuery(!isEditingOwnAccount, 'caller');
   const operator = profileQuery.data;
   const operatorList = operatorsQuery.data?.users ?? [];
-  const currentOperator = sessionUser
-    ? findCurrentAdminOperator(operatorList, sessionUser)
-    : null;
   const effectiveRole = resolveOperatorRole(
     operator,
     operatorList,
-  );
-  const isEditingOwnAccount = Boolean(
-    operator && currentOperator?.id === operator.id,
   );
   const canEditPermissions = Boolean(
     operator &&
@@ -224,7 +220,9 @@ export default function AdminOperatorEditPage() {
           <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
             {canEditPermissions
               ? '運用者のプロフィールと権限情報を編集します。'
-              : '管理者のプロフィール情報を編集します。'}
+              : isEditingOwnAccount
+                ? '自身のプロフィール情報を編集します。'
+                : '管理者のプロフィール情報を編集します。'}
           </p>
         </div>
 
