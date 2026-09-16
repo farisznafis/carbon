@@ -5,6 +5,9 @@ import {
   PROJECT_PLAN_PAGES,
   getPlanPageForSlug,
   getPlanPageForStep,
+  readOnlyFieldsInFormNames,
+  rulesInFormNames,
+  toFormFieldName,
 } from './projectPlanPages';
 import { steps } from './projectSteps';
 
@@ -59,5 +62,34 @@ describe('project plan page wiring', () => {
   it('names a distinct form key per page', () => {
     const keys = PROJECT_PLAN_PAGES.map((page) => page.formKey);
     expect(new Set(keys).size).toBe(keys.length);
+  });
+});
+
+/**
+ * The server describes its rules in its own field names; the wizard renders
+ * form names. These pin the translation for the pages where the two differ.
+ */
+describe('server field names on renamed pages', () => {
+  it('puts step 3 有/無 rules on the toggle the form actually holds', () => {
+    const page = getPlanPageForSlug('other-operator-projects');
+    const [rule] = rulesInFormNames(
+      [{ field: 'energyActOpeNumber', when: 'hasEnergyActPeriodReport', is: true }],
+      page?.renames,
+    );
+
+    expect(rule).toEqual({ field: 'energyActOpeNumber', when: 'hasEnergyActReport', is: true });
+  });
+
+  it('locks the autofilled operator names on step 8 under their form names', () => {
+    const page = getPlanPageForSlug('project-overview');
+
+    expect(
+      readOnlyFieldsInFormNames(['projectOperatorKana', 'projectOperatorName', 'corpNumber'], page?.renames),
+    ).toEqual(['projectOperatorNameKana', 'projectOperatorNameJa', 'corpNumber']);
+  });
+
+  it('renames only the table of a row-relative name', () => {
+    expect(toFormFieldName('rows[].symbol', { formRows: 'rows' })).toBe('formRows[].symbol');
+    expect(toFormFieldName('symbol', undefined)).toBe('symbol');
   });
 });

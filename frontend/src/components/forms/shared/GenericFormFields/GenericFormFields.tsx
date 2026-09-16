@@ -28,6 +28,19 @@ export type FieldType =
   | "date"
   | "file"
   /**
+   * A person's 氏名 entered as 姓 and 名, stored as one string ("山田 太郎").
+   *
+   * Split by the project-plan wizard — see `PersonNameInput`. The official
+   * sheets keep 氏名 in one cell, but a lone 氏名 box leaves the operator
+   * guessing at order and separator. Here it falls back to one text box.
+   */
+  | "personName"
+  /**
+   * 郵便番号 that looks up and fills the address fields named in
+   * `addressFields`. Wizard only — see `PostalCodeInput`; plain text here.
+   */
+  | "postalCode"
+  /**
    * A repeating table, holding an array of rows rather than a single value.
    *
    * Rendered by the project-plan wizard only — see `PlanTableField`. This
@@ -66,6 +79,13 @@ export interface FieldConfig<TFormValues extends FieldValues = FieldValues> {
   //for file
   accept?: string; // MIME types or file extensions (e.g. "image/*")
   multiple?: boolean;
+
+  // --- for type: "postalCode" ---
+  /**
+   * Sibling fields the lookup fills, named relative to the same parent as the
+   * postal code itself (`prefecture`, not `otherProjectOperator.prefecture`).
+   */
+  addressFields?: { prefecture: string; city: string; address: string };
 
   // --- for type: "table" ---
   /**
