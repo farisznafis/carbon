@@ -319,12 +319,10 @@ export function HomeBenefitsSection() {
                   alt={activeCapability.previewImage.alt}
                   loading="lazy"
                   className="
-                    h-full
-                    min-h-[320px]
+                    block
+                    h-auto
                     w-full
-                    object-cover
-                    object-top
-                    sm:min-h-[380px]
+                    object-contain
                   "
                 />
               ) : (
