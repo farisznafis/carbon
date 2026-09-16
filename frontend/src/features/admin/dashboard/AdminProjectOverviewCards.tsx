@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowDown } from 'lucide-react';
 import type { ProjectPlanProgressSummary } from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
 import { SkeletonList } from '@/components/feedback/loading';
@@ -271,7 +271,7 @@ function InProgressProjectSummary({
                           {project.projectName}
                         </p>
                         <p className="mt-1 text-subtle text-muted-foreground">
-                          ステップ {progress.completedForms} / {progress.totalForms}
+                          入力済み {progress.completedForms} / {progress.totalForms} ページ
                         </p>
                       </div>
                       <Button
@@ -306,7 +306,7 @@ function InProgressProjectSummary({
               onClick={onShowAll}
               className="mt-3 ml-auto flex text-primary-strong"
             >
-              すべての作成中プロジェクトを見る <ArrowRight />
+              すべての作成中プロジェクトを見る <ArrowDown />
             </Button>
           </>
         )}

@@ -4,11 +4,11 @@ import { HOME_FLOW_STEPS, HOME_SECTION_IDS } from './homeContent';
  * Displays the Carbon Zero business process as one continuous flow.
  *
  * Desktop:
- * Horizontal eight-step timeline.
+ * Horizontal seven-step timeline.
  *
  * Mobile:
  * Keeps the same horizontal relationship and allows scrolling
- * instead of turning the eight steps into a very long vertical list.
+ * instead of turning the seven steps into a very long vertical list.
  *
  * All visual styles use shared Carbon design-system tokens.
  */
@@ -74,7 +74,7 @@ export function HomeFlowSection() {
                 text-foreground
               '
             >
-              登録から意思決定まで。一本の運用線でつなぐ。
+              登録から削減量の可視化まで。一本の運用線でつなぐ。
             </p>
           </div>
 
@@ -137,7 +137,7 @@ export function HomeFlowSection() {
             <div
               className='
                 relative
-                min-w-[1080px]
+                min-w-[960px]
                 lg:min-w-0
               '
             >
@@ -146,8 +146,8 @@ export function HomeFlowSection() {
                 aria-hidden='true'
                 className='
                   absolute
-                  left-[6.25%]
-                  right-[6.25%]
+                  left-[7.14%]
+                  right-[7.14%]
                   top-8
                   h-px
                   bg-border
@@ -159,7 +159,7 @@ export function HomeFlowSection() {
                   relative
                   z-10
                   grid
-                  grid-cols-8
+                  grid-cols-7
                 '
               >
                 {HOME_FLOW_STEPS.map((step, index) => {
@@ -244,7 +244,7 @@ export function HomeFlowSection() {
 
                         <p
                           className="
-                            mt-3
+                            
                             text-sm
                             leading-6
                             text-muted-foreground

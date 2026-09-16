@@ -28,6 +28,13 @@ All colors MUST be HSL.
     --blue-800: 213.4 77.2% 31%;   /* #12488C */
     --blue-900: 213 67.9% 25.7%;   /* #153D6E */
 
+    /* Marketing dark surface */
+    --brand-dark-start: var(--blue-900);
+    --brand-dark-middle: var(--blue-800);
+    --brand-dark-end: var(--blue-700);
+    --brand-dark-foreground: var(--neutral-0);
+    --brand-dark-muted: var(--blue-100);
+
     /* Neutral */
     --neutral-0: 0 0% 100%;        /* #FFFFFF */
     --neutral-25: 220 60% 99%;     /* #FBFCFE */
@@ -279,8 +286,7 @@ All colors MUST be HSL.
   }
 
   h1 {
-    font-size: 32px;
-    line-height: 38px;
+    @apply text-page-title;
   }
 
   h2 {
@@ -412,6 +418,28 @@ All colors MUST be HSL.
     animation: loading-progress-indeterminate 1.5s ease-in-out infinite;
   }
 
+  .surface-brand-dark {
+    background: linear-gradient(
+      130deg,
+      hsl(var(--brand-dark-start)),
+      hsl(var(--brand-dark-middle)) 70%,
+      hsl(var(--brand-dark-end))
+    );
+    color: hsl(var(--brand-dark-foreground));
+  }
+
+  .text-brand-dark {
+    color: hsl(var(--brand-dark-foreground));
+  }
+
+  .text-brand-dark-muted {
+    color: hsl(var(--brand-dark-muted));
+  }
+
+  .border-brand-dark {
+    border-color: hsl(var(--brand-dark-foreground) / 0.18);
+  }
+
   @keyframes loading-orbit {
     to {
       transform: rotate(360deg);
@@ -502,5 +530,6 @@ All colors MUST be HSL.
       transform: translateX(100%);
     }
   }
+  
 
 }

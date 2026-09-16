@@ -13,8 +13,9 @@ import org.springframework.stereotype.Service;
 /**
  * Resolves the PostgreSQL project context shared by project-plan forms.
  *
- * The context is authorized only when the project belongs to the requesting
- * operator company and the requesting username is registered in that company.
+ * The context is authorized only when the caller is an admin or operator,
+ * the project belongs to their operator company, and their username is
+ * registered in that company.
  * Missing project data and denied access are returned explicitly so callers can
  * preserve the existing API response contract.
  */
@@ -26,7 +27,7 @@ public class ProjectPlanContextService {
     private final OperatingUserRepository operatingUserRepository;
 
     /**
-     * Loads a project and verifies that the requesting operator may access it.
+     * Loads a project and verifies that the requesting user may access it.
      *
      * @param projectId project identifier from the endpoint
      * @param companyId operator company identifier from the authenticated token
@@ -44,10 +45,6 @@ public class ProjectPlanContextService {
             return ProjectContext.notFound();
         }
 
-        if (!RoleConstants.OPERATOR.equals(role)) {
-            return ProjectContext.forbidden();
-        }
-
         OperatorCompany projectCompany = project.getOperatorCompany();
         if (projectCompany == null
                 || companyId == null
@@ -55,14 +52,36 @@ public class ProjectPlanContextService {
             return ProjectContext.forbidden();
         }
 
-        boolean userBelongsToCompany = operatingUserRepository
-                .findByUsernameAndCompany_Id(username, projectCompany.getId())
-                .isPresent();
-        if (!userBelongsToCompany) {
+        if (!canAccessCompany(role, username, projectCompany)) {
             return ProjectContext.forbidden();
         }
 
         return ProjectContext.authorized(project);
+    }
+
+    /**
+     * Whether this caller may work on an operator company's plan data.
+     *
+     * <p>admin and operator are both roles of operating_user, both with a NOT
+     * NULL company_id, so the same membership check scopes them equally. Other
+     * roles (user, master) have no business in the plan.
+     *
+     * <p>Public and shared on purpose: this check used to be duplicated in
+     * {@link ProjectPlanAutofillService}, and the copies diverged — admin was
+     * allowed here and still refused there, so the corporation autofill
+     * endpoint returned 403 while the project one returned 200 for the same
+     * caller.
+     */
+    public boolean canAccessCompany(String role, String username, OperatorCompany company) {
+        if (company == null) {
+            return false;
+        }
+        if (!RoleConstants.OPERATOR.equals(role) && !RoleConstants.ADMIN.equals(role)) {
+            return false;
+        }
+        return operatingUserRepository
+                .findByUsernameAndCompany_Id(username, company.getId())
+                .isPresent();
     }
 
     public enum ProjectContextStatus {

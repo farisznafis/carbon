@@ -1,7 +1,17 @@
-import { useEffect, useState } from 'react';
+import {
+  useEffect,
+  useState,
+} from 'react';
+import {
+  CheckCircle2,
+  Mail,
+} from 'lucide-react';
+import {
+  useForm,
+  type UseFormSetError,
+} from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2 } from 'lucide-react';
-import { useForm, type UseFormSetError } from 'react-hook-form';
+
 import { ApiError } from '@/api/_shared/errors';
 import {
   createInquiry,
@@ -9,9 +19,9 @@ import {
 } from '@/api/notifications';
 import {
   FormActions,
+  FormGrid,
 } from '@/components/forms/form-layout';
 import { RequiredLabel } from '@/components/forms/shared';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -23,9 +33,17 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
+import { HomeFooter } from '@/pages/home/HomeFooter';
+import {
+  PageBackButton,
+  floatingPageBackButtonClassName,
+} from '@/components/navigation/PageBackButton';
 
 const SUCCESS_REDIRECT_DELAY_MS = 3_000;
-const DEFAULT_SUCCESS_MESSAGE = 'お問い合わせありがとうございます。';
+
+const DEFAULT_SUCCESS_MESSAGE =
+  'お問い合わせありがとうございます。';
+
 const INQUIRY_FIELDS = new Set<keyof InquiryRequest>([
   'companyName',
   'name',
@@ -33,116 +51,364 @@ const INQUIRY_FIELDS = new Set<keyof InquiryRequest>([
   'content',
 ]);
 
-/** Resolves a backend validation path to one of the inquiry form fields. */
-function getInquiryFieldName(path: string): keyof InquiryRequest | null {
-  const fieldName = path.split(/::|[.[\]]/).filter(Boolean).at(-1);
+function getInquiryFieldName(
+  path: string,
+): keyof InquiryRequest | null {
+  const fieldName = path
+    .split(/::|[.[\]]/)
+    .filter(Boolean)
+    .at(-1);
 
-  return fieldName && INQUIRY_FIELDS.has(fieldName as keyof InquiryRequest)
+  return fieldName &&
+    INQUIRY_FIELDS.has(fieldName as keyof InquiryRequest)
     ? (fieldName as keyof InquiryRequest)
     : null;
 }
 
-/** Converts a backend field error value into displayable text. */
-function getInquiryErrorMessage(error: unknown): string {
-  if (typeof error === 'string') return error;
-  if (Array.isArray(error)) {
-    return error.map(getInquiryErrorMessage).filter(Boolean).join('\n');
+function getInquiryErrorMessage(
+  error: unknown,
+): string {
+  if (typeof error === 'string') {
+    return error;
   }
-  if (error && typeof error === 'object' && 'message' in error) {
+
+  if (Array.isArray(error)) {
+    return error
+      .map(getInquiryErrorMessage)
+      .filter(Boolean)
+      .join('\n');
+  }
+
+  if (
+    error &&
+    typeof error === 'object' &&
+    'message' in error
+  ) {
     return getInquiryErrorMessage(error.message);
   }
 
   return '';
 }
 
-/** Maps backend validation errors to their matching react-hook-form controls. */
 function applyInquiryFieldErrors(
   error: unknown,
   setError: UseFormSetError<InquiryRequest>,
 ): boolean {
-  if (!(error instanceof ApiError)) return false;
+  if (!(error instanceof ApiError)) {
+    return false;
+  }
 
   const errors = error.payload?.errors;
-  if (!errors || typeof errors !== 'object' || Array.isArray(errors)) {
+
+  if (
+    !errors ||
+    typeof errors !== 'object' ||
+    Array.isArray(errors)
+  ) {
     return false;
   }
 
   let hasMappedError = false;
-  Object.entries(errors).forEach(([path, value]) => {
-    const fieldName = getInquiryFieldName(path);
-    const message = getInquiryErrorMessage(value);
-    if (!fieldName || !message) return;
 
-    setError(fieldName, { type: 'server', message });
-    hasMappedError = true;
-  });
+  Object.entries(errors).forEach(
+    ([path, value]) => {
+      const fieldName =
+        getInquiryFieldName(path);
+
+      const message =
+        getInquiryErrorMessage(value);
+
+      if (!fieldName || !message) {
+        return;
+      }
+
+      setError(fieldName, {
+        type: 'server',
+        message,
+      });
+
+      hasMappedError = true;
+    },
+  );
 
   return hasMappedError;
 }
 
-/** Renders the Figma contact illustration and inquiry guidance. */
-function InquiryInformationCard() {
+function InquiryInformationPanel() {
   return (
-    <Card className="flex w-full max-w-[30rem] flex-col justify-end overflow-hidden rounded-3xl border-0 pt-8 shadow-app-md lg:min-h-[42.25rem] lg:self-stretch">
-      <div className="relative mx-auto mb-[-1.875rem] aspect-[444/336] min-h-64 w-[calc(100%-2rem)] max-w-[27.75rem] flex-1 overflow-hidden sm:min-h-72 sm:w-[calc(100%-2.25rem)]">
-        <img
-          src="/assets/contact/inquiry-guide.png"
-          alt=""
-          className="absolute bottom-[-15%] left-1/2 h-auto w-[130%] max-w-none -translate-x-1/2"
-        />
-      </div>
-      <div className="relative z-10 -mt-8 space-y-4 rounded-xl bg-primary p-8 text-primary-foreground sm:p-9">
-        <h1 className="text-3xl font-bold leading-9 tracking-tight">
-          お問い合わせ
-        </h1>
-        <div className="space-y-1 text-base leading-7 sm:text-xl">
-          <p>
-            サービスに関するご質問、導入のご相談、申請手続きに関するお問い合わせは、以下のフォームよりお気軽にご連絡ください。
+    <aside
+      className="
+        surface-brand-dark
+        relative
+        overflow-hidden
+        px-6
+        py-10
+        sm:px-10
+        sm:py-12
+        lg:px-12
+        lg:py-14
+      "
+    >
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          -bottom-32
+          -right-32
+          h-80
+          w-80
+          rounded-full
+          border
+          border-brand-dark
+        "
+      />
+
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          -bottom-20
+          -right-20
+          h-56
+          w-56
+          rounded-full
+          border
+          border-brand-dark
+        "
+      />
+
+      <div
+        className="
+          relative
+          z-10
+          flex
+          h-full
+          flex-col
+        "
+      >
+        <div>
+          <h1
+            className="
+              text-brand-dark
+              mt-6
+              text-3xl
+              font-bold
+              leading-tight
+              tracking-tight
+              sm:text-4xl
+            "
+          >
+            お問い合わせ
+          </h1>
+          <p
+            className="
+              text-brand-dark-muted
+              mt-5
+              max-w-sm
+              text-sm
+              leading-7
+            "
+          >
+            サービスについてのご質問や
+            <br />
+            導入のご相談はこちらから。
           </p>
-          <p>通常、3営業日以内に担当者よりご返信いたします。</p>
+        </div>
+
+        <div
+          className="
+            mt-12
+            border-t
+            border-brand-dark
+            pt-7
+            lg:mt-auto
+          "
+        >
+          <p
+            className="
+              text-brand-dark-muted
+              text-sm
+              leading-7
+            "
+          >
+            通常、3営業日以内に
+            <br />
+            担当者よりご返信します。
+          </p>
         </div>
       </div>
-    </Card>
+    </aside>
   );
 }
 
-/** Renders the public inquiry form and its temporary success state. */
+function InquirySuccess({
+  message,
+  onReturnHome,
+}: Readonly<{
+  message: string;
+  onReturnHome: () => void;
+}>) {
+  return (
+    <div
+      role="status"
+      className="
+        flex
+        min-h-[460px]
+        flex-col
+        items-center
+        justify-center
+        px-4
+        text-center
+      "
+    >
+      <span
+        className="
+          flex
+          h-16
+          w-16
+          items-center
+          justify-center
+          rounded-full
+          bg-accent
+          text-primary
+        "
+      >
+        <CheckCircle2
+          className="h-8 w-8"
+          aria-hidden="true"
+        />
+      </span>
+
+      <p
+        className="
+          mt-7
+          text-xs
+          font-bold
+          tracking-widest
+          text-primary
+        "
+      >
+        THANK YOU
+      </p>
+
+      <h2
+        className="
+          mt-3
+          text-2xl
+          font-bold
+          leading-tight
+          tracking-tight
+          text-foreground
+          sm:text-3xl
+        "
+      >
+        お問い合わせを受け付けました。
+      </h2>
+
+      <p
+        className="
+          mt-5
+          max-w-md
+          text-sm
+          leading-7
+          text-muted-foreground
+          sm:text-base
+        "
+      >
+        {message}
+      </p>
+
+      <p
+        className="
+          mt-2
+          text-sm
+          text-muted-foreground
+        "
+      >
+        3秒後にホームへ戻ります。
+      </p>
+
+      <FormActions
+        context="auth"
+        className="mt-8 w-full sm:w-fit"
+        actions={[
+          {
+            id: 'home',
+            label: 'ホームへ戻る',
+            onClick: onReturnHome,
+          },
+        ]}
+      />
+    </div>
+  );
+}
+
 export default function InquiryPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const handleBack = () => {
+    navigate(paths.home);
+  };
+
+  const [
+    successMessage,
+    setSuccessMessage,
+  ] = useState<string | null>(null);
+
   const form = useForm<InquiryRequest>({
     defaultValues: {
-      email: '',
       companyName: '',
       name: '',
+      email: '',
       content: '',
     },
   });
 
   useEffect(() => {
-    if (successMessage === null) return;
+    if (successMessage === null) {
+      return;
+    }
 
     const timerId = window.setTimeout(() => {
-      navigate(paths.home, { replace: true });
+      navigate(paths.home, {
+        replace: true,
+      });
     }, SUCCESS_REDIRECT_DELAY_MS);
 
-    return () => window.clearTimeout(timerId);
+    return () => {
+      window.clearTimeout(timerId);
+    };
   }, [navigate, successMessage]);
 
-  /** Submits raw form values and delegates every validation decision to the API. */
-  const handleSubmit = async (inquiry: InquiryRequest) => {
+  const handleSubmit = async (
+    inquiry: InquiryRequest,
+  ) => {
     form.clearErrors();
 
     try {
-      const response = await createInquiry(inquiry);
-      setSuccessMessage(response.message?.trim() || DEFAULT_SUCCESS_MESSAGE);
+      const response =
+        await createInquiry(inquiry);
+
+      setSuccessMessage(
+        response.message?.trim() ||
+          DEFAULT_SUCCESS_MESSAGE,
+      );
     } catch (error) {
-      const hasFieldErrors = applyInquiryFieldErrors(error, form.setError);
-      if (hasFieldErrors) return;
+      const hasFieldErrors =
+        applyInquiryFieldErrors(
+          error,
+          form.setError,
+        );
+
+      if (hasFieldErrors) {
+        return;
+      }
 
       toast({
-        title: 'お問い合わせを送信できませんでした',
+        title:
+          'お問い合わせを送信できませんでした',
         description:
           error instanceof Error
             ? error.message
@@ -152,154 +418,296 @@ export default function InquiryPage() {
     }
   };
 
-  /** Returns immediately to the homepage from the success state. */
   const handleReturnHome = () => {
-    navigate(paths.home, { replace: true });
+    navigate(paths.home, {
+      replace: true,
+    });
   };
 
   return (
-    <main className="min-h-[calc(100dvh-4rem-1px)] bg-background px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-20 xl:py-24">
-      <div className="mx-auto grid w-full max-w-page items-stretch justify-center gap-10 lg:grid-cols-[minmax(20rem,30rem)_minmax(0,45rem)] lg:gap-14 xl:gap-[7.5rem]">
-        <InquiryInformationCard />
+    <>
+      <main
+        className="
+          bg-background
+          text-foreground
+        "
+      >
+        <section
+          className="
+          
+            mx-auto
+            flex
+            min-h-[calc(100dvh-4rem-1px)]
+            w-full
+            max-w-page
+            flex-col
+            justify-center
+            px-4
+            py-12
+            sm:px-6
+            sm:py-16
+            lg:px-8
+            lg:py-20
+          "
+        >
+          {/* <PageBackButton
+            onClick={handleBack}
+            label=""
+            aria-label="ホームに戻る"
+            className={floatingPageBackButtonClassName}
+          /> */}
+          <div
+            className="
+              overflow-hidden
+              rounded-lg
+              border
+              border-border
+              bg-card
+              shadow-app-md
+              lg:grid
+              lg:grid-cols-[0.36fr_0.64fr]
+            "
+          >
+            <InquiryInformationPanel />
 
-        <Card className="w-full max-w-[45rem] self-stretch rounded-xl border-0 shadow-app-md lg:min-h-[42.25rem]">
-          <CardContent className="flex h-full flex-col justify-center p-7 sm:p-10 lg:p-12">
-            {successMessage !== null ? (
-              <div
-                role="status"
-                className="flex min-h-96 flex-col items-center justify-center space-y-6 text-center"
-              >
-                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-success/10 text-success">
-                  <CheckCircle2 className="h-8 w-8" aria-hidden="true" />
-                </span>
-                <div className="space-y-3">
-                  <h2 className="text-2xl font-bold sm:text-3xl">
-                    お問い合わせを受け付けました
-                  </h2>
-                  <p className="text-base leading-7 text-foreground">
-                    {successMessage}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    3秒後にホームへ戻ります。
-                  </p>
-                </div>
-                <FormActions
-                  context="auth"
-                  className="w-full sm:w-fit"
-                  actions={[
-                    {
-                      id: 'home',
-                      label: 'ホームへ戻る',
-                      onClick: handleReturnHome,
-                    },
-                  ]}
+            <div
+              className="
+                px-5
+                py-10
+                sm:px-10
+                sm:py-12
+                lg:px-14
+                lg:py-14
+              "
+            >
+              {successMessage !== null ? (
+                <InquirySuccess
+                  message={successMessage}
+                  onReturnHome={
+                    handleReturnHome
+                  }
                 />
-              </div>
-            ) : (
-              <Form {...form}>
-                <form
-                  noValidate
-                  onSubmit={form.handleSubmit(handleSubmit)}
-                  className="space-y-5"
-                >
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <RequiredLabel>メールアドレス</RequiredLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            autoComplete="email"
-                            placeholder="例）info@company.com"
-                            aria-required="true"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+              ) : (
+                <Form {...form}>
+                  <form
+                    noValidate
+                    onSubmit={form.handleSubmit(
+                      handleSubmit,
                     )}
-                  />
+                  >
+                    <div
+                      className="
+                        border-b
+                        border-border
+                        pb-7
+                      "
+                    >
+                      <h2
+                        className="
+                          text-xl
+                          font-bold
+                          tracking-tight
+                          text-foreground
+                        "
+                      >
+                        お問い合わせフォーム
+                      </h2>
 
-                  <FormField
-                    control={form.control}
-                    name="companyName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <RequiredLabel>会社名</RequiredLabel>
-                        <FormControl>
-                          <Input
-                            autoComplete="organization"
-                            placeholder="例）株式会社ソーラーファーム"
-                            aria-required="true"
-                            {...field}
+                      <p
+                        className="
+                          mt-2
+                          text-sm
+                          text-muted-foreground
+                        "
+                      >
+                        すべての項目をご入力ください。
+                      </p>
+                    </div>
+
+                    <div
+                      className="
+                        mt-8
+                        space-y-6
+                      "
+                    >
+                      <FormGrid
+                        columns={2}
+                        className="
+                          gap-6
+                        "
+                      >
+                        <FormField
+                          control={form.control}
+                          name="companyName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <RequiredLabel>
+                                会社名
+                              </RequiredLabel>
+
+                              <FormControl>
+                                <Input
+                                  autoComplete="organization"
+                                  placeholder="例）株式会社ソーラーファーム"
+                                  aria-required="true"
+                                  {...field}
+                                />
+                              </FormControl>
+
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <RequiredLabel>
+                                お名前
+                              </RequiredLabel>
+
+                              <FormControl>
+                                <Input
+                                  autoComplete="name"
+                                  placeholder="例）田中 太郎"
+                                  aria-required="true"
+                                  {...field}
+                                />
+                              </FormControl>
+
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </FormGrid>
+
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <RequiredLabel>
+                              メールアドレス
+                            </RequiredLabel>
+
+                            <FormControl>
+                              <Input
+                                type="email"
+                                autoComplete="email"
+                                placeholder="例）info@company.com"
+                                aria-required="true"
+                                {...field}
+                              />
+                            </FormControl>
+
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="content"
+                        render={({ field }) => (
+                          <FormItem>
+                            <RequiredLabel>
+                              お問い合わせ内容
+                            </RequiredLabel>
+
+                            <FormControl>
+                              <Textarea
+                                placeholder="お問い合わせ内容をご入力ください。"
+                                className="
+                                  min-h-48
+                                  resize-y
+                                "
+                                aria-required="true"
+                                {...field}
+                              />
+                            </FormControl>
+
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div
+                      className="
+                        mt-8
+                        border-t
+                        border-border
+                        pt-6
+                      "
+                    >
+                      <div
+                        className="
+                          flex
+                          flex-col
+                          gap-5
+                          sm:flex-row
+                          sm:items-center
+                          sm:justify-between
+                        "
+                      >
+                        <p
+                          className="
+                            flex
+                            items-center
+                            gap-2
+                            text-sm
+                            leading-6
+                            text-muted-foreground
+                          "
+                        >
+                          <Mail
+                            className="
+                              
+                              h-4
+                              w-4
+                              text-primary
+                            "
+                            aria-hidden="true"
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <RequiredLabel>お名前</RequiredLabel>
-                        <FormControl>
-                          <Input
-                            autoComplete="name"
-                            placeholder="例）田中 太郎"
-                            aria-required="true"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          内容を確認のうえ、担当者よりご連絡します。
+                        </p>
 
-                  <FormField
-                    control={form.control}
-                    name="content"
-                    render={({ field }) => (
-                      <FormItem>
-                        <RequiredLabel>お問い合わせ内容</RequiredLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="例）サービスの導入時期、申請手続き、料金について相談したいです。"
-                            className="min-h-44 resize-y"
-                            aria-required="true"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                        <FormActions
+                          context="auth"
+                          className="
+                            w-full
+                            sm:w-fit
+                          "
+                          pendingActionId={
+                            form.formState
+                              .isSubmitting
+                              ? 'submit'
+                              : null
+                          }
+                          actions={[
+                            {
+                              id: 'submit',
+                              label: '送信する',
+                              pendingLabel:
+                                '送信中...',
+                              type: 'submit',
+                            },
+                          ]}
+                        />
+                      </div>
+                    </div>
+                  </form>
+                </Form>
+              )}
+            </div>
+          </div>
+        </section>
+      </main>
 
-                  <FormActions
-                    context="auth"
-                    className="w-full pt-3 sm:ml-auto sm:w-fit"
-                    pendingActionId={
-                      form.formState.isSubmitting ? 'submit' : null
-                    }
-                    actions={[
-                      {
-                        id: 'submit',
-                        label: '送信する',
-                        pendingLabel: '送信中...',
-                        type: 'submit',
-                      },
-                    ]}
-                  />
-                </form>
-              </Form>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </main>
+      <HomeFooter />
+    </>
   );
 }

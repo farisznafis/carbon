@@ -11,6 +11,7 @@ import { SkeletonTable } from '@/components/feedback/loading';
 import { Button } from '@/components/ui/button';
 import { isParticipationReviewForProject } from '@/features/admin/membership-review/participationReviewProjectMatch';
 import { usePagination } from '@/hooks/usePagination';
+import { ArrowRight } from 'lucide-react';
 
 const PROJECT_STATUS_PAGE_SIZE = 5;
 const DUMMY_REDUCTION_BARS = [
@@ -36,6 +37,7 @@ type AdminProjectStatusTableProps = {
   projectsLoading: boolean;
   projectsError: string | null;
   openReviewsError: string | null;
+  onOpenProjectDetail: (project: Project) => void;
   onOpenMembership: (project: Project) => void;
 };
 
@@ -66,6 +68,7 @@ export function AdminProjectStatusTable({
   projectsLoading,
   projectsError,
   openReviewsError,
+  onOpenProjectDetail,
   onOpenMembership,
 }: Readonly<AdminProjectStatusTableProps>) {
   const prioritizedProjects = useMemo(() => {
@@ -116,18 +119,33 @@ export function AdminProjectStatusTable({
         label: 'プロジェクト名',
         sortable: true,
         sortValue: (row) => row.project.projectName,
-        render: ({ project }) => (
-          <div className="min-w-0">
-            <p className="truncate text-body font-bold text-foreground">
-              {project.projectName}
-            </p>
-            {!openReviewsError && countOpenReviews(project, openReviews) > 0 && (
-              <p className="mt-1 text-subtle text-primary-strong">
-                入会届 {countOpenReviews(project, openReviews)}件
+        render: ({ project }) => {
+          const openReviewCount = countOpenReviews(project, openReviews);
+
+          return (
+            <div className="min-w-0">
+              <p className="truncate text-body font-bold text-foreground">
+                {project.projectName}
               </p>
-            )}
-          </div>
-        ),
+              {!openReviewsError && openReviewCount > 0 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="mt-1 h-auto gap-1.5 p-0 text-warning-strong hover:bg-transparent hover:text-warning-strong"
+                  aria-label={`${project.projectName}の承認待ち入会届${openReviewCount}件を確認`}
+                  onClick={() => onOpenMembership(project)}
+                >
+                  <StatusBadge tone="warning" className="py-0.5">
+                    要確認
+                  </StatusBadge>
+                  <span>入会届 {openReviewCount}件</span>
+                  <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                </Button>
+              )}
+            </div>
+          );
+        },
       },
       {
         id: 'status',
@@ -174,14 +192,14 @@ export function AdminProjectStatusTable({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => onOpenMembership(project)}
+            onClick={() => onOpenProjectDetail(project)}
           >
-            入会届
+            詳細
           </Button>
         ),
       },
     ],
-    [onOpenMembership, openReviews, openReviewsError],
+    [onOpenMembership, onOpenProjectDetail, openReviews, openReviewsError],
   );
 
   if (projectsLoading) {

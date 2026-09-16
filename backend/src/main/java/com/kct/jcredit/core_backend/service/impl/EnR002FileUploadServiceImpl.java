@@ -1,54 +1,37 @@
 package com.kct.jcredit.core_backend.service.impl;
 
 import com.kct.jcredit.core_backend.service.EnR002FileUploadService;
+import com.kct.jcredit.core_backend.service.storage.S3FileStorage;
 import com.kct.jcredit.core_backend.dto.response.EnR002FileResponse;
-import com.kct.jcredit.core_backend.dto.response.details.ValidationErrorDetail;
 import com.kct.jcredit.core_backend.enums.EquipmentFileType;
-import com.kct.jcredit.core_backend.exception.UnsupportedFileTypeException;
-import com.kct.jcredit.core_backend.repository.postgres.EnR002EquipmentFileRepository;
-import com.kct.jcredit.core_backend.exception.BulkValidationException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.beans.factory.annotation.Value;
 
-import java.util.Set;
-import java.util.UUID;  
+import java.util.UUID;
 import java.util.Map;
-import java.util.List;
 
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-
-
+/**
+ * Equipment evidence files.
+ *
+ * <p>The S3 mechanics live in {@link S3FileStorage}; what stays here is the key
+ * layout, which is deliberately unchanged — existing objects and
+ * {@code extractFileNameFroms3Key} depend on these exact shapes.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
 
-    @Value("${app.s3.bucket:}")
-    private String bucketName;
+    private static final String TEMP_KEY_FORMAT = S3FileStorage.TEMP_ROOT + "equipments/%s/%s_%s";
+    private static final String TEMP_KEY_PREFIX_PATTERN =
+            "^" + S3FileStorage.TEMP_ROOT + "equipments/[^/]+/";
+    private static final String PERMANENT_KEY_FORMAT = "sites/%s/equipments/%d/%s";
 
-    private final S3Client s3Client;
-
-    private final EnR002EquipmentFileRepository equipmentFileRepository;
-
-    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-
-    private static final Set<String> VALID_MIME_TYPES = Set.of(
-            "application/pdf",
-            "image/jpeg",
-            "image/jpg",
-            "image/png"
-    );
-
-    
+    private final S3FileStorage storage;
 
     // UPLOAD
 
@@ -57,53 +40,18 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
                                                 EquipmentFileType fileType,
                                                 String uploadedBy,
                                                 MultipartFile file) {
-        String mime = file.getContentType();
-        if (!VALID_MIME_TYPES.contains(mime)) {
-            throw new UnsupportedFileTypeException(
-                    VALID_MIME_TYPES.stream().toList(), mime);
-        }
+        storage.validate(file);
 
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new BulkValidationException(List.of(
-                    ValidationErrorDetail.builder()
-                            .tempId("request")
-                            .field("file")
-                            .message("ファイルサイズは10MB以下である必要があります。")
-                            .build()
-            ));
-        }
-
-        // 3. Generate fileId
         String fileId    = UUID.randomUUID().toString();
-        String sanitized = sanitizeFileName(file.getOriginalFilename());
+        String sanitized = S3FileStorage.sanitizeFileName(file.getOriginalFilename());
 
-        // 4. tmp
-        String s3Key = String.format(
-                "tmp/equipments/%s/%s_%s",
-                fileId,
-                fileType.getValue(),
-                sanitized
-        );
+        String s3Key = String.format(TEMP_KEY_FORMAT, fileId, fileType.getValue(), sanitized);
 
-        // 5. Upload
-        try (java.io.InputStream inputStream = file.getInputStream()) {
-            s3Client.putObject(
-                    PutObjectRequest.builder()
-                            .bucket(bucketName)
-                            .key(s3Key)
-                            .contentType(mime)
-                            .metadata(Map.of(
-                                    "fileId",     fileId,
-                                    "uploadedBy", uploadedBy,
-                                    "fileType",   fileType.getValue(),
-                                    "siteId",     siteId
-                            ))
-                            .build(),
-                    RequestBody.fromInputStream(inputStream, file.getSize())
-            );
-        } catch (java.io.IOException e) {
-            throw new IllegalStateException("Unable to read uploaded file", e);
-        }
+        storage.put(s3Key, file, Map.of(
+                "fileId",     fileId,
+                "uploadedBy", uploadedBy,
+                "fileType",   fileType.getValue(),
+                "siteId",     siteId));
 
         log.info("File uploaded to S3 tmp. siteId={}, fileType={}, s3Key={}",
                  siteId, fileType.getValue(), s3Key);
@@ -125,58 +73,27 @@ public class EnR002FileUploadServiceImpl implements EnR002FileUploadService {
                                      String siteId,
                                      Integer equipmentId) {
 
-        String fileNamePart = tempS3Key.replaceAll(
-                "^tmp/equipments/[^/]+/", ""
-        );
+        String fileNamePart = tempS3Key.replaceAll(TEMP_KEY_PREFIX_PATTERN, "");
 
-        return String.format(
-                "sites/%s/equipments/%d/%s",
-                siteId,
-                equipmentId,
-                fileNamePart
-        );
+        return String.format(PERMANENT_KEY_FORMAT, siteId, equipmentId, fileNamePart);
     }
 
     @Override
     public void moveToPermanent(String tempS3Key, String permanentKey) {
-
-        s3Client.copyObject(CopyObjectRequest.builder()
-                .sourceBucket(bucketName)
-                .sourceKey(tempS3Key)
-                .destinationBucket(bucketName)
-                .destinationKey(permanentKey)
-                .build());
-
-        // Delete file temp
-        s3Client.deleteObject(DeleteObjectRequest.builder()
-                .bucket(bucketName)
-                .key(tempS3Key)
-                .build());
-
-        log.info("S3 file moved. from={}, to={}", tempS3Key, permanentKey);
-    }
-        @Override
-        public void deletePermanentFile(String s3Key, Integer excludeEquipmentId) {
-        long referenceCount = equipmentFileRepository
-                .countByS3KeyAndEquipment_IdNot(s3Key, excludeEquipmentId);
-
-        if (referenceCount > 0) {
-                log.info("S3ファイルは他の設備から参照されているため削除しません。s3Key={}", s3Key);
-                return;
-        }
-
-        s3Client.deleteObject(DeleteObjectRequest.builder()
-                .bucket(bucketName).key(s3Key).build());
-        }
-
-    // HELPER
-
-    private String sanitizeFileName(String fileName) {
-        if (fileName == null) return "document";
-        return fileName.replaceAll("[^a-zA-Z0-9._-]", "_");
+        storage.promote(tempS3Key, permanentKey);
     }
 
+    @Override
+    public void deletePermanentFile(String s3Key, Integer equipmentId) {
+        if (s3Key != null && !s3Key.isBlank()) {
+            storage.delete(s3Key);
+        }
+    }
 
-
-
+    @Override
+    public String moveTempToPermanent(String tempS3Key, String siteId, Integer equipmentId) {
+        String permanentKey = buildPermanentKey(tempS3Key, siteId, equipmentId);
+        moveToPermanent(tempS3Key, permanentKey);
+        return permanentKey;
+    }
 }
