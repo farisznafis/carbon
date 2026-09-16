@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { calculateEmissionReductionProgress } from './emissionReductionProgressUtils';
 
 type EmissionReductionProgressCardProps = {
   baselineEmission: number | null;
@@ -12,33 +13,18 @@ function formatNumber(value: number | null, maximumFractionDigits = 1) {
   return value.toLocaleString('ja-JP', { maximumFractionDigits });
 }
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
-
+/** Renders the shared emission-reduction calculation in the project detail card. */
 export function EmissionReductionProgressCard({
   baselineEmission,
   projectEmission,
   targetReduction,
   className,
 }: EmissionReductionProgressCardProps) {
-  const achievedReduction =
-    baselineEmission !== null && projectEmission !== null
-      ? baselineEmission - projectEmission
-      : null;
-
-  const safeAchievedReduction =
-    achievedReduction !== null ? Math.max(achievedReduction, 0) : null;
-
-  const progressPercentage =
-    safeAchievedReduction !== null && targetReduction > 0
-      ? clamp((safeAchievedReduction / targetReduction) * 100, 0, 100)
-      : null;
-
-  const remainingReduction =
-    safeAchievedReduction !== null
-      ? Math.max(targetReduction - safeAchievedReduction, 0)
-      : null;
+  const metrics = calculateEmissionReductionProgress({
+    baselineEmission,
+    projectEmission,
+    targetReduction,
+  });
 
   return (
     <section
@@ -56,12 +42,12 @@ export function EmissionReductionProgressCard({
       <div className='flex flex-1 flex-col justify-center'>
         <div className='text-center'>
           <p className='text-5xl font-bold leading-none text-foreground'>
-            {progressPercentage === null
+            {metrics === null
               ? '-'
-              : progressPercentage.toLocaleString('ja-JP', {
+              : metrics.achievementRate.toLocaleString('ja-JP', {
                   maximumFractionDigits: 1,
                 })}
-            {progressPercentage !== null ? (
+            {metrics !== null ? (
               <span className='ml-1 text-2xl'>%</span>
             ) : null}
           </p>
@@ -81,9 +67,9 @@ export function EmissionReductionProgressCard({
               className='h-full rounded-full bg-primary transition-all'
               style={{
                 width:
-                  progressPercentage === null
+                  metrics === null
                     ? '0%'
-                    : `${progressPercentage}%`,
+                    : `${metrics.progressValue}%`,
               }}
             />
           </div>
@@ -93,7 +79,7 @@ export function EmissionReductionProgressCard({
           <div className='text-center'>
             <p className='text-small text-foreground'>達成</p>
             <p className='mt-2 text-large font-bold text-foreground'>
-              {formatNumber(safeAchievedReduction)} tCO₂
+              {formatNumber(metrics?.reductionAmount ?? null)} tCO₂
             </p>
           </div>
 
@@ -107,7 +93,7 @@ export function EmissionReductionProgressCard({
           <div className='text-center'>
             <p className='text-small text-foreground'>残り</p>
             <p className='mt-2 text-large font-bold text-foreground'>
-              {formatNumber(remainingReduction)} tCO₂
+              {formatNumber(metrics?.remainingReduction ?? null)} tCO₂
             </p>
           </div>
         </div>
