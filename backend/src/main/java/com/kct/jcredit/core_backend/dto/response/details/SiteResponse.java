@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class SiteResponse{
-    private String id;
+    private String siteId;
     private String siteName;  
     private String postalCode;
     private String prefecture;
@@ -24,4 +24,5 @@ public class SiteResponse{
     private String picLastName;
     private List<String> projects;
     private SiteDataResponse data;
+    private boolean alreadyInProject;
 }

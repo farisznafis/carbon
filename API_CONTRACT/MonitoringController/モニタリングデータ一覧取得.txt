@@ -1,0 +1,146 @@
+<<<<<<< HEAD
+﻿operator only
+GET /api/monitoring/list
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Param
+siteId = 123
+projectId = 123
+page (optional, default=1): integer
+limit (optional, default=50, max=100): integer
+nextPageToken (optional): string (for subsequent pages)
+
+Response{　
+ "timestamp": "2026-07-09T06:37:15.630Z",
+  "items": [
+    {
+      "id": "string",
+      "projectID": 0,
+      "siteID": 0,
+      "participatingUserID": 0,
+      "timeUpdated": "string",
+      "dateRecorded": "string",
+      "elpjControlValue": 0,
+      "elpjControlEquipmentSpecFiles": "string",
+      "elpjBatteryValue": 0,
+      "elpjAccuracy": 0,
+      "elpjBatteryEvidence": "string",
+      "elPv": 0,
+      "elPvEvidence": "string",
+      "elPvr": 0,
+      "elPvrEvidence": "string",
+      "elPvEvidenceUrl": "string",
+      "elPvrEvidenceUrl": "string",
+      "elpjBatterySpecificationUrl": "string",
+      "elpjControlEvidenceUrl": "string",
+      "changedBattery": true,
+      "isActive": true,
+      "processedAt": "string",
+      "methodologyType": "string"
+    }
+  ],
+  "pagination": {
+    "page": 0,
+    "limit": 0,
+    "totalItems": 0,
+    "totalPages": 0,
+    "nextPageToken": "string",
+    "hasMore": true
+  }
+}
+
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当するプロジェクトが見つかりませんでした。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+
+=======
+﻿operator only
+GET /api/monitoring/list
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Param
+siteId = 123
+projectId = 123
+page (optional, default=1): integer
+limit (optional, default=50, max=100): integer
+nextPageToken (optional): string (for subsequent pages)
+
+Response{　
+ "timestamp": "2026-07-09T06:37:15.630Z",
+  "items": [
+    {
+      "id": "string",
+      "projectID": 0,
+      "siteID": 0,
+      "equipmentID":0,
+      "participatingUserID": 0,
+      "timeUpdated": "string",
+      "dateRecorded": "string",
+      "elpjControlValue": 0,
+      "elpjControlEquipmentSpecFiles": "string",
+      "elpjBatteryValue": 0,
+      "elpjAccuracy": 0,
+      "elpjBatteryEvidence": "string",
+      "elPv": 0,
+      "elPvEvidence": "string",
+      "elPvr": 0,
+      "elPvrEvidence": "string",
+      "elPvEvidenceUrl": "string",
+      "elPvrEvidenceUrl": "string",
+      "elpjBatterySpecificationUrl": "string",
+      "elpjControlEvidenceUrl": "string",
+      "changedBattery": true,
+      "isActive": true,
+      "processedAt": "string",
+      "methodologyType": "string"
+    }
+  ],
+  "pagination": {
+    "page": 0,
+    "limit": 0,
+    "totalItems": 0,
+    "totalPages": 0,
+    "nextPageToken": "string",
+    "hasMore": true
+  }
+}
+
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当するプロジェクトが見つかりませんでした。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+
+>>>>>>> 8771110d (dataupdate)

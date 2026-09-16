@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 
 import com.kct.jcredit.core_backend.entity.EnR002MonitoringRecord;
 import com.kct.jcredit.core_backend.repository.dynamodb.MonitoringTableRecordSolarRepository;
+import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
+import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 public class SolarMonitoringRepositoryAdapter implements GenericMonitoringRepository<EnR002MonitoringRecord> {
     
     private final MonitoringTableRecordSolarRepository solarRepository;
+    private final SiteRepository siteRepository;
+    private final ProjectRepository projectRepository;
     private static final String TABLE_NAME = "solar_monitoring_table_record";
     
     @Override
@@ -44,7 +48,9 @@ public class SolarMonitoringRepositoryAdapter implements GenericMonitoringReposi
             Instant startTime,
             Instant endTime) {
         
-        String pk = projectId + "#" + siteId;
+        String sitePublicId = siteRepository.findById(siteId).map(s -> s.getPublicId()).orElse(String.valueOf(siteId));
+        String projectPublicId = projectRepository.findById(projectId).map(p -> p.getPublicId()).orElse(String.valueOf(projectId));
+        String pk = sitePublicId + "#" + projectPublicId;
         String startSk = startTime.toString();
         String endSk = endTime.toString();
         

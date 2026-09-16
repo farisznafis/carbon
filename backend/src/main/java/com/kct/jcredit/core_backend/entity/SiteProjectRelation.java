@@ -33,14 +33,8 @@ public class SiteProjectRelation extends BaseEntity {
     @JoinColumn(name = "site_id", nullable = false)
     private Site site;
 
-    @Column(name = "application_date", nullable = false)
-    private LocalDate applicationDate;
-
     @Column(name = "activity_start_date", nullable = false)
     private LocalDate activityStartDate;
-
-    @Column(name = "status", nullable = false)
-    private String status;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;

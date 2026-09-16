@@ -1,13 +1,17 @@
 package com.kct.jcredit.core_backend.dto.request;
 
+import com.kct.jcredit.core_backend.validation.ValidEmail;
+
+import java.time.Instant;
+
 import com.kct.jcredit.core_backend.dto.request.base.BaseRequest;
 import com.kct.jcredit.core_backend.validation.Hankaku;
+import com.kct.jcredit.core_backend.validation.JapaneseText;
 import com.kct.jcredit.core_backend.validation.Katakana;
 import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
 import com.kct.jcredit.core_backend.validation.ZenkakuWithSymbols;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -20,7 +24,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateProjectRequest extends BaseRequest{
-    @ZenkakuWithSymbols
+    // Same rule as create and as 計画書 page 2, which copies this value
+    // read-only: project names may contain Latin letters and digits ("GX…").
+    @Size(max = 100, message = "プロジェクト名は100文字以内で入力してください。")
+    @JapaneseText(allowAlphanumeric = true,
+            message = "プロジェクト名は日本語・英数字と許可された記号で入力してください。")
     private String projectName;
 
     @DecimalMin("0")
@@ -38,7 +46,7 @@ public class UpdateProjectRequest extends BaseRequest{
     private String repLastName;
     @Katakana
     private String repLastNameKana;
-    @Email 
+    @ValidEmail
     private String repEmail;
     @PhoneNumber
     private String repPhoneNumber;
@@ -54,7 +62,7 @@ public class UpdateProjectRequest extends BaseRequest{
     private String picLastName;
     @Katakana
     private String picLastNameKana;
-    @Email 
+    @ValidEmail
     private String picEmail;
     @PhoneNumber
     private String picPhoneNumber;
@@ -75,6 +83,7 @@ public class UpdateProjectRequest extends BaseRequest{
     @Size(max = 5)
     private String methodCategory;
     @Hankaku
+    @Pattern(regexp = "^[0-9]{3}$", message = "方法論番号は3桁の数字で入力してください。")
     private String methodNumber;
     @ZenkakuWithSymbols
     private String methodName;
@@ -83,6 +92,10 @@ public class UpdateProjectRequest extends BaseRequest{
 
     private Boolean methodCombiFeasibility;
 
-    @Size(max = 255)
+    private String usePurpose;
+
+    private Instant startedAt;
+
+    @Size(max = 1000, message = "方法論詳細は1000文字以内で入力してください。")
     private String methodDetails;
 }

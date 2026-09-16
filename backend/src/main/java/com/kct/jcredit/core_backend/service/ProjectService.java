@@ -11,21 +11,23 @@ import com.kct.jcredit.core_backend.dto.request.UpdateProjectStatusRequest;
 import com.kct.jcredit.core_backend.dto.request.CreateProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdateProjectRequest;
 import com.kct.jcredit.core_backend.dto.response.CreateProjectResponse;
+import com.kct.jcredit.core_backend.dto.response.ProjectCompanyListResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
+import com.kct.jcredit.core_backend.dto.response.ProjectPdfDownloadResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
 import com.kct.jcredit.core_backend.dto.response.UpdateProjectStatusResponse;
 
 
 public interface ProjectService {
-    ProjectListInfoResponse getProjectsBySiteIdAndCompanyId(Integer siteId, String companyId);
+    ProjectListInfoResponse getProjectsBySiteIdAndCompanyId(String siteId, String companyId);
 
     CreateProjectResponse createProject(CreateProjectRequest request);
 
     ProjectResponse updateProject(UpdateProjectRequest request);
 
-    UpdateProjectStatusResponse updateProjectStatus(String newStatus, Integer projectId);
+    UpdateProjectStatusResponse updateProjectStatus(String newStatus, String projectId);
 
-    ProjectResponse getProject(Integer projectId, String userCompanyId);
+    ProjectResponse getProject(String projectId, String userCompanyId);
 
     ProjectListInfoResponse findByFilter(
             int page,
@@ -39,5 +41,13 @@ public interface ProjectService {
             String search,
             String sort,
             String sortOrder);
+
+    ProjectCompanyListResponse getProjectCompanies(String projectId);
+    
+    ProjectPdfDownloadResponse getMembershipPdfForOperator(String projectId, Integer participationId);
+
+    void assertProject(String projectId, String currentUserId); 
+    
+    boolean hasProjectAccess(String projectId, String currentUserId);
 
 }

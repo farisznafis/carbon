@@ -1,0 +1,114 @@
+POST /sites/{siteId}/equipment/{equipmentId}/change
+Authorization: Bearer {token}
+Content-Type: application/json
+
+変更前の設備は履歴として保持され、モニタリング終了日が自動計算されます。 変更後の設備は新しいIDで作成され、変更していない項目・証憑は自動的に 引き継がれます（証憑ファイルは実体をコピーせず、S3上の同一ファイルを参照）。
+
+Request Body
+{
+  "changeDate": "2026-08-12",
+  "nominalMaxOutput": 55.0,
+  "pcsManufacturer": "株式会社オムロン",
+  "pcsModel": "KPW-A2-SET",
+  "pcsUnitCount": 2,
+  "deviceNo": "DEV-TEST-002",
+  "pcsStandby": 0.04,
+  "hasBattery": true,
+  "batteryMaker": "ニチコン株式会社",
+  "batteryModel": "ESS-U4M1",
+  "batteryCapacity": 16.6,
+  "totalInvestment": 6000000,
+  "hasSubsidy": true,
+  "subsidyName": "東京都自家消費型太陽光発電導入補助金",
+  "subsidyAmount": 1200000,
+  "preProjectUnitPrice": 28.0,
+  "files": [
+    {
+      "fileType": "pcs_spec",
+      "s3Key": "tmp/equipments/550e8400-e29b-41d4-a716-446655440000/pcs_spec_new.pdf",
+      "fileName": "pcs_spec_new.pdf",
+      "fileId": "550e8400-e29b-41d4-a716-446655440000"
+    }
+  ]
+}
+
+変更しないファイル → 何もしない。自動的に変更後の設備へ引き継がれる。
+変更する（差し替える）ファイル → files配列に新規アップロード分
+  （s3Keyが"tmp/equipments/"で始まるもの）のみ送信。同じfileTypeの
+  既存ファイルは自動的に置き換わる。
+
+Response - Success (HTTP 200)
+{
+  "id": 15,
+  "siteId": "site001",
+  "changeDate": "2026-08-12",
+  "previousEquipmentId": 12,
+  "equipmentOpDate": "2026-03-20",
+  "nominalMaxOutput": 55.0,
+  "pcsManufacturer": "株式会社オムロン",
+  "pcsModel": "KPW-A2-SET",
+  "pcsUnitCount": 2,
+  "deviceNo": "DEV-TEST-002",
+  "pcsStandby": 0.04,
+  "hasBattery": true,
+  "batteryMaker": "ニチコン株式会社",
+  "batteryModel": "ESS-U4M1",
+  "batteryCapacity": 16.6,
+  "totalInvestment": 6000000,
+  "hasSubsidy": true,
+  "subsidyName": "東京都自家消費型太陽光発電導入補助金",
+  "subsidyAmount": 1200000,
+  "preProjectUnitPrice": 28.0,
+  "participationId": 5,
+  "files": [
+    {
+      "id": 30,
+      "fileType": "solar_contract",
+      "fileId": "de178ad5-82df-483a-b87a-d70398a249db",
+      "s3Key": "sites/site001/equipments/12/solar_contract.png"
+    },
+    {
+      "id": 35,
+      "fileType": "pcs_spec",
+      "fileId": "550e8400-e29b-41d4-a716-446655440000",
+      "s3Key": "sites/site001/equipments/15/pcs_spec_new.pdf"
+    }
+  ]
+}
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "設備情報が見つかりません。"
+},
+{
+  "statusCode": "EQUIPMENT_ALREADY_CHANGED",
+  "message": "この設備は既に変更済みです。最新の設備に対して変更を行ってください。"
+},
+{
+  "statusCode": "INVALID_CHANGE_DATE",
+  "message": "変更日は変更前設備のモニタリング開始日より後である必要があります。"
+},
+{
+  "statusCode": "INVALID_FILE_REFERENCE",
+  "message": "設備変更では新規アップロードファイルのみ指定可能です。"
+},
+{
+  "statusCode": "VALIDATION_ERROR",
+  "message": "入力内容に不備があります。",
+  "errors": {
+    "15::蓄電池メーカー": "蓄電池を設置する場合は必須項目です。"
+  }
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

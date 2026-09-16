@@ -1,0 +1,31 @@
+url: POST /site/project/final/validate
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body
+{
+  "isAgreeTerms": true
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "message": "Final agreement validation successful."
+}
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "VALIDATION_ERROR",
+  "message": "入力内容に不備があります。",
+  "errors": {
+    "request::isAgreeTerms": "利用規約への同意が必要です。"
+  }
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

@@ -1,0 +1,37 @@
+url: POST /site/project/projects/{projectId}/join-site
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body
+,
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "message": "拠点はプロジェクトへの参加が完了しました。",
+  "participationId": 5,
+  "siteProjectRelationId": 2,  //REJECTEDとOPENの場合nullを返却する
+  "participationStatus": APPROVED
+}
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+{
+  "statusCode": "ALREADY_SUBMITTED",
+  "message": "こちらの拠点はすでにプロジェクトに参加しています。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

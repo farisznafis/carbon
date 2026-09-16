@@ -1,0 +1,41 @@
+# 20260427_拠点とユーザの紐づけ
+# user_site_link
+# This API allows you to link a user to a specific site, enabling them to access and manage resources associated with that site.
+
+POST /api/user/site
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body (JSON):
+{
+  "username": "yamada.taro",
+  "siteId": "123"
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "message": "ユーザと拠点の紐づけが完了しました。"
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当するユーザまたは拠点が見つかりませんでした。"
+},
+{
+  "statusCode": "CONFLICT",
+  "message": "このユーザはすでに該当拠点に紐づいています。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

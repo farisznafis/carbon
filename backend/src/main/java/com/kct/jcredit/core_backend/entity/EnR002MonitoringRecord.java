@@ -14,6 +14,7 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
     private String id;
     private Integer projectID;
     private Integer siteID;
+    private Integer equipmentID;
     private Integer participatingUserID;
     private String timeUpdated;
     private String dateRecorded;
@@ -52,8 +53,8 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
     private String elpjControlEvidenceUrl;
 
     // For IF Battery交換あり condition
-    private Boolean changedBattery; 
-    
+    private Boolean changedBattery;
+
     private Boolean isActive; // レコードの有効/無効を示すフラグ
 
     private String processedAt; // レコードが処理された日時を保存するフィールド
@@ -90,6 +91,12 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
     @DynamoDbAttribute("siteID")
     public Integer getSiteID() {
         return siteID;
+    }
+
+    @Override
+    @DynamoDbAttribute("equipmentID")
+    public Integer getEquipmentID() {
+        return equipmentID;
     }
     
     @Override
@@ -128,7 +135,7 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
         return elpjControlValue;
     }
     
-    @DynamoDbAttribute("ELPJ_control_equipment_spec_files")
+    @DynamoDbAttribute("elpj_control_evidence")
     public String getElpjControlEquipmentSpecFiles() {
         return elpjControlEquipmentSpecFiles;
     }
@@ -143,7 +150,7 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
         return elpjAccuracy;
     }
     
-    @DynamoDbAttribute("ELPJ_battery_evidence")
+    @DynamoDbAttribute("elpj_battery_evidence")
     public String getElpjBatteryEvidence() {
         return elpjBatteryEvidence;
     }
@@ -153,7 +160,7 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
         return elPv;
     }
     
-    @DynamoDbAttribute("ELpv_evidence")
+    @DynamoDbAttribute("elpv_evidence")
     public String getElPvEvidence() {
         return elPvEvidence;
     }
@@ -163,7 +170,7 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
         return elPvr;
     }
     
-    @DynamoDbAttribute("ELpvr_evidence")
+    @DynamoDbAttribute("elpvr_evidence")
     public String getElPvrEvidence() {
         return elPvrEvidence;
     }
@@ -172,7 +179,7 @@ public class EnR002MonitoringRecord implements MonitoringRecord {
     public Boolean getChangedBattery() {
         return changedBattery != null ? changedBattery : false;
     }
-    
+
     @DynamoDbAttribute("elPvEvidenceUrl")
     public String getElPvEvidenceUrl() {
         return elPvEvidenceUrl;

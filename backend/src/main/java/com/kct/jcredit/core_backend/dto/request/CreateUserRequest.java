@@ -1,12 +1,15 @@
 package com.kct.jcredit.core_backend.dto.request;
 
-import com.kct.jcredit.core_backend.validation.HankakuWithSymbols;
+import com.kct.jcredit.core_backend.validation.ValidEmail;
+import com.kct.jcredit.core_backend.validation.ValidUsername;
 import com.kct.jcredit.core_backend.validation.Katakana;
 import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
 import com.kct.jcredit.core_backend.validation.ZenkakuWithSymbols;
 import jakarta.validation.constraints.*;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 public class CreateUserRequest {
@@ -16,7 +19,7 @@ public class CreateUserRequest {
    
     @NotBlank(message = "ユーザー名を入力してください。")
     @Size(min = 3, max = 50, message = "ユーザー名は3文字以上50文字以内で入力してください。")
-    @HankakuWithSymbols
+    @ValidUsername
     private String username;
     
    
@@ -55,7 +58,7 @@ public class CreateUserRequest {
     // メールアドレス
    
     @NotBlank(message = "メールアドレスを入力してください。")
-    @Email(message = "正しいメールアドレス形式で入力してください。")
+    @ValidEmail(message = "正しいメールアドレス形式で入力してください。")
     @Size(max = 254, message = "メールアドレスは254文字以内で入力してください。")
     private String email;
     
@@ -64,7 +67,7 @@ public class CreateUserRequest {
    
     @NotBlank(message = "電話番号を入力してください。")
     @PhoneNumber
-    @Size(max = 20, message = "電話番号は20文字以内で入力してください。")
+    @Size(min = 7, max = 16, message = "電話番号は7文字以上16文字以内で入力してください。")
     private String phoneNumber;
     
     @NotBlank(message = "担当者の役職を入力してください。")
@@ -80,14 +83,10 @@ public class CreateUserRequest {
              message = "パスワードは大文字、小文字、数字をそれぞれ1文字以上含む必要があります。")
     private String password;
     
-   //　マスターユーザは一般ユーザを作成するため、roleは不要
-    // 役割 (master / user)
-   
-    // @NotBlank(message = "役割を選択してください。")
-    // @Pattern(regexp = "^(master|user)$", 
-    //          message = "役割は 'master' または 'user' を指定してください。")
-    // private String role;
-    
+@Pattern(regexp = "^(admin|operator)$", message = "役割は 'admin' または 'operator' を指定してください。")
+    private String role;
+
+    private List<String> permissionCodes;
    
     // サイトID 
     // @NotNull(message = "拠点IDは必須です。") 

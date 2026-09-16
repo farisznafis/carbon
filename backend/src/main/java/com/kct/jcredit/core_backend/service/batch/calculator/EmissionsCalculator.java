@@ -17,23 +17,21 @@ import com.kct.jcredit.core_backend.entity.base.MonitoringRecord;
 public interface EmissionsCalculator<T extends MonitoringRecord, R> {
     
     /**
-     * Calculates emissions for a single site based on monitoring data.
+     * Calculates emissions for a site.
      * 
-     * This is the main calculation entry point. Implementations must:
-     * 1. Aggregate monitoring data (sum, averages, etc.)
-     * 2. Apply methodology-specific formulas
-     * 3. Handle edge cases (no data, invalid data, etc.)
-     * 4. Return a fully calculated result object for the methodology
+     * Implementations may return one or many methodology-specific results per site.
+     * For equipment-based methodologies such as solar, this typically returns one
+     * result per equipment so the batch layer can persist each row independently.
      * 
      * @param projectId Project ID
      * @param siteId Site ID
      * @param batchId Batch ID
      * @param monitoringData List of monitoring records for the site
      * @param processingDate Date being processed
-     * @return Methodology-specific result object, or null when no data is available
+     * @return List of methodology-specific result objects for the site
      * @throws IllegalArgumentException if data is invalid
      */
-    R calculateEmissions(
+    List<R> calculateEmissions(
         Integer projectId,
         Integer siteId,
         Integer batchId,

@@ -13,12 +13,16 @@ public class RegisterMonitoringRecordSolarRequest {
     
    @NotNull(message = "プロジェクトIDを入力してください。")
     @JsonProperty("projectId")
-    private Integer projectId;
+    private String projectId;
     
     @NotNull(message = "拠点IDを入力してください。")
     @JsonProperty("siteId")
-    private Integer siteId;
-    
+    private String siteId;
+
+    @NotNull(message = "設備IDを入力してください。")
+    @JsonProperty("equipmentId")
+    private Integer equipmentId;
+
     @JsonProperty("userId")
     private Integer userId;
     
@@ -46,7 +50,7 @@ public class RegisterMonitoringRecordSolarRequest {
     @JsonProperty("ELpvr_value")
     private BigDecimal elPvr;
     
-    @NotNull(message = "バッテリー交換フラグを入力してください。")
+    // 設備にhasBattery=trueの場合のみ必須（MonitoringServiceImplでequipment-aware検証）
     @JsonProperty("changedBattery")
     private Boolean changedBattery;
     
@@ -67,23 +71,23 @@ public class RegisterMonitoringRecordSolarRequest {
     @DecimalMin(value = "0.0", message = "ELPJ計測精度は0以上である必要があります。")
     @DecimalMax(value = "100.0", message = "ELPJ計測精度は100以下である必要があります。")
     @Digits(integer = 3, fraction = 2, message = "ELPJ計測精度は整数部3桁、小数部2桁以内で入力してください。")
+    @NotNull(message = "測定精度を入力してください。")
     @JsonProperty("ELPJ_accuracy")
     private BigDecimal elpjAccuracy;
 
-     // Mandatory Evidence URLs (Update 1: 4 Evidence URLs Integration)
-    @NotBlank(message = "ELpv（電力使用量）の証憑ファイルURLが必須です。")
-    @JsonProperty("ELpv_evidence")
+     // Mandatory evidence files
+    @NotBlank(message = "発電量（ELPV）の証憑ファイルをアップロードしてください。")
+    @JsonProperty("elpv_evidence")
     private String elPvEvidenceUrl;
     
-    @NotBlank(message = "ELpvr（電力供給量）の証憑ファイルURLが必須です。")
-    @JsonProperty("ELpvr_evidence")
+    @NotBlank(message = "自家消費量（ELPVR）の証憑ファイルをアップロードしてください。")
+    @JsonProperty("elpvr_evidence")
     private String elPvrEvidenceUrl;
     
-    @NotBlank(message = "ELPJ（バッテリー仕様書）の証憑ファイルURLが必須です。")
-    @JsonProperty("ELPJ_battery_evidence")
+    @JsonProperty("elpj_battery_evidence")
     private String elpjBatterySpecificationUrl;
     
-    @NotBlank(message = "ELPJ制御値の証憑ファイルURLが必須です。")
-    @JsonProperty("ELPJ_control_equipment_spec_files")
+    @NotBlank(message = "制御機器稼働時間（ELPJ）の証憑ファイルをアップロードしてください。")
+    @JsonProperty("elpj_control_evidence")
     private String elpjControlEvidenceUrl;
 }

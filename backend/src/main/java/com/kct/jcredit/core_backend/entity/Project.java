@@ -1,5 +1,7 @@
 package com.kct.jcredit.core_backend.entity;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.kct.jcredit.core_backend.entity.base.BaseEntity;
@@ -16,6 +18,9 @@ import lombok.*;
 @Builder
 public class Project extends BaseEntity {
 
+    @Column(name = "public_id", nullable = false, unique = true, length = 32)
+    private String publicId;
+
     @Column(name = "project_name", nullable = false, length = 100)
     private String projectName;
 
@@ -24,6 +29,9 @@ public class Project extends BaseEntity {
 
     @Column(name = "project_status", nullable = false, length = 10)
     private String projectStatus;
+
+    @Column(name = "status_finalized_at")
+    private LocalDateTime statusFinalizedAt;
 
     @Column(name = "rep_first_name", nullable = false, length = 50)
     private String repFirstName;
@@ -112,6 +120,12 @@ public class Project extends BaseEntity {
     @Column(name = "method_combi_feasibility", nullable = false)
     private Boolean methodCombiFeasibility;
 
+    @Column(name = "project_started_at", nullable = false)
+    private Instant startedAt;
+
+    @Column(name = "use_purpose", nullable = false, length = 500)
+    private String usePurpose;
+
     @Column(name = "method_details", nullable = false, length = 1000)
     private String methodDetails;
 
@@ -121,4 +135,11 @@ public class Project extends BaseEntity {
 
     @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
     private List<SiteProjectRelation> siteRelations;
+    @PrePersist
+    private void generatePublicId() {
+        if (this.publicId == null) {
+            this.publicId = com.kct.jcredit.core_backend.util.PublicIdGenerator.generateProjectPublicId();
+        }
+    }
+
 }

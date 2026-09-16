@@ -3,10 +3,10 @@ package com.kct.jcredit.core_backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.kct.jcredit.core_backend.converter.StringListJsonConverter;
 import com.kct.jcredit.core_backend.entity.base.BaseEntity;
-import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
+import com.kct.jcredit.core_backend.enums.CompanyStatus;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,36 +77,32 @@ public class ParticipatingCompany extends BaseEntity {
     @Column(name = "rep_last_name_kana", nullable = false, length = 50)
     private String repLastNameKana;
 
-    @Column(name = "rep_email", nullable = false, length = 254)
-    private String repEmail;
-
     @Column(name = "rep_phone_number", nullable = false, length = 20)
     private String repPhoneNumber;
 
     @Column(name = "rep_position", nullable = false, length = 100)
     private String repPosition;
 
-    @Column(name = "reg_status", length = 20)
-    private String regStatus;
+    @Convert(converter = StringListJsonConverter.class)
+    @Column(name = "requested_methodologies", columnDefinition = "TEXT")
+    private List<String> requestedMethodologies;
 
-    @Column(name = "contract_end_date", nullable = false)
-    private LocalDate contractEndDate;
-
-    @Column(name = "payment_method", length = 50)
-    private String paymentMethod;
-
-    @Column(name = "last_renewal_date")
-    private LocalDateTime lastRenewalDate;
+    @Column(name = "activity_information", columnDefinition = "TEXT")
+    private String activityInformation;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "subscription_status", length = 20)
-    private SubscriptionStatus subscriptionStatus = SubscriptionStatus.ACTIVE;
+    @Column(name = "company_status", nullable = false, length = 30)
+    @Builder.Default
+    private CompanyStatus companyStatus = CompanyStatus.PENDING;
 
-    @Column(name = "suspension_reason", length = 500)
-    private String suspensionReason;
+    @Column(name = "email_verified_at")
+    private LocalDateTime emailVerifiedAt;
 
-    @Column(name = "suspension_date")
-    private LocalDateTime suspensionDate;
+    @Column(name = "last_rejection_reason", length = 1000)
+    private String lastRejectionReason;
+
+    @Column(name = "rejected_at")
+    private LocalDateTime rejectedAt;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
@@ -114,15 +110,13 @@ public class ParticipatingCompany extends BaseEntity {
     @Column(name = "deleted_by", length = 100)
     private String deletedBy;
 
+    /**
+     * Returns whether the company is blocked from operational access.
+     */
     public boolean isSuspended() {
-        return subscriptionStatus == SubscriptionStatus.SUSPENDED;
+        return companyStatus == CompanyStatus.SUSPENDED;
     }
 
-    public boolean isActiveSubscription() {
-        return subscriptionStatus == SubscriptionStatus.ACTIVE && contractEndDate != null && !contractEndDate.isBefore(LocalDate.now());
-    }
-
-    
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<SiteR002MemberData> methodologies = new ArrayList<>();

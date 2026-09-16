@@ -1,0 +1,34 @@
+url: POST /site/project/sustainability-commitment/validate
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body
+{
+  "companyName": "株式会社ソーラーファーム",
+  "repName": "伊藤健一",
+  "repRole": "代表取締役",
+  "hasConsent": true
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "message": "Sustainability commitment validation successful."
+}
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "VALIDATION_ERROR",
+  "message": "入力内容に不備があります。",
+  "errors": {
+    "request::hasConsent": "署名への同意が必要です。"
+  }
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

@@ -1,0 +1,16 @@
+operator company 1
+admin 1
+operator 1
+
+project 2
+
+ParticipatingCompany 1 
+master 1
+user 1
+site 1 
+project site relation 1
+participation_project 1
+equipment 1
+
+ParticipatingCompany 1
+master 1

@@ -21,7 +21,7 @@ export const REGEX_PATTERNS = {
   PROJECT_NUM: /^P[0-9]+$/, // number no symbols
   
   // Contact validations
-  PHONE_NUMBER: /^\d{3}-\d{3,4}-\d{4,5}$/,
+  PHONE_NUMBER_DIGITS: /^\+?\d{9,20}$/, // backend @PhoneNumber: digits only, no hyphens
   NUMERIC_3_DIGITS: /^\d{3}$/,                
   NUMERIC_9_DIGITS: /^\d{9}$/,                
   NUMERIC_13_DIGITS: /^\d{13}$/, 
@@ -53,7 +53,7 @@ export const REGEX_MESSAGES = {
   JAPANESE_ENGLISH_NO_NUM: "日本語・英数字・スペースのみ使用できます",
   PROJECT_NUM: "「P」で始まる半角数字のみで入力してください",
   
-  PHONE_NUMBER: "有効な電話番号を入力してください（例: 999-999-9999)",
+  PHONE_NUMBER_DIGITS: "電話番号はハイフンなしの半角数字で入力してください（例: 0312345678）",
   NUMERIC_3_DIGITS: "3桁の数字で入力してください", // exactly 3 digits no less and more
   NUMERIC_9_DIGITS: "9桁の数字で入力してください", // exactly 9 digits no less and more
   NUMERIC_13_DIGITS: "13桁の数字で入力してください", // exactly 13 digits

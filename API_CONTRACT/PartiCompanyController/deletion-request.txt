@@ -1,0 +1,38 @@
+{
+  "endpoint": "POST /company/{companyId}/deletion-request",
+  "description": "参加企業の削除申請を作成（承認待ち）。申請と同時に企業ステータスを冻结（凍結）する。",
+  "authorization": "Bearer <JWT> (master)",
+  "contentType": "application/json",
+  "pathVariables": {
+    "companyId": "参加企業ID（例: COMP001）"
+  },
+  "requestBody": {
+    "reason": "事業都合により脱退"
+  },
+  "responses": {
+    "success": {
+      "statusCode": "200",
+      "message": "Deletion request created successfully",
+      "data": {
+        "requestId": 1,
+        "companyId": "COMP001",
+        "companyName": "株式会社サンプル",
+        "requestedBy": "master_user",
+        "requestedAt": "2026-06-19T10:30:00",
+        "reason": "事業都合により脱退",
+        "status": "PENDING",
+        "decidedBy": null,
+        "decidedAt": null,
+        "rejectionReason": null
+      }
+    },
+    "errors": [
+      { "statusCode": 400, "errorCode": "COMPANY_NOT_FOUND", "message": "企業が見つかりません。" },
+      { "statusCode": 400, "errorCode": "REQUEST_ALREADY_EXISTS", "message": "この企業の削除申請が既に存在します（PENDING）。" },
+      { "statusCode": 400, "message": "リクエストボディが不正です。" },
+      { "statusCode": 401, "message": "UNAUTHORIZED" },
+      { "statusCode": 403, "message": "FORBIDDEN" },
+      { "statusCode": 500, "errorCode": "SERVER_ERROR", "message": "SERVER_ERROR" }
+    ]
+  }
+}

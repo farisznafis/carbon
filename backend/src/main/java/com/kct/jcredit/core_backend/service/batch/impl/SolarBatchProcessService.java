@@ -82,18 +82,26 @@ public class SolarBatchProcessService extends BaseBatchProcessService<EnR002Moni
     }
     
     @Override
-    public Object saveSiteResult(
+    public Object saveSiteResults(
             Integer projectId,
             Integer siteId,
             Integer batchId,
             LocalDate processingDate,
-            EnR002ReductionResult result) {
+            List<EnR002ReductionResult> results) {
         
-        result.setIsActive(true);
-        EnR002ReductionResult saved = resultRepository.save(result);
+        if (results == null || results.isEmpty()) {
+            return List.of();
+        }
         
-        log.debug("Saved solar result for site {}: ID {}", siteId, saved.getId());
-        return saved;
+        List<EnR002ReductionResult> savedResults = results.stream()
+            .map(result -> {
+                result.setIsActive(true);
+                return resultRepository.save(result);
+            })
+            .collect(Collectors.toList());
+        
+        log.debug("Saved {} solar result(s) for site {}", savedResults.size(), siteId);
+        return savedResults;
     }
     
     @Override
@@ -116,6 +124,10 @@ public class SolarBatchProcessService extends BaseBatchProcessService<EnR002Moni
                 existing.setEmpjS(projectTotal.getEmpjS());
                 existing.setEmpjSControl(projectTotal.getEmpjSControl());
                 existing.setEmpjSBattery(projectTotal.getEmpjSBattery());
+                existing.setElpj(projectTotal.getElpj());
+                existing.setEmbl(projectTotal.getEmbl());
+                existing.setElbl(projectTotal.getElbl());
+                existing.setEr(projectTotal.getEr());
                 existing.setIsActive(true);
                 return existing;
             })
@@ -146,6 +158,10 @@ public class SolarBatchProcessService extends BaseBatchProcessService<EnR002Moni
         BigDecimal totalEmpjS = BigDecimal.ZERO;
         BigDecimal totalEmpjSControl = BigDecimal.ZERO;
         BigDecimal totalEmpjSBattery = BigDecimal.ZERO;
+        BigDecimal totalElpj = BigDecimal.ZERO;
+        BigDecimal totalEmbl = BigDecimal.ZERO;
+        BigDecimal totalElbl = BigDecimal.ZERO;
+        BigDecimal totalEr = BigDecimal.ZERO;
 
         for (EnR002ReductionResult result : results) {
             if (result.getEmpj() != null) {
@@ -163,6 +179,18 @@ public class SolarBatchProcessService extends BaseBatchProcessService<EnR002Moni
             if (result.getEmpjSBattery() != null) {
                 totalEmpjSBattery = totalEmpjSBattery.add(result.getEmpjSBattery());
             }
+            if (result.getElpj() != null) {
+                totalElpj = totalElpj.add(result.getElpj());
+            }
+            if (result.getEmbl() != null) {
+                totalEmbl = totalEmbl.add(result.getEmbl());
+            }
+            if (result.getElbl() != null) {
+                totalElbl = totalElbl.add(result.getElbl());
+            }
+            if (result.getEr() != null) {
+                totalEr = totalEr.add(result.getEr());
+            }
         }
 
         EnR002ReductionResultTotal projectTotal = EnR002ReductionResultTotal.builder()
@@ -176,6 +204,10 @@ public class SolarBatchProcessService extends BaseBatchProcessService<EnR002Moni
             .empjS(totalEmpjS)
             .empjSControl(totalEmpjSControl)
             .empjSBattery(totalEmpjSBattery)
+            .elpj(totalElpj)
+            .embl(totalEmbl)
+            .elbl(totalElbl)
+            .er(totalEr)
             .build();
 
         projectTotal.setIsActive(true);

@@ -8,6 +8,7 @@ import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
 import com.kct.jcredit.core_backend.service.impl.ProjectServiceImpl;
 import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.Project;
+import com.kct.jcredit.core_backend.exception.ResourceNotFoundException;
 import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +18,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +30,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("ProjectServiceImpl - Unit Tests")
 class ProjectServiceImplTest {
 
@@ -130,11 +134,11 @@ class ProjectServiceImplTest {
         projectDtoReq.setOperatorCompanyId("999");
         when(operatorCompanyRepository.findById(999)).thenReturn(Optional.empty());
 
-        UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class, () -> {
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             projectService.createProject(createRequest);
         });
 
-        assertEquals(ResponseConstants.MSG_UNEXPEXTED_ERROR, exception.getMessage());
+        assertEquals(ResponseConstants.MSG_COMPANY_NOT_FOUND, exception.getMessage());
 
         verify(projectRepository, never()).saveAll(any());
     }
@@ -147,10 +151,10 @@ class ProjectServiceImplTest {
     @DisplayName("TC-GP-01: Get project details successfully")
     void getProject_success() {
         // Given
-        Integer targetProjectId = 12345;
+        String targetProjectId = "PROJ12345";
         String dummyUserCompanyId = "COMP-001";
         
-        when(projectRepository.findById(targetProjectId)).thenReturn(Optional.of(dummyProject));
+        when(projectRepository.findByPublicId(targetProjectId)).thenReturn(Optional.of(dummyProject));
 
         ProjectResponse response = projectService.getProject(targetProjectId, dummyUserCompanyId);
 
@@ -158,20 +162,20 @@ class ProjectServiceImplTest {
         assertEquals(ResponseConstants.OK, response.getStatusCode());
         assertNotNull(response.getProject());
         
-        assertEquals("12345", response.getProject().getId());
+        assertEquals("PROJ12345", response.getProject().getId());
         assertEquals("太陽光発電導入プロジェクト", response.getProject().getProjectName());
         assertEquals("株式会社グリーンエナジー", response.getProject().getCompanyName()); 
 
-        verify(projectRepository, times(1)).findById(targetProjectId);
+        verify(projectRepository, times(1)).findByPublicId(targetProjectId);
     }
 
     @Test
     @DisplayName("TC-GP-02: Get project returns 404 when project not found")
     void getProject_notFound() {
-        Integer targetProjectId = 999;
+        String targetProjectId = "PROJ0999";
         String dummyUserCompanyId = "COMP-001";
         
-        when(projectRepository.findById(targetProjectId)).thenReturn(Optional.empty());
+        when(projectRepository.findByPublicId(targetProjectId)).thenReturn(Optional.empty());
 
         ProjectResponse response = projectService.getProject(targetProjectId, dummyUserCompanyId);
 
@@ -180,7 +184,7 @@ class ProjectServiceImplTest {
         assertEquals(ResponseConstants.MSG_PROJECT_NOT_FOUND, response.getMessage());
         assertNull(response.getProject(), "Project details should be null when project is not found");
 
-        verify(projectRepository, times(1)).findById(targetProjectId);
+        verify(projectRepository, times(1)).findByPublicId(targetProjectId);
     }
 
     

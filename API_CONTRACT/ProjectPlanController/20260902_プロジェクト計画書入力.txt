@@ -1,0 +1,222 @@
+//プロジェクト計画書（全34ページ）の入力・保存・進捗のAPI。
+//計画書の出力（PDF）は 5-6_20260527_「プロジェクト計画書」の出力.txt を参照。
+//
+//全ページが1組の共通エンドポイントで処理される。ページの識別は formSlug（例: baseline-emission）。
+//ページ単位で原子的に保存される。1項目でも検証エラーがあれば、そのページは一切保存されない。
+
+
+■ 自動入力: 法人マスタ取得
+
+GET /api/projectplan/autofill
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "data": {
+    "corpNumber": "1234567890123",
+    "corpName": "山田 太郎",
+    "corpPosition": "代表取締役",
+    "prefecture": "東京都",
+    "city": "千代田区",
+    "address": "千代田1-1-1",
+    "representativePosition": "代表取締役",
+    "representativeName": "山田 太郎",
+    "picPosition": "担当者",
+    "picName": "佐藤 花子",
+    "picEmail": "sato@test.com",
+    "picPhoneNumber": "0312345678"
+  }
+}
+
+
+■ 自動入力: プロジェクトマスタ取得
+
+GET /api/projectplan/autofill/{projectId}
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "data": {
+    "projectId": 1,
+    "projectName": "ABC太陽光発電プロジェクト",
+    "methodologyCategory": "エネルギー",
+    "methodologyNumber": "EN-R-002",
+    "methodology": "太陽光発電設備の導入",
+    "location": "東京都千代田区",
+    "regionalCategory": "都市部"
+  }
+}
+
+
+■ ページ取得
+
+GET /api/projectplan/{projectId}/forms/{formSlug}?methodology=2
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+//methodology は任意。方法論によって項目が変わるページでのみ指定する。
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "formSlug": "additional-assessment-method",
+  "displayName": "追加性の評価方法",
+  "status": "COMPLETE",              //NOT_STARTED または COMPLETE
+  "updatedAt": "2026-09-02T07:31:22Z",
+  "updatedBy": "y.taro",
+  "readOnlyFields": ["corporationName", "projectName"],
+                                     //SQL由来。画面では読み取り専用で表示する
+  "conditionalFields": [
+    { "field": "batteryCapacity", "when": "hasBattery", "is": true }
+                                     //hasBattery が true のときのみ batteryCapacity が必須
+  ],
+  "data": {                          //項目はページごとに異なる
+    "assessingAdditionalityMethod": "初期投資回収年数による評価",
+    "assessingAdditionalityMethodImg": "projectplan/PRJ001/additional-assessment-method/a1b2c3.png"
+  }
+}
+
+//未入力のページでも HTTP 200 を返す。status が "NOT_STARTED"、data は空または初期値。
+
+
+■ ページ保存
+
+PUT /api/projectplan/{projectId}/forms/{formSlug}?methodology=2
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body (JSON): //ページの全項目を送る。部分更新はできない
+{
+  "assessingAdditionalityMethod": "初期投資回収年数による評価",
+  "assessingAdditionalityMethodImg": "tmp/projectplan/PRJ001/a1b2c3.png"
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "formSlug": "additional-assessment-method",
+  "displayName": "追加性の評価方法",
+  "status": "COMPLETE",
+  "updatedAt": "2026-09-02T07:31:22Z",
+  "updatedBy": "y.taro",
+  "data": { ... }                    //保存後の内容
+}
+
+//保存に成功すると、仮アップロードされたファイルが正式な保存先へ移動する。
+
+
+■ 添付ファイルの仮アップロード
+
+POST /api/projectplan/{projectId}/forms/{formSlug}/files?fieldName=assessingAdditionalityMethodImg
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: multipart/form-data
+
+Request Parts:
+  file      : アップロードするファイル（必須）
+  fieldName : クエリパラメータ。ファイルを設定する項目名（必須）
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "s3Key": "tmp/projectplan/PRJ001/a1b2c3.png",
+  "fileId": "a1b2c3",
+  "originalName": "追加性評価.png"
+}
+
+//返却された s3Key を該当項目に設定してページを保存すると、正式な保存先へ移動する。
+//保存されないまま放置された場合、ファイルは一時領域で失効する。
+
+
+■ 入力状況取得（1プロジェクト）
+
+GET /api/projectplan/{projectId}/progress
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "totalForms": 34,
+  "completedForms": 12,
+  "nextIncompleteSlug": "baseline-emission",
+                                     //「続きから」の遷移先。全て完了した場合は null
+  "forms": [
+    {
+      "formSlug": "application",
+      "displayName": "申請書",
+      "order": 1,
+      "status": "COMPLETE",
+      "updatedAt": "2026-09-01T02:10:00Z",
+      "updatedBy": "y.taro",
+      "optional": false
+    },
+    {
+      "formSlug": "authority-holder-change",
+      "displayName": "認証権限保有主体変更届",
+      "order": 33,
+      "status": "NOT_STARTED",
+      "optional": true               //一部のプロジェクトのみ提出。完了数に数えない
+    }
+  ]
+}
+
+//optional なページは一覧に表示されるが totalForms / completedForms には含まれず、
+//nextIncompleteSlug の対象にもならない。
+
+
+■ 入力状況一括取得（一覧画面用）
+
+GET /api/projectplan/progress?projectIds=PRJ001&projectIds=PRJ002
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "projects": [
+    {
+      "projectId": "PRJ001",
+      "totalForms": 34,
+      "completedForms": 12,
+      "nextIncompleteSlug": "baseline-emission",
+      "complete": false
+    }
+  ]
+}
+
+//参照権限のないプロジェクトはエラーにならず、結果から除外される。
+
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスすることができません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当するプロジェクトが見つかりませんでした。"
+                                     //存在しない formSlug を指定した場合も同様
+},
+{
+  "statusCode": "VALIDATION_ERROR",
+  "errors": {
+    "assessingAdditionalityMethod": "入力してください。",
+    "batteryCapacity": "この項目は必須です。"
+  }
+                                     //この場合ページは一切保存されていない
+},
+{
+  "statusCode": "FILE_TOO_LARGE",
+  "message": "ファイルサイズが大きすぎます。"   //上限10MB
+},
+{
+  "statusCode": "UNSUPPORTED_FILE_TYPE",
+  "message": "対応していないファイル形式です。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

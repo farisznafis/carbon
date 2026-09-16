@@ -14,6 +14,20 @@ import java.util.Optional;
 public interface SiteProjectRelationRepository extends JpaRepository<SiteProjectRelation, Integer> {
     boolean existsByProjectAndSite(Project project, Site site);
 
+    Optional<SiteProjectRelation> findBySite_IdAndProject_Id(
+            Integer siteId, Integer projectId);
+
+    boolean existsBySite_IdAndProject_Id(
+            Integer siteId, Integer projectId);
+
+        boolean existsBySite_Company_CompanyIdAndProject_Id(String companyId, Integer projectId);
+
+        boolean existsBySite_Id(Integer siteId); // ← tambah ini
+
+    List<SiteProjectRelation> findBySite_Id(Integer siteId);
+
+    List<SiteProjectRelation> findByProject_Id(Integer projectId);
+
     List<SiteProjectRelation> findBySite(Site site);
 
     List<SiteProjectRelation> findByProject(Project project);
@@ -23,6 +37,9 @@ public interface SiteProjectRelationRepository extends JpaRepository<SiteProject
     Optional<SiteProjectRelation> findBySiteIdAndProjectId(Integer siteId, Integer projectId);
     
     SiteProjectRelation findByProjectIdAndSiteId(Integer projectId, Integer siteId);
+
+    @Query("SELECT spr.site.id FROM SiteProjectRelation spr WHERE spr.project.id = :projectId")
+    List<Integer> findSiteIdsByProjectId(@Param("projectId") Integer projectId);
 
     @Modifying
     @Query(value = "UPDATE site_project_relation spr SET deleted_at = CURRENT_TIMESTAMP, deleted_by = :deletedBy "

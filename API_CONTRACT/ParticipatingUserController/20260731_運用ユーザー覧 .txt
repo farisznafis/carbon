@@ -1,0 +1,58 @@
+﻿GET /api/admin/operator-user
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+Response - Success (HTTP 200) //マスターダッシュボードのユーザー一覧
+{
+  "statusCode": "OK",
+  "users": [
+    {
+      "id": "1",
+      "firstName": "山田",
+      "firstNameKana": "ヤマダ",
+      "lastName": "太郎",
+      "lastNameKana": "タロウ",
+      "email": "taroyamada@test.com",
+      "role": "regular",
+      "siteName": "ABC工場",
+      "permissions": [
+            "PROJECT_READ",
+            "MONITORING_READ"
+          ]
+    },
+    {
+      "id": "2",
+      "firstName": "山口",
+      "firstNameKana": "ヤマグチ",
+      "lastName": "太郎",
+      "lastNameKana": "タロウ",
+      "email": "taroyamaguchi@test.com",
+      "role": "regular",
+      "permissions": [
+            "PROJECT_READ",
+            "MONITORING_READ"
+          ]
+    }
+  ]
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+
+
+

@@ -154,7 +154,9 @@ export function MultiStepForm<TFormValues extends FieldValues>({
   }
 
   return (
-    <FormSection number={step} title={current.title}>
+    // Unnumbered: step ids skip the pages a 申請区分 does not file (see
+    // applicationCategory.ts), and the gaps read as missing pages.
+    <FormSection title={current.title}>
       <FormProvider {...form}>
         <PlanFileUploadProvider uploader={onUploadFile ?? null}>
         <DynamicFormRenderer<TFormValues>

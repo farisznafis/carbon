@@ -1,0 +1,51 @@
+﻿プロファイル
+URL: GET /api/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+Response - Success (HTTP 200)
+{
+    "statusCode": "OK",
+    "profile": {
+        "id": "12345",
+        "username": "sampleuser",
+        "firstName": "Sample",
+        "firstNameKana": "サンプル",
+        "lastName": "User",
+        "lastNameKana": "ユーザー",
+        "email": "sample@test.com",
+        "phoneNumber": "+81-90-1234-5678",
+        "userPosition": "部長",
+        "role": "マスター", 
+        "siteId": "54321",
+    }
+	"company" : {
+		"id": "5678",
+		"nameJA": "株式会社サンプル",
+  		"nameFurigana": "カブシキガイシャサンプル",
+  		"nameEN": "Sample Corporation",
+		"email": "info@example.com",
+		"phoneNumber": "0312345678",
+		"fax": null,
+  		"corpNumber": "1234567890123",
+		"address": "千代田区千代田1-1"
+    }
+}
+
+Response - Error (HTTP 401)
+{
+    "statusCode": "UNAUTHORIZED",
+    "message": "認証に失敗しました。有効なトークンを提供してください。"
+}
+
+Response - Error (HTTP 404)
+{
+    "statusCode": "NOT_FOUND",
+    "message": "ユーザープロファイルが見つかりません。"
+}
+
+Response - Error (HTTP 500)
+{
+    "statusCode": "INTERNAL_SERVER_ERROR",
+    "message": "サーバーエラーが発生しました。後でもう一度お試しください。"
+}
+

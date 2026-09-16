@@ -22,6 +22,20 @@ public class CompanyInfoResponse {
     private String fax;
     private String corpNumber;
     private String address;
+    private String postalCode;
+    private String prefecture;
+    private String municipality;
+    private String blocknum;
+    private String buildingName;
+    private String representativeFirstName;
+    private String representativeLastName;
+    private String representativeFirstNameKana;
+    private String representativeLastNameKana;
+    private String representativePosition;
+    private String representativePhoneNumber;
+    private String faxNumber;
     private Boolean isSuspended;
+    private List<String> requestedMethodologies;
+    private String activityInformation;
     private List<MethodologyInfoResponse> methodologies;
 }
