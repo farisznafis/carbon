@@ -15,6 +15,7 @@ import type { MonitoringCancelRequestListItem } from '@/api/monitoring';
 import type { Project } from '@/api/projects';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
+import { NotificationsList } from '@/components/feedback/NotificationsList';
 import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import { AdminTableCard } from '@/components/layout/AdminTableCard';
 import {
@@ -40,6 +41,8 @@ import { CancelRequestStatusBadge } from '@/features/admin/monitoring/CancelRequ
 import { formatCancelRequestDateTime } from '@/features/admin/monitoring/cancelRequestFormatters';
 import type { AdminOperatorPermissionCode } from '@/api/admin/operators';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
+import { useNotifications } from '@/hooks/useNotifications';
+import { toast } from '@/hooks/use-toast';
 
 export type AdminHomePanel = 'cancel' | 'batch';
 
@@ -499,6 +502,64 @@ function BatchHistorySummary({
   );
 }
 
+/** Renders the notification feed from the shared navbar store without refetching it. */
+function NotificationSummary() {
+  const {
+    notifications,
+    loading,
+    error,
+    markAsRead,
+    deleteNotification,
+  } = useNotifications();
+
+  /** Marks one notification as read and keeps failures local to this card. */
+  const handleMarkAsRead = async (
+    notificationId: Parameters<typeof markAsRead>[0],
+  ) => {
+    try {
+      await markAsRead(notificationId);
+    } catch {
+      toast({
+        title: 'エラー',
+        description: '通知を既読にできませんでした。',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  /** Deletes one notification and keeps failures local to this card. */
+  const handleDeleteNotification = async (
+    notificationId: Parameters<typeof deleteNotification>[0],
+  ) => {
+    try {
+      await deleteNotification(notificationId);
+    } catch {
+      toast({
+        title: 'エラー',
+        description: '通知を削除できませんでした。',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  return (
+    <Card className='rounded-xl border-border shadow-app-sm xl:flex xl:min-h-0 xl:flex-1 xl:flex-col xl:overflow-hidden'>
+      <CardHeader className='shrink-0'>
+        <CardTitle>お知らせ</CardTitle>
+      </CardHeader>
+      <CardContent className='min-h-0 xl:flex-1 xl:overflow-y-auto'>
+        <NotificationsList
+          notifications={notifications}
+          loading={loading}
+          error={error}
+          onMarkAsRead={handleMarkAsRead}
+          onDelete={handleDeleteNotification}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
 /** Renders URL-driven monitoring dialogs using the existing full table components. */
 function MonitoringDialogs({
   activePanel,
@@ -646,8 +707,8 @@ export function AdminDashboardOverview(
           requiredPermission='MONITORING_CANCEL'
         />
       </section>
-      <div className='grid items-start gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.85fr)]'>
-        <div className='space-y-6'>
+      <div className='grid items-stretch gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.85fr)]'>
+        <div className='min-w-0 space-y-6'>
           <AdminTableCard
             title='プロジェクト一覧'
             count={props.projects.length}
@@ -681,7 +742,7 @@ export function AdminDashboardOverview(
             permissionGranted={props.canReviewCompanies}
           />
         </div>
-        <div className='space-y-6'>
+        <div className='flex min-w-0 flex-col gap-6 xl:h-full xl:min-h-0'>
           <CancelRequestSummary
             requests={props.cancelRequests}
             loading={props.cancelRequestsLoading}
@@ -697,6 +758,7 @@ export function AdminDashboardOverview(
             onOpenPanel={() => props.onPanelChange('batch')}
             permissionGranted={props.canReadBatchHistory}
           />
+          <NotificationSummary />
         </div>
       </div>
       <MonitoringDialogs
