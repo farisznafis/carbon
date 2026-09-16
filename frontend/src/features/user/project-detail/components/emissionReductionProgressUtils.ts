@@ -34,15 +34,18 @@ export function calculateEmissionReductionProgress({
     return null;
   }
 
-  const reductionAmount = roundEmission(baselineEmission - projectEmission);
+  const reductionAmount = Math.max(
+    roundEmission(baselineEmission - projectEmission),
+    0,
+  );
   const achievementRate = Math.min(
-    roundEmission((reductionAmount / targetReduction) * 100),
+    Math.max(roundEmission((reductionAmount / targetReduction) * 100), 0),
     100,
   );
 
   return {
     achievementRate,
-    progressValue: Math.max(achievementRate, 0),
+    progressValue: achievementRate,
     reductionAmount,
     remainingReduction: Math.max(
       roundEmission(targetReduction - reductionAmount),

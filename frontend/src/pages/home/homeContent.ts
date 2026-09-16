@@ -3,7 +3,7 @@ import {
   BellRing,
   ClipboardCheck,
   Database,
-  FileOutput,
+  Building2,
 } from 'lucide-react';
 
 export type HomeCapability = Readonly<{
@@ -55,6 +55,10 @@ export const HOME_CAPABILITIES: readonly HomeCapability[] = [
       '拠点・設備ごとのモニタリングデータを登録し、排出量と削減量を一つの画面で確認できます。',
     summary:
       '企業・拠点をまたぐ情報を、同じ視点で。',
+    previewImage: {
+      src: '/assets/home/feature-1.png',
+      alt: '排出量データ管理の画面イメージ',
+    },
   },
   {
     icon: ClipboardCheck,
@@ -63,6 +67,10 @@ export const HOME_CAPABILITIES: readonly HomeCapability[] = [
       '参加可能なプロジェクトの確認から入会届、設備証憑、審査状況までまとめて管理できます。',
     summary:
       '参加から証憑まで、ひとつの文脈で。',
+    previewImage: {
+      src: '/assets/home/feature-2.png',
+      alt: 'プロジェクト・J-クレジット管理の画面イメージ',
+    },
   },
   {
     icon: BellRing,
@@ -71,14 +79,22 @@ export const HOME_CAPABILITIES: readonly HomeCapability[] = [
       '拠点・プロジェクトごとの実績を可視化し、申請や承認結果を通知で確認できます。',
     summary:
       '今見るべきことと、次のアクションを明確に。',
+    previewImage: {
+      src: '/assets/home/feature-3.png',
+      alt: 'ダッシュボード・通知の画面イメージ',
+    },
   },
   {
-    icon: FileOutput,
-    title: 'レポート・データ確認',
+    icon: Building2,
+    title: '拠点・担当者管理',
     description:
-      'モニタリング結果や入会届PDFなど、提出・確認に必要な情報へすぐアクセスできます。',
+      '複数の拠点と担当者をまとめて管理し、各拠点のプロジェクト参加状況をスムーズに確認できます。',
     summary:
-      '必要な情報へ、すぐアクセス。',
+      '拠点と担当者を、ひとつの場所で。',
+    previewImage: {
+      src: '/assets/home/feature-4.png',
+      alt: '拠点・担当者管理の画面イメージ',
+    },
   },
 ];
 
@@ -122,11 +138,11 @@ export const HOME_FLOW_STEPS: readonly HomeFlowStep[] = [
     description:
       '登録されたデータから削減実績やプロジェクトの進捗を確認します。',
   },
-  {
-    title: '意思決定',
-    description:
-      '実績・進捗・対応状況を確認し、次に必要なアクションを判断します。',
-  },
+  // {
+  //   title: '意思決定',
+  //   description:
+  //     '実績・進捗・対応状況を確認し、次に必要なアクションを判断します。',
+  // },
 ];
 
 /* =========================================================

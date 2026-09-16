@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import {
   ArrowRight,
   Building2,
@@ -15,6 +16,9 @@ import type { MonitoringCancelRequestListItem } from '@/api/monitoring';
 import type { Project } from '@/api/projects';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
+import { NotificationsList } from '@/components/feedback/NotificationsList';
+import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
+import { AdminTableCard } from '@/components/layout/AdminTableCard';
 import {
   SkeletonList,
   SkeletonMetricCard,
@@ -38,8 +42,41 @@ import { CancelRequestStatusBadge } from '@/features/admin/monitoring/CancelRequ
 import { formatCancelRequestDateTime } from '@/features/admin/monitoring/cancelRequestFormatters';
 import type { AdminOperatorPermissionCode } from '@/api/admin/operators';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
+import { useNotifications } from '@/hooks/useNotifications';
+import { toast } from '@/hooks/use-toast';
 
 export type AdminHomePanel = 'cancel' | 'batch';
+
+/** Tracks an element's rendered height so adjacent desktop content can align to it. */
+function useElementHeight<TElement extends HTMLElement>() {
+  const elementRef = useRef<TElement>(null);
+  const [height, setHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    const element = elementRef.current;
+
+    if (!element) return;
+
+    /** Stores a rounded height to avoid updates caused only by sub-pixel changes. */
+    const updateHeight = () => {
+      const nextHeight = Math.ceil(element.getBoundingClientRect().height);
+      setHeight((currentHeight) =>
+        currentHeight === nextHeight ? currentHeight : nextHeight,
+      );
+    };
+
+    updateHeight();
+
+    if (typeof ResizeObserver === 'undefined') return;
+
+    const resizeObserver = new ResizeObserver(updateHeight);
+    resizeObserver.observe(element);
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  return { elementRef, height };
+}
 
 type AdminDashboardOverviewProps = {
   projects: Project[];
@@ -70,6 +107,7 @@ type AdminDashboardOverviewProps = {
   batchHistoryError: string | null;
   activePanel: AdminHomePanel | null;
   onPanelChange: (panel: AdminHomePanel | null) => void;
+  onOpenProjectDetail: (project: Project) => void;
   onOpenProjectMembership: (project: Project) => void;
   onOpenCompanyApplication: (company: AdminCompanyListItem) => void;
   onOpenCancelRequest: (request: MonitoringCancelRequestListItem) => void;
@@ -100,7 +138,7 @@ function MetricCard({
   label,
   value,
   description,
-  icon,
+  // icon,
   loading,
   error,
   onClick,
@@ -113,30 +151,23 @@ function MetricCard({
 
   return (
     <Card className="h-full rounded-xl border-border shadow-app-sm">
-      <CardContent className="flex h-full min-h-[190px] flex-col p-5">
-
+      <CardContent
+        className="
+          grid h-full min-h-[150px]
+          grid-rows-[auto_1fr_auto]
+          gap-y-3
+          p-5
+        "
+      >
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <p className="text-body font-bold text-foreground">
             {label}
           </p>
-
-          <span
-            className="
-              flex h-10 w-10 shrink-0
-              items-center justify-center
-              rounded-lg
-              bg-accent
-              text-primary
-            "
-            aria-hidden="true"
-          >
-            {icon}
-          </span>
         </div>
 
         {/* KPI value / permission state */}
-        <div className="mt-5">
+        <div className="flex min-w-0 items-center">
           {!permissionGranted ? (
             <PermissionDeniedNotice
               permission={requiredPermission}
@@ -147,6 +178,7 @@ function MetricCard({
             <div
               role="alert"
               className="
+                w-full
                 rounded-lg
                 border border-destructive/30
                 bg-destructive/5
@@ -157,12 +189,12 @@ function MetricCard({
               取得できませんでした
             </div>
           ) : (
-            <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-bold leading-none tabular-nums text-foreground">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-4xl font-bold leading-none tracking-tight tabular-nums text-foreground">
                 {value.toLocaleString('ja-JP')}
               </span>
 
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-base font-semibold text-foreground">
                 件
               </span>
             </div>
@@ -170,13 +202,7 @@ function MetricCard({
         </div>
 
         {/* Footer */}
-        <div
-          className="
-            mt-auto
-            flex items-center justify-between gap-3
-            pt-4
-          "
-        >
+        <div className="flex items-center justify-between gap-3">
           <p className="min-w-0 truncate text-subtle text-foreground">
             {description}
           </p>
@@ -192,7 +218,6 @@ function MetricCard({
             <ArrowRight />
           </Button>
         </div>
-
       </CardContent>
     </Card>
   );
@@ -386,7 +411,7 @@ function CancelRequestSummary({
       <CardHeader className='flex-row items-start justify-between space-y-0'>
         <div>
           <CardTitle>取消一覧</CardTitle>
-          <p className='mt-2 text-subtle text-foreground'>
+          <p className='mt-2 text-sm text-foreground'>
             未処理 {pendingRequests.length.toLocaleString('ja-JP')}件
           </p>
         </div>
@@ -509,6 +534,64 @@ function BatchHistorySummary({
   );
 }
 
+/** Renders the notification feed from the shared navbar store without refetching it. */
+function NotificationSummary() {
+  const {
+    notifications,
+    loading,
+    error,
+    markAsRead,
+    deleteNotification,
+  } = useNotifications();
+
+  /** Marks one notification as read and keeps failures local to this card. */
+  const handleMarkAsRead = async (
+    notificationId: Parameters<typeof markAsRead>[0],
+  ) => {
+    try {
+      await markAsRead(notificationId);
+    } catch {
+      toast({
+        title: 'エラー',
+        description: '通知を既読にできませんでした。',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  /** Deletes one notification and keeps failures local to this card. */
+  const handleDeleteNotification = async (
+    notificationId: Parameters<typeof deleteNotification>[0],
+  ) => {
+    try {
+      await deleteNotification(notificationId);
+    } catch {
+      toast({
+        title: 'エラー',
+        description: '通知を削除できませんでした。',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  return (
+    <Card className='rounded-xl border-border shadow-app-sm xl:flex xl:min-h-0 xl:flex-1 xl:flex-col xl:overflow-hidden'>
+      <CardHeader className='shrink-0'>
+        <CardTitle>お知らせ</CardTitle>
+      </CardHeader>
+      <CardContent className='min-h-0 xl:flex-1 xl:overflow-y-auto'>
+        <NotificationsList
+          notifications={notifications}
+          loading={loading}
+          error={error}
+          onMarkAsRead={handleMarkAsRead}
+          onDelete={handleDeleteNotification}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
 /** Renders URL-driven monitoring dialogs using the existing full table components. */
 function MonitoringDialogs({
   activePanel,
@@ -586,6 +669,8 @@ function MonitoringDialogs({
 export function AdminDashboardOverview(
   props: Readonly<AdminDashboardOverviewProps>,
 ) {
+  const { elementRef: mainColumnRef, height: mainColumnHeight } =
+    useElementHeight<HTMLDivElement>();
   const pendingCancelCount = props.cancelRequests.filter(
     (request) => request.status.toUpperCase() === 'PENDING',
   ).length;
@@ -594,15 +679,19 @@ export function AdminDashboardOverview(
     (props.activePanel === 'batch' && props.canReadBatchHistory)
       ? props.activePanel
       : null;
+  const alignedSidebarStyle =
+    mainColumnHeight > 0
+      ? ({
+          '--admin-home-main-column-height': `${mainColumnHeight}px`,
+        } as CSSProperties)
+      : undefined;
 
   return (
     <div className='space-y-8'>
-      <header className='space-y-2'>
-        <h1 className='text-foreground'>ホーム</h1>
-        <p className='mt-2 text-base text-foreground'>
-          運用業務を担当するユーザーのアカウントを管理します。
-        </p>
-      </header>
+      <AdminPageHeader
+        title="ホーム"
+        description="運用業務を担当するユーザーのアカウントを管理します。"
+      />
       <section
         aria-label="主要な登録状況"
         className="
@@ -659,29 +748,26 @@ export function AdminDashboardOverview(
         />
       </section>
       <div className='grid items-start gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.85fr)]'>
-        <div className='space-y-6'>
-          <Card className='rounded-xl border-border shadow-app-sm'>
-            <CardHeader>
-              <CardTitle>プロジェクト一覧</CardTitle>
-              <p className='text-subtle text-foreground'>
-                確認が必要な入会届が多いプロジェクトから表示します。
-              </p>
-            </CardHeader>
-            <CardContent>
-              {props.canReadProjects ? (
-                <AdminProjectStatusTable
-                  projects={props.projects}
-                  openReviews={props.openMembershipReviews}
-                  projectsLoading={props.projectsLoading}
-                  projectsError={props.projectsError}
-                  openReviewsError={props.openMembershipReviewsError}
-                  onOpenMembership={props.onOpenProjectMembership}
-                />
-              ) : (
-                <PermissionDeniedNotice permission='PROJECT_READ' />
-              )}
-            </CardContent>
-          </Card>
+        <div ref={mainColumnRef} className='min-w-0 space-y-6'>
+          <AdminTableCard
+            title='プロジェクト一覧'
+            count={props.projects.length}
+            description='確認が必要な入会届が多いプロジェクトから表示します。'
+          >
+            {props.canReadProjects ? (
+              <AdminProjectStatusTable
+                projects={props.projects}
+                openReviews={props.openMembershipReviews}
+                projectsLoading={props.projectsLoading}
+                projectsError={props.projectsError}
+                openReviewsError={props.openMembershipReviewsError}
+                onOpenProjectDetail={props.onOpenProjectDetail}
+                onOpenMembership={props.onOpenProjectMembership}
+              />
+            ) : (
+              <PermissionDeniedNotice permission='PROJECT_READ' />
+            )}
+          </AdminTableCard>
           <CompanyApplicationSummary
             pendingApplications={props.pendingApplications}
             pendingTotal={props.pendingApplicationTotal}
@@ -696,7 +782,10 @@ export function AdminDashboardOverview(
             permissionGranted={props.canReviewCompanies}
           />
         </div>
-        <div className='space-y-6'>
+        <div
+          style={alignedSidebarStyle}
+          className='flex min-w-0 flex-col gap-6 xl:h-[var(--admin-home-main-column-height)] xl:min-h-0 xl:max-h-[var(--admin-home-main-column-height)] xl:overflow-hidden'
+        >
           <CancelRequestSummary
             requests={props.cancelRequests}
             loading={props.cancelRequestsLoading}
@@ -712,6 +801,7 @@ export function AdminDashboardOverview(
             onOpenPanel={() => props.onPanelChange('batch')}
             permissionGranted={props.canReadBatchHistory}
           />
+          <NotificationSummary />
         </div>
       </div>
       <MonitoringDialogs

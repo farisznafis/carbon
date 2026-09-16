@@ -30,7 +30,7 @@ export function HomeBenefitsSection() {
         relative
         scroll-mt-20
         overflow-hidden
-        bg-[linear-gradient(130deg,hsl(var(--blue-900)),hsl(var(--blue-800))_70%,hsl(var(--blue-700)))]
+        surface-brand-dark
         py-16
         sm:py-20
         lg:py-24
@@ -210,7 +210,7 @@ export function HomeBenefitsSection() {
                           ${
                             isActive
                               ? 'text-background'
-                              : 'text-background/80'
+                              : 'text-background'
                           }
                         `}
                       >
@@ -223,7 +223,7 @@ export function HomeBenefitsSection() {
                           block
                           text-sm
                           leading-6
-                          text-background/50
+                          text-background
                         "
                       >
                         {capability.summary}
@@ -290,7 +290,7 @@ export function HomeBenefitsSection() {
                 max-w-2xl
                 text-sm
                 leading-7
-                text-background/60
+                text-background
                 sm:text-base
               "
             >
@@ -319,12 +319,10 @@ export function HomeBenefitsSection() {
                   alt={activeCapability.previewImage.alt}
                   loading="lazy"
                   className="
-                    h-full
-                    min-h-[320px]
+                    block
+                    h-auto
                     w-full
-                    object-cover
-                    object-top
-                    sm:min-h-[380px]
+                    object-contain
                   "
                 />
               ) : (

@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { ProjectCompletionDialog } from './ProjectCompletionDialog';
 import { formatProjectDateTime } from '../projectStatusPresentation';
+import { cn } from '@/lib/utils';
 
 type ProjectTableProps = {
   projects: Project[];
@@ -54,53 +55,58 @@ const projectStatusOptions: ProjectStatus[] = [
   '終了',
 ];
 
+const NON_EDITABLE_PROJECT_STATUS: ProjectStatus = '準備中';
+const editableProjectStatusOptions = projectStatusOptions.filter(
+  (status) => status !== NON_EDITABLE_PROJECT_STATUS,
+);
+
 const statusColors: Record<
   ProjectStatus,
   { bg: string; text: string; border: string }
 > = {
   作成済み: {
     bg: '#F1F5F9',
-    text: '#475569',
+    text: '#465467',
     border: '#CBD5E1',
   },
   準備中: {
     bg: '#FEF3C7',
-    text: '#92400E',
+    text: '#8A3908',
     border: '#FCD34D',
   },
   変更中: {
     bg: '#DBEAFE',
-    text: '#1D4ED8',
+    text: '#0C3CC3',
     border: '#93C5FD',
   },
   妥当性確認処理: {
     bg: '#E0E7FF',
-    text: '#4338CA',
+    text: '#3D32C0',
     border: '#A5B4FC',
   },
   却下: {
     bg: '#FEE2E2',
-    text: '#B91C1C',
+    text: '#9B0909',
     border: '#FCA5A5',
   },
   実施中: {
     bg: '#DCFCE7',
-    text: '#15803D',
+    text: '#006024',
     border: '#86EFAC',
   },
   検証中: {
     bg: '#CCFBF1',
-    text: '#0F766E',
+    text: '#005B54',
     border: '#5EEAD4',
   },
   クレジット申請中: {
     bg: '#F3E8FF',
-    text: '#7E22CE',
+    text: '#6F13BF',
     border: '#D8B4FE',
   },
   終了: {
     bg: '#E5E7EB',
-    text: '#374151',
+    text: '#000000',
     border: '#D1D5DB',
   },
 };
@@ -138,12 +144,22 @@ function getProjectStatusColors(status: Project['projectStatus']) {
 function getStatusOptions(currentStatus: string): string[] {
   if (
     !currentStatus ||
-    projectStatusOptions.includes(currentStatus as ProjectStatus)
+    editableProjectStatusOptions.includes(currentStatus as ProjectStatus)
   ) {
-    return projectStatusOptions;
+    return editableProjectStatusOptions;
   }
 
-  return [currentStatus, ...projectStatusOptions];
+  return [currentStatus, ...editableProjectStatusOptions];
+}
+
+/** Checks whether the current API status must remain read-only in the table. */
+function isNonEditableProjectStatus(status: string) {
+  const normalizedStatus = status.trim();
+  return (
+    normalizedStatus === NON_EDITABLE_PROJECT_STATUS ||
+    projectStatusAliases[normalizedStatus.toUpperCase()] ===
+      NON_EDITABLE_PROJECT_STATUS
+  );
 }
 
 function isTerminalProjectStatus(status: string) {
@@ -179,7 +195,7 @@ function MethodologyIdentityCell({
 
   return (
     <div className="min-w-0 leading-5">
-      <div className="font-bold text-foreground">
+      <div className="font-medium text-foreground">
         {methodologyId || '-'}
       </div>
 
@@ -337,6 +353,9 @@ export function ProjectTable({
       sortValue: (project) => project.projectStatus,
       render: (project) => {
         const statusColor = getProjectStatusColors(project.projectStatus);
+        const statusIsReadOnly = isNonEditableProjectStatus(
+          project.projectStatus,
+        );
 
         return (
           <span className="block min-w-0" {...stopRowActivation}>
@@ -344,6 +363,7 @@ export function ProjectTable({
               value={project.projectStatus}
               disabled={
                 updatingProjectStatusId === project.id ||
+                statusIsReadOnly ||
                 isTerminalProjectStatus(project.projectStatus)
               }
               onValueChange={(value) =>
@@ -351,13 +371,20 @@ export function ProjectTable({
               }
             >
               <SelectTrigger
-                className="h-8 w-full rounded-full border px-3 text-table font-bold shadow-none focus:ring-1"
+                className={cn(
+                  'h-8 w-full rounded-full border px-3 text-table font-bold shadow-none focus:ring-1',
+                  statusIsReadOnly && '[&>svg]:hidden',
+                )}
                 style={{
                   backgroundColor: statusColor.bg,
                   color: statusColor.text,
                   borderColor: statusColor.border,
                 }}
-                title="ステータスを変更"
+                title={
+                  statusIsReadOnly
+                    ? '準備中のステータスは変更できません'
+                    : 'ステータスを変更'
+                }
               >
                 <SelectValue />
               </SelectTrigger>
