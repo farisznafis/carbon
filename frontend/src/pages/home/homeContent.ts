@@ -56,7 +56,7 @@ export const HOME_CAPABILITIES: readonly HomeCapability[] = [
     summary:
       '企業・拠点をまたぐ情報を、同じ視点で。',
     previewImage: {
-      src: '/public/assets/home/feature-1.png',
+      src: 'public/assets/home/feature-1.png',
       alt: '排出量データ管理の画面イメージ',
     },
   },
