@@ -2,9 +2,11 @@ package com.kct.jcredit.core_backend.security;
 
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.constant.RoleConstants;
+import com.kct.jcredit.core_backend.entity.OperatingUser;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
-import com.kct.jcredit.core_backend.enums.SubscriptionStatus;
+import com.kct.jcredit.core_backend.enums.CompanyStatus;
+import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.util.JwtUtil;
@@ -15,14 +17,13 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -32,11 +33,12 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
 
     private final ParticipatingCompanyRepository companyRepository;
     private final ParticipatingUserRepository userRepository;
+    private final OperatingUserRepository operatingUserRepository;
     private final JwtUtil jwtUtil;
 
-    private static final String MONITORING_API = "/api/monitoring";
-    private static final String PROJECT_API = "/api/project";
-
+    /**
+     * Enforces canonical company access status before protected business endpoints run.
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -58,6 +60,11 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
             return;
         }
 
+        if (RoleConstants.OPERATOR.equals(role)) {
+            authorizeOperator(request, response, filterChain, token, companyId, role);
+            return;
+        }
+
         Optional<ParticipatingCompany> companyOpt = companyRepository.findByCompanyId(companyId);
         
         if (companyOpt.isEmpty()) {
@@ -66,22 +73,21 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
         }
 
         ParticipatingCompany company = companyOpt.get();
-        if (!company.getIsActive()) {
-            log.warn("Company inactive or suspended, blocking request: {}", request.getRequestURI());
-            sendErrorResponse(response, ResponseConstants.FORBIDDEN, ResponseConstants.MSG_FORBIDDEN);
+        if (company.getCompanyStatus() != CompanyStatus.ACTIVE) {
+            log.warn(
+                    "Company access blocked. companyId={}, status={}, uri={}",
+                    company.getCompanyId(),
+                    company.getCompanyStatus(),
+                    request.getRequestURI()
+            );
+            String statusCode = company.getCompanyStatus() == CompanyStatus.SUSPENDED
+                    ? ResponseConstants.SUSPENDED
+                    : ResponseConstants.FORBIDDEN;
+            String message = company.getCompanyStatus() == CompanyStatus.SUSPENDED
+                    ? ResponseConstants.MSG_COMPANY_ACCESS_SUSPENDED
+                    : ResponseConstants.MSG_FORBIDDEN;
+            sendErrorResponse(response, statusCode, message);
             return;
-        }
-
-        if (company.getSubscriptionStatus() == SubscriptionStatus.SUSPENDED) {
-            String requestUri = request.getRequestURI();
-            boolean isMonitoringPost = request.getMethod().equals("POST") && requestUri.startsWith(MONITORING_API);
-            boolean isProjectGet = request.getMethod().equals("GET") && requestUri.startsWith(PROJECT_API);
-
-            if (isMonitoringPost || isProjectGet) {
-                log.warn("Company inactive or suspended, blocking request: {}", request.getRequestURI());
-                sendErrorResponse(response, ResponseConstants.SUSPENDED, ResponseConstants.MSG_SUSPENDED);
-                return;
-            }
         }
 
         if (RoleConstants.USER.equals(role)) {
@@ -98,12 +104,90 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Validates an operator against the operator domain without consulting participating companies.
+     */
+    private void authorizeOperator(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain,
+            String token,
+            String companyId,
+            String tokenRole) throws IOException, ServletException {
+        Integer tokenUserId = jwtUtil.extractUserId(token);
+        String tokenUsername = jwtUtil.extractUsername(token);
+        if (tokenUserId == null || tokenUsername == null) {
+            log.warn(
+                    "Operator access blocked. tokenUserIdPresent={}, tokenUsernamePresent={}, uri={}",
+                    tokenUserId != null,
+                    tokenUsername != null,
+                    request.getRequestURI()
+            );
+            sendErrorResponse(response, ResponseConstants.FORBIDDEN, ResponseConstants.MSG_FORBIDDEN);
+            return;
+        }
+
+        Optional<OperatingUser> operatorOpt = operatingUserRepository.findForAuthorization(
+                tokenUsername,
+                companyId
+        );
+        if (operatorOpt.isEmpty()) {
+            log.warn(
+                    "Operator access blocked. operatorDomainMatch=false, uri={}",
+                    request.getRequestURI()
+            );
+            sendErrorResponse(response, ResponseConstants.FORBIDDEN, ResponseConstants.MSG_FORBIDDEN);
+            return;
+        }
+
+        OperatingUser operator = operatorOpt.get();
+        boolean userIdMatches = Objects.equals(tokenUserId, operator.getId());
+        boolean roleMatches = RoleConstants.OPERATOR.equals(tokenRole)
+                && RoleConstants.OPERATOR.equals(operator.getRole());
+        boolean usernameMatches = Objects.equals(tokenUsername, operator.getUsername());
+        boolean companyPresent = operator.getCompany() != null;
+        boolean userActive = Boolean.TRUE.equals(operator.getIsActive());
+        boolean companyActive = companyPresent && Boolean.TRUE.equals(operator.getCompany().getIsActive());
+        boolean companyIdMatches = companyPresent
+                && Objects.equals(companyId, operator.getCompany().getCompanyId());
+        boolean authorized = userIdMatches
+                && roleMatches
+                && usernameMatches
+                && userActive
+                && companyActive
+                && companyIdMatches;
+        if (!authorized) {
+            log.warn(
+                    "Operator access blocked. userIdMatches={}, roleMatches={}, usernameMatches={}, "
+                            + "userActive={}, companyPresent={}, companyActive={}, companyIdMatches={}, uri={}",
+                    userIdMatches,
+                    roleMatches,
+                    usernameMatches,
+                    userActive,
+                    companyPresent,
+                    companyActive,
+                    companyIdMatches,
+                    request.getRequestURI()
+            );
+            sendErrorResponse(response, ResponseConstants.FORBIDDEN, ResponseConstants.MSG_FORBIDDEN);
+            return;
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Skips public authentication documentation and login routes.
+     */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
         return path.startsWith("/auth/") || path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui");
     }
 
+    /**
+     * Writes the existing compact security error contract.
+     */
     private void sendErrorResponse(HttpServletResponse response, String statusCode, String message) throws IOException {
         response.setStatus(mapStatusCodeToHttpStatus(statusCode));
         response.setContentType("application/json;charset=UTF-8");
@@ -113,6 +197,9 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
         );
     }
 
+    /**
+     * Maps internal security status codes to HTTP status codes.
+     */
     private int mapStatusCodeToHttpStatus(String statusCode) {
         switch (statusCode) {
             case "NOT_FOUND":

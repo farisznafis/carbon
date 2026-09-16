@@ -1,33 +1,44 @@
 package com.kct.jcredit.core_backend.dto.request;
 
+import com.kct.jcredit.core_backend.validation.ValidEmail;
 import com.kct.jcredit.core_backend.validation.CorpNumber;
+import com.kct.jcredit.core_backend.validation.Hankaku;
 import com.kct.jcredit.core_backend.validation.JapaneseText;
 import com.kct.jcredit.core_backend.validation.Katakana;
 import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.PostalCode;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
 import com.kct.jcredit.core_backend.validation.ZenkakuWithSymbols;
-import com.kct.jcredit.core_backend.validation.Hankaku;
-import com.kct.jcredit.core_backend.validation.HankakuWithSymbols;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class PartiCompanyRegisterRequest {
+
+    private UUID emailVerificationChallengeId;
+
+    /**
+     * Populated only in GET /company/signup/revision responses so the frontend can
+     * display why the application was rejected. Ignored when submitted on PUT.
+     */
+    private String rejectionReason;
+
+    /**
+     * Populated only in GET /company/signup/revision responses. Ignored when submitted on PUT.
+     */
+    private LocalDateTime rejectedAt;
 
     @NotBlank(message = "法人番号は13桁の数字で入力してください。")
     @CorpNumber
@@ -40,13 +51,8 @@ public class PartiCompanyRegisterRequest {
     @Katakana
     private String corporateNameKana;
 
-    @NotBlank(message = "会社名（英語）は英数字で入力してください。")
     @Hankaku
     private String companyNameEnglish;
-
-    @NotBlank(message = "メールアドレスの形式が正しくありません。")
-    @Email(message = "メールアドレスの形式が正しくありません。")
-    private String corporateEmail;
 
     @NotBlank(message = "電話番号の形式が正しくありません。")
     @PhoneNumber
@@ -56,17 +62,17 @@ public class PartiCompanyRegisterRequest {
     @PostalCode
     private String postalCode;
 
-    @NotNull(message = "都道府県を選択してください。")
+    @NotBlank(message = "都道府県を選択してください。")
     @Zenkaku
     @Size(max = 10, message = "都道府県名は100文字以内で入力してください。")
     private String prefecture;
 
-    @NotNull(message = "市区町村を選択してください。")
+    @NotBlank(message = "市区町村を選択してください。")
     @Zenkaku
     @Size(max = 150, message = "市区町村名は150文字以内で入力してください。")
     private String municipality;
 
-    @NotNull(message = "番地を入力してください。")
+    @NotBlank(message = "番地を入力してください。")
     @JapaneseText(allowAlphanumeric = true)
     @Size(max = 100, message = "番地は100文字以内で入力してください。")
     private String blocknum;
@@ -95,19 +101,20 @@ public class PartiCompanyRegisterRequest {
     @Zenkaku
     private String position;
 
-    @NotBlank(message = "電話番号の形式が正しくありません。（例: 03-1234-5678）")
+    @NotBlank(message = "電話番号の形式が正しくありません。（例: 0312345678）")
     @PhoneNumber
     private String phoneNumber;
 
-    @NotBlank(message = "FAX番号の形式が正しくありません。（例: 03-1234-5679）")
     @PhoneNumber
     private String faxNumber;
 
     @NotBlank(message = "メールアドレスの形式が正しくありません。")
-    @Email(message = "メールアドレスの形式が正しくありません。")
+    @ValidEmail(message = "メールアドレスの形式が正しくありません。")
     private String email;
 
+    @NotEmpty(message = "方法論を1つ以上選択してください。")
     private List<String> methodology;
 
+    @NotBlank(message = "活動内容を入力してください。もし活動がない場合は「なし」を選んでください。")
     private String activityInformation;
 }

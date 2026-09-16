@@ -2,9 +2,11 @@ package com.kct.jcredit.core_backend.service.impl;
  
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.response.NotificationListResponse;
-import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.details.NotificationDetailResponse;
+import com.kct.jcredit.core_backend.dto.response.NotificationCountResponse;
 import com.kct.jcredit.core_backend.entity.base.PaginationDetailResponse;
+import com.kct.jcredit.core_backend.dto.request.InquiryRequest;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 
 import com.kct.jcredit.core_backend.entity.Notification;
 import com.kct.jcredit.core_backend.entity.OperatingUser;
@@ -28,7 +30,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
-import java.util.Optional;
+
 
 
 @Slf4j
@@ -50,38 +52,28 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void sendSuspensionNotification(ParticipatingCompany company) {
         String subject = "アカウント停止のお知らせ";
-        String body = "お客様のアカウントは現在停止されています。\n" +
-            "お支払い方法: " + company.getPaymentMethod();
-        sendMail(company.getRepEmail(), subject, body);
+        String body = "お客様のアカウントは現在停止されています。詳細は管理者へお問い合わせください。";
+        sendMail(company.getEmail(), subject, body);
         log.info("[NOTIFICATION] Account Suspension - Company: {}, Email: {}",
-            company.getCompanyId(), company.getRepEmail());
+            company.getCompanyId(), company.getEmail());
     }
 
     @Override
     public void sendReactivationNotification(ParticipatingCompany company) {
         String subject = "アカウント再開のお知らせ";
         String body = "企業 ID: " + company.getCompanyId() + " のアカウントが再開されました。";
-        sendMail(company.getRepEmail(), subject, body);
+        sendMail(company.getEmail(), subject, body);
         log.info("[NOTIFICATION] Account Reactivation - Company: {}, Email: {}",
-            company.getCompanyId(), company.getRepEmail());
-    }
-
-    @Override
-    public void sendFailureNotification(ParticipatingCompany company, String failureReason) {
-        String subject = "支払い失敗の報告";
-        String body = "企業ID " + company.getCompanyId() + " での支払いに失敗しました。理由: " + failureReason;
-        sendMail("admin@gxcarbon.jp", subject, body);
-        log.warn("[NOTIFICATION] Payment Failure - Company: {}, Reason: {}",
-            company.getCompanyId(), failureReason);
+            company.getCompanyId(), company.getEmail());
     }
 
     @Override
     public void sendMasterAccountCredentials(ParticipatingCompany company, String username, String plainPassword) {
         String subject = "マスターアカウント発行のお知らせ";
         String body = "企業 ID: " + company.getCompanyId() + "\nUsername: " + username + "\nPassword: " + plainPassword;
-        sendMail(company.getRepEmail(), subject, body);
+        sendMail(company.getEmail(), subject, body);
         log.info("[NOTIFICATION] Master Account Created - Company: {}, Email: {}",
-                company.getCompanyId(), company.getRepEmail());
+                company.getCompanyId(), company.getEmail());
     }
 
     @Override
@@ -94,9 +86,23 @@ public class NotificationServiceImpl implements NotificationService {
             + "却下理由:\n"
             + rejectionReason + "\n\n"
             + "ご不明点がございましたら、お問い合わせください。";
-        sendMail(company.getRepEmail(), subject, body);
+        sendMail(company.getEmail(), subject, body);
         log.info("[NOTIFICATION] Company Rejected - Company: {}, Email: {}",
-            company.getCompanyId(), company.getRepEmail());
+            company.getCompanyId(), company.getEmail());
+    }
+
+    @Override
+    public void sendSecurityEmail(String email, String subject, String body) {
+        sendMail(email, subject, body);
+    }
+
+    @Override
+    public void sendOtpEmail(String email, String code, long expiresInMinutes) {
+        String subject = "メール認証コードのお知らせ";
+        String body = "認証コードは以下の通りです: " + code + "\n\n"
+                + "このコードの有効期限は" + expiresInMinutes + "分です。"
+                + "このコードは他人に共有しないでください。";
+        sendMail(email, subject, body);
     }
 
 
@@ -170,6 +176,80 @@ public class NotificationServiceImpl implements NotificationService {
         response.setPagination(pagination);
         
         return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public NotificationCountResponse getNotificationCount(Integer userId, boolean isOperatingUser) {
+        log.info("Counting unread notifications - userId: {}, isOperatingUser: {}", userId, isOperatingUser);
+
+        long unreadCount = isOperatingUser
+            ? notificationRepository.countUnreadByOperatingUserId(userId)
+            : notificationRepository.countUnreadByParticipatingUserId(userId);
+
+        NotificationCountResponse response = new NotificationCountResponse();
+        response.setUnreadCount(unreadCount);
+        response.setStatusCode(ResponseConstants.OK);
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public NotificationListResponse readNotification(Integer userId, Integer notificationId, boolean isOperatingUser) {
+        log.info("Marking notification read - userId: {}, notificationId: {}, isOperatingUser: {}", userId, notificationId, isOperatingUser);
+
+        NotificationListResponse response = new NotificationListResponse();
+
+        Notification notification = notificationRepository.findById(notificationId)
+            .filter(Notification::getIsActive)
+            .orElse(null);
+
+        if (notification == null || !isNotificationAccessible(notification, userId, isOperatingUser)) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage("Notification not found");
+            return response;
+        }
+
+        if (!Boolean.TRUE.equals(notification.getRead())) {
+            notification.markAsRead();
+            notificationRepository.save(notification);
+        }
+
+        response.setStatusCode(ResponseConstants.OK);
+        response.setNotifications(List.of(convertToNotificationDetailResponse(notification)));
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public NotificationListResponse deleteNotification(Integer userId, Integer notificationId, boolean isOperatingUser) {
+        log.info("Deleting notification - userId: {}, notificationId: {}, isOperatingUser: {}", userId, notificationId, isOperatingUser);
+
+        NotificationListResponse response = new NotificationListResponse();
+
+        Notification notification = notificationRepository.findById(notificationId)
+            .filter(Notification::getIsActive)
+            .orElse(null);
+
+        if (notification == null || !isNotificationAccessible(notification, userId, isOperatingUser)) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage("Notification not found");
+            return response;
+        }
+
+        notification.setIsActive(false);
+        notificationRepository.save(notification);
+
+        response.setStatusCode(ResponseConstants.OK);
+        response.setNotifications(List.of());
+        return response;
+    }
+
+    private boolean isNotificationAccessible(Notification notification, Integer userId, boolean isOperatingUser) {
+        if (Boolean.TRUE.equals(isOperatingUser)) {
+            return notification.getOperatingUser() != null && notification.getOperatingUser().getId().equals(userId);
+        }
+        return notification.getParticipatingUser() != null && notification.getParticipatingUser().getId().equals(userId);
     }
 
     private NotificationDetailResponse convertToNotificationDetailResponse(Notification notification) {
@@ -325,5 +405,47 @@ public Notification createNotification(
             log.info("Sent email to operator company {} at {}",
                     company.getCompanyId(), company.getEmail());
         }
+    }
+
+    @Override
+    public void sendParticipationRejectionNotification(ParticipatingCompany company, String rejectionReason) {
+        String subject = "入会届審査結果のお知らせ";
+        String body = "この度はお申し込みいただきありがとうございます。\n"
+            + "誠に申し訳ございませんが、入会届の審査の結果、却下となりました。\n\n"
+            + "却下理由:\n" + rejectionReason + "\n\n"
+            + "内容をご確認の上、再度お申し込みいただけます。";
+        sendMail(company.getEmail(), subject, body);
+        log.info("[NOTIFICATION] Participation Rejected - companyId: {}, email: {}",
+            company.getCompanyId(), company.getEmail());
+            //TODO: ここで通知を作成する場合は、参加企業の全ユーザーに通知を送るようにする
+    }
+
+    @Override
+    public void sendParticipationApprovedNotification(ParticipatingCompany company) {
+        String subject = "入会届審査完了のお知らせ";
+        String body = "入会届の審査が完了し、承認されました。\n"
+            + "書類の準備が整いましたら、マイページよりダウンロードいただけます。";
+        sendMail(company.getEmail(), subject, body);
+        log.info("[NOTIFICATION] Participation Approved - companyId: {}, email: {}",
+            company.getCompanyId(), company.getEmail());
+            //TODO: ここで通知を作成する場合は、参加企業の全ユーザーに通知を送るようにする
+    }
+
+    @Override
+    public BaseResponse createInquiry(InquiryRequest request) {
+        // making use of methods here send email to operator and make a notification for operator user
+        String subject = "新しいお問い合わせが届きました";
+        String body = "会社名: " + request.getCompanyName() + "\n"
+                + "氏名: " + request.getName() + "\n"
+                + "メールアドレス: " + request.getEmail() + "\n"
+                + "お問い合わせ内容:\n" + request.getContent();
+        sendEmailToAllOperatingUsers(subject, body);
+        createNotificationForAllOperatingUsers(subject, body);
+
+        // 仮のレスポンスを返す
+        BaseResponse response = new BaseResponse();
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage("お問い合わせ内容を受け付けました。");
+        return response;
     }
 }

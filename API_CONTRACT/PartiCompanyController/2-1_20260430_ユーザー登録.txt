@@ -1,0 +1,106 @@
+20260430_ユーザー登録
+# company_signup
+
+URL: POST /company/signup
+Content-Type: application/json
+
+Request Body (JSON):
+{
+  # Page 1 (法人・個人情報)
+  "corporateNumber": "123467890123", # 電話番号
+  "corporateName": "株式会社サンプル", # 企業名（日本語）
+  "corporateNameKana": "カブシキガイシャサンプル", # 企業名（フリガナ）
+  "companyNameEnglish": "Sample Corporation", # 会社名（英語）
+  "corporatePhoneNumber": "03-1234-5678", # NEW: 電話番号
+
+  "postalCode": "1234567",
+  "prefecture": "東京",
+  "municipality": "渋谷区桜丘町",
+  "blocknum": "1-1"
+  "buildingName": "サンプルビル 3F",
+
+  "lastName": "山田",                   # 法人代表者姓
+  "firstName": "太郎",                  # 法人代表者名
+  "lastNameKana": "ヤマダ",             # 法人代表者姓（フリガナ）
+  "firstNameKana": "タロウ",            # 法人代表者名（フリガナ）
+  "position": "会長",                   # 法人代表役職
+  "phoneNumber": "03-1234-5678",        # 法人代表者電話番号
+  "faxNumber": "03-1234-5679",          # 法人代表者FAX番号
+  "email": "yamada@company.com",         # 法人代表者メールアドレス
+
+  "methodology": "太陽後発電気",        
+  "activityInformation": "lorem ipsum dolor sir amet"       
+
+}
+
+# Response - Success (HTTP 200)
+# {
+#   "statusCode": "OK"
+# }
+
+Response - Success (HTTP 201 Created)
+{
+  "statusCode": "CREATED",
+  "message": "登録申請が完了しました。"
+  "registrationId": "REG-123456" # add registrationId to response
+  "status": "PENDING"
+}
+
+ERROR RESPONSES (HTTP 400 Bad Request)
+{
+  "statusCode": "VALIDATION_ERROR",
+  "fields": {
+    "corporateNumber": "法人番号は13桁の数字で入力してください。",
+    "corporateName": "法人名を入力してください。",
+    "corporateNameKana": "法人名カナは全角カタカナで入力してください。",
+    "companyNameEnglish": "会社名（英語）は半角英数字で入力してください。",
+
+    "postalCode": "郵便番号は7桁の数字で入力してください。（例: 1234567）",
+    "prefecture": "都道府県を選択してください。",
+    "city": "市区町村を入力してください。",
+    "address": "住所を入力してください。",
+    "building": "建物名・部屋番号を入力してください。",
+
+    "lastName": "姓を入力してください。",
+    "firstName": "名を入力してください。",
+    "lastNameKana": "姓（カナ）は全角カタカナで入力してください。",
+    "firstNameKana": "名（カナ）は全角カタカナで入力してください。",
+    "position": "役職を入力してください。",
+    "phoneNumber": "電話番号の形式が正しくありません。（例: 03-1234-5678）",
+    "faxNumber": "FAX番号の形式が正しくありません。（例: 03-1234-5679）",
+    "email": "メールアドレスの形式が正しくありません。",
+  }
+}
+
+
+Response - Error (409 Conflict)
+{ 
+  "statusCode": "EMAIL_ALREADY_USED",
+  "message": "このメールアドレスは既に登録されています。"
+},
+
+
+Response - Error (403 Forbidden)
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+
+Response - Error (404 Not Found)
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+
+Response - Error (400 Internal Server Error)
+{
+  "statusCode": "ALREADY_SUBMITTED",
+  "message": "こちらのフォームはすでに提出済みのため、内容の変更はできません。"
+},
+
+Response - Error (500 Internal Server Error)
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+

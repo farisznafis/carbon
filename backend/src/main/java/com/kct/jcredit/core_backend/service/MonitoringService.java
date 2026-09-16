@@ -4,6 +4,8 @@ import com.kct.jcredit.core_backend.dto.request.RegisterMonitoringRecordSolarReq
 import com.kct.jcredit.core_backend.dto.response.MonitoringRecordSolarResponse;
 import com.kct.jcredit.core_backend.dto.response.MonitoringRecordSolarListResponse;
 import com.kct.jcredit.core_backend.dto.response.FileUploadResponse;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+import com.kct.jcredit.core_backend.dto.response.MonitoringEvidenceItemsResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 
@@ -17,6 +19,12 @@ public interface MonitoringService {
         String companyId,
         RegisterMonitoringRecordSolarRequest request
     );
+
+    BaseResponse validateMonitoringRecordSolar(
+        String username,
+        String companyId,
+        RegisterMonitoringRecordSolarRequest request
+    );
     
     /**
      * Read last monitoring record for a company-specific site/project
@@ -24,19 +32,32 @@ public interface MonitoringService {
     MonitoringRecordSolarResponse readLastMonitoringRecordSolar(
         String username,
         String companyId,
-        Integer projectId,
-        Integer siteId
+        String projectId,
+        String siteId
     );
 
     MonitoringRecordSolarListResponse readAllMonitoringRecordsSolar(
         String username,
+        Integer page,
+        Integer limit,
+        String projectId,
+        String nextPageToken
+    );
+    
+
+    /**
+     * Read monitoring record by ID for a company-specific site/project
+     */   
+     MonitoringRecordSolarListResponse readSiteMonitoringRecordsSolar(
+        String username,
         String companyId,
-        Integer projectId,
-        Integer siteId,
+        String projectId,
+        String siteId,
         Integer page,
         Integer limit,
         String nextPageToken
     );
+    
 
     /**
      * 4 Evidence Upload APIs - company-scoped
@@ -45,8 +66,8 @@ public interface MonitoringService {
     FileUploadResponse uploadElpvEvidence(
         String username,
         String companyId,
-        Integer projectId,
-        Integer siteId,
+        String projectId,
+        String siteId,
         String description,
         MultipartFile file
     );
@@ -54,8 +75,8 @@ public interface MonitoringService {
     FileUploadResponse uploadElpvrEvidence(
         String username,
         String companyId,
-        Integer projectId,
-        Integer siteId,
+        String projectId,
+        String siteId,
         String description,
         MultipartFile file
     );
@@ -63,8 +84,8 @@ public interface MonitoringService {
     FileUploadResponse uploadElpjBatterySpecificationEvidence(
         String username,
         String companyId,
-        Integer projectId,
-        Integer siteId,
+        String projectId,
+        String siteId,
         String description,
         MultipartFile file
     );
@@ -72,10 +93,18 @@ public interface MonitoringService {
     FileUploadResponse uploadElpjControlEvidence(
         String username,
         String companyId,
-        Integer projectId,
-        Integer siteId,
+        String projectId,
+        String siteId,
         String description,
         MultipartFile file
+    );
+
+    MonitoringEvidenceItemsResponse readMonitoringEvidenceItems(
+            String username,
+            String companyId,
+            String projectId,
+            String siteId,
+            Integer equipmentId
     );
 
 }

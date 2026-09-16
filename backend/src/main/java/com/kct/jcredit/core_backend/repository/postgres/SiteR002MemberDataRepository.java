@@ -5,12 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-
-@Repository
 public interface SiteR002MemberDataRepository extends JpaRepository<SiteR002MemberData, Integer> {
 
     List<SiteR002MemberData> findBySite_IdAndProject_Id(Integer siteId, Integer projectId);

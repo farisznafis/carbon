@@ -13,30 +13,32 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MonitoringDataSolarResponse {
-  private Integer projectId;
-  private Integer siteId;
+  private String id;
+  private String projectId;
+  private String siteId;
+  private Integer equipmentId;
   private Integer userId;
-  private String projectType; 
+  private String projectType;
   private String timeUpdated;
-  
-  @JsonProperty("date_recorder")
   private String dateRecorded;
-  
-  @JsonProperty("ELpv_value")
   private BigDecimal elPv;
-  
-  @JsonProperty("ELpvr_value")
+  private String elPvEvidence;
   private BigDecimal elPvr;
-  
+  private String elPvrEvidence;
+  private String elPvEvidenceUrl;
+  private String elPvrEvidenceUrl;
   private Boolean changedBattery;
-  
-  @JsonProperty("ELPJ_battery_value")
   private BigDecimal elpjBatteryValue;
-  
-  @JsonProperty("ELPJ_control_value")
-  private BigDecimal elpjControl;
-  
-  @JsonProperty("ELPJ_accuracy")
-  private BigDecimal elpjAccuracy;
+  private String elpjBatteryEvidence;
+  private String elpjBatterySpecificationUrl;
 
+  @JsonProperty("elpjControlValue")
+  private BigDecimal elpjControl;
+
+  private String elpjControlEquipmentSpecFiles;
+  private String elpjControlEvidenceUrl;
+  private BigDecimal elpjAccuracy;
+  private Boolean isActive;
+  private String processedAt;
+  private String methodologyType;
 }

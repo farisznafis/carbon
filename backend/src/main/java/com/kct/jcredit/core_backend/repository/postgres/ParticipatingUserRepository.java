@@ -1,6 +1,7 @@
 package com.kct.jcredit.core_backend.repository.postgres;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,11 +17,15 @@ import java.util.List;
 public interface ParticipatingUserRepository extends JpaRepository<ParticipatingUser, Integer> {
    Optional<ParticipatingUser> findByUsername(String username);
 
+    Optional<ParticipatingUser> findByUsernameIgnoreCase(String username);
+
     Optional<ParticipatingUser> findByEmail(String email);
+
+    Optional<ParticipatingUser> findByEmailIgnoreCase(String email);
 
     @Query("""
         SELECT u FROM ParticipatingUser u
-        WHERE (u.username = :username OR u.email = :email)
+        WHERE (LOWER(u.username) = LOWER(:username) OR LOWER(u.email) = LOWER(:email))
         AND u.company.id = :companyId
     """)
     Optional<ParticipatingUser> findByUsernameOrEmailAndCompanyId(
@@ -31,13 +36,21 @@ public interface ParticipatingUserRepository extends JpaRepository<Participating
 
     List<ParticipatingUser> findByCompany_Id(Integer companyId);
 
+    @EntityGraph(attributePaths = "site")
+    @Query("SELECT u FROM ParticipatingUser u WHERE u.company.id = :companyId")
+    List<ParticipatingUser> findDetailsByCompanyId(@Param("companyId") Integer companyId);
+
     Optional<ParticipatingUser> findByCompany_IdAndRole(Integer companyId, String role);
 
     Optional<ParticipatingUser> findByUsernameAndCompany_Id(String username, Integer companyId);
 
     boolean existsByUsername(String username);
 
+    boolean existsByUsernameIgnoreCase(String username);
+
     boolean existsByEmail(String email);
+
+    boolean existsByEmailIgnoreCase(String email);
 
     long countByCompany_IdAndSite_Id(Integer companyId, Integer siteId);
     

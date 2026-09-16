@@ -13,7 +13,7 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PhoneNumber {
-    String message() default "電話番号の形式が正しくありません。（例: 03-1234-5678）";
+    String message() default "電話番号の形式が正しくありません。（例: 0312345678）";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

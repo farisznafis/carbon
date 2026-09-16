@@ -1,0 +1,42 @@
+url: POST /site/project/confirmation-items/validate
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body
+{
+  "isAgreeDataUse": true,
+  "isAgreeExtraData": true,
+  "isAgreeTransfer": true,
+  "isNotRegistered": true,
+  "isKeidanrenParticipation": false,
+  "isEmitter": true,
+  "emitterCode": "123456789",
+  "isAdjustedEmissionsAdded": true,
+  "isSubjectToPeriodicReport": true,
+  "isPeriodicReportTypeOne": true,
+  "energyBusinessCode": "1234567",
+  "factoryCode": "7654321"
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "message": "Confirmation items validation successful."
+}
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "VALIDATION_ERROR",
+  "message": "入力内容に不備があります。",
+  "errors": {
+    "request::emitterCode": "isEmitterがtrueの場合、emitterCodeは9桁の数字必須です。"
+  }
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

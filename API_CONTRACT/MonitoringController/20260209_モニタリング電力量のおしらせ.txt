@@ -1,0 +1,61 @@
+For Master and User
+モニタリング登録電力会社からの「購入電力量のおしらせ」資料ファイルアプロード
+POST /api/monitoring/:projectId/files
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: multipart/form-data
+
+Request Body (JSON): 
+{
+  siteId: 123456
+  file = <binary file>
+  fileType = ELPVR_EVIDENCE
+  description = 電力会社からの「購入電力量のおしらせ」資料  
+}　
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+   "file": {
+    "id": "file_98768",
+
+    "fileType": "ELPVR_EVIDENCE",
+    "fileName": "elpvrEvidence.pdf",
+    "contentType": "application/pdf",
+    "fileSize": 345678,
+    "url": "https://files.example.com/files/file_98766",
+    "description": "電力会社からの「購入電力量のおしらせ」資料",
+    
+    "uploadedAt": "2026-01-22"
+  }
+}
+
+ERROR RESPONSES
+{ //error 413
+  "statusCode": "FILE_TOO_LARGE",
+  "message": "アップロードされたファイルは、許可されている最大サイズを超えています。"
+  "details": {
+    "maxSizeMB": 10,
+    "actualSizeMB": 18.4
+  }
+},
+{ //error 415
+  "statusCode": "UNSUPPORTED_FILE_TYPE",
+  "message": "このファイル形式はアップロードできません。"
+  "details": {
+    "allowedTypes": ["application/pdf", "image/png", "image/jpeg"],
+    "receivedType": "application/x-msdownload"
+  }
+},
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+

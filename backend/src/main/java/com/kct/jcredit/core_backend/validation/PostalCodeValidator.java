@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 public class PostalCodeValidator implements ConstraintValidator<PostalCode, String> {
 
-    private static final Pattern POSTAL_CODE_PATTERN = Pattern.compile("^[0-9]{3}-?[0-9]{4}$");
+    private static final Pattern POSTAL_CODE_PATTERN = Pattern.compile("^[0-9]{7}$");
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {

@@ -2,6 +2,7 @@ package com.kct.jcredit.core_backend.security;
 
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.service.TokenBlacklistService;
+import com.kct.jcredit.core_backend.service.AuthVersionService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,16 +18,20 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final TokenBlacklistService tokenBlacklistService;
+    private final AuthVersionService authVersionService;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService,
+                                   AuthVersionService authVersionService) {
         this.jwtUtil = jwtUtil;
         this.tokenBlacklistService = tokenBlacklistService;
+        this.authVersionService = authVersionService;
     }
 
     @Override
@@ -49,11 +54,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     return;
                 }
                 String role = jwtUtil.extractRole(token);
+                Integer userId = jwtUtil.extractUserId(token);
+                if (!Objects.equals(jwtUtil.extractAuthVersion(token), authVersionService.current(userId, role))) {
+                    SecurityContextHolder.clearContext();
+                    sendUnauthorizedResponse(response, ResponseConstants.MSG_RELOGIN_REQUIRED);
+                    return;
+                }
                 List<GrantedAuthority> authorities = new ArrayList<>();
                 if (role.equals("master")) {
                     authorities.add(new SimpleGrantedAuthority("ROLE_user"));
                 }
                 authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+
+                // Add permissions as authorities
+                for (String permission : jwtUtil.extractPermissions(token)) {
+                    authorities.add(new SimpleGrantedAuthority(permission));
+                }
 
                 // set principal (you can store more info if needed)
                 UsernamePasswordAuthenticationToken authentication =

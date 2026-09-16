@@ -13,7 +13,7 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PostalCode {
-    String message() default "郵便番号の形式が正しくありません。（例: 100-0001）";
+    String message() default "郵便番号の形式が正しくありません。（例: 1000001）";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

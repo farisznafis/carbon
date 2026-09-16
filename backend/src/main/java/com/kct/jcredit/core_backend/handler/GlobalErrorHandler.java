@@ -9,20 +9,28 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
+import com.kct.jcredit.core_backend.dto.response.FileUploadResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+import com.kct.jcredit.core_backend.dto.response.details.FileErrorDetailsResponse;
 import com.kct.jcredit.core_backend.exception.AuthenticationException;
 import com.kct.jcredit.core_backend.exception.BusinessRuleViolationException;
 import com.kct.jcredit.core_backend.exception.CustomException;
 import com.kct.jcredit.core_backend.exception.DuplicateResourceException;
 import com.kct.jcredit.core_backend.exception.FileTooLargeException;
 import com.kct.jcredit.core_backend.exception.ResourceNotFoundException;
+import com.kct.jcredit.core_backend.util.JsonFieldNameResolver;
 import com.kct.jcredit.core_backend.exception.UnsupportedFileTypeException;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 
@@ -36,6 +44,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestControllerAdvice
 public class GlobalErrorHandler {
+
+    private static final int MAX_UPLOAD_SIZE_MB = 10;
 
     // ---- Most specific custom exceptions first ----
 
@@ -76,6 +86,26 @@ public class GlobalErrorHandler {
         log.warn("File too large: maxSizeMB={}, actualSizeMB={}", ex.getMaxSizeMB(), ex.getActualSizeMB());
 
         BaseResponse response = BaseResponse.error(ResponseConstants.FILE_TOO_LARGE, ResponseConstants.MSG_FILE_TOO_LARGE);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<FileUploadResponse> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
+        log.warn("Multipart upload exceeded max size: maxUploadSize={}", ex.getMaxUploadSize());
+
+        return new ResponseEntity<>(fileTooLargeUploadResponse(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<BaseResponse> handleMultipartException(MultipartException ex) {
+        log.warn("Multipart request failed: {}", ex.getMessage());
+
+        if (containsCause(ex, MaxUploadSizeExceededException.class)) {
+            BaseResponse response = fileTooLargeUploadResponse();
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        BaseResponse response = BaseResponse.error(ResponseConstants.BAD_REQUEST, ResponseConstants.MSG_BAD_REQUEST);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
@@ -136,6 +166,61 @@ public class GlobalErrorHandler {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
+    /**
+     * Converts validated query-object binding failures into the standard field error contract.
+     */
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<BaseResponse> handleBindException(BindException ex) {
+        Map<String, String> errors = ex.getBindingResult().getFieldErrors().stream()
+                .collect(Collectors.toMap(
+                        FieldError::getField,
+                        fieldError -> fieldError.getDefaultMessage() == null
+                                ? "入力値が正しくありません。"
+                                : fieldError.getDefaultMessage(),
+                        (first, second) -> first,
+                        LinkedHashMap::new
+                ));
+        BaseResponse response = BaseResponse.error(
+                ResponseConstants.VALIDATION_ERROR,
+                ResponseConstants.MSG_VALIDATION_ERROR
+        );
+        response.setErrors(errors);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Handles invalid enum and scalar query parameter formats without leaking conversion details.
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<BaseResponse> handleMethodArgumentTypeMismatchException(
+            MethodArgumentTypeMismatchException ex) {
+        BaseResponse response = BaseResponse.error(
+                ResponseConstants.VALIDATION_ERROR,
+                ResponseConstants.MSG_VALIDATION_ERROR
+        );
+        response.setErrors(Map.of(ex.getName(), "入力値が正しくありません。"));
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Handles method-level parameter constraints used by paginated endpoints.
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<BaseResponse> handleConstraintViolationException(ConstraintViolationException ex) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        ex.getConstraintViolations().forEach(violation -> {
+            String path = violation.getPropertyPath().toString();
+            String field = path.substring(path.lastIndexOf('.') + 1);
+            errors.putIfAbsent(field, violation.getMessage());
+        });
+        BaseResponse response = BaseResponse.error(
+                ResponseConstants.VALIDATION_ERROR,
+                ResponseConstants.MSG_VALIDATION_ERROR
+        );
+        response.setErrors(errors);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<BaseResponse> handleMissingServletRequestParameterException(MissingServletRequestParameterException ex) {
         log.warn("Missing request parameter: {}", ex.getParameterName());
@@ -170,62 +255,12 @@ public class GlobalErrorHandler {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
+    /**
+     * Delegates to the shared resolver so this {@code @Valid} path and the
+     * project-plan service's programmatic validation emit identical error keys.
+     */
     private String resolveJsonFieldName(String fieldPath, String objectName) {
-        Class<?> targetClass = resolveClassFromObjectName(objectName);
-        if (targetClass == null) {
-            return fieldPath;
-        }
-
-        String[] pathParts = fieldPath.split("\\.");
-        Class<?> currentClass = targetClass;
-        StringBuilder jsonPath = new StringBuilder();
-
-        for (String pathPart : pathParts) {
-            String collectionSuffix = "";
-            String fieldName = pathPart;
-            int collectionStart = pathPart.indexOf('[');
-            if (collectionStart >= 0) {
-                collectionSuffix = pathPart.substring(collectionStart);
-                fieldName = pathPart.substring(0, collectionStart);
-            }
-
-            String jsonFieldName = resolveJsonFieldName(currentClass, fieldName);
-            if (jsonPath.length() > 0) {
-                jsonPath.append(".");
-            }
-            jsonPath.append(jsonFieldName).append(collectionSuffix);
-
-            Field nestedField = findField(currentClass, fieldName);
-            if (nestedField != null) {
-                currentClass = nestedField.getType();
-            }
-        }
-
-        return jsonPath.toString();
-    }
-
-    private Class<?> resolveClassFromObjectName(String objectName) {
-        String basePackage = "com.kct.jcredit.core_backend.dto.request.";
-        String className = Character.toUpperCase(objectName.charAt(0)) + objectName.substring(1);
-        try {
-            return Class.forName(basePackage + className);
-        } catch (ClassNotFoundException ex) {
-            return null;
-        }
-    }
-
-    private String resolveJsonFieldName(Class<?> targetClass, String fieldName) {
-        Field field = findField(targetClass, fieldName);
-        if (field == null) {
-            return fieldName;
-        }
-
-        JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
-        if (jsonProperty != null && !jsonProperty.value().isBlank()) {
-            return jsonProperty.value();
-        }
-
-        return fieldName;
+        return JsonFieldNameResolver.resolveByObjectName(fieldPath, objectName);
     }
 
     private Field findField(Class<?> targetClass, String fieldName) {
@@ -238,6 +273,27 @@ public class GlobalErrorHandler {
             }
         }
         return null;
+    }
+
+    private FileUploadResponse fileTooLargeUploadResponse() {
+        FileUploadResponse response = new FileUploadResponse();
+        response.setStatusCode(ResponseConstants.FILE_TOO_LARGE);
+        response.setMessage(ResponseConstants.MSG_FILE_TOO_LARGE);
+        response.setDetails(FileErrorDetailsResponse.builder()
+                .maxSizeMB(MAX_UPLOAD_SIZE_MB)
+                .build());
+        return response;
+    }
+
+    private boolean containsCause(Throwable throwable, Class<? extends Throwable> targetClass) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (targetClass.isInstance(current)) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     private Map<String, String> resolveJsonParseErrors(HttpMessageNotReadableException ex) {
@@ -266,5 +322,7 @@ public class GlobalErrorHandler {
         }
         return errors;
     }
+
+    
 }
 

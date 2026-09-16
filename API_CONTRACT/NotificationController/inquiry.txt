@@ -1,0 +1,42 @@
+﻿
+{
+  "endpoint": "POST /api/inquiry",
+  "description": "お問い合わせを受け付け、担当オペレーターへの通知を作成してメールを送信する",
+  "authorization": "なし",
+  "request": {
+    "email": "string (required) - 問い合わせ者のメールアドレス",
+    "companyName": "string (required) - 会社名",
+    "name": "string (required) - 問い合わせ者氏名",
+    "content": "string (required) - 問い合わせ内容"
+  },
+  "responses": {
+    "success": {
+      "statusCode": 200,
+      "data": {
+        "message": "お問い合わせを受け付けました",
+        "inquiryId": 1
+      }
+    },
+    "errors": [
+      {
+        "statusCode": 400,
+        "message": "VALIDATION_ERROR",
+        "details": {
+          "email": "メールアドレスの形式が正しくありません",
+          "companyName": "会社名は必須です",
+          "name": "お名前は必須です",
+          "content": "お問い合わせ内容は必須です"
+        }
+      },
+      {
+        "statusCode": 429,
+        "message": "TOO_MANY_REQUESTS"
+      },
+      {
+        "statusCode": 500,
+        "message": "SERVER_ERROR"
+      }
+    ]
+  }
+}
+

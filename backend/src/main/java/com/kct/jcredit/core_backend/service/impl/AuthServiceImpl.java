@@ -16,16 +16,23 @@ import com.kct.jcredit.core_backend.dto.response.PasswordChangeResponse;
 import com.kct.jcredit.core_backend.dto.response.details.AdminResponse;
 import com.kct.jcredit.core_backend.dto.response.details.UserInfoResponse;
 import com.kct.jcredit.core_backend.entity.OperatingUser;
+import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
+import com.kct.jcredit.core_backend.enums.CompanyStatus;
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
+import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.service.AuthService;
 import com.kct.jcredit.core_backend.service.TokenBlacklistService;
+import com.kct.jcredit.core_backend.service.SecurityAccountService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
+import jakarta.transaction.Transactional;
+
+import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,15 +41,18 @@ import lombok.RequiredArgsConstructor;
 public class AuthServiceImpl implements AuthService {
     private final JwtUtil jwtUtil;
     private final TokenBlacklistService blacklistService;
+    private final SecurityAccountService securityAccountService;
     private final PasswordEncoder passwordEncoder;
 
     private final ParticipatingUserRepository userRepository;
     private final SiteRepository siteRepository;
     private final OperatingUserRepository operatingUserRepository;
+    private final OperatorCompanyRepository operatorCompanyRepository;
     private final ParticipatingCompanyRepository participatingCompanyRepository;
 
     
     @Override
+    @Transactional
     public LoginResponse userLogin(LoginRequest request) {
         LoginResponse response = new LoginResponse();
 
@@ -51,14 +61,16 @@ public class AuthServiceImpl implements AuthService {
         ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(request.getCompanyId()).orElse(null);
         if (company == null) {
             response.setStatusCode("INVALID_CREDENTIALS");
-            response.setMessage(ResponseConstants.MSG_LOGIN_FAILED);
+            response.setMessage(ResponseConstants.MSG_USER_LOGIN_FAILED);
             return response;
         }
 
         // 企業がサスペンドされているかどうか
-        if (company.isSuspended()) {
+        if (company.getCompanyStatus() != CompanyStatus.ACTIVE) {
             response.setStatusCode(ResponseConstants.FORBIDDEN);
-            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+            response.setMessage(company.getCompanyStatus() == CompanyStatus.SUSPENDED
+                    ? ResponseConstants.MSG_COMPANY_ACCESS_SUSPENDED
+                    : ResponseConstants.MSG_FORBIDDEN);
             return response;
         }
 
@@ -72,7 +84,7 @@ public class AuthServiceImpl implements AuthService {
         //userを、企業ID＆ユーザID/メールアドレスで検索して存在しない場合
         if(user == null) {
             response.setStatusCode("INVALID_CREDENTIALS");
-            response.setMessage(ResponseConstants.MSG_LOGIN_FAILED);
+            response.setMessage(ResponseConstants.MSG_USER_LOGIN_FAILED);
             return response;
         }
 
@@ -109,7 +121,7 @@ public class AuthServiceImpl implements AuthService {
                 return response;
             }
             response.setStatusCode(ResponseConstants.INVALID_CREDENTIALS);
-            response.setMessage(ResponseConstants.MSG_LOGIN_FAILED);
+            response.setMessage(ResponseConstants.MSG_USER_LOGIN_FAILED);
             //attemptsが4になったらロック
             user.setLoginAttempts(attempts + 1);
             userRepository.save(user);
@@ -126,7 +138,14 @@ public class AuthServiceImpl implements AuthService {
             return response;
         }
             
-        String token = jwtUtil.generateToken(user.getId(),user.getUsername(), company.getCompanyId(), user.getRole());
+        if (securityAccountService != null && securityAccountService.requiresParticipatingOtp(user)) {
+            return securityAccountService.beginParticipatingLogin(user, company);
+        }
+    
+        List<String> permissions = List.of(); // Empty list for now, replace with actual permissions if needed
+
+        String token = generateVersionedToken(user.getId(), user.getUsername(), company.getCompanyId(),
+                user.getRole(), user.getAuthVersion(), permissions);
 
         //もしユーザの情報は必要なら、レスポンスにユーザの情報も入れる
         // UserInfoResponse resData = UserInfoResponse.builder()
@@ -156,6 +175,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public AdminLoginResponse operatorLogin(AdminLoginRequest request) {
         // Find operator by companyId + identifier (email/username)
         AdminLoginResponse response = new AdminLoginResponse();
@@ -165,7 +185,16 @@ public class AuthServiceImpl implements AuthService {
             .orElse(null);
         if(operator == null) {
             response.setStatusCode("INVALID_CREDENTIALS");
-            response.setMessage(ResponseConstants.MSG_LOGIN_FAILED);
+            response.setMessage(ResponseConstants.MSG_OPERATOR_LOGIN_FAILED);
+            return response;
+        }
+
+        // Operator access is governed only by the operator account and operator company.
+        if (!Boolean.TRUE.equals(operator.getIsActive())
+                || operator.getCompany() == null
+                || !Boolean.TRUE.equals(operator.getCompany().getIsActive())) {
+            response.setStatusCode(ResponseConstants.FORBIDDEN);
+            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
             return response;
         }
 
@@ -194,7 +223,7 @@ public class AuthServiceImpl implements AuthService {
                 return response;
             }
             response.setStatusCode(ResponseConstants.INVALID_CREDENTIALS);
-            response.setMessage(ResponseConstants.MSG_LOGIN_FAILED);
+            response.setMessage(ResponseConstants.MSG_OPERATOR_LOGIN_FAILED);
             operator.setLoginAttempts(attempts + 1);
             operatingUserRepository.save(operator);
             return response;
@@ -202,9 +231,19 @@ public class AuthServiceImpl implements AuthService {
         //reset attempts on successful login
         operator.setLoginAttempts(0);
         operatingUserRepository.save(operator); 
-        
+
+        // extract permissions for operator user //TODO: Implement permission extraction logic if needed
+        List<String> permissions = operator.getPermissions().stream()
+        .map(p -> p.getCode().name())
+        .toList();
+
         // Generate JWT
-        String token = jwtUtil.generateToken(operator.getId(), operator.getUsername(), operator.getCompany().getCompanyId(), operator.getRole());
+        if (securityAccountService != null && securityAccountService.requiresOperatingOtp()) {
+            return securityAccountService.beginOperatingLogin(operator);
+        }
+
+        String token = generateVersionedToken(operator.getId(), operator.getUsername(),
+                operator.getCompany().getCompanyId(), operator.getRole(), operator.getAuthVersion(), permissions);
 
         // Build response
         AdminResponse admin = AdminResponse.builder()
@@ -248,6 +287,14 @@ public class AuthServiceImpl implements AuthService {
         } else {
             return changePasswordForParticipatingUser(currentParticipating, request, token);
         }
+    }
+
+    private String generateVersionedToken(Integer userId, String username, String companyId,
+                                          String role, Integer authVersion, List<String> permission) {
+        if (authVersion == null || authVersion == 0) {
+            return jwtUtil.generateToken(userId, username, companyId, role, permission);
+        }
+        return jwtUtil.generateToken(userId, username, companyId, role, authVersion, permission);
     }
 
      /**
@@ -412,6 +459,7 @@ public class AuthServiceImpl implements AuthService {
         // 3. パスワード更新
         String encodedPassword = passwordEncoder.encode(request.getNewPassword());
         targetUser.setPassword(encodedPassword);
+        targetUser.setAuthVersion(targetUser.getAuthVersion() == null ? 1 : targetUser.getAuthVersion() + 1);
         operatingUserRepository.save(targetUser);
         
        // 4. Refresh cache so old tokens are rejected by lazy validation
@@ -450,6 +498,7 @@ public class AuthServiceImpl implements AuthService {
         // 3. パスワード更新
         String encodedPassword = passwordEncoder.encode(request.getNewPassword());
         targetUser.setPassword(encodedPassword);
+        targetUser.setAuthVersion(targetUser.getAuthVersion() == null ? 1 : targetUser.getAuthVersion() + 1);
         userRepository.save(targetUser);
         
        // 4. Refresh cache so old tokens are rejected by lazy validation
@@ -513,9 +562,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public OperatingUser createDummyOperatorUser(CreateDummyUserRequest req) {
 
-         ParticipatingCompany company = participatingCompanyRepository
-            .findByCompanyId(req.getParticipatingCompanyId())
-            .orElseThrow(() -> new IllegalArgumentException("Participating company not found"));
+        OperatorCompany company = operatorCompanyRepository
+                .findByCompanyId(req.getParticipatingCompanyId())
+                .orElseThrow(() -> new IllegalArgumentException("Operator company not found"));
             
         OperatingUser user = OperatingUser.builder()
                 .username(req.getUsername())

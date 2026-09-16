@@ -1,0 +1,34 @@
+"url": "DELETE/api/notification/{notificationId}",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1tNiIsInR5cCI6IkpXVCJ9...",
+        "Content-Type": "application/json"
+      },
+      "pathParameters": {
+        "announcementId": {
+          "type": "string",
+          "required": true,
+          "description": "The ID of the announcement to delete"
+        }
+      },
+      "request": {
+        "body": null
+      },
+      "responses": {
+        "204": {
+          "description": "No Content"
+        },
+        "401": {
+          "description": "Unauthorized",
+          "body": {
+            "statusCode": "UNAUTHORIZED",
+            "message": "認証に失敗しました。"
+          }
+        },
+        "404": {
+          "description": "Not Found",
+          "body": {
+            "statusCode": "NOT_FOUND",
+            "message": "お知らせが見つかりませんでした。"
+          }
+        }
+      }

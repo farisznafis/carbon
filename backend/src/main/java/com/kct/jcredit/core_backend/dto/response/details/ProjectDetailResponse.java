@@ -19,6 +19,7 @@ public class ProjectDetailResponse {
     private String projectName;
     private String projectNumber;
     private String projectStatus;      // 派生 or そのまま返却
+    private Instant startedAt;
 
     // 排出量）
     private String emissionReduction;
@@ -62,12 +63,16 @@ public class ProjectDetailResponse {
     private String methodologyMainEmission;
     private Boolean methodCombiFeasibility;
     private String methodDetails;
+    private String usePurpose;
 
     // 事業者会社ID
     private Integer operatorCompanyId;
 
     // 参加状況（派生）
-    private Boolean isJoined;
+    private Boolean isCompanyJoined;
+    private Boolean hasSiteRelation;
+    private String participationStatus;
+    private String pdfStatus;
 
     private LocalDateTime updatedAt;
     private LocalDateTime createdAt;

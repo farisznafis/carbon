@@ -5,20 +5,33 @@ import com.kct.jcredit.core_backend.dto.request.CreateProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdateProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.details.ProjectDtoReq;
 import com.kct.jcredit.core_backend.dto.response.CreateProjectResponse;
+import com.kct.jcredit.core_backend.dto.response.ProjectCompanyListResponse;
+import com.kct.jcredit.core_backend.dto.response.ProjectCompanyResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
+import com.kct.jcredit.core_backend.dto.response.ProjectPdfDownloadResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
 import com.kct.jcredit.core_backend.dto.response.details.ProjectDetailResponse;
 import com.kct.jcredit.core_backend.dto.response.UpdateProjectStatusResponse;
-import com.kct.jcredit.core_backend.dto.request.UpdateProjectStatusRequest;
 import com.kct.jcredit.core_backend.entity.OperatorCompany;
+import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
+import com.kct.jcredit.core_backend.entity.OperatingUser;
+import com.kct.jcredit.core_backend.entity.ParticipatingProject;
 import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.entity.Site;
 import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.entity.base.PaginationDetailResponse;
+import com.kct.jcredit.core_backend.exception.CustomException;
+import com.kct.jcredit.core_backend.exception.ResourceNotFoundException;
 import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
+import com.kct.jcredit.core_backend.repository.postgres.ParticipatingProjectRepository;
+import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
+import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
+import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
+import com.kct.jcredit.core_backend.service.ProjectParticipationPdfService;
 import com.kct.jcredit.core_backend.service.ProjectService;
+import com.kct.jcredit.core_backend.util.ParticipationSelection;
 import com.kct.jcredit.core_backend.util.ProjectSpecification;
 
 import lombok.RequiredArgsConstructor;
@@ -29,11 +42,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -42,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -51,6 +66,11 @@ public class ProjectServiceImpl implements ProjectService {
     private final SiteRepository siteRepository;
     private final ProjectRepository projectRepository;
     private final OperatorCompanyRepository operatorCompanyRepository;
+    private final ParticipatingCompanyRepository participatingCompanyRepository;
+    private final ParticipatingProjectRepository participatingProjectRepository; 
+    private final ProjectParticipationPdfService pdfService;  
+    private final SiteProjectRelationRepository siteProjectRelationRepository;
+    private final OperatingUserRepository userRepository;
     
     
 
@@ -58,10 +78,11 @@ public class ProjectServiceImpl implements ProjectService {
     ZoneId DB_ZONE   = ZoneId.of("Asia/Tokyo");
 
     @Override
-    public ProjectListInfoResponse getProjectsBySiteIdAndCompanyId(Integer siteId, String companyId) {
+    public ProjectListInfoResponse getProjectsBySiteIdAndCompanyId(String siteId, String companyId) {
         ProjectListInfoResponse response = new ProjectListInfoResponse();
+        response.setProjects(new ArrayList<>());
 
-        Site site = siteRepository.findById(siteId).orElse(null);
+        Site site = siteRepository.findByPublicIdWithFallback(siteId).orElse(null);
         if (site == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
@@ -74,39 +95,62 @@ public class ProjectServiceImpl implements ProjectService {
             return response;
         }
 
-        response.setProjects(new ArrayList<>());
-        Map<Integer, String> joinedProjectIdStatusMap = site.getSiteProjectRelations().stream()
-            .collect(Collectors.toMap(
-                rel -> rel.getProject().getId(), SiteProjectRelation::getStatus
-            ));
-
+        // response.setProjects(new ArrayList<>());
+        // Map<Integer, String> joinedProjectIdStatusMap = site.getSiteProjectRelations().stream()
+        //     .collect(Collectors.toMap(
+        //         rel -> rel.getProject().getId(), SiteProjectRelation::getStatus
+        //     ));
+        
         List<Project> projects = projectRepository.findAll();
+        //get DB key for company
+        
+        Integer companyDbId = participatingCompanyRepository.findByCompanyId(companyId)
+            .map(ParticipatingCompany::getId)
+            .orElseThrow(() -> new CustomException(
+                    ResponseConstants.NOT_FOUND, "会社情報が見つかりません。"));
 
-        for (Project project : projects) {
-            ProjectDetailResponse resp = ProjectDetailResponse.builder()
-                    .id(String.valueOf(project.getId()))
-                    .projectName(project.getProjectName())
-                    .emissionReduction(project.getEmissionReduction() != null ?
-                            String.valueOf(project.getEmissionReduction()) : "0")
-                    .baselineEmission(project.getBaselineEmission() != null ?
-                            String.valueOf(project.getBaselineEmission()) : "0")
-                    .postProjectEmission(project.getPostProjectEmission() != null ?
-                            String.valueOf(project.getPostProjectEmission()) : "0")
-                    .regionalCategory(project.getRegionalCategory())
-                    .methodologyVersion(project.getMethodologyVersion())
-                    .methodologyNumber(project.getMethodNumber())
-                    .methodologyName(project.getMethodName())
-                    .methodologyMainEmission(project.getMethodMainEmission())
-                    .isJoined(joinedProjectIdStatusMap.containsKey(project.getId()))
-                    .projectStatus(joinedProjectIdStatusMap.get(project.getId()))
-                    .build();
 
-            response.getProjects().add(resp);
-        }
+        Integer siteDbId = site.getId();
+
+        List<ProjectDetailResponse> projectDetails = projects.stream()
+                .map(project -> {
+
+                    List<ParticipatingProject> participations = participatingProjectRepository
+                            .findByCompanyIdAndProject_IdOrderByIdAsc(companyDbId, project.getId());
+
+                    boolean siteJoined = siteProjectRelationRepository
+                            .existsBySite_IdAndProject_Id(siteDbId, project.getId());
+
+                    return ProjectDetailResponse.builder()
+                            .id(project.getPublicId())
+                            .projectName(project.getProjectName())
+                            .projectNumber(project.getProjectNumber())
+                            .emissionReduction(project.getEmissionReduction() != null
+                                    ? String.valueOf(project.getEmissionReduction()) : "0")
+                            .baselineEmission(project.getBaselineEmission() != null
+                                    ? String.valueOf(project.getBaselineEmission()) : "0")
+                            .postProjectEmission(project.getPostProjectEmission() != null
+                                    ? String.valueOf(project.getPostProjectEmission()) : "0")
+                            .regionalCategory(project.getRegionalCategory())
+                            .methodologyVersion(project.getMethodologyVersion())
+                            .methodologyNumber(project.getMethodNumber())
+                            .methodologyName(project.getMethodName())
+                            .methodologyMainEmission(project.getMethodMainEmission())
+                            .projectStatus(project.getProjectStatus())
+                            .isCompanyJoined(!participations.isEmpty())
+                            .participationStatus(ParticipationSelection.preferred(participations)
+                                    .map(ParticipatingProject::getStatus)
+                                    .orElse(null))
+                            .pdfStatus(ParticipationSelection.pdfStatus(participations))
+                            .hasSiteRelation(siteJoined)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
         response.setStatusCode(ResponseConstants.OK);
-
+        response.setProjects(projectDetails);
         return response;
-    }
+        }
 
     @Override
     @Transactional
@@ -178,7 +222,13 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional
     public ProjectResponse updateProject(UpdateProjectRequest request) {
         ProjectResponse response = new ProjectResponse();
-        Project project = projectRepository.findById(request.getId()).orElse(null);
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(request.getId())
+            .map(Project::getId)
+            .orElse(null);
+        Project project = null;
+        if (projectDbId != null) {
+            project = projectRepository.findById(projectDbId).orElse(null);
+        }
         if (project == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
@@ -215,6 +265,8 @@ public class ProjectServiceImpl implements ProjectService {
         if (request.getMethodName() != null) project.setMethodName(request.getMethodName());
         if (request.getMethodMainEmission() != null) project.setMethodMainEmission(request.getMethodMainEmission());
         if (request.getMethodCombiFeasibility() != null) project.setMethodCombiFeasibility(request.getMethodCombiFeasibility());
+        if (request.getStartedAt() != null) project.setStartedAt(request.getStartedAt());
+        if (request.getUsePurpose() != null) project.setUsePurpose(request.getUsePurpose());
         if (request.getMethodDetails() != null) project.setMethodDetails(request.getMethodDetails());
 
         project.setUpdatedBy(request.getProcessedBy());
@@ -256,6 +308,8 @@ public class ProjectServiceImpl implements ProjectService {
         if (req.getMethodName() != null) detailResponse.setMethodologyName(project.getMethodName());
         if (req.getMethodMainEmission() != null) detailResponse.setMethodologyMainEmission(project.getMethodMainEmission());
         if (req.getMethodCombiFeasibility() != null) detailResponse.setMethodCombiFeasibility(project.getMethodCombiFeasibility());
+        if (req.getStartedAt() != null) detailResponse.setStartedAt(project.getStartedAt());
+        if (req.getUsePurpose() != null) detailResponse.setUsePurpose(project.getUsePurpose());
         if (req.getMethodDetails() != null) detailResponse.setMethodDetails(project.getMethodDetails());
 
         return detailResponse;
@@ -266,7 +320,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         List<ProjectDetailResponse> projectDetailList = projectList.stream()
             .map(p -> ProjectDetailResponse.builder()
-                    .id(p.getId().toString())
+                    .id(p.getPublicId())
                     .projectName(p.getProjectName())
                     .projectNumber(p.getProjectNumber())
                     .projectStatus(p.getProjectStatus())
@@ -300,11 +354,13 @@ public class ProjectServiceImpl implements ProjectService {
                     .methodologyName(p.getMethodName())
                     .methodologyMainEmission(p.getMethodMainEmission())
                     .methodCombiFeasibility(p.getMethodCombiFeasibility())
+                    .usePurpose(p.getUsePurpose())
+                    .startedAt(p.getStartedAt())
                     .methodDetails(p.getMethodDetails())
                     .operatorCompanyId(
                             p.getOperatorCompany() != null ? p.getOperatorCompany().getId() : null
                     )
-                    .isJoined(false) // or set from your own logic
+                    .isCompanyJoined(null) // not needed for this
                     .build()
                 )
             .collect(Collectors.toList());
@@ -323,11 +379,11 @@ public class ProjectServiceImpl implements ProjectService {
             operatorCompany = operatorCompanyRepository.findByCompanyId(operatorCompanyId)
                 .orElseThrow(() -> {
                     log.error("ProjectServiceImpl.createProject()関数 : エラーcompany Id " + operatorCompanyId);
-                    return new UnsupportedOperationException(ResponseConstants.MSG_UNEXPEXTED_ERROR);
+                    return new ResourceNotFoundException(ResponseConstants.MSG_COMPANY_NOT_FOUND);
                 });
         } else {
             log.error("ProjectServiceImpl.createProject()関数 : company Id is missing");
-            throw new UnsupportedOperationException(ResponseConstants.MSG_UNEXPEXTED_ERROR);
+            throw new ResourceNotFoundException(ResponseConstants.MSG_COMPANY_NOT_FOUND);
         }
         
         Project project = Project.builder().build();
@@ -370,6 +426,8 @@ public class ProjectServiceImpl implements ProjectService {
             .methodName(projectDto.getMethodName())
             .methodMainEmission(projectDto.getMethodMainEmission())
             .methodCombiFeasibility(projectDto.getMethodCombiFeasibility())
+            .usePurpose(projectDto.getUsePurpose())
+            .startedAt(projectDto.getStartedAt())
             .methodDetails(projectDto.getMethodDetails())
             .operatorCompany(operatorCompany)
             .build();
@@ -385,21 +443,27 @@ public class ProjectServiceImpl implements ProjectService {
                 .orElseGet(() -> operatorCompanyRepository.findByCompanyId(operatorCompanyId)
                     .orElseThrow(() -> {
                         log.error("ProjectServiceImpl.createProject()関数 : エラーcompany Id " + operatorCompanyId);
-                        return new UnsupportedOperationException(ResponseConstants.MSG_UNEXPEXTED_ERROR);
+                        return new ResourceNotFoundException(ResponseConstants.MSG_COMPANY_NOT_FOUND);
                     }));
         } catch (NumberFormatException ex) {
             return operatorCompanyRepository.findByCompanyId(operatorCompanyId)
                 .orElseThrow(() -> {
                     log.error("ProjectServiceImpl.createProject()関数 : エラーcompany Id " + operatorCompanyId);
-                    return new UnsupportedOperationException(ResponseConstants.MSG_UNEXPEXTED_ERROR);
+                    return new ResourceNotFoundException(ResponseConstants.MSG_COMPANY_NOT_FOUND);
                 });
         }
     }
 
     @Override
-    public ProjectResponse getProject(Integer projectId, String userCompanyId) {
+    public ProjectResponse getProject(String projectId, String userCompanyId) {
         ProjectResponse response = new ProjectResponse();
-        Project project = projectRepository.findById(projectId).orElse(null);
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+            .map(Project::getId)
+            .orElse(null);
+        Project project = null;
+        if (projectDbId != null) {
+            project = projectRepository.findById(projectDbId).orElse(null);
+        }
 
         if (project == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
@@ -418,7 +482,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     private ProjectDetailResponse convertToProjectDetailResponse(Project project) {
         ProjectDetailResponse dto =  ProjectDetailResponse.builder()
-            .id(project.getId() != null ? project.getId().toString() : null)
+            .id(project.getPublicId())
             .projectName(project.getProjectName())
             .projectNumber(project.getProjectNumber())
             .projectStatus(project.getProjectStatus())
@@ -452,6 +516,8 @@ public class ProjectServiceImpl implements ProjectService {
             .methodologyName(project.getMethodName())
             .methodologyMainEmission(project.getMethodMainEmission())
             .methodCombiFeasibility(project.getMethodCombiFeasibility())
+            .usePurpose(project.getUsePurpose())
+            .startedAt(project.getStartedAt())
             .methodDetails(project.getMethodDetails())
             .operatorCompanyId(project.getOperatorCompany().getId())
             .createdAt(project.getCreatedAt())
@@ -527,9 +593,15 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public UpdateProjectStatusResponse updateProjectStatus(String newStatus, Integer projectId) {
+    public UpdateProjectStatusResponse updateProjectStatus(String newStatus, String projectId) {
         UpdateProjectStatusResponse response = new UpdateProjectStatusResponse();
-        Project project = projectRepository.findById(projectId).orElse(null);
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+            .map(Project::getId)
+            .orElse(null);
+        Project project = null;
+        if (projectDbId != null) {
+            project = projectRepository.findById(projectDbId).orElse(null);
+        }
         if (project == null) {
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
@@ -546,8 +618,18 @@ public class ProjectServiceImpl implements ProjectService {
             response.setMessage("プロジェクトはすでにこのステータスです。");
             return response;
         }
+
+        if ("終了".equals(project.getProjectStatus())) {
+            response.setStatusCode(ResponseConstants.BAD_REQUEST);
+            response.setMessage("終了したプロジェクトのステータスは変更できません。");
+            return response;
+        }
+
         String previousStatus = project.getProjectStatus();
-        
+
+        if ("終了".equals(newStatus)) {
+            project.setStatusFinalizedAt(LocalDateTime.now());
+        }
 
         project.setProjectStatus(newStatus);
 
@@ -560,5 +642,96 @@ public class ProjectServiceImpl implements ProjectService {
         response.setStatusCode(ResponseConstants.OK);
 
         return response;
+    }
+
+    @Override
+    public ProjectCompanyListResponse getProjectCompanies(String projectId) {
+        ProjectCompanyListResponse response = new ProjectCompanyListResponse();
+
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+                .map(Project::getId)
+                .orElse(null);
+
+        if (projectDbId == null) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
+            return response;
+        }
+
+        List<ParticipatingProject> participations = participatingProjectRepository
+                .findByProject_Id(projectDbId);
+
+        List<ProjectCompanyResponse> companies = participations.stream()
+                .map(p -> {
+                    ParticipatingCompany company = p.getEquipment().getSite().getCompany();
+                    return ProjectCompanyResponse.builder()
+                            .companyId(company.getCompanyId())
+                            .companyName(company.getNameJa())
+                            .participationId(p.getId())
+                            .pdfStatus(p.getS3KeyPdfMembership() != null ? "READY" : "NOT_READY")
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        response.setCompanies(companies);
+        response.setStatusCode(ResponseConstants.OK);
+        return response;
+    }
+
+    @Override
+    public ProjectPdfDownloadResponse getMembershipPdfForOperator(String projectId, Integer participationId) {
+
+        Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
+                .map(Project::getId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND, ResponseConstants.MSG_PROJECT_NOT_FOUND));
+
+        ParticipatingProject participation = participatingProjectRepository
+                .findByIdAndProject_Id(participationId, projectDbId)
+                .orElseThrow(() -> new CustomException(
+                        ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
+
+        String s3Key = participation.getS3KeyPdfMembership();
+        if (s3Key == null || s3Key.isBlank()) {
+            throw new CustomException("PDF_NOT_READY", "PDFはまだ準備できていません。");
+        }
+
+        String presignedUrl = pdfService.generatePresignedUrl(s3Key);
+
+        return ProjectPdfDownloadResponse.builder()
+                .pdfUrl(presignedUrl)
+                .expiresIn(900)
+                .build();
+    }
+
+    @Override
+    public void assertProject(String projectId, String currentUserId) {
+        if (!hasProjectAccess(projectId, currentUserId)) {
+            throw new AccessDeniedException(
+                    "User " + currentUserId + " does not have access to project " + projectId);
+        }
+    }
+
+    @Override
+    public boolean hasProjectAccess(String projectId, String currentUserId) {
+        OperatingUser user = userRepository.findByUsername(currentUserId)
+                .orElseThrow(() -> new AccessDeniedException("User not found: " + currentUserId));
+
+        if (isAdmin(user)) {
+            return true;
+        }
+
+        Project project = projectRepository.findByPublicId(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("Project not found: " + projectId));
+
+        if (project.getOperatorCompany() == null || user.getCompany() == null) {
+            return false;
+        }
+
+        return project.getOperatorCompany().getId().equals(user.getCompany().getId());
+    }
+
+    private boolean isAdmin(OperatingUser user) {
+        return "ADMIN".equals(user.getRole()); 
     }
 }

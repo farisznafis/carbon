@@ -1,0 +1,30 @@
+GET /project/{projectId}/participations/{participationId}/membership-pdf
+Authorization: Bearer {token}
+
+Response - Success (HTTP 200)
+{
+  "pdfUrl": "https://your-bucket.s3.amazonaws.com/participation/1/3/5/draft.pdf?X-Amz-Signature=...",
+  "expiresIn": 900
+}
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "参加情報が見つかりません。"
+},
+{
+  "statusCode": "PDF_NOT_READY",
+  "message": "PDFはまだ準備できていません。審査完了までしばらくお待ちください。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

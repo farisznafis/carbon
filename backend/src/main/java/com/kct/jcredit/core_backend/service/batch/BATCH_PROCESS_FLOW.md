@@ -100,22 +100,24 @@ This is the main entry point that starts the entire batch processing pipeline.
               │                    batchId,        │
               │                    siteData,       │
               │                    processingDate) │ 
-              │  Returns: R (Result Entity)        │
+              │  Returns: List<R>                  │
+              │  (one row per equipment for solar) │
               └────────────┬───────────────────────┘
                            │
                            ▼
               ┌────────────────────────────────────┐
-              │   saveSiteResult(...)              │
-              │  (Persist site-level result)       │
+              │   saveSiteResults(...)             │
+              │  (Persist site-level results)      │
               │                                    │
               │  For Solar:                        │
-              │  EnR002ReductionResult → Database  │
+              │  One EnR002ReductionResult per     │
+              │  equipmentId → Database           │
               └────────────┬───────────────────────┘
                            │
                            ▼
               ┌────────────────────────────────────┐
-              │  allResults.add(result)            │
-              │  (Collect all site results)        │
+              │  allResults.addAll(results)       │
+              │  (Collect all equipment results)  │
               └────────────┬───────────────────────┘
                            │
                   ╚════════╩════════╝
@@ -184,9 +186,9 @@ This is the main entry point that starts the entire batch processing pipeline.
 | 7 | `getSitesForProject()` | `projectId` | `List<Integer>` | Get all sites in project |
 | 8 | `getMonitoringRepository().findUnprocessedRecordsForProject()` | `projectId, siteIds, ...` | `Map<Integer, List<T>>` | Load monitoring data from DynamoDB |
 | 9 | `processSite()` | `batchId, projectId, siteId, siteData, processingDate, allResults` | `ProcessingResult` | Process single site (loop) |
-| 10 | `getCalculator().calculateEmissions()` | `projectId, siteId, batchId, siteData, processingDate` | `R` | Calculate emissions for site |
-| 11 | `saveSiteResult()` | `projectId, siteId, batchId, processingDate, result` | `Object` | **Save site-level result** |
-| 12 | `aggregateEmissions()` | `List<R> allResults` | `Object` | Sum all site results |
+| 10 | `getCalculator().calculateEmissions()` | `projectId, siteId, batchId, siteData, processingDate` | `List<R>` | Calculate all emissions results for a site (solar: one per equipment) |
+| 11 | `saveSiteResults()` | `projectId, siteId, batchId, processingDate, results` | `Object` | **Persist every equipment-level result for the site** |
+| 12 | `aggregateEmissions()` | `List<R> allResults` | `Object` | Sum all equipment results into project totals |
 | 13 | `saveProjectTotal()` | `projectId, batchId, processingDate, siteResults, aggregated` | `Object` | **Save project-level total** |
 | 14 | `updateBatchHistoryOnCompletion()` | `batchHistory, result` | `void` | Mark batch complete |
 
@@ -221,13 +223,13 @@ solarBatchProcessService.executeAllProjects(processingDate);
 
 ### Processing Path
 1. **Load**: Monitoring records from DynamoDB per site
-2. **Calculate**: Emissions for each site using methodology-specific calculator
-3. **Save Site Results**: Persist individual site calculation results
-4. **Aggregate**: Sum all site results into project totals
+2. **Calculate**: Emissions for each site using the methodology-specific calculator
+3. **Save Site Results**: Persist one or more equipment-level calculation results per site
+4. **Aggregate**: Sum all equipment-level results into project totals
 5. **Save Project Total**: Persist aggregated project-level totals
 
 ### Output
-- **Site-level**: Individual `EnR002ReductionResult` entities (for solar methodology)
+- **Equipment-level**: One `EnR002ReductionResult` row per equipmentId (for solar methodology)
 - **Project-level**: Aggregated `EnR002ReductionResultTotal` entities
 - **Batch History**: Tracking record with COMPLETED/FAILED status
 
@@ -244,8 +246,9 @@ solarBatchProcessService.executeAllProjects(processingDate);
 
 ## For Solar Methodology Specifically
 
-- **Calculator**: `SolarEmissionsCalculator` returns `EnR002ReductionResult`
-- **Site persistence**: `SolarBatchProcessService.saveSiteResult()` → `EnR002ReductionResultRepository`
-- **Aggregation**: `SolarBatchProcessService.aggregateEmissions()` → Sums all site results
+- **Calculator**: `SolarEmissionsCalculator` produces a list of `EnR002ReductionResult` rows, one per equipmentId
+- **Persistence**: `SolarBatchProcessService.saveSiteResults()` → `EnR002ReductionResultRepository`
+- **Aggregation**: `SolarBatchProcessService.aggregateEmissions()` → Sums all equipment-level results into the project total
 - **Project persistence**: `SolarBatchProcessService.saveProjectTotal()` → `EnR002ReductionResultTotalRepository`
+- **Methodology alignment**: The calculator follows the solar methodology formulas from the PDF: ELPJ = ELPV - ELPVR, EM_PJ,S,control = ELPJ,control × CEF(t), EM_PJ,S,battery = ELPJ,battery × CEF(t), and ER = EM_BL - EM_PJ
 
