@@ -56,7 +56,7 @@ export const HOME_CAPABILITIES: readonly HomeCapability[] = [
     summary:
       '企業・拠点をまたぐ情報を、同じ視点で。',
     previewImage: {
-      src: 'public/assets/home/feature-1.png',
+      src: '/assets/home/feature-1.png',
       alt: '排出量データ管理の画面イメージ',
     },
   },
@@ -68,7 +68,7 @@ export const HOME_CAPABILITIES: readonly HomeCapability[] = [
     summary:
       '参加から証憑まで、ひとつの文脈で。',
     previewImage: {
-      src: '/public/assets/home/feature-2.png',
+      src: '/assets/home/feature-2.png',
       alt: 'プロジェクト・J-クレジット管理の画面イメージ',
     },
   },
@@ -80,7 +80,7 @@ export const HOME_CAPABILITIES: readonly HomeCapability[] = [
     summary:
       '今見るべきことと、次のアクションを明確に。',
     previewImage: {
-      src: '/public/assets/home/feature-3.png',
+      src: '/assets/home/feature-3.png',
       alt: 'ダッシュボード・通知の画面イメージ',
     },
   },
@@ -92,7 +92,7 @@ export const HOME_CAPABILITIES: readonly HomeCapability[] = [
     summary:
       '拠点と担当者を、ひとつの場所で。',
     previewImage: {
-      src: '/public/assets/home/feature-4.png',
+      src: '/assets/home/feature-4.png',
       alt: '拠点・担当者管理の画面イメージ',
     },
   },
