@@ -1,0 +1,306 @@
+-- =========================================================================
+-- input this after you input dummy data from file 0_dummy_nyuukai.txt
+-- =========================================================================
+
+BEGIN;
+
+-- =========================================================
+-- 21. Participating company: Japanese company for dashboard
+-- =========================================================
+INSERT INTO participating_company (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    company_id, name_ja, name_furigana, name_en, email, phone_number,
+    corp_number, postal_code, prefecture, municipality, blocknum,
+    building_name, fax,
+    rep_first_name, rep_first_name_kana, rep_last_name, rep_last_name_kana,
+    rep_phone_number, rep_position,
+    requested_methodologies, activity_information, company_status,
+    email_verified_at, last_rejection_reason, rejected_at
+)
+OVERRIDING SYSTEM VALUE
+VALUES (
+    5, TRUE, '2026-08-10 09:00:00', '2026-08-10 09:00:00', 'admin1', 'admin1',
+    'PC000000005',
+    '株式会社さくらエナジー', 'サクラエナジー', 'Sakura Energy Co., Ltd.',
+    'contact@sakura-energy.co.jp', '03-6200-5500',
+    '6666666666666', '100-0005', '東京都', '千代田区丸の内', '2-7-2',
+    '丸の内さくらビル', '03-6200-5501',
+    '陽斗', 'ハルト', '佐藤', 'サトウ',
+    '03-6200-5500', '代表取締役',
+    '["EN-R002"]',
+    '東京都および関東圏の事業所における自家消費型太陽光発電設備の導入・運用。',
+    'ACTIVE', '2026-08-10 09:15:00', NULL, NULL
+);
+
+-- =========================================================
+-- 22. Sites for Sakura Energy
+-- =========================================================
+INSERT INTO site (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    site_name, postal_code, prefecture, municipality, blocknum, building_name,
+    pic_first_name, pic_first_name_kana, pic_last_name, pic_last_name_kana,
+    pic_email, pic_phone_number, pic_position,
+    participating_company_id, public_id
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(19, TRUE, '2026-08-10 10:00:00', '2026-08-10 10:00:00', 'sato.haruto', 'sato.haruto',
+ '東京本社太陽光発電所', '100-0005', '東京都', '千代田区丸の内', '2-7-2', '丸の内さくらビル',
+ '陽斗', 'ハルト', '佐藤', 'サトウ',
+ 'sato.haruto@sakura-energy.co.jp', '03-6200-5510', '代表取締役',
+ 5, 'site019'),
+(20, TRUE, '2026-08-10 10:00:00', '2026-08-10 10:00:00', 'sato.haruto', 'sato.haruto',
+ '横浜物流センター太陽光発電所', '221-0056', '神奈川県', '横浜市神奈川区金港町', '1-1-1', '横浜さくら物流センター',
+ '美月', 'ミヅキ', '高橋', 'タカハシ',
+ 'takahashi.mizuki@sakura-energy.co.jp', '045-620-5511', '設備管理責任者',
+ 5, 'site020'),
+(21, TRUE, '2026-08-10 10:00:00', '2026-08-10 10:00:00', 'sato.haruto', 'sato.haruto',
+ 'さいたま工場太陽光発電所', '330-0854', '埼玉県', 'さいたま市大宮区桜木町', '4-3-2', 'さいたまさくら工場',
+ '蓮', 'レン', '鈴木', 'スズキ',
+ 'suzuki.ren@sakura-energy.co.jp', '048-620-5512', '工場運用担当',
+ 5, 'site021');
+
+-- =========================================================
+-- 23. Participating users
+-- =========================================================
+INSERT INTO participating_user (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    username, first_name, first_name_kana, last_name, last_name_kana,
+    email, phone_number, user_position, password, role, login_attempts,
+    account_locked_until, site_id, company_id, deleted_at, deleted_by,
+    email_otp_login_enabled, auth_version
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(14, TRUE, '2026-08-10 11:00:00', '2026-08-10 11:00:00', 'operator1', 'operator1',
+ 'sato.haruto', '陽斗', 'ハルト', '佐藤', 'サトウ',
+ 'sato.haruto@sakura-energy.co.jp', '03-6200-5510', '代表取締役',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S',
+ 'master', 0, NULL, 19, 5, NULL, NULL, FALSE, 0),
+(15, TRUE, '2026-08-10 11:30:00', '2026-08-10 11:30:00', 'sato.haruto', 'sato.haruto',
+ 'takahashi.mizuki', '美月', 'ミヅキ', '高橋', 'タカハシ',
+ 'takahashi.mizuki@sakura-energy.co.jp', '045-620-5511', '設備管理責任者',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S',
+ 'user', 0, NULL, 20, 5, NULL, NULL, FALSE, 0),
+(16, TRUE, '2026-08-10 12:00:00', '2026-08-10 12:00:00', 'sato.haruto', 'sato.haruto',
+ 'suzuki.ren', '蓮', 'レン', '鈴木', 'スズキ',
+ 'suzuki.ren@sakura-energy.co.jp', '048-620-5512', '工場運用担当',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S',
+ 'user', 0, NULL, 21, 5, NULL, NULL, FALSE, 0);
+
+-- =========================================================
+-- 24. Project participation: project P000001 / project_id=1
+-- Approval reason:
+-- All required documents were complete, the three sites passed
+-- eligibility checks, and their solar equipment met EN-R-002 criteria.
+-- =========================================================
+INSERT INTO site_project_relation (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    project_id, site_id, activity_start_date, deleted_at, deleted_by
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(1, TRUE, '2026-08-11 09:00:00', '2026-08-11 09:00:00', 'admin1', 'admin1',
+ 1, 19, '2026-08-01', NULL, NULL),
+(2, TRUE, '2026-08-11 09:00:00', '2026-08-11 09:00:00', 'admin1', 'admin1',
+ 1, 20, '2026-08-01', NULL, NULL),
+(3, TRUE, '2026-08-11 09:00:00', '2026-08-11 09:00:00', 'admin1', 'admin1',
+ 1, 21, '2026-08-01', NULL, NULL);
+
+-- =========================================================
+-- 25. EN-R-002 equipment
+-- =========================================================
+INSERT INTO en_r002_equipment (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    deleted_at, deleted_by, site_id, change_date, previous_equipment_id,
+    equipment_op_date, nominal_max_output, pcs_manufacturer, pcs_model,
+    device_no, pcs_standby, has_battery, battery_maker, battery_model,
+    battery_capacity, total_investment, has_subsidy, subsidy_name,
+    subsidy_amount, pre_project_unit_price
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(1, TRUE, '2026-08-11 10:00:00', '2026-08-11 10:00:00', 'sato.haruto', 'sato.haruto',
+ NULL, NULL, 19, NULL, NULL,
+ '2026-08-01', 120.0, 'Sakura Solar Systems', 'SS-PCS-120',
+ 'SE-TKY-PCS-001', 0.80, TRUE, 'Sakura Storage', 'SS-BAT-100',
+ 100.0, 28000000, TRUE, '東京都自家消費型太陽光発電設備導入補助金',
+ 5000000, 28.50),
+(2, TRUE, '2026-08-11 10:30:00', '2026-08-11 10:30:00', 'sato.haruto', 'sato.haruto',
+ NULL, NULL, 20, NULL, NULL,
+ '2026-08-01', 180.0, 'Sakura Solar Systems', 'SS-PCS-180',
+ 'SE-YKH-PCS-001', 1.10, FALSE, NULL, NULL,
+ NULL, 35000000, FALSE, NULL,
+ NULL, 27.80),
+(3, TRUE, '2026-08-11 11:00:00', '2026-08-11 11:00:00', 'sato.haruto', 'sato.haruto',
+ NULL, NULL, 21, NULL, NULL,
+ '2026-08-01', 150.0, 'Sakura Solar Systems', 'SS-PCS-150',
+ 'SE-SAI-PCS-001', 0.95, TRUE, 'Sakura Storage', 'SS-BAT-80',
+ 80.0, 31000000, TRUE, '埼玉県再生可能エネルギー設備導入補助金',
+ 3500000, 26.90);
+
+-- =========================================================
+-- 26. Equipment files
+-- =========================================================
+INSERT INTO en_r002_equipment_file (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    equipment_id, deleted_at, deleted_by, file_type, file_id, s3_key
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(1, TRUE, '2026-08-11 12:00:00', '2026-08-11 12:00:00', 'sato.haruto', 'sato.haruto',
+ 1, NULL, NULL, 'EQUIPMENT_SPECIFICATION', 'eq-spec-001',
+ 's3://test-bucket/equipment/SE-TKY-PCS-001/specification.pdf'),
+(2, TRUE, '2026-08-11 12:01:00', '2026-08-11 12:01:00', 'sato.haruto', 'sato.haruto',
+ 2, NULL, NULL, 'EQUIPMENT_SPECIFICATION', 'eq-spec-002',
+ 's3://test-bucket/equipment/SE-YKH-PCS-001/specification.pdf'),
+(3, TRUE, '2026-08-11 12:02:00', '2026-08-11 12:02:00', 'sato.haruto', 'sato.haruto',
+ 3, NULL, NULL, 'EQUIPMENT_SPECIFICATION', 'eq-spec-003',
+ 's3://test-bucket/equipment/SE-SAI-PCS-001/specification.pdf');
+
+-- =========================================================
+-- 27. Participating project
+-- =========================================================
+INSERT INTO participating_project (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    status, project_id, company_id, is_eligible, equipment_id,
+    s3_key_pdf_membership, docusign_envelope_id, signing_status
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(1, TRUE, '2026-08-11 13:00:00', '2026-08-11 13:00:00', 'admin1', 'admin1',
+ 'APPROVED', 1, 5, TRUE, 1,
+ 's3://test-bucket/membership/P000001/PC000000005/SE-TKY-membership.pdf',
+ 'env-sakura-001', 'COMPLETED'),
+(2, TRUE, '2026-08-11 13:01:00', '2026-08-11 13:01:00', 'admin1', 'admin1',
+ 'APPROVED', 1, 5, TRUE, 2,
+ 's3://test-bucket/membership/P000001/PC000000005/SE-YKH-membership.pdf',
+ 'env-sakura-002', 'COMPLETED'),
+(3, TRUE, '2026-08-11 13:02:00', '2026-08-11 13:02:00', 'admin1', 'admin1',
+ 'APPROVED', 1, 5, TRUE, 3,
+ 's3://test-bucket/membership/P000001/PC000000005/SE-SAI-membership.pdf',
+ 'env-sakura-003', 'COMPLETED');
+
+-- =========================================================
+-- 28. Update project member totals
+-- =========================================================
+UPDATE project
+SET
+    new_members_total = 3,
+    withdrawn_members = 0,
+    cumulative_members_total = 3,
+    members_total = 3,
+    updated_at = '2026-08-11 13:05:00',
+    updated_by = 'admin1'
+WHERE id = 1;
+
+-- =========================================================
+-- 29. Batch process history
+-- =========================================================
+INSERT INTO batch_process_history (
+    id, is_active, created_at, created_by, updated_at, updated_by,
+    start_time, end_time, status, claimed_by, claimed_at
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(1, TRUE, '2026-08-12 01:00:00', 'batch-system', '2026-08-12 01:05:00', 'batch-system',
+ '2026-08-12 01:00:00', '2026-08-12 01:05:00', 'SUCCESS', 'batch-worker-01', '2026-08-12 01:00:01'),
+(2, TRUE, '2026-08-13 01:00:00', 'batch-system', '2026-08-13 01:06:00', 'batch-system',
+ '2026-08-13 01:00:00', '2026-08-13 01:06:00', 'SUCCESS', 'batch-worker-01', '2026-08-13 01:00:01'),
+(3, TRUE, '2026-08-14 01:00:00', 'batch-system', '2026-08-14 01:04:00', 'batch-system',
+ '2026-08-14 01:00:00', '2026-08-14 01:04:00', 'SUCCESS', 'batch-worker-02', '2026-08-14 01:00:01');
+
+-- =========================================================
+-- 30. Reduction results
+-- =========================================================
+INSERT INTO en_r002_reduction_result (
+    id, is_active, created_at, created_by, updated_at, updated_by,
+    batch_id, processing_date, project_id, start_time, end_time,
+    site_id, equipment_id,
+    empj, empj_m, empj_s, empj_s_control, empj_s_battery,
+    elpj, embl, elbl, er, deleted_at, deleted_by
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(1, TRUE, '2026-08-12 01:05:00', 'batch-system', '2026-08-12 01:05:00', 'batch-system',
+ 1, '2026-08-11', 1, '2026-08-11 00:00:00', '2026-08-11 23:59:59',
+ 19, 1, 118.500, 2.100, 1.200, 0.300, 0.900, 720.400, 0.000, 0.000, 289.420, NULL, NULL),
+(2, TRUE, '2026-08-12 01:05:00', 'batch-system', '2026-08-12 01:05:00', 'batch-system',
+ 1, '2026-08-11', 1, '2026-08-11 00:00:00', '2026-08-11 23:59:59',
+ 20, 2, 175.800, 2.600, 0.000, 0.000, 0.000, 1050.700, 0.000, 0.000, 420.280, NULL, NULL),
+(3, TRUE, '2026-08-12 01:05:00', 'batch-system', '2026-08-12 01:05:00', 'batch-system',
+ 1, '2026-08-11', 1, '2026-08-11 00:00:00', '2026-08-11 23:59:59',
+ 21, 3, 146.300, 2.400, 0.900, 0.200, 0.700, 880.600, 0.000, 0.000, 352.240, NULL, NULL);
+
+INSERT INTO en_r002_reduction_result_total (
+    id, is_active, created_at, created_by, updated_at, updated_by,
+    batch_id, processing_date, project_id, start_time, end_time,
+    empj, empj_m, empj_s, empj_s_control, empj_s_battery,
+    elpj, embl, elbl, er, deleted_at, deleted_by
+)
+OVERRIDING SYSTEM VALUE
+VALUES (
+    1, TRUE, '2026-08-12 01:05:00', 'batch-system', '2026-08-12 01:05:00', 'batch-system',
+    1, '2026-08-11', 1, '2026-08-11 00:00:00', '2026-08-11 23:59:59',
+    440.600, 7.100, 2.100, 0.500, 1.600,
+    2651.700, 0.000, 0.000, 1061.940, NULL, NULL
+);
+
+-- =========================================================
+-- 31. Notifications
+-- =========================================================
+INSERT INTO notification (
+    id, is_active, created_at, created_by, updated_at, updated_by,
+    title, message, read, operating_user_id, participating_user_id
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(6, TRUE, '2026-08-11 13:10:00', 'admin1', '2026-08-11 13:10:00', 'admin1',
+ 'プロジェクト入会承認のお知らせ',
+ '株式会社さくらエナジーの3サイトは、必要書類およびEN-R-002の適格性確認が完了したため、P000001への入会が承認されました。',
+ FALSE, NULL, 14),
+(7, TRUE, '2026-08-12 01:10:00', 'batch-system', '2026-08-12 01:10:00', 'batch-system',
+ 'モニタリングデータの処理が完了しました',
+ '2026年8月11日分のモニタリングデータ処理および排出削減量算定が完了しました。',
+ FALSE, NULL, 14),
+(8, TRUE, '2026-08-12 01:10:00', 'batch-system', '2026-08-12 01:10:00', 'batch-system',
+ 'モニタリングデータの処理が完了しました',
+ '2026年8月11日分のモニタリングデータ処理および排出削減量算定が完了しました。',
+ TRUE, NULL, 15);
+
+-- =========================================================
+-- 32. Monitoring deletion history
+-- Deletion reason:
+-- The record was a pre-operation test record and was deleted to prevent
+-- it from being included in the formal emissions-reduction calculation.
+-- =========================================================
+INSERT INTO monitoring_data_deletion_history (
+    id, monitoring_record_id, record_time_updated, date_recorded,
+    project_id, site_id, result, failure_reason,
+    is_active, created_at, updated_at, created_by, updated_by
+)
+OVERRIDING SYSTEM VALUE
+VALUES (
+    1, 'site019#prj001', '2026-08-10T12:00:00Z', '2026-08-09',
+    1, 19, 'SUCCESS',
+    '運転開始前の試験データであり、正式な排出削減量算定の対象外であるため削除しました。',
+    TRUE, '2026-08-15 10:00:00', '2026-08-15 10:00:00', 'admin1', 'admin1'
+);
+
+-- =========================================================
+-- Synchronize sequences
+-- =========================================================
+SELECT setval(pg_get_serial_sequence('participating_company', 'id'), 5, TRUE);
+SELECT setval(pg_get_serial_sequence('site', 'id'), 21, TRUE);
+SELECT setval(pg_get_serial_sequence('participating_user', 'id'), 16, TRUE);
+SELECT setval(pg_get_serial_sequence('site_project_relation', 'id'), 3, TRUE);
+SELECT setval(pg_get_serial_sequence('en_r002_equipment', 'id'), 3, TRUE);
+SELECT setval(pg_get_serial_sequence('en_r002_equipment_file', 'id'), 3, TRUE);
+SELECT setval(pg_get_serial_sequence('participating_project', 'id'), 3, TRUE);
+SELECT setval(pg_get_serial_sequence('batch_process_history', 'id'), 3, TRUE);
+SELECT setval(pg_get_serial_sequence('en_r002_reduction_result', 'id'), 3, TRUE);
+SELECT setval(pg_get_serial_sequence('en_r002_reduction_result_total', 'id'), 1, TRUE);
+SELECT setval(pg_get_serial_sequence('notification', 'id'), 8, TRUE);
+SELECT setval(pg_get_serial_sequence('monitoring_data_deletion_history', 'id'), 1, TRUE);
+
+COMMIT;

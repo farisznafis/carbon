@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowDown } from 'lucide-react';
 import type { ProjectPlanProgressSummary } from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
 import { SkeletonList } from '@/components/feedback/loading';
@@ -6,6 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import {
   formatProjectDateTime,
@@ -14,6 +20,7 @@ import {
 } from './projectStatusPresentation';
 
 const REDUCTION_SEGMENT_COUNT = 10;
+const REDUCTION_PROJECT_LIMIT = 3;
 const IN_PROGRESS_PREVIEW_LIMIT = 2;
 
 type AdminProjectOverviewCardsProps = {
@@ -65,16 +72,38 @@ function ProjectStatusSummary({ projects }: Readonly<{ projects: Project[] }>) {
     (total, [status, count]) => total + (knownStatuses.has(status) ? 0 : count),
     0,
   );
+  const statusDistribution = [
+    ...PROJECT_STATUS_PRESENTATIONS.map((presentation) => ({
+      label: presentation.status,
+      count: statusCounts.get(presentation.status) ?? 0,
+      colorClassName: presentation.dotClassName,
+    })),
+    ...(otherCount > 0
+      ? [
+          {
+            label: 'その他',
+            count: otherCount,
+            colorClassName: 'bg-muted-foreground',
+          },
+        ]
+      : []),
+  ].filter((entry) => entry.count > 0);
+  const distributionLabel =
+    statusDistribution.length > 0
+      ? `ステータス構成：${statusDistribution
+          .map((entry) => `${entry.label}${entry.count}件`)
+          .join('、')}`
+      : '登録済みプロジェクトはありません。';
 
   return (
-    <Card className="h-full rounded-xl border-border shadow-app-sm">
+    <Card className="flex h-full flex-col rounded-xl border-border shadow-app-sm">
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle>プロジェクト状況</CardTitle>
-        <Badge variant="secondary">
+        {/* <Badge variant="secondary">
           {projects.length.toLocaleString('ja-JP')}件
-        </Badge>
+        </Badge> */}
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-1 flex-col">
         <dl className="grid grid-cols-2 gap-x-6 gap-y-3">
           {PROJECT_STATUS_PRESENTATIONS.map((presentation) => (
             <div
@@ -109,12 +138,36 @@ function ProjectStatusSummary({ projects }: Readonly<{ projects: Project[] }>) {
             </div>
           )}
         </dl>
+        {/* <div className="mt-auto pt-8">
+          <div className="mb-2 flex items-center justify-between gap-4 text-md text-muted-foreground">
+            <span>ステータス構成</span>
+            <span>{projects.length.toLocaleString('ja-JP')}件</span>
+          </div>
+          <div
+            role="img"
+            aria-label={distributionLabel}
+            className="flex h-3 overflow-hidden rounded-full bg-muted"
+          >
+            {statusDistribution.map((entry) => (
+              <span
+                key={entry.label}
+                aria-hidden="true"
+                title={`${entry.label} ${entry.count}件`}
+                style={{ flexGrow: entry.count }}
+                className={cn(
+                  'min-w-1 basis-0 border-r border-card last:border-r-0',
+                  entry.colorClassName,
+                )}
+              />
+            ))}
+          </div>
+        </div> */}
       </CardContent>
     </Card>
   );
 }
 
-/** Renders the five largest actual project reduction values as segmented bars. */
+/** Renders the three largest actual project reduction values as segmented bars. */
 function ProjectReductionSummary({ projects }: Readonly<{ projects: Project[] }>) {
   const reductionProjects = projects
     .filter((project) => project.emissionReduction !== undefined)
@@ -122,7 +175,7 @@ function ProjectReductionSummary({ projects }: Readonly<{ projects: Project[] }>
       (left, right) =>
         (right.emissionReduction ?? 0) - (left.emissionReduction ?? 0),
     )
-    .slice(0, 5);
+    .slice(0, REDUCTION_PROJECT_LIMIT);
   const maximumReduction = Math.max(
     ...reductionProjects.map((project) => project.emissionReduction ?? 0),
     0,
@@ -132,62 +185,73 @@ function ProjectReductionSummary({ projects }: Readonly<{ projects: Project[] }>
   });
 
   return (
-    <Card className="h-full rounded-xl border-border shadow-app-sm">
+    <Card className="flex h-full flex-col rounded-xl border-border shadow-app-sm">
       <CardHeader>
         <CardTitle>プロジェクト別累計削減量</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-1 flex-col">
         {reductionProjects.length === 0 ? (
           <p className="py-8 text-center text-small text-muted-foreground">
             削減量データはまだありません。
           </p>
         ) : (
-          <ul className="space-y-4">
-            {reductionProjects.map((project) => {
-              const reduction = project.emissionReduction ?? 0;
-              const filledSegments =
-                reduction > 0 && maximumReduction > 0
-                  ? Math.max(
-                      1,
-                      Math.ceil(
-                        (reduction / maximumReduction) *
-                          REDUCTION_SEGMENT_COUNT,
-                      ),
-                    )
-                  : 0;
+          <TooltipProvider delayDuration={300}>
+            <ul className="flex flex-1 flex-col gap-6">
+              {reductionProjects.map((project) => {
+                const reduction = project.emissionReduction ?? 0;
+                const filledSegments =
+                  reduction > 0 && maximumReduction > 0
+                    ? Math.max(
+                        1,
+                        Math.ceil(
+                          (reduction / maximumReduction) *
+                            REDUCTION_SEGMENT_COUNT,
+                        ),
+                      )
+                    : 0;
 
-              return (
-                <li
-                  key={project.id}
-                  className="grid grid-cols-[minmax(6rem,.85fr)_minmax(7rem,1.25fr)_auto] items-center gap-3"
-                >
-                  <span
-                    className="truncate text-small font-medium text-foreground"
-                    title={project.projectName}
-                  >
-                    {project.projectName}
-                  </span>
-                  <span className="flex h-5 overflow-hidden" aria-hidden="true">
-                    {Array.from(
-                      { length: filledSegments },
-                      (_, segmentIndex) => (
-                        <span
-                          key={segmentIndex}
-                          className="w-4 border-r border-primary-foreground/70 bg-primary last:border-r-0"
-                        />
-                      ),
-                    )}
-                  </span>
-                  <span className="whitespace-nowrap text-small text-muted-foreground">
-                    <strong className="text-foreground">
-                      {numberFormatter.format(reduction)}
-                    </strong>{' '}
-                    t-CO₂
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+                return (
+                  <li key={project.id} className="space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span
+                            tabIndex={0}
+                            className="line-clamp-2 min-w-0 text-small font-medium leading-5 text-foreground focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            {project.projectName}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-sm">
+                          {project.projectName}
+                        </TooltipContent>
+                      </Tooltip>
+                      <span className="shrink-0 whitespace-nowrap text-small text-muted-foreground">
+                        <strong className="text-foreground">
+                          {numberFormatter.format(reduction)}
+                        </strong>{' '}
+                        t-CO₂
+                      </span>
+                    </div>
+                    <span
+                      className="flex h-5 overflow-hidden"
+                      aria-hidden="true"
+                    >
+                      {Array.from(
+                        { length: filledSegments },
+                        (_, segmentIndex) => (
+                          <span
+                            key={segmentIndex}
+                            className="w-4 shrink-0 border-r border-primary-foreground/70 bg-primary last:border-r-0"
+                          />
+                        ),
+                      )}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </TooltipProvider>
         )}
       </CardContent>
     </Card>
@@ -242,11 +306,11 @@ function InProgressProjectSummary({
     });
 
   return (
-    <Card className="h-full rounded-xl border-border shadow-app-sm">
+    <Card className="flex h-full flex-col rounded-xl border-border shadow-app-sm">
       <CardHeader>
         <CardTitle>作成中のプロジェクト</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-1 flex-col">
         {planProgressLoading ? (
           <SkeletonList items={IN_PROGRESS_PREVIEW_LIMIT} />
         ) : planProgressError ? (
@@ -256,7 +320,7 @@ function InProgressProjectSummary({
             作成中のプロジェクトはありません。
           </p>
         ) : (
-          <>
+          <div className="flex h-full flex-col">
             <ul className="divide-y divide-border">
               {incompleteProjects
                 .slice(0, IN_PROGRESS_PREVIEW_LIMIT)
@@ -306,9 +370,9 @@ function InProgressProjectSummary({
               onClick={onShowAll}
               className="mt-3 ml-auto flex text-primary-strong"
             >
-              すべての作成中プロジェクトを見る <ArrowRight />
+              すべての作成中プロジェクトを見る <ArrowDown />
             </Button>
-          </>
+          </div>
         )}
       </CardContent>
     </Card>
@@ -349,7 +413,7 @@ export function AdminProjectOverviewCards({
   return (
     <section
       aria-label="プロジェクト概要"
-      className="grid items-stretch gap-4 xl:grid-cols-3"
+      className="grid grid-flow-dense items-stretch gap-4 xl:grid-cols-3"
     >
       <ProjectStatusSummary projects={projects} />
       <ProjectReductionSummary projects={projects} />
