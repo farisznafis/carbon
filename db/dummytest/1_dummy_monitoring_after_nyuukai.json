@@ -1,0 +1,53 @@
+[
+  {
+    "PK": { "S": "site019#prj001" },
+    "SK": { "S": "2026-08-11T12:10:00Z" },
+    "changedBattery": { "BOOL": false },
+    "date_recorder": { "S": "2026-08-11" },
+    "elpjControlEvidenceUrl": { "S": "s3://test-bucket/evidence/site019-control-001.pdf" },
+    "ELPJ_accuracy": { "N": "98.5" },
+    "ELPJ_control_value": { "N": "14.2" },
+    "ELpv": { "N": "720.4" },
+    "elPvEvidenceUrl": { "S": "s3://test-bucket/evidence/site019-elpv-001.pdf" },
+    "ELpvr": { "N": "118.5" },
+    "elPvrEvidenceUrl": { "S": "s3://test-bucket/evidence/site019-elpvr-001.pdf" },
+    "isActive": { "BOOL": true },
+    "participatingUserID": { "N": "14" },
+    "projectID": { "N": "1" },
+    "siteID": { "N": "19" }
+  },
+  {
+    "PK": { "S": "site020#prj001" },
+    "SK": { "S": "2026-08-11T12:15:00Z" },
+    "changedBattery": { "BOOL": false },
+    "date_recorder": { "S": "2026-08-11" },
+    "elpjControlEvidenceUrl": { "S": "s3://test-bucket/evidence/site020-control-001.pdf" },
+    "ELPJ_accuracy": { "N": "99.1" },
+    "ELPJ_control_value": { "N": "18.4" },
+    "ELpv": { "N": "1050.7" },
+    "elPvEvidenceUrl": { "S": "s3://test-bucket/evidence/site020-elpv-001.pdf" },
+    "ELpvr": { "N": "175.8" },
+    "elPvrEvidenceUrl": { "S": "s3://test-bucket/evidence/site020-elpvr-001.pdf" },
+    "isActive": { "BOOL": true },
+    "participatingUserID": { "N": "15" },
+    "projectID": { "N": "1" },
+    "siteID": { "N": "20" }
+  },
+  {
+    "PK": { "S": "site021#prj001" },
+    "SK": { "S": "2026-08-11T12:20:00Z" },
+    "changedBattery": { "BOOL": false },
+    "date_recorder": { "S": "2026-08-11" },
+    "elpjControlEvidenceUrl": { "S": "s3://test-bucket/evidence/site021-control-001.pdf" },
+    "ELPJ_accuracy": { "N": "97.8" },
+    "ELPJ_control_value": { "N": "16.1" },
+    "ELpv": { "N": "880.6" },
+    "elPvEvidenceUrl": { "S": "s3://test-bucket/evidence/site021-elpv-001.pdf" },
+    "ELpvr": { "N": "146.3" },
+    "elPvrEvidenceUrl": { "S": "s3://test-bucket/evidence/site021-elpvr-001.pdf" },
+    "isActive": { "BOOL": true },
+    "participatingUserID": { "N": "16" },
+    "projectID": { "N": "1" },
+    "siteID": { "N": "21" }
+  }
+]
