@@ -139,7 +139,7 @@ type ProjectDetailNavigationState = {
 
 function ProjectDetailTabs() {
   return (
-    <TabsList className={cn(dashboardTabsListClassName, 'mx-0 justify-start')}>
+    <TabsList className={dashboardTabsListClassName}>
       <TabsTrigger
         value='overview'
         className={dashboardTabTriggerClassName}
