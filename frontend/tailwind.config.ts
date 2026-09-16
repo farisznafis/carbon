@@ -13,7 +13,10 @@ export default {
   			'2xl': '1400px'
   		}
   	},
-  	extend: {
+	extend: {
+		fontSize: {
+			'page-title': ['2rem', { lineHeight: '2.375rem' }],
+		},
 		maxWidth: {
 		  app: '77.5rem',      // 1240
 			admin: '100rem',     // 1600

@@ -49,7 +49,7 @@ public class ProjectPlanAutofillService {
             return response;
         }
 
-        if (!hasAccessToCompany(role, username, company)) {
+        if (!projectPlanContextService.canAccessCompany(role, username, company)) {
             response.setStatusCode(ResponseConstants.FORBIDDEN);
             response.setMessage(ResponseConstants.MSG_FORBIDDEN);
             return response;
@@ -61,7 +61,8 @@ public class ProjectPlanAutofillService {
 
         CorporationMasterData data = CorporationMasterData.builder()
                 .corpNumber(company.getCorpNumber())
-                .corpName(company.getNameJa())
+                // 法人代表者の氏名 — the representative, matching the plan page.
+                .corpName(buildFullName(company.getRepLastName(), company.getRepFirstName()))
                 .corpPosition(company.getRepPosition())
                 .prefecture(company.getPrefecture())
                 .city(company.getMunicipality())
@@ -75,7 +76,9 @@ public class ProjectPlanAutofillService {
                         ? null
                         : buildFullName(operatorUser.getLastName(), operatorUser.getFirstName()))
                 .picEmail(operatorUser == null ? null : operatorUser.getEmail())
-                .picPhoneNumber(operatorUser == null ? null : operatorUser.getPhoneNumber())
+                .picPhoneNumber(operatorUser == null
+                        ? null
+                        : ProjectPlanSqlContext.normalizePhoneNumber(operatorUser.getPhoneNumber()))
                 .build();
 
         response.setData(data);
@@ -113,15 +116,6 @@ public class ProjectPlanAutofillService {
         response.setData(data);
         response.setStatusCode(ResponseConstants.OK);
         return response;
-    }
-
-    private boolean hasAccessToCompany(String role, String username, OperatorCompany company) {
-        if (!RoleConstants.OPERATOR.equals(role)) {
-            return false;
-        }
-        return operatingUserRepository
-                .findByUsernameAndCompany_Id(username, company.getId())
-                .isPresent();
     }
 
     private static void applyContextError(BaseResponse response, ProjectContext context) {

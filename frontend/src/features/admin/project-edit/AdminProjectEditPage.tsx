@@ -46,6 +46,7 @@ import { paths } from '@/routes/paths';
 import { MultiStepForm } from '@/features/admin/project-registration/forms/ProjectMultiPageForm';
 import type { AdminProjectRegisterFormInputValues } from '@/features/admin/project-registration/forms/projectFormTypes';
 import { steps } from '@/features/admin/project-registration/forms/projectSteps';
+import { stepsForApplicationCategory } from '@/features/admin/project-registration/forms/applicationCategory';
 import {
   adminProjectEditBasicFields,
   adminProjectEditMethodologyFields,
@@ -58,7 +59,7 @@ type LocationState = {
   project?: Project;
 };
 
-const visibleSteps = steps.slice(0, 2);
+const visibleSteps = stepsForApplicationCategory(steps.slice(0, 2));
 const maxStep = visibleSteps.length;
 
 const textFallback = (value: unknown) => (value == null ? '' : String(value));

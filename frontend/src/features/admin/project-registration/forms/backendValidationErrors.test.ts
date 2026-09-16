@@ -92,6 +92,38 @@ describe('applyBackendValidationErrors on a plan page', () => {
       ).error?.message,
     ).toBe('必須です。');
   });
+
+  it('marks 申請 page inputs whose form names differ from the DTO', async () => {
+    const { getPlanPageForStep } = await import('./projectPlanPages');
+    const { result } = renderHook(() =>
+      useForm<AdminProjectRegisterFormInputValues>(),
+    );
+    const error = new ApiError('入力内容に誤りがあります。', {
+      status: 400,
+      payload: {
+        errors: {
+          picPhoneNumber: '担当者電話番号の形式が正しくありません。（例: 0312345678）',
+          regionalCategory: '地域区分の値が不正です。',
+        },
+      },
+    });
+
+    const page = getPlanPageForStep(2)!;
+    applyBackendValidationErrors(result.current, error, {
+      formKey: page.formKey,
+      renames: page.renames,
+    });
+
+    // The inputs are bound to picPhone / regionCategory; errors set under the
+    // DTO names marked nothing and the operator saw only a toast.
+    expect(
+      result.current.getFieldState('projectApplication.picPhone').error?.message,
+    ).toBe('担当者電話番号の形式が正しくありません。（例: 0312345678）');
+    expect(
+      result.current.getFieldState('projectApplication.regionCategory').error
+        ?.message,
+    ).toBe('地域区分の値が不正です。');
+  });
 });
 
 describe('applyBackendValidationErrors on a repeating table', () => {
