@@ -109,7 +109,7 @@ class SolarBatchProcessServiceTest {
     class SaveSiteResultsTest {
 
         @Test
-        @DisplayName("UT-SB-401: 設備ごとの結果を1件ずつ保存し、全件に isActive=true を設定する")
+        @DisplayName("UT-BS-401: 設備ごとの結果を1件ずつ保存し、全件に isActive=true を設定する")
         void persistsEachEquipmentResultAndSetsActive() {
             EnR002ReductionResult first = resultOf(2, 1, "120.50", "80.25", "40.25");
             EnR002ReductionResult second = resultOf(2, 2, "79.50", "19.75", "9.75");
@@ -134,7 +134,7 @@ class SolarBatchProcessServiceTest {
         }
 
         @Test
-        @DisplayName("UT-SB-402: results が空リストの場合、save を呼ばず空リストを返す")
+        @DisplayName("UT-BS-402: results が空リストの場合、save を呼ばず空リストを返す")
         void emptyList_returnsEmptyAndSkipsSave() {
             Object saved = service.saveSiteResults(1, 3, 1, PROCESSING_DATE, Collections.emptyList());
 
@@ -143,7 +143,7 @@ class SolarBatchProcessServiceTest {
         }
 
         @Test
-        @DisplayName("UT-SB-403: results が null の場合でも NPE にならず空リストを返す")
+        @DisplayName("UT-BS-403: results が null の場合でも NPE にならず空リストを返す")
         void nullList_returnsEmptyAndSkipsSave() {
             Object saved = service.saveSiteResults(1, 3, 1, PROCESSING_DATE, null);
 
@@ -152,7 +152,7 @@ class SolarBatchProcessServiceTest {
         }
 
         @Test
-        @DisplayName("UT-SB-404: 保存中にリポジトリが例外をスローした場合、そのまま伝播される")
+        @DisplayName("UT-BS-404: 保存中にリポジトリが例外をスローした場合、そのまま伝播される")
         void repositoryThrows_propagates() {
             when(resultRepository.save(any(EnR002ReductionResult.class)))
                     .thenThrow(new DataAccessResourceFailureException("DB down"));
@@ -166,7 +166,7 @@ class SolarBatchProcessServiceTest {
         }
 
         /*
-         * UT-SB-405 — GAP: baris hasil lama tidak pernah dinonaktifkan.
+         * UT-BS-405 — GAP: baris hasil lama tidak pernah dinonaktifkan.
          *
          * Calculator menyimpan nilai KUMULATIF, tetapi setiap batch menambah baris baru
          * dengan isActive=true tanpa menyentuh baris sebelumnya. Akibatnya
@@ -174,7 +174,7 @@ class SolarBatchProcessServiceTest {
          * baris historis yang masing-masing sudah kumulatif.
          */
         @Test
-        @DisplayName("UT-SB-405: 過去の結果行が非活性化されない（欠陥候補）")
+        @DisplayName("UT-BS-405: 過去の結果行が非活性化されない（欠陥候補）")
         void doesNotDeactivatePreviousRows() {
             when(resultRepository.save(any(EnR002ReductionResult.class)))
                     .thenAnswer(inv -> inv.getArgument(0));
@@ -194,7 +194,7 @@ class SolarBatchProcessServiceTest {
     class AggregateEmissionsTest {
 
         @Test
-        @DisplayName("UT-SB-406: 4拠点分（ダミー day1）の empj / control / battery が合算される")
+        @DisplayName("UT-BS-406: 4拠点分（ダミー day1）の empj / control / battery が合算される")
         void sumsAllFourDummySites() {
             List<EnR002ReductionResult> dayOne = List.of(
                     resultOf(1, 1, "0.018", "0.011", "0.007"),
@@ -212,7 +212,7 @@ class SolarBatchProcessServiceTest {
         }
 
         @Test
-        @DisplayName("UT-SB-407: null フィールドは 0 として扱われ、例外にならない")
+        @DisplayName("UT-BS-407: null フィールドは 0 として扱われ、例外にならない")
         void nullFieldsTreatedAsZero() {
             // Site tanpa baterai bisa menghasilkan field null
             EnR002ReductionResult noBattery = EnR002ReductionResult.builder()
@@ -234,7 +234,7 @@ class SolarBatchProcessServiceTest {
         }
 
         @Test
-        @DisplayName("UT-SB-408: 空リストの場合、全項目 0 かつ projectId が null になる")
+        @DisplayName("UT-BS-408: 空リストの場合、全項目 0 かつ projectId が null になる")
         void emptyList_returnsZeroTotalsWithNullProjectId() {
             EnR002ReductionResultTotal total =
                     (EnR002ReductionResultTotal) service.aggregateEmissions(Collections.emptyList());
@@ -248,7 +248,7 @@ class SolarBatchProcessServiceTest {
         }
 
         @Test
-        @DisplayName("UT-SB-409: projectId が先頭要素から取得される")
+        @DisplayName("UT-BS-409: projectId が先頭要素から取得される")
         void projectIdTakenFromFirstElement() {
             List<EnR002ReductionResult> results = List.of(
                     resultOf(1, 1, "0.018", "0.011", "0.007"),
@@ -263,10 +263,10 @@ class SolarBatchProcessServiceTest {
         }
 
         /*
-         * UT-SB-410 — GAP PALING BERDAMPAK.
+         * UT-BS-410 — GAP PALING BERDAMPAK.
          *
          * aggregateEmissions() hanya menjumlahkan empj / empjM / empjS /
-         * empjSControl / empjSBattery. Field elpj / embl / elbl / er TIDAK
+         * empjSControl / empjBSattery. Field elpj / embl / elbl / er TIDAK
          * dijumlahkan dan tidak diset di builder → bernilai null.
          *
          * Padahal ER (式1: ER = EMBL - EMPJ) adalah keluaran akhir metodologi
@@ -274,7 +274,7 @@ class SolarBatchProcessServiceTest {
          * saat ini keduanya akan tersimpan sebagai null.
          */
         @Test
-        @DisplayName("UT-SB-410: elpj / embl / elbl / er も集計されるべき（欠陥候補・重要度高）")
+        @DisplayName("UT-BS-410: elpj / embl / elbl / er も集計されるべき（欠陥候補・重要度高）")
         void shouldAlsoAggregateEnergyAndErFields() {
             EnR002ReductionResult site1 = EnR002ReductionResult.builder()
                     .projectId(1).siteId(1).equipmentId(1)
@@ -330,7 +330,7 @@ class SolarBatchProcessServiceTest {
         }
 
         @Test
-        @DisplayName("UT-SB-411: 既存行がない場合、新規行が作成される")
+        @DisplayName("UT-BS-411: 既存行がない場合、新規行が作成される")
         void createsNewRowWhenNoneExists() {
             when(resultTotalRepository.findByProjectId(1)).thenReturn(Optional.empty());
             when(resultTotalRepository.save(any(EnR002ReductionResultTotal.class)))
@@ -356,7 +356,7 @@ class SolarBatchProcessServiceTest {
         }
 
         @Test
-        @DisplayName("UT-SB-412: 既存行がある場合、同じ行が更新され重複挿入されない")
+        @DisplayName("UT-BS-412: 既存行がある場合、同じ行が更新され重複挿入されない")
         void updatesExistingRowInPlace() {
             EnR002ReductionResultTotal existing = EnR002ReductionResultTotal.builder()
                     .projectId(1)
@@ -401,7 +401,7 @@ class SolarBatchProcessServiceTest {
         }
 
         @Test
-        @DisplayName("UT-SB-413: 更新時、既存の startTime は保持される")
+        @DisplayName("UT-BS-413: 更新時、既存の startTime は保持される")
         void updatePreservesOriginalStartTime() {
             Instant originalStart = Instant.parse("2026-07-01T00:00:00Z");
             EnR002ReductionResultTotal existing = EnR002ReductionResultTotal.builder()
@@ -427,7 +427,7 @@ class SolarBatchProcessServiceTest {
         }
 
         @Test
-        @DisplayName("UT-SB-414: aggregated が想定外の型の場合、ClassCastException が発生する")
+        @DisplayName("UT-BS-414: aggregated が想定外の型の場合、ClassCastException が発生する")
         void wrongAggregatedType_throwsClassCastException() {
             // Signature memakai Object (base class generik) → tidak ada type safety saat compile
             assertThrows(ClassCastException.class,
@@ -443,7 +443,7 @@ class SolarBatchProcessServiceTest {
     class GetActiveProjectsTest {
 
         @Test
-        @DisplayName("UT-SB-415: 非活性プロジェクトが除外され、活性プロジェクトの ID のみ返る")
+        @DisplayName("UT-BS-415: 非活性プロジェクトが除外され、活性プロジェクトの ID のみ返る")
         void filtersOutInactiveProjects() {
             when(projectRepository.findAll()).thenReturn(List.of(
                     projectWith(1, true),
@@ -457,7 +457,7 @@ class SolarBatchProcessServiceTest {
         }
 
         @Test
-        @DisplayName("UT-SB-416: プロジェクトが1件もない場合、空リストを返す")
+        @DisplayName("UT-BS-416: プロジェクトが1件もない場合、空リストを返す")
         void noProjects_returnsEmptyList() {
             when(projectRepository.findAll()).thenReturn(Collections.emptyList());
 
@@ -468,13 +468,13 @@ class SolarBatchProcessServiceTest {
         }
 
         /*
-         * UT-SB-417 — GAP: filter(project -> project.getIsActive()) melakukan
+         * UT-BS-417 — GAP: filter(project -> project.getIsActive()) melakukan
          * unboxing Boolean. Kolom is_active bisa null di DB → seluruh batch gagal
          * sebelum project mana pun sempat diproses.
          * Perbaikan yang disarankan: Boolean.TRUE.equals(project.getIsActive())
          */
         @Test
-        @DisplayName("UT-SB-417: isActive が null のプロジェクトがあると NPE が発生する（欠陥候補）")
+        @DisplayName("UT-BS-417: isActive が null のプロジェクトがあると NPE が発生する（欠陥候補）")
         void nullIsActive_currentlyThrowsNpe() {
             when(projectRepository.findAll()).thenReturn(List.of(
                     projectWith(1, true),
@@ -487,13 +487,13 @@ class SolarBatchProcessServiceTest {
         }
 
         /*
-         * UT-SB-418 — GAP: tidak ada penyaringan metodologi.
+         * UT-BS-418 — GAP: tidak ada penyaringan metodologi.
          * Log menulis "active solar projects", tetapi kode mengembalikan SEMUA
          * project aktif. Saat metodologi kedua (mis. EnR003 angin) ditambahkan,
          * batch solar akan ikut memproses project angin.
          */
         @Test
-        @DisplayName("UT-SB-418: 方法論による絞り込みが行われていない（欠陥候補）")
+        @DisplayName("UT-BS-418: 方法論による絞り込みが行われていない（欠陥候補）")
         void doesNotFilterByMethodology() {
             when(projectRepository.findAll()).thenReturn(List.of(
                     projectWith(1, true),  // solar
@@ -515,7 +515,7 @@ class SolarBatchProcessServiceTest {
     class GetSitesForProjectTest {
 
         @Test
-        @DisplayName("UT-SB-419: サイト関連から siteId のみが抽出される（ダミーの4拠点）")
+        @DisplayName("UT-BS-419: サイト関連から siteId のみが抽出される（ダミーの4拠点）")
         void mapsRelationsToSiteIds() {
             when(siteProjectRelationRepo.findByProjectId(1)).thenReturn(List.of(
                     relationFor(1), relationFor(2), relationFor(3), relationFor(4)));
@@ -526,7 +526,7 @@ class SolarBatchProcessServiceTest {
         }
 
         @Test
-        @DisplayName("UT-SB-420: 紐づく拠点がない場合、空リストを返す")
+        @DisplayName("UT-BS-420: 紐づく拠点がない場合、空リストを返す")
         void noRelations_returnsEmptyList() {
             when(siteProjectRelationRepo.findByProjectId(5)).thenReturn(Collections.emptyList());
 
@@ -537,7 +537,7 @@ class SolarBatchProcessServiceTest {
         }
 
         @Test
-        @DisplayName("UT-SB-421: relation.getSite() が null の場合、NPE が発生する（現行仕様の記録）")
+        @DisplayName("UT-BS-421: relation.getSite() が null の場合、NPE が発生する（現行仕様の記録）")
         void relationWithNullSite_throwsNpe() {
             SiteProjectRelation orphan = SiteProjectRelation.builder().site(null).build();
             when(siteProjectRelationRepo.findByProjectId(1))
