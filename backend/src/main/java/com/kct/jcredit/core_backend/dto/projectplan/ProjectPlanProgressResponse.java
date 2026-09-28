@@ -20,10 +20,15 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProjectPlanProgressResponse extends BaseResponse {
 
+    /** Pages the plan actually requires. Optional ones are listed but not counted. */
     private int totalForms;
     private int completedForms;
 
-    /** First page that is not yet complete, or {@code null} when the plan is done. */
+    /**
+     * First <b>required</b> page that is not yet complete, or {@code null} when
+     * the plan is done. Optional pages are skipped: 続きから must not park the
+     * operator on a form only some projects file.
+     */
     private String nextIncompleteSlug;
 
     private List<FormProgress> forms;
@@ -39,5 +44,11 @@ public class ProjectPlanProgressResponse extends BaseResponse {
         private String status;
         private Instant updatedAt;
         private String updatedBy;
+
+        /**
+         * A page only some projects file — 認証権限保有主体変更届, say. Reachable,
+         * listed, but not counted towards completion.
+         */
+        private boolean optional;
     }
 }

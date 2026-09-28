@@ -1,26 +1,57 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  addSiteProjectEquipment,
   getSiteEquipmentById,
   getSiteEquipmentHistory,
   getSiteProjectEquipment,
   getSiteProjectEquipmentPresignedUrl,
+  getSiteProjectSustainabilityCommitmentDefault,
   getSiteEquipmentList,
   joinSiteProject,
   uploadSiteProjectEquipmentFile,
-  updateSiteEquipment,
+  changeSiteEquipment,
   validateSiteProjectConfirmationItems,
   validateSiteProjectEquipment,
   validateSiteProjectFinalAgreement,
   validateSiteProjectSustainabilityCommitment,
 } from './equipment';
 import type {
+  SiteProjectEquipmentCreateRequest,
   SiteProjectEquipmentValidationItem,
   SiteProjectJoinRequest,
-  SiteProjectEquipmentUpdateRequest,
+  SiteProjectEquipmentChangeRequest,
 } from './types';
 
 afterEach(() => {
   vi.unstubAllGlobals();
+});
+
+describe('getSiteProjectSustainabilityCommitmentDefault', () => {
+  it('gets Contract Step defaults with an encoded site ID', async () => {
+    const responseBody = {
+      statusCode: 'OK',
+      companyName: 'ABC株式会社',
+      repName: '山田太郎',
+      repRole: '代表取締役',
+      hasConsent: true,
+      isAgreeTerms: true,
+    };
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(responseBody), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      getSiteProjectSustainabilityCommitmentDefault('SITE/001'),
+    ).resolves.toEqual(responseBody);
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/site/project/sites/SITE%2F001/sustainability-commitment/default',
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
 });
 
 describe('validateSiteProjectEquipment', () => {
@@ -39,7 +70,6 @@ describe('validateSiteProjectEquipment', () => {
       nominalMaxOutput: 10,
       pcsManufacturer: 'Maker',
       pcsModel: 'Model',
-      pcsUnitCount: 1,
       deviceNo: 'DEVICE-01',
       pcsStandby: 2,
       hasBattery: false,
@@ -61,7 +91,51 @@ describe('validateSiteProjectEquipment', () => {
   });
 });
 
-describe('site equipment read and update', () => {
+describe('addSiteProjectEquipment', () => {
+  it('posts confirmed equipment to the encoded site and project endpoint', async () => {
+    const responseBody = { statusCode: '200', equipmentId: 12 };
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(responseBody), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const payload: SiteProjectEquipmentCreateRequest = {
+      tempId: 'temp-1',
+      siteId: 'SITE/1',
+      equipmentOpDate: '2026-09-03',
+      nominalMaxOutput: 10,
+      pcsManufacturer: 'Maker',
+      pcsModel: 'Model',
+      deviceNo: 'DEVICE-01',
+      pcsStandby: 2,
+      hasBattery: false,
+      batteryMaker: null,
+      batteryModel: null,
+      batteryCapacity: null,
+      totalInvestment: 1000,
+      hasSubsidy: false,
+      subsidyName: null,
+      subsidyAmount: null,
+      preProjectUnitPrice: 30,
+      files: [],
+    };
+
+    await expect(
+      addSiteProjectEquipment('SITE/1', 'PROJECT/1', payload),
+    ).resolves.toEqual(responseBody);
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/site/SITE%2F1/PROJECT%2F1/equipment',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    );
+  });
+});
+
+describe('site equipment read and change', () => {
   it.each([
     ['array', [{ id: 10, deviceNo: 'PV-10', hasBattery: true }]],
     [
@@ -99,7 +173,6 @@ describe('site equipment read and update', () => {
           equipments: [
             {
               id: 12,
-              pcsUnitCount: 3,
               pcsStandby: 0,
               nominalMaxOutput: 25.5,
             },
@@ -119,7 +192,6 @@ describe('site equipment read and update', () => {
     expect(result[0]).toEqual(
       expect.objectContaining({
         equipmentId: 12,
-        powerCondUnitCount: 3,
         powerCondStandby: 0,
       }),
     );
@@ -128,7 +200,7 @@ describe('site equipment read and update', () => {
   it('gets equipment details and normalizes backend aliases', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
-        JSON.stringify({ id: 7, pcsUnitCount: 2, pcsStandby: 1.5 }),
+        JSON.stringify({ id: 7, pcsStandby: 1.5 }),
         { status: 200, headers: { 'Content-Type': 'application/json' } },
       ),
     );
@@ -143,7 +215,6 @@ describe('site equipment read and update', () => {
     expect(result).toEqual(
       expect.objectContaining({
         equipmentId: 7,
-        powerCondUnitCount: 2,
         powerCondStandby: 1.5,
       }),
     );
@@ -242,7 +313,6 @@ describe('site equipment read and update', () => {
             registeredAt: '2026-08-13T01:39:59.538Z',
             equipment: {
               id: 7,
-              pcsUnitCount: 0,
               pcsStandby: 0,
               hasBattery: false,
               Files: [
@@ -275,7 +345,6 @@ describe('site equipment read and update', () => {
         isActive: false,
         equipment: expect.objectContaining({
           equipmentId: 7,
-          powerCondUnitCount: 0,
           powerCondStandby: 0,
           hasBattery: false,
           files: [
@@ -292,7 +361,7 @@ describe('site equipment read and update', () => {
     );
   });
 
-  it('patches only the supplied equipment fields and preserves false and zero', async () => {
+  it('posts changed equipment fields while preserving false and zero', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ id: 7, hasBattery: false, pcsStandby: 0 }), {
         status: 200,
@@ -300,17 +369,31 @@ describe('site equipment read and update', () => {
       }),
     );
     vi.stubGlobal('fetch', fetchMock);
-    const payload: SiteProjectEquipmentUpdateRequest = {
+    const payload: SiteProjectEquipmentChangeRequest = {
+      changeDate: '2026-08-20',
+      nominalMaxOutput: 0,
+      pcsManufacturer: 'PCS Maker',
+      pcsModel: 'PCS-1',
+      deviceNo: 'DEVICE-1',
       hasBattery: false,
       pcsStandby: 0,
+      batteryMaker: null,
+      batteryModel: null,
+      batteryCapacity: null,
+      totalInvestment: 0,
+      hasSubsidy: false,
+      subsidyName: null,
+      subsidyAmount: null,
+      preProjectUnitPrice: 0,
+      files: [],
     };
 
-    await updateSiteEquipment('SITE A', 7, payload);
+    await changeSiteEquipment('SITE A', 7, payload);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/site/SITE%20A/equipment/7',
+      '/api/site/SITE%20A/equipment/7/change',
       expect.objectContaining({
-        method: 'PATCH',
+        method: 'POST',
         body: JSON.stringify(payload),
       }),
     );
@@ -486,7 +569,6 @@ describe('joinSiteProject', () => {
         nominalMaxOutput: 10,
         pcsManufacturer: 'Maker',
         pcsModel: 'Model',
-        pcsUnitCount: 1,
         deviceNo: 'DEVICE-1',
         pcsStandby: 1,
         hasBattery: false,
@@ -533,7 +615,7 @@ describe('joinSiteProject', () => {
     await joinSiteProject('PROJ0002', payload);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/site/project/projects/PROJ0002/join',
+      '/api/site/project/projects/PROJ0002/join-company',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(payload),

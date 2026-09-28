@@ -6,6 +6,7 @@ export type EquipmentConfirmationState = {
   isEdit: boolean;
   formData: SolarPowerFormData;
   returnTo?: string;
+  submissionMode: 'draft' | 'create';
   fromMasterDashboard: boolean;
 };
 
@@ -29,6 +30,7 @@ export function getEquipmentConfirmationState(
     formData: candidate.formData,
     returnTo:
       typeof candidate.returnTo === 'string' ? candidate.returnTo : undefined,
+    submissionMode: candidate.submissionMode === 'create' ? 'create' : 'draft',
     fromMasterDashboard: candidate.fromMasterDashboard === true,
   };
 }
@@ -55,5 +57,17 @@ export function getPendingSolarEquipment(state: unknown): SolarEquipment | null 
   const candidate = equipment as Partial<SolarEquipment>;
   return candidate.formType === 'solar' && candidate.solarData
     ? (candidate as SolarEquipment)
+    : null;
+}
+
+/** Reads the site created while temporarily leaving project registration. */
+export function getCreatedSiteId(state: unknown): string | null {
+  if (!state || typeof state !== 'object' || !('createdSiteId' in state)) {
+    return null;
+  }
+
+  const createdSiteId = (state as { createdSiteId?: unknown }).createdSiteId;
+  return typeof createdSiteId === 'string' && createdSiteId
+    ? createdSiteId
     : null;
 }

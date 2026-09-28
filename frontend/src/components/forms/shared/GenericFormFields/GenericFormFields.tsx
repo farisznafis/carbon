@@ -26,7 +26,28 @@ export type FieldType =
   | "email"
   | "select"
   | "date"
-  | "file";
+  | "file"
+  /**
+   * A person's 氏名 entered as 姓 and 名, stored as one string ("山田 太郎").
+   *
+   * Split by the project-plan wizard — see `PersonNameInput`. The official
+   * sheets keep 氏名 in one cell, but a lone 氏名 box leaves the operator
+   * guessing at order and separator. Here it falls back to one text box.
+   */
+  | "personName"
+  /**
+   * 郵便番号 that looks up and fills the address fields named in
+   * `addressFields`. Wizard only — see `PostalCodeInput`; plain text here.
+   */
+  | "postalCode"
+  /**
+   * A repeating table, holding an array of rows rather than a single value.
+   *
+   * Rendered by the project-plan wizard only — see `PlanTableField`. This
+   * component draws one control per config and has nowhere to put a row index,
+   * so it skips these rather than binding a text box to an array.
+   */
+  | "table";
 
 export interface SelectOption<T = string> {
   label: string;
@@ -48,10 +69,43 @@ export interface FieldConfig<TFormValues extends FieldValues = FieldValues> {
   type: FieldType;
   placeholder?: string;
   required?: boolean;
+  /**
+   * Locks the input outright, for a value the form does not own — a field the
+   * server fills from its own data, say. `disabledWhen` covers the cases that
+   * depend on another answer; this one does not depend on anything.
+   */
+  disabled?: boolean;
   options?: SelectOption<unknown>[]; // for select
   //for file
   accept?: string; // MIME types or file extensions (e.g. "image/*")
   multiple?: boolean;
+
+  // --- for type: "postalCode" ---
+  /**
+   * Sibling fields the lookup fills, named relative to the same parent as the
+   * postal code itself (`prefecture`, not `otherProjectOperator.prefecture`).
+   */
+  addressFields?: { prefecture: string; city: string; address: string };
+
+  // --- for type: "table" ---
+  /**
+   * The columns of a repeating table. Names are row-relative (`symbol`, not
+   * `rows.0.symbol`) so one config serves every row; the renderer applies the
+   * index, and `showWhen`/`disabledWhen` inside a column resolve against
+   * sibling columns of the same row.
+   */
+  columns?: Array<FieldConfig & { width?: string }>;
+  /** Minimum rows. Rows are appended to reach it, and 削除 stops there. */
+  minRows?: number;
+  maxRows?: number;
+  /**
+   * No 行を追加 / 削除. For a table the server derives — the 年度 skeleton built
+   * from 認証対象期間 — where an added row would be discarded on the next read.
+   */
+  fixedRows?: boolean;
+  addRowLabel?: string;
+  /** Column width hint; only meaningful inside `columns`. */
+  width?: string;
 
   // show/hide logic
   showWhen?:
@@ -96,7 +150,12 @@ export function GenericFormFields<TFormValues extends FieldValues>({
 }: Readonly<GenericFormFieldsProps<TFormValues>>) {
   return (
     <>
-      {fields.map((config) => (
+      {/*
+        Tables belong to the project-plan wizard's renderer, which owns the row
+        index. Falling through to the text input below would bind it to an
+        array and silently overwrite every row with one string.
+      */}
+      {fields.filter((config) => config.type !== "table").map((config) => (
         <FormField
           key={config.name as string}
           control={form.control}

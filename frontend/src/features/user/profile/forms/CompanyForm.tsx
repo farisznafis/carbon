@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { RequiredLabel } from '@/components/forms/shared';
+import { FormActions } from '@/components/forms/form-layout';
 import { useProfileStore } from '@/stores/ProfileStore';
 import { CompanyFormValues, companySchema } from '@/lib/schemas/companySchema';
 
@@ -174,21 +175,22 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
                   )}
                 />
 
-                <div className='flex justify-end gap-4'>
-                  <Button
-                    type='button'
-                    variant='outline'
-                    onClick={onCancel}
-                  >
-                    キャンセル
-                  </Button>
-                  <Button
-                    type='submit'
-                    disabled={!isDirty}
-                  >
-                    更新
-                  </Button>
-                </div>
+                <FormActions
+                  actions={[
+                    {
+                      id: 'cancel',
+                      label: 'キャンセル',
+                      variant: 'outline',
+                      onClick: onCancel,
+                    },
+                    {
+                      id: 'submit',
+                      label: '更新',
+                      type: 'submit',
+                      disabled: !isDirty,
+                    },
+                  ]}
+                />
               </form>
             </Form>
           </CardContent>

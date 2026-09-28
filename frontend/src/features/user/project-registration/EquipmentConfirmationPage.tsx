@@ -14,6 +14,7 @@ import { ConfirmationItem } from '@/components/feedback/Confirmation/Confirmatio
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
 import {
+  addSiteProjectEquipment,
   uploadSiteProjectEquipmentFile,
   type SiteProjectEquipmentValidationFile,
 } from '@/api/site';
@@ -23,7 +24,10 @@ import {
   type EquipmentConfirmationState,
 } from '@/features/user/project-registration/equipmentConfirmationState';
 import { masterDashboardProjectMembershipState } from '@/features/user/project-registration/projectMembershipNavigation';
-import { getSolarFormSelectedFiles } from '@/features/user/project-registration/equipmentValidationMapper';
+import {
+  getSolarFormSelectedFiles,
+  mapSolarFormToEquipmentCreateRequest,
+} from '@/features/user/project-registration/equipmentValidationMapper';
 import { useSitesQuery } from '@/hooks/sites/useSitesQuery';
 import { useToast } from '@/hooks/use-toast';
 import type { SolarPowerFormData } from '@/lib/equipmentValidations';
@@ -37,7 +41,7 @@ const displayYesNo = (value: SolarPowerFormData['hasBattery']) => {
   return '未選択';
 };
 
-const fileName = (file?: File) => file?.name ?? 'なし';
+const fileName = (file?: File | null) => file?.name ?? 'なし';
 
 function withoutLocalFiles(data: SolarPowerFormData): SolarPowerFormData {
   return {
@@ -99,6 +103,7 @@ export default function EquipmentConfirmationPage() {
           ? masterDashboardProjectMembershipState
           : {}),
         returnTo: confirmationState?.returnTo,
+        submissionMode: confirmationState?.submissionMode,
         equipmentDraft: data,
       },
     });
@@ -114,11 +119,36 @@ export default function EquipmentConfirmationPage() {
           uploadSiteProjectEquipmentFile(data.siteId, fileType, file),
         ),
       );
+
+      if (confirmationState.submissionMode === 'create') {
+        const equipmentSiteId = data.siteId.trim() || siteId;
+        const payload = mapSolarFormToEquipmentCreateRequest(
+          data,
+          confirmationState.equipmentId,
+          equipmentSiteId,
+          uploadedFiles,
+        );
+        await addSiteProjectEquipment(equipmentSiteId, projectId, payload);
+
+        navigate(
+          confirmationState.returnTo ??
+            `${paths.siteProjectDetail(siteId, projectId)}?tab=equipment`,
+          { replace: true },
+        );
+        return;
+      }
+
       const pendingEquipment = saveEquipment(
         projectId,
         confirmationState,
         uploadedFiles,
       );
+
+      if (confirmationState.returnTo) {
+        navigate(confirmationState.returnTo, { replace: true });
+        return;
+      }
+
       navigate(paths.projectRegister(siteId, projectId), {
         replace: true,
         state: {
@@ -205,7 +235,6 @@ export default function EquipmentConfirmationPage() {
               <FormGrid>
                 <ConfirmationItem label="メーカー" value={displayValue(data.pcsManufacturer)} />
                 <ConfirmationItem label="型式" value={displayValue(data.pcsModel)} />
-                <ConfirmationItem label="導入台数" value={displayValue(data.powerCondUnitCount)} />
                 <ConfirmationItem label="機器固有番号" value={displayValue(data.deviceNo)} />
                 <ConfirmationItem label="夜間待機電力 (W)" value={displayValue(data.powerCondStandby)} />
                 <ConfirmationItem label="確認資料" value={fileName(data.pcsFile)} />
@@ -249,27 +278,23 @@ export default function EquipmentConfirmationPage() {
               </FormGrid>
             </FormSection>
 
-            <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={navigateBack}
-                disabled={isSubmitting}
-              >
-                戻る
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                className="w-full"
-                onClick={handleRegister}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? '登録中...' : '登録'}
-              </Button>
-            </FormActions>
+            <FormActions
+              pendingActionId={isSubmitting ? 'register' : null}
+              actions={[
+                {
+                  id: 'back',
+                  label: '戻る',
+                  variant: 'outline',
+                  onClick: navigateBack,
+                },
+                {
+                  id: 'register',
+                  label: '登録',
+                  pendingLabel: '登録中...',
+                  onClick: handleRegister,
+                },
+              ]}
+            />
           </FormSectionStack>
         </FormCard>
       </FormPageContent>

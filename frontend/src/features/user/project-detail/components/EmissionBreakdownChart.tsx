@@ -1,21 +1,27 @@
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+} from 'recharts';
+
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart';
+
 import type { ProjectEmissionBreakdown } from '@/api/batch';
+import { SkeletonChart } from '@/components/feedback/loading';
 import { cn } from '@/lib/utils';
-import { EmissionReductionProgress } from './EmissionReductionProgress';
-import type { EmissionReductionProgressInput } from './emissionReductionProgressUtils';
 
 const EMISSION_VALUE_KEY = 'value';
 
 const emissionBreakdownChartConfig = {
   [EMISSION_VALUE_KEY]: {
     label: '排出量',
-    // color: 'hsl(var(--chart-2))',
     color: 'hsl(var(--primary))',
   },
 } satisfies ChartConfig;
@@ -32,7 +38,9 @@ type EmissionBreakdownPoint = {
 function createEmissionBreakdownData(
   breakdown: ProjectEmissionBreakdown | null,
 ): EmissionBreakdownPoint[] {
-  if (!breakdown) return [];
+  if (!breakdown) {
+    return [];
+  }
 
   const breakdownEntries = [
     {
@@ -50,7 +58,14 @@ function createEmissionBreakdownData(
   ];
 
   return breakdownEntries.flatMap((entry) =>
-    entry.value === null ? [] : [{ ...entry, value: entry.value }],
+    entry.value === null
+      ? []
+      : [
+          {
+            label: entry.label,
+            value: entry.value,
+          },
+        ],
   );
 }
 
@@ -58,7 +73,6 @@ type EmissionBreakdownChartProps = {
   data: ProjectEmissionBreakdown | null;
   isLoading: boolean;
   error: string | null;
-  reductionProgress: EmissionReductionProgressInput;
   className?: string;
 };
 
@@ -66,47 +80,60 @@ export function EmissionBreakdownChart({
   data,
   isLoading,
   error,
-  reductionProgress,
   className,
 }: EmissionBreakdownChartProps) {
   const chartData = createEmissionBreakdownData(data);
 
+  if (isLoading) {
+    return <SkeletonChart className={className} />;
+  }
+
   return (
     <section
       className={cn(
-        'flex h-full min-h-[360px] flex-col rounded-2xl border border-border bg-card p-5 shadow-app-sm',
+        'flex min-h-[320px] flex-col rounded-2xl border border-border bg-card p-5 shadow-app-sm',
         className,
       )}
       aria-labelledby='emission-breakdown-title'
     >
-      <h3 id='emission-breakdown-title' className='leading-8 text-foreground'>
+      <h3
+        id='emission-breakdown-title'
+        className='text-xl font-bold text-foreground'
+      >
         プロジェクト実施後排出量内訳
       </h3>
 
-      <div className='mt-4 flex min-h-[280px] flex-1 items-center justify-center'>
-        {isLoading ? (
-          <p className='text-subtle text-foreground'>読み込み中...</p>
-        ) : error ? (
-          <p className='text-subtle text-destructive' role='alert'>
+      <div className='mt-5 flex min-h-[260px] flex-1 items-center justify-center'>
+        {error ? (
+          <p
+            className='text-small text-destructive'
+            role='alert'
+          >
             {error}
           </p>
         ) : chartData.length === 0 ? (
-          <p className='text-subtle text-foreground'>
+          <p className='text-small text-foreground'>
             表示できるデータがありません。
           </p>
         ) : (
           <div className='w-full'>
             <ChartContainer
               config={emissionBreakdownChartConfig}
-              className='h-[245px] w-full aspect-auto'
+              className='h-[260px] w-full aspect-auto'
             >
               <BarChart
                 accessibilityLayer
                 data={chartData}
                 layout='vertical'
-                margin={{ top: 8, right: 20, bottom: 8, left: 4 }}
+                margin={{
+                  top: 8,
+                  right: 20,
+                  bottom: 8,
+                  left: 4,
+                }}
               >
                 <CartesianGrid horizontal={false} />
+
                 <XAxis
                   type='number'
                   dataKey={EMISSION_VALUE_KEY}
@@ -117,6 +144,7 @@ export function EmissionBreakdownChart({
                     emissionNumberFormatter.format(value)
                   }
                 />
+
                 <YAxis
                   type='category'
                   dataKey='label'
@@ -126,19 +154,26 @@ export function EmissionBreakdownChart({
                   width={150}
                   interval={0}
                 />
+
                 <ChartTooltip
                   cursor={false}
                   content={
                     <ChartTooltipContent
-                      labelFormatter={(label) => String(label)}
+                      labelFormatter={(label) =>
+                        String(label)
+                      }
                       formatter={(value) => (
                         <span className='font-mono font-medium tabular-nums text-foreground'>
-                          {emissionNumberFormatter.format(Number(value))} tCO₂
+                          {emissionNumberFormatter.format(
+                            Number(value),
+                          )}{' '}
+                          tCO₂
                         </span>
                       )}
                     />
                   }
                 />
+
                 <Bar
                   dataKey={EMISSION_VALUE_KEY}
                   fill={`var(--color-${EMISSION_VALUE_KEY})`}
@@ -146,16 +181,13 @@ export function EmissionBreakdownChart({
                 />
               </BarChart>
             </ChartContainer>
-            <p className='text-subtle mt-2 text-center text-foreground'>
+
+            <p className='mt-2 text-center text-small text-foreground'>
               排出量（tCO₂）
             </p>
           </div>
         )}
       </div>
-
-      {!isLoading && !error ? (
-        <EmissionReductionProgress {...reductionProgress} />
-      ) : null}
     </section>
   );
 }

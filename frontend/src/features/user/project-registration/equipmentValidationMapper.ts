@@ -1,5 +1,6 @@
 import type {
   SiteProjectEquipmentFileType,
+  SiteProjectEquipmentCreateRequest,
   SiteProjectEquipmentValidationFile,
   SiteProjectEquipmentValidationItem,
 } from '@/api/site';
@@ -98,7 +99,6 @@ export function mapSolarFormToEquipmentValidationItem(
     nominalMaxOutput: validationNumber(formData.nominalMaxOutput),
     pcsManufacturer: validationString(formData.pcsManufacturer),
     pcsModel: validationString(formData.pcsModel),
-    pcsUnitCount: validationNumber(formData.powerCondUnitCount),
     deviceNo: validationString(formData.deviceNo),
     pcsStandby: validationNumber(formData.powerCondStandby),
     hasBattery,
@@ -119,5 +119,30 @@ export function mapSolarFormToEquipmentValidationItem(
       : {}),
     preProjectUnitPrice: validationNumber(formData.preProjectUnitPrice),
     files,
+  };
+}
+
+/** Maps confirmed solar form values to the create-equipment contract. */
+export function mapSolarFormToEquipmentCreateRequest(
+  formData: SolarPowerFormData,
+  tempId: string,
+  siteId: string,
+  files: SiteProjectEquipmentValidationFile[],
+): SiteProjectEquipmentCreateRequest {
+  const payload = mapSolarFormToEquipmentValidationItem(
+    formData,
+    tempId,
+    siteId,
+    files,
+  );
+
+  return {
+    ...payload,
+    siteId,
+    batteryMaker: payload.batteryMaker ?? null,
+    batteryModel: payload.batteryModel ?? null,
+    batteryCapacity: payload.batteryCapacity ?? null,
+    subsidyName: payload.subsidyName ?? null,
+    subsidyAmount: payload.subsidyAmount ?? null,
   };
 }

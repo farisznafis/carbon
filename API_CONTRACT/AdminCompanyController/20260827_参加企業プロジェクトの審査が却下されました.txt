@@ -1,0 +1,110 @@
+GET /admin/companies/participations/rejected
+Authorization: Bearer {token}
+
+Response - Success (HTTP 200)
+[
+  {
+    "participationId": 9,
+    "projectId": 1,
+    "siteId": 5,
+    "projectName": "関東地域自家消費型太陽光発電プロジェクト",
+    "siteName": "渋谷区オフィス拠点C",
+    "companyName": "株式会社サンパワー",
+    "submittedAt": "2026-08-18T13:20:00",
+    "equipment": {
+      "id": 22,
+      "siteId": "site005",
+      "equipmentOpDate": "2026-05-10",
+      "nominalMaxOutput": 40.0,
+      "pcsManufacturer": "京セラ株式会社",
+      "pcsModel": "KY-200",
+      "pcsUnitCount": 1,
+      "deviceNo": "DEV-TEST-005",
+      "pcsStandby": 0.04,
+      "hasBattery": false,
+      "batteryMaker": null,
+      "batteryModel": null,
+      "batteryCapacity": null,
+      "totalInvestment": 3500000,
+      "hasSubsidy": false,
+      "subsidyName": null,
+      "subsidyAmount": null,
+      "preProjectUnitPrice": 26.8,
+      "files": [
+        {
+          "id": 40,
+          "fileType": "solar_contract",
+          "fileId": "aabb1122-0000-0000-0000-000000000001",
+          "s3Key": "sites/site005/equipments/22/solar_contract.pdf"
+        }
+      ]
+    },
+    "confirmationItems": {
+      "isAgreeDataUse": true,
+      "isAgreeExtraData": true,
+      "isAgreeTransfer": true,
+      "isNotRegistered": true,
+      "isKeidanrenParticipation": true,
+      "isEmitter": false,
+      "emitterCode": null,
+      "isAdjustedEmissionsAdded": null,
+      "isSubjectToPeriodicReport": false,
+      "isPeriodicReportTypeOne": null,
+      "energyBusinessCode": null,
+      "factoryCode": null
+    },
+    "sustainabilityCommitment": {
+      "companyName": "株式会社サンパワー",
+      "repName": "高橋三郎",
+      "repRole": "代表取締役",
+      "hasConsent": true,
+      "isAgreeTerms": true
+    },
+    "review": {
+      "isSolarContractDoc": true,
+      "isPcsSpecDoc": true,
+      "isBatterySpecDoc": true,
+      "isOperationStartDoc": true,
+      "isGenerationDataDoc": true,
+      "isReversePowerDoc": true,
+      "isInvestmentProofDoc": false,
+      "isApplicationCompleteCheck": true,
+      "isFormsAttachCheck": false,
+      "isEmissionsReductionActivityListCheck": true,
+      "isOriginalSpecCheck": true,
+      "isSubsidyCheck": true,
+      "primaryApplReviewerName": "田中一郎",
+      "secondaryApplReviewerName": null
+    },
+    "pdfStatus": "NOT_READY"
+  }
+]
+
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+              submitParticipation()
+                      ↓
+                    OPEN ──────────────┐
+                      │                │
+   approve()（二次確認完了時）           │  reject()
+                      ↓                ↓ 
+                  APPROVED         REJECTED
+                      │                │
+              PDF自動生成          却下通知メール送信
+                                       │
+                                 再申請（同じ /join）
+                                       ↓
+                                     OPEN（差し戻し）

@@ -5,10 +5,16 @@ import { getProfile } from '@/api/profile';
 import {
   getSiteData,
   getSiteProjects,
+  joinProjectSite,
   type Site,
-  type SiteDashboardMetrics,
   type SiteProject,
+  type SiteProjectParticipationStatus,
 } from '@/api/site';
+import {
+  InlineLoader,
+  PageSkeleton,
+  SkeletonCard,
+} from '@/components/feedback/loading';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import {
   dashboardPageContainerClassName,
@@ -16,6 +22,15 @@ import {
 } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { storage, storageKeys } from '@/lib/storage';
@@ -27,6 +42,33 @@ import { DashboardEmissionReductionProgress } from './components/DashboardEmissi
 import { FloatingHelpButton } from '@/features/master/help/FloatingHelpButton';
 
 const pageContainer = dashboardPageContainerClassName;
+const PARTICIPATION_STATUS_ORDER: Record<
+  SiteProjectParticipationStatus,
+  number
+> = {
+  APPROVED: 0,
+  REJECTED: 1,
+  OPEN: 2,
+};
+const DISPLAYABLE_PROJECT_STATUSES = new Set(['ACTIVE', '作成済み']);
+
+/** Sorts projects by membership UX priority without mutating API data. */
+function sortProjectsByParticipationStatus(
+  projects: SiteProject[],
+): SiteProject[] {
+  return [...projects].sort(
+    (firstProject, secondProject) =>
+      (PARTICIPATION_STATUS_ORDER[firstProject.participationStatus ?? ''] ??
+        Number.MAX_SAFE_INTEGER) -
+      (PARTICIPATION_STATUS_ORDER[secondProject.participationStatus ?? ''] ??
+        Number.MAX_SAFE_INTEGER),
+  );
+}
+
+/** Returns whether a project status is eligible for the site dashboard. */
+function isDisplayableSiteProject(project: SiteProject): boolean {
+  return DISPLAYABLE_PROJECT_STATUSES.has(project.projectStatus);
+}
 
 function formatNumber(value?: string | number | null) {
   if (value === null || value === undefined || value === '') return '-';
@@ -291,27 +333,39 @@ function KpiCard({
   );
 }
 
-function ProjectStatus({ joined }: { joined: boolean }) {
+/** Displays whether a project is available, joined, or awaiting admin approval. */
+function ProjectStatus({
+  joined,
+  pending = false,
+}: {
+  joined: boolean;
+  pending?: boolean;
+}) {
   return (
     <span className='inline-flex items-center gap-2 font-bold'>
       <span
         className={cn(
           'h-3 w-3 rounded-full',
-          joined ? 'bg-success' : 'bg-warning',
+          joined && !pending ? 'bg-success' : 'bg-warning',
         )}
       />
-      {joined ? '参加中' : '未参加'}
+      {pending ? '承認待ち' : joined ? '参加中' : '未参加'}
     </span>
   );
 }
 
+// Renders a company-joined project and adapts its action to the current site's relation.
 function JoinedProjectCard({
   project,
-  onDetail,
+  requiresSiteParticipation,
+  onAction,
 }: {
   project: SiteProject;
-  onDetail: () => void;
+  requiresSiteParticipation: boolean;
+  onAction: () => void;
 }) {
+  const isPendingReview = project.participationStatus === 'OPEN';
+
   return (
     <Card className='rounded-2xl border-border bg-card shadow-none'>
       <CardContent className='p-5 md:p-6'>
@@ -322,8 +376,20 @@ function JoinedProjectCard({
           <h3 className='text-foreground'>{project.projectName}</h3>
         </div>
 
-        <div className='grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]'>
-          <div className='space-y-4 xl:order-2'>
+        <div
+          className={cn(
+            'grid gap-6',
+            !requiresSiteParticipation &&
+              !isPendingReview &&
+              'xl:grid-cols-[minmax(0,1fr)_400px]',
+          )}
+        >
+          <div
+            className={cn(
+              'space-y-4',
+              !requiresSiteParticipation && !isPendingReview && 'xl:order-2',
+            )}
+          >
             <div className='rounded-2xl border border-border bg-transparent p-5'>
               <dl className='space-y-4'>
                 <div>
@@ -333,35 +399,40 @@ function JoinedProjectCard({
                   </dd>
                 </div>
                 <div>
-                  <dt className='text-small text-foreground'>
-                    方法論番号
-                  </dt>
+                  <dt className='text-small text-foreground'>方法論番号</dt>
                   <dd className='mt-1 font-bold'>
                     {project.methodNumber} {project.methodologyVersion}
                   </dd>
                 </div>
                 <div>
-                  <dt className='text-small text-foreground'>
-                    ステータス
-                  </dt>
+                  <dt className='text-small text-foreground'>ステータス</dt>
                   <dd className='mt-1'>
-                    <ProjectStatus joined />
+                    <ProjectStatus
+                      joined={!isPendingReview}
+                      pending={isPendingReview}
+                    />
                   </dd>
                 </div>
               </dl>
             </div>
 
-            <Button
-              type='button'
-              size='md'
-              className='w-full text-base'
-              onClick={onDetail}
-            >
-              プロジェクト詳細
-            </Button>
+            {!isPendingReview && (
+              <Button
+                type='button'
+                size='md'
+                className='w-full text-base'
+                onClick={onAction}
+              >
+                {requiresSiteParticipation
+                  ? 'プロジェクト参加'
+                  : 'プロジェクト詳細'}
+              </Button>
+            )}
           </div>
 
-          <DashboardEmissionReductionProgress projectId={project.id} />
+          {!requiresSiteParticipation && !isPendingReview && (
+            <DashboardEmissionReductionProgress projectId={project.id} />
+          )}
         </div>
       </CardContent>
     </Card>
@@ -420,19 +491,73 @@ const Dashboard = () => {
     !userSiteId &&
     !refreshedSiteId;
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isSiteLoading, setIsSiteLoading] = useState(true);
+  const [isProjectsLoading, setIsProjectsLoading] = useState(true);
+  const [siteError, setSiteError] = useState<string | null>(null);
+  const [projectsError, setProjectsError] = useState<string | null>(null);
   const [site, setSite] = useState<Site | null>(null);
-  const [metrics, setMetrics] = useState<SiteDashboardMetrics | null>(null);
   const [projects, setProjects] = useState<SiteProject[]>([]);
+  const [projectToJoin, setProjectToJoin] = useState<SiteProject | null>(null);
+  const [isJoiningProject, setIsJoiningProject] = useState(false);
 
-  const joinedProjects = useMemo(
-    () => projects.filter((project) => project.isJoined),
+  const sortedProjects = useMemo(
+    () => sortProjectsByParticipationStatus(projects),
     [projects],
   );
+
+  const displayableProjects = useMemo(
+    () => sortedProjects.filter(isDisplayableSiteProject),
+    [sortedProjects],
+  );
+
+  const companyJoinedProjects = useMemo(
+    () =>
+      displayableProjects.filter(
+        (project) =>
+          project.isCompanyJoined ||
+          project.participationStatus === 'OPEN',
+      ),
+    [displayableProjects],
+  );
+
   const availableProjects = useMemo(
-    () => projects.filter((project) => !project.isJoined),
-    [projects],
+    () =>
+      displayableProjects.filter(
+        (project) =>
+          project.participationStatus !== 'OPEN' &&
+          !project.isCompanyJoined &&
+          !project.hasSiteRelation,
+      ),
+    [displayableProjects],
   );
+
+  // const sortedProjects = useMemo(
+  //   () => sortProjectsByParticipationStatus(projects),
+  //   [projects],
+  // );
+  // const displayableProjects = useMemo(
+  //   () => sortedProjects.filter(isDisplayableSiteProject),
+  //   [sortedProjects],
+  // );
+
+  // const companyJoinedProjects = useMemo(
+  //   () =>
+  //     displayableProjects.filter(
+  //       (project) =>
+  //         project.isCompanyJoined || project.participationStatus === 'OPEN',
+  //     ),
+  //   [displayableProjects],
+  // );
+  // const availableProjects = useMemo(
+  //   () =>
+  //     displayableProjects.filter(
+  //       (project) =>
+  //         project.participationStatus !== 'OPEN' &&
+  //         !project.isCompanyJoined &&
+  //         !project.hasSiteRelation,
+  //     ),
+  //   [displayableProjects],
+  // );
 
   useEffect(() => {
     if (
@@ -487,12 +612,14 @@ const Dashboard = () => {
     }
 
     if (isUserWithoutSite) {
-      setIsLoading(false);
+      setIsSiteLoading(false);
+      setIsProjectsLoading(false);
       return;
     }
 
     if (!activeSiteId) {
-      setIsLoading(false);
+      setIsSiteLoading(false);
+      setIsProjectsLoading(false);
       toast({
         title: 'エラー',
         description: 'siteId が見つかりません',
@@ -504,37 +631,46 @@ const Dashboard = () => {
     let isMounted = true;
     void loadNotifications();
 
-    const loadDashboardData = async () => {
-      try {
-        setIsLoading(true);
+    setIsSiteLoading(true);
+    setIsProjectsLoading(true);
+    setSiteError(null);
+    setProjectsError(null);
 
-        const [siteResponse, projectData] = await Promise.all([
-          getSiteData(activeSiteId),
-          getSiteProjects(activeSiteId),
-        ]);
-
+    void getSiteData(activeSiteId)
+      .then((siteResponse) => {
         if (!isMounted) return;
-
         setSite(siteResponse.site);
-        setMetrics(siteResponse.metrics);
-        setProjects(projectData);
-      } catch (error) {
-        toast({
-          title: 'エラー',
-          description:
-            error instanceof Error
-              ? error.message
-              : 'データの読み込みに失敗しました',
-          variant: 'destructive',
-        });
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
+      })
+      .catch((error: unknown) => {
+        if (!isMounted) return;
+        setSite(null);
+        setSiteError(
+          error instanceof Error
+            ? error.message
+            : '拠点情報を取得できませんでした。',
+        );
+      })
+      .finally(() => {
+        if (isMounted) setIsSiteLoading(false);
+      });
 
-    void loadDashboardData();
+    void getSiteProjects(activeSiteId)
+      .then((projectData) => {
+        if (!isMounted) return;
+        setProjects(projectData);
+      })
+      .catch((error: unknown) => {
+        if (!isMounted) return;
+        setProjects([]);
+        setProjectsError(
+          error instanceof Error
+            ? error.message
+            : 'プロジェクト情報を取得できませんでした。',
+        );
+      })
+      .finally(() => {
+        if (isMounted) setIsProjectsLoading(false);
+      });
 
     return () => {
       isMounted = false;
@@ -552,15 +688,66 @@ const Dashboard = () => {
     setCurrentProject(null);
   }, [setCurrentProject]);
 
+  // Opens the detail page for a project already related to the current site.
   const handleOpenProject = (project: SiteProject) => {
-    navigate(
-      `/sites/${encodeURIComponent(activeSiteId)}/projects/${project.id}`,
-      {
-        state: {
-          siteName: site?.siteName ?? '',
-        },
+    navigate(paths.siteProjectDetail(activeSiteId, project.id), {
+      state: {
+        siteName: site?.siteName ?? '',
       },
-    );
+    });
+  };
+
+  // Opens the confirmation dialog before relating the current site to the project.
+  const handleParticipateProject = (project: SiteProject) => {
+    setProjectToJoin(project);
+  };
+
+  /** Prevents dismissing the join confirmation while its request is running. */
+  const handleJoinDialogOpenChange = (open: boolean) => {
+    if (!open && !isJoiningProject) setProjectToJoin(null);
+  };
+
+  /** Relates the active site to the selected project and refreshes dashboard data. */
+  const handleConfirmProjectJoin = async () => {
+    if (!projectToJoin || !activeSiteId || isJoiningProject) return;
+
+    setIsJoiningProject(true);
+
+    try {
+      await joinProjectSite(projectToJoin.id, activeSiteId);
+      setCurrentProject(projectToJoin);
+      setProjects((currentProjects) =>
+        currentProjects.map((project) =>
+          project.id === projectToJoin.id
+            ? { ...project, hasSiteRelation: true }
+            : project,
+        ),
+      );
+      setProjectToJoin(null);
+      toast({
+        title: 'プロジェクトに参加しました',
+        description:
+          'プロジェクト詳細の確認や設備の追加・管理ができるようになりました。',
+      });
+
+      try {
+        setProjects(await getSiteProjects(activeSiteId));
+      } catch (error) {
+        toast({
+          title: '最新のプロジェクト情報を取得できませんでした',
+          description: error instanceof Error ? error.message : undefined,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'プロジェクトに参加できませんでした',
+        description: error instanceof Error ? error.message : undefined,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsJoiningProject(false);
+    }
   };
 
   const picName =
@@ -568,15 +755,7 @@ const Dashboard = () => {
   const address = site?.address || '-';
 
   if (isRefreshingUserSite) {
-    return (
-      <div className='min-h-screen bg-background py-8'>
-        <div className={pageContainer}>
-          <div className='py-16 text-center text-foreground'>
-            読み込み中...
-          </div>
-        </div>
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   if (isUserWithoutSite) {
@@ -618,21 +797,45 @@ const Dashboard = () => {
               <span className='flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-primary'>
                 <Factory className='h-6 w-6' />
               </span>
-              <h1 className='min-w-0 break-words text-4xl leading-10 text-foreground'>
-                {user?.companyName || '株式会社ABC'}
-              </h1>
+              {isSiteLoading ? (
+                <InlineLoader label='拠点情報を読み込んでいます' />
+              ) : (
+                <h1 className='min-w-0 break-words text-4xl leading-10 text-foreground'>
+                  {site?.siteName || '株式会社ABC'}
+                </h1>
+              )}
             </div>
             <dl className='ml-[60px] mt-2 grid gap-x-10 gap-y-3 sm:grid-cols-[max-content_minmax(0,1fr)]'>
               <div>
                 <dt className='text-small text-muted-foreground'>担当者</dt>
-                <dd className='mt-1 font-bold'>{picName}</dd>
+                <dd className='mt-1 font-bold'>
+                  {isSiteLoading ? (
+                    <InlineLoader label='担当者を読み込んでいます' />
+                  ) : (
+                    picName
+                  )}
+                </dd>
               </div>
               <div className='min-w-0'>
                 <dt className='text-small text-muted-foreground'>所在地</dt>
-                <dd className='mt-1 break-words font-bold'>{address}</dd>
+                <dd className='mt-1 break-words font-bold'>
+                  {isSiteLoading ? (
+                    <InlineLoader label='所在地を読み込んでいます' />
+                  ) : (
+                    address
+                  )}
+                </dd>
               </div>
             </dl>
           </div>
+          {siteError ? (
+            <p
+              role='alert'
+              className='mt-4 text-small text-destructive'
+            >
+              {siteError}
+            </p>
+          ) : null}
 
           {user?.role === 'master' && activeSiteId && (
             <Button
@@ -653,23 +856,40 @@ const Dashboard = () => {
           <div className='mb-6'>
             <h2 className='text-foreground'>入会中のプロジェクト</h2>
             <p className='text-small mt-2 text-foreground'>
-              この拠点が現在参加しているプロジェクトです。進捗や排出量の詳細を確認できます。
+              企業が入会済みのプロジェクトです。拠点に設備が登録されている場合は、進捗や排出量の詳細を確認できます。
             </p>
           </div>
 
-          {isLoading ? (
+          {isProjectsLoading ? (
+            <div className='space-y-4'>
+              {Array.from({ length: 2 }, (_, index) => (
+                <SkeletonCard
+                  key={index}
+                  className='min-h-80 rounded-2xl'
+                />
+              ))}
+            </div>
+          ) : projectsError ? (
             <Card className='rounded-2xl border-border'>
-              <CardContent className='p-10 text-center text-foreground'>
-                読み込み中...
+              <CardContent
+                className='p-10 text-center text-destructive'
+                role='alert'
+              >
+                {projectsError}
               </CardContent>
             </Card>
-          ) : joinedProjects.length > 0 ? (
+          ) : companyJoinedProjects.length > 0 ? (
             <div className='space-y-4'>
-              {joinedProjects.map((project) => (
+              {companyJoinedProjects.map((project) => (
                 <JoinedProjectCard
                   key={project.id}
                   project={project}
-                  onDetail={() => handleOpenProject(project)}
+                  requiresSiteParticipation={!project.hasSiteRelation}
+                  onAction={() =>
+                    project.hasSiteRelation
+                      ? handleOpenProject(project)
+                      : handleParticipateProject(project)
+                  }
                 />
               ))}
             </div>
@@ -706,10 +926,22 @@ const Dashboard = () => {
             )}
           </div>
 
-          {isLoading ? (
+          {isProjectsLoading ? (
+            <div className='grid gap-5 md:grid-cols-2 xl:grid-cols-4'>
+              {Array.from({ length: 4 }, (_, index) => (
+                <SkeletonCard
+                  key={index}
+                  className='min-h-72 rounded-2xl'
+                />
+              ))}
+            </div>
+          ) : projectsError ? (
             <Card className='rounded-2xl border-border'>
-              <CardContent className='p-10 text-center text-foreground'>
-                読み込み中...
+              <CardContent
+                className='p-10 text-center text-destructive'
+                role='alert'
+              >
+                {projectsError}
               </CardContent>
             </Card>
           ) : availableProjects.length > 0 ? (
@@ -730,6 +962,36 @@ const Dashboard = () => {
           )}
         </div>
       </section>
+      <AlertDialog
+        open={Boolean(projectToJoin)}
+        onOpenChange={handleJoinDialogOpenChange}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>プロジェクトに参加しますか？</AlertDialogTitle>
+            <AlertDialogDescription className='space-y-2'>
+              <span className='block font-medium text-foreground'>
+                {projectToJoin?.projectName}
+              </span>
+              <span className='block'>
+                参加後は、プロジェクト詳細の確認、設備の追加・管理、モニタリングデータの登録などができるようになります。
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isJoiningProject}>
+              キャンセル
+            </AlertDialogCancel>
+            <Button
+              type='button'
+              disabled={isJoiningProject}
+              onClick={() => void handleConfirmProjectJoin()}
+            >
+              {isJoiningProject ? '参加中...' : '参加する'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <FloatingHelpButton context='site-dashboard' />
     </div>
   );

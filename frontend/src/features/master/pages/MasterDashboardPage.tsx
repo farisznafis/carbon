@@ -20,6 +20,9 @@ import { paths } from '@/routes/paths';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { FloatingHelpButton } from '@/features/master/help/FloatingHelpButton';
+import { PageLoadingOverlay } from '@/components/feedback/loading';
+import { UserInvitationDialog } from '@/features/master/user-invitations/UserInvitationDialog';
+import { Plus } from 'lucide-react';
 
 const MasterDashboard = () => {
   const navigate = useNavigate();
@@ -40,6 +43,7 @@ const MasterDashboard = () => {
 
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isInvitationDialogOpen, setIsInvitationDialogOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -75,13 +79,11 @@ const MasterDashboard = () => {
 
   const sortedUsers = useMemo(() => sortMasterUsersFirst(users), [users]);
   const sortedSites = useMemo(() => sortSitesById(sites), [sites]);
+  const hasRegisteredSites = sortedSites.length > 0;
 
   if (loading || loadingStore) {
-    return (
-      <div className="text-small flex min-h-screen items-center justify-center bg-background px-6 text-center text-foreground">
-        読み込み中...
-      </div>
-    );
+    // Skeleton dashboard non active first
+    return <PageLoadingOverlay message="ダッシュボードを読み込んでいます" />;
   }
 
   const companyName = user?.companyName ?? user?.siteName ?? '-';
@@ -91,18 +93,33 @@ const MasterDashboard = () => {
       <MasterDashboardHero
         companyName={companyName}
         action={
-          <Button
-            type="button"
-            size="md"
-            disabled={sortedSites.length === 0}
-            onClick={() =>
-              navigate(paths.projectMembership(sortedSites[0].siteId), {
-                state: masterDashboardProjectMembershipState,
-              })
-            }
-          >
-            プロジェクト入会届
-          </Button>
+          <div className="flex flex-col items-end gap-2">
+            <Button
+              type="button"
+              size="md"
+              disabled={!hasRegisteredSites}
+              aria-describedby={
+                hasRegisteredSites
+                  ? undefined
+                  : 'project-membership-disabled-description'
+              }
+              onClick={() =>
+                navigate(paths.projectMembership(sortedSites[0].siteId), {
+                  state: masterDashboardProjectMembershipState,
+                })
+              }
+            >
+              プロジェクト入会届
+            </Button>
+            {!hasRegisteredSites && (
+              <p
+                id="project-membership-disabled-description"
+                className="text-small text-muted-foreground"
+              >
+                拠点登録後に利用できます。
+              </p>
+            )}
+          </div>
         }
       />
 
@@ -119,8 +136,7 @@ const MasterDashboard = () => {
               title="社員"
               description="行をクリックすると、プロファイル詳細へ移動できます。"
               addLabel="社員を追加"
-              onAdd={() => navigate(paths.masterUserRegister)}
-              addDisabled={users.length > 49}
+              onAdd={() => setIsInvitationDialogOpen(true)}
             >
               {errorMessage ? (
                 <DashboardEmptyState>{errorMessage}</DashboardEmptyState>
@@ -132,11 +148,6 @@ const MasterDashboard = () => {
                       user={dashboardUser}
                       onProfile={(selectedUser) =>
                         navigate(paths.masterUserProfile(selectedUser.id), {
-                          state: { user: selectedUser },
-                        })
-                      }
-                      onEdit={(selectedUser) =>
-                        navigate(paths.userEdit(selectedUser.id), {
                           state: { user: selectedUser },
                         })
                       }
@@ -157,6 +168,7 @@ const MasterDashboard = () => {
               description="各店舗のカーボンクレジット、削減活動、レポート進捗を一箇所で確認できます。"
               addLabel="拠点を追加"
               onAdd={() => navigate(paths.masterSiteRegister)}
+              showAddAction={hasRegisteredSites || Boolean(errorMessage)}
             >
               {errorMessage ? (
                 <DashboardEmptyState>{errorMessage}</DashboardEmptyState>
@@ -173,14 +185,29 @@ const MasterDashboard = () => {
                   ))}
                 </div>
               ) : (
-                <DashboardEmptyState>
-                  まだ拠点が登録されていません
-                </DashboardEmptyState>
+                <DashboardEmptyState
+                  title="まだ拠点が登録されていません"
+                  description="プロジェクト入会届を提出するには、対象となる拠点の登録が必要です。まず拠点を登録してください。"
+                  action={
+                    <Button
+                      type="button"
+                      size="md"
+                      onClick={() => navigate(paths.masterSiteRegister)}
+                    >
+                      <Plus className="h-4 w-4" aria-hidden="true" />
+                      拠点を追加
+                    </Button>
+                  }
+                />
               )}
             </DashboardSection>
           </TabsContent>
         </main>
       </Tabs>
+      <UserInvitationDialog
+        open={isInvitationDialogOpen}
+        onOpenChange={setIsInvitationDialogOpen}
+      />
       <FloatingHelpButton context="master-dashboard" />
     </div>
   );

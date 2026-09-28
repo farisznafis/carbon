@@ -2,29 +2,30 @@ export type YesNoValue = '' | 'yes' | 'no';
 
 export type SolarPowerFormData = {
   siteId: string;
+  /** Used only by the history-preserving equipment change flow. */
+  changeDate?: string;
   equipmentOpDate: string;
-  operationStartDateFile?: File;
+  operationStartDateFile?: File | null;
   nominalMaxOutput: string;
-  nominalMaxOutputFile?: File;
+  nominalMaxOutputFile?: File | null;
   pcsManufacturer: string;
   pcsModel: string;
-  powerCondUnitCount: string;
   deviceNo: string;
   powerCondStandby: string;
-  pcsFile?: File;
+  pcsFile?: File | null;
   hasBattery: YesNoValue;
   batteryMaker: string;
   batteryModel: string;
   batteryCapacity: string;
-  batteryFile?: File;
+  batteryFile?: File | null;
   totalInvestment: string;
-  totalInvestmentFile?: File;
+  totalInvestmentFile?: File | null;
   hasSubsidy: YesNoValue;
   subsidyName: string;
-  subsidyNameFile?: File;
+  subsidyNameFile?: File | null;
   subsidyAmount: string;
   preProjectUnitPrice: string;
-  preProjectUnitPriceFile?: File;
+  preProjectUnitPriceFile?: File | null;
 };
 
 export type OtherEquipmentFormData = {

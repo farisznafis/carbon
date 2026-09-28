@@ -16,6 +16,7 @@ import {
   type MonitoringRecordListItem,
 } from '@/api/monitoring';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
+import { PageSkeleton } from '@/components/feedback/loading';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
 import {
@@ -128,6 +129,7 @@ function DetailSection({
   );
 }
 
+/** Displays one monitoring record within its parent project's admin context. */
 export default function ProjectMonitoringDetailPage() {
   const { projectId, monitoringId } = useParams();
   const navigate = useNavigate();
@@ -187,24 +189,25 @@ export default function ProjectMonitoringDetailPage() {
     }
   }, [loadMonitoringRecord, record]);
 
+  /** Returns to the current project's monitoring list with its pagination restored. */
   const returnToList = () => {
     if (!projectId) {
       navigate(paths.adminDashboard);
       return;
     }
 
+    const projectDetailSearchParams = new URLSearchParams({
+      monitoringPage: String(page),
+      monitoringLimit: String(limit),
+    });
     navigate(
-      `${paths.adminDashboard}?tab=monitoring&projectId=${encodeURIComponent(
-        projectId,
-      )}&monitoringPage=${page}&monitoringLimit=${limit}`,
+      `${paths.adminProjectDetail(projectId)}?${projectDetailSearchParams.toString()}#monitoring-data`,
     );
   };
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        読み込み中...
-      </div>
+      <PageSkeleton label="モニタリングデータを読み込んでいます" />
     );
   }
 

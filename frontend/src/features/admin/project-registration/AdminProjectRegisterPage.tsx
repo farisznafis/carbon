@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm, useWatch, type FieldPath } from 'react-hook-form';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { Project } from '@/api/projects';
@@ -6,16 +6,19 @@ import {
   mapAdminProjectPayload,
   mapAdminProjectPlanApplicationPayload,
   mapAdminProjectUpdatePayload,
-  mapApplicableConditionsPayload,
-  mapOtherOperatorProjectsPayload,
+  mapPlanPagePayload,
+  mapPlanPageValues,
 } from '@/api/admin/projectPayloadMapper';
 import {
   createAdminProject,
+  getAdminProjectDetail,
   getProjectPlanAutofillByProject,
   getProjectPlanAutofillDefaults,
+  getProjectPlanForm,
   getProjectPlanProgress,
   saveProjectPlanForm,
   updateAdminProject,
+  uploadProjectPlanFormFile,
 } from '@/api/admin/projects';
 import { ConfirmationItem } from '@/components/feedback/Confirmation/ConfirmationItem';
 import { ConfirmationLayout } from '@/components/feedback/Confirmation/ConfirmationLayout';
@@ -34,22 +37,41 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
 import { MultiStepForm } from './forms/ProjectMultiPageForm';
-import {
-  TemporaryAdminProjectApplicationAutofillButton,
-  TemporaryAdminProjectAutofillButton,
-} from './forms/TemporaryAdminProjectAutofillButton';
+import { TemporaryAdminProjectAutofillButton } from './forms/TemporaryAdminProjectAutofillButton';
 import { applyBackendValidationErrors } from './forms/backendValidationErrors';
+import { mapDetailToProjectBase } from './forms/projectBaseFromDetail';
 import type { AdminProjectRegisterFormInputValues } from './forms/projectFormTypes';
 import { ProjectStatusSchema } from './forms/projectBaseSchema';
 import {
+  FIRST_PLAN_STEP,
   LAST_IMPLEMENTED_STEP,
-  getFormSlugForStep,
-  getStepForFormSlug,
-} from './forms/projectPlanFormSlugs';
+  getPlanPageForSlug,
+  getPlanPageForStep,
+  readOnlyFieldsInFormNames,
+  rulesInFormNames,
+  type ProjectPlanPage,
+} from './forms/projectPlanPages';
+import type { ProjectPlanConditionalField } from '@/api/admin/types';
 import { steps } from './forms/projectSteps';
+import {
+  adjacentStepId,
+  clampStepId,
+  stepsForApplicationCategory,
+} from './forms/applicationCategory';
+
+/**
+ * Only the steps the plan API serves — the rest of `steps` has no backend page
+ * yet — and of those, only what a プロジェクト登録 files.
+ */
+const visibleSteps = stepsForApplicationCategory(steps.slice(0, LAST_IMPLEMENTED_STEP));
 
 type LocationState = {
   project?: Project;
+  /**
+   * Page to open on arrival. Omitted means "resume": the wizard picks the
+   * first unfinished page itself.
+   */
+  planSlug?: string;
 };
 
 export interface AdminProjectRegisterPage {
@@ -109,6 +131,7 @@ export const AdminProjectRegister: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingProjectBase, setIsSavingProjectBase] = useState(false);
   const [isLoadingApplication, setIsLoadingApplication] = useState(false);
+  const [isLoadingPlanPage, setIsLoadingPlanPage] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
   const [savedProjectBaseSnapshot, setSavedProjectBaseSnapshot] = useState<
@@ -117,6 +140,13 @@ export const AdminProjectRegister: React.FC = () => {
   // Steps already saved on the server, so a returning operator can see how far
   // they got. Populated from the plan's progress endpoint.
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  // Fields the backend fills from SQL; rendered read-only so edits are not
+  // silently overwritten on the next read.
+  const [readOnlyFields, setReadOnlyFields] = useState<string[]>([]);
+  // 有/無 rules from the backend: a field only applies when its toggle matches.
+  const [conditionalFields, setConditionalFields] = useState<
+    ProjectPlanConditionalField[]
+  >([]);
   const [planProgress, setPlanProgress] = useState<{
     completed: number;
     total: number;
@@ -129,27 +159,57 @@ export const AdminProjectRegister: React.FC = () => {
   });
 
   useEffect(() => {
-    if (state?.project) {
-      form.reset({
-        projectBase: {
-          projectName: state.project.projectName,
-          projectNumber: state.project.id,
-          projectStatus: getProjectStatusValue(state.project.projectStatus),
-          methodCategory: 'EN-S',
-          methodNumber: '002',
-          methodName: '太陽光発電設備の導入',
-          methodMainEmission: 'CO2削減',
-          methodCombiFeasibility: false,
-          methodologyVersion: 'Ver.2.0',
-        },
-      });
-    }
-  }, [state?.project, form]);
+    if (!state?.project) return;
 
-  // Only the steps the plan API actually serves; the rest of `steps` has no
-  // backend page yet.
-  const visibleSteps = steps.slice(0, LAST_IMPLEMENTED_STEP);
-  const maxStep = visibleSteps.length;
+    const projectId = state.project.id ? String(state.project.id) : null;
+    let cancelled = false;
+
+    void (async () => {
+      // Step 1 is the SQL project record. The list row this screen is opened
+      // with carries only a handful of its fields, so read the record itself —
+      // otherwise step 1 shows blank required fields and the first 次へ pushes
+      // an almost empty update that the server rejects field by field.
+      let projectBase = {
+        projectName: state.project?.projectName,
+        projectNumber: state.project?.id,
+        projectStatus: getProjectStatusValue(
+          state.project?.projectStatus ?? '',
+        ),
+      } as NonNullable<AdminProjectRegisterFormInputValues['projectBase']>;
+
+      if (projectId) {
+        try {
+          const detail = await getAdminProjectDetail(projectId);
+          if (cancelled) return;
+          projectBase = mapDetailToProjectBase(detail) as typeof projectBase;
+        } catch (e) {
+          console.warn('Failed to load the project record for step 1', e);
+        }
+      }
+      if (cancelled) return;
+
+      form.reset({ projectBase });
+
+      // Arriving with a project means resuming it, not starting a new one.
+      // Without this the wizard treats the id as unset and 次へ creates a
+      // duplicate project instead of updating this one.
+      if (projectId) {
+        // It came from the server, so it already counts as saved; without the
+        // snapshot, leaving step 1 would push a pointless update.
+        setSavedProjectBaseSnapshot(toSnapshot(projectBase));
+        void resumePlan(projectId, state.planSlug);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // resumePlan is stable for a given project; re-running on every render
+    // would refetch progress in a loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state?.project, state?.planSlug, form]);
+
+  const maxStep = visibleSteps[visibleSteps.length - 1].id;
   const projectBaseValues = useWatch({
     control: form.control,
     name: 'projectBase',
@@ -178,31 +238,153 @@ export const AdminProjectRegister: React.FC = () => {
       const progress = await getProjectPlanProgress(projectId);
       const done = (progress.forms ?? [])
         .filter((planForm) => planForm.status === 'COMPLETE')
-        .map((planForm) => getStepForFormSlug(planForm.formSlug))
+        .map((planForm) => getPlanPageForSlug(planForm.formSlug)?.step)
         .filter((planStep): planStep is number => planStep !== undefined);
       setCompletedSteps(done);
       setPlanProgress({
         completed: progress.completedForms ?? 0,
         total: progress.totalForms ?? 0,
       });
+      return progress;
     } catch (e) {
       console.warn('Failed to load project plan progress', e);
+      return undefined;
     }
   };
 
   /**
-   * Payload mapper per wizard step. A page can only be staged once it has one,
-   * so adding a step means adding its mapper here alongside the registry entry
-   * on the backend.
+   * Reopens an existing project's plan.
+   *
+   * Seeding `createdProjectId` is what stops 次へ from creating a second
+   * project: saveProjectBase branches on it, so without it a resume would
+   * silently duplicate the record. It is also what lets the page-loading
+   * effect below fetch anything at all.
+   *
+   * Where it lands: the caller's page if they named one, otherwise the first
+   * unfinished page. A finished plan has neither, so it opens on the first
+   * plan page and the operator picks from the dropdown — which is the point of
+   * 計画書更新.
    */
-  const PAGE_PAYLOAD_MAPPERS: Record<
-    number,
-    (values: AdminProjectRegisterFormInputValues) => Record<string, unknown>
-  > = {
-    2: mapAdminProjectPlanApplicationPayload,
-    3: mapOtherOperatorProjectsPayload,
-    4: mapApplicableConditionsPayload,
+  const resumePlan = async (projectId: string, requestedSlug?: string) => {
+    setCreatedProjectId(projectId);
+
+    const progress = await refreshProgress(projectId);
+    const slug = requestedSlug ?? progress?.nextIncompleteSlug ?? undefined;
+    const target = slug ? getPlanPageForSlug(slug)?.step : undefined;
+
+    setStep(clampStepId(visibleSteps, target ?? FIRST_PLAN_STEP));
   };
+
+  /**
+   * The application page keeps a bespoke mapper: it normalises booleans and
+   * reconciles several legacy field aliases. Every other page goes through the
+   * generic mapper driven by `PROJECT_PLAN_PAGES`.
+   */
+  const buildPagePayload = (
+    page: ProjectPlanPage,
+    values: AdminProjectRegisterFormInputValues,
+  ): Record<string, unknown> =>
+    page.slug === 'application'
+      ? mapAdminProjectPlanApplicationPayload(values)
+      : mapPlanPagePayload(
+          values as Record<string, unknown>,
+          page.formKey,
+          page.renames,
+        );
+
+  /**
+   * Folds a page's server-side values into the form.
+   *
+   * Merge rather than replace: autofill has already put master-data values into
+   * this page, and a record saved before a field existed would otherwise blank
+   * it out.
+   */
+  const applyPageValues = (
+    page: ProjectPlanPage,
+    values: Record<string, unknown>,
+  ) => {
+    if (Object.keys(values).length === 0) return;
+
+    const key = page.formKey as FieldPath<AdminProjectRegisterFormInputValues>;
+    const current = form.getValues(key) as Record<string, unknown> | undefined;
+    form.setValue(key, { ...(current ?? {}), ...values } as never, {
+      shouldDirty: false,
+    });
+  };
+
+  /**
+   * Reads one page back from the server.
+   *
+   * Returns what the caller should apply rather than applying it itself, so a
+   * response arriving after the operator has already moved on can be dropped.
+   */
+  const fetchPlanPage = async (projectId: string, page: ProjectPlanPage) => {
+    const response = await getProjectPlanForm(projectId, page.slug);
+    // The values are renamed to form names below, so the rules about them must
+    // be too, or a rule on a renamed field silently never applies.
+    return {
+      values: mapPlanPageValues(response.data, page.renames),
+      readOnlyFields: readOnlyFieldsInFormNames(response.readOnlyFields ?? [], page.renames),
+      conditionalFields: rulesInFormNames(response.conditionalFields ?? [], page.renames),
+    };
+  };
+
+  /**
+   * Loads the current page every time the operator moves.
+   *
+   * This is what makes the wizard usable rather than just navigable. Without
+   * it a page opens carrying the *previous* page's read-only and 有/無 rules,
+   * the fields the backend fills from PostgreSQL arrive empty, and anything
+   * already saved comes back blank — so 次へ is rejected and the operator
+   * cannot get past the page at all.
+   */
+  // The banner belongs to the page whose save failed. Moving to another page —
+  // by 次へ after a successful save, or through the dropdown — leaves it behind.
+  useEffect(() => {
+    setSubmitError(null);
+  }, [step]);
+
+  useEffect(() => {
+    if (!createdProjectId) return;
+
+    // Step 1 is the SQL project record, not a plan page. It has no server-side
+    // rules, and keeping the previous page's would disable the wrong inputs.
+    const page = getPlanPageForStep(step);
+    if (!page) {
+      setReadOnlyFields([]);
+      setConditionalFields([]);
+      return;
+    }
+
+    let cancelled = false;
+    setIsLoadingPlanPage(true);
+
+    fetchPlanPage(createdProjectId, page)
+      .then((loaded) => {
+        if (cancelled) return;
+
+        applyPageValues(page, loaded.values);
+        setReadOnlyFields(loaded.readOnlyFields);
+        setConditionalFields(loaded.conditionalFields);
+      })
+      .catch((e) => {
+        // Best-effort: a failure must not trap the operator on the page.
+        console.warn('Failed to load project plan page', page.slug, e);
+        if (cancelled) return;
+        setReadOnlyFields([]);
+        setConditionalFields([]);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingPlanPage(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // `form` is stable for the life of the component; re-running on it would
+    // refetch the page on every keystroke.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createdProjectId, step]);
 
   /**
    * Stages one page. The server stores it only if the whole page validates, so
@@ -213,16 +395,36 @@ export const AdminProjectRegister: React.FC = () => {
     targetStep: number,
     values: AdminProjectRegisterFormInputValues,
   ): Promise<boolean> => {
-    const slug = getFormSlugForStep(targetStep);
-    const mapPayload = PAGE_PAYLOAD_MAPPERS[targetStep];
-    if (!slug || !mapPayload) return true;
+    // Steps with no plan page (step 1) are saved elsewhere; nothing to stage.
+    const page = getPlanPageForStep(targetStep);
+    if (!page) return true;
+
+    // A previous rejection's banner and field marks describe values the
+    // operator may since have fixed. Left in place, a save that succeeds
+    // carries them onto the next page; one that fails again sets fresh ones.
+    setSubmitError(null);
+    form.clearErrors(page.formKey as FieldPath<AdminProjectRegisterFormInputValues>);
 
     try {
-      await saveProjectPlanForm(projectId, slug, mapPayload(values));
+      const saved = await saveProjectPlanForm(
+        projectId,
+        page.slug,
+        buildPagePayload(page, values),
+      );
+      // The server owns the derived values — 合計, 年平均, 年度内の認証申請期間
+      // 日数, the 年度 skeleton itself — and recomputes them on every save.
+      // Dropping the response left them showing whatever they were before, so
+      // a 合計 only caught up when the operator navigated away and back.
+      applyPageValues(page, mapPlanPageValues(saved.data, page.renames));
       await refreshProgress(projectId);
       return true;
     } catch (e) {
-      const message = applyBackendValidationErrors(form, e);
+      // Naming the page is what puts the error on the right field: the backend
+      // reports bare names, and several of them exist on more than one page.
+      const message = applyBackendValidationErrors(form, e, {
+        formKey: page.formKey,
+        renames: page.renames,
+      });
       setSubmitError(message);
       showErrorToast(
         '保存に失敗しました',
@@ -242,10 +444,16 @@ export const AdminProjectRegister: React.FC = () => {
         getProjectPlanAutofillDefaults(),
         getProjectPlanAutofillByProject(projectId),
       ]);
-      const projectApplication = {
-        ...getAutofillData(defaultsResponse),
-        ...getAutofillData(projectResponse),
-      } as AdminProjectRegisterFormInputValues['projectApplication'];
+      // Autofill speaks the backend's names; restate them in the form's, or
+      // the value sits under a key no input is bound to and the input stays
+      // empty while the hidden copy is what gets sent.
+      const projectApplication = mapPlanPageValues(
+        {
+          ...getAutofillData(defaultsResponse),
+          ...getAutofillData(projectResponse),
+        },
+        getPlanPageForStep(2)?.renames,
+      ) as AdminProjectRegisterFormInputValues['projectApplication'];
 
       if (Object.keys(projectApplication).length > 0) {
         form.setValue('projectApplication', projectApplication, {
@@ -293,7 +501,7 @@ export const AdminProjectRegister: React.FC = () => {
     if (!saved) return;
 
     if (step < maxStep) {
-      setStep(step + 1);
+      setStep(adjacentStepId(visibleSteps, step, 1));
       return;
     }
 
@@ -301,26 +509,57 @@ export const AdminProjectRegister: React.FC = () => {
     setMode('confirm');
   };
 
+  /**
+   * Uploads a file for whichever page is open.
+   *
+   * The key comes back pointing at temporary storage and is promoted when the
+   * page saves, so an upload on a page that is never completed costs nothing.
+   */
+  const uploadPlanFile = useCallback(
+    async (fieldName: string, file: File) => {
+      const page = getPlanPageForStep(step);
+      if (!createdProjectId || !page) {
+        throw new Error('先にプロジェクトを保存してください。');
+      }
+      // Config names are namespaced and a few differ from the backend's.
+      const bare = fieldName.split('.').pop() ?? fieldName;
+      return uploadProjectPlanFormFile(
+        createdProjectId,
+        page.slug,
+        page.renames?.[bare] ?? bare,
+        file,
+      );
+    },
+    [createdProjectId, step],
+  );
+
   const handleConfirm = async () => {
     await onSubmit(form.getValues());
   };
 
-  const goBack = () => setStep((currentStep) => Math.max(currentStep - 1, 1));
+  const goBack = () =>
+    setStep((currentStep) => adjacentStepId(visibleSteps, currentStep, -1));
 
   const jumpToStep = async (target: number | string) => {
     const targetStep = Number(target);
 
+    // Leaving step 1 has to persist the project first — every plan page is
+    // keyed by its id. Once that is done the operator goes to the page they
+    // actually asked for, not to step 2: being able to open any page directly
+    // is what makes a finished plan freely editable.
     if (targetStep > 1 && step === 1) {
-      await goNext();
-      return;
+      const projectId =
+        createdProjectId && isProjectBaseSaved
+          ? createdProjectId
+          : await saveProjectBase();
+      if (!projectId) return;
     }
 
-    setStep(() => Math.min(Math.max(targetStep, 1), maxStep));
+    setStep(clampStepId(visibleSteps, targetStep));
   };
 
   const jumpToConfirmationStep = async (target: number | string) => {
-    const targetStep = Number(target);
-    setConfirmationStep(() => Math.min(Math.max(targetStep, 1), maxStep));
+    setConfirmationStep(clampStepId(visibleSteps, Number(target)));
   };
 
   const backToForm = () => {
@@ -472,9 +711,6 @@ export const AdminProjectRegister: React.FC = () => {
             completedIds={completedSteps}
           />
           {step === 1 && <TemporaryAdminProjectAutofillButton form={form} />}
-          {step === 2 && (
-            <TemporaryAdminProjectApplicationAutofillButton form={form} />
-          )}
         </div>
 
         {planProgress && planProgress.total > 0 && (
@@ -489,6 +725,9 @@ export const AdminProjectRegister: React.FC = () => {
               form={form}
               step={step}
               stepsOverride={visibleSteps}
+              readOnlyFields={readOnlyFields}
+              conditionalFields={conditionalFields}
+              onUploadFile={uploadPlanFile}
             />
 
             {submitError && (
@@ -496,42 +735,40 @@ export const AdminProjectRegister: React.FC = () => {
             )}
 
             <FormActions
-              className={
-                step > 1
-                  ? 'grid grid-cols-1 gap-3 sm:grid-cols-2'
-                  : 'grid grid-cols-1 gap-3'
-              }
-            >
-              {step > 1 && (
-                <Button
-                  type='button'
-                  variant='outline'
-                  size='md'
-                  className='w-full'
-                  onClick={goBack}
-                  disabled={isSubmitting || isLoadingApplication}
-                >
-                  戻る
-                </Button>
-              )}
-              <Button
-                type='button'
-                size='md'
-                className='w-full'
-                onClick={goNext}
-                disabled={
-                  isSavingProjectBase || isLoadingApplication || isSubmitting
-                }
-              >
-                {step === maxStep
-                  ? '確認へ'
-                  : isSavingProjectBase
-                    ? '保存中...'
-                    : isLoadingApplication
-                      ? '読み込み中...'
-                      : '次へ'}
-              </Button>
-            </FormActions>
+              actions={[
+                ...(step > 1
+                  ? [
+                      {
+                        id: 'back',
+                        label: '戻る',
+                        variant: 'outline' as const,
+                        onClick: goBack,
+                        disabled:
+                          isSubmitting ||
+                          isLoadingApplication ||
+                          isLoadingPlanPage,
+                      },
+                    ]
+                  : []),
+                {
+                  id: 'next',
+                  label:
+                    isSavingProjectBase
+                      ? '保存中...'
+                      : isLoadingApplication || isLoadingPlanPage
+                        ? '読み込み中...'
+                        : step === maxStep
+                          ? '確認へ'
+                          : '次へ',
+                  onClick: goNext,
+                  disabled:
+                    isSavingProjectBase ||
+                    isLoadingApplication ||
+                    isLoadingPlanPage ||
+                    isSubmitting,
+                },
+              ]}
+            />
           </FormSectionStack>
         </FormCard>
       </FormPageContent>

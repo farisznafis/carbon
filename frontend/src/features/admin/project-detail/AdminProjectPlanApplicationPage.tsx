@@ -1,38 +1,55 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  getAdminProjectDetail,
-  getAdminProjectPlanApplication,
-  type AdminProjectDetail,
-  type ProjectPlanApplicationResponse,
-} from '@/api/admin';
-import { PageDropdown } from '@/components/forms/shared/PageDropdown';
+import { getProjectPlanForm } from '@/api/admin/projects';
+import { mapPlanPageValues } from '@/api/admin/projectPayloadMapper';
 import type { FieldConfig } from '@/components/forms/shared/GenericFormFields/GenericFormFields';
-import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { logger } from '@/lib/logger';
+import { PageSkeleton, SkeletonCard } from '@/components/feedback/loading';
+import {
+  FormActions,
+  FormCard,
+  FormSection,
+} from '@/components/forms/form-layout';
+import { PageDropdown } from '@/components/forms/shared/PageDropdown';
+import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { Badge } from '@/components/ui/badge';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  useAdminProjectDetailQuery,
+  useAdminProjectPlanProgressQuery,
+} from '@/hooks/admin/useAdminProjectDetailQuery';
 import { paths } from '@/routes/paths';
+import { mapDetailToProjectBase } from '@/features/admin/project-registration/forms/projectBaseFromDetail';
+import {
+  LAST_IMPLEMENTED_STEP,
+  getPlanPageForSlug,
+  getPlanPageForStep,
+  rulesInFormNames,
+} from '@/features/admin/project-registration/forms/projectPlanPages';
 import { steps } from '@/features/admin/project-registration/forms/projectSteps';
-import type { FormValues } from '@/features/admin/project-registration/forms/projectFormTypes';
+import {
+  adjacentStepId,
+  clampStepId,
+  stepsForApplicationCategory,
+} from '@/features/admin/project-registration/forms/applicationCategory';
+import { AdminProjectDetailLayout } from './AdminProjectDetailLayout';
+import { PlanPageValues } from './plan-view/PlanPageValues';
+import { formatProjectDetailDateTime } from './projectDetailDisplay';
 
-type ProjectPlanDisplayValues = {
-  projectBase?: Record<string, unknown>;
-  projectApplication?: Record<string, unknown>;
-};
+/**
+ * Every step the wizard serves — step 1 is the project record, 2+ are plan
+ * pages — limited to what a プロジェクト登録 files, as in the wizard.
+ */
+const visibleSteps = stepsForApplicationCategory(steps.slice(0, LAST_IMPLEMENTED_STEP));
+const maxStep = visibleSteps[visibleSteps.length - 1].id;
 
-const visibleSteps = [
-  {
-    ...steps[0],
-    title: 'プロジェクト作成',
-  },
-  {
-    ...steps[1],
-    title: 'プロジェクト申請',
-  },
-];
-const maxStep = visibleSteps.length;
-
+/** Step 1's configs are shared with the create form, whose labels are terse. */
 const projectBaseLabelOverrides: Record<string, string> = {
   'projectBase.projectName': 'プロジェクト名称',
   'projectBase.projectStatus': 'ステータス',
@@ -71,286 +88,241 @@ const projectBaseLabelOverrides: Record<string, string> = {
   'projectBase.operatorCompanyId': '運営会社ID',
 };
 
-const textFallback = (value: unknown) => (value == null ? '' : String(value));
-
-const numberFallback = (value: unknown) => {
-  if (value == null || value === '') return 0;
-
-  const numberValue = typeof value === 'number' ? value : Number(value);
-  return Number.isFinite(numberValue) ? numberValue : 0;
-};
-
-const firstPresent = (...values: unknown[]) =>
-  values.find((value) => value != null && value !== '');
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-
-const resolveApplicationData = (
-  response: ProjectPlanApplicationResponse,
-): Record<string, unknown> => {
-  const value =
-    response.application ??
-    response.projectApplication ??
-    response.data ??
-    {};
-
-  return isRecord(value) ? value : {};
-};
-
-const mapDetailToProjectBase = (
-  detail: AdminProjectDetail,
-): Record<string, unknown> => ({
-  projectName: textFallback(detail.projectName),
-  projectNumber: textFallback(detail.projectNumber ?? detail.id),
-  projectStatus: textFallback(detail.projectStatus),
-  emissionReduction: numberFallback(detail.emissionReduction),
-  baselineEmissions: numberFallback(
-    firstPresent(detail.baselineEmissions, detail.baselineEmission),
-  ),
-  postProjectEmission: numberFallback(
-    firstPresent(detail.postProjectEmission, detail.postProjectEmissions),
-  ),
-  repFirstName: textFallback(detail.repFirstName),
-  repFirstNameKana: textFallback(detail.repFirstNameKana),
-  repLastName: textFallback(detail.repLastName),
-  repLastNameKana: textFallback(detail.repLastNameKana),
-  repEmail: textFallback(detail.repEmail),
-  repPhoneNumber: textFallback(detail.repPhoneNumber),
-  repPosition: textFallback(detail.repPosition),
-  picFirstName: textFallback(detail.picFirstName),
-  picFirstNameKana: textFallback(detail.picFirstNameKana),
-  picLastName: textFallback(detail.picLastName),
-  picLastNameKana: textFallback(detail.picLastNameKana),
-  picEmail: textFallback(detail.picEmail),
-  picPhoneNumber: textFallback(detail.picPhoneNumber),
-  picPosition: textFallback(detail.picPosition),
-  picDataManagement: textFallback(detail.dataManagementPic),
-  companyName: textFallback(detail.companyName),
-  regionalCategory: textFallback(detail.regionalCategory),
-  newMembersTotal: numberFallback(detail.newMembersTotal),
-  withdrawnMembers: numberFallback(detail.withdrawnMembers),
-  cumulativeMembers: numberFallback(detail.cumulativeMembers),
-  membersTotal: numberFallback(detail.membersTotal),
-  methodologyVersion: textFallback(detail.methodologyVersion),
-  methodCategory: textFallback(detail.methodologyCategory),
-  methodNumber: textFallback(detail.methodologyNumber),
-  methodName: textFallback(detail.methodologyName),
-  methodMainEmission: textFallback(detail.methodologyMainEmission),
-  methodCombiFeasibility: Boolean(detail.methodCombiFeasibility),
-  methodDetails: textFallback(detail.methodDetails),
-  operatorCompanyId: textFallback(detail.operatorCompanyId),
-});
-
-const getNestedValue = (value: unknown, path: string) =>
-  path.split('.').reduce<unknown>((current, key) => {
-    if (!isRecord(current)) return undefined;
-    return current[key];
-  }, value);
-
-const formatDisplayValue = (field: FieldConfig<FormValues>, value: unknown) => {
-  if (value == null || value === '') return '-';
-
-  const option = field.options?.find(
-    (item) => String(item.value) === String(value),
-  );
-  if (option) {
-    return option.label;
-  }
-
-  if (typeof value === 'boolean') {
-    return value ? 'あり' : 'なし';
-  }
-
-  if (Array.isArray(value)) {
-    return value.length > 0 ? value.join(', ') : '-';
-  }
-
-  return String(value);
-};
-
-function InformationGrid({
-  fields,
-  values,
-}: {
-  fields: FieldConfig<FormValues>[];
-  values: ProjectPlanDisplayValues;
-}) {
-  return (
-    <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-      {fields.map((field) => {
-        const fieldName = String(field.name);
-        const isFullWidthField =
-          field.type === 'textarea' || fieldName === 'projectBase.methodDetails';
-
-        return (
-          <div
-            key={fieldName}
-            className={`rounded-md border bg-muted/20 p-4 ${
-              isFullWidthField ? 'md:col-span-2' : ''
-            }`}
-          >
-            <dt className='text-sm font-medium text-foreground'>
-              {projectBaseLabelOverrides[fieldName] ?? field.label}
-            </dt>
-            <dd className='mt-2 whitespace-pre-wrap break-words text-base font-semibold'>
-              {formatDisplayValue(field, getNestedValue(values, fieldName))}
-            </dd>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
+/**
+ * プロジェクト計画書, read-only: every page the wizard fills, as it is stored.
+ *
+ * Pages are fetched one at a time as the viewer moves, the same way the wizard
+ * loads them, and cached so 戻る/次へ does not refetch. Values come back under
+ * backend field names and are renamed to the form's before display — without
+ * that, every page with a rename showed its renamed fields as empty.
+ */
 export default function AdminProjectPlanApplicationPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [values, setValues] = useState<ProjectPlanDisplayValues>({});
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let isMounted = true;
+  const projectQuery = useAdminProjectDetailQuery(projectId);
+  const progressQuery = useAdminProjectPlanProgressQuery(projectId);
+  const project = projectQuery.data;
 
-    const load = async () => {
-      if (!projectId) {
-        setError('projectId が見つかりません。');
-        setLoading(false);
-        return;
-      }
+  const page = getPlanPageForStep(step);
+  const pageQuery = useQuery({
+    queryKey: ['admin', 'projects', projectId ?? '', 'plan-page', page?.slug ?? ''],
+    queryFn: () => getProjectPlanForm(projectId as string, page?.slug ?? ''),
+    enabled: Boolean(projectId && page),
+    staleTime: 30_000,
+    retry: false,
+  });
 
-      try {
-        setLoading(true);
-        setError(null);
-
-        const [projectDetail, applicationResponse] = await Promise.all([
-          getAdminProjectDetail(projectId),
-          getAdminProjectPlanApplication(projectId),
-        ]);
-
-        if (!isMounted) return;
-
-        setValues({
-          projectBase: mapDetailToProjectBase(projectDetail),
-          projectApplication: resolveApplicationData(applicationResponse),
-        });
-      } catch (e) {
-        logger.error('Error loading project plan application:', e);
-
-        if (!isMounted) return;
-
-        setError(
-          e instanceof Error
-            ? e.message
-            : 'プロジェクト計画書を取得できませんでした。',
-        );
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void load();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [projectId]);
-
-  const jumpToStep = (target: number | string) => {
-    const nextStep = Number(target);
-    setStep(Math.min(Math.max(nextStep, 1), maxStep));
-  };
-
-  const goBack = () => setStep((currentStep) => Math.max(currentStep - 1, 1));
-
-  const goNext = () => setStep((currentStep) => Math.min(currentStep + 1, maxStep));
-
-  const handleUpdateProject = () => {
-    if (!projectId) return;
-
-    navigate(`${paths.adminProjectEdit(projectId)}?page=${step}`);
-  };
+  const progressBySlug = useMemo(
+    () => new Map((progressQuery.data?.forms ?? []).map((form) => [form.formSlug, form])),
+    [progressQuery.data],
+  );
+  const completedSteps = useMemo(
+    () =>
+      (progressQuery.data?.forms ?? [])
+        .filter((form) => form.status === 'COMPLETE')
+        .map((form) => getPlanPageForSlug(form.formSlug)?.step)
+        .filter((planStep): planStep is number => planStep !== undefined),
+    [progressQuery.data],
+  );
 
   const currentStep = visibleSteps.find((item) => item.id === step) ?? visibleSteps[0];
 
-  if (loading) {
+  if (projectQuery.isLoading) {
     return (
-      <div className='flex min-h-screen items-center justify-center'>
-        読み込み中...
+      <PageSkeleton>
+        <div className="mx-auto w-full max-w-admin space-y-5">
+          <SkeletonCard className="min-h-24" />
+          <SkeletonCard className="min-h-[40rem]" />
+        </div>
+      </PageSkeleton>
+    );
+  }
+
+  if (!projectId || projectQuery.isError || !project) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-6">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>プロジェクトが見つかりません</CardTitle>
+            <CardDescription>
+              {projectQuery.error instanceof Error
+                ? projectQuery.error.message
+                : 'プロジェクト情報を取得できませんでした。'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PageBackButton
+              onClick={() => navigate(paths.adminProjectList)}
+              aria-label="プロジェクト管理に戻る"
+            />
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
+  const progress = page ? progressBySlug.get(page.slug) : undefined;
+  const pageStatus = page ? (pageQuery.data?.status ?? progress?.status) : undefined;
+  const isStored = pageStatus === 'COMPLETE';
+  const updatedAt = pageQuery.data?.updatedAt ?? progress?.updatedAt;
+  const updatedBy = pageQuery.data?.updatedBy ?? progress?.updatedBy;
+
+  /**
+   * 更新 opens the page being read. Step 1 is the project record, edited on its
+   * own screen; a plan page opens in the wizard, which resumes this project
+   * rather than creating one because it is handed the project. The layout has
+   * already checked PROJECT_UPDATE.
+   */
+  const handleEdit = () => {
+    if (!page) {
+      navigate(`${paths.adminProjectEdit(projectId)}?page=1`);
+      return;
+    }
+    navigate(paths.adminProjectRegister, {
+      state: {
+        project: {
+          id: projectId,
+          projectName: project.projectName,
+          projectStatus: project.projectStatus,
+        },
+        planSlug: page.slug,
+      },
+    });
+  };
+
+  const renderPageBody = () => {
+    const fields = currentStep.fields as ReadonlyArray<FieldConfig>;
+
+    if (!page) {
+      return (
+        <PlanPageValues
+          projectId={projectId}
+          fields={fields}
+          values={{ projectBase: mapDetailToProjectBase(project) }}
+          labelOverrides={projectBaseLabelOverrides}
+        />
+      );
+    }
+
+    if (pageQuery.isLoading) {
+      return (
+        <div role="status" aria-label="計画書のページを読み込んでいます">
+          <SkeletonCard className="min-h-48" />
+        </div>
+      );
+    }
+
+    if (pageQuery.isError) {
+      return (
+        <p role="alert" className="text-sm text-destructive">
+          {pageQuery.error instanceof Error
+            ? pageQuery.error.message
+            : 'このページを取得できませんでした。'}
+        </p>
+      );
+    }
+
+    // Autofill fills a never-saved page from master data; showing that as if
+    // the operator had entered it would misreport how far the plan has got.
+    if (!isStored) {
+      return (
+        <p className="rounded-md border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+          このページはまだ入力されていません。
+        </p>
+      );
+    }
+
+    return (
+      <PlanPageValues
+        projectId={projectId}
+        fields={fields}
+        values={{ [page.formKey]: mapPlanPageValues(pageQuery.data?.data, page.renames) }}
+        conditionalFields={rulesInFormNames(
+          pageQuery.data?.conditionalFields ?? [],
+          page.renames,
+        )}
+      />
+    );
+  };
+
+  const completed = progressQuery.data?.completedForms ?? 0;
+  const total = progressQuery.data?.totalForms ?? 0;
+
   return (
-    <FormPageWrapper
-      pageName='プロジェクト計画書'
-      title=''
-      onBack={() => navigate(-1)}
-      // backText='戻る'
-      contentMaxWidth='max-w-5xl'
-      wrapInCard={false}
+    <AdminProjectDetailLayout
+      projectId={projectId}
+      projectName={project.projectName}
+      title="プロジェクト計画書"
+      description="計画書の入力内容と関連資料を確認します。"
+      currentBreadcrumb="計画書"
+      backTo={paths.adminProjectDetail(projectId)}
+      backLabel="プロジェクト詳細に戻る"
+      onEdit={handleEdit}
     >
-      <Card className='border-none'>
-        <CardContent className='space-y-6 pt-6'>
-          {error && <div className='text-sm text-destructive'>{error}</div>}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <PageDropdown
+          steps={visibleSteps}
+          value={step}
+          onChange={(target) => setStep(clampStepId(visibleSteps, Number(target)))}
+          completedIds={completedSteps}
+          className="w-full sm:w-96"
+        />
+        {total > 0 ? (
+          <p className="text-sm text-muted-foreground">
+            入力済み: {completed} / {total} ページ
+          </p>
+        ) : null}
+      </div>
 
-          <div className='flex flex-col gap-3 md:flex-row md:items-end md:justify-between'>
-            <PageDropdown
-              steps={visibleSteps}
-              value={step}
-              onChange={jumpToStep}
-              label='ページ'
-              className='w-full md:w-72'
-            />
-          </div>
+      <FormCard>
+        <FormSection
+          title={currentStep.title}
+          meta={
+            page ? (
+              <span className="flex flex-wrap items-center gap-2">
+                <Badge variant={isStored ? 'default' : 'outline'}>
+                  {isStored ? '入力済み' : '未入力'}
+                </Badge>
+                {progress?.optional ? <Badge variant="secondary">任意</Badge> : null}
+              </span>
+            ) : null
+          }
+          description={
+            isStored && updatedAt
+              ? `最終更新: ${formatProjectDetailDateTime(updatedAt)}${updatedBy ? `（${updatedBy}）` : ''}`
+              : undefined
+          }
+        >
+          {renderPageBody()}
+        </FormSection>
 
-          <section className='space-y-4'>
-            <h2 className='text-xl font-semibold'>{currentStep.title}</h2>
-            <InformationGrid
-              fields={currentStep.fields as FieldConfig<FormValues>[]}
-              values={values}
-            />
-          </section>
-
-          <div className='flex items-center justify-between gap-3 pt-4'>
-            <div>
-              {step > 1 && (
-                <Button
-                  type='button'
-                  variant='outline'
-                  onClick={goBack}
-                >
-                  戻る
-                </Button>
-              )}
-            </div>
-
-            <div className='flex items-center gap-3'>
-              <Button
-                type='button'
-                variant='outline'
-                onClick={handleUpdateProject}
-                disabled={!projectId}
-              >
-                更新
-              </Button>
-
-              {step < maxStep && (
-                <Button
-                  type='button'
-                  onClick={goNext}
-                >
-                  次へ
-                </Button>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </FormPageWrapper>
+        <FormActions
+          className="pt-8"
+          actions={[
+            ...(step > 1
+              ? [
+                  {
+                    id: 'back',
+                    label: '戻る',
+                    variant: 'outline' as const,
+                    onClick: () => setStep((current) => adjacentStepId(visibleSteps, current, -1)),
+                  },
+                ]
+              : []),
+            ...(step < maxStep
+              ? [
+                  {
+                    id: 'next',
+                    label: '次へ',
+                    onClick: () => setStep((current) => adjacentStepId(visibleSteps, current, 1)),
+                  },
+                ]
+              : []),
+          ]}
+        />
+      </FormCard>
+    </AdminProjectDetailLayout>
   );
 }

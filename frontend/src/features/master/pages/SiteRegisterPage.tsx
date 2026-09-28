@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useDashboardStore } from '@/stores/dashboardStore';
-import { registerSite, validateCreateSite } from '@/api/site';
+import { registerSite, validateCreateSite, type Site } from '@/api/site';
 import { SiteForm, SiteFormData } from '@/features/master/forms/SiteForm';
 import { SiteConfirmation } from './SiteConfirmation';
 import { logger } from '@/lib/logger';
@@ -14,10 +15,10 @@ import {
   FormStandalonePage,
 } from '@/components/forms/form-layout';
 import {
-  createSiteRegistrationFlowState,
-  getSiteRegistrationFlowState,
+  getSiteRegistrationReturnTarget,
 } from '@/features/master/navigation/siteRegistrationFlow';
 import { paths } from '@/routes/paths';
+import { UserInvitationDialog } from '@/features/master/user-invitations/UserInvitationDialog';
 
 const emptySiteValues: SiteFormData = {
   siteName: '',
@@ -40,28 +41,20 @@ const emptySiteValues: SiteFormData = {
 
 function SiteRegister() {
   const [step, setStep] = useState<'form' | 'confirm'>('form');
+  const [isInvitationDialogOpen, setIsInvitationDialogOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const addSite = useDashboardStore((state) => state.addSite);
   const setUsers = useDashboardStore((state) => state.setUsers);
-  const registrationFlowState = getSiteRegistrationFlowState(location.state);
-  const returnedUser = registrationFlowState?.createdUser;
-  const [formData, setFormData] = useState<SiteFormData>(() => ({
-    ...(registrationFlowState?.siteDraft ?? emptySiteValues),
-    userId:
-      returnedUser?.id ?? registrationFlowState?.siteDraft.userId ?? '',
-  }));
+  const registrationReturnTarget = getSiteRegistrationReturnTarget(
+    location.state,
+  );
+  const [formData, setFormData] = useState<SiteFormData>(emptySiteValues);
   const usersQuery = useUsersQuery();
   const availableUsers = useMemo(
-    () => {
-      const fetchedUsers = usersQuery.data?.users ?? [];
-
-      return returnedUser &&
-        !fetchedUsers.some((user) => user.id === returnedUser.id)
-        ? [...fetchedUsers, returnedUser]
-        : fetchedUsers;
-    },
-    [returnedUser, usersQuery.data?.users],
+    () => usersQuery.data?.users ?? [],
+    [usersQuery.data?.users],
   );
   const selectableUsers = useMemo(
     () =>
@@ -79,12 +72,10 @@ function SiteRegister() {
     }
   }, [availableUsers, setUsers, usersQuery.data?.users]);
 
+  /** Preserves the site draft and opens the invitation without creating a user inline. */
   const handleAddUser = (siteDraft: SiteFormData) => {
     setFormData(siteDraft);
-    navigate(paths.masterUserRegister, {
-      replace: true,
-      state: createSiteRegistrationFlowState(siteDraft),
-    });
+    setIsInvitationDialogOpen(true);
   };
 
   const handleDraftSubmit = async (values: SiteFormData) => {
@@ -111,11 +102,30 @@ function SiteRegister() {
         : null;
       const result = await registerSite(formData, assignee);
       addSite(result.site);
+      queryClient.setQueryData<{ sites: Site[] }>(['sites'], (current) => ({
+        sites: [
+          ...(current?.sites ?? []).filter(
+            (site) => site.siteId !== result.site.siteId,
+          ),
+          result.site,
+        ],
+      }));
 
       toast({
         title: '成功',
         description: '拠点を登録しました',
       });
+
+      if (registrationReturnTarget) {
+        navigate(registrationReturnTarget.path, {
+          replace: true,
+          state: {
+            ...registrationReturnTarget.state,
+            createdSiteId: result.site.siteId,
+          },
+        });
+        return;
+      }
 
       navigate(paths.masterDashboard);
     } catch (error) {
@@ -133,6 +143,19 @@ function SiteRegister() {
     setStep('form');
   };
 
+  /** Returns to the originating form with its preserved draft when available. */
+  const handlePageBack = () => {
+    if (registrationReturnTarget) {
+      navigate(registrationReturnTarget.path, {
+        replace: true,
+        state: registrationReturnTarget.state,
+      });
+      return;
+    }
+
+    navigate(-1);
+  };
+
   if (step === 'confirm') {
     return (
       <SiteConfirmation
@@ -148,7 +171,7 @@ function SiteRegister() {
   return (
     <FormStandalonePage>
       <PageBackButton
-        onClick={() => navigate(-1)}
+        onClick={handlePageBack}
         label=''
         className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
       />
@@ -163,9 +186,9 @@ function SiteRegister() {
           defaultValues={formData}
           originalData={emptySiteValues}
           userOptions={selectableUsers}
-          isUserOptionsLoading={usersQuery.isLoading && !returnedUser}
+          isUserOptionsLoading={usersQuery.isLoading}
           userOptionsError={
-            usersQuery.isError && !returnedUser
+            usersQuery.isError
               ? '責任者候補を取得できませんでした'
               : null
           }
@@ -174,6 +197,10 @@ function SiteRegister() {
           embedded
         />
       </FormPageContent>
+      <UserInvitationDialog
+        open={isInvitationDialogOpen}
+        onOpenChange={setIsInvitationDialogOpen}
+      />
     </FormStandalonePage>
   );
 }

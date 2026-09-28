@@ -80,12 +80,12 @@ function normalizeProjectApplicationBooleans(
     'isChangePicPosition',
     'isChangePicName',
     'isChangePicEmail',
-    'isChangePicPhone',
+    'isChangePicPhoneNumber',
     'isChangeOtherContactBusinessName',
     'isChangeOtherContactPicPosition',
-    'isChangeOtherContactPicName',
-    'isChangeOtherContactPicEmail',
-    'isChangeOtherContactPicPhone',
+    'isChangeOtherContactsPicName',
+    'isChangeOtherContactsPicEmail',
+    'isChangeOtherContactsPicPhoneNumber',
     'isParticipatingCnAct',
   ];
 
@@ -175,8 +175,8 @@ export function mapAdminProjectPlanApplicationPayload(
     projectApplication.hasEnergyActPeriodReport === true;
   const energyActOperationNumber = shouldSendEnergyActNumbers
     ? firstStringValue(
-        projectApplication.energyActOperationNumber,
         projectApplication.energyActOpeNumber,
+        projectApplication.energyActOperationNumber,
       ) ?? NOT_APPLICABLE_ENERGY_ACT_NUMBER
     : NOT_APPLICABLE_ENERGY_ACT_NUMBER;
   const energyManageFactoryNumber = shouldSendEnergyActNumbers
@@ -189,10 +189,13 @@ export function mapAdminProjectPlanApplicationPayload(
   return cleanPayload({
     ...projectApplication,
     applicationCategory: normalizeApplicationCategory(projectApplication.applicationCategory),
-    isUsingExamCostSupport: projectApplication.isUsingExamCostSupport ?? projectApplication.isUsingCostSupport,
+    // Where the form and the DTO spell a field differently, the form's name
+    // comes first: that is the input the operator edits, and a DTO-named copy
+    // left over from autofill must not silently win over their correction.
+    isUsingExamCostSupport: projectApplication.isUsingCostSupport ?? projectApplication.isUsingExamCostSupport,
     projectOperatorKana: projectApplication.projectOperatorKana,
-    projectOperatorNameJa: projectApplication.projectOperatorNameJa ?? projectApplication.projectOperatorJa,
-    projectOperatorNameEn: projectApplication.projectOperatorNameEn ?? projectApplication.projectOperatorEn,
+    projectOperatorNameJa: firstStringValue(projectApplication.projectOperatorJa, projectApplication.projectOperatorNameJa),
+    projectOperatorNameEn: firstStringValue(projectApplication.projectOperatorEn, projectApplication.projectOperatorNameEn),
     corpNumber: projectApplication.corpNumber,
     corpPosition: projectApplication.corpPosition,
     corpName: projectApplication.corpName,
@@ -217,20 +220,20 @@ export function mapAdminProjectPlanApplicationPayload(
       joinName(projectBase.picLastName, projectBase.picFirstName),
     ),
     picEmail: firstStringValue(projectApplication.picEmail, projectBase.picEmail),
-    picPhoneNumber: firstStringValue(projectApplication.picPhoneNumber, projectApplication.picPhone, projectBase.picPhoneNumber),
+    picPhoneNumber: firstStringValue(projectApplication.picPhone, projectApplication.picPhoneNumber, projectBase.picPhoneNumber),
     projectNumber: firstStringValue(projectApplication.projectNumber, projectBase.projectNumber),
     projectName: firstStringValue(projectApplication.projectName, projectBase.projectName),
     methodologyCategory: firstStringValue(projectApplication.methodologyCategory, projectBase.methodCategory),
     methodologyNumber: firstStringValue(projectApplication.methodologyNumber, projectBase.methodNumber),
     methodology: firstStringValue(projectApplication.methodology, projectBase.methodName),
     locationEn: firstStringValue(
-      projectApplication.locationEn,
       projectApplication.SaaS,
+      projectApplication.locationEn,
       projectApplication.location,
     ),
     regionalCategory: firstStringValue(
-      projectApplication.regionalCategory,
       projectApplication.regionCategory,
+      projectApplication.regionalCategory,
       projectBase.regionalCategory,
     ),
     groupName: projectApplication.groupName,
@@ -296,48 +299,54 @@ function toDateString(value: unknown): string | undefined {
 }
 
 /**
- * 代表以外のプログラム型運営・管理者 (step 3).
+ * Maps one project-plan page's form values onto its backend payload.
  *
- * Renames the three fields whose form names differ from the backend DTO;
- * everything else already matches, so it is passed through.
+ * Field names line up with the backend DTO for most pages, so the default is a
+ * pass-through; the few that disagree declare a rename map in
+ * `projectPlanPages.ts` rather than getting a bespoke mapper.
+ *
+ * Dates are normalised because the pickers hold Date objects while the backend
+ * @DateFormat expects yyyy-MM-dd.
  */
-export function mapOtherOperatorProjectsPayload(
+export function mapPlanPagePayload(
   values: Record<string, unknown>,
+  formKey: string,
+  renames?: Readonly<Record<string, string>>,
 ): Record<string, unknown> {
-  const page = (values.otherProjectOperator ?? {}) as Record<string, unknown>;
+  const page = (values[formKey] ?? {}) as Record<string, unknown>;
+  const payload: Record<string, unknown> = {};
 
-  return cleanPayload({
-    ...page,
-    projectOperatorKana: firstStringValue(
-      page.projectOperatorKana,
-      page.projectOperatorNameKana,
-    ),
-    projectOperatorNameKana: undefined,
-    hasEnergyActPeriodReport: toBooleanValue(
-      page.hasEnergyActPeriodReport ?? page.hasEnergyActReport,
-    ),
-    hasEnergyActReport: undefined,
-    energyManagFactoryNumber: firstStringValue(
-      page.energyManagFactoryNumber,
-      page.energyManageFactoryNumber,
-    ),
-    energyManageFactoryNumber: undefined,
-    isDesignatedEmitter: toBooleanValue(page.isDesignatedEmitter),
-  });
+  for (const [key, value] of Object.entries(page)) {
+    const target = renames?.[key] ?? key;
+    payload[target] = value instanceof Date ? toDateString(value) : value;
+  }
+
+  return cleanPayload(payload);
 }
 
 /**
- * (参考様式)適用条件 (step 4).
+ * Turns a stored page back into form values — the inverse of
+ * {@link mapPlanPagePayload}.
  *
- * Field names already match the backend DTO; only the date needs formatting.
+ * Without this a page that was saved comes back blank, because the form binds
+ * to its own field names while the backend stores the spec's.
  */
-export function mapApplicableConditionsPayload(
-  values: Record<string, unknown>,
+export function mapPlanPageValues(
+  data: Record<string, unknown> | undefined,
+  renames?: Readonly<Record<string, string>>,
 ): Record<string, unknown> {
-  const page = (values.appConditions ?? {}) as Record<string, unknown>;
+  if (!data) return {};
 
-  return cleanPayload({
-    ...page,
-    esgPledgeCaseDate: toDateString(page.esgPledgeCaseDate),
-  });
+  const toForm: Record<string, string> = {};
+  for (const [formName, backendName] of Object.entries(renames ?? {})) {
+    toForm[backendName] = formName;
+  }
+
+  const values: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    // Server-managed metadata is not part of the form.
+    if (['pk', 'sk', 'status', 'updatedAt', 'updatedBy'].includes(key)) continue;
+    values[toForm[key] ?? key] = value;
+  }
+  return values;
 }

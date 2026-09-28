@@ -23,7 +23,9 @@ describe('applyBackendValidationErrors', () => {
 
     const message = applyBackendValidationErrors(result.current, error);
 
-    expect(message).toBeNull();
+    // Reported as well as marked inline: the fields it marks belong to step 1,
+    // which the operator may not be looking at when the save is rejected.
+    expect(message).toBe('Validation failed');
     expect(
       result.current.getFieldState('projectBase.picPhoneNumber').error?.message,
     ).toBe('担当者電話番号は必須です。');
@@ -31,5 +33,144 @@ describe('applyBackendValidationErrors', () => {
       result.current.getFieldState('projectBase.postProjectEmission').error
         ?.message,
     ).toBe('プロジェクト実施後排出量は必須です。');
+  });
+});
+
+describe('applyBackendValidationErrors on a plan page', () => {
+  it('marks the page the operator is on, not a same-named project field', () => {
+    const { result } = renderHook(() =>
+      useForm<AdminProjectRegisterFormInputValues>(),
+    );
+    const error = new ApiError('入力内容に誤りがあります。', {
+      status: 400,
+      payload: {
+        errors: {
+          picEmail: '担当者メールアドレスは必須です。',
+          emitterCode: '特定排出者コードは必須です。',
+        },
+      },
+    });
+
+    applyBackendValidationErrors(result.current, error, {
+      formKey: 'otherProjectOperator',
+    });
+
+    // picEmail exists on the project record too. Before the page was named,
+    // it landed on projectBase and page 3 showed a banner with nothing marked.
+    expect(
+      result.current.getFieldState('otherProjectOperator.picEmail').error
+        ?.message,
+    ).toBe('担当者メールアドレスは必須です。');
+    expect(
+      result.current.getFieldState('projectBase.picEmail').error,
+    ).toBeUndefined();
+    expect(
+      result.current.getFieldState('otherProjectOperator.emitterCode').error
+        ?.message,
+    ).toBe('特定排出者コードは必須です。');
+  });
+
+  it('translates the backend name back to the form name where they differ', () => {
+    const { result } = renderHook(() =>
+      useForm<AdminProjectRegisterFormInputValues>(),
+    );
+    const error = new ApiError('入力内容に誤りがあります。', {
+      status: 400,
+      payload: {
+        errors: { energyManagFactoryNo: '必須です。' },
+      },
+    });
+
+    applyBackendValidationErrors(result.current, error, {
+      formKey: 'otherProjectOperator',
+      renames: { energyManageFactoryNumber: 'energyManagFactoryNo' },
+    });
+
+    expect(
+      result.current.getFieldState(
+        'otherProjectOperator.energyManageFactoryNumber',
+      ).error?.message,
+    ).toBe('必須です。');
+  });
+
+  it('marks 申請 page inputs whose form names differ from the DTO', async () => {
+    const { getPlanPageForStep } = await import('./projectPlanPages');
+    const { result } = renderHook(() =>
+      useForm<AdminProjectRegisterFormInputValues>(),
+    );
+    const error = new ApiError('入力内容に誤りがあります。', {
+      status: 400,
+      payload: {
+        errors: {
+          picPhoneNumber: '担当者電話番号の形式が正しくありません。（例: 0312345678）',
+          regionalCategory: '地域区分の値が不正です。',
+        },
+      },
+    });
+
+    const page = getPlanPageForStep(2)!;
+    applyBackendValidationErrors(result.current, error, {
+      formKey: page.formKey,
+      renames: page.renames,
+    });
+
+    // The inputs are bound to picPhone / regionCategory; errors set under the
+    // DTO names marked nothing and the operator saw only a toast.
+    expect(
+      result.current.getFieldState('projectApplication.picPhone').error?.message,
+    ).toBe('担当者電話番号の形式が正しくありません。（例: 0312345678）');
+    expect(
+      result.current.getFieldState('projectApplication.regionCategory').error
+        ?.message,
+    ).toBe('地域区分の値が不正です。');
+  });
+});
+
+describe('applyBackendValidationErrors on a repeating table', () => {
+  it('marks the row the server rejected, not the whole table', () => {
+    const { result } = renderHook(() =>
+      useForm<AdminProjectRegisterFormInputValues>(),
+    );
+    const error = new ApiError('入力内容に誤りがあります。', {
+      status: 400,
+      payload: {
+        errors: { 'rows[1].symbol': '記号は必須です。' },
+      },
+    });
+
+    applyBackendValidationErrors(result.current, error, { formKey: 'emissionCalc' });
+
+    // Left as `rows[1]`, setError would invent a field of that literal name;
+    // the cell the operator has to fix would never be marked.
+    expect(
+      result.current.getFieldState('emissionCalc.rows.1.symbol' as never).error
+        ?.message,
+    ).toBe('記号は必須です。');
+    expect(
+      result.current.getFieldState('emissionCalc.rows.0.symbol' as never).error,
+    ).toBeUndefined();
+  });
+
+  it('renames the table and the column independently', () => {
+    const { result } = renderHook(() =>
+      useForm<AdminProjectRegisterFormInputValues>(),
+    );
+    const error = new ApiError('入力内容に誤りがあります。', {
+      status: 400,
+      payload: {
+        errors: { 'monitorItems[0].monitorPoint': '必須です。' },
+      },
+    });
+
+    applyBackendValidationErrors(result.current, error, {
+      formKey: 'emissionCalc',
+      renames: { items: 'monitorItems', monitoringPoint: 'monitorPoint' },
+    });
+
+    expect(
+      result.current.getFieldState(
+        'emissionCalc.items.0.monitoringPoint' as never,
+      ).error?.message,
+    ).toBe('必須です。');
   });
 });

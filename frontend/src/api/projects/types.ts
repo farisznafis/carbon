@@ -7,6 +7,8 @@ export interface Project {
   projectName: string;
   projectStatus: string;
   emissionReduction?: number;
+  updatedAt?: string | null;
+  createdAt?: string | null;
   baselineEmissions?: number;
   postProjectEmission?: number;
   methodologyVersion: string;
@@ -55,7 +57,8 @@ export interface ProjectDetail {
   methodCombiFeasibility: boolean;
   methodDetails: string;
   operatorCompanyId: number;
-  isJoined: boolean | null;
+  isCompanyJoined: boolean | null;
+  hasSiteRelation: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -82,6 +85,11 @@ export interface Equipment {
   model: string;
 }
 
+export type ProjectMembershipPdfDownload = {
+  pdfUrl: string;
+  expiresIn: number;
+};
+
 export type ProjectListItem = {
   id: string;
   companyId?: string | number | null;
@@ -90,6 +98,9 @@ export type ProjectListItem = {
   siteName?: string | null;
   projectName: string;
   projectStatus: string;
+  emissionReduction?: number | string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
   methodologyCategory: string;
   methodologyNumber: string;
   methodologyName: string;
@@ -111,4 +122,15 @@ export type ProjectListResponse = {
     nextPageToken: string | null;
     hasMore: boolean;
   };
+};
+
+export type ProjectMemberTermsInfo = {
+  statusCode: string;
+  message: string | null;
+  projectName: string;
+  operatorNameJa: string;
+  adminRepName: string;
+  projectOverview: string;
+  usePurpose: string;
+  startedAt: string;
 };

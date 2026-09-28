@@ -1,0 +1,32 @@
+GET /project/{projectId}/member-terms-info
+Authorization: Bearer {token}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "message": null,
+  "projectName": "関東地域自家消費型太陽光発電プロジェクト",
+  "operatorNameJa": "株式会社クリエーションテック",
+  "adminRepName": "真耶増田",
+  "projectOverview": "太陽光発電設備の導入",
+  "usagePurpose": "国内における地球温暖化対策のための排出削減・吸収量認証制度に、方法論EN-R-002に基づくプロジェクトを登録して実施するにあたり...",
+  "effectiveDate": "2026年03月01日"
+}
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "プロジェクトが見つかりません。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

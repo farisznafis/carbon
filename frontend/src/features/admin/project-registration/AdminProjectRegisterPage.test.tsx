@@ -5,9 +5,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const adminProjectApiMocks = vi.hoisted(() => ({
   createAdminProject: vi.fn(),
-  createAdminProjectPlanApplication: vi.fn(),
+  getAdminProjectDetail: vi.fn(),
   getProjectPlanAutofillByProject: vi.fn(),
   getProjectPlanAutofillDefaults: vi.fn(),
+  getProjectPlanForm: vi.fn(),
   getProjectPlanProgress: vi.fn(),
   saveProjectPlanForm: vi.fn(),
   updateAdminProject: vi.fn(),
@@ -24,14 +25,23 @@ vi.mock('@/hooks/use-toast', () => ({
 }));
 
 vi.mock('./forms/ProjectMultiPageForm', () => ({
-  MultiStepForm: ({ step }: { step: number }) => (
-    <div data-testid="project-form-step">step-{step}</div>
+  MultiStepForm: ({
+    step,
+    form,
+  }: {
+    step: number;
+    form: { getValues: () => unknown };
+  }) => (
+    <>
+      <div data-testid="project-form-step">step-{step}</div>
+      {/* The real form renders inputs; the tests only need to read values. */}
+      <div data-testid="project-form-values">{JSON.stringify(form.getValues())}</div>
+    </>
   ),
 }));
 
 vi.mock('./forms/TemporaryAdminProjectAutofillButton', () => ({
   TemporaryAdminProjectAutofillButton: () => null,
-  TemporaryAdminProjectApplicationAutofillButton: () => null,
 }));
 
 import { AdminProjectRegister } from './AdminProjectRegisterPage';
@@ -42,11 +52,22 @@ describe('AdminProjectRegister', () => {
     adminProjectApiMocks.createAdminProject.mockResolvedValue([
       { id: 'project-1' },
     ]);
+    adminProjectApiMocks.getAdminProjectDetail.mockResolvedValue({
+      id: 'project-9',
+      projectName: '既存プロジェクト',
+      projectNumber: 'P9',
+      projectStatus: '準備中',
+      repLastName: '山田',
+    });
     adminProjectApiMocks.getProjectPlanAutofillDefaults.mockResolvedValue({
       data: {},
     });
     adminProjectApiMocks.getProjectPlanAutofillByProject.mockResolvedValue({
       data: {},
+    });
+    adminProjectApiMocks.getProjectPlanForm.mockResolvedValue({
+      data: {},
+      readOnlyFields: [],
     });
     adminProjectApiMocks.getProjectPlanProgress.mockResolvedValue({
       totalForms: 3,
@@ -130,6 +151,74 @@ describe('AdminProjectRegister', () => {
     );
   });
 
+  it('resumes an existing project at its first unfinished page', async () => {
+    adminProjectApiMocks.getProjectPlanProgress.mockResolvedValue({
+      totalForms: 33,
+      completedForms: 2,
+      nextIncompleteSlug: 'applicable-conditions',
+      forms: [],
+    });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/',
+            state: {
+              project: {
+                id: 'project-9',
+                projectName: '既存プロジェクト',
+                projectStatus: '準備中',
+              },
+            },
+          },
+        ]}
+      >
+        <AdminProjectRegister />
+      </MemoryRouter>,
+    );
+
+    // applicable-conditions is step 4.
+    expect(await screen.findByTestId('project-form-step')).toHaveTextContent(
+      'step-4',
+    );
+    expect(adminProjectApiMocks.getProjectPlanForm).toHaveBeenCalledWith(
+      'project-9',
+      'applicable-conditions',
+    );
+    // The whole point: resuming must not create a second project.
+    expect(adminProjectApiMocks.createAdminProject).not.toHaveBeenCalled();
+  });
+
+  it('takes the values the server computed back from the save', async () => {
+    // Pages derive things the client cannot: 合計, 年平均, 年度内の認証申請期間
+    // 日数, the 年度 skeleton itself. The server recomputes them on every save,
+    // and dropping the response left them showing whatever they were before —
+    // a 合計 only caught up when the operator navigated away and back.
+    const user = userEvent.setup();
+    adminProjectApiMocks.saveProjectPlanForm.mockResolvedValue({
+      status: 'COMPLETE',
+      data: { projectNumber: 'P-COMPUTED' },
+    });
+
+    render(
+      <MemoryRouter>
+        <AdminProjectRegister />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+    expect(await screen.findByTestId('project-form-step')).toHaveTextContent('step-2');
+
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('project-form-values')).toHaveTextContent(
+        'P-COMPUTED',
+      );
+    });
+  });
+
   it('does not advance past a page the server rejected', async () => {
     const user = userEvent.setup();
     adminProjectApiMocks.saveProjectPlanForm.mockRejectedValue(
@@ -154,5 +243,158 @@ describe('AdminProjectRegister', () => {
 
     // The page was not stored, so the operator stays on it.
     expect(screen.getByTestId('project-form-step')).toHaveTextContent('step-2');
+  });
+  it('drops a rejected save’s error once the page is fixed and saved', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <AdminProjectRegister />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+    expect(await screen.findByTestId('project-form-step')).toHaveTextContent(
+      'step-2',
+    );
+
+    adminProjectApiMocks.saveProjectPlanForm.mockRejectedValueOnce(
+      new Error('入力内容に誤りがあります。'),
+    );
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+    expect(await screen.findByText('入力内容に誤りがあります。')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('project-form-step')).not.toHaveTextContent('step-2');
+    });
+    expect(screen.queryByText('入力内容に誤りがあります。')).not.toBeInTheDocument();
+  });
+  it('loads every page as the operator arrives on it', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <AdminProjectRegister />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+    expect(await screen.findByTestId('project-form-step')).toHaveTextContent(
+      'step-2',
+    );
+    await waitFor(() => {
+      expect(adminProjectApiMocks.getProjectPlanForm).toHaveBeenCalledWith(
+        'project-1',
+        'application',
+      );
+    });
+
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+    expect(await screen.findByTestId('project-form-step')).toHaveTextContent(
+      'step-3',
+    );
+
+    // Arriving on a page has to fetch it. Otherwise the operator sees the
+    // previous page's read-only and 有/無 rules, its master-data fields come up
+    // empty, and the save is then rejected — the page becomes a dead end.
+    await waitFor(() => {
+      expect(adminProjectApiMocks.getProjectPlanForm).toHaveBeenCalledWith(
+        'project-1',
+        'other-operator-projects',
+      );
+    });
+  });
+
+  it('opens the page the caller asked for', async () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/',
+            state: {
+              project: {
+                id: 'project-9',
+                projectName: '既存プロジェクト',
+                projectStatus: '準備中',
+              },
+              planSlug: 'monitoring-plan',
+            },
+          },
+        ]}
+      >
+        <AdminProjectRegister />
+      </MemoryRouter>,
+    );
+
+    // monitoring-plan is step 29, and it wins over the resume position.
+    expect(await screen.findByTestId('project-form-step')).toHaveTextContent(
+      'step-29',
+    );
+  });
+
+  it('opens a finished plan on its first page so any page can be updated', async () => {
+    adminProjectApiMocks.getProjectPlanProgress.mockResolvedValue({
+      totalForms: 33,
+      completedForms: 33,
+      nextIncompleteSlug: null,
+      forms: [],
+    });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/',
+            state: {
+              project: {
+                id: 'project-9',
+                projectName: '完了プロジェクト',
+                projectStatus: '準備中',
+              },
+            },
+          },
+        ]}
+      >
+        <AdminProjectRegister />
+      </MemoryRouter>,
+    );
+
+    // Nothing is unfinished, so there is no page to resume at. Landing on the
+    // first plan page — not stranded on step 1 — is what makes 計画書更新 work.
+    expect(await screen.findByTestId('project-form-step')).toHaveTextContent(
+      'step-2',
+    );
+    expect(adminProjectApiMocks.createAdminProject).not.toHaveBeenCalled();
+  });
+  it('fills step 1 from the project record, not the list row it was opened with', async () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/',
+            state: {
+              project: {
+                id: 'project-9',
+                projectName: '既存プロジェクト',
+                projectStatus: '準備中',
+              },
+              planSlug: 'applicable-conditions',
+            },
+          },
+        ]}
+      >
+        <AdminProjectRegister />
+      </MemoryRouter>,
+    );
+
+    // The row carries a handful of fields; step 1 has far more, and all of
+    // them are required. Reading only the row left it blank and the first
+    // save was rejected field by field with nothing shown on screen.
+    await waitFor(() =>
+      expect(adminProjectApiMocks.getAdminProjectDetail).toHaveBeenCalledWith(
+        'project-9',
+      ),
+    );
   });
 });

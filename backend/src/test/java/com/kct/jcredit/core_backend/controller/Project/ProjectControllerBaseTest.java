@@ -24,7 +24,6 @@ import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
 import com.kct.jcredit.core_backend.service.ProjectService;
 import com.kct.jcredit.core_backend.service.ParticipationProjectService;
 import com.kct.jcredit.core_backend.service.ProjectMonitoringService;
-import com.kct.jcredit.core_backend.service.ProjectUploadDocumentService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
@@ -51,8 +50,8 @@ public abstract class ProjectControllerBaseTest {
     @Mock
     protected ParticipationProjectService equipmentSolarService;
     
-    @Mock
-    protected ProjectUploadDocumentService projectUploadDocumentService;
+    // @Mock
+    // protected ProjectFilesService projectUploadDocumentService;
     
     @Mock
     protected ProjectMonitoringService projectMonitoringService;
@@ -155,6 +154,8 @@ public abstract class ProjectControllerBaseTest {
             projectData.setMethodName("太陽光発電設備の導入");
             projectData.setMethodMainEmission("CO2排出削減");
             projectData.setMethodCombiFeasibility(true);
+            projectData.setStartedAt(java.time.Instant.parse("2025-01-01T00:00:00Z"));
+            projectData.setUsePurpose("家庭用電力供給");
             projectData.setMethodDetails("家庭用太陽光発電による排出削減");
             projectData.setBaselineEmissions(3200.0);
             projectData.setPostProjectEmission(1950.0);

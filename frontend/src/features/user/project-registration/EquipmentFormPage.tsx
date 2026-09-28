@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import {
   useLocation,
   useNavigate,
@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form';
 import { ApiError } from '@/api/_shared/errors';
 import { validateSiteProjectEquipment } from '@/api/site';
 import {
+  FormActions,
   FormCard,
   FormPageContent,
   FormPageTitle,
@@ -55,6 +56,8 @@ const OTHER_FORM_DEFAULT_VALUES: OtherEquipmentFormData = {
 
 const EMPTY_SITE_OPTIONS: never[] = [];
 
+type EquipmentSubmissionMode = 'draft' | 'create';
+
 function getInternalReturnPath(state: unknown): string | null {
   if (!state || typeof state !== 'object' || !('returnTo' in state)) {
     return null;
@@ -64,6 +67,15 @@ function getInternalReturnPath(state: unknown): string | null {
   return typeof returnTo === 'string' && returnTo.startsWith('/')
     ? returnTo
     : null;
+}
+
+/** Reads whether confirmation should create equipment immediately or keep a membership draft. */
+function getEquipmentSubmissionMode(state: unknown): EquipmentSubmissionMode {
+  if (!state || typeof state !== 'object') return 'draft';
+
+  return (state as { submissionMode?: unknown }).submissionMode === 'create'
+    ? 'create'
+    : 'draft';
 }
 
 function getStringValue(
@@ -144,6 +156,7 @@ export default function EquipmentFormPage() {
   const [searchParams] = useSearchParams();
   const equipmentId = searchParams.get('equipmentId');
   const returnPath = getInternalReturnPath(location.state);
+  const submissionMode = getEquipmentSubmissionMode(location.state);
   const enteredFromMasterDashboard = isFromMasterDashboard(location.state);
   const equipmentDraft = getSolarEquipmentDraft(location.state);
   const { toast } = useToast();
@@ -268,6 +281,7 @@ export default function EquipmentFormPage() {
           isEdit: Boolean(equipmentId),
           formData: data,
           returnTo: returnPath ?? undefined,
+          submissionMode,
           fromMasterDashboard: enteredFromMasterDashboard,
         },
       });
@@ -302,6 +316,12 @@ export default function EquipmentFormPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  /** Resubmits current values without letting stale backend field errors block the request. */
+  const handleSolarFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void submitSolarEquipment(solarForm.getValues());
   };
 
   const submitOtherEquipment = (data: OtherEquipmentFormData) => {
@@ -343,7 +363,7 @@ export default function EquipmentFormPage() {
         {formType === 'solar' ? (
           <Form {...solarForm}>
             <form
-              onSubmit={solarForm.handleSubmit(submitSolarEquipment)}
+              onSubmit={handleSolarFormSubmit}
               noValidate
             >
               <FormCard>
@@ -353,24 +373,24 @@ export default function EquipmentFormPage() {
                   isSiteOptionsLoading={sitesQuery.isLoading}
                   siteOptionsError={siteOptionsError}
                 />
-                <div className="flex justify-end gap-4 pt-6">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCancel}
-                    disabled={isSubmitting}
-                    size="md"
-                  >
-                    キャンセル
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    size="md"
-                  >
-                    {isSubmitting ? '確認中...' : '確認'}
-                  </Button>
-                </div>
+                <FormActions
+                  className="pt-6"
+                  pendingActionId={isSubmitting ? 'confirm' : null}
+                  actions={[
+                    {
+                      id: 'cancel',
+                      label: 'キャンセル',
+                      variant: 'outline',
+                      onClick: handleCancel,
+                    },
+                    {
+                      id: 'confirm',
+                      label: '確認',
+                      pendingLabel: '確認中...',
+                      type: 'submit',
+                    },
+                  ]}
+                />
               </FormCard>
             </form>
           </Form>
@@ -381,19 +401,22 @@ export default function EquipmentFormPage() {
               noValidate
             >
               <FormCard>
-                <div className="flex justify-end gap-4 pt-6">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCancel}
-                    size="md"
-                  >
-                    キャンセル
-                  </Button>
-                  <Button type="submit" size="md">
-                    確認
-                  </Button>
-                </div>
+                <FormActions
+                  className="pt-6"
+                  actions={[
+                    {
+                      id: 'cancel',
+                      label: 'キャンセル',
+                      variant: 'outline',
+                      onClick: handleCancel,
+                    },
+                    {
+                      id: 'confirm',
+                      label: '確認',
+                      type: 'submit',
+                    },
+                  ]}
+                />
               </FormCard>
             </form>
           </Form>

@@ -19,7 +19,7 @@ import jakarta.persistence.Column;
 @AllArgsConstructor
 @Getter 
 @Builder
-public class EnR002ConfirmationItemResponse {
+public class EnR002ConfirmationItemResponse extends BaseResponse {
     private Boolean isAgreeDataUse;
     private Boolean isAgreeExtraData;
     private Boolean isAgreeTransfer;

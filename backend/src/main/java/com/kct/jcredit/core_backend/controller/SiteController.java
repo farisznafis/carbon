@@ -64,13 +64,17 @@ public class SiteController {
     }
 
     @GetMapping("/{siteId}/project")
-    @PreAuthorize("hasAnyRole('master','user')")
+    @PreAuthorize("hasAnyRole('master','user','admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "拠点に紐付くプロジェクト一覧取得", description = "指定された拠点に紐付くプロジェクトの一覧を取得します。")
-    public ResponseEntity<ProjectListInfoResponse> getProjectsBySiteId(Authentication authentication, @PathVariable String siteId) {
-        String token = authentication.getCredentials().toString();
-        ProjectListInfoResponse response = projectService.getProjectsBySiteIdAndCompanyId(siteId, jwtUtil.extractCompanyId(token));
+    @Operation(summary = "拠点別プロジェクト参加状況一覧取得",
+            description = "指定した拠点から見た、全プロジェクトへの参加状況（自社参加済み・"
+                        + "本拠点参加済み・審査状況・PDF準備状況）を取得します。")
+    public ResponseEntity<ProjectListInfoResponse> getProjectsBySiteId(
+            Authentication authentication,
+            @PathVariable String siteId) {
 
+        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
+        ProjectListInfoResponse response = projectService.getProjectsBySiteIdAndCompanyId(siteId, companyId);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
@@ -154,16 +158,17 @@ public class SiteController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
-    @PostMapping("/{siteId}/equipment")
+    @PostMapping("/{siteId}/{projectId}/equipment")
     @PreAuthorize("hasAnyRole('master','user')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<EnR002EquipmentResponse> addEquipment(
             Authentication authentication,
             @PathVariable String siteId,
+            @PathVariable String projectId,
             @RequestBody @Valid EnR002EquipmentRequest request) {
 
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
-        return ResponseEntity.ok(equipmentService.addEquipment(siteId, companyId, request));
+        return ResponseEntity.ok(equipmentService.addEquipment(siteId, companyId, projectId, request));
     }
 
     @GetMapping("/{siteId}/equipment")

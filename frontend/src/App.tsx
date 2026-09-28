@@ -15,12 +15,17 @@ import { SessionExpiryGuard } from "@/components/layout/SessionExpiryGuard";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "./contexts/ProtectedRoute";
 import { ErrorBoundary } from "@/components/feedback/ErrorBoundary";
+import { AdminPermissionProvider } from '@/features/admin/permissions/AdminPermissionContext';
+import { AdminBusinessAccessBoundary } from '@/features/admin/permissions/AdminBusinessAccessBoundary';
+import { AdminPermissionRoute } from '@/features/admin/permissions/AdminPermissionRoute';
+import { AppLoadingScreen, PageSkeleton } from '@/components/feedback/loading';
 import { isAuthPagePath, paths } from "@/routes/paths";
 import { cn } from "@/lib/utils";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
 
 const Index = lazy(() => import("./pages/Index"));
+const Inquiry = lazy(() => import('./features/public/inquiry/InquiryPage'));
 const Login = lazy(() => import("./pages/Login"));
 const AdminLogin = lazy(() => import("./features/admin/auth/AdminLoginPage"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
@@ -29,11 +34,13 @@ const Signup = lazy(() => import("./pages/Signup"));
 const SignupRevision = lazy(() =>
   import("./features/public/signup-revision/SignupRevisionPage"),
 );
+const UserInvitation = lazy(() =>
+  import('./features/public/user-invitation/UserInvitationPage'),
+);
 const ProjectDetail = lazy(() => import("./features/user/project-detail/ProjectDetailPage"));
 const MonitoringRegister = lazy(() => import("./features/user/monitoring/MonitoringRegisterPage"));
 const SiteRegister = lazy(() => import("./features/master/pages/SiteRegisterPage"));
 const SiteEdit = lazy(() => import("./features/master/pages/SiteEditPage"));
-const UserRegister = lazy(() => import("./features/master/pages/UserRegisterPage"));
 const UserEdit = lazy(() => import("./features/master/pages/UserEditPage"));
 const MasterUserProfile = lazy(() => import("./features/master/pages/MasterUserProfilePage"));
 const SiteDetail = lazy(() => import("./features/user/sites/SiteDetailPage"));
@@ -57,6 +64,18 @@ const EquipmentPage = lazy(() =>
 );
 const Profile = lazy(() => import("./features/user/profile/ProfilePage"));
 const AdminDashboard = lazy(() => import("./features/admin/dashboard/AdminDashboardPage"));
+const AdminOperatorList = lazy(() =>
+  import('./features/admin/operators/AdminOperatorListPage'),
+);
+const AdminOperatorRegister = lazy(() =>
+  import('./features/admin/operators/AdminOperatorRegisterPage'),
+);
+const AdminOperatorProfile = lazy(() =>
+  import('./features/admin/operators/AdminOperatorProfilePage'),
+);
+const AdminOperatorEdit = lazy(() =>
+  import('./features/admin/operators/AdminOperatorEditPage'),
+);
 const AdminCompanyDetail = lazy(() =>
   import("./features/admin/company-detail/AdminCompanyDetailPage"),
 );
@@ -70,6 +89,9 @@ const AdminProjectRegister = lazy(() =>
   })),
 );
 const ProjectDetailAdmin = lazy(() => import("./features/admin/project-detail/ProjectDetailAdminPage"));
+const AdminProjectInformation = lazy(() =>
+  import('./features/admin/project-detail/AdminProjectInformationPage'),
+);
 const AdminProjectPlanApplication = lazy(() =>
   import("./features/admin/project-detail/AdminProjectPlanApplicationPage"),
 );
@@ -90,7 +112,7 @@ const AdminHelpFaqPage = lazy(() => import("./features/master/help/AdminHelpFaqP
 function RequireAdmin({ children }: { children: JSX.Element }) {
   const { isAuthenticated, user } = useAuth();
   return isAuthenticated && user?.role === 'admin'
-    ? children
+    ? <AdminBusinessAccessBoundary>{children}</AdminBusinessAccessBoundary>
     : <Navigate to={paths.adminLogin} replace />;
 }
 
@@ -109,6 +131,28 @@ function RequireMaster({ children }: { children: JSX.Element }) {
         : paths.userDashboard;
 
   return <Navigate to={fallbackPath} replace />;
+}
+
+/**
+ * The registration wizard serves two jobs. Opened bare it creates a project;
+ * opened with a project in its state it edits that project's plan — which is
+ * what 計画書更新 and the plan page's 更新 do, both already guarded by
+ * PROJECT_UPDATE. Demanding PROJECT_CREATE for the second would turn away an
+ * operator allowed to edit a plan but not to start new projects.
+ */
+function AdminProjectRegisterRoute() {
+  const { state } = useLocation() as { state?: { project?: unknown } };
+  const isEditingExistingPlan = Boolean(state?.project);
+
+  return isEditingExistingPlan ? (
+    <AdminPermissionRoute permission="PROJECT_UPDATE" title="プロジェクト計画書更新" description="登録済みプロジェクトの計画書を更新します。">
+      <AdminProjectRegister />
+    </AdminPermissionRoute>
+  ) : (
+    <AdminPermissionRoute permission="PROJECT_CREATE" title="プロジェクト追加" description="新しいプロジェクトを登録します。">
+      <AdminProjectRegister />
+    </AdminPermissionRoute>
+  );
 }
 
 function LegacyDashboardRedirect() {
@@ -131,8 +175,11 @@ function LegacyProjectRedirect() {
 const App = () => {
   const location = useLocation();
   const isAuthPage = isAuthPagePath(location.pathname);
+  const { loading: authLoading } = useAuth();
 
   useEffect(() => {
+    if (authLoading) return;
+
     const lenis = new Lenis({
       autoRaf: true,
       autoToggle: true,
@@ -145,10 +192,15 @@ const App = () => {
     return () => {
       lenis.destroy();
     };
-  }, []);
+  }, [authLoading]);
+
+  if (authLoading) {
+    return <AppLoadingScreen />;
+  }
 
   return (
     <ErrorBoundary>
+      <AdminPermissionProvider>
       <div
         className={cn(
           'flex flex-col bg-background text-foreground',
@@ -166,20 +218,21 @@ const App = () => {
             isAuthPage && 'relative overflow-hidden',
           )}
         >
-          <Suspense fallback={<div className="p-6 text-sm text-foreground">Loading...</div>}>
-            <Routes>
+            <Suspense fallback={<PageSkeleton />}>
+              <Routes>
           <Route path={paths.home} element={<Index />} />
+          <Route path={paths.contact} element={<Inquiry />} />
           <Route path={paths.login} element={<Login />} />
           <Route path={paths.adminLogin} element={<AdminLogin />} />
           <Route path={paths.forgotPassword} element={<ForgotPassword />} />
           <Route path={paths.resetPassword} element={<ResetPassword />} />
           <Route path={paths.signup} element={<Signup />} />
           <Route path={paths.signupRevision} element={<SignupRevision />} />
+          <Route path={paths.userInvitation} element={<UserInvitation />} />
           <Route element={<ProtectedRoute />}>
             <Route path={paths.masterDashboard} element={<MasterDashboard />} />
             <Route path={paths.masterSiteRegister} element={<SiteRegister />} />
             <Route path={paths.masterSiteEditRoute} element={<SiteEdit />} />
-            <Route path={paths.masterUserRegister} element={<UserRegister />} />
             <Route path={paths.masterUserProfileRoute} element={<MasterUserProfile />} />
             <Route path={paths.userEditRoute} element={<UserEdit />} />
             <Route path={paths.userDashboard} element={<Dashboard />} />
@@ -240,6 +293,65 @@ const App = () => {
               </RequireAdmin>
             }
           />
+          {[paths.adminProjectList, paths.adminCompanyList, paths.adminMethodologyList].map(
+            (path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <RequireAdmin>
+                    <AdminDashboard />
+                  </RequireAdmin>
+                }
+              />
+            ),
+          )}
+          <Route
+            path={paths.adminMonitoring}
+            element={
+              <RequireAdmin>
+                <Navigate to={`${paths.adminDashboard}?panel=cancel`} replace />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminOperatorList}
+            element={
+              <RequireAdmin>
+                <AdminOperatorList />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminOperatorRegister}
+            element={
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="OPERATOR_USER_CREATE" title="運用者追加" description="新しい運用者を登録します。">
+                      <AdminOperatorRegister />
+                    </AdminPermissionRoute>
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminOperatorProfileRoute}
+            element={
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="OPERATOR_USER_READ" title="運用者プロフィール" description="運用者の登録情報を確認します。" allowSelfOperator>
+                      <AdminOperatorProfile />
+                    </AdminPermissionRoute>
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminOperatorEditRoute}
+            element={
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="OPERATOR_USER_UPDATE" title="運用者更新" description="運用者の登録情報を更新します。" allowSelfOperator>
+                      <AdminOperatorEdit />
+                    </AdminPermissionRoute>
+              </RequireAdmin>
+            }
+          />
           <Route
             path={paths.adminApplicationDetailRoute}
             element={
@@ -251,80 +363,108 @@ const App = () => {
           <Route
             path={paths.adminCompanyDetailRoute}
             element={
-              <RequireAdmin>
-                <AdminCompanyDetail />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="PARTICIPATING_COMPANY_READ" title="参加企業詳細" description="参加企業の登録情報を確認します。">
+                      <AdminCompanyDetail />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminCancelRequestDetailRoute}
             element={
-              <RequireAdmin>
-                <AdminCancelRequestDetail />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="MONITORING_CANCEL" title="取消依頼詳細" description="取消依頼の内容を確認します。">
+                      <AdminCancelRequestDetail />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminProjectRegister}
             element={
-              <RequireAdmin>
-                <AdminProjectRegister />
+                  <RequireAdmin>
+                    <AdminProjectRegisterRoute />
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminProjectDetailRoute}
             element={
-              <RequireAdmin>
-                <ProjectDetailAdmin />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="PROJECT_READ" title="プロジェクト詳細" description="登録済みプロジェクトの進捗、排出量、関連データを確認します。">
+                      <ProjectDetailAdmin />
+                    </AdminPermissionRoute>
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path={paths.adminProjectInformationRoute}
+            element={
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="PROJECT_READ" title="プロジェクト詳細情報" description="登録済みプロジェクトの詳細情報を確認します。">
+                      <AdminProjectInformation />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminProjectMembershipRoute}
             element={
-              <RequireAdmin>
-                <AdminParticipationReviewList />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" title="入会届一覧" description="レビュー対象となる入会届を確認します。">
+                      <AdminParticipationReviewList />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminProjectMembershipDetailRoute}
             element={
-              <RequireAdmin>
-                <AdminParticipationReviewDetail />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" title="入会届詳細" description="入会届の内容と審査状況を確認します。">
+                      <AdminParticipationReviewDetail />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminProjectMonitoringDetailRoute}
             element={
-              <RequireAdmin>
-                <AdminProjectMonitoringDetail />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="MONITORING_READ" title="モニタリングデータ詳細" description="登録されたモニタリングデータを確認します。">
+                      <AdminProjectMonitoringDetail />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminProjectEditRoute}
             element={
-              <RequireAdmin>
-                <AdminProjectEdit />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="PROJECT_UPDATE" title="プロジェクト更新" description="登録済みプロジェクトの情報を更新します。">
+                      <AdminProjectEdit />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminProjectPlanRoute}
             element={
-              <RequireAdmin>
-                <AdminProjectPlanApplication />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="PROJECT_READ" title="プロジェクト計画書" description="計画書の入力内容と関連資料を確認します。">
+                      <AdminProjectPlanApplication />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
           <Route
             path={paths.adminProjectMonitoringReportRoute}
             element={
-              <RequireAdmin>
-                <AdminMonitoringReport />
+                  <RequireAdmin>
+                    <AdminPermissionRoute permission="MONITORING_READ" title="モニタリングデータ報告書" description="モニタリング結果の報告書を確認します。">
+                      <AdminMonitoringReport />
+                    </AdminPermissionRoute>
               </RequireAdmin>
             }
           />
@@ -336,10 +476,11 @@ const App = () => {
               <AdminHelpFaqPage />
             }
           />
-            </Routes>
-          </Suspense>
+              </Routes>
+            </Suspense>
         </div>
       </div>
+      </AdminPermissionProvider>
     </ErrorBoundary>
   );
 };

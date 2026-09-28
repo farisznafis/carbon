@@ -2,6 +2,7 @@ package com.kct.jcredit.core_backend.service.projectplan;
 
 import java.util.function.Supplier;
 
+import com.kct.jcredit.core_backend.entity.Account;
 import com.kct.jcredit.core_backend.entity.OperatingUser;
 import com.kct.jcredit.core_backend.entity.OperatorCompany;
 import com.kct.jcredit.core_backend.entity.Project;
@@ -9,21 +10,28 @@ import com.kct.jcredit.core_backend.entity.Project;
 /**
  * The PostgreSQL-side data a page may autofill from, resolved once per request.
  *
- * <p>The master {@link OperatingUser} is resolved lazily and memoised: only the
- * application page needs it, and the other 30+ pages should not pay for that
- * query on every read.
+ * <p>The master {@link OperatingUser} and the Ｊ－クレジット {@link Account} are
+ * resolved lazily and memoised: only one page each needs them, and the other
+ * 30+ pages should not pay for those queries on every read.
  */
 public final class ProjectPlanSqlContext {
 
     private final Project project;
     private final Supplier<OperatingUser> masterUserSupplier;
+    private final Supplier<Account> holderAccountSupplier;
 
     private OperatingUser masterUser;
     private boolean masterUserResolved;
+    private Account holderAccount;
+    private boolean holderAccountResolved;
 
-    public ProjectPlanSqlContext(Project project, Supplier<OperatingUser> masterUserSupplier) {
+    public ProjectPlanSqlContext(
+            Project project,
+            Supplier<OperatingUser> masterUserSupplier,
+            Supplier<Account> holderAccountSupplier) {
         this.project = project;
         this.masterUserSupplier = masterUserSupplier;
+        this.holderAccountSupplier = holderAccountSupplier;
     }
 
     public Project project() {
@@ -42,6 +50,18 @@ public final class ProjectPlanSqlContext {
             masterUserResolved = true;
         }
         return masterUser;
+    }
+
+    /**
+     * Ｊ－クレジット保有者口座. May be {@code null} — the company may hold no
+     * account, or more than one, in which case the caller declines to guess.
+     */
+    public Account holderAccount() {
+        if (!holderAccountResolved) {
+            holderAccount = holderAccountSupplier == null ? null : holderAccountSupplier.get();
+            holderAccountResolved = true;
+        }
+        return holderAccount;
     }
 
     /** 代表者氏名 — the company representative's full name. */
@@ -63,9 +83,18 @@ public final class ProjectPlanSqlContext {
         return user == null ? null : user.getEmail();
     }
 
+    /**
+     * 担当者電話番号, digits only. Stored numbers may carry hyphens
+     * ({@code 03-5432-1234}) that {@code @PhoneNumber} rejects, and the field is
+     * read-only on the page, so an unnormalized copy could never be saved.
+     */
     public String masterPhoneNumber() {
         OperatingUser user = masterUser();
-        return user == null ? null : user.getPhoneNumber();
+        return user == null ? null : normalizePhoneNumber(user.getPhoneNumber());
+    }
+
+    public static String normalizePhoneNumber(String phoneNumber) {
+        return phoneNumber == null ? null : phoneNumber.replaceAll("[\\s\\-－ー‐]", "");
     }
 
     /** 方法論コード, e.g. {@code EN-R-002}. Null-tolerant on both halves. */
@@ -85,6 +114,15 @@ public final class ProjectPlanSqlContext {
             return category;
         }
         return category + "-" + number;
+    }
+
+    /**
+     * Project stores emissions as {@code Double} while the plan DTOs use
+     * {@code BigDecimal}. Null-safe so an unset figure stays unset rather than
+     * autofilling as zero.
+     */
+    public static java.math.BigDecimal decimal(Double value) {
+        return value == null ? null : java.math.BigDecimal.valueOf(value);
     }
 
     private static boolean isBlank(String value) {

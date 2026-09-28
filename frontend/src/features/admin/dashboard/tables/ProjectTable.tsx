@@ -1,6 +1,10 @@
-import type { ProjectStatus } from '@/api/admin/projects';
+import type {
+  ProjectPlanProgressSummary,
+  ProjectStatus,
+} from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
 import { useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import {
   DataGridTable,
   type DataGridTableColumn,
@@ -14,18 +18,30 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ProjectCompletionDialog } from './ProjectCompletionDialog';
+import { formatProjectDateTime } from '../projectStatusPresentation';
+import { cn } from '@/lib/utils';
 
 type ProjectTableProps = {
   projects: Project[];
   onEdit?: (project: Project) => void;
-  onUpdate?: (project: Project) => void;
   onRowClick?: (project: Project) => void;
   onStatusChange?: (
     project: Project,
     status: ProjectStatus,
   ) => void | Promise<void>;
   updatingProjectStatusId?: string | null;
+  planProgress?: ReadonlyMap<
+    string,
+    ProjectPlanProgressSummary
+  >;
+  onOpenPlan?: (
+    project: Project,
+    slug?: string,
+  ) => void;
 };
+
+const projectTableGridColumns =
+  'minmax(240px,1.6fr) minmax(100px,.5fr) minmax(240px,1.35fr) minmax(160px,.8fr) minmax(140px,.7fr) minmax(155px,.75fr) minmax(88px,.4fr)';
 
 const projectStatusOptions: ProjectStatus[] = [
   '作成済み',
@@ -39,53 +55,58 @@ const projectStatusOptions: ProjectStatus[] = [
   '終了',
 ];
 
+const NON_EDITABLE_PROJECT_STATUS: ProjectStatus = '準備中';
+const editableProjectStatusOptions = projectStatusOptions.filter(
+  (status) => status !== NON_EDITABLE_PROJECT_STATUS,
+);
+
 const statusColors: Record<
   ProjectStatus,
   { bg: string; text: string; border: string }
 > = {
   作成済み: {
     bg: '#F1F5F9',
-    text: '#475569',
+    text: '#465467',
     border: '#CBD5E1',
   },
   準備中: {
     bg: '#FEF3C7',
-    text: '#92400E',
+    text: '#8A3908',
     border: '#FCD34D',
   },
   変更中: {
     bg: '#DBEAFE',
-    text: '#1D4ED8',
+    text: '#0C3CC3',
     border: '#93C5FD',
   },
   妥当性確認処理: {
     bg: '#E0E7FF',
-    text: '#4338CA',
+    text: '#3D32C0',
     border: '#A5B4FC',
   },
   却下: {
     bg: '#FEE2E2',
-    text: '#B91C1C',
+    text: '#9B0909',
     border: '#FCA5A5',
   },
   実施中: {
     bg: '#DCFCE7',
-    text: '#15803D',
+    text: '#006024',
     border: '#86EFAC',
   },
   検証中: {
     bg: '#CCFBF1',
-    text: '#0F766E',
+    text: '#005B54',
     border: '#5EEAD4',
   },
   クレジット申請中: {
     bg: '#F3E8FF',
-    text: '#7E22CE',
+    text: '#6F13BF',
     border: '#D8B4FE',
   },
   終了: {
     bg: '#E5E7EB',
-    text: '#374151',
+    text: '#000000',
     border: '#D1D5DB',
   },
 };
@@ -105,9 +126,6 @@ const projectStatusAliases: Partial<Record<string, ProjectStatus>> = {
   INACTIVE: '終了',
 };
 
-const projectTableGridColumns =
-  'minmax(180px, 1.2fr) minmax(86px, 0.55fr) minmax(86px, 0.55fr) minmax(260px, 1.8fr) minmax(130px, 0.8fr) minmax(180px, 1fr)';
-
 function isProjectStatus(status: string): status is ProjectStatus {
   return projectStatusOptions.includes(status as ProjectStatus);
 }
@@ -126,12 +144,22 @@ function getProjectStatusColors(status: Project['projectStatus']) {
 function getStatusOptions(currentStatus: string): string[] {
   if (
     !currentStatus ||
-    projectStatusOptions.includes(currentStatus as ProjectStatus)
+    editableProjectStatusOptions.includes(currentStatus as ProjectStatus)
   ) {
-    return projectStatusOptions;
+    return editableProjectStatusOptions;
   }
 
-  return [currentStatus, ...projectStatusOptions];
+  return [currentStatus, ...editableProjectStatusOptions];
+}
+
+/** Checks whether the current API status must remain read-only in the table. */
+function isNonEditableProjectStatus(status: string) {
+  const normalizedStatus = status.trim();
+  return (
+    normalizedStatus === NON_EDITABLE_PROJECT_STATUS ||
+    projectStatusAliases[normalizedStatus.toUpperCase()] ===
+      NON_EDITABLE_PROJECT_STATUS
+  );
 }
 
 function isTerminalProjectStatus(status: string) {
@@ -144,13 +172,51 @@ function displayValue(value: unknown) {
   return String(value);
 }
 
+/** Plain single-line cell for the methodology columns. */
+function TextCell({ value }: { value: unknown }) {
+  return (
+    <span className="block truncate text-body text-foreground">
+      {displayValue(value)}
+    </span>
+  );
+}
+
+function MethodologyIdentityCell({
+  project,
+}: {
+  project: Project;
+}) {
+  const methodologyId = [
+    project.methodCategory,
+    project.methodNumber,
+  ]
+    .filter(Boolean)
+    .join('-');
+
+  return (
+    <div className="min-w-0 leading-5">
+      <div className="font-medium text-foreground">
+        {methodologyId || '-'}
+      </div>
+
+      {project.methodologyVersion ? (
+        <div className="mt-0.5 text-small text-foreground">
+          {project.methodologyVersion}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function ProjectTable({
   projects,
   onEdit,
-  onUpdate,
+  // onUpdate,
   onRowClick,
   onStatusChange,
   updatingProjectStatusId,
+  planProgress,
+  onOpenPlan,
 }: ProjectTableProps) {
   const [completionProject, setCompletionProject] = useState<Project | null>(
     null,
@@ -171,6 +237,17 @@ export function ProjectTable({
     setCompletionProject(null);
   };
 
+  /**
+   * Controls sit inside a clickable row, so their clicks must not also trigger
+   * the row's own click.
+   */
+  const stopRowActivation = {
+    onClick: (event: { stopPropagation: () => void }) =>
+      event.stopPropagation(),
+    onPointerDown: (event: { stopPropagation: () => void }) =>
+      event.stopPropagation(),
+  };
+
   const columns: DataGridTableColumn<Project>[] = [
     {
       id: 'projectName',
@@ -178,31 +255,28 @@ export function ProjectTable({
       sortable: true,
       sortValue: (project) => project.projectName,
       render: (project) => (
-        <span className="block truncate text-body font-bold text-foreground">
+        <span
+          className="line-clamp-2 text-body font-bold leading-5 text-foreground"
+          title={displayValue(project.projectName)}
+        >
           {displayValue(project.projectName)}
         </span>
       ),
     },
     {
-      id: 'methodCategory',
-      label: '方法論区分',
+      id: 'methodologyIdentity',
+      label: '方法論ID',
       sortable: true,
-      sortValue: (project) => project.methodCategory,
+      sortValue: (project) =>
+        [
+          project.methodCategory,
+          project.methodNumber,
+          project.methodologyVersion,
+        ]
+          .filter(Boolean)
+          .join(' '),
       render: (project) => (
-        <span className="block truncate text-body text-foreground">
-          {displayValue(project.methodCategory)}
-        </span>
-      ),
-    },
-    {
-      id: 'methodNumber',
-      label: '方法論番号',
-      sortable: true,
-      sortValue: (project) => project.methodNumber,
-      render: (project) => (
-        <span className="block truncate text-body text-foreground">
-          {displayValue(project.methodNumber)}
-        </span>
+        <MethodologyIdentityCell project={project} />
       ),
     },
     {
@@ -211,10 +285,66 @@ export function ProjectTable({
       sortable: true,
       sortValue: (project) => project.methodName,
       render: (project) => (
-        <span className="block truncate text-body text-foreground">
+        <span
+          className="line-clamp-2 text-body leading-5 text-foreground"
+          title={displayValue(project.methodName)}
+        >
           {displayValue(project.methodName)}
         </span>
       ),
+    },
+    {
+      id: 'planProgress',
+      label: '作成の進捗状況',
+      // className: 'font-bold',
+      render: (project) => {
+        const progress = planProgress?.get(String(project.id));
+
+        // Absent while the batch is still loading, or when the plan API is
+        // unavailable — the row must still render either way.
+        if (!progress || progress.totalForms === 0) {
+          return <span className="text-body text-foreground">-</span>;
+        }
+
+        const resumeSlug = progress.complete
+          ? undefined
+          : (progress.nextIncompleteSlug ?? undefined);
+
+        return (
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="whitespace-nowrap text-body text-foreground">
+              <span className="font-bold">{progress.completedForms}</span>
+              <span className="text-foreground">
+                /{progress.totalForms} ページ
+              </span>
+            </span>
+            {onOpenPlan && (
+              <span {...stopRowActivation}>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="
+                    h-auto gap-1 px-0
+                    text-table font-bold text-primary
+                    underline-offset-4
+                    hover:text-primary-strong
+                    hover:underline
+                  "
+                  onClick={() =>
+                    onOpenPlan(project, resumeSlug)
+                  }
+                >
+                  {progress.complete
+                    ? '計画書更新'
+                    : '続きから'}
+
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       id: 'projectStatus',
@@ -223,17 +353,17 @@ export function ProjectTable({
       sortValue: (project) => project.projectStatus,
       render: (project) => {
         const statusColor = getProjectStatusColors(project.projectStatus);
+        const statusIsReadOnly = isNonEditableProjectStatus(
+          project.projectStatus,
+        );
 
         return (
-          <span
-            className="block min-w-0"
-            onClick={(event) => event.stopPropagation()}
-            onPointerDown={(event) => event.stopPropagation()}
-          >
+          <span className="block min-w-0" {...stopRowActivation}>
             <Select
               value={project.projectStatus}
               disabled={
                 updatingProjectStatusId === project.id ||
+                statusIsReadOnly ||
                 isTerminalProjectStatus(project.projectStatus)
               }
               onValueChange={(value) =>
@@ -241,13 +371,20 @@ export function ProjectTable({
               }
             >
               <SelectTrigger
-                className="h-8 w-full rounded-full border px-3 text-table font-bold shadow-none focus:ring-1"
+                className={cn(
+                  'h-8 w-full rounded-full border px-3 text-table font-bold shadow-none focus:ring-1',
+                  statusIsReadOnly && '[&>svg]:hidden',
+                )}
                 style={{
                   backgroundColor: statusColor.bg,
                   color: statusColor.text,
                   borderColor: statusColor.border,
                 }}
-                title="ステータスを変更"
+                title={
+                  statusIsReadOnly
+                    ? '準備中のステータスは変更できません'
+                    : 'ステータスを変更'
+                }
               >
                 <SelectValue />
               </SelectTrigger>
@@ -264,13 +401,24 @@ export function ProjectTable({
       },
     },
     {
+      id: 'updatedAt',
+      label: '最終更新',
+      sortable: true,
+      sortValue: (project) => project.updatedAt ?? project.createdAt,
+      render: (project) => (
+        <span className="block whitespace-nowrap text-body text-foreground">
+          {formatProjectDateTime(project.updatedAt ?? project.createdAt)}
+        </span>
+      ),
+    },
+    {
       id: 'actions',
       label: '操作',
+      // sticky: 'right',
       render: (project) => (
         <div
-          className="flex justify-start gap-2"
-          onClick={(event) => event.stopPropagation()}
-          onPointerDown={(event) => event.stopPropagation()}
+          className="flex justify-start"
+          {...stopRowActivation}
         >
           <Button
             type="button"
@@ -278,13 +426,6 @@ export function ProjectTable({
             onClick={() => onEdit?.(project)}
           >
             詳細
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onUpdate?.(project)}
-          >
-            更新
           </Button>
         </div>
       ),
@@ -297,7 +438,7 @@ export function ProjectTable({
         rows={projects}
         columns={columns}
         gridTemplateColumns={projectTableGridColumns}
-        minWidth={980}
+        minWidth={1280}
         getRowKey={(project) => project.id}
         emptyMessage="まだプロジェクトが登録されていません。"
         onRowClick={onRowClick}

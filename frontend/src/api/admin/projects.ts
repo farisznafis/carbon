@@ -7,8 +7,11 @@ import type {
   CreateAdminProjectResponse,
   CreateAdminProjectPayload,
   ProjectPlanAutofillResponse,
-  ProjectPlanApplicationResponse,
+  ProjectPlanBatchProgressResponse,
+  ProjectPlanFileDownloadResponse,
+  ProjectPlanFileResponse,
   ProjectPlanFormResponse,
+  ProjectPlanProgressSummary,
   ProjectPlanProgressResponse,
   ProjectStatus,
   UpdateProjectStatusPayload,
@@ -22,9 +25,10 @@ export type {
   CreateAdminProjectResponse,
   CreateAdminProjectPayload,
   ProjectPlanAutofillResponse,
-  ProjectPlanApplicationResponse,
   ProjectPlanFormProgress,
+  ProjectPlanBatchProgressResponse,
   ProjectPlanFormResponse,
+  ProjectPlanProgressSummary,
   ProjectPlanFormStatus,
   ProjectPlanProgressResponse,
   ProjectStatus,
@@ -132,32 +136,6 @@ export async function updateAdminProjectStatus(
   return json;
 }
 
-export async function getAdminProjectPlanApplication(
-  projectId: string,
-): Promise<ProjectPlanApplicationResponse> {
-  const response = await apiFetch(
-    `/projectplan/${encodeURIComponent(projectId)}/application`,
-    {
-      method: 'GET',
-    },
-  );
-  const { data: json, rawBody } = await parseJsonResponse<ProjectPlanApplicationResponse>(response);
-
-  if (!response.ok) {
-    const message =
-      json?.message ||
-      rawBody ||
-      `Failed to load project plan application: HTTP ${response.status}`;
-    throw new ApiError(message, {
-      status: response.status,
-      payload: json,
-      rawBody,
-    });
-  }
-
-  return json ?? {};
-}
-
 export async function getProjectPlanAutofillByProject(
   projectId: string,
 ): Promise<ProjectPlanAutofillResponse> {
@@ -205,32 +183,6 @@ export async function getProjectPlanAutofillDefaults(): Promise<ProjectPlanAutof
   }
 
   return json ?? {};
-}
-
-export async function createAdminProjectPlanApplication<TPayload extends object>(
-  projectId: string,
-  payload: TPayload,
-): Promise<void> {
-  const response = await apiFetch(
-    `/projectplan/${encodeURIComponent(projectId)}/application`,
-    {
-      method: 'POST',
-      body: payload,
-    },
-  );
-  const { data: json, rawBody } = await parseJsonResponse<AdminMutationResponse>(response);
-
-  if (!response.ok) {
-    const message =
-      json?.message ||
-      rawBody ||
-      `Failed to create project plan application: HTTP ${response.status}`;
-    throw new ApiError(message, {
-      status: response.status,
-      payload: json,
-      rawBody,
-    });
-  }
 }
 
 // --- Registry-driven project plan pages (staging) ---
@@ -318,4 +270,95 @@ export async function getProjectPlanProgress(
   }
 
   return json ?? {};
+}
+
+/**
+ * Plan progress for several projects in one request.
+ *
+ * Used by list views: asking per row would be one call per project. Returns an
+ * empty map for an empty input rather than calling the API.
+ */
+export async function getProjectPlanProgressBatch(
+  projectIds: string[],
+): Promise<Map<string, ProjectPlanProgressSummary>> {
+  const ids = projectIds.filter(Boolean);
+  if (ids.length === 0) return new Map();
+
+  const query = ids.map((id) => encodeURIComponent(id)).join(',');
+  const response = await apiFetch(`/projectplan/progress?projectIds=${query}`, {
+    method: 'GET',
+  });
+  const { data: json, rawBody } =
+    await parseJsonResponse<ProjectPlanBatchProgressResponse>(response);
+
+  if (!response.ok) {
+    const message =
+      json?.message || rawBody || `Failed to load plan progress: HTTP ${response.status}`;
+    throw new ApiError(message, { status: response.status, payload: json, rawBody });
+  }
+
+  return new Map((json?.projects ?? []).map((p) => [p.projectId, p]));
+}
+
+/**
+ * A short-lived URL to view a file stored on a saved plan page.
+ *
+ * Asked for on click rather than with the page: the URL expires, and most
+ * visits never open the attachment. A refusal is the caller's to show — it must
+ * not replace the page the operator is reading.
+ */
+export async function getProjectPlanFileDownloadUrl(
+  projectId: string,
+  s3Key: string,
+): Promise<string> {
+  const response = await apiFetch(
+    `/projectplan/${encodeURIComponent(projectId)}/files/download-url?s3Key=${encodeURIComponent(
+      s3Key,
+    )}`,
+    { method: 'GET', forbiddenHandling: 'caller' },
+  );
+  const { data: json, rawBody } =
+    await parseJsonResponse<ProjectPlanFileDownloadResponse>(response);
+
+  if (!response.ok || !json?.url) {
+    const message =
+      json?.message || rawBody || `Failed to get file URL: HTTP ${response.status}`;
+    throw new ApiError(message, { status: response.status, payload: json, rawBody });
+  }
+
+  return json.url;
+}
+
+/**
+ * Uploads one file against a plan page, provisionally.
+ *
+ * The returned s3Key belongs in the page body; the server promotes it to its
+ * permanent location only when that page saves and validates. A page that is
+ * never saved leaves the file to expire, so nothing has to be cleaned up here.
+ */
+export async function uploadProjectPlanFormFile(
+  projectId: string,
+  formSlug: string,
+  fieldName: string,
+  file: File,
+): Promise<{ s3Key: string; originalName: string }> {
+  const form = new FormData();
+  form.append('file', file);
+
+  const response = await apiFetch(
+    `/projectplan/${encodeURIComponent(projectId)}/forms/${encodeURIComponent(
+      formSlug,
+    )}/files?fieldName=${encodeURIComponent(fieldName)}`,
+    { method: 'POST', body: form },
+  );
+  const { data: json, rawBody } =
+    await parseJsonResponse<ProjectPlanFileResponse>(response);
+
+  if (!response.ok || !json?.s3Key) {
+    const message =
+      json?.message || rawBody || `Failed to upload file: HTTP ${response.status}`;
+    throw new ApiError(message, { status: response.status, payload: json, rawBody });
+  }
+
+  return { s3Key: json.s3Key, originalName: json.originalName ?? file.name };
 }

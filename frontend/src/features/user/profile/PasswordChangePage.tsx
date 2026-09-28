@@ -1,12 +1,12 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { ApiError } from '@/api/_shared/errors';
 import { changePassword } from '@/api/auth';
 import { PasswordInput } from '@/components/inputs';
+import { FormActions } from '@/components/forms/form-layout';
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
-import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -19,6 +19,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { paths } from '@/routes/paths';
 
 const passwordSchema = z
   .object({
@@ -38,8 +39,23 @@ type PasswordData = z.infer<typeof passwordSchema>;
 
 const PasswordChange = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { user, logout } = useAuth();
+  const requestedUserId = searchParams.get('userId')?.trim() || null;
+  const isManagedUserPasswordChange = Boolean(
+    user?.role === 'master' &&
+      requestedUserId &&
+      requestedUserId !== user.id,
+  );
+  const targetUserId =
+    isManagedUserPasswordChange && requestedUserId
+      ? requestedUserId
+      : user?.id;
+  const backPath =
+    isManagedUserPasswordChange && requestedUserId
+      ? paths.masterUserProfile(requestedUserId)
+      : paths.profile;
 
   const passwordForm = useForm<PasswordData>({
     // resolver: zodResolver(passwordSchema),
@@ -50,8 +66,9 @@ const PasswordChange = () => {
     },
   });
 
+  /** Changes the selected account password while preserving the master session for employee updates. */
   const handlePasswordChange = async (data: PasswordData) => {
-    if (!user) {
+    if (!user || !targetUserId) {
       toast({
         title: 'エラー',
         description: 'ログイン情報を確認できませんでした',
@@ -62,19 +79,26 @@ const PasswordChange = () => {
 
     try {
       await changePassword({
-        userId: user.id,
+        userId: targetUserId,
         currentPassword: data.current,
         newPassword: data.new,
       });
 
       toast({
         title: 'パスワード変更完了',
-        description: '新しいパスワードで再度ログインしてください',
+        description: isManagedUserPasswordChange
+          ? '社員のパスワードを変更しました'
+          : '新しいパスワードで再度ログインしてください',
       });
 
       passwordForm.reset();
+      if (isManagedUserPasswordChange) {
+        navigate(backPath, { replace: true });
+        return;
+      }
+
       await logout();
-      navigate('/login', { replace: true });
+      navigate(paths.login, { replace: true });
     } catch (error) {
       if (error instanceof ApiError && error.payload?.errors) {
         const errors = error.payload.errors as Record<string, string>;
@@ -100,7 +124,7 @@ const PasswordChange = () => {
       pageName='パスワード変更'
       title=''
       description='8文字以上のパスワードを設定してください'
-      onBack={() => navigate('/profile')}
+      onBack={() => navigate(backPath)}
       // backText='プロファイルに戻る'
       backText='戻る'
     >
@@ -161,23 +185,26 @@ const PasswordChange = () => {
               </FormItem>
             )}
           />
-          <div className='flex gap-3 pt-4 justify-end'>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={() => navigate('/profile')}
-            >
-              キャンセル
-            </Button>
-            <Button
-              type='submit'
-              disabled={passwordForm.formState.isSubmitting}
-            >
-              {passwordForm.formState.isSubmitting
-                ? '更新中...'
-                : 'パスワードを変更'}
-            </Button>
-          </div>
+          <FormActions
+            className='pt-4'
+            pendingActionId={
+              passwordForm.formState.isSubmitting ? 'submit' : null
+            }
+            actions={[
+              {
+                id: 'cancel',
+                label: 'キャンセル',
+                variant: 'outline',
+                onClick: () => navigate(backPath),
+              },
+              {
+                id: 'submit',
+                label: 'パスワードを変更',
+                pendingLabel: '更新中...',
+                type: 'submit',
+              },
+            ]}
+          />
         </form>
       </Form>
     </FormPageWrapper>

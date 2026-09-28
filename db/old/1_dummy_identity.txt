@@ -1,0 +1,284 @@
+-- =========================================================================
+-- GX Carbon — ダミーデータ（拡張版 / 入会届テスト用）
+--
+-- 主な構成:
+--   運営会社 1社 / 参加企業 4社 / サイト 18件 / プロジェクト 6件
+--   運営ユーザー 5名（admin3名・operator2名） / 参加企業ユーザー 13名（うち master 4名）
+--
+-- 重要な業務ルール（2026-08-07 スキーマに準拠）:
+--   1) サイトとプロジェクトは多対多。サイト1は第1期・第2期の両方に参加している。
+--   2) プロジェクトへの入会申請ができるのは master ロールのみ。
+--      participating_project は company_id を直接持つ（user_id は実DDLに存在しない）。
+--      created_by に申請した master のユーザー名を監査用に記録している。
+--   3) レビューステータス(APPROVED/OPEN/REJECTED)は participating_project.status が
+--      正。site_project_relation は APPROVED になった参加のみ作成し、
+--      status列（無制約の自由記述）には 'ACTIVE' を入れている。
+--   4) 設備はサイトに属し、最初の設備は入会時に作成される。
+--      未入会のサイトには設備を持たせていない。
+--   5) 方法論は EN-R-002「太陽光発電設備の導入」Ver.3.7 のみ。
+--      https://japancredit.go.jp/pdf/methodology/EN-R-002_v3.7.pdf
+--
+-- ⚠ スキーマは一切変更しない前提で作成:
+--   project.method_number には UNIQUE 制約があるため、同じ '002' を持つ
+--   プロジェクトを複数作ることはできない。よって多対多の検証用に必要な
+--   2件目以降は別方法論の番号を割り当てている（下記参照）。
+--     P000001 = EN-R-002 太陽光発電設備の導入   ← 実装・検証の本体
+--     P000002 = EN-R-006 水力発電設備の導入     ← 多対多の検証用の器
+--     P000003 = EN-R-008 風力発電設備の導入     ← DRAFT の負パターン用
+--     P000004 = EN-R-001 木質バイオマス            ← 募集中・参加者ゼロ
+--     P000005 = EN-R-003 再エネ熱（熱源設備）      ← 募集中・参加者ゼロ
+--     P000006 = EN-R-009 再エネ熱（発電設備）      ← 募集中・参加者ゼロ
+--   方法論番号はいずれもJ-クレジット制度の実在する番号を使用している。
+-- =========================================================================
+
+BEGIN;
+
+-- =========================================================
+-- 1. operator_company
+-- =========================================================
+INSERT INTO operator_company (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    company_id, name_ja, name_furigana, name_en, email, phone_number,
+    corp_number, postal_code, prefecture, municipality, blocknum,
+    building_name, rep_first_name, rep_first_name_kana,
+    rep_last_name, rep_last_name_kana, rep_email, rep_phone_number, rep_position
+)
+OVERRIDING SYSTEM VALUE
+VALUES (
+    1, TRUE, '2026-07-01 09:00:00', '2026-07-01 09:00:00', 'system', 'system',
+    'OP000000001', '株式会社クリエーションテック', 'クリエーションテック', 'Creation Tech Co., Ltd.',
+    'support@creation-tech.co.jp', '03-5555-0100', '4444444444444', '105-0001',
+    '東京都', '港区虎ノ門', '1-2-3', '虎ノ門ヒルズ森タワー',
+    '真耶', 'マヤ', '増田', 'マスダ',
+    'masu.maya@creation-tech.co.jp', '03-5555-0101', '代表取締役'
+);
+
+-- =========================================================
+-- 2. participating_company
+-- =========================================================
+INSERT INTO participating_company (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    company_id, name_ja, name_furigana, name_en, email, phone_number,
+    corp_number, postal_code, prefecture, municipality, blocknum,
+    building_name, fax, rep_first_name, rep_first_name_kana,
+    rep_last_name, rep_last_name_kana, rep_phone_number, rep_position,
+    requested_methodologies, activity_information, company_status,
+    email_verified_at, last_rejection_reason, rejected_at
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(1, TRUE, '2026-07-03 09:30:00', '2026-07-04 10:00:00', 'admin1', 'admin1',
+ 'PC000000001', '株式会社ソーラーファーム', 'ソーラーファーム', 'Solar Farm Co., Ltd.', 'info@solarfarm.co.jp', '03-5432-1234',
+ '1111111111111', '150-0001', '東京都', '渋谷区神宮前', '1-2-3', '神宮前ビル', '03-5432-1235',
+ '健一', 'ケンイチ', '伊藤', 'イトウ', '03-5432-1234', '代表取締役',
+ '["EN-R002"]', '東京都内の複数拠点における太陽光発電設備の設置・運用', 'ACTIVE', '2026-07-03 09:45:00', NULL, NULL),
+(2, TRUE, '2026-07-03 10:15:00', '2026-07-18 16:00:00', 'admin1', 'admin1',
+ 'PC000000002', '有限会社エコライフ', 'エコライフ', 'Eco Life Ltd.', 'contact@ecolife.co.jp', '045-234-5678',
+ '2222222222222', '220-0001', '神奈川県', '横浜市西区みなとみらい', '3-4-5', NULL, '045-234-5679',
+ '幸子', 'サチコ', '中村', 'ナカムラ', '045-234-5678', '代表取締役',
+ '["EN-R002"]', '省エネ設備および自家消費型電源設備の導入', 'ACTIVE', '2026-07-03 10:30:00', NULL, NULL),
+(3, FALSE, '2026-07-03 13:00:00', '2026-07-15 09:00:00', 'admin1', 'admin1',
+ 'PC000000003', '株式会社クマパワー', 'クマパワー', 'Kuma Power Co., Ltd.', 'contact@kuma-power.co.jp', '052-345-6789',
+ '3333333333333', '460-0008', '愛知県', '名古屋市中区栄', '2-8-10', '栄セントラルビル', '052-345-6790',
+ '拓也', 'タクヤ', '熊谷', 'クマガイ', '052-345-6789', '代表取締役',
+ '["EN-R002"]', '中部地域の工場および事業所への再生可能エネルギー設備導入', 'SUSPENDED', '2026-07-03 13:20:00', NULL, NULL),
+(4, FALSE, '2026-07-04 14:00:00', '2026-07-10 11:00:00', 'admin1', 'admin1',
+ 'PC000000004', '朝電気株式会社', 'アサデンキ', 'Asa Denki Co., Ltd.', 'hello@asa-denki.co.jp', '092-456-7890',
+ '5555555555555', '810-0001', '福岡県', '福岡市中央区天神', '4-6-8', '天神朝日ビル', '092-456-7891',
+ '美咲', 'ミサキ', '山本', 'ヤマモト', '092-456-7890', '代表取締役',
+ '["EN-R002"]', '再生可能エネルギー事業への参加申請および設備導入準備', 'REJECTED', NULL, '提出書類に不備があります。修正のうえ再提出してください。', '2026-07-10 11:00:00');
+
+-- =========================================================
+-- 3. site  （18件 / 未入会サイトも全て存在する）
+-- =========================================================
+INSERT INTO site (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    site_name, postal_code, prefecture, municipality, blocknum, building_name,
+    pic_first_name, pic_first_name_kana, pic_last_name, pic_last_name_kana,
+    pic_email, pic_phone_number, pic_position,
+    participating_company_id, public_id
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(1, TRUE, '2026-07-04 09:00:00', '2026-07-04 09:00:00', 'ito.kenichi', 'ito.kenichi',
+ '渋谷本社太陽光発電所', '150-0001', '東京都', '渋谷区神宮前', '1-2-3', '神宮前ビル',
+ '健一', 'ケンイチ', '伊藤', 'イトウ', 'ito.kenichi@solarfarm.co.jp', '03-5432-1240', '代表取締役',
+ 1, 'site001'),
+(2, TRUE, '2026-07-04 09:00:00', '2026-07-04 09:00:00', 'ito.kenichi', 'ito.kenichi',
+ '品川物流センター太陽光発電所', '140-0002', '東京都', '品川区東品川', '2-5-8', '品川物流センター',
+ '明子', 'アキコ', '伊藤', 'イトウ', 'ito.akiko@solarfarm.co.jp', '03-5432-1241', '設備管理責任者',
+ 1, 'site002'),
+(3, TRUE, '2026-07-04 09:00:00', '2026-07-04 09:00:00', 'ito.kenichi', 'ito.kenichi',
+ '立川研究施設太陽光発電所', '190-0012', '東京都', '立川市曙町', '3-7-12', '立川研究施設',
+ '潤', 'ジュン', '伊藤', 'イトウ', 'ito.jun@solarfarm.co.jp', '03-5432-1242', '運用担当',
+ 1, 'site003'),
+(4, TRUE, '2026-07-04 09:00:00', '2026-07-04 09:00:00', 'ito.kenichi', 'ito.kenichi',
+ '八王子工場太陽光発電所', '192-0046', '東京都', '八王子市明神町', '4-9-1', '八王子第一工場',
+ '美咲', 'ミサキ', '伊藤', 'イトウ', 'ito.misaki@solarfarm.co.jp', '03-5432-1243', '総務担当',
+ 1, 'site004'),
+(5, TRUE, '2026-07-04 09:00:00', '2026-07-04 09:00:00', 'ito.kenichi', 'ito.kenichi',
+ '町田倉庫太陽光発電所', '194-0013', '東京都', '町田市原町田', '5-2-6', '町田倉庫',
+ '翔', 'ショウ', '伊藤', 'イトウ', 'ito.sho@solarfarm.co.jp', '03-5432-1244', '設備担当',
+ 1, 'site005'),
+(6, TRUE, '2026-07-04 09:00:00', '2026-07-04 09:00:00', 'ito.kenichi', 'ito.kenichi',
+ '府中データセンター太陽光発電所', '183-0055', '東京都', '府中市府中町', '1-8-4', '府中DC棟',
+ '菜奈', 'ナナ', '伊藤', 'イトウ', 'ito.nana@solarfarm.co.jp', '03-5432-1245', '経理担当',
+ 1, 'site006'),
+(7, TRUE, '2026-07-05 09:00:00', '2026-07-05 09:00:00', 'nakamura.sachiko', 'nakamura.sachiko',
+ '横浜事業所太陽光発電所', '220-0012', '神奈川県', '横浜市西区みなとみらい', '3-4-5', '横浜事業所',
+ '幸子', 'サチコ', '中村', 'ナカムラ', 'nakamura.sachiko@ecolife.co.jp', '045-234-5680', '代表取締役',
+ 2, 'site007'),
+(8, TRUE, '2026-07-05 09:00:00', '2026-07-05 09:00:00', 'nakamura.sachiko', 'nakamura.sachiko',
+ '川崎倉庫太陽光発電所', '210-0007', '神奈川県', '川崎市川崎区駅前本町', '6-7-2', '川崎物流倉庫',
+ '亮太', 'リョウタ', '中村', 'ナカムラ', 'nakamura.ryota@ecolife.co.jp', '045-234-5681', '設備担当',
+ 2, 'site008'),
+(9, TRUE, '2026-07-05 09:00:00', '2026-07-05 09:00:00', 'nakamura.sachiko', 'nakamura.sachiko',
+ '藤沢工場太陽光発電所', '251-0052', '神奈川県', '藤沢市藤沢', '2-1-9', '藤沢第一工場',
+ '結衣', 'ユイ', '中村', 'ナカムラ', 'nakamura.yui@ecolife.co.jp', '045-234-5682', '事務担当',
+ 2, 'site009'),
+(10, TRUE, '2026-07-05 09:00:00', '2026-07-05 09:00:00', 'nakamura.sachiko', 'nakamura.sachiko',
+ '相模原物流施設太陽光発電所', '252-0231', '神奈川県', '相模原市中央区相模原', '4-3-1', '相模原物流施設',
+ '健太', 'ケンタ', '中村', 'ナカムラ', 'nakamura.kenta@ecolife.co.jp', '045-234-5683', '運用担当',
+ 2, 'site010'),
+(11, TRUE, '2026-07-05 09:00:00', '2026-07-05 09:00:00', 'nakamura.sachiko', 'nakamura.sachiko',
+ '厚木研修所太陽光発電所', '243-0018', '神奈川県', '厚木市中町', '3-5-7', '厚木研修センター',
+ '幸子', 'サチコ', '中村', 'ナカムラ', 'nakamura.sachiko@ecolife.co.jp', '045-234-5680', '代表取締役',
+ 2, 'site011'),
+(12, TRUE, '2026-07-05 09:00:00', '2026-07-05 09:00:00', 'kumagai.takuya', 'kumagai.takuya',
+ '名古屋工場太陽光発電所', '460-0008', '愛知県', '名古屋市中区栄', '2-8-10', '栄セントラル工場',
+ '拓也', 'タクヤ', '熊谷', 'クマガイ', 'kumagai.takuya@kuma-power.co.jp', '052-345-6791', '代表取締役',
+ 3, 'site012'),
+(13, TRUE, '2026-07-06 09:00:00', '2026-07-06 09:00:00', 'kumagai.takuya', 'kumagai.takuya',
+ '豊田物流施設太陽光発電所', '471-0026', '愛知県', '豊田市若宮町', '1-1-1', '豊田物流施設',
+ '奈緒', 'ナオ', '熊谷', 'クマガイ', 'kumagai.nao@kuma-power.co.jp', '052-345-6792', '設備管理担当',
+ 3, 'site013'),
+(14, TRUE, '2026-07-06 09:00:00', '2026-07-06 09:00:00', 'kumagai.takuya', 'kumagai.takuya',
+ '岡崎倉庫太陽光発電所', '444-0059', '愛知県', '岡崎市康生通', '2-4-8', '岡崎倉庫',
+ '拓也', 'タクヤ', '熊谷', 'クマガイ', 'kumagai.takuya@kuma-power.co.jp', '052-345-6791', '代表取締役',
+ 3, 'site014'),
+(15, TRUE, '2026-07-06 09:00:00', '2026-07-06 09:00:00', 'kumagai.takuya', 'kumagai.takuya',
+ '四日市事業所太陽光発電所', '510-0075', '三重県', '四日市市安島', '1-3-18', '四日市事業所',
+ '拓也', 'タクヤ', '熊谷', 'クマガイ', 'kumagai.takuya@kuma-power.co.jp', '052-345-6791', '代表取締役',
+ 3, 'site015'),
+(16, TRUE, '2026-07-06 09:00:00', '2026-07-06 09:00:00', 'asano.rei', 'asano.rei',
+ '福岡営業所太陽光発電所', '810-0001', '福岡県', '福岡市中央区天神', '4-6-8', '福岡営業所',
+ '玲', 'レイ', '浅野', 'アサノ', 'asano.rei@asa-denki.co.jp', '092-456-7892', '代表取締役',
+ 4, 'site016'),
+(17, TRUE, '2026-07-06 09:00:00', '2026-07-06 09:00:00', 'asano.rei', 'asano.rei',
+ '北九州倉庫太陽光発電所', '802-0001', '福岡県', '北九州市小倉北区浅野', '2-3-4', '北九州倉庫',
+ '玲', 'レイ', '浅野', 'アサノ', 'asano.rei@asa-denki.co.jp', '092-456-7892', '代表取締役',
+ 4, 'site017'),
+(18, TRUE, '2026-07-06 09:00:00', '2026-07-06 09:00:00', 'asano.rei', 'asano.rei',
+ '久留米工場太陽光発電所', '830-0032', '福岡県', '久留米市東町', '5-1-2', '久留米第一工場',
+ '玲', 'レイ', '浅野', 'アサノ', 'asano.rei@asa-denki.co.jp', '092-456-7892', '代表取締役',
+ 4, 'site018');
+
+-- =========================================================
+-- 4. operating_user
+-- =========================================================
+INSERT INTO operating_user (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    username, first_name, first_name_kana, last_name, last_name_kana,
+    email, phone_number, password, role, login_attempts,
+    account_locked_until, company_id, email_otp_login_enabled, auth_version
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(1, TRUE, '2026-07-01 09:15:00', '2026-07-01 09:15:00', 'system', 'system',
+ 'admin1', '真耶', 'マヤ', '増田', 'マスダ', 'admin1@creation-tech.co.jp', '03-5555-0101',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'admin', 0, NULL, 1, FALSE, 0),
+(2, TRUE, '2026-07-02 10:00:00', '2026-07-02 10:00:00', 'admin1', 'admin1',
+ 'operator1', '沙奈', 'サナ', '鳥居', 'トリイ', 'admin2@creation-tech.co.jp', '03-5555-0102',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'operator', 0, NULL, 1, FALSE, 0),
+(3, TRUE, '2026-07-02 10:30:00', '2026-07-02 10:30:00', 'admin1', 'admin1',
+ 'operator2', '結菜', 'ユナ', '加藤', 'カトウ', 'admin3@creation-tech.co.jp', '03-5555-0103',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'operator', 0, NULL, 1, TRUE, 1),
+(4, TRUE, '2026-07-02 11:00:00', '2026-07-02 11:00:00', 'admin1', 'admin1',
+ 'operator3', '由美', 'ユミ', '森', 'モリ', 'operator1@creation-tech.co.jp', '03-5555-0104',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'operator', 0, NULL, 1, FALSE, 0),
+(5, TRUE, '2026-07-02 11:30:00', '2026-07-02 11:30:00', 'admin1', 'admin1',
+ 'operator4', '誠', 'マコト', '小林', 'コバヤシ', 'operator2@creation-tech.co.jp', '03-5555-0105',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'operator', 0, NULL, 1, FALSE, 0);
+
+-- =========================================================
+-- 5. participating_user
+-- master は各社1名。入会申請ができるのは master のみ。
+-- =========================================================
+INSERT INTO participating_user (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    username, first_name, first_name_kana, last_name, last_name_kana,
+    email, phone_number, user_position, password, role, login_attempts,
+    account_locked_until, site_id, company_id, deleted_at, deleted_by,
+    email_otp_login_enabled, auth_version
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(1, TRUE, '2026-07-06 10:00:00', '2026-07-06 10:00:00', 'admin1', 'admin1',
+ 'ito.kenichi', '健一', 'ケンイチ', '伊藤', 'イトウ', 'ito.kenichi@solarfarm.co.jp', '03-5432-1240', '代表取締役',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'master', 0, NULL, 1, 1, NULL, NULL, FALSE, 0),
+(2, TRUE, '2026-07-06 10:30:00', '2026-07-06 10:30:00', 'ito.kenichi', 'ito.kenichi',
+ 'ito.akiko', '明子', 'アキコ', '伊藤', 'イトウ', 'ito.akiko@solarfarm.co.jp', '03-5432-1241', '設備管理責任者',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'user', 0, NULL, 2, 1, NULL, NULL, FALSE, 0),
+(3, TRUE, '2026-07-06 11:00:00', '2026-07-06 11:00:00', 'ito.kenichi', 'ito.kenichi',
+ 'ito.jun', '潤', 'ジュン', '伊藤', 'イトウ', 'ito.jun@solarfarm.co.jp', '03-5432-1242', '運用担当',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'user', 0, NULL, 3, 1, NULL, NULL, FALSE, 0),
+(4, TRUE, '2026-07-06 11:30:00', '2026-07-06 11:30:00', 'ito.kenichi', 'ito.kenichi',
+ 'ito.misaki', '美咲', 'ミサキ', '伊藤', 'イトウ', 'ito.misaki@solarfarm.co.jp', '03-5432-1243', '総務担当',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'user', 0, NULL, 4, 1, NULL, NULL, FALSE, 0),
+(5, TRUE, '2026-07-06 11:45:00', '2026-07-06 11:45:00', 'ito.kenichi', 'ito.kenichi',
+ 'ito.sho', '翔', 'ショウ', '伊藤', 'イトウ', 'ito.sho@solarfarm.co.jp', '03-5432-1244', '設備担当',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'user', 0, NULL, 5, 1, NULL, NULL, FALSE, 0),
+(6, TRUE, '2026-07-06 12:00:00', '2026-07-06 12:00:00', 'ito.kenichi', 'ito.kenichi',
+ 'ito.nana', '菜奈', 'ナナ', '伊藤', 'イトウ', 'ito.nana@solarfarm.co.jp', '03-5432-1245', '経理担当',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'user', 0, NULL, 6, 1, NULL, NULL, FALSE, 0),
+(7, TRUE, '2026-07-06 13:00:00', '2026-07-06 13:00:00', 'admin1', 'admin1',
+ 'nakamura.sachiko', '幸子', 'サチコ', '中村', 'ナカムラ', 'nakamura.sachiko@ecolife.co.jp', '045-234-5680', '代表取締役',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'master', 0, NULL, 7, 2, NULL, NULL, FALSE, 0),
+(8, TRUE, '2026-07-06 13:30:00', '2026-07-06 13:30:00', 'nakamura.sachiko', 'nakamura.sachiko',
+ 'nakamura.ryota', '亮太', 'リョウタ', '中村', 'ナカムラ', 'nakamura.ryota@ecolife.co.jp', '045-234-5681', '設備担当',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'user', 0, NULL, 8, 2, NULL, NULL, FALSE, 0),
+(9, TRUE, '2026-07-06 14:00:00', '2026-07-06 14:00:00', 'nakamura.sachiko', 'nakamura.sachiko',
+ 'nakamura.yui', '結衣', 'ユイ', '中村', 'ナカムラ', 'nakamura.yui@ecolife.co.jp', '045-234-5682', '事務担当',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'user', 0, NULL, 9, 2, NULL, NULL, FALSE, 0),
+(10, TRUE, '2026-07-06 14:30:00', '2026-07-06 14:30:00', 'nakamura.sachiko', 'nakamura.sachiko',
+ 'nakamura.kenta', '健太', 'ケンタ', '中村', 'ナカムラ', 'nakamura.kenta@ecolife.co.jp', '045-234-5683', '運用担当',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'user', 0, NULL, 10, 2, NULL, NULL, FALSE, 0),
+(11, TRUE, '2026-07-06 15:00:00', '2026-07-06 15:00:00', 'admin1', 'admin1',
+ 'kumagai.takuya', '拓也', 'タクヤ', '熊谷', 'クマガイ', 'kumagai.takuya@kuma-power.co.jp', '052-345-6791', '代表取締役',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'master', 0, NULL, 12, 3, NULL, NULL, FALSE, 0),
+(12, TRUE, '2026-07-06 15:30:00', '2026-07-06 15:30:00', 'kumagai.takuya', 'kumagai.takuya',
+ 'kumagai.nao', '奈緒', 'ナオ', '熊谷', 'クマガイ', 'kumagai.nao@kuma-power.co.jp', '052-345-6792', '設備管理担当',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'user', 0, NULL, 13, 3, NULL, NULL, FALSE, 0),
+(13, TRUE, '2026-07-06 16:00:00', '2026-07-06 16:00:00', 'admin1', 'admin1',
+ 'asano.rei', '玲', 'レイ', '浅野', 'アサノ', 'asano.rei@asa-denki.co.jp', '092-456-7892', '代表取締役',
+ '$2a$10$4x1bXGXM9e7uU5ybFst9NeEbVxyoh6RQ0bBMDl10rmcrWdJHRH.9S', 'master', 0, NULL, 16, 4, NULL, NULL, FALSE, 0);
+
+-- =========================================================
+-- 6. account
+-- =========================================================
+INSERT INTO account (
+    id, is_active, created_at, updated_at, created_by, updated_by,
+    acct_no, holder_account_name_kana, holder_account_name,
+    holder_corp_number, holder_prefecture, holder_city,
+    holder_address, is_holder_undecided, operator_company_id
+)
+OVERRIDING SYSTEM VALUE
+VALUES
+(1, TRUE, '2026-07-01 09:30:00', '2026-07-01 09:30:00', 'system', 'system',
+ 'ACCT0000000001', 'クリエーションテック', '株式会社クリエーションテック',
+ '4444444444444', '東京都', '港区', '虎ノ門1-2-3 虎ノ門ヒルズ森タワー', FALSE, 1),
+(2, TRUE, '2026-07-04 12:00:00', '2026-07-04 12:00:00', 'admin1', 'admin1',
+ 'ACCT0000000002', 'ソーラーファーム', '株式会社ソーラーファーム',
+ '1111111111111', '東京都', '渋谷区', '神宮前1-2-3 神宮前ビル', FALSE, 1),
+(3, TRUE, '2026-07-05 12:00:00', '2026-07-05 12:00:00', 'admin1', 'admin1',
+ 'ACCT0000000003', 'エコライフ', '有限会社エコライフ',
+ '2222222222222', '神奈川県', '横浜市西区', 'みなとみらい3-4-5', FALSE, 1);
+
+SELECT setval(pg_get_serial_sequence('operator_company', 'id'), (SELECT MAX(id) FROM operator_company), TRUE);
+SELECT setval(pg_get_serial_sequence('participating_company', 'id'), (SELECT MAX(id) FROM participating_company), TRUE);
+SELECT setval(pg_get_serial_sequence('site', 'id'), (SELECT MAX(id) FROM site), TRUE);
+SELECT setval(pg_get_serial_sequence('operating_user', 'id'), (SELECT MAX(id) FROM operating_user), TRUE);
+SELECT setval(pg_get_serial_sequence('participating_user', 'id'), (SELECT MAX(id) FROM participating_user), TRUE);
+SELECT setval(pg_get_serial_sequence('account', 'id'), (SELECT MAX(id) FROM account), TRUE);
+
+COMMIT;

@@ -10,7 +10,9 @@ import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRe
 import com.kct.jcredit.core_backend.dto.request.PartiCompanyMethodologyValidateRequest;
 import com.kct.jcredit.core_backend.dto.response.EnR002FileResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
+import com.kct.jcredit.core_backend.dto.response.MemberTermsInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.MyParticipationResponse;
+import com.kct.jcredit.core_backend.dto.response.ParticipationReviewHistoryResponse;
 import com.kct.jcredit.core_backend.dto.response.PdfDownloadResponse;
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 import com.kct.jcredit.core_backend.dto.response.ProjectJoinResponse;
@@ -138,7 +140,7 @@ public class SiteProjectController {
     // SUBMIT — join project
     // ─────────────────────────────────────────────────────────────
 
-    @PostMapping("/projects/{projectId}/join")
+    @PostMapping("/projects/{projectId}/join-company") 
     @PreAuthorize("hasRole('master')")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ProjectJoinResponse> joinProject(
@@ -151,6 +153,26 @@ public class SiteProjectController {
 
         ProjectJoinResponse response = participationService
                 .submitParticipation(projectId, companyId, userId, request);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // JOIN SITE- connect site to already joined project
+    // ─────────────────────────────────────────────────────────────
+
+    @PostMapping("/projects/{projectId}/{siteId}/join-site") 
+    @PreAuthorize("hasRole('master')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ProjectJoinResponse> joinProjectSite(
+            Authentication authentication,
+            @PathVariable String projectId,
+            @PathVariable String siteId) {
+
+        String  companyId = extractCompanyId(authentication);
+        Integer userId    = extractUserId(authentication);
+
+        ProjectJoinResponse response = participationService
+                .joinSite(projectId, companyId, userId, siteId);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
@@ -171,19 +193,20 @@ public class SiteProjectController {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // PDF GENERATION (debug/manual trigger endpoints)
+    // PDF SERVICES
     // ─────────────────────────────────────────────────────────────
 
-    @GetMapping("/participation/{participationId}/pdf")
-    @PreAuthorize("hasAnyRole('master','user')")
+    @GetMapping("/{projectId}/membership-pdf")
+    @PreAuthorize("hasAnyRole('admin','master','user') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_VIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<ProjectPdfDownloadResponse> downloadPdf( 
+    @Operation(summary = "入会届PDFダウンロード（自社用）",
+            description = "プロジェクトIDのみで、自社の入会届PDFダウンロードURLを取得します。")
+    public ResponseEntity<ProjectPdfDownloadResponse> getMembershipPdfByCompany(
             Authentication authentication,
-            @PathVariable Integer participationId) {
+            @PathVariable String projectId) {
 
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
-        ProjectPdfDownloadResponse response = pdfService.getPdfDownloadUrl(participationId, companyId); // ← ganti tipe
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(participationService.getMembershipPdfByCompany(projectId, companyId));
     }
 
     @PostMapping("/generate/{participationId}")
@@ -237,16 +260,4 @@ public class SiteProjectController {
         }
     }
 
-    @GetMapping("/{projectId}/my-participations")
-    @PreAuthorize("hasAnyRole('master','user')")
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "自社の参加情報一覧取得", description = "指定プロジェクトにおける自社の参加情報一覧を取得します。")
-    public ResponseEntity<List<MyParticipationResponse>> getMyParticipations(
-            Authentication authentication,
-            @PathVariable String projectId) {
-
-        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
-        return ResponseEntity.ok(
-                participationService.getMyParticipations(projectId, companyId));
-    }
 }

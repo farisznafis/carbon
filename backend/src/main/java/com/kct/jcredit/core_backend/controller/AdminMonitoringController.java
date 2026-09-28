@@ -5,7 +5,12 @@ import com.kct.jcredit.core_backend.dto.response.MonitoringDataDeletionHistoryLi
 import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionCandidateListResponse;
 import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionCandidateRecordListResponse;
 import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionExecutionResponse;
+import com.kct.jcredit.core_backend.service.EnR002IndividualActivityService;
 import com.kct.jcredit.core_backend.service.MonitoringDataDeletionService;
+import com.kct.jcredit.core_backend.dto.response.CompanyActivityGroupResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002IndividualActivityDetailResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002IndividualActivityRowResponse;
+import com.kct.jcredit.core_backend.service.EnR002IndividualActivityService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 
@@ -16,6 +21,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,6 +48,7 @@ public class AdminMonitoringController {
 
     private final MonitoringDataDeletionService monitoringDataDeletionService;
     private final JwtUtil jwtUtil;
+    private final EnR002IndividualActivityService individualActivityService;
 
     @GetMapping("/deletion-candidates")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
@@ -92,5 +100,39 @@ public class AdminMonitoringController {
         MonitoringDataDeletionHistoryListResponse response =
                 monitoringDataDeletionService.findDeletionHistory(projectId, page, limit);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    //Individual Activity
+
+    /** Lists every reportable equipment of one project. */
+    @GetMapping("/projects/{projectId}/individual-activity/rows")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    public List<EnR002IndividualActivityRowResponse> getRowsByProject(
+            @PathVariable String projectId,
+            @RequestParam(required = false) String companyId,
+            Authentication authentication) {
+        return individualActivityService.getRowsByProject(projectId, companyId, authentication.getName());
+    }
+ 
+    /** Lists one member company's equipment, grouped by project. */
+    @GetMapping("/companies/{companyId}/individual-activity")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    public List<CompanyActivityGroupResponse> getRowsByCompany(
+            @PathVariable String companyId,
+            @RequestParam(required = false) String projectId,
+            Authentication authentication) {
+        return individualActivityService.getRowsByCompany(companyId, projectId, authentication.getName());
+    }
+ 
+    /** Full detail of one row, reached from either of the two listings above. */
+    @GetMapping("/individual-activity/rows/{equipmentId}")
+    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    public EnR002IndividualActivityDetailResponse getRowDetail(
+            @PathVariable Integer equipmentId,
+            Authentication authentication) {
+        return individualActivityService.getRowDetail(equipmentId, authentication.getName());
     }
 }

@@ -21,6 +21,7 @@ import {
 } from '../equipmentDisplay';
 import { projectDetailCardClassName } from '../projectDetailStyles';
 import { EquipmentDetails, EquipmentField } from './EquipmentDetails';
+import { EquipmentChangeStartDialog } from './EquipmentChangeStartDialog';
 import { EquipmentDocuments } from './EquipmentDocuments';
 import { EquipmentHistoryDialog } from './EquipmentHistoryDialog';
 
@@ -59,13 +60,13 @@ function EquipmentSummaryCard({
   index,
   onShowDetails,
   onShowHistory,
-  onEdit,
+  onStartChange,
 }: {
   equipment: SiteProjectEquipment;
   index: number;
   onShowDetails: (equipment: SiteProjectEquipment) => void;
   onShowHistory: (equipmentId: number) => void;
-  onEdit: (equipmentId: number) => void;
+  onStartChange: (equipment: SiteProjectEquipment) => void;
 }) {
   const deviceNo = equipment.deviceNo?.trim();
   const pcsManufacturer = equipment.pcsManufacturer?.trim();
@@ -121,10 +122,10 @@ function EquipmentSummaryCard({
                   type='button'
                   variant='outline'
                   size='sm'
-                  onClick={() => onEdit(equipment.equipmentId as number)}
+                  onClick={() => onStartChange(equipment)}
                 >
                   <PencilLine className='h-4 w-4' />
-                  設備変更
+                  設備を変更する
                 </Button>
               </>
             )}
@@ -160,6 +161,8 @@ export function EquipmentList({
   const [historyEquipmentId, setHistoryEquipmentId] = useState<number | null>(
     null,
   );
+  const [equipmentToChange, setEquipmentToChange] =
+    useState<SiteProjectEquipment | null>(null);
 
   return (
     <>
@@ -171,7 +174,7 @@ export function EquipmentList({
             index={index}
             onShowDetails={setSelectedEquipment}
             onShowHistory={setHistoryEquipmentId}
-            onEdit={onEditEquipment}
+            onStartChange={setEquipmentToChange}
           />
         ))}
       </div>
@@ -191,6 +194,14 @@ export function EquipmentList({
         onOpenChange={(open) => {
           if (!open) setHistoryEquipmentId(null);
         }}
+      />
+
+      <EquipmentChangeStartDialog
+        equipment={equipmentToChange}
+        onOpenChange={(open) => {
+          if (!open) setEquipmentToChange(null);
+        }}
+        onConfirm={onEditEquipment}
       />
     </>
   );

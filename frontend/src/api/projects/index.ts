@@ -1,4 +1,9 @@
-export { getProjectDetails, getProjects } from './queries';
+export {
+  downloadProjectMembershipPdf,
+  getProjectDetails,
+  getProjectMemberTermsInfo,
+  getProjects,
+} from './queries';
 export type {
   CompanyProjectRelation,
   Equipment,
@@ -7,4 +12,6 @@ export type {
   ProjectDetailResponse,
   ProjectListItem,
   ProjectListResponse,
+  ProjectMembershipPdfDownload,
+  ProjectMemberTermsInfo,
 } from './types';

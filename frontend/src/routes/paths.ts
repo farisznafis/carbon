@@ -1,17 +1,18 @@
 export const paths = {
   home: '/',
+  contact: '/contact',
   login: '/login',
   adminLogin: '/admin/login',
   forgotPassword: '/forgot-password',
   resetPassword: '/reset-password',
   signup: '/signup',
   signupRevision: '/signup/revision',
+  userInvitation: '/user/invitation',
 
   masterDashboard: '/master/dashboard',
   masterSiteRegister: '/master/site-register',
   masterSiteEditRoute: '/master/site-edit/:siteId',
   masterSiteEdit: (siteId: string) => `/master/site-edit/${siteId}`,
-  masterUserRegister: '/master/user-register',
   masterUserProfileRoute: '/master/users/:userId/profile',
   masterUserProfile: (userId: string | number) =>
     `/master/users/${userId}/profile`,
@@ -66,8 +67,24 @@ export const paths = {
 
   profile: '/profile',
   passwordChange: '/password-change',
+  passwordChangeForUser: (userId: string | number) =>
+    `/password-change?userId=${encodeURIComponent(String(userId))}`,
 
   adminDashboard: '/admin/dashboard',
+  adminProjectList: '/admin/projects',
+  adminCompanyList: '/admin/companies',
+  adminOperatorList: '/admin/operators',
+  adminOperatorRegister: '/admin/operators/new',
+  adminOperatorProfileRoute: '/admin/operators/:userId',
+  adminOperatorProfile: (userId: string | number) =>
+    `/admin/operators/${encodeURIComponent(String(userId))}`,
+  adminOperatorEditRoute: '/admin/operators/:userId/edit',
+  adminOperatorEdit: (userId: string | number) =>
+    `/admin/operators/${encodeURIComponent(String(userId))}/edit`,
+  adminOperatorPermissionEdit: (userId: string | number) =>
+    `/admin/operators/${encodeURIComponent(String(userId))}/edit#permissions`,
+  adminMethodologyList: '/admin/methodologies',
+  adminMonitoring: '/admin/monitoring',
   adminCompanyDetailRoute: '/admin/companies/:companyId',
   adminCompanyDetail: (companyId: string | number) =>
     `/admin/companies/${companyId}`,
@@ -81,16 +98,20 @@ export const paths = {
   adminProjectRegister: '/admin/project-register',
   adminProjectDetailRoute: '/admin/projects/:projectId',
   adminProjectDetail: (projectId: string) => `/admin/projects/${projectId}`,
+  adminProjectInformationRoute: '/admin/projects/:projectId/information',
+  adminProjectInformation: (projectId: string) =>
+    `/admin/projects/${encodeURIComponent(projectId)}/information`,
   adminProjectMembershipRoute: '/admin/projects/:projectId/memberships',
-  adminProjectMembership: (projectId: string) =>
-    `/admin/projects/${projectId}/memberships`,
+  adminProjectMembership: (projectId: string, status?: string) =>
+    `/admin/projects/${projectId}/memberships${status ? `?status=${encodeURIComponent(status)}` : ''}`,
   adminProjectMembershipDetailRoute:
     '/admin/projects/:projectId/memberships/:participationId',
   adminProjectMembershipDetail: (
     projectId: string,
     participationId: string | number,
+    status?: string,
   ) =>
-    `/admin/projects/${projectId}/memberships/${participationId}`,
+    `/admin/projects/${projectId}/memberships/${participationId}${status ? `?status=${encodeURIComponent(status)}` : ''}`,
   adminProjectMonitoringDetailRoute:
     '/admin/projects/:projectId/monitoring/:monitoringId',
   adminProjectMonitoringDetail: (

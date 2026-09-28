@@ -7,20 +7,21 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 import {
-  createAdminProjectPlanApplication,
+  saveProjectPlanForm,
   getAdminProjectDetail,
-  getAdminProjectPlanApplication,
+  getProjectPlanForm,
   updateAdminProject,
   type AdminProjectDetail,
-  type ProjectPlanApplicationResponse,
+  type ProjectPlanFormResponse,
   type UpdateAdminProjectPayload,
 } from '@/api/admin';
 import { mapAdminProjectPlanApplicationPayload } from '@/api/admin/projectPayloadMapper';
 import type { Project } from '@/api/projects';
+import { FormActions } from '@/components/forms/form-layout';
+import { PageSkeleton } from '@/components/feedback/loading';
 import { PageDropdown } from '@/components/forms/shared/PageDropdown';
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -45,6 +46,7 @@ import { paths } from '@/routes/paths';
 import { MultiStepForm } from '@/features/admin/project-registration/forms/ProjectMultiPageForm';
 import type { AdminProjectRegisterFormInputValues } from '@/features/admin/project-registration/forms/projectFormTypes';
 import { steps } from '@/features/admin/project-registration/forms/projectSteps';
+import { stepsForApplicationCategory } from '@/features/admin/project-registration/forms/applicationCategory';
 import {
   adminProjectEditBasicFields,
   adminProjectEditMethodologyFields,
@@ -57,7 +59,7 @@ type LocationState = {
   project?: Project;
 };
 
-const visibleSteps = steps.slice(0, 2);
+const visibleSteps = stepsForApplicationCategory(steps.slice(0, 2));
 const maxStep = visibleSteps.length;
 
 const textFallback = (value: unknown) => (value == null ? '' : String(value));
@@ -76,13 +78,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 
 const resolveApplicationData = (
-  response: ProjectPlanApplicationResponse,
+  response: ProjectPlanFormResponse,
 ): AdminProjectRegisterFormInputValues['projectApplication'] => {
-  const value =
-    response.application ??
-    response.projectApplication ??
-    response.data ??
-    {};
+  // The plan endpoint returns the page under `data`; the older `application`
+  // and `projectApplication` shapes it used to fall back on were never sent.
+  const value = response.data ?? {};
 
   return (isRecord(value) ? value : {}) as AdminProjectRegisterFormInputValues['projectApplication'];
 };
@@ -346,7 +346,7 @@ export default function AdminProjectEditPage() {
 
         try {
           const applicationResponse =
-            await getAdminProjectPlanApplication(projectId);
+            await getProjectPlanForm(projectId, 'application');
 
           if (!isMounted) return;
           applicationForm.reset({
@@ -444,8 +444,9 @@ export default function AdminProjectEditPage() {
           projectBase: mapEditValuesToProjectBase(form.getValues()),
         };
 
-        await createAdminProjectPlanApplication(
+        await saveProjectPlanForm(
           projectId,
+          'application',
           mapAdminProjectPlanApplicationPayload(mergedValues),
         );
 
@@ -476,9 +477,7 @@ export default function AdminProjectEditPage() {
 
   if (loading) {
     return (
-      <div className='flex min-h-screen items-center justify-center'>
-        読み込み中...
-      </div>
+      <PageSkeleton label="プロジェクト情報を読み込んでいます" />
     );
   }
 
@@ -569,34 +568,37 @@ export default function AdminProjectEditPage() {
           </Card>
         )}
 
-        <div className='flex items-center justify-between gap-3'>
-          <div>
-            {step > 1 && (
-              <Button
-                type='button'
-                variant='outline'
-                onClick={goBack}
-              >
-                戻る
-              </Button>
-            )}
-          </div>
-
-          <div className='flex items-center gap-3'>
-            <Button type='submit' disabled={submitting}>
-              {submitting ? '更新中...' : '更新'}
-            </Button>
-
-            {step < maxStep && (
-              <Button
-                type='button'
-                onClick={goNext}
-              >
-                次へ
-              </Button>
-            )}
-          </div>
-        </div>
+        <FormActions
+          disabled={submitting}
+          pendingActionId={submitting ? 'update' : null}
+          actions={[
+            ...(step > 1
+              ? [
+                  {
+                    id: 'back',
+                    label: '戻る',
+                    variant: 'outline' as const,
+                    onClick: goBack,
+                  },
+                ]
+              : []),
+            {
+              id: 'update',
+              label: '更新',
+              pendingLabel: '更新中...',
+              type: 'submit',
+            },
+            ...(step < maxStep
+              ? [
+                  {
+                    id: 'next',
+                    label: '次へ',
+                    onClick: goNext,
+                  },
+                ]
+              : []),
+          ]}
+        />
 
       </form>
     </FormPageWrapper>

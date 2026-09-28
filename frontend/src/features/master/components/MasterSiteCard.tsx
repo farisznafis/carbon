@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Site } from '@/api/site';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -19,21 +20,18 @@ type MasterSiteCardProps = {
   onOpen: (site: Site) => void;
 };
 
+/** Displays one site summary with separate project expansion and navigation actions. */
 export function MasterSiteCard({
   site,
   onOpen,
 }: MasterSiteCardProps) {
   const projects = Array.isArray(site.project) ? site.project : [];
-  const visibleProjects = projects.slice(0, 2);
+  const [areProjectsExpanded, setAreProjectsExpanded] = useState(false);
+  const visibleProjects = areProjectsExpanded ? projects : projects.slice(0, 2);
 
   return (
-    <article className="grid min-h-28 w-full overflow-hidden rounded-lg border border-border bg-card shadow-app-sm transition hover:border-primary/60 md:grid-cols-[minmax(0,1fr)_96px]">
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={() => onOpen(site)}
-        className="grid h-auto min-w-0 justify-normal gap-5 whitespace-normal rounded-none px-5 py-5 text-left shadow-none hover:bg-transparent md:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)] md:items-start md:px-7 xl:grid-cols-[minmax(0,1fr)_minmax(430px,0.75fr)]"
-      >
+    <article className="grid min-h-28 w-full overflow-hidden rounded-lg border border-border bg-card shadow-app-sm md:grid-cols-[minmax(0,1fr)_96px]">
+      <div className="grid min-w-0 gap-5 px-5 py-5 text-left md:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)] md:items-start md:px-7 xl:grid-cols-[minmax(0,1fr)_minmax(430px,0.75fr)]">
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
@@ -54,12 +52,12 @@ export function MasterSiteCard({
           <div className="pl-3 mt-3 flex flex-col gap-2 text-sm font-bold leading-6 text-foreground">
             <span className="inline-flex items-center gap-1.5">
               <User className="h-4 w-4 text-muted-foreground" />
-              <span className="text-foreground">責任者</span>
+              <span className="text-muted-foreground">責任者</span>
               <span>{formatPersonName(site.picLastName, site.picFirstName)}</span>
             </span>
             <span className="inline-flex min-w-0 items-center gap-1.5">
               <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span className="text-foreground">所在地</span>
+              <span className="text-muted-foreground">所在地</span>
               <span className="min-w-0 break-words">{formatSiteAddress(site)}</span>
             </span>
           </div>
@@ -68,7 +66,7 @@ export function MasterSiteCard({
         <div className="min-w-0 pt-1 text-sm font-bold leading-6 text-foreground md:pt-0">
           <div className="flex min-w-0 items-start gap-2">
             <FolderKanban className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="shrink-0 text-foreground">プロジェクト</span>
+            <span className="shrink-0 text-muted-foreground">プロジェクト</span>
             <div className="min-w-0 flex-1">
               {visibleProjects.length > 0 ? (
                 <>
@@ -76,17 +74,31 @@ export function MasterSiteCard({
                     {visibleProjects.map((project, index) => (
                       <p
                         key={`${site.siteId}-${project}-${index}`}
-                        className="truncate"
+                        className="truncate font-bold text-foreground"
                       >
                         {project}
                       </p>
                     ))}
                   </div>
                   {projects.length > 2 && (
-                    <span className="mt-1 inline-flex items-center gap-2 text-sm font-medium leading-6 text-foreground">
-                      もっと見る
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    </span>
+                    <Button
+                      type="button"
+                      variant="link"
+                      aria-expanded={areProjectsExpanded}
+                      onClick={() =>
+                        setAreProjectsExpanded((isExpanded) => !isExpanded)
+                      }
+                      className="mt-1 h-auto justify-start gap-2 p-0 text-sm font-medium leading-6 text-foreground"
+                    >
+                      {areProjectsExpanded ? '閉じる' : 'もっと見る'}
+                      <ChevronDown
+                        className={
+                          areProjectsExpanded
+                            ? 'rotate-180 text-muted-foreground transition-transform'
+                            : 'text-muted-foreground transition-transform'
+                        }
+                      />
+                    </Button>
                   )}
                 </>
               ) : (
@@ -97,7 +109,7 @@ export function MasterSiteCard({
             </div>
           </div>
         </div>
-      </Button>
+      </div>
 
       <div className="flex min-h-28 items-center justify-center border-t border-border px-4 py-4 md:border-l md:border-t-0">
         <Button

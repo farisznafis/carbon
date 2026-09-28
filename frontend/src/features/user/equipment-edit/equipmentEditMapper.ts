@@ -1,7 +1,7 @@
 import type {
   SiteProjectEquipment,
   SiteProjectEquipmentFile,
-  SiteProjectEquipmentUpdateRequest,
+  SiteProjectEquipmentChangeRequest,
   SiteProjectEquipmentValidationFile,
 } from '@/api/site';
 import { getEquipmentFileDisplayName } from '@/features/user/equipment/equipmentFileDisplay';
@@ -10,6 +10,25 @@ export { getEquipmentFileDisplayName } from '@/features/user/equipment/equipment
 import type { SolarPowerFormData } from '@/lib/equipmentValidations';
 import { SOLAR_FORM_DEFAULT_VALUES } from '@/features/user/project-registration/solarEquipmentFormModel';
 import { getSolarFormSelectedFiles } from '@/features/user/project-registration/equipmentValidationMapper';
+
+const EQUIPMENT_CHANGE_COMPARISON_FIELDS: ReadonlyArray<
+  keyof SolarPowerFormData
+> = [
+  'nominalMaxOutput',
+  'pcsManufacturer',
+  'pcsModel',
+  'deviceNo',
+  'powerCondStandby',
+  'hasBattery',
+  'batteryMaker',
+  'batteryModel',
+  'batteryCapacity',
+  'totalInvestment',
+  'hasSubsidy',
+  'subsidyName',
+  'subsidyAmount',
+  'preProjectUnitPrice',
+];
 
 function formString(value: string | number | null | undefined) {
   return value == null ? '' : String(value);
@@ -21,6 +40,14 @@ function formYesNo(value: boolean | null | undefined) {
   return '' as const;
 }
 
+/** Returns a browser-local date value without UTC date shifting. */
+function getLocalDateInputValue(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function mapEquipmentToEditForm(
   equipment: SiteProjectEquipment,
   siteId: string,
@@ -28,11 +55,11 @@ export function mapEquipmentToEditForm(
   return {
     ...SOLAR_FORM_DEFAULT_VALUES,
     siteId,
+    changeDate: getLocalDateInputValue(),
     equipmentOpDate: equipment.equipmentOpDate ?? '',
     nominalMaxOutput: formString(equipment.nominalMaxOutput),
     pcsManufacturer: equipment.pcsManufacturer ?? '',
     pcsModel: equipment.pcsModel ?? '',
-    powerCondUnitCount: formString(equipment.powerCondUnitCount),
     deviceNo: equipment.deviceNo ?? '',
     powerCondStandby: formString(equipment.powerCondStandby),
     hasBattery: formYesNo(equipment.hasBattery),
@@ -64,139 +91,41 @@ function booleanValue(value: SolarPowerFormData['hasBattery']) {
   return null;
 }
 
-function assignChangedValue<
-  Key extends keyof SiteProjectEquipmentUpdateRequest,
->(
-  payload: SiteProjectEquipmentUpdateRequest,
-  key: Key,
-  currentValue: SiteProjectEquipmentUpdateRequest[Key],
-  originalValue: SiteProjectEquipmentUpdateRequest[Key],
-) {
-  if (!Object.is(currentValue, originalValue)) {
-    payload[key] = currentValue;
-  }
-}
-
-export function mapEquipmentEditToUpdateRequest(
+/** Builds the complete equipment snapshot required by the change endpoint. */
+export function mapEquipmentEditToChangeRequest(
   current: SolarPowerFormData,
-  original: SolarPowerFormData,
   files: SiteProjectEquipmentValidationFile[] = [],
-): SiteProjectEquipmentUpdateRequest {
-  const payload: SiteProjectEquipmentUpdateRequest = {};
+): SiteProjectEquipmentChangeRequest {
+  const hasBattery = booleanValue(current.hasBattery);
+  const hasSubsidy = booleanValue(current.hasSubsidy);
 
-  assignChangedValue(
-    payload,
-    'equipmentOpDate',
-    textValue(current.equipmentOpDate),
-    textValue(original.equipmentOpDate),
-  );
-  assignChangedValue(
-    payload,
-    'nominalMaxOutput',
-    numberValue(current.nominalMaxOutput),
-    numberValue(original.nominalMaxOutput),
-  );
-  assignChangedValue(
-    payload,
-    'pcsManufacturer',
-    textValue(current.pcsManufacturer),
-    textValue(original.pcsManufacturer),
-  );
-  assignChangedValue(
-    payload,
-    'pcsModel',
-    textValue(current.pcsModel),
-    textValue(original.pcsModel),
-  );
-  assignChangedValue(
-    payload,
-    'pcsUnitCount',
-    numberValue(current.powerCondUnitCount),
-    numberValue(original.powerCondUnitCount),
-  );
-  assignChangedValue(
-    payload,
-    'deviceNo',
-    textValue(current.deviceNo),
-    textValue(original.deviceNo),
-  );
-  assignChangedValue(
-    payload,
-    'pcsStandby',
-    numberValue(current.powerCondStandby),
-    numberValue(original.powerCondStandby),
-  );
-  assignChangedValue(
-    payload,
-    'hasBattery',
-    booleanValue(current.hasBattery),
-    booleanValue(original.hasBattery),
-  );
-
-  if (current.hasBattery === 'yes') {
-    assignChangedValue(
-      payload,
-      'batteryMaker',
-      textValue(current.batteryMaker),
-      textValue(original.batteryMaker),
-    );
-    assignChangedValue(
-      payload,
-      'batteryModel',
-      textValue(current.batteryModel),
-      textValue(original.batteryModel),
-    );
-    assignChangedValue(
-      payload,
-      'batteryCapacity',
-      numberValue(current.batteryCapacity),
-      numberValue(original.batteryCapacity),
-    );
-  }
-
-  assignChangedValue(
-    payload,
-    'totalInvestment',
-    numberValue(current.totalInvestment),
-    numberValue(original.totalInvestment),
-  );
-  assignChangedValue(
-    payload,
-    'hasSubsidy',
-    booleanValue(current.hasSubsidy),
-    booleanValue(original.hasSubsidy),
-  );
-
-  if (current.hasSubsidy === 'yes') {
-    assignChangedValue(
-      payload,
-      'subsidyName',
-      textValue(current.subsidyName),
-      textValue(original.subsidyName),
-    );
-    assignChangedValue(
-      payload,
-      'subsidyAmount',
-      numberValue(current.subsidyAmount),
-      numberValue(original.subsidyAmount),
-    );
-  }
-
-  assignChangedValue(
-    payload,
-    'preProjectUnitPrice',
-    numberValue(current.preProjectUnitPrice),
-    numberValue(original.preProjectUnitPrice),
-  );
-
-  if (files.length > 0) {
-    payload.files = files;
-  }
-
-  return payload;
+  return {
+    changeDate: textValue(current.changeDate ?? ''),
+    nominalMaxOutput: numberValue(current.nominalMaxOutput),
+    pcsManufacturer: textValue(current.pcsManufacturer),
+    pcsModel: textValue(current.pcsModel),
+    deviceNo: textValue(current.deviceNo),
+    pcsStandby: numberValue(current.powerCondStandby),
+    hasBattery,
+    batteryMaker:
+      hasBattery === true ? textValue(current.batteryMaker) : null,
+    batteryModel:
+      hasBattery === true ? textValue(current.batteryModel) : null,
+    batteryCapacity:
+      hasBattery === true ? numberValue(current.batteryCapacity) : null,
+    totalInvestment: numberValue(current.totalInvestment),
+    hasSubsidy,
+    subsidyName:
+      hasSubsidy === true ? textValue(current.subsidyName) : null,
+    subsidyAmount:
+      hasSubsidy === true ? numberValue(current.subsidyAmount) : null,
+    preProjectUnitPrice: numberValue(current.preProjectUnitPrice),
+    files,
+  };
 }
 
-export function mergeEquipmentFilesForUpdate(
+/** Combines inherited evidence metadata with newly uploaded replacement documents. */
+export function mergeEquipmentFilesForChange(
   existingFiles: SiteProjectEquipmentFile[],
   uploadedFiles: SiteProjectEquipmentValidationFile[],
 ): SiteProjectEquipmentValidationFile[] {
@@ -221,7 +150,9 @@ export function hasEquipmentEditChanges(
   original: SolarPowerFormData,
 ) {
   return (
-    Object.keys(mapEquipmentEditToUpdateRequest(current, original)).length > 0 ||
+    EQUIPMENT_CHANGE_COMPARISON_FIELDS.some(
+      (fieldName) => current[fieldName] !== original[fieldName],
+    ) ||
     getSolarFormSelectedFiles(current).length > 0
   );
 }
