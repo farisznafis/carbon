@@ -100,7 +100,7 @@ class GetBatchServiceImplTest {
     class GetBatchProcessHistoryTest {
 
         @Test
-        @DisplayName("UT-GB-301: page/limit が null の場合、デフォルト値 1 / 20 が適用される")
+        @DisplayName("UT-BS-101: page/limit が null の場合、デフォルト値 1 / 20 が適用される")
         void nullParams_appliesDefaults() {
             when(batchProcessHistoryRepository.findAll(any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.of(historyWithId(1)), PageRequest.of(0, 20), 1));
@@ -117,7 +117,7 @@ class GetBatchServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-GB-302: page = 0 の場合、1 にフォールバックされる")
+        @DisplayName("UT-BS-102: page = 0 の場合、1 にフォールバックされる")
         void pageZero_fallsBackToOne() {
             when(batchProcessHistoryRepository.findAll(any(Pageable.class))).thenReturn(emptyPage(20));
 
@@ -128,7 +128,7 @@ class GetBatchServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-GB-303: page が負の値の場合、1 にフォールバックされる")
+        @DisplayName("UT-BS-103: page が負の値の場合、1 にフォールバックされる")
         void negativePage_fallsBackToOne() {
             when(batchProcessHistoryRepository.findAll(any(Pageable.class))).thenReturn(emptyPage(20));
 
@@ -138,7 +138,7 @@ class GetBatchServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-GB-304: limit = 0 の場合、デフォルト 20 が適用される")
+        @DisplayName("UT-BS-104: limit = 0 の場合、デフォルト 20 が適用される")
         void limitZero_appliesDefaultTwenty() {
             when(batchProcessHistoryRepository.findAll(any(Pageable.class))).thenReturn(emptyPage(20));
 
@@ -149,7 +149,7 @@ class GetBatchServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-GB-305: limit = 100（上限ちょうど）はそのまま使われる")
+        @DisplayName("UT-BS-105: limit = 100（上限ちょうど）はそのまま使われる")
         void limitExactlyOneHundred_notCapped() {
             when(batchProcessHistoryRepository.findAll(any(Pageable.class))).thenReturn(emptyPage(100));
 
@@ -161,7 +161,7 @@ class GetBatchServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-GB-306: limit = 101 以上の場合、100 に丸められる")
+        @DisplayName("UT-BS-106: limit = 101 以上の場合、100 に丸められる")
         void limitAboveMax_cappedAtOneHundred() {
             when(batchProcessHistoryRepository.findAll(any(Pageable.class))).thenReturn(emptyPage(100));
 
@@ -172,7 +172,7 @@ class GetBatchServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-GB-307: nextPageToken が変更されずにレスポンスへ引き渡される")
+        @DisplayName("UT-BS-107: nextPageToken が変更されずにレスポンスへ引き渡される")
         void nextPageToken_passedThroughUnchanged() {
             String token = "eyJsYXN0SWQiOjEwMH0=";
             when(batchProcessHistoryRepository.findAll(any(Pageable.class))).thenReturn(emptyPage(20));
@@ -185,7 +185,7 @@ class GetBatchServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-GB-308: エンティティの全フィールドが DTO へ正しくマッピングされる")
+        @DisplayName("UT-BS-108: エンティティの全フィールドが DTO へ正しくマッピングされる")
         void mapsAllEntityFieldsToDto() {
             BatchProcessHistory history = historyWithId(1);
             when(batchProcessHistoryRepository.findAll(any(Pageable.class)))
@@ -207,7 +207,7 @@ class GetBatchServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-GB-309: totalItems / totalPages / hasMore が Page から正しく設定される")
+        @DisplayName("UT-BS-109: totalItems / totalPages / hasMore が Page から正しく設定される")
         void paginationMetadataDerivedFromPage() {
             Page<BatchProcessHistory> page = new PageImpl<>(
                     List.of(historyWithId(1), historyWithId(2)), PageRequest.of(0, 2), 5);
@@ -221,7 +221,7 @@ class GetBatchServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-GB-310: 該当データが 0 件の場合、空の items と hasMore=false を返す")
+        @DisplayName("UT-BS-110: 該当データが 0 件の場合、空の items と hasMore=false を返す")
         void emptyPage_returnsEmptyItems() {
             when(batchProcessHistoryRepository.findAll(any(Pageable.class))).thenReturn(emptyPage(20));
 
@@ -262,7 +262,7 @@ class GetBatchServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-GB-311: siteId が見つからない場合、空 items を返し結果リポジトリを呼ばない")
+        @DisplayName("UT-BS-201: siteId が見つからない場合、空 items を返し結果リポジトリを呼ばない")
         void siteNotFound_returnsEmptyAndSkipsResultRepository() {
             when(siteRepository.findByPublicIdWithFallback("unknown-site")).thenReturn(Optional.empty());
 
@@ -275,7 +275,7 @@ class GetBatchServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-GB-312: サイトは存在するが有効な結果が0件の場合、空 items を返す")
+        @DisplayName("UT-BS-202: サイトは存在するが有効な結果が0件の場合、空 items を返す")
         void siteFoundButNoResults_returnsEmpty() {
             when(siteRepository.findByPublicIdWithFallback("site-1"))
                     .thenReturn(Optional.of(siteWithId(1)));
@@ -290,7 +290,7 @@ class GetBatchServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-GB-313: エンティティが DTO へ正しくマッピングされる（ダミー site1/day1）")
+        @DisplayName("UT-BS-203: エンティティが DTO へ正しくマッピングされる（ダミー site1/day1）")
         void mapsEntityFieldsToDto() {
             when(siteRepository.findByPublicIdWithFallback("site-1"))
                     .thenReturn(Optional.of(siteWithId(1)));
@@ -320,7 +320,7 @@ class GetBatchServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-GB-314: 複数結果がある場合、リポジトリの並び順が保持される")
+        @DisplayName("UT-BS-204: 複数結果がある場合、リポジトリの並び順が保持される")
         void multipleResults_preservesRepositoryOrder() {
             EnR002ReductionResult day3 = dummySiteOneDayOne();
             day3.setId(3);
@@ -344,7 +344,7 @@ class GetBatchServiceImplTest {
         }
 
         /*
-         * UT-GB-315 — GAP: er / elpj / elbl / embl / equipmentId tidak dipetakan ke DTO.
+         * UT-BS-315 — GAP: er / elpj / elbl / embl / equipmentId tidak dipetakan ke DTO.
          *
          * PERHATIAN: kalau blok assertion di bawah TIDAK BISA DI-COMPILE
          * (method getEr() / getElpj() / getEquipmentId() tidak ada di DTO),
@@ -352,7 +352,7 @@ class GetBatchServiceImplTest {
          * dan laporkan ke tim — jangan hapus test-nya.
          */
         @Test
-        @DisplayName("UT-GB-315: er / elpj / elbl / equipmentId が DTO にマッピングされるべき（欠陥候補）")
+        @DisplayName("UT-BS-204: er / elpj / elbl / equipmentId が DTO にマッピングされるべき（欠陥候補）")
         void shouldMapErAndEnergyFieldsToDto() {
             when(siteRepository.findByPublicIdWithFallback("site-1"))
                     .thenReturn(Optional.of(siteWithId(1)));
@@ -400,7 +400,7 @@ class GetBatchServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-GB-316: 合計データが存在する場合、statusCode=OK と data が返る")
+        @DisplayName("UT-BS-301: 合計データが存在する場合、statusCode=OK と data が返る")
         void totalFound_returnsOkWithData() {
             when(reductionResultTotalRepository.findByProjectId(1))
                     .thenReturn(Optional.of(dummyTotal()));
@@ -419,7 +419,7 @@ class GetBatchServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-GB-317: 合計データが存在しない場合、statusCode=OK かつ data=null を返す")
+        @DisplayName("UT-BS-302: 合計データが存在しない場合、statusCode=OK かつ data=null を返す")
         void totalNotFound_returnsOkWithNullData() {
             when(reductionResultTotalRepository.findByProjectId(99)).thenReturn(Optional.empty());
 
@@ -430,11 +430,11 @@ class GetBatchServiceImplTest {
         }
 
         /*
-         * UT-GB-318 — GAP: er / elpj / elbl tidak dipetakan ke DTO.
-         * Sama seperti UT-GB-315: kalau tidak compile, itu buktinya.
+         * UT-BS-318 — GAP: er / elpj / elbl tidak dipetakan ke DTO.
+         * Sama seperti UT-BS-315: kalau tidak compile, itu buktinya.
          */
         @Test
-        @DisplayName("UT-GB-318: er / elpj / elbl が DTO にマッピングされるべき（欠陥候補）")
+        @DisplayName("UT-BS-303: er / elpj / elbl が DTO にマッピングされるべき（欠陥候補）")
         void shouldMapErAndEnergyFieldsToProjectDto() {
             when(reductionResultTotalRepository.findByProjectId(1))
                     .thenReturn(Optional.of(dummyTotal()));

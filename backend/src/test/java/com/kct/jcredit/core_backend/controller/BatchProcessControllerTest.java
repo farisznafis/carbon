@@ -50,7 +50,7 @@ class BatchProcessControllerTest {
         class SuccessCase {
 
             @Test
-            @DisplayName("SC-1: デフォルトの page/limit で nextPageToken なしの場合、200OK レスポンスを返す")
+            @DisplayName("UT-BC-101: デフォルトの page/limit で nextPageToken なしの場合、200OK レスポンスを返す")
             void batchProcessHistory_defaultParamsNoToken_returnsOkResponse() {
                 // Arrange
                 Integer page = 1;
@@ -76,7 +76,7 @@ class BatchProcessControllerTest {
             }
 
             @Test
-            @DisplayName("SC-2: nextPageToken が指定された場合（2ページ目以降）、正しく引き渡される")
+            @DisplayName("UT-BC-102: nextPageToken が指定された場合（2ページ目以降）、正しく引き渡される")
             void batchProcessHistory_withNextPageToken_passesTokenCorrectly() {
                 // Arrange
                 Integer page = 2;
@@ -106,7 +106,7 @@ class BatchProcessControllerTest {
         class ErrorCase {
 
             @Test
-            @DisplayName("EC-1: サービスが例外をスローする場合、例外が伝播される")
+            @DisplayName("UT-BC-103: サービスが例外をスローする場合、例外が伝播される")
             void batchProcessHistory_serviceThrowsException_propagatesException() {
                 // Arrange
                 Integer page = 1;
@@ -142,7 +142,7 @@ class BatchProcessControllerTest {
         class SuccessCase {
 
             @Test
-            @DisplayName("SC-1: projectId が解決できる場合、正しい projDbId で batchService を呼び出し 200OK を返す")
+            @DisplayName("UT-BC-201: projectId が解決できる場合、正しい projDbId で batchService を呼び出し 200OK を返す")
             void siteReductionResult_projectFound_returnsOkResponse() {
                 // Arrange
                 String siteId = "SITE001";
@@ -181,7 +181,7 @@ class BatchProcessControllerTest {
         class ErrorCase {
 
             @Test
-            @DisplayName("EC-1: projectId に対応する Project が見つからない場合、例外がスローされ batchService は呼ばれない")
+            @DisplayName("UT-BC-202: projectId に対応する Project が見つからない場合、例外がスローされ batchService は呼ばれない")
             void siteReductionResult_projectNotFound_throwsExceptionAndSkipsService() {
                 // Arrange
                 String siteId = "SITE001";
@@ -205,7 +205,7 @@ class BatchProcessControllerTest {
             }
 
             @Test
-            @DisplayName("EC-2: projectId ditemukan tapi batchService melempar exception, exception diteruskan")
+            @DisplayName("UT-BC-203: projectId ditemukan tapi batchService melempar exception, exception diteruskan")
             void siteReductionResult_serviceThrows_propagatesException() {
                 // Arrange
                 String siteId = "SITE001";
@@ -246,7 +246,7 @@ class BatchProcessControllerTest {
         class SuccessCase {
 
             @Test
-            @DisplayName("SC-1: projectId が解決できる場合、正しい projDbId で batchService を呼び出し 200OK を返す")
+            @DisplayName("UT-BC-301: projectId が解決できる場合、正しい projDbId で batchService を呼び出し 200OK を返す")
             void projectReductionResult_projectFound_returnsOkResponse() {
                 // Arrange
                 String projectId = "PROJ-PUBLIC-002";
@@ -281,7 +281,7 @@ class BatchProcessControllerTest {
         class ErrorCase {
 
             @Test
-            @DisplayName("EC-1: projectId に対応する Project が見つからない場合、例外がスローされ batchService は呼ばれない")
+            @DisplayName("UT-BC-302: projectId に対応する Project が見つからない場合、例外がスローされ batchService は呼ばれない")
             void projectReductionResult_projectNotFound_throwsExceptionAndSkipsService() {
                 // Arrange
                 String projectId = "PROJ-UNKNOWN";
@@ -302,7 +302,7 @@ class BatchProcessControllerTest {
             }
 
             @Test
-            @DisplayName("EC-2: projectId ditemukan tapi batchService melempar exception, exception diteruskan")
+            @DisplayName("UT-BC-303: projectId ditemukan tapi batchService melempar exception, exception diteruskan")
             void projectReductionResult_serviceThrows_propagatesException() {
                 // Arrange
                 String projectId = "PROJ-PUBLIC-002";

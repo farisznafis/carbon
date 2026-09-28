@@ -60,7 +60,7 @@ class CsvLogServiceImplTest {
     class CreateTargetCsvTest {
 
         @Test
-        @DisplayName("UT-CL-201: ヘッダー行 + サイト件数分のデータ行が書き込まれる")
+        @DisplayName("UT-BS-501: ヘッダー行 + サイト件数分のデータ行が書き込まれる")
         void createTargetCsv_writesHeaderAndOneRowPerSite(@TempDir Path tempDir) throws IOException {
             Path targetFile = tempDir.resolve("target.csv");
 
@@ -74,7 +74,7 @@ class CsvLogServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-CL-202: entries が空リストの場合、ヘッダーのみが書き込まれる")
+        @DisplayName("UT-BS-502: entries が空リストの場合、ヘッダーのみが書き込まれる")
         void createTargetCsv_emptyEntries_writesHeaderOnly(@TempDir Path tempDir) throws IOException {
             Path targetFile = tempDir.resolve("target.csv");
 
@@ -86,7 +86,7 @@ class CsvLogServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-CL-203: 親ディレクトリが存在しない場合、自動生成される")
+        @DisplayName("UT-BS-503: 親ディレクトリが存在しない場合、自動生成される")
         void createTargetCsv_createsMissingParentDirectories(@TempDir Path tempDir) {
             Path nested = tempDir.resolve("target/2026-07-10/report.csv");
 
@@ -97,7 +97,7 @@ class CsvLogServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-CL-204: ディレクトリ生成に失敗する場合、RuntimeException にラップされる")
+        @DisplayName("UT-BS-504: ディレクトリ生成に失敗する場合、RuntimeException にラップされる")
         void createTargetCsv_ioFailure_wrappedInRuntimeException(@TempDir Path tempDir) throws IOException {
             // Membuat FILE bernama "blocker", lalu meminta path yang memperlakukannya
             // sebagai DIRECTORY → Files.createDirectories gagal dengan IOException.
@@ -119,7 +119,7 @@ class CsvLogServiceImplTest {
     class CreateEmptyResultCsvTest {
 
         @Test
-        @DisplayName("UT-CL-205: ヘッダー行のみのファイルが生成される（9カラム）")
+        @DisplayName("UT-BS-505: ヘッダー行のみのファイルが生成される（9カラム）")
         void createEmptyResultCsv_writesOnlyHeader(@TempDir Path tempDir) throws IOException {
             Path resultFile = tempDir.resolve("result.csv");
 
@@ -139,7 +139,7 @@ class CsvLogServiceImplTest {
     class AppendToResultCsvTest {
 
         @Test
-        @DisplayName("UT-CL-206: ヘッダーを壊さずに行が追記される")
+        @DisplayName("UT-BS-506: ヘッダーを壊さずに行が追記される")
         void appendToResultCsv_appendsWithoutTouchingHeader(@TempDir Path tempDir) throws IOException {
             Path resultFile = tempDir.resolve("result.csv");
             service.createEmptyResultCsv(resultFile.toString());
@@ -155,7 +155,7 @@ class CsvLogServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-CL-207: null フィールドが空文字として出力され、カラム数が維持される")
+        @DisplayName("UT-BS-507: null フィールドが空文字として出力され、カラム数が維持される")
         void appendToResultCsv_nullFields_keepColumnCount(@TempDir Path tempDir) throws IOException {
             Path resultFile = tempDir.resolve("result.csv");
             service.createEmptyResultCsv(resultFile.toString());
@@ -181,7 +181,7 @@ class CsvLogServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-CL-208: カンマを含むエラーメッセージがダブルクォートでエスケープされる")
+        @DisplayName("UT-BS-508: カンマを含むエラーメッセージがダブルクォートでエスケープされる")
         void appendToResultCsv_errorMessageWithCommas_isQuoted(@TempDir Path tempDir) throws IOException {
             Path resultFile = tempDir.resolve("result.csv");
             service.createEmptyResultCsv(resultFile.toString());
@@ -199,7 +199,7 @@ class CsvLogServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-CL-209: 対象ファイルが存在しない場合、RuntimeException にラップされる")
+        @DisplayName("UT-BS-509: 対象ファイルが存在しない場合、RuntimeException にラップされる")
         void appendToResultCsv_fileMissing_wrappedInRuntimeException(@TempDir Path tempDir) {
             // APPEND dipakai tanpa opsi CREATE → file harus sudah ada lebih dulu
             Path missing = tempDir.resolve("never-created.csv");
@@ -235,7 +235,7 @@ class CsvLogServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-CL-210: 全サイト成功の場合、warning/error が 0 件")
+        @DisplayName("UT-BS-510: 全サイト成功の場合、warning/error が 0 件")
         void compareProcessingLogs_allSuccess_noIssues(@TempDir Path tempDir) {
             setUpFiles(tempDir, targetsFor(1, 2));
             service.appendToResultCsv(resultFile.toString(), resultOf(1, "SUCCESS"));
@@ -251,7 +251,7 @@ class CsvLogServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-CL-211: NO_DATA ステータスは warning として集計される")
+        @DisplayName("UT-BS-511: NO_DATA ステータスは warning として集計される")
         void compareProcessingLogs_noData_countedAsWarning(@TempDir Path tempDir) {
             setUpFiles(tempDir, targetsFor(2));
             service.appendToResultCsv(resultFile.toString(), resultOf(2, "NO_DATA"));
@@ -269,7 +269,7 @@ class CsvLogServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-CL-212: FAILED ステータスは error として集計され、errorMessage が details に入る")
+        @DisplayName("UT-BS-512: FAILED ステータスは error として集計され、errorMessage が details に入る")
         void compareProcessingLogs_failed_countedAsErrorWithMessage(@TempDir Path tempDir) {
             setUpFiles(tempDir, targetsFor(3));
             service.appendToResultCsv(resultFile.toString(), ProcessingResult.builder()
@@ -285,7 +285,7 @@ class CsvLogServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-CL-213: 同一サイトが複数回処理された場合、DUPLICATE として検出される")
+        @DisplayName("UT-BS-513: 同一サイトが複数回処理された場合、DUPLICATE として検出される")
         void compareProcessingLogs_duplicateSite_detected(@TempDir Path tempDir) {
             setUpFiles(tempDir, targetsFor(4));
             service.appendToResultCsv(resultFile.toString(), resultOf(4, "SUCCESS"));
@@ -303,7 +303,7 @@ class CsvLogServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-CL-214: target にあるが result にないサイトは MISSING として検出される")
+        @DisplayName("UT-BS-514: target にあるが result にないサイトは MISSING として検出される")
         void compareProcessingLogs_missingSite_detected(@TempDir Path tempDir) {
             setUpFiles(tempDir, targetsFor(1, 5));
             service.appendToResultCsv(resultFile.toString(), resultOf(1, "SUCCESS"));
@@ -321,7 +321,7 @@ class CsvLogServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-CL-215: result にあるが target にないサイトは検出されない（欠陥候補）")
+        @DisplayName("UT-BS-515: result にあるが target にないサイトは検出されない（欠陥候補）")
         void compareProcessingLogs_unexpectedSiteInResult_isIgnored(@TempDir Path tempDir) {
             setUpFiles(tempDir, targetsFor(1, 2));
             service.appendToResultCsv(resultFile.toString(), resultOf(1, "SUCCESS"));
@@ -342,7 +342,7 @@ class CsvLogServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-CL-216: SUCCESS/NO_DATA/FAILED 以外のステータスはどのカウンタにも計上されない（欠陥候補）")
+        @DisplayName("UT-BS-516: SUCCESS/NO_DATA/FAILED 以外のステータスはどのカウンタにも計上されない（欠陥候補）")
         void compareProcessingLogs_unknownStatus_notCountedAnywhere(@TempDir Path tempDir) {
             setUpFiles(tempDir, targetsFor(1));
             service.appendToResultCsv(resultFile.toString(), resultOf(1, "SKIPPED"));
@@ -361,7 +361,7 @@ class CsvLogServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-CL-217: カンマ入りエラーメッセージの往復で details が破損する（欠陥候補）")
+        @DisplayName("UT-BS-517: カンマ入りエラーメッセージの往復で details が破損する（欠陥候補）")
         void compareProcessingLogs_commaInErrorMessage_detailsCorruptedOnRoundTrip(@TempDir Path tempDir) {
             String originalMessage = "timeout, retrying, gave up";
             setUpFiles(tempDir, targetsFor(3));
@@ -381,7 +381,7 @@ class CsvLogServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-CL-218: target CSV が存在しない場合、RuntimeException にラップされる")
+        @DisplayName("UT-BS-518: target CSV が存在しない場合、RuntimeException にラップされる")
         void compareProcessingLogs_targetFileMissing_wrappedInRuntimeException(@TempDir Path tempDir) {
             Path missingTarget = tempDir.resolve("no-target.csv");
             Path result = tempDir.resolve("result.csv");
@@ -397,7 +397,7 @@ class CsvLogServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-CL-210b: comparison CSV がヘッダー + エントリ件数分書き出される")
+        @DisplayName("UT-BS-519: comparison CSV がヘッダー + エントリ件数分書き出される")
         void compareProcessingLogs_writesComparisonCsvFile(@TempDir Path tempDir) throws IOException {
             setUpFiles(tempDir, targetsFor(1, 2, 3, 4, 5));
             service.appendToResultCsv(resultFile.toString(), resultOf(1, "SUCCESS"));
