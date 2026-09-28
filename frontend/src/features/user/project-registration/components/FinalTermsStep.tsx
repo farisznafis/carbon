@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { Form, FormItem, FormField, FormControl, FormMessage } from "@/components/ui/form";
+import { FormActions } from "@/components/forms/form-layout";
 
 const FinalTermsSchema = z.object({
   finalTermsAgreed: z.boolean().refine(val => val === true, "同意してください"),
@@ -22,16 +23,52 @@ export type FinalTermsValues = {
 }
 
 interface FinalTermsStepProps {
+  projectName: string;
+  operatorName: string;
+  projectOverview: string;
+  usePurpose: string;
+  startedAt: string;
   formValues: Partial<FinalTermsValues>;
+  isSubmitting: boolean;
+  onBack: () => void;
+  onNext: () => void;
   onValueChange: (values: Partial<FinalTermsData>) => void;
   errors?: Record<string, string>;
 }
 
+/** Formats the project terms start timestamp as a zero-padded Japanese date in JST. */
+function formatMemberTermsStartedAt(startedAt: string): string {
+  const date = new Date(startedAt);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const dateParts = new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const valueByType = Object.fromEntries(
+    dateParts.map(({ type, value }) => [type, value]),
+  );
+
+  return `${valueByType.year}年${valueByType.month}月${valueByType.day}日`;
+}
+
 export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
+  projectName,
+  operatorName,
+  projectOverview,
+  usePurpose,
+  startedAt,
   formValues,
+  isSubmitting,
+  onBack,
+  onNext,
   onValueChange,
   errors = {},
 }, ref) => {
+  const resolvedProjectName = projectName.trim();
+  const formattedStartedAt = formatMemberTermsStartedAt(startedAt);
 
   const form = useForm<FinalTermsData>({
       mode: "onChange",
@@ -88,30 +125,30 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2">「プログラム名」入会規約 <span className="ml-1 text-destructive">*</span></h2>
+        <h2 className="text-2xl font-bold mb-2">「{resolvedProjectName}」入会規約 <span className="ml-1 text-destructive">*</span></h2>
         <p className="text-foreground">入会規約をご確認の上、同意してください</p>
       </div>
 
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="space-y-6 pt-6">
           <div className="max-h-[600px] overflow-y-auto p-6 border rounded-lg">
             <div className="text-sm leading-relaxed space-y-6">
               <section>
                 <h3 className="font-semibold mb-2">(名称)</h3>
                 <h4 className="font-semibold mb-2">第1条</h4>
-                <p>本会の名称は、プログラム名 (以下「本会」という) とする。</p>
+                <p>本会の名称は、{resolvedProjectName} (以下「本会」という) とする。</p>
               </section>
 
               <section>
                 <h3 className="font-semibold mb-2">(目的)</h3>
                 <h4 className="font-semibold mb-2">第2条</h4>
-                <p>本会は、プログラム型運営・管理者名が実施する「プロジェクト概要」の一環として、会員が太陽光発電設備を使用することで削減された温室効果ガス排出量を、国内における地球温暖化対策のための排出削減・吸収量認証制度 (以下「Ｊ－クレジット制度」という) 実施要綱 (平成25年4月17日経済産業省、環境省、農林水産省策定) に基づきＪ－クレジットとしてＪ－クレジット制度認証委員会 (Ｊ－クレジット制度を管理する経済産業省、環境省、農林水産省が共同で設置した、Ｊ－クレジットの認証を行う委員会) より認証を受けることで、環境価値の「見える化」を図るとともに、創出されたＪ－クレジットをプログラム型運営・管理者名における利用目的に利用することを目的とする。</p>
+                <p>本会は、{operatorName}が実施する「{projectOverview}」の一環として、会員が太陽光発電設備を使用することで削減された温室効果ガス排出量を、国内における地球温暖化対策のための排出削減・吸収量認証制度 (以下「Ｊ－クレジット制度」という) 実施要綱 (平成25年4月17日経済産業省、環境省、農林水産省策定) に基づきＪ－クレジットとしてＪ－クレジット制度認証委員会 (Ｊ－クレジット制度を管理する経済産業省、環境省、農林水産省が共同で設置した、Ｊ－クレジットの認証を行う委員会) より認証を受けることで、環境価値の「見える化」を図るとともに、創出されたＪ－クレジットを{operatorName}における{usePurpose}に利用することを目的とする。</p>
               </section>
 
               <section>
                 <h3 className="font-semibold mb-2">(運営・管理)</h3>
                 <h4 className="font-semibold mb-2">第3条</h4>
-                <p>本会の運営・管理はプログラム型運営・管理者名 (以下「運営・管理者」という) が行う。</p>
+                <p>本会の運営・管理は{operatorName} (以下「運営・管理者」という) が行う。</p>
               </section>
 
               <section>
@@ -133,7 +170,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
 
               <section>
                 <h4 className="font-semibold mb-2">第3条の3</h4>
-                <p>運営・管理者として必要な事務はプログラム型運営・管理者名において行う。</p>
+                <p>運営・管理者として必要な事務は{operatorName}において行う。</p>
               </section>
 
               <section>
@@ -160,8 +197,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
               <section>
                 <h3 className="font-semibold mb-2">(Ｊ－クレジット売却益の取り扱い)</h3>
                 <h4 className="font-semibold mb-2">第5条</h4>
-                <p>Ｊ－クレジットの売買による売却益は、利用目的に活用することとする。</p>
-                <p className="text-xs text-foreground mt-1">※利用目的は、プロジェクトにおける活用予定・実際の活用方法に応じてご修正ください。</p>
+                <p>Ｊ－クレジットの売買による売却益は、{usePurpose}に活用することとする。</p>
               </section>
 
               <section>
@@ -202,7 +238,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
 
               <section>
                 <h3 className="font-semibold mb-2">(退会)</h3>
-                <p className="text-xs text-foreground mb-2">※補助金受給者を対象としたプロジェクト等で退会を禁ずる場合や、その他プロジェクトの実際に応じて適宜ご修正ください。</p>
+                <p className="mb-2 text-small font-normal text-foreground">※補助金受給者を対象としたプロジェクト等で退会を禁ずる場合や、その他プロジェクトの実際に応じて適宜ご修正ください。</p>
                 <h4 className="font-semibold mb-2">第9条</h4>
                 <p>会員は、本会を退会しようとするときは、運営・管理者にその旨を届け出、その承認を得なければならない。</p>
               </section>
@@ -227,7 +263,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
                 <h3 className="font-semibold mb-2">(会員資格の有効期間)</h3>
                 <h4 className="font-semibold mb-2">第11条</h4>
                 <p>会員資格の有効期間は入会申込日若しくはプロジェクトが実施された日（※）のいずれか遅い日から8年間とする。ただし、運営・管理者が提出し、Ｊ－クレジット制度管理者が承認した、認証対象期間の延長に係るプロジェクト計画変更届に記載された手続きに沿って延長を行う場合、会員資格は8年間延長されるものとする。</p>
-                <p className="text-xs text-foreground mt-1">※プロジェクトが実施された日は、温室効果ガス排出量の削減又は温室効果ガスの除去をもたらす活動が実質的に開始された日とする。</p>
+                <p className="mt-1 text-small font-normal text-foreground">※プロジェクトが実施された日は、温室効果ガス排出量の削減又は温室効果ガスの除去をもたらす活動が実質的に開始された日とする。</p>
               </section>
 
               <section>
@@ -243,8 +279,8 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
               </section>
 
               <section className="mt-8">
-                <h3 className="font-semibold mb-2">附　則</h3>
-                <p>本規約は、YYYY年MM月DD (プロジェクト登録申請日) から施行する。</p>
+                <h3 className="font-semibold mb-2">附則</h3>
+                <p>本規約は、{formattedStartedAt}から施行する。</p>
               </section>
             </div>
           </div>
@@ -254,7 +290,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
               control={form.control}
               name="finalTermsAgreed"
               render={({ field }) => (
-                <FormItem className="mt-6 rounded-lg border border-border p-4">
+                <FormItem className="rounded-lg border border-border p-4">
                   <div className="flex items-center gap-3">
                     <FormControl>
                       <Checkbox
@@ -270,12 +306,29 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
                       htmlFor="finalTermsAgreed"
                       className="cursor-pointer"
                     >
-                      同意します
+                      同意する
                     </RequiredLabel>
                   </div>
                   <FormMessage className="mt-2" />
                 </FormItem>
               )}
+            />
+            <FormActions
+              pendingActionId={isSubmitting ? "next" : null}
+              actions={[
+                {
+                  id: "back",
+                  label: "戻る",
+                  variant: "outline",
+                  onClick: onBack,
+                },
+                {
+                  id: "next",
+                  label: "確認へ",
+                  pendingLabel: "確認中...",
+                  onClick: onNext,
+                },
+              ]}
             />
           </Form>
         </CardContent>

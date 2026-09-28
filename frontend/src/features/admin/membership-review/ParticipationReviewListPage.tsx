@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import {
-  getMyParticipationReviews,
-  getPendingParticipationReviews,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
+import {
+  getAdminProjectDetail,
+  getParticipationReviewsByStatus,
   type ParticipationReviewDetail,
+  type ParticipationReviewStatus,
 } from '@/api/admin';
 import {
   DataGridTable,
@@ -14,6 +20,7 @@ import {
   floatingPageBackButtonClassName,
   PageBackButton,
 } from '@/components/navigation/PageBackButton';
+import { NotFoundPage } from '@/components/feedback/NotFoundPage';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,57 +32,116 @@ import {
 import { formatAdminCompanyDateTime } from '@/features/admin/company-detail/companyDetailDisplay';
 import { usePagination } from '@/hooks/usePagination';
 import { paths } from '@/routes/paths';
-import { getParticipationReviewStage } from './participationReviewDisplay';
+import { isParticipationReviewForProject } from './participationReviewProjectMatch';
+import { isForbiddenApiError } from '@/api/_shared/errors';
+import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
+import { resolveAdminProjectNavigationState } from '@/features/admin/navigation/adminProjectNavigation';
 
 const INITIAL_ITEMS_PER_PAGE = 10;
 const REVIEW_GRID_COLUMNS =
   'minmax(180px, 1fr) minmax(180px, 1fr) minmax(190px, 0.9fr) minmax(150px, 0.75fr) minmax(110px, 0.5fr)';
 
-type ReviewTab = 'mine' | 'pending';
-
-const REVIEW_TAB_DESCRIPTIONS: Record<ReviewTab, string> = {
-  mine: 'あなたがまだ承認していない、対応が必要な入会届を表示しています。',
-  pending:
-    '他の管理者の承認待ちを含む、最終承認前の入会届をすべて表示しています。',
+const REVIEW_STATUSES: ParticipationReviewStatus[] = [
+  'OPEN',
+  'APPROVED',
+  'REJECTED',
+];
+const EMPTY_REVIEWS_BY_STATUS: Record<
+  ParticipationReviewStatus,
+  ParticipationReviewDetail[]
+> = {
+  OPEN: [],
+  APPROVED: [],
+  REJECTED: [],
+};
+const REVIEW_STATUS_CONTENT: Record<
+  ParticipationReviewStatus,
+  { label: string; description: string; emptyMessage: string }
+> = {
+  OPEN: {
+    label: '承認待ち',
+    description: '管理者の承認を待っている入会届を表示しています。',
+    emptyMessage: '承認待ちの入会届はありません。',
+  },
+  APPROVED: {
+    label: '承認済み',
+    description: '2名の管理者による承認が完了した入会届を表示しています。',
+    emptyMessage: '承認済みの入会届はありません。',
+  },
+  REJECTED: {
+    label: '却下',
+    description: '管理者によって却下された入会届を表示しています。',
+    emptyMessage: '却下された入会届はありません。',
+  },
 };
 
-function getErrorMessage(error: unknown, fallback: string) {
-  return error instanceof Error && error.message ? error.message : fallback;
+/** Resolves the membership status query to a supported tab. */
+function resolveReviewStatus(value: string | null): ParticipationReviewStatus {
+  return REVIEW_STATUSES.includes(value as ParticipationReviewStatus)
+    ? (value as ParticipationReviewStatus)
+    : 'OPEN';
 }
 
+/** Returns the badge text shown for a row in the selected status tab. */
+function getStatusBadgeLabel(
+  status: ParticipationReviewStatus,
+  review: ParticipationReviewDetail,
+): string {
+  if (status === 'OPEN') {
+    return review.review.primaryApplReviewerName.trim()
+      ? '二次確認待ち'
+      : '一次確認待ち';
+  }
+  return REVIEW_STATUS_CONTENT[status].label;
+}
+
+/** Displays the project-scoped participation review list. */
 export default function ParticipationReviewListPage() {
+  const location = useLocation();
   const navigate = useNavigate();
   const { projectId = '' } = useParams();
-  const [activeTab, setActiveTab] = useState<ReviewTab>('mine');
-  const [myReviews, setMyReviews] = useState<ParticipationReviewDetail[]>([]);
-  const [pendingReviews, setPendingReviews] = useState<
-    ParticipationReviewDetail[]
-  >([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigationState = resolveAdminProjectNavigationState(location.state);
+  const activeStatus = resolveReviewStatus(searchParams.get('status'));
+  const [reviewsByStatus, setReviewsByStatus] = useState<
+    Record<ParticipationReviewStatus, ParticipationReviewDetail[]>
+  >(EMPTY_REVIEWS_BY_STATUS);
   const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [hasLoadError, setHasLoadError] = useState(false);
+  const [hasPermissionError, setHasPermissionError] = useState(false);
 
+  /** Loads all membership statuses without comparing incompatible public and internal project IDs. */
   const loadReviews = useCallback(async () => {
     if (!projectId) {
-      setLoadError('プロジェクトIDが指定されていません。');
+      setHasLoadError(true);
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
-    setLoadError(null);
+    setHasLoadError(false);
+    setHasPermissionError(false);
 
-    try {
-      const [mine, pending] = await Promise.all([
-        getMyParticipationReviews(),
-        getPendingParticipationReviews(),
+    try {const [project, statusReviews] = await Promise.all([
+        getAdminProjectDetail(projectId),
+        getParticipationReviewsByStatus(),
       ]);
 
-      setMyReviews(mine);
-      setPendingReviews(pending);
+      setReviewsByStatus({
+        OPEN: statusReviews.OPEN.filter((review) =>
+          isParticipationReviewForProject(review, projectId, project),
+        ),
+        APPROVED: statusReviews.APPROVED.filter((review) =>
+          isParticipationReviewForProject(review, projectId, project),
+        ),
+        REJECTED: statusReviews.REJECTED.filter((review) =>
+          isParticipationReviewForProject(review, projectId, project),
+        ),
+      });
+      // setReviewsByStatus(await getParticipationReviewsByStatus());
     } catch (error) {
-      setLoadError(
-        getErrorMessage(error, '入会届一覧の取得に失敗しました。'),
-      );
+      setHasPermissionError(isForbiddenApiError(error));
+      setHasLoadError(true);
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +151,7 @@ export default function ParticipationReviewListPage() {
     void loadReviews();
   }, [loadReviews]);
 
-  const activeReviews = activeTab === 'mine' ? myReviews : pendingReviews;
+  const activeReviews = reviewsByStatus[activeStatus];
   const {
     currentPage,
     totalPages,
@@ -102,12 +168,16 @@ export default function ParticipationReviewListPage() {
     (review: ParticipationReviewDetail) => {
       navigate(
         paths.adminProjectMembershipDetail(
-          String(review.projectId),
+          projectId,
+          // String(review.projectId),
           review.participationId,
+          activeStatus,
         ),
+        { state: navigationState },
       );
     },
-    [navigate],
+    [activeStatus, navigate, navigationState, projectId],
+    // [activeStatus, navigate],
   );
 
   const columns = useMemo<
@@ -148,16 +218,22 @@ export default function ParticipationReviewListPage() {
         ),
       },
       {
-        id: 'stage',
-        label: 'レビュー段階',
+        id: 'status',
+        label: 'ステータス',
         sortable: true,
-        sortValue: getParticipationReviewStage,
+        sortValue: (review) => getStatusBadgeLabel(activeStatus, review),
         render: (review) => (
           <Badge
-            variant="outline"
-            className="border-primary/30 bg-primary/5 text-primary"
+            variant={activeStatus === 'REJECTED' ? 'destructive' : 'outline'}
+            className={
+              activeStatus === 'APPROVED'
+                ? 'border-success/30 bg-success/10 text-success'
+                : activeStatus === 'OPEN'
+                  ? 'border-primary/30 bg-primary/5 text-primary'
+                  : undefined
+            }
           >
-            {getParticipationReviewStage(review)}
+            {getStatusBadgeLabel(activeStatus, review)}
           </Badge>
         ),
       },
@@ -181,10 +257,25 @@ export default function ParticipationReviewListPage() {
         ),
       },
     ],
-    [viewDetail],
+    [activeStatus, viewDetail],
   );
 
-  const returnToProject = () => navigate(paths.adminProjectDetail(projectId));
+  /** Returns to Admin Home when this list was opened from its project summary table. */
+  const returnToProject = () =>
+    navigate(navigationState?.returnTo ?? paths.adminProjectDetail(projectId));
+
+  if (hasPermissionError) {
+    return (
+      <main className="mx-auto w-full max-w-[1120px] space-y-6 px-4 py-10 sm:px-6">
+        <header><h1>入会届一覧</h1><p className="mt-2 text-small text-foreground">レビュー対象となる入会届を確認します。</p></header>
+        <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
+      </main>
+    );
+  }
+
+  if (hasLoadError) {
+    return <NotFoundPage />;
+  }
 
   return (
     <main className="relative min-h-screen bg-background px-4 py-10 sm:px-6 lg:px-8">
@@ -204,44 +295,34 @@ export default function ParticipationReviewListPage() {
         </header>
 
         <Tabs
-          value={activeTab}
+          value={activeStatus}
           onValueChange={(value) => {
-            setActiveTab(value as ReviewTab);
+            const nextStatus = resolveReviewStatus(value);
+            const nextSearchParams = new URLSearchParams(searchParams);
+            nextSearchParams.set('status', nextStatus);
+            setSearchParams(nextSearchParams);
             goToPage(1);
           }}
           className="space-y-5"
         >
-          <TabsList className="grid h-auto w-full grid-cols-2 sm:w-fit">
-            <TabsTrigger value="mine">
-              自分の承認待ち（{myReviews.length}）
-            </TabsTrigger>
-            <TabsTrigger value="pending">
-              承認待ち全件（{pendingReviews.length}）
-            </TabsTrigger>
+          <TabsList className="grid h-auto w-full grid-cols-3 sm:w-fit">
+            {REVIEW_STATUSES.map((status) => (
+              <TabsTrigger key={status} value={status}>
+                {REVIEW_STATUS_CONTENT[status].label}（
+                {reviewsByStatus[status].length}）
+              </TabsTrigger>
+            ))}
           </TabsList>
 
-          {(['mine', 'pending'] as const).map((tab) => (
-            <TabsContent key={tab} value={tab} className="space-y-4">
+          {REVIEW_STATUSES.map((status) => (
+            <TabsContent key={status} value={status} className="space-y-4">
               <p className="text-small text-foreground">
-                {REVIEW_TAB_DESCRIPTIONS[tab]}
+                {REVIEW_STATUS_CONTENT[status].description}
               </p>
 
               {isLoading ? (
                 <div className="rounded-xl border border-border bg-card py-12 text-center text-small text-foreground">
                   入会届一覧を読み込んでいます...
-                </div>
-              ) : loadError ? (
-                <div className="space-y-4 rounded-xl border border-destructive/30 bg-destructive/5 p-8 text-center">
-                  <p role="alert" className="text-small text-destructive">
-                    {loadError}
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => void loadReviews()}
-                  >
-                    再試行
-                  </Button>
                 </div>
               ) : (
                 <>
@@ -251,11 +332,7 @@ export default function ParticipationReviewListPage() {
                     gridTemplateColumns={REVIEW_GRID_COLUMNS}
                     minWidth={930}
                     getRowKey={(review) => String(review.participationId)}
-                    emptyMessage={
-                      tab === 'mine'
-                        ? '現在レビュー可能な入会届はありません。'
-                        : '承認待ちの入会届はありません。'
-                    }
+                    emptyMessage={REVIEW_STATUS_CONTENT[status].emptyMessage}
                     onRowClick={viewDetail}
                   />
                   <PaginationControls

@@ -17,7 +17,7 @@ public class EnR002EquipmentChangeRequest {
     private BigDecimal nominalMaxOutput;
     private String pcsManufacturer;
     private String pcsModel;
-    private Integer pcsUnitCount;
+    // private Integer pcsUnitCount;
     private String deviceNo;
     private BigDecimal pcsStandby;
     private Boolean hasBattery;

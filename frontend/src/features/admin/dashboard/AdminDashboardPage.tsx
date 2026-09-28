@@ -3,9 +3,9 @@ import {
   useLocation,
   useNavigate,
   useParams,
-  useSearchParams,
 } from 'react-router-dom';
-import { ApiError } from '@/api/_shared/errors';
+import { useRef } from 'react';
+import { ApiError, isForbiddenApiError } from '@/api/_shared/errors';
 import type {
   AdminCompanyListItem,
   CompanyStatus,
@@ -14,7 +14,9 @@ import type {
 import {
   approveAdminCompany,
   getAdminCompanies,
+  getOpenParticipationReviews,
   rejectAdminCompany,
+  type ParticipationReviewDetail,
 } from '@/api/admin';
 import {
   getBatchHistory,
@@ -23,53 +25,74 @@ import {
 } from '@/api/batch';
 import {
   getMonitoringCancelRequests,
-  type MonitoringRecordListItem,
 } from '@/api/monitoring';
 import {
+  getProjectPlanProgressBatch,
   updateAdminProjectStatus,
+  type ProjectPlanProgressSummary,
   type ProjectStatus,
 } from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
-import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 import {
+  adminPageContainerClassName,
   dashboardEmptyStateClassName,
-  dashboardPageContainerClassName,
-  dashboardPageHeaderClassName,
-  dashboardTabsListClassName,
-  dashboardTabTriggerClassName,
 } from '@/components/layout/DashboardLayout';
+import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
+import { AdminTableCard } from '@/components/layout/AdminTableCard';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { CancelRequestHistoryTable } from '@/features/admin/dashboard/tables/CancelRequestHistoryTable';
-import { BatchHistoryTable } from '@/features/admin/dashboard/tables/BatchHistoryTable';
 import { AdminCompanyApplicationsTable } from '@/features/admin/dashboard/tables/AdminCompanyApplicationsTable';
 import { PendingCompanyActionDialog } from '@/features/admin/dashboard/tables/PendingCompanyActionDialog';
 import { PendingCompanyApplicationDetail } from '@/features/admin/dashboard/tables/PendingCompanyApplicationDetail';
 import { ProjectTable } from '@/features/admin/dashboard/tables/ProjectTable';
-import { ProjectMonitoringTable } from '@/features/admin/dashboard/tables/ProjectMonitoringTable';
+import {
+  AdminDashboardOverview,
+  type AdminHomePanel,
+} from './AdminDashboardOverview';
+import { AdminProjectOverviewCards } from './AdminProjectOverviewCards';
+import {
+  normalizeProjectStatus,
+  PROJECT_STATUS_PRESENTATIONS,
+} from './projectStatusPresentation';
+import { PageSkeleton, SkeletonTable } from '@/components/feedback/loading';
 import { useProjectsQuery } from '@/hooks/projects/useProjectsQuery';
 import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
-import { cn } from '@/lib/utils';
 import { paths } from '@/routes/paths';
-import { useNotificationStore } from '@/stores/notificationStore';
-import { AlertTriangle, Plus } from 'lucide-react';
+import { getAdminRouteFromLegacyTab } from '@/features/admin/navigation/adminNavigationConfig';
+import { adminHomeProjectNavigationState } from '@/features/admin/navigation/adminProjectNavigation';
+import { Plus, Search, TriangleAlert } from 'lucide-react';
+import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
+import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
+import { NoticeBanner } from '@/components/feedback/NoticeBanner';
 
 type AdminDashboardTabValue =
+  | 'overview'
   | 'companies'
   | 'projects'
   | 'operators'
-  | 'methodologies'
-  | 'monitoring';
+  | 'methodologies';
 
 type PendingCompanyActionMode = 'approve' | 'reject';
 
-const dashboardContainer = dashboardPageContainerClassName;
+const dashboardContainer = adminPageContainerClassName;
 
 const APPLICATION_STATUSES: CompanyStatus[] = ['PENDING', 'REJECTED'];
 const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
+const HOME_APPLICATION_SUMMARY_LIMIT = 3;
+const ALL_PROJECT_FILTER = 'ALL';
+const IN_PROGRESS_PROJECT_STATUS = '準備中';
+const FORBIDDEN_SECTION_ERROR = '__FORBIDDEN_SECTION__';
 
 const DEFAULT_PAGINATION: Pagination = {
   page: 1,
@@ -93,12 +116,31 @@ const adminDashboardTabs: Array<{
   value: AdminDashboardTabValue;
   label: string;
 }> = [
+  // { value: 'overview', label: '概要' },
   { value: 'companies', label: '企業一覧・申請管理' },
   { value: 'projects', label: 'プロジェクト管理' },
   { value: 'operators', label: '運用者一覧' },
   { value: 'methodologies', label: '方法論一覧' },
-  { value: 'monitoring', label: 'モニタリングデータ管理' },
 ];
+
+/** Resolves the route-driven dashboard section while legacy tab URLs redirect. */
+function getAdminDashboardSection(
+  pathname: string,
+  legacyTab: string | null,
+): AdminDashboardTabValue {
+  if (pathname === paths.adminProjectList) return 'projects';
+  if (pathname === paths.adminCompanyList) return 'companies';
+  if (pathname === paths.adminMethodologyList) return 'methodologies';
+  if (
+    pathname === paths.adminDashboard &&
+    (legacyTab === 'overview' ||
+      adminDashboardTabs.some((tab) => tab.value === legacyTab))
+  ) {
+    return legacyTab as AdminDashboardTabValue;
+  }
+
+  return 'overview';
+}
 
 function isStringRecord(value: unknown): value is Record<string, string> {
   return (
@@ -112,6 +154,7 @@ function isStringRecord(value: unknown): value is Record<string, string> {
 }
 
 function getApiMessage(error: unknown, fallback: string) {
+  if (isForbiddenApiError(error)) return FORBIDDEN_SECTION_ERROR;
   if (error instanceof ApiError) return error.message || fallback;
   if (error instanceof Error) return error.message || fallback;
   return fallback;
@@ -125,38 +168,27 @@ function getApiFieldErrors(error: unknown) {
   return {};
 }
 
-function AdminDashboardHero() {
-  return (
-    <header className="border-b border-border bg-background">
-      <div
-        className={dashboardPageHeaderClassName}
-      >
-        <h1 className="text-foreground">
-          運営者・管理者ダッシュボード
-        </h1>
-      </div>
-    </header>
-  );
+/** Builds a stable filter value from one project's methodology identity. */
+function getProjectMethodologyFilterValue(project: Project) {
+  return `${project.methodNumber}::${project.methodName}`;
 }
 
-function AdminDashboardTabs() {
-  const triggerClassName = dashboardTabTriggerClassName;
+/** Builds the human-readable methodology option shown in the filter. */
+function getProjectMethodologyFilterLabel(project: Project) {
+  return [project.methodNumber, project.methodName].filter(Boolean).join(' ');
+}
 
-  return (
-    <div className="bg-card pt-6">
-      <TabsList className={dashboardTabsListClassName}>
-        {adminDashboardTabs.map((tab) => (
-          <TabsTrigger
-            key={tab.value}
-            value={tab.value}
-            className={triggerClassName}
-          >
-            {tab.label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </div>
-  );
+/** Checks whether a project matches the normalized free-text query. */
+function matchesProjectSearch(project: Project, normalizedQuery: string) {
+  if (!normalizedQuery) return true;
+
+  return [
+    project.projectName,
+    project.methodCategory,
+    project.methodNumber,
+    project.methodologyVersion,
+    project.methodName,
+  ].some((field) => field.toLocaleLowerCase('ja-JP').includes(normalizedQuery));
 }
 
 function AdminDashboardSection({
@@ -172,13 +204,12 @@ function AdminDashboardSection({
 }) {
   return (
     <section className="space-y-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-2">
-          <h2 className="text-foreground">{title}</h2>
-          <p className="text-subtle text-foreground">{description}</p>
-        </div>
-        {action}
-      </div>
+      <AdminPageHeader
+        title={title}
+        description={description}
+        action={action}
+        headingAs="h2"
+      />
       {children}
     </section>
   );
@@ -195,28 +226,30 @@ function AdminDashboardEmptyState({ children }: { children: ReactNode }) {
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { applicationId } = useParams();
   const { toast } = useToast();
   const { user } = useAuth();
-  const projectsQuery = useProjectsQuery();
-  const projects = projectsQuery.data ?? [];
-  const loadNotifications = useNotificationStore(
-    (state) => state.loadNotifications,
+  const adminPermissions = useAdminPermissions();
+  const canReadProjects = adminPermissions.hasPermission('PROJECT_READ');
+  const canReadCompanies = adminPermissions.hasPermission(
+    'PARTICIPATING_COMPANY_READ',
   );
+  const canReviewCompanies = adminPermissions.hasPermission(
+    'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+  );
+  const canCancelMonitoring = adminPermissions.hasPermission(
+    'MONITORING_CANCEL',
+  );
+  const canReadBatchHistory = adminPermissions.hasPermission(
+    'MONITORING_BATCH_HISTORY_READ',
+  );
+  const projectsQuery = useProjectsQuery(canReadProjects);
+  const projects = useMemo(() => projectsQuery.data ?? [], [projectsQuery.data]);
 
-  const {
-    currentPage: projectPage,
-    totalPages: projectTotalPages,
-    totalItems: projectTotalItems,
-    itemsPerPage: projectItemsPerPage,
-    paginatedItems: paginatedProjects,
-    goToPage: goToProjectPage,
-    setItemsPerPage: setProjectItemsPerPage,
-  } = usePagination(projects);
-
-  const [companyListLoading, setCompanyListLoading] = useState(true);
-  const [companyListError, setCompanyListError] = useState<string | null>(null);
+  const [applicationCompaniesLoading, setApplicationCompaniesLoading] = useState(true);
+  const [applicationCompaniesError, setApplicationCompaniesError] = useState<string | null>(null);
+  const [participatingCompaniesLoading, setParticipatingCompaniesLoading] = useState(true);
+  const [participatingCompaniesError, setParticipatingCompaniesError] = useState<string | null>(null);
   const [cancelRequestItems, setCancelRequestItems] = useState<
     Awaited<ReturnType<typeof getMonitoringCancelRequests>>
   >([]);
@@ -233,9 +266,27 @@ const AdminDashboard = () => {
   const [batchHistoryError, setBatchHistoryError] = useState<string | null>(
     null,
   );
+  const [openMembershipReviews, setOpenMembershipReviews] = useState<
+    ParticipationReviewDetail[]
+  >([]);
+  const [openMembershipReviewsError, setOpenMembershipReviewsError] = useState<
+    string | null
+  >(null);
   const [applicationCompanies, setApplicationCompanies] = useState<
     AdminCompanyListItem[]
   >([]);
+  const [homePendingApplications, setHomePendingApplications] = useState<
+    AdminCompanyListItem[]
+  >([]);
+  const [homePendingApplicationTotal, setHomePendingApplicationTotal] = useState(0);
+  const [homePendingApplicationsLoading, setHomePendingApplicationsLoading] = useState(true);
+  const [homePendingApplicationsError, setHomePendingApplicationsError] = useState<string | null>(null);
+  const [homeRejectedApplications, setHomeRejectedApplications] = useState<
+    AdminCompanyListItem[]
+  >([]);
+  const [homeRejectedApplicationTotal, setHomeRejectedApplicationTotal] = useState(0);
+  const [homeRejectedApplicationsLoading, setHomeRejectedApplicationsLoading] = useState(true);
+  const [homeRejectedApplicationsError, setHomeRejectedApplicationsError] = useState<string | null>(null);
   const [participatingCompanies, setParticipatingCompanies] = useState<
     AdminCompanyListItem[]
   >([]);
@@ -253,9 +304,14 @@ const AdminDashboard = () => {
   const [updatingProjectStatusId, setUpdatingProjectStatusId] = useState<
     string | null
   >(null);
-  const [selectedMonitoringProjectId, setSelectedMonitoringProjectId] =
-    useState(searchParams.get('projectId') ?? '');
-
+  const [projectStatusFilter, setProjectStatusFilter] = useState(
+    ALL_PROJECT_FILTER,
+  );
+  const [projectMethodologyFilter, setProjectMethodologyFilter] = useState(
+    ALL_PROJECT_FILTER,
+  );
+  const [projectSearchQuery, setProjectSearchQuery] = useState('');
+  const projectListHeadingRef = useRef<HTMLHeadingElement>(null);
   const [pendingDialogOpen, setPendingDialogOpen] = useState(false);
   const [pendingDialogMode, setPendingDialogMode] =
     useState<PendingCompanyActionMode | null>(null);
@@ -274,57 +330,212 @@ const AdminDashboard = () => {
   );
   const [rejectReason, setRejectReason] = useState('');
 
-  const requestedTab = searchParams.get('tab');
-  const initialTab: AdminDashboardTabValue = adminDashboardTabs.some(
-    (tab) => tab.value === requestedTab,
-  )
-    ? (requestedTab as AdminDashboardTabValue)
-    : 'companies';
+  const requestedTab = new URLSearchParams(location.search).get('tab');
+  const requestedPanel = new URLSearchParams(location.search).get('panel');
+  const activePanel: AdminHomePanel | null =
+    requestedPanel === 'cancel' || requestedPanel === 'batch'
+      ? requestedPanel
+      : null;
+  const activeSection = getAdminDashboardSection(
+    location.pathname,
+    requestedTab,
+  );
 
-  const reloadCompanyLists = useCallback(async () => {
-    setCompanyListLoading(true);
-    setCompanyListError(null);
+  useEffect(() => {
+    if (location.pathname !== paths.adminDashboard || !requestedTab) return;
+
+    const legacyRoute = getAdminRouteFromLegacyTab(requestedTab);
+    if (legacyRoute) {
+      navigate(legacyRoute, { replace: true });
+    }
+  }, [location.pathname, navigate, requestedTab]);
+
+  /** Reloads the application-company list independently from participating companies. */
+  const reloadApplicationCompanies = useCallback(async () => {
+    if (!canReviewCompanies) {
+      setApplicationCompanies([]);
+      setApplicationCompaniesLoading(false);
+      setApplicationCompaniesError(null);
+      return;
+    }
+
+    setApplicationCompaniesLoading(true);
+    setApplicationCompaniesError(null);
 
     try {
-      const commonParams = {
+      const applications = await getAdminCompanies({
         limit: companyLimit,
-      };
-
-      const [applications, participating] = await Promise.all([
-        getAdminCompanies({
-          ...commonParams,
-          status: APPLICATION_STATUSES,
-          page: applicationPage,
-        }),
-        getAdminCompanies({
-          ...commonParams,
-          status: PARTICIPATING_STATUSES,
-          page: participatingPage,
-        }),
-      ]);
-
+        status: APPLICATION_STATUSES,
+        page: applicationPage,
+        sort: 'createdAt',
+        sortOrder: 'desc',
+      });
       setApplicationCompanies(applications.companies);
       setApplicationPagination(applications.pagination);
-      setParticipatingCompanies(participating.companies);
-      setParticipatingPagination(participating.pagination);
     } catch (error) {
-      setCompanyListError(
+      setApplicationCompaniesError(
         getApiMessage(error, '企業一覧の取得に失敗しました。'),
       );
     } finally {
-      setCompanyListLoading(false);
+      setApplicationCompaniesLoading(false);
     }
+  }, [applicationPage, canReviewCompanies, companyLimit]);
+
+  /** Reloads participating companies without blocking application reviews. */
+  const reloadParticipatingCompanies = useCallback(async () => {
+    if (!canReadCompanies) {
+      setParticipatingCompanies([]);
+      setParticipatingCompaniesLoading(false);
+      setParticipatingCompaniesError(null);
+      return;
+    }
+
+    setParticipatingCompaniesLoading(true);
+    setParticipatingCompaniesError(null);
+
+    try {
+      const participating = await getAdminCompanies({
+        limit: companyLimit,
+        status: PARTICIPATING_STATUSES,
+        page: participatingPage,
+      });
+      setParticipatingCompanies(participating.companies);
+      setParticipatingPagination(participating.pagination);
+    } catch (error) {
+      setParticipatingCompaniesError(
+        getApiMessage(error, '参加企業一覧の取得に失敗しました。'),
+      );
+    } finally {
+      setParticipatingCompaniesLoading(false);
+    }
+  }, [canReadCompanies, companyLimit, participatingPage]);
+
+  /** Refreshes both company groups after a company mutation. */
+  const reloadCompanyLists = useCallback(async () => {
+    await Promise.all([
+      reloadApplicationCompanies(),
+      reloadParticipatingCompanies(),
+    ]);
+  }, [reloadApplicationCompanies, reloadParticipatingCompanies]);
+
+  /** Loads the latest PENDING applications and their actual API total for Home. */
+  const reloadHomePendingApplications = useCallback(async () => {
+    if (!canReviewCompanies) {
+      setHomePendingApplications([]);
+      setHomePendingApplicationTotal(0);
+      setHomePendingApplicationsLoading(false);
+      setHomePendingApplicationsError(null);
+      return;
+    }
+
+    setHomePendingApplicationsLoading(true);
+    setHomePendingApplicationsError(null);
+    setHomePendingApplications([]);
+    setHomePendingApplicationTotal(0);
+
+    try {
+      const response = await getAdminCompanies({
+        status: 'PENDING',
+        page: 1,
+        limit: HOME_APPLICATION_SUMMARY_LIMIT,
+        sort: 'createdAt',
+        sortOrder: 'desc',
+      });
+      setHomePendingApplications(response.companies);
+      setHomePendingApplicationTotal(response.pagination.totalItems);
+    } catch (error) {
+      setHomePendingApplicationsError(
+        getApiMessage(error, '確認待ちの企業申請を取得できませんでした。'),
+      );
+    } finally {
+      setHomePendingApplicationsLoading(false);
+    }
+  }, [canReviewCompanies]);
+
+  /** Loads the latest REJECTED applications and their actual API total for Home. */
+  const reloadHomeRejectedApplications = useCallback(async () => {
+    if (!canReviewCompanies) {
+      setHomeRejectedApplications([]);
+      setHomeRejectedApplicationTotal(0);
+      setHomeRejectedApplicationsLoading(false);
+      setHomeRejectedApplicationsError(null);
+      return;
+    }
+
+    setHomeRejectedApplicationsLoading(true);
+    setHomeRejectedApplicationsError(null);
+    setHomeRejectedApplications([]);
+    setHomeRejectedApplicationTotal(0);
+
+    try {
+      const response = await getAdminCompanies({
+        status: 'REJECTED',
+        page: 1,
+        limit: HOME_APPLICATION_SUMMARY_LIMIT,
+        sort: 'createdAt',
+        sortOrder: 'desc',
+      });
+      setHomeRejectedApplications(response.companies);
+      setHomeRejectedApplicationTotal(response.pagination.totalItems);
+    } catch (error) {
+      setHomeRejectedApplicationsError(
+        getApiMessage(error, '却下済みの企業申請を取得できませんでした。'),
+      );
+    } finally {
+      setHomeRejectedApplicationsLoading(false);
+    }
+  }, [canReviewCompanies]);
+
+  useEffect(() => {
+    if (location.pathname !== paths.adminDashboard) return;
+
+    void reloadHomePendingApplications();
+    void reloadHomeRejectedApplications();
   }, [
-    applicationPage,
-    companyLimit,
-    participatingPage,
+    location.pathname,
+    reloadHomePendingApplications,
+    reloadHomeRejectedApplications,
   ]);
 
   useEffect(() => {
-    void loadNotifications();
-  }, [loadNotifications]);
+    if (!canReadProjects || !canReviewCompanies) {
+      setOpenMembershipReviews([]);
+      setOpenMembershipReviewsError(null);
+      return;
+    }
+
+    let isActive = true;
+
+    /** Loads OPEN membership reviews used to prioritize the project table. */
+    const preloadOpenMembershipReviews = async () => {
+      setOpenMembershipReviewsError(null);
+
+      try {
+        const reviews = await getOpenParticipationReviews();
+        if (isActive) setOpenMembershipReviews(reviews);
+      } catch (error) {
+        if (!isActive) return;
+        setOpenMembershipReviewsError(
+          getApiMessage(error, '入会届の優先順位を取得できませんでした。'),
+        );
+      }
+    };
+
+    void preloadOpenMembershipReviews();
+
+    return () => {
+      isActive = false;
+    };
+  }, [canReadProjects, canReviewCompanies]);
 
   useEffect(() => {
+    if (!canCancelMonitoring) {
+      setCancelRequestItems([]);
+      setCancelRequestLoading(false);
+      setCancelRequestError(null);
+      return;
+    }
+
     let isActive = true;
 
     const preloadCancelRequests = async () => {
@@ -352,9 +563,16 @@ const AdminDashboard = () => {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [canCancelMonitoring]);
 
   useEffect(() => {
+    if (!canReadBatchHistory) {
+      setBatchHistoryItems([]);
+      setBatchHistoryLoading(false);
+      setBatchHistoryError(null);
+      return;
+    }
+
     let isActive = true;
 
     const preloadBatchHistory = async () => {
@@ -384,11 +602,15 @@ const AdminDashboard = () => {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [canReadBatchHistory]);
 
   useEffect(() => {
-    void reloadCompanyLists();
-  }, [reloadCompanyLists]);
+    void reloadApplicationCompanies();
+  }, [reloadApplicationCompanies]);
+
+  useEffect(() => {
+    void reloadParticipatingCompanies();
+  }, [reloadParticipatingCompanies]);
 
   const resetCompanyPages = () => {
     setApplicationPage(1);
@@ -400,12 +622,132 @@ const AdminDashboard = () => {
     resetCompanyPages();
   };
 
-  const handleEditProject = (project: Project) => {
-    navigate(paths.adminProjectDetail(project.id));
+  const [planProgress, setPlanProgress] = useState<
+    ReadonlyMap<string, ProjectPlanProgressSummary>
+  >(new Map());
+  const [planProgressLoading, setPlanProgressLoading] = useState(false);
+  const [planProgressError, setPlanProgressError] = useState<string | null>(
+    null,
+  );
+
+  /** Loads progress for all projects so overview and incomplete filtering stay accurate. */
+  useEffect(() => {
+    if (!canReadProjects) {
+      setPlanProgress(new Map());
+      setPlanProgressLoading(false);
+      setPlanProgressError(null);
+      return;
+    }
+
+    const ids = projects.map((project) => String(project.id));
+    if (ids.length === 0) {
+      setPlanProgress(new Map());
+      setPlanProgressLoading(false);
+      setPlanProgressError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setPlanProgressLoading(true);
+    setPlanProgressError(null);
+    getProjectPlanProgressBatch(ids)
+      .then((result) => {
+        if (!cancelled) setPlanProgress(result);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setPlanProgress(new Map());
+        setPlanProgressError(
+          getApiMessage(error, 'プロジェクトの作成進捗を取得できませんでした。'),
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setPlanProgressLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [canReadProjects, projects]);
+
+  const filteredProjects = useMemo(() => {
+    const normalizedQuery = projectSearchQuery
+      .trim()
+      .toLocaleLowerCase('ja-JP');
+
+    return projects.filter((project) => {
+      const matchesStatus =
+        projectStatusFilter === ALL_PROJECT_FILTER ||
+        normalizeProjectStatus(project.projectStatus) === projectStatusFilter;
+      const matchesMethodology =
+        projectMethodologyFilter === ALL_PROJECT_FILTER ||
+        getProjectMethodologyFilterValue(project) ===
+          projectMethodologyFilter;
+
+      return (
+        matchesStatus &&
+        matchesMethodology &&
+        matchesProjectSearch(project, normalizedQuery)
+      );
+    });
+  }, [
+    projectMethodologyFilter,
+    projectSearchQuery,
+    projectStatusFilter,
+    projects,
+  ]);
+
+  const {
+    currentPage: projectPage,
+    totalPages: projectTotalPages,
+    totalItems: projectTotalItems,
+    itemsPerPage: projectItemsPerPage,
+    paginatedItems: paginatedProjects,
+    goToPage: goToProjectPage,
+    setCurrentPage: setProjectPage,
+    setItemsPerPage: setProjectItemsPerPage,
+  } = usePagination(filteredProjects);
+
+  /** Filters the table by the API's in-progress status and moves focus to the result list. */
+  const handleShowAllInProgressProjects = () => {
+    setProjectStatusFilter(IN_PROGRESS_PROJECT_STATUS);
+    setProjectMethodologyFilter(ALL_PROJECT_FILTER);
+    setProjectSearchQuery('');
+    setProjectPage(1);
+    window.requestAnimationFrame(() => {
+      projectListHeadingRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+      projectListHeadingRef.current?.focus({ preventScroll: true });
+    });
   };
 
-  const handleUpdateProject = (project: Project) => {
-    navigate(paths.adminProjectEdit(project.id), { state: { project } });
+  const handleEditProject = (project: Project) => {
+    adminPermissions.guardAction('PROJECT_READ', () => {
+      navigate(paths.adminProjectDetail(project.id));
+    });
+  };
+
+  /** Opens project detail while preserving Admin Home as the contextual back destination. */
+  const openHomeProjectDetail = (project: Project) => {
+    adminPermissions.guardAction('PROJECT_READ', () => {
+      navigate(paths.adminProjectDetail(project.id), {
+        state: adminHomeProjectNavigationState,
+      });
+    });
+  };
+
+  /**
+   * Opens the plan wizard on an existing project. Passing the project is what
+   * makes it resume rather than create a new one, and `planSlug` says which
+   * page to land on: the first unfinished one while the plan is incomplete,
+   * and undefined once it is done so the operator can pick a page themselves.
+   */
+  const handleOpenPlan = (project: Project, planSlug?: string) => {
+    adminPermissions.guardAction('PROJECT_UPDATE', () => {
+      navigate(paths.adminProjectRegister, { state: { project, planSlug } });
+    });
   };
 
   const handleChangeProjectStatus = async (
@@ -413,6 +755,10 @@ const AdminDashboard = () => {
     status: ProjectStatus,
   ) => {
     if (project.projectStatus === status || updatingProjectStatusId) return;
+    if (!adminPermissions.hasPermission('PROJECT_STATUS_UPDATE')) {
+      adminPermissions.guardAction('PROJECT_STATUS_UPDATE', () => undefined);
+      return;
+    }
 
     setUpdatingProjectStatusId(project.id);
     try {
@@ -463,6 +809,15 @@ const AdminDashboard = () => {
   }, [applicationId, detailCompany, routeApplicationCompany]);
 
   const openCompanyDetails = (item: AdminCompanyListItem) => {
+    const requiredPermission =
+      item.status === 'ACTIVE' || item.status === 'SUSPENDED'
+        ? 'PARTICIPATING_COMPANY_READ'
+        : 'PARTICIPATING_COMPANY_APPLICATION_REVIEW';
+    if (!adminPermissions.hasPermission(requiredPermission)) {
+      adminPermissions.guardAction(requiredPermission, () => undefined);
+      return;
+    }
+
     if (item.status === 'ACTIVE' || item.status === 'SUSPENDED') {
       navigate(paths.adminCompanyDetail(item.companyId));
       return;
@@ -478,6 +833,18 @@ const AdminDashboard = () => {
   };
 
   const openCompanyReview = (item: AdminCompanyListItem) => {
+    if (
+      !adminPermissions.hasPermission(
+        'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+      )
+    ) {
+      adminPermissions.guardAction(
+        'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+        () => undefined,
+      );
+      return;
+    }
+
     if (item.id) {
       navigate(paths.adminApplicationDetail(item.id), {
         state: { company: item, reviewMode: true },
@@ -485,6 +852,16 @@ const AdminDashboard = () => {
     }
     setDetailCompany(item);
     setDetailReviewMode(true);
+  };
+
+  /** Opens actionable applications in review mode and historical ones read-only. */
+  const openHomeCompanyApplication = (item: AdminCompanyListItem) => {
+    if (item.status === 'PENDING') {
+      openCompanyReview(item);
+      return;
+    }
+
+    openCompanyDetails(item);
   };
 
   const closeCompanyDetail = () => {
@@ -496,6 +873,18 @@ const AdminDashboard = () => {
   };
 
   const openApproveCompany = (item: AdminCompanyListItem) => {
+    if (
+      !adminPermissions.hasPermission(
+        'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+      )
+    ) {
+      adminPermissions.guardAction(
+        'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+        () => undefined,
+      );
+      return;
+    }
+
     setSelectedCompany(item);
     setPendingDialogMode('approve');
     setRejectReason('');
@@ -504,6 +893,18 @@ const AdminDashboard = () => {
   };
 
   const openRejectCompany = (item: AdminCompanyListItem) => {
+    if (
+      !adminPermissions.hasPermission(
+        'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+      )
+    ) {
+      adminPermissions.guardAction(
+        'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+        () => undefined,
+      );
+      return;
+    }
+
     setSelectedCompany(item);
     setPendingDialogMode('reject');
     setRejectReason('');
@@ -514,35 +915,37 @@ const AdminDashboard = () => {
   const openCancelRequestDetail = (
     request: Awaited<ReturnType<typeof getMonitoringCancelRequests>>[number],
   ) => {
-    navigate(paths.adminCancelRequestDetail(request.id), {
-      state: { cancelRequest: request },
+    adminPermissions.guardAction('MONITORING_CANCEL', () => {
+      navigate(paths.adminCancelRequestDetail(request.id), {
+        state: { cancelRequest: request },
+      });
     });
   };
 
-  const handleMonitoringProjectChange = (projectId: string) => {
-    setSelectedMonitoringProjectId(projectId);
-    setSearchParams(
-      {
-        tab: 'monitoring',
-        projectId,
-      },
-      { replace: true },
-    );
+  /** Opens or closes a Home monitoring panel while keeping it addressable by URL. */
+  const handleHomePanelChange = (panel: AdminHomePanel | null) => {
+    if (panel) {
+      const requiredPermission =
+        panel === 'cancel'
+          ? 'MONITORING_CANCEL'
+          : 'MONITORING_BATCH_HISTORY_READ';
+      adminPermissions.guardAction(requiredPermission, () => {
+        navigate(`${paths.adminDashboard}?panel=${panel}`);
+      });
+      return;
+    }
+
+    navigate(paths.adminDashboard, { replace: true });
   };
 
-  const openMonitoringDetail = (
-    record: MonitoringRecordListItem,
-    page: number,
-    limit: number,
-  ) => {
-    if (!selectedMonitoringProjectId) return;
-
-    navigate(
-      `${paths.adminProjectMonitoringDetail(
-        selectedMonitoringProjectId,
-        record.id,
-      )}?page=${page}&limit=${limit}`,
-      { state: { monitoringRecord: record } },
+  /** Opens the OPEN membership list for the selected project. */
+  const openProjectMemberships = (project: Project) => {
+    adminPermissions.guardAction(
+      'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+      () =>
+        navigate(paths.adminProjectMembership(project.id, 'OPEN'), {
+          state: adminHomeProjectNavigationState,
+        }),
     );
   };
 
@@ -568,7 +971,15 @@ const AdminDashboard = () => {
       } else {
         await rejectAdminCompany(selectedCompany.companyId, rejectReason);
       }
-      await reloadCompanyLists();
+      await Promise.all([
+        reloadCompanyLists(),
+        ...(location.pathname === paths.adminDashboard
+          ? [
+              reloadHomePendingApplications(),
+              reloadHomeRejectedApplications(),
+            ]
+          : []),
+      ]);
       handlePendingDialogOpenChange(false);
       closeCompanyDetail();
       toast({
@@ -580,7 +991,7 @@ const AdminDashboard = () => {
       });
     } catch (error) {
       setActionFieldErrors(getApiFieldErrors(error));
-      setCompanyListError(
+      setApplicationCompaniesError(
         getApiMessage(
           error,
           pendingDialogMode === 'approve'
@@ -593,19 +1004,18 @@ const AdminDashboard = () => {
     }
   };
 
-  if (projectsQuery.isLoading) {
+  if (
+    applicationId &&
+    (!canReviewCompanies || applicationCompaniesError === FORBIDDEN_SECTION_ERROR)
+  ) {
     return (
-      <div className="text-small flex min-h-screen items-center justify-center bg-background px-6 text-center text-foreground">
-        読み込み中...
-      </div>
-    );
-  }
-
-  if (projectsQuery.isError) {
-    return (
-      <div className="text-small flex min-h-screen items-center justify-center bg-background px-6 text-center text-destructive">
-        プロジェクトを取得できませんでした。
-      </div>
+      <main className={`${dashboardContainer} space-y-6 py-8`}>
+        <header>
+          <h1 className="text-3xl font-bold text-foreground">企業申請詳細</h1>
+          <p className="mt-2 text-muted-foreground">企業申請の内容を確認します。</p>
+        </header>
+        <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
+      </main>
     );
   }
 
@@ -621,11 +1031,13 @@ const AdminDashboard = () => {
             onReject={openRejectCompany}
           />
         ) : (
-          <div className="flex min-h-screen items-center justify-center bg-background px-6 text-small text-foreground">
-            {companyListLoading
-              ? '読み込み中...'
-              : '申請情報を取得できませんでした。'}
-          </div>
+          applicationCompaniesLoading ? (
+            <PageSkeleton />
+          ) : (
+            <div className="flex min-h-screen items-center justify-center bg-background px-6 text-small text-foreground">
+              申請情報を取得できませんでした。
+            </div>
+          )
         )}
         <PendingCompanyActionDialog
           open={pendingDialogOpen}
@@ -642,127 +1054,364 @@ const AdminDashboard = () => {
     );
   }
 
-  const showApplicationSection =
-    companyListLoading || Boolean(companyListError) || applicationCompanies.length > 0;
-  const showParticipatingSection =
-    !companyListError &&
-    (companyListLoading ||
-      participatingCompanies.length > 0 ||
-      !showApplicationSection);
+  const projectsError = projectsQuery.error instanceof Error
+    ? projectsQuery.error.message
+    : projectsQuery.isError
+      ? 'プロジェクトを取得できませんでした。'
+      : null;
+  const projectSectionAllowed = canReadProjects && !isForbiddenApiError(projectsQuery.error);
+  const applicationSectionAllowed =
+    canReviewCompanies &&
+    applicationCompaniesError !== FORBIDDEN_SECTION_ERROR &&
+    homePendingApplicationsError !== FORBIDDEN_SECTION_ERROR &&
+    homeRejectedApplicationsError !== FORBIDDEN_SECTION_ERROR;
+  const participatingSectionAllowed =
+    canReadCompanies && participatingCompaniesError !== FORBIDDEN_SECTION_ERROR;
+  const cancelSectionAllowed =
+    canCancelMonitoring && cancelRequestError !== FORBIDDEN_SECTION_ERROR;
+  const batchSectionAllowed =
+    canReadBatchHistory && batchHistoryError !== FORBIDDEN_SECTION_ERROR;
 
   return (
-    <div className="flex min-h-screen flex-col bg-card">
-      <AdminDashboardHero />
+    <div className="flex min-h-[calc(100dvh-5rem)] flex-col bg-background">
+      <Tabs value={activeSection} className="flex flex-1 flex-col bg-background">
+        <main className={`${dashboardContainer} flex-1 space-y-10 py-8`}>
+          {/* <TabsContent
+            value="overview"
+            className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
+          >
+            <AdminDashboardOverview
+              projects={projects}
+              projectsLoading={projectsQuery.isLoading}
+              projectsError={projectsError}
+              openMembershipReviews={openMembershipReviews}
+              openMembershipReviewsError={openMembershipReviewsError}
+              applicationTotal={applicationPagination.totalItems}
+              applicationsLoading={applicationCompaniesLoading}
+              applicationsError={applicationCompaniesError}
+              pendingApplications={homePendingApplications}
+              pendingApplicationTotal={homePendingApplicationTotal}
+              pendingApplicationsLoading={homePendingApplicationsLoading}
+              pendingApplicationsError={homePendingApplicationsError}
+              rejectedApplications={homeRejectedApplications}
+              rejectedApplicationTotal={homeRejectedApplicationTotal}
+              rejectedApplicationsLoading={homeRejectedApplicationsLoading}
+              rejectedApplicationsError={homeRejectedApplicationsError}
+              participatingCompanyTotal={participatingPagination.totalItems}
+              participatingCompaniesLoading={participatingCompaniesLoading}
+              participatingCompaniesError={participatingCompaniesError}
+              cancelRequests={cancelRequestItems}
+              cancelRequestsLoading={cancelRequestLoading}
+              cancelRequestsError={cancelRequestError}
+              batchHistory={batchHistoryItems}
+              batchHistoryPagination={batchHistoryPagination}
+              batchHistoryLoading={batchHistoryLoading}
+              batchHistoryError={batchHistoryError}
+              activePanel={activePanel}
+              onPanelChange={handleHomePanelChange}
+              onOpenProjectDetail={openHomeProjectDetail}
+              onOpenProjectMembership={openProjectMemberships}
+              onOpenCompanyApplication={openHomeCompanyApplication}
+              onOpenCancelRequest={openCancelRequestDetail}
+              onNavigateProjects={() =>
+                adminPermissions.guardAction('PROJECT_READ', () =>
+                  navigate(paths.adminProjectList),
+                )
+              }
+              onNavigateCompanies={() =>
+                adminPermissions.guardAction(
+                  'PARTICIPATING_COMPANY_READ',
+                  () => navigate(paths.adminCompanyList),
+                )
+              }
+              onNavigateApplications={() =>
+                adminPermissions.guardAction(
+                  'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+                  () => navigate(paths.adminCompanyList),
+                )
+              }
+              canReadProjects={projectSectionAllowed}
+              canReadCompanies={participatingSectionAllowed}
+              canReviewCompanies={applicationSectionAllowed}
+              canCancelMonitoring={cancelSectionAllowed}
+              canReadBatchHistory={batchSectionAllowed}
+            />
+          </TabsContent> */}
 
-      <Tabs defaultValue={initialTab} className="flex flex-1 flex-col bg-card">
-        <AdminDashboardTabs />
+          <TabsContent
+            value="overview"
+            className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
+          >
+            <AdminDashboardOverview
+              projects={projects}
+              projectsLoading={projectsQuery.isLoading}
+              projectsError={projectsError}
+              openMembershipReviews={openMembershipReviews}
+              openMembershipReviewsError={openMembershipReviewsError}
+              applicationTotal={applicationPagination.totalItems}
+              applicationsLoading={applicationCompaniesLoading}
+              applicationsError={applicationCompaniesError}
+              pendingApplications={homePendingApplications}
+              pendingApplicationTotal={homePendingApplicationTotal}
+              pendingApplicationsLoading={homePendingApplicationsLoading}
+              pendingApplicationsError={homePendingApplicationsError}
+              rejectedApplications={homeRejectedApplications}
+              rejectedApplicationTotal={homeRejectedApplicationTotal}
+              rejectedApplicationsLoading={homeRejectedApplicationsLoading}
+              rejectedApplicationsError={homeRejectedApplicationsError}
+              participatingCompanyTotal={participatingPagination.totalItems}
+              participatingCompaniesLoading={participatingCompaniesLoading}
+              participatingCompaniesError={participatingCompaniesError}
+              cancelRequests={cancelRequestItems}
+              cancelRequestsLoading={cancelRequestLoading}
+              cancelRequestsError={cancelRequestError}
+              batchHistory={batchHistoryItems}
+              batchHistoryPagination={batchHistoryPagination}
+              batchHistoryLoading={batchHistoryLoading}
+              batchHistoryError={batchHistoryError}
+              activePanel={activePanel}
+              onPanelChange={handleHomePanelChange}
+              onOpenProjectDetail={openHomeProjectDetail}
+              onOpenProjectMembership={openProjectMemberships}
+              onOpenCompanyApplication={openHomeCompanyApplication}
+              onOpenCancelRequest={openCancelRequestDetail}
+              onNavigateProjects={() =>
+                adminPermissions.guardAction('PROJECT_READ', () =>
+                  navigate(paths.adminProjectList),
+                )
+              }
+              onNavigateCompanies={() =>
+                adminPermissions.guardAction(
+                  'PARTICIPATING_COMPANY_READ',
+                  () => navigate(paths.adminCompanyList),
+                )
+              }
+              onNavigateApplications={() =>
+                adminPermissions.guardAction(
+                  'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+                  () => navigate(paths.adminCompanyList),
+                )
+              }
+              canReadProjects={projectSectionAllowed}
+              canReadCompanies={participatingSectionAllowed}
+              canReviewCompanies={applicationSectionAllowed}
+              canCancelMonitoring={cancelSectionAllowed}
+              canReadBatchHistory={batchSectionAllowed}
+            />
+          </TabsContent>
 
-        <main className={cn('flex-1 space-y-10 py-8', dashboardContainer)}>
           <TabsContent
             value="companies"
             className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
-            {showApplicationSection && (
-              <AdminDashboardSection
-                title="参加申請中の企業"
-                description="参加申請を受け付けた企業です。内容を確認し、承認または差し戻しを行ってください。"
-              >
-                {companyListLoading ? (
-                  <AdminDashboardEmptyState>読み込み中...</AdminDashboardEmptyState>
-                ) : companyListError ? (
-                  <AdminDashboardEmptyState>
-                    {companyListError}
-                  </AdminDashboardEmptyState>
-                ) : (
-                  <>
-                    <AdminCompanyApplicationsTable
-                      items={applicationCompanies}
-                      emptyMessage="参加申請中の企業はありません。"
-                      onDetails={openCompanyDetails}
-                      onReview={openCompanyReview}
-                    />
-                    <PaginationControls
-                      currentPage={applicationPagination.page}
-                      totalPages={applicationPagination.totalPages}
-                      totalItems={applicationPagination.totalItems}
-                      itemsPerPage={companyLimit}
-                      rowsPerPageOptions={[10, 20, 50, 100]}
-                      onPageChange={setApplicationPage}
-                      onItemsPerPageChange={handleCompanyLimitChange}
-                      className="mt-4"
-                    />
-                  </>
-                )}
-              </AdminDashboardSection>
-            )}
+            <AdminPageHeader
+              title="企業管理"
+              description="参加申請の確認と参加企業の情報を管理します。"
+            />
 
-            {showParticipatingSection && (
-              <AdminDashboardSection
-                title="参加企業"
-                description="承認済みの参加企業です。企業情報と運用状況を確認できます。"
-              >
-                {companyListLoading ? (
-                  <AdminDashboardEmptyState>読み込み中...</AdminDashboardEmptyState>
-                ) : (
-                  <>
-                    <AdminCompanyApplicationsTable
-                      items={participatingCompanies}
-                      emptyMessage="参加企業はありません。"
-                      onDetails={openCompanyDetails}
-                      onReview={openCompanyReview}
-                    />
-                    <PaginationControls
-                      currentPage={participatingPagination.page}
-                      totalPages={participatingPagination.totalPages}
-                      totalItems={participatingPagination.totalItems}
-                      itemsPerPage={companyLimit}
-                      rowsPerPageOptions={[10, 20, 50, 100]}
-                      onPageChange={setParticipatingPage}
-                      onItemsPerPageChange={handleCompanyLimitChange}
-                      className="mt-4"
-                    />
-                  </>
-                )}
-              </AdminDashboardSection>
-            )}
+            <AdminTableCard
+              title="参加申請中の企業"
+              count={applicationPagination.totalItems}
+              description="参加申請を受け付けた企業です。内容を確認し、承認または差し戻しを行ってください。"
+              notice={
+                applicationSectionAllowed ? (
+                  <NoticeBanner
+                    tone='warning'
+                    title='管理者による対応が必要です'
+                  >
+                    ステータスが「申請受付」の企業について、申請内容を確認し、承認または差し戻しを行ってください。
+                  </NoticeBanner>
+                ) : undefined
+              }
+              footer={
+                applicationSectionAllowed &&
+                !applicationCompaniesLoading &&
+                !applicationCompaniesError ? (
+                  <PaginationControls
+                    currentPage={applicationPagination.page}
+                    totalPages={applicationPagination.totalPages}
+                    totalItems={applicationPagination.totalItems}
+                    itemsPerPage={companyLimit}
+                    rowsPerPageOptions={[10, 20, 50, 100]}
+                    onPageChange={setApplicationPage}
+                    onItemsPerPageChange={handleCompanyLimitChange}
+                  />
+                ) : undefined
+              }
+            >
+              {!applicationSectionAllowed ? (
+                <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
+              ) : applicationCompaniesLoading ? (
+                <SkeletonTable columns={5} rows={6} minWidth={980} />
+              ) : applicationCompaniesError ? (
+                <AdminDashboardEmptyState>
+                  {applicationCompaniesError}
+                </AdminDashboardEmptyState>
+              ) : (
+                <AdminCompanyApplicationsTable
+                  items={applicationCompanies}
+                  emptyMessage="参加申請中の企業はありません。"
+                  onDetails={openCompanyDetails}
+                  onReview={openCompanyReview}
+                />
+              )}
+            </AdminTableCard>
+
+            <AdminTableCard
+              title="参加企業"
+              count={participatingPagination.totalItems}
+              description="承認済みの参加企業です。企業情報と運用状況を確認できます。"
+              footer={
+                participatingSectionAllowed &&
+                !participatingCompaniesLoading &&
+                !participatingCompaniesError ? (
+                  <PaginationControls
+                    currentPage={participatingPagination.page}
+                    totalPages={participatingPagination.totalPages}
+                    totalItems={participatingPagination.totalItems}
+                    itemsPerPage={companyLimit}
+                    rowsPerPageOptions={[10, 20, 50, 100]}
+                    onPageChange={setParticipatingPage}
+                    onItemsPerPageChange={handleCompanyLimitChange}
+                  />
+                ) : undefined
+              }
+            >
+              {!participatingSectionAllowed ? (
+                <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_READ" />
+              ) : participatingCompaniesLoading ? (
+                <SkeletonTable columns={5} rows={6} minWidth={980} />
+              ) : participatingCompaniesError ? (
+                <AdminDashboardEmptyState>{participatingCompaniesError}</AdminDashboardEmptyState>
+              ) : (
+                <AdminCompanyApplicationsTable
+                  items={participatingCompanies}
+                  emptyMessage="参加企業はありません。"
+                  onDetails={openCompanyDetails}
+                  onReview={openCompanyReview}
+                />
+              )}
+            </AdminTableCard>
           </TabsContent>
 
           <TabsContent
             value="projects"
             className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
-            <AdminDashboardSection
-              title="プロジェクト管理"
-              description="登録済みプロジェクトの詳細確認、更新、ステータス変更を行えます。"
-              action={
-                <Button
-                  type="button"
-                  size="md"
-                  onClick={() => navigate('/admin/project-register')}
-                  className="self-start sm:self-auto"
+            <section className="space-y-4">
+              <AdminPageHeader
+                title="プロジェクト管理"
+                description="登録済みプロジェクトの詳細確認、更新、ステータス変更を行えます。"
+                action={
+                  <Button
+                    type="button"
+                    size="md"
+                    onClick={() =>
+                      adminPermissions.guardAction('PROJECT_CREATE', () =>
+                        navigate(paths.adminProjectRegister),
+                      )
+                    }
+                  >
+                    <Plus className="h-4 w-4" />
+                    プロジェクトを追加
+                  </Button>
+                }
+              />
+              {!projectSectionAllowed ? (
+                <PermissionDeniedNotice permission="PROJECT_READ" />
+              ) : <div className="space-y-6">
+                <AdminProjectOverviewCards
+                  projects={projects}
+                  projectsLoading={projectsQuery.isLoading}
+                  projectsError={projectsError}
+                  planProgress={planProgress}
+                  planProgressLoading={planProgressLoading}
+                  planProgressError={planProgressError}
+                  onOpenPlan={handleOpenPlan}
+                  onShowAllInProgress={handleShowAllInProgressProjects}
+                />
+
+                <AdminTableCard
+                  title="プロジェクト一覧"
+                  count={projectTotalItems}
+                  headingRef={projectListHeadingRef}
+                  filters={
+                    <Select
+                      value={projectStatusFilter}
+                      onValueChange={(value) => {
+                        setProjectStatusFilter(value);
+                        setProjectPage(1);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="ステータス" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ALL_PROJECT_FILTER}>
+                          すべてのステータス
+                        </SelectItem>
+                        {PROJECT_STATUS_PRESENTATIONS.map((presentation) => (
+                          <SelectItem
+                            key={presentation.status}
+                            value={presentation.status}
+                          >
+                            {presentation.status}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  }
+                  search={
+                    <>
+                      <Search
+                        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                        aria-hidden="true"
+                      />
+                      <Input
+                        type="search"
+                        value={projectSearchQuery}
+                        onChange={(event) => {
+                          setProjectSearchQuery(event.target.value);
+                          setProjectPage(1);
+                        }}
+                        placeholder="プロジェクト名・方法論で検索"
+                        aria-label="プロジェクトを検索"
+                        className="h-10 bg-card pl-9"
+                      />
+                    </>
+                  }
+                  footer={
+                    !projectsQuery.isLoading && !projectsError ? (
+                      <PaginationControls
+                        currentPage={projectPage}
+                        totalPages={projectTotalPages}
+                        totalItems={projectTotalItems}
+                        itemsPerPage={projectItemsPerPage}
+                        onPageChange={goToProjectPage}
+                        onItemsPerPageChange={setProjectItemsPerPage}
+                      />
+                    ) : undefined
+                  }
                 >
-                  <Plus className="h-4 w-4" />
-                  プロジェクトを追加
-                </Button>
-              }
-            >
-              <ProjectTable
-                projects={paginatedProjects}
-                onEdit={handleEditProject}
-                onUpdate={handleUpdateProject}
-                onStatusChange={handleChangeProjectStatus}
-                updatingProjectStatusId={updatingProjectStatusId}
-              />
-              <PaginationControls
-                currentPage={projectPage}
-                totalPages={projectTotalPages}
-                totalItems={projectTotalItems}
-                itemsPerPage={projectItemsPerPage}
-                onPageChange={goToProjectPage}
-                onItemsPerPageChange={setProjectItemsPerPage}
-                className="mt-4"
-              />
-            </AdminDashboardSection>
+                  {projectsQuery.isLoading ? (
+                    <SkeletonTable columns={8} rows={6} minWidth={1390} />
+                  ) : projectsError ? (
+                    <AdminDashboardEmptyState>
+                      {projectsError}
+                    </AdminDashboardEmptyState>
+                  ) : (
+                    <ProjectTable
+                      projects={paginatedProjects}
+                      onEdit={handleEditProject}
+                      onStatusChange={handleChangeProjectStatus}
+                      updatingProjectStatusId={updatingProjectStatusId}
+                      planProgress={planProgress}
+                      onOpenPlan={handleOpenPlan}
+                    />
+                  )}
+                </AdminTableCard>
+              </div>}
+            </section>
           </TabsContent>
 
           <TabsContent
@@ -781,123 +1430,36 @@ const AdminDashboard = () => {
 
           <TabsContent
             value="methodologies"
-            className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
-          >
-            <AdminDashboardSection
-              title="方法論一覧"
-              description="利用可能な方法論の一覧をここで管理できるようにします。"
-            >
-              <AdminDashboardEmptyState>
-                表示できる方法論データがありません。
-              </AdminDashboardEmptyState>
-            </AdminDashboardSection>
-          </TabsContent>
-
-          <TabsContent
-            value="monitoring"
             className="m-0 space-y-10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
           >
-            <AdminDashboardSection
-              title="モニタリングデータ一覧"
-              description="プロジェクトを選択して、登録済みのモニタリングデータを確認できます。"
-            >
-              <ErrorBoundary
-                fallback={({ resetErrorBoundary }) => (
-                  <div
-                    role="alert"
-                    className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center"
-                  >
-                    <AlertTriangle
-                      className="h-5 w-5 text-destructive"
-                      aria-hidden="true"
-                    />
-                    <p className="text-small font-medium text-foreground">
-                      モニタリングデータを表示できませんでした。
-                    </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={resetErrorBoundary}
-                    >
-                      再試行
-                    </Button>
-                  </div>
-                )}
-              >
-                <ProjectMonitoringTable
-                  projects={projects}
-                  projectsLoading={projectsQuery.isLoading}
-                  projectsError={
-                    projectsQuery.error instanceof Error
-                      ? projectsQuery.error.message
-                      : null
-                  }
-                  selectedProjectId={selectedMonitoringProjectId}
-                  initialPage={Math.max(
-                    Number(searchParams.get('monitoringPage')) || 1,
-                    1,
-                  )}
-                  initialLimit={Math.max(
-                    Number(searchParams.get('monitoringLimit')) || 10,
-                    1,
-                  )}
-                  onProjectChange={handleMonitoringProjectChange}
-                  onViewDetail={openMonitoringDetail}
-                />
-              </ErrorBoundary>
-            </AdminDashboardSection>
-            <AdminDashboardSection
-              title="取消一覧"
-              description="取消対象のモニタリングデータを確認し、取消申請を送信できます。"
-            >
-              <ErrorBoundary
-                fallback={({ resetErrorBoundary }) => (
-                  <div
-                    role="alert"
-                    className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center"
-                  >
-                    <AlertTriangle
-                      className="h-5 w-5 text-destructive"
-                      aria-hidden="true"
-                    />
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-foreground">
-                        モニタリングデータを表示できませんでした。
-                      </p>
-                      <p className="text-subtle text-foreground">
-                        もう一度お試しください。
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={resetErrorBoundary}
-                    >
-                      再試行
-                    </Button>
-                  </div>
-                )}
-              >
-                <CancelRequestHistoryTable
-                  initialRequests={cancelRequestItems}
-                  initialLoading={cancelRequestLoading}
-                  initialLoadError={cancelRequestError}
-                  onViewRequest={openCancelRequestDetail}
-                />
-              </ErrorBoundary>
-            </AdminDashboardSection>
-            <AdminDashboardSection
-              title="バッチ履歴"
-              description="バッチ処理の実行状況と処理履歴を確認できます。"
-            >
-              <BatchHistoryTable
-                initialItems={batchHistoryItems}
-                initialPagination={batchHistoryPagination}
-                initialLoading={batchHistoryLoading}
-                initialLoadError={batchHistoryError}
+            <section className="space-y-4">
+              <AdminPageHeader
+                title="方法論一覧"
+                description="利用可能な方法論の一覧をここで管理できるようにします。"
               />
-            </AdminDashboardSection>
+              {adminPermissions.hasPermission('METHODOLOGY_READ') ? (
+                <AdminDashboardEmptyState>
+                  表示できる方法論データがありません。
+                </AdminDashboardEmptyState>
+              ) : (
+                <PermissionDeniedNotice permission="METHODOLOGY_READ" />
+              )}
+            </section>
+
+            {/* <AdminDashboardSection
+              title="申請書様式"
+              description="申請に使用する帳票様式を確認します。"
+            >
+              {adminPermissions.hasPermission('APPLICATION_FORM_READ') ? (
+                <AdminDashboardEmptyState>
+                  表示できる申請書様式データがありません。
+                </AdminDashboardEmptyState>
+              ) : (
+                <PermissionDeniedNotice permission="APPLICATION_FORM_READ" />
+              )}
+            </AdminDashboardSection> */}
           </TabsContent>
+
         </main>
       </Tabs>
 

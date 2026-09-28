@@ -1,22 +1,29 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '@/api/_shared/errors';
 import { mapParticipationReviewDetail } from '@/api/admin/participationReviewMapper';
 import ParticipationReviewDetailPage from './ParticipationReviewDetailPage';
 
 const {
   approveParticipationReview,
+  downloadAdminParticipationMembershipPdf,
   getAdminProjectDetail,
-  getMyParticipationReviews,
+  getOpenParticipationReviews,
   getParticipationReviewDetail,
   rejectParticipationReview,
+  downloadFromUrl,
+  toast,
 } = vi.hoisted(() => ({
   approveParticipationReview: vi.fn(),
+  downloadAdminParticipationMembershipPdf: vi.fn(),
   getAdminProjectDetail: vi.fn(),
-  getMyParticipationReviews: vi.fn(),
+  getOpenParticipationReviews: vi.fn(),
   getParticipationReviewDetail: vi.fn(),
   rejectParticipationReview: vi.fn(),
+  downloadFromUrl: vi.fn(),
+  toast: vi.fn(),
 }));
 
 vi.mock('@/api/admin', async (importOriginal) => {
@@ -24,12 +31,19 @@ vi.mock('@/api/admin', async (importOriginal) => {
   return {
     ...actual,
     approveParticipationReview,
+    downloadAdminParticipationMembershipPdf,
     getAdminProjectDetail,
-    getMyParticipationReviews,
+    getOpenParticipationReviews,
     getParticipationReviewDetail,
     rejectParticipationReview,
   };
 });
+
+vi.mock('@/utils/download', () => ({ downloadFromUrl }));
+
+vi.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({ toast }),
+}));
 
 const reviewDetail = mapParticipationReviewDetail({
   participationId: 12,
@@ -76,10 +90,23 @@ const reviewDetail = mapParticipationReviewDetail({
   },
 });
 
-function renderPage() {
+const approvedReviewDetail = {
+  ...reviewDetail,
+  review: {
+    ...reviewDetail.review,
+    primaryApplReviewerName: '一次確認者',
+    secondaryApplReviewerName: '二次確認者',
+  },
+};
+
+/** Renders the review detail with an optional explicit status query. */
+function renderPage(status?: 'OPEN' | 'APPROVED' | 'REJECTED') {
+  const statusQuery = status ? `?status=${status}` : '';
   return render(
     <MemoryRouter
-      initialEntries={['/admin/projects/7/memberships/12']}
+      initialEntries={[
+        `/admin/projects/7/memberships/12${statusQuery}`,
+      ]}
       future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
     >
       <Routes>
@@ -99,21 +126,28 @@ function renderPage() {
 describe('ParticipationReviewDetailPage', () => {
   beforeEach(() => {
     approveParticipationReview.mockReset();
+    downloadAdminParticipationMembershipPdf.mockReset();
     getAdminProjectDetail.mockReset();
-    getMyParticipationReviews.mockReset();
+    getOpenParticipationReviews.mockReset();
     getParticipationReviewDetail.mockReset();
     rejectParticipationReview.mockReset();
+    downloadFromUrl.mockReset();
+    toast.mockReset();
     getAdminProjectDetail.mockResolvedValue({
       id: '7',
       projectName: 'プロジェクトA',
     });
     getParticipationReviewDetail.mockResolvedValue(reviewDetail);
-    getMyParticipationReviews.mockResolvedValue([reviewDetail]);
+    getOpenParticipationReviews.mockResolvedValue([reviewDetail]);
     approveParticipationReview.mockResolvedValue(undefined);
     rejectParticipationReview.mockResolvedValue(undefined);
+    downloadAdminParticipationMembershipPdf.mockResolvedValue({
+      pdfUrl: 'https://example.com/membership.pdf',
+      expiresIn: 300,
+    });
   });
 
-  it('enables approval only after reviewer inkan and every checklist item are set', async () => {
+  it('opens the approval form and enables submission only after every required field is set', async () => {
     const user = userEvent.setup();
     renderPage();
 
@@ -122,7 +156,15 @@ describe('ParticipationReviewDetailPage', () => {
     ).toBeInTheDocument();
 
     const approveButton = screen.getByRole('button', { name: '承認' });
-    expect(approveButton).toBeDisabled();
+    expect(approveButton).toBeEnabled();
+    expect(
+      screen.queryByRole('heading', { name: 'レビューチェックリスト' }),
+    ).not.toBeInTheDocument();
+
+    await user.click(approveButton);
+
+    const confirmButton = screen.getByRole('button', { name: '承認する' });
+    expect(confirmButton).toBeDisabled();
 
     await user.type(
       screen.getByRole('textbox', { name: /レビュー担当者印/ }),
@@ -132,13 +174,18 @@ describe('ParticipationReviewDetailPage', () => {
       await user.click(checkbox);
     }
 
-    expect(approveButton).toBeEnabled();
-    await user.click(approveButton);
-    await user.click(screen.getByRole('button', { name: '承認する' }));
+    expect(confirmButton).toBeDisabled();
+    await user.type(
+      screen.getByRole('textbox', { name: /レビュー担当者名/ }),
+      '山田 太郎',
+    );
+    expect(confirmButton).toBeEnabled();
+    await user.click(confirmButton);
 
     expect(approveParticipationReview).toHaveBeenCalledWith(
       12,
       expect.objectContaining({
+        reviewerName: '山田 太郎',
         reviewerInkan: '山田',
         isSolarContractDoc: true,
         isSubsidyCheck: true,
@@ -149,13 +196,236 @@ describe('ParticipationReviewDetailPage', () => {
     ).not.toHaveProperty('rejectReason');
   });
 
-  it('renders a non-reviewable pending item as read-only', async () => {
-    getMyParticipationReviews.mockResolvedValue([]);
+  it('starts every decision dialog with an unchecked checklist', async () => {
+    const user = userEvent.setup();
+    getParticipationReviewDetail.mockResolvedValue({
+      ...reviewDetail,
+      review: {
+        ...reviewDetail.review,
+        isSolarContractDoc: true,
+        isPcsSpecDoc: true,
+        isBatterySpecDoc: true,
+        isOperationStartDoc: true,
+        isGenerationDataDoc: true,
+        isReversePowerDoc: true,
+        isInvestmentProofDoc: true,
+        isApplicationCompleteCheck: true,
+        isFormsAttachCheck: true,
+        isEmissionsReductionActivityListCheck: true,
+        isOriginalSpecCheck: true,
+        isSubsidyCheck: true,
+      },
+    });
+
     renderPage();
 
     expect(
+      await screen.findByRole('heading', { level: 1, name: '入会届の詳細' }),
+    ).toBeInTheDocument();
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+
+    await user.click(screen.getByRole('button', { name: '承認' }));
+
+    expect(
+      screen
+        .getAllByRole('checkbox')
+        .every(
+          (checkbox) =>
+            !checkbox.hasAttribute('data-state') ||
+            checkbox.getAttribute('data-state') === 'unchecked',
+        ),
+    ).toBe(true);
+  });
+
+  it('marks every checklist item as required', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
+    await user.click(screen.getByRole('button', { name: '承認' }));
+
+    const checkboxes = screen.getAllByRole('checkbox');
+    expect(checkboxes).toHaveLength(12);
+    for (const checkbox of checkboxes) {
+      expect(checkbox).toHaveAttribute('aria-required', 'true');
+      const checkboxId = checkbox.getAttribute('id');
+      const label = document.querySelector(`label[for="${checkboxId}"]`);
+      expect(label).toHaveTextContent('*');
+    }
+  });
+
+  it('gets the membership PDF and opens its temporary URL', async () => {
+    const user = userEvent.setup();
+    getParticipationReviewDetail.mockResolvedValue(approvedReviewDetail);
+    getOpenParticipationReviews.mockResolvedValue([]);
+    renderPage('APPROVED');
+
+    await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
+    expect(screen.queryByRole('button', { name: '承認' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '却下' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'PDFを表示' }));
+
+    expect(downloadAdminParticipationMembershipPdf).toHaveBeenCalledWith(
+      '7',
+      12,
+    );
+    expect(downloadFromUrl).toHaveBeenCalledWith(
+      'https://example.com/membership.pdf',
+    );
+  });
+
+  it('does not show the PDF after only the primary approval', async () => {
+    getParticipationReviewDetail.mockResolvedValue({
+      ...reviewDetail,
+      review: {
+        ...reviewDetail.review,
+        primaryApplReviewerName: '一次確認者',
+        secondaryApplReviewerName: '',
+      },
+    });
+    renderPage('OPEN');
+
+    await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
+
+    expect(
+      screen.queryByRole('button', { name: 'PDFを表示' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('keeps the page available and shows a toast when the PDF cannot be opened', async () => {
+    const user = userEvent.setup();
+    getParticipationReviewDetail.mockResolvedValue(approvedReviewDetail);
+    getOpenParticipationReviews.mockResolvedValue([]);
+    downloadAdminParticipationMembershipPdf.mockRejectedValue(
+      new Error('PDFがまだ作成されていません。'),
+    );
+    renderPage('APPROVED');
+
+    await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
+    await user.click(screen.getByRole('button', { name: 'PDFを表示' }));
+
+    expect(toast).toHaveBeenCalledWith({
+      title: 'PDFを表示できませんでした',
+      description: 'PDFがまだ作成されていません。',
+      variant: 'destructive',
+    });
+    expect(
+      screen.getByRole('heading', { level: 1, name: '入会届の詳細' }),
+    ).toBeInTheDocument();
+  });
+
+  it('requires a complete rejection form and preserves its draft after closing', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
+    await user.click(screen.getByRole('button', { name: '却下' }));
+
+    const rejectButton = screen.getByRole('button', { name: '却下する' });
+    expect(rejectButton).toBeDisabled();
+
+    await user.type(
+      screen.getByRole('textbox', { name: /レビュー担当者名/ }),
+      '山田 太郎',
+    );
+    await user.type(
+      screen.getByRole('textbox', { name: /レビュー担当者印/ }),
+      '山田',
+    );
+    await user.type(
+      screen.getByRole('textbox', { name: /却下理由/ }),
+      '資料に不備があります。',
+    );
+    for (const checkbox of screen.getAllByRole('checkbox')) {
+      await user.click(checkbox);
+    }
+
+    expect(rejectButton).toBeEnabled();
+    await user.click(screen.getByRole('button', { name: 'キャンセル' }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('button', { name: '却下する' }),
+      ).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: '却下' }));
+    expect(
+      screen.getByRole('textbox', { name: /レビュー担当者名/ }),
+    ).toHaveValue('山田 太郎');
+    expect(
+      screen.getByRole('textbox', { name: /レビュー担当者印/ }),
+    ).toHaveValue('山田');
+    expect(screen.getByRole('textbox', { name: /却下理由/ })).toHaveValue(
+      '資料に不備があります。',
+    );
+    expect(
+      screen
+        .getAllByRole('checkbox')
+        .every((checkbox) => checkbox.getAttribute('data-state') === 'checked'),
+    ).toBe(true);
+
+    await user.click(screen.getByRole('button', { name: '却下する' }));
+
+    expect(rejectParticipationReview).toHaveBeenCalledWith(
+      12,
+      expect.objectContaining({
+        reviewerName: '山田 太郎',
+        reviewerInkan: '山田',
+        rejectReason: '資料に不備があります。',
+        isSolarContractDoc: true,
+        isSubsidyCheck: true,
+      }),
+    );
+  });
+
+  it('keeps the decision dialog open and displays backend field errors', async () => {
+    const user = userEvent.setup();
+    approveParticipationReview.mockRejectedValue(
+      new ApiError('入力内容に不備があります。', {
+        status: 400,
+        payload: {
+          statusCode: 'VALIDATION_ERROR',
+          message: '入力内容に不備があります。',
+          errors: {
+            'request::reviewerName':
+              'レビュー担当者名を確認してください。',
+          },
+        },
+      }),
+    );
+    renderPage();
+
+    await screen.findByRole('heading', { level: 1, name: '入会届の詳細' });
+    await user.click(screen.getByRole('button', { name: '承認' }));
+    await user.type(
+      screen.getByRole('textbox', { name: /レビュー担当者名/ }),
+      '山田 太郎',
+    );
+    await user.type(
+      screen.getByRole('textbox', { name: /レビュー担当者印/ }),
+      '山田',
+    );
+    for (const checkbox of screen.getAllByRole('checkbox')) {
+      await user.click(checkbox);
+    }
+    await user.click(screen.getByRole('button', { name: '承認する' }));
+
+    expect(
+      await screen.findByText('レビュー担当者名を確認してください。'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: '入会届を承認しますか？' }),
+    ).toBeInTheDocument();
+  });
+
+  it('renders a rejected item as read-only without PDF actions', async () => {
+    getOpenParticipationReviews.mockResolvedValue([]);
+    renderPage('REJECTED');
+
+    expect(
       await screen.findByText(
-        'この入会届は現在あなたのレビュー対象ではないため、閲覧のみ可能です。',
+        'この入会届は却下されています。申請内容のみ閲覧できます。',
       ),
     ).toBeInTheDocument();
     expect(
@@ -163,8 +433,9 @@ describe('ParticipationReviewDetailPage', () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '承認' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '却下' })).not.toBeInTheDocument();
-    expect(screen.getAllByRole('checkbox').every((item) => item.hasAttribute('disabled'))).toBe(
-      true,
-    );
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+    expect(
+      screen.queryByRole('button', { name: 'PDFを表示' }),
+    ).not.toBeInTheDocument();
   });
 });

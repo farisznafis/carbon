@@ -28,10 +28,14 @@ This document describes every file under `src/api/`. It is intended for develope
 | `createAdminProject` | `POST /project` | JSON project creation body | [`CreateAdminProjectPayload`](admin/types.ts#L52); [`mapAdminProjectPayload`](admin/projectPayloadMapper.ts#L117) |
 | `updateAdminProject` | `PATCH /project/:projectId` | JSON project update body; path: `projectId` | [`UpdateAdminProjectPayload`](admin/types.ts#L118); [request implementation](admin/projects.ts#L78) |
 | `updateAdminProjectStatus` | `PATCH /project/:projectId/status` | JSON status body; path: `projectId` | [`UpdateProjectStatusPayload`](admin/types.ts#L283); [request implementation](admin/projects.ts#L98) |
-| `getAdminProjectPlanApplication` | `GET /projectplan/:projectId/application` | Path: `projectId` | [Function parameter and path](admin/projects.ts#L129) |
 | `getProjectPlanAutofillByProject` | `GET /projectplan/autofill/:projectId` | Path: `projectId` | [Function parameter and path](admin/projects.ts#L155) |
 | `getProjectPlanAutofillDefaults` | `GET /projectplan/autofill` | No request payload | [Request implementation](admin/projects.ts#L182) |
-| `createAdminProjectPlanApplication` | `POST /projectplan/:projectId/application` | JSON application body; path: `projectId` | [`CreateAdminProjectPlanApplicationPayload`](admin/types.ts#L192); [`mapAdminProjectPlanApplicationPayload`](admin/projectPayloadMapper.ts#L166); [request implementation](admin/projects.ts#L204) |
+| `getProjectPlanForm` | `GET /projectplan/:projectId/forms/:formSlug` | Path: `projectId`, `formSlug`; optional `methodology` query | [Request implementation](admin/projects.ts) |
+| `saveProjectPlanForm` | `PUT /projectplan/:projectId/forms/:formSlug` | JSON page body; path: `projectId`, `formSlug` | [Request implementation](admin/projects.ts) |
+| `uploadProjectPlanFormFile` | `POST /projectplan/:projectId/forms/:formSlug/files` | Multipart `file`; query `fieldName` | [Request implementation](admin/projects.ts) |
+| `getProjectPlanFileDownloadUrl` | `GET /projectplan/:projectId/files/download-url` | Path: `projectId`; query `s3Key` (must be `projects/{projectId}/plan/…`, else 400). Returns `url` valid 15 min (`expiresIn` seconds) | [Request implementation](admin/projects.ts) |
+| `getProjectPlanProgress` | `GET /projectplan/:projectId/progress` | Path: `projectId` | [Request implementation](admin/projects.ts) |
+| `getProjectPlanProgressBatch` | `GET /projectplan/progress` | Query `projectIds` (comma separated) | [Request implementation](admin/projects.ts) |
 
 ### Company
 
@@ -75,9 +79,16 @@ This document describes every file under `src/api/`. It is intended for develope
 | API function | Method and endpoint | Request data | Payload location |
 | --- | --- | --- | --- |
 | `getUsers` | `GET /user` | No request payload | [Request implementation](users/list.ts#L11) |
-| `registerUser` | `POST /user` | JSON user creation body | [`RegisterUserPayload`](users/mutations.ts#L5); [`UserFormData`](users/types.ts#L51); [payload mapping](users/mutations.ts#L55) |
 | `updateUser` | `PATCH /user` | JSON user update body, including `userId` | [`UpdateUserPayload`](users/mutations.ts#L22); [`UserFormData`](users/types.ts#L51); [payload mapping](users/mutations.ts#L84) |
 | `deleteUser` | `DELETE /user/:userId` | Path: `userId`; no request body | [Function parameter and path](users/mutations.ts#L163) |
+
+### User invitations
+
+| API function | Method and endpoint | Request data | Payload location |
+| --- | --- | --- | --- |
+| `createUserInvitation` | `POST /user/invitations` | Email and optional `siteId` | [`CreateUserInvitationPayload`](user-invitations/types.ts); [request implementation](user-invitations/requests.ts) |
+| `getUserInvitationContext` | `GET /auth/invitation` | `X-Action-Session` header | [`UserInvitationContext`](user-invitations/types.ts); [request implementation](user-invitations/requests.ts) |
+| `completeUserInvitation` | `POST /auth/invitation/complete` | Account fields and `X-Action-Session` header | [`CompleteUserInvitationPayload`](user-invitations/types.ts); [request implementation](user-invitations/requests.ts) |
 
 ### Notifications
 
@@ -400,7 +411,7 @@ This document describes every file under `src/api/`. It is intended for develope
 ### `users/index.ts`
 
 - **Purpose:** Public barrel for user API.
-- **Main exports:** `getUsers`, `registerUser`, `updateUser`, `deleteUser`, and user/company types.
+- **Main exports:** `getUsers`, `updateUser`, `deleteUser`, and user/company types.
 - **Boundary:** Public users module entrypoint.
 - **Notes:** Company mutation APIs live in `company`, not `users`.
 
@@ -420,8 +431,8 @@ This document describes every file under `src/api/`. It is intended for develope
 
 ### `users/mutations.ts`
 
-- **Purpose:** User create, update, and delete API calls.
-- **Main exports:** `registerUser`, `updateUser`, `deleteUser`.
+- **Purpose:** User update and delete API calls.
+- **Main exports:** `updateUser`, `deleteUser`.
 - **Boundary:** User mutations only.
 
 ### `users/types.ts`

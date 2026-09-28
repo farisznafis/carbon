@@ -24,10 +24,10 @@ export function FileUploadButton({
 
   return (
     <div className="flex flex-col items-start border-b pb-4 space-y-2">
-        <div className="font-bold text-sm">{label}</div>
+        <div className="text-small font-bold">{label}</div>
         <label
             htmlFor={id}
-            className="flex cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
+            className="flex cursor-pointer items-center rounded-md bg-accent px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-accent/80"
         >
             <Upload className="mr-2 h-4 w-4" />
             ファイルを選択またはドラッグ＆ドロップ

@@ -32,6 +32,54 @@ function renderEquipmentForm() {
   );
 }
 
+/** Fills the required solar-equipment fields used by validation-flow tests. */
+function fillRequiredSolarEquipmentFields(container: HTMLElement) {
+  const requiredFieldValues = {
+    equipmentOpDate: '2026-07-27',
+    nominalMaxOutput: '10',
+    pcsManufacturer: 'メーカー',
+    pcsModel: 'MODEL-1',
+    deviceNo: 'DEVICE-1',
+    powerCondStandby: '0',
+    totalInvestment: '1000',
+    preProjectUnitPrice: '20',
+  };
+
+  Object.entries(requiredFieldValues).forEach(([fieldName, fieldValue]) => {
+    const input = container.querySelector<HTMLInputElement>(
+      `[name="${fieldName}"]`,
+    );
+    expect(input).not.toBeNull();
+    fireEvent.change(input!, { target: { value: fieldValue } });
+  });
+
+  const nativeSelects = container.querySelectorAll<HTMLSelectElement>(
+    'select[aria-hidden="true"]',
+  );
+  fireEvent.change(nativeSelects[1], { target: { value: 'no' } });
+  fireEvent.change(nativeSelects[2], { target: { value: 'no' } });
+
+  [
+    'equipment-op-date-file',
+    'nominal-max-output-file',
+    'pcs-file',
+    'total-investment-file',
+    'pre-project-unit-price-file',
+  ].forEach((inputId) => {
+    const fileInput = container.querySelector<HTMLInputElement>(`#${inputId}`);
+    expect(fileInput).not.toBeNull();
+    fireEvent.change(fileInput!, {
+      target: {
+        files: [
+          new File(['document'], `${inputId}.pdf`, {
+            type: 'application/pdf',
+          }),
+        ],
+      },
+    });
+  });
+}
+
 describe('EquipmentFormPage file handling', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -87,7 +135,6 @@ describe('EquipmentFormPage file handling', () => {
       nominalMaxOutput: '10',
       pcsManufacturer: 'メーカー',
       pcsModel: 'MODEL-1',
-      powerCondUnitCount: '1',
       deviceNo: 'DEVICE-1',
       powerCondStandby: '0',
       totalInvestment: '1000',
@@ -187,5 +234,80 @@ describe('EquipmentFormPage file handling', () => {
       ),
     ).toBe(true);
     expect(screen.queryByText('Equipment confirmation')).not.toBeInTheDocument();
+  });
+
+  it('validates again after correcting a backend field error', async () => {
+    let validationRequestCount = 0;
+    vi.mocked(fetch).mockImplementation((url: string | URL | Request) => {
+      const requestUrl = String(url);
+
+      if (requestUrl.startsWith('/api/site?companyId=')) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              statusCode: '200',
+              siteList: [
+                {
+                  siteId: 'SITE4f83ac050b20d755',
+                  siteName: '東京拠点',
+                },
+              ],
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } },
+          ),
+        );
+      }
+
+      if (requestUrl.includes('/site/project/equipment/validate')) {
+        validationRequestCount += 1;
+        const isFirstRequest = validationRequestCount === 1;
+        return Promise.resolve(
+          new Response(
+            JSON.stringify(
+              isFirstRequest
+                ? {
+                    statusCode: 'VALIDATION_ERROR',
+                    message: '入力内容に不備があります。',
+                    errors: {
+                      equipmentOpDate: '稼働開始日を確認してください。',
+                    },
+                  }
+                : { statusCode: 'OK' },
+            ),
+            {
+              status: isFirstRequest ? 400 : 200,
+              headers: { 'Content-Type': 'application/json' },
+            },
+          ),
+        );
+      }
+
+      return Promise.resolve(
+        new Response(JSON.stringify({ statusCode: '200' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+    });
+
+    const { container } = renderEquipmentForm();
+    expect((await screen.findAllByText('東京拠点')).length).toBeGreaterThan(0);
+    fillRequiredSolarEquipmentFields(container);
+
+    fireEvent.click(screen.getByRole('button', { name: '確認' }));
+    expect(
+      await screen.findByText('稼働開始日を確認してください。'),
+    ).toBeInTheDocument();
+    expect(validationRequestCount).toBe(1);
+
+    const operationDateInput = container.querySelector<HTMLInputElement>(
+      '[name="equipmentOpDate"]',
+    );
+    fireEvent.change(operationDateInput!, {
+      target: { value: '2026-08-01' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '確認' }));
+
+    await vi.waitFor(() => expect(validationRequestCount).toBe(2));
   });
 });

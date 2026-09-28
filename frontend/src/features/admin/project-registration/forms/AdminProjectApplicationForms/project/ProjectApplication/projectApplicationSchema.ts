@@ -179,10 +179,10 @@ export const projectApplicationSchema = z
       .string()
       .min(1, '必須項目です')
       .max(20, VALIDATION_MESSAGES.MAX_CHARACTERS(20))
-      .regex(REGEX_PATTERNS.PHONE_NUMBER, REGEX_MESSAGES.PHONE_NUMBER)
+      .regex(REGEX_PATTERNS.PHONE_NUMBER_DIGITS, REGEX_MESSAGES.PHONE_NUMBER_DIGITS)
       .optional(),
 
-    isChangePicPhone: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
+    isChangePicPhoneNumber: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     otherContactBusinessName: z
       .string()
@@ -208,29 +208,29 @@ export const projectApplicationSchema = z
 
     isChangeOtherContactPicPosition: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
-    otherContactPicName: z
+    otherContactsPicName: z
       .string()
       .max(50, VALIDATION_MESSAGES.MAX_CHARACTERS(50))
       .regex(REGEX_PATTERNS.FULLWIDTH_SYMBOLS, REGEX_MESSAGES.FULLWIDTH_SYMBOLS)
       .optional(),
 
-    isChangeOtherContactPicName: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
+    isChangeOtherContactsPicName: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
-    otherContactPicEmail: z
+    otherContactsPicEmail: z
       .string()
       .max(254, VALIDATION_MESSAGES.MAX_CHARACTERS(254))
       .email('メールアドレスの形式が正しくありません')
       .optional(),
 
-    isChangeOtherContactPicEmail: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
+    isChangeOtherContactsPicEmail: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
-    otherContactPicPhone: z
+    otherContactsPicPhoneNumber: z
       .string()
       .max(20, VALIDATION_MESSAGES.MAX_CHARACTERS(20))
-      .regex(REGEX_PATTERNS.PHONE_NUMBER, REGEX_MESSAGES.PHONE_NUMBER)
+      .regex(REGEX_PATTERNS.PHONE_NUMBER_DIGITS, REGEX_MESSAGES.PHONE_NUMBER_DIGITS)
       .optional(),
 
-    isChangeOtherContactPicPhone: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
+    isChangeOtherContactsPicPhoneNumber: z.boolean(SELECT_TYPE_REQUIRED_VALIDATION).optional(),
 
     projectNumber: z
       .string()

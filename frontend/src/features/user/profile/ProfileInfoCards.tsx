@@ -1,20 +1,12 @@
-import { Building, Lock, User } from 'lucide-react';
+import { Building2, LockKeyhole, UserRound } from 'lucide-react';
 import type { ProfileCompanyViewModel, ProfileViewModel } from '@/api/profile';
-import { Button } from '@/components/ui/button';
+import { ProfileDetailField } from '@/components/data-display/ProfileDetailField';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { InlineHelp } from '@/components/feedback/InlineHelp/InlineHelp';
-
-type InfoItemProps = {
-  label: string;
-  value?: string | number | null;
-};
+  FormCard,
+  FormSection,
+  FormSectionStack,
+} from '@/components/forms/form-layout';
+import { Button } from '@/components/ui/button';
 
 type ProfileInfoCardsProps = {
   profile: ProfileViewModel | null;
@@ -22,21 +14,15 @@ type ProfileInfoCardsProps = {
   onPasswordChange?: () => void;
 };
 
-function InfoItem({ label, value, helpText }: InfoItemProps & { helpText?: string }) {
-  return (
-    <div className="min-w-0">
-      <p className="text-sm font-medium text-foreground flex items-center gap-1">
-        {label}
-        {helpText && <InlineHelp content={helpText} />}
-      </p>
-      <p className="break-words text-base font-semibold">
-        {value == null || value === '' ? '-' : value}
-      </p>
-    </div>
-  );
+/** Formats a profile name in Japanese family-name-first order. */
+function formatProfileName(lastName?: string, firstName?: string): string {
+  return [lastName, firstName]
+    .filter((namePart) => namePart && namePart !== '-')
+    .join(' ') || '-';
 }
 
-function formatRole(role?: string) {
+/** Converts the backend role code into the label shown to profile users. */
+function formatRole(role?: string): string {
   const normalizedRole = role?.toLowerCase();
 
   if (normalizedRole === 'user') return '社員';
@@ -46,101 +32,84 @@ function formatRole(role?: string) {
   return role || '-';
 }
 
+/** Renders personal, corporate, and optional password information using the shared profile layout. */
 export function ProfileInfoCards({
   profile,
   company,
   onPasswordChange,
-}: ProfileInfoCardsProps) {
+}: Readonly<ProfileInfoCardsProps>) {
   const isMaster = profile?.role?.toLowerCase() === 'master';
-  
-  const roleHelpText = isMaster 
+  const roleHelpText = isMaster
     ? 'すべての機能を利用・管理できる権限です。'
     : '基本機能を利用できる権限です。';
 
   return (
-    <div className="space-y-6">
-      <Card className="animate-slide-up rounded-2xl">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            個人情報
-          </CardTitle>
-        </CardHeader>
+    <FormCard>
+      <FormSectionStack spacing="relaxed">
+        <FormSection
+          icon={<UserRound className="h-5 w-5" aria-hidden="true" />}
+          title="個人情報"
+        >
+          <dl className="grid gap-x-10 gap-y-6 md:grid-cols-2">
+            <ProfileDetailField label="企業ID" value={profile?.companyId} />
+            <ProfileDetailField label="社員名" value={profile?.username} />
+            <ProfileDetailField
+              label="氏名"
+              value={formatProfileName(profile?.lastName, profile?.firstName)}
+            />
+            <ProfileDetailField
+              label="氏名（カナ）"
+              value={formatProfileName(
+                profile?.lastNameKana,
+                profile?.firstNameKana,
+              )}
+            />
+            <ProfileDetailField label="メールアドレス" value={profile?.email} />
+            <ProfileDetailField label="役職" value={profile?.userPosition} />
+            <ProfileDetailField label="電話番号" value={profile?.phoneNumber} />
+            {!isMaster ? (
+              <ProfileDetailField label="拠点名" value={profile?.siteName} />
+            ) : null}
+            <ProfileDetailField
+              label="権限"
+              value={formatRole(profile?.role)}
+              helpText={roleHelpText}
+            />
+          </dl>
+        </FormSection>
 
-        <CardContent className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
-          <InfoItem label="企業ID" value={profile?.companyId} />
-          <InfoItem label="社員名" value={profile?.username} />
-          <InfoItem
-            label="氏名"
-            value={profile ? `${profile.lastName} ${profile.firstName}` : '-'}
-          />
-          <InfoItem
-            label="氏名（カナ）"
-            value={
-              profile
-                ? `${profile.lastNameKana} ${profile.firstNameKana}`
-                : '-'
-            }
-          />
-          <InfoItem label="メールアドレス" value={profile?.email} />
-          <InfoItem label="役職" value={profile?.userPosition} />
-          <InfoItem label="電話番号" value={profile?.phoneNumber} />
-          {!isMaster && <InfoItem label="拠点名" value={profile?.siteName} />}
-          <InfoItem 
-            label="権限" 
-            value={formatRole(profile?.role)} 
-            helpText={roleHelpText}
-          />
-        </CardContent>
+        <FormSection
+          icon={<Building2 className="h-5 w-5" aria-hidden="true" />}
+          title="法人情報"
+          description="法人情報の更新をご希望の方は、お問い合わせください。"
+        >
+          <dl className="grid gap-x-10 gap-y-6 md:grid-cols-2">
+            <ProfileDetailField label="法人番号" value={company?.corpNumber} />
+            <ProfileDetailField label="企業名" value={company?.nameJA} />
+            <ProfileDetailField
+              label="企業名（カナ）"
+              value={company?.nameFurigana}
+            />
+            <ProfileDetailField label="企業名（英語）" value={company?.nameEN} />
+            <ProfileDetailField label="所在地" value={company?.address} />
+            <ProfileDetailField label="電話番号" value={company?.phoneNumber} />
+            <ProfileDetailField label="FAX番号" value={company?.fax} />
+            <ProfileDetailField label="メールアドレス" value={company?.email} />
+          </dl>
+        </FormSection>
 
-        <CardFooter className="pt-2" />
-      </Card>
-
-      <Card className="animate-slide-up rounded-2xl">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2">
-            <Building className="h-5 w-5" />
-            法人情報
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
-          <InfoItem label="法人番号" value={company?.corpNumber} />
-          <InfoItem label="企業名" value={company?.nameJA} />
-          <InfoItem label="企業名（カナ）" value={company?.nameFurigana} />
-          <InfoItem label="企業名（英語）" value={company?.nameEN} />
-          <InfoItem label="所在地" value={company?.address} />
-          <InfoItem label="電話番号" value={company?.phoneNumber} />
-          <InfoItem label="FAX番号" value={company?.fax} />
-          <InfoItem label="メールアドレス" value={company?.email} />
-        </CardContent>
-
-        <CardFooter className="pt-2">
-          <CardDescription className="text-sm text-foreground">
-            法人情報の更新をご希望の方は、お問い合わせください。
-          </CardDescription>
-        </CardFooter>
-      </Card>
-
-      {onPasswordChange && (
-        <Card className="animate-slide-up rounded-2xl">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2">
-              <Lock className="h-5 w-5" />
-              パスワード変更
-            </CardTitle>
-            <CardDescription>
-              アカウントのセキュリティを保つためにパスワードを更新できます。
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            <Button onClick={onPasswordChange} className="w-full">
+        {onPasswordChange ? (
+          <FormSection
+            icon={<LockKeyhole className="h-5 w-5" aria-hidden="true" />}
+            title="パスワード変更"
+            description="アカウントのセキュリティを保つためにパスワードを更新できます。"
+          >
+            <Button type="button" className="w-full" onClick={onPasswordChange}>
               パスワードを変更
             </Button>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+          </FormSection>
+        ) : null}
+      </FormSectionStack>
+    </FormCard>
   );
 }

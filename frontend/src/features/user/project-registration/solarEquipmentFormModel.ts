@@ -3,36 +3,39 @@ import type { SolarPowerFormData } from '@/lib/equipmentValidations';
 
 export const SOLAR_FORM_DEFAULT_VALUES: SolarPowerFormData = {
   siteId: '',
+  changeDate: '',
   equipmentOpDate: '',
-  operationStartDateFile: undefined,
+  operationStartDateFile: null,
   nominalMaxOutput: '',
-  nominalMaxOutputFile: undefined,
+  nominalMaxOutputFile: null,
   pcsManufacturer: '',
   pcsModel: '',
-  powerCondUnitCount: '',
   deviceNo: '',
   powerCondStandby: '',
-  pcsFile: undefined,
+  pcsFile: null,
   hasBattery: '',
   batteryMaker: '',
   batteryModel: '',
   batteryCapacity: '',
-  batteryFile: undefined,
+  batteryFile: null,
   totalInvestment: '',
-  totalInvestmentFile: undefined,
+  totalInvestmentFile: null,
   hasSubsidy: '',
   subsidyName: '',
-  subsidyNameFile: undefined,
+  subsidyNameFile: null,
   subsidyAmount: '',
   preProjectUnitPrice: '',
-  preProjectUnitPriceFile: undefined,
+  preProjectUnitPriceFile: null,
 };
 
 export const REQUIRED_EQUIPMENT_FILE_MESSAGE =
   '確認資料をアップロードしてください。';
 
 const API_FIELD_ALIASES: Record<string, keyof SolarPowerFormData> = {
-  pcsunitcount: 'powerCondUnitCount',
+  拠点: 'siteId',
+  変更日: 'changeDate',
+  changedate: 'changeDate',
+  '稼働開始日（電力受給開始日）': 'equipmentOpDate',
   pcsstandby: 'powerCondStandby',
   solar_contract: 'operationStartDateFile',
   panel_catalog: 'nominalMaxOutputFile',
@@ -93,7 +96,6 @@ const REQUIRED_FIELD_MESSAGES: Partial<
   nominalMaxOutput: '公称最大出力を入力してください。',
   pcsManufacturer: 'メーカーを入力してください。',
   pcsModel: '型式を入力してください。',
-  powerCondUnitCount: '導入台数を入力してください。',
   deviceNo: '機器固有番号を入力してください。',
   powerCondStandby: '夜間待機電力を入力してください。',
   hasBattery: '蓄電池設置の有無を選択してください。',
@@ -169,7 +171,8 @@ export function getEquipmentFormFieldName(
     .split('.')
     .at(-1)
     ?.split('::')
-    .at(-1);
+    .at(-1)
+    ?.trim();
   if (!fieldName) return null;
 
   return (
@@ -202,7 +205,6 @@ export function getMissingEquipmentRequiredFieldErrors(
     'nominalMaxOutput',
     'pcsManufacturer',
     'pcsModel',
-    'powerCondUnitCount',
     'deviceNo',
     'powerCondStandby',
     'hasBattery',

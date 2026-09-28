@@ -13,6 +13,15 @@ export const participationReviewChecklistFields = [
   'isSubsidyCheck',
 ] as const;
 
+export const participationReviewStatuses = [
+  'OPEN',
+  'APPROVED',
+  'REJECTED',
+] as const;
+
+export type ParticipationReviewStatus =
+  (typeof participationReviewStatuses)[number];
+
 export type ParticipationReviewChecklistField =
   (typeof participationReviewChecklistFields)[number];
 
@@ -35,7 +44,6 @@ export type ParticipationReviewEquipment = {
   nominalMaxOutput: number | null;
   pcsManufacturer: string;
   pcsModel: string;
-  pcsUnitCount: number | null;
   deviceNo: string;
   pcsStandby: number | null;
   hasBattery: boolean | null;
@@ -91,9 +99,11 @@ export type ParticipationReviewDetail = {
   confirmationItems: ParticipationConfirmationItems;
   sustainabilityCommitment: ParticipationSustainabilityCommitment;
   review: ParticipationReviewState;
+  pdfStatus: string;
 };
 
 export type ApproveParticipationReviewPayload = ParticipationReviewChecklist & {
+  reviewerName: string;
   reviewerInkan: string;
 };
 

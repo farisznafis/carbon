@@ -135,7 +135,7 @@ describe('EquipmentList equipment history', () => {
       screen.getByRole('button', { name: '変更履歴' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: '設備変更' }),
+      screen.getByRole('button', { name: '設備を変更する' }),
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '変更履歴' }));
@@ -176,6 +176,49 @@ describe('EquipmentList equipment history', () => {
     anchorClick.mockRestore();
   });
 
+  it('requires confirmation before opening the equipment change form', async () => {
+    const user = userEvent.setup();
+    const onEditEquipment = vi.fn();
+
+    render(
+      <EquipmentList
+        siteId="SITE-1"
+        equipments={[equipment]}
+        onEditEquipment={onEditEquipment}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole('button', { name: '設備を変更する' }),
+    );
+
+    expect(onEditEquipment).not.toHaveBeenCalled();
+    const dialog = await screen.findByRole('alertdialog');
+    expect(within(dialog).getByText('設備を変更しますか？')).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        '変更すると現在の設備情報は履歴として保存され、新しい設備として登録されます。よろしいですか？',
+      ),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText('SF-TKY-001')).toBeInTheDocument();
+
+    await user.click(
+      within(dialog).getByRole('button', { name: 'キャンセル' }),
+    );
+    expect(onEditEquipment).not.toHaveBeenCalled();
+
+    await user.click(
+      screen.getByRole('button', { name: '設備を変更する' }),
+    );
+    await user.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', {
+        name: '変更内容を入力する',
+      }),
+    );
+    expect(onEditEquipment).toHaveBeenCalledWith(7);
+    expect(onEditEquipment).toHaveBeenCalledTimes(1);
+  });
+
   it('hides history and edit actions when an equipment has no backend id', () => {
     render(
       <EquipmentList
@@ -190,7 +233,7 @@ describe('EquipmentList equipment history', () => {
       screen.queryByRole('button', { name: '変更履歴' }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: '設備変更' }),
+      screen.queryByRole('button', { name: '設備を変更する' }),
     ).not.toBeInTheDocument();
   });
 

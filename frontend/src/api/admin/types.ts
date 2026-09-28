@@ -37,7 +37,8 @@ export type AdminProjectDetail = {
   methodCombiFeasibility: boolean;
   methodDetails: string;
   operatorCompanyId: string;
-  isJoined: boolean | null;
+  isCompanyJoined: boolean | null;
+  hasSiteRelation: boolean | null;
   updatedAt: string;
   createdAt: string;
 };
@@ -99,15 +100,6 @@ export type CreateAdminProjectResponse = {
   }>;
 };
 
-export type ProjectPlanApplicationResponse = {
-  statusCode?: string;
-  message?: string | null;
-  errors?: unknown;
-  application?: unknown;
-  projectApplication?: unknown;
-  data?: unknown;
-};
-
 export type ProjectPlanAutofillResponse = {
   statusCode?: string;
   message?: string | null;
@@ -147,6 +139,8 @@ export type ProjectPlanFormProgress = {
   status: ProjectPlanFormStatus;
   updatedAt?: string | null;
   updatedBy?: string | null;
+  /** Filed only when it applies; not counted towards completion. */
+  optional?: boolean;
 };
 
 export type ProjectPlanProgressResponse = {
@@ -563,3 +557,44 @@ export type UpdateProjectStatusPayload = {
 };
 
 export type UpdateProjectStatusResponse = UpdateProjectStatusPayload;
+
+/** How far one project's plan is filled, for list views. */
+export type ProjectPlanProgressSummary = {
+  projectId: string;
+  totalForms: number;
+  completedForms: number;
+  /** First page not yet complete; null once everything is done. */
+  nextIncompleteSlug?: string | null;
+  /** True when the operator may pick any page instead of resuming. */
+  complete: boolean;
+};
+
+export type ProjectPlanBatchProgressResponse = {
+  statusCode?: string;
+  message?: string | null;
+  errors?: unknown;
+  /** Projects the caller cannot see are omitted rather than reported. */
+  projects?: ProjectPlanProgressSummary[];
+};
+
+/**
+ * A provisional upload against a project-plan page. The s3Key still points
+ * under tmp/; it becomes permanent only when that page is saved.
+ */
+export type ProjectPlanFileResponse = {
+  statusCode?: string;
+  message?: string;
+  s3Key?: string;
+  fileId?: string;
+  originalName?: string;
+};
+
+/** A short-lived URL to view a file stored on a saved plan page. */
+export type ProjectPlanFileDownloadResponse = {
+  statusCode?: string;
+  message?: string;
+  errors?: Record<string, string>;
+  url?: string;
+  /** Seconds until `url` stops working. */
+  expiresIn?: number;
+};

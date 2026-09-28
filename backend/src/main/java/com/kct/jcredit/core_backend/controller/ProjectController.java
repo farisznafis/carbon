@@ -1,6 +1,8 @@
 package com.kct.jcredit.core_backend.controller;
 
 import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.format.annotation.DateTimeFormat;
 
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,20 +29,22 @@ import com.kct.jcredit.core_backend.dto.request.CreateProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdateProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.ProjectUploadDocumentRequest;
 import com.kct.jcredit.core_backend.dto.response.CreateProjectResponse;
+import com.kct.jcredit.core_backend.dto.response.MemberTermsInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectCompanyListResponse;
+import com.kct.jcredit.core_backend.dto.response.ProjectFileDownloadResponse;
+import com.kct.jcredit.core_backend.dto.response.ProjectFileListResponse;
+import com.kct.jcredit.core_backend.dto.response.ProjectFileResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectResponse;
-import com.kct.jcredit.core_backend.dto.response.ProjectUploadDocumentResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectMonitoringResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectPdfDownloadResponse;
 import com.kct.jcredit.core_backend.dto.response.UpdateProjectStatusResponse;
-
-
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+import com.kct.jcredit.core_backend.enums.ProjectFileType;
 import com.kct.jcredit.core_backend.service.ProjectService;
-import com.kct.jcredit.core_backend.service.EnR002FileUploadService;
 import com.kct.jcredit.core_backend.service.ParticipationProjectService;
 import com.kct.jcredit.core_backend.service.ProjectMonitoringService;
-import com.kct.jcredit.core_backend.service.ProjectUploadDocumentService;
+import com.kct.jcredit.core_backend.service.ProjectFileService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 
@@ -63,8 +68,9 @@ public class ProjectController {
 
     private final ProjectService projectService;
     private final JwtUtil jwtUtil;
-    private final ProjectUploadDocumentService projectUploadDocumentService;
+    private final ProjectFileService projectFileService;
     private final ProjectMonitoringService projectMonitoringService;
+    private final ParticipationProjectService participationProjectService;
 
     @PostMapping
     @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_CREATE.name()))")
@@ -120,46 +126,61 @@ public class ProjectController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }  
 
-    //5.4 upload document
-    @PostMapping(value="/{projectId}/document/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-     @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
+    //5.4 PROJECT FILES 
+    @PostMapping(value = "/{projectId}/files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "プロジェクト書類アップロード", description = "指定されたプロジェクトの承認関連書類をアップロードします。")
-    public ProjectUploadDocumentResponse uploadApprovalDocuments(
-            Authentication authentication, 
+    @Operation(summary = "プロジェクトファイルアップロード", description = "プロジェクトに紐づく審査関連書類をアップロードします。")
+    public ResponseEntity<ProjectFileResponse> upload(
             @PathVariable String projectId,
-            @RequestPart(value = "プロジェクト登録証", required = true) MultipartFile fileRegistrationCert,
-            @RequestPart(value = "妥当性報告書", required = true) MultipartFile fileValidationReport,
-            @RequestPart(value = "検証報告書", required = true) MultipartFile fileVerificationReport
-    ) {
-        String token = (String) authentication.getCredentials();
-        String username = jwtUtil.extractUsername(token);
-        return projectUploadDocumentService.processUpload(
-                projectId, 
-                fileRegistrationCert, 
-                fileValidationReport, 
-                fileVerificationReport, 
-                username
-        );
+            @RequestParam ProjectFileType fileType,
+            @RequestPart MultipartFile file,
+            Authentication authentication) {
+        ProjectFileResponse response = projectFileService.uploadFile(projectId, fileType, file, authentication.getName());
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
-    @GetMapping("/{projectId}/document/list")
-     @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
+    @GetMapping("/{projectId}/files")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "プロジェクト書類一覧取得", description = "指定されたプロジェクトに登録された書類一覧を取得します。")
-    public ProjectUploadDocumentResponse getDocumentList(@PathVariable String projectId) {
-        return projectUploadDocumentService.getDocumentsByProjectId(projectId);
+    @Operation(summary = "プロジェクトファイル一覧取得", description = "プロジェクトにアップロード済みの書類一覧を取得する")
+    public ResponseEntity<ProjectFileListResponse> list(
+            @PathVariable String projectId,
+            @RequestParam(required = false) ProjectFileType fileType) {
+        ProjectFileListResponse response = projectFileService.listFiles(projectId, fileType);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
-    @PatchMapping("/{projectId}/document/status")
-    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_UPDATE.name()))")
+    // @PatchMapping("{projectId}/files/{fileId}/submit")
+    // @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
+    // @SecurityRequirement(name = "bearerAuth")
+    // public ResponseEntity<ProjectFileResponse> markAsSubmitted(
+    //         @PathVariable String projectId,
+    //         @PathVariable Integer fileId) {
+    //     return ResponseEntity.ok(projectFileService.markAsSubmitted(projectId, fileId));
+    // }
+
+    @GetMapping("/{projectId}/files/{fileId}/download")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "プロジェクト書類ステータス更新", description = "指定されたプロジェクト書類のステータスを更新します。")
-    public ProjectUploadDocumentResponse updateDocumentStatus(
+    @Operation(summary = "プロジェクトファイルダウンロードURL取得", description = "プロジェクトにアップロード済みの書類のダウンロードURLを取得する")
+    public ResponseEntity<ProjectFileDownloadResponse> download(
             @PathVariable String projectId,
-            @Valid @RequestBody ProjectUploadDocumentRequest request
-    ) {
-        return projectUploadDocumentService.updateStatus(projectId, request);
+            @PathVariable Integer fileId) {
+        ProjectFileDownloadResponse response = projectFileService.getDownloadUrl(projectId, fileId);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @DeleteMapping("/{projectId}/files/{fileId}")
+    @PreAuthorize("hasRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_READ.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "プロジェクトファイル削除", description = "プロジェクトにアップロード済みの書類を削除する")
+    public ResponseEntity<BaseResponse> delete(
+            @PathVariable String projectId,
+            @PathVariable Integer fileId,
+            Authentication authentication) {
+        BaseResponse response = projectFileService.deleteFile(projectId, fileId, authentication.getName());
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
     //list projects with filters
@@ -219,7 +240,7 @@ public class ProjectController {
     }
 
     @GetMapping("/{projectId}/participations/{participationId}/membership-pdf")
-    @PreAuthorize("hasAnyRole('admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_VIEW.name()))")
+    @PreAuthorize("hasAnyRole('admin','master','user') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_VIEW.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "入会届PDFダウンロード（管理者用）", description = "指定参加情報の入会届PDFダウンロードURLを取得します。")
     public ResponseEntity<ProjectPdfDownloadResponse> getMembershipPdf(
@@ -229,5 +250,16 @@ public class ProjectController {
         ProjectPdfDownloadResponse response = projectService
                 .getMembershipPdfForOperator(projectId, participationId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{projectId}/member-terms-info")
+    @PreAuthorize("hasAnyRole('admin','master','user') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PROJECT_VIEW.name()))")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "会員規約表示用情報取得",
+           description = "会員規約ページに表示するプロジェクト・運営者情報を取得します。")
+    public ResponseEntity<MemberTermsInfoResponse> getMemberTermsInfo(
+            @PathVariable String projectId) {
+        MemberTermsInfoResponse response = participationProjectService.getMemberTermsInfo(projectId);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 }

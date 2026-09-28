@@ -1,5 +1,6 @@
 import { BASE_URL, getAuthHeaders } from '../config';
 import { ApiError, getApiErrorMessage } from './errors';
+import type { ForbiddenHandling } from './forbiddenAccess';
 import type { ApiErrorPayload } from './types';
 
 type ApiBody = BodyInit | object | null | undefined;
@@ -7,6 +8,7 @@ type ApiBody = BodyInit | object | null | undefined;
 type ApiFetchOptions = Omit<RequestInit, 'body' | 'headers'> & {
   auth?: boolean;
   body?: ApiBody;
+  forbiddenHandling?: ForbiddenHandling;
   headers?: HeadersInit;
 };
 
@@ -55,12 +57,15 @@ function createHeaders(options: ApiFetchOptions, hasJsonBody: boolean): Headers 
 export async function apiFetch(path: string, options: ApiFetchOptions = {}): Promise<Response> {
   const hasJsonBody = isPlainJsonBody(options.body);
   const body = hasJsonBody ? JSON.stringify(options.body) : options.body;
+  const { forbiddenHandling: _forbiddenHandling, ...requestOptions } = options;
 
-  return fetch(`${BASE_URL}${path}`, {
-    ...options,
+  const response = await fetch(`${BASE_URL}${path}`, {
+    ...requestOptions,
     body: body as BodyInit | null | undefined,
     headers: createHeaders(options, hasJsonBody),
   });
+
+  return response;
 }
 
 export async function parseJsonResponse<T>(response: Response): Promise<ParsedResponse<T>> {

@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { FormActions } from '@/components/forms/form-layout';
 import { AlertCircle, Clock } from "lucide-react";
 
 interface SessionTimeoutOverlayProps {
@@ -34,14 +34,18 @@ export const SessionTimeoutOverlay = ({ isOpen, onReAuthenticate }: SessionTimeo
           </DialogDescription>
         </DialogHeader>
         
-        <DialogFooter className="sm:justify-center">
-          <Button 
-            onClick={onReAuthenticate}
-            className="w-full sm:w-auto px-8"
-            size="lg"
-          >
-            ログインして続ける
-          </Button>
+        <DialogFooter>
+          <FormActions
+            context="compact"
+            className="w-full"
+            actions={[
+              {
+                id: 'reauthenticate',
+                label: 'ログインして続ける',
+                onClick: onReAuthenticate,
+              },
+            ]}
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

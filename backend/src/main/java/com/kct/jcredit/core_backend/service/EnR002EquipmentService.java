@@ -12,9 +12,9 @@ public interface EnR002EquipmentService {
 
     EnR002EquipmentResponse addEquipment(String siteId,
                                          String companyId,
+                                         String projectId,
                                          EnR002EquipmentRequest request);
 
-    // List semua equipment milik satu site — untuk dashboard
     List<EnR002EquipmentResponse> getEquipmentsBySite(String siteId, String companyId);
 
     EnR002EquipmentResponse getEquipmentById(String siteId,

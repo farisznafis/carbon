@@ -11,6 +11,8 @@ public class RejectReviewRequest {
 
     @NotBlank
     private String reviewerInkan;
+    @NotBlank
+    private String reviewerName;
 
     @NotBlank
     private String rejectReason;

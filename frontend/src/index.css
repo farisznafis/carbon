@@ -11,60 +11,201 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Brand palette: update these HSL values when the core brand colors change. */
-    --primary: 117.2 17.3% 48.8%; /* #699267 */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 66.7 58.1% 87.8%; /* #EEF2CE */
-    --secondary-foreground: 193.3 12.7% 13.9%;
-    --foreground: 193.3 12.7% 13.9%; /* #1F2628 */
-    --background: 0 0% 96.5%; /* #F6F6F6 */
-    --destructive: 0 73.7% 40.2%; /* #B21B1B */
-    --destructive-foreground: 0 0% 100%;
+    /* =========================================================
+      PRIMITIVE COLORS
+      Source: J-Credit Carbon Web Design System
+      ========================================================= */
 
-    /* Surfaces and supporting text. */
-    --dashboard-bg: 0 0% 96.5%;
-    --card: 0 0% 100%;
-    --card-foreground: 193.3 12.7% 13.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 193.3 12.7% 13.9%;
-    --muted: 210 16% 93%;
-    --muted-foreground: 214 13% 48%;
-    --accent: 66.7 58.1% 87.8%;
-    --accent-foreground: 193.3 12.7% 13.9%;
+    /* Brand blue */
+    --blue-50: 211.8 100% 96.7%;   /* #EEF6FF */
+    --blue-100: 211.6 100% 92.5%;  /* #D9EBFF */
+    --blue-200: 211.7 100% 86.3%;  /* #B9DAFF */
+    --blue-300: 211.3 100% 76.7%;  /* #88C1FF */
+    --blue-400: 211.9 100% 65.7%;  /* #50A2FF */
+    --blue-500: 213 92.1% 55.1%;   /* #2382F6 */
+    --blue-600: 214.4 83.1% 46.5%; /* #1468D9 */
+    --blue-700: 214.9 82.5% 38%;   /* #1154B1 */
+    --blue-800: 213.4 77.2% 31%;   /* #12488C */
+    --blue-900: 213 67.9% 25.7%;   /* #153D6E */
 
-    /* Component states. */
-    --border: 210 14% 83%;
-    --input: 210 14% 83%;
-    --ring: 117.2 17.3% 48.8%;
-    --placeholder: 214 13% 48%;
-    --disabled: 210 12% 91%;
-    --disabled-foreground: 215 10% 55%;
+    /* Marketing dark surface */
+    --brand-dark-start: var(--blue-900);
+    --brand-dark-middle: var(--blue-800);
+    --brand-dark-end: var(--blue-700);
+    --brand-dark-foreground: var(--neutral-0);
+    --brand-dark-muted: var(--blue-100);
 
-    /* Shape and elevation. */
+    /* Neutral */
+    --neutral-0: 0 0% 100%;        /* #FFFFFF */
+    --neutral-25: 220 60% 99%;     /* #FBFCFE */
+    --neutral-50: 216 38.5% 97.5%; /* #F6F8FB */
+    --neutral-100: 214.3 25.9% 94.7%; /* #EEF1F5 */
+    --neutral-200: 212.7 20.8% 89.6%; /* #DFE4EA */
+    --neutral-300: 215.3 19.5% 82.9%; /* #CBD2DC */
+    --neutral-400: 214.6 14.4% 64.7%; /* #98A3B2 */
+    --neutral-500: 214.8 13% 46.9%;   /* #687587 */
+    --neutral-600: 214 16.7% 35.3%;   /* #4B5869 */
+    --neutral-700: 215.6 23.5% 26.7%; /* #344154 */
+    --neutral-800: 215.2 31.2% 18.2%; /* #202C3D */
+    --neutral-900: 216.4 45.2% 12.2%; /* #111C2D */
+    --neutral-950: 218.2 52.4% 8.2%;  /* #0A1220 */
+
+    /* Success */
+    --success-50: 144.7 81% 95.9%;    /* #ECFDF3 */
+    --success-600: 154.6 82.8% 34.1%; /* #0F9F62 */
+    --success-700: 155 87.6% 25.3%;   /* #08794A */
+    --success-border: 148.1 54% 82.9%; /* #BCEBD2 */
+
+    /* Warning */
+    --warning-50: 44.3 100% 95.5%;   /* #FFF9E8 */
+    --warning-600: 35.9 100% 39%;    /* #C77700 */
+    --warning-700: 35 100% 29.6%;    /* #975800 */
+    --warning-border: 42.3 73.6% 79.2%; /* #F1DAA3 */
+
+    /* Danger */
+    --danger-50: 0 100% 97.1%;       /* #FFF0F0 */
+    --danger-600: 357 66.7% 52.9%;   /* #D7373F */
+    --danger-700: 356.5 66.3% 40.8%; /* #AD232B */
+    --danger-border: 356.4 69.4% 85.9%; /* #F4C2C5 */
+
+    /* Info */
+    --info-50: 213.8 100% 96.9%;  /* #EFF6FF */
+    --info-600: 221.2 83.2% 53.3%; /* #2563EB */
+
+    /* Purple */
+    --purple-50: 250 100% 97.6%;  /* #F5F3FF */
+    --purple-600: 252.9 63.1% 59.6%; /* #7357D9 */
+
+
+    /* =========================================================
+      SEMANTIC COLORS
+      Components should consume these instead of primitives.
+      ========================================================= */
+
+    /* Brand / action */
+    --primary: var(--blue-600);
+    --primary-strong: var(--blue-700);
+    --primary-foreground: var(--neutral-0);
+
+    /*
+    * Keep "secondary" as a subtle semantic surface because
+    * many existing Carbon components already consume it.
+    */
+    --secondary: var(--neutral-100);
+    --secondary-foreground: var(--neutral-700);
+
+    /* Main content */
+    --foreground: 217.7 43.2% 15.9%; /* #17243A */
+    --background: 214.3 46.7% 97.1%; /* #F4F7FB */
+
+    /* Dashboard */
+    --dashboard-bg: 214.3 46.7% 97.1%; /* #F4F7FB */
+
+    /* Surfaces */
+    --card: var(--neutral-0);
+    --card-foreground: var(--foreground);
+
+    --popover: var(--neutral-0);
+    --popover-foreground: var(--foreground);
+
+    --muted: var(--neutral-50);
+    --muted-foreground: var(--neutral-700);
+
+    /* Selected / subtle brand surface */
+    --accent: var(--blue-50);
+    --accent-foreground: var(--blue-700);
+
+    /* Form / borders */
+    --border: var(--neutral-200);
+    --input: var(--neutral-300);
+    --ring: var(--blue-500);
+
+    --placeholder: var(--neutral-700);
+
+    --disabled: var(--neutral-100);
+    --disabled-foreground: var(--neutral-400);
+
+
+    /* =========================================================
+      FEEDBACK
+      ========================================================= */
+
+    --success: var(--success-600);
+    --success-foreground: var(--neutral-0);
+    --success-subtle: var(--success-50);
+    --success-strong: var(--success-700);
+
+    --warning: var(--warning-600);
+    --warning-foreground: var(--neutral-0);
+    --warning-subtle: var(--warning-50);
+    --warning-strong: var(--warning-700);
+
+    --destructive: var(--danger-600);
+    --destructive-foreground: var(--neutral-0);
+    --destructive-subtle: var(--danger-50);
+    --destructive-strong: var(--danger-700);
+
+    --info: var(--info-600);
+    --info-foreground: var(--neutral-0);
+    --info-subtle: var(--info-50);
+    --info-strong: var(--blue-700);
+    --info-border: var(--blue-200);
+
+    --purple: var(--purple-600);
+    --purple-subtle: var(--purple-50);
+
+
+    /* =========================================================
+      SIDEBAR / NAVIGATION
+      ========================================================= */
+
+    --sidebar-background: var(--neutral-0);
+    --sidebar-foreground: var(--foreground);
+
+    --sidebar-primary: var(--blue-500);
+    --sidebar-primary-foreground: var(--neutral-0);
+
+    --sidebar-accent: var(--blue-50);
+    --sidebar-accent-foreground: var(--blue-700);
+
+    --sidebar-border: var(--neutral-200);
+    --sidebar-ring: var(--blue-500);
+
+
+    /* =========================================================
+      CHART
+      ========================================================= */
+
+    --chart-1: var(--blue-500);      /* #2382F6 */
+    --chart-2: var(--success-600);   /* #0F9F62 */
+    --chart-3: var(--purple-600);    /* #7357D9 */
+    --chart-4: var(--warning-600);   /* #C77700 */
+    --chart-5: var(--neutral-600);   /* #4B5869 */
+
+
+    /* =========================================================
+      SHAPE
+      Keep current Carbon geometry
+      ========================================================= */
+
     --radius: 0.75rem;
-    --shadow-sm: 0 1px 2px hsl(193.3 12.7% 13.9% / 0.06), 0 1px 1px hsl(193.3 12.7% 13.9% / 0.04);
-    --shadow-md: 0 10px 24px hsl(193.3 12.7% 13.9% / 0.08), 0 2px 8px hsl(193.3 12.7% 13.9% / 0.05);
 
-    /* Semantic feedback. */
-    --success: 117.2 17.3% 48.8%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
 
-    /* Navigation surfaces. */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 193.3 12.7% 13.9%;
-    --sidebar-primary: 117.2 17.3% 48.8%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 66.7 58.1% 87.8%;
-    --sidebar-accent-foreground: 193.3 12.7% 13.9%;
-    --sidebar-border: 210 14% 83%;
-    --sidebar-ring: 117.2 17.3% 48.8%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    /* =========================================================
+      ELEVATION
+      Same geometry, neutralized shadow color
+      ========================================================= */
+
+    --shadow-sm:
+      0 1px 2px hsl(var(--neutral-950) / 0.06),
+      0 1px 1px hsl(var(--neutral-950) / 0.04);
+
+    --shadow-md:
+      0 10px 24px hsl(var(--neutral-950) / 0.08),
+      0 2px 8px hsl(var(--neutral-950) / 0.05);
+
+    --shadow-marketing:
+      0 0 64px hsl(var(--neutral-950) / 0.16);
   }
 
   .dark {
@@ -119,7 +260,6 @@ All colors MUST be HSL.
     --chart-5: 340 75% 55%;
   }
 }
-
 @layer base {
   * {
     @apply border-border;
@@ -146,8 +286,7 @@ All colors MUST be HSL.
   }
 
   h1 {
-    font-size: 32px;
-    line-height: 38px;
+    @apply text-page-title;
   }
 
   h2 {
@@ -173,7 +312,6 @@ All colors MUST be HSL.
   }
 
 }
-
 @layer utilities {
   .password-input-hide-native-toggle::-ms-reveal,
   .password-input-hide-native-toggle::-ms-clear {
@@ -187,7 +325,11 @@ All colors MUST be HSL.
   }
 
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--primary-strong)) 100%
+    );
   }
 
   .gradient-card {
@@ -264,6 +406,69 @@ All colors MUST be HSL.
     animation: ambient-drift 16s ease-in-out infinite reverse;
   }
 
+  .loading-orbit {
+    animation: loading-orbit 1.6s ease-in-out infinite;
+  }
+
+  .loading-leaf-breathe {
+    animation: loading-leaf-breathe 2s ease-in-out infinite;
+  }
+
+  .loading-progress-indeterminate {
+    animation: loading-progress-indeterminate 1.5s ease-in-out infinite;
+  }
+
+  .surface-brand-dark {
+    background: linear-gradient(
+      130deg,
+      hsl(var(--brand-dark-start)),
+      hsl(var(--brand-dark-middle)) 70%,
+      hsl(var(--brand-dark-end))
+    );
+    color: hsl(var(--brand-dark-foreground));
+  }
+
+  .text-brand-dark {
+    color: hsl(var(--brand-dark-foreground));
+  }
+
+  .text-brand-dark-muted {
+    color: hsl(var(--brand-dark-muted));
+  }
+
+  .border-brand-dark {
+    border-color: hsl(var(--brand-dark-foreground) / 0.18);
+  }
+
+  @keyframes loading-orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes loading-leaf-breathe {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.92;
+    }
+
+    50% {
+      transform: scale(1.04);
+      opacity: 1;
+    }
+  }
+
+  @keyframes loading-progress-indeterminate {
+    0% {
+      transform: translateX(-120%);
+    }
+
+    100% {
+      transform: translateX(320%);
+    }
+  }
+
   @keyframes ambient-drift {
     0%,
     100% {
@@ -314,67 +519,17 @@ All colors MUST be HSL.
     }
   }
 
-}
+  @media (prefers-reduced-motion: reduce) {
+    .loading-orbit,
+    .loading-leaf-breathe,
+    .loading-progress-indeterminate {
+      animation: none;
+    }
 
-/* Blob Movement for Hero Section */
-/* ─── Blob base ──────────────────────────────────────────────────────────── */
-.blob {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(80px);
-  opacity: 0.35;
-  will-change: transform, border-radius;
-}
+    .loading-progress-indeterminate {
+      transform: translateX(100%);
+    }
+  }
+  
 
-/* Blob 1 – large green, drifts top-left → bottom-right */
-.blob-1 {
-  width: 520px;
-  height: 520px;
-  background: radial-gradient(circle, #4ade80, #16a34a);
-  top: -120px;
-  left: -140px;
-  animation: drift1 18s ease-in-out infinite;
-}
-
-/* Blob 2 – medium teal, drifts bottom-right → top-left */
-.blob-2 {
-  width: 380px;
-  height: 380px;
-  background: radial-gradient(circle, #2dd4bf, #0d9488);
-  bottom: -80px;
-  right: -100px;
-  animation: drift2 22s ease-in-out infinite;
-}
-
-/* Blob 3 – small accent, orbits center */
-.blob-3 {
-  width: 280px;
-  height: 280px;
-  background: radial-gradient(circle, #86efac, #4ade80);
-  top: 40%;
-  left: 55%;
-  animation: drift3 26s ease-in-out infinite;
-}
-
-/* ─── Keyframes ──────────────────────────────────────────────────────────── */
-@keyframes drift1 {
-  0%   { transform: translate(0px,   0px)   scale(1);    border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%; }
-  33%  { transform: translate(80px,  60px)  scale(1.08); border-radius: 40% 60% 30% 70% / 60% 40% 70% 30%; }
-  66%  { transform: translate(30px,  110px) scale(0.95); border-radius: 70% 30% 50% 50% / 30% 70% 40% 60%; }
-  100% { transform: translate(0px,   0px)   scale(1);    border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%; }
-}
-
-@keyframes drift2 {
-  0%   { transform: translate(0px,    0px)   scale(1);    border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%; }
-  33%  { transform: translate(-70px, -50px)  scale(1.1);  border-radius: 30% 70% 60% 40% / 40% 60% 30% 70%; }
-  66%  { transform: translate(-20px, -100px) scale(0.92); border-radius: 60% 40% 70% 30% / 50% 50% 60% 40%; }
-  100% { transform: translate(0px,    0px)   scale(1);    border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%; }
-}
-
-@keyframes drift3 {
-  0%   { transform: translate(0px,  0px)  scale(1);    border-radius: 40% 60% 50% 50% / 50% 50% 60% 40%; }
-  25%  { transform: translate(50px, 40px) scale(1.12); border-radius: 60% 40% 30% 70% / 40% 70% 30% 60%; }
-  50%  { transform: translate(-30px,80px) scale(0.9);  border-radius: 70% 30% 60% 40% / 60% 30% 70% 40%; }
-  75%  { transform: translate(60px,-30px) scale(1.05); border-radius: 30% 70% 40% 60% / 50% 40% 60% 50%; }
-  100% { transform: translate(0px,  0px)  scale(1);    border-radius: 40% 60% 50% 50% / 50% 50% 60% 40%; }
 }

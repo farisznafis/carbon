@@ -34,8 +34,8 @@ public class EnR002Equipment extends BaseEntity {
     @Column(name = "pcs_model", length = 50, nullable = false)
     private String pcsModel;
 
-    @Column(name = "pcs_unit_count")
-    private Integer pcsUnitCount;
+    // @Column(name = "pcs_unit_count")
+    // private Integer pcsUnitCount;
 
     @Column(name = "device_no", length = 100, nullable = false)
     private String deviceNo;

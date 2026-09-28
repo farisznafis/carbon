@@ -1,39 +1,40 @@
-import type { SiteFormData } from '@/api/site';
-import type { UserList } from '@/api/users';
+const SITE_REGISTRATION_RETURN_SOURCE = 'site-registration-return';
 
-const SITE_REGISTRATION_SOURCE = 'site-register';
-
-export interface SiteRegistrationFlowState {
-  source: typeof SITE_REGISTRATION_SOURCE;
-  siteDraft: SiteFormData;
-  createdUser?: UserList;
+export interface SiteRegistrationReturnTarget {
+  path: string;
+  state?: Record<string, unknown>;
 }
 
-export function createSiteRegistrationFlowState(
-  siteDraft: SiteFormData,
-  createdUser?: UserList,
-): SiteRegistrationFlowState {
+interface SiteRegistrationReturnState {
+  source: typeof SITE_REGISTRATION_RETURN_SOURCE;
+  returnTarget: SiteRegistrationReturnTarget;
+}
+
+/** Creates navigation state that returns site registration to its calling page. */
+export function createSiteRegistrationReturnState(
+  returnTarget: SiteRegistrationReturnTarget,
+): SiteRegistrationReturnState {
   return {
-    source: SITE_REGISTRATION_SOURCE,
-    siteDraft,
-    createdUser,
+    source: SITE_REGISTRATION_RETURN_SOURCE,
+    returnTarget,
   };
 }
 
-export function getSiteRegistrationFlowState(
+/** Resolves a caller return target from direct or nested site-registration state. */
+export function getSiteRegistrationReturnTarget(
   state: unknown,
-): SiteRegistrationFlowState | null {
+): SiteRegistrationReturnTarget | null {
   if (!state || typeof state !== 'object') return null;
-
-  const candidate = state as Partial<SiteRegistrationFlowState>;
+  const candidate = state as Partial<SiteRegistrationReturnState>;
+  const returnTarget = candidate.returnTarget;
 
   if (
-    candidate.source !== SITE_REGISTRATION_SOURCE ||
-    !candidate.siteDraft ||
-    typeof candidate.siteDraft !== 'object'
+    candidate.source !== SITE_REGISTRATION_RETURN_SOURCE ||
+    !returnTarget ||
+    typeof returnTarget.path !== 'string'
   ) {
     return null;
   }
 
-  return candidate as SiteRegistrationFlowState;
+  return returnTarget;
 }

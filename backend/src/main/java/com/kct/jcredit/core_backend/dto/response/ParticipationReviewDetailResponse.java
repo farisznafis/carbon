@@ -17,7 +17,7 @@ import com.kct.jcredit.core_backend.dto.response.details.CompanyInfoResponse;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-public class ParticipationReviewDetailResponse {
+public class ParticipationReviewDetailResponse extends BaseResponse{
     private Integer participationId;
     private Integer siteId;
     private Integer projectId;
@@ -29,4 +29,5 @@ public class ParticipationReviewDetailResponse {
     private EnR002ConfirmationItemResponse confirmationItems;
     private EnR002SustainabilityCommitmentResponse sustainabilityCommitment;
     private ProjectParticipationConfirmationResponse review;
+    private String pdfStatus;
 }

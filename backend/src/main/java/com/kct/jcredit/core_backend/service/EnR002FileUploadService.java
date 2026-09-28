@@ -16,14 +16,23 @@ import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 
 public interface EnR002FileUploadService {
 
-    // Upload file evidence equipment ke S3 temp
+    // Upload file evidence equipment S3 temp
     EnR002FileResponse uploadFile(String siteId,
                                         EquipmentFileType fileType,
                                         String uploadedBy,
                                         MultipartFile file);
 
-    // projectId dihapus — equipment cuma butuh siteId + equipmentId
-    String moveTempToPermanent(String tempS3Key,
-                               String siteId,
-                               Integer equipmentId);
+    String buildPermanentKey(String tempS3Key,
+                             String siteId,
+                             Integer equipmentId);
+
+    // Copy tmp → permanent 
+    void moveToPermanent(String tempS3Key, String permanentKey);
+
+    // Hapus object permanent.
+    void deletePermanentFile(String s3Key, Integer equipmentId);
+
+    // buildPermanentKey + moveToPermanent dalam satu panggilan, untuk pemakaian
+    // di luar transaksi yang tidak perlu mencatat key ke DB lebih dulu.
+    String moveTempToPermanent(String tempS3Key, String siteId, Integer equipmentId);
 }

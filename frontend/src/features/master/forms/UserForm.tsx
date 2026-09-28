@@ -1,4 +1,9 @@
-import { useMemo, useState } from 'react';
+import {
+  useMemo,
+  useState,
+  type FormEventHandler,
+  type ReactNode,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import { X } from 'lucide-react';
 import { ApiError } from '@/api/_shared/errors';
@@ -72,7 +77,13 @@ interface UserFormProps {
   siteOptionsError?: string | null;
   embedded?: boolean;
   hideSiteSection?: boolean;
+  hidePositionField?: boolean;
   hideUsernameField?: boolean;
+  requireSite?: boolean;
+  additionalSections?: ReactNode;
+  submitLabel?: string;
+  submitDisabled?: boolean;
+  hasExternalChanges?: boolean;
 }
 
 export function UserForm({
@@ -88,7 +99,13 @@ export function UserForm({
   siteOptionsError = null,
   embedded = false,
   hideSiteSection = false,
+  hidePositionField = false,
   hideUsernameField = false,
+  requireSite = false,
+  additionalSections,
+  submitLabel = '確認',
+  submitDisabled = false,
+  hasExternalChanges = false,
 }: Readonly<UserFormProps>) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { joinableSites, getSiteById } = useDashboardStore();
@@ -157,28 +174,34 @@ export function UserForm({
       };
     };
 
-    return (
+    const hasFieldChanges = (
       JSON.stringify(normalize(values)) !==
       JSON.stringify(normalize(originalData))
     );
-  }, [values, originalData]);
 
-  const submitLabel = '確認';
+    return hasFieldChanges || hasExternalChanges;
+  }, [values, originalData, hasExternalChanges]);
+
+  /** Submits validated user values and maps backend field errors back into the form. */
+  const handleValidSubmit = async (formValues: UserFormData) => {
+    onChange(formValues);
+
+    try {
+      await onNext(formValues);
+    } catch (error) {
+      applyBackendValidationErrors(error);
+    }
+  };
+
+  /** Clears stale server errors before React Hook Form decides whether a retry is valid. */
+  const handleFormSubmit: FormEventHandler<HTMLFormElement> = (event) => {
+    form.clearErrors();
+    void form.handleSubmit(handleValidSubmit)(event);
+  };
 
   const formContent = (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(async (formValues) => {
-          form.clearErrors();
-          onChange(formValues);
-
-          try {
-            await onNext(formValues);
-          } catch (error) {
-            applyBackendValidationErrors(error);
-          }
-        })}
-      >
+      <form onSubmit={handleFormSubmit}>
         <FormCard>
           <FormSectionStack spacing="relaxed">
             <FormSection number={1} title="個人情報">
@@ -190,7 +213,7 @@ export function UserForm({
                     <FormItem>
                       <RequiredLabel>姓</RequiredLabel>
                       <FormControl>
-                        <Input inputSize="sm" placeholder="山田" {...field} />
+                        <Input placeholder="例）山田" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -204,7 +227,7 @@ export function UserForm({
                     <FormItem>
                       <RequiredLabel>名</RequiredLabel>
                       <FormControl>
-                        <Input inputSize="sm" placeholder="太郎" {...field} />
+                        <Input placeholder="例）太郎" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -218,7 +241,7 @@ export function UserForm({
                     <FormItem>
                       <RequiredLabel>姓（カナ）</RequiredLabel>
                       <FormControl>
-                        <Input inputSize="sm" placeholder="ヤマダ" {...field} />
+                        <Input placeholder="例）ヤマダ" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -232,7 +255,7 @@ export function UserForm({
                     <FormItem>
                       <RequiredLabel>名（カナ）</RequiredLabel>
                       <FormControl>
-                        <Input inputSize="sm" placeholder="タロウ" {...field} />
+                        <Input placeholder="例）タロウ" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -247,26 +270,28 @@ export function UserForm({
                   <FormItem>
                     <RequiredLabel>電話番号（ハイフン無し）</RequiredLabel>
                     <FormControl>
-                      <Input inputSize="sm" placeholder="半角数字ハイフン不要" {...field} />
+                      <Input placeholder="半角数字ハイフン不要" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="userPosition"
-                render={({ field }) => (
-                  <FormItem>
-                    <RequiredLabel>役職</RequiredLabel>
-                    <FormControl>
-                      <Input inputSize="sm" placeholder="部長" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!hidePositionField && (
+                <FormField
+                  control={form.control}
+                  name="userPosition"
+                  render={({ field }) => (
+                    <FormItem>
+                      <RequiredLabel>役職</RequiredLabel>
+                      <FormControl>
+                        <Input placeholder="部長" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </FormSection>
 
             <FormSection number={2} title="アカウント情報">
@@ -278,7 +303,7 @@ export function UserForm({
                     <FormItem>
                       <RequiredLabel>社員名</RequiredLabel>
                       <FormControl>
-                        <Input inputSize="sm" placeholder="yamada_taro" {...field} />
+                        <Input placeholder="例）yamada_taro" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -294,9 +319,8 @@ export function UserForm({
                     <RequiredLabel>メールアドレス</RequiredLabel>
                     <FormControl>
                       <Input
-                        inputSize="sm"
                         type="email"
-                        placeholder="yamada.taro@example.com"
+                        placeholder="例）yamada.taro@example.com"
                         {...field}
                       />
                     </FormControl>
@@ -314,7 +338,6 @@ export function UserForm({
                       <RequiredLabel>パスワード</RequiredLabel>
                       <FormControl>
                         <PasswordInput
-                          inputSize="sm"
                           placeholder="パスワードを入力"
                           {...field}
                         />
@@ -336,7 +359,7 @@ export function UserForm({
                   name="siteId"
                   render={({ field }) => (
                     <FormItem>
-                      <RequiredLabel required={false}>対象する拠点</RequiredLabel>
+                      <RequiredLabel required={requireSite}>対象する拠点</RequiredLabel>
                       <div className="flex items-center gap-2">
                         <Select
                           value={field.value ?? ''}
@@ -348,7 +371,7 @@ export function UserForm({
                           }
                         >
                           <FormControl>
-                            <SelectTrigger selectSize="sm">
+                            <SelectTrigger>
                               <SelectValue placeholder="拠点を選択してください" />
                             </SelectTrigger>
                           </FormControl>
@@ -385,15 +408,11 @@ export function UserForm({
               </FormSection>
             )}
 
+            {additionalSections}
+
             <FormActions
-              className={
-                onDelete
-                  ? 'grid grid-cols-[40px_minmax(0,1fr)_minmax(0,1fr)] gap-3'
-                  : 'grid grid-cols-1 gap-3 sm:grid-cols-2'
-              }
-            >
-              {onDelete ? (
-                <>
+              leadingAction={
+                onDelete ? (
                   <DeleteAlertDialog
                     label="社員"
                     open={isDeleteDialogOpen}
@@ -401,37 +420,25 @@ export function UserForm({
                     onDelete={onDelete}
                     iconOnly
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="md"
-                    className="w-full"
-                    onClick={onBack}
-                  >
-                    キャンセル
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="md"
-                  className="w-full"
-                  onClick={onBack}
-                >
-                  キャンセル
-                </Button>
-              )}
-
-              <Button
-                type="submit"
-                size="md"
-                className="w-full"
-                disabled={!isTrulyDirty}
-              >
-                {submitLabel}
-              </Button>
-            </FormActions>
+                ) : undefined
+              }
+              actions={[
+                {
+                  id: 'cancel',
+                  label: 'キャンセル',
+                  variant: 'outline',
+                  onClick: onBack,
+                },
+                {
+                  id: 'submit',
+                  label: submitLabel,
+                  pendingLabel: '処理中...',
+                  type: 'submit',
+                  disabled: !isTrulyDirty || submitDisabled,
+                },
+              ]}
+              pendingActionId={form.formState.isSubmitting ? 'submit' : null}
+            />
           </FormSectionStack>
         </FormCard>
       </form>

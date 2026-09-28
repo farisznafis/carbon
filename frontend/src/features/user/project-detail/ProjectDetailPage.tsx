@@ -1,9 +1,9 @@
 ﻿import { useEffect, useState, type ReactNode } from 'react';
-import { getProjectDetails, type ProjectDetail as ProjectDetailApi } from '@/api/projects';
 import {
-  getSiteEquipmentList,
-  type SiteProjectEquipment,
-} from '@/api/site';
+  getProjectDetails,
+  type ProjectDetail as ProjectDetailApi,
+} from '@/api/projects';
+import { getSiteProjectEquipment, type SiteProjectEquipment } from '@/api/site';
 import {
   useLocation,
   useParams,
@@ -43,8 +43,18 @@ import {
   type ProjectEmissionBreakdown,
 } from '@/api/batch';
 import { logger } from '@/lib/logger';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
 import {
+  PageBackButton,
+  // floatingPageBackButtonClassName,
+} from '@/components/navigation/PageBackButton';
+import {
+  PageSkeleton,
+  SkeletonCard,
+  SkeletonChart,
+  SkeletonMetricCard,
+} from '@/components/feedback/loading';
+import {
+  dashboardWidePageContainerClassName,
   dashboardPageContainerClassName,
   dashboardTabsListClassName,
   dashboardTabTriggerClassName,
@@ -58,10 +68,39 @@ import { projectDetailCardClassName } from './projectDetailStyles';
 import { cn } from '@/lib/utils';
 import { paths } from '@/routes/paths';
 import { FloatingHelpButton } from '@/features/master/help/FloatingHelpButton';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
+import { EmissionReductionProgressCard } from './components/EmissionReductionProgressCard';
 
 function formatNumber(n: number | null | undefined) {
   if (n == null || Number.isNaN(n)) return '-';
   return new Intl.NumberFormat().format(n);
+}
+
+function toNumberOrNull(
+  value: string | number | null | undefined,
+): number | null {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+
+  const parsed = typeof value === 'number' ? value : Number(value);
+
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function calculateReductionRate(
+  baselineEmission: number | null,
+  emissionReduction: number | null,
+) {
+  if (
+    baselineEmission === null ||
+    emissionReduction === null ||
+    baselineEmission <= 0
+  ) {
+    return null;
+  }
+
+  return (emissionReduction / baselineEmission) * 100;
 }
 
 type MonitoringDisplayRow = Pick<
@@ -101,10 +140,17 @@ type ProjectDetailNavigationState = {
 function ProjectDetailTabs() {
   return (
     <TabsList className={dashboardTabsListClassName}>
-      <TabsTrigger value='overview' className={dashboardTabTriggerClassName}>
+      <TabsTrigger
+        value='overview'
+        className={dashboardTabTriggerClassName}
+      >
         概要
       </TabsTrigger>
-      <TabsTrigger value='equipment' className={dashboardTabTriggerClassName}>
+
+      <TabsTrigger
+        value='equipment'
+        className={dashboardTabTriggerClassName}
+      >
         設備一覧
       </TabsTrigger>
     </TabsList>
@@ -135,33 +181,99 @@ function formatCreatedDate(value: string | null | undefined) {
   return `${year}年${month}月${day}日 ${hours}:${minutes}`;
 }
 
-type RecentMetricCardProps = {
-  icon?: ReactNode;
+type ProjectMetaItemProps = {
+  icon: ReactNode;
+  label: string;
+  value: ReactNode;
+  className?: string;
+};
+
+function ProjectMetaItem({
+  icon,
+  label,
+  value,
+  className,
+}: ProjectMetaItemProps) {
+  return (
+    <div
+      className={cn(
+        'flex min-w-0 items-start gap-3 px-5 py-4 sm:px-6',
+        className,
+      )}
+    >
+      <span className='mt-0.5 shrink-0 text-muted-foreground'>{icon}</span>
+
+      <div className='min-w-0'>
+        <p className='text-small text-muted-foreground'>{label}</p>
+
+        <div className='mt-1 break-words font-bold text-foreground'>
+          {value || '-'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type SummaryMetricProps = {
+  label: string;
+  value: string;
+  unit?: string;
+  emphasis?: boolean;
+};
+
+function SummaryMetric({
+  label,
+  value,
+  unit,
+  emphasis = false,
+}: SummaryMetricProps) {
+  return (
+    <div className='min-w-0 bg-card px-5 py-5 sm:px-6 sm:py-6'>
+      <p className='text-small text-muted-foreground'>{label}</p>
+
+      <div className='mt-2 flex flex-wrap items-baseline gap-x-1.5'>
+        <span
+          className={cn(
+            'text-3xl font-bold tabular-nums',
+            emphasis ? 'text-primary' : 'text-foreground',
+          )}
+        >
+          {value}
+        </span>
+
+        {unit && value !== '-' ? (
+          <span className='text-small text-muted-foreground'>{unit}</span>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+type MonitoringMetricProps = {
+  icon: ReactNode;
   label: string;
   value: string;
   unit?: string;
 };
 
-function RecentMetricCard({
-  icon,
-  label,
-  value,
-  unit,
-}: RecentMetricCardProps) {
+function MonitoringMetric({ icon, label, value, unit }: MonitoringMetricProps) {
   return (
-    <div className='flex h-24 min-w-0 flex-col items-center justify-center gap-1 rounded-lg border border-border bg-card px-3 py-3 text-center shadow-app-sm'>
-      <div className='text-table flex min-w-0 items-center justify-center gap-1 font-bold text-foreground'>
-        {icon}
-        <span className='min-w-0 truncate'>{label}</span>
+    <div className='min-w-0 bg-card px-4 py-5'>
+      <div className='flex min-w-0 items-center gap-2'>
+        <span className='shrink-0 text-primary'>{icon}</span>
+
+        <span className='truncate text-table font-bold text-foreground'>
+          {label}
+        </span>
       </div>
-      <div className='flex items-end justify-center gap-1'>
-        <span className='text-2xl font-bold leading-none text-foreground'>
+
+      <div className='mt-3 flex items-baseline gap-1.5'>
+        <span className='text-2xl font-bold tabular-nums text-foreground'>
           {value}
         </span>
-        {unit ? (
-          <span className='text-table pb-0.5 text-foreground'>
-            {unit}
-          </span>
+
+        {unit && value !== '-' ? (
+          <span className='text-table text-muted-foreground'>{unit}</span>
         ) : null}
       </div>
     </div>
@@ -170,70 +282,65 @@ function RecentMetricCard({
 
 type RecentDataBarProps = {
   row: MonitoringDisplayRow;
-  cancellationListDisabled: boolean;
-  onOpenCancellationList: () => void;
-  onRegister: () => void;
 };
 
-function RecentDataBar({
-  row,
-  cancellationListDisabled,
-  onOpenCancellationList,
-  onRegister,
-}: RecentDataBarProps) {
-  // If battery was not replaced (false), show 0 for battery discharge value
-  const batteryDischargeValue = row.changedBattery === false ? 0 : row.ELPJ_battery_value;
-  
+function RecentDataBar({ row }: RecentDataBarProps) {
+  const batteryDischargeValue =
+    row.changedBattery === false ? 0 : row.ELPJ_battery_value;
+
   return (
-    <section className={`${projectDetailCardClassName} p-5`}>
-      <div className='mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='text-table inline-flex w-fit items-center gap-1.5 rounded-full border border-border px-4 py-1.5 font-bold text-foreground'>
-          <span className='text-foreground'>記録日</span>
-          {formatMonitoringDate(row.dateRecorded)}
+    <section className={cn(projectDetailCardClassName, 'overflow-hidden')}>
+      <div className='flex flex-col gap-3 border-b border-border px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6'>
+        <div>
+          <p className='text-small text-muted-foreground'>最新モニタリング</p>
+
+          <h2 className='mt-1 text-xl font-bold text-foreground'>
+            モニタリング状況
+          </h2>
         </div>
-        <div className='flex flex-wrap items-center gap-2'>
-          <Button
-            type='button'
-            variant='outline'
-            onClick={onOpenCancellationList}
-            size='md'
-            disabled={cancellationListDisabled}
-          >
-            取消一覧
-          </Button>
-          <Button type='button' onClick={onRegister} size='md'>
-            モニタリングデータを登録
-          </Button>
+
+        <div className='inline-flex w-fit items-center gap-2 rounded-lg bg-muted px-3 py-2 text-small text-foreground'>
+          <Calendar className='h-4 w-4 text-muted-foreground' />
+
+          <span>記録日</span>
+
+          <span className='font-bold'>
+            {formatMonitoringDate(row.dateRecorded)}
+          </span>
         </div>
       </div>
 
-      <div className='grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5'>
-        <RecentMetricCard
-          icon={<Cpu className='h-5 w-5 shrink-0 text-primary' />}
+      <div className='grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'>
+        <MonitoringMetric
+          icon={<Cpu className='h-5 w-5' />}
           label='制御機器稼働時間'
           value={formatNumber(row.ELPJ_control_value)}
           unit='時間'
         />
-        <RecentMetricCard
-          icon={<Zap className='h-5 w-5 shrink-0 text-primary' />}
+
+        <MonitoringMetric
+          icon={<Zap className='h-5 w-5' />}
           label='発電量'
           value={formatNumber(row.ELpv_value)}
           unit='kWh'
         />
-        <RecentMetricCard
-          icon={<HousePlug className='h-5 w-5 shrink-0 text-primary' />}
+
+        <MonitoringMetric
+          icon={<HousePlug className='h-5 w-5' />}
           label='自家消費量'
           value={formatNumber(row.ELpvr_value)}
           unit='kWh'
         />
-        <RecentMetricCard
-          icon={<BatteryCharging className='h-5 w-5 shrink-0 text-primary' />}
+
+        <MonitoringMetric
+          icon={<BatteryCharging className='h-5 w-5' />}
           label='蓄電池放電量'
           value={formatNumber(batteryDischargeValue)}
           unit='kWh'
         />
-        <RecentMetricCard
-          icon={<ChartNoAxesColumn className='h-5 w-5 shrink-0 text-primary' />}
+
+        <MonitoringMetric
+          icon={<ChartNoAxesColumn className='h-5 w-5' />}
           label='測定精度'
           value={formatNumber(row.ELPJ_accuracy)}
           unit='%'
@@ -258,30 +365,15 @@ const ProjectDetail = () => {
     name: string;
     description: string;
     methodology: string;
+    methodologyName: string;
     projectNumber: string;
-    membersTotal: number | null;
     status: 'active' | 'inactive';
     createdDate: string;
     location: string;
-    devices: Array<{
-      id: string;
-      name: string;
-      type: string;
-      status: 'online' | 'offline';
-    }>;
-    recentData: Array<{
-      date: string;
-      parameter: string;
-      value: string;
-      status: 'compliant' | 'non-compliant';
-    }>;
-    documents: Array<{
-      id: string;
-      name: string;
-      type: string;
-      uploadDate: string;
-      size: string;
-    }>;
+
+    emissionReduction: number | null;
+    baselineEmission: number | null;
+    postProjectEmission: number | null;
   };
 
   const [project, setProject] = useState<ProjectView | null>(null);
@@ -295,7 +387,9 @@ const ProjectDetail = () => {
   );
   const [recentLoading, setRecentLoading] = useState(false);
   const [recentHasFetched, setRecentHasFetched] = useState(false);
-  const [equipmentList, setEquipmentList] = useState<SiteProjectEquipment[]>([]);
+  const [equipmentList, setEquipmentList] = useState<SiteProjectEquipment[]>(
+    [],
+  );
   const [equipmentLoading, setEquipmentLoading] = useState(false);
   const [equipmentHasFetched, setEquipmentHasFetched] = useState(false);
   const [equipmentError, setEquipmentError] = useState<string | null>(null);
@@ -424,20 +518,33 @@ const ProjectDetail = () => {
         const result = (await getProjectDetails(projectId)) as ProjectDetailApi;
 
         setProject({
-          projectNumber: result.projectNumber,
-          name: result.projectName,
-          description: result.methodDetails,
-          methodology: `${result.methodologyCategory} ${result.methodologyNumber} ${result.methodologyVersion}`,
+          projectNumber: result.projectNumber ?? '',
+          name: result.projectName ?? '',
+          description: result.methodDetails ?? '',
+
+          methodology: [
+            result.methodologyCategory,
+            result.methodologyNumber,
+            result.methodologyVersion,
+          ]
+            .filter(Boolean)
+            .join(' '),
+
+          methodologyName: result.methodologyName ?? '',
+
           status:
             String(result.projectStatus).toLowerCase() === 'active'
               ? 'active'
               : 'inactive',
+
           createdDate: result.createdAt ?? '',
           location: siteName,
-          membersTotal: result.membersTotal ?? null,
-          devices: [],
-          recentData: [],
-          documents: [],
+
+          emissionReduction: toNumberOrNull(result.emissionReduction),
+
+          baselineEmission: toNumberOrNull(result.baselineEmission),
+
+          postProjectEmission: toNumberOrNull(result.postProjectEmission),
         });
       } catch (error) {
         logger.error('Error loading project detail:', error);
@@ -488,7 +595,7 @@ const ProjectDetail = () => {
       try {
         setEquipmentLoading(true);
         setEquipmentError(null);
-        const rows = await getSiteEquipmentList(siteId);
+        const rows = await getSiteProjectEquipment(siteId, projectId);
         setEquipmentList(rows);
         setEquipmentHasFetched(true);
       } catch (error) {
@@ -505,13 +612,34 @@ const ProjectDetail = () => {
   }, [equipmentHasFetched, projectId, siteId, tab]);
 
   const monitoringRows: MonitoringDisplayRow[] =
-    recentMonitoring.length > 0 ? recentMonitoring : [fallbackMonitoringRow];
+    recentMonitoring.length > 0
+      ? recentMonitoring.map((row) => ({
+          ...row,
+          ELpv_value: row.ELpv_value ?? null,
+          ELpvr_value: row.ELpvr_value ?? null,
+          ELPJ_battery_value: row.ELPJ_battery_value ?? null,
+          ELPJ_accuracy: row.ELPJ_accuracy ?? null,
+          ELPJ_control_value: row.ELPJ_control_value ?? null,
+          changedBattery: row.changedBattery ?? null,
+        }))
+      : [fallbackMonitoringRow];
 
   if (loading) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
-        読み込み中...
-      </div>
+      <PageSkeleton className='py-8'>
+        <div className='mx-auto w-full max-w-page space-y-6'>
+          <SkeletonCard className='min-h-28' />
+          <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
+            {Array.from({ length: 4 }, (_, index) => (
+              <SkeletonMetricCard key={index} />
+            ))}
+          </div>
+          <div className='grid gap-6 lg:grid-cols-2'>
+            <SkeletonChart />
+            <SkeletonChart />
+          </div>
+        </div>
+      </PageSkeleton>
     );
   }
 
@@ -528,7 +656,9 @@ const ProjectDetail = () => {
           <CardContent className='flex gap-3'>
             <Button
               onClick={() =>
-                navigate(siteId ? `/sites/${siteId}/dashboard` : '/master/dashboard')
+                navigate(
+                  siteId ? `/sites/${siteId}/dashboard` : '/master/dashboard',
+                )
               }
             >
               <ArrowLeft className='h-4 w-4 mr-2' />
@@ -550,127 +680,250 @@ const ProjectDetail = () => {
     );
   }
 
+  const effectiveBaselineEmission =
+    projectBaselineEmission ?? project.baselineEmission;
+
+  const effectivePostProjectEmission =
+    projectTotalEmission ?? project.postProjectEmission;
+
+  const calculatedReduction =
+    effectiveBaselineEmission !== null && effectivePostProjectEmission !== null
+      ? effectiveBaselineEmission - effectivePostProjectEmission
+      : null;
+
+  const effectiveEmissionReduction =
+    project.emissionReduction ?? calculatedReduction;
+
+  const reductionRate = calculateReductionRate(
+    effectiveBaselineEmission,
+    effectiveEmissionReduction,
+  );
+
+  const methodologyDisplay =
+    [project.methodology, project.methodologyName]
+      .filter(Boolean)
+      .join(' / ') || '-';
   return (
-    <div className='relative min-h-screen bg-background py-8'>
+    <div className='relative min-h-screen bg-background py-6 sm:py-8'>
+      <PageBackButton
+        onClick={() => {
+          if (siteId) {
+            navigate(`/sites/${siteId}/dashboard`);
+          } else {
+            navigate(-1);
+          }
+        }}
+        placement='floating'
+      />
       <div className={dashboardPageContainerClassName}>
-        <PageBackButton
-          onClick={() => {
-            if (siteId) {
-              navigate(`/sites/${siteId}/dashboard`);
-            } else {
-              navigate(-1);
-            }
-          }}
-          label=''
-          className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
-        />
-        
-        <div className='w-full space-y-7'>
-          <header className='min-h-[66px] animate-slide-up'>
-            <h1 className='text-foreground'>{project.name}</h1>
-            <p className='text-body mt-2 text-foreground'>{project.description}</p>
+        <div className='space-y-6'>
+          {/* =========================
+              PROJECT HEADER
+          ========================== */}
+          <header
+            className={cn(
+              projectDetailCardClassName,
+              'overflow-hidden animate-slide-up',
+            )}
+          >
+            <div className='px-5 py-6 sm:px-7 sm:py-7'>
+              <div className='flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between'>
+                <div className='flex min-w-0 items-start gap-4'>
+                  <div className='min-w-0'>
+                    <div className='mb-3 flex flex-wrap items-center gap-2'>
+                      <StatusBadge
+                        tone={
+                          project.status === 'active' ? 'success' : 'neutral'
+                        }
+                      >
+                        {project.status === 'active' ? '実施中' : '停止中'}
+                      </StatusBadge>
+
+                      <span className='inline-flex rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground'>
+                        {project.projectNumber || '-'}
+                      </span>
+                    </div>
+
+                    <h1 className='max-w-4xl text-2xl font-bold leading-tight text-foreground sm:text-3xl'>
+                      {project.name}
+                    </h1>
+
+                    {project.description ? (
+                      <p className='mt-3 max-w-5xl text-body leading-7 text-muted-foreground'>
+                        {project.description}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className='flex shrink-0 flex-col gap-2 sm:flex-row'>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='md'
+                    disabled={!siteId || !projectId}
+                    onClick={() => setMonitoringCancellationOpen(true)}
+                  >
+                    取消一覧
+                  </Button>
+
+                  <Button
+                    type='button'
+                    size='md'
+                    disabled={!siteId || !projectId}
+                    onClick={() =>
+                      navigate('/monitoring/register/solar', {
+                        state: {
+                          projectId,
+                          siteId,
+                        },
+                      })
+                    }
+                  >
+                    モニタリングデータを登録
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Project metadata */}
+            <div className='grid gap-px border-t border-border bg-neutral-100 md:grid-cols-3'>
+              <ProjectMetaItem
+                icon={<MapPin className='h-5 w-5' />}
+                label='拠点'
+                value={project.location || '-'}
+                className='bg-muted/30'
+              />
+
+              <ProjectMetaItem
+                icon={<Layers className='h-5 w-5' />}
+                label='方法論'
+                value={methodologyDisplay}
+                className='bg-muted/30'
+              />
+
+              <ProjectMetaItem
+                icon={<Calendar className='h-5 w-5' />}
+                label='登録日時'
+                value={formatCreatedDate(project.createdDate)}
+                className='bg-muted/30'
+              />
+            </div>
           </header>
 
+          {/* =========================
+              TABS
+          ========================== */}
           <Tabs
             defaultValue='overview'
-            className='space-y-6'
             value={tab}
-            onValueChange={(v) => setTab(v as ProjectDetailTabValue)}
+            onValueChange={(value) => setTab(value as ProjectDetailTabValue)}
+            className='space-y-6'
           >
-            <ProjectDetailTabs />
+            <div className='-m-1 overflow-x-auto p-1'>
+              <ProjectDetailTabs />
+            </div>
 
+            {/* =========================
+                OVERVIEW
+            ========================== */}
             <TabsContent
               value='overview'
-              className='m-0 space-y-6'
+              className='m-0 space-y-7'
             >
-              <Card className={projectDetailCardClassName}>
-                <CardHeader className='px-7 pb-3 pt-7'>
-                  <CardTitle className='leading-8 text-foreground'>
-                    プロジェクト概要
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className='px-7 pb-7'>
-                  <dl className='grid grid-cols-1 gap-x-16 gap-y-5 md:grid-cols-2'>
-                    <div className='flex items-start gap-3'>
-                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground'>
-                        <MapPin className='h-5 w-5' />
-                      </span>
-                      <div>
-                        <dt className='text-small text-foreground'>
-                          拠点
-                        </dt>
-                        <dd className='font-bold text-foreground'>
-                          {project.location || '-'}
-                        </dd>
-                      </div>
-                    </div>
+              {/* Reduction KPI */}
+              {/* <section aria-labelledby='reduction-summary-title'>
+                <div className='mb-4'>
+                  <h2
+                    id='reduction-summary-title'
+                    className='text-xl font-bold text-foreground'
+                  >
+                    排出削減サマリー
+                  </h2>
 
-                    <div className='flex items-start gap-3'>
-                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground'>
-                        <Layers className='h-5 w-5' />
-                      </span>
-                      <div>
-                        <dt className='text-small text-foreground'>
-                          方法論
-                        </dt>
-                        <dd className='break-words font-bold text-foreground'>
-                          {project.methodology || '-'}
-                        </dd>
-                      </div>
-                    </div>
-
-                    <div className='flex items-start gap-3'>
-                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground'>
-                        <Hash className='h-5 w-5' />
-                      </span>
-                      <div>
-                        <dt className='text-small text-foreground'>
-                          プロジェクト番号
-                        </dt>
-                        <dd className='font-bold text-foreground'>
-                          {project.projectNumber || '-'}
-                        </dd>
-                      </div>
-                    </div>
-
-                    <div className='flex items-start gap-3'>
-                      <span className='mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground'>
-                        <Calendar className='h-5 w-5' />
-                      </span>
-                      <div>
-                        <dt className='text-small text-foreground'>
-                          認証期間
-                        </dt>
-                        <dd className='font-bold text-foreground'>
-                          {formatCreatedDate(project.createdDate)}
-                        </dd>
-                      </div>
-                    </div>
-                  </dl>
-                </CardContent>
-              </Card>
-
-              {recentLoading ? (
-                <div className={`${projectDetailCardClassName} text-subtle p-5 text-foreground`}>
-                  読み込み中...
+                  <p className='mt-1 text-small text-muted-foreground'>
+                    プロジェクトの排出量と削減実績を確認できます。
+                  </p>
                 </div>
+
+                <Card
+                  className={cn(projectDetailCardClassName, 'overflow-hidden')}
+                >
+                  <CardContent className='p-0'>
+                    <div className='grid gap-px bg-border sm:grid-cols-2 xl:grid-cols-4'>
+                      <SummaryMetric
+                        label='削減量'
+                        value={formatNumber(effectiveEmissionReduction)}
+                        unit='tCO₂'
+                        emphasis
+                      />
+
+                      <SummaryMetric
+                        label='ベースライン排出量'
+                        value={formatNumber(effectiveBaselineEmission)}
+                        unit='tCO₂'
+                      />
+
+                      <SummaryMetric
+                        label='プロジェクト実施後排出量'
+                        value={formatNumber(effectivePostProjectEmission)}
+                        unit='tCO₂'
+                      />
+
+                      <SummaryMetric
+                        label='削減率'
+                        value={
+                          reductionRate === null
+                            ? '-'
+                            : reductionRate.toLocaleString('ja-JP', {
+                                maximumFractionDigits: 1,
+                              })
+                        }
+                        unit='%'
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </section> */}
+
+              {/* Latest monitoring */}
+              {recentLoading ? (
+                <SkeletonCard className='min-h-44 rounded-2xl' />
               ) : (
-                <RecentDataBar
-                  row={monitoringRows[0]}
-                  cancellationListDisabled={!siteId || !projectId}
-                  onOpenCancellationList={() =>
-                    setMonitoringCancellationOpen(true)
-                  }
-                  onRegister={() =>
-                    navigate('/monitoring/register/solar', {
-                      state: { projectId, siteId },
-                    })
-                  }
-                />
+                <RecentDataBar row={monitoringRows[0]} />
               )}
 
-              <section className='grid grid-cols-1 items-start gap-6 lg:grid-cols-[1.35fr_0.95fr]'>
-                <div className='h-full animate-slide-up'>
+              {/* Analytics */}
+              <section aria-labelledby='emission-analysis-title'>
+                <div className='mb-4'>
+                  <h2
+                    id='emission-analysis-title'
+                    className='text-xl font-bold text-foreground'
+                  >
+                    排出量分析
+                  </h2>
+
+                  <p className='mt-1 text-small text-foreground'>
+                    排出量の推移と内訳から、プロジェクトの状況を確認できます。
+                  </p>
+                </div>
+
+                <div className='space-y-6'>
+                  <div className='grid grid-cols-1 gap-6 xl:grid-cols-2'>
+                    <EmissionBreakdownChart
+                      data={emissionBreakdown}
+                      isLoading={emissionBreakdownLoading}
+                      error={emissionBreakdownError}
+                      className={projectDetailCardClassName}
+                    />
+
+                    <EmissionReductionProgressCard
+                      baselineEmission={projectBaselineEmission}
+                      projectEmission={projectTotalEmission}
+                      targetReduction={PROJECT_EMISSION_REDUCTION_TARGET}
+                      className={projectDetailCardClassName}
+                    />
+                  </div>
                   <EmissionTrendChart
                     data={emissionTrend}
                     isLoading={emissionTrendLoading}
@@ -678,71 +931,68 @@ const ProjectDetail = () => {
                     className={projectDetailCardClassName}
                   />
                 </div>
-
-                <div className='h-full animate-slide-up'>
-                  <EmissionBreakdownChart
-                    data={emissionBreakdown}
-                    isLoading={emissionBreakdownLoading}
-                    error={emissionBreakdownError}
-                    reductionProgress={{
-                      baselineEmission: projectBaselineEmission,
-                      projectEmission: projectTotalEmission,
-                      targetReduction: PROJECT_EMISSION_REDUCTION_TARGET,
-                    }}
-                    className={projectDetailCardClassName}
-                  />
-                </div>
               </section>
             </TabsContent>
 
-            <TabsContent value='equipment' className='m-0 space-y-6'>
-              <Card className={projectDetailCardClassName}>
-                <CardHeader>
-                  <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-                    <div className='flex items-start gap-3'>
-                      <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary'>
-                        <PackageCheck className='h-5 w-5' />
-                      </span>
-                      <div>
-                        <CardTitle>設備一覧</CardTitle>
-                        <CardDescription className='text-body mt-2'>
-                          このプロジェクトに紐づく設備情報です。運用確認で必要になりやすい仕様、稼働日、蓄電池、補助金情報をまとめています。
-                        </CardDescription>
-                      </div>
-                    </div>
-                    <Button
-                      type='button'
-                      className='shrink-0 self-start sm:self-auto'
-                      disabled={!siteId || !projectId}
-                      onClick={() =>
-                        navigate(paths.projectEquipment(siteId, projectId), {
-                          state: {
-                            returnTo: `${paths.siteProjectDetail(
-                              siteId,
-                              projectId,
-                            )}?${new URLSearchParams({ tab: 'equipment' })}`,
-                          },
-                        })
-                      }
-                    >
-                      <Plus className='h-4 w-4' />
-                      設備追加
-                    </Button>
+            {/* =========================
+                EQUIPMENT
+            ========================== */}
+            <TabsContent
+              value='equipment'
+              className='m-0 space-y-6'
+            >
+              <section className='flex flex-col gap-4 sm:flex-row sm:items-center'>
+                <div className='flex items-center gap-3'>
+                  <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary'>
+                    <PackageCheck className='h-5 w-5' />
+                  </span>
+
+                  <div>
+                    <h2 className='text-xl font-bold text-foreground'>
+                      設備一覧
+                    </h2>
+
+                    <p className='mt-1 max-w-3xl text-body leading-6 text-muted-foreground'>
+                      このプロジェクトに紐づく設備情報です。
+                      仕様、稼働日、蓄電池、補助金情報を確認できます。
+                    </p>
                   </div>
-                </CardHeader>
-              </Card>
+                </div>
+
+                <Button
+                  type='button'
+                  className='shrink-0'
+                  disabled={!siteId || !projectId}
+                  onClick={() =>
+                    navigate(paths.projectEquipment(siteId, projectId), {
+                      state: {
+                        submissionMode: 'create',
+                        returnTo: `${paths.siteProjectDetail(
+                          siteId,
+                          projectId,
+                        )}?${new URLSearchParams({
+                          tab: 'equipment',
+                        })}`,
+                      },
+                    })
+                  }
+                >
+                  <Plus className='h-4 w-4' />
+                  設備追加
+                </Button>
+              </section>
 
               {equipmentLoading ? (
-                <div className={`${projectDetailCardClassName} text-subtle p-5 text-foreground`}>
-                  読み込み中...
-                </div>
+                <SkeletonCard className='min-h-40 rounded-2xl' />
               ) : equipmentError ? (
-                <div
-                  className={`${projectDetailCardClassName} text-subtle p-5 text-destructive`}
-                  role='alert'
-                >
-                  {equipmentError}
-                </div>
+                <Card className={projectDetailCardClassName}>
+                  <CardContent
+                    className='p-6 text-center text-destructive'
+                    role='alert'
+                  >
+                    {equipmentError}
+                  </CardContent>
+                </Card>
               ) : equipmentList.length > 0 ? (
                 <EquipmentList
                   siteId={siteId}
@@ -759,122 +1009,22 @@ const ProjectDetail = () => {
                 />
               ) : (
                 <Card className={projectDetailCardClassName}>
-                  <CardContent className='p-8 text-center text-foreground'>
+                  <CardContent className='p-10 text-center text-muted-foreground'>
                     設備情報がありません。
                   </CardContent>
                 </Card>
               )}
             </TabsContent>
+          </Tabs>
 
-            <TabsContent
-              value='data'
-              className='m-0 space-y-6'
-            >
-            <Card className={projectDetailCardClassName}>
-              <CardHeader>
-                <CardTitle>最近のモニタリングデータ</CardTitle>
-                <CardDescription>直近の記録を表示します。</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {recentLoading ? (
-                  <div className='text-table text-foreground'>
-                    Loading...
-                  </div>
-                ) : (
-                  <ul className='divide-y rounded-lg border'>
-                    {monitoringRows.map((row, index) => (
-                      <li
-                        key={`${row.projectId}-${row.siteId ?? 'na'}-${row.dateRecorded}-${index}`}
-                        className='p-4'
-                      >
-                        <div className='flex flex-wrap items-center justify-between gap-3'>
-                          <div className='text-table text-foreground'>
-                            {row.dateRecorded}
-                          </div>
-                          <div className='text-table flex flex-wrap gap-4'>
-                            <span>
-                              PV Gen:{' '}
-                              <strong>
-                                {formatNumber(row.ELpv_value)} kWh
-                              </strong>
-                            </span>
-                            <span>
-                              Provided:{' '}
-                              <strong>
-                                {formatNumber(row.ELpvr_value)} kWh
-                              </strong>
-                            </span>
-                            <span>
-                              Battery Discharge:{' '}
-                              <strong>
-                                {formatNumber(row.ELPJ_battery_value)} kWh
-                              </strong>
-                            </span>
-                            <span>
-                              Accuracy:{' '}
-                              <strong>
-                                {formatNumber(row.ELPJ_accuracy)} %
-                              </strong>
-                            </span>
-                          </div>
-                        </div>
-                        <div className='text-subtle mt-2 grid grid-cols-2 gap-2 text-foreground md:grid-cols-4'>
-                          <div>
-                            Control Runtime:{' '}
-                            {formatNumber(row.ELPJ_control_value)} hours
-                          </div>
-                          <div>
-                            Battery Replaced:{' '}
-                            {row.changedBattery == null
-                              ? '-'
-                              : row.changedBattery
-                                ? 'Yes'
-                                : 'No'}
-                          </div>
-                          {row.ELpv_evidence && (
-                            <div className='truncate'>
-                              PV Evidence: {row.ELpv_evidence}
-                            </div>
-                          )}
-                          {row.ELPJ_battery_evidence && (
-                            <div className='truncate'>
-                              Battery Evidence: {row.ELPJ_battery_evidence}
-                            </div>
-                          )}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
-            </TabsContent>
+          <MonitoringCancellationDialog
+            open={monitoringCancellationOpen}
+            siteId={siteId}
+            projectId={projectId}
+            onOpenChange={setMonitoringCancellationOpen}
+          />
 
-            <TabsContent value='documents' className='m-0 py-8'>
-            <Card>
-              <CardHeader>
-                <CardTitle>関連書類</CardTitle>
-                <CardDescription>
-                  このプロジェクトに紐づく関連書類です。
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className='text-table text-foreground'>
-                  資料はまだありません。
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-        </Tabs>
-
-        <MonitoringCancellationDialog
-          open={monitoringCancellationOpen}
-          siteId={siteId}
-          projectId={projectId}
-          onOpenChange={setMonitoringCancellationOpen}
-        />
-        <FloatingHelpButton context='project-detail' />
+          <FloatingHelpButton context='project-detail' />
         </div>
       </div>
     </div>
@@ -882,4 +1032,3 @@ const ProjectDetail = () => {
 };
 
 export default ProjectDetail;
-

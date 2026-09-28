@@ -1,6 +1,8 @@
-import * as React from "react";
+import * as React from 'react';
 
-import { cn } from "@/lib/utils";
+import { ButtonLoader } from '@/components/feedback/loading';
+import { Button, type ButtonProps } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 type FormPageShellProps = React.HTMLAttributes<HTMLDivElement> & {
   contentClassName?: string;
@@ -14,10 +16,13 @@ export function FormPageShell({
 }: FormPageShellProps) {
   return (
     <main
-      className={cn("min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8", className)}
+      className={cn(
+        'min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8',
+        className,
+      )}
       {...props}
     >
-      <div className={cn("mx-auto w-full max-w-[768px]", contentClassName)}>
+      <div className={cn('mx-auto w-full max-w-[768px]', contentClassName)}>
         {children}
       </div>
     </main>
@@ -36,13 +41,16 @@ export function FormStandalonePage({
 }: FormStandalonePageProps) {
   return (
     <main
-      className={cn("relative min-h-screen overflow-hidden bg-background px-4 py-8 sm:px-6 lg:px-8", className)}
+      className={cn(
+        'relative min-h-screen overflow-hidden bg-background px-4 py-8 sm:px-6 lg:px-8',
+        className,
+      )}
       {...props}
     >
       {watermark && (
         <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -left-2 top-12 hidden select-none text-[150px] font-light leading-none text-muted/35 sm:block lg:text-[180px]"
+          aria-hidden='true'
+          className='pointer-events-none absolute -left-2 top-12 hidden select-none text-[150px] font-light leading-none text-muted/35 sm:block lg:text-[180px]'
         >
           {watermark}
         </div>
@@ -58,28 +66,31 @@ export function FormPageContent({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("relative mx-auto w-full max-w-[768px] space-y-6", className)}
+      className={cn(
+        'relative mx-auto w-full max-w-[768px] space-y-6',
+        className,
+      )}
       {...props}
     />
   );
 }
 
 type FormPageTitleProps = React.HTMLAttributes<HTMLHeadingElement> & {
-  as?: "h1" | "h2";
-  align?: "left" | "center";
+  as?: 'h1' | 'h2';
+  align?: 'left' | 'center';
 };
 
 export function FormPageTitle({
-  as: Component = "h2",
-  align = "left",
+  as: Component = 'h2',
+  align = 'left',
   className,
   ...props
 }: FormPageTitleProps) {
   return (
     <Component
       className={cn(
-        "text-foreground",
-        align === "center" ? "text-center" : "text-left",
+        'text-foreground',
+        align === 'center' ? 'text-center' : 'text-left',
         className,
       )}
       {...props}
@@ -101,15 +112,19 @@ export function FormPageHeader({
   ...props
 }: FormPageHeaderProps) {
   return (
-    <header className={cn("text-center", className)} {...props}>
+    <header
+      className={cn('text-center', className)}
+      {...props}
+    >
       {icon && (
-        <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-primary">
+        <div className='
+        mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-accent-foreground'>
           {icon}
         </div>
       )}
       <h2>{title}</h2>
       {description && (
-        <p className="mt-2 text-sm font-medium leading-5 text-foreground">
+        <p className='mt-2 text-sm font-medium leading-5 text-foreground'>
           {description}
         </p>
       )}
@@ -134,10 +149,16 @@ export function WizardProgress({
   ...props
 }: WizardProgressProps) {
   return (
-    <nav aria-label="Progress" className={cn("w-full", className)} {...props}>
+    <nav
+      aria-label='Progress'
+      className={cn('w-full', className)}
+      {...props}
+    >
       <ol
-        className="grid gap-2"
-        style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}
+        className='grid gap-2'
+        style={{
+          gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))`,
+        }}
       >
         {steps.map((step) => {
           const isComplete = currentStep > step.number;
@@ -145,35 +166,44 @@ export function WizardProgress({
           const isReached = currentStep >= step.number;
 
           return (
-            <li key={step.number} className="min-w-0">
+            <li
+              key={step.number}
+              className='min-w-0'
+            >
               <div
                 className={cn(
-                  "h-1.5 rounded-full transition-colors",
-                  isReached ? "bg-primary" : "bg-muted",
+                  'h-1.5 rounded-full transition-colors',
+                  isReached ? 'bg-primary' : 'bg-muted-foreground/40',
+                  isComplete && 'bg-success',
                 )}
               />
-              <div className="mt-2 flex min-w-0 flex-col items-center gap-1 text-center">
+              <div className='mt-2 flex min-w-0 flex-col items-center gap-1 text-center'>
                 <span
                   className={cn(
-                    "relative flex h-4 w-4 items-center justify-center rounded-full",
-                    isActive && "bg-primary/20",
-                    isComplete && "bg-primary/20",
-                    !isReached && "bg-muted",
+                    "relative flex h-5 w-5 items-center justify-center rounded-full",
+                    isActive &&
+                      "bg-accent ring-1 ring-primary/20",
+                    isComplete &&
+                      "bg-success-border",
+                    !isReached &&
+                      "border border-border bg-card",
                   )}
                 >
                   <span
                     className={cn(
-                      "h-2 w-2 rounded-full",
-                      isActive && "bg-primary",
-                      isComplete && "bg-primary",
-                      !isReached && "bg-muted-foreground/40",
+                      'h-2 w-2 rounded-full',
+                      isActive && 'bg-primary',
+                      isComplete && 'bg-success',
+                      !isReached && 'bg-muted-foreground/40',
                     )}
                   />
                 </span>
                 <span
                   className={cn(
                     "truncate text-xs font-medium",
-                    isReached ? "text-primary" : "text-foreground",
+                    isActive && "text-primary",
+                    isComplete && "text-success-strong",
+                    !isReached && "text-muted-foreground",
                   )}
                 >
                   {step.title}
@@ -194,7 +224,7 @@ export function FormCard({
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-card p-5 shadow-app-sm sm:p-8",
+        'rounded-xl border border-border bg-card p-5 shadow-app-sm sm:p-8',
         className,
       )}
       {...props}
@@ -203,43 +233,74 @@ export function FormCard({
 }
 
 type FormSectionProps = Omit<React.HTMLAttributes<HTMLElement>, 'title'> & {
-  number: number;
+  number?: number;
+  icon?: React.ReactNode;
   title: React.ReactNode;
+  meta?: React.ReactNode;
+  description?: React.ReactNode;
+  actions?: React.ReactNode;
 };
 
+/** Renders a numbered form section with optional contextual meta, description, and header actions. */
 export function FormSection({
   number,
+  icon,
   title,
+  meta,
+  description,
+  actions,
   children,
   className,
   ...props
 }: FormSectionProps) {
   return (
-    <section className={cn("space-y-4", className)} {...props}>
-      <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-xl font-bold text-primary">
-          {number}
-        </span>
-        <h3>{title}</h3>
+    <section
+      className={cn('space-y-4', className)}
+      {...props}
+    >
+      <div className='flex items-center gap-3'>
+        {number != null || icon ? (
+          <span className='
+            flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-xl font-bold text-primary
+            '>
+            {icon ?? number}
+          </span>
+        ) : null}
+        <div className='min-w-0 flex-1 sm:flex sm:items-center sm:justify-between sm:gap-4'>
+          <div className='min-w-0'>
+            <div className='flex min-h-10 flex-wrap items-center gap-x-2 gap-y-1'>
+              <h3>{title}</h3>
+              {meta}
+            </div>
+            {description ? (
+              <div className='text-sm leading-6 text-foreground'>
+                {description}
+              </div>
+            ) : null}
+          </div>
+          {actions ? (
+            <div className='mt-3 shrink-0 sm:mt-0'>{actions}</div>
+          ) : null}
+        </div>
       </div>
-      <div className="space-y-6">{children}</div>
+      <div className='space-y-6'>{children}</div>
     </section>
   );
 }
 
 type FormSectionStackProps = React.HTMLAttributes<HTMLDivElement> & {
-  spacing?: "default" | "relaxed";
+  spacing?: 'default' | 'relaxed';
 };
 
 export function FormSectionStack({
-  spacing = "default",
+  spacing = 'default',
   className,
   ...props
 }: FormSectionStackProps) {
   return (
     <div
       className={cn(
-        spacing === "default" ? "space-y-8" : "space-y-10",
+        spacing === 'default' ? 'space-y-8' : 'space-y-10',
         className,
       )}
       {...props}
@@ -251,16 +312,12 @@ type FormGridProps = React.HTMLAttributes<HTMLDivElement> & {
   columns?: 1 | 2;
 };
 
-export function FormGrid({
-  columns = 2,
-  className,
-  ...props
-}: FormGridProps) {
+export function FormGrid({ columns = 2, className, ...props }: FormGridProps) {
   return (
     <div
       className={cn(
-        "grid grid-cols-1 gap-4",
-        columns === 2 && "md:grid-cols-2",
+        'grid grid-cols-1 gap-4',
+        columns === 2 && 'md:grid-cols-2',
         className,
       )}
       {...props}
@@ -268,9 +325,128 @@ export function FormGrid({
   );
 }
 
+export type FormActionContext = 'standard' | 'auth' | 'compact';
+
+export type FormActionDefinition = Omit<
+  ButtonProps,
+  'asChild' | 'children' | 'className' | 'size'
+> & {
+  id: string;
+  label: React.ReactNode;
+  pendingLabel?: React.ReactNode;
+};
+
+type FormActionsProps = Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  'children'
+> & {
+  actions: readonly FormActionDefinition[];
+  context?: FormActionContext;
+  disabled?: boolean;
+  leadingAction?: React.ReactNode;
+  pendingActionId?: string | null;
+};
+
+const FORM_ACTION_BUTTON_SIZE: Record<
+  FormActionContext,
+  NonNullable<ButtonProps['size']>
+> = {
+  standard: 'md',
+  auth: 'lg',
+  compact: 'sm',
+};
+
+const STANDARD_ACTION_GRID_CLASS: Record<number, string> = {
+  1: 'grid grid-cols-1 gap-3',
+  2: 'grid grid-cols-1 gap-3 sm:grid-cols-2',
+  3: 'grid grid-cols-1 gap-3 sm:grid-cols-3',
+};
+
+/**
+ * Resolves the responsive action layout without generating dynamic Tailwind classes.
+ */
+function getFormActionsLayoutClass(
+  actionCount: number,
+  hasLeadingAction: boolean,
+) {
+  if (hasLeadingAction) {
+    if (actionCount === 1) {
+      return 'grid grid-cols-[2.5rem_minmax(0,1fr)] gap-3';
+    }
+
+    return 'grid grid-cols-[2.5rem_minmax(0,1fr)_minmax(0,1fr)] gap-3';
+  }
+
+  return STANDARD_ACTION_GRID_CLASS[Math.min(Math.max(actionCount, 1), 3)];
+}
+
+/**
+ * Renders consistent form commit actions for standard pages, auth cards, and dialogs.
+ */
 export function FormActions({
+  actions,
   className,
+  context = 'standard',
+  disabled = false,
+  leadingAction,
+  pendingActionId = null,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("pt-0", className)} {...props} />;
+}: FormActionsProps) {
+  const isPending = pendingActionId !== null;
+  const buttonSize = FORM_ACTION_BUTTON_SIZE[context];
+  const buttonWidthClass = 'w-full';
+  const authMotionClass =
+    context === 'auth'
+      ? 'transition-transform duration-300 hover:scale-[1.01] active:scale-[0.99] [@media(max-height:560px)]:h-9'
+      : undefined;
+
+  return (
+    <div
+      className={cn(
+        'pt-0',
+        getFormActionsLayoutClass(actions.length, Boolean(leadingAction)),
+        className,
+      )}
+      aria-busy={isPending || undefined}
+      {...props}
+    >
+      {leadingAction ? (
+        <fieldset
+          className='contents'
+          disabled={disabled || isPending}
+          aria-label='補助アクション'
+        >
+          {leadingAction}
+        </fieldset>
+      ) : null}
+      {actions.map(
+        ({
+          id,
+          label,
+          pendingLabel,
+          disabled: actionDisabled,
+          ...buttonProps
+        }) => {
+          const isCurrentActionPending = pendingActionId === id;
+
+          return (
+            <Button
+              key={id}
+              type='button'
+              size={buttonSize}
+              className={cn(buttonWidthClass, authMotionClass)}
+              disabled={disabled || isPending || actionDisabled}
+              aria-busy={isCurrentActionPending || undefined}
+              {...buttonProps}
+            >
+              {isCurrentActionPending ? <ButtonLoader /> : null}
+              <span>
+                {isCurrentActionPending ? (pendingLabel ?? label) : label}
+              </span>
+            </Button>
+          );
+        },
+      )}
+    </div>
+  );
 }

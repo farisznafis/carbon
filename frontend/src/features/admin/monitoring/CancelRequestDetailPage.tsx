@@ -9,14 +9,13 @@ import {
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import {
   AlertDialog,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+import { FormActions } from '@/components/forms/form-layout';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { CancelRequestStatusBadge } from '@/features/admin/monitoring/CancelRequestStatusBadge';
@@ -74,7 +73,7 @@ export default function CancelRequestDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const returnToList = useCallback(() => {
-    navigate(`${paths.adminDashboard}?tab=monitoring`);
+    navigate(`${paths.adminDashboard}?panel=cancel`);
   }, [navigate]);
 
   const loadCancelRequest = useCallback(async () => {
@@ -250,24 +249,23 @@ export default function CancelRequestDetailPage() {
           </dl>
 
           {isPending && (
-            <div className="mt-12 flex justify-end gap-3">
-              <Button
-                type="button"
-                variant="destructive"
-                size="md"
-                onClick={() => openDecisionDialog('REJECTED')}
-              >
-                却下
-              </Button>
-              <Button
-                type="button"
-                size="md"
-                className="bg-success text-success-foreground hover:bg-success/90"
-                onClick={() => openDecisionDialog('APPROVE')}
-              >
-                承認
-              </Button>
-            </div>
+            <FormActions
+              className="mt-12"
+              actions={[
+                {
+                  id: 'reject',
+                  label: '却下',
+                  variant: 'destructive',
+                  onClick: () => openDecisionDialog('REJECTED'),
+                },
+                {
+                  id: 'approve',
+                  label: '承認',
+                  variant: 'success',
+                  onClick: () => openDecisionDialog('APPROVE'),
+                },
+              ]}
+            />
           )}
         </section>
       </div>
@@ -319,26 +317,27 @@ export default function CancelRequestDetailPage() {
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSubmitting}>
-              キャンセル
-            </AlertDialogCancel>
-            <Button
-              type="button"
-              variant={isRejection ? 'destructive' : 'default'}
-              className={
-                isRejection
-                  ? undefined
-                  : 'bg-success text-success-foreground hover:bg-success/90'
-              }
+            <FormActions
+              context="compact"
+              className="w-full"
               disabled={isSubmitting}
-              onClick={handleDecisionSubmit}
-            >
-              {isSubmitting
-                ? '処理中...'
-                : isRejection
-                  ? '却下する'
-                  : '承認する'}
-            </Button>
+              pendingActionId={isSubmitting ? 'confirm' : null}
+              actions={[
+                {
+                  id: 'cancel',
+                  label: 'キャンセル',
+                  variant: 'outline',
+                  onClick: () => handleDialogOpenChange(false),
+                },
+                {
+                  id: 'confirm',
+                  label: isRejection ? '却下する' : '承認する',
+                  pendingLabel: '処理中...',
+                  variant: isRejection ? 'destructive' : 'success',
+                  onClick: handleDecisionSubmit,
+                },
+              ]}
+            />
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

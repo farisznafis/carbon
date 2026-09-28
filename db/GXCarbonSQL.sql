@@ -199,6 +199,7 @@ CREATE TABLE project (
     is_active BOOLEAN NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    project_started_at TIMESTAMP,
     created_by VARCHAR(100),
     updated_by VARCHAR(100),
     project_name VARCHAR(100) NOT NULL,
@@ -235,6 +236,7 @@ CREATE TABLE project (
     method_main_emission VARCHAR(255) NOT NULL,
     method_combi_feasibility BOOLEAN NOT NULL,
     method_details VARCHAR(1000) NOT NULL,
+    use_purpose VARCHAR(1000) NOT NULL,
     operator_company_id INT NOT NULL REFERENCES operator_company(id),
     public_id VARCHAR(32) NOT NULL UNIQUE,
     status_finalized_at TIMESTAMP
@@ -386,14 +388,30 @@ CREATE TABLE project_files (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(100),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR(100),
-    project_id INT NOT NULL UNIQUE REFERENCES project(id) ON UPDATE CASCADE ON DELETE CASCADE,
-    certificate_registration TEXT,
-    report_validation TEXT,
-    report_verification TEXT
+    project_id INT NOT NULL REFERENCES project(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    deleted_at TIMESTAMP,
+    deleted_by VARCHAR(100),
+    file_type VARCHAR(30) NOT NULL CHECK (file_type IN (
+        'PROJECT_PLAN',
+        'VALIDATION_REPORT',
+        'REGISTRATION_RESULT',
+        'MONITORING_REPORT',
+        'ACTIVITY_RESULT_LIST',
+        'VERIFICATION_REPORT',
+        'CERTIFICATION_RESULT',
+        'VVB_QUERY_SHEET',
+        'ADDITIONAL_MATERIAL'
+    )),
+    s3_key TEXT NOT NULL,
+    original_file_name VARCHAR(255),
+    owned_by BOOLEAN NOT NULL
 );
+
+CREATE INDEX idx_project_files_project_id ON project_files(project_id);
+CREATE INDEX idx_project_files_project_id_file_type ON project_files(project_id, file_type);
 
 -- en_r002_equipment
 CREATE TABLE en_r002_equipment (
@@ -412,7 +430,6 @@ CREATE TABLE en_r002_equipment (
     nominal_max_output DECIMAL(10,1) NOT NULL,
     pcs_manufacturer VARCHAR(100) NOT NULL,
     pcs_model VARCHAR(50) NOT NULL,
-    pcs_unit_count INT,
     device_no VARCHAR(100) NOT NULL,
     pcs_standby DECIMAL(8,2) NOT NULL,
     has_battery BOOLEAN NOT NULL,
@@ -457,7 +474,7 @@ CREATE TABLE participating_user (
 );
 
 -- participating_project
--- Links a project + participating_user + equipment together. Was missing
+-- Links a project + participating_company + equipment together. Was missing
 -- from the live DB entirely until migration_2026-07-27_create-participating-project.sql.
 CREATE TABLE participating_project (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -466,11 +483,15 @@ CREATE TABLE participating_project (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(100),
     updated_by VARCHAR(100),
+    status VARCHAR(20) NOT NULL
+        CHECK (status IN ('APPROVED','OPEN','REJECTED')),
     project_id INT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
-    user_id INT NOT NULL REFERENCES participating_user(id) ON DELETE CASCADE,
+    company_id INT NOT NULL REFERENCES participating_company(id) ON DELETE CASCADE,
     is_eligible BOOLEAN NOT NULL,
     equipment_id INT NOT NULL REFERENCES en_r002_equipment(id) ON DELETE CASCADE,
-    s3_key_pdf_membership TEXT
+    s3_key_pdf_membership TEXT,
+    docusign_envelope_id VARCHAR(255),
+    signing_status VARCHAR(50)
 );
 
 -- Record Cancel Request
@@ -507,7 +528,6 @@ CREATE TABLE site_project_relation (
     project_id INT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
     site_id INT NOT NULL REFERENCES site(id) ON DELETE CASCADE,
     activity_start_date DATE NOT NULL,
-    status VARCHAR(100) NOT NULL,
     deleted_at TIMESTAMP,
     deleted_by VARCHAR(100),
     CONSTRAINT uq_site_project_relation_project_site UNIQUE (project_id, site_id)

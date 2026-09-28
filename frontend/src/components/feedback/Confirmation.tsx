@@ -63,7 +63,7 @@
 
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
+import { FormActions } from '@/components/forms/form-layout';
 import { ArrowLeft, X } from 'lucide-react';
 import  styles from "./Confirmation.module.css"
 import { ChangedConfirmationValue } from './Confirmation/ChangedConfirmationValue';
@@ -160,24 +160,31 @@ export const Confirmation: React.FC<ConfirmationProps> = ({
           })}
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2 mt-6 justify-end">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            className="w-full sm:w-auto"
-            disabled={isSubmitting}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            戻る
-          </Button>
-          <Button
-            onClick={onConfirm}
-            className="w-full sm:w-auto"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "確定中..." : "確定"}
-          </Button>
-        </div>
+        <FormActions
+          context={asModal ? 'compact' : 'standard'}
+          className="mt-6"
+          disabled={isSubmitting}
+          pendingActionId={isSubmitting ? 'confirm' : null}
+          actions={[
+            {
+              id: 'back',
+              label: (
+                <>
+                  <ArrowLeft className="h-4 w-4" />
+                  戻る
+                </>
+              ),
+              variant: 'outline',
+              onClick: handleBack,
+            },
+            {
+              id: 'confirm',
+              label: '確定',
+              pendingLabel: '確定中...',
+              onClick: onConfirm,
+            },
+          ]}
+        />
       </div>
     </div>
   );

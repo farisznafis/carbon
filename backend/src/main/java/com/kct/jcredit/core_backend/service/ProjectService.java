@@ -46,4 +46,8 @@ public interface ProjectService {
     
     ProjectPdfDownloadResponse getMembershipPdfForOperator(String projectId, Integer participationId);
 
+    void assertProject(String projectId, String currentUserId); 
+    
+    boolean hasProjectAccess(String projectId, String currentUserId);
+
 }

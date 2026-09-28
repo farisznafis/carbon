@@ -3,8 +3,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kct.jcredit.core_backend.entity.EnR002MonitoringRecord;
 import com.kct.jcredit.core_backend.entity.base.PaginationDetailResponse;
 
+import org.springframework.data.jpa.convert.threeten.Jsr310JpaConverters.LocalDateTimeConverter;
 import org.springframework.stereotype.Repository;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
@@ -16,8 +18,17 @@ import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
 import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch;
+ 
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.Page;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -108,11 +119,6 @@ public class MonitoringTableRecordSolarRepository {
         return items;
     }
 
-    /**
-     * Hapus banyak record sekaligus lewat DynamoDB BatchWriteItem (maks 25 item/request,
-     * di-chunk otomatis). Return list Key yang GAGAL dihapus (unprocessed) setelah retry,
-     * supaya caller tahu persis record mana yang perlu ditandai FAILURE di history.
-     */
     public List<Key> deleteBatch(List<Key> keys) {
         List<Key> unprocessed = new ArrayList<>();
         for (List<Key> chunk : partition(keys, 25)) {
@@ -444,4 +450,57 @@ public List<EnR002MonitoringRecord> findAllByProjectIdPaginated(
         
         return result;
     }
+
+        /**
+     * 指定した設備に紐づく最新のモニタリングレコードを取得する。
+     * 同一拠点に複数設備がある場合でも、対象設備のレコードのみを返す。
+     *
+     * SK（timeUpdated）の降順で走査するため、最初に一致したものが最新となる。
+     * findLatest とは異なり limit(1) を使用しない。先頭のレコードが対象設備のものとは限らないため。
+     */
+    public Optional<EnR002MonitoringRecord> findLatestByRecordIdAndEquipmentId(
+            String recordId,
+            Integer equipmentId
+    ) {
+        QueryConditional queryConditional = QueryConditional.keyEqualTo(
+            Key.builder().partitionValue(recordId).build()
+        );
+
+        PageIterable<EnR002MonitoringRecord> pages = table.query(r -> r
+            .queryConditional(queryConditional)
+            .scanIndexForward(false) // DESC
+        );
+
+        return pages.items().stream()
+            .filter(record -> Boolean.TRUE.equals(record.getIsActive()))
+            .filter(record -> equipmentId != null
+                && equipmentId.equals(record.getEquipmentID()))
+            .findFirst();
+    }
+
+    public List<EnR002MonitoringRecord> findByRecordIdAndEquipmentIdAndDateRecordedBetween(
+            String recordId, Integer equipmentId, String startSk, String endSk) {
+        return findByPkAndSkBetween(recordId, startSk, endSk).stream()
+                .filter(record -> equipmentId != null && equipmentId.equals(record.getEquipmentID()))
+                .collect(Collectors.toList());
+    }
+
+
+public List<EnR002MonitoringRecord> findByRecordIdAndEquipmentIdAndDateRecordedAfter(
+        String recordId, Integer equipmentId, String afterSk) {
+    QueryConditional qc = QueryConditional.sortGreaterThan(
+            Key.builder().partitionValue(recordId).sortValue(afterSk).build()
+    );
+    PageIterable<EnR002MonitoringRecord> pages = table.query(r -> r
+            .queryConditional(qc)
+            .scanIndexForward(true) // ASC biar gampang ambil first/last di service
+    );
+    List<EnR002MonitoringRecord> items = new ArrayList<>();
+    for (Page<EnR002MonitoringRecord> page : pages) {
+        items.addAll(page.items());
+    }
+    return items.stream()
+            .filter(record -> equipmentId != null && equipmentId.equals(record.getEquipmentID()))
+            .collect(Collectors.toList());
+}
 }

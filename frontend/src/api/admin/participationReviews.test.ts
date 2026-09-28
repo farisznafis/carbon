@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   approveParticipationReview,
-  getMyParticipationReviews,
+  downloadAdminParticipationMembershipPdf,
+  getApprovedParticipationReviews,
+  getOpenParticipationReviews,
   getParticipationReviewDetail,
-  getPendingParticipationReviews,
+  getRejectedParticipationReviews,
   rejectParticipationReview,
 } from './participationReviews';
 import type { ParticipationReviewChecklist } from './participationReviewTypes';
@@ -58,29 +60,33 @@ function jsonResponse(body: unknown) {
 }
 
 describe('participation review API', () => {
-  it('loads and maps self-sign, pending, and detail endpoints', async () => {
+  it('loads and maps open, approved, rejected, and detail endpoints', async () => {
     const fetchMock = vi
       .fn()
+      .mockResolvedValueOnce(jsonResponse([rawReview]))
       .mockResolvedValueOnce(jsonResponse([rawReview]))
       .mockResolvedValueOnce(jsonResponse([rawReview]))
       .mockResolvedValueOnce(jsonResponse(rawReview));
     vi.stubGlobal('fetch', fetchMock);
 
-    const mine = await getMyParticipationReviews();
-    const pending = await getPendingParticipationReviews();
+    const open = await getOpenParticipationReviews();
+    const approved = await getApprovedParticipationReviews();
+    const rejected = await getRejectedParticipationReviews();
     const detail = await getParticipationReviewDetail(12);
 
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
-      '/api/admin/companies/participate/self-sign',
-      '/api/admin/companies/participate/pending',
+      '/api/admin/companies/participate/open',
+      '/api/admin/companies/participations/approved',
+      '/api/admin/companies/participations/rejected',
       '/api/admin/companies/participate/12',
     ]);
-    expect(mine[0]).toMatchObject({
+    expect(open[0]).toMatchObject({
       participationId: 12,
       projectId: 7,
       projectName: 'プロジェクトA',
     });
-    expect(pending[0]?.review.isSolarContractDoc).toBe(true);
+    expect(approved[0]?.review.isSolarContractDoc).toBe(true);
+    expect(rejected[0]?.participationId).toBe(12);
     expect(detail.equipment.siteId).toBe('3');
   });
 
@@ -91,10 +97,12 @@ describe('participation review API', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     await approveParticipationReview('12/34', {
+      reviewerName: '山田 太郎',
       reviewerInkan: '山田',
       ...checklist,
     });
     await rejectParticipationReview('12/34', {
+      reviewerName: '山田 太郎',
       reviewerInkan: '山田',
       rejectReason: '資料不足',
       ...checklist,
@@ -106,6 +114,7 @@ describe('participation review API', () => {
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({
+          reviewerName: '山田 太郎',
           reviewerInkan: '山田',
           ...checklist,
         }),
@@ -117,6 +126,7 @@ describe('participation review API', () => {
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({
+          reviewerName: '山田 太郎',
           reviewerInkan: '山田',
           rejectReason: '資料不足',
           ...checklist,
@@ -125,10 +135,33 @@ describe('participation review API', () => {
     );
   });
 
+  it('loads an admin membership PDF using both route identifiers', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        pdfUrl: 'https://example.com/membership.pdf',
+        expiresIn: 300,
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await downloadAdminParticipationMembershipPdf(
+      'PRJ/001',
+      '12/34',
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/project/PRJ%2F001/participations/12%2F34/membership-pdf',
+      expect.objectContaining({
+        fallbackErrorMessage: 'PDFの取得に失敗しました。',
+      }),
+    );
+    expect(result.pdfUrl).toBe('https://example.com/membership.pdf');
+  });
+
   it('rejects a malformed list response', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({})));
 
-    await expect(getMyParticipationReviews()).rejects.toThrow(
+    await expect(getOpenParticipationReviews()).rejects.toThrow(
       '入会届一覧のレスポンス形式が不正です。',
     );
   });

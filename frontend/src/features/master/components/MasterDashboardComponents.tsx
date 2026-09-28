@@ -70,6 +70,7 @@ export function DashboardSection({
   addLabel,
   onAdd,
   addDisabled,
+  showAddAction = true,
   children,
 }: {
   title: string;
@@ -77,6 +78,7 @@ export function DashboardSection({
   addLabel: string;
   onAdd: () => void;
   addDisabled?: boolean;
+  showAddAction?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -88,26 +90,53 @@ export function DashboardSection({
             {description}
           </p>
         </div>
-        <Button
-          type="button"
-          size="md"
-          onClick={onAdd}
-          disabled={addDisabled}
-          className="self-start sm:self-auto"
-        >
-          <Plus className="h-4 w-4" />
-          {addLabel}
-        </Button>
+        {showAddAction && (
+          <Button
+            type="button"
+            size="md"
+            onClick={onAdd}
+            disabled={addDisabled}
+            className="self-start sm:self-auto"
+          >
+            <Plus className="h-4 w-4" />
+            {addLabel}
+          </Button>
+        )}
       </div>
       {children}
     </section>
   );
 }
 
-export function DashboardEmptyState({ children }: { children: ReactNode }) {
+/** Renders either a simple dashboard message or a structured onboarding empty state. */
+export function DashboardEmptyState({
+  title,
+  description,
+  action,
+  children,
+}: {
+  title?: string;
+  description?: string;
+  action?: ReactNode;
+  children?: ReactNode;
+}) {
   return (
-    <div className={dashboardEmptyStateClassName}>
-      {children}
+    <div
+      className={cn(
+        dashboardEmptyStateClassName,
+        'flex flex-col items-center justify-center',
+      )}
+    >
+      {title && <h3 className="text-base font-semibold text-foreground">{title}</h3>}
+      {description && (
+        <p className={cn('max-w-2xl text-muted-foreground', title && 'mt-2')}>
+          {description}
+        </p>
+      )}
+      {children && (
+        <div className={cn((title || description) && 'mt-2')}>{children}</div>
+      )}
+      {action && <div className="mt-5">{action}</div>}
     </div>
   );
 }
@@ -125,11 +154,9 @@ export function SiteDashboardCard({
 export function UserDashboardCard({
   user,
   onProfile,
-  onEdit,
 }: {
   user: UserList;
   onProfile: (user: UserList) => void;
-  onEdit: (user: UserList) => void;
 }) {
   const fullName = formatPersonName(user.lastName, user.firstName);
   const isDisconnectedFromSite =
@@ -189,23 +216,14 @@ export function UserDashboardCard({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 border-t border-border md:w-[128px] md:shrink-0 md:grid-cols-1 md:border-l md:border-t-0">
+      <div className="flex items-center justify-end border-t border-border p-4 md:w-[152px] md:shrink-0 md:justify-center md:border-l md:border-t-0">
         <Button
           type="button"
+          variant="outline"
           size="sm"
           onClick={() => onProfile(user)}
-          className="h-full w-full rounded-none px-4 py-4 shadow-none"
         >
           プロファイル
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => onEdit(user)}
-          className="h-full w-full rounded-none bg-card px-4 py-4 text-primary shadow-none hover:bg-secondary/60 hover:text-primary"
-        >
-          更新
         </Button>
       </div>
     </article>

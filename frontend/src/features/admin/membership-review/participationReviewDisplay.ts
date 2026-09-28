@@ -21,12 +21,23 @@ export const participationReviewChecklistLabels: Record<
   isSubsidyCheck: '補助金に関する内容を確認',
 };
 
+/** Returns true only after both required reviewers have approved the participation. */
+export function isParticipationReviewApproved(
+  review: ParticipationReviewDetail,
+): boolean {
+  return Boolean(
+    review.review.primaryApplReviewerName.trim() &&
+      review.review.secondaryApplReviewerName.trim(),
+  );
+}
+
+/** Converts reviewer progress into the stage displayed in membership review screens. */
 export function getParticipationReviewStage(
   review: ParticipationReviewDetail,
 ): '一次確認待ち' | '二次確認待ち' | '確認済み' {
-  if (!review.review.primaryApplReviewerName.trim()) return '一次確認待ち';
-  if (!review.review.secondaryApplReviewerName.trim()) return '二次確認待ち';
-  return '確認済み';
+  if (isParticipationReviewApproved(review)) return '確認済み';
+  if (review.review.primaryApplReviewerName.trim()) return '二次確認待ち';
+  return '一次確認待ち';
 }
 
 export function displayParticipationValue(

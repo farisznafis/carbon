@@ -53,7 +53,7 @@ public class ResponseConstants {
     public static final String MSG_DATE_RECORDED_REQUIRED = "記録日を入力してください。";
     public static final String MSG_DATE_RECORDED_RANGE = "記録日は活動開始日以降、かつ本日以前の日付を入力してください。";
     public static final String MSG_DATE_RECORDED_DUPLICATE = "同一プロジェクト、同一拠点、同一記録日はすでに登録されています。";
-    public static final String MSG_CHANGED_BATTERY_REQUIRED = "バッテリー交換フラグを入力してください。";
+    public static final String MSG_ELPJ_BATTERY_VALUE_REQUIRED = "バッテリーの値を入力してください。";
     public static final String MSG_BATTERY_NOT_APPLICABLE = "この設備には蓄電池が登録されていないため、バッテリー関連項目は入力できません。";
     public static final String MSG_ELPV_VALUE_MIN = "ELpv（電力使用量）は0以上で入力してください。";
     public static final String MSG_ELPVR_VALUE_MIN = "ELpvr（電力供給量）は0以上で入力してください。";
@@ -163,6 +163,11 @@ public class ResponseConstants {
     public static final String MSG_FORM_RETRIEVED = "フォーム情報を取得しました。";
     public static final String MSG_FORM_SAVED = "フォームを保存しました。";
     public static final String MSG_PROGRESS_RETRIEVED = "入力状況を取得しました。";
+
+    // --- Project file upload ---
+        public static final String MSG_FILE_UPLOADED = "ファイルをアップロードしました。";
+        public static final String MSG_FILE_NOT_FOUND = "ファイルが見つかりません。";
+        public static final String MSG_FILE_DELETED = "ファイルを削除しました。";
 
     private ResponseConstants() {}
 }

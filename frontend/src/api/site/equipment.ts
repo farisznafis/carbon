@@ -15,7 +15,9 @@ import type {
   SiteProjectEquipmentFileType,
   SiteProjectEquipmentFileUploadResponse,
   SiteProjectEquipmentResponse,
-  SiteProjectEquipmentUpdateRequest,
+  SiteProjectEquipmentCreateRequest,
+  SiteProjectEquipmentCreateResponse,
+  SiteProjectEquipmentChangeRequest,
   SiteProjectEquipmentValidationFile,
   SiteProjectEquipmentValidationItem,
   SiteProjectEquipmentValidationResponse,
@@ -23,6 +25,7 @@ import type {
   SiteProjectConfirmationItemsValidationResponse,
   SiteProjectJoinSustainabilityCommitmentRequest,
   SiteProjectJoinSustainabilityCommitmentResponse,
+  SiteProjectSustainabilityCommitmentDefaultResponse,
   SiteProjectFinalAgreementValidationRequest,
   SiteProjectFinalAgreementValidationResponse,
   SiteProjectJoinRequest,
@@ -72,8 +75,6 @@ function normalizeSiteProjectEquipment(
   return {
     ...equipment,
     equipmentId: equipment.equipmentId ?? equipment.id ?? null,
-    powerCondUnitCount:
-      equipment.powerCondUnitCount ?? equipment.pcsUnitCount ?? null,
     powerCondStandby:
       equipment.powerCondStandby ?? equipment.pcsStandby ?? null,
     files: rawFiles.map(normalizeSiteProjectEquipmentFile),
@@ -126,7 +127,7 @@ export async function getSiteProjectEquipmentPresignedUrl(
 
   const response = await apiFetch(
     `/site/project/presigned-url?s3Key=${encodeURIComponent(normalizedS3Key)}`,
-    { method: 'GET' },
+    { method: 'GET', forbiddenHandling: 'caller' },
   );
   const { data, rawBody } = await parseJsonResponse<unknown>(response);
 
@@ -211,6 +212,19 @@ export async function validateSiteProjectSustainabilityCommitment(
   );
 }
 
+/** GET /site/project/sites/{siteId}/sustainability-commitment/default — fetches Contract Step defaults. */
+export async function getSiteProjectSustainabilityCommitmentDefault(
+  siteId: string,
+): Promise<SiteProjectSustainabilityCommitmentDefaultResponse> {
+  return apiRequest<SiteProjectSustainabilityCommitmentDefaultResponse>(
+    `/site/project/sites/${encodeURIComponent(siteId)}/sustainability-commitment/default`,
+    {
+      method: 'GET',
+      fallbackErrorMessage: '持続可能性約束の初期値を取得できませんでした。',
+    },
+  );
+}
+
 export async function validateSiteProjectFinalAgreement(
   payload: SiteProjectFinalAgreementValidationRequest,
 ): Promise<SiteProjectFinalAgreementValidationResponse> {
@@ -229,11 +243,25 @@ export async function joinSiteProject(
   payload: SiteProjectJoinRequest,
 ): Promise<SiteProjectJoinResponse> {
   return apiRequest<SiteProjectJoinResponse>(
-    `/site/project/projects/${encodeURIComponent(projectId)}/join`,
+    `/site/project/projects/${encodeURIComponent(projectId)}/join-company`,
     {
       method: 'POST',
       body: payload,
       fallbackErrorMessage: 'プロジェクト参加申請に失敗しました。',
+    },
+  );
+}
+
+/** POST /site/project/projects/{projectId}/{siteId}/join-site — relates an existing company site to a project. */
+export async function joinProjectSite(
+  projectId: string,
+  siteId: string,
+): Promise<SiteProjectJoinResponse> {
+  return apiRequest<SiteProjectJoinResponse>(
+    `/site/project/projects/${encodeURIComponent(projectId)}/${encodeURIComponent(siteId)}/join-site`,
+    {
+      method: 'POST',
+      fallbackErrorMessage: '拠点のプロジェクト参加に失敗しました。',
     },
   );
 }
@@ -265,6 +293,22 @@ export async function getSiteProjectEquipment(
   return Array.isArray(json?.equipments)
     ? json.equipments.map(normalizeSiteProjectEquipment)
     : [];
+}
+
+/** POST /site/{siteId}/{projectId}/equipment — adds equipment to an existing site project. */
+export async function addSiteProjectEquipment(
+  siteId: string,
+  projectId: string,
+  payload: SiteProjectEquipmentCreateRequest,
+): Promise<SiteProjectEquipmentCreateResponse> {
+  return apiRequest<SiteProjectEquipmentCreateResponse>(
+    `/site/${encodeURIComponent(siteId)}/${encodeURIComponent(projectId)}/equipment`,
+    {
+      method: 'POST',
+      body: payload,
+      fallbackErrorMessage: '設備情報の登録に失敗しました。',
+    },
+  );
 }
 
 export async function getSiteEquipmentList(
@@ -318,6 +362,7 @@ export async function getSiteEquipmentHistory(
     `/site/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}/history`,
     {
       method: 'GET',
+      forbiddenHandling: 'caller',
       fallbackErrorMessage: '設備変更履歴の取得に失敗しました。',
     },
   );
@@ -341,16 +386,20 @@ export async function getSiteEquipmentHistory(
     : [];
 }
 
-export async function updateSiteEquipment(
+/**
+ * POST /site/{siteId}/equipment/{equipmentId}/change
+ * Registers replacement equipment while the backend preserves the previous entry as history.
+ */
+export async function changeSiteEquipment(
   siteId: string,
   equipmentId: number,
-  payload: SiteProjectEquipmentUpdateRequest,
+  payload: SiteProjectEquipmentChangeRequest,
 ): Promise<SiteProjectEquipment> {
   return normalizeSiteProjectEquipment(
     await apiRequest<SiteProjectEquipmentDetailResponse>(
-      `/site/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}`,
+      `/site/${encodeURIComponent(siteId)}/equipment/${encodeURIComponent(String(equipmentId))}/change`,
       {
-        method: 'PATCH',
+        method: 'POST',
         body: payload,
         fallbackErrorMessage: '設備情報の変更に失敗しました。',
       },

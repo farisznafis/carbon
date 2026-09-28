@@ -28,11 +28,14 @@ public class ParticipatingProject extends BaseEntity {
     private Project project;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private ParticipatingUser user;
+    @JoinColumn(name = "company_id", nullable = false)
+    private ParticipatingCompany company;
 
     @Column(name = "is_eligible", nullable = false)
     private Boolean isEligible;
+
+    @Column(name = "status", nullable = false)
+    private String status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "equipment_id", nullable = false)
@@ -40,6 +43,13 @@ public class ParticipatingProject extends BaseEntity {
 
     @Column(name = "s3_key_pdf_membership")
     private String s3KeyPdfMembership;
+
+    // Entity ParticipatingProject — tambah 2 field
+    @Column(name = "docusign_envelope_id")
+    private String docusignEnvelopeId;
+
+    @Column(name = "signing_status")
+    private String signingStatus;
 
     // TIDAK ADA field company atau siteProjectRelation
     // TIDAK ADA applicantInkan — kolom ini belum ada di tabel,

@@ -1,15 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import {
   approveParticipationReview,
+  downloadAdminParticipationMembershipPdf,
   getAdminProjectDetail,
-  getMyParticipationReviews,
+  getOpenParticipationReviews,
   getParticipationReviewDetail,
   participationReviewChecklistFields,
   rejectParticipationReview,
   type ParticipationReviewChecklist,
   type ParticipationReviewChecklistField,
   type ParticipationReviewDetail,
+  type ParticipationReviewStatus,
 } from '@/api/admin';
 import { ApiError } from '@/api/_shared/errors';
 import { FormActions, FormPageContent } from '@/components/forms/form-layout';
@@ -17,55 +24,74 @@ import {
   floatingPageBackButtonClassName,
   PageBackButton,
 } from '@/components/navigation/PageBackButton';
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
-import { ParticipationReviewChecklistCard } from './ParticipationReviewChecklistCard';
+import { downloadFromUrl } from '@/utils/download';
+import { isForbiddenApiError } from '@/api/_shared/errors';
+import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
+import { resolveAdminProjectNavigationState } from '@/features/admin/navigation/adminProjectNavigation';
+import {
+  ParticipationReviewDecisionDialog,
+  type ParticipationReviewDecision,
+  type ParticipationReviewDecisionErrors,
+} from './ParticipationReviewDecisionDialog';
+import { ParticipationReviewPdfCard } from './ParticipationReviewPdfCard';
+import { isParticipationReviewApproved } from './participationReviewDisplay';
 import { ParticipationReviewSections } from './ParticipationReviewSections';
 import { isParticipationReviewForProject } from './participationReviewProjectMatch';
 
-type Decision = 'approve' | 'reject';
-
-type FieldErrors = {
-  reviewerInkan: string | null;
-  rejectReason: string | null;
-  checklist: string | null;
-};
-
-const EMPTY_FIELD_ERRORS: FieldErrors = {
+const EMPTY_FIELD_ERRORS: ParticipationReviewDecisionErrors = {
+  reviewerName: null,
   reviewerInkan: null,
   rejectReason: null,
   checklist: null,
 };
 
+const REVIEW_STATUSES: ParticipationReviewStatus[] = [
+  'OPEN',
+  'APPROVED',
+  'REJECTED',
+];
+
+/** Reads a supported membership status without trusting arbitrary query values. */
+function readReviewStatus(value: string | null): ParticipationReviewStatus | null {
+  return REVIEW_STATUSES.includes(value as ParticipationReviewStatus)
+    ? (value as ParticipationReviewStatus)
+    : null;
+}
+
+/** Returns the read-only notice that corresponds to the membership status. */
+function getReadOnlyReviewMessage(status: ParticipationReviewStatus): string {
+  if (status === 'APPROVED') {
+    return 'この入会届は承認済みです。申請内容とPDFを閲覧できます。';
+  }
+  if (status === 'REJECTED') {
+    return 'この入会届は却下されています。申請内容のみ閲覧できます。';
+  }
+  return 'この入会届は現在あなたのレビュー対象ではないため、閲覧のみ可能です。';
+}
+
+/** Returns an API error message while preserving a readable fallback. */
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error && error.message ? error.message : fallback;
 }
 
-function checklistFromReview(
-  review: ParticipationReviewDetail,
-): ParticipationReviewChecklist {
+/** Creates a fresh unchecked checklist for the current reviewer's decision. */
+function createEmptyChecklist(): ParticipationReviewChecklist {
   return participationReviewChecklistFields.reduce<ParticipationReviewChecklist>(
     (checklist, fieldName) => {
-      checklist[fieldName] = review.review[fieldName];
+      checklist[fieldName] = false;
       return checklist;
     },
     {} as ParticipationReviewChecklist,
   );
 }
 
-function readBackendErrors(error: unknown): FieldErrors {
+/** Maps backend decision errors to the matching fields inside the dialog. */
+function readBackendErrors(
+  error: unknown,
+): ParticipationReviewDecisionErrors {
   if (!(error instanceof ApiError)) return EMPTY_FIELD_ERRORS;
   const errors = error.payload?.errors;
   if (!errors || typeof errors !== 'object' || Array.isArray(errors)) {
@@ -84,6 +110,7 @@ function readBackendErrors(error: unknown): FieldErrors {
     )?.[1] ?? null;
 
   return {
+    reviewerName: findError('reviewerName'),
     reviewerInkan: findError('reviewerInkan'),
     rejectReason: findError('rejectReason'),
     checklist:
@@ -93,10 +120,15 @@ function readBackendErrors(error: unknown): FieldErrors {
   };
 }
 
+/** Displays an application review and coordinates its approve or reject decision. */
 export default function ParticipationReviewDetailPage() {
+  const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { projectId = '', participationId = '' } = useParams();
+  const [searchParams] = useSearchParams();
+  const navigationState = resolveAdminProjectNavigationState(location.state);
+  const requestedStatus = readReviewStatus(searchParams.get('status'));
   const numericParticipationId = Number(participationId);
 
   const [review, setReview] = useState<ParticipationReviewDetail | null>(null);
@@ -104,19 +136,50 @@ export default function ParticipationReviewDetailPage() {
   const [checklist, setChecklist] = useState<ParticipationReviewChecklist | null>(
     null,
   );
+  const [reviewerName, setReviewerName] = useState('');
   const [reviewerInkan, setReviewerInkan] = useState('');
   const [rejectReason, setRejectReason] = useState('');
-  const [decision, setDecision] = useState<Decision | null>(null);
+  const [decision, setDecision] =
+    useState<ParticipationReviewDecision | null>(null);
   const [fieldErrors, setFieldErrors] =
-    useState<FieldErrors>(EMPTY_FIELD_ERRORS);
+    useState<ParticipationReviewDecisionErrors>(EMPTY_FIELD_ERRORS);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [hasPermissionError, setHasPermissionError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   const returnToList = useCallback(() => {
-    navigate(paths.adminProjectMembership(projectId));
-  }, [navigate, projectId]);
+    navigate(paths.adminProjectMembership(projectId, requestedStatus ?? 'OPEN'), {
+      state: navigationState,
+    });
+  }, [navigate, navigationState, projectId, requestedStatus]);
+
+  /** Fetches a fresh membership PDF URL and opens it without leaving the review page. */
+  const handleViewMembershipPdf = async () => {
+    if (!review || isDownloadingPdf) return;
+
+    setIsDownloadingPdf(true);
+    try {
+      const { pdfUrl } = await downloadAdminParticipationMembershipPdf(
+        projectId,
+        review.participationId,
+      );
+      downloadFromUrl(pdfUrl);
+    } catch (error) {
+      toast({
+        title: 'PDFを表示できませんでした',
+        description:
+          error instanceof Error && error.message
+            ? error.message
+            : 'しばらくしてからもう一度お試しください。',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
 
   const loadReview = useCallback(async () => {
     if (
@@ -132,12 +195,17 @@ export default function ParticipationReviewDetailPage() {
 
     setIsLoading(true);
     setLoadError(null);
+    setHasPermissionError(false);
 
     try {
-      const [project, detail, myReviews] = await Promise.all([
+      const openReviewsRequest =
+        requestedStatus === 'APPROVED' || requestedStatus === 'REJECTED'
+          ? Promise.resolve([])
+          : getOpenParticipationReviews();
+      const [project, detail, openReviews] = await Promise.all([
         getAdminProjectDetail(projectId),
         getParticipationReviewDetail(numericParticipationId),
-        getMyParticipationReviews(),
+        openReviewsRequest,
       ]);
 
       if (!isParticipationReviewForProject(detail, projectId, project)) {
@@ -148,23 +216,33 @@ export default function ParticipationReviewDetailPage() {
         return;
       }
 
-      setReview(detail);
-      setChecklist(checklistFromReview(detail));
-      setIsReviewable(
-        myReviews.some(
-          (candidate) =>
-            candidate.participationId === numericParticipationId &&
-            isParticipationReviewForProject(candidate, projectId, project),
-        ),
+      const isCurrentUserReviewable = openReviews.some(
+        (candidate) =>
+          candidate.participationId === numericParticipationId &&
+          isParticipationReviewForProject(candidate, projectId, project),
       );
+
+      setReview(detail);
+      setIsReviewable(
+        (requestedStatus === null || requestedStatus === 'OPEN') &&
+          isCurrentUserReviewable,
+      );
+      setChecklist(createEmptyChecklist());
+      setReviewerName('');
+      setReviewerInkan('');
+      setRejectReason('');
+      setDecision(null);
+      setFieldErrors(EMPTY_FIELD_ERRORS);
+      setSubmitError(null);
     } catch (error) {
+      setHasPermissionError(isForbiddenApiError(error));
       setLoadError(
         getErrorMessage(error, '入会届の詳細取得に失敗しました。'),
       );
     } finally {
       setIsLoading(false);
     }
-  }, [numericParticipationId, projectId]);
+  }, [numericParticipationId, projectId, requestedStatus]);
 
   useEffect(() => {
     void loadReview();
@@ -178,14 +256,16 @@ export default function ParticipationReviewDetailPage() {
       ),
     [checklist],
   );
+  const hasReviewerName = Boolean(reviewerName.trim());
   const hasReviewerInkan = Boolean(reviewerInkan.trim());
-  const canApprove =
-    isReviewable &&
+  const canSubmitDecision =
+    hasReviewerName &&
     hasReviewerInkan &&
     allChecklistItemsChecked &&
+    (decision !== 'reject' || Boolean(rejectReason.trim())) &&
     !isSubmitting;
-  const canReject = isReviewable && hasReviewerInkan && !isSubmitting;
 
+  /** Updates one checklist item and clears errors that it resolves. */
   const updateChecklist = (
     fieldName: ParticipationReviewChecklistField,
     checked: boolean,
@@ -197,26 +277,36 @@ export default function ParticipationReviewDetailPage() {
     setSubmitError(null);
   };
 
-  const openDecision = (nextDecision: Decision) => {
+  /** Opens the selected decision form while retaining the current review draft. */
+  const openDecision = (nextDecision: ParticipationReviewDecision) => {
     setDecision(nextDecision);
-    setRejectReason('');
     setFieldErrors(EMPTY_FIELD_ERRORS);
     setSubmitError(null);
   };
 
+  /** Closes the dialog without discarding fields entered for this participation. */
   const closeDecision = (open: boolean) => {
     if (open || isSubmitting) return;
     setDecision(null);
-    setRejectReason('');
     setFieldErrors(EMPTY_FIELD_ERRORS);
     setSubmitError(null);
   };
 
+  /** Sends the validated checklist to the selected approve or reject endpoint. */
   const submitDecision = async () => {
     if (!review || !checklist || !decision || isSubmitting) return;
 
+    const trimmedReviewerName = reviewerName.trim();
     const trimmedInkan = reviewerInkan.trim();
     const trimmedRejectReason = rejectReason.trim();
+
+    if (!trimmedReviewerName) {
+      setFieldErrors((current) => ({
+        ...current,
+        reviewerName: 'レビュー担当者名を入力してください。',
+      }));
+      return;
+    }
 
     if (!trimmedInkan) {
       setFieldErrors((current) => ({
@@ -226,7 +316,7 @@ export default function ParticipationReviewDetailPage() {
       return;
     }
 
-    if (decision === 'approve' && !allChecklistItemsChecked) {
+    if (!allChecklistItemsChecked) {
       setFieldErrors((current) => ({
         ...current,
         checklist: 'すべてのチェック項目を確認してください。',
@@ -248,6 +338,7 @@ export default function ParticipationReviewDetailPage() {
 
     try {
       const commonPayload = {
+        reviewerName: trimmedReviewerName,
         reviewerInkan: trimmedInkan,
         ...checklist,
       };
@@ -300,6 +391,15 @@ export default function ParticipationReviewDetailPage() {
     );
   }
 
+  if (hasPermissionError) {
+    return (
+      <main className="mx-auto w-full max-w-[960px] space-y-6 px-4 py-10 sm:px-6">
+        <header><h1>入会届の詳細</h1><p className="mt-2 text-small text-foreground">申請内容と確認資料を確認します。</p></header>
+        <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
+      </main>
+    );
+  }
+
   if (loadError || !review || !checklist) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background px-6">
@@ -329,7 +429,9 @@ export default function ParticipationReviewDetailPage() {
     );
   }
 
-  const isRejection = decision === 'reject';
+  const reviewStatus =
+    requestedStatus ??
+    (isParticipationReviewApproved(review) ? 'APPROVED' : 'OPEN');
 
   return (
     <main className="relative min-h-screen bg-background px-4 py-10 sm:px-6 lg:px-8">
@@ -353,20 +455,64 @@ export default function ParticipationReviewDetailPage() {
             role="status"
             className="rounded-xl border border-border bg-muted/30 px-5 py-4 text-small text-foreground"
           >
-            この入会届は現在あなたのレビュー対象ではないため、閲覧のみ可能です。
+            {getReadOnlyReviewMessage(reviewStatus)}
           </div>
+        )}
+
+        {reviewStatus === 'APPROVED' && (
+          <ParticipationReviewPdfCard
+            isLoading={isDownloadingPdf}
+            onView={() => void handleViewMembershipPdf()}
+          />
         )}
 
         <ParticipationReviewSections review={review} />
 
-        <ParticipationReviewChecklistCard
+        {isReviewable && (
+          <FormActions
+            actions={[
+              {
+                id: 'reject',
+                label: '却下',
+                variant: 'destructive',
+                disabled: isSubmitting,
+                onClick: () => openDecision('reject'),
+              },
+              {
+                id: 'approve',
+                label: '承認',
+                variant: 'success',
+                disabled: isSubmitting,
+                onClick: () => openDecision('approve'),
+              },
+            ]}
+          />
+        )}
+      </FormPageContent>
+
+      {isReviewable && (
+        <ParticipationReviewDecisionDialog
+          open={Boolean(decision)}
+          decision={decision}
+          review={review}
           checklist={checklist}
+          reviewerName={reviewerName}
           reviewerInkan={reviewerInkan}
-          readOnly={!isReviewable}
-          reviewerInkanError={fieldErrors.reviewerInkan}
-          checklistError={fieldErrors.checklist}
-          disabled={isSubmitting}
+          rejectReason={rejectReason}
+          fieldErrors={fieldErrors}
+          submitError={submitError}
+          isSubmitting={isSubmitting}
+          canSubmit={canSubmitDecision}
+          onOpenChange={closeDecision}
           onChecklistChange={updateChecklist}
+          onReviewerNameChange={(value) => {
+            setReviewerName(value);
+            setFieldErrors((current) => ({
+              ...current,
+              reviewerName: null,
+            }));
+            setSubmitError(null);
+          }}
           onReviewerInkanChange={(value) => {
             setReviewerInkan(value);
             setFieldErrors((current) => ({
@@ -375,111 +521,17 @@ export default function ParticipationReviewDetailPage() {
             }));
             setSubmitError(null);
           }}
+          onRejectReasonChange={(value) => {
+            setRejectReason(value);
+            setFieldErrors((current) => ({
+              ...current,
+              rejectReason: null,
+            }));
+            setSubmitError(null);
+          }}
+          onSubmit={() => void submitDecision()}
         />
-
-        {isReviewable && (
-          <FormActions className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Button
-              type="button"
-              variant="destructive"
-              size="md"
-              disabled={!canReject}
-              onClick={() => openDecision('reject')}
-            >
-              却下
-            </Button>
-            <Button
-              type="button"
-              size="md"
-              className="bg-success text-success-foreground hover:bg-success/90"
-              disabled={!canApprove}
-              onClick={() => openDecision('approve')}
-            >
-              承認
-            </Button>
-          </FormActions>
-        )}
-      </FormPageContent>
-
-      <AlertDialog open={Boolean(decision)} onOpenChange={closeDecision}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              入会届を{isRejection ? '却下' : '承認'}しますか？
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              入会届ID: {review.participationId}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          {isRejection && (
-            <div className="space-y-2">
-              <Label htmlFor="reject-reason">却下理由（必須）</Label>
-              <Textarea
-                id="reject-reason"
-                value={rejectReason}
-                onChange={(event) => {
-                  setRejectReason(event.target.value);
-                  setFieldErrors((current) => ({
-                    ...current,
-                    rejectReason: null,
-                  }));
-                  setSubmitError(null);
-                }}
-                placeholder="却下理由を入力してください"
-                disabled={isSubmitting}
-                aria-invalid={Boolean(fieldErrors.rejectReason)}
-                aria-describedby={
-                  fieldErrors.rejectReason ? 'reject-reason-error' : undefined
-                }
-              />
-              {fieldErrors.rejectReason && (
-                <p
-                  id="reject-reason-error"
-                  role="alert"
-                  className="text-small text-destructive"
-                >
-                  {fieldErrors.rejectReason}
-                </p>
-              )}
-            </div>
-          )}
-
-          {submitError && (
-            <p role="alert" className="text-small text-destructive">
-              {submitError}
-            </p>
-          )}
-
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSubmitting}>
-              キャンセル
-            </AlertDialogCancel>
-            <Button
-              type="button"
-              variant={isRejection ? 'destructive' : 'default'}
-              className={
-                isRejection
-                  ? undefined
-                  : 'bg-success text-success-foreground hover:bg-success/90'
-              }
-              disabled={
-                isSubmitting ||
-                (isRejection
-                  ? !rejectReason.trim()
-                  : !allChecklistItemsChecked)
-              }
-              onClick={() => void submitDecision()}
-            >
-              {isSubmitting
-                ? '処理中...'
-                : isRejection
-                  ? '却下する'
-                  : '承認する'}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      )}
     </main>
   );
 }

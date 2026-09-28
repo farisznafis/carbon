@@ -17,7 +17,7 @@ import com.kct.jcredit.core_backend.dto.response.details.CompanyInfoResponse;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-public class PendingReviewParticipationResponse {
+public class PendingReviewParticipationResponse extends BaseResponse{
     private Integer participationId;
     private String  projectName;
     private String  siteName;
