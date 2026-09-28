@@ -36,7 +36,7 @@ const Profile = () => {
   );
   const accountName =
     formattedUserName === '-'
-      ? profile?.username || user?.username || 'ユーザー'
+      ? profile?.username || user?.username || ''
       : formattedUserName;
 
   /** Returns the signed-in account to its role-specific home page. */

@@ -45,7 +45,7 @@ export default function MasterUserProfilePage() {
   );
   const accountName =
     formattedUserName === '-'
-      ? profile?.username || 'ユーザー'
+      ? profile?.username || ''
       : formattedUserName;
 
   useEffect(() => {
