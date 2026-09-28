@@ -18,7 +18,7 @@ export function HomeFooter() {
 
   return (
     <footer className="border-t border-border bg-muted/70">
-      <div className="mx-auto w-full max-w-page px-4 py-10 sm:px-6 sm:py-12 lg:px-8 2xl:py-16">
+      <div className="mx-auto w-full max-w-page px-4 py-10 sm:px-6 sm:py-12 lg:px-8 2xl:py-[calc(var(--section-gap)*2)]">
         <div
           className="
             grid
@@ -26,7 +26,7 @@ export function HomeFooter() {
             md:grid-cols-2
             lg:grid-cols-[1fr_auto_auto]
             lg:gap-16
-            2xl:gap-28
+            2xl:gap-[calc(var(--section-gap)*3.5)]
           "
         >
           <div className="max-w-sm space-y-4">

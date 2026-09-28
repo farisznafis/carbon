@@ -355,6 +355,7 @@ function ProjectStatus({
 }
 
 // Renders a company-joined project and adapts its action to the current site's relation.
+/** Renders a joined project and its participation action. */
 function JoinedProjectCard({
   project,
   requiresSiteParticipation,
@@ -368,7 +369,7 @@ function JoinedProjectCard({
 
   return (
     <Card className='rounded-2xl border-border bg-card shadow-none'>
-      <CardContent className='p-5 md:p-6'>
+      <CardContent className='p-5 md:p-6 lg:p-[var(--card-padding)]'>
         <div className='mb-5 flex items-center gap-3'>
           <span className='flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-primary'>
             <Building2 className='h-5 w-5' />
@@ -439,10 +440,11 @@ function JoinedProjectCard({
   );
 }
 
+/** Renders a project that the current site can join. */
 function AvailableProjectCard({ project }: { project: SiteProject }) {
   return (
     <Card className='rounded-2xl border-border bg-card shadow-none'>
-      <CardContent className='h-full p-6'>
+      <CardContent className='h-full p-6 lg:p-[var(--card-padding)]'>
         <h3 className='text-foreground'>
           {project.projectName || 'PROJECT ABC'}
         </h3>
@@ -470,6 +472,7 @@ function AvailableProjectCard({ project }: { project: SiteProject }) {
   );
 }
 
+/** Renders the site dashboard with responsive project sections. */
 const Dashboard = () => {
   const { siteId } = useParams();
   const navigate = useNavigate();
@@ -800,7 +803,7 @@ const Dashboard = () => {
               {isSiteLoading ? (
                 <InlineLoader label='拠点情報を読み込んでいます' />
               ) : (
-                <h1 className='min-w-0 break-words text-4xl leading-10 text-foreground'>
+                <h1 className='min-w-0 break-words text-metric leading-[1.111] text-foreground'>
                   {site?.siteName || '株式会社ABC'}
                 </h1>
               )}
@@ -851,7 +854,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <section className='bg-card py-12'>
+      <section className='bg-card py-12 lg:py-[calc(var(--section-gap)*1.5)]'>
         <div className={pageContainer}>
           <div className='mb-6'>
             <h2 className='text-foreground'>入会中のプロジェクト</h2>
@@ -903,7 +906,7 @@ const Dashboard = () => {
         </div>
       </section>
 
-      <section className='bg-background py-12'>
+      <section className='bg-background py-12 lg:py-[calc(var(--section-gap)*1.5)]'>
         <div className={pageContainer}>
           <div className='mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
             <div>

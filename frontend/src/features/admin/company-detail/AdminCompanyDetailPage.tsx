@@ -194,6 +194,7 @@ function DetailErrorState({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+/** Renders company details and permission-aware states for administrators. */
 export default function AdminCompanyDetailPage() {
   const { companyId } = useParams();
   const navigate = useNavigate();
@@ -402,7 +403,7 @@ export default function AdminCompanyDetailPage() {
     return (
       <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
         <header className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">参加企業詳細</h1>
+          <h1 className="text-form-title font-bold text-foreground">参加企業詳細</h1>
           <p className="mt-2 text-muted-foreground">参加企業の登録情報を確認します。</p>
         </header>
         <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_READ" />

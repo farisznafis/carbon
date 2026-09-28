@@ -25,7 +25,7 @@ export const dashboardTabTriggerClassName = cn(
 );
 
 export const dashboardPageHeaderClassName = cn(
-  'flex min-h-36 items-center justify-center text-center',
+  'flex min-h-36 items-center justify-center text-center xl:min-h-[clamp(8rem,9vw,9rem)]',
   dashboardPageContainerClassName,
 );
 

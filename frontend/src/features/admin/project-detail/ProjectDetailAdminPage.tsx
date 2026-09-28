@@ -128,7 +128,7 @@ function ProjectPlanProgressCard({
         ) : totalForms > 0 ? (
           <>
             <p className="flex items-baseline gap-2 text-muted-foreground">
-              <strong className="text-3xl text-foreground">
+              <strong className="text-form-title text-foreground">
                 {completedForms} / {totalForms}
               </strong>
               <span className="text-small">入力済み</span>
@@ -353,7 +353,7 @@ export default function ProjectDetailAdmin() {
     return (
       <main className="mx-auto w-full max-w-admin px-4 py-10 sm:px-6">
         <header className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">プロジェクト詳細</h1>
+          <h1 className="text-form-title font-bold text-foreground">プロジェクト詳細</h1>
           <p className="mt-2 text-muted-foreground">登録済みプロジェクトの情報を確認します。</p>
         </header>
         <PermissionDeniedNotice permission="PROJECT_READ" />

@@ -223,6 +223,7 @@ function AdminDashboardEmptyState({ children }: { children: ReactNode }) {
   );
 }
 
+/** Renders the route-selected admin dashboard section. */
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -1011,7 +1012,7 @@ const AdminDashboard = () => {
     return (
       <main className={`${dashboardContainer} space-y-6 py-8`}>
         <header>
-          <h1 className="text-3xl font-bold text-foreground">企業申請詳細</h1>
+          <h1 className="text-form-title font-bold text-foreground">企業申請詳細</h1>
           <p className="mt-2 text-muted-foreground">企業申請の内容を確認します。</p>
         </header>
         <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />

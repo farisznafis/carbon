@@ -221,6 +221,7 @@ type SummaryMetricProps = {
   emphasis?: boolean;
 };
 
+/** Renders one headline project metric with an optional emphasis color. */
 function SummaryMetric({
   label,
   value,
@@ -234,7 +235,7 @@ function SummaryMetric({
       <div className='mt-2 flex flex-wrap items-baseline gap-x-1.5'>
         <span
           className={cn(
-            'text-3xl font-bold tabular-nums',
+            'text-form-title font-bold tabular-nums',
             emphasis ? 'text-primary' : 'text-foreground',
           )}
         >
@@ -350,6 +351,7 @@ function RecentDataBar({ row }: RecentDataBarProps) {
   );
 }
 
+/** Renders project status, equipment, and monitoring details for a site. */
 const ProjectDetail = () => {
   const { id, projectId: routeProjectId, siteId: routeSiteId } = useParams();
   const [searchParams] = useSearchParams();
@@ -744,7 +746,7 @@ const ProjectDetail = () => {
                       </span>
                     </div>
 
-                    <h1 className='max-w-4xl text-2xl font-bold leading-tight text-foreground sm:text-3xl'>
+                    <h1 className='max-w-4xl text-2xl font-bold leading-tight text-foreground sm:text-form-title'>
                       {project.name}
                     </h1>
 

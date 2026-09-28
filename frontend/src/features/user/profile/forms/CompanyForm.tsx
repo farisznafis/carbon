@@ -34,6 +34,7 @@ interface CompanyFormProps {
   onCancel: () => void;
 }
 
+/** Renders the editable company profile form. */
 export const CompanyForm: React.FC<CompanyFormProps> = ({
   defaultValues,
   onSubmit,
@@ -52,7 +53,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
     <div className='min-h-screen bg-background py-8'>
       <div className='bg-primary text-primary-foreground py-6 px-4 mb-8'>
         <div className='max-w-md mx-auto'>
-          <h2 className='text-3xl font-bold text-center'>法人情報の更新</h2>
+          <h2 className='text-form-title font-bold text-center'>法人情報の更新</h2>
         </div>
       </div>
 

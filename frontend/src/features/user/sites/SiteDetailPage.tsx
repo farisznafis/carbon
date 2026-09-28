@@ -41,6 +41,7 @@ interface CompanyUser {
   role: 'master' | 'regular';
 }
 
+/** Renders a site's details and available management actions. */
 const SiteDetail = () => {
   const { siteId } = useParams();
   const navigate = useNavigate();
@@ -236,7 +237,7 @@ const SiteDetail = () => {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
+          <h1 className="text-form-title font-bold flex items-center gap-2">
             <MapPin className="h-8 w-8 text-primary" />
             {site.name}
           </h1>

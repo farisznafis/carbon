@@ -64,6 +64,7 @@ export function MasterDashboardTabs() {
   );
 }
 
+/** Renders one dashboard section with shared heading and action spacing. */
 export function DashboardSection({
   title,
   description,
@@ -82,7 +83,7 @@ export function DashboardSection({
   children: ReactNode;
 }) {
   return (
-    <section className={cn('py-8', dashboardContainer)}>
+    <section className={cn('py-8 lg:py-section', dashboardContainer)}>
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-foreground">{title}</h2>

@@ -190,7 +190,7 @@ function MetricCard({
             </div>
           ) : (
             <div className="flex items-baseline gap-1.5">
-              <span className="text-4xl font-bold leading-none tracking-tight tabular-nums text-foreground">
+              <span className="text-metric font-bold leading-none tracking-tight tabular-nums text-foreground">
                 {value.toLocaleString('ja-JP')}
               </span>
 
@@ -666,6 +666,7 @@ function MonitoringDialogs({
 }
 
 /** Renders the Figma-aligned Admin Home from independent existing data sources. */
+/** Renders the admin overview metrics, tables, and supporting panels. */
 export function AdminDashboardOverview(
   props: Readonly<AdminDashboardOverviewProps>,
 ) {
@@ -687,7 +688,7 @@ export function AdminDashboardOverview(
       : undefined;
 
   return (
-    <div className='space-y-8'>
+    <div className='space-y-8 lg:space-y-section'>
       <AdminPageHeader
         title="ホーム"
         description="運用業務を担当するユーザーのアカウントを管理します。"

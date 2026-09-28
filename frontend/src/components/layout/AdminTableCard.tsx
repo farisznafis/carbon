@@ -35,7 +35,7 @@ export function AdminTableCard({
         className,
       )}
     >
-      <CardContent className="p-5 sm:p-7 lg:px-9">
+      <CardContent className="p-5 sm:p-7 lg:px-[calc(var(--card-padding)*1.5)]">
         <div>
           <div className="flex flex-wrap items-baseline gap-3">
             <h2

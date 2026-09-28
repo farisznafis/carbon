@@ -17,9 +17,9 @@ export function HomeMethodsSection() {
     <section
       id={HOME_SECTION_IDS.methods}
       aria-labelledby="home-methods-title"
-      className="scroll-mt-20 border-y border-border bg-background py-14 sm:py-16 2xl:py-24"
+      className="scroll-mt-20 border-y border-border bg-background py-14 sm:py-16 2xl:py-marketing-section"
     >
-      <div className="mx-auto w-full max-w-page space-y-8 px-4 sm:space-y-10 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-page space-y-8 px-4 sm:space-y-10 sm:px-6 lg:space-y-[calc(var(--section-gap)*1.25)] lg:px-8">
         <HomeSectionHeading
           id="home-methods-title"
           title="初期対応方法論"
@@ -34,7 +34,7 @@ export function HomeMethodsSection() {
               key={methodology.value}
               className="border-border/70 shadow-app-md"
             >
-              <CardContent className="flex items-center gap-5 p-6 sm:p-7">
+              <CardContent className="flex items-center gap-5 p-6 sm:p-7 lg:p-[calc(var(--card-padding)*1.1667)]">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   <SolarPanel className="h-6 w-6" aria-hidden="true" />
                 </span>
