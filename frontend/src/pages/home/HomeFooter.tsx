@@ -37,7 +37,7 @@ export function HomeFooter() {
               <span className="text-3xl font-bold tracking-tight text-foreground">Project</span>
             </div>
             <p className="text-sm leading-6 text-muted-foreground">
-              再生可能エネルギープロジェクトへの参加申請を、オンラインでかんたんに。
+              再生可能エネルギープロジェクトへの入会申請を、オンラインでかんたんに。
             </p>
           </div>
 

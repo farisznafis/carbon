@@ -258,9 +258,11 @@ export default function ProjectMembershipPage() {
 
       <FormPageContent className="max-w-[1200px] space-y-10 pt-16 sm:pt-0">
         <header className="space-y-2">
-          <FormPageTitle as="h1">プロジェクト入会届</FormPageTitle>
+          <FormPageTitle as="h1">
+            プロジェクトへの入会
+          </FormPageTitle>
           <p className="text-base text-foreground">
-            参加を希望するプロジェクトを選択し、入会届を作成します。
+            入会するプロジェクトを選択し、入会手続きを進めます。
           </p>
           {/* {siteName && (
             <p className="text-small text-foreground">対象拠点：{siteName}</p>

@@ -109,7 +109,7 @@ export function ProjectMembershipCard({
               className='w-full'
               onClick={() => onJoin(project)}
             >
-              入会届を提出
+              このプロジェクトに入会する
             </Button>
           </div>
         )}

@@ -349,7 +349,7 @@ function ProjectStatus({
           joined && !pending ? 'bg-success' : 'bg-warning',
         )}
       />
-      {pending ? '承認待ち' : joined ? '参加中' : '未参加'}
+      {pending ? '承認待ち' : joined ? '入会済み' : '未入会'}
     </span>
   );
 }
@@ -899,7 +899,7 @@ const Dashboard = () => {
           ) : (
             <Card className='rounded-2xl border-border'>
               <CardContent className='p-10 text-center text-foreground'>
-                参加中のプロジェクトがありません
+                入会中のプロジェクトがありません
               </CardContent>
             </Card>
           )}
@@ -910,11 +910,11 @@ const Dashboard = () => {
         <div className={pageContainer}>
           <div className='mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
             <div>
-              <h2 className='text-foreground'>未参加プロジェクト</h2>
+              <h2 className='text-foreground'>未入会プロジェクト</h2>
               <p className='text-small mt-2 whitespace-pre-line text-foreground'>
                 {user?.role === 'master'
-                  ? 'プロジェクトへの参加をご希望の場合は、「プロジェクト入会届」ボタンを押下し、参加するプロジェクトを選択してください。'
-                  : 'この拠点は、以下のプロジェクトにまだ参加していません。\n参加をご希望の場合は、マスター権限を持つ担当者へお問い合わせください。'}
+                  ? 'プロジェクトへの入会をご希望の場合は、「プロジェクトに入会する」ボタンから、入会するプロジェクトを選択してください。'
+                  : 'この拠点は、以下のプロジェクトにまだ入会していません。\n入会をご希望の場合は、マスター権限を持つ担当者へお問い合わせください。'}
               </p>
             </div>
             {user?.role === 'master' && activeSiteId && (
@@ -924,7 +924,7 @@ const Dashboard = () => {
                 className='shrink-0'
                 onClick={() => navigate(paths.projectMembership(activeSiteId))}
               >
-                プロジェクト入会届
+                プロジェクトに入会する
               </Button>
             )}
           </div>
@@ -990,7 +990,7 @@ const Dashboard = () => {
               disabled={isJoiningProject}
               onClick={() => void handleConfirmProjectJoin()}
             >
-              {isJoiningProject ? '参加中...' : '参加する'}
+              {isJoiningProject ? '入会中...' : '入会する'}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -119,7 +119,7 @@ const MasterDashboard = () => {
                     })
                   }
                 >
-                  プロジェクト入会届
+                  プロジェクトに入会する
                 </Button>
                 {!hasRegisteredSites && (
                   <p
@@ -192,7 +192,7 @@ const MasterDashboard = () => {
               ) : (
                 <DashboardEmptyState
                   title="まだ拠点が登録されていません"
-                  description="プロジェクト入会届を提出するには、対象となる拠点の登録が必要です。まず拠点を登録してください。"
+                  description="プロジェクトに入会するには、対象となる拠点の登録が必要です。まず拠点を登録してください。"
                   action={
                     <Button
                       type="button"

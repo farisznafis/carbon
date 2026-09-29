@@ -62,7 +62,7 @@ export function HomeCtaSection({ signupPath }: HomeCtaSectionProps) {
                 text-[hsl(var(--blue-200))]
               '
             >
-              プロジェクト参加
+              プロジェクト入会
             </p>
 
             <h2
@@ -76,7 +76,7 @@ export function HomeCtaSection({ signupPath }: HomeCtaSectionProps) {
                 sm:text-marketing-title
               '
             >
-              プロジェクト参加を、もっとかんたんに
+              プロジェクトへの入会を、もっとかんたんに
             </h2>
 
             <p
