@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { ExternalLink } from 'lucide-react';
 import { ButtonLoader } from '@/components/feedback/loading';
 
-type ProjectMembershipStatus = 'available' | 'pending' | 'joined';
+export type ProjectMembershipStatus = 'available' | 'pending' | 'joined';
 
 type ProjectMembershipCardProps = Readonly<{
   project: SiteProject;
@@ -31,9 +31,19 @@ export function ProjectMembershipCard({
   isDownloadingPdf = false,
 }: ProjectMembershipCardProps) {
   const showsJoinedState = status === 'joined';
+  const canApply = status === 'available';
 
   return (
-    <Card className='h-full rounded-lg border-border bg-card shadow-none'>
+    <Card
+      className={cn(
+        'h-full rounded-lg border-border shadow-none',
+        showsJoinedState
+          ? 'bg-muted'
+          : status === 'pending'
+            ? 'bg-muted/40'
+            : 'bg-card',
+      )}
+    >
       <CardContent className='flex h-full flex-col p-6'>
         <div className='flex items-start justify-between gap-4'>
           <div className='min-w-0'>
@@ -50,12 +60,16 @@ export function ProjectMembershipCard({
           <Badge
             className={cn(
               'shrink-0 border-transparent',
-              showsJoinedState
-                ? 'bg-success/15 text-success hover:bg-success/15'
-                : 'bg-warning/15 text-warning hover:bg-warning/15',
+              status === 'pending'
+                ? 'bg-warning/15 text-warning hover:bg-warning/15'
+                : 'bg-secondary text-secondary-foreground hover:bg-secondary',
             )}
           >
-            {showsJoinedState ? '入会中' : '未入会'}
+            {status === 'joined'
+              ? '入会中'
+              : status === 'pending'
+                ? '申請中'
+                : '未入会'}
           </Badge>
         </div>
 
@@ -84,7 +98,7 @@ export function ProjectMembershipCard({
 
         {showsJoinedState && onDownloadPdf && (
           <div className='mt-6 sm:ml-auto'>
-<Button
+            <Button
               type='button'
               variant='outline'
               size='md'
@@ -101,7 +115,7 @@ export function ProjectMembershipCard({
           </div>
         )}
 
-        {!showsJoinedState && onJoin && (
+        {canApply && onJoin && (
           <div className='mt-6 sm:ml-auto sm:min-w-56'>
             <Button
               type='button'

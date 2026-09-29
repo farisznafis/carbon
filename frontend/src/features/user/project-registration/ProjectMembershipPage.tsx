@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   getSiteData,
@@ -26,8 +26,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ProjectMembershipCard } from '@/features/user/project-registration/components/ProjectMembershipCard';
+import {
+  ProjectMembershipCard,
+  type ProjectMembershipStatus,
+} from '@/features/user/project-registration/components/ProjectMembershipCard';
 import {
   isFromMasterDashboard,
   masterDashboardProjectMembershipState,
@@ -78,36 +80,39 @@ const MEMBERSHIP_PREPARATION_SECTIONS = [
   },
 ] as const;
 
-const membershipTabClassName =
-  'group min-h-11 shrink-0 gap-2 rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-2 text-foreground shadow-none hover:text-primary data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-primary data-[state=active]:shadow-none focus-visible:ring-ring';
-const membershipCountClassName =
-  'text-xs text-muted-foreground group-data-[state=active]:text-primary';
+/** Resolves the application state using the API participation and relation fields. */
+function getMembershipStatus(project: SiteProject): ProjectMembershipStatus {
+  if (project.participationStatus === 'OPEN') return 'pending';
+  if (project.participationStatus === 'APPROVED') return 'joined';
+  if (project.participationStatus === 'REJECTED') return 'available';
+  if (project.isCompanyJoined || project.hasSiteRelation) return 'joined';
+  return 'available';
+}
 
 type MembershipSectionProps = Readonly<{
-  description: string;
   projects: SiteProject[];
-  status: 'available' | 'pending' | 'joined';
-  emptyMessage: string;
-  onJoin?: (project: SiteProject) => void;
-  onDownloadPdf?: (project: SiteProject) => void;
-  isDownloadingPdf?: (project: SiteProject) => boolean;
+  onJoin: (project: SiteProject) => void;
+  onDownloadPdf: (project: SiteProject) => void;
+  isDownloadingPdf: (project: SiteProject) => boolean;
 }>;
 
-/** Renders a membership category and its project cards or empty state. */
+/** Renders every public project with its own application state. */
 function MembershipSection({
-  description,
   projects,
-  status,
-  emptyMessage,
   onJoin,
   onDownloadPdf,
   isDownloadingPdf,
 }: MembershipSectionProps) {
   return (
-    <section>
-      <p className="mb-5 whitespace-pre-line text-small text-foreground">
-        {description}
-      </p>
+    <section aria-labelledby="public-projects-heading">
+      <div className="mb-5 space-y-1">
+        <h2 id="public-projects-heading" className="text-lg font-semibold text-foreground">
+          公開中のプロジェクト
+        </h2>
+        <p className="text-small text-muted-foreground">
+          未入会のプロジェクトから入会を申請できます。
+        </p>
+      </div>
 
       {projects.length > 0 ? (
         <div className="space-y-5">
@@ -115,17 +120,17 @@ function MembershipSection({
             <ProjectMembershipCard
               key={project.id}
               project={project}
-              status={status}
+              status={getMembershipStatus(project)}
               onJoin={onJoin}
               onDownloadPdf={onDownloadPdf}
-              isDownloadingPdf={isDownloadingPdf?.(project) ?? false}
+              isDownloadingPdf={isDownloadingPdf(project)}
             />
           ))}
         </div>
       ) : (
         <Card className="rounded-lg border-dashed border-border shadow-none">
           <CardContent className="p-8 text-center text-foreground">
-            {emptyMessage}
+            公開中のプロジェクトはありません。
           </CardContent>
         </Card>
       )}
@@ -186,30 +191,6 @@ export function ProjectMembershipContent({ siteId, embedded = false }: ProjectMe
   useEffect(() => {
     void loadMembershipData();
   }, [loadMembershipData]);
-
-  const availableProjects = useMemo(
-    () =>
-      projects.filter(
-        (project) =>
-          project.participationStatus !== 'OPEN' &&
-          !project.isCompanyJoined,
-      ),
-    [projects],
-  );
-
-  const activeMembershipProjects = useMemo(
-    () =>
-      projects.filter(
-        (project) =>
-          project.participationStatus === 'OPEN' ||
-          project.isCompanyJoined,
-      ),
-    [projects],
-  );
-  const joinedProjects = useMemo(
-    () => projects.filter((project) => project.isCompanyJoined),
-    [projects],
-  );
 
   /** Opens the preparation dialog for the selected project. */
   const handleJoin = (project: SiteProject) => {
@@ -296,48 +277,12 @@ export function ProjectMembershipContent({ siteId, embedded = false }: ProjectMe
           </Card>
         ) : (
           <>
-            <Tabs defaultValue="available">
-              <TabsList className="flex h-auto w-full flex-wrap justify-start gap-x-6 gap-y-1 rounded-none border-b border-border bg-transparent p-0">
-                <TabsTrigger
-                  value="available"
-                  className={membershipTabClassName}
-                >
-                  <span>入会可能なプロジェクト</span>
-                  <span className={membershipCountClassName}>{availableProjects.length}</span>
-                </TabsTrigger>
-
-                <TabsTrigger
-                  value="joined"
-                  className={membershipTabClassName}
-                >
-                  <span>申請中・入会中のプロジェクト</span>
-                  <span className={membershipCountClassName}>{joinedProjects.length}</span>
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="available" className="mt-6">
-                <MembershipSection
-                  description={'この拠点は以下のプロジェクトにまだ入会していません。入会を希望する場合は、入会届へ進んでください。'}
-                  projects={availableProjects}
-                  status="available"
-                  emptyMessage="入会可能なプロジェクトはありません。"
-                  onJoin={handleJoin}
-                />
-              </TabsContent>
-
-              <TabsContent value="joined" className="mt-6">
-                <MembershipSection
-                  description="この企業が現在入会しているプロジェクトです。再度入会届を提出する必要はありません。"
-                  projects={joinedProjects}
-                  status="joined"
-                  emptyMessage="入会中のプロジェクトはありません。"
-                  onDownloadPdf={(project) => void handleDownloadPdf(project)}
-                  isDownloadingPdf={(project) =>
-                    downloadingProjectIds.has(project.id)
-                  }
-                />
-              </TabsContent>
-            </Tabs>
+            <MembershipSection
+              projects={projects}
+              onJoin={handleJoin}
+              onDownloadPdf={(project) => void handleDownloadPdf(project)}
+              isDownloadingPdf={(project) => downloadingProjectIds.has(project.id)}
+            />
 
             <Dialog
               open={selectedProject !== null}
