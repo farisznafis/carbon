@@ -283,8 +283,9 @@ export function AppShell({
         {showSidebar && (
           <aside
             className={cn(
-              'sticky top-0 hidden h-dvh shrink-0 flex-col',
+              'sticky top-0 z-50 hidden h-dvh shrink-0 flex-col',
               'border-r border-sidebar-border bg-sidebar',
+              'overflow-visible',
               'lg:flex',
               collapsed ? 'w-[72px]' : 'w-60',
             )}

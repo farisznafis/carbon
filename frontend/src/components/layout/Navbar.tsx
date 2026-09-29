@@ -232,16 +232,10 @@ export const Navbar = ({
 
   return (
     <nav
-      className="
-        sticky
-        top-0
-        z-50
-        shrink-0
-        border-b
-        border-border
-        bg-card/50
-        backdrop-blur-sm
-      "
+      className={cn(
+        'sticky top-0 shrink-0 border-b border-border bg-card/50 backdrop-blur-sm',
+        appShell ? 'z-40' : 'z-50',
+      )}
     >
       <div
         className={cn(

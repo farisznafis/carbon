@@ -10,15 +10,7 @@ type SidebarHeaderProps = {
   onToggleCollapsed: () => void;
 };
 
-/**
- * Renders the desktop product identity and sidebar collapse control.
- *
- * Expanded:
- * [ Logo GX                  < ]
- *
- * Collapsed:
- * [ Logo > ]
- */
+/** Keeps the product mark aligned with sidebar icons in both desktop widths. */
 export function SidebarHeader({
   homeHref,
   collapsed,
@@ -27,8 +19,9 @@ export function SidebarHeader({
   return (
     <div
       className={cn(
-        'flex h-20 shrink-0 items-center border-b border-sidebar-border',
-        collapsed ? 'justify-center gap-1 px-1' : 'gap-3 px-5',
+        'relative flex h-20 shrink-0 items-center',
+        'border-b border-sidebar-border',
+        collapsed ? 'justify-center px-3' : 'px-3',
       )}
     >
       <Link
@@ -36,15 +29,10 @@ export function SidebarHeader({
         aria-label="ホーム"
         className={cn(
           'flex min-w-0 items-center',
-          collapsed ? 'justify-center' : 'gap-3',
+          collapsed ? 'justify-center' : 'ml-1.5 gap-3',
         )}
       >
-        <div
-          className={cn(
-            'shrink-0 rounded-lg gradient-primary',
-            collapsed ? 'h-7 w-7' : 'h-9 w-9',
-          )}
-        />
+        <div className="h-9 w-9 shrink-0 rounded-lg gradient-primary" />
 
         {!collapsed && (
           <span className="truncate text-xl font-bold text-foreground">
@@ -65,14 +53,23 @@ export function SidebarHeader({
         }
         aria-expanded={!collapsed}
         className={cn(
-          'shrink-0 rounded-full border border-border bg-card shadow-app-sm',
+          'absolute right-0 top-1/2 z-30',
+          'h-8 w-8',
+          'translate-x-1/2 -translate-y-1/2',
+          'rounded-full',
+          'border border-border',
+          'bg-card',
+          'shadow-app-sm',
           'hover:bg-muted',
-          collapsed ? 'h-7 w-7' : 'ml-auto h-8 w-8',
+          'focus-visible:outline-none',
+          'focus-visible:ring-2',
+          'focus-visible:ring-ring',
+          'focus-visible:ring-offset-2',
         )}
       >
         {collapsed ? (
           <ChevronRight
-            className="h-3.5 w-3.5"
+            className="h-4 w-4"
             aria-hidden="true"
           />
         ) : (
