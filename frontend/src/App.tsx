@@ -9,7 +9,7 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import { Navbar } from "@/components/layout/Navbar";
+import { AppShell } from "@/components/layout/AppShell";
 import { ScrollToTop } from "./components/layout/ScrollToTop";
 import { SessionExpiryGuard } from "@/components/layout/SessionExpiryGuard";
 import { useAuth } from "@/contexts/AuthContext";
@@ -220,9 +220,9 @@ const App = () => {
       >
         <Toaster />
         <Sonner />
-        <Navbar />
         <ScrollToTop onRouteScrollReset={resetSmoothScrollPosition} />
         <SessionExpiryGuard />
+        <AppShell>
         <div
           className={cn(
             'min-h-0 min-w-0 flex-1',
@@ -490,6 +490,7 @@ const App = () => {
               </Routes>
             </Suspense>
         </div>
+        </AppShell>
       </div>
       </AdminPermissionProvider>
     </ErrorBoundary>

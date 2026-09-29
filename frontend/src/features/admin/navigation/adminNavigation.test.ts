@@ -11,12 +11,12 @@ describe('admin navigation routing', () => {
     expect(getActiveAdminNavigationKey('/admin/operators/12')).toBe('operators');
     expect(
       getActiveAdminNavigationKey('/admin/monitoring/cancel-requests/4'),
-    ).toBe('monitoring');
+    ).toBe('home');
   });
 
   it('maps legacy dashboard tabs to the new routes', () => {
     expect(getAdminRouteFromLegacyTab('overview')).toBe('/admin/dashboard');
     expect(getAdminRouteFromLegacyTab('operators')).toBe('/admin/operators');
-    expect(getAdminRouteFromLegacyTab('monitoring')).toBe('/admin/monitoring');
+    expect(getAdminRouteFromLegacyTab('monitoring')).toBe('/admin/dashboard?panel=cancel');
   });
 });

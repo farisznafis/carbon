@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Bell, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,7 +17,6 @@ import { toast } from '@/hooks/use-toast';
 import { getHomePath } from '@/utils/getHomePath';
 import { isLoginPath, paths } from '@/routes/paths';
 import { cn } from '@/lib/utils';
-import { AdminNavigation } from '@/features/admin/navigation/AdminNavigation';
 import { AccountMenu } from './AccountMenu';
 import { useAccountIdentity } from './useAccountIdentity';
 
@@ -70,7 +69,8 @@ function AuthenticatedNavbarContent({
   );
 }
 
-export const Navbar = () => {
+/** Renders product identity, shell controls, notifications, and account actions. */
+export const Navbar = ({ sidebarControl, appShell = false }: { sidebarControl?: ReactNode; appShell?: boolean }) => {
   const { user, logout, isAuthenticated } = useAuth();
   const {
     notifications,
@@ -155,28 +155,28 @@ export const Navbar = () => {
         className={cn(
           'w-full px-4 py-4 sm:px-6 lg:px-8',
           isAuthenticated && user && 'py-3',
-          isAdminAuthenticated && 'h-20 px-6 py-0',
+          appShell && 'h-20 px-6 py-0',
           isLoginPage && '[@media(max-height:480px)]:py-2',
         )}
       >
         <div
           className={cn(
             'flex items-center justify-between',
-            isAdminAuthenticated &&
+            appShell &&
               'relative h-full justify-start gap-3',
           )}
         >
+          {sidebarControl}
+
           <Link to={linkTarget} className="flex items-center space-x-2">
             <div className="h-8 w-8 rounded-lg gradient-primary" />
             <span className="text-xl font-bold">GX</span>
           </Link>
 
-          {isAdminAuthenticated && <AdminNavigation />}
-
           <div
             className={cn(
               'flex items-center space-x-3',
-              isAdminAuthenticated && 'ml-auto',
+              appShell && 'ml-auto',
             )}
           >
             {isAuthenticated && user ? (
