@@ -22,6 +22,7 @@ import { CancelRequestStatusBadge } from '@/features/admin/monitoring/CancelRequ
 import { formatCancelRequestDateTime } from '@/features/admin/monitoring/cancelRequestFormatters';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
+import { Button } from '@/components/ui/button';
 
 type DetailFieldProps = {
   label: string;

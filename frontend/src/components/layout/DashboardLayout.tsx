@@ -31,3 +31,11 @@ export const dashboardPageHeaderClassName = cn(
 
 export const dashboardEmptyStateClassName =
   'rounded-xl border border-dashed border-border bg-card px-6 py-8 text-center text-small text-foreground';
+
+export const adminHomePageContainerClassName =
+`
+  mx-auto
+  w-[83.333vw]
+  max-w-[1600px]
+  px-[clamp(21.333px,1.667vw,32px)]
+`;

@@ -105,7 +105,7 @@ const PasswordChange = () => {
     try {
       await changePassword({
         userId: targetUserId,
-        currentPassword: data.current,
+        currentPassword: isManagedUserPasswordChange ? null : data.current,
         newPassword: data.new,
       });
 
@@ -131,7 +131,7 @@ const PasswordChange = () => {
           passwordForm.setError('new', { message: errors.newPassword });
           return;
         }
-        if (errors.currentPassword) {
+        if (!isManagedUserPasswordChange && errors.currentPassword) {
           passwordForm.setError('current', { message: errors.currentPassword });
           return;
         }
@@ -191,7 +191,7 @@ const PasswordChange = () => {
           <Form {...passwordForm}>
             <form onSubmit={passwordForm.handleSubmit(handlePasswordChange)}>
               <FormSectionStack spacing="relaxed">
-                {/* <FormSection number={1} title="現在のパスワード"> */}
+                {!isManagedUserPasswordChange && (
                   <FormField
                     control={passwordForm.control}
                     name="current"
@@ -208,7 +208,7 @@ const PasswordChange = () => {
                       </FormItem>
                     )}
                   />
-                {/* </FormSection> */}
+                )}
 
                 {/* <FormSection number={2} title="新しいパスワード"> */}
                   <div className="space-y-5">

@@ -696,9 +696,10 @@ export function AdminDashboardOverview(
       <section
         aria-label="主要な登録状況"
         className="
-          grid items-stretch gap-4
+          grid items-stretch
+          gap-[var(--admin-home-grid-gap)]
           sm:grid-cols-2
-          xl:grid-cols-4
+          lg:grid-cols-4
         "
       >
         <MetricCard
@@ -748,7 +749,14 @@ export function AdminDashboardOverview(
           requiredPermission='MONITORING_CANCEL'
         />
       </section>
-      <div className='grid items-start gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.85fr)]'>
+      <div
+        className="
+          grid
+          items-start
+          gap-[var(--admin-home-panel-gap)]
+          lg:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.85fr)]
+        "
+      >
         <div ref={mainColumnRef} className='min-w-0 space-y-6'>
           <AdminTableCard
             title='プロジェクト一覧'
