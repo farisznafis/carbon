@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   getSiteData,
@@ -91,10 +91,9 @@ type MembershipSectionProps = Readonly<{
   onJoin?: (project: SiteProject) => void;
   onDownloadPdf?: (project: SiteProject) => void;
   isDownloadingPdf?: (project: SiteProject) => boolean;
-  beforeProjectList?: ReactNode;
 }>;
 
-// Renders one membership category while allowing category-specific guidance before its project list.
+/** Renders a membership category and its project cards or empty state. */
 function MembershipSection({
   description,
   projects,
@@ -103,15 +102,12 @@ function MembershipSection({
   onJoin,
   onDownloadPdf,
   isDownloadingPdf,
-  beforeProjectList,
 }: MembershipSectionProps) {
   return (
     <section>
       <p className="mb-5 whitespace-pre-line text-small text-foreground">
         {description}
       </p>
-
-      {beforeProjectList && <div className="mb-5">{beforeProjectList}</div>}
 
       {projects.length > 0 ? (
         <div className="space-y-5">
@@ -154,7 +150,7 @@ export function ProjectMembershipContent({ siteId, embedded = false }: ProjectMe
   const [projects, setProjects] = useState<SiteProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-  const [isPreparationDialogOpen, setIsPreparationDialogOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<SiteProject | null>(null);
   const [downloadingProjectIds, setDownloadingProjectIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -215,10 +211,17 @@ export function ProjectMembershipContent({ siteId, embedded = false }: ProjectMe
     [projects],
   );
 
-  /** Carries the Master return destination into the registration flow. */
+  /** Opens the preparation dialog for the selected project. */
   const handleJoin = (project: SiteProject) => {
-    setCurrentProject(project);
-    navigate(paths.projectRegister(siteId, project.id), {
+    setSelectedProject(project);
+  };
+
+  /** Starts registration only after the preparation dialog is confirmed. */
+  const handleConfirmJoin = () => {
+    if (!selectedProject) return;
+
+    setCurrentProject(selectedProject);
+    navigate(paths.projectRegister(siteId, selectedProject.id), {
       state: {
         ...(enteredFromMasterDashboard
           ? masterDashboardProjectMembershipState
@@ -228,11 +231,6 @@ export function ProjectMembershipContent({ siteId, embedded = false }: ProjectMe
           : paths.projectMembership(siteId),
       },
     });
-  };
-
-  // Opens the general preparation guide without selecting or changing a project.
-  const handleOpenPreparationDialog = () => {
-    setIsPreparationDialogOpen(true);
   };
 
   // Opens the membership PDF for a joined project without leaving the page.
@@ -324,30 +322,6 @@ export function ProjectMembershipContent({ siteId, embedded = false }: ProjectMe
                   status="available"
                   emptyMessage="入会可能なプロジェクトはありません。"
                   onJoin={handleJoin}
-                  beforeProjectList={(
-                    <Card className="rounded-lg border-border bg-secondary/40 shadow-none">
-                      <CardContent className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="min-w-0 space-y-2">
-                          <h2 className="text-base font-semibold leading-6 text-foreground">
-                            入会届の提出前にご準備ください
-                          </h2>
-                          <p className="max-w-3xl text-small font-normal text-muted-foreground">
-                            入会届の提出には、設備情報の入力と確認資料のアップロードが必要です。
-                            あらかじめ必要なものをご確認いただくと、スムーズにお手続きいただけます。
-                          </p>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="md"
-                          className="w-full shrink-0 sm:w-auto"
-                          onClick={handleOpenPreparationDialog}
-                        >
-                          必要書類を詳しく確認
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )}
                 />
               </TabsContent>
 
@@ -366,14 +340,21 @@ export function ProjectMembershipContent({ siteId, embedded = false }: ProjectMe
             </Tabs>
 
             <Dialog
-              open={isPreparationDialogOpen}
-              onOpenChange={setIsPreparationDialogOpen}
+              open={selectedProject !== null}
+              onOpenChange={(open) => {
+                if (!open) setSelectedProject(null);
+              }}
             >
               <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-2xl flex-col gap-0 overflow-hidden rounded-xl p-0">
                 <DialogHeader className="shrink-0 border-b border-border p-6 pr-12">
                   <DialogTitle>入会届の提出に必要なもの</DialogTitle>
                   <DialogDescription className="text-small font-normal text-muted-foreground">
-                    申請を始める前に、以下の情報と確認資料をご準備ください。
+                    <span className="block font-semibold text-foreground">
+                      {selectedProject?.projectName || '-'}
+                    </span>
+                    <span className="mt-1 block">
+                      申請を始める前に、以下の情報と確認資料をご準備ください。
+                    </span>
                   </DialogDescription>
                 </DialogHeader>
 
@@ -412,6 +393,14 @@ export function ProjectMembershipContent({ siteId, embedded = false }: ProjectMe
                       閉じる
                     </Button>
                   </DialogClose>
+                  <Button
+                    type="button"
+                    size="md"
+                    className="w-full sm:w-auto"
+                    onClick={handleConfirmJoin}
+                  >
+                    入会届へ進む
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
