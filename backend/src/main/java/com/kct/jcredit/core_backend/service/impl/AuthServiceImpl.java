@@ -482,7 +482,7 @@ public class AuthServiceImpl implements AuthService {
         PasswordChangeResponse response = new PasswordChangeResponse();
         
         // 1. 現在のパスワード検証
-        if (!passwordEncoder.matches(request.getCurrentPassword(), targetUser.getPassword())) {
+        if (isSelfChange && !passwordEncoder.matches(request.getCurrentPassword(), targetUser.getPassword())) {
             response.setStatusCode(ResponseConstants.INVALID_CURRENT_PASSWORD);
             response.setMessage(ResponseConstants.MSG_INVALID_CURRENT_PASSWORD);
             return response;
