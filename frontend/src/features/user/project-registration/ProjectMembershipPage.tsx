@@ -36,10 +36,6 @@ import { paths } from '@/routes/paths';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { downloadFromUrl } from '@/utils/download';
 import { useToast } from '@/hooks/use-toast';
-import {
-  dashboardTabsListClassName,
-  dashboardTabTriggerClassName,
-} from '@/components/layout/DashboardLayout';
 
 // Keeps the preparation checklist content structured and easy to maintain in one place.
 const MEMBERSHIP_PREPARATION_SECTIONS = [
@@ -82,10 +78,15 @@ const MEMBERSHIP_PREPARATION_SECTIONS = [
   },
 ] as const;
 
+const membershipTabClassName =
+  'group min-h-11 shrink-0 gap-2 rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-2 text-foreground shadow-none hover:text-primary data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-primary data-[state=active]:shadow-none focus-visible:ring-ring';
+const membershipCountClassName =
+  'text-xs text-muted-foreground group-data-[state=active]:text-primary';
+
 type MembershipSectionProps = Readonly<{
   description: string;
   projects: SiteProject[];
-  status: 'available' | 'joined';
+  status: 'available' | 'pending' | 'joined';
   emptyMessage: string;
   onJoin?: (project: SiteProject) => void;
   onDownloadPdf?: (project: SiteProject) => void;
@@ -136,16 +137,20 @@ function MembershipSection({
   );
 }
 
-export default function ProjectMembershipPage() {
-  const { siteId = '' } = useParams<{ siteId: string }>();
+type ProjectMembershipContentProps = Readonly<{
+  siteId: string;
+  embedded?: boolean;
+}>;
+
+/** Shares project membership data and actions between the Master tab and standalone route. */
+export function ProjectMembershipContent({ siteId, embedded = false }: ProjectMembershipContentProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const enteredFromMasterDashboard = isFromMasterDashboard(location.state);
+  const enteredFromMasterDashboard = embedded || isFromMasterDashboard(location.state);
   const setCurrentProject = useDashboardStore(
     (state) => state.setCurrentProject,
   );
-  const [siteName, setSiteName] = useState('');
   const [projects, setProjects] = useState<SiteProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -165,12 +170,11 @@ export default function ProjectMembershipPage() {
     setErrorMessage('');
 
     try {
-      const [siteData, siteProjects] = await Promise.all([
+      const [, siteProjects] = await Promise.all([
         getSiteData(siteId),
         getSiteProjects(siteId),
       ]);
 
-      setSiteName(siteData.site?.siteName ?? '');
       setProjects(siteProjects);
     } catch (error) {
       setErrorMessage(
@@ -188,7 +192,22 @@ export default function ProjectMembershipPage() {
   }, [loadMembershipData]);
 
   const availableProjects = useMemo(
-    () => projects.filter((project) => !project.isCompanyJoined),
+    () =>
+      projects.filter(
+        (project) =>
+          project.participationStatus !== 'OPEN' &&
+          !project.isCompanyJoined,
+      ),
+    [projects],
+  );
+
+  const activeMembershipProjects = useMemo(
+    () =>
+      projects.filter(
+        (project) =>
+          project.participationStatus === 'OPEN' ||
+          project.isCompanyJoined,
+      ),
     [projects],
   );
   const joinedProjects = useMemo(
@@ -196,6 +215,7 @@ export default function ProjectMembershipPage() {
     [projects],
   );
 
+  /** Carries the Master return destination into the registration flow. */
   const handleJoin = (project: SiteProject) => {
     setCurrentProject(project);
     navigate(paths.projectRegister(siteId, project.id), {
@@ -203,7 +223,9 @@ export default function ProjectMembershipPage() {
         ...(enteredFromMasterDashboard
           ? masterDashboardProjectMembershipState
           : {}),
-        returnTo: paths.projectMembership(siteId),
+        returnTo: enteredFromMasterDashboard
+          ? paths.masterDashboardMembership
+          : paths.projectMembership(siteId),
       },
     });
   };
@@ -239,34 +261,24 @@ export default function ProjectMembershipPage() {
     }
   };
 
+  /** Returns the standalone page to the entry context. */
   const handleBack = () => {
     navigate(
       enteredFromMasterDashboard
-        ? paths.masterDashboard
+        ? paths.masterDashboardMembership
         : paths.siteDashboard(siteId),
     );
   };
 
-  return (
-    <FormStandalonePage className="overflow-visible">
-      <PageBackButton
-        onClick={handleBack}
-        label=""
-        aria-label="前の画面へ戻る"
-        className={floatingPageBackButtonClassName}
-      />
-
-      <FormPageContent className="max-w-[1200px] space-y-10 pt-16 sm:pt-0">
+  const content = (
+    <>
         <header className="space-y-2">
-          <FormPageTitle as="h1">
+          <FormPageTitle as={embedded ? 'h2' : 'h1'}>
             プロジェクトへの入会
           </FormPageTitle>
           <p className="text-base text-foreground">
             入会するプロジェクトを選択し、入会手続きを進めます。
           </p>
-          {/* {siteName && (
-            <p className="text-small text-foreground">対象拠点：{siteName}</p>
-          )} */}
         </header>
 
         {isLoading ? (
@@ -287,51 +299,21 @@ export default function ProjectMembershipPage() {
         ) : (
           <>
             <Tabs defaultValue="available">
-              <TabsList className={dashboardTabsListClassName}>
+              <TabsList className="flex h-auto w-full flex-wrap justify-start gap-x-6 gap-y-1 rounded-none border-b border-border bg-transparent p-0">
                 <TabsTrigger
                   value="available"
-                  className={`${dashboardTabTriggerClassName} group min-w-[240px] gap-2`}
+                  className={membershipTabClassName}
                 >
                   <span>入会可能なプロジェクト</span>
-
-                  <span
-                    className="
-                      inline-flex min-w-6 items-center justify-center
-                      rounded-full bg-secondary
-                      px-2 py-0.5
-                      text-xs font-semibold
-                      text-secondary-foreground
-                      transition-colors
-
-                      group-data-[state=active]:bg-primary-foreground/20
-                      group-data-[state=active]:text-primary-foreground
-                    "
-                  >
-                    {availableProjects.length}
-                  </span>
+                  <span className={membershipCountClassName}>{availableProjects.length}</span>
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="joined"
-                  className={`${dashboardTabTriggerClassName} group min-w-[240px] gap-2`}
+                  className={membershipTabClassName}
                 >
-                  <span>入会中のプロジェクト</span>
-
-                  <span
-                    className="
-                      inline-flex min-w-6 items-center justify-center
-                      rounded-full bg-secondary
-                      px-2 py-0.5
-                      text-xs font-semibold
-                      text-secondary-foreground
-                      transition-colors
-
-                      group-data-[state=active]:bg-primary-foreground/20
-                      group-data-[state=active]:text-primary-foreground
-                    "
-                  >
-                    {joinedProjects.length}
-                  </span>
+                  <span>申請中・入会中のプロジェクト</span>
+                  <span className={membershipCountClassName}>{joinedProjects.length}</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -435,7 +417,30 @@ export default function ProjectMembershipPage() {
             </Dialog>
           </>
         )}
+    </>
+  );
+
+  if (embedded) {
+    return <div className="min-w-0 space-y-8">{content}</div>;
+  }
+
+  return (
+    <FormStandalonePage className="overflow-visible">
+      <PageBackButton
+        onClick={handleBack}
+        label=""
+        aria-label="前の画面へ戻る"
+        className={floatingPageBackButtonClassName}
+      />
+      <FormPageContent className="max-w-[1200px] space-y-10 pt-16 sm:pt-0">
+        {content}
       </FormPageContent>
     </FormStandalonePage>
   );
+}
+
+/** Keeps the existing site-specific route while reusing the membership content. */
+export default function ProjectMembershipPage() {
+  const { siteId = '' } = useParams<{ siteId: string }>();
+  return <ProjectMembershipContent siteId={siteId} />;
 }

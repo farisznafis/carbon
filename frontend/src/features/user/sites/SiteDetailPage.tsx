@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { PageLoadingOverlay } from '@/components/feedback/loading';
+import { paths } from '@/routes/paths';
 
 interface SiteData {
   siteId: string;
@@ -440,7 +441,14 @@ const SiteDetail = () => {
                     <div
                       key={project.id}
                       className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/sites/${site.siteId}/projects/${project.id}`)}
+                      onClick={() =>
+                        navigate(
+                          paths.siteProjectDetail(
+                            site.siteId,
+                            project.id,
+                          ),
+                        )
+                      }
                     >
                       <div>
                         <p className="font-medium">{project.name}</p>

@@ -10,6 +10,7 @@ export const paths = {
   userInvitation: '/user/invitation',
 
   masterDashboard: '/master/dashboard',
+  masterDashboardMembership: '/master/dashboard?tab=membership',
   masterSiteRegister: '/master/site-register',
   masterSiteEditRoute: '/master/site-edit/:siteId',
   masterSiteEdit: (siteId: string) => `/master/site-edit/${siteId}`,

@@ -349,7 +349,7 @@ function ProjectStatus({
           joined && !pending ? 'bg-success' : 'bg-warning',
         )}
       />
-      {pending ? '承認待ち' : joined ? '入会済み' : '未入会'}
+      {pending ? '申請中' : joined ? '入会済み' : '未入会'}
     </span>
   );
 }
@@ -959,7 +959,7 @@ const Dashboard = () => {
           ) : (
             <Card className='rounded-2xl border-border'>
               <CardContent className='p-10 text-center text-foreground'>
-                未参加のプロジェクトがありません
+                未入会のプロジェクトがありません
               </CardContent>
             </Card>
           )}

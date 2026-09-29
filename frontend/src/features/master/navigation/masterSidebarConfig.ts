@@ -6,7 +6,7 @@ export type MasterSidebarKey = 'home' | 'analytics' | 'membership' | 'sites' | '
 export const MASTER_SIDEBAR_ITEMS = [
   { key: 'home', label: 'ホーム', href: paths.masterDashboard, icon: House },
   { key: 'analytics', label: 'アナリティクス', href: `${paths.masterDashboard}?tab=analytics`, icon: BarChart3 },
-  { key: 'membership', label: '入会', href: `${paths.masterDashboard}?tab=membership`, icon: ClipboardList },
+  { key: 'membership', label: '入会', href: paths.masterDashboardMembership, icon: ClipboardList },
   { key: 'sites', label: '拠点管理', href: `${paths.masterDashboard}?tab=sites`, icon: Building2 },
   { key: 'users', label: '社員管理', href: `${paths.masterDashboard}?tab=users`, icon: Users },
 ] as const;

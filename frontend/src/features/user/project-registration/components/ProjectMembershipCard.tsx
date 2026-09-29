@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { ExternalLink } from 'lucide-react';
 import { ButtonLoader } from '@/components/feedback/loading';
 
-type ProjectMembershipStatus = 'available' | 'joined';
+type ProjectMembershipStatus = 'available' | 'pending' | 'joined';
 
 type ProjectMembershipCardProps = Readonly<{
   project: SiteProject;
@@ -55,7 +55,7 @@ export function ProjectMembershipCard({
                 : 'bg-warning/15 text-warning hover:bg-warning/15',
             )}
           >
-            {showsJoinedState ? '参加中' : '未参加'}
+            {showsJoinedState ? '入会中' : '未入会'}
           </Badge>
         </div>
 

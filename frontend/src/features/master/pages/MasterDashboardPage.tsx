@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +14,7 @@ import {
   sortMasterUsersFirst,
   sortSitesById,
 } from '@/features/master/components/masterDashboardUtils';
-import { masterDashboardProjectMembershipState } from '@/features/user/project-registration/projectMembershipNavigation';
+import { ProjectMembershipContent } from '@/features/user/project-registration/ProjectMembershipPage';
 import { paths } from '@/routes/paths';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useDashboardStore } from '@/stores/dashboardStore';
@@ -24,11 +24,11 @@ import { UserInvitationDialog } from '@/features/master/user-invitations/UserInv
 import { Plus } from 'lucide-react';
 
 /** Renders a quiet placeholder for Master destinations awaiting content. */
-function MasterPlaceholderSection({ title, action }: { title: string; action?: ReactNode }) {
+function MasterPlaceholderSection({ title }: { title: string }) {
   return (
     <section>
       <h2 className="mb-5 text-foreground">{title}</h2>
-      <DashboardEmptyState title="準備中" description="この画面は準備中です。" action={action} />
+      <DashboardEmptyState title="準備中" description="この画面は準備中です。" />
     </section>
   );
 }
@@ -100,38 +100,19 @@ const MasterDashboard = () => {
         {activeTab === 'home' && <MasterPlaceholderSection title="ホーム" />}
         {activeTab === 'analytics' && <MasterPlaceholderSection title="アナリティクス" />}
         {activeTab === 'membership' && (
-          <MasterPlaceholderSection
-            title="入会"
-            action={
-              <div className="flex flex-col items-center gap-2">
-                <Button
-                  type="button"
-                  size="md"
-                  disabled={!hasRegisteredSites}
-                  aria-describedby={
-                    hasRegisteredSites
-                      ? undefined
-                      : 'project-membership-disabled-description'
-                  }
-                  onClick={() =>
-                    navigate(paths.projectMembership(sortedSites[0].siteId), {
-                      state: masterDashboardProjectMembershipState,
-                    })
-                  }
-                >
-                  プロジェクトに入会する
-                </Button>
-                {!hasRegisteredSites && (
-                  <p
-                    id="project-membership-disabled-description"
-                    className="text-small text-muted-foreground"
-                  >
-                    拠点登録後に利用できます。
-                  </p>
-                )}
-              </div>
-            }
-          />
+          errorMessage ? (
+            <DashboardEmptyState>{errorMessage}</DashboardEmptyState>
+          ) : hasRegisteredSites ? (
+            <ProjectMembershipContent siteId={sortedSites[0].siteId} embedded />
+          ) : (
+            <section className="space-y-5">
+              <h2 className="text-foreground">入会</h2>
+              <DashboardEmptyState
+                title="まだ拠点が登録されていません"
+                description="拠点登録後に利用できます。"
+              />
+            </section>
+          )
         )}
         {activeTab === 'users' && (
           <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500">

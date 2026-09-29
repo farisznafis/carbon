@@ -287,7 +287,7 @@ export function AppShell({
               'border-r border-sidebar-border bg-sidebar',
               'overflow-visible',
               'lg:flex',
-              collapsed ? 'w-[72px]' : 'w-[248px]',
+              collapsed ? 'w-[72px]' : 'w-[220px] 2xl:w-[240px] min-[1800px]:w-[280px]',
             )}
           >
             <SidebarHeader
