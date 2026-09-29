@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Portal as TooltipPortal } from '@radix-ui/react-tooltip';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { SidebarNavigationItem } from './sidebarTypes';
@@ -34,7 +35,9 @@ export function SidebarNavItem({ item, collapsed, onNavigate }: SidebarNavItemPr
       {collapsed ? (
         <Tooltip>
           <TooltipTrigger asChild>{link}</TooltipTrigger>
-          <TooltipContent side="right">{item.label}</TooltipContent>
+          <TooltipPortal>
+            <TooltipContent side="right">{item.label}</TooltipContent>
+          </TooltipPortal>
         </Tooltip>
       ) : link}
     </li>

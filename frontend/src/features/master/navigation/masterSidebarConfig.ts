@@ -1,6 +1,18 @@
-import { House } from 'lucide-react';
+import { BarChart3, Building2, ClipboardList, House, Users } from 'lucide-react';
 import { paths } from '@/routes/paths';
 
+export type MasterSidebarKey = 'home' | 'analytics' | 'membership' | 'sites' | 'users';
+
 export const MASTER_SIDEBAR_ITEMS = [
-  { key: 'dashboard', label: 'ホーム', href: paths.masterDashboard, icon: House },
+  { key: 'home', label: 'ホーム', href: paths.masterDashboard, icon: House },
+  { key: 'analytics', label: 'アナリティクス', href: `${paths.masterDashboard}?tab=analytics`, icon: BarChart3 },
+  { key: 'membership', label: '入会', href: `${paths.masterDashboard}?tab=membership`, icon: ClipboardList },
+  { key: 'sites', label: '拠点管理', href: `${paths.masterDashboard}?tab=sites`, icon: Building2 },
+  { key: 'users', label: '社員管理', href: `${paths.masterDashboard}?tab=users`, icon: Users },
 ] as const;
+
+/** Resolves known dashboard tabs while keeping old and empty URLs on Home. */
+export function getMasterDashboardTab(tab: string | null): MasterSidebarKey {
+  if (tab === 'analytics' || tab === 'membership' || tab === 'sites' || tab === 'users') return tab;
+  return 'home';
+}

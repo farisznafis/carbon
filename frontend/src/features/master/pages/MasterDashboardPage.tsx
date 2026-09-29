@@ -1,16 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { useAuth } from '@/contexts/AuthContext';
 import {
   DashboardEmptyState,
   DashboardSection,
-  MasterDashboardHero,
-  MasterDashboardTabs,
   SiteDashboardCard,
   UserDashboardCard,
 } from '@/features/master/components/MasterDashboardComponents';
+import { adminPageContainerClassName } from '@/components/layout/DashboardLayout';
+import { getMasterDashboardTab } from '@/features/master/navigation/masterSidebarConfig';
+import { cn } from '@/lib/utils';
 import {
   sortMasterUsersFirst,
   sortSitesById,
@@ -24,12 +23,22 @@ import { PageLoadingOverlay } from '@/components/feedback/loading';
 import { UserInvitationDialog } from '@/features/master/user-invitations/UserInvitationDialog';
 import { Plus } from 'lucide-react';
 
+/** Renders a quiet placeholder for Master destinations awaiting content. */
+function MasterPlaceholderSection({ title, action }: { title: string; action?: ReactNode }) {
+  return (
+    <section>
+      <h2 className="mb-5 text-foreground">{title}</h2>
+      <DashboardEmptyState title="準備中" description="この画面は準備中です。" action={action} />
+    </section>
+  );
+}
+
+/** Displays one Master dashboard destination selected through the URL. */
 const MasterDashboard = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { user } = useAuth();
-  
-  const activeTab = searchParams.get('tab') === 'users' ? 'users' : 'sites';
+  const [searchParams] = useSearchParams();
+
+  const activeTab = getMasterDashboardTab(searchParams.get('tab'));
 
   const sites = useDashboardStore((state) => state.sites);
   const users = useDashboardStore((state) => state.users);
@@ -81,57 +90,51 @@ const MasterDashboard = () => {
   const sortedSites = useMemo(() => sortSitesById(sites), [sites]);
   const hasRegisteredSites = sortedSites.length > 0;
 
-  if (loading || loadingStore) {
-    // Skeleton dashboard non active first
+  if ((activeTab === 'sites' || activeTab === 'users' || activeTab === 'membership') && (loading || loadingStore)) {
     return <PageLoadingOverlay message="ダッシュボードを読み込んでいます" />;
   }
 
-  const companyName = user?.companyName ?? user?.siteName ?? '-';
-
   return (
-    <div className="flex min-h-screen flex-col bg-card">
-      <MasterDashboardHero
-        companyName={companyName}
-        action={
-          <div className="flex flex-col items-end gap-2">
-            <Button
-              type="button"
-              size="md"
-              disabled={!hasRegisteredSites}
-              aria-describedby={
-                hasRegisteredSites
-                  ? undefined
-                  : 'project-membership-disabled-description'
-              }
-              onClick={() =>
-                navigate(paths.projectMembership(sortedSites[0].siteId), {
-                  state: masterDashboardProjectMembershipState,
-                })
-              }
-            >
-              プロジェクト入会届
-            </Button>
-            {!hasRegisteredSites && (
-              <p
-                id="project-membership-disabled-description"
-                className="text-small text-muted-foreground"
-              >
-                拠点登録後に利用できます。
-              </p>
-            )}
-          </div>
-        }
-      />
-
-      <Tabs 
-        value={activeTab} 
-        onValueChange={(value) => setSearchParams({ tab: value })}
-        className="flex flex-1 flex-col bg-card"
-      >
-        <MasterDashboardTabs />
-
-        <main className="flex-1 bg-card">
-          <TabsContent value="users" className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+    <div className="flex min-h-[calc(100dvh-5rem)] flex-col bg-background">
+      <main className={cn(adminPageContainerClassName, 'flex-1 py-8')}>
+        {activeTab === 'home' && <MasterPlaceholderSection title="ホーム" />}
+        {activeTab === 'analytics' && <MasterPlaceholderSection title="アナリティクス" />}
+        {activeTab === 'membership' && (
+          <MasterPlaceholderSection
+            title="入会"
+            action={
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  type="button"
+                  size="md"
+                  disabled={!hasRegisteredSites}
+                  aria-describedby={
+                    hasRegisteredSites
+                      ? undefined
+                      : 'project-membership-disabled-description'
+                  }
+                  onClick={() =>
+                    navigate(paths.projectMembership(sortedSites[0].siteId), {
+                      state: masterDashboardProjectMembershipState,
+                    })
+                  }
+                >
+                  プロジェクト入会届
+                </Button>
+                {!hasRegisteredSites && (
+                  <p
+                    id="project-membership-disabled-description"
+                    className="text-small text-muted-foreground"
+                  >
+                    拠点登録後に利用できます。
+                  </p>
+                )}
+              </div>
+            }
+          />
+        )}
+        {activeTab === 'users' && (
+          <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
             <DashboardSection
               title="社員"
               description="行をクリックすると、プロファイル詳細へ移動できます。"
@@ -160,9 +163,11 @@ const MasterDashboard = () => {
                 </DashboardEmptyState>
               )}
             </DashboardSection>
-          </TabsContent>
+          </div>
+        )}
 
-          <TabsContent value="sites" className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+        {activeTab === 'sites' && (
+          <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
             <DashboardSection
               title="拠点"
               description="各店舗のカーボンクレジット、削減活動、レポート進捗を一箇所で確認できます。"
@@ -201,9 +206,9 @@ const MasterDashboard = () => {
                 />
               )}
             </DashboardSection>
-          </TabsContent>
-        </main>
-      </Tabs>
+          </div>
+        )}
+      </main>
       <UserInvitationDialog
         open={isInvitationDialogOpen}
         onOpenChange={setIsInvitationDialogOpen}

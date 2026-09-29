@@ -3,66 +3,13 @@ import type { Site } from '@/api/site';
 import type { UserList } from '@/api/users';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { Button } from '@/components/ui/button';
-import { TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   dashboardEmptyStateClassName,
-  dashboardPageContainerClassName,
-  dashboardPageHeaderClassName,
-  dashboardTabsListClassName,
-  dashboardTabTriggerClassName,
 } from '@/components/layout/DashboardLayout';
 import { MasterSiteCard } from '@/features/master/components/MasterSiteCard';
 import { formatPersonName } from '@/features/master/components/masterDashboardUtils';
 import { cn } from '@/lib/utils';
 import { Building2, Mail, Plus, User } from 'lucide-react';
-
-const dashboardContainer = dashboardPageContainerClassName;
-
-export function MasterDashboardHero({
-  companyName,
-  action,
-}: {
-  companyName: string;
-  action?: ReactNode;
-}) {
-  return (
-    <header className="relative overflow-hidden border-b border-border bg-background">
-      <div className={cn(dashboardPageHeaderClassName, 'justify-between text-left')}>
-        {/* left text */}
-        <div className="flex flex-col gap-1">
-          <span className="text-small text-muted-foreground">
-            マスターダッシュボード
-          </span>
-          <h1 className="max-w-5xl text-foreground">
-            {companyName}
-          </h1>
-        </div>
-        {action && (
-          <div className="shrink-0">
-            {action}
-          </div>
-        )}
-      </div>
-    </header>
-  );
-}
-
-export function MasterDashboardTabs() {
-  const triggerClassName = dashboardTabTriggerClassName;
-
-  return (
-    <div className="bg-card pt-6">
-      <TabsList className={dashboardTabsListClassName}>
-        <TabsTrigger value="sites" className={triggerClassName}>
-          拠点管理
-        </TabsTrigger>
-        <TabsTrigger value="users" className={triggerClassName}>
-          社員管理
-        </TabsTrigger>
-      </TabsList>
-    </div>
-  );
-}
 
 /** Renders one dashboard section with shared heading and action spacing. */
 export function DashboardSection({
@@ -83,7 +30,7 @@ export function DashboardSection({
   children: ReactNode;
 }) {
   return (
-    <section className={cn('py-8 lg:py-section', dashboardContainer)}>
+    <section>
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-foreground">{title}</h2>
