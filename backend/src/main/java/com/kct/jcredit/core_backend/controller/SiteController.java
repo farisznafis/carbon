@@ -5,7 +5,9 @@ import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentChangeRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdateSiteRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002EquipmentRequest;
 import com.kct.jcredit.core_backend.dto.response.CreateSiteResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentHistoryListResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentHistoryResponse;
+import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentListResponse;
 import com.kct.jcredit.core_backend.dto.response.ProjectListInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentRegisterResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002EquipmentResponse;
@@ -166,20 +168,22 @@ public class SiteController {
             @PathVariable String siteId,
             @PathVariable String projectId,
             @RequestBody @Valid EnR002EquipmentRequest request) {
-
+    
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
-        return ResponseEntity.ok(equipmentService.addEquipment(siteId, companyId, projectId, request));
+        EnR002EquipmentResponse response = equipmentService.addEquipment(siteId, companyId, projectId, request);
+        return ResponseEntity.status(ResponseUtil.getHttpStatus(response.getStatusCode())).body(response);
     }
 
     @GetMapping("/{siteId}/equipment")
     @PreAuthorize("hasAnyRole('master','user')")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<List<EnR002EquipmentResponse>> getEquipments(
+    public ResponseEntity<EnR002EquipmentListResponse> getEquipments(
             Authentication authentication,
             @PathVariable String siteId) {
-
+    
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
-        return ResponseEntity.ok(equipmentService.getEquipmentsBySite(siteId, companyId));
+        EnR002EquipmentListResponse response = equipmentService.getEquipmentsBySite(siteId, companyId);
+        return ResponseEntity.status(ResponseUtil.getHttpStatus(response.getStatusCode())).body(response);
     }
 
     @GetMapping("/{siteId}/equipment/{equipmentId}")
@@ -189,10 +193,10 @@ public class SiteController {
             Authentication authentication,
             @PathVariable String siteId,
             @PathVariable Integer equipmentId) {
-
+    
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
-        return ResponseEntity.ok(
-                equipmentService.getEquipmentById(siteId, equipmentId, companyId));
+        EnR002EquipmentResponse response = equipmentService.getEquipmentById(siteId, equipmentId, companyId);
+        return ResponseEntity.status(ResponseUtil.getHttpStatus(response.getStatusCode())).body(response);
     }
 
     @PostMapping("/{siteId}/equipment/{equipmentId}/change")
@@ -206,10 +210,10 @@ public class SiteController {
             @PathVariable String siteId,
             @PathVariable Integer equipmentId,
             @RequestBody @Valid EnR002EquipmentChangeRequest request) {
-
+    
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
-        return ResponseEntity.ok(
-                equipmentService.changeEquipment(siteId, equipmentId, companyId, request));
+        EnR002EquipmentResponse response = equipmentService.changeEquipment(siteId, equipmentId, companyId, request);
+        return ResponseEntity.status(ResponseUtil.getHttpStatus(response.getStatusCode())).body(response);
     }
 
     @GetMapping("/{siteId}/equipment/{equipmentId}/history")
@@ -218,13 +222,14 @@ public class SiteController {
     @Operation(summary = "設備履歴取得",
             description = "設備の変更履歴を時系列で取得します。"
                         + "各バージョンのモニタリング期間、証憑、登録者情報を含みます。")
-    public ResponseEntity<List<EnR002EquipmentHistoryResponse>> getEquipmentHistory(
+    public ResponseEntity<EnR002EquipmentHistoryListResponse> getEquipmentHistory(
             Authentication authentication,
             @PathVariable String siteId,
             @PathVariable Integer equipmentId) {
-
+    
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
-        return ResponseEntity.ok(
-                equipmentService.getEquipmentHistory(siteId, equipmentId, companyId));
+        EnR002EquipmentHistoryListResponse response =
+                equipmentService.getEquipmentHistory(siteId, equipmentId, companyId);
+        return ResponseEntity.status(ResponseUtil.getHttpStatus(response.getStatusCode())).body(response);
     }
 }
