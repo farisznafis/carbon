@@ -16,6 +16,5 @@ public interface OperatorUserService {
     CreateUserResponse createOperatorUser(String companyId, String username, CreateOperatorUserRequest request);
     BaseResponse validateUpdateOperatorUser(String companyId, String username, UpdateUserRequest request);
     UpdateUserResponse updateUser(String companyId, String username, UpdateUserRequest request, String role, Integer currentId);
-    void changePassword(String targetUsername, String newPassword);
     UserProfileResponse getOperatorUserProfileById(Integer userId, Integer requestingId, String requestingRole, String requestingCompanyId);
 }

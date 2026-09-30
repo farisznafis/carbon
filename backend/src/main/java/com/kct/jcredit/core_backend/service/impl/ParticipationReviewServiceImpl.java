@@ -231,11 +231,16 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
         reviewRepository.save(confirmation);
 
         if (isPrimarySlotEmpty) {
+                try {
                 notificationService.createNotificationForAllOperatingUsers(
                         "二次確認が必要な入会届があります",
                         "一次確認が完了しました。別の担当者が入会届の二次確認を行ってください。\n"
                                 + "企業: " + participation.getCompany().getNameJa() + "\n"
                                 + "プロジェクト: " + participation.getProject().getProjectName());
+               } catch (Exception e) {
+                log.error("Approval notification failed. participationId={}, error={}",
+                        participationId, e.getMessage());
+                }
         }
 
        if (!isPrimarySlotEmpty) {
