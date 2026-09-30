@@ -1,12 +1,12 @@
 package com.kct.jcredit.core_backend.controller;
 
 import com.kct.jcredit.core_backend.service.impl.NotificationServiceImpl;
-import com.kct.jcredit.core_backend.repository.NotificationRepository;
-import com.kct.jcredit.core_backend.repository.OperatingUserRepository;
+import com.kct.jcredit.core_backend.repository.postgres.NotificationRepository;
+import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.dto.request.InquiryRequest;
 import com.kct.jcredit.core_backend.dto.response.NotificationListResponse;
 import com.kct.jcredit.core_backend.dto.response.NotificationCountResponse;
-import com.kct.jcredit.core_backend.dto.response.BaseResponse;
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
