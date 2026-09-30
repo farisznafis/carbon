@@ -261,11 +261,17 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
         final Integer participationId = participation.getId();
 
+        saveConfirmationItems(request.getConfirmationItems(), participationId, companyId);
+        saveSustainabilityCommitment(
+                request.getSustainabilityCommitment(),
+                request.getFinalAgreement().getIsAgreeTerms(),
+                participationId, companyId);
+
         // 8. afterCommit
         TransactionSynchronizationManager.registerSynchronization(
-                new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
+        new TransactionSynchronization() {
+        @Override
+        public void afterCommit() {
                 savedFiles.forEach(fileEntity -> {
                     try {
                         fileUploadSolarService.moveToPermanent(
@@ -277,22 +283,22 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                 }
                         });
 
-                        try {
-                                saveConfirmationItems(request.getConfirmationItems(), participationId, companyId);
-                        } catch (Exception e) {
-                                log.error("ConfirmationItems save failed. participationId={}, error={}",
-                                        participationId, e.getMessage());
-                        }
+                        // try {
+                        //         saveConfirmationItems(request.getConfirmationItems(), participationId, companyId);
+                        // } catch (Exception e) {
+                        //         log.error("ConfirmationItems save failed. participationId={}, error={}",
+                        //                 participationId, e.getMessage());
+                        // }
 
-                        try {
-                                saveSustainabilityCommitment(
-                                        request.getSustainabilityCommitment(),
-                                        request.getFinalAgreement().getIsAgreeTerms(),
-                                        participationId, companyId);
-                        } catch (Exception e) {
-                                log.error("SustainabilityCommitment save failed. participationId={}, error={}",
-                                        participationId, e.getMessage());
-                        }
+                        // try {
+                        //         saveSustainabilityCommitment(
+                        //                 request.getSustainabilityCommitment(),
+                        //                 request.getFinalAgreement().getIsAgreeTerms(),
+                        //                 participationId, companyId);
+                        // } catch (Exception e) {
+                        //         log.error("SustainabilityCommitment save failed. participationId={}, error={}",
+                        //                 participationId, e.getMessage());
+                        // }
 
                         try {
                                 notificationService.createNotification(
@@ -609,10 +615,14 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
         String presignedUrl = pdfService.generatePresignedUrl(s3Key);
 
-        return ProjectPdfDownloadResponse.builder()
+        ProjectPdfDownloadResponse response = ProjectPdfDownloadResponse.builder()
                 .pdfUrl(presignedUrl)
                 .expiresIn(900)
                 .build();
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage("PDFのダウンロードURLを取得しました。");
+        return response;
+        
         }
 
 
@@ -667,16 +677,27 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                 }
                                 
                         }
+
                         Site site = siteRepository
                                 .findByPublicId(siteId)
                                 .orElseThrow(() -> new CustomException(
                                         ResponseConstants.NOT_FOUND,
                                         ResponseConstants.MSG_SITE_NOT_FOUND));
+
+                        // Same ownership gate as submitParticipation: a site may only be attached to a
+                        // project by the company that owns it.
+                        if (site.getCompany() == null
+                                || !companyId.equals(site.getCompany().getCompanyId())) {
+                                throw new CustomException(
+                                        ResponseConstants.FORBIDDEN,
+                                        ResponseConstants.MSG_UNAUTHORIZED);
+                        }
+
                         Project project = projectRepository.findByPublicIdWithFallback(projectId)
                                 .orElseThrow(() -> new CustomException(
                                         ResponseConstants.NOT_FOUND,
                                         ResponseConstants.MSG_PROJECT_NOT_FOUND));
-                        
+
                         SiteProjectRelation relation = saveSiteProjectRelation(site, project, companyId);
 
                         ProjectJoinResponse response = ProjectJoinResponse.builder()       
