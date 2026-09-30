@@ -27,6 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -34,7 +35,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.MailSender;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
@@ -77,11 +78,14 @@ class NotificationServiceImplTest {
     // =========================================================
     // Mocks — 外部依存をすべてモック化
     // =========================================================
-    @Mock private JavaMailSender mailSender;
+    @Mock private MailSender mailSender;
     @Mock private NotificationRepository notificationRepository;
     @Mock private OperatingUserRepository operatingUserRepository;
     @Mock private OperatorCompanyRepository operatorCompanyRepository;
     @Mock private ParticipatingUserRepository participatingUserRepository;
+
+    // 実バンドルを使う。文面抽出が忠実かを既存アサーションが検証する。
+    @Spy private NotificationMessages messages = new NotificationMessages();
  
     @InjectMocks
     private NotificationServiceImpl notificationService;

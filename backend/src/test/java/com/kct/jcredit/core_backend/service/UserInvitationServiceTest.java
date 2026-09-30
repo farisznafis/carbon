@@ -114,7 +114,7 @@ class UserInvitationServiceTest {
         service = new UserInvitationService(
                 actionLinkService, actionLinkRepository, emailDeliveryService, rateLimitService,
                 usernameAvailabilityService, companyRepository, userRepository, siteRepository,
-                properties, passwordEncoder);
+                properties, passwordEncoder, new NotificationMessages());
     }
 
     @Test
@@ -202,7 +202,7 @@ class UserInvitationServiceTest {
                 actionLinkService, actionLinkRepository, mock(SecurityEmailDeliveryService.class),
                 mock(SecurityRateLimitService.class), mock(UsernameAvailabilityService.class),
                 mock(ParticipatingCompanyRepository.class), userRepository,
-                mock(SiteRepository.class), off, mock(PasswordEncoder.class));
+                mock(SiteRepository.class), off, mock(PasswordEncoder.class), new NotificationMessages());
 
         assertThatThrownBy(() -> disabled.invite(COMPANY_ID, "master1", "x@example.test", null))
                 .isInstanceOf(CustomException.class)

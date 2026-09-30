@@ -56,6 +56,7 @@ public class UserInvitationService {
     private final SiteRepository siteRepository;
     private final SecurityFlowProperties properties;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationMessages messages;
 
     // ---------------------------------------------------------------- master side
 
@@ -152,22 +153,18 @@ public class UserInvitationService {
                 company.getId(), actor,
                 email, site == null ? null : site.getId());
 
-        String siteLine = site == null ? "" : "拠点: " + site.getSiteName() + "\n";
-        String subject = "【アカウント登録のご案内】";
-        String body = "いつもお世話になっております。\n\n"
-                + company.getNameJa() + " より、アカウント登録のご案内をお送りしております。\n"
-                + siteLine + "\n"
-                + "下記のリンクよりお客様ご自身で情報を入力し、アカウントの登録を完了してください。\n\n"
-                + issued.url() + "\n\n"
-                + "【リンクに関するご注意】\n"
-                + "・このリンクは一度クリックすると無効になります(一回限り有効です)。同じリンクを再度開くことはできませんのでご注意ください。\n"
-                + "・このリンクの有効期限は発行から" + formatDuration(properties.getUserInvitationLinkTtl()) + "です。"
-                + "期限を過ぎた場合は、招待した担当者に再送信をご依頼ください。\n"
-                + "・リンクを開いた後、入力を行うためのセッションの有効期限は"
-                + formatDuration(properties.getUserInvitationSessionTtl()) + "です。時間内に入力を完了してください。\n\n"
-                + "お心当たりがない場合は、このメールを破棄してください。";
+        String siteLine = site == null
+                ? ""
+                : messages.text("link.user-invitation.site-line", site.getSiteName());
+        NotificationMessages.Content content = messages.of("link.user-invitation",
+                company.getNameJa(),
+                siteLine,
+                issued.url(),
+                messages.duration(properties.getUserInvitationLinkTtl()),
+                messages.duration(properties.getUserInvitationSessionTtl()));
 
-        afterCommit(() -> emailDeliveryService.deliverActionLink(issued.linkId(), email, subject, body));
+        afterCommit(() -> emailDeliveryService.deliverActionLink(
+                issued.linkId(), email, content.subject(), content.body()));
     }
 
     private ParticipatingCompany requireCompany(String companyId) {
@@ -229,18 +226,6 @@ public class UserInvitationService {
             throw new CustomException(ResponseConstants.BAD_REQUEST, ResponseConstants.MSG_BAD_REQUEST);
         }
         return email.trim().toLowerCase(Locale.ROOT);
-    }
-
-    private String formatDuration(Duration duration) {
-        long days = duration.toDays();
-        if (days >= 1) {
-            return days + "日間";
-        }
-        long hours = duration.toHours();
-        if (hours >= 1) {
-            return hours + "時間";
-        }
-        return duration.toMinutes() + "分";
     }
 
     private void afterCommit(Runnable runnable) {
