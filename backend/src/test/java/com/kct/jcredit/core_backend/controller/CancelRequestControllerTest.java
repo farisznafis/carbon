@@ -1,3 +1,5 @@
+//REMAKE - integrate into admin controller -AIDAN
+
 package com.kct.jcredit.core_backend.controller;
 
 // TODO: sesuaikan package & import dengan struktur project asli
