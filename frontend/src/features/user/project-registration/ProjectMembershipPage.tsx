@@ -1,5 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+} from 'react-router-dom';
 import {
   getSiteData,
   getSiteProjects,
@@ -26,6 +35,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   ProjectMembershipCard,
   type ProjectMembershipStatus,
@@ -80,47 +96,72 @@ const MEMBERSHIP_PREPARATION_SECTIONS = [
   },
 ] as const;
 
+type MembershipStatusFilter =
+  | 'all'
+  | ProjectMembershipStatus;
+
+type ProjectMembershipListItem = Readonly<{
+  project: SiteProject;
+  status: ProjectMembershipStatus;
+}>;
+
+const MEMBERSHIP_STATUS_ORDER: Record<
+  ProjectMembershipStatus,
+  number
+> = {
+  available: 0,
+  pending: 1,
+  joined: 2,
+};
+
 /** Resolves the application state using the API participation and relation fields. */
-function getMembershipStatus(project: SiteProject): ProjectMembershipStatus {
-  if (project.participationStatus === 'OPEN') return 'pending';
-  if (project.participationStatus === 'APPROVED') return 'joined';
-  if (project.participationStatus === 'REJECTED') return 'available';
-  if (project.isCompanyJoined || project.hasSiteRelation) return 'joined';
+function getMembershipStatus(
+  project: SiteProject,
+): ProjectMembershipStatus {
+  if (project.participationStatus === 'OPEN') {
+    return 'pending';
+  }
+
+  if (project.participationStatus === 'APPROVED') {
+    return 'joined';
+  }
+
+  if (project.participationStatus === 'REJECTED') {
+    return 'available';
+  }
+
+  if (project.isCompanyJoined || project.hasSiteRelation) {
+    return 'joined';
+  }
+
   return 'available';
 }
 
 type MembershipSectionProps = Readonly<{
-  projects: SiteProject[];
+  projectItems: ProjectMembershipListItem[];
+  emptyMessage: string;
   onJoin: (project: SiteProject) => void;
   onDownloadPdf: (project: SiteProject) => void;
   isDownloadingPdf: (project: SiteProject) => boolean;
 }>;
 
-/** Renders every public project with its own application state. */
+/** Renders the projects after sorting and filtering have been applied. */
 function MembershipSection({
-  projects,
+  projectItems,
+  emptyMessage,
   onJoin,
   onDownloadPdf,
   isDownloadingPdf,
 }: MembershipSectionProps) {
   return (
-    <section aria-labelledby="public-projects-heading">
-      {/* <div className="mb-5 space-y-1">
-        <h2 id="public-projects-heading" className="text-lg font-semibold text-foreground">
-          公開中のプロジェクト
-        </h2>
-        <p className="text-small text-muted-foreground">
-          未入会のプロジェクトから入会を申請できます。
-        </p>
-      </div> */}
-
-      {projects.length > 0 ? (
+    <section aria-label="公開中のプロジェクト">
+      {projectItems.length > 0 ? (
         <div className="space-y-4">
-          {projects.map((project) => (
+          {projectItems.map(({ project, status }) => (
             <ProjectMembershipCard
               key={project.id}
               project={project}
-              status={getMembershipStatus(project)}
+              status={status}
               onJoin={onJoin}
               onDownloadPdf={onDownloadPdf}
               isDownloadingPdf={isDownloadingPdf(project)}
@@ -130,7 +171,7 @@ function MembershipSection({
       ) : (
         <Card className="rounded-lg border-dashed border-border shadow-none">
           <CardContent className="p-8 text-center text-foreground">
-            公開中のプロジェクトはありません。
+            {emptyMessage}
           </CardContent>
         </Card>
       )}
@@ -144,21 +185,33 @@ type ProjectMembershipContentProps = Readonly<{
 }>;
 
 /** Shares project membership data and actions between the Master tab and standalone route. */
-export function ProjectMembershipContent({ siteId, embedded = false }: ProjectMembershipContentProps) {
+export function ProjectMembershipContent({
+  siteId,
+  embedded = false,
+}: ProjectMembershipContentProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const enteredFromMasterDashboard = embedded || isFromMasterDashboard(location.state);
+
+  const enteredFromMasterDashboard =
+    embedded || isFromMasterDashboard(location.state);
+
   const setCurrentProject = useDashboardStore(
     (state) => state.setCurrentProject,
   );
+
   const [projects, setProjects] = useState<SiteProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-  const [selectedProject, setSelectedProject] = useState<SiteProject | null>(null);
-  const [downloadingProjectIds, setDownloadingProjectIds] = useState<Set<string>>(
-    () => new Set(),
-  );
+
+  const [statusFilter, setStatusFilter] =
+    useState<MembershipStatusFilter>('all');
+
+  const [selectedProject, setSelectedProject] =
+    useState<SiteProject | null>(null);
+
+  const [downloadingProjectIds, setDownloadingProjectIds] =
+    useState<Set<string>>(() => new Set());
 
   const loadMembershipData = useCallback(async () => {
     if (!siteId) {
@@ -192,6 +245,37 @@ export function ProjectMembershipContent({ siteId, embedded = false }: ProjectMe
     void loadMembershipData();
   }, [loadMembershipData]);
 
+  /**
+   * Default order:
+   * 1. 未入会
+   * 2. 申請中
+   * 3. 入会中
+   */
+  const projectItems = useMemo<ProjectMembershipListItem[]>(
+    () =>
+      projects
+        .map((project) => ({
+          project,
+          status: getMembershipStatus(project),
+        }))
+        .sort(
+          (first, second) =>
+            MEMBERSHIP_STATUS_ORDER[first.status] -
+            MEMBERSHIP_STATUS_ORDER[second.status],
+        ),
+    [projects],
+  );
+
+  const visibleProjectItems = useMemo(() => {
+    if (statusFilter === 'all') {
+      return projectItems;
+    }
+
+    return projectItems.filter(
+      ({ status }) => status === statusFilter,
+    );
+  }, [projectItems, statusFilter]);
+
   /** Opens the preparation dialog for the selected project. */
   const handleJoin = (project: SiteProject) => {
     setSelectedProject(project);
@@ -199,28 +283,41 @@ export function ProjectMembershipContent({ siteId, embedded = false }: ProjectMe
 
   /** Starts registration only after the preparation dialog is confirmed. */
   const handleConfirmJoin = () => {
-    if (!selectedProject) return;
+    if (!selectedProject) {
+      return;
+    }
 
     setCurrentProject(selectedProject);
-    navigate(paths.projectRegister(siteId, selectedProject.id), {
-      state: {
-        ...(enteredFromMasterDashboard
-          ? masterDashboardProjectMembershipState
-          : {}),
-        returnTo: enteredFromMasterDashboard
-          ? paths.masterDashboardMembership
-          : paths.projectMembership(siteId),
+
+    navigate(
+      paths.projectRegister(siteId, selectedProject.id),
+      {
+        state: {
+          ...(enteredFromMasterDashboard
+            ? masterDashboardProjectMembershipState
+            : {}),
+          returnTo: enteredFromMasterDashboard
+            ? paths.masterDashboardMembership
+            : paths.projectMembership(siteId),
+        },
       },
-    });
+    );
   };
 
-  // Opens the membership PDF for a joined project without leaving the page.
+  /** Opens the membership PDF for a joined project without leaving the page. */
   const handleDownloadPdf = async (project: SiteProject) => {
-    if (downloadingProjectIds.has(project.id)) return;
+    if (downloadingProjectIds.has(project.id)) {
+      return;
+    }
 
-    setDownloadingProjectIds((current) => new Set(current).add(project.id));
+    setDownloadingProjectIds(
+      (current) => new Set(current).add(project.id),
+    );
+
     try {
-      const { pdfUrl } = await downloadProjectMembershipPdf(project.id);
+      const { pdfUrl } =
+        await downloadProjectMembershipPdf(project.id);
+
       downloadFromUrl(pdfUrl);
     } catch (error) {
       toast({
@@ -249,113 +346,195 @@ export function ProjectMembershipContent({ siteId, embedded = false }: ProjectMe
     );
   };
 
+  const emptyMessage =
+    projects.length === 0
+      ? '公開中のプロジェクトはありません。'
+      : '選択したステータスのプロジェクトはありません。';
+
   const content = (
     <>
-        <header className="space-y-2">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
           <FormPageTitle as={embedded ? 'h2' : 'h1'}>
             プロジェクトへの入会
           </FormPageTitle>
+
           <p className="text-base text-foreground">
             入会するプロジェクトを選択し、入会手続きを進めます。
           </p>
-        </header>
+        </div>
 
-        {isLoading ? (
-          <Card className="rounded-lg border-border shadow-none">
-            <CardContent className="p-10 text-center text-foreground">
-              読み込み中...
-            </CardContent>
-          </Card>
-        ) : errorMessage ? (
-          <Card className="rounded-lg border-border shadow-none">
-            <CardContent className="space-y-5 p-10 text-center">
-              <p className="text-destructive">{errorMessage}</p>
-              <Button type="button" variant="outline" onClick={loadMembershipData}>
-                再読み込み
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            <MembershipSection
-              projects={projects}
-              onJoin={handleJoin}
-              onDownloadPdf={(project) => void handleDownloadPdf(project)}
-              isDownloadingPdf={(project) => downloadingProjectIds.has(project.id)}
-            />
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          <span className="shrink-0 text-small text-muted-foreground">
+            ステータス
+          </span>
 
-            <Dialog
-              open={selectedProject !== null}
-              onOpenChange={(open) => {
-                if (!open) setSelectedProject(null);
-              }}
+          <Select
+            value={statusFilter}
+            onValueChange={(value) =>
+              setStatusFilter(
+                value as MembershipStatusFilter,
+              )
+            }
+            disabled={isLoading || projects.length === 0}
+          >
+            <SelectTrigger
+              className="w-full sm:w-[180px]"
+              aria-label="入会ステータスで絞り込む"
             >
-              <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-2xl flex-col gap-0 overflow-hidden rounded-xl p-0">
-                <DialogHeader className="shrink-0 border-b border-border p-6 pr-12">
-                  <DialogTitle>入会届の提出に必要なもの</DialogTitle>
-                  <DialogDescription className="text-small font-normal text-muted-foreground">
-                    <span className="block font-semibold text-foreground">
-                      {selectedProject?.projectName || '-'}
-                    </span>
-                    <span className="mt-1 block">
-                      申請を始める前に、以下の情報と確認資料をご準備ください。
-                    </span>
-                  </DialogDescription>
-                </DialogHeader>
+              <SelectValue />
+            </SelectTrigger>
 
-                <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-                  <div className="space-y-6">
-                    {MEMBERSHIP_PREPARATION_SECTIONS.map((section) => (
-                      <section key={section.title} className="space-y-3">
+            <SelectContent>
+              <SelectItem value="all">
+                すべて
+              </SelectItem>
+
+              <SelectItem value="available">
+                未入会
+              </SelectItem>
+
+              <SelectItem value="pending">
+                申請中
+              </SelectItem>
+
+              <SelectItem value="joined">
+                入会中
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </header>
+
+      {isLoading ? (
+        <Card className="rounded-lg border-border shadow-none">
+          <CardContent className="p-10 text-center text-foreground">
+            読み込み中...
+          </CardContent>
+        </Card>
+      ) : errorMessage ? (
+        <Card className="rounded-lg border-border shadow-none">
+          <CardContent className="space-y-5 p-10 text-center">
+            <p className="text-destructive">
+              {errorMessage}
+            </p>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={loadMembershipData}
+            >
+              再読み込み
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <MembershipSection
+            projectItems={visibleProjectItems}
+            emptyMessage={emptyMessage}
+            onJoin={handleJoin}
+            onDownloadPdf={(project) =>
+              void handleDownloadPdf(project)
+            }
+            isDownloadingPdf={(project) =>
+              downloadingProjectIds.has(project.id)
+            }
+          />
+
+          <Dialog
+            open={selectedProject !== null}
+            onOpenChange={(open) => {
+              if (!open) {
+                setSelectedProject(null);
+              }
+            }}
+          >
+            <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-2xl flex-col gap-0 overflow-hidden rounded-xl p-0">
+              <DialogHeader className="shrink-0 border-b border-border p-6 pr-12">
+                <DialogTitle>
+                  入会届の提出に必要なもの
+                </DialogTitle>
+
+                <DialogDescription className="text-small font-normal text-muted-foreground">
+                  <span className="block font-semibold text-foreground">
+                    {selectedProject?.projectName || '-'}
+                  </span>
+
+                  <span className="mt-1 block">
+                    申請を始める前に、以下の情報と確認資料をご準備ください。
+                  </span>
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+                <div className="space-y-6">
+                  {MEMBERSHIP_PREPARATION_SECTIONS.map(
+                    (section) => (
+                      <section
+                        key={section.title}
+                        className="space-y-3"
+                      >
                         <h3 className="text-base font-semibold leading-6 text-foreground">
                           {section.title}
                         </h3>
+
                         <ul className="list-disc space-y-2 pl-5 text-small font-normal text-foreground marker:text-primary">
                           {section.items.map((item) => (
-                            <li key={item} className="pl-1">
+                            <li
+                              key={item}
+                              className="pl-1"
+                            >
                               {item}
                             </li>
                           ))}
                         </ul>
+
                         {'note' in section && (
                           <p className="rounded-lg bg-muted px-4 py-3 text-small font-normal text-foreground">
                             {section.note}
                           </p>
                         )}
                       </section>
-                    ))}
-                  </div>
+                    ),
+                  )}
                 </div>
+              </div>
 
-                <DialogFooter className="shrink-0 border-t border-border p-6">
-                  <DialogClose asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="md"
-                      className="w-full sm:w-auto"
-                    >
-                      閉じる
-                    </Button>
-                  </DialogClose>
+              <DialogFooter className="shrink-0 border-t border-border p-6">
+                <DialogClose asChild>
                   <Button
                     type="button"
+                    variant="outline"
                     size="md"
                     className="w-full sm:w-auto"
-                    onClick={handleConfirmJoin}
                   >
-                    入会届へ進む
+                    閉じる
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </>
-        )}
+                </DialogClose>
+
+                <Button
+                  type="button"
+                  size="md"
+                  className="w-full sm:w-auto"
+                  onClick={handleConfirmJoin}
+                >
+                  入会届へ進む
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
     </>
   );
 
   if (embedded) {
-    return <div className="min-w-0 space-y-8">{content}</div>;
+    return (
+      <div className="min-w-0 space-y-8">
+        {content}
+      </div>
+    );
   }
 
   return (
@@ -366,6 +545,7 @@ export function ProjectMembershipContent({ siteId, embedded = false }: ProjectMe
         aria-label="前の画面へ戻る"
         className={floatingPageBackButtonClassName}
       />
+
       <FormPageContent className="max-w-[1200px] space-y-10 pt-16 sm:pt-0">
         {content}
       </FormPageContent>
@@ -375,6 +555,12 @@ export function ProjectMembershipContent({ siteId, embedded = false }: ProjectMe
 
 /** Keeps the existing site-specific route while reusing the membership content. */
 export default function ProjectMembershipPage() {
-  const { siteId = '' } = useParams<{ siteId: string }>();
-  return <ProjectMembershipContent siteId={siteId} />;
+  const { siteId = '' } =
+    useParams<{ siteId: string }>();
+
+  return (
+    <ProjectMembershipContent
+      siteId={siteId}
+    />
+  );
 }

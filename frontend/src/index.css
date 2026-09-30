@@ -54,12 +54,14 @@ All colors MUST be HSL.
     --success-50: 144.7 81% 95.9%;    /* #ECFDF3 */
     --success-600: 154.6 82.8% 34.1%; /* #0F9F62 */
     --success-700: 155 87.6% 25.3%;   /* #08794A */
+    --success-800: 164.2 85.7% 16.5%; /* #064E3B */
     --success-border: 148.1 54% 82.9%; /* #BCEBD2 */
 
     /* Warning */
     --warning-50: 44.3 100% 95.5%;   /* #FFF9E8 */
     --warning-600: 35.9 100% 39%;    /* #C77700 */
     --warning-700: 35 100% 29.6%;    /* #975800 */
+    --warning-800: 28.4 72.5% 25.7%; /* #713F12 */
     --warning-border: 42.3 73.6% 79.2%; /* #F1DAA3 */
 
     /* Danger */
