@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 
 type AdminPageHeaderProps = {
   title: string;
-  description: string;
+  description?: string;
   action?: ReactNode;
   className?: string;
   headingAs?: 'h1' | 'h2';

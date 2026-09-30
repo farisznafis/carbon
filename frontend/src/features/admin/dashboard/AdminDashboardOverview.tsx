@@ -124,7 +124,7 @@ type AdminDashboardOverviewProps = {
 type MetricCardProps = {
   label: string;
   value: number;
-  description: string;
+  description?: string;
   icon: React.ReactNode;
   loading: boolean;
   error: string | null;
@@ -691,7 +691,7 @@ export function AdminDashboardOverview(
     <div className='space-y-8 lg:space-y-section'>
       <AdminPageHeader
         title="ホーム"
-        description="運用業務を担当するユーザーのアカウントを管理します。"
+        // description="運用業務を担当するユーザーのアカウントを管理します。"
       />
       <section
         aria-label="主要な登録状況"
@@ -705,7 +705,7 @@ export function AdminDashboardOverview(
         <MetricCard
           label='プロジェクト'
           value={props.projects.length}
-          description='登録済みプロジェクト'
+          // description='登録済みプロジェクト'
           icon={<FolderKanban />}
           loading={props.canReadProjects && props.projectsLoading}
           error={props.projectsError}
@@ -716,7 +716,7 @@ export function AdminDashboardOverview(
         <MetricCard
           label='参加企業'
           value={props.participatingCompanyTotal}
-          description='稼働中・一時停止中'
+          // description='稼働中・一時停止中'
           icon={<Building2 />}
           loading={
             props.canReadCompanies && props.participatingCompaniesLoading
@@ -729,7 +729,7 @@ export function AdminDashboardOverview(
         <MetricCard
           label='企業申請'
           value={props.applicationTotal}
-          description='申請中・却下'
+          // description='申請中・却下'
           icon={<ClipboardCheck />}
           loading={props.canReviewCompanies && props.applicationsLoading}
           error={props.applicationsError}
@@ -740,7 +740,7 @@ export function AdminDashboardOverview(
         <MetricCard
           label='取消依頼'
           value={pendingCancelCount}
-          description='確認待ちの取消依頼'
+          // description='確認待ちの取消依頼'
           icon={<RotateCcw />}
           loading={props.canCancelMonitoring && props.cancelRequestsLoading}
           error={props.cancelRequestsError}
@@ -761,7 +761,7 @@ export function AdminDashboardOverview(
           <AdminTableCard
             title='プロジェクト一覧'
             count={props.projects.length}
-            description='確認が必要な入会届が多いプロジェクトから表示します。'
+            // description='確認が必要な入会届が多いプロジェクトから表示します。'
           >
             {props.canReadProjects ? (
               <AdminProjectStatusTable

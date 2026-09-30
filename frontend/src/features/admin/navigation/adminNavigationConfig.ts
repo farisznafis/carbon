@@ -18,9 +18,9 @@ export type AdminNavigationItem = {
 export const ADMIN_NAVIGATION_ITEMS: readonly AdminNavigationItem[] = [
   { key: 'home', label: 'ホーム', href: paths.adminDashboard, icon: House },
   { key: 'projects', label: 'プロジェクト', href: paths.adminProjectList, icon: FolderKanban },
-  { key: 'companies', label: '企業管理', href: paths.adminCompanyList, icon: Building2 },
-  { key: 'operators', label: '運営管理', href: paths.adminOperatorList, icon: Users },
   { key: 'methodologies', label: '方法論', href: paths.adminMethodologyList, icon: BookOpen },
+  { key: 'companies', label: '企業', href: paths.adminCompanyList, icon: Building2 },
+  { key: 'operators', label: '運営者', href: paths.adminOperatorList, icon: Users },
 ] as const;
 
 const LEGACY_TAB_NAVIGATION_MAP: Partial<
