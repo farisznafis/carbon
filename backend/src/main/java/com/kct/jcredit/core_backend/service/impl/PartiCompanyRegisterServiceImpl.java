@@ -6,6 +6,7 @@ import com.kct.jcredit.core_backend.dto.response.details.PartiCompanyResponseDet
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.enums.CompanyStatus;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRegisterRepository;
+import com.kct.jcredit.core_backend.service.NotificationMessages;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.service.PartiCompanyRegisterService;
 import com.kct.jcredit.core_backend.service.PartiCompanySignupValidator;
@@ -35,6 +36,7 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
     private final PartiCompanySignupValidator signupValidator;
     private final OtpChallengeService otpChallengeService;
     private final SecurityFlowProperties securityFlowProperties;
+    private final NotificationMessages messages;
 
     @Override
     @Transactional(readOnly = true)
@@ -112,46 +114,42 @@ public class PartiCompanyRegisterServiceImpl implements PartiCompanyRegisterServ
 
         repository.save(entity);
 
+        NotificationMessages.Content operatorNotice = messages.of("signup.operator", newCompanyId);
         notificationService.createNotificationForAllOperatingUsers(
-                "新規登録申請のお知らせ",
-                "新しい参加企業の登録申請がありました。企業ID: " + newCompanyId
-        );
+                operatorNotice.subject(), operatorNotice.body());
 
         String signupTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"));
+        String emptyValue = messages.text("signup.operator.mail.empty-value");
         String methodologiesStr = Optional.ofNullable(request.getMethodology())
                 .map(list -> String.join(", ", list))
-                .orElse("なし");
+                .orElse(emptyValue);
 
-        String emailBody = "【新規登録申請のお知らせ】\n\n"
-                + "登録日時: " + signupTime + "\n"
-                + "企業ID: " + newCompanyId + "\n\n"
-                + "■ 法人情報\n"
-                + "法人番号: " + request.getCorporateNumber() + "\n"
-                + "法人名: " + request.getCorporateName() + "\n"
-                + "法人名カナ: " + request.getCorporateNameKana() + "\n"
-                + "会社名（英語）: " + request.getCompanyNameEnglish() + "\n"
-                + "電話番号: " + request.getCorporatePhoneNumber() + "\n\n"
-                + "■ 住所\n"
-                + "郵便番号: " + request.getPostalCode() + "\n"
-                + "都道府県: " + request.getPrefecture() + "\n"
-                + "市区町村: " + request.getMunicipality() + "\n"
-                + "番地: " + request.getBlocknum() + "\n"
-                + "建物名: " + request.getBuildingName() + "\n\n"
-                + "■ 担当者情報\n"
-                + "氏名: " + request.getLastName() + " " + request.getFirstName() + "\n"
-                + "氏名（カナ）: " + request.getLastNameKana() + " " + request.getFirstNameKana() + "\n"
-                + "役職: " + request.getPosition() + "\n"
-                + "メールアドレス: " + request.getEmail() + "\n"
-                + "電話番号: " + request.getPhoneNumber() + "\n"
-                + "FAX番号: " + request.getFaxNumber() + "\n\n"
-                + "■ Methodology\n"
-                + "選択方法論: " + methodologiesStr + "\n"
-                + "補足説明: " + Optional.ofNullable(request.getActivityInformation()).orElse("なし");
+        NotificationMessages.Content operatorMail = messages.of("signup.operator.mail",
+                signupTime,
+                newCompanyId,
+                request.getCorporateNumber(),
+                request.getCorporateName(),
+                request.getCorporateNameKana(),
+                request.getCompanyNameEnglish(),
+                request.getCorporatePhoneNumber(),
+                request.getPostalCode(),
+                request.getPrefecture(),
+                request.getMunicipality(),
+                request.getBlocknum(),
+                request.getBuildingName(),
+                request.getLastName(),
+                request.getFirstName(),
+                request.getLastNameKana(),
+                request.getFirstNameKana(),
+                request.getPosition(),
+                request.getEmail(),
+                request.getPhoneNumber(),
+                request.getFaxNumber(),
+                methodologiesStr,
+                Optional.ofNullable(request.getActivityInformation()).orElse(emptyValue));
 
         notificationService.sendEmailToAllOperatorCompanies(
-                "新規登録申請のお知らせ",
-                emailBody
-        );
+                operatorMail.subject(), operatorMail.body());
 
         if (securityFlowProperties.getFeatures().isSignupEmailVerification()) {
             UUID challengeId = request.getEmailVerificationChallengeId();

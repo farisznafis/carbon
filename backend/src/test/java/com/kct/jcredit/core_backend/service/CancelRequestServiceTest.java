@@ -21,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -49,6 +50,10 @@ class CancelRequestServiceTest {
 
     @Mock
     private MonitoringTableRecordSolarRepository monitoringRecordSolarRepository;
+
+    // 実バンドルを使う。文面抽出が忠実かどうかを既存アサーションがそのまま検証する。
+    @Spy
+    private NotificationMessages messages = new NotificationMessages();
 
     @InjectMocks
     private CancelRequestServiceImpl cancelRequestService;
