@@ -65,7 +65,7 @@ function ProjectMembershipCardAction({
         className="h-auto min-h-10 w-fit max-w-full whitespace-normal text-center"
         onClick={() => onJoin(project)}
       >
-        このプロジェクトに入会する
+        入会する
       </Button>
     );
   }
@@ -119,17 +119,10 @@ export function ProjectMembershipCard({
             : 'bg-card',
       )}
     >
-      <CardContent className="grid min-w-0 p-0 xl:grid-cols-[minmax(0,1fr)_18rem]">
+      <CardContent className="grid min-w-0 p-0 xl:grid-cols-[minmax(0,1fr)_15rem]">
         <div className="min-w-0 px-5 py-5 sm:px-6">
-          {/* <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-small text-muted-foreground">
-            <span>プロジェクト番号 {project.projectNumber || '-'}</span>
-            {project.regionalCategory && (
-              <span>{project.regionalCategory}</span>
-            )}
-          </div> */}
-
-          <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-4 gap-y-2">
-            <h3 className="min-w-0 flex-1 break-words font-semibold leading-snug text-foreground">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
+            <h3 className="min-w-0 break-words font-semibold leading-snug text-foreground">
               {project.projectName || '-'}
             </h3>
 
@@ -143,7 +136,9 @@ export function ProjectMembershipCard({
 
           <dl className="mt-4 grid min-w-0 gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-8">
             <div className="min-w-0 lg:col-span-3">
-              <dt className="text-small text-muted-foreground">方法論名称</dt>
+              <dt className="text-small text-muted-foreground">
+                方法論名称
+              </dt>
               <dd className="mt-1 break-words font-semibold text-foreground">
                 {project.methodName || '-'}
               </dd>
@@ -159,7 +154,9 @@ export function ProjectMembershipCard({
             </div>
 
             <div className="min-w-0 sm:col-span-2 lg:col-span-3">
-              <dt className="text-small text-muted-foreground">排出削減活動</dt>
+              <dt className="text-small text-muted-foreground">
+                排出削減活動
+              </dt>
               <dd className="mt-1 whitespace-pre-wrap break-words font-semibold text-foreground">
                 {project.methodMainEmission || '-'}
               </dd>
@@ -167,7 +164,7 @@ export function ProjectMembershipCard({
           </dl>
         </div>
 
-        <div className="flex min-h-16 min-w-0 items-center justify-end border-t border-border px-5 py-3 sm:px-6 xl:border-l xl:border-t-0 xl:px-4">
+        <div className="flex min-h-16 min-w-0 items-center justify-end border-t border-border px-5 py-3 sm:px-6 xl:border-t-0 xl:px-5">
           <ProjectMembershipCardAction
             project={project}
             status={status}
