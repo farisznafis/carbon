@@ -5,11 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { ExternalLink } from 'lucide-react';
+import type { ProjectMembershipStatus } from '@/features/user/project-registration/projectMembershipStatus';
 
-export type ProjectMembershipStatus =
-  | 'available'
-  | 'pending'
-  | 'joined';
+export type { ProjectMembershipStatus } from '@/features/user/project-registration/projectMembershipStatus';
 
 type ProjectMembershipCardProps = Readonly<{
   project: SiteProject;
@@ -23,14 +21,17 @@ const STATUS_PRESENTATION = {
   available: {
     label: '未入会',
     tone: 'neutral',
+    accentClassName: 'border-l-primary',
   },
   pending: {
     label: '申請中',
     tone: 'warning',
+    accentClassName: 'border-l-warning',
   },
   joined: {
     label: '入会中',
     tone: 'success',
+    accentClassName: 'border-l-success',
   },
 } as const;
 
@@ -48,6 +49,50 @@ function formatMethodologyReference(
   );
 }
 
+/** Renders the action available for the current membership status. */
+function ProjectMembershipCardAction({
+  project,
+  status,
+  onJoin,
+  onDownloadPdf,
+  isDownloadingPdf = false,
+}: ProjectMembershipCardProps) {
+  if (status === 'available' && onJoin) {
+    return (
+      <Button
+        type="button"
+        size="md"
+        className="h-auto min-h-10 w-fit max-w-full whitespace-normal text-center"
+        onClick={() => onJoin(project)}
+      >
+        このプロジェクトに入会する
+      </Button>
+    );
+  }
+
+  if (status === 'joined' && onDownloadPdf) {
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        size="md"
+        className="h-auto min-h-10 w-fit max-w-full whitespace-normal text-center"
+        disabled={isDownloadingPdf}
+        onClick={() => onDownloadPdf(project)}
+      >
+        {isDownloadingPdf ? <ButtonLoader /> : <ExternalLink />}
+        PDFを表示
+      </Button>
+    );
+  }
+
+  return (
+    <span className="text-small font-medium text-muted-foreground">
+      {status === 'pending' ? '申請内容を確認中です' : status === 'joined' ? '入会中' : '未入会'}
+    </span>
+  );
+}
+
 /** Presents a project and keeps its status-specific action in a shared card layout. */
 export function ProjectMembershipCard({
   project,
@@ -59,16 +104,14 @@ export function ProjectMembershipCard({
   const showsJoinedState =
     status === 'joined';
 
-  const canApply =
-    status === 'available';
-
   const statusPresentation =
     STATUS_PRESENTATION[status];
 
   return (
     <Card
       className={cn(
-        'h-full rounded-lg border-border shadow-none',
+        'overflow-hidden rounded-lg border-l-4 border-border shadow-app-sm',
+        statusPresentation.accentClassName,
         showsJoinedState
           ? 'bg-muted'
           : status === 'pending'
@@ -76,102 +119,62 @@ export function ProjectMembershipCard({
             : 'bg-card',
       )}
     >
-      <CardContent className="flex h-full min-w-0 flex-col p-5">
-        <div className="flex min-w-0 items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <h3 className="break-words font-semibold leading-snug text-foreground">
+      <CardContent className="grid min-w-0 p-0 xl:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className="min-w-0 px-5 py-5 sm:px-6">
+          {/* <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-small text-muted-foreground">
+            <span>プロジェクト番号 {project.projectNumber || '-'}</span>
+            {project.regionalCategory && (
+              <span>{project.regionalCategory}</span>
+            )}
+          </div> */}
+
+          <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-4 gap-y-2">
+            <h3 className="min-w-0 flex-1 break-words font-semibold leading-snug text-foreground">
               {project.projectName || '-'}
             </h3>
+
+            <StatusBadge
+              tone={statusPresentation.tone}
+              className="shrink-0 font-semibold"
+            >
+              {statusPresentation.label}
+            </StatusBadge>
           </div>
 
-          <StatusBadge
-            tone={statusPresentation.tone}
-            className="shrink-0 font-semibold"
-          >
-            {statusPresentation.label}
-          </StatusBadge>
+          <dl className="mt-4 grid min-w-0 gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-8">
+            <div className="min-w-0 lg:col-span-3">
+              <dt className="text-small text-muted-foreground">方法論名称</dt>
+              <dd className="mt-1 break-words font-semibold text-foreground">
+                {project.methodName || '-'}
+              </dd>
+            </div>
+
+            <div className="min-w-0 lg:col-span-2">
+              <dt className="text-small text-muted-foreground">
+                方法論番号・バージョン
+              </dt>
+              <dd className="mt-1 break-words font-semibold text-foreground">
+                {formatMethodologyReference(project)}
+              </dd>
+            </div>
+
+            <div className="min-w-0 sm:col-span-2 lg:col-span-3">
+              <dt className="text-small text-muted-foreground">排出削減活動</dt>
+              <dd className="mt-1 whitespace-pre-wrap break-words font-semibold text-foreground">
+                {project.methodMainEmission || '-'}
+              </dd>
+            </div>
+          </dl>
         </div>
 
-        <dl className="mt-4 grid min-w-0 gap-x-6 gap-y-3 md:grid-cols-8">
-          <div className="min-w-0 md:col-span-3">
-            <dt className="text-small text-muted-foreground">
-              方法論名称
-            </dt>
-
-            <dd className="mt-1 break-words font-semibold text-foreground">
-              {project.methodName || '-'}
-            </dd>
-          </div>
-
-          <div className="min-w-0 md:col-span-2">
-            <dt className="text-small text-muted-foreground">
-              方法論番号・バージョン
-            </dt>
-
-            <dd className="mt-1 break-words font-semibold text-foreground">
-              {formatMethodologyReference(
-                project,
-              )}
-            </dd>
-          </div>
-
-          <div className="min-w-0 md:col-span-3">
-            <dt className="text-small text-muted-foreground">
-              排出削減活動
-            </dt>
-
-            <dd className="mt-1 whitespace-pre-wrap break-words font-semibold text-foreground">
-              {project.methodMainEmission ||
-                '-'}
-            </dd>
-          </div>
-        </dl>
-
-        <div className="mt-4 border-t border-border pt-3">
-          <div className="flex min-h-10 items-center justify-end">
-            {canApply && onJoin ? (
-              <Button
-                type="button"
-                size="md"
-                className="w-full sm:w-auto sm:min-w-56"
-                onClick={() =>
-                  onJoin(project)
-                }
-              >
-                このプロジェクトに入会する
-              </Button>
-            ) : showsJoinedState &&
-              onDownloadPdf ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="md"
-                className="w-full sm:w-auto"
-                disabled={
-                  isDownloadingPdf
-                }
-                onClick={() =>
-                  onDownloadPdf(project)
-                }
-              >
-                {isDownloadingPdf ? (
-                  <ButtonLoader />
-                ) : (
-                  <ExternalLink />
-                )}
-
-                PDFを表示
-              </Button>
-            ) : (
-              <span className="text-small font-medium text-muted-foreground">
-                {status === 'pending'
-                  ? '申請内容を確認中です'
-                  : showsJoinedState
-                    ? '入会中'
-                    : '未入会'}
-              </span>
-            )}
-          </div>
+        <div className="flex min-h-16 min-w-0 items-center justify-end border-t border-border px-5 py-3 sm:px-6 xl:border-l xl:border-t-0 xl:px-4">
+          <ProjectMembershipCardAction
+            project={project}
+            status={status}
+            onJoin={onJoin}
+            onDownloadPdf={onDownloadPdf}
+            isDownloadingPdf={isDownloadingPdf}
+          />
         </div>
       </CardContent>
     </Card>

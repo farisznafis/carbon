@@ -103,7 +103,10 @@ const MasterDashboard = () => {
           errorMessage ? (
             <DashboardEmptyState>{errorMessage}</DashboardEmptyState>
           ) : hasRegisteredSites ? (
-            <ProjectMembershipContent siteId={sortedSites[0].siteId} embedded />
+            <ProjectMembershipContent
+              siteId={sortedSites[0].siteId}
+              embedded
+            />
           ) : (
             <section className="space-y-5">
               <h2 className="text-foreground">入会</h2>

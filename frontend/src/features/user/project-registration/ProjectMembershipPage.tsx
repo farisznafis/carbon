@@ -2,8 +2,11 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
 import {
   useLocation,
   useNavigate,
@@ -15,6 +18,7 @@ import {
   type SiteProject,
 } from '@/api/site';
 import { downloadProjectMembershipPdf } from '@/api/projects';
+import { SkeletonList } from '@/components/feedback/loading';
 import {
   FormPageContent,
   FormPageTitle,
@@ -26,158 +30,26 @@ import {
 } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  ProjectMembershipCard,
-  type ProjectMembershipStatus,
-} from '@/features/user/project-registration/components/ProjectMembershipCard';
+import { MembershipPreparationDialog } from '@/features/user/project-registration/components/MembershipPreparationDialog';
+import { MembershipStatusOverview } from '@/features/user/project-registration/components/MembershipStatusOverview';
+import { ProjectMembershipList } from '@/features/user/project-registration/components/ProjectMembershipList';
 import {
   isFromMasterDashboard,
   masterDashboardProjectMembershipState,
 } from '@/features/user/project-registration/projectMembershipNavigation';
+import {
+  getMembershipStatus,
+  MEMBERSHIP_STATUS_ORDER,
+  type MembershipStatusFilter,
+  type ProjectMembershipListItem,
+  type ProjectMembershipStatus,
+} from '@/features/user/project-registration/projectMembershipStatus';
 import { paths } from '@/routes/paths';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { downloadFromUrl } from '@/utils/download';
 import { useToast } from '@/hooks/use-toast';
 
-// Keeps the preparation checklist content structured and easy to maintain in one place.
-const MEMBERSHIP_PREPARATION_SECTIONS = [
-  {
-    title: '設備情報',
-    items: [
-      '設備の稼働開始日',
-      '太陽光パネルの公称最大出力',
-      'パワーコンディショナーのメーカー、型式、台数、製造番号',
-      'パワーコンディショナーの夜間待機電力',
-      '蓄電池の設置有無',
-      '蓄電池のメーカー、型式、容量（設置している場合）',
-      '設備の総投資額',
-      '補助金の受給有無、名称、金額（受給している場合）',
-      'プロジェクト実施前の電力購入単価',
-    ],
-  },
-  {
-    title: '確認資料',
-    items: [
-      '設備の稼働開始日を確認できる資料',
-      '太陽光パネルの仕様書またはカタログ',
-      'パワーコンディショナーの仕様書',
-      '蓄電池の仕様書またはカタログ（設置している場合）',
-      '設備の総投資額を確認できる資料',
-      '補助金交付決定を確認できる資料（補助金を受給している場合）',
-      '電力購入単価を確認できる資料',
-    ],
-    note: '対応ファイル形式：PDF、CSV、JPG、JPEG、PNG',
-  },
-  {
-    title: '確認・同意事項',
-    items: [
-      '各確認事項への回答および同意',
-      '事業者名、代表者名、代表者役職',
-      '環境社会配慮および持続可能性に関する同意',
-      'プロジェクト入会規約への同意',
-    ],
-    note: '該当する場合、特定排出者コードや省エネ法に関する事業者番号・工場番号の入力が必要です。',
-  },
-] as const;
-
-type MembershipStatusFilter =
-  | 'all'
-  | ProjectMembershipStatus;
-
-type ProjectMembershipListItem = Readonly<{
-  project: SiteProject;
-  status: ProjectMembershipStatus;
-}>;
-
-const MEMBERSHIP_STATUS_ORDER: Record<
-  ProjectMembershipStatus,
-  number
-> = {
-  available: 0,
-  pending: 1,
-  joined: 2,
-};
-
-/** Resolves the application state using the API participation and relation fields. */
-function getMembershipStatus(
-  project: SiteProject,
-): ProjectMembershipStatus {
-  if (project.participationStatus === 'OPEN') {
-    return 'pending';
-  }
-
-  if (project.participationStatus === 'APPROVED') {
-    return 'joined';
-  }
-
-  if (project.participationStatus === 'REJECTED') {
-    return 'available';
-  }
-
-  if (project.isCompanyJoined || project.hasSiteRelation) {
-    return 'joined';
-  }
-
-  return 'available';
-}
-
-type MembershipSectionProps = Readonly<{
-  projectItems: ProjectMembershipListItem[];
-  emptyMessage: string;
-  onJoin: (project: SiteProject) => void;
-  onDownloadPdf: (project: SiteProject) => void;
-  isDownloadingPdf: (project: SiteProject) => boolean;
-}>;
-
-/** Renders the projects after sorting and filtering have been applied. */
-function MembershipSection({
-  projectItems,
-  emptyMessage,
-  onJoin,
-  onDownloadPdf,
-  isDownloadingPdf,
-}: MembershipSectionProps) {
-  return (
-    <section aria-label="公開中のプロジェクト">
-      {projectItems.length > 0 ? (
-        <div className="space-y-4">
-          {projectItems.map(({ project, status }) => (
-            <ProjectMembershipCard
-              key={project.id}
-              project={project}
-              status={status}
-              onJoin={onJoin}
-              onDownloadPdf={onDownloadPdf}
-              isDownloadingPdf={isDownloadingPdf(project)}
-            />
-          ))}
-        </div>
-      ) : (
-        <Card className="rounded-lg border-dashed border-border shadow-none">
-          <CardContent className="p-8 text-center text-foreground">
-            {emptyMessage}
-          </CardContent>
-        </Card>
-      )}
-    </section>
-  );
-}
+gsap.registerPlugin(useGSAP);
 
 type ProjectMembershipContentProps = Readonly<{
   siteId: string;
@@ -192,6 +64,7 @@ export function ProjectMembershipContent({
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const enteredFromMasterDashboard =
     embedded || isFromMasterDashboard(location.state);
@@ -203,7 +76,6 @@ export function ProjectMembershipContent({
   const [projects, setProjects] = useState<SiteProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-
   const [statusFilter, setStatusFilter] =
     useState<MembershipStatusFilter>('all');
 
@@ -275,6 +147,64 @@ export function ProjectMembershipContent({
       ({ status }) => status === statusFilter,
     );
   }, [projectItems, statusFilter]);
+
+  const membershipStatusCounts = useMemo(
+    () =>
+      projectItems.reduce<Record<ProjectMembershipStatus, number>>(
+        (counts, projectItem) => ({
+          ...counts,
+          [projectItem.status]: counts[projectItem.status] + 1,
+        }),
+        { available: 0, pending: 0, joined: 0 },
+      ),
+    [projectItems],
+  );
+
+  useGSAP(
+    () => {
+      if (isLoading || errorMessage || typeof window.matchMedia !== 'function') {
+        return;
+      }
+
+      const prefersReducedMotion = window.matchMedia(
+        '(prefers-reduced-motion: reduce)',
+      ).matches;
+
+      if (prefersReducedMotion) {
+        return;
+      }
+
+      gsap.fromTo(
+        '[data-membership-reveal]',
+        { autoAlpha: 0, y: 16 },
+        {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.45,
+          ease: 'power2.out',
+          stagger: 0.06,
+        },
+      );
+
+      gsap.fromTo(
+        '[data-membership-project]',
+        { autoAlpha: 0, y: 20, scale: 0.985 },
+        {
+          autoAlpha: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.5,
+          ease: 'power2.out',
+          stagger: 0.05,
+        },
+      );
+    },
+    {
+      scope: contentRef,
+      dependencies: [errorMessage, isLoading, siteId, statusFilter],
+      revertOnUpdate: true,
+    },
+  );
 
   /** Opens the preparation dialog for the selected project. */
   const handleJoin = (project: SiteProject) => {
@@ -352,181 +282,66 @@ export function ProjectMembershipContent({
       : '選択したステータスのプロジェクトはありません。';
 
   const content = (
-    <>
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-2">
+    <div ref={contentRef} className="min-w-0 space-y-6 overflow-x-hidden">
+      <header data-membership-reveal>
+        <div className="max-w-4xl space-y-2">
           <FormPageTitle as={embedded ? 'h2' : 'h1'}>
             プロジェクトへの入会
           </FormPageTitle>
 
-          <p className="text-base text-foreground">
-            入会するプロジェクトを選択し、入会手続きを進めます。
+          <p className="max-w-3xl text-base leading-7 text-foreground">
+            公開中のプロジェクトを比較し、申請状況を確認しながら入会手続きを進めます。
           </p>
-        </div>
-
-        <div className="flex w-full items-center gap-2 sm:w-auto">
-          <span className="shrink-0 text-small text-muted-foreground">
-            ステータス
-          </span>
-
-          <Select
-            value={statusFilter}
-            onValueChange={(value) =>
-              setStatusFilter(
-                value as MembershipStatusFilter,
-              )
-            }
-            disabled={isLoading || projects.length === 0}
-          >
-            <SelectTrigger
-              className="w-full sm:w-[180px]"
-              aria-label="入会ステータスで絞り込む"
-            >
-              <SelectValue />
-            </SelectTrigger>
-
-            <SelectContent>
-              <SelectItem value="all">
-                すべて
-              </SelectItem>
-
-              <SelectItem value="available">
-                未入会
-              </SelectItem>
-
-              <SelectItem value="pending">
-                申請中
-              </SelectItem>
-
-              <SelectItem value="joined">
-                入会中
-              </SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </header>
 
       {isLoading ? (
-        <Card className="rounded-lg border-border shadow-none">
-          <CardContent className="p-10 text-center text-foreground">
-            読み込み中...
-          </CardContent>
-        </Card>
+        <SkeletonList items={4} className="min-h-[28rem]" />
       ) : errorMessage ? (
-        <Card className="rounded-lg border-border shadow-none">
+        <Card className="border-border shadow-none">
           <CardContent className="space-y-5 p-10 text-center">
-            <p className="text-destructive">
-              {errorMessage}
-            </p>
+            <p className="text-destructive">{errorMessage}</p>
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={loadMembershipData}
-            >
+            <Button type="button" variant="outline" onClick={loadMembershipData}>
               再読み込み
             </Button>
           </CardContent>
         </Card>
       ) : (
         <>
-          <MembershipSection
-            projectItems={visibleProjectItems}
-            emptyMessage={emptyMessage}
-            onJoin={handleJoin}
-            onDownloadPdf={(project) =>
-              void handleDownloadPdf(project)
-            }
-            isDownloadingPdf={(project) =>
-              downloadingProjectIds.has(project.id)
+          <MembershipStatusOverview
+            counts={membershipStatusCounts}
+            activeStatus={statusFilter}
+            onStatusChange={(status) =>
+              setStatusFilter((currentStatus) =>
+                currentStatus === status ? 'all' : status,
+              )
             }
           />
 
-          <Dialog
-            open={selectedProject !== null}
-            onOpenChange={(open) => {
-              if (!open) {
-                setSelectedProject(null);
+          <div className="min-w-0" aria-live="polite">
+            <ProjectMembershipList
+              projectItems={visibleProjectItems}
+              emptyMessage={emptyMessage}
+              headingAs={embedded ? 'h3' : 'h2'}
+              activeFilter={statusFilter}
+              onShowAll={() => setStatusFilter('all')}
+              onJoin={handleJoin}
+              onDownloadPdf={(project) => void handleDownloadPdf(project)}
+              isDownloadingPdf={(project) =>
+                downloadingProjectIds.has(project.id)
               }
-            }}
-          >
-            <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-2xl flex-col gap-0 overflow-hidden rounded-xl p-0">
-              <DialogHeader className="shrink-0 border-b border-border p-6 pr-12">
-                <DialogTitle>
-                  入会届の提出に必要なもの
-                </DialogTitle>
+            />
+          </div>
 
-                <DialogDescription className="text-small font-normal text-muted-foreground">
-                  <span className="block font-semibold text-foreground">
-                    {selectedProject?.projectName || '-'}
-                  </span>
-
-                  <span className="mt-1 block">
-                    申請を始める前に、以下の情報と確認資料をご準備ください。
-                  </span>
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-                <div className="space-y-6">
-                  {MEMBERSHIP_PREPARATION_SECTIONS.map(
-                    (section) => (
-                      <section
-                        key={section.title}
-                        className="space-y-3"
-                      >
-                        <h3 className="text-base font-semibold leading-6 text-foreground">
-                          {section.title}
-                        </h3>
-
-                        <ul className="list-disc space-y-2 pl-5 text-small font-normal text-foreground marker:text-primary">
-                          {section.items.map((item) => (
-                            <li
-                              key={item}
-                              className="pl-1"
-                            >
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-
-                        {'note' in section && (
-                          <p className="rounded-lg bg-muted px-4 py-3 text-small font-normal text-foreground">
-                            {section.note}
-                          </p>
-                        )}
-                      </section>
-                    ),
-                  )}
-                </div>
-              </div>
-
-              <DialogFooter className="shrink-0 border-t border-border p-6">
-                <DialogClose asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="md"
-                    className="w-full sm:w-auto"
-                  >
-                    閉じる
-                  </Button>
-                </DialogClose>
-
-                <Button
-                  type="button"
-                  size="md"
-                  className="w-full sm:w-auto"
-                  onClick={handleConfirmJoin}
-                >
-                  入会届へ進む
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <MembershipPreparationDialog
+            project={selectedProject}
+            onClose={() => setSelectedProject(null)}
+            onConfirm={handleConfirmJoin}
+          />
         </>
       )}
-    </>
+    </div>
   );
 
   if (embedded) {
