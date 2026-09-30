@@ -105,17 +105,17 @@ function MembershipSection({
 }: MembershipSectionProps) {
   return (
     <section aria-labelledby="public-projects-heading">
-      <div className="mb-5 space-y-1">
+      {/* <div className="mb-5 space-y-1">
         <h2 id="public-projects-heading" className="text-lg font-semibold text-foreground">
           公開中のプロジェクト
         </h2>
         <p className="text-small text-muted-foreground">
           未入会のプロジェクトから入会を申請できます。
         </p>
-      </div>
+      </div> */}
 
       {projects.length > 0 ? (
-        <div className="space-y-5">
+        <div className="space-y-4">
           {projects.map((project) => (
             <ProjectMembershipCard
               key={project.id}

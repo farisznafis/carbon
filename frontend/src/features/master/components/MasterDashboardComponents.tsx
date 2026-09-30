@@ -111,10 +111,10 @@ export function UserDashboardCard({
     user.role !== 'master' && !user.siteId && !user.siteName;
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-app-sm transition hover:border-primary/60 md:min-h-28 md:flex-row">
-      <div className="min-w-0 flex-1 px-5 py-5 md:px-7">
+    <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-app-sm transition hover:border-primary/60 md:flex-row">
+      <div className="min-w-0 flex-1 px-5 py-4 md:px-6">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
             <User className="h-5 w-5" />
           </span>
           <h3 className="text-foreground">
@@ -127,7 +127,7 @@ export function UserDashboardCard({
           )}
         </div>
 
-        <div className="pl-3 mt-3 grid gap-x-8 gap-y-3 text-sm font-bold leading-6 text-foreground xl:grid-cols-[minmax(360px,1.7fr)_minmax(220px,1fr)_minmax(220px,1fr)]">
+        <div className="pl-3 mt-2 grid gap-x-8 gap-y-2 text-sm font-bold leading-6 text-foreground xl:grid-cols-[minmax(360px,1.7fr)_minmax(220px,1fr)_minmax(220px,1fr)]">
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <Mail className="h-4 w-4 shrink-0 text-muted-foreground" />
             <span className="shrink-0 text-foreground">
@@ -164,7 +164,7 @@ export function UserDashboardCard({
         </div>
       </div>
 
-      <div className="flex items-center justify-end border-t border-border p-4 md:w-[152px] md:shrink-0 md:justify-center md:border-l md:border-t-0">
+      <div className="flex items-center justify-end border-t border-border px-4 py-3 md:w-[152px] md:shrink-0 md:justify-center md:border-l md:border-t-0">
         <Button
           type="button"
           variant="outline"

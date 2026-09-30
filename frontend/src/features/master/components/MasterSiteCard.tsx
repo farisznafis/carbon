@@ -30,11 +30,11 @@ export function MasterSiteCard({
   const visibleProjects = areProjectsExpanded ? projects : projects.slice(0, 2);
 
   return (
-    <article className="grid min-h-28 w-full overflow-hidden rounded-lg border border-border bg-card shadow-app-sm md:grid-cols-[minmax(0,1fr)_96px]">
-      <div className="grid min-w-0 gap-5 px-5 py-5 text-left md:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)] md:items-start md:px-7 xl:grid-cols-[minmax(0,1fr)_minmax(430px,0.75fr)]">
+    <article className="grid w-full overflow-hidden rounded-lg border border-border bg-card shadow-app-sm md:grid-cols-[minmax(0,1fr)_96px]">
+      <div className="grid min-w-0 gap-4 px-5 py-4 text-left md:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)] md:items-start md:px-6 xl:grid-cols-[minmax(0,1fr)_minmax(430px,0.75fr)]">
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
               <Building2 className="h-5 w-5" />
             </span>
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -49,7 +49,7 @@ export function MasterSiteCard({
             </div>
           </div>
 
-          <div className="pl-3 mt-3 flex flex-col gap-2 text-sm font-bold leading-6 text-foreground">
+          <div className="pl-3 mt-2 flex flex-col gap-1.5 text-sm font-bold leading-6 text-foreground">
             <span className="inline-flex items-center gap-1.5">
               <User className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">責任者</span>
@@ -111,7 +111,7 @@ export function MasterSiteCard({
         </div>
       </div>
 
-      <div className="flex min-h-28 items-center justify-center border-t border-border px-4 py-4 md:border-l md:border-t-0">
+      <div className="flex items-center justify-center border-t border-border px-4 py-3 md:border-l md:border-t-0">
         <Button
           type="button"
           size="icon"

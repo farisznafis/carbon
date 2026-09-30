@@ -23,6 +23,7 @@ function formatMethodologyReference(project: SiteProject): string {
     .join(' / ') || '-';
 }
 
+/** Presents a project and keeps its status-specific action in a shared card layout. */
 export function ProjectMembershipCard({
   project,
   status,
@@ -44,10 +45,10 @@ export function ProjectMembershipCard({
             : 'bg-card',
       )}
     >
-      <CardContent className='flex h-full flex-col p-6'>
-        <div className='flex items-start justify-between gap-4'>
-          <div className='min-w-0'>
-            <h3 className='break-words text-foreground'>
+      <CardContent className='flex h-full min-w-0 flex-col p-5'>
+        <div className='flex min-w-0 items-start justify-between gap-4'>
+          <div className='min-w-0 flex-1'>
+            <h3 className='break-words font-semibold leading-snug text-foreground'>
               {project.projectName || '-'}
             </h3>
             {/* {project.regionalCategory && (
@@ -73,60 +74,63 @@ export function ProjectMembershipCard({
           </Badge>
         </div>
 
-        <dl className='mt-6 grid gap-x-8 gap-y-5 md:grid-cols-8'>
-          <div className='md:col-span-3'>
-            <dt className='text-small text-foreground'>方法論名称</dt>
-            <dd className='mt-1 break-words font-bold'>
+        <dl className='mt-4 grid min-w-0 gap-x-6 gap-y-3 md:grid-cols-8'>
+          <div className='min-w-0 md:col-span-3'>
+            <dt className='text-small text-muted-foreground'>方法論名称</dt>
+            <dd className='mt-1 break-words font-semibold text-foreground'>
               {project.methodName || '-'}
             </dd>
           </div>
-          <div className='md:col-span-2'>
-            <dt className='text-small text-foreground'>
+          <div className='min-w-0 md:col-span-2'>
+            <dt className='text-small text-muted-foreground'>
               方法論番号・バージョン
             </dt>
-            <dd className='mt-1 break-words font-bold'>
+            <dd className='mt-1 break-words font-semibold text-foreground'>
               {formatMethodologyReference(project)}
             </dd>
           </div>
-          <div className='md:col-span-3'>
-            <dt className='text-small text-foreground'>排出削減活動</dt>
-            <dd className='mt-1 whitespace-pre-wrap break-words font-bold'>
+          <div className='min-w-0 md:col-span-3'>
+            <dt className='text-small text-muted-foreground'>排出削減活動</dt>
+            <dd className='mt-1 whitespace-pre-wrap break-words font-semibold text-foreground'>
               {project.methodMainEmission || '-'}
             </dd>
           </div>
         </dl>
 
-        {showsJoinedState && onDownloadPdf && (
-          <div className='mt-6 sm:ml-auto'>
-            <Button
-              type='button'
-              variant='outline'
-              size='md'
-              disabled={isDownloadingPdf}
-              onClick={() => onDownloadPdf?.(project)}
-            >
-              {isDownloadingPdf ? (
-                <ButtonLoader />
-              ) : (
-                <ExternalLink />
-              )}
-              PDFを表示
-            </Button>
+        <div className='mt-4 border-t border-border pt-3'>
+          <div className='flex min-h-10 items-center justify-end'>
+            {canApply && onJoin ? (
+              <Button
+                type='button'
+                size='md'
+                className='w-full sm:w-auto sm:min-w-56'
+                onClick={() => onJoin(project)}
+              >
+                このプロジェクトに入会する
+              </Button>
+            ) : showsJoinedState && onDownloadPdf ? (
+              <Button
+                type='button'
+                variant='outline'
+                size='md'
+                className='w-full sm:w-auto'
+                disabled={isDownloadingPdf}
+                onClick={() => onDownloadPdf(project)}
+              >
+                {isDownloadingPdf ? <ButtonLoader /> : <ExternalLink />}
+                PDFを表示
+              </Button>
+            ) : (
+              <span className='text-small font-medium text-muted-foreground'>
+                {status === 'pending'
+                  ? '申請内容を確認中です'
+                  : showsJoinedState
+                    ? '入会中'
+                    : '未入会'}
+              </span>
+            )}
           </div>
-        )}
-
-        {canApply && onJoin && (
-          <div className='mt-6 sm:ml-auto sm:min-w-56'>
-            <Button
-              type='button'
-              size='md'
-              className='w-full'
-              onClick={() => onJoin(project)}
-            >
-              このプロジェクトに入会する
-            </Button>
-          </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   );
