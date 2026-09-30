@@ -10,7 +10,6 @@ import lombok.Data;
 public class PasswordChangeRequest {
     private Object userId; // null or company ID value = self password change
 
-    @NotBlank(message = "現在のパスワードは必須です")
     private String currentPassword;
 
     @NotBlank(message = "新しいパスワードは必須です")
