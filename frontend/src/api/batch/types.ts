@@ -32,6 +32,14 @@ export type EmissionTrendPoint = {
   y: number;
 };
 
+/** One processing period of a project's emission history (tCO₂). */
+export type ProjectEmissionHistoryPoint = {
+  period: string;
+  baselineEmission: number | null;
+  projectEmission: number | null;
+  reduction: number | null;
+};
+
 export type ProjectEmissionBreakdown = {
   mainEmission: number | null;
   controlDeviceEmission: number | null;

@@ -4,6 +4,7 @@ import type {
   BatchHistoryResult,
   EmissionTrendPoint,
   ProjectEmissionBreakdown,
+  ProjectEmissionHistoryPoint,
   ProjectEmissionSummary,
   ProjectReductionResultResponse,
   ReductionResultApiItem,
@@ -193,6 +194,77 @@ function toFiniteEmission(value: number | string | null | undefined) {
 
   const emission = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(emission) ? emission : null;
+}
+
+function mapProjectEmissionHistoryPoint(
+  result: ReductionResultApiItem,
+): ProjectEmissionHistoryPoint | null {
+  const period = result.processing_date?.trim() || result.created_at?.trim();
+  if (!period) return null;
+
+  const baselineEmission = toFiniteEmission(result.embl);
+  const projectEmission = toFiniteEmission(result.empj);
+  if (baselineEmission === null && projectEmission === null) return null;
+
+  return {
+    period,
+    baselineEmission,
+    projectEmission,
+    reduction:
+      baselineEmission !== null && projectEmission !== null
+        ? baselineEmission - projectEmission
+        : null,
+  };
+}
+
+/** Normalizes per-period reduction results into a chronological history. */
+export function normalizeProjectEmissionHistoryResponse(
+  response:
+    | ReductionResultResponse
+    | ReductionResultApiItem
+    | ReductionResultApiItem[],
+): ProjectEmissionHistoryPoint[] {
+  return extractReductionResults(response)
+    .flatMap((result) => {
+      const point = mapProjectEmissionHistoryPoint(result);
+      return point ? [point] : [];
+    })
+    .sort((left, right) => left.period.localeCompare(right.period));
+}
+
+/**
+ * Loads a project's per-period emission history across all sites.
+ *
+ * GET /batch/{projectId}/reduction-result-history is not served by the
+ * backend yet; a 404 is treated as "no history" so the charts show their
+ * empty state instead of an error until the endpoint ships.
+ */
+export async function getProjectEmissionHistory(
+  projectId: string,
+): Promise<ProjectEmissionHistoryPoint[]> {
+  if (!projectId) return [];
+
+  const response = await apiFetch(
+    `/batch/${encodeURIComponent(projectId)}/reduction-result-history`,
+    { method: 'GET' },
+  );
+  if (response.status === 404) return [];
+
+  const { data: json, rawBody } =
+    await parseJsonResponse<ReductionResultJson>(response);
+
+  if (!response.ok) {
+    const message =
+      json && !Array.isArray(json) && 'message' in json ? json.message : null;
+
+    throw new Error(
+      message ||
+        rawBody ||
+        `Failed to fetch project emission history: HTTP ${response.status}`,
+    );
+  }
+
+  return json ? normalizeProjectEmissionHistoryResponse(json) : [];
 }
 
 function sumEmissionField(

@@ -26,6 +26,8 @@ type DataGridTableProps<T> = {
   getRowKey: (row: T) => string;
   emptyMessage: ReactNode;
   onRowClick?: (row: T) => void;
+  /** Extra classes for one row, e.g. to highlight rows that need attention. */
+  getRowClassName?: (row: T) => string | undefined;
 };
 
 function normalizeSortValue(value: string | number | null | undefined) {
@@ -116,6 +118,7 @@ export function DataGridTable<T>({
   getRowKey,
   emptyMessage,
   onRowClick,
+  getRowClassName,
 }: DataGridTableProps<T>) {
   const [sortColumnId, setSortColumnId] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -225,6 +228,7 @@ export function DataGridTable<T>({
               'group grid min-h-[60px] items-center gap-4 border-b border-border px-5 py-3 last:border-b-0',
               onRowClick &&
                 'cursor-pointer transition hover:bg-muted/40',
+              getRowClassName?.(row),
             )}
             style={{ ...gridStyle, minWidth }}
           >
