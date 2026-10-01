@@ -1,92 +1,55 @@
 //モニタリングデータの削除。運営者専用（admin または権限を持つ operator）。
 //
-//【重要】これは物理削除（削除）であり、取消ではない。実行するとデータは復元できない。
+//【重要】これは物理削除（削除）であり、取消ではない。削除されたデータは復元できない。
 //モニタリングの取消申請とは別機能。取消は /api/monitoring/cancel-requests を参照。
 //
-//削除対象は「認証対象期間終了から2年が経過した」モニタリングデータ。
+//【2026-10-01 変更】削除は手動実行から自動実行に変更した。
+//  廃止: GET  /api/admin/monitoring-data/deletion-candidates
+//  廃止: GET  /api/admin/monitoring-data/deletion-candidates/{projectPublicId}
+//  廃止: POST /api/admin/monitoring-data/deletion
+//  追加: GET  /api/admin/monitoring-data/deletion-schedule
+//  継続: GET  /api/admin/monitoring-data/deletion-history（変更なし）
+//
+//削除対象は、プロジェクトのステータスが「終了」になってから保存期間が経過したプロジェクトの
+//モニタリングデータすべて。プロジェクト単位で削除し、拠点・企業・レコードの選択はできない。
 //保持年数は app.monitoring.retention.retention-years で設定（現在: 2年）。
 //
+//自動削除の流れ（1日1回のバッチ。既定は毎日 02:00）:
+//  1. 削除予定日の7日前 : 運営ユーザー全員に「モニタリングデータ削除予定のお知らせ」を通知
+//  2. 削除予定日の当日  : 「モニタリングデータ削除開始のお知らせ」を通知し、削除を開始
+//  3. 全件削除の完了時  : プロジェクトごとに「モニタリングデータ削除完了のお知らせ」を通知
+//  通知はアプリ内通知とメールの両方。1・2 は同じ日に該当するプロジェクトを1通にまとめる。
+//  削除できなかったレコードは次回以降のバッチで自動的に再実行される。
+//
 //必要権限:
-//  抽出・履歴 : admin、または MONITORING_READ を持つ operator
-//  削除実行   : admin、または MONITORING_DELETE を持つ operator
+//  削除予定・履歴 : admin、または MONITORING_READ を持つ operator
 
 
-■ 削除対象データ抽出（プロジェクト・拠点単位のサマリ）
+■ 削除予定取得（プロジェクト単位）
 
-GET /api/admin/monitoring-data/deletion-candidates
+GET /api/admin/monitoring-data/deletion-schedule
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 Response - Success (HTTP 200)
 {
   "statusCode": "OK",
-  "totalProjects": 2,
-  "totalRecords": 1250,
-  "candidates": [
+  "message": "モニタリングデータの削除予定を取得しました。",
+  "autoDeletionEnabled": true,          //false の環境では自動削除バッチは動かない
+  "totalProjects": 1,
+  "schedule": [                         //削除予定日の近い順
     {
       "projectId": 1,
       "projectPublicId": "PRJ00000001",
       "projectName": "ABC太陽光発電プロジェクト",
-      "siteId": 3,
-      "sitePublicId": "SITEa8Kd93jFnQ2xLp0w",
-      "statusFinalizedAt": "2024-08-31T00:00:00",   //認証対象期間の終了日時
-      "candidateRecordCount": 830,
-      "oldestDateRecorded": "2023-04-01",
-      "newestDateRecorded": "2024-08-31"
+      "statusFinalizedAt": "2024-10-08T10:30:00",   //ステータスが「終了」になった日時
+      "scheduledDeletionDate": "2026-10-08",
+      "daysUntilDeletion": 7                        //0 は本日削除
     }
   ]
 }
 
-//該当データがない場合も HTTP 200。totalProjects / totalRecords は 0、candidates は空配列。
-
-
-■ 削除対象データ明細取得（レコード単位）
-
-GET /api/admin/monitoring-data/deletion-candidates/{projectPublicId}?sitePublicId=SITEa8Kd93jFnQ2xLp0w
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
-//sitePublicId はクエリパラメータ。必須。
-
-Response - Success (HTTP 200)
-{
-  "statusCode": "OK",
-  "projectId": 1,
-  "projectPublicId": "PRJ00000001",
-  "siteId": 3,
-  "sitePublicId": "SITEa8Kd93jFnQ2xLp0w",
-  "totalRecords": 830,
-  "records": [
-    {
-      "monitoringRecordId": "MON-20230401-0001",
-      "recordTimeUpdated": "2023-04-01T09:15:00",
-      "dateRecorded": "2023-04-01"
-    }
-  ]
-}
-
-
-■ 削除実行
-
-POST /api/admin/monitoring-data/deletion
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-Content-Type: application/json
-
-Request Body (JSON): //複数プロジェクトをまとめて削除できる
-{
-  "projectPublicIds": ["PRJ00000001", "PRJ00000002"]
-}
-
-Response - Success (HTTP 200)
-{
-  "statusCode": "OK",
-  "deletedCount": 1250,
-  "failedCount": 0,
-  "executedAt": "2026-09-02T16:47:37",
-  "executedBy": "operator1"
-}
-
-//部分的に失敗しても HTTP 200 を返す。failedCount が 0 より大きい場合は
-//一部のレコードが削除されていないため、削除履歴で failureReason を確認すること。
-//削除したレコードは1件ずつ削除履歴に記録される。
+//削除予定日が本日以降のプロジェクトのみ返す。削除予定日を過ぎたプロジェクトは削除履歴で確認する。
+//該当するプロジェクトがない場合も HTTP 200。totalProjects は 0、schedule は空配列。
 
 
 ■ 削除履歴取得
@@ -104,15 +67,15 @@ Response - Success (HTTP 200)
   "history": [
     {
       "id": 501,
-      "monitoringRecordId": "MON-20230401-0001",
+      "monitoringRecordId": "SITEa8Kd93jFnQ2xLp0w#PRJ00000001",
       "recordTimeUpdated": "2023-04-01T09:15:00",
       "dateRecorded": "2023-04-01",
       "projectId": 1,
       "siteId": 3,
       "result": "SUCCESS",              //SUCCESS または FAILURE
       "failureReason": null,            //FAILURE のときのみ内容が入る
-      "deletedAt": "2026-09-02T16:47:37",
-      "deletedBy": "operator1"
+      "deletedAt": "2026-10-08T02:00:12",
+      "deletedBy": "system"             //自動削除は "system"。過去の手動削除分は実行した運営ユーザー名
     }
   ],
   "pagination": {
@@ -124,6 +87,9 @@ Response - Success (HTTP 200)
   }
 }
 
+//削除したレコードは1件ずつ削除履歴に記録される。
+//FAILURE のレコードは次回のバッチで再実行され、削除できた時点で SUCCESS の行が追加される。
+
 
 ERROR RESPONSES
 {
@@ -133,17 +99,7 @@ ERROR RESPONSES
 {
   "statusCode": "FORBIDDEN",
   "message": "このリソースにアクセスすることができません。"
-                                        //MONITORING_DELETE 権限がない operator が削除を実行した場合など
-},
-{
-  "statusCode": "NOT_FOUND",
-  "message": "該当するプロジェクトが見つかりませんでした。"
-},
-{
-  "statusCode": "VALIDATION_ERROR",
-  "errors": {
-    "projectPublicIds": "削除対象のプロジェクトを指定してください。"
-  }
+                                        //MONITORING_READ 権限がない operator がアクセスした場合など
 },
 {
   "statusCode": "BAD_REQUEST",
