@@ -37,7 +37,7 @@ public class ParticipatingUserController {
     private final JwtUtil jwtUtil;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('master')")
+    @PreAuthorize("hasAnyRole('master','admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_USER_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "参加企業ユーザー一覧取得", description = "ログイン中の参加企業に所属する参加企業ユーザー一覧を取得します。")
     public ResponseEntity<UserListResponse> getUsers(Authentication authentication) {
@@ -47,7 +47,7 @@ public class ParticipatingUserController {
     }
 
     @PostMapping("/invitations")
-    @PreAuthorize("hasAnyRole('master')")
+    @PreAuthorize("hasAnyRole('master','admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_USER_CREATE.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "参加企業ユーザー招待", description = "メールアドレスと拠点のみを指定して招待メールを送信します。ユーザー本人がリンクから残りの情報を入力してアカウントを作成します。")
     public ResponseEntity<BaseResponse> inviteUser(
@@ -62,7 +62,7 @@ public class ParticipatingUserController {
 
     @PatchMapping
     @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize("hasAnyRole('master')")
+    @PreAuthorize("hasAnyRole('master','admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_USER_UPDATE.name()))")
     @Operation(summary = "参加企業ユーザー情報更新", description = "指定された参加企業ユーザーの情報を更新します。")
     public ResponseEntity<UpdateUserResponse> updateUser(
             Authentication authentication,
@@ -75,6 +75,7 @@ public class ParticipatingUserController {
 
     @PostMapping("/validate-update")
     @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasAnyRole('master','admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_USER_UPDATE.name()))")
     @Operation(summary = "参加企業ユーザー更新検証", description = "参加企業ユーザー更新リクエストを保存せずに検証します。")
     public ResponseEntity<BaseResponse> validateUpdateUser(
             Authentication authentication,
