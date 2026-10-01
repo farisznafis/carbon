@@ -80,17 +80,17 @@ public class AuthController {
    }
 
 
-    @PostMapping("/dummyUser")
-    @Operation(summary = "ダミー参加企業ユーザー作成", description = "検証用の参加企業ユーザーを作成します。")
-    public ResponseEntity<ParticipatingUser> createDummyUser(@RequestBody CreateDummyUserRequest req) {
-        ParticipatingUser user = authService.createDummyUser(req);
-        return ResponseEntity.ok(user);
-    }
+    // @PostMapping("/dummyUser")
+    // @Operation(summary = "ダミー参加企業ユーザー作成", description = "検証用の参加企業ユーザーを作成します。")
+    // public ResponseEntity<ParticipatingUser> createDummyUser(@RequestBody CreateDummyUserRequest req) {
+    //     ParticipatingUser user = authService.createDummyUser(req);
+    //     return ResponseEntity.ok(user);
+    // }
 
-    @PostMapping("/dummyOperator")
-    @Operation(summary = "ダミー管理者作成", description = "検証用の管理者を作成します。")
-    public ResponseEntity<OperatingUser> createDummyOperator(@RequestBody CreateDummyUserRequest req) {
-        OperatingUser user = authService.createDummyOperatorUser(req);
-        return ResponseEntity.ok(user);
-    }
+    // @PostMapping("/dummyOperator")
+    // @Operation(summary = "ダミー管理者作成", description = "検証用の管理者を作成します。")
+    // public ResponseEntity<OperatingUser> createDummyOperator(@RequestBody CreateDummyUserRequest req) {
+    //     OperatingUser user = authService.createDummyOperatorUser(req);
+    //     return ResponseEntity.ok(user);
+    // }
 }

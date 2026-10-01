@@ -173,5 +173,21 @@ public class ResponseConstants {
         public static final String MSG_FILE_NOT_FOUND = "ファイルが見つかりません。";
         public static final String MSG_FILE_DELETED = "ファイルを削除しました。";
 
+    // Equipment domain-specific status codes
+    public static final String SITE_NOT_JOINED = "SITE_NOT_JOINED";
+    public static final String EQUIPMENT_ALREADY_CHANGED = "EQUIPMENT_ALREADY_CHANGED";
+    public static final String INVALID_CHANGE_DATE = "INVALID_CHANGE_DATE";
+    public static final String INVALID_FILE_REFERENCE = "INVALID_FILE_REFERENCE";
+
+    // Corresponding messages
+    public static final String MSG_SITE_NOT_JOINED =
+            "このサイトはまだプロジェクトに参加していません。先に参加登録を行ってください。";
+    public static final String MSG_EQUIPMENT_ALREADY_CHANGED =
+            "この設備は既に変更済みです。最新の設備に対して変更を行ってください。";
+    public static final String MSG_INVALID_CHANGE_DATE =
+            "変更日は変更前設備のモニタリング開始日より後である必要があります。";
+    public static final String MSG_INVALID_FILE_REFERENCE =
+            "設備変更では新規アップロードファイルのみ指定可能です。s3Key=";
+
     private ResponseConstants() {}
 }

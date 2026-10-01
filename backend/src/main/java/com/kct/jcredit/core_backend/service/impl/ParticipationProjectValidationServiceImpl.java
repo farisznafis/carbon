@@ -48,6 +48,9 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
     public void validateEquipment(EnR002EquipmentRequest equipment) {
         List<ValidationErrorDetail> errors = new ArrayList<>();
 
+        if (equipment.getFiles() == null)
+            equipment.setFiles(new ArrayList<>());
+
         validateRequiredFields(equipment, errors);
         validateOperationDate(equipment, errors);
         validateRequiredFiles(equipment, errors);
@@ -62,7 +65,7 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
         if (!errors.isEmpty()) throw new BulkValidationException(errors);
     }
 
-    @Override
+   @Override
     public void validateConfirmationItems(EnR002ConfirmationItemRequest request) {
         List<ValidationErrorDetail> errors = new ArrayList<>();
 
@@ -92,46 +95,40 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
                     "選択してください。"));
 
         // Conditional: isEmitter
-        if (Boolean.TRUE.equals(request.getIsEmitter())) {
+        // null is checked before the value branch. Boolean.TRUE.equals() treats null and
+        // false alike, so a null check placed inside the true branch can never be reached.
+        if (request.getIsEmitter() == null) {
+            errors.add(err("request",
+                    "特定排出者該当",
+                    "選択してください。"));
 
-            if (request.getIsEmitter() == null)
-                errors.add(err("request",
-                        "特定排出者該当",
-                        "選択してください。"));
+        } else if (Boolean.TRUE.equals(request.getIsEmitter())) {
+            if (request.getEmitterCode() == null
+                    || request.getEmitterCode().isBlank()
+                    || !request.getEmitterCode().matches("\\d{9}"))
+                errors.add(err("request", "事業者コード（9桁）", "9桁の数字を入力してください。"));
 
-            // Conditional: isEmitter
-            if (Boolean.TRUE.equals(request.getIsEmitter())) {
-                if (request.getEmitterCode() == null
-                        || request.getEmitterCode().isBlank()
-                        || !request.getEmitterCode().matches("\\d{9}"))
-                    errors.add(err("request", "事業者コード（9桁）", "9桁の数字を入力してください。"));
-
-                if (!Boolean.TRUE.equals(request.getIsAdjustedEmissionsAdded()))
-                    errors.add(err("request", "調整後排出量への加算", "同意が必要です。"));
-            }
+            if (!Boolean.TRUE.equals(request.getIsAdjustedEmissionsAdded()))
+                errors.add(err("request", "調整後排出量への加算", "同意が必要です。"));
         }
 
         // Conditional: isSubjectToPeriodicReport
-        if (Boolean.TRUE.equals(request.getIsSubjectToPeriodicReport())) {
+        if (request.getIsSubjectToPeriodicReport() == null) {
+            errors.add(err("request",
+                    "定期報告対象者該当",
+                    "選択してください。"));
 
-            if (request.getIsSubjectToPeriodicReport() == null)
-                errors.add(err("request",
-                        "定期報告対象者該当",
-                        "選択してください。"));
+        } else if (Boolean.TRUE.equals(request.getIsSubjectToPeriodicReport())) {
+            if (request.getIsPeriodicReportTypeOne() == null)
+                errors.add(err("request", "第一種・第二種区分", "選択してください。"));
 
-            // Conditional: isSubjectToPeriodicReport
-            if (Boolean.TRUE.equals(request.getIsSubjectToPeriodicReport())) {
-                if (request.getIsPeriodicReportTypeOne() == null)
-                    errors.add(err("request", "第一種・第二種区分", "選択してください。"));
+            if (request.getEnergyBusinessCode() == null
+                    || !request.getEnergyBusinessCode().matches("\\d{7}"))
+                errors.add(err("request", "事業者番号", "7桁の数字を入力してください。"));
 
-                if (request.getEnergyBusinessCode() == null
-                        || !request.getEnergyBusinessCode().matches("\\d{7}"))
-                    errors.add(err("request", "事業者番号", "7桁の数字を入力してください。"));
-
-                if (request.getFactoryCode() == null
-                        || !request.getFactoryCode().matches("\\d{7}"))
-                    errors.add(err("request", "工場等番号", "7桁の数字を入力してください。"));
-            }
+            if (request.getFactoryCode() == null
+                    || !request.getFactoryCode().matches("\\d{7}"))
+                errors.add(err("request", "工場等番号", "7桁の数字を入力してください。"));
         }
 
         if (!errors.isEmpty()) throw new BulkValidationException(errors);
@@ -356,16 +353,22 @@ public class ParticipationProjectValidationServiceImpl implements ParticipationP
             }
         }
 
+        // One ValidationErrorDetail per field. BulkValidationException keys its error map by
+        // "<tempId>::<field>", so a second detail with the same key is discarded by the merge
+        // function and the user is only ever shown the first problem.
+        List<String> fileProblems = new ArrayList<>();
+
         if (f.getS3Key() == null || f.getS3Key().isBlank())
-            errors.add(err(item.getTempId(),
-                    field,
-                    "ファイルのアップロードに失敗しました。もう一度アップロードしてください。"));
+            fileProblems.add("ファイルのアップロードに失敗しました。");
 
         if (f.getFileName() == null || f.getFileName().isBlank())
+            fileProblems.add("ファイル名を取得できませんでした。");
+
+        if (!fileProblems.isEmpty())
             errors.add(err(item.getTempId(),
                     field,
-                    "ファイル名を取得できませんでした。もう一度アップロードしてください。"));
-    });
+                    String.join("", fileProblems) + "もう一度アップロードしてください。"));
+        });
 }
 
     private void validateBattery(EnR002EquipmentRequest item,
