@@ -19,7 +19,8 @@
 --   - migration_2026-07-27_create-participating-project.sql
 --   - monitoring_data_deletion_ddl.sql (monitoring_data_deletion_history,
 --     project.status_finalized_at)
---   - the USER_INVITATION purpose and its two columns on security_action_link
+--   - the USER_INVITATION purpose and its two columns on security_action_link,
+--     with their CHECK constraints and the per-address unique index
 --
 -- operating_user.role: correct set is ('admin','operator'); the live DB's
 -- operating_user_role_check currently allows ('operator','user') instead,
@@ -179,7 +180,14 @@ CREATE TABLE security_action_link (
     -- this infrastructure table is deliberately kept out of the domain graph,
     -- and the site is re-resolved (and may legitimately be gone) at redemption.
     invite_email VARCHAR(254),
-    invite_site_id INT
+    invite_site_id INT,
+    -- An invitation always names the invited address; the site is optional.
+    CONSTRAINT security_action_link_invitation_email_check
+        CHECK (purpose <> 'USER_INVITATION' OR invite_email IS NOT NULL),
+    -- Every other purpose leaves both invitation columns empty.
+    CONSTRAINT security_action_link_invitation_only_check
+        CHECK (purpose = 'USER_INVITATION'
+               OR (invite_email IS NULL AND invite_site_id IS NULL))
 );
 
 -- Account
@@ -687,6 +695,10 @@ CREATE UNIQUE INDEX uq_participating_user_username_ci
     ON participating_user (lower(btrim(username)))
     WHERE (deleted_at IS NULL);
 
+-- One live link per subject and purpose. For USER_INVITATION the invited
+-- address is part of the key, so a company can hold one live invitation per
+-- address; for every other purpose invite_email is NULL and the rule is
+-- unchanged.
 CREATE UNIQUE INDEX uq_security_action_active
-    ON security_action_link (subject_type, subject_id, purpose)
+    ON security_action_link (subject_type, subject_id, purpose, COALESCE(lower(invite_email), ''))
     WHERE (status IN ('PENDING', 'OPENED'));
