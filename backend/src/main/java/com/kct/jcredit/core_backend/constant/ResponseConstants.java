@@ -16,6 +16,7 @@ public class ResponseConstants {
     public static final String USED_USERNAME = "USED_USERNAME";
     public static final String ACCOUNT_LOCKED = "ACCOUNT_LOCKED";
     public static final String FILE_TOO_LARGE = "FILE_TOO_LARGE";
+    public static final String PDF_NOT_READY = "PDF_NOT_READY";
     public static final String UNSUPPORTED_FILE_TYPE = "UNSUPPORTED_FILE_TYPE";
     public static final String ALREADY_SUBMITTED = "ALREADY_SUBMITTED";
     public static final String SUSPENDED = "SUSPENDED";

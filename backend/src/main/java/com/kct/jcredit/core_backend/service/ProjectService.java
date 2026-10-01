@@ -25,7 +25,9 @@ public interface ProjectService {
 
     ProjectResponse updateProject(UpdateProjectRequest request);
 
-    UpdateProjectStatusResponse updateProjectStatus(String newStatus, String projectId);
+    public UpdateProjectStatusResponse updateProjectStatus(String newStatus,
+                                                       String projectId,
+                                                       String processedBy);
 
     ProjectResponse getProject(String projectId, String userCompanyId);
 
@@ -44,7 +46,10 @@ public interface ProjectService {
 
     ProjectCompanyListResponse getProjectCompanies(String projectId);
     
-    ProjectPdfDownloadResponse getMembershipPdfForOperator(String projectId, Integer participationId);
+    public ProjectPdfDownloadResponse getMembershipPdf(String projectId,
+                                                    Integer participationId,
+                                                    String requestingRole,
+                                                    String requestingCompanyId);
 
     void assertProject(String projectId, String currentUserId); 
     

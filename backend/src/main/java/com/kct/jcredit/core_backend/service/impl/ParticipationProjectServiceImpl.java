@@ -179,13 +179,19 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
         OperatorCompany operatorCompany = project.getOperatorCompany();
 
-        String adminRepName = safe(operatorCompany.getRepFirstName())
-                + safe(operatorCompany.getRepLastName());
+        // This page is the membership terms a member company consents to, so it cannot be shown
+        // without naming the operator it is an agreement with. A project with no operator company
+        // is incomplete data, not a display gap.
+        if (operatorCompany == null) {
+        return MemberTermsInfoResponse.builder()
+                .statusCode(ResponseConstants.NOT_FOUND)
+                .message(ResponseConstants.MSG_COMPANY_NOT_FOUND)
+                .build();
+        }
 
-        String effectiveDate = project.getCreatedAt() != null
-                ? project.getCreatedAt().toLocalDate().format(
-                        DateTimeFormatter.ofPattern("yyyy年MM月dd日"))
-                : "";
+        // Japanese name order is family name first, matching UserServiceImpl's mapping.
+        String adminRepName = safe(operatorCompany.getRepLastName())
+                + safe(operatorCompany.getRepFirstName());
 
         return MemberTermsInfoResponse.builder()
                 .statusCode(ResponseConstants.OK)

@@ -74,7 +74,7 @@ public class ProjectFileServiceImpl implements ProjectFileService {
                 .fileType(fileType)
                 .ownedByKanrisha(fileType.isOwnedByKanrisha())
                 .s3Key(s3Key)
-                .originalFileName(sanitizeFileName(file.getOriginalFilename()))
+                .originalFileName(displayFileName(file.getOriginalFilename()))  
                 .build();
         entity.setIsActive(true);
         entity.setCreatedBy(username);
@@ -151,7 +151,8 @@ public class ProjectFileServiceImpl implements ProjectFileService {
     private Integer resolveProjectId(String projectPublicId) {
         return projectRepository.findByPublicIdWithFallback(projectPublicId)
                 .map(Project::getId)
-                .orElseThrow(() -> new ResourceNotFoundException(ResponseConstants.NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ResponseConstants.MSG_PROJECT_NOT_FOUND));
     }
 
     private ProjectFiles getOwnedFile(Integer projectId, Integer fileId) {
@@ -179,7 +180,7 @@ public class ProjectFileServiceImpl implements ProjectFileService {
 
     private String uploadToS3(String username, ProjectFileType fileType, MultipartFile file, Integer projectId) {
         String fileId = "file_" + UUID.randomUUID().toString().substring(0, 8);
-        String cleanName = sanitizeFileName(file.getOriginalFilename());
+        String cleanName = sanitizeForS3Key(file.getOriginalFilename());
         // matches the existing "participation/{id}/{id}/{id}/name.pdf" style —
         // flat numeric path segments, no extra "review-documents" wrapper
         String s3Key = String.format("project/%d/files/%s/%s_%s",
@@ -201,7 +202,20 @@ public class ProjectFileServiceImpl implements ProjectFileService {
         return s3Key;
     }
 
-    private String sanitizeFileName(String originalFilename) {
+    /** Keeps the name readable: only what is unsafe to store or display is stripped. */
+    private String displayFileName(String originalFilename) {
+        if (originalFilename == null || originalFilename.isBlank()) {
+            return "document";
+        }
+        // Drop any directory the browser may have prefixed, and control characters.
+        // Everything else is kept, Japanese included, so the user recognises their own file.
+        String name = originalFilename.replaceAll(".*[/\\\\]", "")
+                                    .replaceAll("\\p{Cntrl}", "");
+        return name.isBlank() ? "document" : name;
+    }
+
+    /** ASCII-safe segment for the S3 key. Never shown to the user. */
+    private String sanitizeForS3Key(String originalFilename) {
         return originalFilename != null
                 ? originalFilename.replaceAll("[^a-zA-Z0-9.-]", "_")
                 : "document";
