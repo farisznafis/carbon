@@ -88,6 +88,11 @@ type AdminDashboardTabValue =
 type ProjectManagementView = 'analytics' | 'management';
 
 type PendingCompanyActionMode = 'approve' | 'reject';
+type ApplicationDetailNavigationState = {
+  company?: AdminCompanyListItem;
+  reviewMode?: boolean;
+  returnTo?: string;
+};
 
 const dashboardContainer = adminPageContainerClassName;
 
@@ -324,17 +329,9 @@ const AdminDashboard = () => {
     useState<PendingCompanyActionMode | null>(null);
   const [selectedCompany, setSelectedCompany] =
     useState<AdminCompanyListItem | null>(null);
-  const [detailCompany, setDetailCompany] =
-    useState<AdminCompanyListItem | null>(
-      (location.state as { company?: AdminCompanyListItem } | null)?.company ??
-        null,
-    );
-  const [detailReviewMode, setDetailReviewMode] = useState(
-    Boolean(
-      (location.state as { reviewMode?: boolean } | null)?.reviewMode ??
-        applicationId,
-    ),
-  );
+  const [unroutedDetailCompany, setUnroutedDetailCompany] =
+    useState<AdminCompanyListItem | null>(null);
+  const [unroutedReviewMode, setUnroutedReviewMode] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
   const requestedTab = new URLSearchParams(location.search).get('tab');
@@ -821,15 +818,23 @@ const AdminDashboard = () => {
       null
     );
   }, [applicationCompanies, applicationId]);
+  const applicationNavigationState = location.state as
+    | ApplicationDetailNavigationState
+    | null;
+  const detailCompany = applicationId
+    ? applicationNavigationState?.company?.id === applicationId
+      ? applicationNavigationState.company
+      : routeApplicationCompany
+    : unroutedDetailCompany;
+  const detailReviewMode = applicationId
+    ? applicationNavigationState?.reviewMode ?? true
+    : unroutedReviewMode;
+  const companyDetailReturnTo =
+    applicationNavigationState?.returnTo === paths.adminDashboard
+      ? paths.adminDashboard
+      : paths.adminCompanyList;
 
-  useEffect(() => {
-    if (!applicationId || detailCompany) return;
-    if (routeApplicationCompany) {
-      setDetailCompany(routeApplicationCompany);
-      setDetailReviewMode(true);
-    }
-  }, [applicationId, detailCompany, routeApplicationCompany]);
-
+  /** Opens a company application detail while preserving its source page. */
   const openCompanyDetails = (item: AdminCompanyListItem) => {
     const requiredPermission =
       item.status === 'ACTIVE' || item.status === 'SUSPENDED'
@@ -847,13 +852,15 @@ const AdminDashboard = () => {
 
     if (item.id) {
       navigate(paths.adminApplicationDetail(item.id), {
-        state: { company: item, reviewMode: false },
+        state: { company: item, reviewMode: false, returnTo: location.pathname },
       });
+      return;
     }
-    setDetailCompany(item);
-    setDetailReviewMode(false);
+    setUnroutedDetailCompany(item);
+    setUnroutedReviewMode(false);
   };
 
+  /** Opens a pending application with review actions available. */
   const openCompanyReview = (item: AdminCompanyListItem) => {
     if (
       !adminPermissions.hasPermission(
@@ -869,11 +876,12 @@ const AdminDashboard = () => {
 
     if (item.id) {
       navigate(paths.adminApplicationDetail(item.id), {
-        state: { company: item, reviewMode: true },
+        state: { company: item, reviewMode: true, returnTo: location.pathname },
       });
+      return;
     }
-    setDetailCompany(item);
-    setDetailReviewMode(true);
+    setUnroutedDetailCompany(item);
+    setUnroutedReviewMode(true);
   };
 
   /** Opens actionable applications in review mode and historical ones read-only. */
@@ -886,12 +894,14 @@ const AdminDashboard = () => {
     openCompanyDetails(item);
   };
 
+  /** Returns to the source list and clears details without a route ID. */
   const closeCompanyDetail = () => {
-    setDetailCompany(null);
-    setDetailReviewMode(false);
     if (applicationId) {
-      navigate(paths.adminDashboard);
+      navigate(companyDetailReturnTo);
+      return;
     }
+    setUnroutedDetailCompany(null);
+    setUnroutedReviewMode(false);
   };
 
   const openApproveCompany = (item: AdminCompanyListItem) => {
@@ -1041,7 +1051,7 @@ const AdminDashboard = () => {
     );
   }
 
-  if (detailCompany || applicationId) {
+  if (applicationId || unroutedDetailCompany) {
     return (
       <>
         {detailCompany ? (
