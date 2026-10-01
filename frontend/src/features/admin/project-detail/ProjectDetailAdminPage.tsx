@@ -39,11 +39,8 @@ import {
 } from '@/hooks/admin/useAdminProjectDetailQuery';
 import { paths } from '@/routes/paths';
 import { AdminProjectDetailLayout } from './AdminProjectDetailLayout';
-import {
-  formatProjectDetailValue,
-  formatProjectEmission,
-  toProjectDetailNumber,
-} from './projectDetailDisplay';
+import { ProjectEmissionTrendCard } from './components/ProjectEmissionTrendCard';
+import { formatProjectDetailValue } from './projectDetailDisplay';
 
 const DEFAULT_MONITORING_PAGE = 1;
 const DEFAULT_MONITORING_LIMIT = 10;
@@ -77,15 +74,6 @@ function getMethodologyCode(project: AdminProjectDetail) {
     .filter(Boolean)
     .join('-');
   return methodologyCode || '—';
-}
-
-/** Calculates a bounded comparison percentage without treating missing data as zero. */
-function getEmissionComparisonPercentage(
-  value: number | null,
-  baseline: number | null,
-) {
-  if (value == null || baseline == null || baseline <= 0) return 0;
-  return Math.min(100, Math.max(0, (value / baseline) * 100));
 }
 
 /** Renders the best-effort project-plan progress summary. */
@@ -147,66 +135,6 @@ function ProjectPlanProgressCard({
             計画書の進捗情報はありません。
           </p>
         )}
-      </CardContent>
-    </Card>
-  );
-}
-
-/** Renders actual project emissions as a baseline comparison. */
-function ProjectEmissionSummaryCard({
-  project,
-}: Readonly<{ project: AdminProjectDetail }>) {
-  const baselineEmission = toProjectDetailNumber(
-    project.baselineEmissions ?? project.baselineEmission,
-  );
-  const projectEmission = toProjectDetailNumber(
-    project.postProjectEmissions ?? project.postProjectEmission,
-  );
-  const reduction = toProjectDetailNumber(project.emissionReduction);
-
-  return (
-    <Card className="h-full rounded-xl border-border shadow-app-sm">
-      <CardHeader className="gap-2">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <CardTitle>排出量サマリ</CardTitle>
-          <p className="text-small font-bold text-primary-strong">
-            削減量 {formatProjectEmission(reduction)}
-          </p>
-        </div>
-        <CardDescription>
-          ベースラインとプロジェクト排出量を比較します。
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3 text-small">
-            <span className="text-muted-foreground">ベースライン</span>
-            <span className="font-medium text-foreground">
-              {formatProjectEmission(baselineEmission)}
-            </span>
-          </div>
-          <Progress
-            value={baselineEmission != null && baselineEmission > 0 ? 100 : 0}
-            className="h-2"
-            aria-label={`ベースライン ${formatProjectEmission(baselineEmission)}`}
-          />
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3 text-small">
-            <span className="text-muted-foreground">プロジェクト排出量</span>
-            <span className="font-medium text-foreground">
-              {formatProjectEmission(projectEmission)}
-            </span>
-          </div>
-          <Progress
-            value={getEmissionComparisonPercentage(
-              projectEmission,
-              baselineEmission,
-            )}
-            className="h-2"
-            aria-label={`プロジェクト排出量 ${formatProjectEmission(projectEmission)}`}
-          />
-        </div>
       </CardContent>
     </Card>
   );
@@ -413,18 +341,22 @@ export default function ProjectDetailAdmin() {
         aria-label="プロジェクトサマリ"
         className="grid items-stretch gap-4 xl:grid-cols-3"
       >
-        <ProjectPlanProgressCard
-          completedForms={completedForms}
-          totalForms={totalForms}
-          isLoading={progressQuery.isLoading}
-          hasError={progressQuery.isError}
+        <ProjectEmissionTrendCard
+          projectId={projectId}
+          project={project}
+          className="xl:col-span-2 xl:row-span-2"
         />
-        <ProjectEmissionSummaryCard project={project} />
         <ProjectOverviewCard
           project={project}
           onOpenInformation={() =>
             navigate(paths.adminProjectInformation(projectId))
           }
+        />
+        <ProjectPlanProgressCard
+          completedForms={completedForms}
+          totalForms={totalForms}
+          isLoading={progressQuery.isLoading}
+          hasError={progressQuery.isError}
         />
       </section>
 

@@ -18,6 +18,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ProjectCompletionDialog } from './ProjectCompletionDialog';
+import {
+  INCOMPLETE_PLAN_LABEL,
+  isPlanEntryIncomplete,
+} from '../planProgressStatus';
 import { formatProjectDateTime } from '../projectStatusPresentation';
 import { cn } from '@/lib/utils';
 
@@ -309,15 +313,21 @@ export function ProjectTable({
         const resumeSlug = progress.complete
           ? undefined
           : (progress.nextIncompleteSlug ?? undefined);
+        const isIncomplete = isPlanEntryIncomplete(progress);
 
         return (
-          <div className="flex min-w-0 items-center gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
             <span className="whitespace-nowrap text-body text-foreground">
               <span className="font-bold">{progress.completedForms}</span>
               <span className="text-foreground">
                 /{progress.totalForms} ページ
               </span>
             </span>
+            {isIncomplete && (
+              <span className="rounded-full border border-warning-border bg-warning-subtle px-2 py-0.5 text-subtle font-bold text-warning-strong">
+                {INCOMPLETE_PLAN_LABEL}
+              </span>
+            )}
             {onOpenPlan && (
               <span {...stopRowActivation}>
                 <Button
@@ -442,6 +452,11 @@ export function ProjectTable({
         getRowKey={(project) => project.id}
         emptyMessage="まだプロジェクトが登録されていません。"
         onRowClick={onRowClick}
+        getRowClassName={(project) =>
+          isPlanEntryIncomplete(planProgress?.get(String(project.id)))
+            ? 'bg-warning-subtle/50 shadow-[inset_3px_0_0_hsl(var(--warning))]'
+            : undefined
+        }
       />
       <ProjectCompletionDialog
         project={completionProject}

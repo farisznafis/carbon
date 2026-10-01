@@ -1,6 +1,7 @@
 export {
   getBatchHistory,
   getEmissionTrend,
+  getProjectEmissionHistory,
   getProjectEmissionSummary,
 } from './queries';
 export type {
@@ -10,6 +11,7 @@ export type {
   BatchHistoryResult,
   EmissionTrendPoint,
   ProjectEmissionBreakdown,
+  ProjectEmissionHistoryPoint,
   ProjectEmissionSummary,
   ProjectReductionResultResponse,
   ReductionResultApiItem,
