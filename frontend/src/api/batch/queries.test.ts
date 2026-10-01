@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   normalizeEmissionTrendResponse,
   normalizeProjectEmissionBreakdownResponse,
+  normalizeProjectEmissionHistoryResponse,
   normalizeProjectEmissionSummaryResponse,
 } from './queries';
 
@@ -170,5 +171,40 @@ describe('normalizeProjectEmissionSummaryResponse', () => {
         batteryEmission: 3.5,
       },
     });
+  });
+});
+
+describe('normalizeProjectEmissionHistoryResponse', () => {
+  it('derives per-period reductions and sorts chronologically', () => {
+    expect(
+      normalizeProjectEmissionHistoryResponse({
+        items: [
+          { processing_date: '2026-03-31', embl: '12', empj: 9.5 },
+          { processing_date: '2026-02-28', embl: 12, empj: null },
+        ],
+      }),
+    ).toEqual([
+      {
+        period: '2026-02-28',
+        baselineEmission: 12,
+        projectEmission: null,
+        reduction: null,
+      },
+      {
+        period: '2026-03-31',
+        baselineEmission: 12,
+        projectEmission: 9.5,
+        reduction: 2.5,
+      },
+    ]);
+  });
+
+  it('drops periods without a date or any emission value', () => {
+    expect(
+      normalizeProjectEmissionHistoryResponse([
+        { embl: 12, empj: 9 },
+        { processing_date: '2026-01-31' },
+      ]),
+    ).toEqual([]);
   });
 });

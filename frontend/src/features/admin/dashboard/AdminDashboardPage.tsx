@@ -4,7 +4,6 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom';
-import { useRef } from 'react';
 import { ApiError, isForbiddenApiError } from '@/api/_shared/errors';
 import type {
   AdminCompanyListItem,
@@ -61,6 +60,10 @@ import {
 } from './AdminDashboardOverview';
 import { AdminProjectOverviewCards } from './AdminProjectOverviewCards';
 import {
+  INCOMPLETE_PLAN_LABEL,
+  isPlanEntryIncomplete,
+} from './planProgressStatus';
+import {
   normalizeProjectStatus,
   PROJECT_STATUS_PRESENTATIONS,
 } from './projectStatusPresentation';
@@ -91,7 +94,6 @@ const APPLICATION_STATUSES: CompanyStatus[] = ['PENDING', 'REJECTED'];
 const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
 const HOME_APPLICATION_SUMMARY_LIMIT = 3;
 const ALL_PROJECT_FILTER = 'ALL';
-const IN_PROGRESS_PROJECT_STATUS = '準備中';
 const FORBIDDEN_SECTION_ERROR = '__FORBIDDEN_SECTION__';
 
 const DEFAULT_PAGINATION: Pagination = {
@@ -308,11 +310,11 @@ const AdminDashboard = () => {
   const [projectStatusFilter, setProjectStatusFilter] = useState(
     ALL_PROJECT_FILTER,
   );
-  const [projectMethodologyFilter, setProjectMethodologyFilter] = useState(
+  const [projectMethodologyFilter] = useState(
     ALL_PROJECT_FILTER,
   );
   const [projectSearchQuery, setProjectSearchQuery] = useState('');
-  const projectListHeadingRef = useRef<HTMLHeadingElement>(null);
+  const [showIncompletePlanOnly, setShowIncompletePlanOnly] = useState(false);
   const [pendingDialogOpen, setPendingDialogOpen] = useState(false);
   const [pendingDialogMode, setPendingDialogMode] =
     useState<PendingCompanyActionMode | null>(null);
@@ -685,17 +687,24 @@ const AdminDashboard = () => {
         getProjectMethodologyFilterValue(project) ===
           projectMethodologyFilter;
 
+      const matchesPlanProgress =
+        !showIncompletePlanOnly ||
+        isPlanEntryIncomplete(planProgress.get(String(project.id)));
+
       return (
         matchesStatus &&
         matchesMethodology &&
+        matchesPlanProgress &&
         matchesProjectSearch(project, normalizedQuery)
       );
     });
   }, [
+    planProgress,
     projectMethodologyFilter,
     projectSearchQuery,
     projectStatusFilter,
     projects,
+    showIncompletePlanOnly,
   ]);
 
   const {
@@ -708,21 +717,6 @@ const AdminDashboard = () => {
     setCurrentPage: setProjectPage,
     setItemsPerPage: setProjectItemsPerPage,
   } = usePagination(filteredProjects);
-
-  /** Filters the table by the API's in-progress status and moves focus to the result list. */
-  const handleShowAllInProgressProjects = () => {
-    setProjectStatusFilter(IN_PROGRESS_PROJECT_STATUS);
-    setProjectMethodologyFilter(ALL_PROJECT_FILTER);
-    setProjectSearchQuery('');
-    setProjectPage(1);
-    window.requestAnimationFrame(() => {
-      projectListHeadingRef.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      });
-      projectListHeadingRef.current?.focus({ preventScroll: true });
-    });
-  };
 
   const handleEditProject = (project: Project) => {
     adminPermissions.guardAction('PROJECT_READ', () => {
@@ -1303,20 +1297,6 @@ const AdminDashboard = () => {
               <AdminPageHeader
                 title="プロジェクト管理"
                 description="登録済みプロジェクトの詳細確認、更新、ステータス変更を行えます。"
-                action={
-                  <Button
-                    type="button"
-                    size="md"
-                    onClick={() =>
-                      adminPermissions.guardAction('PROJECT_CREATE', () =>
-                        navigate(paths.adminProjectRegister),
-                      )
-                    }
-                  >
-                    <Plus className="h-4 w-4" />
-                    プロジェクトを追加
-                  </Button>
-                }
               />
               {!projectSectionAllowed ? (
                 <PermissionDeniedNotice permission="PROJECT_READ" />
@@ -1325,42 +1305,74 @@ const AdminDashboard = () => {
                   projects={projects}
                   projectsLoading={projectsQuery.isLoading}
                   projectsError={projectsError}
-                  planProgress={planProgress}
-                  planProgressLoading={planProgressLoading}
-                  planProgressError={planProgressError}
-                  onOpenPlan={handleOpenPlan}
-                  onShowAllInProgress={handleShowAllInProgressProjects}
                 />
 
                 <AdminTableCard
                   title="プロジェクト一覧"
                   count={projectTotalItems}
-                  headingRef={projectListHeadingRef}
-                  filters={
-                    <Select
-                      value={projectStatusFilter}
-                      onValueChange={(value) => {
-                        setProjectStatusFilter(value);
-                        setProjectPage(1);
-                      }}
+                  description={
+                    <span className="inline-flex flex-wrap items-center gap-2">
+                      <span
+                        aria-hidden="true"
+                        className="h-3 w-3 shrink-0 rounded-sm border border-warning-border bg-warning-subtle"
+                      />
+                      計画書の記入が完了していないプロジェクトはハイライト表示されます。
+                    </span>
+                  }
+                  action={
+                    <Button
+                      type="button"
+                      size="md"
+                      onClick={() =>
+                        adminPermissions.guardAction('PROJECT_CREATE', () =>
+                          navigate(paths.adminProjectRegister),
+                        )
+                      }
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="ステータス" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={ALL_PROJECT_FILTER}>
-                          すべてのステータス
-                        </SelectItem>
-                        {PROJECT_STATUS_PRESENTATIONS.map((presentation) => (
-                          <SelectItem
-                            key={presentation.status}
-                            value={presentation.status}
-                          >
-                            {presentation.status}
+                      <Plus className="h-4 w-4" />
+                      プロジェクトを追加
+                    </Button>
+                  }
+                  filters={
+                    <>
+                      <Select
+                        value={projectStatusFilter}
+                        onValueChange={(value) => {
+                          setProjectStatusFilter(value);
+                          setProjectPage(1);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="ステータス" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={ALL_PROJECT_FILTER}>
+                            すべてのステータス
                           </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                          {PROJECT_STATUS_PRESENTATIONS.map((presentation) => (
+                            <SelectItem
+                              key={presentation.status}
+                              value={presentation.status}
+                            >
+                              {presentation.status}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant={showIncompletePlanOnly ? 'primary' : 'outline'}
+                        aria-pressed={showIncompletePlanOnly}
+                        disabled={planProgressLoading || Boolean(planProgressError)}
+                        title={planProgressError ?? undefined}
+                        onClick={() => {
+                          setShowIncompletePlanOnly((current) => !current);
+                          setProjectPage(1);
+                        }}
+                      >
+                        {INCOMPLETE_PLAN_LABEL}のみ表示
+                      </Button>
+                    </>
                   }
                   search={
                     <>
