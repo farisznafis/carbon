@@ -1,6 +1,7 @@
 package com.kct.jcredit.core_backend.service.impl;
 
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
+import com.kct.jcredit.core_backend.constant.RoleConstants;
 import com.kct.jcredit.core_backend.dto.request.CreateProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.UpdateProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.details.ProjectDtoReq;
@@ -54,6 +55,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.Optional;
@@ -72,7 +74,9 @@ public class ProjectServiceImpl implements ProjectService {
     private final SiteProjectRelationRepository siteProjectRelationRepository;
     private final OperatingUserRepository userRepository;
     
-    
+    private static final String STATUS_CLOSED = "終了";
+    private static final Set<String> ALLOWED_PROJECT_STATUSES =
+            Set.of("下書き", "公開", STATUS_CLOSED);
 
     ZoneId USER_ZONE = ZoneId.of("Asia/Tokyo");
     ZoneId DB_ZONE   = ZoneId.of("Asia/Tokyo");
@@ -593,11 +597,15 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public UpdateProjectStatusResponse updateProjectStatus(String newStatus, String projectId) {
+    @Transactional
+    public UpdateProjectStatusResponse updateProjectStatus(String newStatus,
+                                                        String projectId,
+                                                        String processedBy) {
         UpdateProjectStatusResponse response = new UpdateProjectStatusResponse();
+
         Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
-            .map(Project::getId)
-            .orElse(null);
+                .map(Project::getId)
+                .orElse(null);
         Project project = null;
         if (projectDbId != null) {
             project = projectRepository.findById(projectDbId).orElse(null);
@@ -608,18 +616,30 @@ public class ProjectServiceImpl implements ProjectService {
             return response;
         }
 
-        if(project.getIsActive() != null && !project.getIsActive()) {
+        // Input validation before state checks: an unknown status must never reach the entity,
+        // because the column has no constraint and the value is compared against literals
+        // everywhere else.
+        if (!ALLOWED_PROJECT_STATUSES.contains(newStatus)) {
+            response.setStatusCode(ResponseConstants.BAD_REQUEST);
+            response.setMessage("指定されたステータスは有効ではありません。");
+            return response;
+        }
+
+        if (project.getIsActive() != null && !project.getIsActive()) {
             response.setStatusCode(ResponseConstants.FORBIDDEN);
             response.setMessage(ResponseConstants.MSG_FORBIDDEN);
             return response;
         }
-        if(project.getProjectStatus().equals(newStatus)) {
+
+        // Objects.equals: a row created before this column was populated has a null status,
+        // and project.getProjectStatus().equals(...) would throw there with no try/catch.
+        if (Objects.equals(project.getProjectStatus(), newStatus)) {
             response.setStatusCode(ResponseConstants.BAD_REQUEST);
             response.setMessage("プロジェクトはすでにこのステータスです。");
             return response;
         }
 
-        if ("終了".equals(project.getProjectStatus())) {
+        if (STATUS_CLOSED.equals(project.getProjectStatus())) {
             response.setStatusCode(ResponseConstants.BAD_REQUEST);
             response.setMessage("終了したプロジェクトのステータスは変更できません。");
             return response;
@@ -627,11 +647,12 @@ public class ProjectServiceImpl implements ProjectService {
 
         String previousStatus = project.getProjectStatus();
 
-        if ("終了".equals(newStatus)) {
+        if (STATUS_CLOSED.equals(newStatus)) {
             project.setStatusFinalizedAt(LocalDateTime.now());
         }
 
         project.setProjectStatus(newStatus);
+        project.setUpdatedBy(processedBy);
 
         Project updatedProject = projectRepository.save(project);
 
@@ -679,29 +700,55 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectPdfDownloadResponse getMembershipPdfForOperator(String projectId, Integer participationId) {
+    public ProjectPdfDownloadResponse getMembershipPdf(String projectId,
+                                                    Integer participationId,
+                                                    String requestingRole,
+                                                    String requestingCompanyId) {
 
         Integer projectDbId = projectRepository.findByPublicIdWithFallback(projectId)
                 .map(Project::getId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND, ResponseConstants.MSG_PROJECT_NOT_FOUND));
 
+        // Already enforced: the participation must belong to this project, otherwise any
+        // projectId in the path could be paired with any participationId.
         ParticipatingProject participation = participatingProjectRepository
                 .findByIdAndProject_Id(participationId, projectDbId)
                 .orElseThrow(() -> new CustomException(
                         ResponseConstants.NOT_FOUND, "参加情報が見つかりません。"));
 
+        // Allowlist, not denylist: only the operator-side roles may read another company's
+        // application, so a role added later is company-scoped by default.
+        boolean crossCompanyAllowed = RoleConstants.ADMIN.equals(requestingRole)
+                || RoleConstants.OPERATOR.equals(requestingRole);
+
+        if (!crossCompanyAllowed) {
+            ParticipatingCompany owner =
+                    participation.getEquipment() == null || participation.getEquipment().getSite() == null
+                            ? null
+                            : participation.getEquipment().getSite().getCompany();
+
+            if (owner == null || !requestingCompanyId.equals(owner.getCompanyId())) {
+                throw new CustomException(
+                        ResponseConstants.FORBIDDEN, ResponseConstants.MSG_FORBIDDEN);
+            }
+        }
+
         String s3Key = participation.getS3KeyPdfMembership();
         if (s3Key == null || s3Key.isBlank()) {
-            throw new CustomException("PDF_NOT_READY", "PDFはまだ準備できていません。");
+            throw new CustomException(
+                    ResponseConstants.PDF_NOT_READY, "PDFはまだ準備できていません。");
         }
 
         String presignedUrl = pdfService.generatePresignedUrl(s3Key);
 
-        return ProjectPdfDownloadResponse.builder()
+        ProjectPdfDownloadResponse response = ProjectPdfDownloadResponse.builder()
                 .pdfUrl(presignedUrl)
                 .expiresIn(900)
                 .build();
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage("PDFのダウンロードURLを取得しました。");
+        return response;
     }
 
     @Override
