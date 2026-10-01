@@ -87,7 +87,7 @@ import org.springframework.security.core.Authentication;
  * these instantiations will fail to compile and must be adjusted.
  */
 @ExtendWith(MockitoExtension.class)
-class NotificationControllerTest {
+class NotificationControllerTestOld {
 
     @Mock
     private JwtUtil jwtUtil;

@@ -1,4 +1,4 @@
-package com.kct.jcredit.core_backend.controller;
+package com.kct.jcredit.core_backend.controller.NotificationControllerTest;
 
 import com.kct.jcredit.core_backend.service.NotificationMessages;
 import com.kct.jcredit.core_backend.service.NotificationService;
@@ -25,7 +25,7 @@ import com.kct.jcredit.core_backend.entity.OperatingUser;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.constant.ResponseConstants;
-
+import com.kct.jcredit.core_backend.controller.NotificationController;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 
 //import com.kct.jcredit.core_backend.dto.response.BaseResponse;

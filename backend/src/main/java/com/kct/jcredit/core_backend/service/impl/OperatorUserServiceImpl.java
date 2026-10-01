@@ -266,18 +266,6 @@ public class OperatorUserServiceImpl implements OperatorUserService {
     }
 
     @Override
-    @Transactional
-    public void changePassword(String targetUsername, String newPassword) {
-        OperatingUser user = operatingUserRepository.findByUsername(targetUsername)
-                .orElseThrow(() -> new IllegalArgumentException(ResponseConstants.MSG_USER_NOT_FOUND));
-
-        user.setPassword(passwordEncoder.encode(newPassword));
-        user.setUpdatedAt(LocalDateTime.now());
-        operatingUserRepository.save(user);
-        tokenBlacklistService.recordPasswordChange(user.getUsername());
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public UserProfileResponse getOperatorUserProfileById(Integer userId, Integer requestingId, String requestingRole, String requestingCompanyId) {
         UserProfileResponse response = new UserProfileResponse();
@@ -289,6 +277,12 @@ public class OperatorUserServiceImpl implements OperatorUserService {
         }
 
         if (!requestingRole.equalsIgnoreCase(RoleConstants.ADMIN) && !user.getId().equals(requestingId)) {
+            response.setStatusCode(ResponseConstants.FORBIDDEN);
+            response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+            return response;
+        }
+
+        if(requestingCompanyId != null && !requestingCompanyId.equals(user.getCompany().getCompanyId())) {
             response.setStatusCode(ResponseConstants.FORBIDDEN);
             response.setMessage(ResponseConstants.MSG_FORBIDDEN);
             return response;

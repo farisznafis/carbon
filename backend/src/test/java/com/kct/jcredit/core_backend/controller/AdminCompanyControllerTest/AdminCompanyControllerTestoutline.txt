@@ -1,0 +1,555 @@
+package com.kct.jcredit.core_backend.controller.AdminCompanyControllerTest;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+/**
+ * AdminCompanyController and backing service unit-test outline.
+ *
+ */
+class AdminCompanyControllerTest {
+    @Nested
+    @DisplayName("GET /admin/companies のテスト")
+    class GetCompaniesTest {
+
+        @Test
+        @DisplayName("UT-ACC-001: 有効な検索条件がServiceへ渡り、レスポンスがそのまま返る")
+        void getCompanies_validQuery_returnsServiceResponseAsIs() {
+            // Input: query: status="ACTIVE", keyword="テスト", page=1, limit=20
+            //        （Serviceが成功レスポンス(statusCode=OK)を返すようモック）
+            // Output: HTTPステータス200、レスポンスボディがServiceの戻り値と一致すること
+            //         findCompaniesに同一queryインスタンスが渡っていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-002: Serviceがエラー系statusCodeを返した場合のHTTPステータス変換確認")
+        void getCompanies_serviceReturnsError_convertsHttpStatus() {
+            // Input: query: status="ACTIVE", keyword=null, page=1, limit=20
+            //        （Serviceがエラーレスポンス(statusCode=BAD_REQUEST等)を返すようモック）
+            // Output: ResponseUtil.getHttpStatusで変換されたエラーステータスとエラーボディが返却される
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // POST /admin/companies/{companyId}/approve
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("POST /admin/companies/{companyId}/approve のテスト")
+    class ApproveCompanyTest {
+
+        @Test
+        @DisplayName("UT-ACC-003: 申請中企業のcompanyIdがServiceへ渡り、承認成功結果が返る")
+        void approveCompany_validCompanyId_returnsServiceSuccessResponse() {
+            // Input: companyId="COMP-001"（Serviceが成功レスポンス(statusCode=OK)を返すようモック）
+            // Output: HTTPステータス200、Serviceの返すApproveCompanyResponseがそのまま返却される
+            //         approveCompanyにcompanyId="COMP-001"が渡っていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-004: ServiceがNOT_FOUND等のエラーレスポンスを返した場合のステータス変換確認")
+        void approveCompany_serviceReturnsError_convertsHttpStatus() {
+            // Input: companyId="COMP-404"（Serviceがstatus=NOT_FOUNDを返すようモック）
+            // Output: HTTPステータス404、statusCode=NOT_FOUNDのレスポンスが返却される
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // POST /admin/companies/{companyId}/reject
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("POST /admin/companies/{companyId}/reject のテスト")
+    class RejectCompanyTest {
+
+        @Test
+        @DisplayName("UT-ACC-005: 有効な却下理由がServiceへ渡り、却下成功結果が返る")
+        void rejectCompany_validRequest_returnsServiceSuccessResponse() {
+            // Input: companyId="COMP-001", request.rejectionReason="書類不備"
+            //        （Serviceが成功レスポンス(statusCode=OK)を返すようモック）
+            // Output: HTTPステータス200、Serviceの返すRejectCompanyResponseがそのまま返却される
+            //         rejectCompanyにcompanyId・rejectionReasonが渡っていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-006: rejectionReasonが不正/欠落し@Validでバリデーションエラーとなる")
+        void rejectCompany_invalidRejectionReason_returnsValidationError() {
+            // Input: companyId="COMP-001", request.rejectionReason=""（または欠落）
+            // Output: HTTPステータス400、バリデーションエラーレスポンスが返却される
+            //         Serviceのreject Companyが呼ばれないこと
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // POST /admin/companies/{companyId}/master-setup-link/resend
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("POST /admin/companies/{companyId}/master-setup-link/resend のテスト")
+    class ResendMasterSetupLinkTest {
+
+        @Test
+        @DisplayName("UT-ACC-007: 有効なcompanyIdがServiceへ渡り、再送成功結果が返る")
+        void resendMasterSetupLink_validCompanyId_returnsServiceSuccessResponse() {
+            // Input: companyId="COMP-001"（Serviceが成功レスポンス(statusCode=OK)を返すようモック）
+            // Output: HTTPステータス200、Serviceの返すApproveCompanyResponseがそのまま返却される
+            //         resendMasterSetupLinkにcompanyId="COMP-001"が渡っていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-008: ServiceがNOT_FOUND等のエラーレスポンスを返した場合のステータス変換確認")
+        void resendMasterSetupLink_serviceReturnsError_convertsHttpStatus() {
+            // Input: companyId="COMP-404"（Serviceがstatus=NOT_FOUNDを返すようモック）
+            // Output: HTTPステータス404、statusCode=NOT_FOUNDのレスポンスが返却される
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // POST /admin/companies/{companyId}/password-reset-link
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("POST /admin/companies/{companyId}/password-reset-link のテスト")
+    class RequestMasterPasswordResetTest {
+
+        @Test
+        @DisplayName("UT-ACC-009: JWTのusernameとcompanyIdがServiceへ渡り、成功結果が返る")
+        void requestMasterPasswordReset_validRequest_returnsServiceSuccessResponse() {
+            // Input: companyId="COMP-001", Authentication.credentialsにJWT
+            //        （jwtUtil.extractUsernameが"admin@example.com"を返すようモック）
+            //        （Serviceが成功レスポンス(statusCode=OK)を返すようモック）
+            // Output: HTTPステータス200、Serviceの返すBaseResponseがそのまま返却される
+            //         operatorRequestMasterPasswordResetにcompanyId・actor="admin@example.com"が渡っていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-010: ServiceがNOT_FOUND等のエラーレスポンスを返した場合のステータス変換確認")
+        void requestMasterPasswordReset_serviceReturnsError_convertsHttpStatus() {
+            // Input: companyId="COMP-404", Authentication.credentialsにJWT
+            //        （Serviceがstatus=NOT_FOUNDを返すようモック）
+            // Output: HTTPステータス404、statusCode=NOT_FOUNDのレスポンスが返却される
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // GET /admin/companies/{companyId}
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("GET /admin/companies/{companyId} のテスト")
+    class GetCompanyDetailTest {
+
+        @Test
+        @DisplayName("UT-ACC-011: 有効なcompanyIdがServiceへ渡り、企業詳細がそのまま返る")
+        void getCompanyDetail_validCompanyId_returnsServiceResponseAsIs() {
+            // Input: companyId="COMP-001"（Serviceが成功レスポンス(statusCode=OK)を返すようモック）
+            // Output: HTTPステータス200、Serviceの返すAdminCompanyDetailResponseがそのまま返却される
+            //         findCompanyDetailにcompanyId="COMP-001"が渡っていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-012: ServiceがNOT_FOUNDレスポンスを返した場合のステータス変換確認")
+        void getCompanyDetail_serviceReturnsNotFound_convertsHttpStatus404() {
+            // Input: companyId="COMP-404"（Serviceがstatus=NOT_FOUNDを返すようモック）
+            // Output: HTTPステータス404、statusCode=NOT_FOUNDのレスポンスが返却される
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // POST /admin/companies/{companyId}/suspensions
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("POST /admin/companies/{companyId}/suspensions のテスト")
+    class CreateSuspensionTest {
+
+        @Test
+        @DisplayName("UT-ACC-013: 有効なリクエストがServiceへ渡り、登録成功結果が返る")
+        void createSuspension_validRequest_returnsServiceSuccessResponse() {
+            // Input: companyId="COMP-001", request: reason="規約違反", 必須項目あり
+            //        （Serviceが成功レスポンス(statusCode=OK)を返すようモック）
+            // Output: HTTPステータス200、Serviceの返すCompanySuspensionResponseがそのまま返却される
+            //         createSuspensionにcompanyId・requestが渡っていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-014: 必須項目（reason等）が欠落し@Validでバリデーションエラーとなる")
+        void createSuspension_invalidRequest_returnsValidationError() {
+            // Input: companyId="COMP-001", request: reason=""（または欠落）
+            // Output: HTTPステータス400、バリデーションエラーレスポンスが返却される
+            //         Serviceのcreate Suspensionが呼ばれないこと
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // GET /admin/companies/{companyId}/suspensions
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("GET /admin/companies/{companyId}/suspensions のテスト")
+    class GetSuspensionsTest {
+
+        @Test
+        @DisplayName("UT-ACC-015: フィルターとページ情報がServiceへ渡り、一覧結果が返る")
+        void getSuspensions_validParams_returnsServiceResponseAsIs() {
+            // Input: companyId="COMP-001", activeOnly=false, page=2, limit=10
+            //        （Serviceが成功レスポンス(statusCode=OK)を返すようモック）
+            // Output: HTTPステータス200、Serviceの返すCompanySuspensionListResponseがそのまま返却される
+            //         findSuspensionsにcompanyId・activeOnly=false・page=2・limit=10が渡っていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-016: page/limitが範囲外の場合@Min/@Maxでバリデーションエラーとなる")
+        void getSuspensions_outOfRangePageOrLimit_returnsValidationError() {
+            // Input: companyId="COMP-001", activeOnly=true, page=0（1未満）, limit=200（100超）
+            // Output: HTTPステータス400、バリデーションエラーレスポンスが返却される
+            //         Serviceのfind Suspensionsが呼ばれないこと
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // POST /admin/companies/{companyId}/suspensions/{suspensionId}/resolve
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("POST /admin/companies/{companyId}/suspensions/{suspensionId}/resolve のテスト")
+    class ResolveSuspensionTest {
+
+        @Test
+        @DisplayName("UT-ACC-017: 有効なリクエストがServiceへ渡り、解除成功結果が返る")
+        void resolveSuspension_validRequest_returnsServiceSuccessResponse() {
+            // Input: companyId="COMP-001", suspensionId=10, request: resolutionNote="対応完了"
+            //        （Serviceが成功レスポンス(statusCode=OK)を返すようモック）
+            // Output: HTTPステータス200、Serviceの返すCompanySuspensionResponseがそのまま返却される
+            //         resolveSuspensionにcompanyId・suspensionId・requestが渡っていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-018: ServiceがNOT_FOUND等のエラーレスポンスを返した場合のステータス変換確認")
+        void resolveSuspension_serviceReturnsError_convertsHttpStatus() {
+            // Input: companyId="COMP-001", suspensionId=99999, request: resolutionNote="対応完了"
+            //        （Serviceがstatus=NOT_FOUNDを返すようモック）
+            // Output: HTTPステータス404、statusCode=NOT_FOUNDのレスポンスが返却される
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // GET /admin/companies/participate/project/{projectId}
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("GET /admin/companies/participate/project/{projectId} のテスト")
+    class GetParticipationsByProjectTest {
+
+        @Test
+        @DisplayName("UT-ACC-019: 有効なprojectIdがServiceへ渡り、一覧結果が返る")
+        void getParticipationsByProject_validProjectId_returnsServiceListAsIs() {
+            // Input: projectId="PROJECT-001"
+            //        （Serviceが対象プロジェクトの一覧を返すようモック）
+            // Output: HTTPステータス200、Serviceの返す一覧がそのまま返却される
+            //         getParticipationsByProjectにprojectId="PROJECT-001"が渡っていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-020: 対象プロジェクトの申請が存在しない場合、空リストが返る")
+        void getParticipationsByProject_noMatchingParticipations_returnsEmptyList() {
+            // Input: projectId="PROJECT-999"
+            //        （Serviceが空リストを返すようモック）
+            // Output: HTTPステータス200、空リストが返却される
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // GET /admin/companies/participate/pending
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("GET /admin/companies/participate/pending のテスト")
+    class GetPendingReviewsTest {
+
+        @Test
+        @DisplayName("UT-ACC-021: Serviceのレビュー待ち一覧がそのまま返る")
+        void getPendingReviews_returnsServiceListAsIs() {
+            // Input: なし（Serviceがレビュー待ち一覧を返すようモック）
+            // Output: HTTPステータス200、レスポンスボディがServiceの戻り値と一致すること
+            //         getPendingReviewsが呼ばれていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-022: レビュー待ちが0件の場合、空リストが返る")
+        void getPendingReviews_noPendingReviews_returnsEmptyList() {
+            // Input: なし（Serviceが空リストを返すようモック）
+            // Output: HTTPステータス200、空リストが返却される
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // GET /admin/companies/participate/open
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("GET /admin/companies/participate/open のテスト")
+    class GetPendingReviewsForMeTest {
+
+        @Test
+        @DisplayName("UT-ACC-023: JWTの運営者IDがServiceへ渡り、レビュー可能一覧が返る")
+        void getPendingReviewsForMe_validOperatorUserId_returnsServiceListAsIs() {
+            // Input: Authentication.credentialsにJWT（jwtUtil.extractUserIdが7を返すようモック）
+            //        （Serviceがoperator=7のレビュー可能一覧を返すようモック）
+            // Output: HTTPステータス200、Serviceの返す一覧がそのまま返却される
+            //         getPendingReviewsByUserId(7)が呼ばれていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-024: 対象運営者にレビュー可能な申請が無い場合、空リストが返る")
+        void getPendingReviewsForMe_noAssignableReviews_returnsEmptyList() {
+            // Input: Authentication.credentialsにJWT（jwtUtil.extractUserIdが8を返すようモック）
+            //        （Serviceが空リストを返すようモック）
+            // Output: HTTPステータス200、空リストが返却される
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // GET /admin/companies/participations/approved
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("GET /admin/companies/participations/approved のテスト")
+    class GetApprovedParticipationsTest {
+
+        @Test
+        @DisplayName("UT-ACC-025: Serviceの承認済み一覧がそのまま返る")
+        void getApprovedParticipations_returnsServiceListAsIs() {
+            // Input: なし（Serviceが承認済み一覧を返すようモック）
+            // Output: HTTPステータス200、レスポンスボディがServiceの戻り値と一致すること
+            //         getApprovedParticipationsが呼ばれていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-026: 承認済み申請が0件の場合、空リストが返る")
+        void getApprovedParticipations_noApprovedParticipations_returnsEmptyList() {
+            // Input: なし（Serviceが空リストを返すようモック）
+            // Output: HTTPステータス200、空リストが返却される
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // GET /admin/companies/participations/rejected
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("GET /admin/companies/participations/rejected のテスト")
+    class GetRejectedParticipationsTest {
+
+        @Test
+        @DisplayName("UT-ACC-027: Serviceの却下済み一覧がそのまま返る")
+        void getRejectedParticipations_returnsServiceListAsIs() {
+            // Input: なし（Serviceが却下済み一覧を返すようモック）
+            // Output: HTTPステータス200、レスポンスボディがServiceの戻り値と一致すること
+            //         getRejectedParticipationsが呼ばれていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-028: 却下済み申請が0件の場合、空リストが返る")
+        void getRejectedParticipations_noRejectedParticipations_returnsEmptyList() {
+            // Input: なし（Serviceが空リストを返すようモック）
+            // Output: HTTPステータス200、空リストが返却される
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // GET /admin/companies/participate/{participationId}
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("GET /admin/companies/participate/{participationId} のテスト")
+    class GetReviewDetailTest {
+
+        @Test
+        @DisplayName("UT-ACC-029: 有効なparticipationIdがServiceへ渡り、詳細結果が返る")
+        void getReviewDetail_validParticipationId_returnsServiceResponseAsIs() {
+            // Input: participationId=12（Serviceが対象詳細を返すようモック）
+            // Output: HTTPステータス200、Serviceの返すParticipationReviewDetailResponseがそのまま返却される
+            //         getReviewDetailにparticipationId=12が渡っていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-030: 対象participationIdが存在しない場合、Serviceの例外がハンドラで処理される")
+        void getReviewDetail_notFoundParticipationId_propagatesServiceException() {
+            // Input: participationId=99999（ServiceがNotFound系例外をthrowするようモック）
+            // Output: HTTPステータス404（グローバル例外ハンドラの定義に従う）
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // POST /admin/companies/participation/{participationId}/approve
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("POST /admin/companies/participation/{participationId}/approve のテスト")
+    class ApproveReviewTest {
+
+        @Test
+        @DisplayName("UT-ACC-031: JWT由来の運営者IDと有効なリクエストがServiceへ渡り、承認成功結果が返る")
+        void approveReview_validRequest_returnsSuccessMessage() {
+            // Input: participationId=12, Authentication.credentialsにJWT（extractUserIdが7を返すようモック）
+            //        request: comment="承認します"
+            //        （reviewService.approveReviewが例外を投げないようモック）
+            // Output: HTTPステータス200、BaseResponse.success("承認しました。")が返却される
+            //         approveReviewにparticipationId=12・operatorUserId=7・requestが渡っていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-032: 必須項目が欠落し@Validでバリデーションエラーとなる")
+        void approveReview_invalidRequest_returnsValidationError() {
+            // Input: participationId=12, Authentication.credentialsにJWT
+            //        request: 必須項目が欠落（例: comment=null）
+            // Output: HTTPステータス400、バリデーションエラーレスポンスが返却される
+            //         Serviceのapprove Reviewが呼ばれないこと
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // POST /admin/companies/participation/{participationId}/reject
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("POST /admin/companies/participation/{participationId}/reject のテスト")
+    class RejectReviewTest {
+
+        @Test
+        @DisplayName("UT-ACC-033: JWT由来の運営者IDと有効なリクエストがServiceへ渡り、却下成功結果が返る")
+        void rejectReview_validRequest_returnsSuccessMessage() {
+            // Input: participationId=12, Authentication.credentialsにJWT（extractUserIdが7を返すようモック）
+            //        request: rejectionReason="書類不備"
+            //        （reviewService.rejectReviewが例外を投げないようモック）
+            // Output: HTTPステータス200、BaseResponse.success("却下しました。")が返却される
+            //         rejectReviewにparticipationId=12・operatorUserId=7・requestが渡っていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-034: 必須項目（rejectionReason）が欠落し@Validでバリデーションエラーとなる")
+        void rejectReview_invalidRequest_returnsValidationError() {
+            // Input: participationId=12, Authentication.credentialsにJWT
+            //        request: rejectionReason=""（または欠落）
+            // Output: HTTPステータス400、バリデーションエラーレスポンスが返却される
+            //         Serviceのreject Reviewが呼ばれないこと
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // GET /admin/companies/operator-user
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("GET /admin/companies/operator-user のテスト")
+    class GetOperatorUsersTest {
+
+        @Test
+        @DisplayName("UT-ACC-035: JWTのcompanyIdがServiceへ渡り、運用者一覧がそのまま返る")
+        void getOperatorUsers_validCompanyId_returnsServiceResponseAsIs() {
+            // Input: Authentication.credentialsにJWT（jwtUtil.extractCompanyIdが"COMP-001"を返すようモック）
+            //        （Serviceが成功レスポンス(statusCode=OK)を返すようモック）
+            // Output: HTTPステータス200、Serviceの返すUserListResponseがそのまま返却される
+            //         getOperatorUsersByCompanyに"COMP-001"が渡っていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-036: Serviceがエラー系statusCodeを返した場合のHTTPステータス変換確認")
+        void getOperatorUsers_serviceReturnsError_convertsHttpStatus() {
+            // Input: Authentication.credentialsにJWT（jwtUtil.extractCompanyIdが"COMP-404"を返すようモック）
+            //        （Serviceがstatus=NOT_FOUNDを返すようモック）
+            // Output: HTTPステータス404、statusCode=NOT_FOUNDのレスポンスが返却される
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // POST /admin/companies/operator-user
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("POST /admin/companies/operator-user のテスト")
+    class CreateUserTest {
+
+        @Test
+        @DisplayName("UT-ACC-037: JWTのcompanyId・usernameと有効なリクエストがServiceへ渡り、作成成功結果が返る")
+        void createUser_validRequest_returnsServiceSuccessResponse() {
+            // Input: Authentication.credentialsにJWT（extractCompanyIdが"COMP-001"、extractUsernameが"admin@example.com"を返すようモック）
+            //        request: name="山田太郎", email="yamada@example.com", 必須項目あり
+            //        （Serviceが成功レスポンス(statusCode=CREATED)を返すようモック）
+            // Output: HTTPステータス201、Serviceの返すCreateUserResponseがそのまま返却される
+            //         createOperatorUserに companyId="COMP-001"・username="admin@example.com"・requestが渡っていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-038: 必須項目（email等）が欠落し@Validでバリデーションエラーとなる")
+        void createUser_invalidRequest_returnsValidationError() {
+            // Input: Authentication.credentialsにJWT
+            //        request: email=""（または欠落）
+            // Output: HTTPステータス400、バリデーションエラーレスポンスが返却される
+            //         Serviceのcreate OperatorUserが呼ばれないこと
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // PATCH /admin/companies/operator-user/{userId}
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("PATCH /admin/companies/operator-user/{userId} のテスト")
+    class UpdateOperatorUserTest {
+
+        @Test
+        @DisplayName("UT-ACC-039: adminロールが他ユーザーを更新した場合、Serviceへ委譲され成功結果が返る")
+        void updateOperatorUser_adminUpdatingOtherUser_returnsServiceSuccessResponse() {
+            // Input: userId=5, Authentication.credentialsにJWT
+            //        （extractRoleが"admin"、extractUserIdが1（自分ではない）、extractCompanyIdが"COMP-001"、
+            //          extractUsernameが"admin@example.com"を返すようモック）
+            //        request: name="更新後氏名"
+            //        （Serviceが成功レスポンス(statusCode=OK)を返すようモック）
+            // Output: HTTPステータス200、Serviceの返すUpdateUserResponseがそのまま返却される
+            //         request.userIdが5にセットされ、updateUserにcompanyId・username・request・role="admin"・currentId=1が渡っていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-040: operatorロールが他ユーザー（自分以外）を更新しようとした場合、403が返りServiceが呼ばれない")
+        void updateOperatorUser_operatorUpdatingOtherUser_returnsForbidden() {
+            // Input: userId=5, Authentication.credentialsにJWT
+            //        （extractRoleが"operator"、extractUserIdが1（userId=5とは不一致）を返すようモック）
+            //        request: name="更新後氏名"
+            // Output: HTTPステータス403、レスポンスボディがnull
+            //         Serviceのupdate Userが呼ばれないこと
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // GET /admin/companies/operator-user/{userId}
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("GET /admin/companies/operator-user/{userId} のテスト")
+    class GetOperatorUserProfileTest {
+
+        @Test
+        @DisplayName("UT-ACC-041: operatorロールが自分自身のプロファイルを取得した場合、Serviceへ委譲され成功結果が返る")
+        void getOperatorUserProfile_operatorRequestingSelf_returnsServiceSuccessResponse() {
+            // Input: userId=1, Authentication.credentialsにJWT
+            //        （extractRoleが"operator"、extractUserIdが1（自分自身）、extractCompanyIdが"COMP-001"を返すようモック）
+            //        （Serviceが成功レスポンス(statusCode=OK)を返すようモック）
+            // Output: HTTPステータス200、Serviceの返すUserProfileResponseがそのまま返却される
+            //         getOperatorUserProfileByIdにuserId=1・currentId=1・role="operator"・companyId="COMP-001"が渡っていること
+        }
+
+        @Test
+        @DisplayName("UT-ACC-042: operatorロールが他人（自分以外）のプロファイルを取得しようとした場合、403が返りServiceが呼ばれない")
+        void getOperatorUserProfile_operatorRequestingOtherUser_returnsForbidden() {
+            // Input: userId=5, Authentication.credentialsにJWT
+            //        （extractRoleが"operator"、extractUserIdが1（userId=5とは不一致）を返すようモック）
+            // Output: HTTPステータス403、レスポンスボディがnull
+            //         Serviceのget OperatorUserProfileByIdが呼ばれないこと
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // GET /test/docusign/token （ネストされたDocuSignTestController）
+    // ------------------------------------------------------------------------
+    @Nested
+    @DisplayName("GET /test/docusign/token のテスト")
+    class DocuSignTestTokenTest {
+
+        @Test
+        @DisplayName("UT-ACC-043: DocuSignServiceがトークンを返した場合、先頭20文字のプレビューが返る")
+        void testToken_serviceReturnsToken_returnsPreview() {
+            // Input: なし（docuSignService.getAccessTokenが20文字以上のtoken文字列を返すようモック）
+            // Output: HTTPステータス200、status="OK"、tokenPreview=先頭20文字+"..."が返却される
+        }
+
+        @Test
+        @DisplayName("UT-ACC-044: DocuSignServiceが例外をthrowした場合、HTTP 500とエラー内容が返る")
+        void testToken_serviceThrowsException_returns500WithErrorMessage() {
+            // Input: なし（docuSignService.getAccessTokenが例外(message="認証失敗")をthrowするようモック）
+            // Output: HTTPステータス500、status="ERROR"、message="認証失敗"が返却される
+        }
+    }
+}

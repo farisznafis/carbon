@@ -64,7 +64,7 @@ import com.kct.jcredit.core_backend.util.ResponseUtil;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class MonitoringControllerTest {
+class MonitoringControllerTestOld {
     
     @Mock
     private MonitoringService monitoringService;

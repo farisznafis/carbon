@@ -233,11 +233,16 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
         reviewRepository.save(confirmation);
 
         if (isPrimarySlotEmpty) {
+                try {
                 NotificationMessages.Content secondReview = messages.of("participation.second-review",
                         participation.getCompany().getNameJa(),
                         participation.getProject().getProjectName());
                 notificationService.createNotificationForAllOperatingUsers(
                         secondReview.subject(), secondReview.body());
+               } catch (Exception e) {
+                log.error("Approval notification failed. participationId={}, error={}",
+                        participationId, e.getMessage());
+                }
         }
 
        if (!isPrimarySlotEmpty) {

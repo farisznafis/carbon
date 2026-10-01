@@ -1,0 +1,245 @@
+package com.kct.jcredit.core_backend.controller.SecurityFlowControllerTest;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+/**
+ * SecurityFlowController API delegation, validation, and authentication outline.
+ *
+ * Use MockMvc for @Valid, required-header, and method-security behavior.
+ */
+class SecurityFlowControllerTest {
+
+    @Nested
+    @DisplayName("POST /auth/action-links/exchange のテスト")
+    class ExchangeActionLinkTest {
+
+        @Test
+        @DisplayName("UT-SFC-001: 有効なaction tokenがServiceへ渡り、session情報が返る")
+        void exchangeActionLink_validToken_returnsSessionResponse() {
+            // Input: ActionLinkExchangeRequest.tokenをServiceへ渡す
+            // Output: HTTP 200、actionSessionToken/purpose/expiresInSecondsを含むresponse
+        }
+
+        @Test
+        @DisplayName("UT-SFC-002: tokenが空または欠落した場合は400となりServiceは呼ばれない")
+        void exchangeActionLink_blankToken_returnsValidationError() {
+            // Input: token=nullまたはblank
+            // Output: HTTP 400、exchangeActionLinkは呼ばれない
+        }
+
+        @Test
+        @DisplayName("UT-SFC-003: 無効または期限切れtokenの例外がHTTP error responseへ変換される")
+        void exchangeActionLink_invalidToken_mapsServiceException() {
+            // Input: Serviceがinvalid/expired action token例外を送出
+            // Output: Global exception handlerの定義に従うHTTP status/body
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /auth/master-account/setup のテスト")
+    class SetupMasterAccountTest {
+
+        @Test
+        @DisplayName("UT-SFC-004: session、username、passwordがServiceへ渡り成功する")
+        void setupMasterAccount_validRequest_returnsSuccess() {
+            // Input: X-Action-Sessionと有効なusername/password
+            // Output: setupMasterAccount(session, username, password)が呼ばれHTTP 200
+        }
+
+        @Test
+        @DisplayName("UT-SFC-005: 必須headerまたはrequest制約違反時は400となりServiceは呼ばれない")
+        void setupMasterAccount_invalidRequest_returnsValidationError() {
+            // Input: headerなし、blank/不正username、password policy違反
+            // Output: HTTP 400、setupMasterAccountは呼ばれない
+        }
+
+        @Test
+        @DisplayName("UT-SFC-006: 無効session等のService例外がHTTP error responseへ変換される")
+        void setupMasterAccount_invalidSession_mapsServiceException() {
+            // Input: Serviceが無効/期限切れsessionを拒否
+            // Output: Global exception handlerの定義に従うHTTP status/body
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /auth/password-reset/request のテスト")
+    class RequestPasswordResetTest {
+
+        @Test
+        @DisplayName("UT-SFC-007: 有効なemail requestがServiceへ渡り成功responseが返る")
+        void requestPasswordReset_validEmail_returnsSuccess() {
+            // Input: 有効なForgotPasswordRequest
+            // Output: requestPasswordReset(request)が呼ばれHTTP 200とService response
+        }
+
+        @Test
+        @DisplayName("UT-SFC-008: emailが空または不正形式の場合は400となりServiceは呼ばれない")
+        void requestPasswordReset_invalidEmail_returnsValidationError() {
+            // Input: email=null/blank/不正形式
+            // Output: HTTP 400、requestPasswordResetは呼ばれない
+        }
+
+        @Test
+        @DisplayName("UT-SFC-009: 未登録emailでもアカウント有無を漏らさない成功responseが返る")
+        void requestPasswordReset_unknownEmail_returnsGenericSuccess() {
+            // Input: 有効だが未登録のemail
+            // Output: アカウント存在時と同じ外部response contract
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /auth/password-reset/complete のテスト")
+    class CompletePasswordResetTest {
+
+        @Test
+        @DisplayName("UT-SFC-010: sessionと有効なnewPasswordがServiceへ渡る")
+        void completePasswordReset_validRequest_returnsSuccess() {
+            // Input: X-Action-Sessionとpolicy適合newPassword
+            // Output: completePasswordReset(session, newPassword)が呼ばれ、response statusが変換される
+        }
+
+        @Test
+        @DisplayName("UT-SFC-011: headerまたはpassword制約違反時は400となりServiceは呼ばれない")
+        void completePasswordReset_invalidRequest_returnsValidationError() {
+            // Input: headerなし、password blankまたはpassword policy違反
+            // Output: HTTP 400、completePasswordResetは呼ばれない
+        }
+
+        @Test
+        @DisplayName("UT-SFC-012: Service error statusCodeがHTTP statusへ変換される")
+        void completePasswordReset_serviceReturnsError_convertsHttpStatus() {
+            // Input: ServiceがSAME_PASSWORD等のerror BaseResponseを返す
+            // Output: ResponseUtilに従うHTTP statusとService body
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /auth/user/login/email-otp/verify のテスト")
+    class VerifyParticipatingLoginTest {
+
+        @Test
+        @DisplayName("UT-SFC-013: challengeId/codeが参加企業login verify Serviceへ渡る")
+        void verifyParticipatingLogin_validOtp_returnsLoginResponse() {
+            // Input: UUID challengeIdと6桁code
+            // Output: verifyParticipatingLogin(challengeId, code)が呼ばれ、LoginResponseがHTTP 200で返る
+        }
+
+        @Test
+        @DisplayName("UT-SFC-014: challengeIdまたはcodeが不正時は400となりServiceは呼ばれない")
+        void verifyParticipatingLogin_invalidRequest_returnsValidationError() {
+            // Input: challengeId=null、code欠落、または6桁数字以外
+            // Output: HTTP 400、verifyParticipatingLoginは呼ばれない
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /auth/admin/login/email-otp/verify のテスト")
+    class VerifyOperatingLoginTest {
+
+        @Test
+        @DisplayName("UT-SFC-015: challengeId/codeが運営login verify Serviceへ渡りAdminLoginResponseが返る")
+        void verifyOperatingLogin_validOtp_returnsAdminLoginResponse() {
+            // Input: UUID challengeIdと6桁code
+            // Output: verifyOperatingLogin(challengeId, code)が呼ばれ、AdminLoginResponseがHTTP 200で返る
+        }
+
+        @Test
+        @DisplayName("UT-SFC-016: challengeIdまたはcodeが不正時は400となりServiceは呼ばれない")
+        void verifyOperatingLogin_invalidRequest_returnsValidationError() {
+            // Input: challengeId=null、code欠落、または6桁数字以外
+            // Output: HTTP 400、verifyOperatingLoginは呼ばれない
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /auth/user/login/email-otp/resend のテスト")
+    class ResendParticipatingLoginTest {
+
+        @Test
+        @DisplayName("UT-SFC-017: challengeIdとPARTICIPATING_LOGIN purposeで再送Serviceが呼ばれる")
+        void resendParticipatingLogin_validChallenge_returnsChallengeResponse() {
+            // Input: OtpResendRequest.challengeId
+            // Output: resendLoginOtp(challengeId, PARTICIPATING_LOGIN)とHTTP 200 response
+        }
+
+        @Test
+        @DisplayName("UT-SFC-018: challengeIdが欠落した場合は400となりServiceは呼ばれない")
+        void resendParticipatingLogin_missingChallengeId_returnsValidationError() {
+            // Input: challengeId=null
+            // Output: HTTP 400、resendLoginOtpは呼ばれない
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /auth/admin/login/email-otp/resend のテスト")
+    class ResendOperatingLoginTest {
+
+        @Test
+        @DisplayName("UT-SFC-019: challengeIdとOPERATING_LOGIN purposeで再送Serviceが呼ばれる")
+        void resendOperatingLogin_validChallenge_returnsChallengeResponse() {
+            // Input: OtpResendRequest.challengeId
+            // Output: resendLoginOtp(challengeId, OPERATING_LOGIN)とHTTP 200 response
+        }
+
+        @Test
+        @DisplayName("UT-SFC-020: challengeIdが欠落した場合は400となりServiceは呼ばれない")
+        void resendOperatingLogin_missingChallengeId_returnsValidationError() {
+            // Input: challengeId=null
+            // Output: HTTP 400、resendLoginOtpは呼ばれない
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /auth/email-otp/settings/challenge のテスト")
+    class StartEmailOtpSettingTest {
+
+        @Test
+        @DisplayName("UT-SFC-021: JWT userId/roleとenabled/currentPasswordがServiceへ渡る")
+        void startEmailOtpSetting_authenticatedRequest_returnsChallenge() {
+            // Input: authenticated principal, JWT, enabled, currentPassword
+            // Output: startEmailOtpSetting(userId, role, enabled, currentPassword)が呼ばれHTTP 200
+        }
+
+        @Test
+        @DisplayName("UT-SFC-022: enabledまたはcurrentPasswordが不正時は400となりServiceは呼ばれない")
+        void startEmailOtpSetting_invalidRequest_returnsValidationError() {
+            // Input: enabled=nullまたはcurrentPassword blank
+            // Output: HTTP 400、startEmailOtpSettingは呼ばれない
+        }
+
+        @Test
+        @DisplayName("UT-SFC-023: unauthenticated requestは401となる")
+        void startEmailOtpSetting_unauthenticated_returnsUnauthorized() {
+            // Input: 認証なし
+            // Output: HTTP 401、SecurityAccountServiceは呼ばれない
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /auth/email-otp/settings/confirm のテスト")
+    class ConfirmEmailOtpSettingTest {
+
+        @Test
+        @DisplayName("UT-SFC-024: JWT userId/roleとchallengeId/codeがServiceへ渡る")
+        void confirmEmailOtpSetting_authenticatedRequest_returnsServiceResponse() {
+            // Input: authenticated principal、JWT、UUID challengeId、6桁code
+            // Output: confirmEmailOtpSetting(userId, role, challengeId, code)が呼ばれHTTP 200
+        }
+
+        @Test
+        @DisplayName("UT-SFC-025: challengeId/codeが不正時は400となりServiceは呼ばれない")
+        void confirmEmailOtpSetting_invalidRequest_returnsValidationError() {
+            // Input: challengeId=nullまたはcodeが空/6桁数字以外
+            // Output: HTTP 400、confirmEmailOtpSettingは呼ばれない
+        }
+
+        @Test
+        @DisplayName("UT-SFC-026: unauthenticated requestは401となる")
+        void confirmEmailOtpSetting_unauthenticated_returnsUnauthorized() {
+            // Input: 認証なし
+            // Output: HTTP 401、SecurityAccountServiceは呼ばれない
+        }
+    }
+}
