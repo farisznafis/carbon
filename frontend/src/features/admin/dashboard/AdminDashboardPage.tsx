@@ -48,7 +48,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { AdminCompanyApplicationsTable } from '@/features/admin/dashboard/tables/AdminCompanyApplicationsTable';
 import { PendingCompanyActionDialog } from '@/features/admin/dashboard/tables/PendingCompanyActionDialog';
@@ -85,6 +85,7 @@ type AdminDashboardTabValue =
   | 'projects'
   | 'operators'
   | 'methodologies';
+type ProjectManagementView = 'analytics' | 'management';
 
 type PendingCompanyActionMode = 'approve' | 'reject';
 
@@ -94,6 +95,9 @@ const APPLICATION_STATUSES: CompanyStatus[] = ['PENDING', 'REJECTED'];
 const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
 const HOME_APPLICATION_SUMMARY_LIMIT = 3;
 const ALL_PROJECT_FILTER = 'ALL';
+const PROJECT_VIEW_QUERY_PARAM = 'view';
+const PROJECT_VIEW_TRIGGER_CLASS_NAME =
+  'h-11 shrink-0 rounded-none border-b-2 border-transparent bg-transparent px-1 py-2 text-body text-muted-foreground shadow-none hover:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-foreground data-[state=active]:shadow-none focus-visible:ring-2 focus-visible:ring-ring';
 const FORBIDDEN_SECTION_ERROR = '__FORBIDDEN_SECTION__';
 
 const DEFAULT_PAGINATION: Pagination = {
@@ -335,6 +339,11 @@ const AdminDashboard = () => {
 
   const requestedTab = new URLSearchParams(location.search).get('tab');
   const requestedPanel = new URLSearchParams(location.search).get('panel');
+  const requestedProjectView = new URLSearchParams(location.search).get(
+    PROJECT_VIEW_QUERY_PARAM,
+  );
+  const activeProjectView: ProjectManagementView =
+    requestedProjectView === 'analytics' ? 'analytics' : 'management';
   const activePanel: AdminHomePanel | null =
     requestedPanel === 'cancel' || requestedPanel === 'batch'
       ? requestedPanel
@@ -343,6 +352,24 @@ const AdminDashboard = () => {
     location.pathname,
     requestedTab,
   );
+
+  /** Keeps project subtab selection in the URL without changing the route. */
+  const handleProjectViewChange = (view: string) => {
+    if (view !== 'analytics' && view !== 'management') return;
+    if (view === activeProjectView) return;
+
+    const searchParams = new URLSearchParams(location.search);
+    if (view === 'analytics') {
+      searchParams.set(PROJECT_VIEW_QUERY_PARAM, view);
+    } else {
+      searchParams.delete(PROJECT_VIEW_QUERY_PARAM);
+    }
+
+    navigate(
+      { pathname: location.pathname, search: searchParams.toString(), hash: location.hash },
+      { state: location.state, preventScrollReset: true },
+    );
+  };
 
   useEffect(() => {
     if (location.pathname !== paths.adminDashboard || !requestedTab) return;
@@ -1207,14 +1234,14 @@ const AdminDashboard = () => {
             <AdminTableCard
               title="参加申請中の企業"
               count={applicationPagination.totalItems}
-              description="参加申請を受け付けた企業です。内容を確認し、承認または差し戻しを行ってください。"
+              description="参加申請を受け付けた企業です。内容を確認し、承認または却下を行ってください。"
               notice={
                 applicationSectionAllowed ? (
                   <NoticeBanner
                     tone='warning'
                     title='管理者による対応が必要です'
                   >
-                    ステータスが「申請受付」の企業について、申請内容を確認し、承認または差し戻しを行ってください。
+                    ステータスが「申請受付」の企業について、申請内容を確認し、承認または却下を行ってください。
                   </NoticeBanner>
                 ) : undefined
               }
@@ -1300,130 +1327,150 @@ const AdminDashboard = () => {
               />
               {!projectSectionAllowed ? (
                 <PermissionDeniedNotice permission="PROJECT_READ" />
-              ) : <div className="space-y-6">
-                <AdminProjectOverviewCards
-                  projects={projects}
-                  projectsLoading={projectsQuery.isLoading}
-                  projectsError={projectsError}
-                />
+              ) : (
+                <Tabs
+                  value={activeProjectView}
+                  onValueChange={handleProjectViewChange}
+                  className="min-w-0"
+                >
+                  <TabsList
+                    aria-label="プロジェクト管理の表示"
+                    className="flex h-auto w-full justify-start gap-6 overflow-x-auto rounded-none border-b border-border bg-transparent p-0"
+                  >
+                    <TabsTrigger
+                      value="management"
+                      className={PROJECT_VIEW_TRIGGER_CLASS_NAME}
+                    >
+                      管理
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="analytics"
+                      className={PROJECT_VIEW_TRIGGER_CLASS_NAME}
+                    >
+                      アナリティクス
+                    </TabsTrigger>
+                  </TabsList>
 
-                <AdminTableCard
-                  title="プロジェクト一覧"
-                  count={projectTotalItems}
-                  description={
-                    <span className="inline-flex flex-wrap items-center gap-2">
-                      <span
-                        aria-hidden="true"
-                        className="h-3 w-3 shrink-0 rounded-sm border border-warning-border bg-warning-subtle"
-                      />
-                      計画書の記入が完了していないプロジェクトはハイライト表示されます。
-                    </span>
-                  }
-                  action={
-                    <Button
-                      type="button"
-                      size="md"
-                      onClick={() =>
-                        adminPermissions.guardAction('PROJECT_CREATE', () =>
-                          navigate(paths.adminProjectRegister),
-                        )
+                  <TabsContent value="analytics" className="m-0 pt-5">
+                    <AdminProjectOverviewCards
+                      projects={projects}
+                      projectsLoading={projectsQuery.isLoading}
+                      projectsError={projectsError}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="management" className="m-0 pt-5">
+                    <AdminTableCard
+                      title="プロジェクト一覧"
+                      count={projectTotalItems}
+                      description="計画書の記入が完了していないプロジェクトはハイライト表示されます。"
+                      action={
+                        <Button
+                          type="button"
+                          size="md"
+                          onClick={() =>
+                            adminPermissions.guardAction('PROJECT_CREATE', () =>
+                              navigate(paths.adminProjectRegister),
+                            )
+                          }
+                        >
+                          <Plus className="h-4 w-4" />
+                          プロジェクトを追加
+                        </Button>
+                      }
+                      filters={
+                        <>
+                          <Select
+                            value={projectStatusFilter}
+                            onValueChange={(value) => {
+                              setProjectStatusFilter(value);
+                              setProjectPage(1);
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="ステータス" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={ALL_PROJECT_FILTER}>
+                                すべてのステータス
+                              </SelectItem>
+                              {PROJECT_STATUS_PRESENTATIONS.map((presentation) => (
+                                <SelectItem
+                                  key={presentation.status}
+                                  value={presentation.status}
+                                >
+                                  {presentation.status}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            type="button"
+                            variant={showIncompletePlanOnly ? 'primary' : 'outline'}
+                            aria-pressed={showIncompletePlanOnly}
+                            disabled={planProgressLoading || Boolean(planProgressError)}
+                            title={planProgressError ?? undefined}
+                            onClick={() => {
+                              setShowIncompletePlanOnly((current) => !current);
+                              setProjectPage(1);
+                            }}
+                          >
+                            {INCOMPLETE_PLAN_LABEL}のみ表示
+                          </Button>
+                        </>
+                      }
+                      search={
+                        <>
+                          <Search
+                            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                            aria-hidden="true"
+                          />
+                          <Input
+                            type="search"
+                            value={projectSearchQuery}
+                            onChange={(event) => {
+                              setProjectSearchQuery(event.target.value);
+                              setProjectPage(1);
+                            }}
+                            placeholder="プロジェクト名・方法論で検索"
+                            aria-label="プロジェクトを検索"
+                            className="h-10 bg-card pl-9"
+                          />
+                        </>
+                      }
+                      footer={
+                        !projectsQuery.isLoading && !projectsError ? (
+                          <PaginationControls
+                            currentPage={projectPage}
+                            totalPages={projectTotalPages}
+                            totalItems={projectTotalItems}
+                            itemsPerPage={projectItemsPerPage}
+                            onPageChange={goToProjectPage}
+                            onItemsPerPageChange={setProjectItemsPerPage}
+                          />
+                        ) : undefined
                       }
                     >
-                      <Plus className="h-4 w-4" />
-                      プロジェクトを追加
-                    </Button>
-                  }
-                  filters={
-                    <>
-                      <Select
-                        value={projectStatusFilter}
-                        onValueChange={(value) => {
-                          setProjectStatusFilter(value);
-                          setProjectPage(1);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="ステータス" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={ALL_PROJECT_FILTER}>
-                            すべてのステータス
-                          </SelectItem>
-                          {PROJECT_STATUS_PRESENTATIONS.map((presentation) => (
-                            <SelectItem
-                              key={presentation.status}
-                              value={presentation.status}
-                            >
-                              {presentation.status}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        type="button"
-                        variant={showIncompletePlanOnly ? 'primary' : 'outline'}
-                        aria-pressed={showIncompletePlanOnly}
-                        disabled={planProgressLoading || Boolean(planProgressError)}
-                        title={planProgressError ?? undefined}
-                        onClick={() => {
-                          setShowIncompletePlanOnly((current) => !current);
-                          setProjectPage(1);
-                        }}
-                      >
-                        {INCOMPLETE_PLAN_LABEL}のみ表示
-                      </Button>
-                    </>
-                  }
-                  search={
-                    <>
-                      <Search
-                        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                        aria-hidden="true"
-                      />
-                      <Input
-                        type="search"
-                        value={projectSearchQuery}
-                        onChange={(event) => {
-                          setProjectSearchQuery(event.target.value);
-                          setProjectPage(1);
-                        }}
-                        placeholder="プロジェクト名・方法論で検索"
-                        aria-label="プロジェクトを検索"
-                        className="h-10 bg-card pl-9"
-                      />
-                    </>
-                  }
-                  footer={
-                    !projectsQuery.isLoading && !projectsError ? (
-                      <PaginationControls
-                        currentPage={projectPage}
-                        totalPages={projectTotalPages}
-                        totalItems={projectTotalItems}
-                        itemsPerPage={projectItemsPerPage}
-                        onPageChange={goToProjectPage}
-                        onItemsPerPageChange={setProjectItemsPerPage}
-                      />
-                    ) : undefined
-                  }
-                >
-                  {projectsQuery.isLoading ? (
-                    <SkeletonTable columns={8} rows={6} minWidth={1390} />
-                  ) : projectsError ? (
-                    <AdminDashboardEmptyState>
-                      {projectsError}
-                    </AdminDashboardEmptyState>
-                  ) : (
-                    <ProjectTable
-                      projects={paginatedProjects}
-                      onEdit={handleEditProject}
-                      onStatusChange={handleChangeProjectStatus}
-                      updatingProjectStatusId={updatingProjectStatusId}
-                      planProgress={planProgress}
-                      onOpenPlan={handleOpenPlan}
-                    />
-                  )}
-                </AdminTableCard>
-              </div>}
+                      {projectsQuery.isLoading ? (
+                        <SkeletonTable columns={8} rows={6} minWidth={1390} />
+                      ) : projectsError ? (
+                        <AdminDashboardEmptyState>
+                          {projectsError}
+                        </AdminDashboardEmptyState>
+                      ) : (
+                        <ProjectTable
+                          projects={paginatedProjects}
+                          onEdit={handleEditProject}
+                          onStatusChange={handleChangeProjectStatus}
+                          updatingProjectStatusId={updatingProjectStatusId}
+                          planProgress={planProgress}
+                          onOpenPlan={handleOpenPlan}
+                        />
+                      )}
+                    </AdminTableCard>
+                  </TabsContent>
+                </Tabs>
+              )}
             </section>
           </TabsContent>
 

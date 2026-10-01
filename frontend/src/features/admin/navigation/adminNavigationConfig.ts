@@ -20,7 +20,7 @@ export const ADMIN_NAVIGATION_ITEMS: readonly AdminNavigationItem[] = [
   { key: 'projects', label: 'プロジェクト', href: paths.adminProjectList, icon: FolderKanban },
   { key: 'methodologies', label: '方法論', href: paths.adminMethodologyList, icon: BookOpen },
   { key: 'companies', label: '企業', href: paths.adminCompanyList, icon: Building2 },
-  { key: 'operators', label: '運営者', href: paths.adminOperatorList, icon: Users },
+  { key: 'operators', label: '運用者', href: paths.adminOperatorList, icon: Users },
 ] as const;
 
 const LEGACY_TAB_NAVIGATION_MAP: Partial<
