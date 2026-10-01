@@ -108,15 +108,19 @@ public class MonitoringTableRecordSolarRepository {
         return pages.items().stream().findFirst();
     }
 
-    public List<EnR002MonitoringRecord> findAllByPk(String pk) {
+    /**
+     * Walks one partition page by page without loading it all into memory. Pages are fetched
+     * lazily as the caller iterates, so deleting each page before asking for the next is safe.
+     * Reads are strongly consistent so a page never contains items that were just deleted.
+     */
+    public Iterable<List<EnR002MonitoringRecord>> findPagesByPk(String pk, int pageSize) {
         QueryConditional qc = QueryConditional.keyEqualTo(k -> k.partitionValue(pk));
-        PageIterable<EnR002MonitoringRecord> pages = table.query(r -> r.queryConditional(qc));
+        PageIterable<EnR002MonitoringRecord> pages = table.query(r -> r
+            .queryConditional(qc)
+            .consistentRead(true)
+            .limit(pageSize));
 
-        List<EnR002MonitoringRecord> items = new ArrayList<>();
-        for (Page<EnR002MonitoringRecord> page : pages) {
-            items.addAll(page.items());
-        }
-        return items;
+        return () -> pages.stream().map(Page::items).iterator();
     }
 
     public List<Key> deleteBatch(List<Key> keys) {

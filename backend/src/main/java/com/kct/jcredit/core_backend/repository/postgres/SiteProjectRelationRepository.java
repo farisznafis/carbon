@@ -41,6 +41,22 @@ public interface SiteProjectRelationRepository extends JpaRepository<SiteProject
     @Query("SELECT spr.site.id FROM SiteProjectRelation spr WHERE spr.project.id = :projectId")
     List<Integer> findSiteIdsByProjectId(@Param("projectId") Integer projectId);
 
+    /** A site that is, or once was, linked to a project. */
+    interface LinkedSite {
+        Integer getSiteId();
+        String getSitePublicId();
+    }
+
+    /**
+     * Every site ever linked to the project, including soft-deleted relations and sites.
+     * Native so it bypasses the deleted_at restrictions: monitoring records written before
+     * a site left the project are still stored under that site's key.
+     */
+    @Query(value = "SELECT DISTINCT s.id AS siteId, s.public_id AS sitePublicId "
+         + "FROM site_project_relation spr JOIN site s ON s.id = spr.site_id "
+         + "WHERE spr.project_id = :projectId ORDER BY s.id", nativeQuery = true)
+    List<LinkedSite> findLinkedSitesIncludingDeleted(@Param("projectId") Integer projectId);
+
     @Modifying
     @Query(value = "UPDATE site_project_relation spr SET deleted_at = CURRENT_TIMESTAMP, deleted_by = :deletedBy "
          + "WHERE spr.site_id IN (SELECT s.id FROM site s JOIN participating_company pc ON pc.id = s.participating_company_id WHERE pc.company_id = :companyId)", nativeQuery = true)
