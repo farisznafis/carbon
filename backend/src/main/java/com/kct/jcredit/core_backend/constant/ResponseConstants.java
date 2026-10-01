@@ -152,12 +152,8 @@ public class ResponseConstants {
     public static final String MSG_PAYMENT_DECLINED = "カード情報が無効です。";
 
     // Monitoring data deletion messages
-    public static final String MSG_MONITORING_DELETION_CANDIDATES_RETRIEVED = "モニタリングデータの削除候補を取得しました。";
-    public static final String MSG_MONITORING_DELETION_NO_CANDIDATES = "削除対象のモニタリングデータはありません。";
-    public static final String MSG_MONITORING_DELETION_COMPLETED = "モニタリングデータの削除が完了しました。";
+    public static final String MSG_MONITORING_DELETION_SCHEDULE_RETRIEVED = "モニタリングデータの削除予定を取得しました。";
     public static final String MSG_MONITORING_DELETION_HISTORY_RETRIEVED = "モニタリングデータの削除履歴を取得しました。";
-    public static final String MSG_MONITORING_DELETION_CANDIDATE_RECORDS_RETRIEVED = "モニタリングデータの削除候補明細を取得しました。";
-    public static final String MSG_MONITORING_DELETION_PROJECT_NOT_CANDIDATE = "対象のプロジェクトは削除候補ではありません。";
     public static final String OPEN = "OPEN";
     public static final String APPROVED = "APPROVED";
     public static final String REJECTED = "REJECTED";
