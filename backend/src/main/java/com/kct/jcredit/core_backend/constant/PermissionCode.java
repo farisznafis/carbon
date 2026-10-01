@@ -32,6 +32,11 @@ public enum PermissionCode {
 
     //project form management
     METHODOLOGY_READ,   
-    APPLICATION_FORM_READ
+    APPLICATION_FORM_READ,
+
+    //participating-company user management
+    PARTICIPATING_USER_READ, //included
+    PARTICIPATING_USER_CREATE, //included
+    PARTICIPATING_USER_UPDATE, //included
     
 }
