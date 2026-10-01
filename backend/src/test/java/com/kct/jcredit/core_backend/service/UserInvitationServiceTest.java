@@ -17,6 +17,7 @@ import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepo
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SecurityActionLinkRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
+import com.kct.jcredit.core_backend.service.impl.UserInvitationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -111,7 +112,7 @@ class UserInvitationServiceTest {
         when(actionLinkRepository.findById(any())).thenAnswer(invocation ->
                 links.stream().filter(link -> link.getId().equals(invocation.getArgument(0))).findFirst());
 
-        service = new UserInvitationService(
+        service = new UserInvitationServiceImpl(
                 actionLinkService, actionLinkRepository, emailDeliveryService, rateLimitService,
                 usernameAvailabilityService, companyRepository, userRepository, siteRepository,
                 properties, passwordEncoder, new NotificationMessages());
@@ -198,7 +199,7 @@ class UserInvitationServiceTest {
     void everyEndpointIsHiddenWhileTheFeatureIsOff() {
         SecurityFlowProperties off = new SecurityFlowProperties();
         off.setTokenPepper("test-pepper-with-enough-randomness");
-        UserInvitationService disabled = new UserInvitationService(
+        UserInvitationService disabled = new UserInvitationServiceImpl(
                 actionLinkService, actionLinkRepository, mock(SecurityEmailDeliveryService.class),
                 mock(SecurityRateLimitService.class), mock(UsernameAvailabilityService.class),
                 mock(ParticipatingCompanyRepository.class), userRepository,
