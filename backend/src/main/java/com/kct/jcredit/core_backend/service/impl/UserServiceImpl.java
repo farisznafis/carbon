@@ -245,10 +245,13 @@ public class UserServiceImpl implements UserService {
                                     && !(requestedSiteId == null && currentSiteId == null)  // both null → no change
                                     && !Objects.equals(requestedSiteId, currentSiteId);     // same id → no change
 
-            // ── GATE 1: Non-master editing someone else → FORBIDDEN ───────────
-            // Covers cases: 1, 3, 9, 11
-            if (!isMaster && !isSelf) {
-                // FIX #7: was silently falling through to self-edit before
+            // ── GATE 1: Non-master targeting someone else → FORBIDDEN ─────────
+            // Checked against the request, not against targetUser: resolveTargetUser returns the
+            // caller for every non-master, so isSelf is always true by this point and a
+            // target-based condition can never fire. Mirrors the same rule in validateUpdateUser.
+            if (!isMaster
+                    && request.getUserId() != null
+                    && !request.getUserId().equals(requestingUser.getId())) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
                 response.setMessage(ResponseConstants.MSG_FORBIDDEN);
                 return response;
@@ -599,12 +602,18 @@ public class UserServiceImpl implements UserService {
                 return response;
             }
 
-            if ("master".equals(requestingRole)) {
-                if (!requestingCompanyId.equals(user.getCompany().getCompanyId())) {
-                    response.setStatusCode(ResponseConstants.FORBIDDEN);
-                    response.setMessage(ResponseConstants.MSG_FORBIDDEN);
-                    return response;
-                }
+            // Allowlist, not denylist: only the operator-side roles are exempt from the company
+            // scope check, so any role added later is scoped by default instead of exempt by
+            // default. A user row with no company is refused rather than dereferenced.
+            boolean crossCompanyAllowed = RoleConstants.ADMIN.equals(requestingRole)
+                    || RoleConstants.OPERATOR.equals(requestingRole);
+
+            if (!crossCompanyAllowed
+                    && (user.getCompany() == null
+                        || !requestingCompanyId.equals(user.getCompany().getCompanyId()))) {
+                response.setStatusCode(ResponseConstants.FORBIDDEN);
+                response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+                return response;
             }
 
             ParticipatingCompany company = user.getCompany();
