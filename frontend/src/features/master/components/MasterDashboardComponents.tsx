@@ -3,14 +3,14 @@ import type { Site } from '@/api/site';
 import type { UserList } from '@/api/users';
 import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
-import { Button } from '@/components/ui/button';
 import {
   dashboardEmptyStateClassName,
 } from '@/components/layout/DashboardLayout';
 import { MasterSiteCard } from '@/features/master/components/MasterSiteCard';
 import { formatPersonName } from '@/features/master/components/masterDashboardUtils';
 import { cn } from '@/lib/utils';
-import { Building2, Mail, Plus, User } from 'lucide-react';
+import { Building2, Mail, User } from 'lucide-react';
+import { ActionButton } from '@/components/actions';
 
 /** Renders one dashboard section with shared heading and action spacing. */
 export function DashboardSection({
@@ -40,16 +40,14 @@ export function DashboardSection({
           </p>
         </div>
         {showAddAction && (
-          <Button
-            type="button"
-            size="md"
+          <ActionButton
+            kind="add"
             onClick={onAdd}
             disabled={addDisabled}
             className="self-start sm:self-auto"
           >
-            <Plus className="h-4 w-4" />
             {addLabel}
-          </Button>
+          </ActionButton>
         )}
       </div>
       {children}
@@ -167,9 +165,11 @@ export function UserDashboardCard({
 
       <div className="flex items-center justify-end border-t border-border px-4 py-3 md:w-[152px] md:shrink-0 md:justify-center md:border-l md:border-t-0">
         <RowActionButton
-          aria-label={`${fullName || '社員'}の詳細`}
+          aria-label={`${fullName || '社員'}のプロファイル`}
           onClick={() => onProfile(user)}
-        />
+        >
+          プロファイル
+        </RowActionButton>
       </div>
     </article>
   );

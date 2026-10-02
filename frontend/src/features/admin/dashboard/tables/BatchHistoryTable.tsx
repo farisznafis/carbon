@@ -10,11 +10,11 @@ import {
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { RowActionButton } from '@/components/data-display/RowActionButton';
-import { Button } from '@/components/ui/button';
 import { BatchHistoryDetailDialog } from './BatchHistoryDetailDialog';
 import { SkeletonTable } from '@/components/feedback/loading';
 import { BatchHistoryStatusBadge } from './BatchHistoryStatusBadge';
 import { formatBatchHistoryDateTime } from './batchHistoryFormatters';
+import { ActionButton } from '@/components/actions';
 
 const INITIAL_PAGE = 1;
 const INITIAL_ITEMS_PER_PAGE = 10;
@@ -152,9 +152,7 @@ export function BatchHistoryTable({
         <p role="alert" className="text-sm text-destructive">
           {loadError}
         </p>
-        <Button type="button" variant="outline" onClick={() => void loadHistory()}>
-          再試行
-        </Button>
+        <ActionButton kind="retry" onClick={() => void loadHistory()} />
       </div>
     );
   }

@@ -7,13 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MapPin, User, Calendar, Edit, Save, X } from 'lucide-react';
+import { ArrowLeft, MapPin, User, Calendar, Save, X } from 'lucide-react';
 import { FormActions } from '@/components/forms/form-layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { PageLoadingOverlay } from '@/components/feedback/loading';
 import { paths } from '@/routes/paths';
+import { ActionButton } from '@/components/actions';
 
 interface SiteData {
   siteId: string;
@@ -247,10 +248,9 @@ const SiteDetail = () => {
           </p>
         </div>
         {user?.role === 'master' && !isEditing && (
-          <Button onClick={handleEdit}>
-            <Edit className="h-4 w-4 mr-2" />
+          <ActionButton kind="edit" onClick={handleEdit}>
             編集
-          </Button>
+          </ActionButton>
         )}
       </div>
 

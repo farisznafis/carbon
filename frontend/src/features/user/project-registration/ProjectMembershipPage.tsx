@@ -28,7 +28,6 @@ import {
   PageBackButton,
   floatingPageBackButtonClassName,
 } from '@/components/navigation/PageBackButton';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { MembershipPreparationDialog } from '@/features/user/project-registration/components/MembershipPreparationDialog';
 import { MembershipStatusFilter } from '@/features/user/project-registration/components/MembershipStatusFilter';
@@ -48,6 +47,7 @@ import { paths } from '@/routes/paths';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { downloadFromUrl } from '@/utils/download';
 import { useToast } from '@/hooks/use-toast';
+import { ActionButton } from '@/components/actions';
 
 gsap.registerPlugin(useGSAP);
 
@@ -450,15 +450,14 @@ export function ProjectMembershipContent({
               {errorMessage}
             </p>
 
-            <Button
-              type="button"
-              variant="outline"
+            <ActionButton
+              kind="retry"
               onClick={
                 loadMembershipData
               }
             >
               再読み込み
-            </Button>
+            </ActionButton>
           </CardContent>
         </Card>
       ) : (

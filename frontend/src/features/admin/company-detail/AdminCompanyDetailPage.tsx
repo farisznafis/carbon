@@ -58,6 +58,7 @@ import {
   formatCompanyStatus,
   formatSubscriptionStatus,
 } from './companyDetailDisplay';
+import { ActionButton } from '@/components/actions';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -176,14 +177,8 @@ function DetailErrorState({
           <CardContent className="space-y-6">
             <p className="text-sm text-foreground">{message}</p>
             <div className="flex flex-wrap gap-3">
-              <Button type="button" variant="outline" onClick={onBack}>
-                戻る
-              </Button>
-              {onRetry && (
-                <Button type="button" onClick={onRetry}>
-                  再試行
-                </Button>
-              )}
+              <ActionButton kind="back" onClick={onBack} />
+              {onRetry && <ActionButton kind="retry" onClick={onRetry} />}
             </div>
           </CardContent>
         </Card>

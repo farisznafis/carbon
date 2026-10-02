@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, LoaderCircle, X } from 'lucide-react';
+import { LoaderCircle, X } from 'lucide-react';
 import {
   getSiteEquipmentHistory,
   type SiteEquipmentHistory,
@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { EquipmentDetails } from './EquipmentDetails';
 import { EquipmentDocuments } from './EquipmentDocuments';
+import { ActionButton } from '@/components/actions';
 
 type EquipmentHistoryDialogProps = {
   siteId: string;
@@ -107,10 +108,9 @@ function HistoryDetail({
 }) {
   return (
     <div className="animate-slide-up space-y-5">
-      <Button type="button" variant="ghost" onClick={onBack}>
-        <ArrowLeft />
+      <ActionButton kind="back" onClick={onBack}>
         一覧へ戻る
-      </Button>
+      </ActionButton>
 
       <section className="rounded-xl border border-border bg-card p-5">
         <h3 className="mb-4 text-large text-foreground">履歴情報</h3>
@@ -304,13 +304,7 @@ export function EquipmentHistoryDialog({
               <p role="alert" className="text-small text-destructive">
                 {errorMessage}
               </p>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => void loadHistory(true)}
-              >
-                再試行
-              </Button>
+              <ActionButton kind="retry" onClick={() => void loadHistory(true)} />
             </div>
           ) : (
             <DataGridTable

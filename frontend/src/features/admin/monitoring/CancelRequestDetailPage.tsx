@@ -22,7 +22,7 @@ import { CancelRequestStatusBadge } from '@/features/admin/monitoring/CancelRequ
 import { formatCancelRequestDateTime } from '@/features/admin/monitoring/cancelRequestFormatters';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
-import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/actions';
 
 type DetailFieldProps = {
   label: string;
@@ -179,12 +179,10 @@ export default function CancelRequestDetailPage() {
             {loadError}
           </p>
           <div className="flex justify-center gap-3">
-            <Button type="button" variant="outline" onClick={returnToList}>
+            <ActionButton kind="back" onClick={returnToList}>
               一覧へ戻る
-            </Button>
-            <Button type="button" onClick={() => void loadCancelRequest()}>
-              再試行
-            </Button>
+            </ActionButton>
+            <ActionButton kind="retry" onClick={() => void loadCancelRequest()} />
           </div>
         </div>
       </main>
@@ -198,9 +196,9 @@ export default function CancelRequestDetailPage() {
           <p className="text-small text-foreground">
             取消申請情報が見つかりませんでした。
           </p>
-          <Button type="button" variant="outline" onClick={returnToList}>
+          <ActionButton kind="back" onClick={returnToList}>
             一覧へ戻る
-          </Button>
+          </ActionButton>
         </div>
       </main>
     );

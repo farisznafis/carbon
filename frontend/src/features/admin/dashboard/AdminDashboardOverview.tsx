@@ -24,7 +24,6 @@ import {
   SkeletonList,
   SkeletonMetricCard,
 } from '@/components/feedback/loading';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
@@ -45,6 +44,7 @@ import type { AdminOperatorPermissionCode } from '@/api/admin/operators';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
 import { useNotifications } from '@/hooks/useNotifications';
 import { toast } from '@/hooks/use-toast';
+import { ActionButton } from '@/components/actions';
 
 export type AdminHomePanel = 'cancel' | 'batch';
 
@@ -269,15 +269,9 @@ function CompanyApplicationSummary({
     <Card className='min-h-72 rounded-xl border-border shadow-app-sm'>
       <CardHeader className='flex-row items-center justify-between space-y-0'>
         <CardTitle className={panelTitleClassName}>企業申請</CardTitle>
-        <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          onClick={onOpenAll}
-          className='text-primary-strong'
-        >
-          すべて見る <ArrowRight />
-        </Button>
+        <ActionButton kind='link' onClick={onOpenAll}>
+          すべて見る
+        </ActionButton>
       </CardHeader>
       <CardContent className='space-y-4'>
         {!permissionGranted ? (
@@ -416,15 +410,9 @@ function CancelRequestSummary({
             未処理 {pendingRequests.length.toLocaleString('ja-JP')}件
           </span>
         </div>
-        <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          onClick={onOpenPanel}
-          className='text-primary-strong'
-        >
-          すべて見る <ArrowRight />
-        </Button>
+        <ActionButton kind='link' onClick={onOpenPanel}>
+          すべて見る
+        </ActionButton>
       </CardHeader>
       <CardContent>
         {!permissionGranted ? (
@@ -498,15 +486,9 @@ function BatchHistorySummary({
     <Card className='rounded-xl border-border shadow-app-sm'>
       <CardHeader className='flex-row items-center justify-between space-y-0'>
         <CardTitle className={panelTitleClassName}>バッチ処理</CardTitle>
-        <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          onClick={onOpenPanel}
-          className='text-primary-strong'
-        >
-          履歴を見る <ArrowRight />
-        </Button>
+        <ActionButton kind='link' onClick={onOpenPanel}>
+          履歴を見る
+        </ActionButton>
       </CardHeader>
       <CardContent>
         {!permissionGranted ? (

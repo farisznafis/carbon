@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import {
   DashboardEmptyState,
   DashboardSection,
@@ -21,7 +20,7 @@ import { useDashboardStore } from '@/stores/dashboardStore';
 import { FloatingHelpButton } from '@/features/master/help/FloatingHelpButton';
 import { PageLoadingOverlay } from '@/components/feedback/loading';
 import { UserInvitationDialog } from '@/features/master/user-invitations/UserInvitationDialog';
-import { Plus } from 'lucide-react';
+import { ActionButton } from '@/components/actions';
 
 /** Renders a quiet placeholder for Master destinations awaiting content. */
 function MasterPlaceholderSection({ title }: { title: string }) {
@@ -178,14 +177,12 @@ const MasterDashboard = () => {
                   title="まだ拠点が登録されていません"
                   description="プロジェクトに入会するには、対象となる拠点の登録が必要です。まず拠点を登録してください。"
                   action={
-                    <Button
-                      type="button"
-                      size="md"
+                    <ActionButton
+                      kind="add"
                       onClick={() => navigate(paths.masterSiteRegister)}
                     >
-                      <Plus className="h-4 w-4" aria-hidden="true" />
                       拠点を追加
-                    </Button>
+                    </ActionButton>
                   }
                 />
               )}

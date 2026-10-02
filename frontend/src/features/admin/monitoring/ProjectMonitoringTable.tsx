@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { RefreshCw } from 'lucide-react';
 import {
   getAdminProjectMonitoringRecords,
   type MonitoringRecordListItem,
@@ -13,13 +12,13 @@ import { PaginationControls } from '@/components/data-display/Pagination/Paginat
 import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { SkeletonTable } from '@/components/feedback/loading';
-import { Button } from '@/components/ui/button';
 import { logger } from '@/lib/logger';
 import {
   formatMonitoringDate,
   formatMonitoringNumber,
   formatMonitoringValue,
 } from './monitoringRecordDisplay';
+import { ActionButton } from '@/components/actions';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
@@ -183,14 +182,7 @@ export function ProjectMonitoringTable({
           <p role="alert" className="text-small text-destructive">
             {loadError}
           </p>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => void loadMonitoringRecords()}
-          >
-            <RefreshCw />
-            再試行
-          </Button>
+          <ActionButton kind="retry" onClick={() => void loadMonitoringRecords()} />
         </div>
       ) : (
         <>

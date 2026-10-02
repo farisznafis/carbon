@@ -31,6 +31,7 @@ import { getOperatorRoleLabel } from './operatorRoles';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
 import { NoticeBanner } from '@/components/feedback/NoticeBanner';
+import { ActionButton } from '@/components/actions';
 
 const EMPTY_OPERATORS: AdminOperator[] = [];
 
@@ -109,18 +110,9 @@ function OperatorEmptyState({ onAdd }: Readonly<{ onAdd: () => void }>) {
         <br className='hidden sm:block' />
         日常の運用業務を行うユーザーです。
       </p>
-      <Button
-        type='button'
-        size='md'
-        className='mt-8'
-        onClick={onAdd}
-      >
-        <Plus
-          className='h-4 w-4'
-          aria-hidden='true'
-        />
+      <ActionButton kind='add' className='mt-8' onClick={onAdd}>
         最初の運用者を追加
-      </Button>
+      </ActionButton>
     </div>
   );
 }
@@ -250,7 +242,9 @@ export default function AdminOperatorListPage() {
         id: 'action',
         label: '操作',
         render: (operator) => (
-          <RowActionButton onClick={() => handleViewProfile(operator)} />
+          <RowActionButton onClick={() => handleViewProfile(operator)}>
+            プロファイル
+          </RowActionButton>
         ),
       },
     ],
@@ -264,10 +258,9 @@ export default function AdminOperatorListPage() {
           title="運用者管理"
           description="運用業務を担当するユーザーのアカウントを管理します。"
           action={
-            <Button type="button" size="md" onClick={handleAddOperator}>
-              <Plus className="h-4 w-4" aria-hidden="true" />
+            <ActionButton kind="add" onClick={handleAddOperator}>
               運用者を追加
-            </Button>
+            </ActionButton>
           }
         />
 
@@ -346,14 +339,7 @@ export default function AdminOperatorListPage() {
               <p className="text-sm text-foreground">
                 運用者一覧を表示できませんでした。
               </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="md"
-                onClick={() => operatorsQuery.refetch()}
-              >
-                再試行
-              </Button>
+              <ActionButton kind="retry" onClick={() => operatorsQuery.refetch()} />
             </div>
           ) : manageableOperators.length === 0 ? (
             <OperatorEmptyState onAdd={handleAddOperator} />

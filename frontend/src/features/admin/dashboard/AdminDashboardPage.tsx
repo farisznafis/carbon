@@ -48,7 +48,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { AdminCompanyApplicationsTable } from '@/features/admin/dashboard/tables/AdminCompanyApplicationsTable';
 import { PendingCompanyActionDialog } from '@/features/admin/dashboard/tables/PendingCompanyActionDialog';
@@ -74,10 +74,12 @@ import { usePagination } from '@/hooks/usePagination';
 import { paths } from '@/routes/paths';
 import { getAdminRouteFromLegacyTab } from '@/features/admin/navigation/adminNavigationConfig';
 import { adminHomeProjectNavigationState } from '@/features/admin/navigation/adminProjectNavigation';
-import { Plus, Search, TriangleAlert } from 'lucide-react';
+import { Search, TriangleAlert } from 'lucide-react';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
 import { NoticeBanner } from '@/components/feedback/NoticeBanner';
+import { ActionButton } from '@/components/actions';
+import { PageTabsList, PageTabsTrigger } from '@/components/navigation/PageTabs';
 
 type AdminDashboardTabValue =
   | 'overview'
@@ -101,8 +103,6 @@ const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
 const HOME_APPLICATION_SUMMARY_LIMIT = 3;
 const ALL_PROJECT_FILTER = 'ALL';
 const PROJECT_VIEW_QUERY_PARAM = 'view';
-const PROJECT_VIEW_TRIGGER_CLASS_NAME =
-  'h-11 shrink-0 rounded-none border-b-2 border-transparent bg-transparent px-1 py-2 text-body text-muted-foreground shadow-none hover:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-foreground data-[state=active]:shadow-none focus-visible:ring-2 focus-visible:ring-ring';
 const FORBIDDEN_SECTION_ERROR = '__FORBIDDEN_SECTION__';
 
 const DEFAULT_PAGINATION: Pagination = {
@@ -1343,23 +1343,10 @@ const AdminDashboard = () => {
                   onValueChange={handleProjectViewChange}
                   className="min-w-0"
                 >
-                  <TabsList
-                    aria-label="プロジェクト管理の表示"
-                    className="flex h-auto w-full justify-start gap-6 overflow-x-auto rounded-none border-b border-border bg-transparent p-0"
-                  >
-                    <TabsTrigger
-                      value="management"
-                      className={PROJECT_VIEW_TRIGGER_CLASS_NAME}
-                    >
-                      管理
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="analytics"
-                      className={PROJECT_VIEW_TRIGGER_CLASS_NAME}
-                    >
-                      アナリティクス
-                    </TabsTrigger>
-                  </TabsList>
+                  <PageTabsList aria-label="プロジェクト管理の表示">
+                    <PageTabsTrigger value="management">管理</PageTabsTrigger>
+                    <PageTabsTrigger value="analytics">アナリティクス</PageTabsTrigger>
+                  </PageTabsList>
 
                   <TabsContent value="analytics" className="m-0 pt-5">
                     <AdminProjectOverviewCards
@@ -1375,18 +1362,16 @@ const AdminDashboard = () => {
                       count={projectTotalItems}
                       description="計画書の記入が完了していないプロジェクトはハイライト表示されます。"
                       action={
-                        <Button
-                          type="button"
-                          size="md"
+                        <ActionButton
+                          kind="add"
                           onClick={() =>
                             adminPermissions.guardAction('PROJECT_CREATE', () =>
                               navigate(paths.adminProjectRegister),
                             )
                           }
                         >
-                          <Plus className="h-4 w-4" />
                           プロジェクトを追加
-                        </Button>
+                        </ActionButton>
                       }
                       filters={
                         <>

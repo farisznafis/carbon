@@ -43,7 +43,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -60,6 +59,7 @@ import {
   adminProjectEditRepresentativeFields,
   type AdminProjectEditField,
 } from './projectEditFields';
+import { ActionButton } from '@/components/actions';
 
 type LocationState = {
   project?: Project;
@@ -498,15 +498,11 @@ export default function AdminProjectEditPage() {
               プロジェクト情報を表示できませんでした。
             </p>
             <p className='mt-1 text-sm text-muted-foreground'>{error}</p>
-            <Button
-              type='button'
-              variant='outline'
-              size='md'
+            <ActionButton
+              kind='retry'
               className='mt-5'
               onClick={() => setReloadKey((key) => key + 1)}
-            >
-              再試行
-            </Button>
+            />
           </FormCard>
         ) : (
           <>

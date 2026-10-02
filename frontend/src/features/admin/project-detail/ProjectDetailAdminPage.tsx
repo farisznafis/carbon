@@ -7,20 +7,23 @@ import {
 } from 'react-router-dom';
 import {
   AlertTriangle,
-  ArrowRight,
   ArrowUpRight,
   BarChart3,
   FileText,
-  UsersRound,
 } from 'lucide-react';
 import type { AdminProjectDetail } from '@/api/admin/projects';
 import { isForbiddenApiError } from '@/api/_shared/errors';
 import type { MonitoringRecordListItem } from '@/api/monitoring';
+import { ActionButton } from '@/components/actions';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 import { PageSkeleton, SkeletonCard } from '@/components/feedback/loading';
+import { dashboardEmptyStateClassName } from '@/components/layout/DashboardLayout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { PageTabsList, PageTabsTrigger } from '@/components/navigation/PageTabs';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { ParticipationReviewListPanel } from '@/features/admin/membership-review/ParticipationReviewListPanel';
 import {
   Card,
   CardContent,
@@ -44,6 +47,22 @@ import { formatProjectDetailValue } from './projectDetailDisplay';
 
 const DEFAULT_MONITORING_PAGE = 1;
 const DEFAULT_MONITORING_LIMIT = 10;
+
+const PROJECT_DETAIL_TABS = [
+  { value: 'overview', label: '概要' },
+  { value: 'monitoring', label: 'モニタリングデータ' },
+  { value: 'membership', label: '入会届' },
+  { value: 'companies', label: '参加企業' },
+] as const;
+
+type ProjectDetailTab = (typeof PROJECT_DETAIL_TABS)[number]['value'];
+
+/** Reads the active tab from the URL so back navigation and shared links reopen the same tab. */
+function resolveProjectDetailTab(value: string | null): ProjectDetailTab {
+  return PROJECT_DETAIL_TABS.some((tab) => tab.value === value)
+    ? (value as ProjectDetailTab)
+    : 'overview';
+}
 
 type ProjectNavigationCardProps = {
   title: string;
@@ -174,15 +193,13 @@ function ProjectOverviewCard({
             </dd>
           </div>
         </dl>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
+        <ActionButton
+          kind="link"
           onClick={onOpenInformation}
-          className="ml-auto flex px-1 text-primary-strong"
+          className="ml-auto flex"
         >
-          詳細情報を見る <ArrowRight aria-hidden="true" />
-        </Button>
+          詳細情報を見る
+        </ActionButton>
       </CardContent>
     </Card>
   );
@@ -225,12 +242,30 @@ function ProjectNavigationCard({
   );
 }
 
-/** Displays one admin project overview and its project-scoped monitoring records. */
+/** Wraps one list-style tab so every project detail tab shares the same card heading. */
+function ProjectDetailTabCard({
+  title,
+  description,
+  children,
+}: Readonly<{ title: string; description: string; children: React.ReactNode }>) {
+  return (
+    <Card className="rounded-xl shadow-app-sm">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
+  );
+}
+
+/** Displays one admin project with its overview, monitoring, membership and participant tabs. */
 export default function ProjectDetailAdmin() {
   const location = useLocation();
   const { projectId } = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = resolveProjectDetailTab(searchParams.get('tab'));
   const permissions = useAdminPermissions();
   const projectQuery = useAdminProjectDetailQuery(projectId);
   const progressQuery = useAdminProjectPlanProgressQuery(projectId);
@@ -264,6 +299,13 @@ export default function ProjectDetailAdmin() {
     },
     [navigate, projectId],
   );
+
+  /** Switches tabs in place, keeping the return destination carried in navigation state. */
+  const changeTab = (value: string) => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.set('tab', resolveProjectDetailTab(value));
+    setSearchParams(nextSearchParams, { replace: true, state: location.state });
+  };
 
   if (projectQuery.isLoading) {
     return (
@@ -337,112 +379,130 @@ export default function ProjectDetailAdmin() {
         </p>
       </section> */}
 
-      <section
-        aria-label="プロジェクトサマリ"
-        className="grid items-stretch gap-4 xl:grid-cols-3"
-      >
-        <ProjectEmissionTrendCard
-          projectId={projectId}
-          project={project}
-          className="xl:col-span-2 xl:row-span-2"
-        />
-        <ProjectOverviewCard
-          project={project}
-          onOpenInformation={() =>
-            navigate(paths.adminProjectInformation(projectId))
-          }
-        />
-        <ProjectPlanProgressCard
-          completedForms={completedForms}
-          totalForms={totalForms}
-          isLoading={progressQuery.isLoading}
-          hasError={progressQuery.isError}
-        />
-      </section>
+      <Tabs value={activeTab} onValueChange={changeTab} className="min-w-0">
+        <PageTabsList aria-label="プロジェクト詳細の表示">
+          {PROJECT_DETAIL_TABS.map((tab) => (
+            <PageTabsTrigger key={tab.value} value={tab.value}>
+              {tab.label}
+            </PageTabsTrigger>
+          ))}
+        </PageTabsList>
 
-      <section
-        aria-label="プロジェクト関連ページ"
-        className="grid gap-4 xl:grid-cols-3"
-      >
-        <ProjectNavigationCard
-          title="プロジェクト計画書"
-          description="計画書の入力内容・関連資料を確認します。"
-          icon={<FileText className="h-5 w-5" />}
-          ariaLabel="プロジェクト計画書を開く"
-          onClick={() =>
-            permissions.guardAction('PROJECT_READ', () =>
-              navigate(paths.adminProjectPlan(projectId)),
-            )
-          }
-        />
-        <ProjectNavigationCard
-          title="モニタリングデータ報告書"
-          description="モニタリング結果の報告書を確認します。"
-          icon={<BarChart3 className="h-5 w-5" />}
-          ariaLabel="モニタリングデータ報告書を開く"
-          onClick={() =>
-            permissions.guardAction('MONITORING_READ', () =>
-              navigate(paths.adminProjectMonitoringReport(projectId)),
-            )
-          }
-        />
-        <ProjectNavigationCard
-          title="入会届一覧"
-          description="このプロジェクトへの入会申請と審査状況を確認します。"
-          icon={<UsersRound className="h-5 w-5" />}
-          ariaLabel="入会届一覧を開く"
-          onClick={() =>
-            permissions.guardAction(
-              'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
-              () => navigate(paths.adminProjectMembership(projectId)),
-            )
-          }
-        />
-      </section>
-
-      <Card id="monitoring-data" className="scroll-mt-24 rounded-xl shadow-app-sm">
-        <CardHeader>
-          <CardTitle>モニタリングデータ一覧</CardTitle>
-          <CardDescription>
-            このプロジェクトに登録されたモニタリングデータを確認できます。
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {!permissions.hasPermission('MONITORING_READ') ? (
-            <PermissionDeniedNotice permission="MONITORING_READ" />
-          ) : <ErrorBoundary
-            fallback={({ resetErrorBoundary }) => (
-              <div
-                role="alert"
-                className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center"
-              >
-                <AlertTriangle
-                  className="h-5 w-5 text-destructive"
-                  aria-hidden="true"
-                />
-                <p className="text-small font-medium text-foreground">
-                  モニタリングデータを表示できませんでした。
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={resetErrorBoundary}
-                >
-                  再試行
-                </Button>
-              </div>
-            )}
+        <TabsContent value="overview" className="m-0 space-y-6 pt-5">
+          <section
+            aria-label="プロジェクトサマリ"
+            className="grid items-stretch gap-4 xl:grid-cols-3"
           >
-            <ProjectMonitoringTable
-              key={projectId}
+            <ProjectEmissionTrendCard
               projectId={projectId}
-              initialPage={monitoringPage}
-              initialLimit={monitoringLimit}
-              onViewDetail={openMonitoringDetail}
+              project={project}
+              className="xl:col-span-2 xl:row-span-2"
             />
-          </ErrorBoundary>}
-        </CardContent>
-      </Card>
+            <ProjectOverviewCard
+              project={project}
+              onOpenInformation={() =>
+                navigate(paths.adminProjectInformation(projectId))
+              }
+            />
+            <ProjectPlanProgressCard
+              completedForms={completedForms}
+              totalForms={totalForms}
+              isLoading={progressQuery.isLoading}
+              hasError={progressQuery.isError}
+            />
+          </section>
+
+          <section
+            aria-label="プロジェクト関連ページ"
+            className="grid gap-4 lg:grid-cols-2"
+          >
+            <ProjectNavigationCard
+              title="プロジェクト計画書"
+              description="計画書の入力内容・関連資料を確認します。"
+              icon={<FileText className="h-5 w-5" />}
+              ariaLabel="プロジェクト計画書を開く"
+              onClick={() =>
+                permissions.guardAction('PROJECT_READ', () =>
+                  navigate(paths.adminProjectPlan(projectId)),
+                )
+              }
+            />
+            <ProjectNavigationCard
+              title="モニタリングデータ報告書"
+              description="モニタリング結果の報告書を確認します。"
+              icon={<BarChart3 className="h-5 w-5" />}
+              ariaLabel="モニタリングデータ報告書を開く"
+              onClick={() =>
+                permissions.guardAction('MONITORING_READ', () =>
+                  navigate(paths.adminProjectMonitoringReport(projectId)),
+                )
+              }
+            />
+          </section>
+        </TabsContent>
+
+        <TabsContent value="monitoring" className="m-0 pt-5">
+          <ProjectDetailTabCard
+            title="モニタリングデータ一覧"
+            description="このプロジェクトに登録されたモニタリングデータを確認できます。"
+          >
+            {!permissions.hasPermission('MONITORING_READ') ? (
+              <PermissionDeniedNotice permission="MONITORING_READ" />
+            ) : (
+              <ErrorBoundary
+                fallback={({ resetErrorBoundary }) => (
+                  <div
+                    role="alert"
+                    className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center"
+                  >
+                    <AlertTriangle
+                      className="h-5 w-5 text-destructive"
+                      aria-hidden="true"
+                    />
+                    <p className="text-small font-medium text-foreground">
+                      モニタリングデータを表示できませんでした。
+                    </p>
+                    <ActionButton kind="retry" onClick={resetErrorBoundary} />
+                  </div>
+                )}
+              >
+                <ProjectMonitoringTable
+                  key={projectId}
+                  projectId={projectId}
+                  initialPage={monitoringPage}
+                  initialLimit={monitoringLimit}
+                  onViewDetail={openMonitoringDetail}
+                />
+              </ErrorBoundary>
+            )}
+          </ProjectDetailTabCard>
+        </TabsContent>
+
+        <TabsContent value="membership" className="m-0 pt-5">
+          <ProjectDetailTabCard
+            title="入会届一覧"
+            description="このプロジェクトへの入会申請と審査状況を確認します。"
+          >
+            {!permissions.hasPermission('PARTICIPATING_COMPANY_APPLICATION_REVIEW') ? (
+              <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
+            ) : (
+              <ParticipationReviewListPanel projectId={projectId} />
+            )}
+          </ProjectDetailTabCard>
+        </TabsContent>
+
+        <TabsContent value="companies" className="m-0 pt-5">
+          <ProjectDetailTabCard
+            title="参加企業一覧"
+            description="このプロジェクトに参加している企業を確認します。"
+          >
+            {/* TODO: render the participating companies once their API is available. */}
+            <div className={dashboardEmptyStateClassName}>
+              参加企業の一覧は準備中です。
+            </div>
+          </ProjectDetailTabCard>
+        </TabsContent>
+      </Tabs>
     </AdminProjectDetailLayout>
   );
 }

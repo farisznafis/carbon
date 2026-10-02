@@ -5,10 +5,12 @@ import {
   Route,
   Routes,
   useLocation,
+  useParams,
 } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mapParticipationReviewDetail } from '@/api/admin/participationReviewMapper';
 import ParticipationReviewListPage from './ParticipationReviewListPage';
+import { ParticipationReviewListPanel } from './ParticipationReviewListPanel';
 
 const { getAdminProjectDetail, getParticipationReviewsByStatus } = vi.hoisted(
   () => ({
@@ -61,8 +63,14 @@ function LocationProbe() {
   return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
 }
 
-/** Renders the project-scoped membership list with its detail destination. */
-function renderPage(initialEntry = '/admin/projects/7/memberships') {
+/** Mounts the panel the way the project detail 入会届 tab does. */
+function ProjectDetailHarness() {
+  const { projectId = '' } = useParams();
+  return <ParticipationReviewListPanel projectId={projectId} />;
+}
+
+/** Renders the project detail route (入会届 tab), the legacy list URL and the detail destination. */
+function renderPage(initialEntry = '/admin/projects/7?tab=membership') {
   return render(
     <MemoryRouter
       initialEntries={[initialEntry]}
@@ -70,6 +78,7 @@ function renderPage(initialEntry = '/admin/projects/7/memberships') {
     >
       <LocationProbe />
       <Routes>
+        <Route path="/admin/projects/:projectId" element={<ProjectDetailHarness />} />
         <Route
           path="/admin/projects/:projectId/memberships"
           element={<ParticipationReviewListPage />}
@@ -83,7 +92,7 @@ function renderPage(initialEntry = '/admin/projects/7/memberships') {
   );
 }
 
-describe('ParticipationReviewListPage', () => {
+describe('ParticipationReviewListPanel', () => {
   beforeEach(() => {
     getAdminProjectDetail.mockReset();
     getParticipationReviewsByStatus.mockReset();
@@ -115,8 +124,9 @@ describe('ParticipationReviewListPage', () => {
     await user.click(screen.getByRole('tab', { name: '承認済み（1）' }));
     expect(screen.getByText('承認済み会社')).toBeInTheDocument();
     expect(screen.getByText('承認済み')).toBeInTheDocument();
+    // The status filter is added next to the tab instead of replacing it.
     expect(screen.getByTestId('location')).toHaveTextContent(
-      '/admin/projects/7/memberships?status=APPROVED',
+      '/admin/projects/7?tab=membership&status=APPROVED',
     );
 
     await user.click(screen.getByRole('button', { name: '詳細' }));
@@ -125,8 +135,12 @@ describe('ParticipationReviewListPage', () => {
     );
   });
 
-  it('restores a rejected tab directly from the status query', async () => {
+  it('restores a rejected filter when opened from the legacy list URL', async () => {
     renderPage('/admin/projects/7/memberships?status=REJECTED');
+
+    expect(screen.getByTestId('location')).toHaveTextContent(
+      '/admin/projects/7?tab=membership&status=REJECTED',
+    );
 
     expect(await screen.findByText('却下会社')).toBeInTheDocument();
     expect(screen.getByText('却下')).toBeInTheDocument();
@@ -136,18 +150,19 @@ describe('ParticipationReviewListPage', () => {
     );
   });
 
-  it('renders the shared 404 page when a page-loading request fails', async () => {
+  it('shows an inline error with retry instead of leaving the project page', async () => {
+    const user = userEvent.setup();
     getParticipationReviewsByStatus.mockRejectedValueOnce(
       new Error('gateway error'),
     );
     renderPage();
 
     expect(
-      await screen.findByRole('heading', { name: 'ページが見つかりません' }),
+      await screen.findByText('入会届一覧を取得できませんでした。'),
     ).toBeInTheDocument();
     expect(screen.queryByText('gateway error')).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'ホームに戻る' }),
-    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '再試行' }));
+    expect(await screen.findByText('承認待ち会社')).toBeInTheDocument();
   });
 });
