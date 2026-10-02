@@ -50,7 +50,6 @@ const PARTICIPATION_STATUS_ORDER: Record<
   REJECTED: 1,
   OPEN: 2,
 };
-const DISPLAYABLE_PROJECT_STATUSES = new Set(['ACTIVE', '作成済み']);
 
 /** Sorts projects by membership UX priority without mutating API data. */
 function sortProjectsByParticipationStatus(
@@ -63,11 +62,6 @@ function sortProjectsByParticipationStatus(
       (PARTICIPATION_STATUS_ORDER[secondProject.participationStatus ?? ''] ??
         Number.MAX_SAFE_INTEGER),
   );
-}
-
-/** Returns whether a project status is eligible for the site dashboard. */
-function isDisplayableSiteProject(project: SiteProject): boolean {
-  return DISPLAYABLE_PROJECT_STATUSES.has(project.projectStatus);
 }
 
 function formatNumber(value?: string | number | null) {
@@ -508,10 +502,9 @@ const Dashboard = () => {
     [projects],
   );
 
-  const displayableProjects = useMemo(
-    () => sortedProjects.filter(isDisplayableSiteProject),
-    [sortedProjects],
-  );
+  // 入会中 / 未入会 are split by isCompanyJoined alone; projectStatus does not
+  // hide a project here (the API sends Japanese statuses such as 準備中).
+  const displayableProjects = sortedProjects;
 
   const companyJoinedProjects = useMemo(
     () =>

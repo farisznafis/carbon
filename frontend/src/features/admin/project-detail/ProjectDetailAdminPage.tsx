@@ -20,10 +20,18 @@ import { PageSkeleton, SkeletonCard } from '@/components/feedback/loading';
 import { dashboardEmptyStateClassName } from '@/components/layout/DashboardLayout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
-import { PageTabsList, PageTabsTrigger } from '@/components/navigation/PageTabs';
+import {
+  PageTabsList,
+  PageTabsTrigger,
+  TabCount,
+} from '@/components/navigation/PageTabs';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
+import type { ParticipationReviewStatus } from '@/api/admin';
+import { NoticeBanner } from '@/components/feedback/NoticeBanner';
+import { MembershipStatusChips } from '@/features/admin/membership-review/MembershipStatusChips';
 import { ParticipationReviewListPanel } from '@/features/admin/membership-review/ParticipationReviewListPanel';
+import { useProjectParticipationReviews } from '@/hooks/admin/useProjectParticipationReviews';
 import {
   Card,
   CardContent,
@@ -163,9 +171,14 @@ function ProjectPlanProgressCard({
 function ProjectOverviewCard({
   project,
   onOpenInformation,
+  membershipCounts,
+  onOpenMembership,
 }: Readonly<{
   project: AdminProjectDetail;
   onOpenInformation: () => void;
+  /** Omitted when the operator cannot review memberships; null while loading. */
+  membershipCounts?: Record<ParticipationReviewStatus, number> | null;
+  onOpenMembership: (status: ParticipationReviewStatus) => void;
 }>) {
   return (
     <Card className="h-full rounded-xl border-border shadow-app-sm">
@@ -192,6 +205,17 @@ function ProjectOverviewCard({
               {formatProjectDetailValue(project.regionalCategory)}
             </dd>
           </div>
+          {membershipCounts !== undefined && (
+            <div className="flex items-start justify-between gap-4">
+              <dt className="pt-0.5 text-small text-muted-foreground">入会届</dt>
+              <dd>
+                <MembershipStatusChips
+                  counts={membershipCounts}
+                  onSelect={onOpenMembership}
+                />
+              </dd>
+            </div>
+          )}
         </dl>
         <ActionButton
           kind="link"
@@ -301,6 +325,27 @@ export default function ProjectDetailAdmin() {
   );
 
   /** Switches tabs in place, keeping the return destination carried in navigation state. */
+  const canReviewMemberships = permissions.hasPermission(
+    'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+  );
+  const membershipReviews = useProjectParticipationReviews(
+    projectId,
+    project,
+    canReviewMemberships,
+  );
+  const pendingMembershipCount = membershipReviews.isReady
+    ? membershipReviews.counts.OPEN
+    : 0;
+
+  /** Opens the 入会届 tab on one status, keeping the return destination. */
+  const openMembership = (status: ParticipationReviewStatus) => {
+    if (!projectId) return;
+    navigate(paths.adminProjectMembership(projectId, status), {
+      replace: true,
+      state: location.state,
+    });
+  };
+
   const changeTab = (value: string) => {
     const nextSearchParams = new URLSearchParams(searchParams);
     nextSearchParams.set('tab', resolveProjectDetailTab(value));
@@ -381,14 +426,42 @@ export default function ProjectDetailAdmin() {
 
       <Tabs value={activeTab} onValueChange={changeTab} className="min-w-0">
         <PageTabsList aria-label="プロジェクト詳細の表示">
-          {PROJECT_DETAIL_TABS.map((tab) => (
-            <PageTabsTrigger key={tab.value} value={tab.value}>
-              {tab.label}
-            </PageTabsTrigger>
-          ))}
+          {PROJECT_DETAIL_TABS.map((tab) => {
+            const badgeCount =
+              tab.value === 'membership' ? pendingMembershipCount : 0;
+
+            return (
+              <PageTabsTrigger
+                key={tab.value}
+                value={tab.value}
+                aria-label={
+                  badgeCount > 0
+                    ? `${tab.label}（承認待ち${badgeCount}件）`
+                    : undefined
+                }
+                className="gap-2"
+              >
+                {tab.label}
+                {badgeCount > 0 && <TabCount count={badgeCount} tone="warning" />}
+              </PageTabsTrigger>
+            );
+          })}
         </PageTabsList>
 
         <TabsContent value="overview" className="m-0 space-y-6 pt-5">
+          {pendingMembershipCount > 0 && (
+            <NoticeBanner
+              tone="warning"
+              action={
+                <ActionButton kind="review" onClick={() => openMembership('OPEN')}>
+                  確認する
+                </ActionButton>
+              }
+            >
+              承認待ちの入会届が{pendingMembershipCount}件あります。
+            </NoticeBanner>
+          )}
+
           <section
             aria-label="プロジェクトサマリ"
             className="grid items-stretch gap-4 xl:grid-cols-3"
@@ -403,6 +476,14 @@ export default function ProjectDetailAdmin() {
               onOpenInformation={() =>
                 navigate(paths.adminProjectInformation(projectId))
               }
+              membershipCounts={
+                canReviewMemberships
+                  ? membershipReviews.isReady
+                    ? membershipReviews.counts
+                    : null
+                  : undefined
+              }
+              onOpenMembership={openMembership}
             />
             <ProjectPlanProgressCard
               completedForms={completedForms}
@@ -486,7 +567,14 @@ export default function ProjectDetailAdmin() {
             {!permissions.hasPermission('PARTICIPATING_COMPANY_APPLICATION_REVIEW') ? (
               <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
             ) : (
-              <ParticipationReviewListPanel projectId={projectId} />
+              <ParticipationReviewListPanel
+                projectId={projectId}
+                reviewsByStatus={membershipReviews.reviewsByStatus}
+                isLoading={membershipReviews.isLoading}
+                isError={membershipReviews.isError}
+                isForbidden={membershipReviews.isForbidden}
+                onRetry={() => void membershipReviews.refetch()}
+              />
             )}
           </ProjectDetailTabCard>
         </TabsContent>

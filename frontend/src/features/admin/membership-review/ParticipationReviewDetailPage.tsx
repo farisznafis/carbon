@@ -39,6 +39,7 @@ import { ParticipationReviewPdfCard } from './ParticipationReviewPdfCard';
 import { isParticipationReviewApproved } from './participationReviewDisplay';
 import { ParticipationReviewSections } from './ParticipationReviewSections';
 import { isParticipationReviewForProject } from './participationReviewProjectMatch';
+import { REVIEW_STATUSES } from './participationReviewStatusContent';
 import { ActionButton } from '@/components/actions';
 
 const EMPTY_FIELD_ERRORS: ParticipationReviewDecisionErrors = {
@@ -47,12 +48,6 @@ const EMPTY_FIELD_ERRORS: ParticipationReviewDecisionErrors = {
   rejectReason: null,
   checklist: null,
 };
-
-const REVIEW_STATUSES: ParticipationReviewStatus[] = [
-  'OPEN',
-  'APPROVED',
-  'REJECTED',
-];
 
 /** Reads a supported membership status without trusting arbitrary query values. */
 function readReviewStatus(value: string | null): ParticipationReviewStatus | null {

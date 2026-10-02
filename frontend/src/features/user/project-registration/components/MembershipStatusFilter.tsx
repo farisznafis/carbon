@@ -5,11 +5,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type {
-  MembershipStatusFilter as MembershipStatusFilterValue,
-  ProjectMembershipStatus,
+import type { StatusBadgeTone } from '@/components/data-display/StatusBadge';
+import {
+  SegmentButton,
+  SegmentGroup,
+  TabCount,
+} from '@/components/navigation/PageTabs';
+import {
+  MEMBERSHIP_STATUS_PRESENTATION,
+  type MembershipStatusFilter as MembershipStatusFilterValue,
+  type ProjectMembershipStatus,
 } from '@/features/user/project-registration/projectMembershipStatus';
-import { cn } from '@/lib/utils';
 
 type MembershipStatusFilterProps = Readonly<{
   counts: Record<ProjectMembershipStatus, number>;
@@ -23,34 +29,15 @@ type MembershipStatusFilterProps = Readonly<{
 type FilterOption = Readonly<{
   value: MembershipStatusFilterValue;
   label: string;
-  activeClassName: string;
+  tone: StatusBadgeTone;
 }>;
 
+/** すべて plus each membership state, in the same tones as the project cards. */
 const FILTER_OPTIONS: FilterOption[] = [
-  {
-    value: 'all',
-    label: 'すべて',
-    activeClassName:
-      'border-border bg-secondary text-secondary-foreground',
-  },
-  {
-    value: 'available',
-    label: '未入会',
-    activeClassName:
-      'border-primary/40 bg-accent text-accent-foreground',
-  },
-  {
-    value: 'pending',
-    label: '申請中',
-    activeClassName:
-      'border-warning-border bg-warning-subtle text-[hsl(var(--warning-800))]',
-  },
-  {
-    value: 'joined',
-    label: '入会中',
-    activeClassName:
-      'border-success-border bg-success-subtle text-[hsl(var(--success-800))]',
-  },
+  { value: 'all', label: 'すべて', tone: 'neutral' },
+  { value: 'available', ...MEMBERSHIP_STATUS_PRESENTATION.available },
+  { value: 'pending', ...MEMBERSHIP_STATUS_PRESENTATION.pending },
+  { value: 'joined', ...MEMBERSHIP_STATUS_PRESENTATION.joined },
 ];
 
 function getStatusCount(
@@ -91,56 +78,32 @@ export function MembershipStatusFilter({
           ステータス
         </span>
 
-        <div
-          role="group"
-          aria-label="入会ステータスで絞り込む"
-          className="flex items-center gap-1 rounded-full border border-border bg-card p-1 shadow-app-sm"
-        >
+        <SegmentGroup aria-label="入会ステータスで絞り込む">
           {FILTER_OPTIONS.map((option) => {
             const count = getStatusCount(
               option.value,
               counts,
             );
 
-            const isActive =
-              activeStatus === option.value;
-
             return (
-              <button
+              <SegmentButton
                 key={option.value}
-                type="button"
-                aria-pressed={isActive}
+                tone={option.tone}
+                active={activeStatus === option.value}
                 aria-label={`${option.label} ${count}件`}
                 disabled={disabled}
                 onClick={() =>
                   onStatusChange(option.value)
                 }
-                className={cn(
-                  'inline-flex h-9 items-center gap-2 rounded-full border border-transparent px-3 text-sm font-medium text-muted-foreground transition-colors',
-                  'hover:bg-muted hover:text-foreground',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                  'disabled:pointer-events-none disabled:opacity-50',
-                  isActive &&
-                    option.activeClassName,
-                )}
               >
                 <span>{option.label}</span>
-
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    'min-w-5 rounded-full bg-background/80 px-1.5 py-0.5 text-center text-xs tabular-nums',
-                    isActive
-                      ? 'text-current'
-                      : 'text-muted-foreground',
-                  )}
-                >
-                  {count}
+                <span aria-hidden="true">
+                  <TabCount count={count} />
                 </span>
-              </button>
+              </SegmentButton>
             );
           })}
-        </div>
+        </SegmentGroup>
       </div>
 
       {/* Tablet / mobile */}

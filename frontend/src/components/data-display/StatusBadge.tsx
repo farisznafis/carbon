@@ -1,7 +1,15 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
-type StatusBadgeTone =
+/**
+ * Pick the tone by what the status means, never by the screen it is on:
+ * - warning: waiting for someone's action (承認待ち, 申請受付, 確認待ち)
+ * - success: completed, approved or active (承認済み, 入力済み, 稼働中)
+ * - danger:  rejected or failed (却下, 失敗)
+ * - info:    in progress (実行中)
+ * - neutral: no state, a plain tag or a count (未入力, 停止中, 任意, role names)
+ */
+export type StatusBadgeTone =
   | 'success'
   | 'warning'
   | 'danger'

@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { ArrowLeft, MapPin, User, Calendar, Save, X } from 'lucide-react';
 import { FormActions } from '@/components/forms/form-layout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,6 +15,7 @@ import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { PageLoadingOverlay } from '@/components/feedback/loading';
 import { paths } from '@/routes/paths';
 import { ActionButton } from '@/components/actions';
+import { PageTabsList, PageTabsTrigger } from '@/components/navigation/PageTabs';
 
 interface SiteData {
   siteId: string;
@@ -255,10 +256,10 @@ const SiteDetail = () => {
       </div>
 
       <Tabs defaultValue="info" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="info">基本情報</TabsTrigger>
-          <TabsTrigger value="projects">参加プロジェクト</TabsTrigger>
-        </TabsList>
+        <PageTabsList aria-label="拠点詳細の表示">
+          <PageTabsTrigger value="info">基本情報</PageTabsTrigger>
+          <PageTabsTrigger value="projects">参加プロジェクト</PageTabsTrigger>
+        </PageTabsList>
 
         <TabsContent value="info">
           <Card>
@@ -456,9 +457,9 @@ const SiteDetail = () => {
                           参加日: {project.joinedDate}
                         </p>
                       </div>
-                      <Badge variant={project.status === 'active' ? 'default' : 'secondary'}>
+                      <StatusBadge tone={project.status === 'active' ? 'success' : 'neutral'}>
                         {project.status === 'active' ? '稼働中' : '停止中'}
-                      </Badge>
+                      </StatusBadge>
                     </div>
                   ))}
                 </div>

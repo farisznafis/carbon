@@ -5,7 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { ExternalLink } from 'lucide-react';
-import type { ProjectMembershipStatus } from '@/features/user/project-registration/projectMembershipStatus';
+import {
+  MEMBERSHIP_STATUS_PRESENTATION,
+  type ProjectMembershipStatus,
+} from '@/features/user/project-registration/projectMembershipStatus';
 
 export type { ProjectMembershipStatus } from '@/features/user/project-registration/projectMembershipStatus';
 
@@ -17,23 +20,27 @@ type ProjectMembershipCardProps = Readonly<{
   isDownloadingPdf?: boolean;
 }>;
 
+/** Card accent per state; neutral 未入会 gets a neutral bar to match its badge. */
+const STATUS_ACCENT_CLASS_NAMES: Record<ProjectMembershipStatus, string> = {
+  available: 'border-l-border',
+  pending: 'border-l-warning',
+  joined: 'border-l-success',
+};
+
 const STATUS_PRESENTATION = {
   available: {
-    label: '未入会',
-    tone: 'neutral',
-    accentClassName: 'border-l-primary',
+    ...MEMBERSHIP_STATUS_PRESENTATION.available,
+    accentClassName: STATUS_ACCENT_CLASS_NAMES.available,
   },
   pending: {
-    label: '申請中',
-    tone: 'warning',
-    accentClassName: 'border-l-warning',
+    ...MEMBERSHIP_STATUS_PRESENTATION.pending,
+    accentClassName: STATUS_ACCENT_CLASS_NAMES.pending,
   },
   joined: {
-    label: '入会中',
-    tone: 'success',
-    accentClassName: 'border-l-success',
+    ...MEMBERSHIP_STATUS_PRESENTATION.joined,
+    accentClassName: STATUS_ACCENT_CLASS_NAMES.joined,
   },
-} as const;
+};
 
 // Builds the compact methodology reference shown on membership project cards.
 function formatMethodologyReference(

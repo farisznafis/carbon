@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   MemoryRouter,
@@ -11,6 +12,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mapParticipationReviewDetail } from '@/api/admin/participationReviewMapper';
 import ParticipationReviewListPage from './ParticipationReviewListPage';
 import { ParticipationReviewListPanel } from './ParticipationReviewListPanel';
+import { useAdminProjectDetailQuery } from '@/hooks/admin/useAdminProjectDetailQuery';
+import { useProjectParticipationReviews } from '@/hooks/admin/useProjectParticipationReviews';
 
 const { getAdminProjectDetail, getParticipationReviewsByStatus } = vi.hoisted(
   () => ({
@@ -26,6 +29,12 @@ vi.mock('@/api/admin', async (importOriginal) => {
     getAdminProjectDetail,
     getParticipationReviewsByStatus,
   };
+});
+
+// The project detail query reads from the projects module directly.
+vi.mock('@/api/admin/projects', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/api/admin/projects')>();
+  return { ...actual, getAdminProjectDetail };
 });
 
 vi.mock('@/contexts/AuthContext', () => ({
@@ -63,15 +72,32 @@ function LocationProbe() {
   return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
 }
 
-/** Mounts the panel the way the project detail 入会届 tab does. */
+/** Mounts the panel the way the project detail 入会届 tab does, fed by the shared hook. */
 function ProjectDetailHarness() {
   const { projectId = '' } = useParams();
-  return <ParticipationReviewListPanel projectId={projectId} />;
+  const { data: project } = useAdminProjectDetailQuery(projectId);
+  const reviews = useProjectParticipationReviews(projectId, project, true);
+
+  return (
+    <ParticipationReviewListPanel
+      projectId={projectId}
+      reviewsByStatus={reviews.reviewsByStatus}
+      isLoading={!reviews.isReady && !reviews.isError}
+      isError={reviews.isError}
+      isForbidden={reviews.isForbidden}
+      onRetry={() => void reviews.refetch()}
+    />
+  );
 }
 
 /** Renders the project detail route (入会届 tab), the legacy list URL and the detail destination. */
 function renderPage(initialEntry = '/admin/projects/7?tab=membership') {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
   return render(
+    <QueryClientProvider client={queryClient}>
     <MemoryRouter
       initialEntries={[initialEntry]}
       future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
@@ -88,7 +114,8 @@ function renderPage(initialEntry = '/admin/projects/7?tab=membership') {
           element={<div>detail page</div>}
         />
       </Routes>
-    </MemoryRouter>,
+    </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 
@@ -116,14 +143,15 @@ describe('ParticipationReviewListPanel', () => {
 
     expect(await screen.findByText('承認待ち会社')).toBeInTheDocument();
     expect(screen.queryByText('別プロジェクト会社')).not.toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: '承認待ち（1）' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: '承認済み（1）' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: '却下（1）' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '承認待ち1' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '承認済み1' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '却下1' })).toBeInTheDocument();
     expect(screen.getByText('一次確認待ち')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: '承認済み（1）' }));
+    await user.click(screen.getByRole('tab', { name: '承認済み1' }));
     expect(screen.getByText('承認済み会社')).toBeInTheDocument();
-    expect(screen.getByText('承認済み')).toBeInTheDocument();
+    // The row badge, not the filter label, carries the status.
+    expect(within(screen.getByRole('tabpanel')).getByText('承認済み')).toBeInTheDocument();
     // The status filter is added next to the tab instead of replacing it.
     expect(screen.getByTestId('location')).toHaveTextContent(
       '/admin/projects/7?tab=membership&status=APPROVED',
@@ -143,8 +171,8 @@ describe('ParticipationReviewListPanel', () => {
     );
 
     expect(await screen.findByText('却下会社')).toBeInTheDocument();
-    expect(screen.getByText('却下')).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: '却下（1）' })).toHaveAttribute(
+    expect(within(screen.getByRole('tabpanel')).getByText('却下')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '却下1' })).toHaveAttribute(
       'data-state',
       'active',
     );

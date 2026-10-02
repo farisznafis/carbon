@@ -1,12 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  getAdminProjectDetail,
-  getParticipationReviewsByStatus,
-  type ParticipationReviewDetail,
-  type ParticipationReviewStatus,
+import type {
+  ParticipationReviewDetail,
+  ParticipationReviewStatus,
 } from '@/api/admin';
-import { isForbiddenApiError } from '@/api/_shared/errors';
 import { ActionButton, RowActionButton } from '@/components/actions';
 import {
   DataGridTable,
@@ -14,59 +11,28 @@ import {
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { SkeletonTable } from '@/components/feedback/loading';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  SegmentTabsList,
+  SegmentTabsTrigger,
+  TabCount,
+} from '@/components/navigation/PageTabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { formatAdminCompanyDateTime } from '@/features/admin/company-detail/companyDetailDisplay';
 import { resolveAdminProjectNavigationState } from '@/features/admin/navigation/adminProjectNavigation';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
+import type { ParticipationReviewsByStatus } from '@/hooks/admin/useProjectParticipationReviews';
 import { usePagination } from '@/hooks/usePagination';
 import { paths } from '@/routes/paths';
-import { isParticipationReviewForProject } from './participationReviewProjectMatch';
+import { MembershipStatusBadge } from './MembershipStatusBadge';
+import {
+  REVIEW_STATUSES,
+  REVIEW_STATUS_CONTENT,
+  resolveReviewStatus,
+} from './participationReviewStatusContent';
 
 const INITIAL_ITEMS_PER_PAGE = 10;
 const REVIEW_GRID_COLUMNS =
   'minmax(180px, 1fr) minmax(180px, 1fr) minmax(190px, 0.9fr) minmax(150px, 0.75fr) minmax(110px, 0.5fr)';
-
-const REVIEW_STATUSES: ParticipationReviewStatus[] = [
-  'OPEN',
-  'APPROVED',
-  'REJECTED',
-];
-const EMPTY_REVIEWS_BY_STATUS: Record<
-  ParticipationReviewStatus,
-  ParticipationReviewDetail[]
-> = {
-  OPEN: [],
-  APPROVED: [],
-  REJECTED: [],
-};
-const REVIEW_STATUS_CONTENT: Record<
-  ParticipationReviewStatus,
-  { label: string; description: string; emptyMessage: string }
-> = {
-  OPEN: {
-    label: '承認待ち',
-    description: '管理者の承認を待っている入会届を表示しています。',
-    emptyMessage: '承認待ちの入会届はありません。',
-  },
-  APPROVED: {
-    label: '承認済み',
-    description: '2名の管理者による承認が完了した入会届を表示しています。',
-    emptyMessage: '承認済みの入会届はありません。',
-  },
-  REJECTED: {
-    label: '却下',
-    description: '管理者によって却下された入会届を表示しています。',
-    emptyMessage: '却下された入会届はありません。',
-  },
-};
-
-/** Resolves the membership status query to a supported status filter. */
-function resolveReviewStatus(value: string | null): ParticipationReviewStatus {
-  return REVIEW_STATUSES.includes(value as ParticipationReviewStatus)
-    ? (value as ParticipationReviewStatus)
-    : 'OPEN';
-}
 
 /** Returns the badge text shown for a row in the selected status filter. */
 function getStatusBadgeLabel(
@@ -81,51 +47,30 @@ function getStatusBadgeLabel(
   return REVIEW_STATUS_CONTENT[status].label;
 }
 
+type ParticipationReviewListPanelProps = {
+  projectId: string;
+  /** Already narrowed to this project (see useProjectParticipationReviews). */
+  reviewsByStatus: ParticipationReviewsByStatus;
+  isLoading: boolean;
+  isError: boolean;
+  isForbidden: boolean;
+  onRetry: () => void;
+};
+
 /** Lists one project's membership applications by status; embedded in the project detail 入会届 tab. */
 export function ParticipationReviewListPanel({
   projectId,
-}: Readonly<{ projectId: string }>) {
+  reviewsByStatus,
+  isLoading,
+  isError,
+  isForbidden,
+  onRetry,
+}: Readonly<ParticipationReviewListPanelProps>) {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigationState = resolveAdminProjectNavigationState(location.state);
   const activeStatus = resolveReviewStatus(searchParams.get('status'));
-  const [reviewsByStatus, setReviewsByStatus] = useState(EMPTY_REVIEWS_BY_STATUS);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasLoadError, setHasLoadError] = useState(false);
-  const [hasPermissionError, setHasPermissionError] = useState(false);
-
-  /** Loads all statuses at once, keeping only this project's applications. */
-  const loadReviews = useCallback(async () => {
-    setIsLoading(true);
-    setHasLoadError(false);
-    setHasPermissionError(false);
-
-    try {
-      const [project, statusReviews] = await Promise.all([
-        getAdminProjectDetail(projectId),
-        getParticipationReviewsByStatus(),
-      ]);
-      const belongsToProject = (review: ParticipationReviewDetail) =>
-        isParticipationReviewForProject(review, projectId, project);
-
-      setReviewsByStatus({
-        OPEN: statusReviews.OPEN.filter(belongsToProject),
-        APPROVED: statusReviews.APPROVED.filter(belongsToProject),
-        REJECTED: statusReviews.REJECTED.filter(belongsToProject),
-      });
-    } catch (error) {
-      setHasPermissionError(isForbiddenApiError(error));
-      setHasLoadError(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [projectId]);
-
-  useEffect(() => {
-    void loadReviews();
-  }, [loadReviews]);
-
   const {
     currentPage,
     totalPages,
@@ -201,18 +146,9 @@ export function ParticipationReviewListPanel({
         sortable: true,
         sortValue: (review) => getStatusBadgeLabel(activeStatus, review),
         render: (review) => (
-          <Badge
-            variant={activeStatus === 'REJECTED' ? 'destructive' : 'outline'}
-            className={
-              activeStatus === 'APPROVED'
-                ? 'border-success/30 bg-success/10 text-success'
-                : activeStatus === 'OPEN'
-                  ? 'border-primary/30 bg-primary/5 text-primary'
-                  : undefined
-            }
-          >
+          <MembershipStatusBadge status={activeStatus}>
             {getStatusBadgeLabel(activeStatus, review)}
-          </Badge>
+          </MembershipStatusBadge>
         ),
       },
       {
@@ -226,33 +162,41 @@ export function ParticipationReviewListPanel({
     [activeStatus, viewDetail],
   );
 
-  if (hasPermissionError) {
+  if (isForbidden) {
     return (
       <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
     );
   }
 
-  if (hasLoadError) {
+  if (isError) {
     return (
       <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center">
         <p role="alert" className="text-small text-destructive">
           入会届一覧を取得できませんでした。
         </p>
-        <ActionButton kind="retry" onClick={() => void loadReviews()} />
+        <ActionButton kind="retry" onClick={onRetry} />
       </div>
     );
   }
 
   return (
     <Tabs value={activeStatus} onValueChange={changeStatus} className="space-y-5">
-      <TabsList className="grid h-auto w-full grid-cols-3 sm:w-fit">
-        {REVIEW_STATUSES.map((status) => (
-          <TabsTrigger key={status} value={status}>
-            {REVIEW_STATUS_CONTENT[status].label}（
-            {reviewsByStatus[status].length}）
-          </TabsTrigger>
-        ))}
-      </TabsList>
+      <SegmentTabsList aria-label="入会届のステータス">
+        {REVIEW_STATUSES.map((status) => {
+          const count = reviewsByStatus[status].length;
+
+          return (
+            <SegmentTabsTrigger
+              key={status}
+              value={status}
+              tone={REVIEW_STATUS_CONTENT[status].tone}
+            >
+              {REVIEW_STATUS_CONTENT[status].label}
+              <TabCount count={count} />
+            </SegmentTabsTrigger>
+          );
+        })}
+      </SegmentTabsList>
 
       {REVIEW_STATUSES.map((status) => (
         <TabsContent key={status} value={status} className="space-y-4">

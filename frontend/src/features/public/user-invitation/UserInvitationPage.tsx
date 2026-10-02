@@ -29,7 +29,7 @@ import {
 } from '@/components/forms/form-layout';
 import { RequiredLabel } from '@/components/forms/shared';
 import { PasswordInput } from '@/components/inputs';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { Button } from '@/components/ui/button';
 import {
   CardContent,
@@ -520,7 +520,7 @@ export default function UserInvitationPage() {
                 <FormSection
                   icon={<Building2 className="h-5 w-5" />}
                   title="招待情報"
-                  meta={<Badge variant="secondary">変更不可</Badge>}
+                  meta={<StatusBadge>変更不可</StatusBadge>}
                   description={
                     <div id={INVITATION_READONLY_DESCRIPTION_ID}>
                       <span className="block">
