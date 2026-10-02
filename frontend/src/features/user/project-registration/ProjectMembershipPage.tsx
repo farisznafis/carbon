@@ -240,7 +240,7 @@ export function ProjectMembershipContent({
         '[data-membership-reveal]',
         {
           autoAlpha: 0,
-          y: 16,
+          y: embedded ? 0 : 16,
         },
         {
           autoAlpha: 1,
@@ -255,8 +255,8 @@ export function ProjectMembershipContent({
         '[data-membership-project]',
         {
           autoAlpha: 0,
-          y: 20,
-          scale: 0.985,
+          y: embedded ? 0 : 20,
+          scale: embedded ? 1 : 0.985,
         },
         {
           autoAlpha: 1,
