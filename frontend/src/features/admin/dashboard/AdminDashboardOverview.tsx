@@ -154,10 +154,13 @@ function MetricCard({
 
   const header = (
     <span className='flex items-start justify-between gap-3'>
-      <span className='flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5'>
-        <span className='text-body font-bold text-foreground'>{label}</span>
+      <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+        <span className="text-body !font-bold text-foreground">
+          {label}
+        </span>
+
         {description && (
-          <span className='text-subtle text-muted-foreground'>
+          <span className="text-subtle text-muted-foreground">
             {description}
           </span>
         )}
@@ -784,6 +787,7 @@ export function AdminDashboardOverview(
           style={alignedSidebarStyle}
           className='flex min-w-0 flex-col gap-grid xl:h-[var(--admin-home-main-column-height)] xl:min-h-0 xl:max-h-[var(--admin-home-main-column-height)] xl:overflow-hidden'
         >
+          <NotificationSummary />
           <CancelRequestSummary
             requests={props.cancelRequests}
             loading={props.cancelRequestsLoading}
@@ -799,7 +803,6 @@ export function AdminDashboardOverview(
             onOpenPanel={() => props.onPanelChange('batch')}
             permissionGranted={props.canReadBatchHistory}
           />
-          <NotificationSummary />
         </div>
       </div>
       <MonitoringDialogs
