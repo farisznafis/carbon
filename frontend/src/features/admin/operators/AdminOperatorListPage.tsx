@@ -264,7 +264,7 @@ export default function AdminOperatorListPage() {
   );
 
   return (
-    <main className='min-h-[calc(100dvh-5rem)] bg-background py-8'>
+    <main className='min-h-[calc(100dvh-var(--app-header-height))] bg-background py-8'>
       <div className={`${adminPageContainerClassName} space-y-4`}>
         <AdminPageHeader
           title="運用者管理"

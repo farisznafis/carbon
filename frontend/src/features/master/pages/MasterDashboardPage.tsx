@@ -95,7 +95,7 @@ const MasterDashboard = () => {
   }
 
   return (
-    <div className="flex min-h-[calc(100dvh-5rem)] flex-col bg-background">
+    <div className="flex min-h-[calc(100dvh-var(--app-header-height))] flex-col bg-background">
       <main className={cn(adminPageContainerClassName, 'flex-1 py-8')}>
         {activeTab === 'home' && <MasterPlaceholderSection title="ホーム" />}
         {activeTab === 'analytics' && <MasterPlaceholderSection title="アナリティクス" />}

@@ -244,7 +244,7 @@ export const Navbar = ({
             user &&
             'py-3',
           appShell &&
-            'h-20 px-4 py-0 sm:px-6 lg:px-8',
+            'h-header px-4 py-0 sm:px-6 lg:px-gutter',
           isLoginPage &&
             '[@media(max-height:480px)]:py-2',
         )}

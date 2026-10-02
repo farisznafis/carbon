@@ -1105,9 +1105,9 @@ const AdminDashboard = () => {
     canReadBatchHistory && batchHistoryError !== FORBIDDEN_SECTION_ERROR;
 
   return (
-    <div className="flex min-h-[calc(100dvh-5rem)] flex-col bg-background">
+    <div className="flex min-h-[calc(100dvh-var(--app-header-height))] flex-col bg-background">
       <Tabs value={activeSection} className="flex flex-1 flex-col bg-background">
-        <main className={`${dashboardContainer} flex-1 space-y-10 py-8`}>
+        <main className={`${dashboardContainer} flex-1 space-y-section py-page-y`}>
           {/* <TabsContent
             value="overview"
             className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"

@@ -205,6 +205,12 @@ All colors MUST be HSL.
     --section-gap: 2rem;
     --marketing-section-padding: 6rem;
 
+    /* Application shell geometry shared by the navbar, sidebar and page containers. */
+    --app-header-height: 5rem;
+    --page-gutter: 2rem;
+    --page-padding-y: 2rem;
+    --grid-gap: 1.5rem;
+
 
     /* =========================================================
       ELEVATION
@@ -236,6 +242,10 @@ All colors MUST be HSL.
       --card-padding: clamp(1.25rem, 1.25vw, 1.5rem);
       --section-gap: clamp(1.5rem, 1.67vw, 2rem);
       --marketing-section-padding: clamp(4rem, 5vw, 6rem);
+      --app-header-height: clamp(4rem, 4.17vw, 5rem);
+      --page-gutter: clamp(1.5rem, 1.67vw, 2rem);
+      --page-padding-y: clamp(1.5rem, 1.67vw, 2rem);
+      --grid-gap: clamp(1rem, 1.25vw, 1.5rem);
     }
   }
 

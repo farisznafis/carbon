@@ -28,6 +28,10 @@ export default {
 			card: 'var(--card-padding)',
 			section: 'var(--section-gap)',
 			'marketing-section': 'var(--marketing-section-padding)',
+			header: 'var(--app-header-height)',
+			gutter: 'var(--page-gutter)',
+			'page-y': 'var(--page-padding-y)',
+			grid: 'var(--grid-gap)',
 		},
 		maxWidth: {
 		  app: '77.5rem',      // 1240

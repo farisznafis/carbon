@@ -19,7 +19,7 @@ export function SidebarHeader({
   return (
     <div
       className={cn(
-        'relative flex h-20 shrink-0 items-center',
+        'relative flex h-header shrink-0 items-center',
         'border-b border-sidebar-border',
         collapsed ? 'justify-center px-3' : 'px-3',
       )}

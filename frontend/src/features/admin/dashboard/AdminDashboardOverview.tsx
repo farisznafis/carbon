@@ -47,6 +47,9 @@ import { toast } from '@/hooks/use-toast';
 
 export type AdminHomePanel = 'cancel' | 'batch';
 
+/** Matches AdminTableCard headings so every Home panel shares one title size. */
+const panelTitleClassName = 'text-subsection-title font-bold';
+
 /** Tracks an element's rendered height so adjacent desktop content can align to it. */
 function useElementHeight<TElement extends HTMLElement>() {
   const elementRef = useRef<TElement>(null);
@@ -133,7 +136,7 @@ type MetricCardProps = {
   requiredPermission: AdminOperatorPermissionCode;
 };
 
-/** Renders one independently loading metric card. */
+/** Renders one independently loading metric card; the whole card opens its destination. */
 function MetricCard({
   label,
   value,
@@ -146,79 +149,67 @@ function MetricCard({
   requiredPermission,
 }: Readonly<MetricCardProps>) {
   if (loading) {
-    return <SkeletonMetricCard />;
+    return <SkeletonMetricCard className='min-h-[6.5rem]' />;
   }
 
-  return (
-    <Card className="h-full rounded-xl border-border shadow-app-sm">
-      <CardContent
-        className="
-          grid h-full min-h-[150px]
-          grid-rows-[auto_1fr_auto]
-          gap-y-3
-          p-5
-        "
-      >
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4">
-          <p className="text-body font-bold text-foreground">
-            {label}
-          </p>
-        </div>
+  const header = (
+    <span className='flex items-start justify-between gap-3'>
+      <span className='flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5'>
+        <span className='text-body font-bold text-foreground'>{label}</span>
+        {description && (
+          <span className='text-subtle text-muted-foreground'>
+            {description}
+          </span>
+        )}
+      </span>
+      {permissionGranted && (
+        <ArrowRight
+          className='mt-0.5 h-4 w-4 shrink-0 text-primary-strong transition-transform group-hover:translate-x-0.5'
+          aria-hidden='true'
+        />
+      )}
+    </span>
+  );
 
-        {/* KPI value / permission state */}
-        <div className="flex min-w-0 items-center">
+  if (!permissionGranted || error) {
+    return (
+      <Card className='h-full rounded-xl border-border shadow-app-sm'>
+        <div className='flex h-full flex-col gap-3 p-card'>
+          {header}
           {!permissionGranted ? (
             <PermissionDeniedNotice
               permission={requiredPermission}
               compact
-              className="w-full"
+              className='w-full'
             />
-          ) : error ? (
+          ) : (
             <div
-              role="alert"
-              className="
-                w-full
-                rounded-lg
-                border border-destructive/30
-                bg-destructive/5
-                px-4 py-3
-                text-small text-destructive
-              "
+              role='alert'
+              className='w-full rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-small text-destructive'
             >
               取得できませんでした
             </div>
-          ) : (
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-metric font-bold leading-none tracking-tight tabular-nums text-foreground">
-                {value.toLocaleString('ja-JP')}
-              </span>
-
-              <span className="text-base font-semibold text-foreground">
-                件
-              </span>
-            </div>
           )}
         </div>
+      </Card>
+    );
+  }
 
-        {/* Footer */}
-        <div className="flex items-center justify-between gap-3">
-          <p className="min-w-0 truncate text-subtle text-foreground">
-            {description}
-          </p>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onClick}
-            className="shrink-0 px-1 text-primary-strong"
-          >
-            確認
-            <ArrowRight />
-          </Button>
-        </div>
-      </CardContent>
+  return (
+    <Card className='h-full rounded-xl border-border shadow-app-sm transition-colors hover:border-primary/40'>
+      <button
+        type='button'
+        onClick={onClick}
+        className='group flex h-full w-full flex-col gap-3 rounded-xl p-card text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+      >
+        {header}
+        <span className='flex items-baseline gap-1.5'>
+          <span className='text-metric font-bold leading-none tracking-tight tabular-nums text-foreground'>
+            {value.toLocaleString('ja-JP')}
+          </span>
+          <span className='text-base font-semibold text-foreground'>件</span>
+        </span>
+      </button>
     </Card>
   );
 }
@@ -273,7 +264,7 @@ function CompanyApplicationSummary({
   return (
     <Card className='min-h-72 rounded-xl border-border shadow-app-sm'>
       <CardHeader className='flex-row items-center justify-between space-y-0'>
-        <CardTitle>企業申請</CardTitle>
+        <CardTitle className={panelTitleClassName}>企業申請</CardTitle>
         <Button
           type='button'
           variant='ghost'
@@ -408,12 +399,12 @@ function CancelRequestSummary({
 
   return (
     <Card className='rounded-xl border-border shadow-app-sm'>
-      <CardHeader className='flex-row items-start justify-between space-y-0'>
-        <div>
-          <CardTitle>取消一覧</CardTitle>
-          <p className='mt-2 text-sm text-foreground'>
+      <CardHeader className='flex-row items-center justify-between space-y-0'>
+        <div className='flex min-w-0 flex-wrap items-baseline gap-x-3'>
+          <CardTitle className={panelTitleClassName}>取消一覧</CardTitle>
+          <span className='text-sm font-medium text-foreground'>
             未処理 {pendingRequests.length.toLocaleString('ja-JP')}件
-          </p>
+          </span>
         </div>
         <Button
           type='button'
@@ -491,7 +482,7 @@ function BatchHistorySummary({
   return (
     <Card className='rounded-xl border-border shadow-app-sm'>
       <CardHeader className='flex-row items-center justify-between space-y-0'>
-        <CardTitle>バッチ処理</CardTitle>
+        <CardTitle className={panelTitleClassName}>バッチ処理</CardTitle>
         <Button
           type='button'
           variant='ghost'
@@ -536,13 +527,8 @@ function BatchHistorySummary({
 
 /** Renders the notification feed from the shared navbar store without refetching it. */
 function NotificationSummary() {
-  const {
-    notifications,
-    loading,
-    error,
-    markAsRead,
-    deleteNotification,
-  } = useNotifications();
+  const { notifications, loading, error, markAsRead, deleteNotification } =
+    useNotifications();
 
   /** Marks one notification as read and keeps failures local to this card. */
   const handleMarkAsRead = async (
@@ -577,7 +563,7 @@ function NotificationSummary() {
   return (
     <Card className='rounded-xl border-border shadow-app-sm xl:flex xl:min-h-0 xl:flex-1 xl:flex-col xl:overflow-hidden'>
       <CardHeader className='shrink-0'>
-        <CardTitle>お知らせ</CardTitle>
+        <CardTitle className={panelTitleClassName}>お知らせ</CardTitle>
       </CardHeader>
       <CardContent className='min-h-0 xl:flex-1 xl:overflow-y-auto'>
         <NotificationsList
@@ -688,24 +674,24 @@ export function AdminDashboardOverview(
       : undefined;
 
   return (
-    <div className='space-y-8 lg:space-y-section'>
+    <div className='space-y-section'>
       <AdminPageHeader
-        title="ホーム"
+        title='ホーム'
         // description="運用業務を担当するユーザーのアカウントを管理します。"
       />
       <section
-        aria-label="主要な登録状況"
-        className="
+        aria-label='主要な登録状況'
+        className='
           grid items-stretch
-          gap-[var(--admin-home-grid-gap)]
+          gap-grid
           sm:grid-cols-2
           lg:grid-cols-4
-        "
+        '
       >
         <MetricCard
           label='プロジェクト'
           value={props.projects.length}
-          // description='登録済みプロジェクト'
+          description='登録済み'
           icon={<FolderKanban />}
           loading={props.canReadProjects && props.projectsLoading}
           error={props.projectsError}
@@ -716,7 +702,7 @@ export function AdminDashboardOverview(
         <MetricCard
           label='参加企業'
           value={props.participatingCompanyTotal}
-          // description='稼働中・一時停止中'
+          description='稼働中・一時停止中'
           icon={<Building2 />}
           loading={
             props.canReadCompanies && props.participatingCompaniesLoading
@@ -729,7 +715,7 @@ export function AdminDashboardOverview(
         <MetricCard
           label='企業申請'
           value={props.applicationTotal}
-          // description='申請中・却下'
+          description='申請中・却下'
           icon={<ClipboardCheck />}
           loading={props.canReviewCompanies && props.applicationsLoading}
           error={props.applicationsError}
@@ -740,7 +726,7 @@ export function AdminDashboardOverview(
         <MetricCard
           label='取消依頼'
           value={pendingCancelCount}
-          // description='確認待ちの取消依頼'
+          description='確認待ち'
           icon={<RotateCcw />}
           loading={props.canCancelMonitoring && props.cancelRequestsLoading}
           error={props.cancelRequestsError}
@@ -750,14 +736,17 @@ export function AdminDashboardOverview(
         />
       </section>
       <div
-        className="
+        className='
           grid
           items-start
-          gap-[var(--admin-home-panel-gap)]
-          lg:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.85fr)]
-        "
+          gap-grid
+          xl:grid-cols-[minmax(0,1.65fr)_minmax(18rem,0.8fr)]
+        '
       >
-        <div ref={mainColumnRef} className='min-w-0 space-y-6'>
+        <div
+          ref={mainColumnRef}
+          className='min-w-0 space-y-grid'
+        >
           <AdminTableCard
             title='プロジェクト一覧'
             count={props.projects.length}
@@ -793,7 +782,7 @@ export function AdminDashboardOverview(
         </div>
         <div
           style={alignedSidebarStyle}
-          className='flex min-w-0 flex-col gap-6 xl:h-[var(--admin-home-main-column-height)] xl:min-h-0 xl:max-h-[var(--admin-home-main-column-height)] xl:overflow-hidden'
+          className='flex min-w-0 flex-col gap-grid xl:h-[var(--admin-home-main-column-height)] xl:min-h-0 xl:max-h-[var(--admin-home-main-column-height)] xl:overflow-hidden'
         >
           <CancelRequestSummary
             requests={props.cancelRequests}

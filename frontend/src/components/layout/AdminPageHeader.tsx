@@ -26,7 +26,9 @@ export function AdminPageHeader({
     >
       <div>
         <Heading className="text-page-title text-foreground">{title}</Heading>
-        <p className="mt-2 text-base text-foreground">{description}</p>
+        {description && (
+          <p className="mt-2 text-base text-foreground">{description}</p>
+        )}
       </div>
       {action && <div className="shrink-0 self-start sm:self-auto">{action}</div>}
     </header>

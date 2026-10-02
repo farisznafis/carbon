@@ -38,7 +38,7 @@ export function AdminTableCard({
         className,
       )}
     >
-      <CardContent className="p-5 sm:p-7 lg:px-[calc(var(--card-padding)*1.5)]">
+      <CardContent className="p-card">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-baseline gap-3">
@@ -46,7 +46,7 @@ export function AdminTableCard({
                 ref={headingRef}
                 tabIndex={headingRef ? -1 : undefined}
                 className={cn(
-                  'text-xl font-bold leading-7 text-foreground',
+                  'text-subsection-title font-bold text-foreground',
                   headingRef &&
                     'scroll-mt-24 outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 )}
@@ -84,7 +84,7 @@ export function AdminTableCard({
             )}
           </div>
         )}
-        <div className="mt-6">{children}</div>
+        <div className="mt-5">{children}</div>
         {footer && <div className="mt-4">{footer}</div>}
       </CardContent>
     </Card>
