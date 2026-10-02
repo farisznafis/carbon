@@ -9,6 +9,7 @@ import {
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { Button } from '@/components/ui/button';
 import { BatchHistoryDetailDialog } from './BatchHistoryDetailDialog';
 import { SkeletonTable } from '@/components/feedback/loading';
@@ -134,14 +135,7 @@ export function BatchHistoryTable({
         id: 'actions',
         label: '操作',
         render: (item) => (
-          <div
-            onClick={(event) => event.stopPropagation()}
-            onPointerDown={(event) => event.stopPropagation()}
-          >
-            <Button type="button" variant="outline" onClick={() => setSelectedItem(item)}>
-              詳細
-            </Button>
-          </div>
+          <RowActionButton onClick={() => setSelectedItem(item)} />
         ),
       },
     ],
@@ -185,6 +179,7 @@ export function BatchHistoryTable({
         minWidth={1170}
         getRowKey={(item) => String(item.id)}
         emptyMessage="バッチ履歴はありません。"
+        onRowClick={(item) => setSelectedItem(item)}
       />
       <PaginationControls
         currentPage={pagination.page}

@@ -222,7 +222,7 @@ describe('AdminOperatorListPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(screen.getAllByRole('button', { name: 'プロファイル' })[0]);
+    await user.click(screen.getAllByRole('button', { name: '詳細' })[0]);
     expect(await screen.findByText('プロファイルページ')).toBeInTheDocument();
   });
 });

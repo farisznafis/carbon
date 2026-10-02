@@ -6,6 +6,7 @@ import {
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { SkeletonTable } from '@/components/feedback/loading';
 import { Button } from '@/components/ui/button';
@@ -177,14 +178,7 @@ export function AdminProjectStatusTable({
         id: 'action',
         label: '操作',
         render: ({ project }) => (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => onOpenProjectDetail(project)}
-          >
-            詳細
-          </Button>
+          <RowActionButton onClick={() => onOpenProjectDetail(project)} />
         ),
       },
     ],
@@ -216,6 +210,7 @@ export function AdminProjectStatusTable({
         gridTemplateColumns={projectStatusGridColumns}
         minWidth={PROJECT_STATUS_TABLE_MIN_WIDTH}
         getRowKey={(row) => row.project.id}
+        onRowClick={({ project }) => onOpenProjectDetail(project)}
         emptyMessage="登録済みのプロジェクトはありません。"
       />
       <PaginationControls

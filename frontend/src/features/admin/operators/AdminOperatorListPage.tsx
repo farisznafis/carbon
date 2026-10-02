@@ -5,6 +5,7 @@ import type { AdminOperator } from '@/api/admin/operators';
 import { isForbiddenApiError } from '@/api/_shared/errors';
 import {
   DataGridTable,
+  RowActionButton,
   type DataGridTableColumn,
 } from '@/components/data-display';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
@@ -249,14 +250,7 @@ export default function AdminOperatorListPage() {
         id: 'action',
         label: '操作',
         render: (operator) => (
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            onClick={() => handleViewProfile(operator)}
-          >
-            プロファイル
-          </Button>
+          <RowActionButton onClick={() => handleViewProfile(operator)} />
         ),
       },
     ],
@@ -371,6 +365,7 @@ export default function AdminOperatorListPage() {
               minWidth={1040}
               getRowKey={(operator) => operator.id}
               emptyMessage="条件に一致する運用者はいません。"
+              onRowClick={handleViewProfile}
             />
           )}
         </AdminTableCard>

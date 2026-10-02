@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Site } from '@/api/site';
 import type { UserList } from '@/api/users';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,7 +23,7 @@ export function DashboardSection({
   children,
 }: {
   title: string;
-  description: string;
+  description?: string;
   addLabel: string;
   onAdd: () => void;
   addDisabled?: boolean;
@@ -111,7 +112,7 @@ export function UserDashboardCard({
     user.role !== 'master' && !user.siteId && !user.siteName;
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-app-sm transition hover:border-primary/60 md:flex-row">
+    <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-app-sm md:flex-row">
       <div className="min-w-0 flex-1 px-5 py-4 md:px-6">
         <div className="flex flex-wrap items-center gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
@@ -165,14 +166,10 @@ export function UserDashboardCard({
       </div>
 
       <div className="flex items-center justify-end border-t border-border px-4 py-3 md:w-[152px] md:shrink-0 md:justify-center md:border-l md:border-t-0">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
+        <RowActionButton
+          aria-label={`${fullName || '社員'}の詳細`}
           onClick={() => onProfile(user)}
-        >
-          プロファイル
-        </Button>
+        />
       </div>
     </article>
   );

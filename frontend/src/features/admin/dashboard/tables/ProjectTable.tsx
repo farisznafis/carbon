@@ -9,6 +9,7 @@ import {
   DataGridTable,
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -33,8 +34,8 @@ import { cn } from '@/lib/utils';
 
 type ProjectTableProps = {
   projects: Project[];
+  /** Opens the project detail; used by both the 詳細 button and the row click. */
   onEdit?: (project: Project) => void;
-  onRowClick?: (project: Project) => void;
   onStatusChange?: (
     project: Project,
     status: ProjectStatus,
@@ -271,7 +272,6 @@ function MethodologyIdentityCell({
 export function ProjectTable({
   projects,
   onEdit,
-  onRowClick,
   onStatusChange,
   updatingProjectStatusId,
   planProgress,
@@ -313,20 +313,6 @@ export function ProjectTable({
 
       setCompletionProject(null);
     };
-
-  /**
-   * Controls sit inside a clickable row, so their clicks must not also trigger
-   * the row's own click.
-   */
-  const stopRowActivation = {
-    onClick: (event: {
-      stopPropagation: () => void;
-    }) => event.stopPropagation(),
-
-    onPointerDown: (event: {
-      stopPropagation: () => void;
-    }) => event.stopPropagation(),
-  };
 
   const columns: DataGridTableColumn<Project>[] =
     [
@@ -450,9 +436,7 @@ export function ProjectTable({
               )}
 
               {onOpenPlan && (
-                <span
-                  {...stopRowActivation}
-                >
+                <span>
                   <Button
                     type="button"
                     variant="link"
@@ -560,7 +544,7 @@ export function ProjectTable({
           return (
             <span
               className="block min-w-0"
-              {...stopRowActivation}
+              data-row-click-ignore
             >
               {statusIsReadOnly ? (
                 <TooltipProvider
@@ -620,20 +604,9 @@ export function ProjectTable({
         label: '操作',
 
         render: (project) => (
-          <div
-            className="flex justify-start"
-            {...stopRowActivation}
-          >
-            <Button
-              type="button"
-              variant="primary"
-              onClick={() =>
-                onEdit?.(project)
-              }
-            >
-              詳細
-            </Button>
-          </div>
+          <RowActionButton
+            onClick={() => onEdit?.(project)}
+          />
         ),
       },
     ];
@@ -651,7 +624,7 @@ export function ProjectTable({
           project.id
         }
         emptyMessage="まだプロジェクトが登録されていません。"
-        onRowClick={onRowClick}
+        onRowClick={onEdit}
         getRowClassName={(
           project,
         ) =>

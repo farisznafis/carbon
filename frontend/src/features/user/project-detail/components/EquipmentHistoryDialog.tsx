@@ -8,6 +8,7 @@ import {
   DataGridTable,
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { Button } from '@/components/ui/button';
 import {
@@ -245,17 +246,9 @@ export function EquipmentHistoryDialog({
       },
       {
         id: 'actions',
-        label: '',
-        className: 'text-right',
+        label: '操作',
         render: (history) => (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setSelectedHistory(history)}
-          >
-            詳細
-          </Button>
+          <RowActionButton onClick={() => setSelectedHistory(history)} />
         ),
       },
     ],
@@ -332,6 +325,7 @@ export function EquipmentHistoryDialog({
                 )
               }
               emptyMessage="設備変更履歴はありません。"
+              onRowClick={(history) => setSelectedHistory(history)}
             />
           )}
         </div>

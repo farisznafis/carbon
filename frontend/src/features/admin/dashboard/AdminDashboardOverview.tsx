@@ -14,6 +14,7 @@ import type {
 import type { BatchHistoryItem, BatchHistoryPagination } from '@/api/batch';
 import type { MonitoringCancelRequestListItem } from '@/api/monitoring';
 import type { Project } from '@/api/projects';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 import { NotificationsList } from '@/components/feedback/NotificationsList';
@@ -354,14 +355,20 @@ function CompanyApplicationSummary({
                           {formatAdminCompanyDateTime(company.createdAt) || '—'}
                         </p>
                       </div>
-                      <Button
-                        type='button'
-                        variant='link'
-                        size='sm'
-                        onClick={() => onOpen(company)}
-                      >
-                        {isPending ? '確認' : '詳細'} <ArrowRight />
-                      </Button>
+                      {isPending ? (
+                        <RowActionButton
+                          intent='review'
+                          className='self-start sm:self-auto'
+                          onClick={() => onOpen(company)}
+                        >
+                          申請内容を確認
+                        </RowActionButton>
+                      ) : (
+                        <RowActionButton
+                          className='self-start sm:self-auto'
+                          onClick={() => onOpen(company)}
+                        />
+                      )}
                     </li>
                   );
                 })}
@@ -440,21 +447,26 @@ function CancelRequestSummary({
             {pendingRequests.slice(0, 3).map((request) => (
               <li
                 key={request.id}
-                className='flex items-center justify-between gap-4 py-4'
+                className='flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between'
               >
-                <button
-                  type='button'
+                <div className='min-w-0'>
+                  <div className='flex flex-wrap items-center gap-2'>
+                    <p className='truncate text-body font-bold text-foreground'>
+                      {request.siteName || '拠点名未登録'}
+                    </p>
+                    <CancelRequestStatusBadge status={request.status} />
+                  </div>
+                  <p className='mt-1 text-subtle text-muted-foreground'>
+                    申請日 {formatCancelRequestDateTime(request.requestedAt)}
+                  </p>
+                </div>
+                <RowActionButton
+                  intent='review'
+                  className='self-start sm:self-auto'
                   onClick={() => onOpenRequest(request)}
-                  className='min-w-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
                 >
-                  <p className='truncate text-body font-bold text-foreground'>
-                    {request.siteName || '拠点名未登録'}
-                  </p>
-                  <p className='mt-1 text-subtle text-foreground'>
-                    {formatCancelRequestDateTime(request.requestedAt)}
-                  </p>
-                </button>
-                <CancelRequestStatusBadge status={request.status} />
+                  取消内容を確認
+                </RowActionButton>
               </li>
             ))}
           </ul>

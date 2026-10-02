@@ -16,13 +16,13 @@ import {
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import {
   floatingPageBackButtonClassName,
   PageBackButton,
 } from '@/components/navigation/PageBackButton';
 import { NotFoundPage } from '@/components/feedback/NotFoundPage';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Tabs,
   TabsContent,
@@ -241,19 +241,7 @@ export default function ParticipationReviewListPage() {
         id: 'actions',
         label: '操作',
         render: (review) => (
-          <div
-            onClick={(event) => event.stopPropagation()}
-            onPointerDown={(event) => event.stopPropagation()}
-          >
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => viewDetail(review)}
-            >
-              詳細
-            </Button>
-          </div>
+          <RowActionButton onClick={() => viewDetail(review)} />
         ),
       },
     ],

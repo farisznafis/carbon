@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Site } from '@/api/site';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,7 +10,6 @@ import {
 import {
   Building2,
   ChevronDown,
-  ChevronRight,
   FolderKanban,
   MapPin,
   User,
@@ -30,7 +30,7 @@ export function MasterSiteCard({
   const visibleProjects = areProjectsExpanded ? projects : projects.slice(0, 2);
 
   return (
-    <article className="grid w-full overflow-hidden rounded-lg border border-border bg-card shadow-app-sm md:grid-cols-[minmax(0,1fr)_96px]">
+    <article className="grid w-full overflow-hidden rounded-lg border border-border bg-card shadow-app-sm md:grid-cols-[minmax(0,1fr)_152px]">
       <div className="grid min-w-0 gap-4 px-5 py-4 text-left md:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)] md:items-start md:px-6 xl:grid-cols-[minmax(0,1fr)_minmax(430px,0.75fr)]">
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-3">
@@ -111,16 +111,11 @@ export function MasterSiteCard({
         </div>
       </div>
 
-      <div className="flex items-center justify-center border-t border-border px-4 py-3 md:border-l md:border-t-0">
-        <Button
-          type="button"
-          size="icon"
-          aria-label={`${site.siteName || '拠点'}のダッシュボードを開く`}
+      <div className="flex items-center justify-end border-t border-border px-4 py-3 md:justify-center md:border-l md:border-t-0">
+        <RowActionButton
+          aria-label={`${site.siteName || '拠点'}の詳細`}
           onClick={() => onOpen(site)}
-          className="shrink-0"
-        >
-          <ChevronRight className="h-6 w-6" />
-        </Button>
+        />
       </div>
     </article>
   );
