@@ -140,148 +140,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public BaseResponse validateCreateUser(String masterCompanyId, String username, CreateUserRequest request) {
-        Map<String, String> errors = new LinkedHashMap<>();
-
-        ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(masterCompanyId)
-                .orElse(null);
-        if (company == null) {
-            errors.put("companyId", ResponseConstants.MSG_NOT_FOUND);
-            return validationError(errors);
-        }
-
-        if (userRepository.countByCompany_Id(company.getId()) >= MAX_USERS_PER_COMPANY) {
-            errors.put("companyId", ResponseConstants.MSG_LIMIT_EXCEEDED);
-        }
-
-        if (request.getSiteId() != null) {
-            Site site = siteRepository.findById(request.getSiteId()).orElse(null);
-            if (site == null) {
-                errors.put("siteId", ResponseConstants.MSG_NOT_FOUND);
-            } else {
-                if (!masterCompanyId.equals(site.getCompany().getCompanyId())) {
-                    errors.put("siteId", ResponseConstants.MSG_FORBIDDEN);
-                } else if (userRepository.countByCompany_IdAndSite_Id(company.getId(), request.getSiteId()) >= MAX_USERS_PER_SITE) {
-                    errors.put("siteId", ResponseConstants.MSG_LIMIT_EXCEEDED);
-                }
-            }
-        }
-
-        if (userRepository.existsByEmail(request.getEmail())
-                || userRepository.existsByEmailIgnoreCase(request.getEmail())) {
-            errors.put("email", ResponseConstants.MSG_USED_EMAIL);
-        }
-        if (userRepository.existsByUsername(request.getUsername())
-                || (usernameAvailabilityService != null
-                    && !usernameAvailabilityService.isAvailable(request.getUsername()))) {
-            errors.put("username", ResponseConstants.MSG_USED_USERNAME);
-        }
-
-        return errors.isEmpty()
-                ? BaseResponse.success(ResponseConstants.MSG_VALIDATION_SUCCESS)
-                : validationError(errors);
-    }
-
-    @Override
-    @Transactional
-    public CreateUserResponse createUser(String masterCompanyId, String username, CreateUserRequest request) {
-        CreateUserResponse response = new CreateUserResponse();
-        ParticipatingCompany company = participatingCompanyRepository.findByCompanyId(masterCompanyId)
-        .orElse(null);
-
-        if (company == null) {
-            response.setStatusCode(ResponseConstants.NOT_FOUND);
-            response.setMessage(ResponseConstants.MSG_NOT_FOUND);
-            return response;
-        }
-        // Check if the user count for the company exceeds the limit
-        long userCountForCompany = userRepository.countByCompany_Id(company.getId());
-        if (userCountForCompany >= MAX_USERS_PER_COMPANY) {
-            response.setStatusCode(ResponseConstants.LIMIT_EXCEEDED);
-            response.setMessage(ResponseConstants.MSG_LIMIT_EXCEEDED);
-            return response;
-        }
-
-        Site site = null;
-        // 1. サイトが指定されている場合は存在確認
-        if(request.getSiteId() != null) {
-            site = siteRepository.findById(request.getSiteId())
-                .orElse(null);
-            if (site == null) {
-                response.setStatusCode(ResponseConstants.NOT_FOUND);
-                response.setMessage(ResponseConstants.MSG_NOT_FOUND);
-                return response;
-            }
-        
-            // 権限チェック: Masterは自分の会社のサイトにのみユーザーを作成可能
-            if (!masterCompanyId.equals(site.getCompany().getCompanyId())) {
-                response.setStatusCode(ResponseConstants.FORBIDDEN);
-                response.setMessage(ResponseConstants.MSG_FORBIDDEN);
-                return response; 
-            }
-
-            if(userRepository.countByCompany_IdAndSite_Id(company.getId(), request.getSiteId()) >= MAX_USERS_PER_SITE) {
-                response.setStatusCode(ResponseConstants.LIMIT_EXCEEDED);
-                response.setMessage(ResponseConstants.MSG_LIMIT_EXCEEDED);
-                return response;
-            }
-            
-        }
-
-        // 6. メールアドレスの重複チェック
-        if (userRepository.existsByEmail(request.getEmail())
-                || userRepository.existsByEmailIgnoreCase(request.getEmail())) {
-            response.setStatusCode(ResponseConstants.USED_EMAIL);
-            response.setMessage(ResponseConstants.MSG_USED_EMAIL);
-            return response;
-        }
-        // 7. ユーザー名の重複チェック
-        if (userRepository.existsByUsername(request.getUsername())) {
-            response.setStatusCode(ResponseConstants.USED_USERNAME);
-            response.setMessage(ResponseConstants.MSG_USED_USERNAME);
-            return response;
-        }
-        String availableUsername = usernameAvailabilityService == null
-                ? request.getUsername().trim()
-                : usernameAvailabilityService.lockAndRequireAvailable(request.getUsername());
-        LocalDateTime currentTime = LocalDateTime.now();
-        // 8. 新しいユーザーを作成
-        ParticipatingUser newUser = ParticipatingUser.builder()
-                .username(availableUsername)
-                .firstName(request.getFirstName())
-                .firstNameKana(request.getFirstNameKana())
-                .lastName(request.getLastName())
-                .lastNameKana(request.getLastNameKana())
-                .email(request.getEmail())
-                .phoneNumber(request.getPhoneNumber())
-                .userPosition(request.getUserPosition())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(RoleConstants.USER)
-                .loginAttempts(0)
-                .accountLockedUntil(null)
-                .site(site)
-                .company(company)  // Masterと同じ会社ID
-                .build();
-        newUser.setIsActive(true);
-        newUser.setCreatedAt(currentTime);
-        newUser.setUpdatedAt(currentTime);
-        
-        ParticipatingUser savedUser = userRepository.save(newUser);
-        response.setStatusCode(ResponseConstants.OK);
-        response.setMessage("ユーザーが正常に作成されました。");
-        
-        // 10. レスポンスにサイト情報とユーザー情報を設定
-        SiteResponse siteResponse = !Objects.isNull(site) ? mapToSiteResponse(site) : null;
-        UserInfoResponse userResponse = mapToUserInfoResponse(savedUser);
-
-        response.setSite(siteResponse);
-        response.setUser(userResponse);
-        
-        return response;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public BaseResponse validateUpdateUser(String masterCompanyId,
                                            String username,
                                            UpdateUserRequest request) {
@@ -387,10 +245,13 @@ public class UserServiceImpl implements UserService {
                                     && !(requestedSiteId == null && currentSiteId == null)  // both null → no change
                                     && !Objects.equals(requestedSiteId, currentSiteId);     // same id → no change
 
-            // ── GATE 1: Non-master editing someone else → FORBIDDEN ───────────
-            // Covers cases: 1, 3, 9, 11
-            if (!isMaster && !isSelf) {
-                // FIX #7: was silently falling through to self-edit before
+            // ── GATE 1: Non-master targeting someone else → FORBIDDEN ─────────
+            // Checked against the request, not against targetUser: resolveTargetUser returns the
+            // caller for every non-master, so isSelf is always true by this point and a
+            // target-based condition can never fire. Mirrors the same rule in validateUpdateUser.
+            if (!isMaster
+                    && request.getUserId() != null
+                    && !request.getUserId().equals(requestingUser.getId())) {
                 response.setStatusCode(ResponseConstants.FORBIDDEN);
                 response.setMessage(ResponseConstants.MSG_FORBIDDEN);
                 return response;
@@ -741,12 +602,18 @@ public class UserServiceImpl implements UserService {
                 return response;
             }
 
-            if ("master".equals(requestingRole)) {
-                if (!requestingCompanyId.equals(user.getCompany().getCompanyId())) {
-                    response.setStatusCode(ResponseConstants.FORBIDDEN);
-                    response.setMessage(ResponseConstants.MSG_FORBIDDEN);
-                    return response;
-                }
+            // Allowlist, not denylist: only the operator-side roles are exempt from the company
+            // scope check, so any role added later is scoped by default instead of exempt by
+            // default. A user row with no company is refused rather than dereferenced.
+            boolean crossCompanyAllowed = RoleConstants.ADMIN.equals(requestingRole)
+                    || RoleConstants.OPERATOR.equals(requestingRole);
+
+            if (!crossCompanyAllowed
+                    && (user.getCompany() == null
+                        || !requestingCompanyId.equals(user.getCompany().getCompanyId()))) {
+                response.setStatusCode(ResponseConstants.FORBIDDEN);
+                response.setMessage(ResponseConstants.MSG_FORBIDDEN);
+                return response;
             }
 
             ParticipatingCompany company = user.getCompany();

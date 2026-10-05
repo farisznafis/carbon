@@ -88,7 +88,7 @@ public class NotificationController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }  
 
-     @PostMapping("/inquiry")
+    @PostMapping("/inquiry")
     @Operation(summary = "問い合わせ受付", description = "お問い合わせ内容を受け付け、担当オペレーターへ通知・メール送信を行います。")
     public ResponseEntity<BaseResponse> createInquiry(
             @Valid @RequestBody InquiryRequest request) {

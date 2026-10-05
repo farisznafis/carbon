@@ -49,7 +49,8 @@ public class SecurityEndpointRateLimitFilter extends OncePerRequestFilter {
         boolean actionLink = uri.contains("/auth/action-links/")
                 && (properties.getFeatures().isMasterSetupLink()
                     || properties.getFeatures().isRejectedSignupRevision()
-                    || properties.getFeatures().isPasswordReset());
+                    || properties.getFeatures().isPasswordReset()
+                    || properties.getFeatures().isUserInvitation());
         boolean masterSetup = properties.getFeatures().isMasterSetupLink()
                 && (uri.contains("/auth/master-account/") || uri.contains("/master-setup-link"));
         boolean passwordReset = properties.getFeatures().isPasswordReset()
@@ -62,8 +63,10 @@ public class SecurityEndpointRateLimitFilter extends OncePerRequestFilter {
                 && uri.contains("/company/signup/email-verification");
         boolean revision = properties.getFeatures().isRejectedSignupRevision()
                 && uri.contains("/company/signup/revision");
+        boolean invitation = properties.getFeatures().isUserInvitation()
+                && (uri.contains("/user/invitations") || uri.contains("/auth/invitation"));
         return actionLink || masterSetup || passwordReset || loginOtp || passwordLogin
-                || signupVerification || revision;
+                || signupVerification || revision || invitation;
     }
 
     private String resolveClientAddress(HttpServletRequest request) {

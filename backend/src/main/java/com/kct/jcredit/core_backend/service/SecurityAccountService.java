@@ -49,6 +49,7 @@ public class SecurityAccountService {
     private final UsernameAvailabilityService usernameAvailabilityService;
     private final CompanyLifecycleService companyLifecycleService;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationMessages messages;
     private final AuthVersionService authVersionService;
     private final JwtUtil jwtUtil;
     private final SecurityRateLimitService rateLimitService;
@@ -313,11 +314,9 @@ public class SecurityAccountService {
     }
 
     private void deliverResetLink(SecurityActionLinkService.IssuedActionLink issued, String email) {
+        NotificationMessages.Content content = messages.of("link.password-reset", issued.url());
         securityEmailDeliveryService.deliverActionLink(
-                issued.linkId(),
-                email,
-                "パスワードリセットのご案内",
-                "以下の使い捨てリンクからパスワードをリセットしてください。このリンクは一度のみ使用できます:\n" + issued.url());
+                issued.linkId(), email, content.subject(), content.body());
     }
 
     private OtpChallengeResponse toChallengeResponse(OtpChallengeService.IssuedOtp issued) {

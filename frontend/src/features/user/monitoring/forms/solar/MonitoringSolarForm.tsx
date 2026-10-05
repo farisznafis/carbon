@@ -15,7 +15,6 @@ import {
 } from '@/components/forms/form-layout';
 import { RequiredLabel } from '@/components/forms/shared';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
-import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -34,6 +33,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { getUploadFileValidationError } from '@/lib/uploadFileValidation';
 import { emptyFormData } from './emptyFormData';
+import { ActionButton } from '@/components/actions';
 
 const base = {
   projectId: z.string().optional(),
@@ -311,14 +311,9 @@ export function MonitoringSolarForm({
                           {equipmentLoadError}
                         </p>
                         {onEquipmentRetry ? (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={onEquipmentRetry}
-                          >
+                          <ActionButton kind="retry" onClick={onEquipmentRetry}>
                             再読み込み
-                          </Button>
+                          </ActionButton>
                         ) : null}
                       </div>
                     ) : null}

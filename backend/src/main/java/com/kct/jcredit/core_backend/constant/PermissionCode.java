@@ -11,6 +11,8 @@ public enum PermissionCode {
     PROJECT_UPDATE, //included
     PROJECT_STATUS_UPDATE, //included
     PROJECT_APPLICATION_OUTPUT,
+    PROJECT_FILE_UPLOAD,     // included
+    PROJECT_FILE_DELETE,   //included
 
     //participating-company management
     PARTICIPATING_COMPANY_READ, //included
@@ -32,6 +34,11 @@ public enum PermissionCode {
 
     //project form management
     METHODOLOGY_READ,   
-    APPLICATION_FORM_READ
+    APPLICATION_FORM_READ,
+
+    //participating-company user management
+    PARTICIPATING_USER_READ, //included
+    PARTICIPATING_USER_CREATE, //included
+    PARTICIPATING_USER_UPDATE, //included
     
 }

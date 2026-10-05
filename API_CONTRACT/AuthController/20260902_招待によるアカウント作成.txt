@@ -1,0 +1,101 @@
+//招待メールのリンクを開いた本人が、自分で情報を入力してアカウントを作成する流れ。
+//招待の送信は ParticipatingUserController/20260902_ユーザー招待.txt を参照。
+//いずれもログイン不要（公開エンドポイント）。
+
+
+■ 手順1: トークンをアクションセッションに交換する
+
+POST /api/auth/action-links/exchange
+Content-Type: application/json
+
+Request Body (JSON): //メール内リンクのフラグメント #token=... から取得した値を送る
+{
+  "token": "3f9c1a7e5b2d4e889a017c6b2f4d8e13"
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "actionSessionToken": "e81f4d7c2a9b6e3f8c1d5a7b9e2f4c6d",
+  "purpose": "USER_INVITATION",
+  "expiresInSeconds": 3600
+}
+
+//リンクは一度開くと無効になる（1回限り有効）。
+//リンクの有効期限は発行から7日間、交換後のセッションの有効期限は1時間。
+
+
+■ 手順2: 招待内容を取得する（画面に表示するのみ、変更不可）
+
+GET /api/auth/invitation
+X-Action-Session: e81f4d7c2a9b6e3f8c1d5a7b9e2f4c6d
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "email": "y.taro@test.com",
+  "companyName": "ABC株式会社",
+  "siteId": "SITEa8Kd93jFnQ2xLp0w",
+  "siteName": "ABC支店"
+}
+
+
+■ 手順3: 情報を入力してアカウントを作成する
+
+POST /api/auth/invitation/complete
+X-Action-Session: e81f4d7c2a9b6e3f8c1d5a7b9e2f4c6d
+Content-Type: application/json
+
+Request Body (JSON): //メールアドレスは招待時のものを使用するため、リクエストには含めない
+{
+  "username": "y.taro",
+  "firstName": "太郎",
+  "firstNameKana": "タロウ",
+  "lastName": "山田",
+  "lastNameKana": "ヤマダ",
+  "phoneNumber": "03-1234-5678",
+  "userPosition": "担当者",
+  "password": "Abcd123!"
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "message": "アカウントを作成しました。ログインしてください。"
+}
+
+//作成されるユーザーの role は "user"、拠点は招待時に指定されたもの。
+
+
+ERROR RESPONSES
+{
+  "statusCode": "INVALID_OR_EXPIRED_TOKEN",
+  "message": "セキュリティトークンが無効か、有効期限が切れています。"   //リンク使用済み・期限切れ・セッション切れ
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当するリソースが見つかりませんでした。"   //機能が無効の場合もこの応答
+},
+{
+  "statusCode": "USED_EMAIL",
+  "message": "このメールアドレスは既に使用されています。"   //招待後に同じアドレスで登録された場合
+},
+{
+  "statusCode": "USED_USERNAME",
+  "message": "このユーザ名は既に使用されています。"
+},
+{
+  "statusCode": "LIMIT_EXCEEDED",
+  "message": "上限に達しています。"   //招待後に拠点・企業の上限に達した場合
+},
+{
+  "statusCode": "VALIDATION_ERROR",
+  "errors": {
+    "password": "パスワードは8〜64文字で、大文字・小文字・数字をそれぞれ1文字以上含めてください。よく使われるパスワードは使用できません。",
+    "firstNameKana": "カタカナで入力してください。"
+  }
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

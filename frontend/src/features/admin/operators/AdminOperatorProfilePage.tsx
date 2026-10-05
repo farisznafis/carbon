@@ -23,7 +23,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { Button } from '@/components/ui/button';
 import { useAdminOperatorProfileQuery } from '@/hooks/admin/useAdminOperatorsQuery';
 import { paths } from '@/routes/paths';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
@@ -33,6 +32,7 @@ import {
   getOperatorRoleLabel,
   isAdminOperatorRole,
 } from './operatorRoles';
+import { ActionButton } from '@/components/actions';
 
 /** Formats a Japanese operator name in family-name-first order. */
 function formatOperatorName(operator: AdminOperator): string {
@@ -106,9 +106,9 @@ export default function AdminOperatorProfilePage() {
             </p>
           </div>
           {operator ? (
-            <Button type="button" variant="outline" size="md" onClick={handleEdit}>
+            <ActionButton kind="edit" onClick={handleEdit}>
               編集
-            </Button>
+            </ActionButton>
           ) : null}
         </header>
 
@@ -121,15 +121,11 @@ export default function AdminOperatorProfilePage() {
             <p className="text-sm text-foreground">
               運用者のプロファイルを表示できませんでした。
             </p>
-            <Button
-              type="button"
-              variant="outline"
-              size="md"
+            <ActionButton
+              kind="retry"
               className="mt-5"
               onClick={() => profileQuery.refetch()}
-            >
-              再試行
-            </Button>
+            />
           </FormCard>
         ) : (
           <FormCard>

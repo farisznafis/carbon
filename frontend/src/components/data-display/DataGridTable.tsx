@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
-import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
+import type { CSSProperties, MouseEvent, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -18,6 +18,13 @@ export type DataGridTableColumn<T> = {
 
 type SortDirection = 'asc' | 'desc';
 
+/**
+ * Controls whose own clicks must not also trigger the row action. Wrap any
+ * other non-navigating area (e.g. a tooltip trigger) in `data-row-click-ignore`.
+ */
+const INTERACTIVE_ROW_CHILD_SELECTOR =
+  'button, a, input, select, textarea, label, [role="button"], [role="combobox"], [role="checkbox"], [role="switch"], [role="menuitem"], [data-row-click-ignore]';
+
 type DataGridTableProps<T> = {
   rows: T[];
   columns: DataGridTableColumn<T>[];
@@ -25,7 +32,14 @@ type DataGridTableProps<T> = {
   minWidth?: number;
   getRowKey: (row: T) => string;
   emptyMessage: ReactNode;
+  /**
+   * Mouse shortcut for the row's main action. The row is not focusable, so it
+   * must also render a `RowActionButton` doing the same thing for keyboard and
+   * screen-reader users.
+   */
   onRowClick?: (row: T) => void;
+  /** Extra classes for one row, e.g. to highlight rows that need attention. */
+  getRowClassName?: (row: T) => string | undefined;
 };
 
 function normalizeSortValue(value: string | number | null | undefined) {
@@ -116,6 +130,7 @@ export function DataGridTable<T>({
   getRowKey,
   emptyMessage,
   onRowClick,
+  getRowClassName,
 }: DataGridTableProps<T>) {
   const [sortColumnId, setSortColumnId] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -150,13 +165,18 @@ export function DataGridTable<T>({
     setSortDirection('asc');
   };
 
-  const handleRowKeyDown = (event: KeyboardEvent<HTMLDivElement>, row: T) => {
+  /** Runs the row action unless the click belongs to a control inside the row or ends a text selection. */
+  const handleRowClick = (event: MouseEvent<HTMLDivElement>, row: T) => {
     if (!onRowClick) return;
 
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      onRowClick(row);
-    }
+    const target = event.target as Element | null;
+    // React bubbles portal events (select menus, dialogs) through the row even
+    // though they are not inside it in the DOM.
+    if (!target || !event.currentTarget.contains(target)) return;
+    if (target.closest(INTERACTIVE_ROW_CHILD_SELECTOR)) return;
+    if (window.getSelection()?.toString()) return;
+
+    onRowClick(row);
   };
 
   return (
@@ -217,14 +237,12 @@ export function DataGridTable<T>({
         sortedRows.map((row) => (
           <div
             key={getRowKey(row)}
-            role={onRowClick ? 'button' : undefined}
-            tabIndex={onRowClick ? 0 : undefined}
-            onClick={() => onRowClick?.(row)}
-            onKeyDown={(event) => handleRowKeyDown(event, row)}
+            onClick={(event) => handleRowClick(event, row)}
             className={cn(
               'group grid min-h-[60px] items-center gap-4 border-b border-border px-5 py-3 last:border-b-0',
               onRowClick &&
                 'cursor-pointer transition hover:bg-muted/40',
+              getRowClassName?.(row),
             )}
             style={{ ...gridStyle, minWidth }}
           >

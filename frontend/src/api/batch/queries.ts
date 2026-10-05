@@ -4,6 +4,9 @@ import type {
   BatchHistoryResult,
   EmissionTrendPoint,
   ProjectEmissionBreakdown,
+  ProjectEmissionHistoryPoint,
+  ProjectMonitoringChartItem,
+  ProjectMonitoringResponse,
   ProjectEmissionSummary,
   ProjectReductionResultResponse,
   ReductionResultApiItem,
@@ -193,6 +196,57 @@ function toFiniteEmission(value: number | string | null | undefined) {
 
   const emission = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(emission) ? emission : null;
+}
+
+/**
+ * Maps the yearly reduction chart into a chronological history. The backend
+ * emits one entry per processing record, so a year that appears twice keeps
+ * its latest entry.
+ */
+function toProjectEmissionHistory(
+  chartData: readonly ProjectMonitoringChartItem[],
+): ProjectEmissionHistoryPoint[] {
+  const pointsByPeriod = new Map<string, ProjectEmissionHistoryPoint>();
+
+  chartData.forEach((item) => {
+    const period = item.year?.trim();
+    if (!period) return;
+
+    pointsByPeriod.set(period, {
+      period,
+      baselineEmission: toFiniteEmission(item.baseline),
+      projectEmission: toFiniteEmission(item.actualEmission),
+      reduction: toFiniteEmission(item.reduction),
+    });
+  });
+
+  return [...pointsByPeriod.values()].sort((left, right) =>
+    left.period.localeCompare(right.period),
+  );
+}
+
+/** Loads a project's yearly emission history from GET /project/{projectId}/monitoring. */
+export async function getProjectEmissionHistory(
+  projectId: string,
+): Promise<ProjectEmissionHistoryPoint[]> {
+  if (!projectId) return [];
+
+  const response = await apiFetch(
+    `/project/${encodeURIComponent(projectId)}/monitoring`,
+    { method: 'GET' },
+  );
+  const { data: json, rawBody } =
+    await parseJsonResponse<ProjectMonitoringResponse>(response);
+
+  if (!response.ok) {
+    throw new Error(
+      json?.message ||
+        rawBody ||
+        `Failed to fetch project monitoring: HTTP ${response.status}`,
+    );
+  }
+
+  return toProjectEmissionHistory(json?.detail?.chart?.chartData ?? []);
 }
 
 function sumEmissionField(

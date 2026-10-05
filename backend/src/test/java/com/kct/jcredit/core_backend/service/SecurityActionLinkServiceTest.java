@@ -6,15 +6,18 @@ import com.kct.jcredit.core_backend.entity.SecurityActionLink;
 import com.kct.jcredit.core_backend.enums.SecurityActionPurpose;
 import com.kct.jcredit.core_backend.enums.SecurityActionStatus;
 import com.kct.jcredit.core_backend.enums.SecurityActionSubjectType;
+import com.kct.jcredit.core_backend.repository.dynamodb.SecurityTempStateRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SecurityActionLinkRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import com.kct.jcredit.core_backend.enums.SecurityActionDeliveryStatus;
 import com.kct.jcredit.core_backend.exception.CustomException;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import java.util.List;
@@ -22,6 +25,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -43,7 +48,7 @@ class SecurityActionLinkServiceTest {
                 repository,
                 secretService,
                 properties,
-                mock(StringRedisTemplate.class),
+                mock(SecurityTempStateRepository.class),
                 new ObjectMapper());
 
         SecurityActionLinkService.IssuedActionLink issued = service.issue(
@@ -62,15 +67,19 @@ class SecurityActionLinkServiceTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void exchangedEmailTokenCannotBeExchangedTwice() {
         SecurityFlowProperties properties = new SecurityFlowProperties();
         properties.setTokenPepper("test-pepper-with-enough-randomness");
         SecuritySecretService secretService = new SecuritySecretService(properties);
         SecurityActionLinkRepository repository = mock(SecurityActionLinkRepository.class);
-        StringRedisTemplate redis = mock(StringRedisTemplate.class);
-        ValueOperations<String, String> operations = mock(ValueOperations.class);
-        when(redis.opsForValue()).thenReturn(operations);
+        Map<String, String> sessions = new HashMap<>();
+        SecurityTempStateRepository store = mock(SecurityTempStateRepository.class);
+        doAnswer(invocation -> {
+            sessions.put(invocation.getArgument(0), invocation.getArgument(1));
+            return null;
+        }).when(store).put(anyString(), anyString(), any(Duration.class));
+        when(store.get(anyString())).thenAnswer(invocation ->
+                Optional.ofNullable(sessions.get(invocation.getArgument(0))));
 
         String rawToken = secretService.newActionToken();
         SecurityActionLink link = SecurityActionLink.builder()
@@ -91,7 +100,7 @@ class SecurityActionLinkServiceTest {
         when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         SecurityActionLinkService service = new SecurityActionLinkService(
-                repository, secretService, properties, redis, new ObjectMapper());
+                repository, secretService, properties, store, new ObjectMapper());
 
         SecurityActionLinkService.ActionSession session = service.exchange(rawToken);
         assertThat(session.purpose()).isEqualTo(SecurityActionPurpose.PASSWORD_RESET);

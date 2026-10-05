@@ -7,12 +7,15 @@ import com.kct.jcredit.core_backend.dto.request.ForgotPasswordRequest;
 import com.kct.jcredit.core_backend.dto.request.MasterAccountSetupRequest;
 import com.kct.jcredit.core_backend.dto.request.OtpResendRequest;
 import com.kct.jcredit.core_backend.dto.request.OtpVerifyRequest;
+import com.kct.jcredit.core_backend.dto.request.UserInvitationCompleteRequest;
 import com.kct.jcredit.core_backend.dto.response.ActionLinkExchangeResponse;
+import com.kct.jcredit.core_backend.dto.response.UserInvitationPrefillResponse;
 import com.kct.jcredit.core_backend.dto.response.AdminLoginResponse;
 import com.kct.jcredit.core_backend.dto.response.LoginResponse;
 import com.kct.jcredit.core_backend.dto.response.OtpChallengeResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 import com.kct.jcredit.core_backend.service.SecurityAccountService;
+import com.kct.jcredit.core_backend.service.UserInvitationService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 import com.kct.jcredit.core_backend.enums.OtpPurpose;
@@ -24,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -36,6 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class SecurityFlowController {
     private final SecurityAccountService securityAccountService;
+    private final UserInvitationService userInvitationService;
     private final JwtUtil jwtUtil;
 
     @PostMapping("/action-links/exchange")
@@ -68,6 +73,22 @@ public class SecurityFlowController {
             @Valid @RequestBody CompletePasswordResetRequest request) {
         BaseResponse response = securityAccountService.completePasswordReset(
                 actionSession, request.getNewPassword());
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @GetMapping("/invitation")
+    @Operation(summary = "招待内容の取得", description = "招待リンクから交換したアクションセッションを用いて、招待されたメールアドレスと所属先を取得します。")
+    public ResponseEntity<UserInvitationPrefillResponse> getInvitation(
+            @RequestHeader("X-Action-Session") String actionSession) {
+        return ResponseEntity.ok(userInvitationService.getPrefill(actionSession));
+    }
+
+    @PostMapping("/invitation/complete")
+    @Operation(summary = "招待によるアカウント作成", description = "招待されたユーザー本人が氏名・電話番号・ユーザー名・パスワードを入力し、アカウントを作成します。メールアドレスは招待時のものが使用されます。")
+    public ResponseEntity<BaseResponse> completeInvitation(
+            @RequestHeader("X-Action-Session") String actionSession,
+            @Valid @RequestBody UserInvitationCompleteRequest request) {
+        BaseResponse response = userInvitationService.complete(actionSession, request);
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 

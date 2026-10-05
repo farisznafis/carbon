@@ -69,7 +69,7 @@ const pendingEquipment: SolarEquipment = {
     nominalMaxOutput: '10',
     pcsManufacturer: 'Maker',
     pcsModel: 'Model',
-    powerCondUnitCount: '1',
+    // powerCondUnitCount: '1',
     deviceNo: 'DEVICE-1',
     powerCondStandby: '1',
     hasBattery: 'no',
@@ -180,7 +180,7 @@ describe('ProjectRegisterPage', () => {
     expect(screen.queryByText('ステップ 1 / 5')).not.toBeInTheDocument();
     expect(screen.getByText('対象拠点').parentElement).toHaveTextContent('*');
     expect(
-      screen.getByText('プロジェクトへの参加を申請する拠点を選択してください。'),
+      screen.getByText('このプロジェクトに入会する拠点を選択してください。'),
     ).toBeInTheDocument();
     expect(
       (await screen.findByText('太陽光発電所・発電設備を特定できる資料'))

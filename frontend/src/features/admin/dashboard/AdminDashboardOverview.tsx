@@ -14,6 +14,7 @@ import type {
 import type { BatchHistoryItem, BatchHistoryPagination } from '@/api/batch';
 import type { MonitoringCancelRequestListItem } from '@/api/monitoring';
 import type { Project } from '@/api/projects';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 import { NotificationsList } from '@/components/feedback/NotificationsList';
@@ -23,7 +24,6 @@ import {
   SkeletonList,
   SkeletonMetricCard,
 } from '@/components/feedback/loading';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
@@ -44,8 +44,12 @@ import type { AdminOperatorPermissionCode } from '@/api/admin/operators';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
 import { useNotifications } from '@/hooks/useNotifications';
 import { toast } from '@/hooks/use-toast';
+import { ActionButton } from '@/components/actions';
 
 export type AdminHomePanel = 'cancel' | 'batch';
+
+/** Matches AdminTableCard headings so every Home panel shares one title size. */
+const panelTitleClassName = 'text-subsection-title font-bold';
 
 /** Tracks an element's rendered height so adjacent desktop content can align to it. */
 function useElementHeight<TElement extends HTMLElement>() {
@@ -124,7 +128,7 @@ type AdminDashboardOverviewProps = {
 type MetricCardProps = {
   label: string;
   value: number;
-  description: string;
+  description?: string;
   icon: React.ReactNode;
   loading: boolean;
   error: string | null;
@@ -133,7 +137,7 @@ type MetricCardProps = {
   requiredPermission: AdminOperatorPermissionCode;
 };
 
-/** Renders one independently loading metric card. */
+/** Renders one independently loading metric card; the whole card opens its destination. */
 function MetricCard({
   label,
   value,
@@ -146,79 +150,70 @@ function MetricCard({
   requiredPermission,
 }: Readonly<MetricCardProps>) {
   if (loading) {
-    return <SkeletonMetricCard />;
+    return <SkeletonMetricCard className='min-h-[6.5rem]' />;
   }
 
-  return (
-    <Card className="h-full rounded-xl border-border shadow-app-sm">
-      <CardContent
-        className="
-          grid h-full min-h-[150px]
-          grid-rows-[auto_1fr_auto]
-          gap-y-3
-          p-5
-        "
-      >
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4">
-          <p className="text-body font-bold text-foreground">
-            {label}
-          </p>
-        </div>
+  const header = (
+    <span className='flex items-start justify-between gap-3'>
+      <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+        <span className="text-body !font-bold text-foreground">
+          {label}
+        </span>
 
-        {/* KPI value / permission state */}
-        <div className="flex min-w-0 items-center">
+        {description && (
+          <span className="text-subtle text-muted-foreground">
+            {description}
+          </span>
+        )}
+      </span>
+      {permissionGranted && (
+        <ArrowRight
+          className='mt-0.5 h-4 w-4 shrink-0 text-primary-strong transition-transform group-hover:translate-x-0.5'
+          aria-hidden='true'
+        />
+      )}
+    </span>
+  );
+
+  if (!permissionGranted || error) {
+    return (
+      <Card className='h-full rounded-xl border-border shadow-app-sm'>
+        <div className='flex h-full flex-col gap-3 p-card'>
+          {header}
           {!permissionGranted ? (
             <PermissionDeniedNotice
               permission={requiredPermission}
               compact
-              className="w-full"
+              className='w-full'
             />
-          ) : error ? (
+          ) : (
             <div
-              role="alert"
-              className="
-                w-full
-                rounded-lg
-                border border-destructive/30
-                bg-destructive/5
-                px-4 py-3
-                text-small text-destructive
-              "
+              role='alert'
+              className='w-full rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-small text-destructive'
             >
               取得できませんでした
             </div>
-          ) : (
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-4xl font-bold leading-none tracking-tight tabular-nums text-foreground">
-                {value.toLocaleString('ja-JP')}
-              </span>
-
-              <span className="text-base font-semibold text-foreground">
-                件
-              </span>
-            </div>
           )}
         </div>
+      </Card>
+    );
+  }
 
-        {/* Footer */}
-        <div className="flex items-center justify-between gap-3">
-          <p className="min-w-0 truncate text-subtle text-foreground">
-            {description}
-          </p>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onClick}
-            className="shrink-0 px-1 text-primary-strong"
-          >
-            確認
-            <ArrowRight />
-          </Button>
-        </div>
-      </CardContent>
+  return (
+    <Card className='h-full rounded-xl border-border shadow-app-sm transition-colors hover:border-primary/40'>
+      <button
+        type='button'
+        onClick={onClick}
+        className='group flex h-full w-full flex-col gap-3 rounded-xl p-card text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+      >
+        {header}
+        <span className='flex items-baseline gap-1.5'>
+          <span className='text-metric font-bold leading-none tracking-tight tabular-nums text-foreground'>
+            {value.toLocaleString('ja-JP')}
+          </span>
+          <span className='text-base font-semibold text-foreground'>件</span>
+        </span>
+      </button>
     </Card>
   );
 }
@@ -273,16 +268,10 @@ function CompanyApplicationSummary({
   return (
     <Card className='min-h-72 rounded-xl border-border shadow-app-sm'>
       <CardHeader className='flex-row items-center justify-between space-y-0'>
-        <CardTitle>企業申請</CardTitle>
-        <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          onClick={onOpenAll}
-          className='text-primary-strong'
-        >
-          すべて見る <ArrowRight />
-        </Button>
+        <CardTitle className={panelTitleClassName}>企業申請</CardTitle>
+        <ActionButton kind='link' onClick={onOpenAll}>
+          すべて見る
+        </ActionButton>
       </CardHeader>
       <CardContent className='space-y-4'>
         {!permissionGranted ? (
@@ -360,14 +349,20 @@ function CompanyApplicationSummary({
                           {formatAdminCompanyDateTime(company.createdAt) || '—'}
                         </p>
                       </div>
-                      <Button
-                        type='button'
-                        variant='link'
-                        size='sm'
-                        onClick={() => onOpen(company)}
-                      >
-                        {isPending ? '確認' : '詳細'} <ArrowRight />
-                      </Button>
+                      {isPending ? (
+                        <RowActionButton
+                          intent='review'
+                          className='self-start sm:self-auto'
+                          onClick={() => onOpen(company)}
+                        >
+                          申請内容を確認
+                        </RowActionButton>
+                      ) : (
+                        <RowActionButton
+                          className='self-start sm:self-auto'
+                          onClick={() => onOpen(company)}
+                        />
+                      )}
                     </li>
                   );
                 })}
@@ -408,22 +403,16 @@ function CancelRequestSummary({
 
   return (
     <Card className='rounded-xl border-border shadow-app-sm'>
-      <CardHeader className='flex-row items-start justify-between space-y-0'>
-        <div>
-          <CardTitle>取消一覧</CardTitle>
-          <p className='mt-2 text-sm text-foreground'>
+      <CardHeader className='flex-row items-center justify-between space-y-0'>
+        <div className='flex min-w-0 flex-wrap items-baseline gap-x-3'>
+          <CardTitle className={panelTitleClassName}>取消一覧</CardTitle>
+          <span className='text-sm font-medium text-foreground'>
             未処理 {pendingRequests.length.toLocaleString('ja-JP')}件
-          </p>
+          </span>
         </div>
-        <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          onClick={onOpenPanel}
-          className='text-primary-strong'
-        >
-          すべて見る <ArrowRight />
-        </Button>
+        <ActionButton kind='link' onClick={onOpenPanel}>
+          すべて見る
+        </ActionButton>
       </CardHeader>
       <CardContent>
         {!permissionGranted ? (
@@ -446,21 +435,26 @@ function CancelRequestSummary({
             {pendingRequests.slice(0, 3).map((request) => (
               <li
                 key={request.id}
-                className='flex items-center justify-between gap-4 py-4'
+                className='flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between'
               >
-                <button
-                  type='button'
+                <div className='min-w-0'>
+                  <div className='flex flex-wrap items-center gap-2'>
+                    <p className='truncate text-body font-bold text-foreground'>
+                      {request.siteName || '拠点名未登録'}
+                    </p>
+                    <CancelRequestStatusBadge status={request.status} />
+                  </div>
+                  <p className='mt-1 text-subtle text-muted-foreground'>
+                    申請日 {formatCancelRequestDateTime(request.requestedAt)}
+                  </p>
+                </div>
+                <RowActionButton
+                  intent='review'
+                  className='self-start sm:self-auto'
                   onClick={() => onOpenRequest(request)}
-                  className='min-w-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
                 >
-                  <p className='truncate text-body font-bold text-foreground'>
-                    {request.siteName || '拠点名未登録'}
-                  </p>
-                  <p className='mt-1 text-subtle text-foreground'>
-                    {formatCancelRequestDateTime(request.requestedAt)}
-                  </p>
-                </button>
-                <CancelRequestStatusBadge status={request.status} />
+                  取消内容を確認
+                </RowActionButton>
               </li>
             ))}
           </ul>
@@ -491,16 +485,10 @@ function BatchHistorySummary({
   return (
     <Card className='rounded-xl border-border shadow-app-sm'>
       <CardHeader className='flex-row items-center justify-between space-y-0'>
-        <CardTitle>バッチ処理</CardTitle>
-        <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          onClick={onOpenPanel}
-          className='text-primary-strong'
-        >
-          履歴を見る <ArrowRight />
-        </Button>
+        <CardTitle className={panelTitleClassName}>バッチ処理</CardTitle>
+        <ActionButton kind='link' onClick={onOpenPanel}>
+          履歴を見る
+        </ActionButton>
       </CardHeader>
       <CardContent>
         {!permissionGranted ? (
@@ -536,13 +524,8 @@ function BatchHistorySummary({
 
 /** Renders the notification feed from the shared navbar store without refetching it. */
 function NotificationSummary() {
-  const {
-    notifications,
-    loading,
-    error,
-    markAsRead,
-    deleteNotification,
-  } = useNotifications();
+  const { notifications, loading, error, markAsRead, deleteNotification } =
+    useNotifications();
 
   /** Marks one notification as read and keeps failures local to this card. */
   const handleMarkAsRead = async (
@@ -577,7 +560,7 @@ function NotificationSummary() {
   return (
     <Card className='rounded-xl border-border shadow-app-sm xl:flex xl:min-h-0 xl:flex-1 xl:flex-col xl:overflow-hidden'>
       <CardHeader className='shrink-0'>
-        <CardTitle>お知らせ</CardTitle>
+        <CardTitle className={panelTitleClassName}>お知らせ</CardTitle>
       </CardHeader>
       <CardContent className='min-h-0 xl:flex-1 xl:overflow-y-auto'>
         <NotificationsList
@@ -666,6 +649,7 @@ function MonitoringDialogs({
 }
 
 /** Renders the Figma-aligned Admin Home from independent existing data sources. */
+/** Renders the admin overview metrics, tables, and supporting panels. */
 export function AdminDashboardOverview(
   props: Readonly<AdminDashboardOverviewProps>,
 ) {
@@ -687,23 +671,24 @@ export function AdminDashboardOverview(
       : undefined;
 
   return (
-    <div className='space-y-8'>
+    <div className='space-y-section'>
       <AdminPageHeader
-        title="ホーム"
-        description="運用業務を担当するユーザーのアカウントを管理します。"
+        title='ホーム'
+        // description="運用業務を担当するユーザーのアカウントを管理します。"
       />
       <section
-        aria-label="主要な登録状況"
-        className="
-          grid items-stretch gap-4
+        aria-label='主要な登録状況'
+        className='
+          grid items-stretch
+          gap-grid
           sm:grid-cols-2
-          xl:grid-cols-4
-        "
+          lg:grid-cols-4
+        '
       >
         <MetricCard
           label='プロジェクト'
           value={props.projects.length}
-          description='登録済みプロジェクト'
+          description='登録済み'
           icon={<FolderKanban />}
           loading={props.canReadProjects && props.projectsLoading}
           error={props.projectsError}
@@ -738,7 +723,7 @@ export function AdminDashboardOverview(
         <MetricCard
           label='取消依頼'
           value={pendingCancelCount}
-          description='確認待ちの取消依頼'
+          description='確認待ち'
           icon={<RotateCcw />}
           loading={props.canCancelMonitoring && props.cancelRequestsLoading}
           error={props.cancelRequestsError}
@@ -747,12 +732,22 @@ export function AdminDashboardOverview(
           requiredPermission='MONITORING_CANCEL'
         />
       </section>
-      <div className='grid items-start gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.85fr)]'>
-        <div ref={mainColumnRef} className='min-w-0 space-y-6'>
+      <div
+        className='
+          grid
+          items-start
+          gap-grid
+          xl:grid-cols-[minmax(0,1.65fr)_minmax(18rem,0.8fr)]
+        '
+      >
+        <div
+          ref={mainColumnRef}
+          className='min-w-0 space-y-grid'
+        >
           <AdminTableCard
             title='プロジェクト一覧'
             count={props.projects.length}
-            description='確認が必要な入会届が多いプロジェクトから表示します。'
+            // description='確認が必要な入会届が多いプロジェクトから表示します。'
           >
             {props.canReadProjects ? (
               <AdminProjectStatusTable
@@ -784,8 +779,9 @@ export function AdminDashboardOverview(
         </div>
         <div
           style={alignedSidebarStyle}
-          className='flex min-w-0 flex-col gap-6 xl:h-[var(--admin-home-main-column-height)] xl:min-h-0 xl:max-h-[var(--admin-home-main-column-height)] xl:overflow-hidden'
+          className='flex min-w-0 flex-col gap-grid xl:h-[var(--admin-home-main-column-height)] xl:min-h-0 xl:max-h-[var(--admin-home-main-column-height)] xl:overflow-hidden'
         >
+          <NotificationSummary />
           <CancelRequestSummary
             requests={props.cancelRequests}
             loading={props.cancelRequestsLoading}
@@ -801,7 +797,6 @@ export function AdminDashboardOverview(
             onOpenPanel={() => props.onPanelChange('batch')}
             permissionGranted={props.canReadBatchHistory}
           />
-          <NotificationSummary />
         </div>
       </div>
       <MonitoringDialogs

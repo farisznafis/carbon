@@ -1,0 +1,55 @@
+POST /api/user/invitations
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body (JSON): //マスターがメールアドレスと拠点のみを指定して招待メールを送信する
+{
+  "email": "y.taro@test.com",
+  "siteId": "SITEa8Kd93jFnQ2xLp0w"   //拠点の公開ID。任意（未指定の場合は拠点なし）
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "message": "招待メールを送信しました。"
+}
+
+//招待メールのリンクから、招待された本人が残りの情報を入力してアカウントを作成する。
+//以降の手順は AuthController/20260902_招待によるアカウント作成.txt を参照。
+//同じメールアドレスで再度実行すると、以前の招待は無効になり新しい招待メールが送信される。
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスすることができません。"   //他社の拠点を指定した場合
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+{
+  "statusCode": "USED_EMAIL",
+  "message": "このメールアドレスは既に使用されています。"
+},
+{
+  "statusCode": "LIMIT_EXCEEDED",
+  "message": "上限に達しています。"   //拠点あたり5名、企業あたり50名
+},
+{
+  "statusCode": "TOO_MANY_REQUESTS",
+  "message": "リクエストが多すぎます。しばらくしてから再度お試しください。"   //同一メールアドレスへは1時間に3回まで
+},
+{
+  "statusCode": "VALIDATION_ERROR",
+  "errors": {
+    "email": "正しいメールアドレス形式で入力してください。"
+  }
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

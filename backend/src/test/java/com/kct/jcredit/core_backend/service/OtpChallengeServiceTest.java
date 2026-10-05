@@ -4,14 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kct.jcredit.core_backend.config.SecurityFlowProperties;
 import com.kct.jcredit.core_backend.enums.OtpPurpose;
 import com.kct.jcredit.core_backend.exception.CustomException;
+import com.kct.jcredit.core_backend.repository.dynamodb.SecurityTempStateRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -25,26 +25,26 @@ class OtpChallengeServiceTest {
     private final Map<String, String> values = new HashMap<>();
     private OtpChallengeService service;
 
-    @SuppressWarnings("unchecked")
     @BeforeEach
     void setUp() {
         SecurityFlowProperties properties = new SecurityFlowProperties();
         properties.setTokenPepper("test-pepper-with-enough-randomness");
-        StringRedisTemplate redis = mock(StringRedisTemplate.class);
-        ValueOperations<String, String> operations = mock(ValueOperations.class);
-        when(redis.opsForValue()).thenReturn(operations);
-        when(operations.increment(anyString())).thenReturn(1L);
+        SecurityTempStateRepository store = mock(SecurityTempStateRepository.class);
         doAnswer(invocation -> {
             values.put(invocation.getArgument(0), invocation.getArgument(1));
             return null;
-        }).when(operations).set(anyString(), anyString(), any(Duration.class));
-        when(operations.get(anyString())).thenAnswer(invocation -> values.get(invocation.getArgument(0)));
-        when(redis.getExpire(anyString())).thenReturn(300L);
-        when(redis.delete(anyString())).thenAnswer(invocation ->
-                values.remove(invocation.getArgument(0)) != null);
+        }).when(store).put(anyString(), anyString(), any(Duration.class));
+        when(store.get(anyString())).thenAnswer(invocation ->
+                Optional.ofNullable(values.get(invocation.getArgument(0))));
+        when(store.remainingTtl(anyString())).thenReturn(Duration.ofSeconds(300));
+        when(store.incrementAndGet(anyString(), any(Duration.class))).thenReturn(1L);
+        doAnswer(invocation -> {
+            values.remove(invocation.getArgument(0));
+            return null;
+        }).when(store).delete(anyString());
 
         service = new OtpChallengeService(
-                redis,
+                store,
                 new ObjectMapper(),
                 new SecuritySecretService(properties),
                 properties);

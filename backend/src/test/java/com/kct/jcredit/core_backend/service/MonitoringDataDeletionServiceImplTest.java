@@ -1,17 +1,20 @@
 package com.kct.jcredit.core_backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -29,21 +33,16 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import com.kct.jcredit.core_backend.config.MonitoringDataRetentionProperties;
-import com.kct.jcredit.core_backend.constant.ResponseConstants;
-import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionCandidateListResponse;
-import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionCandidateRecordListResponse;
-import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionExecutionResponse;
-import com.kct.jcredit.core_backend.dto.response.details.MonitoringDeletionCandidateDetailResponse;
+import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionScheduleListResponse;
 import com.kct.jcredit.core_backend.entity.EnR002MonitoringRecord;
 import com.kct.jcredit.core_backend.entity.MonitoringDataDeletionHistory;
 import com.kct.jcredit.core_backend.entity.Project;
-import com.kct.jcredit.core_backend.entity.Site;
-import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.enums.DeletionResult;
 import com.kct.jcredit.core_backend.repository.dynamodb.MonitoringTableRecordSolarRepository;
 import com.kct.jcredit.core_backend.repository.postgres.MonitoringDataDeletionHistoryRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
+import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository.LinkedSite;
 import com.kct.jcredit.core_backend.service.impl.MonitoringDataDeletionServiceImpl;
 
 import software.amazon.awssdk.enhanced.dynamodb.Key;
@@ -53,6 +52,12 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 class MonitoringDataDeletionServiceImplTest {
 
     private static final String FINALIZED_STATUS = "終了";
+    private static final LocalDate TODAY = LocalDate.of(2026, 10, 1);
+    private static final String PK = "SITEPUBLIC1#PROJPUBLIC1";
+
+    private static final String ADVANCE_SUBJECT = "モニタリングデータ削除予定のお知らせ";
+    private static final String STARTED_SUBJECT = "モニタリングデータ削除開始のお知らせ";
+    private static final String COMPLETED_SUBJECT = "モニタリングデータ削除完了のお知らせ";
 
     @Mock
     private ProjectRepository projectRepository;
@@ -69,206 +74,268 @@ class MonitoringDataDeletionServiceImplTest {
     @Mock
     private MonitoringDataRetentionProperties retentionProperties;
 
+    @Mock
+    private NotificationService notificationService;
+
+    // Real instance, so the tests also prove the message keys exist in mail/messages.properties.
+    @Spy
+    private NotificationMessages messages = new NotificationMessages();
+
     @InjectMocks
     private MonitoringDataDeletionServiceImpl service;
-
-    private Project eligibleProject;
-    private Site site;
-    private SiteProjectRelation relation;
 
     @BeforeEach
     void setUp() {
         when(retentionProperties.getRetentionYears()).thenReturn(2);
-
-        eligibleProject = buildProject(1, "PROJPUBLIC1", "eligible-project", LocalDateTime.now().minusYears(3));
-        site = buildSite(10, "SITEPUBLIC1");
-        relation = buildRelation(eligibleProject, site);
+        when(retentionProperties.getAdvanceNoticeDays()).thenReturn(7);
+        when(retentionProperties.getRetryBackoffMillis()).thenReturn(0L);
+        when(retentionProperties.resolveEarliestDeletionDate()).thenReturn(LocalDate.of(2000, 1, 1));
     }
 
     @Test
-    @DisplayName("cutoff is computed from the configured retention years")
-    void cutoffIsComputedFromConfig() {
-        when(projectRepository.findByProjectStatusAndStatusFinalizedAtBefore(eq(FINALIZED_STATUS), any()))
+    @DisplayName("the job does nothing while the earliest deletion date is not configured")
+    void skipsWhenEarliestDeletionDateIsMissing() {
+        when(retentionProperties.resolveEarliestDeletionDate()).thenReturn(null);
+
+        service.runAutomaticDeletion(TODAY);
+
+        verifyNoInteractions(projectRepository, monitoringTableRecordSolarRepository, notificationService);
+    }
+
+    @Test
+    @DisplayName("the advance notice goes out exactly advanceNoticeDays before the deletion date, without deleting")
+    void advanceNoticeIsSentSevenDaysBefore() {
+        givenFinalizedProjects(projectDueOn(1, "PROJPUBLIC1", TODAY.plusDays(7)));
+
+        service.runAutomaticDeletion(TODAY);
+
+        verify(notificationService).createNotificationForAllOperatingUsers(
+                eq(ADVANCE_SUBJECT), contains("PROJPUBLIC1"));
+        verify(notificationService).sendEmailToAllOperatingUsers(
+                eq(ADVANCE_SUBJECT), contains(TODAY.plusDays(7).toString()));
+        verifyNoInteractions(monitoringTableRecordSolarRepository);
+    }
+
+    @Test
+    @DisplayName("no notice and no deletion on the days in between")
+    void nothingHappensOnOtherDays() {
+        givenFinalizedProjects(projectDueOn(1, "PROJPUBLIC1", TODAY.plusDays(3)));
+
+        service.runAutomaticDeletion(TODAY);
+
+        verifyNoInteractions(notificationService, monitoringTableRecordSolarRepository);
+    }
+
+    @Test
+    @DisplayName("on the deletion date: start notice, every record deleted and logged, then the completion notice")
+    void deletesEverythingOnTheDeletionDate() {
+        Project project = projectDueOn(1, "PROJPUBLIC1", TODAY);
+        givenFinalizedProjects(project);
+        givenLinkedSites(project, site(10, "SITEPUBLIC1"));
+        when(monitoringTableRecordSolarRepository.findPagesByPk(PK, 25))
+                .thenReturn(List.of(List.of(record("2020-01-01"), record(null))));
+        when(monitoringDataDeletionHistoryRepository.countByProjectIdAndResult(1, DeletionResult.SUCCESS))
+                .thenReturn(2L);
+
+        service.runAutomaticDeletion(TODAY);
+
+        verify(notificationService).createNotificationForAllOperatingUsers(
+                eq(STARTED_SUBJECT), contains("PROJPUBLIC1"));
+
+        List<MonitoringDataDeletionHistory> history = savedHistory();
+        assertEquals(2, history.size());
+        for (MonitoringDataDeletionHistory row : history) {
+            assertEquals(DeletionResult.SUCCESS, row.getResult());
+            assertNull(row.getFailureReason());
+            assertEquals(1, row.getProjectId());
+            assertEquals(10, row.getSiteId());
+        }
+
+        verify(notificationService).createNotificationForAllOperatingUsers(
+                eq(COMPLETED_SUBJECT), contains("削除件数: 2件"));
+        verify(notificationService).sendEmailToAllOperatingUsers(
+                eq(COMPLETED_SUBJECT), contains("PROJPUBLIC1"));
+    }
+
+    @Test
+    @DisplayName("each page of a partition is deleted as its own batch")
+    void everyPageIsDeleted() {
+        Project project = projectDueOn(1, "PROJPUBLIC1", TODAY);
+        givenFinalizedProjects(project);
+        givenLinkedSites(project, site(10, "SITEPUBLIC1"));
+        when(monitoringTableRecordSolarRepository.findPagesByPk(PK, 25))
+                .thenReturn(List.of(List.of(record("2020-01-01")), List.of(record("2020-01-02"))));
+
+        service.runAutomaticDeletion(TODAY);
+
+        verify(monitoringTableRecordSolarRepository, times(2)).deleteBatch(any());
+        assertEquals(2, savedHistory().size());
+    }
+
+    @Test
+    @DisplayName("every site ever linked to the project is walked, using sitePublicId#projectPublicId")
+    void walksEveryLinkedSite() {
+        Project project = projectDueOn(1, "PROJPUBLIC1", TODAY.minusDays(30));
+        givenFinalizedProjects(project);
+        givenLinkedSites(project, site(10, "SITEPUBLIC1"), site(11, "SITEPUBLIC2"));
+
+        service.runAutomaticDeletion(TODAY);
+
+        verify(monitoringTableRecordSolarRepository).findPagesByPk("SITEPUBLIC1#PROJPUBLIC1", 25);
+        verify(monitoringTableRecordSolarRepository).findPagesByPk("SITEPUBLIC2#PROJPUBLIC1", 25);
+    }
+
+    @Test
+    @DisplayName("a project that is already empty is not reported as completed again")
+    void emptyProjectSendsNoCompletionNotice() {
+        Project project = projectDueOn(1, "PROJPUBLIC1", TODAY.minusDays(30));
+        givenFinalizedProjects(project);
+        givenLinkedSites(project, site(10, "SITEPUBLIC1"));
+        when(monitoringTableRecordSolarRepository.findPagesByPk(PK, 25)).thenReturn(List.of());
+
+        service.runAutomaticDeletion(TODAY);
+
+        verify(monitoringTableRecordSolarRepository, never()).deleteBatch(any());
+        verifyNoInteractions(notificationService);
+    }
+
+    @Test
+    @DisplayName("items returned as unprocessed are retried until they are deleted")
+    void unprocessedItemsAreRetried() {
+        Project project = projectDueOn(1, "PROJPUBLIC1", TODAY.minusDays(1));
+        givenFinalizedProjects(project);
+        givenLinkedSites(project, site(10, "SITEPUBLIC1"));
+        EnR002MonitoringRecord stubborn = record("2020-01-02");
+        when(monitoringTableRecordSolarRepository.findPagesByPk(PK, 25))
+                .thenReturn(List.of(List.of(record("2020-01-01"), stubborn)));
+        when(monitoringTableRecordSolarRepository.deleteBatch(any()))
+                .thenReturn(List.of(keyOf(stubborn)))
                 .thenReturn(List.of());
 
-        service.previewDeletionCandidates();
+        service.runAutomaticDeletion(TODAY);
 
-        ArgumentCaptor<LocalDateTime> cutoffCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
-        verify(projectRepository).findByProjectStatusAndStatusFinalizedAtBefore(eq(FINALIZED_STATUS), cutoffCaptor.capture());
-
-        LocalDateTime expectedCutoff = LocalDateTime.now().minusYears(2);
-        assertTrue(java.time.Duration.between(cutoffCaptor.getValue(), expectedCutoff).abs().getSeconds() < 5);
+        verify(monitoringTableRecordSolarRepository, times(2)).deleteBatch(any());
+        assertTrue(savedHistory().stream().allMatch(row -> row.getResult() == DeletionResult.SUCCESS));
+        verify(notificationService).createNotificationForAllOperatingUsers(eq(COMPLETED_SUBJECT), anyString());
     }
 
     @Test
-    @DisplayName("PK is built as sitePublicId#projectPublicId")
-    void pkIsBuiltFromSiteAndProjectPublicIds() {
-        when(projectRepository.findByProjectStatusAndStatusFinalizedAtBefore(eq(FINALIZED_STATUS), any()))
-                .thenReturn(List.of(eligibleProject));
-        when(siteProjectRelationRepository.findByProject_Id(eligibleProject.getId()))
-                .thenReturn(List.of(relation));
-        when(monitoringTableRecordSolarRepository.findAllByPk(anyString())).thenReturn(List.of());
+    @DisplayName("items still unprocessed after every retry are logged as FAILURE and completion is not reported")
+    void persistentFailureIsRecordedAndLeftForTheNextRun() {
+        Project project = projectDueOn(1, "PROJPUBLIC1", TODAY.minusDays(1));
+        givenFinalizedProjects(project);
+        givenLinkedSites(project, site(10, "SITEPUBLIC1"));
+        EnR002MonitoringRecord stubborn = record("2020-01-02");
+        when(monitoringTableRecordSolarRepository.findPagesByPk(PK, 25))
+                .thenReturn(List.of(List.of(record("2020-01-01"), stubborn), List.of(record("2020-01-03"))));
+        when(monitoringTableRecordSolarRepository.deleteBatch(any())).thenReturn(List.of(keyOf(stubborn)));
 
-        service.previewDeletionCandidates();
+        service.runAutomaticDeletion(TODAY);
 
-        verify(monitoringTableRecordSolarRepository).findAllByPk("SITEPUBLIC1#PROJPUBLIC1");
+        // First call plus five retries, and the following page is left for the next run.
+        verify(monitoringTableRecordSolarRepository, times(6)).deleteBatch(any());
+        List<MonitoringDataDeletionHistory> history = savedHistory();
+        assertEquals(2, history.size());
+        assertEquals(1, history.stream().filter(row -> row.getResult() == DeletionResult.SUCCESS).count());
+        MonitoringDataDeletionHistory failure = history.stream()
+                .filter(row -> row.getResult() == DeletionResult.FAILURE)
+                .findFirst()
+                .orElseThrow();
+        assertEquals(stubborn.getTimeUpdated(), failure.getRecordTimeUpdated());
+        assertEquals("DynamoDB throttled/unprocessed", failure.getFailureReason());
+        verifyNoInteractions(notificationService);
     }
 
     @Test
-    @DisplayName("records with a recent dateRecorded are excluded even when the project is eligible")
-    void recentRecordsAreExcludedFromCandidates() {
-        EnR002MonitoringRecord oldRecord = buildRecord("SITEPUBLIC1#PROJPUBLIC1", "2020-01-01T00:00:00Z", "2020-01-01", 1, 10);
-        EnR002MonitoringRecord recentRecord = buildRecord("SITEPUBLIC1#PROJPUBLIC1", "2026-01-01T00:00:00Z", LocalDate.now().minusDays(1).toString(), 1, 10);
+    @DisplayName("a DynamoDB error on one project is logged as FAILURE and does not stop the other projects")
+    void errorOnOneProjectDoesNotStopTheOthers() {
+        Project broken = projectDueOn(1, "PROJPUBLIC1", TODAY.minusDays(1));
+        Project healthy = projectDueOn(2, "PROJPUBLIC2", TODAY.minusDays(1));
+        givenFinalizedProjects(broken, healthy);
+        givenLinkedSites(broken, site(10, "SITEPUBLIC1"));
+        givenLinkedSites(healthy, site(20, "SITEPUBLIC2"));
+        EnR002MonitoringRecord brokenRecord = record("2020-01-01");
+        EnR002MonitoringRecord healthyRecord = record("2020-01-01");
+        healthyRecord.setId("SITEPUBLIC2#PROJPUBLIC2");
+        when(monitoringTableRecordSolarRepository.findPagesByPk(PK, 25))
+                .thenReturn(List.of(List.of(brokenRecord)));
+        when(monitoringTableRecordSolarRepository.findPagesByPk("SITEPUBLIC2#PROJPUBLIC2", 25))
+                .thenReturn(List.of(List.of(healthyRecord)));
+        when(monitoringTableRecordSolarRepository.deleteBatch(List.of(keyOf(brokenRecord))))
+                .thenThrow(new IllegalStateException("table unavailable"));
 
-        when(projectRepository.findByProjectStatusAndStatusFinalizedAtBefore(eq(FINALIZED_STATUS), any()))
-                .thenReturn(List.of(eligibleProject));
-        when(siteProjectRelationRepository.findByProject_Id(eligibleProject.getId()))
-                .thenReturn(List.of(relation));
-        when(monitoringTableRecordSolarRepository.findAllByPk("SITEPUBLIC1#PROJPUBLIC1"))
-                .thenReturn(List.of(oldRecord, recentRecord));
+        service.runAutomaticDeletion(TODAY);
 
-        MonitoringDeletionCandidateListResponse response = service.previewDeletionCandidates();
-
-        assertEquals(1, response.getCandidates().size());
-        MonitoringDeletionCandidateDetailResponse candidate = response.getCandidates().get(0);
-        assertEquals(1, candidate.getCandidateRecordCount());
-        assertEquals("2020-01-01", candidate.getOldestDateRecorded());
-        assertEquals("2020-01-01", candidate.getNewestDateRecorded());
+        List<MonitoringDataDeletionHistory> history = savedHistory();
+        assertEquals(2, history.size());
+        MonitoringDataDeletionHistory failure = history.stream()
+                .filter(row -> row.getProjectId() == 1)
+                .findFirst()
+                .orElseThrow();
+        assertEquals(DeletionResult.FAILURE, failure.getResult());
+        assertEquals("table unavailable", failure.getFailureReason());
+        verify(notificationService, times(1))
+                .createNotificationForAllOperatingUsers(eq(COMPLETED_SUBJECT), contains("PROJPUBLIC2"));
     }
 
     @Test
-    @DisplayName("previewDeletionCandidateRecords returns sorted, filtered records for one project/site")
-    void previewDeletionCandidateRecordsReturnsFilteredRecords() {
-        EnR002MonitoringRecord oldRecord = buildRecord("SITEPUBLIC1#PROJPUBLIC1", "2020-02-01T00:00:00Z", "2020-02-01", 1, 10);
-        EnR002MonitoringRecord olderRecord = buildRecord("SITEPUBLIC1#PROJPUBLIC1", "2020-01-01T00:00:00Z", "2020-01-01", 1, 10);
-        EnR002MonitoringRecord recentRecord = buildRecord("SITEPUBLIC1#PROJPUBLIC1", "2026-01-01T00:00:00Z", LocalDate.now().minusDays(1).toString(), 1, 10);
+    @DisplayName("a project already past retention at go-live waits for the earliest deletion date and still gets its notices")
+    void earliestDeletionDateProtectsTheBacklog() {
+        Project project = projectDueOn(1, "PROJPUBLIC1", TODAY.minusYears(1));
+        givenFinalizedProjects(project);
+        when(retentionProperties.resolveEarliestDeletionDate()).thenReturn(TODAY.plusDays(7));
 
-        when(projectRepository.findByProjectStatusAndStatusFinalizedAtBefore(eq(FINALIZED_STATUS), any()))
-                .thenReturn(List.of(eligibleProject));
-        when(siteProjectRelationRepository.findByProject_Id(eligibleProject.getId()))
-                .thenReturn(List.of(relation));
-        when(monitoringTableRecordSolarRepository.findAllByPk("SITEPUBLIC1#PROJPUBLIC1"))
-                .thenReturn(List.of(oldRecord, olderRecord, recentRecord));
+        service.runAutomaticDeletion(TODAY);
 
-        MonitoringDeletionCandidateRecordListResponse response =
-                service.previewDeletionCandidateRecords("PROJPUBLIC1", "SITEPUBLIC1");
-
-        assertEquals(ResponseConstants.OK, response.getStatusCode());
-        assertEquals(2, response.getTotalRecords());
-        assertEquals("2020-01-01", response.getRecords().get(0).getDateRecorded());
-        assertEquals("2020-02-01", response.getRecords().get(1).getDateRecorded());
+        verify(notificationService).createNotificationForAllOperatingUsers(
+                eq(ADVANCE_SUBJECT), contains("PROJPUBLIC1"));
+        verifyNoInteractions(monitoringTableRecordSolarRepository);
     }
 
     @Test
-    @DisplayName("previewDeletionCandidateRecords returns NOT_FOUND when the project is not an eligible candidate")
-    void previewDeletionCandidateRecordsRejectsNonEligibleProject() {
-        when(projectRepository.findByProjectStatusAndStatusFinalizedAtBefore(eq(FINALIZED_STATUS), any()))
-                .thenReturn(List.of());
+    @DisplayName("a failing notification does not stop the deletion")
+    void notificationFailureDoesNotStopDeletion() {
+        Project project = projectDueOn(1, "PROJPUBLIC1", TODAY);
+        givenFinalizedProjects(project);
+        givenLinkedSites(project, site(10, "SITEPUBLIC1"));
+        when(monitoringTableRecordSolarRepository.findPagesByPk(PK, 25))
+                .thenReturn(List.of(List.of(record("2020-01-01"))));
+        org.mockito.Mockito.doThrow(new IllegalStateException("mail down"))
+                .when(notificationService).sendEmailToAllOperatingUsers(anyString(), anyString());
 
-        MonitoringDeletionCandidateRecordListResponse response =
-                service.previewDeletionCandidateRecords("PROJPUBLIC1", "SITEPUBLIC1");
+        service.runAutomaticDeletion(TODAY);
 
-        assertEquals(ResponseConstants.NOT_FOUND, response.getStatusCode());
-        verify(siteProjectRelationRepository, never()).findByProject_Id(any());
+        verify(monitoringTableRecordSolarRepository).deleteBatch(any());
+        assertEquals(1, savedHistory().size());
     }
 
     @Test
-    @DisplayName("previewDeletionCandidateRecords returns NOT_FOUND when the site is not related to the project")
-    void previewDeletionCandidateRecordsRejectsUnrelatedSite() {
-        when(projectRepository.findByProjectStatusAndStatusFinalizedAtBefore(eq(FINALIZED_STATUS), any()))
-                .thenReturn(List.of(eligibleProject));
-        when(siteProjectRelationRepository.findByProject_Id(eligibleProject.getId()))
-                .thenReturn(List.of(relation));
+    @DisplayName("the schedule lists only projects whose deletion date has not passed, soonest first")
+    void scheduleListsUpcomingProjectsInOrder() {
+        LocalDate today = LocalDate.now();
+        Project later = projectDueOn(1, "PROJPUBLIC1", today.plusDays(30));
+        Project sooner = projectDueOn(2, "PROJPUBLIC2", today.plusDays(5));
+        Project past = projectDueOn(3, "PROJPUBLIC3", today.minusDays(5));
+        Project neverFinalized = projectDueOn(4, "PROJPUBLIC4", today);
+        neverFinalized.setStatusFinalizedAt(null);
+        givenFinalizedProjects(later, sooner, past, neverFinalized);
+        when(retentionProperties.isAutoDeletionEnabled()).thenReturn(true);
 
-        MonitoringDeletionCandidateRecordListResponse response =
-                service.previewDeletionCandidateRecords("PROJPUBLIC1", "SITE_UNRELATED");
+        MonitoringDeletionScheduleListResponse response = service.findDeletionSchedule();
 
-        assertEquals(ResponseConstants.NOT_FOUND, response.getStatusCode());
-        verify(monitoringTableRecordSolarRepository, never()).findAllByPk(anyString());
-    }
-
-    @Test
-    @DisplayName("deleteBatch is called exactly once with all candidate keys instead of per-record delete")
-    void deleteBatchCalledOnceWithAllKeys() {
-        EnR002MonitoringRecord record1 = buildRecord("SITEPUBLIC1#PROJPUBLIC1", "2020-01-01T00:00:00Z", "2020-01-01", 1, 10);
-        EnR002MonitoringRecord record2 = buildRecord("SITEPUBLIC1#PROJPUBLIC1", "2020-02-01T00:00:00Z", "2020-02-01", 1, 10);
-
-        when(projectRepository.findByProjectStatusAndStatusFinalizedAtBefore(eq(FINALIZED_STATUS), any()))
-                .thenReturn(List.of(eligibleProject));
-        when(siteProjectRelationRepository.findByProject_Id(eligibleProject.getId()))
-                .thenReturn(List.of(relation));
-        when(monitoringTableRecordSolarRepository.findAllByPk("SITEPUBLIC1#PROJPUBLIC1"))
-                .thenReturn(List.of(record1, record2));
-        when(monitoringTableRecordSolarRepository.deleteBatch(any())).thenReturn(List.of());
-
-        service.executeDeletion("operator1", List.of("PROJPUBLIC1"));
-
-        @SuppressWarnings("unchecked")
-        ArgumentCaptor<List<Key>> keysCaptor = ArgumentCaptor.forClass(List.class);
-        verify(monitoringTableRecordSolarRepository, times(1)).deleteBatch(keysCaptor.capture());
-        assertEquals(2, keysCaptor.getValue().size());
-        verify(monitoringTableRecordSolarRepository, never()).delete(anyString(), anyString());
-    }
-
-    @Test
-    @DisplayName("keys returned as unprocessed are recorded as FAILURE, the rest as SUCCESS")
-    void unprocessedKeysAreRecordedAsFailure() {
-        EnR002MonitoringRecord record1 = buildRecord("SITEPUBLIC1#PROJPUBLIC1", "2020-01-01T00:00:00Z", "2020-01-01", 1, 10);
-        EnR002MonitoringRecord record2 = buildRecord("SITEPUBLIC1#PROJPUBLIC1", "2020-02-01T00:00:00Z", "2020-02-01", 1, 10);
-
-        when(projectRepository.findByProjectStatusAndStatusFinalizedAtBefore(eq(FINALIZED_STATUS), any()))
-                .thenReturn(List.of(eligibleProject));
-        when(siteProjectRelationRepository.findByProject_Id(eligibleProject.getId()))
-                .thenReturn(List.of(relation));
-        when(monitoringTableRecordSolarRepository.findAllByPk("SITEPUBLIC1#PROJPUBLIC1"))
-                .thenReturn(List.of(record1, record2));
-
-        Key failedKey = Key.builder()
-                .partitionValue(record2.getId())
-                .sortValue(record2.getTimeUpdated())
-                .build();
-        when(monitoringTableRecordSolarRepository.deleteBatch(any())).thenReturn(List.of(failedKey));
-
-        MonitoringDeletionExecutionResponse response = service.executeDeletion("operator1", List.of("PROJPUBLIC1"));
-
-        assertEquals(1, response.getDeletedCount());
-        assertEquals(1, response.getFailedCount());
-
-        @SuppressWarnings("unchecked")
-        ArgumentCaptor<List<MonitoringDataDeletionHistory>> historyCaptor = ArgumentCaptor.forClass(List.class);
-        verify(monitoringDataDeletionHistoryRepository).saveAll(historyCaptor.capture());
-
-        List<MonitoringDataDeletionHistory> savedHistory = historyCaptor.getValue();
-        assertEquals(2, savedHistory.size());
-        long successCount = savedHistory.stream().filter(h -> h.getResult() == DeletionResult.SUCCESS).count();
-        long failureCount = savedHistory.stream().filter(h -> h.getResult() == DeletionResult.FAILURE).count();
-        assertEquals(1, successCount);
-        assertEquals(1, failureCount);
-    }
-
-    @Test
-    @DisplayName("executeDeletion only processes projects that are both eligible and requested")
-    void executeDeletionOnlyProcessesRequestedEligibleProjects() {
-        Project otherEligibleProject = buildProject(2, "PROJPUBLIC2", "other-eligible-project", LocalDateTime.now().minusYears(3));
-
-        when(projectRepository.findByProjectStatusAndStatusFinalizedAtBefore(eq(FINALIZED_STATUS), any()))
-                .thenReturn(List.of(eligibleProject, otherEligibleProject));
-        when(siteProjectRelationRepository.findByProject_Id(eligibleProject.getId()))
-                .thenReturn(List.of(relation));
-        when(monitoringTableRecordSolarRepository.findAllByPk("SITEPUBLIC1#PROJPUBLIC1"))
-                .thenReturn(List.of(buildRecord("SITEPUBLIC1#PROJPUBLIC1", "2020-01-01T00:00:00Z", "2020-01-01", 1, 10)));
-        when(monitoringTableRecordSolarRepository.deleteBatch(any())).thenReturn(List.of());
-
-        service.executeDeletion("operator1", List.of("PROJPUBLIC1"));
-
-        verify(siteProjectRelationRepository, never()).findByProject_Id(otherEligibleProject.getId());
+        assertTrue(response.isAutoDeletionEnabled());
+        assertEquals(2, response.getTotalProjects());
+        assertEquals("PROJPUBLIC2", response.getSchedule().get(0).getProjectPublicId());
+        assertEquals(5, response.getSchedule().get(0).getDaysUntilDeletion());
+        assertEquals(today.plusDays(5), response.getSchedule().get(0).getScheduledDeletionDate());
+        assertEquals("PROJPUBLIC1", response.getSchedule().get(1).getProjectPublicId());
     }
 
     @Test
     @DisplayName("findDeletionHistory delegates to the repository with a page/limit pageable")
     void findDeletionHistoryDelegatesToRepository() {
         MonitoringDataDeletionHistory history = MonitoringDataDeletionHistory.builder()
-                .monitoringRecordId("SITEPUBLIC1#PROJPUBLIC1")
+                .monitoringRecordId(PK)
                 .recordTimeUpdated("2020-01-01T00:00:00Z")
                 .dateRecorded("2020-01-01")
                 .projectId(1)
@@ -284,37 +351,60 @@ class MonitoringDataDeletionServiceImplTest {
         verify(monitoringDataDeletionHistoryRepository).findByProjectId(eq(1), any(Pageable.class));
     }
 
-    private Project buildProject(Integer id, String publicId, String name, LocalDateTime statusFinalizedAt) {
+    private void givenFinalizedProjects(Project... projects) {
+        when(projectRepository.findByProjectStatus(FINALIZED_STATUS)).thenReturn(List.of(projects));
+    }
+
+    private void givenLinkedSites(Project project, LinkedSite... sites) {
+        when(siteProjectRelationRepository.findLinkedSitesIncludingDeleted(project.getId()))
+                .thenReturn(List.of(sites));
+    }
+
+    /** A finalized project whose two-year retention ends on the given date. */
+    private Project projectDueOn(Integer id, String publicId, LocalDate deletionDate) {
         Project project = new Project();
         project.setId(id);
         project.setPublicId(publicId);
-        project.setProjectName(name);
+        project.setProjectName("project-" + id);
         project.setProjectStatus(FINALIZED_STATUS);
-        project.setStatusFinalizedAt(statusFinalizedAt);
+        project.setStatusFinalizedAt(deletionDate.minusYears(2).atTime(9, 0));
         return project;
     }
 
-    private Site buildSite(Integer id, String publicId) {
-        Site s = new Site();
-        s.setId(id);
-        s.setPublicId(publicId);
-        return s;
+    private LinkedSite site(Integer id, String publicId) {
+        return new LinkedSite() {
+            @Override
+            public Integer getSiteId() {
+                return id;
+            }
+
+            @Override
+            public String getSitePublicId() {
+                return publicId;
+            }
+        };
     }
 
-    private SiteProjectRelation buildRelation(Project project, Site site) {
-        SiteProjectRelation r = new SiteProjectRelation();
-        r.setProject(project);
-        r.setSite(site);
-        return r;
-    }
+    private int recordSequence = 0;
 
-    private EnR002MonitoringRecord buildRecord(String pk, String timeUpdated, String dateRecorded, Integer projectId, Integer siteId) {
+    private EnR002MonitoringRecord record(String dateRecorded) {
         EnR002MonitoringRecord record = new EnR002MonitoringRecord();
-        record.setId(pk);
-        record.setTimeUpdated(timeUpdated);
+        record.setId(PK);
+        record.setTimeUpdated("2020-01-01T00:00:0" + (recordSequence++) + "Z");
         record.setDateRecorded(dateRecorded);
-        record.setProjectID(projectId);
-        record.setSiteID(siteId);
         return record;
+    }
+
+    private Key keyOf(EnR002MonitoringRecord record) {
+        return Key.builder().partitionValue(record.getId()).sortValue(record.getTimeUpdated()).build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<MonitoringDataDeletionHistory> savedHistory() {
+        ArgumentCaptor<List<MonitoringDataDeletionHistory>> captor = ArgumentCaptor.forClass(List.class);
+        verify(monitoringDataDeletionHistoryRepository, org.mockito.Mockito.atLeastOnce()).saveAll(captor.capture());
+        List<MonitoringDataDeletionHistory> rows = new ArrayList<>();
+        captor.getAllValues().forEach(rows::addAll);
+        return rows;
     }
 }

@@ -17,7 +17,6 @@ import {
   FormStandalonePage,
 } from '@/components/forms/form-layout';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
-import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { SolarPowerEquipmentForm } from '@/features/user/project-registration/components/equipment-forms/SolarPowerEquipmentForm';
 import { mapEquipmentValidationFieldErrors } from '@/features/user/project-registration/solarEquipmentFormModel';
@@ -36,6 +35,7 @@ import {
   mapEquipmentToEditForm,
   mergeEquipmentFilesForChange,
 } from './equipmentEditMapper';
+import { ActionButton } from '@/components/actions';
 
 type EquipmentEditStep = 'form' | 'confirmation';
 
@@ -289,9 +289,9 @@ export default function EquipmentEditPage() {
               {loadError ?? '設備情報を取得できませんでした。'}
             </p>
             {equipmentId !== null && siteId && projectId && (
-              <Button type="button" onClick={() => setReloadKey((key) => key + 1)}>
+              <ActionButton kind="retry" onClick={() => setReloadKey((key) => key + 1)}>
                 再読み込み
-              </Button>
+              </ActionButton>
             )}
           </FormCard>
         </FormPageContent>

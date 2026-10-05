@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, LifeBuoy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import {
   Accordion,
   AccordionContent,
@@ -153,9 +153,9 @@ export default function AdminHelpFaqPage() {
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base font-semibold">
                 {section.category}
-                <Badge variant="secondary" className="text-xs font-normal">
+                <StatusBadge className="font-normal">
                   {section.items.length}件
-                </Badge>
+                </StatusBadge>
               </CardTitle>
             </CardHeader>
             <CardContent>

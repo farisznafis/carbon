@@ -33,7 +33,7 @@ import {
   Plus,
   Zap,
 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { getMonitoringRecent } from '@/api/monitoring';
 import type { MonitoringData } from '@/api/monitoring';
 import {
@@ -56,8 +56,6 @@ import {
 import {
   dashboardWidePageContainerClassName,
   dashboardPageContainerClassName,
-  dashboardTabsListClassName,
-  dashboardTabTriggerClassName,
 } from '@/components/layout/DashboardLayout';
 import { EquipmentList } from './components/EquipmentList';
 import { MonitoringCancellationDialog } from './components/MonitoringCancellationDialog';
@@ -70,6 +68,7 @@ import { paths } from '@/routes/paths';
 import { FloatingHelpButton } from '@/features/master/help/FloatingHelpButton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { EmissionReductionProgressCard } from './components/EmissionReductionProgressCard';
+import { PageTabsList, PageTabsTrigger } from '@/components/navigation/PageTabs';
 
 function formatNumber(n: number | null | undefined) {
   if (n == null || Number.isNaN(n)) return '-';
@@ -139,21 +138,10 @@ type ProjectDetailNavigationState = {
 
 function ProjectDetailTabs() {
   return (
-    <TabsList className={dashboardTabsListClassName}>
-      <TabsTrigger
-        value='overview'
-        className={dashboardTabTriggerClassName}
-      >
-        概要
-      </TabsTrigger>
-
-      <TabsTrigger
-        value='equipment'
-        className={dashboardTabTriggerClassName}
-      >
-        設備一覧
-      </TabsTrigger>
-    </TabsList>
+    <PageTabsList aria-label='プロジェクト詳細の表示'>
+      <PageTabsTrigger value='overview'>概要</PageTabsTrigger>
+      <PageTabsTrigger value='equipment'>設備一覧</PageTabsTrigger>
+    </PageTabsList>
   );
 }
 
@@ -221,6 +209,7 @@ type SummaryMetricProps = {
   emphasis?: boolean;
 };
 
+/** Renders one headline project metric with an optional emphasis color. */
 function SummaryMetric({
   label,
   value,
@@ -234,7 +223,7 @@ function SummaryMetric({
       <div className='mt-2 flex flex-wrap items-baseline gap-x-1.5'>
         <span
           className={cn(
-            'text-3xl font-bold tabular-nums',
+            'text-form-title font-bold tabular-nums',
             emphasis ? 'text-primary' : 'text-foreground',
           )}
         >
@@ -350,6 +339,7 @@ function RecentDataBar({ row }: RecentDataBarProps) {
   );
 }
 
+/** Renders project status, equipment, and monitoring details for a site. */
 const ProjectDetail = () => {
   const { id, projectId: routeProjectId, siteId: routeSiteId } = useParams();
   const [searchParams] = useSearchParams();
@@ -744,7 +734,7 @@ const ProjectDetail = () => {
                       </span>
                     </div>
 
-                    <h1 className='max-w-4xl text-2xl font-bold leading-tight text-foreground sm:text-3xl'>
+                    <h1 className='max-w-4xl text-2xl font-bold leading-tight text-foreground sm:text-form-title'>
                       {project.name}
                     </h1>
 
@@ -820,9 +810,7 @@ const ProjectDetail = () => {
             onValueChange={(value) => setTab(value as ProjectDetailTabValue)}
             className='space-y-6'
           >
-            <div className='-m-1 overflow-x-auto p-1'>
-              <ProjectDetailTabs />
-            </div>
+            <ProjectDetailTabs />
 
             {/* =========================
                 OVERVIEW
@@ -941,7 +929,7 @@ const ProjectDetail = () => {
               value='equipment'
               className='m-0 space-y-6'
             >
-              <section className='flex flex-col gap-4 sm:flex-row sm:items-center'>
+              <section className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
                 <div className='flex items-center gap-3'>
                   <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary'>
                     <PackageCheck className='h-5 w-5' />

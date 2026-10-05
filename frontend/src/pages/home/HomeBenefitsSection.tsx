@@ -33,7 +33,7 @@ export function HomeBenefitsSection() {
         surface-brand-dark
         py-16
         sm:py-20
-        lg:py-24
+        lg:py-marketing-section
       "
     >
       <div
@@ -53,7 +53,7 @@ export function HomeBenefitsSection() {
             gap-6
             lg:grid-cols-[1.05fr_0.95fr]
             lg:items-end
-            lg:gap-16
+            lg:gap-[calc(var(--section-gap)*2)]
           "
         >
           <div>
@@ -65,7 +65,7 @@ export function HomeBenefitsSection() {
                 leading-tight
                 tracking-tight
                 text-background
-                sm:text-4xl
+                sm:text-marketing-title
               "
             >
               このサービスでできること
@@ -276,7 +276,7 @@ export function HomeBenefitsSection() {
                     leading-tight
                     tracking-tight
                     text-background
-                    sm:text-3xl
+                    sm:text-form-title
                   "
                 >
                   {activeCapability.title}
@@ -339,6 +339,7 @@ export function HomeBenefitsSection() {
                     p-5
                     sm:min-h-[380px]
                     sm:p-8
+                    lg:p-[calc(var(--card-padding)*1.3333)]
                   "
                 >
                   <div

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useForm, type PathValue, type UseFormReturn } from 'react-hook-form';
+import { useForm, type UseFormReturn } from 'react-hook-form';
 import {
+  Link,
   useLocation,
   useNavigate,
   useParams,
@@ -17,28 +18,32 @@ import {
 } from '@/api/admin';
 import { mapAdminProjectPlanApplicationPayload } from '@/api/admin/projectPayloadMapper';
 import type { Project } from '@/api/projects';
-import { FormActions } from '@/components/forms/form-layout';
-import { PageSkeleton } from '@/components/feedback/loading';
+import { LoadingPanel } from '@/components/feedback/loading';
+import {
+  FormActions,
+  FormCard,
+  FormGrid,
+  FormPageContent,
+  FormPageTitle,
+  FormSection,
+  FormSectionStack,
+  FormStandalonePage,
+} from '@/components/forms/form-layout';
+import { GenericFormFields } from '@/components/forms/shared/GenericFormFields/GenericFormFields';
 import { PageDropdown } from '@/components/forms/shared/PageDropdown';
-import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+  PageBackButton,
+  floatingPageBackButtonClassName,
+} from '@/components/navigation/PageBackButton';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import { Form } from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
@@ -54,6 +59,7 @@ import {
   adminProjectEditRepresentativeFields,
   type AdminProjectEditField,
 } from './projectEditFields';
+import { ActionButton } from '@/components/actions';
 
 type LocationState = {
   project?: Project;
@@ -203,79 +209,40 @@ const mapEditValuesToProjectBase = (
     methodDetails: values.methodDetails,
   }) as AdminProjectRegisterFormInputValues['projectBase'];
 
-function FieldGrid({
+const projectBaseSections = [
+  { title: '基本情報', fields: adminProjectEditBasicFields },
+  { title: '代表者情報', fields: adminProjectEditRepresentativeFields },
+  { title: '責任者情報', fields: adminProjectEditPicFields },
+  { title: '方法論情報', fields: adminProjectEditMethodologyFields },
+] as const;
+
+/** Renders one numbered project-record section with the shared form field components. */
+function ProjectBaseSection({
+  number,
+  title,
   fields,
   form,
-}: {
-  fields: AdminProjectEditField[];
+}: Readonly<{
+  number: number;
+  title: string;
+  fields: readonly AdminProjectEditField[];
   form: UseFormReturn<UpdateAdminProjectPayload>;
-}) {
+}>) {
+  // Textareas span the full row, so they sit below the two-column grid.
+  const gridFields = fields.filter((field) => field.type !== 'textarea');
+  const fullWidthFields = fields.filter((field) => field.type === 'textarea');
+
   return (
-    <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-      {fields.map((field) => {
-        const fieldName = field.name;
-        const isFullWidthField = fieldName === 'methodDetails';
-
-        return (
-          <div
-            key={fieldName}
-            className={`space-y-2 ${isFullWidthField ? 'md:col-span-2' : ''}`}
-          >
-            <Label htmlFor={fieldName}>{field.label}</Label>
-            {field.type === 'select' ? (
-              <Select
-                value={String(form.watch(fieldName) ?? '')}
-                onValueChange={(value) => {
-                  const selected = field.options?.find(
-                    (option) => String(option.value) === value,
-                  );
-
-                  form.setValue(
-                    fieldName,
-                    selected?.value as PathValue<
-                      UpdateAdminProjectPayload,
-                      typeof fieldName
-                    >,
-                    { shouldDirty: true },
-                  );
-                }}
-              >
-                <SelectTrigger id={fieldName}>
-                  <SelectValue placeholder={field.placeholder} />
-                </SelectTrigger>
-                <SelectContent>
-                  {field.options?.map((option) => (
-                    <SelectItem
-                      key={String(option.value)}
-                      value={String(option.value)}
-                    >
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : field.type === 'textarea' ? (
-              <Textarea
-                id={fieldName}
-                rows={5}
-                placeholder={field.placeholder}
-                {...form.register(fieldName)}
-              />
-            ) : (
-              <Input
-                id={fieldName}
-                type={field.type === 'number' ? 'number' : field.type ?? 'text'}
-                step={field.type === 'number' ? 'any' : undefined}
-                placeholder={field.placeholder}
-                {...form.register(fieldName, {
-                  valueAsNumber: field.type === 'number',
-                })}
-              />
-            )}
-          </div>
-        );
-      })}
-    </div>
+    <FormSection number={number} title={title}>
+      {gridFields.length > 0 && (
+        <FormGrid>
+          <GenericFormFields form={form} fields={gridFields} />
+        </FormGrid>
+      )}
+      {fullWidthFields.length > 0 && (
+        <GenericFormFields form={form} fields={fullWidthFields} />
+      )}
+    </FormSection>
   );
 }
 
@@ -288,6 +255,8 @@ export default function AdminProjectEditPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Bumped by 再試行 to rerun the load effect after a failed fetch.
+  const [reloadKey, setReloadKey] = useState(0);
   const [step, setStep] = useState(() => {
     const page = Number(searchParams.get('page'));
     return page >= 1 && page <= maxStep ? page : 1;
@@ -385,7 +354,7 @@ export default function AdminProjectEditPage() {
     return () => {
       isMounted = false;
     };
-  }, [applicationForm, form, processedBy, projectId]);
+  }, [applicationForm, form, processedBy, projectId, reloadKey]);
 
   const jumpToStep = (target: number | string) => {
     const targetStep = Number(target);
@@ -475,132 +444,135 @@ export default function AdminProjectEditPage() {
   const handleSubmit =
     step === 1 ? handleProjectBaseSubmit : handleProjectApplicationSubmit;
 
-  if (loading) {
-    return (
-      <PageSkeleton label="プロジェクト情報を読み込んでいます" />
-    );
-  }
-
-  if (error) {
-    return (
-      <div className='flex min-h-screen items-center justify-center p-6'>
-        <Card className='w-full max-w-md'>
-          <CardHeader>
-            <CardTitle>プロジェクト情報を取得できませんでした</CardTitle>
-            <CardDescription>{error}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PageBackButton onClick={() => navigate(-1)} />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const detailPath = projectId
+    ? paths.adminProjectDetail(projectId)
+    : paths.adminProjectList;
+  const projectName = form.getValues('projectName');
 
   return (
-    <FormPageWrapper
-      pageName='プロジェクト情報更新'
-      title=''
-      onBack={() => navigate(-1)}
-      // backText='戻る'
-      contentMaxWidth='max-w-3xl'
-      wrapInCard={false}
-    >
-      <form onSubmit={handleSubmit} className='space-y-6'>
-        <div className='mb-4'>
-          <PageDropdown
-            steps={visibleSteps}
-            value={step}
-            onChange={jumpToStep}
-          />
+    <FormStandalonePage>
+      <PageBackButton
+        onClick={() => navigate(detailPath)}
+        label=''
+        aria-label='プロジェクト詳細に戻る'
+        className={floatingPageBackButtonClassName}
+      />
+      <FormPageContent>
+        <Breadcrumb>
+          <BreadcrumbList className='flex-nowrap'>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to={paths.adminProjectList}>プロジェクト管理</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem className='min-w-0'>
+              <BreadcrumbLink asChild>
+                <Link
+                  to={detailPath}
+                  className='block max-w-40 truncate sm:max-w-72'
+                >
+                  {!loading && !error && projectName ? projectName : 'プロジェクト詳細'}
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>編集</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        <div>
+          <FormPageTitle as='h1'>プロジェクト情報の編集</FormPageTitle>
+          <p className='mt-2 text-sm leading-6 text-muted-foreground sm:text-base'>
+            プロジェクトの基本情報と申請情報を編集します。
+          </p>
         </div>
 
-        {step === 1 ? (
-          <>
-        <Card>
-          <CardHeader>
-            <CardTitle>基本情報</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FieldGrid fields={adminProjectEditBasicFields} form={form} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>代表者情報</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FieldGrid
-              fields={adminProjectEditRepresentativeFields}
-              form={form}
+        {loading ? (
+          <LoadingPanel message='プロジェクト情報を読み込んでいます' />
+        ) : error ? (
+          <FormCard className='text-center'>
+            <p className='text-sm text-foreground'>
+              プロジェクト情報を表示できませんでした。
+            </p>
+            <p className='mt-1 text-sm text-muted-foreground'>{error}</p>
+            <ActionButton
+              kind='retry'
+              className='mt-5'
+              onClick={() => setReloadKey((key) => key + 1)}
             />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>責任者情報</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FieldGrid fields={adminProjectEditPicFields} form={form} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>方法論情報</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FieldGrid fields={adminProjectEditMethodologyFields} form={form} />
-          </CardContent>
-        </Card>
-          </>
+          </FormCard>
         ) : (
-          <Card>
-            <CardContent className='pt-6'>
-              <MultiStepForm
-                form={applicationForm}
-                step={2}
-                stepsOverride={visibleSteps}
-              />
-            </CardContent>
-          </Card>
+          <>
+            <PageDropdown
+              steps={visibleSteps}
+              value={step}
+              onChange={jumpToStep}
+            />
+
+            <Form {...form}>
+              <form onSubmit={handleSubmit} noValidate>
+                <FormCard>
+                  <FormSectionStack spacing='relaxed'>
+                    {step === 1 ? (
+                      projectBaseSections.map((section, index) => (
+                        <ProjectBaseSection
+                          key={section.title}
+                          number={index + 1}
+                          title={section.title}
+                          fields={section.fields}
+                          form={form}
+                        />
+                      ))
+                    ) : (
+                      <MultiStepForm
+                        form={applicationForm}
+                        step={2}
+                        stepsOverride={visibleSteps}
+                      />
+                    )}
+
+                    <FormActions
+                      disabled={submitting}
+                      pendingActionId={submitting ? 'update' : null}
+                      actions={[
+                        ...(step > 1
+                          ? [
+                              {
+                                id: 'back',
+                                label: '戻る',
+                                variant: 'outline' as const,
+                                onClick: goBack,
+                              },
+                            ]
+                          : []),
+                        {
+                          id: 'update',
+                          label: '更新',
+                          pendingLabel: '更新中...',
+                          type: 'submit',
+                        },
+                        ...(step < maxStep
+                          ? [
+                              {
+                                id: 'next',
+                                label: '次へ',
+                                variant: 'outline' as const,
+                                onClick: goNext,
+                              },
+                            ]
+                          : []),
+                      ]}
+                    />
+                  </FormSectionStack>
+                </FormCard>
+              </form>
+            </Form>
+          </>
         )}
-
-        <FormActions
-          disabled={submitting}
-          pendingActionId={submitting ? 'update' : null}
-          actions={[
-            ...(step > 1
-              ? [
-                  {
-                    id: 'back',
-                    label: '戻る',
-                    variant: 'outline' as const,
-                    onClick: goBack,
-                  },
-                ]
-              : []),
-            {
-              id: 'update',
-              label: '更新',
-              pendingLabel: '更新中...',
-              type: 'submit',
-            },
-            ...(step < maxStep
-              ? [
-                  {
-                    id: 'next',
-                    label: '次へ',
-                    onClick: goNext,
-                  },
-                ]
-              : []),
-          ]}
-        />
-
-      </form>
-    </FormPageWrapper>
+      </FormPageContent>
+    </FormStandalonePage>
   );
 }

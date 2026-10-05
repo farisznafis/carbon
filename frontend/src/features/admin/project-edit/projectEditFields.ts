@@ -52,6 +52,7 @@ const toEditField = (field: FieldConfig<FormValues>): AdminProjectEditField | nu
     label: field.label,
     type: editName === 'methodDetails' ? 'textarea' : field.type,
     placeholder: field.placeholder,
+    required: field.required,
     options: field.options,
   };
 };

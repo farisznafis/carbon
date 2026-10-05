@@ -22,11 +22,11 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { Button } from '@/components/ui/button';
 import { formatPersonName } from '@/features/master/components/masterDashboardUtils';
 import { ProfileInfoCards } from '@/features/user/profile/ProfileInfoCards';
 import { handleError } from '@/lib/errors';
 import { paths } from '@/routes/paths';
+import { ActionButton } from '@/components/actions';
 
 /** Converts a profile display value into a value that is safe for an editable input. */
 function getEditableProfileValue(value?: string): string {
@@ -45,7 +45,7 @@ export default function MasterUserProfilePage() {
   );
   const accountName =
     formattedUserName === '-'
-      ? profile?.username || 'ユーザー'
+      ? profile?.username || ''
       : formattedUserName;
 
   useEffect(() => {
@@ -158,15 +158,13 @@ export default function MasterUserProfilePage() {
               登録されている個人情報と法人情報を確認します。
             </p>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="md"
+          <ActionButton
+            kind="edit"
             onClick={handleEdit}
             disabled={!profile}
           >
             更新
-          </Button>
+          </ActionButton>
         </header>
 
         {loading ? (

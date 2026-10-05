@@ -28,6 +28,7 @@ import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRe
 import com.kct.jcredit.core_backend.service.ParticipationProjectService;
 import com.kct.jcredit.core_backend.service.ParticipationProjectValidationService;
 import com.kct.jcredit.core_backend.service.ProjectParticipationPdfService;
+import com.kct.jcredit.core_backend.service.NotificationMessages;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.entity.ParticipatingProject;
 import com.kct.jcredit.core_backend.entity.ParticipationReviewHistory;
@@ -78,6 +79,7 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
     private final ParticipationReviewHistoryRepository reviewHistoryRepository; 
     private final ProjectParticipationPdfService pdfService;
     private final NotificationService notificationService;
+    private final NotificationMessages messages;
 
     // ─────────────────────────────────────────────────────────────
     // LIST
@@ -232,11 +234,11 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
 
         if (isPrimarySlotEmpty) {
                 try {
+                NotificationMessages.Content secondReview = messages.of("participation.second-review",
+                        participation.getCompany().getNameJa(),
+                        participation.getProject().getProjectName());
                 notificationService.createNotificationForAllOperatingUsers(
-                        "二次確認が必要な入会届があります",
-                        "一次確認が完了しました。別の担当者が入会届の二次確認を行ってください。\n"
-                                + "企業: " + participation.getCompany().getNameJa() + "\n"
-                                + "プロジェクト: " + participation.getProject().getProjectName());
+                        secondReview.subject(), secondReview.body());
                } catch (Exception e) {
                 log.error("Approval notification failed. participationId={}, error={}",
                         participationId, e.getMessage());
@@ -248,9 +250,10 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
         participatingProjectRepository.save(participation);
         pdfService.generateAndProcess(participationId);
         try {
+                NotificationMessages.Content approved = messages.of("participation.approved.notification");
                 notificationService.createNotificationForParticipatingCompany(
-                        "入会届審査完了のお知らせ",
-                        "入会届の審査が完了し、承認されました。マイページから書類をダウンロードできます。",
+                        approved.subject(),
+                        approved.body(),
                         participation.getCompany().getId(),
                         null);
         } catch (Exception e) {
@@ -341,10 +344,11 @@ public class ParticipationReviewServiceImpl implements ParticipationReviewServic
                 participation.getCompany(), request.getRejectReason());
 
         try {
+            NotificationMessages.Content rejected = messages.of(
+                    "participation.rejected.notification", request.getRejectReason());
             notificationService.createNotificationForParticipatingCompany(
-                    "入会届審査結果のお知らせ",
-                    "入会届の審査の結果、却下となりました。内容をご確認の上、再度申請してください。\n"
-                            + "却下理由: " + request.getRejectReason(),
+                    rejected.subject(),
+                    rejected.body(),
                     participation.getCompany().getId(),
                     null);
         } catch (Exception e) {

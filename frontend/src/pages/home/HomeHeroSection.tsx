@@ -65,7 +65,7 @@ export function HeroMediaFrame({ source }: HeroMediaFrameProps) {
           bg-foreground
           shadow-app-md
           sm:aspect-[16/10]
-          lg:min-h-[490px]
+          lg:min-h-[clamp(360px,25.5vw,490px)]
         "
       >
         {source.kind === 'image' ? (
@@ -132,6 +132,7 @@ export function HeroMediaFrame({ source }: HeroMediaFrameProps) {
   );
 }
 
+/** Renders the responsive public hero and its primary actions. */
 export function HomeHeroSection({
   signupPath,
 }: HomeHeroSectionProps) {
@@ -187,7 +188,7 @@ export function HomeHeroSection({
           lg:gap-12
           lg:px-8
           lg:py-[72px]
-          xl:gap-[72px]
+          xl:gap-[clamp(48px,3.75vw,72px)]
         "
       >
         {/* Left: message and CTA */}
@@ -202,7 +203,7 @@ export function HomeHeroSection({
               tracking-tight
               text-foreground
               sm:text-5xl
-              lg:text-6xl
+              lg:text-hero-title
             "
           >
             カーボンデータを、

@@ -1,5 +1,6 @@
 package com.kct.jcredit.core_backend.controller.NotificationControllerTest;
 
+import com.kct.jcredit.core_backend.service.NotificationMessages;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.service.impl.NotificationServiceImpl;
 import com.kct.jcredit.core_backend.repository.postgres.NotificationRepository;
@@ -40,9 +41,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -537,7 +539,11 @@ class NotificationTest {
         private OperatingUserRepository operatingUserRepository;
 
         @Mock
-        private JavaMailSender mailSender;
+        private MailSender mailSender;
+
+        // 実バンドルを使う。文面抽出が忠実かを既存アサーションが検証する。
+        @Spy
+        private NotificationMessages messages = new NotificationMessages();
 
         @InjectMocks
         private NotificationServiceImpl notificationService;

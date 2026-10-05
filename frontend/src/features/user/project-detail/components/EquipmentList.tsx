@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { SiteProjectEquipment } from '@/api/site';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -96,15 +97,11 @@ function EquipmentSummaryCard({
             </div>
           </div>
           <div className='flex flex-wrap gap-2 self-start sm:self-auto'>
-            <Button
-              type='button'
-              variant='outline'
-              size='sm'
-              onClick={() => onShowDetails(equipment)}
-            >
+            {/* Keeps its icon so it matches the icon+label actions beside it. */}
+            <RowActionButton onClick={() => onShowDetails(equipment)}>
               <Eye className='h-4 w-4' />
               詳細
-            </Button>
+            </RowActionButton>
             {typeof equipment.equipmentId === 'number' && (
               <>
                 <Button
