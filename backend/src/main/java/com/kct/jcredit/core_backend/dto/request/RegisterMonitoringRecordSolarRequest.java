@@ -50,10 +50,6 @@ public class RegisterMonitoringRecordSolarRequest {
     @JsonProperty("ELpvr_value")
     private BigDecimal elPvr;
     
-    // 設備にhasBattery=trueの場合のみ必須（MonitoringServiceImplでequipment-aware検証）
-    @JsonProperty("changedBattery")
-    private Boolean changedBattery;
-    
     // ELPJBatteryValue - バッテリー放電 (1年1回又はバッテリー交換時のみ)
     @DecimalMin(value = "0.0", message = "ELPJバッテリー値は0以上である必要があります。")
     @Digits(integer = 9, fraction = 3, message = "ELPJバッテリー値は整数部9桁、小数部3桁以内で入力してください。")
