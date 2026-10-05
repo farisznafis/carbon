@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class CompanyLifecycleServiceImplTest {
+class CompanyLifecycleServiceTest {
 
     @Mock
     private ParticipatingCompanyRepository companyRepository;

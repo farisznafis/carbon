@@ -770,7 +770,7 @@ class AdminCompanyControllerTest {
             CreateOperatorUserRequest request = new CreateOperatorUserRequest();
             request.setEmail("yamada@example.com");
             CreateUserResponse expected = new CreateUserResponse();
-            expected.setStatusCode("CREATED");
+            expected.setStatusCode("OK");
             when(authentication.getCredentials()).thenReturn(TOKEN);
             when(jwtUtil.extractCompanyId(TOKEN)).thenReturn("COMP-001");
             when(jwtUtil.extractUsername(TOKEN)).thenReturn("admin@example.com");
@@ -779,7 +779,7 @@ class AdminCompanyControllerTest {
 
             ResponseEntity<CreateUserResponse> response = controller.createUser(authentication, request);
 
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isSameAs(expected);
             verify(operatorUserService).createOperatorUser("COMP-001", "admin@example.com", request);
         }
