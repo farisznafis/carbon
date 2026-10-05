@@ -5,6 +5,7 @@ import { FormCard } from '@/components/forms/form-layout';
 import { Button } from '@/components/ui/button';
 import { Mail, CheckCircle } from 'lucide-react';
 
+/** Confirms the completed signup and links to login. */
 export const SignupStep4 = () => {
   const navigate = useNavigate();
   const { signupData, resetSignup } = useSignup();
@@ -29,7 +30,7 @@ export const SignupStep4 = () => {
       </div>
 
       <div>
-        <h3 className="text-3xl font-semibold mb-2">登録完了！</h3>
+        <h3 className="text-form-title font-semibold mb-2">登録完了！</h3>
         <p className="text-foreground text-lg">
           ご登録ありがとうございます
         </p>

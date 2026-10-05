@@ -60,7 +60,7 @@ export interface SignUpResponse {
 
 export type ChangePasswordPayload = {
   userId: string;
-  currentPassword: string;
+  currentPassword: string | null;
   newPassword: string;
 };
 

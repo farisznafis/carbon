@@ -21,9 +21,9 @@ export function HomeFaqSection({ contactPath }: HomeFaqSectionProps) {
     <section
       id={HOME_SECTION_IDS.faq}
       aria-labelledby="home-faq-title"
-      className="scroll-mt-20 bg-card py-14 sm:py-16 2xl:py-24"
+      className="scroll-mt-20 bg-card py-14 sm:py-16 2xl:py-marketing-section"
     >
-      <div className="mx-auto grid w-full max-w-page gap-8 px-4 sm:gap-10 sm:px-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-center lg:px-8 2xl:gap-16">
+      <div className="mx-auto grid w-full max-w-page gap-8 px-4 sm:gap-10 sm:px-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-center lg:gap-[calc(var(--section-gap)*1.25)] lg:px-8 2xl:gap-[calc(var(--section-gap)*2)]">
         <div className="space-y-8">
           <HomeSectionHeading
             id="home-faq-title"
@@ -31,7 +31,7 @@ export function HomeFaqSection({ contactPath }: HomeFaqSectionProps) {
             align="left"
           />
           <Card className="max-w-xl border-border/70 shadow-app-md">
-            <CardContent className="space-y-5 p-6">
+            <CardContent className="space-y-5 p-6 lg:p-[var(--card-padding)]">
               {/* <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-primary">
                 <LifeBuoy className="h-5 w-5" aria-hidden="true" />
               </span> */}

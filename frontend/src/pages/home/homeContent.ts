@@ -64,7 +64,7 @@ export const HOME_CAPABILITIES: readonly HomeCapability[] = [
     icon: ClipboardCheck,
     title: 'プロジェクト・J-クレジット管理',
     description:
-      '参加可能なプロジェクトの確認から入会届、設備証憑、審査状況までまとめて管理できます。',
+      '入会可能なプロジェクトの確認から入会届、設備証憑、審査状況までまとめて管理できます。',
     summary:
       '参加から証憑まで、ひとつの文脈で。',
     previewImage: {
@@ -111,7 +111,7 @@ export const HOME_FLOW_STEPS: readonly HomeFlowStep[] = [
   {
     title: 'プロジェクト選択',
     description:
-      '参加可能なプロジェクトを確認し、自社・拠点に合うプロジェクトを選択します。',
+      '入会可能なプロジェクトを確認し、自社・拠点に合うプロジェクトを選択します。',
   },
   {
     title: '入会届',
@@ -154,7 +154,7 @@ export const HOME_FAQ_ITEMS: readonly HomeFaqItem[] = [
     value: 'j-credit-guidance',
     question: 'J-クレジット制度に詳しくなくても利用できますか？',
     answer:
-      'はい。画面の案内に沿って、企業・拠点・設備情報の登録からプロジェクト入会届、モニタリングデータ登録まで進められます。',
+      'はい。画面の案内に沿って、企業・拠点・設備情報の登録からプロジェクトへの入会、モニタリングデータ登録まで進められます。',
   },
   {
     value: 'multiple-sites',

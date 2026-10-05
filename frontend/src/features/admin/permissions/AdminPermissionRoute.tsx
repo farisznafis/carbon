@@ -40,7 +40,7 @@ export function AdminPermissionRoute({
           <span aria-current="page">{title}</span>
         </nav>
         <header>
-          <h1 className="text-3xl font-bold text-foreground">{title}</h1>
+          <h1 className="text-form-title font-bold text-foreground">{title}</h1>
           <p className="mt-2 text-body text-muted-foreground">{description}</p>
         </header>
         <PermissionDeniedNotice permission={permission} />

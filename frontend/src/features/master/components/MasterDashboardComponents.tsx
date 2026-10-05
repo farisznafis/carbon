@@ -1,69 +1,18 @@
 import type { ReactNode } from 'react';
 import type { Site } from '@/api/site';
 import type { UserList } from '@/api/users';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
-import { Button } from '@/components/ui/button';
-import { TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   dashboardEmptyStateClassName,
-  dashboardPageContainerClassName,
-  dashboardPageHeaderClassName,
-  dashboardTabsListClassName,
-  dashboardTabTriggerClassName,
 } from '@/components/layout/DashboardLayout';
 import { MasterSiteCard } from '@/features/master/components/MasterSiteCard';
 import { formatPersonName } from '@/features/master/components/masterDashboardUtils';
 import { cn } from '@/lib/utils';
-import { Building2, Mail, Plus, User } from 'lucide-react';
+import { Building2, Mail, User } from 'lucide-react';
+import { ActionButton } from '@/components/actions';
 
-const dashboardContainer = dashboardPageContainerClassName;
-
-export function MasterDashboardHero({
-  companyName,
-  action,
-}: {
-  companyName: string;
-  action?: ReactNode;
-}) {
-  return (
-    <header className="relative overflow-hidden border-b border-border bg-background">
-      <div className={cn(dashboardPageHeaderClassName, 'justify-between text-left')}>
-        {/* left text */}
-        <div className="flex flex-col gap-1">
-          <span className="text-small text-muted-foreground">
-            マスターダッシュボード
-          </span>
-          <h1 className="max-w-5xl text-foreground">
-            {companyName}
-          </h1>
-        </div>
-        {action && (
-          <div className="shrink-0">
-            {action}
-          </div>
-        )}
-      </div>
-    </header>
-  );
-}
-
-export function MasterDashboardTabs() {
-  const triggerClassName = dashboardTabTriggerClassName;
-
-  return (
-    <div className="bg-card pt-6">
-      <TabsList className={dashboardTabsListClassName}>
-        <TabsTrigger value="sites" className={triggerClassName}>
-          拠点管理
-        </TabsTrigger>
-        <TabsTrigger value="users" className={triggerClassName}>
-          社員管理
-        </TabsTrigger>
-      </TabsList>
-    </div>
-  );
-}
-
+/** Renders one dashboard section with shared heading and action spacing. */
 export function DashboardSection({
   title,
   description,
@@ -74,7 +23,7 @@ export function DashboardSection({
   children,
 }: {
   title: string;
-  description: string;
+  description?: string;
   addLabel: string;
   onAdd: () => void;
   addDisabled?: boolean;
@@ -82,7 +31,7 @@ export function DashboardSection({
   children: ReactNode;
 }) {
   return (
-    <section className={cn('py-8', dashboardContainer)}>
+    <section>
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-foreground">{title}</h2>
@@ -91,16 +40,14 @@ export function DashboardSection({
           </p>
         </div>
         {showAddAction && (
-          <Button
-            type="button"
-            size="md"
+          <ActionButton
+            kind="add"
             onClick={onAdd}
             disabled={addDisabled}
             className="self-start sm:self-auto"
           >
-            <Plus className="h-4 w-4" />
             {addLabel}
-          </Button>
+          </ActionButton>
         )}
       </div>
       {children}
@@ -163,10 +110,10 @@ export function UserDashboardCard({
     user.role !== 'master' && !user.siteId && !user.siteName;
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-app-sm transition hover:border-primary/60 md:min-h-28 md:flex-row">
-      <div className="min-w-0 flex-1 px-5 py-5 md:px-7">
+    <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-app-sm md:flex-row">
+      <div className="min-w-0 flex-1 px-5 py-4 md:px-6">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
             <User className="h-5 w-5" />
           </span>
           <h3 className="text-foreground">
@@ -179,7 +126,7 @@ export function UserDashboardCard({
           )}
         </div>
 
-        <div className="pl-3 mt-3 grid gap-x-8 gap-y-3 text-sm font-bold leading-6 text-foreground xl:grid-cols-[minmax(360px,1.7fr)_minmax(220px,1fr)_minmax(220px,1fr)]">
+        <div className="pl-3 mt-2 grid gap-x-8 gap-y-2 text-sm font-bold leading-6 text-foreground xl:grid-cols-[minmax(360px,1.7fr)_minmax(220px,1fr)_minmax(220px,1fr)]">
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <Mail className="h-4 w-4 shrink-0 text-muted-foreground" />
             <span className="shrink-0 text-foreground">
@@ -216,15 +163,13 @@ export function UserDashboardCard({
         </div>
       </div>
 
-      <div className="flex items-center justify-end border-t border-border p-4 md:w-[152px] md:shrink-0 md:justify-center md:border-l md:border-t-0">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
+      <div className="flex items-center justify-end border-t border-border px-4 py-3 md:w-[152px] md:shrink-0 md:justify-center md:border-l md:border-t-0">
+        <RowActionButton
+          aria-label={`${fullName || '社員'}のプロファイル`}
           onClick={() => onProfile(user)}
         >
           プロファイル
-        </Button>
+        </RowActionButton>
       </div>
     </article>
   );

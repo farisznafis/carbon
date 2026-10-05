@@ -19,7 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 
 @ExtendWith(MockitoExtension.class)
-class ParticipationReviewServiceImplTest {
+class ParticipationReviewServiceTest {
 
     @Mock
     private ParticipatingProjectRepository participatingProjectRepository;

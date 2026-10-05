@@ -1,14 +1,19 @@
-import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   MemoryRouter,
   Route,
   Routes,
   useLocation,
+  useParams,
 } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mapParticipationReviewDetail } from '@/api/admin/participationReviewMapper';
 import ParticipationReviewListPage from './ParticipationReviewListPage';
+import { ParticipationReviewListPanel } from './ParticipationReviewListPanel';
+import { useAdminProjectDetailQuery } from '@/hooks/admin/useAdminProjectDetailQuery';
+import { useProjectParticipationReviews } from '@/hooks/admin/useProjectParticipationReviews';
 
 const { getAdminProjectDetail, getParticipationReviewsByStatus } = vi.hoisted(
   () => ({
@@ -24,6 +29,12 @@ vi.mock('@/api/admin', async (importOriginal) => {
     getAdminProjectDetail,
     getParticipationReviewsByStatus,
   };
+});
+
+// The project detail query reads from the projects module directly.
+vi.mock('@/api/admin/projects', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/api/admin/projects')>();
+  return { ...actual, getAdminProjectDetail };
 });
 
 vi.mock('@/contexts/AuthContext', () => ({
@@ -61,15 +72,39 @@ function LocationProbe() {
   return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
 }
 
-/** Renders the project-scoped membership list with its detail destination. */
-function renderPage(initialEntry = '/admin/projects/7/memberships') {
+/** Mounts the panel the way the project detail 入会届 tab does, fed by the shared hook. */
+function ProjectDetailHarness() {
+  const { projectId = '' } = useParams();
+  const { data: project } = useAdminProjectDetailQuery(projectId);
+  const reviews = useProjectParticipationReviews(projectId, project, true);
+
+  return (
+    <ParticipationReviewListPanel
+      projectId={projectId}
+      reviewsByStatus={reviews.reviewsByStatus}
+      isLoading={!reviews.isReady && !reviews.isError}
+      isError={reviews.isError}
+      isForbidden={reviews.isForbidden}
+      onRetry={() => void reviews.refetch()}
+    />
+  );
+}
+
+/** Renders the project detail route (入会届 tab), the legacy list URL and the detail destination. */
+function renderPage(initialEntry = '/admin/projects/7?tab=membership') {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
   return render(
+    <QueryClientProvider client={queryClient}>
     <MemoryRouter
       initialEntries={[initialEntry]}
       future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
     >
       <LocationProbe />
       <Routes>
+        <Route path="/admin/projects/:projectId" element={<ProjectDetailHarness />} />
         <Route
           path="/admin/projects/:projectId/memberships"
           element={<ParticipationReviewListPage />}
@@ -79,11 +114,12 @@ function renderPage(initialEntry = '/admin/projects/7/memberships') {
           element={<div>detail page</div>}
         />
       </Routes>
-    </MemoryRouter>,
+    </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 
-describe('ParticipationReviewListPage', () => {
+describe('ParticipationReviewListPanel', () => {
   beforeEach(() => {
     getAdminProjectDetail.mockReset();
     getParticipationReviewsByStatus.mockReset();
@@ -107,16 +143,18 @@ describe('ParticipationReviewListPage', () => {
 
     expect(await screen.findByText('承認待ち会社')).toBeInTheDocument();
     expect(screen.queryByText('別プロジェクト会社')).not.toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: '承認待ち（1）' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: '承認済み（1）' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: '却下（1）' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '承認待ち1' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '承認済み1' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '却下1' })).toBeInTheDocument();
     expect(screen.getByText('一次確認待ち')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: '承認済み（1）' }));
+    await user.click(screen.getByRole('tab', { name: '承認済み1' }));
     expect(screen.getByText('承認済み会社')).toBeInTheDocument();
-    expect(screen.getByText('承認済み')).toBeInTheDocument();
+    // The row badge, not the filter label, carries the status.
+    expect(within(screen.getByRole('tabpanel')).getByText('承認済み')).toBeInTheDocument();
+    // The status filter is added next to the tab instead of replacing it.
     expect(screen.getByTestId('location')).toHaveTextContent(
-      '/admin/projects/7/memberships?status=APPROVED',
+      '/admin/projects/7?tab=membership&status=APPROVED',
     );
 
     await user.click(screen.getByRole('button', { name: '詳細' }));
@@ -125,29 +163,34 @@ describe('ParticipationReviewListPage', () => {
     );
   });
 
-  it('restores a rejected tab directly from the status query', async () => {
+  it('restores a rejected filter when opened from the legacy list URL', async () => {
     renderPage('/admin/projects/7/memberships?status=REJECTED');
 
+    expect(screen.getByTestId('location')).toHaveTextContent(
+      '/admin/projects/7?tab=membership&status=REJECTED',
+    );
+
     expect(await screen.findByText('却下会社')).toBeInTheDocument();
-    expect(screen.getByText('却下')).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: '却下（1）' })).toHaveAttribute(
+    expect(within(screen.getByRole('tabpanel')).getByText('却下')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '却下1' })).toHaveAttribute(
       'data-state',
       'active',
     );
   });
 
-  it('renders the shared 404 page when a page-loading request fails', async () => {
+  it('shows an inline error with retry instead of leaving the project page', async () => {
+    const user = userEvent.setup();
     getParticipationReviewsByStatus.mockRejectedValueOnce(
       new Error('gateway error'),
     );
     renderPage();
 
     expect(
-      await screen.findByRole('heading', { name: 'ページが見つかりません' }),
+      await screen.findByText('入会届一覧を取得できませんでした。'),
     ).toBeInTheDocument();
     expect(screen.queryByText('gateway error')).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'ホームに戻る' }),
-    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '再試行' }));
+    expect(await screen.findByText('承認待ち会社')).toBeInTheDocument();
   });
 });

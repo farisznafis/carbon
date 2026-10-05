@@ -105,7 +105,6 @@ class MonitoringControllerTestOld {
         request.setDateRecorded("2024-01-15"); // ← これが正しい
         request.setElPv(new BigDecimal("123.456"));
         request.setElPvr(new BigDecimal("789.012"));
-        request.setChangedBattery(false);
         request.setElpjControl(new BigDecimal("50.000"));
     }
 
@@ -124,7 +123,6 @@ class MonitoringControllerTestOld {
         request.setDateRecorded("2024-01-15T10:30:00");
         request.setElPv(new BigDecimal("150.500"));
         request.setElPvr(new BigDecimal("120.300"));
-        request.setChangedBattery(false);
         request.setElpjControl(new BigDecimal("50.000"));
         request.setElPvEvidenceUrl("https://example.com/evidence/elpv_001.pdf");
         request.setElPvrEvidenceUrl("https://example.com/evidence/elpvr_001.pdf");
@@ -208,7 +206,6 @@ class MonitoringControllerTestOld {
         request.setDateRecorded("2024-02-20T14:00:00");
         request.setElPv(new BigDecimal("180.750"));
         request.setElPvr(new BigDecimal("140.500"));
-        request.setChangedBattery(true);
         request.setElpjBatteryValue(new BigDecimal("250.000"));
         request.setElpjControl(new BigDecimal("60.000"));
         request.setElPvEvidenceUrl("https://example.com/evidence/elpv_002.pdf");
@@ -273,7 +270,6 @@ class MonitoringControllerTestOld {
         request.setDateRecorded("2024-03-10T09:15:00");
         request.setElPv(new BigDecimal("200.125"));
         request.setElPvr(new BigDecimal("160.875"));
-        request.setChangedBattery(false);
         request.setElpjControl(new BigDecimal("70.500"));
         request.setElpjBatteryValue(new BigDecimal("300.000"));
         request.setElpjAccuracy(new BigDecimal("95.50"));
@@ -342,7 +338,6 @@ class MonitoringControllerTestOld {
         request.setDateRecorded("2024-01-15T10:30:00");
         request.setElPv(new BigDecimal("150.500"));
         request.setElPvr(new BigDecimal("120.300"));
-        request.setChangedBattery(false);
         request.setElpjControl(new BigDecimal("50.000"));
         request.setElPvEvidenceUrl("https://example.com/evidence/elpv_001.pdf");
         request.setElPvrEvidenceUrl("https://example.com/evidence/elpvr_001.pdf");
