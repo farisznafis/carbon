@@ -15,9 +15,9 @@ export function getMonitoringSolarConfirmation(
   data: MonitoringSolarFormData,
   original?: MonitoringSolarFormData,
 ): ConfirmationItem[] {
-  /** Compares a confirmation field with the original monitoring value. */
+  /** Marks changes only when comparing against an existing monitoring record. */
   const isChanged = (key: keyof MonitoringSolarFormData) =>
-    original?.[key] !== data[key];
+    original !== undefined && original[key] !== data[key];
 
   return [
     {

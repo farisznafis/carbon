@@ -59,6 +59,7 @@ describe('Monitoring registration evidence upload', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '確認' }));
     const confirmButton = await screen.findByRole('button', { name: '確定' });
+    expect(screen.queryByText('変更あり')).not.toBeInTheDocument();
     expect(validateMonitoringData).toHaveBeenCalledWith(expect.objectContaining({
       ELpv_value: 0,
       ELpvr_value: 0,

@@ -113,7 +113,6 @@ const MonitoringRegister = () => {
   const [isEquipmentLoading, setIsEquipmentLoading] = useState(false);
   const [equipmentLoadError, setEquipmentLoadError] = useState<string | null>(null);
   const [equipmentReloadKey, setEquipmentReloadKey] = useState(0);
-  const originalDataRef = useRef<MonitoringFormData | null>(null);
   const uploadJobsRef = useRef<EvidenceUploadJob[]>([]);
   const uploadedEvidenceUrlsRef = useRef<Partial<Record<EvidenceUploadKey, string>>>({});
 
@@ -129,7 +128,6 @@ const MonitoringRegister = () => {
     if (!definition) return;
 
     setFormData(definition.emptyData);
-    originalDataRef.current = definition.emptyData;
   }, [definition]);
 
   useEffect(() => {
@@ -476,10 +474,7 @@ const MonitoringRegister = () => {
     <MonitoringConfirmationLayout
       title='モニタリングデータ'
       description={submitError || (isSubmitting ? '登録処理を進めています' : '以下の内容をご確認ください。')}
-      items={getConfirmationItems(
-        formData,
-        originalDataRef.current ?? undefined,
-      )}
+      items={getConfirmationItems(formData)}
       onBack={() => setStep('form')}
       onConfirm={handleConfirm}
       isSubmitting={isSubmitting}

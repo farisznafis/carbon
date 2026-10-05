@@ -58,6 +58,27 @@ describe("Monitoring confirmation consistency", () => {
                 expect(items.some(i => i.isChanged)).toBe(true);
             });
 
+            it("does not mark new registration values as changed without an existing record", () => {
+                const registrationData = {
+                    ...emptyData,
+                    equipmentId: 100,
+                    dateRecorded: '2026-10-05',
+                    ELpv_value: 12,
+                    equipmentHasBattery: true,
+                    ELPJ_battery_value: 0,
+                    elpj_battery_evidence: 'battery.pdf',
+                    elpv_evidence: new File(['evidence'], 'generation.pdf'),
+                };
+
+                const items = getConfirmationItems(registrationData);
+
+                expect(items.some(item => item.isChanged)).toBe(false);
+                expect(items).toEqual(expect.arrayContaining([
+                    expect.objectContaining({ label: '発電量 (ELPV)', value: '12' }),
+                    expect.objectContaining({ label: '発電量 (ELPV) エビデンス', value: 'generation.pdf' }),
+                ]));
+            });
+
         });
     });
 });

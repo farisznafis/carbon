@@ -406,7 +406,7 @@ export function MonitoringSolarForm({
                           onChange={field.onChange}
                           placeholder="数値を入力"
                           unit="kWh"
-                          required
+                          // required
                         />
                       </FormControl>
                       <FormMessage />
