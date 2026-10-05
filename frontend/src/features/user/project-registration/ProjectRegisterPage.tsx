@@ -340,13 +340,15 @@ const ProjectRegister = () => {
     }
   }, [navigate, user?.role, resolvedSiteId]);
 
+  /** Returns Master registration to its sidebar tab and direct visits to the site page. */
   const navigateToMembership = useCallback(() => {
+    if (enteredFromMasterDashboard) {
+      navigate(paths.masterDashboardMembership);
+      return;
+    }
+
     if (resolvedSiteId) {
-      navigate(paths.projectMembership(resolvedSiteId), {
-        state: enteredFromMasterDashboard
-          ? masterDashboardProjectMembershipState
-          : undefined,
-      });
+      navigate(paths.projectMembership(resolvedSiteId));
     } else {
       navigateToDashboard();
     }

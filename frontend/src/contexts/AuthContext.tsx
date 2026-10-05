@@ -115,57 +115,12 @@ function isSameAuthSession(
   );
 }
 
-/** Storage keys that describe the session; a change to anything else cannot affect it. */
-const authStorageKeys: string[] = [
-  storageKeys.authToken,
-  storageKeys.user,
-  storageKeys.sessionExpiresAt,
-];
-
-type StoredSessionSnapshot =
-  | { status: 'none' | 'partial' | 'expired' }
-  | { status: 'active'; token: string; user: User };
-
-function parseStoredUser(rawUser: string | null): User | null {
-  if (!rawUser) return null;
-
-  try {
-    return JSON.parse(rawUser) as User;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Reads the stored session without writing to storage.
- *
- * Every tab of the origin shares one localStorage and sees the other tabs'
- * writes arrive a key at a time, so a login running elsewhere shows up here as
- * a token whose user has not landed yet — reported as `partial`. Clearing on
- * that would delete the token the other tab just wrote and sign it straight
- * back out, so this stays a pure read and leaves the decision to the caller.
- */
-function readStoredSession(): StoredSessionSnapshot {
-  const token = storage.get(storageKeys.authToken);
-  const rawUser = storage.get(storageKeys.user);
+const isStoredSessionExpired = () => {
+  const hasToken = !!storage.get(storageKeys.authToken);
   const expiresAt = getSessionExpiresAt();
 
-  if (!token && !rawUser && expiresAt === null) {
-    return { status: 'none' };
-  }
-
-  const storedUser = parseStoredUser(rawUser);
-
-  if (!token || !storedUser) {
-    return { status: 'partial' };
-  }
-
-  if (expiresAt !== null && Date.now() >= expiresAt) {
-    return { status: 'expired' };
-  }
-
-  return { status: 'active', token, user: storedUser };
-}
+  return hasToken && expiresAt !== null && Date.now() >= expiresAt;
+};
 
 const EMPTY_AUTH_SESSION: AuthSession = {
   user: null,
@@ -190,46 +145,39 @@ function needsAdminSessionIdMigration(user: User): boolean {
   return user.role === 'admin' && !normalizeAdminOperatorId(user.id);
 }
 
-/** Maps a snapshot to a session, or null when it holds no usable login. Writes nothing. */
-function toAuthSession(snapshot: StoredSessionSnapshot): AuthSession | null {
-  if (snapshot.status !== 'active') {
-    return null;
-  }
+const getStoredAuthSession = (): AuthSession => {
+  const token = storage.get(storageKeys.authToken);
+  const storedUser = storage.getJson<User>(storageKeys.user);
+  const hasStoredSession = !!token || !!storedUser || getSessionExpiresAt() !== null;
 
-  if (!needsAdminSessionIdMigration(snapshot.user)) {
-    return { user: snapshot.user, isAuthenticated: true };
-  }
-
-  const jwtUserId = getJwtUserId(snapshot.token);
-  if (!jwtUserId) {
-    return null;
-  }
-
-  return { user: { ...snapshot.user, id: jwtUserId }, isAuthenticated: true };
-}
-
-/**
- * Loads the session when a tab starts up — the one moment where dropping a
- * half-written or expired session is safe, since nothing in this tab wrote it.
- */
-function loadInitialSession(): AuthSession {
-  const snapshot = readStoredSession();
-  const session = toAuthSession(snapshot);
-
-  if (!session) {
-    if (snapshot.status !== 'none') {
+  if (!token || !storedUser || isStoredSessionExpired()) {
+    if (hasStoredSession) {
       clearStoredSession();
     }
 
     return EMPTY_AUTH_SESSION;
   }
 
-  if (snapshot.status === 'active' && session.user?.id !== snapshot.user.id) {
-    storage.setJson(storageKeys.user, session.user);
+  if (needsAdminSessionIdMigration(storedUser)) {
+    const jwtUserId = getJwtUserId(token);
+    if (!jwtUserId) {
+      clearStoredSession();
+      return EMPTY_AUTH_SESSION;
+    }
+
+    const migratedUser = { ...storedUser, id: jwtUserId };
+    storage.setJson(storageKeys.user, migratedUser);
+    return {
+      user: migratedUser,
+      isAuthenticated: true,
+    };
   }
 
-  return session;
-}
+  return {
+    user: storedUser,
+    isAuthenticated: true,
+  };
+};
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<AuthSession>(EMPTY_AUTH_SESSION);
@@ -238,27 +186,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setSession(loadInitialSession());
+    setSession(getStoredAuthSession());
     setLoading(false);
 
     /** Synchronizes authentication when another tab or window changes storage. */
     const synchronizeSession = () => {
-      const snapshot = readStoredSession();
-
-      // A login or logout in another tab reaches this one key by key. Signing
-      // out on that half-written state is what stopped a login from sticking
-      // while a second tab of the app was open, so let the writer finish.
-      if (snapshot.status === 'partial') {
-        return;
-      }
-
-      // An expiry is a real end of session rather than a write in flight, so
-      // the stored keys can go.
-      if (snapshot.status === 'expired') {
-        clearStoredSession();
-      }
-
-      const nextSession = toAuthSession(snapshot) ?? EMPTY_AUTH_SESSION;
+      const nextSession = getStoredAuthSession();
 
       setSession((currentSession) => {
         if (isSameAuthSession(currentSession, nextSession)) {
@@ -270,19 +203,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
     };
 
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key !== null && !authStorageKeys.includes(event.key)) {
-        return;
-      }
-
-      synchronizeSession();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('storage', synchronizeSession);
     window.addEventListener('focus', synchronizeSession);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('storage', synchronizeSession);
       window.removeEventListener('focus', synchronizeSession);
     };
   }, []);
@@ -307,12 +232,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           siteName: data.companyName,
         };
 
-        // The token goes in last: other tabs read these writes one at a time,
-        // and its arrival is what tells them the rest of the session is there.
+        storage.set(storageKeys.authToken, data.token);
         storage.setJson(storageKeys.user, loginUser);
         storage.set(storageKeys.siteId, loginUser.siteId);
         setSessionExpiry();
-        storage.set(storageKeys.authToken, data.token);
         setSession({
           user: loginUser,
           isAuthenticated: true,
@@ -370,11 +293,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           siteName: adminSource?.siteName ?? undefined,
         };
 
-        // The token goes in last, for the reason given in login().
+        storage.set(storageKeys.authToken, data.token);
         storage.setJson(storageKeys.user, adminUser);
         storage.remove(storageKeys.siteId);
         setSessionExpiry();
-        storage.set(storageKeys.authToken, data.token);
         setSession({
           user: adminUser,
           isAuthenticated: true,

@@ -43,7 +43,7 @@ export const projectApplicationSchema = z
 
     projectOperatorKana: z
       .string()
-      .min(1, 'プロジェクト運営者（カナ）は必須です')
+      .min(1, 'プロジェクト運用者（カナ）は必須です')
       .max(255, VALIDATION_MESSAGES.MAX_CHARACTERS(255))
       .regex(
         REGEX_PATTERNS.FULLWIDTH_KATAKANA,
@@ -53,7 +53,7 @@ export const projectApplicationSchema = z
 
     projectOperatorJa: z
       .string()
-      .min(1, 'プロジェクト運営者（日本語）は必須です')
+      .min(1, 'プロジェクト運用者（日本語）は必須です')
       .max(255, VALIDATION_MESSAGES.MAX_CHARACTERS(255))
       .optional(),
     // .regex(
@@ -62,7 +62,7 @@ export const projectApplicationSchema = z
     // )
     projectOperatorEn: z
       .string()
-      .min(1, 'プロジェクト運営者（英語）は必須です')
+      .min(1, 'プロジェクト運用者（英語）は必須です')
       .max(255, VALIDATION_MESSAGES.MAX_CHARACTERS(255))
       .optional(),
     // .regex(REGEX_PATTERNS.HALFWIDTH_SYMBOLS, REGEX_MESSAGES.HALFWIDTH_SYMBOLS)

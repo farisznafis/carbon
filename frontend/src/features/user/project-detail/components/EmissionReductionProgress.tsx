@@ -25,6 +25,7 @@ type EmissionReductionProgressProps = EmissionReductionProgressInput & {
   className?: string;
 };
 
+/** Displays a project emission reduction percentage and progress bar. */
 export function EmissionReductionProgress({
   baselineEmission,
   projectEmission,
@@ -56,7 +57,7 @@ export function EmissionReductionProgress({
         </p>
       ) : (
         <div className='mt-5'>
-          <p className='text-center text-3xl font-bold tabular-nums text-foreground'>
+          <p className='text-center text-form-title font-bold tabular-nums text-foreground'>
             {percentageFormatter.format(metrics.achievementRate)}%
           </p>
 

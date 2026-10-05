@@ -3,7 +3,7 @@ import {
   DataGridTable,
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import {
   formatAdminCompanyAddress,
   formatAdminCompanyDateTime,
@@ -56,9 +56,9 @@ export function AdminCompanySitesTable({
         site.projectNames.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {site.projectNames.map((projectName, index) => (
-              <Badge key={`${projectName}-${index}`} variant="secondary">
+              <StatusBadge key={`${projectName}-${index}`}>
                 {projectName}
-              </Badge>
+              </StatusBadge>
             ))}
           </div>
         ) : (

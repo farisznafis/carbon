@@ -9,7 +9,7 @@ type HomeCtaSectionProps = Readonly<{
 /** Renders the final registration call-to-action on the public homepage. */
 export function HomeCtaSection({ signupPath }: HomeCtaSectionProps) {
   return (
-    <section className='bg-card px-4 py-14 sm:px-6 sm:py-16 lg:px-8 2xl:py-24'>
+    <section className='bg-card px-4 py-14 sm:px-6 sm:py-16 lg:px-8 2xl:py-marketing-section'>
       <div
         className='
           relative
@@ -44,13 +44,13 @@ export function HomeCtaSection({ signupPath }: HomeCtaSectionProps) {
             z-10
             flex
             flex-col
-            gap-8
+            gap-section
             p-8
             sm:p-10
+            lg:p-[clamp(2rem,2.5vw,3rem)]
             lg:flex-row
             lg:items-center
             lg:justify-between
-            2xl:p-12
           '
         >
           <div className='max-w-3xl'>
@@ -62,7 +62,7 @@ export function HomeCtaSection({ signupPath }: HomeCtaSectionProps) {
                 text-[hsl(var(--blue-200))]
               '
             >
-              プロジェクト参加
+              プロジェクト入会
             </p>
 
             <h2
@@ -73,10 +73,10 @@ export function HomeCtaSection({ signupPath }: HomeCtaSectionProps) {
                 leading-tight
                 tracking-tight
                 text-white
-                sm:text-4xl
+                sm:text-marketing-title
               '
             >
-              プロジェクト参加を、もっとかんたんに
+              プロジェクトへの入会を、もっとかんたんに
             </h2>
 
             <p

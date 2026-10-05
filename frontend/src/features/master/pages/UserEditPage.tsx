@@ -101,7 +101,7 @@ export default function UserEdit() {
   );
   const accountName =
     formattedUserName === '-'
-      ? initialUser?.username || 'ユーザー'
+      ? initialUser?.username || ''
       : formattedUserName;
   const dashboardPath =
     mode === 'profile' ? getHomePath(initialUser) : paths.masterDashboard;

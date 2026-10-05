@@ -4,7 +4,6 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom';
-import { useRef } from 'react';
 import { ApiError, isForbiddenApiError } from '@/api/_shared/errors';
 import type {
   AdminCompanyListItem,
@@ -61,6 +60,10 @@ import {
 } from './AdminDashboardOverview';
 import { AdminProjectOverviewCards } from './AdminProjectOverviewCards';
 import {
+  INCOMPLETE_PLAN_LABEL,
+  isPlanEntryIncomplete,
+} from './planProgressStatus';
+import {
   normalizeProjectStatus,
   PROJECT_STATUS_PRESENTATIONS,
 } from './projectStatusPresentation';
@@ -71,10 +74,12 @@ import { usePagination } from '@/hooks/usePagination';
 import { paths } from '@/routes/paths';
 import { getAdminRouteFromLegacyTab } from '@/features/admin/navigation/adminNavigationConfig';
 import { adminHomeProjectNavigationState } from '@/features/admin/navigation/adminProjectNavigation';
-import { Plus, Search, TriangleAlert } from 'lucide-react';
+import { Search, TriangleAlert } from 'lucide-react';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
 import { NoticeBanner } from '@/components/feedback/NoticeBanner';
+import { ActionButton } from '@/components/actions';
+import { PageTabsList, PageTabsTrigger } from '@/components/navigation/PageTabs';
 
 type AdminDashboardTabValue =
   | 'overview'
@@ -82,8 +87,14 @@ type AdminDashboardTabValue =
   | 'projects'
   | 'operators'
   | 'methodologies';
+type ProjectManagementView = 'analytics' | 'management';
 
 type PendingCompanyActionMode = 'approve' | 'reject';
+type ApplicationDetailNavigationState = {
+  company?: AdminCompanyListItem;
+  reviewMode?: boolean;
+  returnTo?: string;
+};
 
 const dashboardContainer = adminPageContainerClassName;
 
@@ -91,7 +102,7 @@ const APPLICATION_STATUSES: CompanyStatus[] = ['PENDING', 'REJECTED'];
 const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
 const HOME_APPLICATION_SUMMARY_LIMIT = 3;
 const ALL_PROJECT_FILTER = 'ALL';
-const IN_PROGRESS_PROJECT_STATUS = '準備中';
+const PROJECT_VIEW_QUERY_PARAM = 'view';
 const FORBIDDEN_SECTION_ERROR = '__FORBIDDEN_SECTION__';
 
 const DEFAULT_PAGINATION: Pagination = {
@@ -223,6 +234,7 @@ function AdminDashboardEmptyState({ children }: { children: ReactNode }) {
   );
 }
 
+/** Renders the route-selected admin dashboard section. */
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -307,31 +319,28 @@ const AdminDashboard = () => {
   const [projectStatusFilter, setProjectStatusFilter] = useState(
     ALL_PROJECT_FILTER,
   );
-  const [projectMethodologyFilter, setProjectMethodologyFilter] = useState(
+  const [projectMethodologyFilter] = useState(
     ALL_PROJECT_FILTER,
   );
   const [projectSearchQuery, setProjectSearchQuery] = useState('');
-  const projectListHeadingRef = useRef<HTMLHeadingElement>(null);
+  const [showIncompletePlanOnly, setShowIncompletePlanOnly] = useState(false);
   const [pendingDialogOpen, setPendingDialogOpen] = useState(false);
   const [pendingDialogMode, setPendingDialogMode] =
     useState<PendingCompanyActionMode | null>(null);
   const [selectedCompany, setSelectedCompany] =
     useState<AdminCompanyListItem | null>(null);
-  const [detailCompany, setDetailCompany] =
-    useState<AdminCompanyListItem | null>(
-      (location.state as { company?: AdminCompanyListItem } | null)?.company ??
-        null,
-    );
-  const [detailReviewMode, setDetailReviewMode] = useState(
-    Boolean(
-      (location.state as { reviewMode?: boolean } | null)?.reviewMode ??
-        applicationId,
-    ),
-  );
+  const [unroutedDetailCompany, setUnroutedDetailCompany] =
+    useState<AdminCompanyListItem | null>(null);
+  const [unroutedReviewMode, setUnroutedReviewMode] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
   const requestedTab = new URLSearchParams(location.search).get('tab');
   const requestedPanel = new URLSearchParams(location.search).get('panel');
+  const requestedProjectView = new URLSearchParams(location.search).get(
+    PROJECT_VIEW_QUERY_PARAM,
+  );
+  const activeProjectView: ProjectManagementView =
+    requestedProjectView === 'analytics' ? 'analytics' : 'management';
   const activePanel: AdminHomePanel | null =
     requestedPanel === 'cancel' || requestedPanel === 'batch'
       ? requestedPanel
@@ -340,6 +349,24 @@ const AdminDashboard = () => {
     location.pathname,
     requestedTab,
   );
+
+  /** Keeps project subtab selection in the URL without changing the route. */
+  const handleProjectViewChange = (view: string) => {
+    if (view !== 'analytics' && view !== 'management') return;
+    if (view === activeProjectView) return;
+
+    const searchParams = new URLSearchParams(location.search);
+    if (view === 'analytics') {
+      searchParams.set(PROJECT_VIEW_QUERY_PARAM, view);
+    } else {
+      searchParams.delete(PROJECT_VIEW_QUERY_PARAM);
+    }
+
+    navigate(
+      { pathname: location.pathname, search: searchParams.toString(), hash: location.hash },
+      { state: location.state, preventScrollReset: true },
+    );
+  };
 
   useEffect(() => {
     if (location.pathname !== paths.adminDashboard || !requestedTab) return;
@@ -684,17 +711,24 @@ const AdminDashboard = () => {
         getProjectMethodologyFilterValue(project) ===
           projectMethodologyFilter;
 
+      const matchesPlanProgress =
+        !showIncompletePlanOnly ||
+        isPlanEntryIncomplete(planProgress.get(String(project.id)));
+
       return (
         matchesStatus &&
         matchesMethodology &&
+        matchesPlanProgress &&
         matchesProjectSearch(project, normalizedQuery)
       );
     });
   }, [
+    planProgress,
     projectMethodologyFilter,
     projectSearchQuery,
     projectStatusFilter,
     projects,
+    showIncompletePlanOnly,
   ]);
 
   const {
@@ -707,21 +741,6 @@ const AdminDashboard = () => {
     setCurrentPage: setProjectPage,
     setItemsPerPage: setProjectItemsPerPage,
   } = usePagination(filteredProjects);
-
-  /** Filters the table by the API's in-progress status and moves focus to the result list. */
-  const handleShowAllInProgressProjects = () => {
-    setProjectStatusFilter(IN_PROGRESS_PROJECT_STATUS);
-    setProjectMethodologyFilter(ALL_PROJECT_FILTER);
-    setProjectSearchQuery('');
-    setProjectPage(1);
-    window.requestAnimationFrame(() => {
-      projectListHeadingRef.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      });
-      projectListHeadingRef.current?.focus({ preventScroll: true });
-    });
-  };
 
   const handleEditProject = (project: Project) => {
     adminPermissions.guardAction('PROJECT_READ', () => {
@@ -799,15 +818,23 @@ const AdminDashboard = () => {
       null
     );
   }, [applicationCompanies, applicationId]);
+  const applicationNavigationState = location.state as
+    | ApplicationDetailNavigationState
+    | null;
+  const detailCompany = applicationId
+    ? applicationNavigationState?.company?.id === applicationId
+      ? applicationNavigationState.company
+      : routeApplicationCompany
+    : unroutedDetailCompany;
+  const detailReviewMode = applicationId
+    ? applicationNavigationState?.reviewMode ?? true
+    : unroutedReviewMode;
+  const companyDetailReturnTo =
+    applicationNavigationState?.returnTo === paths.adminDashboard
+      ? paths.adminDashboard
+      : paths.adminCompanyList;
 
-  useEffect(() => {
-    if (!applicationId || detailCompany) return;
-    if (routeApplicationCompany) {
-      setDetailCompany(routeApplicationCompany);
-      setDetailReviewMode(true);
-    }
-  }, [applicationId, detailCompany, routeApplicationCompany]);
-
+  /** Opens a company application detail while preserving its source page. */
   const openCompanyDetails = (item: AdminCompanyListItem) => {
     const requiredPermission =
       item.status === 'ACTIVE' || item.status === 'SUSPENDED'
@@ -825,13 +852,15 @@ const AdminDashboard = () => {
 
     if (item.id) {
       navigate(paths.adminApplicationDetail(item.id), {
-        state: { company: item, reviewMode: false },
+        state: { company: item, reviewMode: false, returnTo: location.pathname },
       });
+      return;
     }
-    setDetailCompany(item);
-    setDetailReviewMode(false);
+    setUnroutedDetailCompany(item);
+    setUnroutedReviewMode(false);
   };
 
+  /** Opens a pending application with review actions available. */
   const openCompanyReview = (item: AdminCompanyListItem) => {
     if (
       !adminPermissions.hasPermission(
@@ -847,11 +876,12 @@ const AdminDashboard = () => {
 
     if (item.id) {
       navigate(paths.adminApplicationDetail(item.id), {
-        state: { company: item, reviewMode: true },
+        state: { company: item, reviewMode: true, returnTo: location.pathname },
       });
+      return;
     }
-    setDetailCompany(item);
-    setDetailReviewMode(true);
+    setUnroutedDetailCompany(item);
+    setUnroutedReviewMode(true);
   };
 
   /** Opens actionable applications in review mode and historical ones read-only. */
@@ -864,12 +894,14 @@ const AdminDashboard = () => {
     openCompanyDetails(item);
   };
 
+  /** Returns to the source list and clears details without a route ID. */
   const closeCompanyDetail = () => {
-    setDetailCompany(null);
-    setDetailReviewMode(false);
     if (applicationId) {
-      navigate(paths.adminDashboard);
+      navigate(companyDetailReturnTo);
+      return;
     }
+    setUnroutedDetailCompany(null);
+    setUnroutedReviewMode(false);
   };
 
   const openApproveCompany = (item: AdminCompanyListItem) => {
@@ -1011,7 +1043,7 @@ const AdminDashboard = () => {
     return (
       <main className={`${dashboardContainer} space-y-6 py-8`}>
         <header>
-          <h1 className="text-3xl font-bold text-foreground">企業申請詳細</h1>
+          <h1 className="text-form-title font-bold text-foreground">企業申請詳細</h1>
           <p className="mt-2 text-muted-foreground">企業申請の内容を確認します。</p>
         </header>
         <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
@@ -1019,7 +1051,7 @@ const AdminDashboard = () => {
     );
   }
 
-  if (detailCompany || applicationId) {
+  if (applicationId || unroutedDetailCompany) {
     return (
       <>
         {detailCompany ? (
@@ -1073,9 +1105,9 @@ const AdminDashboard = () => {
     canReadBatchHistory && batchHistoryError !== FORBIDDEN_SECTION_ERROR;
 
   return (
-    <div className="flex min-h-[calc(100dvh-5rem)] flex-col bg-background">
+    <div className="flex min-h-[calc(100dvh-var(--app-header-height))] flex-col bg-background">
       <Tabs value={activeSection} className="flex flex-1 flex-col bg-background">
-        <main className={`${dashboardContainer} flex-1 space-y-10 py-8`}>
+        <main className={`${dashboardContainer} flex-1 space-y-section py-page-y`}>
           {/* <TabsContent
             value="overview"
             className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
@@ -1212,14 +1244,14 @@ const AdminDashboard = () => {
             <AdminTableCard
               title="参加申請中の企業"
               count={applicationPagination.totalItems}
-              description="参加申請を受け付けた企業です。内容を確認し、承認または差し戻しを行ってください。"
+              description="参加申請を受け付けた企業です。内容を確認し、承認または却下を行ってください。"
               notice={
                 applicationSectionAllowed ? (
                   <NoticeBanner
                     tone='warning'
                     title='管理者による対応が必要です'
                   >
-                    ステータスが「申請受付」の企業について、申請内容を確認し、承認または差し戻しを行ってください。
+                    ステータスが「申請受付」の企業について、申請内容を確認し、承認または却下を行ってください。
                   </NoticeBanner>
                 ) : undefined
               }
@@ -1302,115 +1334,138 @@ const AdminDashboard = () => {
               <AdminPageHeader
                 title="プロジェクト管理"
                 description="登録済みプロジェクトの詳細確認、更新、ステータス変更を行えます。"
-                action={
-                  <Button
-                    type="button"
-                    size="md"
-                    onClick={() =>
-                      adminPermissions.guardAction('PROJECT_CREATE', () =>
-                        navigate(paths.adminProjectRegister),
-                      )
-                    }
-                  >
-                    <Plus className="h-4 w-4" />
-                    プロジェクトを追加
-                  </Button>
-                }
               />
               {!projectSectionAllowed ? (
                 <PermissionDeniedNotice permission="PROJECT_READ" />
-              ) : <div className="space-y-6">
-                <AdminProjectOverviewCards
-                  projects={projects}
-                  projectsLoading={projectsQuery.isLoading}
-                  projectsError={projectsError}
-                  planProgress={planProgress}
-                  planProgressLoading={planProgressLoading}
-                  planProgressError={planProgressError}
-                  onOpenPlan={handleOpenPlan}
-                  onShowAllInProgress={handleShowAllInProgressProjects}
-                />
-
-                <AdminTableCard
-                  title="プロジェクト一覧"
-                  count={projectTotalItems}
-                  headingRef={projectListHeadingRef}
-                  filters={
-                    <Select
-                      value={projectStatusFilter}
-                      onValueChange={(value) => {
-                        setProjectStatusFilter(value);
-                        setProjectPage(1);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="ステータス" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={ALL_PROJECT_FILTER}>
-                          すべてのステータス
-                        </SelectItem>
-                        {PROJECT_STATUS_PRESENTATIONS.map((presentation) => (
-                          <SelectItem
-                            key={presentation.status}
-                            value={presentation.status}
-                          >
-                            {presentation.status}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  }
-                  search={
-                    <>
-                      <Search
-                        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                        aria-hidden="true"
-                      />
-                      <Input
-                        type="search"
-                        value={projectSearchQuery}
-                        onChange={(event) => {
-                          setProjectSearchQuery(event.target.value);
-                          setProjectPage(1);
-                        }}
-                        placeholder="プロジェクト名・方法論で検索"
-                        aria-label="プロジェクトを検索"
-                        className="h-10 bg-card pl-9"
-                      />
-                    </>
-                  }
-                  footer={
-                    !projectsQuery.isLoading && !projectsError ? (
-                      <PaginationControls
-                        currentPage={projectPage}
-                        totalPages={projectTotalPages}
-                        totalItems={projectTotalItems}
-                        itemsPerPage={projectItemsPerPage}
-                        onPageChange={goToProjectPage}
-                        onItemsPerPageChange={setProjectItemsPerPage}
-                      />
-                    ) : undefined
-                  }
+              ) : (
+                <Tabs
+                  value={activeProjectView}
+                  onValueChange={handleProjectViewChange}
+                  className="min-w-0"
                 >
-                  {projectsQuery.isLoading ? (
-                    <SkeletonTable columns={8} rows={6} minWidth={1390} />
-                  ) : projectsError ? (
-                    <AdminDashboardEmptyState>
-                      {projectsError}
-                    </AdminDashboardEmptyState>
-                  ) : (
-                    <ProjectTable
-                      projects={paginatedProjects}
-                      onEdit={handleEditProject}
-                      onStatusChange={handleChangeProjectStatus}
-                      updatingProjectStatusId={updatingProjectStatusId}
-                      planProgress={planProgress}
-                      onOpenPlan={handleOpenPlan}
+                  <PageTabsList aria-label="プロジェクト管理の表示">
+                    <PageTabsTrigger value="management">管理</PageTabsTrigger>
+                    <PageTabsTrigger value="analytics">アナリティクス</PageTabsTrigger>
+                  </PageTabsList>
+
+                  <TabsContent value="analytics" className="m-0 pt-5">
+                    <AdminProjectOverviewCards
+                      projects={projects}
+                      projectsLoading={projectsQuery.isLoading}
+                      projectsError={projectsError}
                     />
-                  )}
-                </AdminTableCard>
-              </div>}
+                  </TabsContent>
+
+                  <TabsContent value="management" className="m-0 pt-5">
+                    <AdminTableCard
+                      title="プロジェクト一覧"
+                      count={projectTotalItems}
+                      description="計画書の記入が完了していないプロジェクトはハイライト表示されます。"
+                      action={
+                        <ActionButton
+                          kind="add"
+                          onClick={() =>
+                            adminPermissions.guardAction('PROJECT_CREATE', () =>
+                              navigate(paths.adminProjectRegister),
+                            )
+                          }
+                        >
+                          プロジェクトを追加
+                        </ActionButton>
+                      }
+                      filters={
+                        <>
+                          <Select
+                            value={projectStatusFilter}
+                            onValueChange={(value) => {
+                              setProjectStatusFilter(value);
+                              setProjectPage(1);
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="ステータス" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={ALL_PROJECT_FILTER}>
+                                すべてのステータス
+                              </SelectItem>
+                              {PROJECT_STATUS_PRESENTATIONS.map((presentation) => (
+                                <SelectItem
+                                  key={presentation.status}
+                                  value={presentation.status}
+                                >
+                                  {presentation.status}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            type="button"
+                            variant={showIncompletePlanOnly ? 'primary' : 'outline'}
+                            aria-pressed={showIncompletePlanOnly}
+                            disabled={planProgressLoading || Boolean(planProgressError)}
+                            title={planProgressError ?? undefined}
+                            onClick={() => {
+                              setShowIncompletePlanOnly((current) => !current);
+                              setProjectPage(1);
+                            }}
+                          >
+                            {INCOMPLETE_PLAN_LABEL}のみ表示
+                          </Button>
+                        </>
+                      }
+                      search={
+                        <>
+                          <Search
+                            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                            aria-hidden="true"
+                          />
+                          <Input
+                            type="search"
+                            value={projectSearchQuery}
+                            onChange={(event) => {
+                              setProjectSearchQuery(event.target.value);
+                              setProjectPage(1);
+                            }}
+                            placeholder="プロジェクト名・方法論で検索"
+                            aria-label="プロジェクトを検索"
+                            className="h-10 bg-card pl-9"
+                          />
+                        </>
+                      }
+                      footer={
+                        !projectsQuery.isLoading && !projectsError ? (
+                          <PaginationControls
+                            currentPage={projectPage}
+                            totalPages={projectTotalPages}
+                            totalItems={projectTotalItems}
+                            itemsPerPage={projectItemsPerPage}
+                            onPageChange={goToProjectPage}
+                            onItemsPerPageChange={setProjectItemsPerPage}
+                          />
+                        ) : undefined
+                      }
+                    >
+                      {projectsQuery.isLoading ? (
+                        <SkeletonTable columns={8} rows={6} minWidth={1390} />
+                      ) : projectsError ? (
+                        <AdminDashboardEmptyState>
+                          {projectsError}
+                        </AdminDashboardEmptyState>
+                      ) : (
+                        <ProjectTable
+                          projects={paginatedProjects}
+                          onEdit={handleEditProject}
+                          onStatusChange={handleChangeProjectStatus}
+                          updatingProjectStatusId={updatingProjectStatusId}
+                          planProgress={planProgress}
+                          onOpenPlan={handleOpenPlan}
+                        />
+                      )}
+                    </AdminTableCard>
+                  </TabsContent>
+                </Tabs>
+              )}
             </section>
           </TabsContent>
 

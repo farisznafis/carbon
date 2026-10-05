@@ -37,7 +37,7 @@ const flowEquipment: SolarEquipment = {
     nominalMaxOutput: '49.5',
     pcsManufacturer: 'Maker',
     pcsModel: 'Model',
-    powerCondUnitCount: '1',
+    // powerCondUnitCount: '1',
     deviceNo: 'DEVICE-1',
     powerCondStandby: '0.05',
     hasBattery: 'no',
@@ -737,7 +737,7 @@ describe('ProjectRegisterPage review flow', () => {
       statusCode: 'OK',
       message: '',
       projectName: '再取得プロジェクト',
-      operatorNameJa: '再取得運営者',
+      operatorNameJa: '再取得運用者',
       adminRepName: '再取得代表者',
       projectOverview: '再取得概要',
       usePurpose: '再取得利用目的',
@@ -747,7 +747,7 @@ describe('ProjectRegisterPage review flow', () => {
 
     expect(await screen.findByText('持続可能性フォーム')).toBeVisible();
     expect(screen.getByTestId('contract-operator-name')).toHaveTextContent(
-      '再取得運営者・再取得代表者',
+      '再取得運用者・再取得代表者',
     );
     expect(projectApiMocks.getProjectMemberTermsInfo).toHaveBeenCalledTimes(2);
   });

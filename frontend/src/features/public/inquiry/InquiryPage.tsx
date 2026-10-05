@@ -98,6 +98,7 @@ function applyInquiryFieldErrors(
   return hasMappedError;
 }
 
+/** Renders the informational side of the inquiry card. */
 function InquiryInformationPanel() {
   return (
     <aside
@@ -109,8 +110,8 @@ function InquiryInformationPanel() {
         py-10
         sm:px-10
         sm:py-12
-        lg:px-12
-        lg:py-14
+        lg:px-[clamp(2rem,2.5vw,3rem)]
+        lg:py-[clamp(2rem,2.9vw,3.5rem)]
       '
     >
       <div
@@ -161,7 +162,7 @@ function InquiryInformationPanel() {
               font-bold
               leading-tight
               tracking-tight
-              sm:text-4xl
+              sm:text-marketing-title
             '
           >
             お問い合わせ
@@ -261,7 +262,7 @@ function InquirySuccess({
           leading-tight
           tracking-tight
           text-foreground
-          sm:text-3xl
+          sm:text-form-title
         '
       >
         お問い合わせを受け付けました。
@@ -305,6 +306,7 @@ function InquirySuccess({
   );
 }
 
+/** Renders the inquiry form and its submission result. */
 export default function InquiryPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -420,8 +422,8 @@ export default function InquiryPage() {
                 py-10
                 sm:px-10
                 sm:py-12
-                lg:px-14
-                lg:py-14
+                lg:px-[clamp(2rem,2.9vw,3.5rem)]
+                lg:py-[clamp(2rem,2.9vw,3.5rem)]
               '
             >
               {successMessage !== null ? (

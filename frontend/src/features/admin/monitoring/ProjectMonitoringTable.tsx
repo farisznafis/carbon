@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Eye, RefreshCw } from 'lucide-react';
 import {
   getAdminProjectMonitoringRecords,
   type MonitoringRecordListItem,
@@ -10,15 +9,16 @@ import {
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { SkeletonTable } from '@/components/feedback/loading';
-import { Button } from '@/components/ui/button';
 import { logger } from '@/lib/logger';
 import {
   formatMonitoringDate,
   formatMonitoringNumber,
   formatMonitoringValue,
 } from './monitoringRecordDisplay';
+import { ActionButton } from '@/components/actions';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
@@ -161,15 +161,7 @@ export function ProjectMonitoringTable({
         id: 'actions',
         label: '操作',
         render: (record) => (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => onViewDetail(record, page, limit)}
-          >
-            <Eye />
-            詳細
-          </Button>
+          <RowActionButton onClick={() => onViewDetail(record, page, limit)} />
         ),
       },
     ],
@@ -190,14 +182,7 @@ export function ProjectMonitoringTable({
           <p role="alert" className="text-small text-destructive">
             {loadError}
           </p>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => void loadMonitoringRecords()}
-          >
-            <RefreshCw />
-            再試行
-          </Button>
+          <ActionButton kind="retry" onClick={() => void loadMonitoringRecords()} />
         </div>
       ) : (
         <>
@@ -208,6 +193,7 @@ export function ProjectMonitoringTable({
             minWidth={MONITORING_TABLE_MIN_WIDTH}
             getRowKey={(record) => `${record.id}:${record.timeUpdated}`}
             emptyMessage="モニタリングデータはありません。"
+            onRowClick={(record) => onViewDetail(record, page, limit)}
           />
           <PaginationControls
             currentPage={Math.max(result.pagination.page || page, 1)}
