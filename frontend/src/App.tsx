@@ -1,6 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef } from "react";
 import {
   Routes,
   Route,
@@ -9,7 +9,7 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import { Navbar } from "@/components/layout/Navbar";
+import { AppShell } from "@/components/layout/AppShell";
 import { ScrollToTop } from "./components/layout/ScrollToTop";
 import { SessionExpiryGuard } from "@/components/layout/SessionExpiryGuard";
 import { useAuth } from "@/contexts/AuthContext";
@@ -176,6 +176,15 @@ const App = () => {
   const location = useLocation();
   const isAuthPage = isAuthPagePath(location.pathname);
   const { loading: authLoading } = useAuth();
+  const lenisRef = useRef<Lenis | null>(null);
+
+  /** Synchronizes Lenis with route-level native scroll resets. */
+  const resetSmoothScrollPosition = useCallback(() => {
+    lenisRef.current?.scrollTo(0, {
+      immediate: true,
+      force: true,
+    });
+  }, []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -188,8 +197,10 @@ const App = () => {
       naiveDimensions: true,
       stopInertiaOnNavigate: true,
     });
+    lenisRef.current = lenis;
 
     return () => {
+      lenisRef.current = null;
       lenis.destroy();
     };
   }, [authLoading]);
@@ -209,9 +220,9 @@ const App = () => {
       >
         <Toaster />
         <Sonner />
-        <Navbar />
-        <ScrollToTop />
+        <ScrollToTop onRouteScrollReset={resetSmoothScrollPosition} />
         <SessionExpiryGuard />
+        <AppShell>
         <div
           className={cn(
             'min-h-0 min-w-0 flex-1',
@@ -479,6 +490,7 @@ const App = () => {
               </Routes>
             </Suspense>
         </div>
+        </AppShell>
       </div>
       </AdminPermissionProvider>
     </ErrorBoundary>

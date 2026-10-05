@@ -1,4 +1,5 @@
 import { paths } from '@/routes/paths';
+import { BookOpen, Building2, FolderKanban, House, Users, type LucideIcon } from 'lucide-react';
 
 export type AdminNavigationKey =
   | 'home'
@@ -11,14 +12,15 @@ export type AdminNavigationItem = {
   key: AdminNavigationKey;
   label: string;
   href: string;
+  icon: LucideIcon;
 };
 
 export const ADMIN_NAVIGATION_ITEMS: readonly AdminNavigationItem[] = [
-  { key: 'home', label: 'ホーム', href: paths.adminDashboard },
-  { key: 'projects', label: 'プロジェクト', href: paths.adminProjectList },
-  { key: 'companies', label: '企業管理', href: paths.adminCompanyList },
-  { key: 'operators', label: '運営管理', href: paths.adminOperatorList },
-  { key: 'methodologies', label: '方法論', href: paths.adminMethodologyList },
+  { key: 'home', label: 'ホーム', href: paths.adminDashboard, icon: House },
+  { key: 'projects', label: 'プロジェクト', href: paths.adminProjectList, icon: FolderKanban },
+  { key: 'methodologies', label: '方法論', href: paths.adminMethodologyList, icon: BookOpen },
+  { key: 'companies', label: '企業', href: paths.adminCompanyList, icon: Building2 },
+  { key: 'operators', label: '運用者', href: paths.adminOperatorList, icon: Users },
 ] as const;
 
 const LEGACY_TAB_NAVIGATION_MAP: Partial<

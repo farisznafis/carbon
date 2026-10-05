@@ -334,8 +334,12 @@ export default function EquipmentFormPage() {
     navigateToProjectRegister();
   };
 
+  /** Keeps cancellation in the Master tab when no explicit return path exists. */
   const handleCancel = () => {
-    navigate(returnPath ?? paths.projectMembership(siteId), {
+    const membershipReturnPath = enteredFromMasterDashboard
+      ? paths.masterDashboardMembership
+      : paths.projectMembership(siteId);
+    navigate(returnPath ?? membershipReturnPath, {
       state: enteredFromMasterDashboard
         ? masterDashboardProjectMembershipState
         : undefined,

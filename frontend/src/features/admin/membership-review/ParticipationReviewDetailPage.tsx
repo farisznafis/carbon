@@ -24,7 +24,6 @@ import {
   floatingPageBackButtonClassName,
   PageBackButton,
 } from '@/components/navigation/PageBackButton';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
 import { downloadFromUrl } from '@/utils/download';
@@ -40,6 +39,8 @@ import { ParticipationReviewPdfCard } from './ParticipationReviewPdfCard';
 import { isParticipationReviewApproved } from './participationReviewDisplay';
 import { ParticipationReviewSections } from './ParticipationReviewSections';
 import { isParticipationReviewForProject } from './participationReviewProjectMatch';
+import { REVIEW_STATUSES } from './participationReviewStatusContent';
+import { ActionButton } from '@/components/actions';
 
 const EMPTY_FIELD_ERRORS: ParticipationReviewDecisionErrors = {
   reviewerName: null,
@@ -47,12 +48,6 @@ const EMPTY_FIELD_ERRORS: ParticipationReviewDecisionErrors = {
   rejectReason: null,
   checklist: null,
 };
-
-const REVIEW_STATUSES: ParticipationReviewStatus[] = [
-  'OPEN',
-  'APPROVED',
-  'REJECTED',
-];
 
 /** Reads a supported membership status without trusting arbitrary query values. */
 function readReviewStatus(value: string | null): ParticipationReviewStatus | null {
@@ -415,13 +410,11 @@ export default function ParticipationReviewDetailPage() {
             {loadError || '入会届が見つかりませんでした。'}
           </p>
           <div className="flex justify-center gap-3">
-            <Button type="button" variant="outline" onClick={returnToList}>
+            <ActionButton kind="back" onClick={returnToList}>
               一覧へ戻る
-            </Button>
+            </ActionButton>
             {loadError && (
-              <Button type="button" onClick={() => void loadReview()}>
-                再試行
-              </Button>
+              <ActionButton kind="retry" onClick={() => void loadReview()} />
             )}
           </div>
         </div>

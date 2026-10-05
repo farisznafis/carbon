@@ -26,7 +26,7 @@ export function HomeSectionHeading({
     >
       <h2
         id={id}
-        className="text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl"
+        className="text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-home-section-title"
       >
         {title}
       </h2>

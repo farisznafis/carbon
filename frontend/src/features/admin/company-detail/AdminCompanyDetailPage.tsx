@@ -27,7 +27,6 @@ import {
   floatingPageBackButtonClassName,
   PageBackButton,
 } from '@/components/navigation/PageBackButton';
-import { Badge } from '@/components/ui/badge';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -38,7 +37,7 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { CompanySuspendDialog } from '@/features/admin/dashboard/tables/CompanySuspendDialog';
 import { CompanySuspensionResolveDialog } from '@/features/admin/dashboard/tables/CompanySuspensionResolveDialog';
@@ -58,6 +57,8 @@ import {
   formatCompanyStatus,
   formatSubscriptionStatus,
 } from './companyDetailDisplay';
+import { ActionButton } from '@/components/actions';
+import { SegmentTabsList, SegmentTabsTrigger, TabCount } from '@/components/navigation/PageTabs';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -176,14 +177,8 @@ function DetailErrorState({
           <CardContent className="space-y-6">
             <p className="text-sm text-foreground">{message}</p>
             <div className="flex flex-wrap gap-3">
-              <Button type="button" variant="outline" onClick={onBack}>
-                戻る
-              </Button>
-              {onRetry && (
-                <Button type="button" onClick={onRetry}>
-                  再試行
-                </Button>
-              )}
+              <ActionButton kind="back" onClick={onBack} />
+              {onRetry && <ActionButton kind="retry" onClick={onRetry} />}
             </div>
           </CardContent>
         </Card>
@@ -194,6 +189,7 @@ function DetailErrorState({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+/** Renders company details and permission-aware states for administrators. */
 export default function AdminCompanyDetailPage() {
   const { companyId } = useParams();
   const navigate = useNavigate();
@@ -402,7 +398,7 @@ export default function AdminCompanyDetailPage() {
     return (
       <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
         <header className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">参加企業詳細</h1>
+          <h1 className="text-form-title font-bold text-foreground">参加企業詳細</h1>
           <p className="mt-2 text-muted-foreground">参加企業の登録情報を確認します。</p>
         </header>
         <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_READ" />
@@ -580,7 +576,7 @@ export default function AdminCompanyDetailPage() {
                     <DefinitionRow label="電話番号">{masterAccount.phoneNumber || '―'}</DefinitionRow>
                     <DefinitionRow label="権限">
                       {masterAccount.role ? (
-                        <Badge variant="outline">{formatAdminRole(masterAccount.role)}</Badge>
+                        <StatusBadge>{formatAdminRole(masterAccount.role)}</StatusBadge>
                       ) : (
                         '―'
                       )}
@@ -618,24 +614,16 @@ export default function AdminCompanyDetailPage() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="users">
-              <TabsList className="justify-start mb-4">
-                <TabsTrigger value="users">
+              <SegmentTabsList aria-label="関連情報の表示" className="mb-4">
+                <SegmentTabsTrigger value="users">
                   ユーザー一覧
-                  {users?.length != null && (
-                    <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground">
-                      {users.length}
-                    </span>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="sites">
+                  {users?.length != null && <TabCount count={users.length} />}
+                </SegmentTabsTrigger>
+                <SegmentTabsTrigger value="sites">
                   拠点一覧
-                  {sites?.length != null && (
-                    <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground">
-                      {sites.length}
-                    </span>
-                  )}
-                </TabsTrigger>
-              </TabsList>
+                  {sites?.length != null && <TabCount count={sites.length} />}
+                </SegmentTabsTrigger>
+              </SegmentTabsList>
 
               <TabsContent value="users">
                 <div className="overflow-x-auto">

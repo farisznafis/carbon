@@ -205,7 +205,7 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
             <FormItem>
               <RequiredLabel>対象拠点</RequiredLabel>
               <FormDescription className="text-foreground">
-                プロジェクトへの参加を申請する拠点を選択してください。
+                このプロジェクトに入会する拠点を選択してください。
               </FormDescription>
               <Select
                 value={field.value}

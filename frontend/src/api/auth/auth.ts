@@ -16,6 +16,7 @@ import type {
   SignUpResponse,
 } from './types';
 
+/** Sends POST /auth/user/login and accepts both documented success status values. */
 export async function login(
   companyId: string,
   email: string,
@@ -33,7 +34,7 @@ export async function login(
     throw new Error(json?.message || `HTTP ${response.status} Error during login`);
   }
 
-  if (json?.statusCode !== 'OK') {
+  if (json?.statusCode !== 'OK' && json?.statusCode !== '200') {
     throw new Error(json?.message || 'Error during login');
   }
 

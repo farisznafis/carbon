@@ -6,6 +6,7 @@ import {
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { SkeletonTable } from '@/components/feedback/loading';
 import { Button } from '@/components/ui/button';
@@ -14,21 +15,18 @@ import { usePagination } from '@/hooks/usePagination';
 import { ArrowRight } from 'lucide-react';
 
 const PROJECT_STATUS_PAGE_SIZE = 5;
-const DUMMY_REDUCTION_BARS = [
-  { value: 320, segments: 10 },
-  { value: 160, segments: 4 },
-  { value: 90, segments: 3 },
-  { value: 20, segments: 1 },
-  { value: 10, segments: 1, compact: true },
-] as const;
+const DUMMY_REDUCTION_VALUES = [320, 160, 90, 20, 10] as const;
+const MAX_DUMMY_REDUCTION_VALUE = Math.max(...DUMMY_REDUCTION_VALUES);
+/** Narrow minimums keep the table unscrolled in the Home main column down to ~1280px viewports. */
 const projectStatusGridColumns =
-  'minmax(240px,1.45fr) minmax(120px,.65fr) minmax(260px,1.15fr) minmax(96px,.4fr)';
+  'minmax(180px,1.5fr) minmax(112px,auto) minmax(152px,1fr) 80px';
+const PROJECT_STATUS_TABLE_MIN_WIDTH = 600;
 
 type ProjectStatusRow = {
   project: Project;
   reductionValue: number;
-  reductionSegments: number;
-  compactReductionBar: boolean;
+  /** Bar length relative to the largest value, as a percentage. */
+  reductionRatio: number;
 };
 
 type AdminProjectStatusTableProps = {
@@ -100,13 +98,12 @@ export function AdminProjectStatusTable({
 
   const projectRows = useMemo<ProjectStatusRow[]>(
     () => paginatedItems.map((project, index) => {
-      const reductionBar = DUMMY_REDUCTION_BARS[index % DUMMY_REDUCTION_BARS.length];
+      const reductionValue = DUMMY_REDUCTION_VALUES[index % DUMMY_REDUCTION_VALUES.length];
 
       return {
         project,
-        reductionValue: reductionBar.value,
-        reductionSegments: reductionBar.segments,
-        compactReductionBar: 'compact' in reductionBar && reductionBar.compact,
+        reductionValue,
+        reductionRatio: (reductionValue / MAX_DUMMY_REDUCTION_VALUE) * 100,
       };
     }),
     [paginatedItems],
@@ -165,18 +162,11 @@ export function AdminProjectStatusTable({
         sortValue: (row) => row.reductionValue,
         render: (row) => (
           <div className="flex min-w-0 items-center gap-3">
-            <div
-              className="flex h-6 shrink-0 overflow-hidden"
-              aria-hidden="true"
-            >
-              {Array.from({ length: row.reductionSegments }, (_, segmentIndex) => (
-                <span
-                  key={segmentIndex}
-                  className={row.compactReductionBar
-                    ? 'w-1.5 bg-primary'
-                    : 'w-4 border-r border-primary-foreground/70 bg-primary last:border-r-0'}
-                />
-              ))}
+            <div className="min-w-0 flex-1" aria-hidden="true">
+              <div
+                className="h-2.5 min-w-1 rounded-sm bg-primary"
+                style={{ width: `${row.reductionRatio}%` }}
+              />
             </div>
             <span className="whitespace-nowrap text-body text-muted-foreground">
               {row.reductionValue.toLocaleString('ja-JP')} t-CO₂
@@ -188,14 +178,7 @@ export function AdminProjectStatusTable({
         id: 'action',
         label: '操作',
         render: ({ project }) => (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => onOpenProjectDetail(project)}
-          >
-            詳細
-          </Button>
+          <RowActionButton onClick={() => onOpenProjectDetail(project)} />
         ),
       },
     ],
@@ -203,7 +186,7 @@ export function AdminProjectStatusTable({
   );
 
   if (projectsLoading) {
-    return <SkeletonTable columns={4} rows={PROJECT_STATUS_PAGE_SIZE} minWidth={760} />;
+    return <SkeletonTable columns={4} rows={PROJECT_STATUS_PAGE_SIZE} minWidth={PROJECT_STATUS_TABLE_MIN_WIDTH} />;
   }
 
   if (projectsError) {
@@ -225,8 +208,9 @@ export function AdminProjectStatusTable({
         rows={projectRows}
         columns={columns}
         gridTemplateColumns={projectStatusGridColumns}
-        minWidth={820}
+        minWidth={PROJECT_STATUS_TABLE_MIN_WIDTH}
         getRowKey={(row) => row.project.id}
+        onRowClick={({ project }) => onOpenProjectDetail(project)}
         emptyMessage="登録済みのプロジェクトはありません。"
       />
       <PaginationControls

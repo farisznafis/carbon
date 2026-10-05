@@ -1,7 +1,15 @@
-import { useEffect, useRef } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  useEffect,
+  useRef,
+  type ReactNode,
+} from 'react';
+import {
+  Link,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 import { Bell, X } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+
 import { NotificationsList } from '@/components/feedback/NotificationsList';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,18 +20,29 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { toast } from '@/hooks/use-toast';
-import { getHomePath } from '@/utils/getHomePath';
-import { isLoginPath, paths } from '@/routes/paths';
 import { cn } from '@/lib/utils';
-import { AdminNavigation } from '@/features/admin/navigation/AdminNavigation';
+import {
+  isLoginPath,
+  paths,
+} from '@/routes/paths';
+import { getHomePath } from '@/utils/getHomePath';
+
 import { AccountMenu } from './AccountMenu';
 import { useAccountIdentity } from './useAccountIdentity';
 
 type AuthenticatedNavbarContentProps = {
-  user: NonNullable<ReturnType<typeof useAuth>['user']>;
+  user: NonNullable<
+    ReturnType<typeof useAuth>['user']
+  >;
   onLogout: () => Promise<void>;
+};
+
+type NavbarProps = {
+  sidebarControl?: ReactNode;
+  appShell?: boolean;
 };
 
 function AuthenticatedNavbarContent({
@@ -31,6 +50,7 @@ function AuthenticatedNavbarContent({
   onLogout,
 }: Readonly<AuthenticatedNavbarContentProps>) {
   const navigate = useNavigate();
+
   const {
     avatarInitial,
     displayName,
@@ -39,21 +59,28 @@ function AuthenticatedNavbarContent({
     resolveProfilePath,
   } = useAccountIdentity(user);
 
-  /** Opens the matched admin operator profile without guessing an account. */
+  /**
+   * Opens the current account profile without
+   * guessing an operator/user identifier.
+   */
   const handleProfile = async () => {
     try {
-      const profilePath = await resolveProfilePath();
+      const profilePath =
+        await resolveProfilePath();
+
       if (profilePath) {
         navigate(profilePath);
         return;
       }
     } catch {
-      // The shared message below also covers API failures while resolving the account.
+      // The shared message below also covers
+      // profile resolution/API failures.
     }
 
     toast({
       title: 'エラー',
-      description: 'プロファイルを表示できませんでした。',
+      description:
+        'プロファイルを表示できませんでした。',
       variant: 'destructive',
     });
   };
@@ -70,8 +97,26 @@ function AuthenticatedNavbarContent({
   );
 }
 
-export const Navbar = () => {
-  const { user, logout, isAuthenticated } = useAuth();
+/**
+ * Global application topbar.
+ *
+ * Desktop application shell:
+ * - product identity lives in SidebarHeader
+ * - Navbar contains notification/account actions
+ *
+ * Mobile:
+ * - hamburger + GX identity remain in Navbar
+ */
+export const Navbar = ({
+  sidebarControl,
+  appShell = false,
+}: Readonly<NavbarProps>) => {
+  const {
+    user,
+    logout,
+    isAuthenticated,
+  } = useAuth();
+
   const {
     notifications,
     loading: notificationsLoading,
@@ -81,23 +126,41 @@ export const Navbar = () => {
     markAsRead,
     deleteNotification,
   } = useNotifications();
-  const loadedAdminNotificationSessionRef = useRef<string | null>(null);
+
+  const loadedAdminNotificationSessionRef =
+    useRef<string | null>(null);
+
   const navigate = useNavigate();
   const location = useLocation();
 
   const linkTarget = getHomePath(user);
-  const isLoginPage = isLoginPath(location.pathname);
-  const isAdminLoginPage =
-    isLoginPage && location.pathname.startsWith(paths.adminLogin);
-  const isAdminAuthenticated = isAuthenticated && user?.role === 'admin';
-  const adminNotificationSessionKey = isAdminAuthenticated
-    ? `${user.id}:${user.email}`
-    : null;
 
-  /** Loads navbar notifications once for each authenticated admin account. */
+  const isLoginPage =
+    isLoginPath(location.pathname);
+
+  const isAdminLoginPage =
+    isLoginPage &&
+    location.pathname.startsWith(
+      paths.adminLogin,
+    );
+
+  const isAdminAuthenticated =
+    isAuthenticated &&
+    user?.role === 'admin';
+
+  const adminNotificationSessionKey =
+    isAdminAuthenticated
+      ? `${user.id}:${user.email}`
+      : null;
+
+  /**
+   * Loads navbar notifications once for each
+   * authenticated admin account.
+   */
   useEffect(() => {
     if (!adminNotificationSessionKey) {
-      loadedAdminNotificationSessionRef.current = null;
+      loadedAdminNotificationSessionRef.current =
+        null;
       return;
     }
 
@@ -109,74 +172,121 @@ export const Navbar = () => {
       return;
     }
 
-    loadedAdminNotificationSessionRef.current = adminNotificationSessionKey;
+    loadedAdminNotificationSessionRef.current =
+      adminNotificationSessionKey;
+
     void loadNotifications();
-  }, [adminNotificationSessionKey, loadNotifications]);
+  }, [
+    adminNotificationSessionKey,
+    loadNotifications,
+  ]);
 
   const handleLogout = async () => {
     const redirectPath =
-      user?.role === 'admin' ? paths.adminLogin : paths.home;
+      user?.role === 'admin'
+        ? paths.adminLogin
+        : paths.home;
 
     await logout();
-    navigate(redirectPath, { replace: true });
+
+    navigate(redirectPath, {
+      replace: true,
+    });
   };
 
   const handleMarkAsRead = async (
-    notificationId: Parameters<typeof markAsRead>[0],
+    notificationId: Parameters<
+      typeof markAsRead
+    >[0],
   ) => {
     try {
       await markAsRead(notificationId);
     } catch {
       toast({
         title: 'エラー',
-        description: '通知を既読にできませんでした。',
+        description:
+          '通知を既読にできませんでした。',
         variant: 'destructive',
       });
     }
   };
 
   const handleDeleteNotification = async (
-    notificationId: Parameters<typeof deleteNotification>[0],
+    notificationId: Parameters<
+      typeof deleteNotification
+    >[0],
   ) => {
     try {
-      await deleteNotification(notificationId);
+      await deleteNotification(
+        notificationId,
+      );
     } catch {
       toast({
         title: 'エラー',
-        description: '通知を削除できませんでした。',
+        description:
+          '通知を削除できませんでした。',
         variant: 'destructive',
       });
     }
   };
 
   return (
-    <nav className="sticky top-0 z-50 shrink-0 border-b bg-card/50 backdrop-blur-sm">
+    <nav
+      className={cn(
+        'sticky top-0 shrink-0 border-b border-border bg-card/50 backdrop-blur-sm',
+        appShell ? 'z-40' : 'z-50',
+      )}
+    >
       <div
         className={cn(
           'w-full px-4 py-4 sm:px-6 lg:px-8',
-          isAuthenticated && user && 'py-3',
-          isAdminAuthenticated && 'h-20 px-6 py-0',
-          isLoginPage && '[@media(max-height:480px)]:py-2',
+          isAuthenticated &&
+            user &&
+            'py-3',
+          appShell &&
+            'h-header px-4 py-0 sm:px-6 lg:px-gutter',
+          isLoginPage &&
+            '[@media(max-height:480px)]:py-2',
         )}
       >
         <div
           className={cn(
             'flex items-center justify-between',
-            isAdminAuthenticated &&
+            appShell &&
               'relative h-full justify-start gap-3',
           )}
         >
-          <Link to={linkTarget} className="flex items-center space-x-2">
-            <div className="h-8 w-8 rounded-lg gradient-primary" />
-            <span className="text-xl font-bold">GX</span>
-          </Link>
+          {/* Mobile application menu button */}
+          {sidebarControl}
 
-          {isAdminAuthenticated && <AdminNavigation />}
+          {/*
+           * Desktop application identity now lives
+           * inside SidebarHeader.
+           *
+           * Keep GX visible for:
+           * - public pages
+           * - auth pages
+           * - mobile application layout
+           */}
+          <Link
+            to={linkTarget}
+            aria-label="ホーム"
+            className={cn(
+              'flex items-center space-x-2',
+              appShell && 'lg:hidden',
+            )}
+          >
+            <div className="h-8 w-8 rounded-lg gradient-primary" />
+
+            <span className="text-xl font-bold text-foreground">
+              GX
+            </span>
+          </Link>
 
           <div
             className={cn(
               'flex items-center space-x-3',
-              isAdminAuthenticated && 'ml-auto',
+              appShell && 'ml-auto',
             )}
           >
             {isAuthenticated && user ? (
@@ -187,37 +297,111 @@ export const Navbar = () => {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="relative h-11 w-11 border border-border"
+                      className="
+                        relative
+                        h-11
+                        w-11
+                        border
+                        border-border
+                      "
                       aria-label="お知らせ"
                     >
-                      <Bell className="h-4 w-4" />
+                      <Bell
+                        className="h-4 w-4"
+                        aria-hidden="true"
+                      />
+
                       {unreadCount > 0 && (
-                        <span className="absolute -right-0 -top-0 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-destructive-foreground">
-                          {unreadCount > 99 ? '99+' : unreadCount}
+                        <span
+                          className="
+                            absolute
+                            -right-0
+                            -top-0
+                            flex
+                            min-h-4
+                            min-w-4
+                            items-center
+                            justify-center
+                            rounded-full
+                            bg-destructive
+                            px-1
+                            text-[10px]
+                            font-semibold
+                            leading-none
+                            text-destructive-foreground
+                          "
+                        >
+                          {unreadCount > 99
+                            ? '99+'
+                            : unreadCount}
                         </span>
                       )}
                     </Button>
                   </SheetTrigger>
+
                   <SheetContent
                     side="right"
                     hideCloseButton
-                    className="flex h-full flex-col overflow-hidden p-0"
+                    className="
+                      flex
+                      h-full
+                      flex-col
+                      overflow-hidden
+                      p-0
+                    "
                   >
-                    <SheetHeader className="sticky top-0 z-10 flex-row items-center justify-between space-y-0 border-b bg-background px-6 py-4 text-left">
-                      <SheetTitle>お知らせ</SheetTitle>
+                    <SheetHeader
+                      className="
+                        sticky
+                        top-0
+                        z-10
+                        flex-row
+                        items-center
+                        justify-between
+                        space-y-0
+                        border-b
+                        bg-background
+                        px-6
+                        py-4
+                        text-left
+                      "
+                    >
+                      <SheetTitle>
+                        お知らせ
+                      </SheetTitle>
+
                       <SheetClose asChild>
-                        <Button type="button" variant="ghost" size="icon" aria-label="閉じる">
-                          <X className="h-4 w-4" />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label="閉じる"
+                        >
+                          <X
+                            className="h-4 w-4"
+                            aria-hidden="true"
+                          />
                         </Button>
                       </SheetClose>
                     </SheetHeader>
+
                     <div className="flex-1 overflow-y-auto p-4">
                       <NotificationsList
-                        notifications={notifications}
-                        loading={notificationsLoading}
-                        error={notificationsError}
-                        onMarkAsRead={handleMarkAsRead}
-                        onDelete={handleDeleteNotification}
+                        notifications={
+                          notifications
+                        }
+                        loading={
+                          notificationsLoading
+                        }
+                        error={
+                          notificationsError
+                        }
+                        onMarkAsRead={
+                          handleMarkAsRead
+                        }
+                        onDelete={
+                          handleDeleteNotification
+                        }
                       />
                     </div>
                   </SheetContent>
@@ -231,10 +415,20 @@ export const Navbar = () => {
             ) : (
               !isAdminLoginPage && (
                 <div className="flex items-center space-x-2">
-                  <Button variant="ghost" onClick={() => navigate(paths.login)}>
+                  <Button
+                    variant="ghost"
+                    onClick={() =>
+                      navigate(paths.login)
+                    }
+                  >
                     ログイン
                   </Button>
-                  <Button onClick={() => navigate(paths.signup)}>
+
+                  <Button
+                    onClick={() =>
+                      navigate(paths.signup)
+                    }
+                  >
                     新規登録
                   </Button>
                 </div>

@@ -50,7 +50,6 @@ const PARTICIPATION_STATUS_ORDER: Record<
   REJECTED: 1,
   OPEN: 2,
 };
-const DISPLAYABLE_PROJECT_STATUSES = new Set(['ACTIVE', '作成済み']);
 
 /** Sorts projects by membership UX priority without mutating API data. */
 function sortProjectsByParticipationStatus(
@@ -63,11 +62,6 @@ function sortProjectsByParticipationStatus(
       (PARTICIPATION_STATUS_ORDER[secondProject.participationStatus ?? ''] ??
         Number.MAX_SAFE_INTEGER),
   );
-}
-
-/** Returns whether a project status is eligible for the site dashboard. */
-function isDisplayableSiteProject(project: SiteProject): boolean {
-  return DISPLAYABLE_PROJECT_STATUSES.has(project.projectStatus);
 }
 
 function formatNumber(value?: string | number | null) {
@@ -349,12 +343,13 @@ function ProjectStatus({
           joined && !pending ? 'bg-success' : 'bg-warning',
         )}
       />
-      {pending ? '承認待ち' : joined ? '参加中' : '未参加'}
+      {pending ? '申請中' : joined ? '入会済み' : '未入会'}
     </span>
   );
 }
 
 // Renders a company-joined project and adapts its action to the current site's relation.
+/** Renders a joined project and its participation action. */
 function JoinedProjectCard({
   project,
   requiresSiteParticipation,
@@ -368,7 +363,7 @@ function JoinedProjectCard({
 
   return (
     <Card className='rounded-2xl border-border bg-card shadow-none'>
-      <CardContent className='p-5 md:p-6'>
+      <CardContent className='p-5 md:p-6 lg:p-[var(--card-padding)]'>
         <div className='mb-5 flex items-center gap-3'>
           <span className='flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-primary'>
             <Building2 className='h-5 w-5' />
@@ -439,10 +434,11 @@ function JoinedProjectCard({
   );
 }
 
+/** Renders a project that the current site can join. */
 function AvailableProjectCard({ project }: { project: SiteProject }) {
   return (
     <Card className='rounded-2xl border-border bg-card shadow-none'>
-      <CardContent className='h-full p-6'>
+      <CardContent className='h-full p-6 lg:p-[var(--card-padding)]'>
         <h3 className='text-foreground'>
           {project.projectName || 'PROJECT ABC'}
         </h3>
@@ -470,6 +466,7 @@ function AvailableProjectCard({ project }: { project: SiteProject }) {
   );
 }
 
+/** Renders the site dashboard with responsive project sections. */
 const Dashboard = () => {
   const { siteId } = useParams();
   const navigate = useNavigate();
@@ -505,10 +502,9 @@ const Dashboard = () => {
     [projects],
   );
 
-  const displayableProjects = useMemo(
-    () => sortedProjects.filter(isDisplayableSiteProject),
-    [sortedProjects],
-  );
+  // 入会中 / 未入会 are split by isCompanyJoined alone; projectStatus does not
+  // hide a project here (the API sends Japanese statuses such as 準備中).
+  const displayableProjects = sortedProjects;
 
   const companyJoinedProjects = useMemo(
     () =>
@@ -800,7 +796,7 @@ const Dashboard = () => {
               {isSiteLoading ? (
                 <InlineLoader label='拠点情報を読み込んでいます' />
               ) : (
-                <h1 className='min-w-0 break-words text-4xl leading-10 text-foreground'>
+                <h1 className='min-w-0 break-words text-metric leading-[1.111] text-foreground'>
                   {site?.siteName || '株式会社ABC'}
                 </h1>
               )}
@@ -851,7 +847,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <section className='bg-card py-12'>
+      <section className='bg-card py-12 lg:py-[calc(var(--section-gap)*1.5)]'>
         <div className={pageContainer}>
           <div className='mb-6'>
             <h2 className='text-foreground'>入会中のプロジェクト</h2>
@@ -896,22 +892,22 @@ const Dashboard = () => {
           ) : (
             <Card className='rounded-2xl border-border'>
               <CardContent className='p-10 text-center text-foreground'>
-                参加中のプロジェクトがありません
+                入会中のプロジェクトがありません
               </CardContent>
             </Card>
           )}
         </div>
       </section>
 
-      <section className='bg-background py-12'>
+      <section className='bg-background py-12 lg:py-[calc(var(--section-gap)*1.5)]'>
         <div className={pageContainer}>
           <div className='mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
             <div>
-              <h2 className='text-foreground'>未参加プロジェクト</h2>
+              <h2 className='text-foreground'>未入会プロジェクト</h2>
               <p className='text-small mt-2 whitespace-pre-line text-foreground'>
                 {user?.role === 'master'
-                  ? 'プロジェクトへの参加をご希望の場合は、「プロジェクト入会届」ボタンを押下し、参加するプロジェクトを選択してください。'
-                  : 'この拠点は、以下のプロジェクトにまだ参加していません。\n参加をご希望の場合は、マスター権限を持つ担当者へお問い合わせください。'}
+                  ? 'プロジェクトへの入会をご希望の場合は、「プロジェクトに入会する」ボタンから、入会するプロジェクトを選択してください。'
+                  : 'この拠点は、以下のプロジェクトにまだ入会していません。\n入会をご希望の場合は、マスター権限を持つ担当者へお問い合わせください。'}
               </p>
             </div>
             {user?.role === 'master' && activeSiteId && (
@@ -921,7 +917,7 @@ const Dashboard = () => {
                 className='shrink-0'
                 onClick={() => navigate(paths.projectMembership(activeSiteId))}
               >
-                プロジェクト入会届
+                プロジェクトに入会する
               </Button>
             )}
           </div>
@@ -956,7 +952,7 @@ const Dashboard = () => {
           ) : (
             <Card className='rounded-2xl border-border'>
               <CardContent className='p-10 text-center text-foreground'>
-                未参加のプロジェクトがありません
+                未入会のプロジェクトがありません
               </CardContent>
             </Card>
           )}
@@ -987,7 +983,7 @@ const Dashboard = () => {
               disabled={isJoiningProject}
               onClick={() => void handleConfirmProjectJoin()}
             >
-              {isJoiningProject ? '参加中...' : '参加する'}
+              {isJoiningProject ? '入会中...' : '入会する'}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

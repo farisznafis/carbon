@@ -42,6 +42,7 @@ function AuthPageHeader() {
   );
 }
 
+/** Renders the shared authentication card within the available viewport. */
 export function AuthPageLayout({
   title,
   description,
@@ -106,7 +107,7 @@ export function AuthPageLayout({
       <div className="relative z-10 flex max-h-full w-full items-center justify-center px-4 pb-5 pt-20 sm:px-6 sm:pb-8 sm:pt-24 [@media(max-height:560px)]:pb-3 [@media(max-height:560px)]:pt-16">
         <div
           ref={cardRef}
-          className="w-full max-w-[480px] rounded-2xl border border-border/70 bg-card/95 p-6 shadow-app-md backdrop-blur-md sm:p-9 [@media(max-height:700px)]:max-w-[460px] [@media(max-height:700px)]:p-5 [@media(max-height:560px)]:p-4"
+          className="w-full max-w-[480px] rounded-2xl border border-border/70 bg-card/95 p-6 shadow-app-md backdrop-blur-md sm:p-9 lg:p-[calc(var(--card-padding)*1.5)] [@media(max-height:700px)]:max-w-[460px] [@media(max-height:700px)]:p-5 [@media(max-height:560px)]:p-4"
         >
           <header
             className={
@@ -120,7 +121,7 @@ export function AuthPageLayout({
                 {headerIcon}
               </div>
             )}
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-form-title">
               {title}
             </h1>
             {description && (

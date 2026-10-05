@@ -11,7 +11,6 @@ import {
   FormPageShell,
   WizardProgress,
 } from '@/components/forms/form-layout';
-import { Button } from '@/components/ui/button';
 import {
   CardContent,
   CardDescription,
@@ -32,6 +31,7 @@ import {
   type SignupRevisionFieldErrors,
   type SignupRevisionStep,
 } from './signupRevisionMapper';
+import { ActionButton } from '@/components/actions';
 
 const revisionSteps = [
   { number: 1, title: '法人・個人情報' },
@@ -269,7 +269,8 @@ export default function SignupRevisionPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
+            <ActionButton
+              kind="retry"
               className="w-full"
               onClick={() => {
                 const token = actionSessionTokenRef.current;
@@ -277,7 +278,7 @@ export default function SignupRevisionPage() {
               }}
             >
               再読み込み
-            </Button>
+            </ActionButton>
           </CardContent>
         </FormCard>
       </FormPageShell>

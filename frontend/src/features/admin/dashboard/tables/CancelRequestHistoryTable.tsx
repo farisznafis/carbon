@@ -8,11 +8,12 @@ import {
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
-import { Button } from '@/components/ui/button';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { CancelRequestStatusBadge } from '@/features/admin/monitoring/CancelRequestStatusBadge';
 import { formatCancelRequestDateTime } from '@/features/admin/monitoring/cancelRequestFormatters';
 import { usePagination } from '@/hooks/usePagination';
 import { SkeletonTable } from '@/components/feedback/loading';
+import { ActionButton } from '@/components/actions';
 
 const INITIAL_ITEMS_PER_PAGE = 10;
 const cancelRequestGridColumns =
@@ -123,26 +124,14 @@ export function CancelRequestHistoryTable({
       {
         id: 'actions',
         label: '操作',
-        render: (request) => (
-          <div
-            onClick={(event) => event.stopPropagation()}
-            onPointerDown={(event) => event.stopPropagation()}
-          >
-            <Button
-              type="button"
-              variant={
-                request.status.toUpperCase() === 'PENDING'
-                  ? 'default'
-                  : 'outline'
-              }
-              onClick={() => onViewRequest(request)}
-            >
-              {request.status.toUpperCase() === 'PENDING'
-                ? '取消内容を確認'
-                : '詳細'}
-            </Button>
-          </div>
-        ),
+        render: (request) =>
+          request.status.toUpperCase() === 'PENDING' ? (
+            <RowActionButton intent="review" onClick={() => onViewRequest(request)}>
+              取消内容を確認
+            </RowActionButton>
+          ) : (
+            <RowActionButton onClick={() => onViewRequest(request)} />
+          ),
       },
     ],
     [onViewRequest],
@@ -156,9 +145,7 @@ export function CancelRequestHistoryTable({
     return (
       <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center">
         <p className="text-sm text-destructive">{loadError}</p>
-        <Button type="button" variant="outline" onClick={reloadRequests}>
-          再試行
-        </Button>
+        <ActionButton kind="retry" onClick={reloadRequests} />
       </div>
     );
   }
@@ -172,6 +159,7 @@ export function CancelRequestHistoryTable({
         minWidth={960}
         getRowKey={(request) => String(request.id)}
         emptyMessage="取消申請はありません。"
+        onRowClick={onViewRequest}
       />
       <PaginationControls
         currentPage={currentPage}

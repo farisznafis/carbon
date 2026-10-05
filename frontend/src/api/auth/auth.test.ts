@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  login,
   completePasswordReset,
   exchangePasswordResetActionLink,
   requestPasswordReset,
@@ -19,6 +20,23 @@ const createFetchMock = (responseBody: object) => {
   vi.stubGlobal('fetch', fetchMock);
   return fetchMock;
 };
+
+describe('user login API', () => {
+  it.each(['OK', '200'])('accepts the %s success status', async (statusCode) => {
+    createFetchMock({
+      statusCode,
+      role: 'master',
+      token: 'login-token',
+      userId: 'user-42',
+      companyName: 'Example Company',
+    });
+
+    const response = await login('company-1', 'master@example.com', 'password');
+
+    expect(response.statusCode).toBe(statusCode);
+    expect(response.role).toBe('master');
+  });
+});
 
 describe('password reset API', () => {
   it('requests a reset link with the email address', async () => {

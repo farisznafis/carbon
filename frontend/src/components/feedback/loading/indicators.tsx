@@ -77,7 +77,7 @@ export function PageLoadingOverlay({
       aria-disabled="true"
       data-page-interactions-disabled="true"
       className={cn(
-        'flex min-h-[calc(100dvh-4rem)] cursor-wait select-none items-center justify-center bg-background/95 px-6 text-center',
+        'flex min-h-[calc(100dvh-var(--app-header-height))] cursor-wait select-none items-center justify-center bg-background/95 px-6 text-center',
         className,
       )}
       {...props}

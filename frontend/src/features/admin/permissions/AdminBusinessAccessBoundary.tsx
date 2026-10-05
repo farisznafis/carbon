@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { LoadingPanel } from '@/components/feedback/loading';
 import { ForbiddenAccessPage } from '@/components/feedback/ForbiddenAccessPage';
 import { paths } from '@/routes/paths';
 import { useAdminPermissions } from './useAdminPermissions';
+import { ActionButton } from '@/components/actions';
 
 /** Protects admin business routes while keeping self-profile flows available. */
 export function AdminBusinessAccessBoundary({ children }: { children: ReactNode }) {
@@ -25,7 +25,7 @@ export function AdminBusinessAccessBoundary({ children }: { children: ReactNode 
           <CardContent className="p-8 text-center">
             <p className="font-semibold text-foreground">権限情報を取得できませんでした。</p>
             <p className="mt-2 text-small text-muted-foreground">通信状況を確認して、もう一度お試しください。</p>
-            <Button type="button" variant="outline" className="mt-6" onClick={() => void permissions.retry()}>再試行</Button>
+            <ActionButton kind="retry" className="mt-6" onClick={() => void permissions.retry()} />
           </CardContent>
         </Card>
       </main>

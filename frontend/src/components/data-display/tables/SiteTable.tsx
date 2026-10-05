@@ -5,7 +5,7 @@ import {
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { InlineHelp } from '@/components/feedback/InlineHelp/InlineHelp';
-import { Button } from '@/components/ui/button';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { usePagination } from '@/hooks/usePagination';
 import { Building2 } from 'lucide-react';
 
@@ -65,14 +65,7 @@ export function SiteTable({ sites, onEdit, onRowClick }: SiteTableProps) {
       id: 'actions',
       label: '操作',
       render: (site) => (
-        <div
-          onClick={(event) => event.stopPropagation()}
-          onPointerDown={(event) => event.stopPropagation()}
-        >
-          <Button type="button" onClick={() => onEdit?.(site)}>
-            更新
-          </Button>
-        </div>
+        <RowActionButton onClick={() => onEdit?.(site)}>更新</RowActionButton>
       ),
     },
   ];

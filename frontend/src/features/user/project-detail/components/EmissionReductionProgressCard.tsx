@@ -41,7 +41,7 @@ export function EmissionReductionProgressCard({
 
       <div className='flex flex-1 flex-col justify-center'>
         <div className='text-center'>
-          <p className='text-5xl font-bold leading-none text-foreground'>
+          <p className='text-5xl font-bold leading-none text-foreground lg:text-[clamp(2.5rem,2.5vw,3rem)]'>
             {metrics === null
               ? '-'
               : metrics.achievementRate.toLocaleString('ja-JP', {

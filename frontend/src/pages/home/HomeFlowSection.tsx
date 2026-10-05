@@ -24,7 +24,7 @@ export function HomeFlowSection() {
         bg-card
         py-16
         sm:py-20
-        lg:py-24
+        lg:py-marketing-section
       '
     >
       <div
@@ -46,7 +46,7 @@ export function HomeFlowSection() {
             gap-6
             lg:grid-cols-[1.05fr_0.95fr]
             lg:items-end
-            lg:gap-16
+            lg:gap-[calc(var(--section-gap)*2)]
           '
         >
           <div>
@@ -58,7 +58,7 @@ export function HomeFlowSection() {
                 leading-tight
                 tracking-tight
                 text-foreground
-                sm:text-4xl
+                sm:text-marketing-title
               '
             >
               ご利用の流れ
@@ -82,7 +82,7 @@ export function HomeFlowSection() {
         {/* =====================================================
             BUSINESS FLOW
             ===================================================== */}
-        <div className='mt-12 lg:mt-16'>
+        <div className='mt-12 lg:mt-[calc(var(--section-gap)*2)]'>
           {/* Mobile scroll hint */}
           <div
             className='
