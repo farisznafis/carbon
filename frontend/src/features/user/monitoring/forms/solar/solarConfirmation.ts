@@ -30,13 +30,6 @@ export function getMonitoringSolarConfirmation(
     { label: '自家消費量 (ELPVR)', value: String(data.ELpvr_value ?? missingValue), isChanged: isChanged('ELpvr_value') },
     ...(data.equipmentHasBattery === true
       ? [{
-          label: '蓄電池交換の有無',
-          value: 'あり',
-          isChanged: isChanged('changedBattery'),
-        }]
-      : []),
-    ...(data.equipmentHasBattery === true
-      ? [{
           label: '蓄電池放電量 (ELPJ)',
           value: String(data.ELPJ_battery_value ?? missingValue),
           isChanged: isChanged('ELPJ_battery_value'),

@@ -66,6 +66,11 @@ describe('Monitoring registration evidence upload', () => {
       elpvr_evidence: evidenceFile.name,
       elpj_control_evidence: evidenceFile.name,
     }));
+    const validationPayload = vi.mocked(validateMonitoringData).mock.calls[0][0];
+    expect(validationPayload).not.toHaveProperty('changedBattery');
+    expect(validationPayload).toMatchObject(hasBattery
+      ? { ELPJ_battery_value: 0, elpj_battery_evidence: evidenceFile.name }
+      : { ELPJ_battery_value: null, elpj_battery_evidence: null });
     fireEvent.click(confirmButton);
 
     await waitFor(() => expect(submitMonitoringData).toHaveBeenCalledTimes(1));
@@ -75,6 +80,7 @@ describe('Monitoring registration evidence upload', () => {
       );
     }
     const payload = vi.mocked(submitMonitoringData).mock.calls[0][0];
+    expect(payload).not.toHaveProperty('changedBattery');
     expect(payload).toMatchObject({
       ELpv_value: 0,
       ELpvr_value: 0,
@@ -85,14 +91,14 @@ describe('Monitoring registration evidence upload', () => {
     if (hasBattery) {
       expect(uploadElpjBatteryFile).toHaveBeenCalledTimes(1);
       expect(payload).toMatchObject({
-        changedBattery: true, ELPJ_battery_value: 0,
+        ELPJ_battery_value: 0,
         elpj_battery_evidence: 'https://example.com/battery.pdf',
       });
     } else {
       expect(uploadElpjBatteryFile).not.toHaveBeenCalled();
       expect(payload).not.toHaveProperty('changedBattery');
-      expect(payload).not.toHaveProperty('ELPJ_battery_value');
-      expect(payload).not.toHaveProperty('elpj_battery_evidence');
+      expect(payload.ELPJ_battery_value).toBeNull();
+      expect(payload.elpj_battery_evidence).toBeNull();
     }
   });
 });

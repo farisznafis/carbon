@@ -46,26 +46,24 @@ describe('MonitoringSolarForm equipment selection', () => {
     );
   });
 
-  it('fixes battery selection to あり and always shows required battery inputs', async () => {
+  it('shows required battery inputs without a battery replacement selection', async () => {
     const onNext = vi.fn();
     render(
       <MonitoringSolarForm
         {...baseProps}
-        value={{ ...emptyFormData, equipmentId: 101, changedBattery: false, ELPJ_battery_value: 0 }}
+        value={{ ...emptyFormData, equipmentId: 101, ELPJ_battery_value: 0 }}
         onNext={onNext}
         equipmentList={[{ equipmentId: 101, hasBattery: true }]}
       />,
     );
 
-    const batterySelect = await screen.findByRole('combobox', { name: /蓄電池交換の有無/ });
-    expect(batterySelect).toBeDisabled();
-    expect(batterySelect).toHaveTextContent('あり');
+    expect(screen.queryByText('蓄電池交換の有無')).not.toBeInTheDocument();
     expect(screen.getByRole('spinbutton', { name: /蓄電池放電量/ })).toBeRequired();
     expect(screen.getByText('蓄電池エビデンス')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: '確認' }));
     await waitFor(() => expect(onNext).toHaveBeenCalledWith(
-      expect.objectContaining({ equipmentHasBattery: true, changedBattery: true, ELPJ_battery_value: 0 }),
+      expect.objectContaining({ equipmentHasBattery: true, ELPJ_battery_value: 0 }),
     ));
   });
 

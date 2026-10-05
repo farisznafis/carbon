@@ -55,7 +55,6 @@ const base = {
 
 export const MonitoringSolarFormSchema = z.object({
   ...base,
-  changedBattery: z.boolean().nullable(),
   ELPJ_battery_value: z.union([z.string(), z.number(), z.null()]).optional(),
 });
 
@@ -67,7 +66,6 @@ export type MonitoringSolarFormData = {
   dateRecorded?: string;
   ELpv_value?: string | number | null;
   ELpvr_value?: string | number | null;
-  changedBattery: boolean | null;
   ELPJ_battery_value?: string | number | null;
   ELPJ_control_value?: string | number | null;
   ELPJ_accuracy?: string | number | null;
@@ -199,17 +197,11 @@ export function MonitoringSolarForm({
       shouldValidate: false,
     });
 
-    if (equipmentHasBattery) {
-      form.setValue('changedBattery', true, { shouldValidate: false });
-      form.clearErrors('changedBattery');
-      return;
-    }
+    if (equipmentHasBattery) return;
 
-    form.setValue('changedBattery', null, { shouldValidate: false });
     form.setValue('ELPJ_battery_value', null, { shouldValidate: false });
     form.setValue('elpj_battery_evidence', null, { shouldValidate: false });
     form.clearErrors([
-      'changedBattery',
       'ELPJ_battery_value',
       'elpj_battery_evidence',
     ]);
@@ -397,33 +389,6 @@ export function MonitoringSolarForm({
                   </FormItem>
                 )}
               />
-
-              {equipmentHasBattery ? (
-                <FormField
-                control={form.control}
-                name="changedBattery"
-                render={() => (
-                  <FormItem>
-                    <RequiredLabel>蓄電池交換の有無</RequiredLabel>
-                    <p className="text-sm text-foreground mt-1">
-                      蓄電池を備える設備では、蓄電池放電量と証憑資料の入力が必要です。
-                    </p>
-                    <FormControl>
-                      <Select value="true" disabled>
-                        <SelectTrigger aria-label="蓄電池交換の有無">
-                          <SelectValue placeholder="選択してください" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="true">あり</SelectItem>
-                          <SelectItem value="false">なし</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-                />
-              ) : null}
 
               {equipmentHasBattery ? (
                 <FormField

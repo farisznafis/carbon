@@ -22,7 +22,7 @@ function toNumberOrNull(value: unknown): number | null {
   return Number.isFinite(numberValue) ? numberValue : null;
 }
 
-/** Builds the backend DTO and includes battery data only for battery equipment. */
+/** Builds the backend DTO and clears battery data for equipment without a battery. */
 export function buildMonitoringPayload(
   formData: Record<string, unknown>,
   context: MonitoringPayloadContext,
@@ -38,13 +38,12 @@ export function buildMonitoringPayload(
     ELpvr_value: toNumberOrNull(formData.ELpvr_value),
     ...(context.hasBattery === true
       ? {
-          changedBattery: true,
           ELPJ_battery_value: toNumberOrNull(formData.ELPJ_battery_value),
           elpj_battery_evidence:
             evidenceUrls.elpj_battery_evidence ??
             fileValueToString(formData.elpj_battery_evidence),
         }
-      : {}),
+      : { ELPJ_battery_value: null, elpj_battery_evidence: null }),
     ELPJ_control_value: toNumberOrNull(formData.ELPJ_control_value),
     ELPJ_accuracy: toNumberOrNull(formData.ELPJ_accuracy),
     elpv_evidence:

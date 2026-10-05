@@ -20,7 +20,7 @@ const context = {
 };
 
 describe('buildMonitoringPayload', () => {
-  it('includes equipmentId and omits every battery field for equipment without a battery', () => {
+  it('includes equipmentId and clears stale battery fields for equipment without a battery', () => {
     const payload = buildMonitoringPayload(
       {
         ...baseForm,
@@ -37,12 +37,12 @@ describe('buildMonitoringPayload', () => {
 
     expect(payload.equipmentId).toBe(100);
     expect(payload).not.toHaveProperty('changedBattery');
-    expect(payload).not.toHaveProperty('ELPJ_battery_value');
-    expect(payload).not.toHaveProperty('elpj_battery_evidence');
+    expect(payload.ELPJ_battery_value).toBeNull();
+    expect(payload.elpj_battery_evidence).toBeNull();
   });
 
   it.each([true, false, null, undefined])(
-    'always includes battery fields for battery equipment despite changedBattery=%s',
+    'includes battery fields and never sends the removed changedBattery=%s',
     (changedBattery) => {
       const payload = buildMonitoringPayload(
         {
@@ -57,11 +57,11 @@ describe('buildMonitoringPayload', () => {
       expect(payload).toEqual(
         expect.objectContaining({
           equipmentId: 100,
-          changedBattery: true,
           ELPJ_battery_value: 8,
           elpj_battery_evidence: 'battery.pdf',
         }),
       );
+      expect(payload).not.toHaveProperty('changedBattery');
     },
   );
 

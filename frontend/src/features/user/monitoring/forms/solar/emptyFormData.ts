@@ -8,7 +8,6 @@ export const emptyFormData: MonitoringSolarFormData = {
   dateRecorded: '',
   ELpv_value: null,
   ELpvr_value: null,
-  changedBattery: null,
   ELPJ_battery_value: null,
   ELPJ_control_value: null,
   ELPJ_accuracy: null,

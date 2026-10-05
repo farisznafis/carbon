@@ -8,7 +8,6 @@ export type MonitoringData = {
   dateRecorded: string | null;
   ELpv_value: number | null;
   ELpvr_value: number | null;
-  changedBattery?: boolean | null;
   ELPJ_battery_value?: number | null;
   ELPJ_control_value: number | null;
   ELPJ_accuracy: number | null;

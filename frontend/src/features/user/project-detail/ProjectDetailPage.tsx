@@ -115,7 +115,6 @@ type MonitoringDisplayRow = Pick<
   ELPJ_battery_value: number | null;
   ELPJ_accuracy: number | null;
   ELPJ_control_value: number | null;
-  changedBattery: boolean | null;
 };
 
 const fallbackMonitoringRow: MonitoringDisplayRow = {
@@ -127,7 +126,6 @@ const fallbackMonitoringRow: MonitoringDisplayRow = {
   ELPJ_battery_value: null,
   ELPJ_accuracy: null,
   ELPJ_control_value: null,
-  changedBattery: null,
 };
 
 type ProjectDetailTabValue = 'overview' | 'equipment';
@@ -273,9 +271,9 @@ type RecentDataBarProps = {
   row: MonitoringDisplayRow;
 };
 
+/** Displays the latest monitoring values without the removed battery replacement flag. */
 function RecentDataBar({ row }: RecentDataBarProps) {
-  const batteryDischargeValue =
-    row.changedBattery === false ? 0 : row.ELPJ_battery_value;
+  const batteryDischargeValue = row.ELPJ_battery_value;
 
   return (
     <section className={cn(projectDetailCardClassName, 'overflow-hidden')}>
@@ -610,7 +608,6 @@ const ProjectDetail = () => {
           ELPJ_battery_value: row.ELPJ_battery_value ?? null,
           ELPJ_accuracy: row.ELPJ_accuracy ?? null,
           ELPJ_control_value: row.ELPJ_control_value ?? null,
-          changedBattery: row.changedBattery ?? null,
         }))
       : [fallbackMonitoringRow];
 
