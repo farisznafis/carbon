@@ -6,8 +6,8 @@ import {
   DataGridTable,
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
-import { Button } from '@/components/ui/button';
 
 type AdminCompanyApplicationsTableProps = {
   items: AdminCompanyListItem[];
@@ -63,35 +63,9 @@ function CompanyStatusBadge({ status }: { status: CompanyStatus }) {
   );
 }
 
-function ActionButtons({
-  item,
-  onDetails,
-  onReview,
-}: {
-  item: AdminCompanyListItem;
-  onDetails: (item: AdminCompanyListItem) => void;
-  onReview: (item: AdminCompanyListItem) => void;
-}) {
-  if (item.status === 'PENDING') {
-    return (
-      <div className="flex justify-start gap-2">
-        {/* <Button type="button" variant="outline" onClick={() => onDetails(item)}>
-          詳細
-        </Button> */}
-        <Button type="button" onClick={() => onReview(item)}>
-          申請内容を確認
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex justify-start">
-      <Button type="button" variant="outline" onClick={() => onDetails(item)}>
-        詳細
-      </Button>
-    </div>
-  );
+/** Pending applications need a decision, so they open the review; everything else opens details. */
+function isPendingApplication(item: AdminCompanyListItem) {
+  return item.status === 'PENDING';
 }
 
 export function AdminCompanyApplicationsTable({
@@ -100,6 +74,9 @@ export function AdminCompanyApplicationsTable({
   onDetails,
   onReview,
 }: AdminCompanyApplicationsTableProps) {
+  const openRow = (item: AdminCompanyListItem) =>
+    isPendingApplication(item) ? onReview(item) : onDetails(item);
+
   const columns: DataGridTableColumn<AdminCompanyListItem>[] = [
     {
       id: 'nameJA',
@@ -144,18 +121,14 @@ export function AdminCompanyApplicationsTable({
     {
       id: 'actions',
       label: '操作',
-      render: (item) => (
-        <div
-          onClick={(event) => event.stopPropagation()}
-          onPointerDown={(event) => event.stopPropagation()}
-        >
-          <ActionButtons
-            item={item}
-            onDetails={onDetails}
-            onReview={onReview}
-          />
-        </div>
-      ),
+      render: (item) =>
+        isPendingApplication(item) ? (
+          <RowActionButton intent="review" onClick={() => openRow(item)}>
+            申請内容を確認
+          </RowActionButton>
+        ) : (
+          <RowActionButton onClick={() => openRow(item)} />
+        ),
     },
   ];
 
@@ -167,6 +140,7 @@ export function AdminCompanyApplicationsTable({
       minWidth={980}
       getRowKey={(item) => item.id ?? item.companyId}
       emptyMessage={emptyMessage}
+      onRowClick={openRow}
     />
   );
 }

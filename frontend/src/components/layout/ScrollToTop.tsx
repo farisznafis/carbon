@@ -1,8 +1,12 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ScrollToTopButton } from '@/components/navigation/ScrollToTopButton';
 
 const SCROLL_VISIBLE_THRESHOLD = 8;
+
+type ScrollToTopProps = {
+  onRouteScrollReset?: () => void;
+};
 
 /** Resets the document scroll position without an animated route transition. */
 function resetDocumentScrollPosition() {
@@ -11,20 +15,26 @@ function resetDocumentScrollPosition() {
   document.body.scrollTop = 0;
 }
 
-export const ScrollToTop = () => {
+export const ScrollToTop = ({ onRouteScrollReset }: ScrollToTopProps) => {
   const { pathname } = useLocation();
   const [isVisible, setIsVisible] = useState(false);
 
-  useLayoutEffect(() => {
+  /** Resets both the native document position and an optional smooth-scroll controller. */
+  const resetRouteScrollPosition = useCallback(() => {
     resetDocumentScrollPosition();
+    onRouteScrollReset?.();
+  }, [onRouteScrollReset]);
+
+  useLayoutEffect(() => {
+    resetRouteScrollPosition();
     setIsVisible(false);
 
     const animationFrameId = window.requestAnimationFrame(
-      resetDocumentScrollPosition,
+      resetRouteScrollPosition,
     );
 
     return () => window.cancelAnimationFrame(animationFrameId);
-  }, [pathname]);
+  }, [pathname, resetRouteScrollPosition]);
 
   useEffect(() => {
     const previousScrollRestoration = window.history.scrollRestoration;

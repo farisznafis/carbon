@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -283,16 +283,11 @@ export function MonitoringCancellationDialog({
                               {formatMetric(record.elpjAccuracy, '%')}
                             </TableCell>
                             <TableCell>
-                              <Badge
-                                variant='outline'
-                                className={
-                                  record.isActive
-                                    ? 'border-primary/40 text-primary'
-                                    : 'border-border text-foreground'
-                                }
+                              <StatusBadge
+                                tone={record.isActive ? 'success' : 'neutral'}
                               >
                                 {record.isActive ? '有効' : '取消済み'}
-                              </Badge>
+                              </StatusBadge>
                             </TableCell>
                             <TableCell className='text-right'>
                               <Button

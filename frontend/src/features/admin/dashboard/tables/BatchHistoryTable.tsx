@@ -9,11 +9,12 @@ import {
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
-import { Button } from '@/components/ui/button';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { BatchHistoryDetailDialog } from './BatchHistoryDetailDialog';
 import { SkeletonTable } from '@/components/feedback/loading';
 import { BatchHistoryStatusBadge } from './BatchHistoryStatusBadge';
 import { formatBatchHistoryDateTime } from './batchHistoryFormatters';
+import { ActionButton } from '@/components/actions';
 
 const INITIAL_PAGE = 1;
 const INITIAL_ITEMS_PER_PAGE = 10;
@@ -134,14 +135,7 @@ export function BatchHistoryTable({
         id: 'actions',
         label: '操作',
         render: (item) => (
-          <div
-            onClick={(event) => event.stopPropagation()}
-            onPointerDown={(event) => event.stopPropagation()}
-          >
-            <Button type="button" variant="outline" onClick={() => setSelectedItem(item)}>
-              詳細
-            </Button>
-          </div>
+          <RowActionButton onClick={() => setSelectedItem(item)} />
         ),
       },
     ],
@@ -158,9 +152,7 @@ export function BatchHistoryTable({
         <p role="alert" className="text-sm text-destructive">
           {loadError}
         </p>
-        <Button type="button" variant="outline" onClick={() => void loadHistory()}>
-          再試行
-        </Button>
+        <ActionButton kind="retry" onClick={() => void loadHistory()} />
       </div>
     );
   }
@@ -185,6 +177,7 @@ export function BatchHistoryTable({
         minWidth={1170}
         getRowKey={(item) => String(item.id)}
         emptyMessage="バッチ履歴はありません。"
+        onRowClick={(item) => setSelectedItem(item)}
       />
       <PaginationControls
         currentPage={pagination.page}

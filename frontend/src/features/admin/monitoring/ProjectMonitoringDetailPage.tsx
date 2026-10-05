@@ -9,7 +9,6 @@ import {
   Activity,
   ExternalLink,
   FileText,
-  RefreshCw,
 } from 'lucide-react';
 import {
   getAdminProjectMonitoringRecords,
@@ -37,6 +36,7 @@ import {
   formatMonitoringValue,
   isMatchingMonitoringRecord,
 } from './monitoringRecordDisplay';
+import { ActionButton } from '@/components/actions';
 
 type MonitoringDetailLocationState = {
   monitoringRecord?: MonitoringRecordListItem;
@@ -196,12 +196,11 @@ export default function ProjectMonitoringDetailPage() {
       return;
     }
 
-    const projectDetailSearchParams = new URLSearchParams({
-      monitoringPage: String(page),
-      monitoringLimit: String(limit),
-    });
     navigate(
-      `${paths.adminProjectDetail(projectId)}?${projectDetailSearchParams.toString()}#monitoring-data`,
+      paths.adminProjectDetailTab(projectId, 'monitoring', {
+        monitoringPage: String(page),
+        monitoringLimit: String(limit),
+      }),
     );
   };
 
@@ -225,14 +224,9 @@ export default function ProjectMonitoringDetailPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void loadMonitoringRecord()}
-            >
-              <RefreshCw />
+            <ActionButton kind="retry" onClick={() => void loadMonitoringRecord()}>
               再読み込み
-            </Button>
+            </ActionButton>
           </CardContent>
         </Card>
       </MonitoringDetailLayout>

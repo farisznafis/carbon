@@ -27,6 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -64,6 +65,7 @@ import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.service.EnR002FileUploadService;
+import com.kct.jcredit.core_backend.service.NotificationMessages;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.service.ParticipationProjectValidationService;
 import com.kct.jcredit.core_backend.service.ProjectParticipationPdfService;
@@ -88,6 +90,8 @@ class ParticipationProjectServiceImplTest {
     @Mock private ParticipationProjectValidationService validationService;
     @Mock private ProjectParticipationPdfService pdfService;
     @Mock private NotificationService notificationService;
+    // 実バンドルを使う。文面は mail/messages.properties から読む。
+    @Spy private NotificationMessages messages = new NotificationMessages();
 
     @InjectMocks
     private ParticipationProjectServiceImpl participationService;

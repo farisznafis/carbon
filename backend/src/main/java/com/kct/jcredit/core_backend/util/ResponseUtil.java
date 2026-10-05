@@ -30,6 +30,7 @@ public class ResponseUtil {
             case ResponseConstants.CORP_NUMBER_ALREADY_USED:
             case ResponseConstants.PROJECT_NUMBER_ALREADY_USED:
             case ResponseConstants.METHOD_NUMBER_ALREADY_USED:
+            case ResponseConstants.LIMIT_EXCEEDED:
                 return HttpStatus.CONFLICT;
             case ResponseConstants.UNAUTHORIZED:
             case ResponseConstants.INVALID_CREDENTIALS:

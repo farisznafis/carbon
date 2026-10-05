@@ -56,7 +56,7 @@ export function NotFoundPage({
 
           <div className="flex max-w-2xl flex-col items-center gap-4 text-center lg:items-start lg:text-left">
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+              <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-[clamp(2.5rem,2.5vw,3rem)]">
                 ページが見つかりません
               </h1>
               <p className="text-sm leading-6 text-foreground sm:text-base lg:text-xl lg:leading-7">

@@ -1,15 +1,15 @@
 package com.kct.jcredit.core_backend.controller;
 
-import com.kct.jcredit.core_backend.dto.request.CreateUserRequest;
 import com.kct.jcredit.core_backend.dto.request.DeleteUserSite;
 import com.kct.jcredit.core_backend.dto.request.UpdateUserRequest;
-import com.kct.jcredit.core_backend.dto.response.CreateUserResponse;
+import com.kct.jcredit.core_backend.dto.request.UserInvitationRequest;
 import com.kct.jcredit.core_backend.dto.response.DeleteUserSiteResponse;
 import com.kct.jcredit.core_backend.dto.response.NotificationListResponse;
 import com.kct.jcredit.core_backend.dto.response.UpdateUserResponse;
 import com.kct.jcredit.core_backend.dto.response.UserListResponse;
 import com.kct.jcredit.core_backend.dto.response.UserProfileResponse;
 import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+import com.kct.jcredit.core_backend.service.UserInvitationService;
 import com.kct.jcredit.core_backend.service.UserService;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.util.JwtUtil;
@@ -33,10 +33,11 @@ import org.springframework.web.bind.annotation.*;
 public class ParticipatingUserController {
 
     private final UserService userService;
+    private final UserInvitationService userInvitationService;
     private final JwtUtil jwtUtil;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('master')")
+    @PreAuthorize("hasAnyRole('master','admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_USER_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "参加企業ユーザー一覧取得", description = "ログイン中の参加企業に所属する参加企業ユーザー一覧を取得します。")
     public ResponseEntity<UserListResponse> getUsers(Authentication authentication) {
@@ -45,44 +46,23 @@ public class ParticipatingUserController {
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
-    @PostMapping
-    @PreAuthorize("hasAnyRole('master')")
+    @PostMapping("/invitations")
+    @PreAuthorize("hasAnyRole('master','admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_USER_CREATE.name()))")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "参加企業ユーザー作成", description = "ログイン中の参加企業に新しい参加企業ユーザーを作成します。")
-    public ResponseEntity<CreateUserResponse> createUser(
+    @Operation(summary = "参加企業ユーザー招待", description = "メールアドレスと拠点のみを指定して招待メールを送信します。ユーザー本人がリンクから残りの情報を入力してアカウントを作成します。")
+    public ResponseEntity<BaseResponse> inviteUser(
             Authentication authentication,
-            @RequestBody @Valid CreateUserRequest request) {
-            String companyId = jwtUtil.extractCompanyId(
-            authentication.getCredentials().toString()
-        );
-        String username = jwtUtil.extractUsername(authentication.getCredentials().toString());
-        
-        CreateUserResponse response = userService.createUser(companyId, username, request);
-        
-        // レスポンスのステータスコードに応じたHTTPステータスを返す
-        return new ResponseEntity<>(
-            response, 
-            ResponseUtil.getHttpStatus(response.getStatusCode())
-        );
-    }
-
-    @PostMapping("/validate-create")
-    @PreAuthorize("hasAnyRole('master')")
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "参加企業ユーザー作成検証", description = "参加企業ユーザー作成リクエストを保存せずに検証します。")
-    public ResponseEntity<BaseResponse> validateCreateUser(
-            Authentication authentication,
-            @RequestBody @Valid CreateUserRequest request) {
-        String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
-        String username = jwtUtil.extractUsername(authentication.getCredentials().toString());
-
-        BaseResponse response = userService.validateCreateUser(companyId, username, request);
+            @RequestBody @Valid UserInvitationRequest request) {
+        String token = authentication.getCredentials().toString();
+        BaseResponse response = userInvitationService.invite(
+                jwtUtil.extractCompanyId(token), jwtUtil.extractUsername(token),
+                request.getEmail(), request.getSiteId());
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
     @PatchMapping
     @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize("hasAnyRole('master')")
+    @PreAuthorize("hasAnyRole('master','admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_USER_UPDATE.name()))")
     @Operation(summary = "参加企業ユーザー情報更新", description = "指定された参加企業ユーザーの情報を更新します。")
     public ResponseEntity<UpdateUserResponse> updateUser(
             Authentication authentication,
@@ -95,6 +75,7 @@ public class ParticipatingUserController {
 
     @PostMapping("/validate-update")
     @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasAnyRole('master','admin') or (hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).PARTICIPATING_USER_UPDATE.name()))")
     @Operation(summary = "参加企業ユーザー更新検証", description = "参加企業ユーザー更新リクエストを保存せずに検証します。")
     public ResponseEntity<BaseResponse> validateUpdateUser(
             Authentication authentication,

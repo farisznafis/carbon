@@ -76,4 +76,13 @@ public class SecurityActionLink {
 
     @Column(name = "created_by", nullable = false, length = 100)
     private String createdBy;
+
+    // USER_INVITATION only: the address the master invited and the site the
+    // invitee will be attached to. Held as a plain id rather than a relation so
+    // this infrastructure table stays out of the domain entity graph.
+    @Column(name = "invite_email", length = 254)
+    private String inviteEmail;
+
+    @Column(name = "invite_site_id")
+    private Integer inviteSiteId;
 }

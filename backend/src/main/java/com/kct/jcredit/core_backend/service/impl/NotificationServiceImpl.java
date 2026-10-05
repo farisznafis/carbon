@@ -17,6 +17,7 @@ import com.kct.jcredit.core_backend.repository.postgres.NotificationRepository;
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
 import com.kct.jcredit.core_backend.repository.postgres.OperatorCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
+import com.kct.jcredit.core_backend.service.NotificationMessages;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.MailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -37,7 +38,10 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
-    private final JavaMailSender mailSender;
+    // SMTP (MailHog) / Amazon SES のどちらかが注入される。app.mail.provider で切り替え。
+    private final MailSender mailSender;
+    // 文面は mail/messages.properties が唯一の置き場所。ここでは組み立てない。
+    private final NotificationMessages messages;
     private final NotificationRepository notificationRepository;
     private final ParticipatingUserRepository participatingUserRepository;
     private final OperatingUserRepository operatingUserRepository;
@@ -51,42 +55,30 @@ public class NotificationServiceImpl implements NotificationService {
     
     @Override
     public void sendSuspensionNotification(ParticipatingCompany company) {
-        String subject = "アカウント停止のお知らせ";
-        String body = "お客様のアカウントは現在停止されています。詳細は管理者へお問い合わせください。";
-        sendMail(company.getEmail(), subject, body);
+        sendMail(company.getEmail(), messages.of("account.suspended"));
         log.info("[NOTIFICATION] Account Suspension - Company: {}, Email: {}",
             company.getCompanyId(), company.getEmail());
     }
 
     @Override
     public void sendReactivationNotification(ParticipatingCompany company) {
-        String subject = "アカウント再開のお知らせ";
-        String body = "企業 ID: " + company.getCompanyId() + " のアカウントが再開されました。";
-        sendMail(company.getEmail(), subject, body);
+        sendMail(company.getEmail(), messages.of("account.reactivated", company.getCompanyId()));
         log.info("[NOTIFICATION] Account Reactivation - Company: {}, Email: {}",
             company.getCompanyId(), company.getEmail());
     }
 
     @Override
     public void sendMasterAccountCredentials(ParticipatingCompany company, String username, String plainPassword) {
-        String subject = "マスターアカウント発行のお知らせ";
-        String body = "企業 ID: " + company.getCompanyId() + "\nUsername: " + username + "\nPassword: " + plainPassword;
-        sendMail(company.getEmail(), subject, body);
+        sendMail(company.getEmail(), messages.of("account.master-credentials",
+                company.getCompanyId(), username, plainPassword));
         log.info("[NOTIFICATION] Master Account Created - Company: {}, Email: {}",
                 company.getCompanyId(), company.getEmail());
     }
 
     @Override
     public void sendCompanyRejectionNotification(ParticipatingCompany company, String rejectionReason) {
-        String subject = "申請アカウントが却下されました";
         String companyName = company.getNameJa() != null ? company.getNameJa() : "";
-        String body = companyName + " ご担当者様\n\n"
-            + "このたびはご申請いただきありがとうございます。\n"
-            + "申し訳ございませんが、貴社の申請は却下されました。\n\n"
-            + "却下理由:\n"
-            + rejectionReason + "\n\n"
-            + "ご不明点がございましたら、お問い合わせください。";
-        sendMail(company.getEmail(), subject, body);
+        sendMail(company.getEmail(), messages.of("company.rejected", companyName, rejectionReason));
         log.info("[NOTIFICATION] Company Rejected - Company: {}, Email: {}",
             company.getCompanyId(), company.getEmail());
     }
@@ -98,13 +90,14 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void sendOtpEmail(String email, String code, long expiresInMinutes) {
-        String subject = "メール認証コードのお知らせ";
-        String body = "認証コードは以下の通りです: " + code + "\n\n"
-                + "このコードの有効期限は" + expiresInMinutes + "分です。"
-                + "このコードは他人に共有しないでください。";
-        sendMail(email, subject, body);
+        // 数値は文字列で渡す。MessageFormat に数値のまま渡すと桁区切りが入る。
+        sendMail(email, messages.of("otp", code, String.valueOf(expiresInMinutes)));
     }
 
+
+    private void sendMail(String to, NotificationMessages.Content content) {
+        sendMail(to, content.subject(), content.body());
+    }
 
     private void sendMail(String to, String subject, String body) {
         String resolvedTo = to;
@@ -409,12 +402,7 @@ public Notification createNotification(
 
     @Override
     public void sendParticipationRejectionNotification(ParticipatingCompany company, String rejectionReason) {
-        String subject = "入会届審査結果のお知らせ";
-        String body = "この度はお申し込みいただきありがとうございます。\n"
-            + "誠に申し訳ございませんが、入会届の審査の結果、却下となりました。\n\n"
-            + "却下理由:\n" + rejectionReason + "\n\n"
-            + "内容をご確認の上、再度お申し込みいただけます。";
-        sendMail(company.getEmail(), subject, body);
+        sendMail(company.getEmail(), messages.of("participation.rejected.mail", rejectionReason));
         log.info("[NOTIFICATION] Participation Rejected - companyId: {}, email: {}",
             company.getCompanyId(), company.getEmail());
             //TODO: ここで通知を作成する場合は、参加企業の全ユーザーに通知を送るようにする
@@ -422,10 +410,7 @@ public Notification createNotification(
 
     @Override
     public void sendParticipationApprovedNotification(ParticipatingCompany company) {
-        String subject = "入会届審査完了のお知らせ";
-        String body = "入会届の審査が完了し、承認されました。\n"
-            + "書類の準備が整いましたら、マイページよりダウンロードいただけます。";
-        sendMail(company.getEmail(), subject, body);
+        sendMail(company.getEmail(), messages.of("participation.approved.mail"));
         log.info("[NOTIFICATION] Participation Approved - companyId: {}, email: {}",
             company.getCompanyId(), company.getEmail());
             //TODO: ここで通知を作成する場合は、参加企業の全ユーザーに通知を送るようにする
@@ -434,13 +419,10 @@ public Notification createNotification(
     @Override
     public BaseResponse createInquiry(InquiryRequest request) {
         // making use of methods here send email to operator and make a notification for operator user
-        String subject = "新しいお問い合わせが届きました";
-        String body = "会社名: " + request.getCompanyName() + "\n"
-                + "氏名: " + request.getName() + "\n"
-                + "メールアドレス: " + request.getEmail() + "\n"
-                + "お問い合わせ内容:\n" + request.getContent();
-        sendEmailToAllOperatingUsers(subject, body);
-        createNotificationForAllOperatingUsers(subject, body);
+        NotificationMessages.Content content = messages.of("inquiry",
+                request.getCompanyName(), request.getName(), request.getEmail(), request.getContent());
+        sendEmailToAllOperatingUsers(content.subject(), content.body());
+        createNotificationForAllOperatingUsers(content.subject(), content.body());
 
         // 仮のレスポンスを返す
         BaseResponse response = new BaseResponse();

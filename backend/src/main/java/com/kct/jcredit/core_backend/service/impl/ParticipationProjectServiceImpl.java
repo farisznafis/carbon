@@ -31,6 +31,7 @@ import com.kct.jcredit.core_backend.service.ParticipationProjectService;
 import com.kct.jcredit.core_backend.service.ParticipationProjectValidationService;
 import com.kct.jcredit.core_backend.service.ProjectParticipationPdfService;
 import com.kct.jcredit.core_backend.service.EnR002FileUploadService;
+import com.kct.jcredit.core_backend.service.NotificationMessages;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.dynamodb.EnR002ApplicationConfirmationRepository;
@@ -83,6 +84,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
     private final ParticipationProjectValidationService      validationService;
     private final ProjectParticipationPdfService             pdfService;
         private final NotificationService                    notificationService;
+    private final NotificationMessages                       messages;
 
     // ─────────────────────────────────────────────────────────────
     // BROWSE
@@ -177,13 +179,19 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
         OperatorCompany operatorCompany = project.getOperatorCompany();
 
-        String adminRepName = safe(operatorCompany.getRepFirstName())
-                + safe(operatorCompany.getRepLastName());
+        // This page is the membership terms a member company consents to, so it cannot be shown
+        // without naming the operator it is an agreement with. A project with no operator company
+        // is incomplete data, not a display gap.
+        if (operatorCompany == null) {
+        return MemberTermsInfoResponse.builder()
+                .statusCode(ResponseConstants.NOT_FOUND)
+                .message(ResponseConstants.MSG_COMPANY_NOT_FOUND)
+                .build();
+        }
 
-        String effectiveDate = project.getCreatedAt() != null
-                ? project.getCreatedAt().toLocalDate().format(
-                        DateTimeFormatter.ofPattern("yyyy年MM月dd日"))
-                : "";
+        // Japanese name order is family name first, matching UserServiceImpl's mapping.
+        String adminRepName = safe(operatorCompany.getRepLastName())
+                + safe(operatorCompany.getRepFirstName());
 
         return MemberTermsInfoResponse.builder()
                 .statusCode(ResponseConstants.OK)
@@ -301,15 +309,16 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                         // }
 
                         try {
+                                NotificationMessages.Content submitted = messages.of("participation.submitted");
                                 notificationService.createNotification(
-                                        "入会届申請完了のお知らせ",
-                                        "入会届の提出が完了しました。運営事務局による二重承認をお待ちください。",
+                                        submitted.subject(),
+                                        submitted.body(),
                                         userId,
                                         null);
+                                NotificationMessages.Content operatorNotice = messages.of(
+                                        "participation.submitted.operator", project.getProjectName());
                                 notificationService.createNotificationForAllOperatingUsers(
-                                        "新しい入会届が提出されました",
-                                        "新しい入会届が提出されました。内容を確認し、二重承認を行ってください。\n"
-                                                + "プロジェクト: " + project.getProjectName());
+                                        operatorNotice.subject(), operatorNotice.body());
                         } catch (Exception e) {
                                 log.error("Participation notification creation failed. participationId={}, error={}",
                                         participationId, e.getMessage());

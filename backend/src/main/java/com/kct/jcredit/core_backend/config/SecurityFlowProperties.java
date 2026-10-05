@@ -25,6 +25,8 @@ public class SecurityFlowProperties {
     private Duration revisionSessionTtl = Duration.ofHours(2);
     private Duration passwordResetLinkTtl = Duration.ofMinutes(30);
     private Duration passwordResetSessionTtl = Duration.ofMinutes(15);
+    private Duration userInvitationLinkTtl = Duration.ofDays(7);
+    private Duration userInvitationSessionTtl = Duration.ofHours(1);
     private int terminalRetentionDays = 30;
     private int bcryptStrength = 12;
     private int ipMaxRequests = 20;
@@ -39,5 +41,6 @@ public class SecurityFlowProperties {
         private boolean rejectedSignupRevision;
         private boolean passwordReset;
         private boolean loginEmailOtp;
+        private boolean userInvitation;
     }
 }

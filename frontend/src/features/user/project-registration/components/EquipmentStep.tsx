@@ -1,9 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { Equipment } from "./types";
 import { paths } from "@/routes/paths";
+import { ActionButton } from '@/components/actions';
 
 interface EquipmentStepProps {
   equipment: Equipment[];
@@ -131,14 +132,13 @@ export function EquipmentStep({
       )}
 
       <div className="flex justify-center">
-        <Button
-          type="button"
+        <ActionButton
+          kind="add"
           onClick={handleAddEquipment}
           className="w-full sm:w-auto"
         >
-          <Plus className="mr-2 h-4 w-4" />
           設備追加
-        </Button>
+        </ActionButton>
       </div>
     </div>
   );

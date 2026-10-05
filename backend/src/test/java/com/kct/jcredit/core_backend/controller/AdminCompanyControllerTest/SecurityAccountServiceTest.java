@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -44,6 +45,8 @@ class SecurityAccountServiceTest {
     @Mock private JwtUtil jwtUtil;
     @Mock private SecurityRateLimitService rateLimitService;
     @Mock private SecurityEmailDeliveryService securityEmailDeliveryService;
+    // 実バンドルを使う。文面は mail/messages.properties から読む。
+    @Spy private NotificationMessages messages = new NotificationMessages();
 
     @InjectMocks
     private SecurityAccountService securityAccountService;

@@ -54,7 +54,7 @@ export const FormPageWrapper: React.FC<FormPageWrapperProps> = ({
         )}
       >
         <div className='mx-auto max-w-5xl'>
-          <h2 className='text-center text-3xl font-bold'>{pageName}</h2>
+          <h2 className='text-center text-form-title font-bold'>{pageName}</h2>
         </div>
       </div>
 

@@ -1,7 +1,20 @@
-import { render, screen } from '@testing-library/react';
+import {
+  render,
+  screen,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  MemoryRouter,
+  Route,
+  Routes,
+} from 'react-router-dom';
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import type { SiteProject } from '@/api/site';
 import ProjectMembershipPage from './ProjectMembershipPage';
 
@@ -11,60 +24,134 @@ const {
   getMyProjectParticipations,
   downloadProjectMembershipPdf,
   downloadFromUrl,
-} =
-  vi.hoisted(() => ({
-    getSiteData: vi.fn(),
-    getSiteProjects: vi.fn(),
-    getMyProjectParticipations: vi.fn(),
-    downloadProjectMembershipPdf: vi.fn(),
-    downloadFromUrl: vi.fn(),
-  }));
+} = vi.hoisted(() => ({
+  getSiteData: vi.fn(),
+  getSiteProjects: vi.fn(),
+  getMyProjectParticipations:
+    vi.fn(),
+  downloadProjectMembershipPdf:
+    vi.fn(),
+  downloadFromUrl: vi.fn(),
+}));
 
-vi.mock('@/api/site', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/api/site')>();
-  return {
-    ...actual,
-    getSiteData,
-    getSiteProjects,
-    getMyProjectParticipations,
-  };
-});
+vi.mock(
+  '@/api/site',
+  async (importOriginal) => {
+    const actual =
+      await importOriginal<
+        typeof import('@/api/site')
+      >();
 
-vi.mock('@/api/projects', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/api/projects')>();
-  return {
-    ...actual,
-    downloadProjectMembershipPdf,
-  };
-});
+    return {
+      ...actual,
+      getSiteData,
+      getSiteProjects,
+      getMyProjectParticipations,
+    };
+  },
+);
 
-vi.mock('@/utils/download', () => ({ downloadFromUrl }));
+vi.mock(
+  '@/api/projects',
+  async (importOriginal) => {
+    const actual =
+      await importOriginal<
+        typeof import('@/api/projects')
+      >();
+
+    return {
+      ...actual,
+      downloadProjectMembershipPdf,
+    };
+  },
+);
+
+vi.mock('@/utils/download', () => ({
+  downloadFromUrl,
+}));
 
 vi.mock('@/hooks/use-toast', () => ({
-  useToast: () => ({ toast: vi.fn() }),
+  useToast: () => ({
+    toast: vi.fn(),
+  }),
 }));
 
-vi.mock('@/stores/dashboardStore', () => ({
-  useDashboardStore: (
-    selector: (state: { setCurrentProject: ReturnType<typeof vi.fn> }) => unknown,
-  ) => selector({ setCurrentProject: vi.fn() }),
-}));
+vi.mock(
+  '@/stores/dashboardStore',
+  () => ({
+    useDashboardStore: (
+      selector: (state: {
+        setCurrentProject: ReturnType<
+          typeof vi.fn
+        >;
+      }) => unknown,
+    ) =>
+      selector({
+        setCurrentProject:
+          vi.fn(),
+      }),
+  }),
+);
+
+type TestMembershipStatus =
+  | 'available'
+  | 'pending'
+  | 'joined';
 
 function createProject(
   id: string,
   projectName: string,
-  isCompanyJoined: boolean,
-  hasSiteRelation = isCompanyJoined,
+  status: TestMembershipStatus,
 ): SiteProject {
+  if (status === 'pending') {
+    return {
+      id,
+      projectName,
+      projectNumber: id,
+      projectStatus: '実施中',
+      isCompanyJoined: true,
+      hasSiteRelation: false,
+      participationStatus:
+        'OPEN',
+      methodName: '方法論',
+      methodNumber: '001',
+      methodologyVersion:
+        'Ver.1.0',
+      methodMainEmission:
+        'CO2',
+    } as SiteProject;
+  }
+
+  if (status === 'joined') {
+    return {
+      id,
+      projectName,
+      projectNumber: id,
+      projectStatus: '実施中',
+      isCompanyJoined: true,
+      hasSiteRelation: false,
+      participationStatus:
+        'APPROVED',
+      methodName: '方法論',
+      methodNumber: '001',
+      methodologyVersion:
+        'Ver.1.0',
+      methodMainEmission:
+        'CO2',
+    } as SiteProject;
+  }
+
   return {
     id,
     projectName,
     projectNumber: id,
     projectStatus: '実施中',
-    isCompanyJoined,
-    hasSiteRelation,
+    isCompanyJoined: false,
+    hasSiteRelation: false,
     methodName: '方法論',
     methodNumber: '001',
+    methodologyVersion:
+      'Ver.1.0',
     methodMainEmission: 'CO2',
   } as SiteProject;
 }
@@ -72,170 +159,474 @@ function createProject(
 function renderPage() {
   return render(
     <MemoryRouter
-      initialEntries={['/projects/site001/register']}
-      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      initialEntries={[
+        '/projects/site001/register',
+      ]}
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
     >
       <Routes>
         <Route
           path="/projects/:siteId/register"
-          element={<ProjectMembershipPage />}
+          element={
+            <ProjectMembershipPage />
+          }
         />
       </Routes>
     </MemoryRouter>,
   );
 }
 
-describe('ProjectMembershipPage tabs', () => {
-beforeEach(() => {
-    getSiteData.mockReset();
-    getSiteProjects.mockReset();
-    getMyProjectParticipations.mockReset();
-    downloadProjectMembershipPdf.mockReset();
-    downloadFromUrl.mockReset();
-    getSiteData.mockResolvedValue({
-      site: { siteId: 'site001', siteName: '東京拠点' },
-      metrics: null,
+describe(
+  'ProjectMembershipPage',
+  () => {
+    beforeEach(() => {
+      getSiteData.mockReset();
+      getSiteProjects.mockReset();
+
+      getMyProjectParticipations.mockReset();
+
+      downloadProjectMembershipPdf.mockReset();
+
+      downloadFromUrl.mockReset();
+
+      getSiteData.mockResolvedValue(
+        {
+          site: {
+            siteId: 'site001',
+            siteName: '東京拠点',
+          },
+          metrics: null,
+        },
+      );
+
+      downloadProjectMembershipPdf.mockResolvedValue(
+        {
+          pdfUrl:
+            'https://example.com/membership.pdf',
+          expiresIn: 300,
+        },
+      );
     });
-    downloadProjectMembershipPdf.mockResolvedValue({
-      pdfUrl: 'https://example.com/membership.pdf',
-      expiresIn: 300,
-    });
-  });
 
-  it('shows available projects by default and switches to joined projects', async () => {
-    const user = userEvent.setup();
-    getSiteProjects.mockResolvedValue([
-      createProject('PROJ001', '入会可能プロジェクト', false),
-      createProject('PROJ002', '入会中プロジェクト', true, false),
-    ]);
+    it(
+      'shows every membership state by default in the required order',
+      async () => {
+        getSiteProjects.mockResolvedValue(
+          [
+            createProject(
+              'PROJ003',
+              '入会中プロジェクト',
+              'joined',
+            ),
+            createProject(
+              'PROJ002',
+              '申請中プロジェクト',
+              'pending',
+            ),
+            createProject(
+              'PROJ001',
+              '未入会プロジェクト',
+              'available',
+            ),
+          ],
+        );
 
-    renderPage();
+        renderPage();
 
-    expect(
-      await screen.findByRole('heading', { name: '入会可能プロジェクト' }),
-    ).toBeVisible();
-    expect(
-      screen.getByRole('tab', { name: /入会可能なプロジェクト\s*1/ }),
-    ).toHaveAttribute('data-state', 'active');
-    expect(
-      screen.getByRole('tab', { name: /入会中のプロジェクト\s*1/ }),
-    ).toHaveAttribute('data-state', 'inactive');
+        expect(
+          await screen.findByRole(
+            'heading',
+            {
+              name:
+                '未入会プロジェクト',
+            },
+          ),
+        ).toBeVisible();
 
-    await user.click(
-      screen.getByRole('tab', { name: /入会中のプロジェクト\s*1/ }),
+        const projectHeadings =
+          screen.getAllByRole(
+            'heading',
+            {
+              level: 3,
+            },
+          );
+
+        const projectNames =
+          projectHeadings
+            .map(
+              (heading) =>
+                heading.textContent,
+            )
+            .filter(
+              (text) =>
+                text?.includes(
+                  'プロジェクト',
+                ),
+            );
+
+        expect(projectNames).toEqual([
+          '未入会プロジェクト',
+          '申請中プロジェクト',
+          '入会中プロジェクト',
+        ]);
+      },
     );
 
-    expect(
-      screen.getByRole('heading', { name: '入会中プロジェクト' }),
-    ).toBeVisible();
-    expect(
-      screen.queryByRole('heading', { name: '入会可能プロジェクト' }),
-    ).not.toBeInTheDocument();
-  });
+    it(
+      'shows compact status filter counts',
+      async () => {
+        getSiteProjects.mockResolvedValue(
+          [
+            createProject(
+              'PROJ001',
+              '未入会1',
+              'available',
+            ),
+            createProject(
+              'PROJ002',
+              '未入会2',
+              'available',
+            ),
+            createProject(
+              'PROJ003',
+              '申請中',
+              'pending',
+            ),
+            createProject(
+              'PROJ004',
+              '入会中',
+              'joined',
+            ),
+          ],
+        );
 
-  it('shows the empty state only inside its selected tab', async () => {
-    const user = userEvent.setup();
-    getSiteProjects.mockResolvedValue([
-      createProject('PROJ001', '入会可能プロジェクト', false),
-    ]);
+        renderPage();
 
-    renderPage();
+        await screen.findByText(
+          '未入会1',
+        );
 
-    await screen.findByRole('heading', { name: '入会可能プロジェクト' });
-    expect(
-      screen.queryByText('入会中のプロジェクトはありません。'),
-    ).not.toBeInTheDocument();
+        expect(
+          screen.getByRole(
+            'button',
+            {
+              name: 'すべて 4件',
+            },
+          ),
+        ).toHaveAttribute(
+          'aria-pressed',
+          'true',
+        );
 
-    await user.click(
-      screen.getByRole('tab', { name: /入会中のプロジェクト\s*0/ }),
+        expect(
+          screen.getByRole(
+            'button',
+            {
+              name: '未入会 2件',
+            },
+          ),
+        ).toBeVisible();
+
+        expect(
+          screen.getByRole(
+            'button',
+            {
+              name: '申請中 1件',
+            },
+          ),
+        ).toBeVisible();
+
+        expect(
+          screen.getByRole(
+            'button',
+            {
+              name: '入会中 1件',
+            },
+          ),
+        ).toBeVisible();
+      },
     );
 
-    expect(screen.getByText('入会中のプロジェクトはありません。')).toBeVisible();
-  });
+    it(
+      'filters projects by membership status',
+      async () => {
+        const user =
+          userEvent.setup();
 
-  it('shows the preparation guide only for available projects and opens its dialog on demand', async () => {
-    const user = userEvent.setup();
-    getSiteProjects.mockResolvedValue([
-      createProject('PROJ001', '入会可能プロジェクト', false),
-      createProject('PROJ002', '入会中プロジェクト', true),
-    ]);
+        getSiteProjects.mockResolvedValue(
+          [
+            createProject(
+              'PROJ001',
+              '未入会プロジェクト',
+              'available',
+            ),
+            createProject(
+              'PROJ002',
+              '申請中プロジェクト',
+              'pending',
+            ),
+            createProject(
+              'PROJ003',
+              '入会中プロジェクト',
+              'joined',
+            ),
+          ],
+        );
 
-    renderPage();
+        renderPage();
 
-    expect(
-      await screen.findByRole('heading', {
-        name: '入会届の提出前にご準備ください',
-      }),
-    ).toBeVisible();
-    expect(
-      screen.queryByRole('dialog', { name: '入会届の提出に必要なもの' }),
-    ).not.toBeInTheDocument();
+        await screen.findByText(
+          '未入会プロジェクト',
+        );
 
-    await user.click(
-      screen.getByRole('button', { name: '必要書類を詳しく確認' }),
+        await user.click(
+          screen.getByRole(
+            'button',
+            {
+              name: '申請中 1件',
+            },
+          ),
+        );
+
+        expect(
+          screen.getByRole(
+            'heading',
+            {
+              name:
+                '申請中プロジェクト',
+            },
+          ),
+        ).toBeVisible();
+
+        expect(
+          screen.queryByRole(
+            'heading',
+            {
+              name:
+                '未入会プロジェクト',
+            },
+          ),
+        ).not.toBeInTheDocument();
+
+        expect(
+          screen.queryByRole(
+            'heading',
+            {
+              name:
+                '入会中プロジェクト',
+            },
+          ),
+        ).not.toBeInTheDocument();
+
+        await user.click(
+          screen.getByRole(
+            'button',
+            {
+              name: 'すべて 3件',
+            },
+          ),
+        );
+
+        expect(
+          screen.getByRole(
+            'heading',
+            {
+              name:
+                '未入会プロジェクト',
+            },
+          ),
+        ).toBeVisible();
+
+        expect(
+          screen.getByRole(
+            'heading',
+            {
+              name:
+                '入会中プロジェクト',
+            },
+          ),
+        ).toBeVisible();
+      },
     );
 
-    expect(
-      screen.getByRole('dialog', { name: '入会届の提出に必要なもの' }),
-    ).toBeVisible();
-    expect(screen.getByText('対応ファイル形式：PDF、CSV、JPG、JPEG、PNG')).toBeVisible();
-    expect(screen.queryByText(/ファイルサイズ/)).not.toBeInTheDocument();
+    it(
+      'opens the preparation dialog from an available project',
+      async () => {
+        const user =
+          userEvent.setup();
 
-    await user.click(screen.getByRole('button', { name: '閉じる' }));
-    expect(
-      screen.queryByRole('dialog', { name: '入会届の提出に必要なもの' }),
-    ).not.toBeInTheDocument();
+        getSiteProjects.mockResolvedValue(
+          [
+            createProject(
+              'PROJ001',
+              '未入会プロジェクト',
+              'available',
+            ),
+          ],
+        );
 
-    await user.click(
-      screen.getByRole('tab', { name: /入会中のプロジェクト\s*1/ }),
+        renderPage();
+
+        await screen.findByText(
+          '未入会プロジェクト',
+        );
+
+        expect(
+          screen.queryByRole(
+            'dialog',
+            {
+              name:
+                '入会届の提出に必要なもの',
+            },
+          ),
+        ).not.toBeInTheDocument();
+
+        await user.click(
+          screen.getByRole(
+            'button',
+            {
+              name:
+                'このプロジェクトに入会する',
+            },
+          ),
+        );
+
+        expect(
+          screen.getByRole(
+            'dialog',
+            {
+              name:
+                '入会届の提出に必要なもの',
+            },
+          ),
+        ).toBeVisible();
+
+        expect(
+          screen.getByText(
+            '未入会プロジェクト',
+          ),
+        ).toBeVisible();
+
+        await user.click(
+          screen.getByRole(
+            'button',
+            {
+              name: '閉じる',
+            },
+          ),
+        );
+
+        expect(
+          screen.queryByRole(
+            'dialog',
+            {
+              name:
+                '入会届の提出に必要なもの',
+            },
+          ),
+        ).not.toBeInTheDocument();
+      },
     );
-    expect(
-      screen.queryByRole('heading', {
-        name: '入会届の提出前にご準備ください',
-      }),
-    ).not.toBeInTheDocument();
-  });
 
-it('uses the project list flags without requesting participation details', async () => {
-    const user = userEvent.setup();
-    getSiteProjects.mockResolvedValue([
-      createProject('PROJ002', '入会中プロジェクト', true, false),
-    ]);
+    it(
+      'uses project list flags without requesting participation details',
+      async () => {
+        getSiteProjects.mockResolvedValue(
+          [
+            createProject(
+              'PROJ001',
+              '入会中プロジェクト',
+              'joined',
+            ),
+          ],
+        );
 
-    renderPage();
+        renderPage();
 
-    await user.click(
-      await screen.findByRole('tab', { name: /入会中のプロジェクト\s*1/ }),
-    );
-    expect(
-      screen.getByRole('heading', { name: '入会中プロジェクト' }),
-    ).toBeVisible();
-    expect(getMyProjectParticipations).not.toHaveBeenCalled();
-  });
+        expect(
+          await screen.findByRole(
+            'heading',
+            {
+              name:
+                '入会中プロジェクト',
+            },
+          ),
+        ).toBeVisible();
 
-  it('opens the membership PDF for a joined project from the joined tab', async () => {
-    const user = userEvent.setup();
-    getSiteProjects.mockResolvedValue([
-      createProject('PROJ001', '入会可能プロジェクト', false),
-      createProject('PROJ002', '入会中プロジェクト', true, false),
-    ]);
-
-    renderPage();
-
-    await screen.findByRole('heading', { name: '入会可能プロジェクト' });
-    expect(
-      screen.queryByRole('button', { name: 'PDFを表示' }),
-    ).not.toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole('tab', { name: /入会中のプロジェクト\s*1/ }),
+        expect(
+          getMyProjectParticipations,
+        ).not.toHaveBeenCalled();
+      },
     );
 
-    await user.click(screen.getByRole('button', { name: 'PDFを表示' }));
+    it(
+      'opens the membership PDF for a joined project',
+      async () => {
+        const user =
+          userEvent.setup();
 
-    expect(downloadProjectMembershipPdf).toHaveBeenCalledWith('PROJ002');
-    expect(downloadFromUrl).toHaveBeenCalledWith(
-      'https://example.com/membership.pdf',
+        getSiteProjects.mockResolvedValue(
+          [
+            createProject(
+              'PROJ001',
+              '未入会プロジェクト',
+              'available',
+            ),
+            createProject(
+              'PROJ002',
+              '入会中プロジェクト',
+              'joined',
+            ),
+          ],
+        );
+
+        renderPage();
+
+        await screen.findByText(
+          '入会中プロジェクト',
+        );
+
+        await user.click(
+          screen.getByRole(
+            'button',
+            {
+              name: 'PDFを表示',
+            },
+          ),
+        );
+
+        expect(
+          downloadProjectMembershipPdf,
+        ).toHaveBeenCalledWith(
+          'PROJ002',
+        );
+
+        expect(
+          downloadFromUrl,
+        ).toHaveBeenCalledWith(
+          'https://example.com/membership.pdf',
+        );
+      },
     );
-  });
-});
+
+    it(
+      'shows an empty state when no public project exists',
+      async () => {
+        getSiteProjects.mockResolvedValue(
+          [],
+        );
+
+        renderPage();
+
+        expect(
+          await screen.findByText(
+            '公開中のプロジェクトはありません。',
+          ),
+        ).toBeVisible();
+      },
+    );
+  },
+);

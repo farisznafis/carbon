@@ -1,4 +1,10 @@
-﻿POST /api/users
+﻿//【廃止】このAPIは削除されました（2026-09-02）。
+//マスターがユーザーの情報をすべて入力する方式は、招待方式に置き換えられました。
+//  招待の送信 : 20260902_ユーザー招待.txt
+//  アカウント作成: AuthController/20260902_招待によるアカウント作成.txt
+//以下は履歴として残しています。
+
+POST /api/users
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Content-Type: application/json
 

@@ -42,7 +42,8 @@ public class SecurityConfig {
                     "/swagger-ui.html",
                     "/auth/**",
                     "/company/signup",
-                    "/company/signup/**"
+                    "/company/signup/**",
+                    "/notification/inquiry"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

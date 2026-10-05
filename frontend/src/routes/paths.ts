@@ -10,6 +10,7 @@ export const paths = {
   userInvitation: '/user/invitation',
 
   masterDashboard: '/master/dashboard',
+  masterDashboardMembership: '/master/dashboard?tab=membership',
   masterSiteRegister: '/master/site-register',
   masterSiteEditRoute: '/master/site-edit/:siteId',
   masterSiteEdit: (siteId: string) => `/master/site-edit/${siteId}`,
@@ -98,12 +99,24 @@ export const paths = {
   adminProjectRegister: '/admin/project-register',
   adminProjectDetailRoute: '/admin/projects/:projectId',
   adminProjectDetail: (projectId: string) => `/admin/projects/${projectId}`,
+  /** Opens one tab of the project detail page, carrying any extra query state for that tab. */
+  adminProjectDetailTab: (
+    projectId: string,
+    tab: 'overview' | 'monitoring' | 'membership' | 'companies',
+    params?: Record<string, string>,
+  ) =>
+    `/admin/projects/${projectId}?${new URLSearchParams({ tab, ...params }).toString()}`,
   adminProjectInformationRoute: '/admin/projects/:projectId/information',
   adminProjectInformation: (projectId: string) =>
     `/admin/projects/${encodeURIComponent(projectId)}/information`,
+  /** Legacy list URL; it now redirects to the project detail 入会届 tab. */
   adminProjectMembershipRoute: '/admin/projects/:projectId/memberships',
+  /** The project's membership list, which lives in the project detail 入会届 tab. */
   adminProjectMembership: (projectId: string, status?: string) =>
-    `/admin/projects/${projectId}/memberships${status ? `?status=${encodeURIComponent(status)}` : ''}`,
+    `/admin/projects/${projectId}?${new URLSearchParams({
+      tab: 'membership',
+      ...(status ? { status } : {}),
+    }).toString()}`,
   adminProjectMembershipDetailRoute:
     '/admin/projects/:projectId/memberships/:participationId',
   adminProjectMembershipDetail: (
