@@ -107,8 +107,8 @@ type MonitoringDisplayRow = Pick<
   | 'projectId'
   | 'siteId'
   | 'dateRecorded'
-  | 'ELpv_evidence'
-  | 'ELPJ_battery_evidence'
+  | 'elpv_evidence'
+  | 'elpj_battery_evidence'
 > & {
   ELpv_value: number | null;
   ELpvr_value: number | null;

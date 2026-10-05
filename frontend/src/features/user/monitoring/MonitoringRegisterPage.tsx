@@ -32,10 +32,10 @@ type RouteState = {
 };
 
 type EvidenceUploadKey =
-  | 'ELpv_evidence'
-  | 'ELpvr_evidence'
-  | 'ELPJ_battery_evidence'
-  | 'ELPJ_control_equipment_spec_files';
+  | 'elpv_evidence'
+  | 'elpvr_evidence'
+  | 'elpj_battery_evidence'
+  | 'elpj_control_evidence';
 
 type EvidenceUploadJob = {
   id: EvidenceUploadKey;
@@ -76,11 +76,7 @@ function toServerFieldErrors(errors: unknown): Record<string, string> {
     elpj_battery_value: 'ELPJ_battery_value',
     elpj_control_value: 'ELPJ_control_value',
     elpj_accuracy: 'ELPJ_accuracy',
-    elpv_evidence: 'ELpv_evidence',
-    elpvr_evidence: 'ELpvr_evidence',
-    elpj_battery_evidence: 'ELPJ_battery_evidence',
-    elpj_control_equipment_spec_files: 'ELPJ_control_equipment_spec_files',
-    elpj_control_evidence: 'ELPJ_control_equipment_spec_files',
+    elpj_control_equipment_spec_files: 'elpj_control_evidence',
   };
 
   return Object.entries(errors as Record<string, unknown>).reduce<
@@ -281,16 +277,16 @@ const MonitoringRegister = () => {
       });
     };
 
-    addUpload('ELpv_evidence', currentData.ELpv_evidence, (file, onProgress) =>
+    addUpload('elpv_evidence', currentData.elpv_evidence, (file, onProgress) =>
       uploadElpvFile(file, projectIdValue, siteIdString, descriptionValue, { onProgress }),
     );
-    addUpload('ELpvr_evidence', currentData.ELpvr_evidence, (file, onProgress) =>
+    addUpload('elpvr_evidence', currentData.elpvr_evidence, (file, onProgress) =>
       uploadElpvrFile(file, projectIdValue, siteIdString, descriptionValue, { onProgress }),
     );
-    if (currentData.equipmentHasBattery && currentData.changedBattery) {
+    if (currentData.equipmentHasBattery === true) {
       addUpload(
-        'ELPJ_battery_evidence',
-        currentData.ELPJ_battery_evidence,
+        'elpj_battery_evidence',
+        currentData.elpj_battery_evidence,
         (file, onProgress) =>
           uploadElpjBatteryFile(
             file,
@@ -302,8 +298,8 @@ const MonitoringRegister = () => {
       );
     }
     addUpload(
-      'ELPJ_control_equipment_spec_files',
-      currentData.ELPJ_control_equipment_spec_files,
+      'elpj_control_evidence',
+      currentData.elpj_control_evidence,
       (file, onProgress) =>
         uploadElpjControlFile(file, projectIdValue, siteIdString, descriptionValue, { onProgress }),
     );

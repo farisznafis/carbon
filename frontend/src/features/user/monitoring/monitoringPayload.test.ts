@@ -8,9 +8,9 @@ const baseForm = {
   ELpvr_value: '5',
   ELPJ_control_value: '2',
   ELPJ_accuracy: '99',
-  ELpv_evidence: 'pv.pdf',
-  ELpvr_evidence: 'pvr.pdf',
-  ELPJ_control_equipment_spec_files: 'control.pdf',
+  elpv_evidence: 'pv.pdf',
+  elpvr_evidence: 'pvr.pdf',
+  elpj_control_evidence: 'control.pdf',
 };
 
 const context = {
@@ -26,44 +26,100 @@ describe('buildMonitoringPayload', () => {
         ...baseForm,
         changedBattery: true,
         ELPJ_battery_value: '8',
-        ELPJ_battery_evidence: 'battery.pdf',
+        elpj_battery_evidence: 'battery.pdf',
       },
-      { ...context, hasBattery: false },
+      {
+        ...context,
+        hasBattery: false,
+        evidenceUrls: { elpj_battery_evidence: 'https://example.com/battery.pdf' },
+      },
     );
 
     expect(payload.equipmentId).toBe(100);
     expect(payload).not.toHaveProperty('changedBattery');
     expect(payload).not.toHaveProperty('ELPJ_battery_value');
-    expect(payload).not.toHaveProperty('ELPJ_battery_evidence');
+    expect(payload).not.toHaveProperty('elpj_battery_evidence');
   });
 
-  it('includes battery fields when the selected equipment has a changed battery', () => {
+  it.each([true, false, null, undefined])(
+    'always includes battery fields for battery equipment despite changedBattery=%s',
+    (changedBattery) => {
+      const payload = buildMonitoringPayload(
+        {
+          ...baseForm,
+          changedBattery,
+          ELPJ_battery_value: '8',
+          elpj_battery_evidence: 'battery.pdf',
+        },
+        { ...context, hasBattery: true },
+      );
+
+      expect(payload).toEqual(
+        expect.objectContaining({
+          equipmentId: 100,
+          changedBattery: true,
+          ELPJ_battery_value: 8,
+          elpj_battery_evidence: 'battery.pdf',
+        }),
+      );
+    },
+  );
+
+  it('uses uploaded evidence URLs under the exact DTO keys', () => {
+    const file = new File(['evidence'], 'evidence.pdf', { type: 'application/pdf' });
+    const evidenceUrls = {
+      elpv_evidence: 'https://example.com/pv.pdf',
+      elpvr_evidence: 'https://example.com/pvr.pdf',
+      elpj_control_evidence: 'https://example.com/control.pdf',
+      elpj_battery_evidence: 'https://example.com/battery.pdf',
+    };
     const payload = buildMonitoringPayload(
       {
         ...baseForm,
-        changedBattery: true,
+        elpv_evidence: file,
+        elpvr_evidence: file,
+        elpj_control_evidence: file,
+        elpj_battery_evidence: file,
+        changedBattery: false,
         ELPJ_battery_value: '8',
-        ELPJ_battery_evidence: 'battery.pdf',
+      },
+      { ...context, hasBattery: true, evidenceUrls },
+    );
+
+    expect(payload).toMatchObject(evidenceUrls);
+    expect(Object.keys(payload).filter((key) => key.includes('evidence')).sort()).toEqual(
+      Object.keys(evidenceUrls).sort(),
+    );
+  });
+
+  it('sends every numeric value as zero when the input is "0"', () => {
+    const payload = buildMonitoringPayload(
+      {
+        ...baseForm,
+        ELpv_value: '0',
+        ELpvr_value: '0',
+        ELPJ_battery_value: '0',
+        ELPJ_control_value: '0',
+        ELPJ_accuracy: '0',
       },
       { ...context, hasBattery: true },
     );
 
-    expect(payload).toEqual(
-      expect.objectContaining({
-        equipmentId: 100,
-        changedBattery: true,
-        ELPJ_battery_value: 8,
-        ELPJ_battery_evidence: 'battery.pdf',
-      }),
-    );
+    expect(payload).toMatchObject({
+      ELpv_value: 0,
+      ELpvr_value: 0,
+      ELPJ_battery_value: 0,
+      ELPJ_control_value: 0,
+      ELPJ_accuracy: 0,
+    });
   });
 
-  it('keeps changedBattery null so backend validation remains authoritative', () => {
-    const payload = buildMonitoringPayload(baseForm, {
-      ...context,
-      hasBattery: true,
-    });
+  it.each(['', null, undefined])('keeps an empty numeric value %s as null', (value) => {
+    const payload = buildMonitoringPayload(
+      { ...baseForm, ELpv_value: value },
+      { ...context, hasBattery: false },
+    );
 
-    expect(payload.changedBattery).toBeNull();
+    expect(payload.ELpv_value).toBeNull();
   });
 });
