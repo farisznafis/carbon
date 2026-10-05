@@ -92,6 +92,7 @@ public class UpdateProjectRequest extends BaseRequest{
 
     private Boolean methodCombiFeasibility;
 
+    @Size(max = 1000, message = "利用目的は1000文字以内で入力してください。")
     private String usePurpose;
 
     private Instant startedAt;

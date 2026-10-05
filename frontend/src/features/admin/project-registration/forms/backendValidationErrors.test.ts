@@ -34,6 +34,30 @@ describe('applyBackendValidationErrors', () => {
         ?.message,
     ).toBe('プロジェクト実施後排出量は必須です。');
   });
+
+  it('marks 開始日時 and 利用目的 on step 1 rather than on the plan page', () => {
+    const { result } = renderHook(() =>
+      useForm<AdminProjectRegisterFormInputValues>(),
+    );
+    const error = new ApiError('入力内容に誤りがあります。', {
+      status: 400,
+      payload: {
+        errors: {
+          'project[0].startedAt': '開始日時は必須です。',
+          'project[0].usePurpose': '利用目的は必須です。',
+        },
+      },
+    });
+
+    applyBackendValidationErrors(result.current, error);
+
+    expect(
+      result.current.getFieldState('projectBase.startedAt').error?.message,
+    ).toBe('開始日時は必須です。');
+    expect(
+      result.current.getFieldState('projectBase.usePurpose').error?.message,
+    ).toBe('利用目的は必須です。');
+  });
 });
 
 describe('applyBackendValidationErrors on a plan page', () => {

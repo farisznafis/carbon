@@ -123,7 +123,7 @@ public class Project extends BaseEntity {
     @Column(name = "project_started_at", nullable = false)
     private Instant startedAt;
 
-    @Column(name = "use_purpose", nullable = false, length = 500)
+    @Column(name = "use_purpose", nullable = false, length = 1000)
     private String usePurpose;
 
     @Column(name = "method_details", nullable = false, length = 1000)
