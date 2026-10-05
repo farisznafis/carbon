@@ -12,6 +12,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -224,6 +225,14 @@ public class GlobalErrorHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<BaseResponse> handleMissingServletRequestParameterException(MissingServletRequestParameterException ex) {
         log.warn("Missing request parameter: {}", ex.getParameterName());
+
+        BaseResponse response = BaseResponse.error(ResponseConstants.BAD_REQUEST, ex.getMessage());
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<BaseResponse> handleMissingRequestHeaderException(MissingRequestHeaderException ex) {
+        log.warn("Missing request header: {}", ex.getHeaderName());
 
         BaseResponse response = BaseResponse.error(ResponseConstants.BAD_REQUEST, ex.getMessage());
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
