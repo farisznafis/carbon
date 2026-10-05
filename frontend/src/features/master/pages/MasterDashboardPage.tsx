@@ -1,35 +1,43 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { useAuth } from '@/contexts/AuthContext';
 import {
   DashboardEmptyState,
   DashboardSection,
-  MasterDashboardHero,
-  MasterDashboardTabs,
   SiteDashboardCard,
   UserDashboardCard,
 } from '@/features/master/components/MasterDashboardComponents';
+import { adminPageContainerClassName } from '@/components/layout/DashboardLayout';
+import { getMasterDashboardTab } from '@/features/master/navigation/masterSidebarConfig';
+import { cn } from '@/lib/utils';
 import {
   sortMasterUsersFirst,
   sortSitesById,
 } from '@/features/master/components/masterDashboardUtils';
-import { masterDashboardProjectMembershipState } from '@/features/user/project-registration/projectMembershipNavigation';
+import { ProjectMembershipContent } from '@/features/user/project-registration/ProjectMembershipPage';
 import { paths } from '@/routes/paths';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { FloatingHelpButton } from '@/features/master/help/FloatingHelpButton';
 import { PageLoadingOverlay } from '@/components/feedback/loading';
 import { UserInvitationDialog } from '@/features/master/user-invitations/UserInvitationDialog';
-import { Plus } from 'lucide-react';
+import { ActionButton } from '@/components/actions';
 
+/** Renders a quiet placeholder for Master destinations awaiting content. */
+function MasterPlaceholderSection({ title }: { title: string }) {
+  return (
+    <section>
+      <h2 className="mb-5 text-foreground">{title}</h2>
+      <DashboardEmptyState title="準備中" description="この画面は準備中です。" />
+    </section>
+  );
+}
+
+/** Displays one Master dashboard destination selected through the URL. */
 const MasterDashboard = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { user } = useAuth();
-  
-  const activeTab = searchParams.get('tab') === 'users' ? 'users' : 'sites';
+  const [searchParams] = useSearchParams();
+
+  const activeTab = getMasterDashboardTab(searchParams.get('tab'));
 
   const sites = useDashboardStore((state) => state.sites);
   const users = useDashboardStore((state) => state.users);
@@ -81,57 +89,35 @@ const MasterDashboard = () => {
   const sortedSites = useMemo(() => sortSitesById(sites), [sites]);
   const hasRegisteredSites = sortedSites.length > 0;
 
-  if (loading || loadingStore) {
-    // Skeleton dashboard non active first
+  if ((activeTab === 'sites' || activeTab === 'users' || activeTab === 'membership') && (loading || loadingStore)) {
     return <PageLoadingOverlay message="ダッシュボードを読み込んでいます" />;
   }
 
-  const companyName = user?.companyName ?? user?.siteName ?? '-';
-
   return (
-    <div className="flex min-h-screen flex-col bg-card">
-      <MasterDashboardHero
-        companyName={companyName}
-        action={
-          <div className="flex flex-col items-end gap-2">
-            <Button
-              type="button"
-              size="md"
-              disabled={!hasRegisteredSites}
-              aria-describedby={
-                hasRegisteredSites
-                  ? undefined
-                  : 'project-membership-disabled-description'
-              }
-              onClick={() =>
-                navigate(paths.projectMembership(sortedSites[0].siteId), {
-                  state: masterDashboardProjectMembershipState,
-                })
-              }
-            >
-              プロジェクト入会届
-            </Button>
-            {!hasRegisteredSites && (
-              <p
-                id="project-membership-disabled-description"
-                className="text-small text-muted-foreground"
-              >
-                拠点登録後に利用できます。
-              </p>
-            )}
-          </div>
-        }
-      />
-
-      <Tabs 
-        value={activeTab} 
-        onValueChange={(value) => setSearchParams({ tab: value })}
-        className="flex flex-1 flex-col bg-card"
-      >
-        <MasterDashboardTabs />
-
-        <main className="flex-1 bg-card">
-          <TabsContent value="users" className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+    <div className="flex min-h-[calc(100dvh-var(--app-header-height))] flex-col bg-background">
+      <main className={cn(adminPageContainerClassName, 'flex-1 py-8')}>
+        {activeTab === 'home' && <MasterPlaceholderSection title="ホーム" />}
+        {activeTab === 'analytics' && <MasterPlaceholderSection title="アナリティクス" />}
+        {activeTab === 'membership' && (
+          errorMessage ? (
+            <DashboardEmptyState>{errorMessage}</DashboardEmptyState>
+          ) : hasRegisteredSites ? (
+            <ProjectMembershipContent
+              siteId={sortedSites[0].siteId}
+              embedded
+            />
+          ) : (
+            <section className="space-y-5">
+              <h2 className="text-foreground">入会</h2>
+              <DashboardEmptyState
+                title="まだ拠点が登録されていません"
+                description="拠点登録後に利用できます。"
+              />
+            </section>
+          )
+        )}
+        {activeTab === 'users' && (
+          <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
             <DashboardSection
               title="社員"
               description="行をクリックすると、プロファイル詳細へ移動できます。"
@@ -160,9 +146,11 @@ const MasterDashboard = () => {
                 </DashboardEmptyState>
               )}
             </DashboardSection>
-          </TabsContent>
+          </div>
+        )}
 
-          <TabsContent value="sites" className="m-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+        {activeTab === 'sites' && (
+          <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
             <DashboardSection
               title="拠点"
               description="各店舗のカーボンクレジット、削減活動、レポート進捗を一箇所で確認できます。"
@@ -187,23 +175,21 @@ const MasterDashboard = () => {
               ) : (
                 <DashboardEmptyState
                   title="まだ拠点が登録されていません"
-                  description="プロジェクト入会届を提出するには、対象となる拠点の登録が必要です。まず拠点を登録してください。"
+                  description="プロジェクトに入会するには、対象となる拠点の登録が必要です。まず拠点を登録してください。"
                   action={
-                    <Button
-                      type="button"
-                      size="md"
+                    <ActionButton
+                      kind="add"
                       onClick={() => navigate(paths.masterSiteRegister)}
                     >
-                      <Plus className="h-4 w-4" aria-hidden="true" />
                       拠点を追加
-                    </Button>
+                    </ActionButton>
                   }
                 />
               )}
             </DashboardSection>
-          </TabsContent>
-        </main>
-      </Tabs>
+          </div>
+        )}
+      </main>
       <UserInvitationDialog
         open={isInvitationDialogOpen}
         onOpenChange={setIsInvitationDialogOpen}

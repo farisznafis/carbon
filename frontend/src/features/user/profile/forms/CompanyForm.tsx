@@ -1,8 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft } from 'lucide-react';
 import {
   Card,
   CardHeader,
@@ -21,6 +19,7 @@ import { RequiredLabel } from '@/components/forms/shared';
 import { FormActions } from '@/components/forms/form-layout';
 import { useProfileStore } from '@/stores/ProfileStore';
 import { CompanyFormValues, companySchema } from '@/lib/schemas/companySchema';
+import { ActionButton } from '@/components/actions';
 
 export interface CompanyFormData {
   phoneNumber: string;
@@ -34,6 +33,7 @@ interface CompanyFormProps {
   onCancel: () => void;
 }
 
+/** Renders the editable company profile form. */
 export const CompanyForm: React.FC<CompanyFormProps> = ({
   defaultValues,
   onSubmit,
@@ -52,19 +52,14 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
     <div className='min-h-screen bg-background py-8'>
       <div className='bg-primary text-primary-foreground py-6 px-4 mb-8'>
         <div className='max-w-md mx-auto'>
-          <h2 className='text-3xl font-bold text-center'>法人情報の更新</h2>
+          <h2 className='text-form-title font-bold text-center'>法人情報の更新</h2>
         </div>
       </div>
 
       <div className='container mx-auto max-w-xl px-4'>
-        <Button
-          variant='ghost'
-          onClick={onCancel}
-          className='mb-6'
-        >
-          <ArrowLeft className='mr-2 h-4 w-4' />
+        <ActionButton kind='back' onClick={onCancel} className='mb-6'>
           プロファイルに戻る
-        </Button>
+        </ActionButton>
 
         <Card>
           <CardHeader>

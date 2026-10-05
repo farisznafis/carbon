@@ -28,7 +28,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { Button } from '@/components/ui/button';
 import { UserForm } from '@/features/master/forms/UserForm';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 import {
@@ -51,6 +50,7 @@ import {
   isAdminOperatorRole,
   resolveOperatorRole,
 } from './operatorRoles';
+import { ActionButton } from '@/components/actions';
 
 /** Compares permission selections independent of API ordering. */
 function havePermissionChanges(
@@ -233,15 +233,11 @@ export default function AdminOperatorEditPage() {
             <p className="text-sm text-foreground">
               運用者情報を表示できませんでした。
             </p>
-            <Button
-              type="button"
-              variant="outline"
-              size="md"
+            <ActionButton
+              kind="retry"
               className="mt-5"
               onClick={() => profileQuery.refetch()}
-            >
-              再試行
-            </Button>
+            />
           </FormCard>
         ) : (
           <UserForm

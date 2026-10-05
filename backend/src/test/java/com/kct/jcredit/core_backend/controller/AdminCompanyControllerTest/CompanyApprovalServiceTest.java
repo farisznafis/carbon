@@ -12,10 +12,15 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import java.util.*;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class CompanyApprovalServiceTest {
@@ -199,8 +204,15 @@ class CompanyApprovalServiceTest {
             when(userRepository.existsByUsername(anyString())).thenReturn(false);
             when(userRepository.existsByEmail(anyString())).thenReturn(false);
             when(passwordEncoder.encode(anyString())).thenReturn("ENCODED");
-            doThrow(new RuntimeException("mail server down")).when(notificationService).sendMasterAccountCredentials(any(), anyString(), anyString());
-            assertThat(companyApprovalService.approveCompany("COMP-001").getStatusCode()).isEqualTo(ResponseConstants.INTERNAL_SERVER_ERROR);
+            doThrow(new RuntimeException("mail server down"))
+                .when(notificationService).sendMasterAccountCredentials(any(), anyString(), anyString());
+
+            try (MockedStatic<TransactionAspectSupport> mocked = mockStatic(TransactionAspectSupport.class)) {
+                mocked.when(TransactionAspectSupport::currentTransactionStatus).thenReturn(mock(TransactionStatus.class));
+
+                assertThat(companyApprovalService.approveCompany("COMP-001").getStatusCode())
+                    .isEqualTo(ResponseConstants.INTERNAL_SERVER_ERROR);
+            }
             // Input: companyId="COMP-001"
             //        companyRepository.findByCompanyId(...) が companyStatus=PENDING の company を返すようモック
             //        userRepository.findByCompany_IdAndRole(...) が Optional.empty を返すようモック
@@ -291,8 +303,14 @@ class CompanyApprovalServiceTest {
         void rejectCompany_securityFlowPropertiesNull_fallsBackToNotificationFlow() {
             ParticipatingCompany company = company(CompanyStatus.PENDING);
             when(companyRepository.findByCompanyId("COMP-001")).thenReturn(Optional.of(company));
-            assertThat(companyApprovalService.rejectCompany("COMP-001", "不備あり").getStatusCode()).isEqualTo(ResponseConstants.OK);
-            verify(notificationService).sendCompanyRejectionNotification(company, "不備あり");
+
+            try (MockedStatic<TransactionAspectSupport> mocked = mockStatic(TransactionAspectSupport.class)) {
+                mocked.when(TransactionAspectSupport::currentTransactionStatus).thenReturn(mock(TransactionStatus.class));
+
+                assertThat(companyApprovalService.rejectCompany("COMP-001", "不備あり").getStatusCode())
+                    .isEqualTo(ResponseConstants.OK);
+                verify(notificationService).sendCompanyRejectionNotification(company, "不備あり");
+            }
             // Input: companyId="COMP-001", rejectionReason="不備あり"
             //        companyApprovalServiceのsecurityFlowPropertiesフィールドをnullにセット（テスト内で再構築 or setterが無い場合はReflection）
             //        companyRepository.findByCompanyId(...) が companyStatus=PENDING の company を返すようモック
@@ -307,14 +325,22 @@ class CompanyApprovalServiceTest {
             ParticipatingCompany company = company(CompanyStatus.PENDING);
             when(companyRepository.findByCompanyId("COMP-001")).thenReturn(Optional.of(company));
             doThrow(new RuntimeException("db error")).when(companyLifecycleService).rejectPendingCompany(company);
-            assertThat(companyApprovalService.rejectCompany("COMP-001", "不備あり").getStatusCode()).isEqualTo(ResponseConstants.INTERNAL_SERVER_ERROR);
-            // Input: companyId="COMP-001", rejectionReason="不備あり"
-            //        companyRepository.findByCompanyId(...) が companyStatus=PENDING の company を返すようモック
-            //        companyLifecycleService.rejectPendingCompany(company) が
-            //        RuntimeException("db error")をthrowするようモック
-            // Output: statusCode=INTERNAL_SERVER_ERROR, message=MSG_COMPANY_REJECT_FAILED
-            //         notificationService / companySecurityFlowService のリンク発行・通知メソッドは
-            //         呼ばれないこと（例外がrejectPendingCompany呼び出し直後に発生するため）
+
+            try (MockedStatic<TransactionAspectSupport> mocked = mockStatic(TransactionAspectSupport.class)) {
+                mocked.when(TransactionAspectSupport::currentTransactionStatus).thenReturn(mock(TransactionStatus.class));
+
+                assertThat(companyApprovalService.rejectCompany("COMP-001", "不備あり").getStatusCode())
+                    .isEqualTo(ResponseConstants.INTERNAL_SERVER_ERROR);
+                    verifyNoInteractions(notificationService);
+            }
+
+                    // Input: companyId="COMP-001", rejectionReason="不備あり"
+                    //        companyRepository.findByCompanyId(...) が companyStatus=PENDING の company を返すようモック
+                    //        companyLifecycleService.rejectPendingCompany(company) が
+                    //        RuntimeException("db error")をthrowするようモック
+                    // Output: statusCode=INTERNAL_SERVER_ERROR, message=MSG_COMPANY_REJECT_FAILED
+                    //         notificationService / companySecurityFlowService のリンク発行・通知メソッドは
+                    //         呼ばれないこと（例外がrejectPendingCompany呼び出し直後に発生するため）
         }
     }
 
@@ -341,7 +367,10 @@ class CompanyApprovalServiceTest {
         @Test
         @DisplayName("UT-ACA-016: securityFlowPropertiesがnullの場合、NOT_FOUNDを返す")
         void resendMasterSetupLink_securityFlowPropertiesNull_returnsNotFound() {
-            assertThat(companyApprovalService.resendMasterSetupLink("COMP-001").getStatusCode()).isEqualTo(ResponseConstants.NOT_FOUND);
+            ReflectionTestUtils.setField(companyApprovalService, "securityFlowProperties", null);
+
+            assertThat(companyApprovalService.resendMasterSetupLink("COMP-001").getStatusCode())
+                .isEqualTo(ResponseConstants.NOT_FOUND);
             verifyNoInteractions(companyRepository);
             // Input: companyId="COMP-001"
             //        companyApprovalServiceのsecurityFlowPropertiesフィールドをnullにセット

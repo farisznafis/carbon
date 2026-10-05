@@ -6,6 +6,9 @@ import {
 } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
+// Temporarily hide page back buttons across all pages; set to true to restore them.
+const PAGE_BACK_BUTTON_ENABLED = false;
+
 type PageBackButtonPlacement =
   | 'inline'
   | 'floating';
@@ -64,7 +67,7 @@ export const PageBackButton = ({
   'aria-label': ariaLabel,
   ...buttonProps
 }: PageBackButtonProps) => {
-  if (!onClick) {
+  if (!PAGE_BACK_BUTTON_ENABLED || !onClick) {
     return null;
   }
 

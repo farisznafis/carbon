@@ -5,14 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MapPin, User, Calendar, Edit, Save, X } from 'lucide-react';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
+import { ArrowLeft, MapPin, User, Calendar, Save, X } from 'lucide-react';
 import { FormActions } from '@/components/forms/form-layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { PageLoadingOverlay } from '@/components/feedback/loading';
+import { paths } from '@/routes/paths';
+import { ActionButton } from '@/components/actions';
+import { PageTabsList, PageTabsTrigger } from '@/components/navigation/PageTabs';
 
 interface SiteData {
   siteId: string;
@@ -41,6 +44,7 @@ interface CompanyUser {
   role: 'master' | 'regular';
 }
 
+/** Renders a site's details and available management actions. */
 const SiteDetail = () => {
   const { siteId } = useParams();
   const navigate = useNavigate();
@@ -236,7 +240,7 @@ const SiteDetail = () => {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
+          <h1 className="text-form-title font-bold flex items-center gap-2">
             <MapPin className="h-8 w-8 text-primary" />
             {site.name}
           </h1>
@@ -245,18 +249,17 @@ const SiteDetail = () => {
           </p>
         </div>
         {user?.role === 'master' && !isEditing && (
-          <Button onClick={handleEdit}>
-            <Edit className="h-4 w-4 mr-2" />
+          <ActionButton kind="edit" onClick={handleEdit}>
             編集
-          </Button>
+          </ActionButton>
         )}
       </div>
 
       <Tabs defaultValue="info" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="info">基本情報</TabsTrigger>
-          <TabsTrigger value="projects">参加プロジェクト</TabsTrigger>
-        </TabsList>
+        <PageTabsList aria-label="拠点詳細の表示">
+          <PageTabsTrigger value="info">基本情報</PageTabsTrigger>
+          <PageTabsTrigger value="projects">参加プロジェクト</PageTabsTrigger>
+        </PageTabsList>
 
         <TabsContent value="info">
           <Card>
@@ -439,7 +442,14 @@ const SiteDetail = () => {
                     <div
                       key={project.id}
                       className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/sites/${site.siteId}/projects/${project.id}`)}
+                      onClick={() =>
+                        navigate(
+                          paths.siteProjectDetail(
+                            site.siteId,
+                            project.id,
+                          ),
+                        )
+                      }
                     >
                       <div>
                         <p className="font-medium">{project.name}</p>
@@ -447,9 +457,9 @@ const SiteDetail = () => {
                           参加日: {project.joinedDate}
                         </p>
                       </div>
-                      <Badge variant={project.status === 'active' ? 'default' : 'secondary'}>
+                      <StatusBadge tone={project.status === 'active' ? 'success' : 'neutral'}>
                         {project.status === 'active' ? '稼働中' : '停止中'}
-                      </Badge>
+                      </StatusBadge>
                     </div>
                   ))}
                 </div>

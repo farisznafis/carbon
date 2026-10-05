@@ -7,20 +7,31 @@ import {
 } from 'react-router-dom';
 import {
   AlertTriangle,
-  ArrowRight,
   ArrowUpRight,
   BarChart3,
   FileText,
-  UsersRound,
 } from 'lucide-react';
 import type { AdminProjectDetail } from '@/api/admin/projects';
 import { isForbiddenApiError } from '@/api/_shared/errors';
 import type { MonitoringRecordListItem } from '@/api/monitoring';
+import { ActionButton } from '@/components/actions';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 import { PageSkeleton, SkeletonCard } from '@/components/feedback/loading';
+import { dashboardEmptyStateClassName } from '@/components/layout/DashboardLayout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
+import {
+  PageTabsList,
+  PageTabsTrigger,
+  TabCount,
+} from '@/components/navigation/PageTabs';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import type { ParticipationReviewStatus } from '@/api/admin';
+import { NoticeBanner } from '@/components/feedback/NoticeBanner';
+import { MembershipStatusChips } from '@/features/admin/membership-review/MembershipStatusChips';
+import { ParticipationReviewListPanel } from '@/features/admin/membership-review/ParticipationReviewListPanel';
+import { useProjectParticipationReviews } from '@/hooks/admin/useProjectParticipationReviews';
 import {
   Card,
   CardContent,
@@ -39,14 +50,27 @@ import {
 } from '@/hooks/admin/useAdminProjectDetailQuery';
 import { paths } from '@/routes/paths';
 import { AdminProjectDetailLayout } from './AdminProjectDetailLayout';
-import {
-  formatProjectDetailValue,
-  formatProjectEmission,
-  toProjectDetailNumber,
-} from './projectDetailDisplay';
+import { ProjectEmissionTrendCard } from './components/ProjectEmissionTrendCard';
+import { formatProjectDetailValue } from './projectDetailDisplay';
 
 const DEFAULT_MONITORING_PAGE = 1;
 const DEFAULT_MONITORING_LIMIT = 10;
+
+const PROJECT_DETAIL_TABS = [
+  { value: 'overview', label: '概要' },
+  { value: 'monitoring', label: 'モニタリングデータ' },
+  { value: 'membership', label: '入会届' },
+  { value: 'companies', label: '参加企業' },
+] as const;
+
+type ProjectDetailTab = (typeof PROJECT_DETAIL_TABS)[number]['value'];
+
+/** Reads the active tab from the URL so back navigation and shared links reopen the same tab. */
+function resolveProjectDetailTab(value: string | null): ProjectDetailTab {
+  return PROJECT_DETAIL_TABS.some((tab) => tab.value === value)
+    ? (value as ProjectDetailTab)
+    : 'overview';
+}
 
 type ProjectNavigationCardProps = {
   title: string;
@@ -77,15 +101,6 @@ function getMethodologyCode(project: AdminProjectDetail) {
     .filter(Boolean)
     .join('-');
   return methodologyCode || '—';
-}
-
-/** Calculates a bounded comparison percentage without treating missing data as zero. */
-function getEmissionComparisonPercentage(
-  value: number | null,
-  baseline: number | null,
-) {
-  if (value == null || baseline == null || baseline <= 0) return 0;
-  return Math.min(100, Math.max(0, (value / baseline) * 100));
 }
 
 /** Renders the best-effort project-plan progress summary. */
@@ -128,7 +143,7 @@ function ProjectPlanProgressCard({
         ) : totalForms > 0 ? (
           <>
             <p className="flex items-baseline gap-2 text-muted-foreground">
-              <strong className="text-3xl text-foreground">
+              <strong className="text-form-title text-foreground">
                 {completedForms} / {totalForms}
               </strong>
               <span className="text-small">入力済み</span>
@@ -152,73 +167,18 @@ function ProjectPlanProgressCard({
   );
 }
 
-/** Renders actual project emissions as a baseline comparison. */
-function ProjectEmissionSummaryCard({
-  project,
-}: Readonly<{ project: AdminProjectDetail }>) {
-  const baselineEmission = toProjectDetailNumber(
-    project.baselineEmissions ?? project.baselineEmission,
-  );
-  const projectEmission = toProjectDetailNumber(
-    project.postProjectEmissions ?? project.postProjectEmission,
-  );
-  const reduction = toProjectDetailNumber(project.emissionReduction);
-
-  return (
-    <Card className="h-full rounded-xl border-border shadow-app-sm">
-      <CardHeader className="gap-2">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <CardTitle>排出量サマリ</CardTitle>
-          <p className="text-small font-bold text-primary-strong">
-            削減量 {formatProjectEmission(reduction)}
-          </p>
-        </div>
-        <CardDescription>
-          ベースラインとプロジェクト排出量を比較します。
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3 text-small">
-            <span className="text-muted-foreground">ベースライン</span>
-            <span className="font-medium text-foreground">
-              {formatProjectEmission(baselineEmission)}
-            </span>
-          </div>
-          <Progress
-            value={baselineEmission != null && baselineEmission > 0 ? 100 : 0}
-            className="h-2"
-            aria-label={`ベースライン ${formatProjectEmission(baselineEmission)}`}
-          />
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3 text-small">
-            <span className="text-muted-foreground">プロジェクト排出量</span>
-            <span className="font-medium text-foreground">
-              {formatProjectEmission(projectEmission)}
-            </span>
-          </div>
-          <Progress
-            value={getEmissionComparisonPercentage(
-              projectEmission,
-              baselineEmission,
-            )}
-            className="h-2"
-            aria-label={`プロジェクト排出量 ${formatProjectEmission(projectEmission)}`}
-          />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 /** Renders the project attributes most useful for quick scanning. */
 function ProjectOverviewCard({
   project,
   onOpenInformation,
+  membershipCounts,
+  onOpenMembership,
 }: Readonly<{
   project: AdminProjectDetail;
   onOpenInformation: () => void;
+  /** Omitted when the operator cannot review memberships; null while loading. */
+  membershipCounts?: Record<ParticipationReviewStatus, number> | null;
+  onOpenMembership: (status: ParticipationReviewStatus) => void;
 }>) {
   return (
     <Card className="h-full rounded-xl border-border shadow-app-sm">
@@ -245,16 +205,25 @@ function ProjectOverviewCard({
               {formatProjectDetailValue(project.regionalCategory)}
             </dd>
           </div>
+          {membershipCounts !== undefined && (
+            <div className="flex items-start justify-between gap-4">
+              <dt className="pt-0.5 text-small text-muted-foreground">入会届</dt>
+              <dd>
+                <MembershipStatusChips
+                  counts={membershipCounts}
+                  onSelect={onOpenMembership}
+                />
+              </dd>
+            </div>
+          )}
         </dl>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
+        <ActionButton
+          kind="link"
           onClick={onOpenInformation}
-          className="ml-auto flex px-1 text-primary-strong"
+          className="ml-auto flex"
         >
-          詳細情報を見る <ArrowRight aria-hidden="true" />
-        </Button>
+          詳細情報を見る
+        </ActionButton>
       </CardContent>
     </Card>
   );
@@ -297,12 +266,30 @@ function ProjectNavigationCard({
   );
 }
 
-/** Displays one admin project overview and its project-scoped monitoring records. */
+/** Wraps one list-style tab so every project detail tab shares the same card heading. */
+function ProjectDetailTabCard({
+  title,
+  description,
+  children,
+}: Readonly<{ title: string; description: string; children: React.ReactNode }>) {
+  return (
+    <Card className="rounded-xl shadow-app-sm">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
+  );
+}
+
+/** Displays one admin project with its overview, monitoring, membership and participant tabs. */
 export default function ProjectDetailAdmin() {
   const location = useLocation();
   const { projectId } = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = resolveProjectDetailTab(searchParams.get('tab'));
   const permissions = useAdminPermissions();
   const projectQuery = useAdminProjectDetailQuery(projectId);
   const progressQuery = useAdminProjectPlanProgressQuery(projectId);
@@ -337,6 +324,34 @@ export default function ProjectDetailAdmin() {
     [navigate, projectId],
   );
 
+  /** Switches tabs in place, keeping the return destination carried in navigation state. */
+  const canReviewMemberships = permissions.hasPermission(
+    'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+  );
+  const membershipReviews = useProjectParticipationReviews(
+    projectId,
+    project,
+    canReviewMemberships,
+  );
+  const pendingMembershipCount = membershipReviews.isReady
+    ? membershipReviews.counts.OPEN
+    : 0;
+
+  /** Opens the 入会届 tab on one status, keeping the return destination. */
+  const openMembership = (status: ParticipationReviewStatus) => {
+    if (!projectId) return;
+    navigate(paths.adminProjectMembership(projectId, status), {
+      replace: true,
+      state: location.state,
+    });
+  };
+
+  const changeTab = (value: string) => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.set('tab', resolveProjectDetailTab(value));
+    setSearchParams(nextSearchParams, { replace: true, state: location.state });
+  };
+
   if (projectQuery.isLoading) {
     return (
       <PageSkeleton>
@@ -353,7 +368,7 @@ export default function ProjectDetailAdmin() {
     return (
       <main className="mx-auto w-full max-w-admin px-4 py-10 sm:px-6">
         <header className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">プロジェクト詳細</h1>
+          <h1 className="text-form-title font-bold text-foreground">プロジェクト詳細</h1>
           <p className="mt-2 text-muted-foreground">登録済みプロジェクトの情報を確認します。</p>
         </header>
         <PermissionDeniedNotice permission="PROJECT_READ" />
@@ -409,108 +424,173 @@ export default function ProjectDetailAdmin() {
         </p>
       </section> */}
 
-      <section
-        aria-label="プロジェクトサマリ"
-        className="grid items-stretch gap-4 xl:grid-cols-3"
-      >
-        <ProjectPlanProgressCard
-          completedForms={completedForms}
-          totalForms={totalForms}
-          isLoading={progressQuery.isLoading}
-          hasError={progressQuery.isError}
-        />
-        <ProjectEmissionSummaryCard project={project} />
-        <ProjectOverviewCard
-          project={project}
-          onOpenInformation={() =>
-            navigate(paths.adminProjectInformation(projectId))
-          }
-        />
-      </section>
+      <Tabs value={activeTab} onValueChange={changeTab} className="min-w-0">
+        <PageTabsList aria-label="プロジェクト詳細の表示">
+          {PROJECT_DETAIL_TABS.map((tab) => {
+            const badgeCount =
+              tab.value === 'membership' ? pendingMembershipCount : 0;
 
-      <section
-        aria-label="プロジェクト関連ページ"
-        className="grid gap-4 xl:grid-cols-3"
-      >
-        <ProjectNavigationCard
-          title="プロジェクト計画書"
-          description="計画書の入力内容・関連資料を確認します。"
-          icon={<FileText className="h-5 w-5" />}
-          ariaLabel="プロジェクト計画書を開く"
-          onClick={() =>
-            permissions.guardAction('PROJECT_READ', () =>
-              navigate(paths.adminProjectPlan(projectId)),
-            )
-          }
-        />
-        <ProjectNavigationCard
-          title="モニタリングデータ報告書"
-          description="モニタリング結果の報告書を確認します。"
-          icon={<BarChart3 className="h-5 w-5" />}
-          ariaLabel="モニタリングデータ報告書を開く"
-          onClick={() =>
-            permissions.guardAction('MONITORING_READ', () =>
-              navigate(paths.adminProjectMonitoringReport(projectId)),
-            )
-          }
-        />
-        <ProjectNavigationCard
-          title="入会届一覧"
-          description="このプロジェクトへの入会申請と審査状況を確認します。"
-          icon={<UsersRound className="h-5 w-5" />}
-          ariaLabel="入会届一覧を開く"
-          onClick={() =>
-            permissions.guardAction(
-              'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
-              () => navigate(paths.adminProjectMembership(projectId)),
-            )
-          }
-        />
-      </section>
-
-      <Card id="monitoring-data" className="scroll-mt-24 rounded-xl shadow-app-sm">
-        <CardHeader>
-          <CardTitle>モニタリングデータ一覧</CardTitle>
-          <CardDescription>
-            このプロジェクトに登録されたモニタリングデータを確認できます。
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {!permissions.hasPermission('MONITORING_READ') ? (
-            <PermissionDeniedNotice permission="MONITORING_READ" />
-          ) : <ErrorBoundary
-            fallback={({ resetErrorBoundary }) => (
-              <div
-                role="alert"
-                className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center"
+            return (
+              <PageTabsTrigger
+                key={tab.value}
+                value={tab.value}
+                aria-label={
+                  badgeCount > 0
+                    ? `${tab.label}（承認待ち${badgeCount}件）`
+                    : undefined
+                }
+                className="gap-2"
               >
-                <AlertTriangle
-                  className="h-5 w-5 text-destructive"
-                  aria-hidden="true"
-                />
-                <p className="text-small font-medium text-foreground">
-                  モニタリングデータを表示できませんでした。
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={resetErrorBoundary}
-                >
-                  再試行
-                </Button>
-              </div>
-            )}
+                {tab.label}
+                {badgeCount > 0 && <TabCount count={badgeCount} tone="warning" />}
+              </PageTabsTrigger>
+            );
+          })}
+        </PageTabsList>
+
+        <TabsContent value="overview" className="m-0 space-y-6 pt-5">
+          {pendingMembershipCount > 0 && (
+            <NoticeBanner
+              tone="warning"
+              action={
+                <ActionButton kind="review" onClick={() => openMembership('OPEN')}>
+                  確認する
+                </ActionButton>
+              }
+            >
+              承認待ちの入会届が{pendingMembershipCount}件あります。
+            </NoticeBanner>
+          )}
+
+          <section
+            aria-label="プロジェクトサマリ"
+            className="grid items-stretch gap-4 xl:grid-cols-3"
           >
-            <ProjectMonitoringTable
-              key={projectId}
+            <ProjectEmissionTrendCard
               projectId={projectId}
-              initialPage={monitoringPage}
-              initialLimit={monitoringLimit}
-              onViewDetail={openMonitoringDetail}
+              project={project}
+              className="xl:col-span-2 xl:row-span-2"
             />
-          </ErrorBoundary>}
-        </CardContent>
-      </Card>
+            <ProjectOverviewCard
+              project={project}
+              onOpenInformation={() =>
+                navigate(paths.adminProjectInformation(projectId))
+              }
+              membershipCounts={
+                canReviewMemberships
+                  ? membershipReviews.isReady
+                    ? membershipReviews.counts
+                    : null
+                  : undefined
+              }
+              onOpenMembership={openMembership}
+            />
+            <ProjectPlanProgressCard
+              completedForms={completedForms}
+              totalForms={totalForms}
+              isLoading={progressQuery.isLoading}
+              hasError={progressQuery.isError}
+            />
+          </section>
+
+          <section
+            aria-label="プロジェクト関連ページ"
+            className="grid gap-4 lg:grid-cols-2"
+          >
+            <ProjectNavigationCard
+              title="プロジェクト計画書"
+              description="計画書の入力内容・関連資料を確認します。"
+              icon={<FileText className="h-5 w-5" />}
+              ariaLabel="プロジェクト計画書を開く"
+              onClick={() =>
+                permissions.guardAction('PROJECT_READ', () =>
+                  navigate(paths.adminProjectPlan(projectId)),
+                )
+              }
+            />
+            <ProjectNavigationCard
+              title="モニタリングデータ報告書"
+              description="モニタリング結果の報告書を確認します。"
+              icon={<BarChart3 className="h-5 w-5" />}
+              ariaLabel="モニタリングデータ報告書を開く"
+              onClick={() =>
+                permissions.guardAction('MONITORING_READ', () =>
+                  navigate(paths.adminProjectMonitoringReport(projectId)),
+                )
+              }
+            />
+          </section>
+        </TabsContent>
+
+        <TabsContent value="monitoring" className="m-0 pt-5">
+          <ProjectDetailTabCard
+            title="モニタリングデータ一覧"
+            description="このプロジェクトに登録されたモニタリングデータを確認できます。"
+          >
+            {!permissions.hasPermission('MONITORING_READ') ? (
+              <PermissionDeniedNotice permission="MONITORING_READ" />
+            ) : (
+              <ErrorBoundary
+                fallback={({ resetErrorBoundary }) => (
+                  <div
+                    role="alert"
+                    className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center"
+                  >
+                    <AlertTriangle
+                      className="h-5 w-5 text-destructive"
+                      aria-hidden="true"
+                    />
+                    <p className="text-small font-medium text-foreground">
+                      モニタリングデータを表示できませんでした。
+                    </p>
+                    <ActionButton kind="retry" onClick={resetErrorBoundary} />
+                  </div>
+                )}
+              >
+                <ProjectMonitoringTable
+                  key={projectId}
+                  projectId={projectId}
+                  initialPage={monitoringPage}
+                  initialLimit={monitoringLimit}
+                  onViewDetail={openMonitoringDetail}
+                />
+              </ErrorBoundary>
+            )}
+          </ProjectDetailTabCard>
+        </TabsContent>
+
+        <TabsContent value="membership" className="m-0 pt-5">
+          <ProjectDetailTabCard
+            title="入会届一覧"
+            description="このプロジェクトへの入会申請と審査状況を確認します。"
+          >
+            {!permissions.hasPermission('PARTICIPATING_COMPANY_APPLICATION_REVIEW') ? (
+              <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
+            ) : (
+              <ParticipationReviewListPanel
+                projectId={projectId}
+                reviewsByStatus={membershipReviews.reviewsByStatus}
+                isLoading={membershipReviews.isLoading}
+                isError={membershipReviews.isError}
+                isForbidden={membershipReviews.isForbidden}
+                onRetry={() => void membershipReviews.refetch()}
+              />
+            )}
+          </ProjectDetailTabCard>
+        </TabsContent>
+
+        <TabsContent value="companies" className="m-0 pt-5">
+          <ProjectDetailTabCard
+            title="参加企業一覧"
+            description="このプロジェクトに参加している企業を確認します。"
+          >
+            {/* TODO: render the participating companies once their API is available. */}
+            <div className={dashboardEmptyStateClassName}>
+              参加企業の一覧は準備中です。
+            </div>
+          </ProjectDetailTabCard>
+        </TabsContent>
+      </Tabs>
     </AdminProjectDetailLayout>
   );
 }

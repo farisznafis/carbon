@@ -30,6 +30,7 @@ type AdminProjectDetailLayoutProps = {
   currentBreadcrumb?: string;
   backTo: string;
   backLabel: string;
+  showBackButton?: boolean;
   /**
    * Where 更新 leads. Defaults to the project edit flow; the plan page sends
    * the operator to the wizard page they are reading instead.
@@ -47,6 +48,7 @@ export function AdminProjectDetailLayout({
   currentBreadcrumb,
   backTo,
   backLabel,
+  showBackButton = false,
   onEdit,
   children,
 }: Readonly<AdminProjectDetailLayoutProps>) {
@@ -61,12 +63,14 @@ export function AdminProjectDetailLayout({
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={() => navigate(backTo)}
-        label=""
-        aria-label={backLabel}
-        className={floatingPageBackButtonClassName}
-      />
+      {showBackButton && (
+        <PageBackButton
+          onClick={() => navigate(backTo)}
+          label=""
+          aria-label={backLabel}
+          className={floatingPageBackButtonClassName}
+        />
+      )}
       <FormPageContent className="max-w-admin space-y-6">
         <Breadcrumb>
           <BreadcrumbList className="flex-nowrap">

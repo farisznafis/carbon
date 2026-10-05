@@ -32,6 +32,32 @@ export type EmissionTrendPoint = {
   y: number;
 };
 
+/** One processing period of a project's emission history (tCO₂). */
+export type ProjectEmissionHistoryPoint = {
+  period: string;
+  baselineEmission: number | null;
+  projectEmission: number | null;
+  reduction: number | null;
+};
+
+/** One yearly entry of GET /project/{projectId}/monitoring → detail.chart.chartData. */
+export type ProjectMonitoringChartItem = {
+  year?: string | null;
+  baseline?: number | null;
+  actualEmission?: number | null;
+  reduction?: number | null;
+};
+
+export type ProjectMonitoringResponse = {
+  statusCode?: string;
+  message?: string | null;
+  detail?: {
+    chart?: {
+      chartData?: ProjectMonitoringChartItem[] | null;
+    } | null;
+  } | null;
+};
+
 export type ProjectEmissionBreakdown = {
   mainEmission: number | null;
   controlDeviceEmission: number | null;

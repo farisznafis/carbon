@@ -842,10 +842,6 @@ public class MonitoringServiceImpl implements MonitoringService {
         if (isBlank(request.getElPvrEvidenceUrl())) {
             errors.put("elpvr_evidence", ResponseConstants.MSG_ELPVR_EVIDENCE_REQUIRED);
         }
-        if (Boolean.TRUE.equals(request.getChangedBattery())
-                && isBlank(request.getElpjBatterySpecificationUrl())) {
-            errors.put("elpj_battery_evidence", ResponseConstants.MSG_ELPJ_BATTERY_EVIDENCE_REQUIRED);
-        }
         // if (isBlank(request.getElpjControlEvidenceUrl())) {
         //     errors.put("elpj_control_evidence", ResponseConstants.MSG_ELPJ_CONTROL_EVIDENCE_REQUIRED);
         // } 

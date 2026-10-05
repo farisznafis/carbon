@@ -1,9 +1,9 @@
-import { AlertCircle, Check, Clock3, RefreshCw } from 'lucide-react';
+import { AlertCircle, Check, Clock3 } from 'lucide-react';
 import type { HTMLAttributes } from 'react';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { InlineLoader } from './indicators';
+import { ActionButton } from "@/components/actions";
 
 export type FileUploadItemStatus = 'queued' | 'uploading' | 'success' | 'error';
 
@@ -57,10 +57,7 @@ export function FileUploadProgress({ items, onRetry, className, ...props }: File
                 </div>
               </div>
               {item.status === 'error' && onRetry ? (
-                <Button type="button" variant="outline" size="sm" onClick={() => onRetry(item.id)}>
-                  <RefreshCw aria-hidden="true" />
-                  再試行
-                </Button>
+                <ActionButton kind="retry" onClick={() => onRetry(item.id)} />
               ) : null}
             </div>
             {item.status === 'uploading' ? (

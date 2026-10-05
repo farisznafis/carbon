@@ -1,12 +1,30 @@
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { ApiError } from '@/api/_shared/errors';
 import { changePassword } from '@/api/auth';
 import { PasswordInput } from '@/components/inputs';
-import { FormActions } from '@/components/forms/form-layout';
-import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
+import {
+  FormActions,
+  FormCard,
+  FormPageContent,
+  FormPageTitle,
+  FormSection,
+  FormSectionStack,
+  FormStandalonePage,
+} from '@/components/forms/form-layout';
+import {
+  PageBackButton,
+  floatingPageBackButtonClassName,
+} from '@/components/navigation/PageBackButton';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import {
   Form,
   FormControl,
@@ -16,10 +34,10 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
+import { getHomePath } from '@/utils/getHomePath';
 
 const passwordSchema = z
   .object({
@@ -56,6 +74,13 @@ const PasswordChange = () => {
     isManagedUserPasswordChange && requestedUserId
       ? paths.masterUserProfile(requestedUserId)
       : paths.profile;
+  const homePath = getHomePath(user);
+  const profileBreadcrumbLabel = isManagedUserPasswordChange
+    ? '社員プロファイル'
+    : 'プロファイル';
+  const pageDescription = isManagedUserPasswordChange
+    ? '社員アカウントのパスワードを変更します。'
+    : '安全のため、現在のパスワードを確認して新しいパスワードを設定します。';
 
   const passwordForm = useForm<PasswordData>({
     // resolver: zodResolver(passwordSchema),
@@ -80,7 +105,7 @@ const PasswordChange = () => {
     try {
       await changePassword({
         userId: targetUserId,
-        currentPassword: data.current,
+        currentPassword: isManagedUserPasswordChange ? null : data.current,
         newPassword: data.new,
       });
 
@@ -106,6 +131,10 @@ const PasswordChange = () => {
           passwordForm.setError('new', { message: errors.newPassword });
           return;
         }
+        if (!isManagedUserPasswordChange && errors.currentPassword) {
+          passwordForm.setError('current', { message: errors.currentPassword });
+          return;
+        }
         return;
       }
       toast({
@@ -120,94 +149,133 @@ const PasswordChange = () => {
   };
 
   return (
-    <FormPageWrapper
-      pageName='パスワード変更'
-      title=''
-      description='8文字以上のパスワードを設定してください'
-      onBack={() => navigate(backPath)}
-      // backText='プロファイルに戻る'
-      backText='戻る'
-    >
-      <Form {...passwordForm}>
-        <form
-          onSubmit={passwordForm.handleSubmit(handlePasswordChange)}
-          className='space-y-4'
-        >
-          <FormField
-            control={passwordForm.control}
-            name='current'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>現在のパスワード</FormLabel>
-                <FormControl>
-                  <PasswordInput
-                    autoComplete='current-password'
-                    {...field}
+    <FormStandalonePage>
+      <PageBackButton
+        onClick={() => navigate(backPath)}
+        label=""
+        aria-label={`${profileBreadcrumbLabel}に戻る`}
+        className={floatingPageBackButtonClassName}
+      />
+
+      <FormPageContent>
+        <Breadcrumb>
+          <BreadcrumbList className="flex-nowrap">
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to={homePath}>ダッシュボード</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to={backPath}>{profileBreadcrumbLabel}</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem className="min-w-0">
+              <BreadcrumbPage className="block truncate">
+                パスワード変更
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        <header>
+          <FormPageTitle as="h2">パスワード変更</FormPageTitle>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
+            {pageDescription}
+          </p>
+        </header>
+
+        <FormCard>
+          <Form {...passwordForm}>
+            <form onSubmit={passwordForm.handleSubmit(handlePasswordChange)}>
+              <FormSectionStack spacing="relaxed">
+                {!isManagedUserPasswordChange && (
+                  <FormField
+                    control={passwordForm.control}
+                    name="current"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>現在のパスワード</FormLabel>
+                        <FormControl>
+                          <PasswordInput
+                            autoComplete="current-password"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Separator />
-          <FormField
-            control={passwordForm.control}
-            name='new'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>新しいパスワード</FormLabel>
-                <FormControl>
-                  <PasswordInput
-                    autoComplete='new-password'
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>
-                  8文字以上で、大文字・小文字・数字をそれぞれ1文字以上含むパスワードを設定してください。
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={passwordForm.control}
-            name='confirm'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>新しいパスワード（確認）</FormLabel>
-                <FormControl>
-                  <PasswordInput
-                    autoComplete='new-password'
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormActions
-            className='pt-4'
-            pendingActionId={
-              passwordForm.formState.isSubmitting ? 'submit' : null
-            }
-            actions={[
-              {
-                id: 'cancel',
-                label: 'キャンセル',
-                variant: 'outline',
-                onClick: () => navigate(backPath),
-              },
-              {
-                id: 'submit',
-                label: 'パスワードを変更',
-                pendingLabel: '更新中...',
-                type: 'submit',
-              },
-            ]}
-          />
-        </form>
-      </Form>
-    </FormPageWrapper>
+                )}
+
+                {/* <FormSection number={2} title="新しいパスワード"> */}
+                  <div className="space-y-5">
+                    <FormField
+                      control={passwordForm.control}
+                      name="new"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>新しいパスワード</FormLabel>
+                          <FormControl>
+                            <PasswordInput
+                              autoComplete="new-password"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            8文字以上で、大文字・小文字・数字をそれぞれ1文字以上含むパスワードを設定してください。
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={passwordForm.control}
+                      name="confirm"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>新しいパスワード（確認）</FormLabel>
+                          <FormControl>
+                            <PasswordInput
+                              autoComplete="new-password"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                {/* </FormSection> */}
+              </FormSectionStack>
+
+              <FormActions
+                className="pt-8"
+                pendingActionId={
+                  passwordForm.formState.isSubmitting ? 'submit' : null
+                }
+                actions={[
+                  {
+                    id: 'cancel',
+                    label: 'キャンセル',
+                    variant: 'outline',
+                    onClick: () => navigate(backPath),
+                  },
+                  {
+                    id: 'submit',
+                    label: 'パスワードを変更',
+                    pendingLabel: '更新中...',
+                    type: 'submit',
+                  },
+                ]}
+              />
+            </form>
+          </Form>
+        </FormCard>
+      </FormPageContent>
+    </FormStandalonePage>
   );
 };
 

@@ -6,7 +6,7 @@ import {
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { InlineHelp } from '@/components/feedback/InlineHelp/InlineHelp';
-import { Button } from '@/components/ui/button';
+import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { usePagination } from '@/hooks/usePagination';
 import { Users } from 'lucide-react';
 import { useMemo } from 'react';
@@ -95,14 +95,7 @@ export function UserTable({
       id: 'actions',
       label: '操作',
       render: (user) => (
-        <div
-          onClick={(event) => event.stopPropagation()}
-          onPointerDown={(event) => event.stopPropagation()}
-        >
-          <Button type="button" onClick={() => onEdit?.(user)}>
-            更新
-          </Button>
-        </div>
+        <RowActionButton onClick={() => onEdit?.(user)}>更新</RowActionButton>
       ),
     },
   ];

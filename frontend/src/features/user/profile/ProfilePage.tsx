@@ -16,13 +16,13 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatPersonName } from '@/features/master/components/masterDashboardUtils';
 import { paths } from '@/routes/paths';
 import { useProfileStore } from '@/stores/ProfileStore';
 import { getHomePath } from '@/utils/getHomePath';
 import { ProfileInfoCards } from './ProfileInfoCards';
+import { ActionButton } from '@/components/actions';
 
 /** Renders the signed-in user or master profile using the shared profile sections. */
 const Profile = () => {
@@ -36,7 +36,7 @@ const Profile = () => {
   );
   const accountName =
     formattedUserName === '-'
-      ? profile?.username || user?.username || 'ユーザー'
+      ? profile?.username || user?.username || ''
       : formattedUserName;
 
   /** Returns the signed-in account to its role-specific home page. */
@@ -106,9 +106,9 @@ const Profile = () => {
               登録されている個人情報と法人情報を確認します。
             </p>
           </div>
-          <Button type="button" variant="outline" size="md" onClick={handleEdit}>
+          <ActionButton kind="edit" onClick={handleEdit}>
             更新
-          </Button>
+          </ActionButton>
         </header>
         <ProfileInfoCards
           profile={profile}

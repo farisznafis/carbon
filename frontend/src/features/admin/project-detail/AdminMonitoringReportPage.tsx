@@ -7,11 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import {
   floatingPageBackButtonClassName,
   PageBackButton,
 } from '@/components/navigation/PageBackButton';
+import { ActionButton } from '@/components/actions';
 
 export default function AdminMonitoringReportPage() {
   const { projectId } = useParams();
@@ -40,7 +40,9 @@ export default function AdminMonitoringReportPage() {
             </div>
           </CardContent>
           <CardFooter className='justify-end'>
-            <Button disabled>更新</Button>
+            <ActionButton kind="edit" disabled>
+              更新
+            </ActionButton>
           </CardFooter>
         </Card>
       </div>

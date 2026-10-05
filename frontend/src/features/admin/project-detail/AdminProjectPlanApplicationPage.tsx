@@ -12,7 +12,7 @@ import {
 } from '@/components/forms/form-layout';
 import { PageDropdown } from '@/components/forms/shared/PageDropdown';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import {
   Card,
   CardContent,
@@ -282,10 +282,10 @@ export default function AdminProjectPlanApplicationPage() {
           meta={
             page ? (
               <span className="flex flex-wrap items-center gap-2">
-                <Badge variant={isStored ? 'default' : 'outline'}>
+                <StatusBadge tone={isStored ? 'success' : 'neutral'}>
                   {isStored ? '入力済み' : '未入力'}
-                </Badge>
-                {progress?.optional ? <Badge variant="secondary">任意</Badge> : null}
+                </StatusBadge>
+                {progress?.optional ? <StatusBadge>任意</StatusBadge> : null}
               </span>
             ) : null
           }
