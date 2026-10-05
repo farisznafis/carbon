@@ -10,6 +10,8 @@ const PROJECT_BASE_FIELDS = new Set([
   'projectName',
   'projectNumber',
   'projectStatus',
+  'startedAt',
+  'usePurpose',
   'baselineEmissions',
   'postProjectEmission',
   'repFirstName',
