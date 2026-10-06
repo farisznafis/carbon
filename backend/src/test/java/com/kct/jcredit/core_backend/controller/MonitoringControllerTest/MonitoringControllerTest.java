@@ -88,7 +88,6 @@ class MonitoringControllerTest {
         request.setDateRecorded("2024-01-15");
         request.setElPv(new BigDecimal("123.456"));
         request.setElPvr(new BigDecimal("78.900"));
-        request.setChangedBattery(false);
         request.setElpjControl(new BigDecimal("12.300"));
         request.setElpjAccuracy(new BigDecimal("99.50"));
         request.setElPvEvidenceUrl("https://example.test/elpv.pdf");

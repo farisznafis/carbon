@@ -440,7 +440,7 @@ export function FormActions({
               {...buttonProps}
             >
               {isCurrentActionPending ? <ButtonLoader /> : null}
-              <span>
+              <span className='inline-flex items-center justify-center gap-2'>
                 {isCurrentActionPending ? (pendingLabel ?? label) : label}
               </span>
             </Button>
