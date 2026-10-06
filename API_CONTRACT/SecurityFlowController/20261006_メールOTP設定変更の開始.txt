@@ -1,0 +1,73 @@
+メールOTP設定変更の開始
+//ログイン中のユーザーが、自分のメールOTPログイン（二段階認証）の有効・無効を変更する1段階目。
+//現在のパスワードを検証し、登録メールアドレス宛に6桁の認証コードを送信する。
+//ログイン必須（参加企業ユーザー・運営ユーザー共通）。
+
+URL: POST /auth/email-otp/settings/challenge
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
+
+Request Body (JSON):
+{
+	"enabled": true, //true: 有効にする / false: 無効にする
+	"currentPassword": "Abcd1234"
+}
+
+Response – Success (HTTP 200):
+{
+	"statusCode": "OK",
+	"message": "認証コードを送信しました。",
+	"challengeId": "7c9e6679-7425-40de-944b-e07fc1f90ae7", //「メールOTP設定変更の確認」で使用する
+	"maskedEmail": "u***@example.com",
+	"expiresInSeconds": 300
+}
+
+//この時点では設定は変更されない。「メールOTP設定変更の確認」で確定する。
+//無効にできるのは参加企業の一般ユーザー（role = user）のみ。マスターと運営ユーザーは常に有効。
+
+Response – Error:
+(HTTP 400)
+{
+	"statusCode": "INVALID_CURRENT_PASSWORD",
+	"message": "現在のパスワードが正しくありません。"
+}
+--
+(HTTP 403) //マスターまたは運営ユーザーが "enabled": false を指定した場合
+{
+	"statusCode": "FORBIDDEN",
+	"message": "このリソースにアクセスすることができません。"
+}
+--
+(HTTP 401) //トークンが失効している場合（パスワード変更・メールOTP設定変更の後など）
+{
+	"statusCode": "UNAUTHORIZED",
+	"message": "パスワード変更後のトークンは無効です。再度ログインしてください。"
+}
+--
+(HTTP 400)
+{
+	"statusCode": "VALIDATION_ERROR",
+	"message": "入力内容に誤りがあります。",
+	"errors": {
+		"enabled": "null は許可されていません", //標準メッセージ（Accept-Language により変わる）
+		"currentPassword": "空白は許可されていません"
+	}
+}
+--
+(HTTP 429) //同じメールアドレスへ15分間に3回を超える送信、または同一IPから15分間に20回超
+{
+	"statusCode": "TOO_MANY_REQUESTS",
+	"message": "リクエストが多すぎます。しばらくしてから再度お試しください。"
+}
+--
+(HTTP 404) //機能が無効の場合
+{
+	"statusCode": "NOT_FOUND",
+	"message": "該当するリソースが見つかりませんでした。"
+}
+--
+(HTTP 500) //Authorization ヘッダーがない・トークンの形式が不正な場合も、現状はこの応答になる（401 ではない）
+{
+	"statusCode": "INTERNAL_SERVER_ERROR",
+	"message": "サイト情報の取得中にエラーが発生しました。"
+}

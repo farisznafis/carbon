@@ -1,0 +1,60 @@
+運営ユーザーのログインOTP再送信
+//運営ユーザーのログイン用認証コードを、同じチャレンジに対して再送信する。
+//ログイン不要（公開エンドポイント）。
+
+URL: POST /auth/admin/login/email-otp/resend
+Content-Type: application/json
+
+Request Body (JSON):
+{
+	"challengeId": "7c9e6679-7425-40de-944b-e07fc1f90ae7" //POST /auth/admin/login の応答の challengeId（UUID）
+}
+
+Response – Success (HTTP 200):
+{
+	"statusCode": "OK",
+	"message": "認証コードを送信しました。",
+	"challengeId": "7c9e6679-7425-40de-944b-e07fc1f90ae7", //リクエストと同じ値
+	"maskedEmail": "u***@example.com",
+	"expiresInSeconds": 300
+}
+
+//再送信すると以前のコードは無効になり、有効期限は再送信時点から5分に延長される。
+//コードの入力失敗回数は引き継がれる。
+
+Response – Error:
+(HTTP 429) //前回の送信から60秒以内、1チャレンジあたりの送信上限（初回を含め3回）到達、同じメールアドレスへ15分間に3回を超える送信、または同一IPから15分間に20回超
+{
+	"statusCode": "TOO_MANY_REQUESTS",
+	"message": "リクエストが多すぎます。しばらくしてから再度お試しください。"
+}
+--
+(HTTP 401) //チャレンジが存在しない・期限切れ・使用済み、または参加企業ユーザー用のチャレンジを指定した場合
+{
+	"statusCode": "INVALID_OR_EXPIRED_TOKEN",
+	"message": "セキュリティトークンが無効か、有効期限が切れています。"
+}
+--
+(HTTP 400)
+{
+	"statusCode": "VALIDATION_ERROR",
+	"message": "入力内容に誤りがあります。",
+	"errors": {
+		"challengeId": "null は許可されていません" //標準メッセージ（Accept-Language により変わる）
+	}
+}
+--
+(HTTP 400) //challengeId が UUID 形式でない場合
+{
+	"statusCode": "BAD_REQUEST",
+	"message": "入力値に誤りがあります。",
+	"errors": {
+		"challengeId": "入力形式が正しくありません。"
+	}
+}
+--
+(HTTP 500)
+{
+	"statusCode": "INTERNAL_SERVER_ERROR",
+	"message": "サイト情報の取得中にエラーが発生しました。"
+}

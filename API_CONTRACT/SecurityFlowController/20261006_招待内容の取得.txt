@@ -1,0 +1,46 @@
+招待内容の取得
+//招待リンクを開いた本人に、招待されたメールアドレスと所属先を表示するための情報を返す（画面に表示するのみ、変更不可）。
+//事前に「アクションリンク検証」で purpose = USER_INVITATION のアクションセッションを取得しておく。
+//招待の送信は ParticipatingUserController/20260902_ユーザー招待.txt を参照。
+//ログイン不要（公開エンドポイント）。
+
+URL: GET /auth/invitation
+X-Action-Session: e81f4d7c2a9b6e3f8c1d5a7b9e2f4c6d
+
+Request Body: なし
+
+Response – Success (HTTP 200):
+{
+	"statusCode": "OK",
+	"email": "y.taro@test.com",
+	"companyName": "ABC株式会社",
+	"siteId": "SITEa8Kd93jFnQ2xLp0w", //拠点の公開ID
+	"siteName": "ABC支店"
+}
+
+//拠点を指定せずに招待された場合、siteId と siteName は応答に含まれない。
+
+Response – Error:
+(HTTP 401) //セッション不正・期限切れ（1時間）・purpose 不一致・使用済み
+{
+	"statusCode": "INVALID_OR_EXPIRED_TOKEN",
+	"message": "セキュリティトークンが無効か、有効期限が切れています。"
+}
+--
+(HTTP 400) //X-Action-Session ヘッダーがない場合
+{
+	"statusCode": "BAD_REQUEST",
+	"message": "Required request header 'X-Action-Session' for method parameter type String is not present"
+}
+--
+(HTTP 404) //機能が無効の場合
+{
+	"statusCode": "NOT_FOUND",
+	"message": "該当するリソースが見つかりませんでした。"
+}
+--
+(HTTP 500)
+{
+	"statusCode": "INTERNAL_SERVER_ERROR",
+	"message": "サイト情報の取得中にエラーが発生しました。"
+}
