@@ -1,5 +1,4 @@
-﻿import { ArrowLeft } from 'lucide-react';
-import {
+﻿import {
   FormActions,
   FormCard,
   FormPageContent,
@@ -25,6 +24,7 @@ type ConfirmationLayoutProps = {
   onRetryUpload?: (itemId: string) => void;
 };
 
+/** Renders monitoring review details, upload progress, and submission actions. */
 export function MonitoringConfirmationLayout({
   title,
   description,
@@ -80,12 +80,7 @@ export function MonitoringConfirmationLayout({
               actions={[
                 {
                   id: 'back',
-                  label: (
-                    <>
-                      <ArrowLeft className="h-4 w-4" />
-                      戻る
-                    </>
-                  ),
+                  label: '戻る',
                   variant: 'outline',
                   onClick: onBack,
                 },

@@ -10,6 +10,7 @@ type SidebarHeaderProps = {
   onToggleCollapsed: () => void;
 };
 
+
 /** Keeps the product mark aligned with sidebar icons in both desktop widths. */
 export function SidebarHeader({
   homeHref,

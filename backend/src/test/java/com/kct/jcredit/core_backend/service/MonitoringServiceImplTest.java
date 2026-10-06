@@ -477,7 +477,6 @@ class MonitoringServiceImplTest {
         String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
-        request.setChangedBattery(true);
         request.setElpjBatteryValue(new BigDecimal("10.00"));
         request.setElpjBatterySpecificationUrl(null);
 
@@ -500,7 +499,6 @@ class MonitoringServiceImplTest {
         String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
-        request.setChangedBattery(false);
         request.setElpjBatterySpecificationUrl(null);
 
         stubValidMonitoringContext(username, projectId, siteId);
@@ -544,7 +542,6 @@ class MonitoringServiceImplTest {
         String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
-        request.setChangedBattery(null);
         request.setElpjBatteryValue(null);
         request.setElpjBatterySpecificationUrl(null);
 
@@ -571,7 +568,6 @@ class MonitoringServiceImplTest {
         String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
-        request.setChangedBattery(true);
         request.setElpjBatteryValue(new BigDecimal("10.00"));
         request.setElpjBatterySpecificationUrl("https://example.com/battery.pdf");
 
@@ -599,7 +595,6 @@ class MonitoringServiceImplTest {
         String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
-        request.setChangedBattery(null);
         request.setElpjBatteryValue(new BigDecimal("10.00"));
         request.setElpjBatterySpecificationUrl(null);
 
@@ -1302,7 +1297,6 @@ class MonitoringServiceImplTest {
         String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
-        request.setChangedBattery(true);
         request.setElpjBatteryValue(new BigDecimal("10.00"));
         request.setElpjBatterySpecificationUrl("   ");
 
@@ -1325,7 +1319,6 @@ class MonitoringServiceImplTest {
         String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
-        request.setChangedBattery(false);
         request.setElpjBatterySpecificationUrl(null);
 
         stubValidMonitoringContext(username, projectId, siteId);
@@ -1524,7 +1517,6 @@ class MonitoringServiceImplTest {
         request.setElPvr(new BigDecimal("50.25"));
         request.setElpjControl(new BigDecimal("75.00"));
         request.setElpjAccuracy(new BigDecimal("95.5"));
-        request.setChangedBattery(false);
         request.setDateRecorded(LocalDate.now().toString()); // Convert to String
         request.setProjectType("ENR002");
         return request;
