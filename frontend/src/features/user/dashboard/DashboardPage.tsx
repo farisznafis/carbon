@@ -261,7 +261,7 @@ function KpiCard({
         >
           {title}
         </p>
-        <p className='mt-2 text-[28px] font-normal leading-9 tracking-normal'>
+        <p className='mt-2 text-[1.75rem] font-normal leading-9 tracking-normal'>
           {value}
         </p>
         <p
