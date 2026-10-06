@@ -4,11 +4,11 @@ import {
   type MonitoringCancelRequestListItem,
 } from '@/api/monitoring';
 import {
+  ATTENTION_ROW_CLASS_NAME,
   DataGridTable,
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
-import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { CancelRequestStatusBadge } from '@/features/admin/monitoring/CancelRequestStatusBadge';
 import { formatCancelRequestDateTime } from '@/features/admin/monitoring/cancelRequestFormatters';
 import { usePagination } from '@/hooks/usePagination';
@@ -17,7 +17,12 @@ import { ActionButton } from '@/components/actions';
 
 const INITIAL_ITEMS_PER_PAGE = 10;
 const cancelRequestGridColumns =
-  'minmax(200px, 1.35fr) minmax(140px, 0.8fr) minmax(190px, 1fr) minmax(130px, 0.7fr) minmax(180px, 0.9fr)';
+  'minmax(200px, 1.35fr) minmax(140px, 0.8fr) minmax(190px, 1fr) minmax(130px, 0.7fr)';
+
+/** Pending cancel requests wait on the admin, so they are highlighted and labelled for review. */
+function isPendingRequest(request: MonitoringCancelRequestListItem) {
+  return request.status.toUpperCase() === 'PENDING';
+}
 
 type CancelRequestHistoryTableProps = {
   initialRequests: MonitoringCancelRequestListItem[];
@@ -121,24 +126,12 @@ export function CancelRequestHistoryTable({
         sortValue: (request) => request.status,
         render: (request) => <CancelRequestStatusBadge status={request.status} />,
       },
-      {
-        id: 'actions',
-        label: '操作',
-        render: (request) =>
-          request.status.toUpperCase() === 'PENDING' ? (
-            <RowActionButton intent="review" onClick={() => onViewRequest(request)}>
-              取消内容を確認
-            </RowActionButton>
-          ) : (
-            <RowActionButton onClick={() => onViewRequest(request)} />
-          ),
-      },
     ],
-    [onViewRequest],
+    [],
   );
 
   if (isLoading) {
-    return <SkeletonTable columns={5} rows={6} gridTemplateColumns={cancelRequestGridColumns} minWidth={980} />;
+    return <SkeletonTable columns={4}rows={6} gridTemplateColumns={cancelRequestGridColumns} minWidth={980} />;
   }
 
   if (loadError) {
@@ -160,6 +153,12 @@ export function CancelRequestHistoryTable({
         getRowKey={(request) => String(request.id)}
         emptyMessage="取消申請はありません。"
         onRowClick={onViewRequest}
+        getRowActionLabel={(request) =>
+          isPendingRequest(request) ? '取消内容を確認' : '詳細'
+        }
+        getRowClassName={(request) =>
+          isPendingRequest(request) ? ATTENTION_ROW_CLASS_NAME : undefined
+        }
       />
       <PaginationControls
         currentPage={currentPage}

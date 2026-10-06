@@ -6,7 +6,6 @@ import {
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
-import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { SkeletonTable } from '@/components/feedback/loading';
 import { Button } from '@/components/ui/button';
@@ -19,7 +18,7 @@ const DUMMY_REDUCTION_VALUES = [320, 160, 90, 20, 10] as const;
 const MAX_DUMMY_REDUCTION_VALUE = Math.max(...DUMMY_REDUCTION_VALUES);
 /** Narrow minimums keep the table unscrolled in the Home main column down to ~1280px viewports. */
 const projectStatusGridColumns =
-  'minmax(180px,1.5fr) minmax(112px,auto) minmax(152px,1fr) 80px';
+  'minmax(180px,1.5fr) minmax(112px,auto) minmax(152px,1fr)';
 const PROJECT_STATUS_TABLE_MIN_WIDTH = 600;
 
 type ProjectStatusRow = {
@@ -174,19 +173,12 @@ export function AdminProjectStatusTable({
           </div>
         ),
       },
-      {
-        id: 'action',
-        label: '操作',
-        render: ({ project }) => (
-          <RowActionButton onClick={() => onOpenProjectDetail(project)} />
-        ),
-      },
     ],
-    [onOpenMembership, onOpenProjectDetail, openReviews, openReviewsError],
+    [onOpenMembership, openReviews, openReviewsError],
   );
 
   if (projectsLoading) {
-    return <SkeletonTable columns={4} rows={PROJECT_STATUS_PAGE_SIZE} minWidth={PROJECT_STATUS_TABLE_MIN_WIDTH} />;
+    return <SkeletonTable columns={3}rows={PROJECT_STATUS_PAGE_SIZE} minWidth={PROJECT_STATUS_TABLE_MIN_WIDTH} />;
   }
 
   if (projectsError) {

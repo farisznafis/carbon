@@ -6,10 +6,10 @@ import type { Project } from '@/api/projects';
 import { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import {
+  ATTENTION_ROW_CLASS_NAME,
   DataGridTable,
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
-import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -52,7 +52,7 @@ type ProjectTableProps = {
 };
 
 const projectTableGridColumns =
-  'minmax(240px,1.6fr) minmax(100px,.5fr) minmax(240px,1.35fr) minmax(160px,.8fr) minmax(140px,.7fr) minmax(155px,.75fr) minmax(88px,.4fr)';
+  'minmax(240px,1.6fr) minmax(100px,.5fr) minmax(240px,1.35fr) minmax(160px,.8fr) minmax(140px,.7fr) minmax(155px,.75fr)';
 
 const projectStatusOptions: ProjectStatus[] = [
   '作成済み',
@@ -598,17 +598,6 @@ export function ProjectTable({
           </span>
         ),
       },
-
-      {
-        id: 'actions',
-        label: '操作',
-
-        render: (project) => (
-          <RowActionButton
-            onClick={() => onEdit?.(project)}
-          />
-        ),
-      },
     ];
 
   return (
@@ -633,7 +622,7 @@ export function ProjectTable({
               String(project.id),
             ),
           )
-            ? 'bg-warning-subtle/50 shadow-[inset_3px_0_0_hsl(var(--warning))]'
+            ? ATTENTION_ROW_CLASS_NAME
             : undefined
         }
       />

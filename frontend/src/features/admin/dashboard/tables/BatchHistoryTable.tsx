@@ -9,7 +9,6 @@ import {
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
-import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { BatchHistoryDetailDialog } from './BatchHistoryDetailDialog';
 import { SkeletonTable } from '@/components/feedback/loading';
 import { BatchHistoryStatusBadge } from './BatchHistoryStatusBadge';
@@ -19,7 +18,7 @@ import { ActionButton } from '@/components/actions';
 const INITIAL_PAGE = 1;
 const INITIAL_ITEMS_PER_PAGE = 10;
 const batchHistoryGridColumns =
-  'minmax(72px, 0.45fr) minmax(130px, 0.8fr) minmax(175px, 1fr) minmax(175px, 1fr) minmax(160px, 0.9fr) minmax(175px, 1fr) minmax(100px, 0.55fr)';
+  'minmax(72px, 0.45fr) minmax(130px, 0.8fr) minmax(175px, 1fr) minmax(175px, 1fr) minmax(160px, 0.9fr) minmax(175px, 1fr)';
 
 type BatchHistoryTableProps = {
   initialItems: BatchHistoryItem[];
@@ -131,19 +130,12 @@ export function BatchHistoryTable({
           </span>
         ),
       },
-      {
-        id: 'actions',
-        label: '操作',
-        render: (item) => (
-          <RowActionButton onClick={() => setSelectedItem(item)} />
-        ),
-      },
     ],
     [],
   );
 
   if (isLoading) {
-    return <SkeletonTable columns={7} rows={6} gridTemplateColumns={batchHistoryGridColumns} minWidth={1120} />;
+    return <SkeletonTable columns={6}rows={6} gridTemplateColumns={batchHistoryGridColumns} minWidth={1120} />;
   }
 
   if (loadError) {
