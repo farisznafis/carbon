@@ -104,7 +104,8 @@ public class AdminMonitoringController {
            description = "設備1件分の個別活動データの詳細を取得します。")
     public EnR002IndividualActivityDetailResponse getRowDetail(
             @PathVariable Integer equipmentId,
+            @RequestParam String projectPublicId,
             Authentication authentication) {
-        return individualActivityService.getRowDetail(equipmentId, authentication.getName());
+        return individualActivityService.getRowDetail(equipmentId, projectPublicId, authentication.getName());
     }
 }

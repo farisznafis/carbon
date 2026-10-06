@@ -134,26 +134,31 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
         return byProject.entrySet().stream()
                 .map(entry -> new CompanyActivityGroupResponse(
                         entry.getKey().getPublicId(),
-                        entry.getKey().getProjectNumber(),
+                        entry.getKey().getProjectName(),
                         buildRows(entry.getKey(), entry.getValue())))
                 .toList();
     }
  
     @Override
-    public EnR002IndividualActivityDetailResponse getRowDetail(Integer equipmentId, String currentUserId) {
+        public EnR002IndividualActivityDetailResponse getRowDetail(
+                Integer equipmentId, String projectPublicId, String currentUserId) {
+
+        // 1. Access check first, so a forbidden caller cannot probe which equipment ids exist.
+        projectService.assertProject(projectPublicId, currentUserId);
+
         EnR002Equipment equipment = equipmentRepository.findById(equipmentId)
                 .orElseThrow(() -> new IndividualActivityNotFoundException(equipmentId));
- 
+
+        // 2. Look the participation up inside the requested project only.
         ParticipatingProject participation = participatingProjectRepository
                 .findByEquipment_Id(equipmentId).stream()
+                .filter(p -> projectPublicId.equals(p.getProject().getPublicId()))
                 .findFirst()
                 .orElseThrow(() -> new IndividualActivityNotFoundException(equipmentId));
- 
+
         Project project = participation.getProject();
-        projectService.assertProject(project.getPublicId(), currentUserId);
- 
         ReportingWindow window = loadReportingWindow(project.getId(), equipment);
- 
+
         return new EnR002IndividualActivityDetailResponse(
                 equipment.getId(),
                 buildMemberInfo(equipment, participation),
@@ -162,7 +167,7 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
                 buildRegistrationRequirements(equipment, participation),
                 buildMonitoringInfo(window)
         );
-    }
+        }
  
     // ------------------------------------------------------------------
     // Row assembly
@@ -247,14 +252,12 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
                         Comparator.nullsFirst(Comparator.naturalOrder()));
  
         static ReportingWindow from(List<EnR002ReductionResult> results) {
-            // SOURCE PENDING: `isReported` marks the batch result that was actually submitted
-            // to J-Credit. The column is not in the schema yet — until it is added, every row
-            // is treated as a first-time report and the 開始日 block stays zero.
-            Optional<EnR002ReductionResult> lastReported = results.stream()
-                    .filter(null) //.filter(r -> Boolean.TRUE.equals(r.getIsReported()))
-                    .max(BY_BATCH);
- 
-            return new ReportingWindow(lastReported, results.stream().max(BY_BATCH));
+        // SOURCE PENDING: `isReported` marks the batch result that was actually submitted
+        // to J-Credit. The column is not in the schema yet, so every row is treated as a
+        // first-time report and the 開始日 block stays zero.
+        Optional<EnR002ReductionResult> lastReported = Optional.empty();
+
+        return new ReportingWindow(lastReported, results.stream().max(BY_BATCH));
         }
  
         static ReportingWindow empty() {
@@ -303,7 +306,7 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
         List<EnR002IndividualActivityDetailResponse.FileRef> files =
                 equipmentFileRepository.findByEquipmentId(equipment.getId()).stream()
                         .map(file -> new EnR002IndividualActivityDetailResponse.FileRef(
-                                file.getFileType().name(), file.getS3Key()))
+                                file.getFileType().getValue(), file.getS3Key()))
                         .toList();
  
         return new EnR002IndividualActivityDetailResponse.EquipmentInfo(
@@ -354,6 +357,7 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
  
         LocalDate applicationDate = participation.getCreatedAt().toLocalDate();
         LocalDate operationDate = equipment.getEquipmentOpDate();
+        
  
         return new EnR002IndividualActivityDetailResponse.RegistrationRequirements(
                 isJapaneseAddress(equipment.getSite()),
@@ -436,12 +440,14 @@ public class EnR002IndividualActivityServiceImpl implements EnR002IndividualActi
         String prefecture = site.getPrefecture();
         return prefecture != null && prefecture.matches(JP_PREFECTURE_SUFFIX_PATTERN);
     }
+
  
     private boolean isWithinTwoYears(LocalDate applicationDate, LocalDate operationDate) {
         if (applicationDate == null || operationDate == null) {
             return false;
         }
-        return !operationDate.isBefore(applicationDate.minusYears(2));
+            return !operationDate.isBefore(applicationDate.minusYears(2))
+                && !operationDate.isAfter(applicationDate);
     }
  
     private String formatAddress(Site site) {
