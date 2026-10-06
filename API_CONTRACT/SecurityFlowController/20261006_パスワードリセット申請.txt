@@ -1,0 +1,51 @@
+パスワードリセット申請
+//入力されたメールアドレス宛にパスワードリセット用のリンクを送信する。
+//参加企業ユーザー・運営ユーザーの両方が対象。
+//ログイン不要（公開エンドポイント）。
+
+URL: POST /auth/password-reset/request
+Content-Type: application/json
+
+Request Body (JSON):
+{
+	"email": "user@example.com"
+}
+
+Response – Success (HTTP 200):
+{
+	"statusCode": "OK",
+	"message": "該当するアカウントが存在する場合、パスワードリセット用のメールを送信しました。"
+}
+
+//アカウントの有無を推測されないよう、該当するアカウントが存在しない場合も同じ成功応答を返す。
+//メール内リンク: {フロントエンドURL}/reset-password#token=...（有効期限30分、1回限り有効）
+//再申請すると、以前に送信した未使用のリンクは失効する。
+//続きは「アクションリンク検証」→「パスワードリセット完了」。
+
+Response – Error:
+(HTTP 400)
+{
+	"statusCode": "VALIDATION_ERROR",
+	"message": "入力内容に誤りがあります。",
+	"errors": {
+		"email": "電子メールアドレスとして正しい形式にしてください" //標準メッセージ（Accept-Language により変わる）
+	}
+}
+--
+(HTTP 429) //同じメールアドレスで1時間に3回を超えた場合、または同一IPから15分間に20回を超えた場合
+{
+	"statusCode": "TOO_MANY_REQUESTS",
+	"message": "リクエストが多すぎます。しばらくしてから再度お試しください。"
+}
+--
+(HTTP 404) //機能が無効の場合
+{
+	"statusCode": "NOT_FOUND",
+	"message": "該当するリソースが見つかりませんでした。"
+}
+--
+(HTTP 500)
+{
+	"statusCode": "INTERNAL_SERVER_ERROR",
+	"message": "サイト情報の取得中にエラーが発生しました。"
+}

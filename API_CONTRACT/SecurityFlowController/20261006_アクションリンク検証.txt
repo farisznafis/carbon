@@ -1,0 +1,56 @@
+アクションリンク検証
+//メールで届いたリンクのトークンを、後続処理用のアクションセッションに交換する。
+//マスターアカウント設定・パスワードリセット・招待によるアカウント作成・却下後の再申請の共通の最初の手順。
+//ログイン不要（公開エンドポイント）。
+
+URL: POST /auth/action-links/exchange
+Content-Type: application/json
+
+Request Body (JSON):
+{
+	"token": "3f9c1a7e5b2d4e889a017c6b2f4d8e13" //メール内リンクのフラグメント #token=... から取得した値
+}
+
+Response – Success (HTTP 200):
+{
+	"statusCode": "OK",
+	"message": "リンクを開きました。",
+	"actionSessionToken": "e81f4d7c2a9b6e3f8c1d5a7b9e2f4c6d", //以降のAPIで X-Action-Session ヘッダーに設定する
+	"purpose": "PASSWORD_RESET",
+	"expiresInSeconds": 900
+}
+
+//purpose ごとのリンク先画面・有効期限（既定値。環境変数で変更可能）
+//  MASTER_ACCOUNT_SETUP      /account/setup#token=...    リンク72時間 / セッション30分 (1800)
+//  REJECTED_SIGNUP_REVISION  /signup/revision#token=...  リンク7日間  / セッション2時間 (7200)
+//  PASSWORD_RESET            /reset-password#token=...   リンク30分   / セッション15分 (900)
+//  USER_INVITATION           /user/invitation#token=...  リンク7日間  / セッション1時間 (3600)
+//リンクは一度交換すると無効になる（1回限り有効）。同じ対象に新しいリンクが発行されると古いリンクは失効する。
+
+Response – Error:
+(HTTP 401) //トークン不正・使用済み・期限切れ・失効済み
+{
+	"statusCode": "INVALID_OR_EXPIRED_TOKEN",
+	"message": "セキュリティトークンが無効か、有効期限が切れています。"
+}
+--
+(HTTP 400)
+{
+	"statusCode": "VALIDATION_ERROR",
+	"message": "入力内容に誤りがあります。",
+	"errors": {
+		"token": "空白は許可されていません" //標準メッセージ（Accept-Language により変わる）
+	}
+}
+--
+(HTTP 429) //同一IPから15分間に20回を超えた場合（セキュリティ系POSTの合計）
+{
+	"statusCode": "TOO_MANY_REQUESTS",
+	"message": "リクエストが多すぎます。しばらくしてから再度お試しください。"
+}
+--
+(HTTP 500)
+{
+	"statusCode": "INTERNAL_SERVER_ERROR",
+	"message": "サイト情報の取得中にエラーが発生しました。"
+}

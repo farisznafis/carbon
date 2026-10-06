@@ -1,0 +1,72 @@
+マスターアカウント設定
+//入会申請が承認された企業の代表者が、メールのリンクからマスターアカウントのユーザー名とパスワードを設定する。
+//事前に「アクションリンク検証」で purpose = MASTER_ACCOUNT_SETUP のアクションセッションを取得しておく。
+//ログイン不要（公開エンドポイント）。
+
+URL: POST /auth/master-account/setup
+Content-Type: application/json
+X-Action-Session: e81f4d7c2a9b6e3f8c1d5a7b9e2f4c6d
+
+Request Body (JSON):
+{
+	"username": "tyamada", //3〜50文字。半角英数字、スペース、@、_、絵文字
+	"password": "Abcd1234" //8〜64文字。大文字・小文字・数字を各1文字以上
+}
+
+Response – Success (HTTP 200):
+{
+	"statusCode": "OK",
+	"message": "マスターアカウントを作成しました。企業が有効化されました。"
+}
+
+//氏名・メールアドレス・電話番号・役職は入会申請時の代表者情報がそのまま使われる。
+//作成されるユーザーの role は "master"、メールOTPログインは有効（無効化不可）。
+//完了と同時に企業が有効化され、リンクとセッションは使用済みになる。
+
+Response – Error:
+(HTTP 401) //セッション不正・期限切れ・purpose 不一致、企業が設定待ち状態でない、マスターが既に存在する
+{
+	"statusCode": "INVALID_OR_EXPIRED_TOKEN",
+	"message": "セキュリティトークンが無効か、有効期限が切れています。"
+}
+--
+(HTTP 409)
+{
+	"statusCode": "USED_USERNAME",
+	"message": "このユーザ名は既に使用されています。"
+}
+--
+(HTTP 400)
+{
+	"statusCode": "VALIDATION_ERROR",
+	"message": "入力内容に誤りがあります。",
+	"errors": {
+		"username": "ユーザー名は半角英数字、スペース、@、_、絵文字で入力してください。",
+		"password": "パスワードは8〜64文字で、大文字・小文字・数字をそれぞれ1文字以上含めてください。よく使われるパスワードは使用できません。"
+	}
+}
+//未入力・文字数違反は標準メッセージ（Accept-Language により変わる）。例: "空白は許可されていません"、"3 から 50 の間のサイズにしてください"
+--
+(HTTP 400) //X-Action-Session ヘッダーがない場合
+{
+	"statusCode": "BAD_REQUEST",
+	"message": "Required request header 'X-Action-Session' for method parameter type String is not present"
+}
+--
+(HTTP 404) //機能が無効の場合
+{
+	"statusCode": "NOT_FOUND",
+	"message": "該当するリソースが見つかりませんでした。"
+}
+--
+(HTTP 429) //同一IPから15分間に20回を超えた場合（セキュリティ系POSTの合計）
+{
+	"statusCode": "TOO_MANY_REQUESTS",
+	"message": "リクエストが多すぎます。しばらくしてから再度お試しください。"
+}
+--
+(HTTP 500)
+{
+	"statusCode": "INTERNAL_SERVER_ERROR",
+	"message": "サイト情報の取得中にエラーが発生しました。"
+}
