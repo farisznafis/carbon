@@ -382,12 +382,12 @@ class AdminMonitoringControllerTest {
     void getRowDetail_valid_delegatesWithCallerName() {
         EnR002IndividualActivityDetailResponse detail = mock(EnR002IndividualActivityDetailResponse.class);
         when(authentication.getName()).thenReturn(USERNAME);
-        when(individualActivityService.getRowDetail(42, USERNAME)).thenReturn(detail);
+        when(individualActivityService.getRowDetail(42, PROJECT_PUBLIC_ID, USERNAME)).thenReturn(detail);
 
-        EnR002IndividualActivityDetailResponse result = controller.getRowDetail(42, authentication);
+        EnR002IndividualActivityDetailResponse result = controller.getRowDetail(42, PROJECT_PUBLIC_ID, authentication);
 
         assertThat(result).isSameAs(detail);
-        verify(individualActivityService).getRowDetail(42, USERNAME);
+        verify(individualActivityService).getRowDetail(42, PROJECT_PUBLIC_ID, USERNAME);
         verifyNoInteractions(deletionService);
     }
 
@@ -397,10 +397,10 @@ class AdminMonitoringControllerTest {
         // NOTE: IndividualActivityNotFoundException carries no @ResponseStatus, so unless a
         // @ControllerAdvice maps it, the client sees HTTP 500 for an unknown equipmentId.
         when(authentication.getName()).thenReturn(USERNAME);
-        when(individualActivityService.getRowDetail(999, USERNAME))
+        when(individualActivityService.getRowDetail(999, PROJECT_PUBLIC_ID, USERNAME))
                 .thenThrow(new EnR002IndividualActivityServiceImpl.IndividualActivityNotFoundException(999));
 
-        assertThatThrownBy(() -> controller.getRowDetail(999, authentication))
+        assertThatThrownBy(() -> controller.getRowDetail(999, PROJECT_PUBLIC_ID, authentication))
                 .isInstanceOf(EnR002IndividualActivityServiceImpl.IndividualActivityNotFoundException.class)
                 .hasMessageContaining("999");
     }
@@ -409,12 +409,12 @@ class AdminMonitoringControllerTest {
     @DisplayName("UT-AMC-05-03: 正常 - ログインユーザー名はAuthenticationから取得される")
     void getRowDetail_usesNameFromAuthentication() {
         when(authentication.getName()).thenReturn("another.user");
-        when(individualActivityService.getRowDetail(42, "another.user"))
+        when(individualActivityService.getRowDetail(42, PROJECT_PUBLIC_ID, "another.user"))
                 .thenReturn(mock(EnR002IndividualActivityDetailResponse.class));
 
-        controller.getRowDetail(42, authentication);
+        controller.getRowDetail(42, PROJECT_PUBLIC_ID, authentication);
 
         verify(authentication).getName();
-        verify(individualActivityService).getRowDetail(42, "another.user");
+        verify(individualActivityService).getRowDetail(42, PROJECT_PUBLIC_ID, "another.user");
     }
 }
