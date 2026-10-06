@@ -42,17 +42,6 @@ export const projectFields: FieldConfig<FormValues>[] = [
     label: 'プロジェクト番号',
     type: 'text',
   },
-  {
-    name: 'projectBase.startedAt',
-    label: 'プロジェクト開始日',
-    type: 'date',
-  },
-  {
-    name: 'projectBase.usePurpose',
-    label: '利用目的',
-    type: 'textarea',
-    placeholder: '例：地域脱炭素施策',
-  },
 ];
 
 export const representativeFields: FieldConfig<FormValues>[] = [

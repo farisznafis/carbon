@@ -1,9 +1,21 @@
+import { describe, expect, it } from 'vitest';
 import {
   normalizeMonitoringRecordListItem,
   normalizeRecentMonitoringItem,
 } from './mappers';
 
 describe('normalizeRecentMonitoringItem', () => {
+  it('preserves evidence returned under the DTO field names', () => {
+    const evidence = {
+      elpv_evidence: 'pv.pdf',
+      elpvr_evidence: 'pvr.pdf',
+      elpj_battery_evidence: 'battery.pdf',
+      elpj_control_evidence: 'control.pdf',
+    };
+
+    expect(normalizeRecentMonitoringItem(evidence)).toMatchObject(evidence);
+  });
+
   it('preserves the Project public ID without numeric conversion', () => {
     const monitoringItem = normalizeRecentMonitoringItem({
       projectId: 'PROJ0123',
