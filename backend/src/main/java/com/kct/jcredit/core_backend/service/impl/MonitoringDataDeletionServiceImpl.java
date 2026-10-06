@@ -19,6 +19,7 @@ import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepos
 import com.kct.jcredit.core_backend.service.MonitoringDataDeletionService;
 import com.kct.jcredit.core_backend.service.NotificationMessages;
 import com.kct.jcredit.core_backend.service.NotificationService;
+import com.kct.jcredit.core_backend.service.ProjectService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +63,7 @@ public class MonitoringDataDeletionServiceImpl implements MonitoringDataDeletion
     private final MonitoringDataRetentionProperties retentionProperties;
     private final NotificationService notificationService;
     private final NotificationMessages messages;
+    private final ProjectService projectService;
 
     @Override
     @Transactional(readOnly = true)
@@ -90,7 +92,7 @@ public class MonitoringDataDeletionServiceImpl implements MonitoringDataDeletion
         MonitoringDeletionScheduleListResponse response = new MonitoringDeletionScheduleListResponse();
         response.setStatusCode(ResponseConstants.OK);
         response.setMessage(ResponseConstants.MSG_MONITORING_DELETION_SCHEDULE_RETRIEVED);
-        response.setAutoDeletionEnabled(retentionProperties.isAutoDeletionEnabled());
+        response.setAutoDeletionEnabled(retentionProperties.isAutoDeletionEnabled() && earliestDeletionDate != null);
         response.setTotalProjects(schedule.size());
         response.setSchedule(schedule);
         return response;
@@ -132,15 +134,37 @@ public class MonitoringDataDeletionServiceImpl implements MonitoringDataDeletion
 
     @Override
     @Transactional(readOnly = true)
-    public MonitoringDataDeletionHistoryListResponse findDeletionHistory(Integer projectId, int page, int limit) {
+    public MonitoringDataDeletionHistoryListResponse findDeletionHistory(
+            Integer projectId, int page, int limit, String currentUserId) {
         Pageable pageable = PageRequest.of(
                 page - 1,
                 limit,
                 Sort.by(Sort.Direction.DESC, "createdAt").and(Sort.by(Sort.Direction.DESC, "id"))
         );
-        Page<MonitoringDataDeletionHistory> historyPage = projectId != null
-                ? monitoringDataDeletionHistoryRepository.findByProjectId(projectId, pageable)
-                : monitoringDataDeletionHistoryRepository.findAll(pageable);
+
+        Page<MonitoringDataDeletionHistory> historyPage;
+        if (projectId != null) {
+            Project project = projectRepository.findById(projectId).orElse(null);
+            // An unknown project and a project the caller may not see get the same answer,
+            // so the response does not reveal which ids exist.
+            if (project == null || !projectService.hasProjectAccess(project.getPublicId(), currentUserId)) {
+                MonitoringDataDeletionHistoryListResponse notFound =
+                        new MonitoringDataDeletionHistoryListResponse();
+                notFound.setStatusCode(ResponseConstants.NOT_FOUND);
+                return notFound;
+            }
+            historyPage = monitoringDataDeletionHistoryRepository.findByProjectId(projectId, pageable);
+        } else {
+            // No project given: restrict to the projects the caller may see. History only
+            // exists for finalized projects, so finalizedProjects() is the candidate set.
+            List<Integer> accessibleProjectIds = finalizedProjects().stream()
+                    .filter(project -> projectService.hasProjectAccess(project.getPublicId(), currentUserId))
+                    .map(Project::getId)
+                    .toList();
+            historyPage = accessibleProjectIds.isEmpty()
+                    ? Page.empty(pageable)
+                    : monitoringDataDeletionHistoryRepository.findByProjectIdIn(accessibleProjectIds, pageable);
+        }
 
         MonitoringDataDeletionHistoryListResponse response = new MonitoringDataDeletionHistoryListResponse();
         response.setStatusCode(ResponseConstants.OK);
@@ -257,7 +281,10 @@ public class MonitoringDataDeletionServiceImpl implements MonitoringDataDeletion
                 failureReason = UNPROCESSED_FAILURE_REASON;
             }
         } catch (RuntimeException e) {
-            failureReason = truncate(String.valueOf(e.getMessage()));
+            failureReason = truncate(
+            e.getMessage() == null || e.getMessage().isBlank()
+                    ? e.getClass().getName()
+                    : e.getMessage());
             log.error("[MONITORING DELETION] Batch delete failed for project {}", project.getPublicId(), e);
         }
 
