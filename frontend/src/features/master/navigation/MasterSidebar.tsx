@@ -6,6 +6,7 @@ import {
 import { AppSidebar } from '@/components/layout/sidebar/AppSidebar';
 import type { RoleSidebarProps } from '@/components/layout/sidebar/sidebarTypes';
 import { useAuth } from '@/contexts/AuthContext';
+import { SidebarHelpMenu } from '@/features/master/help/SidebarHelpMenu';
 import { paths } from '@/routes/paths';
 
 import {
@@ -132,6 +133,11 @@ export function MasterSidebar({
       <AppSidebar
         items={items}
         label="マスターのメインナビゲーション"
+        collapsed={collapsed}
+        onNavigate={onNavigate}
+      />
+
+      <SidebarHelpMenu
         collapsed={collapsed}
         onNavigate={onNavigate}
       />

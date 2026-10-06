@@ -17,7 +17,6 @@ import { ProjectMembershipContent } from '@/features/user/project-registration/P
 import { paths } from '@/routes/paths';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useDashboardStore } from '@/stores/dashboardStore';
-import { FloatingHelpButton } from '@/features/master/help/FloatingHelpButton';
 import { PageLoadingOverlay } from '@/components/feedback/loading';
 import { UserInvitationDialog } from '@/features/master/user-invitations/UserInvitationDialog';
 import { ActionButton } from '@/components/actions';
@@ -194,7 +193,6 @@ const MasterDashboard = () => {
         open={isInvitationDialogOpen}
         onOpenChange={setIsInvitationDialogOpen}
       />
-      <FloatingHelpButton context="master-dashboard" />
     </div>
   );
 };
