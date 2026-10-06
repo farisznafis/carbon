@@ -22,5 +22,6 @@ public interface MonitoringDataDeletionService {
     /**
      * Returns paginated deletion history, optionally filtered by project.
      */
-    MonitoringDataDeletionHistoryListResponse findDeletionHistory(Integer projectId, int page, int limit);
+    MonitoringDataDeletionHistoryListResponse findDeletionHistory(
+        Integer projectId, int page, int limit, String currentUserId);
 }

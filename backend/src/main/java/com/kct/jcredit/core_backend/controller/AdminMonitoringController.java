@@ -61,9 +61,10 @@ public class AdminMonitoringController {
             @Min(value = 1, message = "ページ番号は1以上で指定してください。") int page,
             @RequestParam(defaultValue = "20")
             @Min(value = 1, message = "表示件数は1以上で指定してください。")
-            @Max(value = 100, message = "表示件数は100以下で指定してください。") int limit) {
+            @Max(value = 100, message = "表示件数は100以下で指定してください。") int limit,
+            Authentication authentication) {
         MonitoringDataDeletionHistoryListResponse response =
-                monitoringDataDeletionService.findDeletionHistory(projectId, page, limit);
+                monitoringDataDeletionService.findDeletionHistory(projectId, page, limit, authentication.getName());
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
@@ -73,6 +74,8 @@ public class AdminMonitoringController {
     @GetMapping("/projects/{projectId}/individual-activity/rows")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "個別活動データ一覧取得（プロジェクト単位）",
+           description = "指定プロジェクトに紐づく報告対象設備の一覧を取得します。companyIdを指定すると、特定の参加企業の設備のみに絞り込めます。")
     public List<EnR002IndividualActivityRowResponse> getRowsByProject(
             @PathVariable String projectId,
             @RequestParam(required = false) String companyId,
@@ -84,6 +87,8 @@ public class AdminMonitoringController {
     @GetMapping("/companies/{companyId}/individual-activity")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "個別活動データ一覧取得（企業単位）",
+           description = "指定企業が保有する報告対象設備を、参加プロジェクトごとにまとめて取得します。")
     public List<CompanyActivityGroupResponse> getRowsByCompany(
             @PathVariable String companyId,
             @RequestParam(required = false) String projectId,
@@ -95,6 +100,8 @@ public class AdminMonitoringController {
     @GetMapping("/individual-activity/rows/{equipmentId}")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "個別活動データ詳細取得",
+           description = "設備1件分の個別活動データの詳細を取得します。")
     public EnR002IndividualActivityDetailResponse getRowDetail(
             @PathVariable Integer equipmentId,
             Authentication authentication) {
