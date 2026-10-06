@@ -1137,6 +1137,9 @@ const AdminDashboard = () => {
           <PendingCompanyApplicationDetail
             item={detailCompany}
             reviewMode={detailReviewMode}
+            backLabel={
+              companyDetailReturnTo === paths.adminDashboard ? 'ダッシュボード' : '企業一覧'
+            }
             onBack={closeCompanyDetail}
             onApprove={openApproveCompany}
             onReject={openRejectCompany}
