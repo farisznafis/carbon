@@ -1,13 +1,11 @@
-import type {
-  AdminCompanyListItem,
-  CompanyStatus,
-} from '@/api/admin/pendingCompanies';
+import type { AdminCompanyListItem } from '@/api/admin/pendingCompanies';
 import {
   DataGridTable,
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
 import { RowActionButton } from '@/components/data-display/RowActionButton';
-import { StatusBadge } from '@/components/data-display/StatusBadge';
+import { CompanyStatusBadge } from '@/features/admin/company-detail/CompanyStatusBadge';
+import { COMPANY_STATUS_CONTENT } from '@/features/admin/company-detail/companyStatusContent';
 
 type AdminCompanyApplicationsTableProps = {
   items: AdminCompanyListItem[];
@@ -19,31 +17,6 @@ type AdminCompanyApplicationsTableProps = {
 const companyTableGridColumns =
   'minmax(180px, 1.35fr) minmax(110px, 0.75fr) minmax(240px, 1.45fr) minmax(110px, 0.65fr) minmax(220px, 1fr)';
 
-const statusMeta: Record<
-  CompanyStatus,
-  {
-    label: string;
-    tone: 'warning' | 'danger' | 'success';
-  }
-> = {
-  PENDING: {
-    label: '申請受付',
-    tone: 'warning',
-  },
-  REJECTED: {
-    label: '却下',
-    tone: 'danger',
-  },
-  ACTIVE: {
-    label: '承認済み',
-    tone: 'success',
-  },
-  SUSPENDED: {
-    label: '利用停止',
-    tone: 'danger',
-  },
-};
-
 function formatRepresentativeName(item: AdminCompanyListItem) {
   const name = [item.representativeLastName, item.representativeFirstName]
     .filter(Boolean)
@@ -51,16 +24,6 @@ function formatRepresentativeName(item: AdminCompanyListItem) {
     .trim();
 
   return name || '-';
-}
-
-function CompanyStatusBadge({ status }: { status: CompanyStatus }) {
-  const meta = statusMeta[status];
-
-  return (
-    <StatusBadge tone={meta.tone}>
-      {meta.label}
-    </StatusBadge>
-  );
 }
 
 /** Pending applications need a decision, so they open the review; everything else opens details. */
@@ -115,7 +78,7 @@ export function AdminCompanyApplicationsTable({
       id: 'status',
       label: 'ステータス',
       sortable: true,
-      sortValue: (item) => statusMeta[item.status].label,
+      sortValue: (item) => COMPANY_STATUS_CONTENT[item.status].label,
       render: (item) => <CompanyStatusBadge status={item.status} />,
     },
     {

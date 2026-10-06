@@ -15,7 +15,7 @@ import type { BatchHistoryItem, BatchHistoryPagination } from '@/api/batch';
 import type { MonitoringCancelRequestListItem } from '@/api/monitoring';
 import type { Project } from '@/api/projects';
 import { RowActionButton } from '@/components/data-display/RowActionButton';
-import { StatusBadge } from '@/components/data-display/StatusBadge';
+import { CompanyStatusBadge } from '@/features/admin/company-detail/CompanyStatusBadge';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 import { NotificationsList } from '@/components/feedback/NotificationsList';
 import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
@@ -340,9 +340,7 @@ function CompanyApplicationSummary({
                           <p className='truncate text-body font-bold text-foreground'>
                             {company.nameJA || '企業名未登録'}
                           </p>
-                          <StatusBadge tone={isPending ? 'warning' : 'danger'}>
-                            {isPending ? '申請受付' : '却下'}
-                          </StatusBadge>
+                          <CompanyStatusBadge status={company.status} />
                         </div>
                         <p className='mt-1 text-subtle text-muted-foreground'>
                           受付日{' '}
