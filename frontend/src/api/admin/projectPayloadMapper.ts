@@ -113,34 +113,6 @@ function cleanPayload(payload: Record<string, unknown>): Record<string, unknown>
   );
 }
 
-const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
-
-/**
- * プロジェクト開始日 as the Instant the backend stores.
- *
- * The operator picks a calendar date; 会則 prints the stored instant in JST.
- * So the date is read as JST midnight whatever the browser's timezone —
- * otherwise the terms could show the day before the one that was picked.
- */
-export function toStartedAtInstant(value: unknown): string | undefined {
-  const date = toStringValue(value);
-  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return undefined;
-
-  const instant = new Date(`${date}T00:00:00+09:00`);
-  return Number.isNaN(instant.getTime()) ? undefined : instant.toISOString();
-}
-
-/** The reverse of `toStartedAtInstant`: the JST date, for the date input. */
-export function toStartedAtDate(value: unknown): string {
-  const text = toStringValue(value);
-  if (!text) return '';
-
-  const instant = new Date(text);
-  return Number.isNaN(instant.getTime())
-    ? ''
-    : new Date(instant.getTime() + JST_OFFSET_MS).toISOString().slice(0, 10);
-}
-
 const NOT_APPLICABLE_ENERGY_ACT_NUMBER = '0';
 
 export function mapAdminProjectPayload(
@@ -155,8 +127,6 @@ export function mapAdminProjectPayload(
         projectName: projectBase.projectName,
         projectNumber: projectBase.projectNumber,
         projectStatus: projectBase.projectStatus,
-        startedAt: toStartedAtInstant(projectBase.startedAt),
-        usePurpose: projectBase.usePurpose,
         baselineEmissions: projectBase.baselineEmissions,
         postProjectEmission: projectBase.postProjectEmission,
         repFirstName: projectBase.repFirstName,
@@ -315,8 +285,6 @@ export function mapAdminProjectUpdatePayload(
       toStringValue(projectBase.methodMainEmission) ?? '',
     methodCombiFeasibility: Boolean(projectBase.methodCombiFeasibility),
     methodDetails: toStringValue(projectBase.methodDetails) ?? '',
-    startedAt: toStartedAtInstant(projectBase.startedAt),
-    usePurpose: toStringValue(projectBase.usePurpose),
   };
 }
 

@@ -16,8 +16,6 @@ const AUTOFILL_VALUES = {
     projectName: '太陽光発電設備導入プロジェクト',
     projectNumber: 'P10001',
     projectStatus: ProjectStatusSchema.options[1],
-    startedAt: '2026-04-01',
-    usePurpose: '地域脱炭素施策',
     repFirstName: '太郎',
     repFirstNameKana: 'タロウ',
     repLastName: '山田',
