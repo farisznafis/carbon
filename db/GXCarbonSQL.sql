@@ -423,7 +423,10 @@ CREATE TABLE project_files (
     )),
     s3_key TEXT NOT NULL,
     original_file_name VARCHAR(255),
-    owned_by BOOLEAN NOT NULL
+    owned_by BOOLEAN NOT NULL,
+    file_version INTEGER NOT NULL DEFAULT 1,
+    -- The same version number can never exist twice for one document type
+    CONSTRAINT uq_project_files_version UNIQUE (project_id, file_type, file_version)
 );
 
 CREATE INDEX idx_project_files_project_id ON project_files(project_id);
