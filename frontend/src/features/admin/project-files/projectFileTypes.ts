@@ -77,6 +77,14 @@ export function groupProjectFiles(listing: ProjectFileListing): ProjectFileGroup
   });
 }
 
-/** Only PDFs can be shown in the browser; Excel files must be downloaded. */
-export const isPreviewableFile = (file: Pick<ProjectFile, 'originalFileName'>) =>
-  (file.originalFileName ?? '').toLowerCase().endsWith('.pdf');
+export type ProjectFilePreviewKind = 'pdf' | 'excel';
+
+/** How a file can be shown in the browser, or null when it can only be downloaded. */
+export function previewKindOf(
+  file: Pick<ProjectFile, 'originalFileName'>,
+): ProjectFilePreviewKind | null {
+  const name = (file.originalFileName ?? '').toLowerCase();
+  if (name.endsWith('.pdf')) return 'pdf';
+  if (name.endsWith('.xlsx')) return 'excel';
+  return null;
+}

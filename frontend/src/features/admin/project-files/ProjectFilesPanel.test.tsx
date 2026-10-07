@@ -91,11 +91,11 @@ describe('ProjectFilesPanel', () => {
     expect(within(rows[1]).getByText('最新')).toBeInTheDocument();
   });
 
-  it('only previews PDFs', async () => {
+  it('previews both PDF and Excel files', async () => {
     renderPanel();
 
     expect(await screen.findByRole('button', { name: 'report_v2.pdf を表示' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'report_v1.xlsx を表示' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'report_v1.xlsx を表示' })).toBeEnabled();
   });
 
   it('asks before deleting, then deletes', async () => {

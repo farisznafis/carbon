@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatUploadedAt } from '@/features/admin/project-plan/planFiles';
 import { cn } from '@/lib/utils';
-import { isPreviewableFile, type ProjectFileVersion } from './projectFileTypes';
+import { previewKindOf, type ProjectFileVersion } from './projectFileTypes';
 
 type ProjectFileRowProps = Readonly<{
   file: ProjectFileVersion;
@@ -49,7 +49,13 @@ function RowIconButton({
     <Tooltip>
       <TooltipTrigger asChild>
         {/* A disabled button fires no pointer events, so the span carries the tooltip. */}
-        {disabled ? <span tabIndex={0} aria-label={tooltip}>{button}</span> : button}
+        {disabled ? (
+          <span tabIndex={0} aria-label={tooltip} className="cursor-not-allowed">
+            {button}
+          </span>
+        ) : (
+          button
+        )}
       </TooltipTrigger>
       <TooltipContent>{tooltip}</TooltipContent>
     </Tooltip>
@@ -65,8 +71,9 @@ export function ProjectFileRow({
   onDelete,
 }: ProjectFileRowProps) {
   const name = file.originalFileName ?? '—';
-  const previewable = isPreviewableFile(file);
-  const FileIcon = previewable ? FileText : FileSpreadsheet;
+  const previewKind = previewKindOf(file);
+  const isExcel = name.toLowerCase().endsWith('.xlsx');
+  const FileIcon = isExcel ? FileSpreadsheet : FileText;
 
   return (
     <li className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
@@ -77,7 +84,7 @@ export function ProjectFileRow({
       <div className="flex min-w-0 flex-1 items-start gap-3">
         <FileIcon
           aria-hidden="true"
-          className={cn('mt-0.5 h-5 w-5 shrink-0', previewable ? 'text-destructive' : 'text-success')}
+          className={cn('mt-0.5 h-5 w-5 shrink-0', isExcel ? 'text-success' : 'text-destructive')}
         />
         <div className="min-w-0">
           <p className="flex flex-wrap items-center gap-2 text-sm text-foreground">
@@ -94,8 +101,8 @@ export function ProjectFileRow({
       <div className="flex shrink-0 items-center gap-1 self-end sm:self-auto">
         <RowIconButton
           label={`${name} を表示`}
-          tooltip={previewable ? '表示' : 'Excelファイルはダウンロードして確認してください'}
-          disabled={!previewable}
+          tooltip={previewKind ? '表示' : 'この形式は表示できません。ダウンロードしてご確認ください'}
+          disabled={!previewKind}
           onClick={() => onPreview(file)}
         >
           <Eye aria-hidden="true" />
