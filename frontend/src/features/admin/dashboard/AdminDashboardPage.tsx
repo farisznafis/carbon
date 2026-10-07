@@ -26,9 +26,7 @@ import {
   getMonitoringCancelRequests,
 } from '@/api/monitoring';
 import {
-  getProjectPlanProgressBatch,
   updateAdminProjectStatus,
-  type ProjectPlanProgressSummary,
   type ProjectStatus,
 } from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
@@ -59,10 +57,6 @@ import {
   type AdminHomePanel,
 } from './AdminDashboardOverview';
 import { AdminProjectOverviewCards } from './AdminProjectOverviewCards';
-import {
-  INCOMPLETE_PLAN_LABEL,
-  isPlanEntryIncomplete,
-} from './planProgressStatus';
 import {
   normalizeProjectStatus,
   PROJECT_STATUS_PRESENTATIONS,
@@ -323,7 +317,6 @@ const AdminDashboard = () => {
     ALL_PROJECT_FILTER,
   );
   const [projectSearchQuery, setProjectSearchQuery] = useState('');
-  const [showIncompletePlanOnly, setShowIncompletePlanOnly] = useState(false);
   const [pendingDialogOpen, setPendingDialogOpen] = useState(false);
   const [pendingDialogMode, setPendingDialogMode] =
     useState<PendingCompanyActionMode | null>(null);
@@ -649,54 +642,6 @@ const AdminDashboard = () => {
     resetCompanyPages();
   };
 
-  const [planProgress, setPlanProgress] = useState<
-    ReadonlyMap<string, ProjectPlanProgressSummary>
-  >(new Map());
-  const [planProgressLoading, setPlanProgressLoading] = useState(false);
-  const [planProgressError, setPlanProgressError] = useState<string | null>(
-    null,
-  );
-
-  /** Loads progress for all projects so overview and incomplete filtering stay accurate. */
-  useEffect(() => {
-    if (!canReadProjects) {
-      setPlanProgress(new Map());
-      setPlanProgressLoading(false);
-      setPlanProgressError(null);
-      return;
-    }
-
-    const ids = projects.map((project) => String(project.id));
-    if (ids.length === 0) {
-      setPlanProgress(new Map());
-      setPlanProgressLoading(false);
-      setPlanProgressError(null);
-      return;
-    }
-
-    let cancelled = false;
-    setPlanProgressLoading(true);
-    setPlanProgressError(null);
-    getProjectPlanProgressBatch(ids)
-      .then((result) => {
-        if (!cancelled) setPlanProgress(result);
-      })
-      .catch((error) => {
-        if (cancelled) return;
-        setPlanProgress(new Map());
-        setPlanProgressError(
-          getApiMessage(error, 'プロジェクトの作成進捗を取得できませんでした。'),
-        );
-      })
-      .finally(() => {
-        if (!cancelled) setPlanProgressLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [canReadProjects, projects]);
-
   const filteredProjects = useMemo(() => {
     const normalizedQuery = projectSearchQuery
       .trim()
@@ -711,24 +656,17 @@ const AdminDashboard = () => {
         getProjectMethodologyFilterValue(project) ===
           projectMethodologyFilter;
 
-      const matchesPlanProgress =
-        !showIncompletePlanOnly ||
-        isPlanEntryIncomplete(planProgress.get(String(project.id)));
-
       return (
         matchesStatus &&
         matchesMethodology &&
-        matchesPlanProgress &&
         matchesProjectSearch(project, normalizedQuery)
       );
     });
   }, [
-    planProgress,
     projectMethodologyFilter,
     projectSearchQuery,
     projectStatusFilter,
     projects,
-    showIncompletePlanOnly,
   ]);
 
   const {
@@ -754,18 +692,6 @@ const AdminDashboard = () => {
       navigate(paths.adminProjectDetail(project.id), {
         state: adminHomeProjectNavigationState,
       });
-    });
-  };
-
-  /**
-   * Opens the plan wizard on an existing project. Passing the project is what
-   * makes it resume rather than create a new one, and `planSlug` says which
-   * page to land on: the first unfinished one while the plan is incomplete,
-   * and undefined once it is done so the operator can pick a page themselves.
-   */
-  const handleOpenPlan = (project: Project, planSlug?: string) => {
-    adminPermissions.guardAction('PROJECT_UPDATE', () => {
-      navigate(paths.adminProjectRegister, { state: { project, planSlug } });
     });
   };
 
@@ -1399,19 +1325,6 @@ const AdminDashboard = () => {
                               ))}
                             </SelectContent>
                           </Select>
-                          <Button
-                            type="button"
-                            variant={showIncompletePlanOnly ? 'primary' : 'outline'}
-                            aria-pressed={showIncompletePlanOnly}
-                            disabled={planProgressLoading || Boolean(planProgressError)}
-                            title={planProgressError ?? undefined}
-                            onClick={() => {
-                              setShowIncompletePlanOnly((current) => !current);
-                              setProjectPage(1);
-                            }}
-                          >
-                            {INCOMPLETE_PLAN_LABEL}のみ表示
-                          </Button>
                         </>
                       }
                       search={
@@ -1458,8 +1371,6 @@ const AdminDashboard = () => {
                           onEdit={handleEditProject}
                           onStatusChange={handleChangeProjectStatus}
                           updatingProjectStatusId={updatingProjectStatusId}
-                          planProgress={planProgress}
-                          onOpenPlan={handleOpenPlan}
                         />
                       )}
                     </AdminTableCard>
