@@ -39,6 +39,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { ProjectMonitoringTable } from '@/features/admin/monitoring/ProjectMonitoringTable';
+import { ProjectDocumentsTab } from '@/features/admin/project-files/ProjectDocumentsTab';
 import { ProjectPlanFileCard } from '@/features/admin/project-plan/ProjectPlanFileCard';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
@@ -57,6 +58,7 @@ const PROJECT_DETAIL_TABS = [
   { value: 'monitoring', label: 'モニタリングデータ' },
   { value: 'membership', label: '入会届' },
   { value: 'companies', label: '参加企業' },
+  { value: 'documents', label: '書類' },
 ] as const;
 
 type ProjectDetailTab = (typeof PROJECT_DETAIL_TABS)[number]['value'];
@@ -511,6 +513,19 @@ export default function ProjectDetailAdmin() {
             <div className={dashboardEmptyStateClassName}>
               参加企業の一覧は準備中です。
             </div>
+          </ProjectDetailTabCard>
+        </TabsContent>
+
+        <TabsContent value="documents" className="m-0 pt-5">
+          <ProjectDetailTabCard
+            title="書類"
+            description="計画書・報告書などのファイルをバージョンごとに管理します。"
+          >
+            {!permissions.hasPermission('PROJECT_READ') ? (
+              <PermissionDeniedNotice permission="PROJECT_READ" />
+            ) : (
+              <ProjectDocumentsTab projectId={projectId} />
+            )}
           </ProjectDetailTabCard>
         </TabsContent>
       </Tabs>
