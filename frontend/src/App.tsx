@@ -92,8 +92,8 @@ const ProjectDetailAdmin = lazy(() => import("./features/admin/project-detail/Pr
 const AdminProjectInformation = lazy(() =>
   import('./features/admin/project-detail/AdminProjectInformationPage'),
 );
-const AdminProjectPlanApplication = lazy(() =>
-  import("./features/admin/project-detail/AdminProjectPlanApplicationPage"),
+const AdminProjectPlan = lazy(() =>
+  import("./features/admin/project-detail/AdminProjectPlanPage"),
 );
 const AdminMonitoringReport = lazy(() =>
   import("./features/admin/project-detail/AdminMonitoringReportPage"),
@@ -133,22 +133,9 @@ function RequireMaster({ children }: { children: JSX.Element }) {
   return <Navigate to={fallbackPath} replace />;
 }
 
-/**
- * The registration wizard serves two jobs. Opened bare it creates a project;
- * opened with a project in its state it edits that project's plan — which is
- * what 計画書更新 and the plan page's 更新 do, both already guarded by
- * PROJECT_UPDATE. Demanding PROJECT_CREATE for the second would turn away an
- * operator allowed to edit a plan but not to start new projects.
- */
+/** プロジェクト作成. An existing project is changed on the edit page, not here. */
 function AdminProjectRegisterRoute() {
-  const { state } = useLocation() as { state?: { project?: unknown } };
-  const isEditingExistingPlan = Boolean(state?.project);
-
-  return isEditingExistingPlan ? (
-    <AdminPermissionRoute permission="PROJECT_UPDATE" title="プロジェクト計画書更新" description="登録済みプロジェクトの計画書を更新します。">
-      <AdminProjectRegister />
-    </AdminPermissionRoute>
-  ) : (
+  return (
     <AdminPermissionRoute permission="PROJECT_CREATE" title="プロジェクト追加" description="新しいプロジェクトを登録します。">
       <AdminProjectRegister />
     </AdminPermissionRoute>
@@ -463,8 +450,8 @@ const App = () => {
             path={paths.adminProjectPlanRoute}
             element={
                   <RequireAdmin>
-                    <AdminPermissionRoute permission="PROJECT_READ" title="プロジェクト計画書" description="計画書の入力内容と関連資料を確認します。">
-                      <AdminProjectPlanApplication />
+                    <AdminPermissionRoute permission="PROJECT_READ" title="プロジェクト計画書" description="計画書ファイルと、認証対象期間・会員数計画を確認します。">
+                      <AdminProjectPlan />
                     </AdminPermissionRoute>
               </RequireAdmin>
             }

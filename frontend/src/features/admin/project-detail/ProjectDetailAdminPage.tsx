@@ -18,7 +18,6 @@ import { ActionButton } from '@/components/actions';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 import { PageSkeleton, SkeletonCard } from '@/components/feedback/loading';
 import { dashboardEmptyStateClassName } from '@/components/layout/DashboardLayout';
-import { Skeleton } from '@/components/ui/skeleton';
 import { PageBackButton } from '@/components/navigation/PageBackButton';
 import {
   PageTabsList,
@@ -39,15 +38,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { ProjectMonitoringTable } from '@/features/admin/monitoring/ProjectMonitoringTable';
+import { ProjectPlanFileCard } from '@/features/admin/project-plan/ProjectPlanFileCard';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
 import { resolveAdminProjectNavigationState } from '@/features/admin/navigation/adminProjectNavigation';
-import {
-  useAdminProjectDetailQuery,
-  useAdminProjectPlanProgressQuery,
-} from '@/hooks/admin/useAdminProjectDetailQuery';
+import { useAdminProjectDetailQuery } from '@/hooks/admin/useAdminProjectDetailQuery';
 import { paths } from '@/routes/paths';
 import { AdminProjectDetailLayout } from './AdminProjectDetailLayout';
 import { ProjectEmissionTrendCard } from './components/ProjectEmissionTrendCard';
@@ -101,70 +97,6 @@ function getMethodologyCode(project: AdminProjectDetail) {
     .filter(Boolean)
     .join('-');
   return methodologyCode || '—';
-}
-
-/** Renders the best-effort project-plan progress summary. */
-function ProjectPlanProgressCard({
-  completedForms,
-  totalForms,
-  isLoading,
-  hasError,
-}: Readonly<{
-  completedForms: number;
-  totalForms: number;
-  isLoading: boolean;
-  hasError: boolean;
-}>) {
-  const progressPercentage =
-    totalForms > 0 ? (completedForms / totalForms) * 100 : 0;
-  const remainingForms = Math.max(totalForms - completedForms, 0);
-
-  return (
-    <Card className="h-full rounded-xl border-border shadow-app-sm">
-      <CardHeader>
-        <CardTitle>計画書進捗</CardTitle>
-        <CardDescription>プロジェクト計画書の入力状況です。</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {isLoading ? (
-          <div
-            role="status"
-            aria-label="計画書の進捗を読み込んでいます"
-            className="space-y-4 py-2"
-          >
-            <Skeleton className="h-9 w-40" />
-            <Skeleton className="h-2 w-full" />
-            <Skeleton className="h-4 w-24" />
-          </div>
-        ) : hasError ? (
-          <p role="alert" className="py-6 text-small text-destructive">
-            計画書の進捗を取得できませんでした。
-          </p>
-        ) : totalForms > 0 ? (
-          <>
-            <p className="flex items-baseline gap-2 text-muted-foreground">
-              <strong className="text-form-title text-foreground">
-                {completedForms} / {totalForms}
-              </strong>
-              <span className="text-small">入力済み</span>
-            </p>
-            <Progress
-              value={progressPercentage}
-              className="h-2"
-              aria-label={`計画書進捗 ${completedForms}/${totalForms}`}
-            />
-            <p className="text-small text-muted-foreground">
-              残り {remainingForms} 項目
-            </p>
-          </>
-        ) : (
-          <p className="py-6 text-small text-muted-foreground">
-            計画書の進捗情報はありません。
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  );
 }
 
 /** Renders the project attributes most useful for quick scanning. */
@@ -292,7 +224,6 @@ export default function ProjectDetailAdmin() {
   const activeTab = resolveProjectDetailTab(searchParams.get('tab'));
   const permissions = useAdminPermissions();
   const projectQuery = useAdminProjectDetailQuery(projectId);
-  const progressQuery = useAdminProjectPlanProgressQuery(projectId);
   const project = projectQuery.data;
   const navigationState = resolveAdminProjectNavigationState(location.state);
   const projectDetailReturnTo =
@@ -401,9 +332,6 @@ export default function ProjectDetailAdmin() {
     );
   }
 
-  const completedForms = progressQuery.data?.completedForms ?? 0;
-  const totalForms = progressQuery.data?.totalForms ?? 0;
-
   return (
     <AdminProjectDetailLayout
       projectId={projectId}
@@ -485,12 +413,7 @@ export default function ProjectDetailAdmin() {
               }
               onOpenMembership={openMembership}
             />
-            <ProjectPlanProgressCard
-              completedForms={completedForms}
-              totalForms={totalForms}
-              isLoading={progressQuery.isLoading}
-              hasError={progressQuery.isError}
-            />
+            <ProjectPlanFileCard projectId={projectId} />
           </section>
 
           <section
@@ -499,7 +422,7 @@ export default function ProjectDetailAdmin() {
           >
             <ProjectNavigationCard
               title="プロジェクト計画書"
-              description="計画書の入力内容・関連資料を確認します。"
+              description="計画書ファイルと、認証対象期間・会員数計画を確認します。"
               icon={<FileText className="h-5 w-5" />}
               ariaLabel="プロジェクト計画書を開く"
               onClick={() =>

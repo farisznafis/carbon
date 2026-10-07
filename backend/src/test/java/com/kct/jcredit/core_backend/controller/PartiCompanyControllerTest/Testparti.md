@@ -19,12 +19,12 @@
 
 ## Service Index
 
-1. `PartiCompanyService`
+1. `PartiCompanyService` 〇
    - `PATCH /company` (`updateCompany`)
-2. `PartiCompanyRegisterService`
+2. `PartiCompanyRegisterService`〇
    - `POST /company/signup` (`signup`)
    - `POST /company/signup/company-info/validate` (`validateSignupCompanyInfo`)
-3. `CompanySecurityFlowService`
+3. `CompanySecurityFlowService`〇
    - `POST /company/signup/email-verification/start` (`startSignupEmailVerification`)
    - `POST /company/signup/email-verification/resend` (`resendSignupEmailVerification`)
    - `POST /company/signup/email-verification/verify` (`verifySignupEmail`)

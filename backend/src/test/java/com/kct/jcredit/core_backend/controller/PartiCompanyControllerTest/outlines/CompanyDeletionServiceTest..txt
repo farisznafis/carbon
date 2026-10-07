@@ -1,0 +1,191 @@
+package com.kct.jcredit.core_backend.controller.PartiCompanyControllerTest;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+/**
+ * CompanyDeletionService test outline.
+ * 対象メソッド: createDeletionRequest, approveDeletionRequest, rejectDeletionRequest
+ */
+class CompanyDeletionServiceTest {
+
+    @Nested
+    @DisplayName("createDeletionRequest（POST /company/{companyId}/deletion-request）のテスト")
+    class CreateDeletionRequestTest {
+
+        @Test
+        @DisplayName("UT-CDS-001: companyIdの会社が存在しない場合、COMPANY_NOT_FOUND例外をthrowする")
+        void createDeletionRequest_companyNotFound_throwsCompanyNotFound() {
+            // Input: companyId="COMP999", reason="事業都合により脱退"
+            //        companyRepository.findById("COMP999")がOptional.emptyを返すようモック
+            // Output: CustomException(400, COMPANY_NOT_FOUND, "企業が見つかりません。")がthrowされること
+            //         deletionRequestRepository.saveが呼ばれないこと
+        }
+
+        @Test
+        @DisplayName("UT-CDS-002: 既にPENDING状態の削除申請が存在する場合、REQUEST_ALREADY_EXISTS例外をthrowする")
+        void createDeletionRequest_pendingRequestExists_throwsRequestAlreadyExists() {
+            // Input: companyId="COMP001", reason="事業都合により脱退"
+            //        companyRepository.findById("COMP001")がcompanyを返すようモック
+            //        deletionRequestRepository.findByCompanyIdAndStatus("COMP001", PENDING)が既存のリクエストを返すようモック
+            // Output: CustomException(400, REQUEST_ALREADY_EXISTS, "この企業の削除申請が既に存在します（PENDING）。")がthrowされること
+            //         deletionRequestRepository.save、companyRepository.saveが呼ばれないこと
+        }
+
+        @Test
+        @DisplayName("UT-CDS-003: リクエストボディが不正（reason未入力等）な場合、400エラーをthrowする")
+        void createDeletionRequest_invalidRequestBody_throwsBadRequest() {
+            // Input: companyId="COMP001", reason=null または reason=""
+            // Output: 400エラー（バリデーションエラー、"リクエストボディが不正です。"）がthrowされること
+            //         companyRepository.findById、deletionRequestRepository.saveが呼ばれないこと
+        }
+
+        @Test
+        @DisplayName("UT-CDS-004: 正常に削除申請が作成できた場合、PENDING状態のリクエストが保存され企業が凍結される")
+        void createDeletionRequest_valid_createsPendingRequestAndFreezesCompany() {
+            // Input: companyId="COMP001", reason="事業都合により脱退"（Authorization: master_userのJWT）
+            //        companyRepository.findById("COMP001")がcompany(companyName="株式会社サンプル", status=ACTIVE)を返すようモック
+            //        deletionRequestRepository.findByCompanyIdAndStatus("COMP001", PENDING)がOptional.emptyを返すようモック
+            //        deletionRequestRepository.save(...)がrequestId=1, status=PENDING, requestedBy="master_user", requestedAt=2026-06-19T10:30:00のエンティティを返すようモック
+            // Output: statusCode=200, message="Deletion request created successfully"
+            //         data.requestId=1, companyId="COMP001", companyName="株式会社サンプル", requestedBy="master_user", reason="事業都合により脱退", status="PENDING", decidedBy=null, decidedAt=null, rejectionReason=null
+            //         companyRepository.saveに渡されたcompanyが凍結状態（例: isFrozen=true、companyStatus=FROZEN等）に更新されていることを検証
+        }
+
+        @Test
+        @DisplayName("UT-CDS-005: 認可されていないユーザ（master権限なし）がアクセスした場合、403 FORBIDDENをthrowする")
+        void createDeletionRequest_notMasterRole_throwsForbidden() {
+            // Input: companyId="COMP001", reason="事業都合により脱退"（Authorization: master以外のロールのJWT）
+            // Output: statusCode=403, message="FORBIDDEN"がthrowされること
+            //         companyRepository.findById、deletionRequestRepository.saveが呼ばれないこと
+        }
+    }
+
+    @Nested
+    @DisplayName("approveDeletionRequest（POST /company/{companyId}/deletion-approve）のテスト")
+    class ApproveDeletionRequestTest {
+
+        @Test
+        @DisplayName("UT-CDS-006: companyIdに紐づく削除申請が存在しない場合、REQUEST_NOT_FOUND例外をthrowする")
+        void approveDeletionRequest_requestNotFound_throwsRequestNotFound() {
+            // Input: companyId="COMP001"
+            //        deletionRequestRepository.findByCompanyIdAndStatus("COMP001", PENDING)がOptional.emptyを返すようモック
+            // Output: CustomException(400, REQUEST_NOT_FOUND, "削除申請が見つかりません。")がthrowされること
+            //         companyRepository.saveが呼ばれないこと
+        }
+
+        @Test
+        @DisplayName("UT-CDS-007: 削除申請のステータスがPENDING以外（APPROVED/REJECTED）の場合、INVALID_STATE例外をthrowする")
+        void approveDeletionRequest_notPending_throwsInvalidState() {
+            // Input: companyId="COMP001"
+            //        deletionRequestRepository.findByCompanyIdAndStatus("COMP001", PENDING)が既にstatus=APPROVEDのリクエストを返すようモック（またはfindByIdでstatusチェックする実装の場合はそれに合わせる）
+            // Output: CustomException(400, INVALID_STATE, "PENDING以外は処理できません。")がthrowされること
+            //         companyRepository.saveが呼ばれないこと
+        }
+
+        @Test
+        @DisplayName("UT-CDS-008: 削除申請はPENDINGだが紐づく企業が存在しない場合、COMPANY_NOT_FOUND例外をthrowする")
+        void approveDeletionRequest_companyNotFound_throwsCompanyNotFound() {
+            // Input: companyId="COMP001"
+            //        deletionRequestRepository.findByCompanyIdAndStatus("COMP001", PENDING)がstatus=PENDINGのリクエストを返すようモック
+            //        companyRepository.findById("COMP001")がOptional.emptyを返すようモック
+            // Output: CustomException(400, COMPANY_NOT_FOUND, "企業が見つかりません。")がthrowされること
+            //         companyRepository.saveが呼ばれないこと
+        }
+
+        @Test
+        @DisplayName("UT-CDS-009: 正常に承認された場合、企業と関連データがカスケード論理削除され申請がAPPROVEDに更新される")
+        void approveDeletionRequest_valid_cascadesSoftDeleteAndApprovesRequest() {
+            // Input: companyId="COMP001"（Authorization: operator_adminのJWT）
+            //        deletionRequestRepository.findByCompanyIdAndStatus("COMP001", PENDING)がrequestId=1, requestedBy="master_user", requestedAt=2026-06-19T10:30:00, reason="事業都合により脱退"のリクエストを返すようモック
+            //        companyRepository.findById("COMP001")がcompany(companyName="株式会社サンプル")を返すようモック
+            //        userRepository.findByCompanyId、siteRepository.findByCompanyId、projectRelationRepository等が関連エンティティ一覧を返すようモック
+            // Output: statusCode=200, message="Deletion request approved and company soft-deleted successfully"
+            //         data.requestId=1, companyId="COMP001", status="APPROVED", decidedBy="operator_admin", decidedAt=2026-06-19T11:00:00, rejectionReason=null
+            //         companyRepository.saveに渡されたcompanyが論理削除状態（deletedAt設定、isActive=false等）であることを検証
+            //         userRepository.saveAll／siteRepository.saveAll／projectRelationRepository.saveAll／equipmentRepository.saveAll／reductionResultRepository.saveAll等、関連エンティティが論理削除（deletedAt設定）されたことを検証
+            //         deletionRequestRepository.saveに渡されたrequestのstatus=APPROVED、decidedBy、decidedAtが設定されていることを検証
+        }
+
+        @Test
+        @DisplayName("UT-CDS-010: カスケード削除処理中に例外が発生した場合、トランザクションがロールバックされ一部のみ更新されないこと")
+        void approveDeletionRequest_cascadeFailure_rollsBackTransaction() {
+            // Input: companyId="COMP001"
+            //        deletionRequestRepository.findByCompanyIdAndStatus("COMP001", PENDING)がstatus=PENDINGのリクエストを返すようモック
+            //        companyRepository.findById("COMP001")がcompanyを返すようモック
+            //        equipmentRepository.saveAll等、カスケード処理の一部でRuntimeExceptionをthrowするようモック
+            // Output: 例外がそのままthrowされること
+            //         companyRepository.saveで更新された内容がコミットされない（ロールバックされる）ことを検証（@Transactional前提のテスト、実際はトランザクション境界の確認）
+            //         deletionRequestRepository.saveがAPPROVEDで呼ばれていないことを検証
+        }
+
+        @Test
+        @DisplayName("UT-CDS-011: operator権限がないユーザがアクセスした場合、403 FORBIDDENをthrowする")
+        void approveDeletionRequest_notOperatorRole_throwsForbidden() {
+            // Input: companyId="COMP001"（Authorization: operator以外のロールのJWT）
+            // Output: statusCode=403, message="FORBIDDEN"がthrowされること
+            //         deletionRequestRepository.findByCompanyIdAndStatus、companyRepository.saveが呼ばれないこと
+        }
+    }
+
+    @Nested
+    @DisplayName("rejectDeletionRequest（POST /company/{companyId}/deletion-reject）のテスト")
+    class RejectDeletionRequestTest {
+
+        @Test
+        @DisplayName("UT-CDS-012: companyIdに紐づく削除申請が存在しない場合、REQUEST_NOT_FOUND例外をthrowする")
+        void rejectDeletionRequest_requestNotFound_throwsRequestNotFound() {
+            // Input: companyId="COMP001", rejectionReason="提出書類に不備があるため却下"
+            //        deletionRequestRepository.findByCompanyIdAndStatus("COMP001", PENDING)がOptional.emptyを返すようモック
+            // Output: CustomException(400, REQUEST_NOT_FOUND, "削除申請が見つかりません。")がthrowされること
+            //         companyRepository.saveが呼ばれないこと
+        }
+
+        @Test
+        @DisplayName("UT-CDS-013: 削除申請のステータスがPENDING以外の場合、INVALID_STATE例外をthrowする")
+        void rejectDeletionRequest_notPending_throwsInvalidState() {
+            // Input: companyId="COMP001", rejectionReason="提出書類に不備があるため却下"
+            //        deletionRequestRepository.findByCompanyIdAndStatus("COMP001", PENDING)が既にstatus=REJECTEDのリクエストを返すようモック
+            // Output: CustomException(400, INVALID_STATE, "PENDING以外は処理できません。")がthrowされること
+            //         companyRepository.saveが呼ばれないこと
+        }
+
+        @Test
+        @DisplayName("UT-CDS-014: rejectionReasonが未入力の場合、REJECTION_REASON_REQUIRED例外をthrowする")
+        void rejectDeletionRequest_missingRejectionReason_throwsReasonRequired() {
+            // Input: companyId="COMP001", rejectionReason=null または rejectionReason=""
+            //        deletionRequestRepository.findByCompanyIdAndStatus("COMP001", PENDING)がstatus=PENDINGのリクエストを返すようモック
+            // Output: CustomException(400, REJECTION_REASON_REQUIRED, "rejectionReasonは必須です。")がthrowされること
+            //         companyRepository.saveが呼ばれないこと
+        }
+
+        @Test
+        @DisplayName("UT-CDS-015: リクエストボディが不正な場合、400エラーをthrowする")
+        void rejectDeletionRequest_invalidRequestBody_throwsBadRequest() {
+            // Input: companyId="COMP001", request body不正（JSON形式エラー等）
+            // Output: 400エラー（"リクエストボディが不正です。"）がthrowされること
+            //         deletionRequestRepository.findByCompanyIdAndStatusが呼ばれないこと
+        }
+
+        @Test
+        @DisplayName("UT-CDS-016: 正常に却下された場合、申請がREJECTEDに更新され企業の凍結状態が解除される")
+        void rejectDeletionRequest_valid_rejectsRequestAndUnfreezesCompany() {
+            // Input: companyId="COMP001", rejectionReason="提出書類に不備があるため却下"（Authorization: operator_adminのJWT）
+            //        deletionRequestRepository.findByCompanyIdAndStatus("COMP001", PENDING)がrequestId=1, requestedBy="master_user", requestedAt=2026-06-19T10:30:00, reason="事業都合により脱退"のリクエストを返すようモック
+            //        companyRepository.findById("COMP001")がcompany(companyName="株式会社サンプル", isFrozen=true)を返すようモック
+            // Output: statusCode=200, message="Deletion request rejected"
+            //         data.requestId=1, companyId="COMP001", status="REJECTED", decidedBy="operator_admin", decidedAt=2026-06-19T11:00:00, rejectionReason="提出書類に不備があるため却下"
+            //         companyRepository.saveに渡されたcompanyの凍結状態が解除（isFrozen=false、companyStatus=ACTIVE等）されていることを検証
+            //         deletionRequestRepository.saveに渡されたrequestのstatus=REJECTED、decidedBy、decidedAt、rejectionReasonが設定されていることを検証
+        }
+
+        @Test
+        @DisplayName("UT-CDS-017: operator権限がないユーザがアクセスした場合、403 FORBIDDENをthrowする")
+        void rejectDeletionRequest_notOperatorRole_throwsForbidden() {
+            // Input: companyId="COMP001", rejectionReason="提出書類に不備があるため却下"（Authorization: operator以外のロールのJWT）
+            // Output: statusCode=403, message="FORBIDDEN"がthrowされること
+            //         deletionRequestRepository.findByCompanyIdAndStatus、companyRepository.saveが呼ばれないこと
+        }
+    }
+}
