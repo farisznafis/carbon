@@ -1,17 +1,10 @@
 import { useState } from 'react';
-import { FolderOpen, Upload } from 'lucide-react';
-import {
-  getProjectFileDownloadUrl,
-  type ProjectFileType,
-} from '@/api/admin/projectFiles';
+import * as AccordionPrimitive from '@radix-ui/react-accordion';
+import { ChevronRight, FolderOpen, Plus } from 'lucide-react';
+import type { ProjectFileType } from '@/api/admin/projectFiles';
 import { ActionButton } from '@/components/actions';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+import { Accordion, AccordionContent, AccordionItem } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -23,24 +16,36 @@ import { ProjectFilePreviewDialog } from './ProjectFilePreviewDialog';
 import { ProjectFileRow } from './ProjectFileRow';
 import { ProjectFileUploadDialog } from './ProjectFileUploadDialog';
 import { projectFileTypeLabel, type ProjectFileVersion } from './projectFileTypes';
-import { useProjectFiles } from './useProjectFiles';
+import { downloadProjectFile, useProjectFiles } from './useProjectFiles';
 
 const errorMessage = (error: unknown, fallback: string) =>
   error instanceof Error && error.message ? error.message : fallback;
 
+/** An open upload dialog, with the type chosen beforehand if any. Null when closed. */
+export type ProjectFileUploadRequest = { type: ProjectFileType | null } | null;
+
+type ProjectFilesPanelProps = Readonly<{
+  projectId: string;
+  /** Owned by the tab, whose toolbar holds the global upload button. */
+  uploadRequest: ProjectFileUploadRequest;
+  onUploadRequestChange: (request: ProjectFileUploadRequest) => void;
+}>;
+
 /**
  * The フォーム tab: one collapsible section per document type, like Swagger's
- * operation list, each holding its versions newest first. Upload is global —
- * one button, a dialog that asks for the type and the file.
+ * operation list, each holding its versions newest first. Each section adds
+ * to itself, so the upload dialog opens with its type already chosen.
  */
-export function ProjectFilesPanel({ projectId }: Readonly<{ projectId: string }>) {
+export function ProjectFilesPanel({
+  projectId,
+  uploadRequest,
+  onUploadRequestChange,
+}: ProjectFilesPanelProps) {
   const permissions = useAdminPermissions();
   const { listingQuery, groups, uploadMutation, deleteMutation } = useProjectFiles(projectId);
 
   // Null until the user toggles a section: until then the sections with files are open.
   const [openSections, setOpenSections] = useState<string[] | null>(null);
-  const [uploadOpen, setUploadOpen] = useState(false);
-  const [uploadPresetType, setUploadPresetType] = useState<ProjectFileType | null>(null);
   const [previewFile, setPreviewFile] = useState<ProjectFileVersion | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProjectFileVersion | null>(null);
 
@@ -48,10 +53,9 @@ export function ProjectFilesPanel({ projectId }: Readonly<{ projectId: string }>
     openSections ?? groups.filter((group) => group.files.length > 0).map((group) => group.type);
 
   const openUpload = (presetType: ProjectFileType | null = null) =>
-    permissions.guardAction('PROJECT_UPDATE', () => {
-      setUploadPresetType(presetType);
-      setUploadOpen(true);
-    });
+    permissions.guardAction('PROJECT_UPDATE', () =>
+      onUploadRequestChange({ type: presetType }),
+    );
 
   const expandSection = (fileType: ProjectFileType) =>
     setOpenSections((current) => {
@@ -61,7 +65,7 @@ export function ProjectFilesPanel({ projectId }: Readonly<{ projectId: string }>
 
   /** From the upload dialog's limit warning: back to the list to delete a version. */
   const showSection = (fileType: ProjectFileType) => {
-    setUploadOpen(false);
+    onUploadRequestChange(null);
     expandSection(fileType);
   };
 
@@ -75,18 +79,7 @@ export function ProjectFilesPanel({ projectId }: Readonly<{ projectId: string }>
     });
   };
 
-  const handleDownload = async (file: ProjectFileVersion) => {
-    try {
-      const url = await getProjectFileDownloadUrl(projectId, file.id);
-      window.open(url, '_blank', 'noopener,noreferrer');
-    } catch (error) {
-      toast({
-        title: 'ファイルを取得できませんでした',
-        description: errorMessage(error, '時間をおいて再度お試しください。'),
-        variant: 'destructive',
-      });
-    }
-  };
+  const handleDownload = (file: ProjectFileVersion) => downloadProjectFile(projectId, file);
 
   const requestDelete = (file: ProjectFileVersion) =>
     permissions.guardAction('PROJECT_UPDATE', () => setDeleteTarget(file));
@@ -149,21 +142,39 @@ export function ProjectFilesPanel({ projectId }: Readonly<{ projectId: string }>
               value={group.type}
               className="overflow-hidden rounded-lg border border-border bg-card shadow-app-sm"
             >
-              <AccordionTrigger className="gap-3 px-4 py-3 text-left hover:bg-muted/60 hover:no-underline data-[state=open]:border-b data-[state=open]:border-border">
-                <span className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-                  <span className="font-bold text-foreground">{group.label}</span>
-                  <span className="flex flex-wrap items-center gap-2 text-small font-normal text-muted-foreground">
-                    {latest ? (
-                      <>
-                        <StatusBadge className="tabular-nums">{group.files.length}件</StatusBadge>
-                        最新 {formatUploadedAt(latest.uploadedAt)}
-                      </>
-                    ) : (
-                      '未アップロード'
-                    )}
+              {/* The add button sits beside the trigger, not in it: a button cannot hold a button. */}
+              <AccordionPrimitive.Header className="flex items-center gap-2 pr-3 transition-colors hover:bg-muted/60 data-[state=open]:border-b data-[state=open]:border-border">
+                <AccordionPrimitive.Trigger className="group flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+                  <ChevronRight
+                    aria-hidden="true"
+                    className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90 motion-reduce:transition-none"
+                  />
+                  <span className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                    <span className="font-bold text-foreground">{group.label}</span>
+                    <span className="flex flex-wrap items-center gap-2 text-small font-normal text-muted-foreground">
+                      {latest ? (
+                        <>
+                          <StatusBadge className="tabular-nums">{group.files.length}件</StatusBadge>
+                          最新 {formatUploadedAt(latest.uploadedAt)}
+                        </>
+                      ) : (
+                        '未アップロード'
+                      )}
+                    </span>
                   </span>
-                </span>
-              </AccordionTrigger>
+                </AccordionPrimitive.Trigger>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="shrink-0"
+                  aria-label={`${group.label}にファイルを追加`}
+                  onClick={() => openUpload(group.type)}
+                >
+                  <Plus aria-hidden="true" />
+                  追加
+                </Button>
+              </AccordionPrimitive.Header>
               <AccordionContent className="p-0">
                 {group.files.length > 0 ? (
                   <ul className="divide-y divide-border">
@@ -185,17 +196,10 @@ export function ProjectFilesPanel({ projectId }: Readonly<{ projectId: string }>
                       <p className="text-sm text-foreground">
                         {group.label}はまだアップロードされていません。
                       </p>
-                      <p className="mt-1 text-small text-muted-foreground">{group.description}</p>
+                      <p className="mt-1 text-small text-muted-foreground">
+                        {group.description}「追加」からアップロードできます。
+                      </p>
                     </div>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => openUpload(group.type)}
-                    >
-                      <Upload aria-hidden="true" />
-                      アップロード
-                    </Button>
                   </div>
                 )}
               </AccordionContent>
@@ -211,27 +215,13 @@ export function ProjectFilesPanel({ projectId }: Readonly<{ projectId: string }>
 
   return (
     <TooltipProvider delayDuration={250}>
-      <div className="space-y-4">
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            size="md"
-            disabled={listingQuery.isLoading || listingQuery.isError}
-            onClick={() => openUpload()}
-          >
-            <Upload aria-hidden="true" />
-            ファイルをアップロード
-          </Button>
-        </div>
-
-        {renderSections()}
-      </div>
+      {renderSections()}
 
       <ProjectFileUploadDialog
-        open={uploadOpen}
-        onOpenChange={setUploadOpen}
+        open={uploadRequest !== null}
+        onOpenChange={(open) => !open && onUploadRequestChange(null)}
         groups={groups}
-        initialType={uploadPresetType}
+        initialType={uploadRequest?.type ?? null}
         isUploading={uploadMutation.isPending}
         onUpload={handleUpload}
         onShowFiles={showSection}

@@ -63,29 +63,48 @@ export function ProjectFilePreviewDialog({
     retry: false,
   });
 
-  const renderFailure = (onRetry: () => void) => (
-    <div
-      role="alert"
-      className="flex h-full flex-col items-center justify-center gap-3 rounded-md border border-border bg-muted/40 p-6 text-center"
-    >
-      <AlertTriangle aria-hidden="true" className="h-6 w-6 text-warning-strong" />
-      <div className="space-y-1">
-        <p className="text-sm font-medium text-foreground">ファイルを表示できませんでした。</p>
-        <p className="text-small text-muted-foreground">
-          再度お試しいただくか、ダウンロードしてご確認ください。
-        </p>
+  /**
+   * A failed link is usually passing, so retry leads. A workbook that could not be
+   * read in the browser will fail the same way again, so download leads instead.
+   */
+  const renderFailure = (cause: 'link' | 'workbook', onRetry: () => void) => {
+    const downloadLeads = cause === 'workbook';
+    return (
+      <div
+        role="alert"
+        className="flex h-full flex-col items-center justify-center gap-3 rounded-md border border-border bg-muted/40 p-6 text-center"
+      >
+        <AlertTriangle aria-hidden="true" className="h-6 w-6 text-warning-strong" />
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-foreground">
+            {downloadLeads
+              ? 'このファイルはブラウザで表示できませんでした。'
+              : 'ファイルを表示できませんでした。'}
+          </p>
+          <p className="text-small text-muted-foreground">
+            {downloadLeads
+              ? 'ダウンロードしてExcelで開いてください。'
+              : '再度お試しいただくか、ダウンロードしてご確認ください。'}
+          </p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-2">
+          {file && downloadLeads ? (
+            <Button type="button" size="md" onClick={() => onDownload(file)}>
+              <Download aria-hidden="true" />
+              ダウンロード
+            </Button>
+          ) : null}
+          <ActionButton kind="retry" onClick={onRetry} />
+          {file && !downloadLeads ? (
+            <Button type="button" size="md" variant="outline" onClick={() => onDownload(file)}>
+              <Download aria-hidden="true" />
+              ダウンロード
+            </Button>
+          ) : null}
+        </div>
       </div>
-      <div className="flex flex-wrap justify-center gap-2">
-        <ActionButton kind="retry" onClick={onRetry} />
-        {file ? (
-          <Button type="button" size="md" variant="outline" onClick={() => onDownload(file)}>
-            <Download aria-hidden="true" />
-            ダウンロード
-          </Button>
-        ) : null}
-      </div>
-    </div>
-  );
+    );
+  };
 
   const loading = (
     <div role="status" aria-label="ファイルを読み込んでいます" className="h-full">
@@ -95,12 +114,14 @@ export function ProjectFilePreviewDialog({
 
   const renderBody = () => {
     if (urlQuery.isLoading) return loading;
-    if (urlQuery.isError || !urlQuery.data) return renderFailure(() => void urlQuery.refetch());
+    if (urlQuery.isError || !urlQuery.data) {
+      return renderFailure('link', () => void urlQuery.refetch());
+    }
 
     if (kind === 'excel') {
       if (sheetsQuery.isLoading) return loading;
       if (sheetsQuery.isError || !sheetsQuery.data) {
-        return renderFailure(() => void sheetsQuery.refetch());
+        return renderFailure('workbook', () => void sheetsQuery.refetch());
       }
       return <SpreadsheetView sheets={sheetsQuery.data} />;
     }

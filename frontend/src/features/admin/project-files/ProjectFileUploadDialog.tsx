@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { ProjectFileGroup } from './projectFileTypes';
+import { DEFAULT_PROJECT_FILE_VERSION_LIMIT, type ProjectFileGroup } from './projectFileTypes';
 
 type ProjectFileUploadDialogProps = Readonly<{
   open: boolean;
@@ -120,7 +120,11 @@ export function ProjectFileUploadDialog({
               onValueChange={(value) => setFileType(value as ProjectFileType)}
               disabled={isUploading}
             >
-              <SelectTrigger id="project-file-type" aria-required="true">
+              <SelectTrigger
+                id="project-file-type"
+                aria-required="true"
+                aria-describedby="project-file-type-help"
+              >
                 <SelectValue placeholder="選択してください" />
               </SelectTrigger>
               <SelectContent>
@@ -131,6 +135,10 @@ export function ProjectFileUploadDialog({
                 ))}
               </SelectContent>
             </Select>
+            {/* Said here, where the upload is decided, rather than on every list row. */}
+            <p id="project-file-type-help" className="text-small text-muted-foreground">
+              各書類は{groups[0]?.limit ?? DEFAULT_PROJECT_FILE_VERSION_LIMIT}件まで保存できます。
+            </p>
           </div>
 
           {isFull && selectedGroup ? (

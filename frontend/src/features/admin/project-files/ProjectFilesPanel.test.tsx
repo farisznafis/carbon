@@ -24,7 +24,9 @@ vi.mock('@/features/admin/permissions/useAdminPermissions', () => ({
   }),
 }));
 
-import { ProjectFilesPanel } from './ProjectFilesPanel';
+import { useState } from 'react';
+import { ProjectDocumentsSummaryCard } from './ProjectDocumentsSummaryCard';
+import { ProjectFilesPanel, type ProjectFileUploadRequest } from './ProjectFilesPanel';
 import { groupProjectFiles } from './projectFileTypes';
 
 const listing = {
@@ -40,10 +42,22 @@ const listing = {
   ],
 };
 
+/** The panel with the upload request held the way ProjectDocumentsTab holds it. */
+function PanelHarness() {
+  const [uploadRequest, setUploadRequest] = useState<ProjectFileUploadRequest>(null);
+  return (
+    <ProjectFilesPanel
+      projectId="PROJ1"
+      uploadRequest={uploadRequest}
+      onUploadRequestChange={setUploadRequest}
+    />
+  );
+}
+
 function renderPanel() {
   return render(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-      <ProjectFilesPanel projectId="PROJ1" />
+      <PanelHarness />
     </QueryClientProvider>,
   );
 }
@@ -61,6 +75,38 @@ describe('groupProjectFiles', () => {
     const plan = groups.find((group) => group.type === 'PROJECT_PLAN');
     expect(plan?.files.map((file) => [file.id, file.version])).toEqual([[2, 2], [1, 1]]);
     expect(plan).toMatchObject({ activeCount: 2, limit: 10, canUpload: true });
+  });
+});
+
+describe('ProjectDocumentsSummaryCard', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    filesApi.getProjectFileListing.mockResolvedValue(listing);
+  });
+
+  it('shows the current version of each type and offers to add a missing one', async () => {
+    const onUpload = vi.fn();
+    const onOpenDocuments = vi.fn();
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <ProjectDocumentsSummaryCard
+          projectId="PROJ1"
+          onOpenDocuments={onOpenDocuments}
+          onUpload={onUpload}
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByText('report_v2.pdf')).toBeInTheDocument();
+    expect(screen.getByText('plan.xlsx')).toBeInTheDocument();
+    expect(screen.queryByText('report_v1.xlsx')).not.toBeInTheDocument();
+    expect(screen.getByText('2/3種類')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '追加' }));
+    expect(onUpload).toHaveBeenCalledWith('ACTIVITY_RESULT_LIST');
+
+    fireEvent.click(screen.getByRole('button', { name: 'すべて見る' }));
+    expect(onOpenDocuments).toHaveBeenCalled();
   });
 });
 
@@ -108,12 +154,14 @@ describe('ProjectFilesPanel', () => {
     await waitFor(() => expect(filesApi.deleteProjectFile).toHaveBeenCalledWith('PROJ1', 11));
   });
 
-  it('uploads into the type chosen from an empty section', async () => {
+  it('uploads into the section whose 追加 was pressed', async () => {
     renderPanel();
 
-    fireEvent.click(await screen.findByRole('button', { name: /個別活動実績報告リスト/ }));
-    fireEvent.click(await screen.findByRole('button', { name: 'アップロード' }));
+    fireEvent.click(
+      await screen.findByRole('button', { name: '個別活動実績報告リストにファイルを追加' }),
+    );
     const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('各書類は10件まで保存できます。')).toBeInTheDocument();
 
     const file = new File(['x'], 'list.xlsx');
     fireEvent.change(dialog.querySelector('input[type="file"]') as HTMLInputElement, {
@@ -141,8 +189,9 @@ describe('ProjectFilesPanel', () => {
     });
     renderPanel();
 
-    fireEvent.click(await screen.findByRole('button', { name: /個別活動実績報告リスト/ }));
-    fireEvent.click(await screen.findByRole('button', { name: 'アップロード' }));
+    fireEvent.click(
+      await screen.findByRole('button', { name: '個別活動実績報告リストにファイルを追加' }),
+    );
     const dialog = await screen.findByRole('dialog');
 
     expect(

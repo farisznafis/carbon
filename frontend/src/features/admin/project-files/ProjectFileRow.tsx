@@ -98,7 +98,7 @@ export function ProjectFileRow({
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1 self-end sm:self-auto">
+      <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
         <RowIconButton
           label={`${name} を表示`}
           tooltip={previewKind ? '表示' : 'この形式は表示できません。ダウンロードしてご確認ください'}
@@ -110,6 +110,8 @@ export function ProjectFileRow({
         <RowIconButton label={`${name} をダウンロード`} tooltip="ダウンロード" onClick={() => onDownload(file)}>
           <Download aria-hidden="true" />
         </RowIconButton>
+        {/* Kept apart from the safe actions so a destructive click is never a near miss. */}
+        <span aria-hidden="true" className="mx-1 h-5 w-px bg-border" />
         <RowIconButton label={`${name} を削除`} tooltip="削除" destructive onClick={() => onDelete(file)}>
           <Trash2 aria-hidden="true" />
         </RowIconButton>
