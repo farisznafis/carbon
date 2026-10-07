@@ -1,22 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useForm, type UseFormReturn } from 'react-hook-form';
-import {
-  Link,
-  useLocation,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   saveProjectPlanForm,
   getAdminProjectDetail,
   getProjectPlanForm,
   updateAdminProject,
   type AdminProjectDetail,
-  type ProjectPlanFormResponse,
   type UpdateAdminProjectPayload,
 } from '@/api/admin';
-import { mapAdminProjectPlanApplicationPayload } from '@/api/admin/projectPayloadMapper';
 import type { Project } from '@/api/projects';
 import { LoadingPanel } from '@/components/feedback/loading';
 import {
@@ -30,7 +22,6 @@ import {
   FormStandalonePage,
 } from '@/components/forms/form-layout';
 import { GenericFormFields } from '@/components/forms/shared/GenericFormFields/GenericFormFields';
-import { PageDropdown } from '@/components/forms/shared/PageDropdown';
 import {
   PageBackButton,
   floatingPageBackButtonClassName,
@@ -48,10 +39,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
 import { paths } from '@/routes/paths';
-import { MultiStepForm } from '@/features/admin/project-registration/forms/ProjectMultiPageForm';
-import type { AdminProjectRegisterFormInputValues } from '@/features/admin/project-registration/forms/projectFormTypes';
-import { steps } from '@/features/admin/project-registration/forms/projectSteps';
-import { stepsForApplicationCategory } from '@/features/admin/project-registration/forms/applicationCategory';
+import { PlanFileList } from '@/features/admin/project-plan/PlanFileList';
+import { PlanSummarySection } from '@/features/admin/project-plan/PlanSummarySection';
+import {
+  PLAN_SUMMARY_SLUG,
+  fromPlanPageData,
+  isPlanSummaryEmpty,
+  planSummaryProblem,
+  toPlanPagePayload,
+  type PlanSummaryFormValues,
+} from '@/features/admin/project-plan/planSummary';
 import {
   adminProjectEditBasicFields,
   adminProjectEditMethodologyFields,
@@ -65,9 +62,6 @@ type LocationState = {
   project?: Project;
 };
 
-const visibleSteps = stepsForApplicationCategory(steps.slice(0, 2));
-const maxStep = visibleSteps.length;
-
 const textFallback = (value: unknown) => (value == null ? '' : String(value));
 
 const numberFallback = (value: unknown) => {
@@ -79,19 +73,6 @@ const numberFallback = (value: unknown) => {
 
 const firstPresent = (...values: unknown[]) =>
   values.find((value) => value != null && value !== '');
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-
-const resolveApplicationData = (
-  response: ProjectPlanFormResponse,
-): AdminProjectRegisterFormInputValues['projectApplication'] => {
-  // The plan endpoint returns the page under `data`; the older `application`
-  // and `projectApplication` shapes it used to fall back on were never sent.
-  const value = response.data ?? {};
-
-  return (isRecord(value) ? value : {}) as AdminProjectRegisterFormInputValues['projectApplication'];
-};
 
 const createEmptyValues = (processedBy: string): UpdateAdminProjectPayload => ({
   processedBy,
@@ -176,39 +157,6 @@ const mapDetailToValues = (
   methodDetails: textFallback(detail.methodDetails),
 });
 
-const mapEditValuesToProjectBase = (
-  values: UpdateAdminProjectPayload,
-): AdminProjectRegisterFormInputValues['projectBase'] =>
-  ({
-    projectName: values.projectName,
-    projectStatus: textFallback((values as { projectStatus?: unknown }).projectStatus),
-    regionalCategory: values.regionalCategory,
-    baselineEmissions: values.baselineEmissions,
-    postProjectEmission: values.postProjectEmission,
-    repFirstName: values.repFirstName,
-    repFirstNameKana: values.repFirstNameKana,
-    repLastName: values.repLastName,
-    repLastNameKana: values.repLastNameKana,
-    repEmail: values.repEmail,
-    repPhoneNumber: values.repPhoneNumber,
-    repPosition: values.repPosition,
-    picFirstName: values.picFirstName,
-    picFirstNameKana: values.picFirstNameKana,
-    picLastName: values.picLastName,
-    picLastNameKana: values.picLastNameKana,
-    picEmail: values.picEmail,
-    picPhoneNumber: values.picPhoneNumber,
-    picPosition: values.picPosition,
-    picDataManagement: values.dataManagementPic,
-    methodologyVersion: values.methodologyVersion,
-    methodCategory: values.methodCategory,
-    methodNumber: values.methodNumber,
-    methodName: values.methodName,
-    methodMainEmission: values.methodMainEmission,
-    methodCombiFeasibility: values.methodCombiFeasibility,
-    methodDetails: values.methodDetails,
-  }) as AdminProjectRegisterFormInputValues['projectBase'];
-
 const projectBaseSections = [
   { title: '基本情報', fields: adminProjectEditBasicFields },
   { title: '代表者情報', fields: adminProjectEditRepresentativeFields },
@@ -246,21 +194,28 @@ function ProjectBaseSection({
   );
 }
 
+/**
+ * プロジェクト情報の編集, on one page.
+ *
+ * The same sections as project creation: the 計画書 file, the plan values the
+ * system keeps (認証対象期間 and the planned member counts per 年度), then the
+ * project record. A file is uploaded as soon as it is chosen — the project
+ * exists, so there is nothing to wait for — while 更新 saves the record and
+ * then the plan values.
+ */
 export default function AdminProjectEditPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [planError, setPlanError] = useState<string | null>(null);
+  // The unit stored with the plan page; sent back unchanged on save.
+  const [planUnitEmission, setPlanUnitEmission] = useState<string | undefined>(undefined);
   // Bumped by 再試行 to rerun the load effect after a failed fetch.
   const [reloadKey, setReloadKey] = useState(0);
-  const [step, setStep] = useState(() => {
-    const page = Number(searchParams.get('page'));
-    return page >= 1 && page <= maxStep ? page : 1;
-  });
 
   const processedBy = user?.id ? String(user.id) : 'admin';
   const stateProject = (location.state as LocationState | null)?.project;
@@ -274,22 +229,11 @@ export default function AdminProjectEditPage() {
     defaultValues,
   });
 
-  const applicationForm = useForm<AdminProjectRegisterFormInputValues>({
-    defaultValues: {},
-  });
-
-  useEffect(() => {
-    const page = Number(searchParams.get('page'));
-    const nextStep = page >= 1 && page <= maxStep ? page : 1;
-    setStep(nextStep);
-  }, [searchParams]);
+  const planForm = useForm<PlanSummaryFormValues>({ defaultValues: {} });
 
   useEffect(() => {
     form.reset(defaultValues);
-    applicationForm.setValue('projectBase', mapEditValuesToProjectBase(defaultValues), {
-      shouldDirty: false,
-    });
-  }, [applicationForm, defaultValues, form]);
+  }, [defaultValues, form]);
 
   useEffect(() => {
     let isMounted = true;
@@ -307,32 +251,22 @@ export default function AdminProjectEditPage() {
         const detail = await getAdminProjectDetail(projectId);
 
         if (!isMounted) return;
-        const projectBaseValues = mapDetailToValues(detail, processedBy);
-        form.reset(projectBaseValues);
-        applicationForm.reset({
-          projectBase: mapEditValuesToProjectBase(projectBaseValues),
-        });
+        form.reset(mapDetailToValues(detail, processedBy));
 
+        // The plan values are a separate record. Failing to read them must not
+        // keep the operator from editing the project itself.
         try {
-          const applicationResponse =
-            await getProjectPlanForm(projectId, 'application');
+          const planResponse = await getProjectPlanForm(projectId, PLAN_SUMMARY_SLUG);
 
           if (!isMounted) return;
-          applicationForm.reset({
-            projectBase: mapEditValuesToProjectBase(projectBaseValues),
-            projectApplication: resolveApplicationData(applicationResponse),
-          });
-        } catch (applicationError) {
-          logger.error(
-            'Error loading admin project application for edit:',
-            applicationError,
-          );
+          const loaded = fromPlanPageData(planResponse.data);
+          planForm.reset(loaded.values);
+          setPlanUnitEmission(loaded.unitEmission);
+        } catch (planLoadError) {
+          logger.error('Error loading admin project plan values for edit:', planLoadError);
           toast({
-            title: 'プロジェクト申請情報を取得できませんでした',
-            description:
-              applicationError instanceof Error
-                ? applicationError.message
-                : undefined,
+            title: '認証対象期間・会員数計画を取得できませんでした',
+            description: planLoadError instanceof Error ? planLoadError.message : undefined,
             variant: 'destructive',
           });
         }
@@ -354,22 +288,23 @@ export default function AdminProjectEditPage() {
     return () => {
       isMounted = false;
     };
-  }, [applicationForm, form, processedBy, projectId, reloadKey]);
+  }, [form, planForm, processedBy, projectId, reloadKey]);
 
-  const jumpToStep = (target: number | string) => {
-    const targetStep = Number(target);
-    const nextStep = Math.min(Math.max(targetStep, 1), maxStep);
-
-    setStep(nextStep);
-    setSearchParams({ page: String(nextStep) });
-  };
-
-  const goBack = () => jumpToStep(step - 1);
-
-  const goNext = () => jumpToStep(step + 1);
-
-  const handleProjectBaseSubmit = form.handleSubmit(async (values) => {
+  const handleSubmit = form.handleSubmit(async (values) => {
     if (!projectId) return;
+
+    setPlanError(null);
+    const planValues = planForm.getValues();
+    const planProblem = planSummaryProblem(planValues);
+    if (planProblem) {
+      setPlanError(planProblem);
+      toast({
+        title: '入力内容をご確認ください',
+        description: planProblem,
+        variant: 'destructive',
+      });
+      return;
+    }
 
     try {
       setSubmitting(true);
@@ -380,13 +315,6 @@ export default function AdminProjectEditPage() {
         postProjectEmission: numberFallback(values.postProjectEmission),
         methodCombiFeasibility: Boolean(values.methodCombiFeasibility),
       });
-
-      toast({
-        title: '更新しました',
-        description: 'プロジェクト情報を更新しました。',
-        variant: 'success',
-      });
-      navigate(paths.adminProjectDetail(projectId));
     } catch (e) {
       logger.error('Error updating admin project:', e);
       toast({
@@ -397,52 +325,41 @@ export default function AdminProjectEditPage() {
             : 'プロジェクト情報を更新できませんでした。',
         variant: 'destructive',
       });
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      if (!isPlanSummaryEmpty(planValues)) {
+        await saveProjectPlanForm(
+          projectId,
+          PLAN_SUMMARY_SLUG,
+          toPlanPagePayload(planValues, planUnitEmission),
+        );
+      }
+
+      toast({
+        title: '更新しました',
+        description: 'プロジェクト情報を更新しました。',
+        variant: 'success',
+      });
+      navigate(paths.adminProjectDetail(projectId));
+    } catch (e) {
+      logger.error('Error updating admin project plan values:', e);
+      const message =
+        e instanceof Error && e.message
+          ? e.message
+          : '認証対象期間・会員数計画を更新できませんでした。';
+      setPlanError(message);
+      toast({
+        title: '認証対象期間・会員数計画を更新できませんでした',
+        description: `プロジェクト情報は更新されました。${message}`,
+        variant: 'destructive',
+      });
     } finally {
       setSubmitting(false);
     }
   });
-
-  const handleProjectApplicationSubmit = applicationForm.handleSubmit(
-    async (values) => {
-      if (!projectId) return;
-
-      try {
-        setSubmitting(true);
-        const mergedValues: AdminProjectRegisterFormInputValues = {
-          ...values,
-          projectBase: mapEditValuesToProjectBase(form.getValues()),
-        };
-
-        await saveProjectPlanForm(
-          projectId,
-          'application',
-          mapAdminProjectPlanApplicationPayload(mergedValues),
-        );
-
-        toast({
-          title: '更新しました',
-          description: 'プロジェクト申請情報を更新しました。',
-          variant: 'success',
-        });
-        navigate(paths.adminProjectDetail(projectId));
-      } catch (e) {
-        logger.error('Error updating admin project application:', e);
-        toast({
-          title: '更新に失敗しました',
-          description:
-            e instanceof Error
-              ? e.message
-              : 'プロジェクト申請情報を更新できませんでした。',
-          variant: 'destructive',
-        });
-      } finally {
-        setSubmitting(false);
-      }
-    },
-  );
-
-  const handleSubmit =
-    step === 1 ? handleProjectBaseSubmit : handleProjectApplicationSubmit;
 
   const detailPath = projectId
     ? paths.adminProjectDetail(projectId)
@@ -486,7 +403,7 @@ export default function AdminProjectEditPage() {
         <div>
           <FormPageTitle as='h1'>プロジェクト情報の編集</FormPageTitle>
           <p className='mt-2 text-sm leading-6 text-muted-foreground sm:text-base'>
-            プロジェクトの基本情報と申請情報を編集します。
+            計画書ファイル、認証対象期間・会員数計画、プロジェクトの基本情報を編集します。
           </p>
         </div>
 
@@ -505,72 +422,56 @@ export default function AdminProjectEditPage() {
             />
           </FormCard>
         ) : (
-          <>
-            <PageDropdown
-              steps={visibleSteps}
-              value={step}
-              onChange={jumpToStep}
-            />
+          <Form {...form}>
+            <form onSubmit={handleSubmit} noValidate>
+              <FormCard>
+                <FormSectionStack spacing='relaxed'>
+                  <FormSection
+                    number={1}
+                    title='計画書ファイル'
+                    description='Excelで作成したプロジェクト計画書です。選択するとすぐにアップロードされ、以前のファイルは残ります。'
+                  >
+                    {projectId ? <PlanFileList projectId={projectId} canUpload /> : null}
+                  </FormSection>
 
-            <Form {...form}>
-              <form onSubmit={handleSubmit} noValidate>
-                <FormCard>
-                  <FormSectionStack spacing='relaxed'>
-                    {step === 1 ? (
-                      projectBaseSections.map((section, index) => (
-                        <ProjectBaseSection
-                          key={section.title}
-                          number={index + 1}
-                          title={section.title}
-                          fields={section.fields}
-                          form={form}
-                        />
-                      ))
-                    ) : (
-                      <MultiStepForm
-                        form={applicationForm}
-                        step={2}
-                        stepsOverride={visibleSteps}
-                      />
-                    )}
-
-                    <FormActions
+                  <FormSection
+                    number={2}
+                    title='認証対象期間・会員数計画'
+                    description='計画書に記載した認証対象期間と、年度ごとの会員数（計画値）を入力します。'
+                  >
+                    <PlanSummarySection
+                      form={planForm}
                       disabled={submitting}
-                      pendingActionId={submitting ? 'update' : null}
-                      actions={[
-                        ...(step > 1
-                          ? [
-                              {
-                                id: 'back',
-                                label: '戻る',
-                                variant: 'outline' as const,
-                                onClick: goBack,
-                              },
-                            ]
-                          : []),
-                        {
-                          id: 'update',
-                          label: '更新',
-                          pendingLabel: '更新中...',
-                          type: 'submit',
-                        },
-                        ...(step < maxStep
-                          ? [
-                              {
-                                id: 'next',
-                                label: '次へ',
-                                variant: 'outline' as const,
-                                onClick: goNext,
-                              },
-                            ]
-                          : []),
-                      ]}
+                      error={planError}
                     />
-                  </FormSectionStack>
-                </FormCard>
-              </form>
-            </Form>
-          </>
+                  </FormSection>
+
+                  {projectBaseSections.map((section, index) => (
+                    <ProjectBaseSection
+                      key={section.title}
+                      number={index + 3}
+                      title={section.title}
+                      fields={section.fields}
+                      form={form}
+                    />
+                  ))}
+
+                  <FormActions
+                    disabled={submitting}
+                    pendingActionId={submitting ? 'update' : null}
+                    actions={[
+                      {
+                        id: 'update',
+                        label: '更新',
+                        pendingLabel: '更新中...',
+                        type: 'submit',
+                      },
+                    ]}
+                  />
+                </FormSectionStack>
+              </FormCard>
+            </form>
+          </Form>
         )}
       </FormPageContent>
     </FormStandalonePage>

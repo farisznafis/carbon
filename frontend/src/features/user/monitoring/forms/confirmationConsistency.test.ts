@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { formDefinitions } from "./formDefinitions";
+import { emptyFormData } from './solar/emptyFormData';
+import { getMonitoringSolarConfirmation } from './solar/solarConfirmation';
 
 describe("Monitoring confirmation consistency", () => {
     const projectTypes = Object.keys(formDefinitions);
@@ -56,6 +58,58 @@ describe("Monitoring confirmation consistency", () => {
                 expect(items.some(i => i.isChanged)).toBe(true);
             });
 
+            it("does not mark new registration values as changed without an existing record", () => {
+                const registrationData = {
+                    ...emptyData,
+                    equipmentId: 100,
+                    dateRecorded: '2026-10-05',
+                    ELpv_value: 12,
+                    equipmentHasBattery: true,
+                    ELPJ_battery_value: 0,
+                    elpj_battery_evidence: 'battery.pdf',
+                    elpv_evidence: new File(['evidence'], 'generation.pdf'),
+                };
+
+                const items = getConfirmationItems(registrationData);
+
+                expect(items.some(item => item.isChanged)).toBe(false);
+                expect(items).toEqual(expect.arrayContaining([
+                    expect.objectContaining({ label: '発電量 (ELPV)', value: '12' }),
+                    expect.objectContaining({ label: '発電量 (ELPV) エビデンス', value: 'generation.pdf' }),
+                ]));
+            });
+
         });
+    });
+});
+
+describe('Solar battery confirmation', () => {
+    it('shows battery details without a replacement selection for battery equipment', () => {
+        const items = getMonitoringSolarConfirmation({
+            ...emptyFormData,
+            equipmentHasBattery: true,
+            ELPJ_battery_value: 0,
+            elpj_battery_evidence: 'battery.pdf',
+        });
+
+        expect(items).toEqual(expect.arrayContaining([
+            expect.objectContaining({ label: '蓄電池放電量 (ELPJ)', value: '0' }),
+            expect.objectContaining({ label: '蓄電池エビデンス', value: 'battery.pdf' }),
+        ]));
+        expect(items.map((item) => item.label)).not.toContain('蓄電池交換の有無');
+    });
+
+    it('omits battery details for equipment without a battery despite stale values', () => {
+        const items = getMonitoringSolarConfirmation({
+            ...emptyFormData,
+            equipmentHasBattery: false,
+            ELPJ_battery_value: 8,
+            elpj_battery_evidence: 'battery.pdf',
+        });
+
+        const labels = items.map((item) => item.label);
+        for (const label of ['蓄電池交換の有無', '蓄電池放電量 (ELPJ)', '蓄電池エビデンス']) {
+            expect(labels).not.toContain(label);
+        }
     });
 });

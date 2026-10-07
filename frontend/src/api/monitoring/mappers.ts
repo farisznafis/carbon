@@ -37,6 +37,7 @@ function toBoolean(value: unknown): boolean {
   return false;
 }
 
+/** Maps recent monitoring values and DTO evidence fields into the display model. */
 export function normalizeRecentMonitoringItem(
   item: MonitoringRecentApiItem,
 ): MonitoringRecentItem {
@@ -72,11 +73,11 @@ export function normalizeRecentMonitoringItem(
     ELPJ_control_value: toNumberOrZero(item.ELPJ_control_value),
     ELPJ_accuracy: toNumberOrZero(item.ELPJ_accuracy),
 
-    ELpv_evidence: item.ELpv_evidence ?? null,
-    ELpvr_evidence: item.ELpvr_evidence ?? null,
-    ELPJ_battery_evidence: item.ELPJ_battery_evidence ?? null,
-    ELPJ_control_equipment_spec_files:
-      item.ELPJ_control_equipment_spec_files ?? null,
+    elpv_evidence: item.elpv_evidence ?? null,
+    elpvr_evidence: item.elpvr_evidence ?? null,
+    elpj_battery_evidence: item.elpj_battery_evidence ?? null,
+    elpj_control_evidence:
+      item.elpj_control_evidence ?? null,
   };
 }
 

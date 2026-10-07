@@ -1,0 +1,68 @@
+パスワードリセット完了
+//パスワードリセット用リンクを開いた本人が、新しいパスワードを設定する。
+//事前に「アクションリンク検証」で purpose = PASSWORD_RESET のアクションセッションを取得しておく。
+//ログイン不要（公開エンドポイント）。
+
+URL: POST /auth/password-reset/complete
+Content-Type: application/json
+X-Action-Session: e81f4d7c2a9b6e3f8c1d5a7b9e2f4c6d
+
+Request Body (JSON):
+{
+	"newPassword": "Abcd1234" //8〜64文字。大文字・小文字・数字を各1文字以上
+}
+
+Response – Success (HTTP 200):
+{
+	"statusCode": "OK",
+	"message": "パスワードのリセットが完了しました。再度ログインしてください。"
+}
+
+//完了すると、ログイン失敗回数とアカウントロックが解除され、発行済みのログイントークンはすべて無効になる。
+//リンクとセッションは使用済みになる。
+
+Response – Error:
+(HTTP 400)
+{
+	"statusCode": "SAME_PASSWORD",
+	"message": "新しいパスワードは現在のパスワードと異なる必要があります。"
+}
+--
+(HTTP 401) //セッション不正・期限切れ（15分）・purpose 不一致・使用済み
+{
+	"statusCode": "INVALID_OR_EXPIRED_TOKEN",
+	"message": "セキュリティトークンが無効か、有効期限が切れています。"
+}
+--
+(HTTP 400)
+{
+	"statusCode": "VALIDATION_ERROR",
+	"message": "入力内容に誤りがあります。",
+	"errors": {
+		"newPassword": "パスワードは8〜64文字で、大文字・小文字・数字をそれぞれ1文字以上含めてください。よく使われるパスワードは使用できません。"
+	}
+}
+--
+(HTTP 400) //X-Action-Session ヘッダーがない場合
+{
+	"statusCode": "BAD_REQUEST",
+	"message": "Required request header 'X-Action-Session' for method parameter type String is not present"
+}
+--
+(HTTP 404) //機能が無効の場合
+{
+	"statusCode": "NOT_FOUND",
+	"message": "該当するリソースが見つかりませんでした。"
+}
+--
+(HTTP 429) //同一IPから15分間に20回を超えた場合（セキュリティ系POSTの合計）
+{
+	"statusCode": "TOO_MANY_REQUESTS",
+	"message": "リクエストが多すぎます。しばらくしてから再度お試しください。"
+}
+--
+(HTTP 500)
+{
+	"statusCode": "INTERNAL_SERVER_ERROR",
+	"message": "サイト情報の取得中にエラーが発生しました。"
+}

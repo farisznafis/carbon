@@ -3,6 +3,8 @@ export type AdminProjectDetail = {
   projectName: string;
   projectNumber: string;
   projectStatus: string;
+  startedAt?: string | null;
+  usePurpose?: string | null;
   emissionReduction: string | number | null;
   baselineEmission?: string | number | null;
   baselineEmissions?: string | number | null;
@@ -55,6 +57,9 @@ export type CreateAdminProjectPayload = {
     projectName?: string;
     projectNumber?: string;
     projectStatus?: string;
+    /** ISO-8601 instant; the backend field is an Instant. */
+    startedAt?: string;
+    usePurpose?: string;
     // emissionReduction?: number;
     baselineEmissions?: number;
     postProjectEmission?: number;
@@ -182,6 +187,9 @@ export type UpdateAdminProjectPayload = {
   methodMainEmission: string;
   methodCombiFeasibility: boolean;
   methodDetails: string;
+  // Optional: the backend leaves either one untouched when it is not sent.
+  startedAt?: string;
+  usePurpose?: string;
 };
 
 export type AdminProjectPayloadFormValues = {
@@ -189,6 +197,9 @@ export type AdminProjectPayloadFormValues = {
     projectName?: string;
     projectNumber?: string;
     projectStatus?: string;
+    /** yyyy-MM-dd, as the date input holds it. */
+    startedAt?: string;
+    usePurpose?: string;
     // emissionReduction?: number;
     baselineEmissions?: number;
     postProjectEmission?: number;

@@ -1,0 +1,79 @@
+メールOTP設定変更の確認
+//メールOTPログイン設定変更の2段階目。メールで届いた6桁の認証コードを検証し、設定の変更を確定する。
+//「メールOTP設定変更の開始」を実行した本人のトークンで呼び出す。
+//ログイン必須（参加企業ユーザー・運営ユーザー共通）。
+
+URL: POST /auth/email-otp/settings/confirm
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
+
+Request Body (JSON):
+{
+	"challengeId": "7c9e6679-7425-40de-944b-e07fc1f90ae7", //「メールOTP設定変更の開始」の応答の challengeId（UUID）
+	"code": "123456" //メールで届いた6桁の数字
+}
+
+Response – Success (HTTP 200):
+{
+	"statusCode": "OK",
+	"message": "メールログイン認証設定を更新しました。"
+}
+
+//変更後の値は「メールOTP設定変更の開始」で指定した enabled。
+//確定すると発行済みのログイントークンはすべて無効になるため、再ログインが必要。
+//認証コードの有効期限は5分。5回間違えるとチャレンジは破棄され、「開始」からやり直しになる。
+
+Response – Error:
+(HTTP 401) //コード不一致・期限切れ・試行回数超過・使用済み、または他のユーザー・他の用途のチャレンジを指定した場合
+{
+	"statusCode": "INVALID_OR_EXPIRED_TOKEN",
+	"message": "セキュリティトークンが無効か、有効期限が切れています。"
+}
+--
+(HTTP 403) //マスターユーザーを無効にしようとした場合
+{
+	"statusCode": "FORBIDDEN",
+	"message": "このリソースにアクセスすることができません。"
+}
+--
+(HTTP 401) //トークンが失効している場合（パスワード変更・メールOTP設定変更の後など）
+{
+	"statusCode": "UNAUTHORIZED",
+	"message": "パスワード変更後のトークンは無効です。再度ログインしてください。"
+}
+--
+(HTTP 400)
+{
+	"statusCode": "VALIDATION_ERROR",
+	"message": "入力内容に誤りがあります。",
+	"errors": {
+		"code": "正規表現 \"\\d{6}\" にマッチさせてください" //標準メッセージ（Accept-Language により変わる）
+	}
+}
+--
+(HTTP 400) //challengeId が UUID 形式でない場合
+{
+	"statusCode": "BAD_REQUEST",
+	"message": "入力値に誤りがあります。",
+	"errors": {
+		"challengeId": "入力形式が正しくありません。"
+	}
+}
+--
+(HTTP 429) //同一IPから15分間に20回を超えた場合（セキュリティ系POSTの合計）
+{
+	"statusCode": "TOO_MANY_REQUESTS",
+	"message": "リクエストが多すぎます。しばらくしてから再度お試しください。"
+}
+--
+(HTTP 404) //機能が無効の場合
+{
+	"statusCode": "NOT_FOUND",
+	"message": "該当するリソースが見つかりませんでした。"
+}
+--
+(HTTP 500) //Authorization ヘッダーがない・トークンの形式が不正な場合も、現状はこの応答になる（401 ではない）
+{
+	"statusCode": "INTERNAL_SERVER_ERROR",
+	"message": "サイト情報の取得中にエラーが発生しました。"
+}
