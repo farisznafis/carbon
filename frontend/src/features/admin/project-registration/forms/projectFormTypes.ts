@@ -1,105 +1,20 @@
-// formTypes.ts
-// Define the form values and validation schema for the multi-step form
+// Form values of the project record (プロジェクト作成).
+//
+// The 計画書 itself is no longer typed into the system page by page: it is
+// written in the official Excel 様式 and uploaded as a file. What remains here
+// is the project record; the few plan values the system uses have their own
+// small form (see features/admin/project-plan/planSummary.ts).
 
-import { z } from "zod";
+import { z } from 'zod';
+import { projectBaseSchema } from './projectBaseSchema';
 
-
-import { projectBaseSchema } from "./projectBaseSchema";
-
-import { 
-  // project
-  projectApplicationSchema,
-  otherProjectOperatorSchema, //other_project_operator
-  applicableConditionsSchema, // applicable_conditions
-  projChangeInfoSchema, // project_change_information
-  projPlanCoverSchema, // project_plan_cover
-  authorityHolderChangeSchema, // 認証権限保有主体変更届
-  projectOverviewSchema, // project_overview
-  applicableMethodologySchema, // applicable_methodology
-  programMethodologySchema, // program_type_methodology
-
-  // emission
-  emissionReductionSchema, // emission_reduction_plan
-  emissionCalcSchema, // emission_reduction_calculation
-  baselineIncidentalSchema, // baseline_incidental_activity
-  postImplementalSchema, // post_impliment_incedental_activity
-  mainActivitySchema, // main_activity_project_emission
-  incidentalActivitySchema, // incidental_activity_project_emission
-  // baselineEmissionSchema,
-  // mainBaselineSchema, 
-  // incidentalEmissionSchema,
-
-  // monitoring
-  monitoringCalcSchema, // monitoring_calculation
-  dataManagementSchema, // data_management
-  equipmentInfoSchema, // equipment_information_verification_method
-  equipmentInfoBeforeNewSchema, // equipment_verification_before_new
-  equipmentInfoAfterSchema, // equipment_verification_after
-  monitoringActivityPlanSchema, // 11.モニタリング計画（１）活動量
-  monitoringCoefficientPlanSchema, // 11.モニタリング計画（２）係数
-  monitoringPlanSchema, // monitoring_plan
-  measureSpecifiedSchema, // measure_specified_instrument
-  measureOtherSchema, // measure_other_instruments_overview
-  monitoringExplanationSchema, // monitoring_method_explaination
-  coefficientSchema, // coefficient_measure_explanation
-
-  // assessment
-  additionalAssessmentSchema, // additional_assesment_method
-  obtainingAdditionalSchema, // obtaining_additional_method
-} from "./AdminProjectApplicationForms";
-
-export const formSchema = z.object({ 
+export const formSchema = z.object({
   projectBase: projectBaseSchema,
-  projectApplication: projectApplicationSchema,
-  otherProjectOperator: otherProjectOperatorSchema,
-  appConditions: applicableConditionsSchema,
-  projChangeInfo: projChangeInfoSchema,
-  projPlanCover: projPlanCoverSchema,
-  authorityHolderChange: authorityHolderChangeSchema,
-  projectOverview: projectOverviewSchema,
-  applicableMethodology: applicableMethodologySchema,
-  programMethodology: programMethodologySchema,
-  emissionReduction: emissionReductionSchema,
-  monitoringCalc: monitoringCalcSchema,
-  dataManagement: dataManagementSchema, 
-  equipmentInfo: equipmentInfoSchema,
-  equipmentInfoBeforeNew: equipmentInfoBeforeNewSchema,
-  equipmentInfoAfter: equipmentInfoAfterSchema,
-  additionalAssessment: additionalAssessmentSchema, 
-  obtainingAdditional: obtainingAdditionalSchema,
-  emissionCalc: emissionCalcSchema,
-  baselineIncidental: baselineIncidentalSchema,
-  postImplemental: postImplementalSchema,
-  mainActivity: mainActivitySchema,
-  incidentalActivity: incidentalActivitySchema,
-  baselineEmission: mainActivitySchema,
-  mainBaseline: incidentalActivitySchema,
-  incidentalEmission: incidentalActivitySchema,
-  monitoringActivityPlan: monitoringActivityPlanSchema,
-  monitoringCoefficientPlan: monitoringCoefficientPlanSchema,
-  monitoringPlan: monitoringPlanSchema,
-  measureSpecified: measureSpecifiedSchema,
-  measureOther: measureOtherSchema,
-  monitoringExplanation: monitoringExplanationSchema,
-  coefficient: coefficientSchema
 });
 
 export type FormValues = z.output<typeof formSchema>;
 
-// Steps reachable from the registration wizard. Every key after projectBase is
-// one page of the plan, staged to the backend independently.
-export const adminProjectRegisterSchema = z.object({
-  projectBase: projectBaseSchema,
-  projectApplication: projectApplicationSchema,
-  otherProjectOperator: otherProjectOperatorSchema,
-  appConditions: applicableConditionsSchema,
-});
+export const adminProjectRegisterSchema = formSchema;
 
 export type AdminProjectRegisterFormInputValues = z.input<typeof adminProjectRegisterSchema>;
 export type AdminProjectRegisterFormValues = z.output<typeof adminProjectRegisterSchema>;
-
-export const step1Schema = z.object({
-  projectBase: projectBaseSchema,
-});
-
-export type Step1Values = z.output<typeof step1Schema>;
