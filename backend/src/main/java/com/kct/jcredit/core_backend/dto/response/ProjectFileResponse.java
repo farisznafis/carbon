@@ -19,4 +19,5 @@ public class ProjectFileResponse extends BaseResponse {
     private String originalFileName;
     private String uploadedBy;
     private LocalDateTime uploadedAt;
+    private Integer versionNo;
 }
