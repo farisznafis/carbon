@@ -1,4 +1,5 @@
 import type { AdminProjectDetail } from '@/api/admin/projects';
+import { toStartedAtDate } from '@/api/admin/projectPayloadMapper';
 
 const textFallback = (value: unknown) => (value == null ? '' : String(value));
 
@@ -25,6 +26,8 @@ export const mapDetailToProjectBase = (
   projectName: textFallback(detail.projectName),
   projectNumber: textFallback(detail.projectNumber ?? detail.id),
   projectStatus: textFallback(detail.projectStatus),
+  startedAt: toStartedAtDate(detail.startedAt),
+  usePurpose: textFallback(detail.usePurpose),
   emissionReduction: numberFallback(detail.emissionReduction),
   baselineEmissions: numberFallback(
     firstPresent(detail.baselineEmissions, detail.baselineEmission),

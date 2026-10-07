@@ -13,7 +13,9 @@ import ProjectDetailAdmin from './ProjectDetailAdminPage';
 
 const projectsApi = vi.hoisted(() => ({
   getAdminProjectDetail: vi.fn(),
-  getProjectPlanProgress: vi.fn(),
+}));
+const projectFilesApi = vi.hoisted(() => ({
+  getProjectFiles: vi.fn(),
 }));
 const reviewsApi = vi.hoisted(() => ({
   getParticipationReviewsByStatus: vi.fn(),
@@ -23,6 +25,7 @@ vi.mock('@/api/admin/projects', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/admin/projects')>()),
   ...projectsApi,
 }));
+vi.mock('@/api/admin/projectFiles', () => projectFilesApi);
 vi.mock('@/api/admin', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/admin')>()),
   ...projectsApi,
@@ -113,10 +116,10 @@ describe('ProjectDetailAdmin membership visibility', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     projectsApi.getAdminProjectDetail.mockResolvedValue(project);
-    projectsApi.getProjectPlanProgress.mockResolvedValue({
-      completedForms: 1,
-      totalForms: 3,
-    });
+    projectFilesApi.getProjectFiles.mockResolvedValue([
+      { id: 2, originalFileName: '計画書_v2.xlsx', uploadedAt: '2026-10-07T01:00:00' },
+      { id: 1, originalFileName: '計画書.xlsx', uploadedAt: '2026-10-01T01:00:00' },
+    ]);
     reviewsApi.getParticipationReviewsByStatus.mockResolvedValue({
       OPEN: [review(1, 7), review(2, 7), review(3, 8)],
       APPROVED: [review(4, 7), review(5, 7), review(6, 7)],

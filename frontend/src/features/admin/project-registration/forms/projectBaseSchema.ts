@@ -50,6 +50,18 @@ export const projectBaseSchema = z.object({
 
   projectStatus: ProjectStatusSchema,
 
+  // 会則 quotes both of these, so the backend refuses a project without them.
+  // startedAt is the yyyy-MM-dd the date input holds; the payload mapper turns
+  // it into the Instant the backend stores.
+  startedAt: z
+    .string()
+    .min(1, "必須項目です")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "日付の形式が正しくありません"),
+  usePurpose: z
+    .string()
+    .min(1, "必須項目です")
+    .max(1000, "文字列は最大1000文字までです"),
+
   // Representative
   repFirstName: z
     .string()
