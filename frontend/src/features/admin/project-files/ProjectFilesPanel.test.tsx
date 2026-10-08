@@ -100,7 +100,7 @@ describe('ProjectDocumentsSummaryCard', () => {
     expect(await screen.findByText('report_v2.pdf')).toBeInTheDocument();
     expect(screen.getByText('plan.xlsx')).toBeInTheDocument();
     expect(screen.queryByText('report_v1.xlsx')).not.toBeInTheDocument();
-    expect(screen.getByText('2/3種類')).toBeInTheDocument();
+    expect(screen.getByText('主要様式 2/3')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: '追加' }));
     expect(onUpload).toHaveBeenCalledWith('ACTIVITY_RESULT_LIST');
@@ -128,13 +128,25 @@ describe('ProjectFilesPanel', () => {
     expect(screen.getByText('2件')).toBeInTheDocument();
     expect(screen.queryByText(/\d+\/10件/)).not.toBeInTheDocument();
     // Sections without files start collapsed.
-    expect(screen.getByText('未アップロード')).toBeInTheDocument();
+    expect(screen.getAllByText('未アップロード')).toHaveLength(7);
     expect(screen.queryByText('個別活動実績報告リストはまだアップロードされていません。')).not.toBeInTheDocument();
 
     const rows = screen.getAllByRole('listitem');
     expect(within(rows[0]).getByText('v1')).toBeInTheDocument(); // PROJECT_PLAN section comes first
     expect(within(rows[1]).getByText('v2')).toBeInTheDocument();
     expect(within(rows[1]).getByText('最新')).toBeInTheDocument();
+  });
+
+  it('lists every document type under its J-Credit stage, each with its own 追加', async () => {
+    renderPanel();
+
+    for (const stage of ['プロジェクト登録', 'モニタリング・検証・認証', '審査中のやり取り']) {
+      expect(await screen.findByRole('heading', { name: stage })).toBeInTheDocument();
+    }
+    const registration = screen.getByRole('region', { name: 'プロジェクト登録' });
+    expect(within(registration).getByText('妥当性確認報告書')).toBeInTheDocument();
+    expect(within(registration).getByText('登録通知')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /にファイルを追加$/ })).toHaveLength(9);
   });
 
   it('previews both PDF and Excel files', async () => {

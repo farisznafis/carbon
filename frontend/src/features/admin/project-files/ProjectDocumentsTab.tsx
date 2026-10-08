@@ -10,7 +10,7 @@ import { PROJECT_FILE_TYPES } from './projectFileTypes';
 
 const DOCUMENT_VIEWS = [
   { value: 'forms', label: 'フォーム' },
-  { value: 'entry', label: 'データ入力' },
+  { value: 'acquisition', label: 'データ取得' },
 ] as const;
 
 type DocumentView = (typeof DOCUMENT_VIEWS)[number]['value'];
@@ -72,9 +72,9 @@ export function ProjectDocumentsTab({ projectId }: Readonly<{ projectId: string 
         />
       </TabsContent>
 
-      <TabsContent value="entry" className="m-0">
-        {/* TODO: data entry is designed once its API is specified. */}
-        <div className={dashboardEmptyStateClassName}>データ入力は準備中です。</div>
+      <TabsContent value="acquisition" className="m-0">
+        {/* TODO: data acquisition is designed once its API is specified. */}
+        <div className={dashboardEmptyStateClassName}>データ取得は準備中です。</div>
       </TabsContent>
     </Tabs>
   );

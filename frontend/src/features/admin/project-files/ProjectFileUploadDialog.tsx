@@ -21,11 +21,17 @@ import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DEFAULT_PROJECT_FILE_VERSION_LIMIT, type ProjectFileGroup } from './projectFileTypes';
+import {
+  DEFAULT_PROJECT_FILE_VERSION_LIMIT,
+  PROJECT_FILE_STAGES,
+  type ProjectFileGroup,
+} from './projectFileTypes';
 
 type ProjectFileUploadDialogProps = Readonly<{
   open: boolean;
@@ -128,10 +134,17 @@ export function ProjectFileUploadDialog({
                 <SelectValue placeholder="選択してください" />
               </SelectTrigger>
               <SelectContent>
-                {groups.map((group) => (
-                  <SelectItem key={group.type} value={group.type}>
-                    {group.label}
-                  </SelectItem>
+                {PROJECT_FILE_STAGES.map(({ stage, label }) => (
+                  <SelectGroup key={stage}>
+                    <SelectLabel className="text-small text-muted-foreground">{label}</SelectLabel>
+                    {groups
+                      .filter((group) => group.stage === stage)
+                      .map((group) => (
+                        <SelectItem key={group.type} value={group.type}>
+                          {group.label}
+                        </SelectItem>
+                      ))}
+                  </SelectGroup>
                 ))}
               </SelectContent>
             </Select>

@@ -15,7 +15,12 @@ import { ProjectFileDeleteDialog } from './ProjectFileDeleteDialog';
 import { ProjectFilePreviewDialog } from './ProjectFilePreviewDialog';
 import { ProjectFileRow } from './ProjectFileRow';
 import { ProjectFileUploadDialog } from './ProjectFileUploadDialog';
-import { projectFileTypeLabel, type ProjectFileVersion } from './projectFileTypes';
+import {
+  PROJECT_FILE_STAGES,
+  projectFileTypeLabel,
+  type ProjectFileGroup,
+  type ProjectFileVersion,
+} from './projectFileTypes';
 import { downloadProjectFile, useProjectFiles } from './useProjectFiles';
 
 const errorMessage = (error: unknown, fallback: string) =>
@@ -127,85 +132,105 @@ export function ProjectFilesPanel({
       );
     }
 
+    const renderSection = (group: ProjectFileGroup) => {
+      const latest = group.files[0];
+      return (
+        <AccordionItem
+          key={group.type}
+          value={group.type}
+          className="overflow-hidden rounded-lg border border-border bg-card shadow-app-sm"
+        >
+          {/* The add button sits beside the trigger, not in it: a button cannot hold a button. */}
+          <AccordionPrimitive.Header className="flex items-center gap-2 pr-3 transition-colors hover:bg-muted/60 data-[state=open]:border-b data-[state=open]:border-border">
+            <AccordionPrimitive.Trigger className="group flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+              <ChevronRight
+                aria-hidden="true"
+                className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90 motion-reduce:transition-none"
+              />
+              <span className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                <span className="font-bold text-foreground">{group.label}</span>
+                <span className="flex flex-wrap items-center gap-2 text-small font-normal text-muted-foreground">
+                  {latest ? (
+                    <>
+                      <StatusBadge className="tabular-nums">{group.files.length}件</StatusBadge>
+                      最新 {formatUploadedAt(latest.uploadedAt)}
+                    </>
+                  ) : (
+                    '未アップロード'
+                  )}
+                </span>
+              </span>
+            </AccordionPrimitive.Trigger>
+            {/* Quiet on purpose: nine of these sit in one list, so none may shout. */}
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="shrink-0 text-primary-strong hover:text-primary-strong"
+              aria-label={`${group.label}にファイルを追加`}
+              onClick={() => openUpload(group.type)}
+            >
+              <Plus aria-hidden="true" />
+              追加
+            </Button>
+          </AccordionPrimitive.Header>
+          <AccordionContent className="p-0">
+            {group.files.length > 0 ? (
+              <ul className="divide-y divide-border">
+                {group.files.map((file, index) => (
+                  <ProjectFileRow
+                    key={file.id}
+                    file={file}
+                    isLatest={index === 0}
+                    onPreview={setPreviewFile}
+                    onDownload={(target) => void handleDownload(target)}
+                    onDelete={requestDelete}
+                  />
+                ))}
+              </ul>
+            ) : (
+              <div className="flex flex-col items-center gap-3 px-4 py-8 text-center">
+                <FolderOpen aria-hidden="true" className="h-8 w-8 text-muted-foreground" />
+                <div>
+                  <p className="text-sm text-foreground">
+                    {group.label}はまだアップロードされていません。
+                  </p>
+                  <p className="mt-1 text-small text-muted-foreground">
+                    {group.description}「追加」からアップロードできます。
+                  </p>
+                </div>
+              </div>
+            )}
+          </AccordionContent>
+        </AccordionItem>
+      );
+    };
+
+    // One accordion for every section, headed by the J-Credit stage each belongs to.
     return (
       <Accordion
         type="multiple"
         value={expandedSections}
         onValueChange={setOpenSections}
-        className="space-y-3"
+        className="space-y-6"
       >
-        {groups.map((group) => {
-          const latest = group.files[0];
-          return (
-            <AccordionItem
-              key={group.type}
-              value={group.type}
-              className="overflow-hidden rounded-lg border border-border bg-card shadow-app-sm"
+        {PROJECT_FILE_STAGES.map(({ stage, label }) => (
+          <section
+            key={stage}
+            aria-labelledby={`project-file-stage-${stage}`}
+            className="space-y-2"
+          >
+            <h3
+              id={`project-file-stage-${stage}`}
+              className="text-small font-bold text-muted-foreground"
             >
-              {/* The add button sits beside the trigger, not in it: a button cannot hold a button. */}
-              <AccordionPrimitive.Header className="flex items-center gap-2 pr-3 transition-colors hover:bg-muted/60 data-[state=open]:border-b data-[state=open]:border-border">
-                <AccordionPrimitive.Trigger className="group flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
-                  <ChevronRight
-                    aria-hidden="true"
-                    className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90 motion-reduce:transition-none"
-                  />
-                  <span className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-                    <span className="font-bold text-foreground">{group.label}</span>
-                    <span className="flex flex-wrap items-center gap-2 text-small font-normal text-muted-foreground">
-                      {latest ? (
-                        <>
-                          <StatusBadge className="tabular-nums">{group.files.length}件</StatusBadge>
-                          最新 {formatUploadedAt(latest.uploadedAt)}
-                        </>
-                      ) : (
-                        '未アップロード'
-                      )}
-                    </span>
-                  </span>
-                </AccordionPrimitive.Trigger>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="shrink-0"
-                  aria-label={`${group.label}にファイルを追加`}
-                  onClick={() => openUpload(group.type)}
-                >
-                  <Plus aria-hidden="true" />
-                  追加
-                </Button>
-              </AccordionPrimitive.Header>
-              <AccordionContent className="p-0">
-                {group.files.length > 0 ? (
-                  <ul className="divide-y divide-border">
-                    {group.files.map((file, index) => (
-                      <ProjectFileRow
-                        key={file.id}
-                        file={file}
-                        isLatest={index === 0}
-                        onPreview={setPreviewFile}
-                        onDownload={(target) => void handleDownload(target)}
-                        onDelete={requestDelete}
-                      />
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="flex flex-col items-center gap-3 px-4 py-8 text-center">
-                    <FolderOpen aria-hidden="true" className="h-8 w-8 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm text-foreground">
-                        {group.label}はまだアップロードされていません。
-                      </p>
-                      <p className="mt-1 text-small text-muted-foreground">
-                        {group.description}「追加」からアップロードできます。
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </AccordionContent>
-            </AccordionItem>
-          );
-        })}
+              {label}
+            </h3>
+            <div className="space-y-2">
+              {groups.filter((group) => group.stage === stage).map(renderSection)}
+            </div>
+          </section>
+        ))}
       </Accordion>
     );
   };

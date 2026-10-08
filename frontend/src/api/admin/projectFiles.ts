@@ -2,19 +2,26 @@ import { apiFetch, parseJsonResponse } from '@/api/_shared/httpClient';
 import { ApiError } from '@/api/_shared/errors';
 
 /**
- * Files attached to a project: the プロジェクト計画書, モニタリング報告書 and
- * 個別活動実績報告リスト.
+ * Files attached to a project: the forms we write (プロジェクト計画書,
+ * モニタリング報告書, 個別活動実績報告リスト, 追加資料) and the documents the
+ * VVB and the J-Credit secretariat send back, which we upload too.
  *
- * Each is written in the official Excel 様式 and kept as a file; the system
- * does not read inside it. Every upload is a new version of its type, the
+ * Each is kept as a file; the system does not read inside it. Every upload is a new version of its type, the
  * newest is the current one, and the server keeps at most 10 per type. This module is the only place that knows the endpoint, so a
  * change to how the server versions files stays in one file.
  */
 
+/** Mirrors the backend ProjectFileType enum. */
 export type ProjectFileType =
   | 'PROJECT_PLAN'
+  | 'VALIDATION_REPORT'
+  | 'REGISTRATION_RESULT'
   | 'MONITORING_REPORT'
-  | 'ACTIVITY_RESULT_LIST';
+  | 'ACTIVITY_RESULT_LIST'
+  | 'VERIFICATION_REPORT'
+  | 'CERTIFICATION_RESULT'
+  | 'VVB_QUERY_SHEET'
+  | 'ADDITIONAL_MATERIAL';
 
 export type ProjectFile = {
   id: number;

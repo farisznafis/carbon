@@ -23,6 +23,16 @@ import {
 } from './projectFileTypes';
 import { downloadProjectFile, useProjectFiles } from './useProjectFiles';
 
+/**
+ * The forms the project is judged on. The VVB's reports and the secretariat's
+ * notices answer these, so 概要 stays at three rows and 書類 holds the rest.
+ */
+const SUMMARY_FILE_TYPES: readonly ProjectFileType[] = [
+  'PROJECT_PLAN',
+  'MONITORING_REPORT',
+  'ACTIVITY_RESULT_LIST',
+];
+
 type ProjectDocumentsSummaryCardProps = Readonly<{
   projectId: string;
   /** Opens the 書類 tab with every version. */
@@ -134,7 +144,8 @@ export function ProjectDocumentsSummaryCard({
   onOpenDocuments,
   onUpload,
 }: ProjectDocumentsSummaryCardProps) {
-  const { listingQuery, groups } = useProjectFiles(projectId);
+  const { listingQuery, groups: allGroups } = useProjectFiles(projectId);
+  const groups = allGroups.filter((group) => SUMMARY_FILE_TYPES.includes(group.type));
   const [previewFile, setPreviewFile] = useState<ProjectFileVersion | null>(null);
 
   const handleDownload = (file: ProjectFileVersion) => void downloadProjectFile(projectId, file);
@@ -187,7 +198,7 @@ export function ProjectDocumentsSummaryCard({
             <CardTitle>書類</CardTitle>
             {listingQuery.isSuccess ? (
               <StatusBadge className="tabular-nums">
-                {uploadedCount}/{groups.length}種類
+                主要様式 {uploadedCount}/{groups.length}
               </StatusBadge>
             ) : null}
           </div>
