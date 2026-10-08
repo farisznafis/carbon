@@ -131,6 +131,7 @@ export function UserTable({
         getRowKey={(user) => user.id}
         emptyMessage="まだ社員が登録されていません"
         onRowClick={onRowClick}
+        getRowActionLabel={() => 'プロファイル'}
       />
       <PaginationControls
         currentPage={currentPage}

@@ -101,6 +101,7 @@ export function SiteTable({ sites, onEdit, onRowClick }: SiteTableProps) {
         getRowKey={(site) => site.siteId}
         emptyMessage="まだ拠点が登録されていません"
         onRowClick={onRowClick}
+        getRowActionLabel={() => 'ダッシュボード'}
       />
       <PaginationControls
         currentPage={currentPage}

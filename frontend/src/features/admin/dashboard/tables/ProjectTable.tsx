@@ -5,7 +5,6 @@ import {
   DataGridTable,
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
-import { RowActionButton } from '@/components/data-display/RowActionButton';
 import {
   Select,
   SelectContent,
@@ -13,15 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { ProjectCompletionDialog } from './ProjectCompletionDialog';
 import { formatProjectDateTime } from '../projectStatusPresentation';
-import { cn } from '@/lib/utils';
 
 type ProjectTableProps = {
   projects: Project[];
@@ -35,7 +27,7 @@ type ProjectTableProps = {
 };
 
 const projectTableGridColumns =
-  'minmax(240px,1.6fr) minmax(100px,.5fr) minmax(240px,1.35fr) minmax(140px,.7fr) minmax(155px,.75fr) minmax(88px,.4fr)';
+  'minmax(240px,1.6fr) minmax(100px,.5fr) minmax(240px,1.35fr) minmax(140px,.7fr) minmax(155px,.75fr)';
 
 const projectStatusOptions: ProjectStatus[] = [
   '作成済み',
@@ -48,15 +40,6 @@ const projectStatusOptions: ProjectStatus[] = [
   'クレジット申請中',
   '終了',
 ];
-
-const NON_EDITABLE_PROJECT_STATUS: ProjectStatus = '準備中';
-
-const NON_EDITABLE_PROJECT_STATUS_MESSAGE =
-  'プロジェクトの作成が完了していないため、ステータスを変更できません。';
-
-const editableProjectStatusOptions = projectStatusOptions.filter(
-  (status) => status !== NON_EDITABLE_PROJECT_STATUS,
-);
 
 const statusColors: Record<
   ProjectStatus,
@@ -157,33 +140,15 @@ function getStatusOptions(
 ): string[] {
   if (
     !currentStatus ||
-    editableProjectStatusOptions.some(
-      (status) => status === currentStatus,
-    )
+    isProjectStatus(currentStatus)
   ) {
-    return editableProjectStatusOptions;
+    return projectStatusOptions;
   }
 
   return [
     currentStatus,
-    ...editableProjectStatusOptions,
+    ...projectStatusOptions,
   ];
-}
-
-/** Checks whether the current API status must remain read-only in the table. */
-function isNonEditableProjectStatus(
-  status: string,
-) {
-  const normalizedStatus =
-    status.trim();
-
-  return (
-    normalizedStatus ===
-      NON_EDITABLE_PROJECT_STATUS ||
-    projectStatusAliases[
-      normalizedStatus.toUpperCase()
-    ] === NON_EDITABLE_PROJECT_STATUS
-  );
 }
 
 function isTerminalProjectStatus(
@@ -371,11 +336,6 @@ export function ProjectTable({
               project.projectStatus,
             );
 
-          const statusIsReadOnly =
-            isNonEditableProjectStatus(
-              project.projectStatus,
-            );
-
           const statusIsTerminal =
             isTerminalProjectStatus(
               project.projectStatus,
@@ -385,87 +345,50 @@ export function ProjectTable({
             updatingProjectStatusId ===
             project.id;
 
-          const statusSelect = (
-            <Select
-              value={
-                project.projectStatus
-              }
-              disabled={
-                isUpdating ||
-                statusIsReadOnly ||
-                statusIsTerminal
-              }
-              onValueChange={(value) =>
-                handleStatusChange(
-                  project,
-                  value as ProjectStatus,
-                )
-              }
-            >
-              <SelectTrigger
-                className={cn(
-                  'h-8 w-full rounded-full border px-3 text-table font-bold shadow-none focus:ring-1',
-                  statusIsReadOnly &&
-                    'pointer-events-none [&>svg]:hidden',
-                )}
-                style={{
-                  backgroundColor: statusColor.bg,
-                  color: statusColor.text,
-                  borderColor: statusColor.border,
-                }}
-              >
-                <SelectValue />
-              </SelectTrigger>
-
-              <SelectContent>
-                {getStatusOptions(
-                  project.projectStatus,
-                ).map((status) => (
-                  <SelectItem
-                    key={status}
-                    value={status}
-                  >
-                    {status}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          );
-
           return (
             <span
               className="block min-w-0"
               data-row-click-ignore
             >
-              {statusIsReadOnly ? (
-                <TooltipProvider
-                  delayDuration={250}
+              <Select
+                value={
+                  project.projectStatus
+                }
+                disabled={
+                  isUpdating ||
+                  statusIsTerminal
+                }
+                onValueChange={(value) =>
+                  handleStatusChange(
+                    project,
+                    value as ProjectStatus,
+                  )
+                }
+              >
+                <SelectTrigger
+                  className="h-8 w-full rounded-full border px-3 text-table font-bold shadow-none focus:ring-1"
+                  style={{
+                    backgroundColor: statusColor.bg,
+                    color: statusColor.text,
+                    borderColor: statusColor.border,
+                  }}
                 >
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span
-                        className="block min-w-0 cursor-help"
-                        tabIndex={0}
-                      >
-                        {statusSelect}
-                      </span>
-                    </TooltipTrigger>
+                  <SelectValue />
+                </SelectTrigger>
 
-                    <TooltipContent
-                      id={`project-status-help-${project.id}`}
-                      side="top"
-                      align="center"
-                      className="max-w-xs text-center leading-5"
+                <SelectContent>
+                  {getStatusOptions(
+                    project.projectStatus,
+                  ).map((status) => (
+                    <SelectItem
+                      key={status}
+                      value={status}
                     >
-                      {
-                        NON_EDITABLE_PROJECT_STATUS_MESSAGE
-                      }
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ) : (
-                statusSelect
-              )}
+                      {status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </span>
           );
         },
@@ -487,17 +410,6 @@ export function ProjectTable({
                 project.createdAt,
             )}
           </span>
-        ),
-      },
-
-      {
-        id: 'actions',
-        label: '操作',
-
-        render: (project) => (
-          <RowActionButton
-            onClick={() => onEdit?.(project)}
-          />
         ),
       },
     ];

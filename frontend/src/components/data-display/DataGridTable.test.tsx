@@ -32,7 +32,34 @@ describe('DataGridTable', () => {
     );
   });
 
-  it('opens a row on click without making the row itself a focusable button', () => {
+  it('opens a row on click and through the trailing › button for keyboard users', () => {
+    const onRowClick = vi.fn();
+    const row = { id: 'row-1', name: 'First row' };
+
+    render(
+      <DataGridTable
+        rows={[row]}
+        columns={columns}
+        gridTemplateColumns="1fr"
+        getRowKey={(item) => item.id}
+        emptyMessage="No rows"
+        onRowClick={onRowClick}
+      />,
+    );
+
+    fireEvent.click(screen.getByText('First row'));
+    expect(onRowClick).toHaveBeenCalledWith(row);
+
+    // The › button is a real button with an accessible name; the row itself is not role="button".
+    fireEvent.click(screen.getByRole('button', { name: '詳細' }));
+    expect(onRowClick).toHaveBeenCalledTimes(2);
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+    expect(screen.getByText('First row').closest('div[style]')).toHaveStyle({
+      gridTemplateColumns: '1fr 32px',
+    });
+  });
+
+  it('names the trailing button per row and keeps other row controls independent', () => {
     const onRowClick = vi.fn();
     const onAction = vi.fn();
 
@@ -45,7 +72,7 @@ describe('DataGridTable', () => {
             id: 'actions',
             label: '操作',
             render: (row) => (
-              <RowActionButton onClick={() => onAction(row)} />
+              <RowActionButton onClick={() => onAction(row)}>更新</RowActionButton>
             ),
           },
         ]}
@@ -53,18 +80,30 @@ describe('DataGridTable', () => {
         getRowKey={(row) => row.id}
         emptyMessage="No rows"
         onRowClick={onRowClick}
+        getRowActionLabel={(row) => `${row.name}を確認`}
       />,
     );
 
-    fireEvent.click(screen.getByText('First row'));
-    expect(onRowClick).toHaveBeenCalledWith({ id: 'row-1', name: 'First row' });
-
-    fireEvent.click(screen.getByRole('button', { name: '詳細' }));
+    fireEvent.click(screen.getByRole('button', { name: '更新' }));
     expect(onAction).toHaveBeenCalledTimes(1);
-    expect(onRowClick).toHaveBeenCalledTimes(1);
+    expect(onRowClick).not.toHaveBeenCalled();
 
-    // The 詳細 button is the only button: the row is not role="button".
-    expect(screen.getAllByRole('button')).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'First rowを確認' }));
+    expect(onRowClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not add the trailing column to tables without a row action', () => {
+    render(
+      <DataGridTable
+        rows={[{ id: 'row-1', name: 'First row' }]}
+        columns={columns}
+        gridTemplateColumns="1fr"
+        getRowKey={(row) => row.id}
+        emptyMessage="No rows"
+      />,
+    );
+
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
   it('ignores clicks inside areas marked data-row-click-ignore', () => {

@@ -1,16 +1,16 @@
 ﻿import { useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
-  AlertTriangle,
   ArrowLeft,
+  Ban,
   Building2,
+  ChevronDown,
   Clock3,
   KeyRound,
   ShieldCheck,
 } from 'lucide-react';
 import type {
   AdminCompanyAccountActionTarget,
-  CompanyStatus,
   CompanySuspension,
   SuspendCompanyPayload,
   SuspensionReasonCode,
@@ -36,6 +36,12 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
@@ -50,11 +56,12 @@ import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionD
 import { AdminCompanySitesTable } from './components/AdminCompanySitesTable';
 import { AdminCompanyUsersTable } from './components/AdminCompanyUsersTable';
 import { AdminMasterPasswordResetDialog } from './components/AdminMasterPasswordResetDialog';
+import { DefinitionRow } from './components/DefinitionRow';
+import { CompanyStatusBadge } from './CompanyStatusBadge';
 import {
   formatAdminCompanyAddress,
   formatAdminCompanyDateTime,
   formatAdminRole,
-  formatCompanyStatus,
   formatSubscriptionStatus,
 } from './companyDetailDisplay';
 import { ActionButton } from '@/components/actions';
@@ -69,17 +76,15 @@ const DEFAULT_SUSPEND_PAYLOAD: SuspendCompanyPayload = {
   reasonDetail: '',
 };
 
-const companyStatusTones: Record<
-  CompanyStatus,
-  'warning' | 'danger' | 'success'
-> = {
-  PENDING: 'warning',
-  REJECTED: 'danger',
-  ACTIVE: 'success',
-  SUSPENDED: 'danger',
-};
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Returns to the filtered company list the detail was opened from, else the dashboard. */
+function resolveCompanyDetailBackTo(state: unknown): string {
+  const returnTo = (state as { returnTo?: unknown } | null)?.returnTo;
+  return typeof returnTo === 'string' && returnTo.startsWith(paths.adminCompanyList)
+    ? returnTo
+    : paths.adminDashboard;
+}
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (error instanceof ApiError) return error.message || fallback;
@@ -109,35 +114,11 @@ function getPasswordResetErrorMessage(error: unknown) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function CompanyStatusBadge({ status }: { status: CompanyStatus }) {
-  return (
-    <StatusBadge tone={companyStatusTones[status]}>
-      {formatCompanyStatus(status)}
-    </StatusBadge>
-  );
-}
-
 function AccountStatusBadge({ isActive }: { isActive: boolean }) {
   return (
     <StatusBadge tone={isActive ? 'success' : 'danger'}>
       {isActive ? 'アカウント有効' : 'アカウント無効'}
     </StatusBadge>
-  );
-}
-
-/** Definition-list row: label left / top, value right / bottom */
-function DefinitionRow({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="grid grid-cols-1 gap-0.5 sm:grid-cols-[180px_1fr] sm:gap-2 sm:items-start py-2 border-b border-border/50 last:border-0">
-      <dt className="text-sm text-foreground">{label}</dt>
-      <dd className="text-sm font-medium text-foreground break-words">{children}</dd>
-    </div>
   );
 }
 
@@ -193,6 +174,8 @@ function DetailErrorState({
 export default function AdminCompanyDetailPage() {
   const { companyId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const backTo = resolveCompanyDetailBackTo(location.state);
   const { user } = useAuth();
   const { toast } = useToast();
   const permissions = useAdminPermissions();
@@ -379,7 +362,7 @@ export default function AdminCompanyDetailPage() {
     }
   };
 
-  const handleBack = () => navigate(paths.adminDashboard);
+  const handleBack = () => navigate(backTo);
 
   // ── Guard states ───────────────────────────────────────────────────────────
 
@@ -436,12 +419,7 @@ export default function AdminCompanyDetailPage() {
       .join(' ');
 
   const formattedAddress = formatAdminCompanyAddress(company);
-  const isSuspended = company.companyStatus === 'SUSPENDED';
-  const dangerZoneTitle = isSuspended ? 'アカウント操作' : '危険な操作';
-  const dangerZoneActionLabel = isSuspended ? 'アカウント有効化' : 'アカウント停止';
-  const dangerZoneActionDescription = isSuspended
-    ? '停止中のアカウントを再び有効にします。'
-    : 'この企業のアカウントを停止すると、ログインできなくなります。';
+  const backLabel = backTo === paths.adminDashboard ? 'ダッシュボード' : '企業一覧';
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -450,7 +428,7 @@ export default function AdminCompanyDetailPage() {
       <PageBackButton
         onClick={handleBack}
         label=""
-        aria-label="ダッシュボードへ戻る"
+        aria-label={`${backLabel}へ戻る`}
         className={floatingPageBackButtonClassName}
       />
 
@@ -463,11 +441,11 @@ export default function AdminCompanyDetailPage() {
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
                     <Link
-                      to={paths.adminDashboard}
+                      to={backTo}
                       className="inline-flex items-center gap-1.5 font-medium text-foreground hover:text-primary"
                     >
                       <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-                      ダッシュボード
+                      {backLabel}
                     </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
@@ -523,6 +501,53 @@ export default function AdminCompanyDetailPage() {
                   )}
                 </div>
               </div>
+
+              {/* Account actions: pulldown at the top, items depend on the account status */}
+              {(company.companyStatus === 'ACTIVE' ||
+                company.companyStatus === 'SUSPENDED') && (
+                // Non-modal so the confirmation dialog can take focus once the menu closes.
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <Button type="button" variant="outline" size="sm" className="shrink-0">
+                      アカウント操作
+                      <ChevronDown aria-hidden="true" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-72 p-1.5">
+                    {company.companyStatus === 'ACTIVE' && (
+                      <DropdownMenuItem
+                        disabled={isOwnCompany}
+                        onSelect={handleOpenSuspendDialog}
+                        className="flex-col items-start gap-0.5 px-3 py-2.5 text-destructive focus:bg-destructive/10 focus:text-destructive"
+                      >
+                        <span className="inline-flex items-center gap-2 font-medium">
+                          <Ban className="h-4 w-4" aria-hidden="true" />
+                          アカウント停止
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {isOwnCompany
+                            ? '管理者自身が所属する企業は停止できません。'
+                            : 'この企業のアカウントを停止すると、ログインできなくなります。'}
+                        </span>
+                      </DropdownMenuItem>
+                    )}
+                    {company.companyStatus === 'SUSPENDED' && (
+                      <DropdownMenuItem
+                        onSelect={() => void handleOpenResolveDialog()}
+                        className="flex-col items-start gap-0.5 px-3 py-2.5"
+                      >
+                        <span className="inline-flex items-center gap-2 font-medium text-success-strong">
+                          <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                          アカウント有効化
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          停止中のアカウントを再び有効にします。
+                        </span>
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
         </div>
 
@@ -669,90 +694,6 @@ export default function AdminCompanyDetailPage() {
             </dl>
           </CardContent>
         </Card>
-
-        {/* ── Danger Zone ─────────────────────────────────────────────────── */}
-        {(company.companyStatus === 'ACTIVE' || company.companyStatus === 'SUSPENDED') && (
-          <Card
-            className={
-              isSuspended
-                ? 'border-success-border bg-success-subtle/40'
-                : 'border-destructive/40'
-            }
-          >
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                {isSuspended ? (
-                  <ShieldCheck className="h-5 w-5 text-emerald-600" />
-                ) : (
-                  <AlertTriangle className="h-5 w-5 text-destructive" />
-                )}
-                <CardTitle
-                  className={
-                    isSuspended
-                      ? 'text-lg font-semibold text-emerald-700'
-                      : 'text-lg font-semibold text-destructive'
-                  }
-                >
-                  {dangerZoneTitle}
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  {company.companyStatus === 'ACTIVE' ? (
-                    <>
-                      <p className="text-sm font-medium text-foreground">
-                        アカウント停止
-                      </p>
-                      <p className="text-sm text-foreground">
-                        この企業のアカウントを停止すると、ログインできなくなります。
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-sm font-medium text-foreground">
-                        {dangerZoneActionLabel}
-                      </p>
-                      <p className="text-sm text-foreground">
-                        {dangerZoneActionDescription}
-                      </p>
-                    </>
-                  )}
-                </div>
-
-                <div className="shrink-0">
-                  {company.companyStatus === 'ACTIVE' && (
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      disabled={isOwnCompany}
-                      title={
-                        isOwnCompany
-                          ? '管理者自身が所属する企業は停止できません。'
-                          : undefined
-                      }
-                      onClick={handleOpenSuspendDialog}
-                    >
-                      アカウント停止
-                    </Button>
-                  )}
-                  {company.companyStatus === 'SUSPENDED' && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="success"
-                      onClick={() => void handleOpenResolveDialog()}
-                    >
-                      {dangerZoneActionLabel}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       <CompanySuspendDialog
