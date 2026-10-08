@@ -10,9 +10,11 @@ const filesApi = vi.hoisted(() => ({
   projectFileProblem: vi.fn(),
   PROJECT_FILE_ACCEPT: '.xlsx,.pdf',
 }));
+const companiesApi = vi.hoisted(() => ({ getProjectMembershipPdfs: vi.fn() }));
 const toastMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/api/admin/projectFiles', () => filesApi);
+vi.mock('@/api/admin/projectCompanies', () => companiesApi);
 vi.mock('@/hooks/use-toast', () => ({ toast: toastMock }));
 vi.mock('@/features/admin/permissions/useAdminPermissions', () => ({
   useAdminPermissions: () => ({
@@ -25,6 +27,7 @@ vi.mock('@/features/admin/permissions/useAdminPermissions', () => ({
 }));
 
 import { useState } from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { ProjectDocumentsSummaryCard } from './ProjectDocumentsSummaryCard';
 import { ProjectFilesPanel, type ProjectFileUploadRequest } from './ProjectFilesPanel';
 import { groupProjectFiles } from './projectFileTypes';
@@ -57,7 +60,9 @@ function PanelHarness() {
 function renderPanel() {
   return render(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-      <PanelHarness />
+      <MemoryRouter>
+        <PanelHarness />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -114,6 +119,10 @@ describe('ProjectFilesPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     filesApi.getProjectFileListing.mockResolvedValue(listing);
+    companiesApi.getProjectMembershipPdfs.mockResolvedValue([
+      { companyId: 'C1', companyName: '株式会社A', participationId: 7, pdfStatus: 'READY', pdfUrl: 'https://signed/a.pdf' },
+      { companyId: 'C2', companyName: '株式会社B', participationId: 8, pdfStatus: 'PENDING', pdfUrl: null },
+    ]);
     filesApi.projectFileProblem.mockReturnValue(null);
     filesApi.uploadProjectFile.mockResolvedValue({ id: 20 });
     filesApi.deleteProjectFile.mockResolvedValue(undefined);
@@ -151,6 +160,26 @@ describe('ProjectFilesPanel', () => {
     // Only types with files expand; an empty one has nothing to show.
     expect(within(registration).getAllByRole('button', { expanded: true })).toHaveLength(1);
     expect(within(registration).queryByRole('button', { name: /妥当性確認報告書/, expanded: false })).toBeNull();
+  });
+
+  it('lists one 入会届 PDF per company after 個別活動実績報告リスト, read-only', async () => {
+    renderPanel();
+
+    const trigger = await screen.findByRole('button', { name: /入会届.*2社/ });
+    const monitoring = screen.getByRole('region', { name: 'モニタリング・検証・認証' });
+    // Not a versioned type: no add button, and it does not count toward the stage's uploads.
+    expect(within(monitoring).getByText('1 / 4 アップロード済')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '入会届にファイルを追加' })).toBeNull();
+
+    fireEvent.click(trigger);
+    const list = await screen.findByRole('list', { name: '入会届の一覧' });
+    expect(within(list).getByRole('button', { name: '株式会社Aの入会届を表示' })).toBeEnabled();
+    expect(within(list).getByText('PDF準備中')).toBeInTheDocument();
+    expect(within(list).getByRole('link', { name: '株式会社Aの入会届詳細を開く' })).toHaveAttribute(
+      'href',
+      '/admin/projects/PROJ1/memberships/7',
+    );
+    expect(within(list).queryByRole('button', { name: /削除$/ })).toBeNull();
   });
 
   it('previews both PDF and Excel files', async () => {

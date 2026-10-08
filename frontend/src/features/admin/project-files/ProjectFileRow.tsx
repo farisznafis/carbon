@@ -15,8 +15,12 @@ type ProjectFileRowProps = Readonly<{
   onDelete: (file: ProjectFileVersion) => void;
 }>;
 
+/** Label, count and latest upload share columns across section rows so the dates scan down. */
+export const sectionRowGridClassName =
+  'flex min-w-0 flex-1 flex-col gap-0.5 sm:grid sm:grid-cols-[minmax(0,1fr)_3.5rem_9.5rem] sm:items-center sm:gap-4';
+
 /** Icon button whose name is both its accessible label and its tooltip. */
-function RowIconButton({
+export function RowIconButton({
   label,
   tooltip = label,
   disabled = false,

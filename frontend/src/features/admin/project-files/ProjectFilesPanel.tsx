@@ -13,8 +13,9 @@ import { formatUploadedAt } from '@/features/admin/project-plan/planFiles';
 import { toast } from '@/hooks/use-toast';
 import { ProjectFileDeleteDialog } from './ProjectFileDeleteDialog';
 import { ProjectFilePreviewDialog } from './ProjectFilePreviewDialog';
-import { ProjectFileRow } from './ProjectFileRow';
+import { ProjectFileRow, sectionRowGridClassName } from './ProjectFileRow';
 import { ProjectFileUploadDialog } from './ProjectFileUploadDialog';
+import { ProjectMembershipPdfSection } from './ProjectMembershipPdfSection';
 import {
   PROJECT_FILE_STAGES,
   projectFileTypeLabel,
@@ -132,10 +133,6 @@ export function ProjectFilesPanel({
       );
     }
 
-    // Label, count and latest upload share columns across rows so the dates scan down.
-    const rowGridClassName =
-      'flex min-w-0 flex-1 flex-col gap-0.5 sm:grid sm:grid-cols-[minmax(0,1fr)_3.5rem_9.5rem] sm:items-center sm:gap-4';
-
     /**
      * A type with nothing in it yet: nothing to expand, so the row only invites the first upload.
      * Its name keeps the siblings' weight; only the status dims, or the row reads as a child.
@@ -143,7 +140,7 @@ export function ProjectFilesPanel({
     const renderEmptySection = (group: ProjectFileGroup) => (
       <div key={group.type} className="flex min-h-11 items-center gap-3 py-1.5 pl-4 pr-3">
         <span aria-hidden="true" className="h-4 w-4 shrink-0" />
-        <span className={rowGridClassName}>
+        <span className={sectionRowGridClassName}>
           <span className="truncate text-sm font-medium text-foreground" title={group.description}>
             {group.label}
           </span>
@@ -175,7 +172,7 @@ export function ProjectFilesPanel({
                 aria-hidden="true"
                 className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90 motion-reduce:transition-none"
               />
-              <span className={rowGridClassName}>
+              <span className={sectionRowGridClassName}>
                 <span className="truncate text-sm font-medium text-foreground">{group.label}</span>
                 <span className="flex items-center gap-2 text-small text-muted-foreground sm:contents">
                   <StatusBadge className="w-fit tabular-nums">{group.files.length}件</StatusBadge>
@@ -250,7 +247,12 @@ export function ProjectFilesPanel({
                 </span>
               </div>
               <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card shadow-app-sm">
-                {stageGroups.map(renderSection)}
+                {stageGroups.flatMap((group) =>
+                  // 入会届 sits with the monitoring forms but is not one of the versioned types.
+                  group.type === 'ACTIVITY_RESULT_LIST'
+                    ? [renderSection(group), <ProjectMembershipPdfSection key="membership" projectId={projectId} />]
+                    : [renderSection(group)],
+                )}
               </div>
             </section>
           );
