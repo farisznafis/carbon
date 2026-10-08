@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronRight, ChevronsUpDown } from 'lucide-react';
 import type { CSSProperties, MouseEvent, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,16 @@ export type DataGridTableColumn<T> = {
 
 type SortDirection = 'asc' | 'desc';
 
+/** Row tone for records waiting on the user (pending review, incomplete plan). Pass via `getRowClassName`. */
+export const ATTENTION_ROW_CLASS_NAME =
+  'bg-warning-subtle/50 shadow-[inset_3px_0_0_hsl(var(--warning))]';
+/** Row tone for records that are no longer active (rejected, suspended). Pass via `getRowClassName`. */
+export const INACTIVE_ROW_CLASS_NAME = 'bg-muted/70';
+
+/** Width of the trailing › column added to clickable tables. */
+const ROW_OPEN_COLUMN_WIDTH = '32px';
+const DEFAULT_ROW_ACTION_LABEL = '詳細';
+
 /**
  * Controls whose own clicks must not also trigger the row action. Wrap any
  * other non-navigating area (e.g. a tooltip trigger) in `data-row-click-ignore`.
@@ -33,11 +43,13 @@ type DataGridTableProps<T> = {
   getRowKey: (row: T) => string;
   emptyMessage: ReactNode;
   /**
-   * Mouse shortcut for the row's main action. The row is not focusable, so it
-   * must also render a `RowActionButton` doing the same thing for keyboard and
-   * screen-reader users.
+   * Opens the row (usually its detail). The whole row is the mouse target and
+   * the table appends a trailing › button doing the same thing, so keyboard and
+   * screen-reader users can reach it; columns should not repeat a 詳細 button.
    */
   onRowClick?: (row: T) => void;
+  /** Accessible name of the trailing › button, e.g. 申請内容を確認 for rows awaiting review. */
+  getRowActionLabel?: (row: T) => string;
   /** Extra classes for one row, e.g. to highlight rows that need attention. */
   getRowClassName?: (row: T) => string | undefined;
 };
@@ -130,12 +142,15 @@ export function DataGridTable<T>({
   getRowKey,
   emptyMessage,
   onRowClick,
+  getRowActionLabel,
   getRowClassName,
 }: DataGridTableProps<T>) {
   const [sortColumnId, setSortColumnId] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const gridStyle = {
-    gridTemplateColumns,
+    gridTemplateColumns: onRowClick
+      ? `${gridTemplateColumns} ${ROW_OPEN_COLUMN_WIDTH}`
+      : gridTemplateColumns,
   } satisfies CSSProperties;
 
   const sortedRows = useMemo(() => {
@@ -227,6 +242,7 @@ export function DataGridTable<T>({
             </span>
           );
         })}
+        {onRowClick && <span className='sr-only'>{DEFAULT_ROW_ACTION_LABEL}</span>}
       </div>
 
       {sortedRows.length === 0 ? (
@@ -258,6 +274,18 @@ export function DataGridTable<T>({
                 {column.render(row)}
               </div>
             ))}
+            {onRowClick && (
+              <div className='flex justify-end'>
+                <button
+                  type='button'
+                  aria-label={getRowActionLabel?.(row) ?? DEFAULT_ROW_ACTION_LABEL}
+                  onClick={() => onRowClick(row)}
+                  className='inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition group-hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                >
+                  <ChevronRight className='h-4 w-4' aria-hidden='true' />
+                </button>
+              </div>
+            )}
           </div>
         ))
       )}

@@ -31,7 +31,7 @@ export const PageTabsTrigger = forwardRef<
   <TabsTrigger
     ref={ref}
     className={cn(
-      'h-11 shrink-0 rounded-none border-b-2 border-transparent bg-transparent px-1 py-2 text-body text-muted-foreground shadow-none hover:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-foreground data-[state=active]:shadow-none focus-visible:ring-2 focus-visible:ring-ring',
+      'h-11 shrink-0 rounded-none border-b-2 border-transparent bg-transparent px-1 py-2 text-body text-muted-foreground shadow-none hover:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-foreground data-[state=active]:shadow-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0',
       className,
     )}
     {...props}

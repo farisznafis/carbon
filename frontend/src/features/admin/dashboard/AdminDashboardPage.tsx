@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+﻿import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   useLocation,
   useNavigate,
@@ -48,7 +48,17 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  ALL_COMPANIES_CONTENT,
+  COMPANY_APPLICATION_STATUSES,
+  COMPANY_PARTICIPATING_STATUSES,
+  COMPANY_STATUSES,
+  COMPANY_STATUS_CONTENT,
+  resolveCompanyStatusFilter,
+  type CompanyStatusFilter as CompanyStatusFilterValue,
+} from '@/features/admin/company-detail/companyStatusContent';
 import { AdminCompanyApplicationsTable } from '@/features/admin/dashboard/tables/AdminCompanyApplicationsTable';
+import { CompanyStatusFilter } from '@/features/admin/dashboard/tables/CompanyStatusFilter';
 import { PendingCompanyActionDialog } from '@/features/admin/dashboard/tables/PendingCompanyActionDialog';
 import { PendingCompanyApplicationDetail } from '@/features/admin/dashboard/tables/PendingCompanyApplicationDetail';
 import { ProjectTable } from '@/features/admin/dashboard/tables/ProjectTable';
@@ -92,8 +102,7 @@ type ApplicationDetailNavigationState = {
 
 const dashboardContainer = adminPageContainerClassName;
 
-const APPLICATION_STATUSES: CompanyStatus[] = ['PENDING', 'REJECTED'];
-const PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
+const COMPANY_STATUS_QUERY_PARAM = 'status';
 const HOME_APPLICATION_SUMMARY_LIMIT = 3;
 const ALL_PROJECT_FILTER = 'ALL';
 const PROJECT_VIEW_QUERY_PARAM = 'view';
@@ -145,6 +154,14 @@ function getAdminDashboardSection(
   }
 
   return 'overview';
+}
+
+/** Checks whether a return target is the company list, with or without a status filter. */
+function isCompanyListLocation(value: string | undefined): value is string {
+  return (
+    value === paths.adminCompanyList ||
+    Boolean(value?.startsWith(`${paths.adminCompanyList}?`))
+  );
 }
 
 function isStringRecord(value: unknown): value is Record<string, string> {
@@ -252,10 +269,19 @@ const AdminDashboard = () => {
   const projectsQuery = useProjectsQuery(canReadProjects);
   const projects = useMemo(() => projectsQuery.data ?? [], [projectsQuery.data]);
 
-  const [applicationCompaniesLoading, setApplicationCompaniesLoading] = useState(true);
-  const [applicationCompaniesError, setApplicationCompaniesError] = useState<string | null>(null);
-  const [participatingCompaniesLoading, setParticipatingCompaniesLoading] = useState(true);
-  const [participatingCompaniesError, setParticipatingCompaniesError] = useState<string | null>(null);
+  const [companies, setCompanies] = useState<AdminCompanyListItem[]>([]);
+  const [companyPagination, setCompanyPagination] =
+    useState<Pagination>(DEFAULT_PAGINATION);
+  const [companyPage, setCompanyPage] = useState(1);
+  const [companiesLoading, setCompaniesLoading] = useState(true);
+  const [companiesError, setCompaniesError] = useState<string | null>(null);
+  const latestCompanyRequestRef = useRef(0);
+  const [companyStatusCounts, setCompanyStatusCounts] = useState<
+    Partial<Record<CompanyStatus, number>>
+  >({});
+  const [companyStatusCountsLoading, setCompanyStatusCountsLoading] = useState(true);
+  const [applicationCountsError, setApplicationCountsError] = useState<string | null>(null);
+  const [participatingCountsError, setParticipatingCountsError] = useState<string | null>(null);
   const [cancelRequestItems, setCancelRequestItems] = useState<
     Awaited<ReturnType<typeof getMonitoringCancelRequests>>
   >([]);
@@ -278,9 +304,6 @@ const AdminDashboard = () => {
   const [openMembershipReviewsError, setOpenMembershipReviewsError] = useState<
     string | null
   >(null);
-  const [applicationCompanies, setApplicationCompanies] = useState<
-    AdminCompanyListItem[]
-  >([]);
   const [homePendingApplications, setHomePendingApplications] = useState<
     AdminCompanyListItem[]
   >([]);
@@ -293,15 +316,6 @@ const AdminDashboard = () => {
   const [homeRejectedApplicationTotal, setHomeRejectedApplicationTotal] = useState(0);
   const [homeRejectedApplicationsLoading, setHomeRejectedApplicationsLoading] = useState(true);
   const [homeRejectedApplicationsError, setHomeRejectedApplicationsError] = useState<string | null>(null);
-  const [participatingCompanies, setParticipatingCompanies] = useState<
-    AdminCompanyListItem[]
-  >([]);
-  const [applicationPagination, setApplicationPagination] =
-    useState<Pagination>(DEFAULT_PAGINATION);
-  const [participatingPagination, setParticipatingPagination] =
-    useState<Pagination>(DEFAULT_PAGINATION);
-  const [applicationPage, setApplicationPage] = useState(1);
-  const [participatingPage, setParticipatingPage] = useState(1);
   const [companyLimit, setCompanyLimit] = useState(20);
   const [submitting, setSubmitting] = useState(false);
   const [actionFieldErrors, setActionFieldErrors] = useState<
@@ -370,73 +384,123 @@ const AdminDashboard = () => {
     }
   }, [location.pathname, navigate, requestedTab]);
 
-  /** Reloads the application-company list independently from participating companies. */
-  const reloadApplicationCompanies = useCallback(async () => {
-    if (!canReviewCompanies) {
-      setApplicationCompanies([]);
-      setApplicationCompaniesLoading(false);
-      setApplicationCompaniesError(null);
+  /** Statuses this operator may see in the company list, in display order. */
+  const visibleCompanyStatuses = useMemo(
+    () =>
+      COMPANY_STATUSES.filter((status) =>
+        adminPermissions.hasPermission(COMPANY_STATUS_CONTENT[status].permission),
+      ),
+    [adminPermissions],
+  );
+  const activeCompanyStatusFilter = resolveCompanyStatusFilter(
+    new URLSearchParams(location.search).get(COMPANY_STATUS_QUERY_PARAM),
+    visibleCompanyStatuses,
+  );
+  const companyListStatusKey = (
+    applicationId
+      ? canReviewCompanies
+        ? COMPANY_APPLICATION_STATUSES
+        : []
+      : activeCompanyStatusFilter === 'all'
+        ? visibleCompanyStatuses
+        : [activeCompanyStatusFilter]
+  ).join(',');
+
+  /**
+   * Reloads the company list for the selected status filter. An application
+   * detail route always loads applications so it can resolve its company.
+   */
+  const reloadCompanies = useCallback(async () => {
+    const statuses = companyListStatusKey
+      ? (companyListStatusKey.split(',') as CompanyStatus[])
+      : [];
+    const requestId = latestCompanyRequestRef.current + 1;
+    latestCompanyRequestRef.current = requestId;
+
+    if (statuses.length === 0) {
+      setCompanies([]);
+      setCompanyPagination(DEFAULT_PAGINATION);
+      setCompaniesLoading(false);
+      setCompaniesError(null);
       return;
     }
 
-    setApplicationCompaniesLoading(true);
-    setApplicationCompaniesError(null);
+    setCompaniesLoading(true);
+    setCompaniesError(null);
 
     try {
-      const applications = await getAdminCompanies({
+      const response = await getAdminCompanies({
         limit: companyLimit,
-        status: APPLICATION_STATUSES,
-        page: applicationPage,
+        status: statuses,
+        page: companyPage,
         sort: 'createdAt',
         sortOrder: 'desc',
       });
-      setApplicationCompanies(applications.companies);
-      setApplicationPagination(applications.pagination);
+      if (latestCompanyRequestRef.current !== requestId) return;
+      setCompanies(response.companies);
+      setCompanyPagination(response.pagination);
     } catch (error) {
-      setApplicationCompaniesError(
-        getApiMessage(error, '企業一覧の取得に失敗しました。'),
-      );
+      if (latestCompanyRequestRef.current !== requestId) return;
+      setCompaniesError(getApiMessage(error, '企業一覧の取得に失敗しました。'));
     } finally {
-      setApplicationCompaniesLoading(false);
+      if (latestCompanyRequestRef.current === requestId) {
+        setCompaniesLoading(false);
+      }
     }
-  }, [applicationPage, canReviewCompanies, companyLimit]);
+  }, [companyLimit, companyListStatusKey, companyPage]);
 
-  /** Reloads participating companies without blocking application reviews. */
-  const reloadParticipatingCompanies = useCallback(async () => {
-    if (!canReadCompanies) {
-      setParticipatingCompanies([]);
-      setParticipatingCompaniesLoading(false);
-      setParticipatingCompaniesError(null);
-      return;
-    }
+  /** Loads the API total of each status for the filter counts and Home summary. */
+  const reloadCompanyStatusCounts = useCallback(async () => {
+    const loadGroup = async (
+      statuses: CompanyStatus[],
+      allowed: boolean,
+      fallbackMessage: string,
+    ) => {
+      if (!allowed) return { counts: {}, error: null };
 
-    setParticipatingCompaniesLoading(true);
-    setParticipatingCompaniesError(null);
+      try {
+        const responses = await Promise.all(
+          statuses.map((status) =>
+            getAdminCompanies({ status, page: 1, limit: 1 }),
+          ),
+        );
+        return {
+          counts: Object.fromEntries(
+            statuses.map((status, index) => [
+              status,
+              responses[index].pagination.totalItems,
+            ]),
+          ),
+          error: null,
+        };
+      } catch (error) {
+        return { counts: {}, error: getApiMessage(error, fallbackMessage) };
+      }
+    };
 
-    try {
-      const participating = await getAdminCompanies({
-        limit: companyLimit,
-        status: PARTICIPATING_STATUSES,
-        page: participatingPage,
-      });
-      setParticipatingCompanies(participating.companies);
-      setParticipatingPagination(participating.pagination);
-    } catch (error) {
-      setParticipatingCompaniesError(
-        getApiMessage(error, '参加企業一覧の取得に失敗しました。'),
-      );
-    } finally {
-      setParticipatingCompaniesLoading(false);
-    }
-  }, [canReadCompanies, companyLimit, participatingPage]);
-
-  /** Refreshes both company groups after a company mutation. */
-  const reloadCompanyLists = useCallback(async () => {
-    await Promise.all([
-      reloadApplicationCompanies(),
-      reloadParticipatingCompanies(),
+    setCompanyStatusCountsLoading(true);
+    const [applications, participating] = await Promise.all([
+      loadGroup(
+        COMPANY_APPLICATION_STATUSES,
+        canReviewCompanies,
+        '企業申請の件数を取得できませんでした。',
+      ),
+      loadGroup(
+        COMPANY_PARTICIPATING_STATUSES,
+        canReadCompanies,
+        '参加企業の件数を取得できませんでした。',
+      ),
     ]);
-  }, [reloadApplicationCompanies, reloadParticipatingCompanies]);
+    setCompanyStatusCounts({ ...applications.counts, ...participating.counts });
+    setApplicationCountsError(applications.error);
+    setParticipatingCountsError(participating.error);
+    setCompanyStatusCountsLoading(false);
+  }, [canReadCompanies, canReviewCompanies]);
+
+  /** Refreshes the list and the status counts after a company mutation. */
+  const reloadCompanyLists = useCallback(async () => {
+    await Promise.all([reloadCompanies(), reloadCompanyStatusCounts()]);
+  }, [reloadCompanies, reloadCompanyStatusCounts]);
 
   /** Loads the latest PENDING applications and their actual API total for Home. */
   const reloadHomePendingApplications = useCallback(async () => {
@@ -625,21 +689,34 @@ const AdminDashboard = () => {
   }, [canReadBatchHistory]);
 
   useEffect(() => {
-    void reloadApplicationCompanies();
-  }, [reloadApplicationCompanies]);
+    void reloadCompanies();
+  }, [reloadCompanies]);
 
   useEffect(() => {
-    void reloadParticipatingCompanies();
-  }, [reloadParticipatingCompanies]);
-
-  const resetCompanyPages = () => {
-    setApplicationPage(1);
-    setParticipatingPage(1);
-  };
+    void reloadCompanyStatusCounts();
+  }, [reloadCompanyStatusCounts]);
 
   const handleCompanyLimitChange = (value: number) => {
     setCompanyLimit(value);
-    resetCompanyPages();
+    setCompanyPage(1);
+  };
+
+  /** Switches the company status filter while keeping the page's other query state. */
+  const handleCompanyStatusFilterChange = (status: CompanyStatusFilterValue) => {
+    if (status === activeCompanyStatusFilter) return;
+
+    const searchParams = new URLSearchParams(location.search);
+    if (status === 'all') {
+      searchParams.delete(COMPANY_STATUS_QUERY_PARAM);
+    } else {
+      searchParams.set(COMPANY_STATUS_QUERY_PARAM, status);
+    }
+
+    setCompanyPage(1);
+    navigate(
+      { pathname: location.pathname, search: searchParams.toString(), hash: location.hash },
+      { replace: true, state: location.state, preventScrollReset: true },
+    );
   };
 
   const filteredProjects = useMemo(() => {
@@ -739,11 +816,8 @@ const AdminDashboard = () => {
 
   const routeApplicationCompany = useMemo(() => {
     if (!applicationId) return null;
-    return (
-      applicationCompanies.find((company) => company.id === applicationId) ??
-      null
-    );
-  }, [applicationCompanies, applicationId]);
+    return companies.find((company) => company.id === applicationId) ?? null;
+  }, [companies, applicationId]);
   const applicationNavigationState = location.state as
     | ApplicationDetailNavigationState
     | null;
@@ -755,10 +829,14 @@ const AdminDashboard = () => {
   const detailReviewMode = applicationId
     ? applicationNavigationState?.reviewMode ?? true
     : unroutedReviewMode;
+  const applicationReturnTo = applicationNavigationState?.returnTo;
   const companyDetailReturnTo =
-    applicationNavigationState?.returnTo === paths.adminDashboard
-      ? paths.adminDashboard
+    applicationReturnTo === paths.adminDashboard ||
+    isCompanyListLocation(applicationReturnTo)
+      ? applicationReturnTo
       : paths.adminCompanyList;
+  /** The list location, filter included, that a detail page returns to. */
+  const companyListReturnTo = `${location.pathname}${location.search}`;
 
   /** Opens a company application detail while preserving its source page. */
   const openCompanyDetails = (item: AdminCompanyListItem) => {
@@ -772,13 +850,15 @@ const AdminDashboard = () => {
     }
 
     if (item.status === 'ACTIVE' || item.status === 'SUSPENDED') {
-      navigate(paths.adminCompanyDetail(item.companyId));
+      navigate(paths.adminCompanyDetail(item.companyId), {
+        state: { returnTo: companyListReturnTo },
+      });
       return;
     }
 
     if (item.id) {
       navigate(paths.adminApplicationDetail(item.id), {
-        state: { company: item, reviewMode: false, returnTo: location.pathname },
+        state: { company: item, reviewMode: false, returnTo: companyListReturnTo },
       });
       return;
     }
@@ -802,7 +882,7 @@ const AdminDashboard = () => {
 
     if (item.id) {
       navigate(paths.adminApplicationDetail(item.id), {
-        state: { company: item, reviewMode: true, returnTo: location.pathname },
+        state: { company: item, reviewMode: true, returnTo: companyListReturnTo },
       });
       return;
     }
@@ -949,14 +1029,13 @@ const AdminDashboard = () => {
       });
     } catch (error) {
       setActionFieldErrors(getApiFieldErrors(error));
-      setApplicationCompaniesError(
-        getApiMessage(
-          error,
-          pendingDialogMode === 'approve'
-            ? '承認に失敗しました。'
-            : '却下に失敗しました。',
-        ),
-      );
+      const fallbackMessage =
+        pendingDialogMode === 'approve' ? '承認に失敗しました。' : '却下に失敗しました。';
+      toast({
+        title: fallbackMessage,
+        description: getApiMessage(error, fallbackMessage),
+        variant: 'destructive',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -964,7 +1043,7 @@ const AdminDashboard = () => {
 
   if (
     applicationId &&
-    (!canReviewCompanies || applicationCompaniesError === FORBIDDEN_SECTION_ERROR)
+    (!canReviewCompanies || companiesError === FORBIDDEN_SECTION_ERROR)
   ) {
     return (
       <main className={`${dashboardContainer} space-y-6 py-8`}>
@@ -984,12 +1063,15 @@ const AdminDashboard = () => {
           <PendingCompanyApplicationDetail
             item={detailCompany}
             reviewMode={detailReviewMode}
+            backLabel={
+              companyDetailReturnTo === paths.adminDashboard ? 'ダッシュボード' : '企業一覧'
+            }
             onBack={closeCompanyDetail}
             onApprove={openApproveCompany}
             onReject={openRejectCompany}
           />
         ) : (
-          applicationCompaniesLoading ? (
+          companiesLoading ? (
             <PageSkeleton />
           ) : (
             <div className="flex min-h-screen items-center justify-center bg-background px-6 text-small text-foreground">
@@ -1020,11 +1102,26 @@ const AdminDashboard = () => {
   const projectSectionAllowed = canReadProjects && !isForbiddenApiError(projectsQuery.error);
   const applicationSectionAllowed =
     canReviewCompanies &&
-    applicationCompaniesError !== FORBIDDEN_SECTION_ERROR &&
+    applicationCountsError !== FORBIDDEN_SECTION_ERROR &&
     homePendingApplicationsError !== FORBIDDEN_SECTION_ERROR &&
     homeRejectedApplicationsError !== FORBIDDEN_SECTION_ERROR;
   const participatingSectionAllowed =
-    canReadCompanies && participatingCompaniesError !== FORBIDDEN_SECTION_ERROR;
+    canReadCompanies && participatingCountsError !== FORBIDDEN_SECTION_ERROR;
+  /** Statuses still shown after a section turned out to be forbidden by the API. */
+  const allowedCompanyStatuses = visibleCompanyStatuses.filter((status) =>
+    COMPANY_APPLICATION_STATUSES.includes(status)
+      ? applicationSectionAllowed
+      : participatingSectionAllowed,
+  );
+  const sumCompanyCounts = (statuses: CompanyStatus[]) =>
+    statuses.reduce((total, status) => total + (companyStatusCounts[status] ?? 0), 0);
+  const applicationCompanyTotal = sumCompanyCounts(COMPANY_APPLICATION_STATUSES);
+  const participatingCompanyTotal = sumCompanyCounts(COMPANY_PARTICIPATING_STATUSES);
+  const pendingCompanyCount = companyStatusCounts.PENDING ?? 0;
+  const activeCompanyStatusContent =
+    activeCompanyStatusFilter === 'all'
+      ? ALL_COMPANIES_CONTENT
+      : COMPANY_STATUS_CONTENT[activeCompanyStatusFilter];
   const cancelSectionAllowed =
     canCancelMonitoring && cancelRequestError !== FORBIDDEN_SECTION_ERROR;
   const batchSectionAllowed =
@@ -1044,9 +1141,9 @@ const AdminDashboard = () => {
               projectsError={projectsError}
               openMembershipReviews={openMembershipReviews}
               openMembershipReviewsError={openMembershipReviewsError}
-              applicationTotal={applicationPagination.totalItems}
-              applicationsLoading={applicationCompaniesLoading}
-              applicationsError={applicationCompaniesError}
+              applicationTotal={applicationCompanyTotal}
+              applicationsLoading={companyStatusCountsLoading}
+              applicationsError={applicationCountsError}
               pendingApplications={homePendingApplications}
               pendingApplicationTotal={homePendingApplicationTotal}
               pendingApplicationsLoading={homePendingApplicationsLoading}
@@ -1055,9 +1152,9 @@ const AdminDashboard = () => {
               rejectedApplicationTotal={homeRejectedApplicationTotal}
               rejectedApplicationsLoading={homeRejectedApplicationsLoading}
               rejectedApplicationsError={homeRejectedApplicationsError}
-              participatingCompanyTotal={participatingPagination.totalItems}
-              participatingCompaniesLoading={participatingCompaniesLoading}
-              participatingCompaniesError={participatingCompaniesError}
+              participatingCompanyTotal={participatingCompanyTotal}
+              participatingCompaniesLoading={companyStatusCountsLoading}
+              participatingCompaniesError={participatingCountsError}
               cancelRequests={cancelRequestItems}
               cancelRequestsLoading={cancelRequestLoading}
               cancelRequestsError={cancelRequestError}
@@ -1106,9 +1203,9 @@ const AdminDashboard = () => {
               projectsError={projectsError}
               openMembershipReviews={openMembershipReviews}
               openMembershipReviewsError={openMembershipReviewsError}
-              applicationTotal={applicationPagination.totalItems}
-              applicationsLoading={applicationCompaniesLoading}
-              applicationsError={applicationCompaniesError}
+              applicationTotal={applicationCompanyTotal}
+              applicationsLoading={companyStatusCountsLoading}
+              applicationsError={applicationCountsError}
               pendingApplications={homePendingApplications}
               pendingApplicationTotal={homePendingApplicationTotal}
               pendingApplicationsLoading={homePendingApplicationsLoading}
@@ -1117,9 +1214,9 @@ const AdminDashboard = () => {
               rejectedApplicationTotal={homeRejectedApplicationTotal}
               rejectedApplicationsLoading={homeRejectedApplicationsLoading}
               rejectedApplicationsError={homeRejectedApplicationsError}
-              participatingCompanyTotal={participatingPagination.totalItems}
-              participatingCompaniesLoading={participatingCompaniesLoading}
-              participatingCompaniesError={participatingCompaniesError}
+              participatingCompanyTotal={participatingCompanyTotal}
+              participatingCompaniesLoading={companyStatusCountsLoading}
+              participatingCompaniesError={participatingCountsError}
               cancelRequests={cancelRequestItems}
               cancelRequestsLoading={cancelRequestLoading}
               cancelRequestsError={cancelRequestError}
@@ -1147,7 +1244,7 @@ const AdminDashboard = () => {
               onNavigateApplications={() =>
                 adminPermissions.guardAction(
                   'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
-                  () => navigate(paths.adminCompanyList),
+                  () => navigate(`${paths.adminCompanyList}?${COMPANY_STATUS_QUERY_PARAM}=PENDING`),
                 )
               }
               canReadProjects={projectSectionAllowed}
@@ -1168,83 +1265,65 @@ const AdminDashboard = () => {
             />
 
             <AdminTableCard
-              title="参加申請中の企業"
-              count={applicationPagination.totalItems}
-              description="参加申請を受け付けた企業です。内容を確認し、承認または却下を行ってください。"
+              title="企業一覧"
+              count={companiesLoading || companiesError ? undefined : companyPagination.totalItems}
+              description={activeCompanyStatusContent.description}
+              filters={
+                allowedCompanyStatuses.length > 0 ? (
+                  <CompanyStatusFilter
+                    statuses={allowedCompanyStatuses}
+                    counts={companyStatusCountsLoading ? null : companyStatusCounts}
+                    activeStatus={activeCompanyStatusFilter}
+                    onStatusChange={handleCompanyStatusFilterChange}
+                  />
+                ) : undefined
+              }
               notice={
-                applicationSectionAllowed ? (
+                applicationSectionAllowed &&
+                pendingCompanyCount > 0 &&
+                activeCompanyStatusFilter !== 'PENDING' ? (
                   <NoticeBanner
-                    tone='warning'
-                    title='管理者による対応が必要です'
+                    tone="warning"
+                    action={
+                      <ActionButton
+                        kind="review"
+                        onClick={() => handleCompanyStatusFilterChange('PENDING')}
+                      >
+                        確認する
+                      </ActionButton>
+                    }
                   >
-                    ステータスが「申請受付」の企業について、申請内容を確認し、承認または却下を行ってください。
+                    {COMPANY_STATUS_CONTENT.PENDING.label}の企業が{pendingCompanyCount}件あります。申請内容を確認し、承認または却下を行ってください。
                   </NoticeBanner>
                 ) : undefined
               }
               footer={
-                applicationSectionAllowed &&
-                !applicationCompaniesLoading &&
-                !applicationCompaniesError ? (
+                allowedCompanyStatuses.length > 0 &&
+                !companiesLoading &&
+                !companiesError ? (
                   <PaginationControls
-                    currentPage={applicationPagination.page}
-                    totalPages={applicationPagination.totalPages}
-                    totalItems={applicationPagination.totalItems}
+                    currentPage={companyPagination.page}
+                    totalPages={companyPagination.totalPages}
+                    totalItems={companyPagination.totalItems}
                     itemsPerPage={companyLimit}
                     rowsPerPageOptions={[10, 20, 50, 100]}
-                    onPageChange={setApplicationPage}
+                    onPageChange={setCompanyPage}
                     onItemsPerPageChange={handleCompanyLimitChange}
                   />
                 ) : undefined
               }
             >
-              {!applicationSectionAllowed ? (
-                <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_APPLICATION_REVIEW" />
-              ) : applicationCompaniesLoading ? (
-                <SkeletonTable columns={5} rows={6} minWidth={980} />
-              ) : applicationCompaniesError ? (
-                <AdminDashboardEmptyState>
-                  {applicationCompaniesError}
-                </AdminDashboardEmptyState>
-              ) : (
-                <AdminCompanyApplicationsTable
-                  items={applicationCompanies}
-                  emptyMessage="参加申請中の企業はありません。"
-                  onDetails={openCompanyDetails}
-                  onReview={openCompanyReview}
-                />
-              )}
-            </AdminTableCard>
-
-            <AdminTableCard
-              title="参加企業"
-              count={participatingPagination.totalItems}
-              description="承認済みの参加企業です。企業情報と運用状況を確認できます。"
-              footer={
-                participatingSectionAllowed &&
-                !participatingCompaniesLoading &&
-                !participatingCompaniesError ? (
-                  <PaginationControls
-                    currentPage={participatingPagination.page}
-                    totalPages={participatingPagination.totalPages}
-                    totalItems={participatingPagination.totalItems}
-                    itemsPerPage={companyLimit}
-                    rowsPerPageOptions={[10, 20, 50, 100]}
-                    onPageChange={setParticipatingPage}
-                    onItemsPerPageChange={handleCompanyLimitChange}
-                  />
-                ) : undefined
-              }
-            >
-              {!participatingSectionAllowed ? (
+              {allowedCompanyStatuses.length === 0 ||
+              companiesError === FORBIDDEN_SECTION_ERROR ? (
                 <PermissionDeniedNotice permission="PARTICIPATING_COMPANY_READ" />
-              ) : participatingCompaniesLoading ? (
+              ) : companiesLoading ? (
                 <SkeletonTable columns={5} rows={6} minWidth={980} />
-              ) : participatingCompaniesError ? (
-                <AdminDashboardEmptyState>{participatingCompaniesError}</AdminDashboardEmptyState>
+              ) : companiesError ? (
+                <AdminDashboardEmptyState>{companiesError}</AdminDashboardEmptyState>
               ) : (
                 <AdminCompanyApplicationsTable
-                  items={participatingCompanies}
-                  emptyMessage="参加企業はありません。"
+                  items={companies}
+                  emptyMessage={activeCompanyStatusContent.emptyMessage}
                   onDetails={openCompanyDetails}
                   onReview={openCompanyReview}
                 />

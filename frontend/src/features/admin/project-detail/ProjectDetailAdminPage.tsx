@@ -39,7 +39,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { ProjectMonitoringTable } from '@/features/admin/monitoring/ProjectMonitoringTable';
-import { ProjectPlanFileCard } from '@/features/admin/project-plan/ProjectPlanFileCard';
+import {
+  DOCUMENT_UPLOAD_QUERY_PARAM,
+  ProjectDocumentsTab,
+} from '@/features/admin/project-files/ProjectDocumentsTab';
+import { ProjectDocumentsSummaryCard } from '@/features/admin/project-files/ProjectDocumentsSummaryCard';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
 import { resolveAdminProjectNavigationState } from '@/features/admin/navigation/adminProjectNavigation';
@@ -57,6 +61,7 @@ const PROJECT_DETAIL_TABS = [
   { value: 'monitoring', label: 'モニタリングデータ' },
   { value: 'membership', label: '入会届' },
   { value: 'companies', label: '参加企業' },
+  { value: 'documents', label: '書類' },
 ] as const;
 
 type ProjectDetailTab = (typeof PROJECT_DETAIL_TABS)[number]['value'];
@@ -283,6 +288,14 @@ export default function ProjectDetailAdmin() {
     setSearchParams(nextSearchParams, { replace: true, state: location.state });
   };
 
+  /** From the 概要 書類 card: the 書類 tab with the upload dialog open for one type. */
+  const openDocumentUpload = (fileType: string) => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.set('tab', 'documents');
+    nextSearchParams.set(DOCUMENT_UPLOAD_QUERY_PARAM, fileType);
+    setSearchParams(nextSearchParams, { replace: true, state: location.state });
+  };
+
   if (projectQuery.isLoading) {
     return (
       <PageSkeleton>
@@ -413,34 +426,10 @@ export default function ProjectDetailAdmin() {
               }
               onOpenMembership={openMembership}
             />
-            <ProjectPlanFileCard projectId={projectId} />
-          </section>
-
-          <section
-            aria-label="プロジェクト関連ページ"
-            className="grid gap-4 lg:grid-cols-2"
-          >
-            <ProjectNavigationCard
-              title="プロジェクト計画書"
-              description="計画書ファイルと、認証対象期間・会員数計画を確認します。"
-              icon={<FileText className="h-5 w-5" />}
-              ariaLabel="プロジェクト計画書を開く"
-              onClick={() =>
-                permissions.guardAction('PROJECT_READ', () =>
-                  navigate(paths.adminProjectPlan(projectId)),
-                )
-              }
-            />
-            <ProjectNavigationCard
-              title="モニタリングデータ報告書"
-              description="モニタリング結果の報告書を確認します。"
-              icon={<BarChart3 className="h-5 w-5" />}
-              ariaLabel="モニタリングデータ報告書を開く"
-              onClick={() =>
-                permissions.guardAction('MONITORING_READ', () =>
-                  navigate(paths.adminProjectMonitoringReport(projectId)),
-                )
-              }
+            <ProjectDocumentsSummaryCard
+              projectId={projectId}
+              onOpenDocuments={() => changeTab('documents')}
+              onUpload={openDocumentUpload}
             />
           </section>
         </TabsContent>
@@ -512,6 +501,19 @@ export default function ProjectDetailAdmin() {
               参加企業の一覧は準備中です。
             </div>
           </ProjectDetailTabCard>
+        </TabsContent>
+
+        <TabsContent value="documents" className="m-0 pt-5">
+          {/* No card heading: the page tab already says 書類, and the sub-tabs lead the card. */}
+          <Card className="rounded-xl shadow-app-sm">
+            <CardContent className="pt-[var(--card-padding)]">
+              {!permissions.hasPermission('PROJECT_READ') ? (
+                <PermissionDeniedNotice permission="PROJECT_READ" />
+              ) : (
+                <ProjectDocumentsTab projectId={projectId} />
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </AdminProjectDetailLayout>
