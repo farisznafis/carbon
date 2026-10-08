@@ -682,17 +682,23 @@ public class ProjectServiceImpl implements ProjectService {
         List<ParticipatingProject> participations = participatingProjectRepository
                 .findByProject_Id(projectDbId);
 
-        List<ProjectCompanyResponse> companies = participations.stream()
-                .map(p -> {
-                    ParticipatingCompany company = p.getEquipment().getSite().getCompany();
-                    return ProjectCompanyResponse.builder()
-                            .companyId(company.getCompanyId())
-                            .companyName(company.getNameJa())
-                            .participationId(p.getId())
-                            .pdfStatus(p.getS3KeyPdfMembership() != null ? "READY" : "NOT_READY")
-                            .build();
-                })
-                .collect(Collectors.toList());
+        List<ProjectCompanyResponse> companies = participatingProjectRepository
+        .findByProject_Id(projectDbId).stream()
+        .map(p -> {
+            ParticipatingCompany company = p.getCompany();
+            String s3Key = p.getS3KeyPdfMembership();
+            boolean ready = s3Key != null && !s3Key.isBlank();
+
+            return ProjectCompanyResponse.builder()
+                    .companyId(company.getCompanyId())
+                    .companyName(company.getNameJa())
+                    .participationId(p.getId())
+                    .pdfStatus(ready ? "READY" : "NOT_READY")
+                    // generated per request, valid for 15 minutes only
+                    .pdfUrl(ready ? pdfService.generatePresignedUrl(s3Key) : null)
+                    .build();
+        })
+        .collect(Collectors.toList());
 
         response.setCompanies(companies);
         response.setStatusCode(ResponseConstants.OK);

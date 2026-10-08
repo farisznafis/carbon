@@ -10,4 +10,5 @@ public class ProjectCompanyResponse {
     private String companyName;
     private Integer participationId;
     private String pdfStatus;  // "READY" / "NOT_READY"
+    private String pdfUrl; // presigned URL, null when the PDF is not ready
 }
