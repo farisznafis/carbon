@@ -1,4 +1,5 @@
 import type { CompanyStatus } from '@/api/admin';
+import { COMPANY_STATUS_CONTENT } from './companyStatusContent';
 
 export function displayCompanyDetailValue(
   value?: string | number | null,
@@ -51,13 +52,6 @@ export function formatAdminCompanyAddress({
   return separatedAddress || displayCompanyDetailValue(address);
 }
 
-const companyStatusLabels: Record<CompanyStatus, string> = {
-  PENDING: '申請受付',
-  REJECTED: '却下',
-  ACTIVE: '承認済み',
-  SUSPENDED: '利用停止',
-};
-
 const roleLabels: Record<string, string> = {
   admin: '管理者',
   master: 'マスター',
@@ -72,7 +66,7 @@ const subscriptionStatusLabels: Record<string, string> = {
 };
 
 export function formatCompanyStatus(status: CompanyStatus): string {
-  return companyStatusLabels[status] ?? status;
+  return COMPANY_STATUS_CONTENT[status]?.label ?? status;
 }
 
 export function formatAdminRole(role?: string | null): string {

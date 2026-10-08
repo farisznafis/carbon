@@ -325,7 +325,7 @@ export const Navbar = ({
                             rounded-full
                             bg-destructive
                             px-1
-                            text-[10px]
+                            text-[0.625rem]
                             font-semibold
                             leading-none
                             text-destructive-foreground

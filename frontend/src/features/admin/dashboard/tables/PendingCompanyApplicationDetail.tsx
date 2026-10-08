@@ -1,34 +1,35 @@
 import type { AdminCompanyListItem } from '@/api/admin/pendingCompanies';
-import { FormActions } from '@/components/forms/form-layout';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
-import { cn } from '@/lib/utils';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import {
-  BriefcaseBusiness,
-  Building2,
-  MapPin,
-  UserRound,
-} from 'lucide-react';
-import type { ReactNode } from 'react';
+  floatingPageBackButtonClassName,
+  PageBackButton,
+} from '@/components/navigation/PageBackButton';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CompanyStatusBadge } from '@/features/admin/company-detail/CompanyStatusBadge';
+import { DefinitionRow } from '@/features/admin/company-detail/components/DefinitionRow';
+import {
+  formatAdminCompanyAddress,
+  formatAdminCompanyDateTime,
+} from '@/features/admin/company-detail/companyDetailDisplay';
+import { ArrowLeft, BriefcaseBusiness, Building2, Check, UserRound, X } from 'lucide-react';
 
 type PendingCompanyApplicationDetailProps = {
   item: AdminCompanyListItem;
   reviewMode: boolean;
+  backLabel?: string;
   onBack: () => void;
   onApprove: (item: AdminCompanyListItem) => void;
   onReject: (item: AdminCompanyListItem) => void;
 };
-
-type DetailField = {
-  label: string;
-  value?: string | number | null;
-  className?: string;
-  valueClassName?: string;
-};
-
-function displayValue(value?: string | number | null) {
-  if (value === null || value === undefined || value === '') return '-';
-  return String(value);
-}
 
 function joinName(
   lastName?: string | null,
@@ -37,183 +38,188 @@ function joinName(
   return [lastName, firstName].filter(Boolean).join(' ').trim() || undefined;
 }
 
-function DetailFieldItem({
-  label,
-  value,
-  className,
-  valueClassName,
-}: DetailField) {
-  return (
-    <div className={cn('min-w-0 space-y-1', className)}>
-      <p className="text-small font-bold text-foreground">{label}</p>
-      <p
-        className={cn(
-          'break-words text-body font-bold text-foreground',
-          valueClassName,
-        )}
-      >
-        {displayValue(value)}
-      </p>
-    </div>
-  );
-}
-
-function DetailSection({
-  title,
-  icon,
-  fields,
-}: {
-  title: string;
-  icon: ReactNode;
-  fields: DetailField[];
-}) {
-  return (
-    <section className="space-y-6">
-      <div className="flex items-center gap-3">
-        <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          {icon}
-        </span>
-        <h2 className="text-foreground">{title}</h2>
-      </div>
-      <div className="grid grid-cols-1 gap-x-10 gap-y-6 md:grid-cols-2">
-        {fields.map((field) => (
-          <DetailFieldItem
-            key={`${title}-${field.label}`}
-            label={field.label}
-            value={field.value}
-            className={field.className}
-            valueClassName={field.valueClassName}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function formatRequestedProjects(item: AdminCompanyListItem) {
-  return item.requestedMethodologies.length > 0
-    ? item.requestedMethodologies.join('、')
-    : '-';
-}
-
+/** Renders a submitted company application in the same layout as the company detail page. */
 export function PendingCompanyApplicationDetail({
   item,
   reviewMode,
+  backLabel = '企業一覧',
   onBack,
   onApprove,
   onReject,
 }: PendingCompanyApplicationDetailProps) {
-  const legalFields: DetailField[] = [
-    { label: '法人名', value: item.nameJA },
-    {
-      label: '氏名（カナ）',
-      value: joinName(
-        item.representativeLastNameKana,
-        item.representativeFirstNameKana,
-      ),
-    },
-    { label: '法人番号', value: item.corpNumber },
-    { label: '会社名（英語）', value: item.nameEN },
-    { label: '法人電話番号', value: item.phoneNumber },
-  ];
-
-  const addressFields: DetailField[] = [
-    { label: '郵便番号', value: item.postalCode },
-    { label: '都道府県', value: item.prefecture },
-    { label: '市区町村', value: item.municipality },
-    { label: '番地', value: item.blocknum },
-    { label: '建物名', value: item.buildingName },
-  ];
-
-  const representativeFields: DetailField[] = [
-    {
-      label: '氏名',
-      value: joinName(item.representativeLastName, item.representativeFirstName),
-    },
-    {
-      label: '氏名（カナ）',
-      value: joinName(
-        item.representativeLastNameKana,
-        item.representativeFirstNameKana,
-      ),
-    },
-    { label: '役職', value: item.representativePosition },
-    { label: 'メールアドレス', value: item.email },
-    { label: '電話番号', value: item.representativePhoneNumber },
-    { label: 'FAX番号', value: item.fax },
-  ];
-
-  const projectFields: DetailField[] = [
-    {
-      label: 'プロジェクト名',
-      value: formatRequestedProjects(item),
-      className: 'md:col-span-2',
-      valueClassName: 'overflow-x-auto whitespace-nowrap',
-    },
-    {
-      label: '活動情報',
-      value: item.activityInformation,
-      className: 'md:col-span-2',
-    },
-  ];
+  const companyName = item.nameJA || `企業ID: ${item.companyId}`;
+  const representativeName = joinName(
+    item.representativeLastName,
+    item.representativeFirstName,
+  );
+  const representativeNameKana = joinName(
+    item.representativeLastNameKana,
+    item.representativeFirstNameKana,
+  );
 
   return (
-    <main className="relative min-h-screen bg-background px-4 py-10 sm:px-6">
+    <main className="relative min-h-screen bg-background px-4 py-8 sm:px-6">
       <PageBackButton
         onClick={onBack}
         label=""
-        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
-        aria-label="戻る"
+        aria-label={`${backLabel}へ戻る`}
+        className={floatingPageBackButtonClassName}
       />
-      <div className="mx-auto w-full max-w-[1120px] space-y-10">
-        <div className="space-y-10">
-          <h1 className="text-foreground">申請情報の詳細</h1>
 
-          <div className="rounded-xl border border-border bg-card p-8 shadow-app-sm md:p-12">
-            <div className="grid grid-cols-1 gap-x-16 gap-y-12 lg:grid-cols-2">
-              <DetailSection
-                title="法人情報"
-                icon={<Building2 className="h-6 w-6" />}
-                fields={legalFields}
-              />
-              <DetailSection
-                title="所在地"
-                icon={<MapPin className="h-6 w-6" />}
-                fields={addressFields}
-              />
-              <DetailSection
-                title="責任者情報"
-                icon={<UserRound className="h-6 w-6" />}
-                fields={representativeFields}
-              />
-              <DetailSection
-                title="参加希望プロジェクト"
-                icon={<BriefcaseBusiness className="h-6 w-6" />}
-                fields={projectFields}
-              />
+      <div className="mx-auto w-full max-w-7xl space-y-6">
+
+        {/* ── Page Header ─────────────────────────────────────────────────── */}
+        <div className="min-w-0 space-y-3 pl-16 sm:pl-20 2xl:pl-0">
+          <Breadcrumb>
+            <BreadcrumbList className="flex-nowrap">
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <button
+                    type="button"
+                    onClick={onBack}
+                    className="inline-flex items-center gap-1.5 font-medium text-foreground hover:text-primary"
+                  >
+                    <ArrowLeft className="h-4 w-4 text-muted-foreground" />
+                    {backLabel}
+                  </button>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator>/</BreadcrumbSeparator>
+              <BreadcrumbItem className="min-w-0">
+                <BreadcrumbPage className="block truncate">{companyName}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+
+          {/* Title row */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1.5 min-w-0">
+              <p className="text-sm text-foreground tracking-wide">申請情報の詳細</p>
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground truncate">
+                {companyName}
+              </h1>
+
+              {/* Inline metadata chips */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-0.5">
+                <span className="inline-flex items-center gap-1 text-sm text-foreground">
+                  ステータス：
+                  <CompanyStatusBadge status={item.status} />
+                </span>
+
+                {item.corpNumber && (
+                  <span className="text-sm text-foreground">
+                    法人番号：
+                    <span className="font-medium text-foreground ml-1">
+                      {item.corpNumber}
+                    </span>
+                  </span>
+                )}
+
+                {item.createdAt && (
+                  <span className="text-sm text-foreground">
+                    申請日時：
+                    <span className="font-medium text-foreground ml-1">
+                      {formatAdminCompanyDateTime(item.createdAt)}
+                    </span>
+                  </span>
+                )}
+              </div>
             </div>
 
             {reviewMode && (
-              <FormActions
-                className="mt-14"
-                actions={[
-                  {
-                    id: 'reject',
-                    label: '却下',
-                    variant: 'destructive',
-                    onClick: () => onReject(item),
-                  },
-                  {
-                    id: 'approve',
-                    label: '承認',
-                    variant: 'success',
-                    onClick: () => onApprove(item),
-                  },
-                ]}
-              />
+              <div className="flex shrink-0 items-center gap-2">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="md"
+                  onClick={() => onReject(item)}
+                >
+                  <X aria-hidden="true" />
+                  却下
+                </Button>
+                <Button
+                  type="button"
+                  variant="success"
+                  size="md"
+                  onClick={() => onApprove(item)}
+                >
+                  <Check aria-hidden="true" />
+                  承認
+                </Button>
+              </div>
             )}
           </div>
         </div>
+
+        <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
+          {/* ── 企業情報 ─────────────────────────────────────────────────── */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-muted-foreground" />
+                <CardTitle className="text-lg font-semibold">企業情報</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <dl className="divide-y divide-border/50">
+                <DefinitionRow label="企業名">{item.nameJA || '―'}</DefinitionRow>
+                <DefinitionRow label="企業名（カナ）">{item.nameFurigana || '―'}</DefinitionRow>
+                <DefinitionRow label="企業名（英語）">{item.nameEN || '―'}</DefinitionRow>
+                <DefinitionRow label="法人番号">{item.corpNumber || '―'}</DefinitionRow>
+                <DefinitionRow label="電話番号">{item.phoneNumber || '―'}</DefinitionRow>
+                <DefinitionRow label="所在地">{formatAdminCompanyAddress(item)}</DefinitionRow>
+              </dl>
+            </CardContent>
+          </Card>
+
+          {/* ── 責任者情報 ───────────────────────────────────────────────── */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <UserRound className="h-5 w-5 text-muted-foreground" />
+                <CardTitle className="text-lg font-semibold">責任者情報</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <dl className="divide-y divide-border/50">
+                <DefinitionRow label="氏名">{representativeName || '―'}</DefinitionRow>
+                <DefinitionRow label="氏名（カナ）">{representativeNameKana || '―'}</DefinitionRow>
+                <DefinitionRow label="役職">{item.representativePosition || '―'}</DefinitionRow>
+                <DefinitionRow label="メールアドレス">{item.email || '―'}</DefinitionRow>
+                <DefinitionRow label="電話番号">{item.representativePhoneNumber || '―'}</DefinitionRow>
+                <DefinitionRow label="FAX番号">{item.fax || '―'}</DefinitionRow>
+              </dl>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* ── 参加希望プロジェクト ─────────────────────────────────────────── */}
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <BriefcaseBusiness className="h-5 w-5 text-muted-foreground" />
+              <CardTitle className="text-lg font-semibold">参加希望プロジェクト</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <dl className="divide-y divide-border/50">
+              <DefinitionRow label="プロジェクト名">
+                {item.requestedMethodologies.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {item.requestedMethodologies.map((methodology) => (
+                      <StatusBadge key={methodology}>{methodology}</StatusBadge>
+                    ))}
+                  </div>
+                ) : (
+                  '―'
+                )}
+              </DefinitionRow>
+              <DefinitionRow label="活動情報">
+                <span className="whitespace-pre-wrap">{item.activityInformation || '―'}</span>
+              </DefinitionRow>
+            </dl>
+          </CardContent>
+        </Card>
       </div>
     </main>
   );

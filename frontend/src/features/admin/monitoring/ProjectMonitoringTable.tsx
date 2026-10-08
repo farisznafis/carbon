@@ -6,10 +6,10 @@ import {
 } from '@/api/monitoring';
 import {
   DataGridTable,
+  INACTIVE_ROW_CLASS_NAME,
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
-import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { SkeletonTable } from '@/components/feedback/loading';
 import { logger } from '@/lib/logger';
@@ -25,7 +25,7 @@ const DEFAULT_LIMIT = 10;
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
 const MONITORING_TABLE_MIN_WIDTH = 920;
 const MONITORING_TABLE_COLUMNS =
-  'minmax(90px,1.1fr) minmax(70px,.8fr) repeat(5,minmax(88px,1fr)) minmax(70px,.7fr) 88px';
+  'minmax(90px,1.1fr) minmax(70px,.8fr) repeat(5,minmax(88px,1fr)) minmax(70px,.7fr)';
 
 const EMPTY_RESULT: MonitoringRecordListResult = {
   items: [],
@@ -157,22 +157,15 @@ export function ProjectMonitoringTable({
         ),
         sortValue: (record) => (record.isActive ? 1 : 0),
       },
-      {
-        id: 'actions',
-        label: '操作',
-        render: (record) => (
-          <RowActionButton onClick={() => onViewDetail(record, page, limit)} />
-        ),
-      },
     ],
-    [limit, onViewDetail, page],
+    [],
   );
 
   return (
     <div className="space-y-4">
       {isLoading ? (
         <SkeletonTable
-          columns={9}
+          columns={8}
           rows={6}
           gridTemplateColumns={MONITORING_TABLE_COLUMNS}
           minWidth={MONITORING_TABLE_MIN_WIDTH}
@@ -194,6 +187,9 @@ export function ProjectMonitoringTable({
             getRowKey={(record) => `${record.id}:${record.timeUpdated}`}
             emptyMessage="モニタリングデータはありません。"
             onRowClick={(record) => onViewDetail(record, page, limit)}
+            getRowClassName={(record) =>
+              record.isActive ? undefined : INACTIVE_ROW_CLASS_NAME
+            }
           />
           <PaginationControls
             currentPage={Math.max(result.pagination.page || page, 1)}

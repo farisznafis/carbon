@@ -15,8 +15,9 @@ import type { BatchHistoryItem, BatchHistoryPagination } from '@/api/batch';
 import type { MonitoringCancelRequestListItem } from '@/api/monitoring';
 import type { Project } from '@/api/projects';
 import { RowActionButton } from '@/components/data-display/RowActionButton';
-import { StatusBadge } from '@/components/data-display/StatusBadge';
+import { CompanyStatusBadge } from '@/features/admin/company-detail/CompanyStatusBadge';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
+import { NoticeBanner } from '@/components/feedback/NoticeBanner';
 import { NotificationsList } from '@/components/feedback/NotificationsList';
 import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import { AdminTableCard } from '@/components/layout/AdminTableCard';
@@ -38,8 +39,6 @@ import { BatchHistoryStatusBadge } from '@/features/admin/dashboard/tables/Batch
 import { BatchHistoryTable } from '@/features/admin/dashboard/tables/BatchHistoryTable';
 import { CancelRequestHistoryTable } from '@/features/admin/dashboard/tables/CancelRequestHistoryTable';
 import { formatBatchHistoryDateTime } from '@/features/admin/dashboard/tables/batchHistoryFormatters';
-import { CancelRequestStatusBadge } from '@/features/admin/monitoring/CancelRequestStatusBadge';
-import { formatCancelRequestDateTime } from '@/features/admin/monitoring/cancelRequestFormatters';
 import type { AdminOperatorPermissionCode } from '@/api/admin/operators';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -340,9 +339,7 @@ function CompanyApplicationSummary({
                           <p className='truncate text-body font-bold text-foreground'>
                             {company.nameJA || '企業名未登録'}
                           </p>
-                          <StatusBadge tone={isPending ? 'warning' : 'danger'}>
-                            {isPending ? '申請受付' : '却下'}
-                          </StatusBadge>
+                          <CompanyStatusBadge status={company.status} />
                         </div>
                         <p className='mt-1 text-subtle text-muted-foreground'>
                           受付日{' '}
@@ -379,88 +376,34 @@ function CompanyApplicationSummary({
   );
 }
 
-/** Renders a compact cancellation summary that opens the full table dialog. */
-function CancelRequestSummary({
-  requests,
+/**
+ * Announces pending monitoring-data cancel requests. Renders nothing when none
+ * are waiting; load errors are shown by the データ取消依頼 metric card.
+ */
+function CancelRequestBanner({
+  pendingCount,
   loading,
   error,
-  onOpenPanel,
-  onOpenRequest,
-  permissionGranted,
+  onOpen,
 }: Readonly<{
-  requests: MonitoringCancelRequestListItem[];
+  pendingCount: number;
   loading: boolean;
   error: string | null;
-  onOpenPanel: () => void;
-  onOpenRequest: (request: MonitoringCancelRequestListItem) => void;
-  permissionGranted: boolean;
+  onOpen: () => void;
 }>) {
-  const pendingRequests = requests
-    .filter((request) => request.status.toUpperCase() === 'PENDING')
-    .sort((left, right) =>
-      compareNewestFirst(left.requestedAt, right.requestedAt),
-    );
+  if (loading || error || pendingCount === 0) return null;
 
   return (
-    <Card className='rounded-xl border-border shadow-app-sm'>
-      <CardHeader className='flex-row items-center justify-between space-y-0'>
-        <div className='flex min-w-0 flex-wrap items-baseline gap-x-3'>
-          <CardTitle className={panelTitleClassName}>取消一覧</CardTitle>
-          <span className='text-sm font-medium text-foreground'>
-            未処理 {pendingRequests.length.toLocaleString('ja-JP')}件
-          </span>
-        </div>
-        <ActionButton kind='link' onClick={onOpenPanel}>
-          すべて見る
+    <NoticeBanner
+      tone='warning'
+      action={
+        <ActionButton kind='review' onClick={onOpen}>
+          確認する
         </ActionButton>
-      </CardHeader>
-      <CardContent>
-        {!permissionGranted ? (
-          <PermissionDeniedNotice permission='MONITORING_CANCEL' />
-        ) : loading ? (
-          <SkeletonList items={2} />
-        ) : error ? (
-          <p
-            role='alert'
-            className='py-6 text-center text-small text-destructive'
-          >
-            {error}
-          </p>
-        ) : pendingRequests.length === 0 ? (
-          <p className='py-6 text-center text-small text-foreground'>
-            未処理の取消依頼はありません。
-          </p>
-        ) : (
-          <ul className='divide-y divide-border'>
-            {pendingRequests.slice(0, 3).map((request) => (
-              <li
-                key={request.id}
-                className='flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between'
-              >
-                <div className='min-w-0'>
-                  <div className='flex flex-wrap items-center gap-2'>
-                    <p className='truncate text-body font-bold text-foreground'>
-                      {request.siteName || '拠点名未登録'}
-                    </p>
-                    <CancelRequestStatusBadge status={request.status} />
-                  </div>
-                  <p className='mt-1 text-subtle text-muted-foreground'>
-                    申請日 {formatCancelRequestDateTime(request.requestedAt)}
-                  </p>
-                </div>
-                <RowActionButton
-                  intent='review'
-                  className='self-start sm:self-auto'
-                  onClick={() => onOpenRequest(request)}
-                >
-                  取消内容を確認
-                </RowActionButton>
-              </li>
-            ))}
-          </ul>
-        )}
-      </CardContent>
-    </Card>
+      }
+    >
+      未処理のモニタリングデータ取消依頼が{pendingCount.toLocaleString('ja-JP')}件あります。
+    </NoticeBanner>
   );
 }
 
@@ -676,6 +619,14 @@ export function AdminDashboardOverview(
         title='ホーム'
         // description="運用業務を担当するユーザーのアカウントを管理します。"
       />
+      {props.canCancelMonitoring && (
+        <CancelRequestBanner
+          pendingCount={pendingCancelCount}
+          loading={props.cancelRequestsLoading}
+          error={props.cancelRequestsError}
+          onOpen={() => props.onPanelChange('cancel')}
+        />
+      )}
       <section
         aria-label='主要な登録状況'
         className='
@@ -721,7 +672,7 @@ export function AdminDashboardOverview(
           requiredPermission='PARTICIPATING_COMPANY_APPLICATION_REVIEW'
         />
         <MetricCard
-          label='取消依頼'
+          label='データ取消依頼'
           value={pendingCancelCount}
           description='確認待ち'
           icon={<RotateCcw />}
@@ -782,14 +733,6 @@ export function AdminDashboardOverview(
           className='flex min-w-0 flex-col gap-grid xl:h-[var(--admin-home-main-column-height)] xl:min-h-0 xl:max-h-[var(--admin-home-main-column-height)] xl:overflow-hidden'
         >
           <NotificationSummary />
-          <CancelRequestSummary
-            requests={props.cancelRequests}
-            loading={props.cancelRequestsLoading}
-            error={props.cancelRequestsError}
-            onOpenPanel={() => props.onPanelChange('cancel')}
-            onOpenRequest={props.onOpenCancelRequest}
-            permissionGranted={props.canCancelMonitoring}
-          />
           <BatchHistorySummary
             items={props.batchHistory}
             loading={props.batchHistoryLoading}

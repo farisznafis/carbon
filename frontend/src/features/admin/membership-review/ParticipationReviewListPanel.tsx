@@ -4,7 +4,7 @@ import type {
   ParticipationReviewDetail,
   ParticipationReviewStatus,
 } from '@/api/admin';
-import { ActionButton, RowActionButton } from '@/components/actions';
+import { ActionButton } from '@/components/actions';
 import {
   DataGridTable,
   type DataGridTableColumn,
@@ -32,7 +32,7 @@ import {
 
 const INITIAL_ITEMS_PER_PAGE = 10;
 const REVIEW_GRID_COLUMNS =
-  'minmax(180px, 1fr) minmax(180px, 1fr) minmax(190px, 0.9fr) minmax(150px, 0.75fr) minmax(110px, 0.5fr)';
+  'minmax(180px, 1fr) minmax(180px, 1fr) minmax(190px, 0.9fr) minmax(150px, 0.75fr)';
 
 /** Returns the badge text shown for a row in the selected status filter. */
 function getStatusBadgeLabel(
@@ -151,15 +151,8 @@ export function ParticipationReviewListPanel({
           </MembershipStatusBadge>
         ),
       },
-      {
-        id: 'actions',
-        label: '操作',
-        render: (review) => (
-          <RowActionButton onClick={() => viewDetail(review)} />
-        ),
-      },
     ],
-    [activeStatus, viewDetail],
+    [activeStatus],
   );
 
   if (isForbidden) {
@@ -206,7 +199,7 @@ export function ParticipationReviewListPanel({
 
           {isLoading ? (
             <SkeletonTable
-              columns={5}
+              columns={4}
               rows={3}
               gridTemplateColumns={REVIEW_GRID_COLUMNS}
               minWidth={930}

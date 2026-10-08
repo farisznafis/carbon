@@ -18,7 +18,7 @@ export function ScrollToTopButton({
   return (
     <div
       className={cn(
-        'fixed bottom-20 right-4 sm:right-3 z-50 flex origin-bottom flex-col items-center gap-1 transition-all duration-100 ease-in-out',
+        'fixed bottom-4 right-4 sm:right-3 z-50 flex origin-bottom flex-col items-center gap-1 transition-all duration-100 ease-in-out',
         isVisible
           ? 'translate-y-0 scale-100 opacity-100'
           : 'translate-y-4 scale-75 opacity-0 pointer-events-none',

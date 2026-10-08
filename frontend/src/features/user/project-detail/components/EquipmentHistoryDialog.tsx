@@ -8,7 +8,6 @@ import {
   DataGridTable,
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
-import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { Button } from '@/components/ui/button';
 import {
@@ -244,13 +243,6 @@ export function EquipmentHistoryDialog({
         sortValue: (history) => history.registeredAt,
         render: (history) => formatDateTime(history.registeredAt),
       },
-      {
-        id: 'actions',
-        label: '操作',
-        render: (history) => (
-          <RowActionButton onClick={() => setSelectedHistory(history)} />
-        ),
-      },
     ],
     [],
   );
@@ -310,7 +302,7 @@ export function EquipmentHistoryDialog({
             <DataGridTable
               rows={histories}
               columns={columns}
-              gridTemplateColumns="140px minmax(230px,1.4fr) 100px minmax(130px,1fr) 190px 80px"
+              gridTemplateColumns="140px minmax(230px,1.4fr) 100px minmax(130px,1fr) 190px"
               minWidth={940}
               getRowKey={(history) =>
                 String(

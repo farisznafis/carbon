@@ -1,13 +1,12 @@
-import type {
-  AdminCompanyListItem,
-  CompanyStatus,
-} from '@/api/admin/pendingCompanies';
+import type { AdminCompanyListItem } from '@/api/admin/pendingCompanies';
 import {
+  ATTENTION_ROW_CLASS_NAME,
   DataGridTable,
+  INACTIVE_ROW_CLASS_NAME,
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
-import { RowActionButton } from '@/components/data-display/RowActionButton';
-import { StatusBadge } from '@/components/data-display/StatusBadge';
+import { CompanyStatusBadge } from '@/features/admin/company-detail/CompanyStatusBadge';
+import { COMPANY_STATUS_CONTENT } from '@/features/admin/company-detail/companyStatusContent';
 
 type AdminCompanyApplicationsTableProps = {
   items: AdminCompanyListItem[];
@@ -17,32 +16,7 @@ type AdminCompanyApplicationsTableProps = {
 };
 
 const companyTableGridColumns =
-  'minmax(180px, 1.35fr) minmax(110px, 0.75fr) minmax(240px, 1.45fr) minmax(110px, 0.65fr) minmax(220px, 1fr)';
-
-const statusMeta: Record<
-  CompanyStatus,
-  {
-    label: string;
-    tone: 'warning' | 'danger' | 'success';
-  }
-> = {
-  PENDING: {
-    label: '申請受付',
-    tone: 'warning',
-  },
-  REJECTED: {
-    label: '却下',
-    tone: 'danger',
-  },
-  ACTIVE: {
-    label: '承認済み',
-    tone: 'success',
-  },
-  SUSPENDED: {
-    label: '利用停止',
-    tone: 'danger',
-  },
-};
+  'minmax(180px, 1.35fr) minmax(110px, 0.75fr) minmax(240px, 1.45fr) minmax(110px, 0.65fr)';
 
 function formatRepresentativeName(item: AdminCompanyListItem) {
   const name = [item.representativeLastName, item.representativeFirstName]
@@ -53,19 +27,18 @@ function formatRepresentativeName(item: AdminCompanyListItem) {
   return name || '-';
 }
 
-function CompanyStatusBadge({ status }: { status: CompanyStatus }) {
-  const meta = statusMeta[status];
-
-  return (
-    <StatusBadge tone={meta.tone}>
-      {meta.label}
-    </StatusBadge>
-  );
-}
-
 /** Pending applications need a decision, so they open the review; everything else opens details. */
 function isPendingApplication(item: AdminCompanyListItem) {
   return item.status === 'PENDING';
+}
+
+/** Highlights applications waiting on review and greys out rejected or suspended companies. */
+function getCompanyRowClassName(item: AdminCompanyListItem) {
+  if (isPendingApplication(item)) return ATTENTION_ROW_CLASS_NAME;
+  if (item.status === 'REJECTED' || item.status === 'SUSPENDED') {
+    return INACTIVE_ROW_CLASS_NAME;
+  }
+  return undefined;
 }
 
 export function AdminCompanyApplicationsTable({
@@ -115,20 +88,8 @@ export function AdminCompanyApplicationsTable({
       id: 'status',
       label: 'ステータス',
       sortable: true,
-      sortValue: (item) => statusMeta[item.status].label,
+      sortValue: (item) => COMPANY_STATUS_CONTENT[item.status].label,
       render: (item) => <CompanyStatusBadge status={item.status} />,
-    },
-    {
-      id: 'actions',
-      label: '操作',
-      render: (item) =>
-        isPendingApplication(item) ? (
-          <RowActionButton intent="review" onClick={() => openRow(item)}>
-            申請内容を確認
-          </RowActionButton>
-        ) : (
-          <RowActionButton onClick={() => openRow(item)} />
-        ),
     },
   ];
 
@@ -141,6 +102,10 @@ export function AdminCompanyApplicationsTable({
       getRowKey={(item) => item.id ?? item.companyId}
       emptyMessage={emptyMessage}
       onRowClick={openRow}
+      getRowActionLabel={(item) =>
+        isPendingApplication(item) ? '申請内容を確認' : '詳細'
+      }
+      getRowClassName={getCompanyRowClassName}
     />
   );
 }

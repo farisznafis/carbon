@@ -14,6 +14,11 @@ export default {
   		}
   	},
 	extend: {
+		screens: {
+			// 1920px monitors at Windows 150% scaling leave a ~1265px viewport
+			// (after scrollbar/window chrome); keep wide layouts active there.
+			xl: '1200px',
+		},
 		fontSize: {
 			'page-title': ['var(--page-title-size)', { lineHeight: '1.1875' }],
 			'form-title': ['var(--form-title-size)', { lineHeight: '1.2' }],

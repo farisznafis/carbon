@@ -39,7 +39,6 @@ import { paths } from '@/routes/paths';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { DashboardEmissionReductionProgress } from './components/DashboardEmissionReductionProgress';
-import { FloatingHelpButton } from '@/features/master/help/FloatingHelpButton';
 
 const pageContainer = dashboardPageContainerClassName;
 const PARTICIPATION_STATUS_ORDER: Record<
@@ -262,7 +261,7 @@ function KpiCard({
         >
           {title}
         </p>
-        <p className='mt-2 text-[28px] font-normal leading-9 tracking-normal'>
+        <p className='mt-2 text-[1.75rem] font-normal leading-9 tracking-normal'>
           {value}
         </p>
         <p
@@ -988,7 +987,6 @@ const Dashboard = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <FloatingHelpButton context='site-dashboard' />
     </div>
   );
 };

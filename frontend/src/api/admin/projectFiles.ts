@@ -2,31 +2,62 @@ import { apiFetch, parseJsonResponse } from '@/api/_shared/httpClient';
 import { ApiError } from '@/api/_shared/errors';
 
 /**
- * Files attached to a project — here, the プロジェクト計画書 itself.
+ * Files attached to a project: the forms we write (プロジェクト計画書,
+ * モニタリング報告書, 個別活動実績報告リスト, 追加資料) and the documents the
+ * VVB and the J-Credit secretariat send back, which we upload too.
  *
- * The plan is written in the official Excel 様式 and kept as a file; the system
- * does not read inside it. Every upload is a new entry and the newest is the
- * current one. This module is the only place that knows the endpoint, so a
+ * Each is kept as a file; the system does not read inside it. Every upload is a new version of its type, the
+ * newest is the current one, and the server keeps at most 10 per type. This module is the only place that knows the endpoint, so a
  * change to how the server versions files stays in one file.
  */
 
-export type ProjectFileType = 'PROJECT_PLAN';
+/** Mirrors the backend ProjectFileType enum. */
+export type ProjectFileType =
+  | 'PROJECT_PLAN'
+  | 'VALIDATION_REPORT'
+  | 'REGISTRATION_RESULT'
+  | 'MONITORING_REPORT'
+  | 'ACTIVITY_RESULT_LIST'
+  | 'VERIFICATION_REPORT'
+  | 'CERTIFICATION_RESULT'
+  | 'VVB_QUERY_SHEET'
+  | 'ADDITIONAL_MATERIAL';
 
 export type ProjectFile = {
   id: number;
   fileType?: ProjectFileType | string;
+  ownedByKanrisha?: boolean;
   originalFileName?: string | null;
   uploadedBy?: string | null;
   uploadedAt?: string | null;
+  /** Per-type version number; absent from servers older than versioning. */
+  versionNo?: number | null;
+};
+
+/** How many live versions one type holds, and whether another may be added. */
+export type ProjectFileVersionSummary = {
+  fileType: ProjectFileType | string;
+  activeCount: number;
+  limit: number;
+  canUpload: boolean;
+};
+
+export type ProjectFileListing = {
+  files: ProjectFile[];
+  versionSummary: ProjectFileVersionSummary[];
 };
 
 type BaseResponse = { statusCode?: string; message?: string };
-type FileListResponse = BaseResponse & { files?: ProjectFile[] };
+type FileListResponse = BaseResponse & {
+  files?: ProjectFile[];
+  versionSummary?: ProjectFileVersionSummary[];
+};
 type FileUploadResponse = BaseResponse & ProjectFile;
 type FileDownloadResponse = BaseResponse & { downloadUrl?: string };
 
-/** What the server accepts for a plan: the Excel 様式, or a PDF of it. */
-export const PROJECT_PLAN_FILE_ACCEPT = '.xlsx,.pdf';
+/** What the server accepts for any project file: the Excel 様式, or a PDF of it. */
+export const PROJECT_FILE_ACCEPT = '.xlsx,.pdf';
+export const PROJECT_PLAN_FILE_ACCEPT = PROJECT_FILE_ACCEPT;
 export const PROJECT_FILE_MAX_BYTES = 10 * 1024 * 1024;
 
 const CONTENT_TYPE_BY_EXTENSION: Record<string, string> = {
@@ -36,8 +67,8 @@ const CONTENT_TYPE_BY_EXTENSION: Record<string, string> = {
 
 const extensionOf = (fileName: string) => fileName.toLowerCase().split('.').pop() ?? '';
 
-/** Why this file cannot be uploaded as a plan, or null when it can. */
-export function projectPlanFileProblem(file: File): string | null {
+/** Why this file cannot be uploaded as a project file, or null when it can. */
+export function projectFileProblem(file: File): string | null {
   if (!(extensionOf(file.name) in CONTENT_TYPE_BY_EXTENSION)) {
     return 'Excelファイル（.xlsx）またはPDFファイルを選択してください。';
   }
@@ -49,6 +80,8 @@ export function projectPlanFileProblem(file: File): string | null {
   }
   return null;
 }
+
+export const projectPlanFileProblem = projectFileProblem;
 
 const filesPath = (projectId: string) => `/project/${encodeURIComponent(projectId)}/files`;
 
@@ -77,6 +110,20 @@ export async function getProjectFiles(
   const { data: json, rawBody } = await parseJsonResponse<FileListResponse>(response);
   if (!response.ok) fail(response, json, rawBody, 'Failed to load project files');
   return json?.files ?? [];
+}
+
+/**
+ * Every live file of the project, newest first, with the per-type version
+ * counts the server enforces its limit against.
+ */
+export async function getProjectFileListing(projectId: string): Promise<ProjectFileListing> {
+  const response = await apiFetch(filesPath(projectId), {
+    method: 'GET',
+    forbiddenHandling: 'caller',
+  });
+  const { data: json, rawBody } = await parseJsonResponse<FileListResponse>(response);
+  if (!response.ok) fail(response, json, rawBody, 'Failed to load project files');
+  return { files: json?.files ?? [], versionSummary: json?.versionSummary ?? [] };
 }
 
 /**
@@ -116,4 +163,14 @@ export async function getProjectFileDownloadUrl(
   const { data: json, rawBody } = await parseJsonResponse<FileDownloadResponse>(response);
   if (!response.ok || !json?.downloadUrl) fail(response, json, rawBody, 'Failed to get file URL');
   return json.downloadUrl;
+}
+
+/** Removes one file. The server keeps it soft-deleted; the UI cannot bring it back. */
+export async function deleteProjectFile(projectId: string, fileId: number): Promise<void> {
+  const response = await apiFetch(`${filesPath(projectId)}/${fileId}`, {
+    method: 'DELETE',
+    forbiddenHandling: 'caller',
+  });
+  const { data: json, rawBody } = await parseJsonResponse<BaseResponse>(response);
+  if (!response.ok) fail(response, json, rawBody, 'Failed to delete file');
 }
