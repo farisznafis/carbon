@@ -48,6 +48,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -56,10 +57,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProjectFileServiceImpl implements ProjectFileService {
 
-    private static final List<String> ALLOWED_CONTENT_TYPES = List.of(
-            "application/pdf",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
     private static final int MAX_FILE_SIZE_MB = 10;
     private static final int PRESIGN_MINUTES = 15;
 
@@ -76,7 +73,7 @@ public class ProjectFileServiceImpl implements ProjectFileService {
     public ProjectFileResponse uploadFile(String projectPublicId, ProjectFileType fileType,
                                           MultipartFile file, String username) {
         Integer projectId = resolveProjectId(projectPublicId);
-        validateFile(file);
+        validateFile(file, fileType);
 
         // Lock the project row so concurrent uploads can't both pass the limit check
         projectRepository.findByIdForUpdate(projectId);
@@ -213,7 +210,7 @@ public class ProjectFileServiceImpl implements ProjectFileService {
                 .toList();
     }
 
-    private void validateFile(MultipartFile file) {
+    private void validateFile(MultipartFile file, ProjectFileType fileType) {
         if (file == null || file.isEmpty()) {
             throw new BusinessRuleViolationException("アップロードするファイルが空です。");
         }
@@ -221,10 +218,19 @@ public class ProjectFileServiceImpl implements ProjectFileService {
             double actualSizeMB = file.getSize() / (1024.0 * 1024.0);
             throw new FileTooLargeException(MAX_FILE_SIZE_MB, actualSizeMB);
         }
-        String contentType = file.getContentType();
-        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
-            throw new UnsupportedFileTypeException(ALLOWED_CONTENT_TYPES, contentType);
+        String extension = extensionOf(file.getOriginalFilename());
+        if (!fileType.accepts(extension, file.getContentType())) {
+            throw new UnsupportedFileTypeException(fileType.getAllowedExtensions(), extension);
         }
+    }
+
+    /** Lower-cased extension without the dot, or "" when the name has none. */
+    private String extensionOf(String filename) {
+        if (filename == null) {
+            return "";
+        }
+        int dot = filename.lastIndexOf('.');
+        return dot < 0 ? "" : filename.substring(dot + 1).toLowerCase(Locale.ROOT);
     }
 
     private String uploadToS3(ProjectFileType fileType, MultipartFile file, Integer projectId) {
