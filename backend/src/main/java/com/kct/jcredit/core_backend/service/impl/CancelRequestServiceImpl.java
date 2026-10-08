@@ -228,7 +228,6 @@ public class CancelRequestServiceImpl implements CancelRequestService {
        Optional<EnR002MonitoringRecord> originalRecord = 
                     monitoringRecordSolarRepository.findByPKandSK(cancelRequest.getRecordPk(), cancelRequest.getRecordSk());
         if (!originalRecord.isPresent()) {
-             System.err.println("DEB:UG: 元のレコードが見つかりません: recordPk=" + cancelRequest.getRecordPk() + ", recordSk=" + cancelRequest.getRecordSk());
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_NOT_FOUND);
             return response;
