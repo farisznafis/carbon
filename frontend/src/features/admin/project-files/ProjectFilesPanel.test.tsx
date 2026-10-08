@@ -147,6 +147,10 @@ describe('ProjectFilesPanel', () => {
     expect(within(registration).getByText('妥当性確認報告書')).toBeInTheDocument();
     expect(within(registration).getByText('登録通知')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /にファイルを追加$/ })).toHaveLength(9);
+    expect(within(registration).getByText('1 / 3 アップロード済')).toBeInTheDocument();
+    // Only types with files expand; an empty one has nothing to show.
+    expect(within(registration).getAllByRole('button', { expanded: true })).toHaveLength(1);
+    expect(within(registration).queryByRole('button', { name: /妥当性確認報告書/, expanded: false })).toBeNull();
   });
 
   it('previews both PDF and Excel files', async () => {
