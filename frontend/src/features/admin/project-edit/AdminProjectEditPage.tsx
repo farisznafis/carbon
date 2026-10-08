@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useForm, type UseFormReturn } from 'react-hook-form';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   saveProjectPlanForm,
   getAdminProjectDetail,
@@ -22,18 +22,7 @@ import {
   FormStandalonePage,
 } from '@/components/forms/form-layout';
 import { GenericFormFields } from '@/components/forms/shared/GenericFormFields/GenericFormFields';
-import {
-  PageBackButton,
-  floatingPageBackButtonClassName,
-} from '@/components/navigation/PageBackButton';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { Form } from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -366,39 +355,18 @@ export default function AdminProjectEditPage() {
     : paths.adminProjectList;
   const projectName = form.getValues('projectName');
 
+  usePageBreadcrumb([
+    { label: 'プロジェクト管理', to: paths.adminProjectList },
+    {
+      label: !loading && !error && projectName ? projectName : 'プロジェクト詳細',
+      to: detailPath,
+    },
+    { label: '編集' },
+  ]);
+
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={() => navigate(detailPath)}
-        label=''
-        aria-label='プロジェクト詳細に戻る'
-        className={floatingPageBackButtonClassName}
-      />
       <FormPageContent>
-        <Breadcrumb>
-          <BreadcrumbList className='flex-nowrap'>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={paths.adminProjectList}>プロジェクト管理</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem className='min-w-0'>
-              <BreadcrumbLink asChild>
-                <Link
-                  to={detailPath}
-                  className='block max-w-40 truncate sm:max-w-72'
-                >
-                  {!loading && !error && projectName ? projectName : 'プロジェクト詳細'}
-                </Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>編集</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
 
         <div>
           <FormPageTitle as='h1'>プロジェクト情報の編集</FormPageTitle>

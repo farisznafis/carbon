@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { ProfileDetailField } from '@/components/data-display/ProfileDetailField';
 import { PageSkeleton, SkeletonCard } from '@/components/feedback/loading';
 import {
@@ -6,7 +6,7 @@ import {
   FormSection,
   FormSectionStack,
 } from '@/components/forms/form-layout';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -38,7 +38,6 @@ function formatRelationshipStatus(
 /** Renders all read-only registration information for one admin project. */
 export default function AdminProjectInformationPage() {
   const { projectId } = useParams();
-  const navigate = useNavigate();
   const projectQuery = useAdminProjectDetailQuery(projectId);
   const project = projectQuery.data;
 
@@ -66,10 +65,9 @@ export default function AdminProjectInformationPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <PageBackButton
-              onClick={() => navigate(paths.adminProjectList)}
-              aria-label="プロジェクト管理に戻る"
-            />
+            <Button asChild variant="outline">
+              <Link to={paths.adminProjectList}>プロジェクト管理に戻る</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -83,8 +81,6 @@ export default function AdminProjectInformationPage() {
       title="プロジェクト詳細情報"
       description="プロジェクトの登録情報を確認します。"
       currentBreadcrumb="詳細情報"
-      backTo={paths.adminProjectDetail(projectId)}
-      backLabel="プロジェクト詳細に戻る"
     >
       <FormCard>
         <FormSectionStack spacing="relaxed">

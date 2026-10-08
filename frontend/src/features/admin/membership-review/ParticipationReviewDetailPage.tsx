@@ -20,10 +20,7 @@ import {
 } from '@/api/admin';
 import { ApiError } from '@/api/_shared/errors';
 import { FormActions, FormPageContent } from '@/components/forms/form-layout';
-import {
-  floatingPageBackButtonClassName,
-  PageBackButton,
-} from '@/components/navigation/PageBackButton';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
 import { downloadFromUrl } from '@/utils/download';
@@ -144,6 +141,16 @@ export default function ParticipationReviewDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+
+  usePageBreadcrumb([
+    { label: 'プロジェクト管理', to: paths.adminProjectList },
+    { label: 'プロジェクト詳細', to: paths.adminProjectDetail(projectId) },
+    {
+      label: '入会届一覧',
+      to: paths.adminProjectMembership(projectId, requestedStatus ?? 'OPEN'),
+    },
+    { label: '入会届の詳細' },
+  ]);
 
   const returnToList = useCallback(() => {
     navigate(paths.adminProjectMembership(projectId, requestedStatus ?? 'OPEN'), {
@@ -428,14 +435,7 @@ export default function ParticipationReviewDetailPage() {
 
   return (
     <main className="relative min-h-screen bg-background px-4 py-10 sm:px-6 lg:px-8">
-      <PageBackButton
-        onClick={returnToList}
-        label=""
-        aria-label="入会届一覧へ戻る"
-        className={floatingPageBackButtonClassName}
-      />
-
-      <FormPageContent className="max-w-[960px] space-y-6 pt-16 sm:pt-0">
+      <FormPageContent className="max-w-[960px] space-y-6">
         <header className="space-y-2">
           <h1>入会届の詳細</h1>
           <p className="text-small text-foreground">

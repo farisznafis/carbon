@@ -1,23 +1,12 @@
 import type { ReactNode } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Pencil } from 'lucide-react';
 import {
   FormPageContent,
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import {
-  PageBackButton,
-  floatingPageBackButtonClassName,
-} from '@/components/navigation/PageBackButton';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { Button } from '@/components/ui/button';
 import { paths } from '@/routes/paths';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
@@ -27,10 +16,8 @@ type AdminProjectDetailLayoutProps = {
   projectName: string;
   title: string;
   description: string;
+  /** Set on sub-pages; the project name then links back to the project detail. */
   currentBreadcrumb?: string;
-  backTo: string;
-  backLabel: string;
-  showBackButton?: boolean;
   /**
    * Where 更新 leads. Defaults to the project edit flow; the plan page sends
    * the operator to the wizard page they are reading instead.
@@ -46,14 +33,19 @@ export function AdminProjectDetailLayout({
   title,
   description,
   currentBreadcrumb,
-  backTo,
-  backLabel,
-  showBackButton = false,
   onEdit,
   children,
 }: Readonly<AdminProjectDetailLayoutProps>) {
   const navigate = useNavigate();
   const permissions = useAdminPermissions();
+
+  usePageBreadcrumb([
+    { label: 'プロジェクト管理', to: paths.adminProjectList },
+    currentBreadcrumb
+      ? { label: projectName || 'プロジェクト詳細', to: paths.adminProjectDetail(projectId) }
+      : { label: projectName || 'プロジェクト詳細' },
+    ...(currentBreadcrumb ? [{ label: currentBreadcrumb }] : []),
+  ]);
 
   /** Opens the edit flow for the read-only page being shown. */
   const handleEdit = () =>
@@ -63,55 +55,7 @@ export function AdminProjectDetailLayout({
 
   return (
     <FormStandalonePage>
-      {showBackButton && (
-        <PageBackButton
-          onClick={() => navigate(backTo)}
-          label=""
-          aria-label={backLabel}
-          className={floatingPageBackButtonClassName}
-        />
-      )}
       <FormPageContent className="max-w-admin space-y-6">
-        <Breadcrumb>
-          <BreadcrumbList className="flex-nowrap">
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={paths.adminProjectList}>プロジェクト管理</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem className="min-w-0">
-              <BreadcrumbLink asChild>
-                <BreadcrumbPage className="block max-w-40 truncate sm:max-w-72">
-                  プロジェクト詳細
-                </BreadcrumbPage>
-              </BreadcrumbLink>
-              {/* {currentBreadcrumb ? (
-                <BreadcrumbLink asChild>
-                  <Link
-                    to={paths.adminProjectDetail(projectId)}
-                    className="block max-w-40 truncate sm:max-w-72"
-                  >
-                    {projectName}
-                  </Link>
-                </BreadcrumbLink>
-              ) : (
-                <BreadcrumbPage className="block max-w-40 truncate sm:max-w-72">
-                  {projectName}
-                </BreadcrumbPage>
-              )} */}
-            </BreadcrumbItem>
-            {currentBreadcrumb ? (
-              <>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{currentBreadcrumb}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </>
-            ) : null}
-          </BreadcrumbList>
-        </Breadcrumb>
-
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <FormPageTitle as="h1">{title}</FormPageTitle>

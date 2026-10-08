@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  Link,
   useLocation,
   useNavigate,
   useParams,
@@ -16,18 +15,7 @@ import {
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import {
-  PageBackButton,
-  floatingPageBackButtonClassName,
-} from '@/components/navigation/PageBackButton';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { UserForm } from '@/features/master/forms/UserForm';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 import {
@@ -128,6 +116,19 @@ export default function AdminOperatorEditPage() {
     : false;
 
   /** Returns to the operator profile without saving changes. */
+  usePageBreadcrumb([
+    { label: '運用者管理', to: paths.adminOperatorList },
+    ...(operator
+      ? [
+          {
+            label: formatOperatorName(operator.lastName, operator.firstName),
+            to: paths.adminOperatorProfile(operator.id),
+          },
+        ]
+      : []),
+    { label: '編集' },
+  ]);
+
   const handleBack = () => {
     navigate(userId ? paths.adminOperatorProfile(userId) : paths.adminOperatorList);
   };
@@ -179,41 +180,7 @@ export default function AdminOperatorEditPage() {
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={handleBack}
-        label=""
-        aria-label="運用者プロファイルに戻る"
-        className={floatingPageBackButtonClassName}
-      />
       <FormPageContent>
-        <Breadcrumb>
-          <BreadcrumbList className="flex-nowrap">
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={paths.adminOperatorList}>運用者管理</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            {operator ? (
-              <>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem className="min-w-0">
-                  <BreadcrumbLink asChild>
-                    <Link
-                      className="block max-w-48 truncate"
-                      to={paths.adminOperatorProfile(operator.id)}
-                    >
-                      {formatOperatorName(operator.lastName, operator.firstName)}
-                    </Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-              </>
-            ) : null}
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>編集</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
 
         <div>
           <FormPageTitle as="h2">運用者情報の編集</FormPageTitle>

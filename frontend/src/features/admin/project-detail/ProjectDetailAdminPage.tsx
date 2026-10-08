@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import {
+  Link,
   useLocation,
   useNavigate,
   useParams,
@@ -18,7 +19,6 @@ import { ActionButton } from '@/components/actions';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 import { PageSkeleton, SkeletonCard } from '@/components/feedback/loading';
 import { dashboardEmptyStateClassName } from '@/components/layout/DashboardLayout';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
 import {
   PageTabsList,
   PageTabsTrigger,
@@ -333,12 +333,11 @@ export default function ProjectDetailAdmin() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <PageBackButton
-              onClick={() => navigate(projectDetailReturnTo)}
-              aria-label={
-                navigationState ? 'ホームに戻る' : 'プロジェクト管理に戻る'
-              }
-            />
+            <Button asChild variant="outline">
+              <Link to={projectDetailReturnTo}>
+                {navigationState ? 'ホームに戻る' : 'プロジェクト管理に戻る'}
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -351,10 +350,6 @@ export default function ProjectDetailAdmin() {
       projectName={project.projectName}
       title={formatProjectDetailValue(project.projectName)}
       description="登録済みプロジェクトの進捗、排出量、関連データを確認します。"
-      backTo={projectDetailReturnTo}
-      backLabel={
-        navigationState ? 'ホームに戻る' : 'プロジェクト管理に戻る'
-      }
     >
       {/* <section aria-label="プロジェクト識別情報" className="space-y-1">
         <h2 className="break-words text-2xl font-bold text-foreground">

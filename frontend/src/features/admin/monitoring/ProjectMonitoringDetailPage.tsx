@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   useLocation,
-  useNavigate,
   useParams,
   useSearchParams,
 } from 'react-router-dom';
@@ -16,7 +15,7 @@ import {
 } from '@/api/monitoring';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { PageSkeleton } from '@/components/feedback/loading';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -44,27 +43,16 @@ type MonitoringDetailLocationState = {
 
 function MonitoringDetailLayout({
   children,
-  onBack,
   contentMaxWidth = 'max-w-5xl',
 }: {
   children: React.ReactNode;
-  onBack: () => void;
   contentMaxWidth?: string;
 }) {
   return (
     <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-10">
-      <div className="mx-auto grid w-full max-w-[1200px] grid-cols-[48px_minmax(0,1fr)] items-start gap-4 sm:gap-6">
-        <PageBackButton
-          onClick={onBack}
-          label=""
-          aria-label="モニタリングデータ一覧へ戻る"
-          className="h-12 w-12 rounded-full p-0"
-        />
-
-        <div className={cn('w-full space-y-6', contentMaxWidth)}>
-          <h1 className="text-foreground">モニタリング詳細</h1>
-          {children}
-        </div>
+      <div className={cn('mx-auto w-full space-y-6', contentMaxWidth)}>
+        <h1 className="text-foreground">モニタリング詳細</h1>
+        {children}
       </div>
     </main>
   );
@@ -132,7 +120,6 @@ function DetailSection({
 /** Displays one monitoring record within its parent project's admin context. */
 export default function ProjectMonitoringDetailPage() {
   const { projectId, monitoringId } = useParams();
-  const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const page = Math.max(Number(searchParams.get('page')) || 1, 1);
@@ -189,20 +176,19 @@ export default function ProjectMonitoringDetailPage() {
     }
   }, [loadMonitoringRecord, record]);
 
-  /** Returns to the current project's monitoring list with its pagination restored. */
-  const returnToList = () => {
-    if (!projectId) {
-      navigate(paths.adminDashboard);
-      return;
-    }
-
-    navigate(
-      paths.adminProjectDetailTab(projectId, 'monitoring', {
+  /** The current project's monitoring list with its pagination restored. */
+  const listPath = projectId
+    ? paths.adminProjectDetailTab(projectId, 'monitoring', {
         monitoringPage: String(page),
         monitoringLimit: String(limit),
-      }),
-    );
-  };
+      })
+    : paths.adminProjectList;
+
+  usePageBreadcrumb([
+    { label: 'プロジェクト管理', to: paths.adminProjectList },
+    { label: 'モニタリングデータ', to: listPath },
+    { label: 'モニタリング詳細' },
+  ]);
 
   if (isLoading) {
     return (
@@ -213,7 +199,6 @@ export default function ProjectMonitoringDetailPage() {
   if (!record || error) {
     return (
       <MonitoringDetailLayout
-        onBack={returnToList}
         contentMaxWidth="max-w-3xl"
       >
         <Card>
@@ -234,7 +219,7 @@ export default function ProjectMonitoringDetailPage() {
   }
 
   return (
-    <MonitoringDetailLayout onBack={returnToList}>
+    <MonitoringDetailLayout>
       <DetailSection
         title="基本情報"
         description="対象レコードと処理状況を確認できます。"

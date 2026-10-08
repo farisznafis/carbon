@@ -7,6 +7,7 @@ import {
 import { Menu } from 'lucide-react';
 import { matchPath, useLocation } from 'react-router-dom';
 
+import { BreadcrumbProvider } from '@/components/navigation/BreadcrumbProvider';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -118,7 +119,7 @@ function getInitialCollapsed(): boolean {
  * Desktop:
  *
  * ┌─────────────┬─────────────────────────┐
- * │ Sidebar     │ Topbar                  │
+ * │ Sidebar     │ Breadcrumb      Actions │
  * │             ├─────────────────────────┤
  * │             │ Main content            │
  * └─────────────┴─────────────────────────┘
@@ -126,12 +127,12 @@ function getInitialCollapsed(): boolean {
  * Mobile:
  *
  * ┌───────────────────────────────────────┐
- * │ Menu + GX                 Actions     │
+ * │ Menu + GX (or ‹ parent)   Actions     │
  * ├───────────────────────────────────────┤
  * │ Main content                          │
  * └───────────────────────────────────────┘
  */
-export function AppShell({
+function AppShellLayout({
   children,
 }: {
   children: ReactNode;
@@ -356,5 +357,18 @@ export function AppShell({
         </SheetContent>
       )}
     </Sheet>
+  );
+}
+
+/** Lets pages publish their breadcrumb to the topbar via `usePageBreadcrumb`. */
+export function AppShell({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return (
+    <BreadcrumbProvider>
+      <AppShellLayout>{children}</AppShellLayout>
+    </BreadcrumbProvider>
   );
 }

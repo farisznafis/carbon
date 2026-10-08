@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { getProjectPlanForm } from '@/api/admin/projects';
 import { PageSkeleton, SkeletonCard } from '@/components/feedback/loading';
 import { FormCard, FormSection } from '@/components/forms/form-layout';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -24,7 +24,6 @@ import { AdminProjectDetailLayout } from './AdminProjectDetailLayout';
  */
 export default function AdminProjectPlanPage() {
   const { projectId } = useParams();
-  const navigate = useNavigate();
   const projectQuery = useAdminProjectDetailQuery(projectId);
   const project = projectQuery.data;
 
@@ -59,10 +58,9 @@ export default function AdminProjectPlanPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <PageBackButton
-              onClick={() => navigate(paths.adminProjectList)}
-              aria-label="プロジェクト管理に戻る"
-            />
+            <Button asChild variant="outline">
+              <Link to={paths.adminProjectList}>プロジェクト管理に戻る</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -96,8 +94,6 @@ export default function AdminProjectPlanPage() {
       title="プロジェクト計画書"
       description="アップロードされた計画書ファイルと、認証対象期間・会員数計画を確認します。"
       currentBreadcrumb="計画書"
-      backTo={paths.adminProjectDetail(projectId)}
-      backLabel="プロジェクト詳細に戻る"
     >
       <FormCard>
         <FormSection

@@ -1,17 +1,6 @@
 import type { AdminCompanyListItem } from '@/api/admin/pendingCompanies';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
-import {
-  floatingPageBackButtonClassName,
-  PageBackButton,
-} from '@/components/navigation/PageBackButton';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CompanyStatusBadge } from '@/features/admin/company-detail/CompanyStatusBadge';
@@ -20,7 +9,7 @@ import {
   formatAdminCompanyAddress,
   formatAdminCompanyDateTime,
 } from '@/features/admin/company-detail/companyDetailDisplay';
-import { ArrowLeft, BriefcaseBusiness, Building2, Check, UserRound, X } from 'lucide-react';
+import { BriefcaseBusiness, Building2, Check, UserRound, X } from 'lucide-react';
 
 type PendingCompanyApplicationDetailProps = {
   item: AdminCompanyListItem;
@@ -48,6 +37,7 @@ export function PendingCompanyApplicationDetail({
   onReject,
 }: PendingCompanyApplicationDetailProps) {
   const companyName = item.nameJA || `企業ID: ${item.companyId}`;
+  usePageBreadcrumb([{ label: backLabel, onClick: onBack }, { label: companyName }]);
   const representativeName = joinName(
     item.representativeLastName,
     item.representativeFirstName,
@@ -59,42 +49,13 @@ export function PendingCompanyApplicationDetail({
 
   return (
     <main className="relative min-h-screen bg-background px-4 py-8 sm:px-6">
-      <PageBackButton
-        onClick={onBack}
-        label=""
-        aria-label={`${backLabel}へ戻る`}
-        className={floatingPageBackButtonClassName}
-      />
-
       <div className="mx-auto w-full max-w-7xl space-y-6">
 
         {/* ── Page Header ─────────────────────────────────────────────────── */}
-        <div className="min-w-0 space-y-3 pl-16 sm:pl-20 2xl:pl-0">
-          <Breadcrumb>
-            <BreadcrumbList className="flex-nowrap">
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <button
-                    type="button"
-                    onClick={onBack}
-                    className="inline-flex items-center gap-1.5 font-medium text-foreground hover:text-primary"
-                  >
-                    <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-                    {backLabel}
-                  </button>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator>/</BreadcrumbSeparator>
-              <BreadcrumbItem className="min-w-0">
-                <BreadcrumbPage className="block truncate">{companyName}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-
+        <div className="min-w-0 space-y-3">
           {/* Title row */}
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1.5 min-w-0">
-              <p className="text-sm text-foreground tracking-wide">申請情報の詳細</p>
               <h1 className="text-2xl font-semibold tracking-tight text-foreground truncate">
                 {companyName}
               </h1>

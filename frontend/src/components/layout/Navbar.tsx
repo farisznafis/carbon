@@ -11,6 +11,8 @@ import {
 import { Bell, X } from 'lucide-react';
 
 import { NotificationsList } from '@/components/feedback/NotificationsList';
+import { PageBreadcrumb } from '@/components/navigation/PageBreadcrumb';
+import { usePageBreadcrumbItems } from '@/components/navigation/pageBreadcrumbContext';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -102,10 +104,11 @@ function AuthenticatedNavbarContent({
  *
  * Desktop application shell:
  * - product identity lives in SidebarHeader
- * - Navbar contains notification/account actions
+ * - Navbar contains the page breadcrumb and notification/account actions
  *
  * Mobile:
  * - hamburger + GX identity remain in Navbar
+ * - on pages with a breadcrumb, "‹ parent" replaces the GX identity
  */
 export const Navbar = ({
   sidebarControl,
@@ -134,6 +137,10 @@ export const Navbar = ({
   const location = useLocation();
 
   const linkTarget = getHomePath(user);
+
+  // Detail pages declare a trail; on mobile its "‹ parent" link takes the logo's place.
+  const breadcrumbItems = usePageBreadcrumbItems();
+  const showBreadcrumb = appShell && breadcrumbItems.length > 0;
 
   const isLoginPage =
     isLoginPath(location.pathname);
@@ -274,6 +281,7 @@ export const Navbar = ({
             className={cn(
               'flex items-center space-x-2',
               appShell && 'lg:hidden',
+              showBreadcrumb && 'hidden',
             )}
           >
             <div className="h-8 w-8 rounded-lg gradient-primary" />
@@ -283,10 +291,17 @@ export const Navbar = ({
             </span>
           </Link>
 
+          {showBreadcrumb && (
+            <PageBreadcrumb
+              items={breadcrumbItems}
+              className="min-w-0 flex-1"
+            />
+          )}
+
           <div
             className={cn(
               'flex items-center space-x-3',
-              appShell && 'ml-auto',
+              appShell && 'ml-auto shrink-0',
             )}
           >
             {isAuthenticated && user ? (

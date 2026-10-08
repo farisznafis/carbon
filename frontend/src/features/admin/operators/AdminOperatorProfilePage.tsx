@@ -1,4 +1,4 @@
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import type { AdminOperator } from '@/api/admin/operators';
 import { isForbiddenApiError } from '@/api/_shared/errors';
 import { ProfileDetailField } from '@/components/data-display/ProfileDetailField';
@@ -11,18 +11,7 @@ import {
   FormSectionStack,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import {
-  PageBackButton,
-  floatingPageBackButtonClassName,
-} from '@/components/navigation/PageBackButton';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { useAdminOperatorProfileQuery } from '@/hooks/admin/useAdminOperatorsQuery';
 import { paths } from '@/routes/paths';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
@@ -55,8 +44,10 @@ export default function AdminOperatorProfilePage() {
   const operator = profileQuery.data;
   const effectiveRole = operator?.role ?? '';
 
-  /** Returns to the operator list from the profile page. */
-  const handleBack = () => navigate(paths.adminOperatorList);
+  usePageBreadcrumb([
+    { label: '運用者管理', to: paths.adminOperatorList },
+    { label: operator ? formatOperatorName(operator) : '運用者のプロファイル' },
+  ]);
 
   /** Opens the edit page for the operator currently displayed. */
   const handleEdit = () => {
@@ -75,28 +66,7 @@ export default function AdminOperatorProfilePage() {
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={handleBack}
-        label=""
-        aria-label="運用者一覧に戻る"
-        className={floatingPageBackButtonClassName}
-      />
       <FormPageContent>
-        <Breadcrumb>
-          <BreadcrumbList className="flex-nowrap">
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={paths.adminOperatorList}>運用者管理</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem className="min-w-0">
-              <BreadcrumbPage className="block truncate">
-                {operator ? formatOperatorName(operator) : '運用者のプロファイル'}
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
 
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">

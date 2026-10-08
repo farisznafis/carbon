@@ -2,7 +2,15 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MonitoringRecordListItem } from '@/api/monitoring';
+import { PageBreadcrumb } from '@/components/navigation/PageBreadcrumb';
+import { BreadcrumbProvider } from '@/components/navigation/BreadcrumbProvider';
+import { usePageBreadcrumbItems } from '@/components/navigation/pageBreadcrumbContext';
 import ProjectMonitoringDetailPage from './ProjectMonitoringDetailPage';
+
+/** Renders the trail the page declares, as the app topbar does. */
+function TopbarBreadcrumb() {
+  return <PageBreadcrumb items={usePageBreadcrumbItems()} />;
+}
 
 const { getAdminProjectMonitoringRecords } = vi.hoisted(() => ({
   getAdminProjectMonitoringRecords: vi.fn(),
@@ -147,6 +155,8 @@ describe('ProjectMonitoringDetailPage', () => {
         ]}
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
+        <BreadcrumbProvider>
+        <TopbarBreadcrumb />
         <Routes>
           <Route
             path="/admin/projects/:projectId/monitoring/:monitoringId"
@@ -157,12 +167,13 @@ describe('ProjectMonitoringDetailPage', () => {
             element={<div>プロジェクト詳細へ戻りました</div>}
           />
         </Routes>
+        </BreadcrumbProvider>
       </MemoryRouter>,
     );
 
     fireEvent.click(
-      await screen.findByRole('button', {
-        name: 'モニタリングデータ一覧へ戻る',
+      await screen.findByRole('link', {
+        name: 'モニタリングデータ',
       }),
     );
 

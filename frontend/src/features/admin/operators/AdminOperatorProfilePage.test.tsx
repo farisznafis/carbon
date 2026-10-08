@@ -3,6 +3,9 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AdminOperator } from '@/api/admin/operators';
+import { PageBreadcrumb } from '@/components/navigation/PageBreadcrumb';
+import { BreadcrumbProvider } from '@/components/navigation/BreadcrumbProvider';
+import { usePageBreadcrumbItems } from '@/components/navigation/pageBreadcrumbContext';
 import AdminOperatorProfilePage from './AdminOperatorProfilePage';
 
 const operator: AdminOperator = {
@@ -35,10 +38,17 @@ vi.mock('@/hooks/admin/useAdminOperatorsQuery', () => ({
   }),
 }));
 
+/** Renders the trail the page declares, as the app topbar does. */
+function TopbarBreadcrumb() {
+  return <PageBreadcrumb items={usePageBreadcrumbItems()} />;
+}
+
 /** Renders the read-only admin operator profile route. */
 function renderProfilePage() {
   return render(
     <MemoryRouter initialEntries={['/admin/operators/2']}>
+      <BreadcrumbProvider>
+      <TopbarBreadcrumb />
       <Routes>
         <Route
           path="/admin/operators/:userId"
@@ -49,6 +59,7 @@ function renderProfilePage() {
           element={<p>編集ページ</p>}
         />
       </Routes>
+      </BreadcrumbProvider>
     </MemoryRouter>,
   );
 }

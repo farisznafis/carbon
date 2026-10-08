@@ -9,10 +9,7 @@ import {
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import {
-  PageBackButton,
-  floatingPageBackButtonClassName,
-} from '@/components/navigation/PageBackButton';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { UserForm } from '@/features/master/forms/UserForm';
 import { adminOperatorsQueryKey } from '@/hooks/admin/useAdminOperatorsQuery';
 import { toast } from '@/hooks/use-toast';
@@ -33,6 +30,11 @@ export default function AdminOperatorRegisterPage() {
 
   /** Returns to the operator list without submitting the registration form. */
   const handleBack = () => navigate(paths.adminOperatorList);
+
+  usePageBreadcrumb([
+    { label: '運用者管理', to: paths.adminOperatorList },
+    { label: '運用者を追加' },
+  ]);
 
   /** Updates the operator permission selection and clears its validation error. */
   const handlePermissionsChange = (permissions: string[]) => {
@@ -73,12 +75,6 @@ export default function AdminOperatorRegisterPage() {
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={handleBack}
-        label=""
-        aria-label="運用者一覧に戻る"
-        className={floatingPageBackButtonClassName}
-      />
       <FormPageContent>
         <div>
           <FormPageTitle as="h1">運用者を追加</FormPageTitle>

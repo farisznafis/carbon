@@ -6,7 +6,7 @@ import {
   type MonitoringCancelDecision,
   type MonitoringCancelRequestListItem,
 } from '@/api/monitoring';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
 import { ActionButton } from '@/components/actions';
 
+const CANCEL_REQUEST_LIST_PATH = `${paths.adminDashboard}?panel=cancel`;
 type DetailFieldProps = {
   label: string;
   children: React.ReactNode;
@@ -74,7 +75,7 @@ export default function CancelRequestDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const returnToList = useCallback(() => {
-    navigate(`${paths.adminDashboard}?panel=cancel`);
+    navigate(CANCEL_REQUEST_LIST_PATH);
   }, [navigate]);
 
   const loadCancelRequest = useCallback(async () => {
@@ -163,6 +164,12 @@ export default function CancelRequestDetailPage() {
     }
   };
 
+  usePageBreadcrumb([
+    { label: 'ホーム', to: paths.adminDashboard },
+    { label: '取消申請一覧', to: CANCEL_REQUEST_LIST_PATH },
+    { label: '取消申請内容の詳細' },
+  ]);
+
   if (isLoading && !cancelRequest) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background px-6 text-small text-foreground">
@@ -209,13 +216,6 @@ export default function CancelRequestDetailPage() {
 
   return (
     <main className="relative min-h-screen bg-background px-4 py-10 sm:px-6">
-      <PageBackButton
-        onClick={returnToList}
-        label=""
-        aria-label="取消一覧へ戻る"
-        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
-      />
-
       <div className="mx-auto w-full max-w-[960px] space-y-10">
         <h1 className="text-foreground">取消申請内容の詳細</h1>
 

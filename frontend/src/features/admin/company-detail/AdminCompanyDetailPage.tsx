@@ -1,7 +1,6 @@
 ﻿import { useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
-  ArrowLeft,
   Ban,
   Building2,
   ChevronDown,
@@ -23,18 +22,7 @@ import {
 } from '@/api/admin';
 import { ApiError, isForbiddenApiError } from '@/api/_shared/errors';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
-import {
-  floatingPageBackButtonClassName,
-  PageBackButton,
-} from '@/components/navigation/PageBackButton';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -364,6 +352,16 @@ export default function AdminCompanyDetailPage() {
 
   const handleBack = () => navigate(backTo);
 
+  const loadedCompany = companyDetailQuery.data?.company;
+  usePageBreadcrumb([
+    { label: backTo === paths.adminDashboard ? 'ダッシュボード' : '企業一覧', to: backTo },
+    {
+      label: loadedCompany
+        ? loadedCompany.nameJA || `企業ID: ${loadedCompany.companyId}`
+        : '企業情報の詳細',
+    },
+  ]);
+
   // ── Guard states ───────────────────────────────────────────────────────────
 
   if (!companyId) {
@@ -419,51 +417,18 @@ export default function AdminCompanyDetailPage() {
       .join(' ');
 
   const formattedAddress = formatAdminCompanyAddress(company);
-  const backLabel = backTo === paths.adminDashboard ? 'ダッシュボード' : '企業一覧';
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <main className="relative min-h-screen bg-background px-4 py-8 sm:px-6">
-      <PageBackButton
-        onClick={handleBack}
-        label=""
-        aria-label={`${backLabel}へ戻る`}
-        className={floatingPageBackButtonClassName}
-      />
-
       <div className="mx-auto w-full max-w-7xl space-y-6">
 
         {/* ── Page Header ─────────────────────────────────────────────────── */}
-        <div className="min-w-0 space-y-3 pl-16 sm:pl-20 2xl:pl-0">
-            <Breadcrumb>
-              <BreadcrumbList className="flex-nowrap">
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link
-                      to={backTo}
-                      className="inline-flex items-center gap-1.5 font-medium text-foreground hover:text-primary"
-                    >
-                      <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-                      {backLabel}
-                    </Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator>/</BreadcrumbSeparator>
-                <BreadcrumbItem className="min-w-0">
-                  <BreadcrumbPage className="block truncate">
-                    {company.nameJA || `企業ID: ${company.companyId}`}
-                  </BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-
+        <div className="min-w-0 space-y-3">
             {/* Title row */}
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1.5 min-w-0">
-                <p className="text-sm text-foreground tracking-wide">
-                  企業情報の詳細
-                </p>
                 <h1 className="text-2xl font-semibold tracking-tight text-foreground truncate">
                   {company.nameJA || `企業ID: ${company.companyId}`}
                 </h1>

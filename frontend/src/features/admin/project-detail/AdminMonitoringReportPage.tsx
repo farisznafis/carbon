@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -7,26 +7,25 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  floatingPageBackButtonClassName,
-  PageBackButton,
-} from '@/components/navigation/PageBackButton';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { ActionButton } from '@/components/actions';
+import { paths } from '@/routes/paths';
 
 export default function AdminMonitoringReportPage() {
   const { projectId } = useParams();
-  const navigate = useNavigate();
+
+  usePageBreadcrumb([
+    { label: 'プロジェクト管理', to: paths.adminProjectList },
+    {
+      label: 'プロジェクト詳細',
+      to: projectId ? paths.adminProjectDetail(projectId) : undefined,
+    },
+    { label: 'モニタリング報告書' },
+  ]);
 
   return (
     <main className='relative min-h-screen bg-background px-4 py-8 sm:px-6'>
-      <PageBackButton
-        onClick={() => navigate(-1)}
-        label=''
-        aria-label='プロジェクト詳細へ戻る'
-        className={floatingPageBackButtonClassName}
-      />
-
-      <div className='container mx-auto space-y-6 pt-16'>
+      <div className='container mx-auto space-y-6'>
         <Card>
           <CardHeader>
             <CardTitle>モニタリングデータ報告書</CardTitle>

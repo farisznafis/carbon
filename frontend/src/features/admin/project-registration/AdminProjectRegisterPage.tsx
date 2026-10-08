@@ -21,7 +21,7 @@ import {
   FormSectionStack,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PlanFilePicker } from '@/features/admin/project-plan/PlanFilePicker';
 import { PlanSummarySection } from '@/features/admin/project-plan/PlanSummarySection';
@@ -84,6 +84,11 @@ const errorMessage = (error: unknown, fallback: string) =>
 export const AdminProjectRegister: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  usePageBreadcrumb([
+    { label: 'プロジェクト管理', to: paths.adminProjectList },
+    { label: 'プロジェクト作成' },
+  ]);
 
   const form = useForm<AdminProjectRegisterFormInputValues>({
     mode: 'onChange',
@@ -194,12 +199,6 @@ export const AdminProjectRegister: React.FC = () => {
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={() => navigate(paths.adminDashboard)}
-        label=''
-        className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
-      />
-
       <FormPageContent>
         <FormPageTitle align='center'>プロジェクト作成</FormPageTitle>
 
