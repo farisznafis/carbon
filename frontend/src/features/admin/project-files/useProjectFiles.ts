@@ -27,7 +27,7 @@ export async function downloadProjectFile(projectId: string, file: Pick<ProjectF
 }
 
 /** Prefix shared by every file query of a project, including the 計画書 card's. */
-const projectFilesQueryPrefix = (projectId: string) =>
+export const projectFilesQueryPrefix = (projectId: string) =>
   ['admin', 'projects', projectId, 'files'] as const;
 
 export const projectFileListingQueryKey = (projectId: string) =>

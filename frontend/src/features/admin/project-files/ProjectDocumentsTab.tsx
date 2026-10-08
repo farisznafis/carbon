@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import type { ProjectFileType } from '@/api/admin/projectFiles';
-import { dashboardEmptyStateClassName } from '@/components/layout/DashboardLayout';
 import { PageTabsList, PageTabsTrigger } from '@/components/navigation/PageTabs';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
+import { ProjectDocumentDataPanel } from './ProjectDocumentDataPanel';
 import { ProjectFilesPanel, type ProjectFileUploadRequest } from './ProjectFilesPanel';
 import { PROJECT_FILE_TYPES } from './projectFileTypes';
 
@@ -15,7 +15,7 @@ const DOCUMENT_VIEWS = [
 
 type DocumentView = (typeof DOCUMENT_VIEWS)[number]['value'];
 
-const DOCUMENT_VIEW_QUERY_PARAM = 'doc';
+export const DOCUMENT_VIEW_QUERY_PARAM = 'doc';
 /** Set by other screens (the 概要 書類 card) to land here with the upload dialog open. */
 export const DOCUMENT_UPLOAD_QUERY_PARAM = 'upload';
 
@@ -25,7 +25,7 @@ const resolveDocumentView = (value: string | null): DocumentView =>
 const resolveUploadType = (value: string | null): ProjectFileType | null =>
   PROJECT_FILE_TYPES.find((definition) => definition.type === value)?.type ?? null;
 
-/** The 書類 tab: uploaded forms, and (later) the data entered from them. */
+/** The 書類 tab: uploaded forms, and the data read from them. */
 export function ProjectDocumentsTab({ projectId }: Readonly<{ projectId: string }>) {
   const location = useLocation();
   const permissions = useAdminPermissions();
@@ -73,8 +73,7 @@ export function ProjectDocumentsTab({ projectId }: Readonly<{ projectId: string 
       </TabsContent>
 
       <TabsContent value="acquisition" className="m-0">
-        {/* TODO: data acquisition is designed once its API is specified. */}
-        <div className={dashboardEmptyStateClassName}>データ取得は準備中です。</div>
+        <ProjectDocumentDataPanel projectId={projectId} />
       </TabsContent>
     </Tabs>
   );
