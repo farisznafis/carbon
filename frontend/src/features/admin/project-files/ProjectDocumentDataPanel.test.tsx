@@ -25,6 +25,8 @@ const listing = {
   files: [
     { id: 12, fileType: 'MONITORING_REPORT', originalFileName: 'report.xlsx', uploadedAt: '2026-10-01T10:00:00', versionNo: 2 },
     { id: 5, fileType: 'PROJECT_PLAN', originalFileName: 'plan.xlsx', uploadedAt: '2026-09-01T10:00:00', versionNo: 3 },
+    { id: 4, fileType: 'PROJECT_PLAN', originalFileName: 'plan_old.xlsx', uploadedAt: '2026-08-01T10:00:00', versionNo: 2 },
+    { id: 9, fileType: 'VALIDATION_REPORT', originalFileName: 'validation.pdf', uploadedAt: '2026-09-10T10:00:00', versionNo: 1 },
   ],
   versionSummary: [],
 };
@@ -97,11 +99,44 @@ describe('ProjectDocumentDataPanel', () => {
       'aria-current',
       'true',
     );
-    expect(within(nav()).getByRole('button', { name: /妥当性確認報告書.*未アップロード/ })).toBeInTheDocument();
+    expect(within(nav()).getByRole('button', { name: /個別活動実績報告リスト.*未アップロード/ })).toBeInTheDocument();
     expect(screen.getByRole('table', { name: '認証対象期間・会員数計画の表' })).toBeInTheDocument();
     // Units are left out: values go into Excel cells that already carry them.
     expect(screen.getByRole('columnheader', { name: '会員数' })).toBeInTheDocument();
     expect(screen.queryByText(/社/)).not.toBeInTheDocument();
+  });
+
+  it('lists only the three readable forms, counting every version of them', async () => {
+    renderPanel();
+    await screen.findByText('GX太陽光');
+
+    expect(within(nav()).getAllByRole('button')).toHaveLength(3);
+    expect(within(nav()).queryByRole('button', { name: /妥当性確認報告書/ })).not.toBeInTheDocument();
+    // plan v3 + plan v2 + report v2; the 妥当性確認報告書 is not counted.
+    expect(screen.getByText('3件')).toBeInTheDocument();
+  });
+
+  it('ignores a dataType the tab does not read', async () => {
+    renderPanel('/?doc=acquisition&dataType=VALIDATION_REPORT');
+
+    expect(await screen.findByText('GX太陽光')).toBeInTheDocument();
+    expect(dataApi.getProjectDocumentData).toHaveBeenCalledWith('PROJ1', 'PROJECT_PLAN');
+  });
+
+  it('searches the list by file name', async () => {
+    renderPanel();
+    await screen.findByText('GX太陽光');
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'ファイル名を検索' }), {
+      target: { value: 'REPORT' },
+    });
+    expect(within(nav()).getAllByRole('button')).toHaveLength(1);
+    expect(within(nav()).getByRole('button', { name: /report\.xlsx/ })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'ファイル名を検索' }), {
+      target: { value: 'zzz' },
+    });
+    expect(within(nav()).getByText('一致するファイルはありません。')).toBeInTheDocument();
   });
 
   it('copies one value without its unit and announces it', async () => {
@@ -134,13 +169,13 @@ describe('ProjectDocumentDataPanel', () => {
   });
 
   it('asks for an upload, without a request, when the document has no file', async () => {
-    renderPanel('/?doc=acquisition&dataType=VALIDATION_REPORT');
+    renderPanel('/?doc=acquisition&dataType=ACTIVITY_RESULT_LIST');
 
     expect(await screen.findByText('この書類はまだアップロードされていません。')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: '妥当性確認報告書' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '妥当性確認報告書をアップロード' })).toHaveAttribute(
+    expect(screen.getByRole('heading', { level: 2, name: '個別活動実績報告リスト' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '個別活動実績報告リストをアップロード' })).toHaveAttribute(
       'href',
-      '/?doc=forms&upload=VALIDATION_REPORT',
+      '/?doc=forms&upload=ACTIVITY_RESULT_LIST',
     );
     expect(dataApi.getProjectDocumentData).not.toHaveBeenCalled();
   });
