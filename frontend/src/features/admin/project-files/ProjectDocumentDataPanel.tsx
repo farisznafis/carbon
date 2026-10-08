@@ -92,13 +92,27 @@ export function ProjectDocumentDataPanel({ projectId }: Readonly<{ projectId: st
   // Every version counts, though each row shows its type's latest file.
   const fileCount = dataGroups.reduce((total, group) => total + group.files.length, 0);
 
-  const fileNameNeedle = fileNameQuery.trim().toLowerCase();
-  const listedDefinitions = DATA_FILE_DEFINITIONS.filter((definition) => {
-    if (typeFilter !== ALL_TYPES && definition.type !== typeFilter) return false;
-    if (!fileNameNeedle) return true;
-    const fileName = dataGroups.find((group) => group.type === definition.type)?.files[0]?.originalFileName;
-    return (fileName ?? '').toLowerCase().includes(fileNameNeedle);
+  
+const fileNameNeedle = fileNameQuery.trim().toLowerCase();
+
+const listedFiles = dataGroups
+  .flatMap((group) =>
+    group.files.map((file, index) => ({
+      file,
+      type: group.type,
+      label: group.label,
+      isLatest: index === 0,
+    })),
+  )
+  .filter(({ file, type }) => {
+    const matchesType = typeFilter === ALL_TYPES || type === typeFilter;
+    const matchesName = (file.originalFileName ?? '')
+      .toLowerCase()
+      .includes(fileNameNeedle);
+
+    return matchesType && matchesName;
   });
+
 
   // Unknown until the listing loads; when it fails, ask for the data anyway.
   const hasFile = listingQuery.isSuccess ? Boolean(latestFile) : null;
@@ -138,25 +152,36 @@ export function ProjectDocumentDataPanel({ projectId }: Readonly<{ projectId: st
     return `?${nextSearchParams.toString()}`;
   };
 
+  
   const renderFileList = () => (
     <aside
       aria-labelledby="document-data-files-heading"
-      className="hidden overflow-hidden rounded-lg border border-border bg-card shadow-app-sm lg:block"
+      className="hidden overflow-hidden rounded-[10px] border border-border bg-card lg:block"
     >
-      <div className="flex items-baseline justify-between gap-3 border-b border-border px-4 py-3">
-        <h3 id="document-data-files-heading" className="text-sm font-semibold text-foreground">
-          書類ファイル
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-3">
+        <h3
+          id="document-data-files-heading"
+          className="text-base font-bold text-foreground"
+        >
+          アップロード済みファイル
         </h3>
-        <span className="text-small tabular-nums text-muted-foreground">{fileCount}件</span>
+        <span className="text-base text-secondary-foreground tabular-nums">
+          {fileCount}件
+        </span>
       </div>
 
-      <div className="flex gap-2 border-b border-border p-3">
+      {/* Filters */}
+      <div className="flex items-center justify-between gap-2 px-[18px] py-3">
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger aria-label="ファイル種類で絞り込み" className="h-9 w-36 shrink-0">
+          <SelectTrigger
+            aria-label="ファイル種類で絞り込み"
+            className="h-[38px] w-[134px] shrink-0 rounded-lg border-border px-[14px] text-[13px] shadow-none"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL_TYPES}>すべての種類</SelectItem>
+            <SelectItem value={ALL_TYPES}>ファイル種類</SelectItem>
             {DATA_FILE_DEFINITIONS.map((definition) => (
               <SelectItem key={definition.type} value={definition.type}>
                 {definition.label}
@@ -164,10 +189,11 @@ export function ProjectDocumentDataPanel({ projectId }: Readonly<{ projectId: st
             ))}
           </SelectContent>
         </Select>
-        <div className="relative min-w-0 flex-1">
+
+        <div className="relative min-w-0 max-w-[212px] flex-1">
           <Search
             aria-hidden="true"
-            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-secondary-foreground"
           />
           <Input
             type="search"
@@ -175,53 +201,59 @@ export function ProjectDocumentDataPanel({ projectId }: Readonly<{ projectId: st
             onChange={(event) => setFileNameQuery(event.target.value)}
             placeholder="ファイル名を検索"
             aria-label="ファイル名を検索"
-            className="h-9 pl-9"
+            className="h-[38px] w-full rounded-lg border-border pl-10 text-[13px] shadow-none"
           />
         </div>
       </div>
 
-      <nav aria-label="データを表示する書類" className="p-2">
-        {listedDefinitions.length === 0 ? (
-          <p className="px-3 py-6 text-center text-small text-muted-foreground">
+      {/* File list */}
+      <nav aria-label="データを表示する書類">
+        {listedFiles.length === 0 ? (
+          <p className="px-4 py-8 text-center text-sm text-muted-foreground">
             一致するファイルはありません。
           </p>
         ) : (
-          <ul className="space-y-0.5">
-            {listedDefinitions.map((definition) => {
-              const isActive = definition.type === activeType;
-              const latest = dataGroups.find((group) => group.type === definition.type)?.files[0];
+          <ul className="space-y-[3px]">
+            {listedFiles.map(({ file, type, label, isLatest }) => {
+              const isActive = type === activeType && isLatest;
+
               return (
-                <li key={definition.type}>
+                <li key={file.id}>
                   <button
                     type="button"
+                    disabled={!isLatest}
                     aria-current={isActive ? 'true' : undefined}
-                    onClick={() => selectType(definition.type)}
+                    onClick={() => selectType(type)}
                     className={cn(
-                      'relative flex min-h-14 w-full items-center gap-3 rounded-md py-2.5 pl-3 pr-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      'flex min-h-[72px] w-full items-center justify-between gap-4 px-[18px] py-3 text-left transition-colors',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                      'disabled:cursor-default',
                       isActive
-                        ? 'bg-primary/10 before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-primary-strong'
-                        : 'hover:bg-muted',
+                        ? 'bg-accent'
+                        : 'enabled:hover:bg-muted/50',
                     )}
                   >
-                    <span className="min-w-0 flex-1 space-y-0.5">
-                      <span className="block truncate text-xs text-muted-foreground">{definition.label}</span>
-                      {latest ? (
-                        <span
-                          className={cn(
-                            'block truncate text-sm font-medium',
-                            isActive ? 'text-primary-strong' : 'text-foreground',
-                          )}
-                          title={latest.originalFileName ?? undefined}
-                        >
-                          {latest.originalFileName ?? definition.label}
-                        </span>
-                      ) : (
-                        <span className="block text-sm text-muted-foreground">未アップロード</span>
-                      )}
+                    {/* File information */}
+                    <span className="flex min-w-0 flex-1 flex-col gap-1">
+                      <span className="truncate text-[11px] font-medium text-secondary-foreground">
+                        {label}
+                      </span>
+
+                      <span
+                        className={cn(
+                          'block truncate text-[13px] font-medium text-foreground',
+                          isActive && 'font-bold text-primary-strong',
+                        )}
+                        title={file.originalFileName ?? undefined}
+                      >
+                        {file.originalFileName ?? label}
+                      </span>
                     </span>
-                    {latest && (
-                      <StatusBadge className="shrink-0 px-2 py-0.5 tabular-nums">v{latest.version}</StatusBadge>
-                    )}
+
+                    {/* Version */}
+                    <StatusBadge className="flex h-7 w-[50px] shrink-0 items-center justify-center bg-muted px-0 py-0 text-xs font-bold text-secondary-foreground tabular-nums">
+                      v{file.version}
+                    </StatusBadge>
                   </button>
                 </li>
               );
@@ -231,6 +263,7 @@ export function ProjectDocumentDataPanel({ projectId }: Readonly<{ projectId: st
       </nav>
     </aside>
   );
+
 
   const renderMobileSelect = () => (
     <div className="lg:hidden">
@@ -336,7 +369,7 @@ export function ProjectDocumentDataPanel({ projectId }: Readonly<{ projectId: st
 
   return (
     <TooltipProvider delayDuration={250}>
-      <div className="grid min-w-0 gap-4 lg:grid-cols-[clamp(18rem,30vw,28rem)_minmax(0,1fr)] lg:gap-6">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[clamp(18rem,32vw,29.625rem)_minmax(0,1fr)] lg:gap-6">
         {renderFileList()}
 
         {/* gap, not space-y: the hidden mobile select would push the card below the list. */}
