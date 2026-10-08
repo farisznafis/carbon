@@ -9,6 +9,13 @@ import { toast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useUsersQuery } from '@/hooks/users/useUsersQuery';
+import { PageSkeleton } from '@/components/feedback/loading';
+import { PageBackButton } from '@/components/navigation/PageBackButton';
+import {
+  FormPageContent,
+  FormPageTitle,
+  FormStandalonePage,
+} from '@/components/forms/form-layout';
 
 const resolveSiteAssigneeId = (site: Site, users: UserList[] = []) => {
   if (site.picId) return site.picId;
@@ -108,11 +115,11 @@ function SiteEdit() {
   );
 
   if (!siteId) {
-    return <div>読み込み中...</div>;
+    return <PageSkeleton />;
   }
 
   if (!initialSite) {
-    return <div>読み込み中...</div>;
+    return <PageSkeleton />;
   }
 
   const handleFormSubmit = async (values: SiteFormData) => {
@@ -233,20 +240,33 @@ function SiteEdit() {
   return (
     <>
       {step === 'form' && (
-        <SiteForm
-          mode="edit"
-          originalData={initialFormData}
-          onChange={setFormData}
-          onNext={handleFormSubmit}
-          defaultValues={formData || initialFormData}
-          onDelete={handleDelete}
-          userOptions={selectableUsers}
-          isUserOptionsLoading={usersQuery.isLoading}
-          userOptionsError={
-            usersQuery.isError ? '責任者候補を取得できませんでした' : null
-          }
-          userOptionsHelperText="この拠点に紐づいている社員のみ表示されます。"
-        />
+        <FormStandalonePage>
+          <PageBackButton
+            onClick={() => navigate(-1)}
+            label=''
+            className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
+          />
+
+          <FormPageContent>
+            <FormPageTitle>拠点編集</FormPageTitle>
+
+            <SiteForm
+              mode="edit"
+              originalData={initialFormData}
+              onChange={setFormData}
+              onNext={handleFormSubmit}
+              defaultValues={formData || initialFormData}
+              onDelete={handleDelete}
+              userOptions={selectableUsers}
+              isUserOptionsLoading={usersQuery.isLoading}
+              userOptionsError={
+                usersQuery.isError ? '責任者候補を取得できませんでした' : null
+              }
+              userOptionsHelperText="この拠点に紐づいている社員のみ表示されます。"
+              embedded
+            />
+          </FormPageContent>
+        </FormStandalonePage>
       )}
 
       {step === 'confirm' && (

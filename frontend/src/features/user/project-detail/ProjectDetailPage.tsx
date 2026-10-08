@@ -65,7 +65,6 @@ import { PROJECT_EMISSION_REDUCTION_TARGET } from './components/emissionReductio
 import { projectDetailCardClassName } from './projectDetailStyles';
 import { cn } from '@/lib/utils';
 import { paths } from '@/routes/paths';
-import { FloatingHelpButton } from '@/features/master/help/FloatingHelpButton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { EmissionReductionProgressCard } from './components/EmissionReductionProgressCard';
 import { PageTabsList, PageTabsTrigger } from '@/components/navigation/PageTabs';
@@ -1009,7 +1008,6 @@ const ProjectDetail = () => {
             onOpenChange={setMonitoringCancellationOpen}
           />
 
-          <FloatingHelpButton context='project-detail' />
         </div>
       </div>
     </div>
