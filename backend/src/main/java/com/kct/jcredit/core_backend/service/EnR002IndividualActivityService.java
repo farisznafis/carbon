@@ -20,6 +20,6 @@ public interface EnR002IndividualActivityService {
             String companyId, String projectPublicIdFilter, String currentUserId);
  
     /** Full detail of a single row, shared by both entry points above. */
-    EnR002IndividualActivityDetailResponse getRowDetail(Integer equipmentId, String currentUserId);
+    EnR002IndividualActivityDetailResponse getRowDetail(Integer equipmentId, String projectPublicId, String currentUserId);
 }
  

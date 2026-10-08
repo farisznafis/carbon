@@ -31,8 +31,13 @@ import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import java.util.Optional;
+import org.springframework.data.domain.Sort;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.kct.jcredit.core_backend.config.MonitoringDataRetentionProperties;
+import com.kct.jcredit.core_backend.constant.ResponseConstants;
 import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionScheduleListResponse;
 import com.kct.jcredit.core_backend.entity.EnR002MonitoringRecord;
 import com.kct.jcredit.core_backend.entity.MonitoringDataDeletionHistory;
@@ -46,6 +51,7 @@ import com.kct.jcredit.core_backend.repository.postgres.SiteProjectRelationRepos
 import com.kct.jcredit.core_backend.service.impl.MonitoringDataDeletionServiceImpl;
 
 import software.amazon.awssdk.enhanced.dynamodb.Key;
+
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -76,6 +82,11 @@ class MonitoringDataDeletionServiceImplTest {
 
     @Mock
     private NotificationService notificationService;
+
+    @Mock
+    private ProjectService projectService;
+
+    private static final String USER_ID = "operator01";
 
     // Real instance, so the tests also prove the message keys exist in mail/messages.properties.
     @Spy
@@ -332,28 +343,104 @@ class MonitoringDataDeletionServiceImplTest {
     }
 
     @Test
-    @DisplayName("findDeletionHistory delegates to the repository with a page/limit pageable")
+    @DisplayName("findDeletionHistory delegates to the repository for a project the caller may access")
     void findDeletionHistoryDelegatesToRepository() {
-        MonitoringDataDeletionHistory history = MonitoringDataDeletionHistory.builder()
-                .monitoringRecordId(PK)
-                .recordTimeUpdated("2020-01-01T00:00:00Z")
-                .dateRecorded("2020-01-01")
-                .projectId(1)
-                .siteId(10)
-                .result(DeletionResult.SUCCESS)
-                .build();
-        Page<MonitoringDataDeletionHistory> page = new PageImpl<>(List.of(history));
-        when(monitoringDataDeletionHistoryRepository.findByProjectId(eq(1), any(Pageable.class))).thenReturn(page);
+        givenAccessibleProject(1, "PUB-1");
+        Page<MonitoringDataDeletionHistory> page = new PageImpl<>(List.of(historyOf(1)));
+        when(monitoringDataDeletionHistoryRepository.findByProjectId(eq(1), any(Pageable.class)))
+                .thenReturn(page);
 
-        var response = service.findDeletionHistory(1, 1, 20);
+        var response = service.findDeletionHistory(1, 1, 20, USER_ID);
 
+        assertEquals(ResponseConstants.OK, response.getStatusCode());
         assertEquals(1, response.getHistory().size());
         verify(monitoringDataDeletionHistoryRepository).findByProjectId(eq(1), any(Pageable.class));
     }
 
-    private void givenFinalizedProjects(Project... projects) {
-        when(projectRepository.findByProjectStatus(FINALIZED_STATUS)).thenReturn(List.of(projects));
+    @Test
+    @DisplayName("findDeletionHistory returns NOT_FOUND for an unknown project and never reads the history")
+    void findDeletionHistoryUnknownProjectReturnsNotFound() {
+        when(projectRepository.findById(999)).thenReturn(Optional.empty());
+
+        var response = service.findDeletionHistory(999, 1, 20, USER_ID);
+
+        assertEquals(ResponseConstants.NOT_FOUND, response.getStatusCode());
+        verifyNoInteractions(monitoringDataDeletionHistoryRepository);
+        verifyNoInteractions(projectService);
     }
+
+    @Test
+    @DisplayName("findDeletionHistory returns the same NOT_FOUND for a project the caller may not access")
+    void findDeletionHistoryInaccessibleProjectReturnsNotFound() {
+        // Same answer as an unknown id, so the response does not reveal which ids exist.
+        Project project = new Project();
+        project.setId(2);
+        project.setPublicId("PUB-2");
+        when(projectRepository.findById(2)).thenReturn(Optional.of(project));
+        when(projectService.hasProjectAccess("PUB-2", USER_ID)).thenReturn(false);
+
+        var response = service.findDeletionHistory(2, 1, 20, USER_ID);
+
+        assertEquals(ResponseConstants.NOT_FOUND, response.getStatusCode());
+        verifyNoInteractions(monitoringDataDeletionHistoryRepository);
+    }
+
+    @Test
+    @DisplayName("findDeletionHistory without projectId lists only the projects the caller may access")
+    void findDeletionHistoryWithoutProjectIdIsLimitedToAccessibleProjects() {
+        Project accessible = projectDueOn(1, "PUB-1", LocalDate.of(2030, 1, 1));
+        Project hidden = projectDueOn(2, "PUB-2", LocalDate.of(2030, 1, 1));
+        givenFinalizedProjects(accessible, hidden);
+        when(projectService.hasProjectAccess("PUB-1", USER_ID)).thenReturn(true);
+        when(projectService.hasProjectAccess("PUB-2", USER_ID)).thenReturn(false);
+        when(monitoringDataDeletionHistoryRepository.findByProjectIdIn(eq(List.of(1)), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(historyOf(1))));
+
+        var response = service.findDeletionHistory(null, 1, 20, USER_ID);
+
+        assertEquals(1, response.getHistory().size());
+        verify(monitoringDataDeletionHistoryRepository)
+                .findByProjectIdIn(eq(List.of(1)), any(Pageable.class));
+        // The unscoped query must never be used again.
+        verify(monitoringDataDeletionHistoryRepository, never()).findAll(any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("findDeletionHistory without projectId returns an empty list when the caller can access no project")
+    void findDeletionHistoryWithoutProjectIdAndNoAccessReturnsEmpty() {
+        Project hidden = projectDueOn(2, "PUB-2", LocalDate.of(2030, 1, 1));
+        givenFinalizedProjects(hidden);
+        when(projectService.hasProjectAccess("PUB-2", USER_ID)).thenReturn(false);
+
+        var response = service.findDeletionHistory(null, 1, 20, USER_ID);
+
+        assertEquals(ResponseConstants.OK, response.getStatusCode());
+        assertEquals(0, response.getHistory().size());
+        verifyNoInteractions(monitoringDataDeletionHistoryRepository);
+    }
+
+    @Test
+    @DisplayName("findDeletionHistory builds a 0-based pageable sorted newest first")
+    void findDeletionHistoryBuildsZeroBasedPageableSortedNewestFirst() {
+        // Distinct page and limit so a swap would fail; page 3 must become index 2.
+        givenAccessibleProject(1, "PUB-1");
+        when(monitoringDataDeletionHistoryRepository.findByProjectId(eq(1), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        service.findDeletionHistory(1, 3, 50, USER_ID);
+
+        ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+        verify(monitoringDataDeletionHistoryRepository).findByProjectId(eq(1), captor.capture());
+        Pageable pageable = captor.getValue();
+        assertEquals(2, pageable.getPageNumber());
+        assertEquals(50, pageable.getPageSize());
+        assertEquals(Sort.Direction.DESC, pageable.getSort().getOrderFor("createdAt").getDirection());
+        assertEquals(Sort.Direction.DESC, pageable.getSort().getOrderFor("id").getDirection());
+    }
+
+        private void givenFinalizedProjects(Project... projects) {
+            when(projectRepository.findByProjectStatus(FINALIZED_STATUS)).thenReturn(List.of(projects));
+        }
 
     private void givenLinkedSites(Project project, LinkedSite... sites) {
         when(siteProjectRelationRepository.findLinkedSitesIncludingDeleted(project.getId()))
@@ -406,5 +493,26 @@ class MonitoringDataDeletionServiceImplTest {
         List<MonitoringDataDeletionHistory> rows = new ArrayList<>();
         captor.getAllValues().forEach(rows::addAll);
         return rows;
+    }
+
+    private MonitoringDataDeletionHistory historyOf(Integer projectId) {
+        return MonitoringDataDeletionHistory.builder()
+                .monitoringRecordId(PK)
+                .recordTimeUpdated("2020-01-01T00:00:00Z")
+                .dateRecorded("2020-01-01")
+                .projectId(projectId)
+                .siteId(10)
+                .result(DeletionResult.SUCCESS)
+                .build();
+    }
+
+    /** A project the caller may see, resolvable by its DB id. */
+    private Project givenAccessibleProject(Integer id, String publicId) {
+        Project project = new Project();
+        project.setId(id);
+        project.setPublicId(publicId);
+        when(projectRepository.findById(id)).thenReturn(Optional.of(project));
+        when(projectService.hasProjectAccess(publicId, USER_ID)).thenReturn(true);
+        return project;
     }
 }

@@ -6,13 +6,7 @@ import type {
   AdminProjectDetailResponse,
   CreateAdminProjectResponse,
   CreateAdminProjectPayload,
-  ProjectPlanAutofillResponse,
-  ProjectPlanBatchProgressResponse,
-  ProjectPlanFileDownloadResponse,
-  ProjectPlanFileResponse,
   ProjectPlanFormResponse,
-  ProjectPlanProgressSummary,
-  ProjectPlanProgressResponse,
   ProjectStatus,
   UpdateProjectStatusPayload,
   UpdateProjectStatusResponse,
@@ -136,60 +130,10 @@ export async function updateAdminProjectStatus(
   return json;
 }
 
-export async function getProjectPlanAutofillByProject(
-  projectId: string,
-): Promise<ProjectPlanAutofillResponse> {
-  const response = await apiFetch(
-    `/projectplan/autofill/${encodeURIComponent(projectId)}`,
-    {
-      method: 'GET',
-    },
-  );
-  const { data: json, rawBody } =
-    await parseJsonResponse<ProjectPlanAutofillResponse>(response);
-
-  if (!response.ok) {
-    const message =
-      json?.message ||
-      rawBody ||
-      `Failed to load project autofill data: HTTP ${response.status}`;
-    throw new ApiError(message, {
-      status: response.status,
-      payload: json,
-      rawBody,
-    });
-  }
-
-  return json ?? {};
-}
-
-export async function getProjectPlanAutofillDefaults(): Promise<ProjectPlanAutofillResponse> {
-  const response = await apiFetch('/projectplan/autofill', {
-    method: 'GET',
-  });
-  const { data: json, rawBody } =
-    await parseJsonResponse<ProjectPlanAutofillResponse>(response);
-
-  if (!response.ok) {
-    const message =
-      json?.message ||
-      rawBody ||
-      `Failed to load default autofill data: HTTP ${response.status}`;
-    throw new ApiError(message, {
-      status: response.status,
-      payload: json,
-      rawBody,
-    });
-  }
-
-  return json ?? {};
-}
-
-// --- Registry-driven project plan pages (staging) ---
+// --- Project plan pages ---
 //
-// One pair of endpoints serves every page. A page is persisted only when it
-// validates in full, so the progress endpoint can say exactly where an
-// operator who stopped partway should resume.
+// One pair of endpoints serves a plan page by its slug. A page is stored only
+// when it validates in full; a rejected save stores nothing.
 
 function projectPlanFormPath(projectId: string, formSlug: string, methodology?: number) {
   const base = `/projectplan/${encodeURIComponent(projectId)}/forms/${encodeURIComponent(formSlug)}`;
@@ -246,119 +190,4 @@ export async function saveProjectPlanForm<TPayload extends object>(
   }
 
   return json ?? {};
-}
-
-export async function getProjectPlanProgress(
-  projectId: string,
-): Promise<ProjectPlanProgressResponse> {
-  const response = await apiFetch(
-    `/projectplan/${encodeURIComponent(projectId)}/progress`,
-    {
-      method: 'GET',
-    },
-  );
-  const { data: json, rawBody } = await parseJsonResponse<ProjectPlanProgressResponse>(response);
-
-  if (!response.ok) {
-    const message =
-      json?.message || rawBody || `Failed to load project plan progress: HTTP ${response.status}`;
-    throw new ApiError(message, {
-      status: response.status,
-      payload: json,
-      rawBody,
-    });
-  }
-
-  return json ?? {};
-}
-
-/**
- * Plan progress for several projects in one request.
- *
- * Used by list views: asking per row would be one call per project. Returns an
- * empty map for an empty input rather than calling the API.
- */
-export async function getProjectPlanProgressBatch(
-  projectIds: string[],
-): Promise<Map<string, ProjectPlanProgressSummary>> {
-  const ids = projectIds.filter(Boolean);
-  if (ids.length === 0) return new Map();
-
-  const query = ids.map((id) => encodeURIComponent(id)).join(',');
-  const response = await apiFetch(`/projectplan/progress?projectIds=${query}`, {
-    method: 'GET',
-  });
-  const { data: json, rawBody } =
-    await parseJsonResponse<ProjectPlanBatchProgressResponse>(response);
-
-  if (!response.ok) {
-    const message =
-      json?.message || rawBody || `Failed to load plan progress: HTTP ${response.status}`;
-    throw new ApiError(message, { status: response.status, payload: json, rawBody });
-  }
-
-  return new Map((json?.projects ?? []).map((p) => [p.projectId, p]));
-}
-
-/**
- * A short-lived URL to view a file stored on a saved plan page.
- *
- * Asked for on click rather than with the page: the URL expires, and most
- * visits never open the attachment. A refusal is the caller's to show — it must
- * not replace the page the operator is reading.
- */
-export async function getProjectPlanFileDownloadUrl(
-  projectId: string,
-  s3Key: string,
-): Promise<string> {
-  const response = await apiFetch(
-    `/projectplan/${encodeURIComponent(projectId)}/files/download-url?s3Key=${encodeURIComponent(
-      s3Key,
-    )}`,
-    { method: 'GET', forbiddenHandling: 'caller' },
-  );
-  const { data: json, rawBody } =
-    await parseJsonResponse<ProjectPlanFileDownloadResponse>(response);
-
-  if (!response.ok || !json?.url) {
-    const message =
-      json?.message || rawBody || `Failed to get file URL: HTTP ${response.status}`;
-    throw new ApiError(message, { status: response.status, payload: json, rawBody });
-  }
-
-  return json.url;
-}
-
-/**
- * Uploads one file against a plan page, provisionally.
- *
- * The returned s3Key belongs in the page body; the server promotes it to its
- * permanent location only when that page saves and validates. A page that is
- * never saved leaves the file to expire, so nothing has to be cleaned up here.
- */
-export async function uploadProjectPlanFormFile(
-  projectId: string,
-  formSlug: string,
-  fieldName: string,
-  file: File,
-): Promise<{ s3Key: string; originalName: string }> {
-  const form = new FormData();
-  form.append('file', file);
-
-  const response = await apiFetch(
-    `/projectplan/${encodeURIComponent(projectId)}/forms/${encodeURIComponent(
-      formSlug,
-    )}/files?fieldName=${encodeURIComponent(fieldName)}`,
-    { method: 'POST', body: form },
-  );
-  const { data: json, rawBody } =
-    await parseJsonResponse<ProjectPlanFileResponse>(response);
-
-  if (!response.ok || !json?.s3Key) {
-    const message =
-      json?.message || rawBody || `Failed to upload file: HTTP ${response.status}`;
-    throw new ApiError(message, { status: response.status, payload: json, rawBody });
-  }
-
-  return { s3Key: json.s3Key, originalName: json.originalName ?? file.name };
 }

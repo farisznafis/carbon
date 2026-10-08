@@ -1,16 +1,11 @@
-import type {
-  ProjectPlanProgressSummary,
-  ProjectStatus,
-} from '@/api/admin/projects';
+import type { ProjectStatus } from '@/api/admin/projects';
 import type { Project } from '@/api/projects';
 import { useState } from 'react';
-import { ArrowRight } from 'lucide-react';
 import {
   DataGridTable,
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
 import { RowActionButton } from '@/components/data-display/RowActionButton';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -25,10 +20,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { ProjectCompletionDialog } from './ProjectCompletionDialog';
-import {
-  INCOMPLETE_PLAN_LABEL,
-  isPlanEntryIncomplete,
-} from '../planProgressStatus';
 import { formatProjectDateTime } from '../projectStatusPresentation';
 import { cn } from '@/lib/utils';
 
@@ -41,18 +32,10 @@ type ProjectTableProps = {
     status: ProjectStatus,
   ) => void | Promise<void>;
   updatingProjectStatusId?: string | null;
-  planProgress?: ReadonlyMap<
-    string,
-    ProjectPlanProgressSummary
-  >;
-  onOpenPlan?: (
-    project: Project,
-    slug?: string,
-  ) => void;
 };
 
 const projectTableGridColumns =
-  'minmax(240px,1.6fr) minmax(100px,.5fr) minmax(240px,1.35fr) minmax(160px,.8fr) minmax(140px,.7fr) minmax(155px,.75fr) minmax(88px,.4fr)';
+  'minmax(240px,1.6fr) minmax(100px,.5fr) minmax(240px,1.35fr) minmax(140px,.7fr) minmax(155px,.75fr) minmax(88px,.4fr)';
 
 const projectStatusOptions: ProjectStatus[] = [
   '作成済み',
@@ -274,8 +257,6 @@ export function ProjectTable({
   onEdit,
   onStatusChange,
   updatingProjectStatusId,
-  planProgress,
-  onOpenPlan,
 }: ProjectTableProps) {
   const [
     completionProject,
@@ -375,96 +356,6 @@ export function ProjectTable({
             )}
           </span>
         ),
-      },
-
-      {
-        id: 'planProgress',
-        label: '作成の進捗状況',
-
-        render: (project) => {
-          const progress =
-            planProgress?.get(
-              String(project.id),
-            );
-
-          if (
-            !progress ||
-            progress.totalForms === 0
-          ) {
-            return (
-              <span className="text-body text-foreground">
-                -
-              </span>
-            );
-          }
-
-          const resumeSlug =
-            progress.complete
-              ? undefined
-              : (progress.nextIncompleteSlug ??
-                undefined);
-
-          const isIncomplete =
-            isPlanEntryIncomplete(
-              progress,
-            );
-
-          return (
-            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-              <span className="whitespace-nowrap text-body text-foreground">
-                <span className="font-bold">
-                  {
-                    progress.completedForms
-                  }
-                </span>
-
-                <span className="text-foreground">
-                  /
-                  {
-                    progress.totalForms
-                  }{' '}
-                  ページ
-                </span>
-              </span>
-
-              {isIncomplete && (
-                <span className="rounded-full border border-warning-border bg-warning-subtle px-2 py-0.5 text-subtle font-bold text-warning-strong">
-                  {
-                    INCOMPLETE_PLAN_LABEL
-                  }
-                </span>
-              )}
-
-              {onOpenPlan && (
-                <span>
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="
-                      h-auto gap-1 px-0
-                      text-table font-bold text-primary
-                      underline-offset-4
-                      hover:text-primary-strong
-                      hover:underline
-                    "
-                    onClick={() =>
-                      onOpenPlan(
-                        project,
-                        resumeSlug,
-                      )
-                    }
-                  >
-                    {progress.complete
-                      ? '計画書更新'
-                      : '続きから'}
-
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
-                </span>
-              )}
-            </div>
-          );
-        },
       },
 
       {
@@ -619,23 +510,12 @@ export function ProjectTable({
         gridTemplateColumns={
           projectTableGridColumns
         }
-        minWidth={1280}
+        minWidth={1120}
         getRowKey={(project) =>
           project.id
         }
         emptyMessage="まだプロジェクトが登録されていません。"
         onRowClick={onEdit}
-        getRowClassName={(
-          project,
-        ) =>
-          isPlanEntryIncomplete(
-            planProgress?.get(
-              String(project.id),
-            ),
-          )
-            ? 'bg-warning-subtle/50 shadow-[inset_3px_0_0_hsl(var(--warning))]'
-            : undefined
-        }
       />
 
       <ProjectCompletionDialog

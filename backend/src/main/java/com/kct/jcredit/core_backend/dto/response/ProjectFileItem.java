@@ -22,4 +22,5 @@ public class ProjectFileItem {
     private String originalFileName;
     private String uploadedBy;
     private LocalDateTime uploadedAt;
+    private Integer versionNo;
 }
