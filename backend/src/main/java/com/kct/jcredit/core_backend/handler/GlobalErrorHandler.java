@@ -30,6 +30,7 @@ import com.kct.jcredit.core_backend.exception.BusinessRuleViolationException;
 import com.kct.jcredit.core_backend.exception.CustomException;
 import com.kct.jcredit.core_backend.exception.DuplicateResourceException;
 import com.kct.jcredit.core_backend.exception.FileTooLargeException;
+import com.kct.jcredit.core_backend.exception.FileVersionLimitExceededException;
 import com.kct.jcredit.core_backend.exception.ResourceNotFoundException;
 import com.kct.jcredit.core_backend.util.JsonFieldNameResolver;
 import com.kct.jcredit.core_backend.exception.UnsupportedFileTypeException;
@@ -332,6 +333,12 @@ public class GlobalErrorHandler {
         return errors;
     }
 
-    
+    @ExceptionHandler(FileVersionLimitExceededException.class)
+        public ResponseEntity<BaseResponse> handleVersionLimit(FileVersionLimitExceededException ex) {
+            BaseResponse response = new BaseResponse();
+            response.setStatusCode(ResponseConstants.INTERNAL_SERVER_ERROR); // or BAD_REQUEST if you define it
+            response.setMessage(ResponseConstants.MSG_INTERNAL_ERROR);
+            return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
+        }
 }
 
