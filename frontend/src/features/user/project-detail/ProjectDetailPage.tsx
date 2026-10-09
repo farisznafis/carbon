@@ -56,7 +56,7 @@ import {
   dashboardPageContainerClassName,
 } from '@/components/layout/DashboardLayout';
 import { EquipmentList } from './components/EquipmentList';
-import { MonitoringCancellationDialog } from './components/MonitoringCancellationDialog';
+import { ProjectMonitoringDataTab } from './components/ProjectMonitoringDataTab';
 import { EmissionTrendChart } from './components/EmissionTrendChart';
 import { EmissionBreakdownChart } from './components/EmissionBreakdownChart';
 import { PROJECT_EMISSION_REDUCTION_TARGET } from './components/emissionReductionProgressUtils';
@@ -125,7 +125,12 @@ const fallbackMonitoringRow: MonitoringDisplayRow = {
   ELPJ_control_value: null,
 };
 
-type ProjectDetailTabValue = 'overview' | 'equipment';
+type ProjectDetailTabValue = 'overview' | 'equipment' | 'monitoring';
+
+/** Reads ?tab= so return links (e.g. after adding equipment) reopen the same tab. */
+function resolveProjectDetailTab(value: string | null): ProjectDetailTabValue {
+  return value === 'equipment' || value === 'monitoring' ? value : 'overview';
+}
 
 type ProjectDetailNavigationState = {
   siteName?: string;
@@ -136,6 +141,7 @@ function ProjectDetailTabs() {
     <PageTabsList aria-label='プロジェクト詳細の表示' data-tour='project-tabs'>
       <PageTabsTrigger value='overview'>概要</PageTabsTrigger>
       <PageTabsTrigger value='equipment'>設備一覧</PageTabsTrigger>
+      <PageTabsTrigger value='monitoring'>モニタリングデータ</PageTabsTrigger>
     </PageTabsList>
   );
 }
@@ -365,7 +371,7 @@ const ProjectDetail = () => {
   const [loading, setLoading] = useState(true);
 
   const [tab, setTab] = useState<ProjectDetailTabValue>(() =>
-    searchParams.get('tab') === 'equipment' ? 'equipment' : 'overview',
+    resolveProjectDetailTab(searchParams.get('tab')),
   );
   const [recentMonitoring, setRecentMonitoring] = useState<MonitoringData[]>(
     [],
@@ -396,8 +402,6 @@ const ProjectDetail = () => {
   const [projectBaselineEmission, setProjectBaselineEmission] = useState<
     number | null
   >(null);
-  const [monitoringCancellationOpen, setMonitoringCancellationOpen] =
-    useState(false);
 
   useEffect(() => {
     setRecentHasFetched(false);
@@ -740,16 +744,6 @@ const ProjectDetail = () => {
                 <div className='flex shrink-0 flex-col gap-2 sm:flex-row' data-tour='project-monitoring'>
                   <Button
                     type='button'
-                    variant='outline'
-                    size='md'
-                    disabled={!siteId || !projectId}
-                    onClick={() => setMonitoringCancellationOpen(true)}
-                  >
-                    取消一覧
-                  </Button>
-
-                  <Button
-                    type='button'
                     size='md'
                     disabled={!siteId || !projectId}
                     onClick={() =>
@@ -997,14 +991,21 @@ const ProjectDetail = () => {
                 </Card>
               )}
             </TabsContent>
-          </Tabs>
 
-          <MonitoringCancellationDialog
-            open={monitoringCancellationOpen}
-            siteId={siteId}
-            projectId={projectId}
-            onOpenChange={setMonitoringCancellationOpen}
-          />
+            {/* =========================
+                MONITORING DATA
+            ========================== */}
+            <TabsContent
+              value='monitoring'
+              className='m-0 space-y-6'
+            >
+              <ProjectMonitoringDataTab
+                siteId={siteId}
+                projectId={projectId}
+                equipments={equipmentList}
+              />
+            </TabsContent>
+          </Tabs>
 
         </div>
       </div>

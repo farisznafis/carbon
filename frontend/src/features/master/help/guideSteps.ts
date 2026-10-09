@@ -115,12 +115,12 @@ export const GUIDE_CONTENT: Record<GuideContext, GuideContent> = {
       {
         target: 'project-monitoring',
         title: 'モニタリングデータ',
-        description: 'モニタリングデータの登録と、取消申請の一覧はここから行います。',
+        description: 'モニタリングデータの登録はここから行います。',
       },
       {
         target: 'project-tabs',
-        title: '概要・設備一覧',
-        description: 'タブを切り替えて、排出量の分析と登録済みの設備を確認します。',
+        title: 'タブ',
+        description: '排出量の分析、登録済みの設備、モニタリングデータを切り替えて確認します。誤ったモニタリングデータの取消申請は「モニタリングデータ」から行います。',
       },
       {
         target: 'project-emissions',
