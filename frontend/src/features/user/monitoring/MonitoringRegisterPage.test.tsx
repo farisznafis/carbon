@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -21,6 +22,7 @@ vi.mock('@/api/monitoring', () => ({
   uploadElpvrFile: vi.fn().mockResolvedValue('https://example.com/pvr.pdf'),
   uploadElpjControlFile: vi.fn().mockResolvedValue('https://example.com/control.pdf'),
   uploadElpjBatteryFile: vi.fn().mockResolvedValue('https://example.com/battery.pdf'),
+  getMonitoringRecords: vi.fn(),
 }));
 vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
 
@@ -30,6 +32,7 @@ describe('Monitoring registration evidence upload', () => {
   it.each([true, false])('uploads evidence and sends the DTO for equipment.hasBattery=%s', async (hasBattery) => {
     vi.mocked(getSiteEquipmentList).mockResolvedValue([{ equipmentId: 100, hasBattery }]);
     const { container } = render(
+      <QueryClientProvider client={new QueryClient()}>
       <MemoryRouter
         initialEntries={[
           paths.userDashboard,
@@ -41,7 +44,8 @@ describe('Monitoring registration evidence upload', () => {
           <Route path={paths.monitoringRegisterRoute} element={<MonitoringRegister />} />
           <Route path={paths.userDashboard} element={<div>登録完了</div>} />
         </Routes>
-      </MemoryRouter>,
+      </MemoryRouter>
+      </QueryClientProvider>,
     );
     await waitFor(() => expect(screen.getByRole('combobox', { name: '設備ID' })).toHaveTextContent('設備ID：100'));
 

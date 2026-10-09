@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MonitoringRecordListItem } from '@/api/monitoring';
@@ -48,14 +49,18 @@ function makeRecord(overrides: Partial<MonitoringRecordListItem> = {}): Monitori
   };
 }
 
-function renderTab() {
-  render(
-    <ProjectMonitoringDataTab
-      siteId="S1"
-      projectId="P1"
-      equipments={[{ equipmentId: 7, deviceNo: 'PCS-001' }]}
-    />,
+/** A fresh cache per test; no retries so a failed load shows its error at once. */
+function renderTab(queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })) {
+  const tab = (
+    <QueryClientProvider client={queryClient}>
+      <ProjectMonitoringDataTab
+        siteId="S1"
+        projectId="P1"
+        equipments={[{ equipmentId: 7, deviceNo: 'PCS-001' }]}
+      />
+    </QueryClientProvider>
   );
+  return { ...render(tab), tab };
 }
 
 describe('ProjectMonitoringDataTab', () => {
@@ -111,6 +116,28 @@ describe('ProjectMonitoringDataTab', () => {
       reasonText: '二重登録',
     });
     expect(await screen.findByText('取消申請中')).toBeInTheDocument();
+  });
+
+  it('reopens from cache without refetching and keeps the 取消申請中 mark', async () => {
+    const user = userEvent.setup();
+    getMonitoringRecordsMock.mockResolvedValue({
+      items: [makeRecord()],
+      pagination: { totalItems: 1, totalPages: 1 },
+    });
+    createCancelRequestMock.mockResolvedValue({ statusCode: 'OK' });
+    const { unmount, tab } = renderTab();
+
+    await user.click(await screen.findByRole('button', { name: /取消申請$/ }));
+    await user.type(screen.getByLabelText(/理由/), '二重登録');
+    await user.click(screen.getByRole('button', { name: '取消申請を送信' }));
+    await screen.findByText('取消申請中');
+
+    // Switching tabs unmounts the panel; coming back must not lose either.
+    unmount();
+    render(tab);
+
+    expect(screen.getByText('取消申請中')).toBeInTheDocument();
+    expect(getMonitoringRecordsMock).toHaveBeenCalledTimes(1);
   });
 
   it('shows the empty state and retries after a load failure', async () => {

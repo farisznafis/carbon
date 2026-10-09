@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ClipboardList } from 'lucide-react';
 import {
   createMonitoringCancelRequest,
-  getMonitoringRecords,
   type MonitoringRecordListItem,
 } from '@/api/monitoring';
 import type { SiteProjectEquipment } from '@/api/site';
@@ -30,6 +29,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  useCancelRequestedRecords,
+  useMonitoringRecordsQuery,
+} from '@/hooks/monitoring/useMonitoringRecordsQuery';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { projectDetailCardClassName } from '../projectDetailStyles';
@@ -85,22 +88,27 @@ export function ProjectMonitoringDataTab({
   equipments,
 }: Readonly<ProjectMonitoringDataTabProps>) {
   const { toast } = useToast();
-  const [records, setRecords] = useState<MonitoringRecordListItem[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
+  const recordsQuery = useMonitoringRecordsQuery(
+    siteId,
+    projectId,
+    currentPage,
+    MONITORING_RECORDS_PAGE_SIZE,
+  );
+  const records = recordsQuery.data?.items ?? [];
+  const totalItems = recordsQuery.data?.pagination.totalItems ?? 0;
+  const totalPages = Math.max(recordsQuery.data?.pagination.totalPages ?? 1, 1);
+  const loadError = recordsQuery.isError
+    ? recordsQuery.error instanceof Error
+      ? recordsQuery.error.message
+      : 'モニタリングデータの取得に失敗しました。'
+    : null;
+  const { requestedKeys, markRequested } = useCancelRequestedRecords(siteId, projectId);
   const [selectedRecord, setSelectedRecord] =
     useState<MonitoringRecordListItem | null>(null);
   const [reasonText, setReasonText] = useState('');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // The API has no request status for users yet, so this only covers requests sent on this visit.
-  const [submittedRecordKeys, setSubmittedRecordKeys] = useState<Set<string>>(
-    () => new Set(),
-  );
 
   const equipmentLabels = useMemo(
     () =>
@@ -111,50 +119,6 @@ export function ProjectMonitoringDataTab({
       ),
     [equipments],
   );
-
-  useEffect(() => {
-    if (!siteId || !projectId) return;
-
-    let ignoreResult = false;
-
-    const loadRecords = async () => {
-      try {
-        setIsLoading(true);
-        setLoadError(null);
-        const result = await getMonitoringRecords({
-          siteId,
-          projectId,
-          page: currentPage,
-          limit: MONITORING_RECORDS_PAGE_SIZE,
-        });
-
-        if (ignoreResult) return;
-
-        setRecords(result.items);
-        setTotalItems(result.pagination.totalItems);
-        setTotalPages(Math.max(result.pagination.totalPages, 1));
-      } catch (error) {
-        if (ignoreResult) return;
-
-        setRecords([]);
-        setTotalItems(0);
-        setTotalPages(1);
-        setLoadError(
-          error instanceof Error
-            ? error.message
-            : 'モニタリングデータの取得に失敗しました。',
-        );
-      } finally {
-        if (!ignoreResult) setIsLoading(false);
-      }
-    };
-
-    void loadRecords();
-
-    return () => {
-      ignoreResult = true;
-    };
-  }, [currentPage, projectId, reloadKey, siteId]);
 
   const closeCancelConfirmation = () => {
     if (isSubmitting) return;
@@ -177,12 +141,7 @@ export function ProjectMonitoringDataTab({
         reasonText: trimmedReason,
       });
 
-      const submittedRecordKey = getRecordKey(selectedRecord);
-      setSubmittedRecordKeys((previousKeys) => {
-        const nextKeys = new Set(previousKeys);
-        nextKeys.add(submittedRecordKey);
-        return nextKeys;
-      });
+      markRequested(getRecordKey(selectedRecord));
       setSelectedRecord(null);
       setReasonText('');
 
@@ -216,7 +175,7 @@ export function ProjectMonitoringDataTab({
         </div>
       </section>
 
-      {isLoading ? (
+      {recordsQuery.isPending ? (
         <SkeletonCard className='min-h-40 rounded-2xl' />
       ) : loadError ? (
         <Card className={projectDetailCardClassName}>
@@ -224,7 +183,7 @@ export function ProjectMonitoringDataTab({
             <p className='text-destructive' role='alert'>
               {loadError}
             </p>
-            <ActionButton kind='retry' onClick={() => setReloadKey((key) => key + 1)} />
+            <ActionButton kind='retry' onClick={() => void recordsQuery.refetch()} />
           </CardContent>
         </Card>
       ) : records.length === 0 && currentPage === 1 ? (
@@ -235,7 +194,15 @@ export function ProjectMonitoringDataTab({
         </Card>
       ) : (
         <div className='space-y-4'>
-          <Card className={cn(projectDetailCardClassName, 'overflow-hidden')}>
+          <Card
+            className={cn(
+              projectDetailCardClassName,
+              'overflow-hidden transition-opacity',
+              // Dims the previous page while the next one loads.
+              recordsQuery.isPlaceholderData && 'opacity-60',
+            )}
+            aria-busy={recordsQuery.isPlaceholderData}
+          >
             <Table className='min-w-[1040px]'>
               <TableHeader>
                 <TableRow>
@@ -255,7 +222,7 @@ export function ProjectMonitoringDataTab({
               <TableBody>
                 {records.map((record) => {
                   const recordKey = getRecordKey(record);
-                  const hasSubmitted = submittedRecordKeys.has(recordKey);
+                  const hasSubmitted = requestedKeys.includes(recordKey);
                   const canCancel =
                     record.isActive &&
                     Boolean(record.id) &&

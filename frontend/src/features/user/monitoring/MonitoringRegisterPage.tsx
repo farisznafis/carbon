@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   MonitoringConfirmationLayout,
@@ -16,6 +17,7 @@ import {
   uploadElpvrFile,
 } from '@/api/monitoring';
 import { ApiError } from '@/api/_shared/errors';
+import { monitoringRecordsQueryKey } from '@/hooks/monitoring/useMonitoringRecordsQuery';
 import { useToast } from '@/hooks/use-toast';
 import {
   getSiteEquipmentList,
@@ -99,6 +101,7 @@ function toServerFieldErrors(errors: unknown): Record<string, string> {
 
 const MonitoringRegister = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const { projectType } = useParams<{ projectType: string }>();
   const { toast } = useToast();
@@ -378,6 +381,10 @@ const MonitoringRegister = () => {
 
     try {
       await submitMonitoringData(payload);
+      // The project's モニタリングデータ tab would otherwise show its cached list.
+      void queryClient.invalidateQueries({
+        queryKey: monitoringRecordsQueryKey(String(siteIdValue), String(projectIdValue)),
+      });
       toast({
         title: 'データの送信に成功しました',
         description: 'モニタリングデータが正常に登録されました。',
