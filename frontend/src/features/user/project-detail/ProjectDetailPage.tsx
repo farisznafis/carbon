@@ -999,11 +999,7 @@ const ProjectDetail = () => {
               value='monitoring'
               className='m-0 space-y-6'
             >
-              <ProjectMonitoringDataTab
-                siteId={siteId}
-                projectId={projectId}
-                equipments={equipmentList}
-              />
+              <ProjectMonitoringDataTab siteId={siteId} projectId={projectId} />
             </TabsContent>
           </Tabs>
 

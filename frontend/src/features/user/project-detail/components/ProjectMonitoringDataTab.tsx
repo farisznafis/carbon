@@ -4,8 +4,11 @@ import {
   createMonitoringCancelRequest,
   type MonitoringRecordListItem,
 } from '@/api/monitoring';
-import type { SiteProjectEquipment } from '@/api/site';
 import { ActionButton } from '@/components/actions';
+import {
+  DataGridTable,
+  type DataGridTableColumn,
+} from '@/components/data-display/DataGridTable';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { SkeletonCard } from '@/components/feedback/loading';
@@ -18,16 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import {
   useCancelRequestedRecords,
@@ -36,56 +30,33 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { projectDetailCardClassName } from '../projectDetailStyles';
+import {
+  MonitoringRecordSheet,
+  MonitoringRecordStatusBadge,
+} from './MonitoringRecordSheet';
+import {
+  formatNumber,
+  formatRecordDate,
+  getRecordKey,
+  getRecordStatus,
+} from './monitoringRecordDisplay';
 
 const MONITORING_RECORDS_PAGE_SIZE = 10;
+const RECORD_GRID_COLUMNS =
+  'minmax(110px, 0.8fr) minmax(110px, 1fr) minmax(110px, 1fr) minmax(150px, 1fr)';
 
 type ProjectMonitoringDataTabProps = {
   siteId: string;
   projectId: string;
-  /** The project's equipment, used to name the equipment each record belongs to. */
-  equipments: readonly SiteProjectEquipment[];
 };
 
-function formatDate(value: string) {
-  if (!value) return '-';
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return new Intl.DateTimeFormat('ja-JP', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(date);
-}
-
-function formatMetric(value: number | null, unit: string) {
-  if (value === null || value === undefined || Number.isNaN(value)) return '-';
-  return `${new Intl.NumberFormat('ja-JP').format(value)} ${unit}`;
-}
-
-function getRecordKey(record: MonitoringRecordListItem) {
-  return `${record.id}:${record.timeUpdated}`;
-}
-
-/** Names equipment the way the 設備一覧 cards do, so both tabs refer to it alike. */
-function getEquipmentLabel(equipment: SiteProjectEquipment) {
-  return (
-    equipment.deviceNo?.trim() ||
-    equipment.pcsModel?.trim() ||
-    equipment.pcsManufacturer?.trim() ||
-    `設備ID: ${equipment.equipmentId}`
-  );
-}
-
 /**
- * The project's monitoring records for this site. A record cannot be edited
- * once registered, so a wrong one is withdrawn by sending a 取消申請 for review.
+ * The project's monitoring records for this site. The list keeps to what tells
+ * records apart; the rest, and the 取消申請, open in a side panel per record.
  */
 export function ProjectMonitoringDataTab({
   siteId,
   projectId,
-  equipments,
 }: Readonly<ProjectMonitoringDataTabProps>) {
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
@@ -104,45 +75,78 @@ export function ProjectMonitoringDataTab({
       : 'モニタリングデータの取得に失敗しました。'
     : null;
   const { requestedKeys, markRequested } = useCancelRequestedRecords(siteId, projectId);
-  const [selectedRecord, setSelectedRecord] =
-    useState<MonitoringRecordListItem | null>(null);
+  const [viewedRecord, setViewedRecord] = useState<MonitoringRecordListItem | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<MonitoringRecordListItem | null>(null);
   const [reasonText, setReasonText] = useState('');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const equipmentLabels = useMemo(
-    () =>
-      new Map(
-        equipments
-          .filter((equipment) => typeof equipment.equipmentId === 'number')
-          .map((equipment) => [equipment.equipmentId as number, getEquipmentLabel(equipment)]),
-      ),
-    [equipments],
+  const columns = useMemo<DataGridTableColumn<MonitoringRecordListItem>[]>(
+    () => [
+      {
+        id: 'dateRecorded',
+        label: '記録日',
+        render: (record) => (
+          <span className='font-bold tabular-nums text-foreground'>
+            {formatRecordDate(record.dateRecorded)}
+          </span>
+        ),
+      },
+      {
+        id: 'elPv',
+        label: '発電量 (kWh)',
+        render: (record) => (
+          <span className='tabular-nums text-foreground'>
+            {formatNumber(record.elPv)}
+          </span>
+        ),
+      },
+      {
+        id: 'elPvr',
+        label: '自家消費量 (kWh)',
+        render: (record) => (
+          <span className='tabular-nums text-foreground'>
+            {formatNumber(record.elPvr)}
+          </span>
+        ),
+      },
+      {
+        id: 'status',
+        label: '状態',
+        render: (record) => (
+          <span className='flex flex-wrap items-center gap-1.5'>
+            <MonitoringRecordStatusBadge status={getRecordStatus(record, requestedKeys)} />
+            {record.processedAt && <StatusBadge>集計済み</StatusBadge>}
+          </span>
+        ),
+      },
+    ],
+    [requestedKeys],
   );
 
   const closeCancelConfirmation = () => {
     if (isSubmitting) return;
-    setSelectedRecord(null);
+    setCancelTarget(null);
     setReasonText('');
     setSubmitError(null);
   };
 
   const handleCancelRequest = async () => {
     const trimmedReason = reasonText.trim();
-    if (!selectedRecord || !trimmedReason || isSubmitting) return;
+    if (!cancelTarget || !trimmedReason || isSubmitting) return;
 
     try {
       setIsSubmitting(true);
       setSubmitError(null);
       await createMonitoringCancelRequest({
-        siteId: selectedRecord.siteId || siteId,
-        recordPK: selectedRecord.id,
-        recordSK: selectedRecord.timeUpdated,
+        siteId: cancelTarget.siteId || siteId,
+        recordPK: cancelTarget.id,
+        recordSK: cancelTarget.timeUpdated,
         reasonText: trimmedReason,
       });
 
-      markRequested(getRecordKey(selectedRecord));
-      setSelectedRecord(null);
+      markRequested(getRecordKey(cancelTarget));
+      setCancelTarget(null);
       setReasonText('');
 
       toast({
@@ -170,7 +174,7 @@ export function ProjectMonitoringDataTab({
           <h2 className='text-xl font-bold text-foreground'>モニタリングデータ</h2>
           <p className='mt-1 max-w-3xl text-body leading-6 text-muted-foreground'>
             この拠点で登録したモニタリングデータです。
-            誤りがある場合は、取消申請を送信してください。
+            行を選ぶと詳細を確認でき、誤りがある場合は取消申請を送信できます。
           </p>
         </div>
       </section>
@@ -194,104 +198,27 @@ export function ProjectMonitoringDataTab({
         </Card>
       ) : (
         <div className='space-y-4'>
-          <Card
+          <div
             className={cn(
-              projectDetailCardClassName,
-              'overflow-hidden transition-opacity',
+              'transition-opacity',
               // Dims the previous page while the next one loads.
               recordsQuery.isPlaceholderData && 'opacity-60',
             )}
             aria-busy={recordsQuery.isPlaceholderData}
           >
-            <Table className='min-w-[1040px]'>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className='whitespace-nowrap'>記録日</TableHead>
-                  <TableHead className='whitespace-nowrap'>設備</TableHead>
-                  <TableHead className='whitespace-nowrap text-right'>発電量</TableHead>
-                  <TableHead className='whitespace-nowrap text-right'>自家消費量</TableHead>
-                  <TableHead className='whitespace-nowrap text-right'>蓄電池放電量</TableHead>
-                  <TableHead className='whitespace-nowrap text-right'>制御機器稼働時間</TableHead>
-                  <TableHead className='whitespace-nowrap text-right'>測定精度</TableHead>
-                  <TableHead className='whitespace-nowrap'>状態</TableHead>
-                  <TableHead className='whitespace-nowrap text-right'>
-                    <span className='sr-only'>操作</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {records.map((record) => {
-                  const recordKey = getRecordKey(record);
-                  const hasSubmitted = requestedKeys.includes(recordKey);
-                  const canCancel =
-                    record.isActive &&
-                    Boolean(record.id) &&
-                    Boolean(record.timeUpdated) &&
-                    !hasSubmitted;
-                  const batteryValue = record.changedBattery
-                    ? record.elpjBatteryValue
-                    : 0;
-                  const equipmentLabel =
-                    record.equipmentId === null
-                      ? '-'
-                      : equipmentLabels.get(record.equipmentId) ??
-                        `設備ID: ${record.equipmentId}`;
-
-                  return (
-                    <TableRow key={recordKey}>
-                      <TableCell className='whitespace-nowrap'>
-                        {formatDate(record.dateRecorded)}
-                      </TableCell>
-                      <TableCell className='max-w-48 truncate' title={equipmentLabel}>
-                        {equipmentLabel}
-                      </TableCell>
-                      <TableCell className='whitespace-nowrap text-right tabular-nums'>
-                        {formatMetric(record.elPv, 'kWh')}
-                      </TableCell>
-                      <TableCell className='whitespace-nowrap text-right tabular-nums'>
-                        {formatMetric(record.elPvr, 'kWh')}
-                      </TableCell>
-                      <TableCell className='whitespace-nowrap text-right tabular-nums'>
-                        {formatMetric(batteryValue, 'kWh')}
-                      </TableCell>
-                      <TableCell className='whitespace-nowrap text-right tabular-nums'>
-                        {formatMetric(record.elpjControlValue, '時間')}
-                      </TableCell>
-                      <TableCell className='whitespace-nowrap text-right tabular-nums'>
-                        {formatMetric(record.elpjAccuracy, '%')}
-                      </TableCell>
-                      <TableCell>
-                        {hasSubmitted ? (
-                          <StatusBadge tone='warning'>取消申請中</StatusBadge>
-                        ) : record.isActive ? (
-                          <StatusBadge tone='success'>有効</StatusBadge>
-                        ) : (
-                          <StatusBadge>取消済み</StatusBadge>
-                        )}
-                      </TableCell>
-                      <TableCell className='text-right'>
-                        {canCancel && (
-                          <Button
-                            type='button'
-                            variant='outline'
-                            size='sm'
-                            aria-label={`${formatDate(record.dateRecorded)}のモニタリングデータを取消申請`}
-                            onClick={() => {
-                              setSelectedRecord(record);
-                              setReasonText('');
-                              setSubmitError(null);
-                            }}
-                          >
-                            取消申請
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </Card>
+            <DataGridTable
+              rows={records}
+              columns={columns}
+              gridTemplateColumns={RECORD_GRID_COLUMNS}
+              minWidth={560}
+              getRowKey={getRecordKey}
+              emptyMessage='このページにモニタリングデータはありません。'
+              onRowClick={(record) => setViewedRecord(record)}
+              getRowActionLabel={(record) =>
+                `${formatRecordDate(record.dateRecorded)}のモニタリングデータの詳細を開く`
+              }
+            />
+          </div>
 
           <PaginationControls
             currentPage={currentPage}
@@ -302,8 +229,21 @@ export function ProjectMonitoringDataTab({
         </div>
       )}
 
+      <MonitoringRecordSheet
+        record={viewedRecord}
+        status={viewedRecord ? getRecordStatus(viewedRecord, requestedKeys) : 'active'}
+        onOpenChange={(open) => {
+          if (!open) setViewedRecord(null);
+        }}
+        onRequestCancel={(record) => {
+          setCancelTarget(record);
+          setReasonText('');
+          setSubmitError(null);
+        }}
+      />
+
       <AlertDialog
-        open={selectedRecord !== null}
+        open={cancelTarget !== null}
         onOpenChange={(nextOpen) => {
           if (!nextOpen) closeCancelConfirmation();
         }}
@@ -312,7 +252,7 @@ export function ProjectMonitoringDataTab({
           <AlertDialogHeader>
             <AlertDialogTitle>取消申請を送信しますか？</AlertDialogTitle>
             <AlertDialogDescription>
-              対象レコードの記録日: {formatDate(selectedRecord?.dateRecorded ?? '')}
+              対象レコードの記録日: {formatRecordDate(cancelTarget?.dateRecorded ?? '')}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
