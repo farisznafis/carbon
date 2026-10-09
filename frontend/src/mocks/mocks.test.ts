@@ -39,6 +39,7 @@ import { getAdminOperatorProfile, getAdminOperators } from '@/api/admin/operator
 import { getProjectFileDownloadUrl, getProjectFileListing } from '@/api/admin/projectFiles';
 import { getProjectDocumentData } from '@/api/admin/projectDocumentData';
 import { getProjectMembershipPdfs } from '@/api/admin/projectCompanies';
+import { lookupPostalCode } from '@/lib/postalCode';
 import { storage, storageKeys } from '@/lib/storage';
 import { handlers } from './handlers';
 
@@ -88,6 +89,13 @@ describe('mock API covers the user portal', () => {
     expect(await getProjectEmissionSummary('P001')).not.toBeNull();
     expect((await getNotifications()).notifications).not.toHaveLength(0);
     expect(await getUnreadNotificationCount()).toBeGreaterThan(0);
+  });
+});
+
+describe('mock postal code lookup works offline', () => {
+  it('answers known and unlisted codes', async () => {
+    expect(await lookupPostalCode('1000005')).toEqual({ prefecture: '東京都', city: '千代田区', town: '丸の内' });
+    expect((await lookupPostalCode('5559999'))?.prefecture).toBe('大阪府');
   });
 });
 

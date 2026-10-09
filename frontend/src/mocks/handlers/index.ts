@@ -4,6 +4,7 @@ import { adminHandlers } from './admin';
 import { authHandlers } from './auth';
 import { fileHandlers } from './files';
 import { monitoringHandlers } from './monitoring';
+import { postalCodeHandlers } from './postalCode';
 import { projectHandlers } from './projects';
 import { siteHandlers } from './sites';
 
@@ -14,6 +15,7 @@ export const handlers = [
   ...monitoringHandlers,
   ...adminHandlers,
   ...fileHandlers,
+  ...postalCodeHandlers,
 
   // Anything not mocked yet still succeeds, so a new endpoint never breaks the demo.
   http.all('/api/*', ({ request }) => {
