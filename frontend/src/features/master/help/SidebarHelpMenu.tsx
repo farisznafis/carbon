@@ -96,25 +96,17 @@ export function SidebarHelpMenu({
           sideOffset={12}
           className='w-56 p-1.5'
         >
-          {/* Kept visible when unavailable so it does not seem to vanish between pages. */}
-          <Button
-            type='button'
-            variant='ghost'
-            onClick={handleOpenGuide}
-            disabled={!guideContext}
-            aria-describedby={guideContext ? undefined : 'guide-unavailable-note'}
-            className='h-auto min-h-9 w-full items-start justify-start rounded-md px-3 py-2 text-left'
-          >
-            <BookOpen className='mt-0.5 h-4 w-4 shrink-0 text-muted-foreground' aria-hidden='true' />
-            <span className='flex flex-col'>
+          {guideContext && (
+            <Button
+              type='button'
+              variant='ghost'
+              onClick={handleOpenGuide}
+              className='h-9 w-full justify-start rounded-md px-3'
+            >
+              <BookOpen className='h-4 w-4 shrink-0 text-muted-foreground' aria-hidden='true' />
               使い方ガイド
-              {!guideContext && (
-                <span id='guide-unavailable-note' className='text-xs font-normal text-muted-foreground'>
-                  このページにはガイドがありません
-                </span>
-              )}
-            </span>
-          </Button>
+            </Button>
+          )}
 
           <Button
             type='button'
