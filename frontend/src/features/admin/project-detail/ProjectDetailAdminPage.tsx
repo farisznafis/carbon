@@ -18,7 +18,6 @@ import type { MonitoringRecordListItem } from '@/api/monitoring';
 import { ActionButton } from '@/components/actions';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 import { PageSkeleton, SkeletonCard } from '@/components/feedback/loading';
-import { dashboardEmptyStateClassName } from '@/components/layout/DashboardLayout';
 import {
   PageTabsList,
   PageTabsTrigger,
@@ -50,6 +49,7 @@ import { resolveAdminProjectNavigationState } from '@/features/admin/navigation/
 import { useAdminProjectDetailQuery } from '@/hooks/admin/useAdminProjectDetailQuery';
 import { paths } from '@/routes/paths';
 import { AdminProjectDetailLayout } from './AdminProjectDetailLayout';
+import { ProjectCompaniesPanel } from './components/ProjectCompaniesPanel';
 import { ProjectEmissionTrendCard } from './components/ProjectEmissionTrendCard';
 import { formatProjectDetailValue } from './projectDetailDisplay';
 
@@ -491,10 +491,11 @@ export default function ProjectDetailAdmin() {
             title="参加企業一覧"
             description="このプロジェクトに参加している企業を確認します。"
           >
-            {/* TODO: render the participating companies once their API is available. */}
-            <div className={dashboardEmptyStateClassName}>
-              参加企業の一覧は準備中です。
-            </div>
+            {!permissions.hasPermission('PROJECT_READ') ? (
+              <PermissionDeniedNotice permission="PROJECT_READ" />
+            ) : (
+              <ProjectCompaniesPanel projectId={projectId} />
+            )}
           </ProjectDetailTabCard>
         </TabsContent>
 

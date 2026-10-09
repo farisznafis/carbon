@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import * as AccordionPrimitive from '@radix-ui/react-accordion';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, ChevronRight, Download, Eye, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getProjectMembershipPdfs, type ProjectMembershipPdf } from '@/api/admin/projectCompanies';
@@ -10,6 +10,11 @@ import { AccordionContent, AccordionItem } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  PROJECT_COMPANIES_STALE_MS,
+  projectCompaniesQueryKey,
+  useProjectCompaniesQuery,
+} from '@/hooks/admin/useProjectCompaniesQuery';
 import { toast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
 import { downloadFromUrl } from '@/utils/download';
@@ -20,12 +25,6 @@ import { RowIconButton, sectionRowGridClassName } from './ProjectFileRow';
 export const MEMBERSHIP_SECTION_VALUE = 'MEMBERSHIP';
 
 const LABEL = '入会届';
-
-/** The list carries presigned URLs that live 15 minutes; refetch before they lapse. */
-const MEMBERSHIP_PDF_STALE_MS = 10 * 60 * 1000;
-
-const membershipPdfsQueryKey = (projectId: string) =>
-  ['admin', 'projects', projectId, 'membership-pdfs'] as const;
 
 /** Stands in for the add button the versioned rows carry, so every row's columns line up. */
 const actionSpacer = <span aria-hidden="true" className="w-8 shrink-0" />;
@@ -53,20 +52,14 @@ export function ProjectMembershipPdfSection({ projectId }: Readonly<{ projectId:
   const queryClient = useQueryClient();
   const [previewCompany, setPreviewCompany] = useState<ProjectMembershipPdf | null>(null);
 
-  const query = useQuery({
-    queryKey: membershipPdfsQueryKey(projectId),
-    queryFn: () => getProjectMembershipPdfs(projectId),
-    enabled: Boolean(projectId),
-    staleTime: MEMBERSHIP_PDF_STALE_MS,
-    retry: false,
-  });
+  const query = useProjectCompaniesQuery(projectId);
 
   /** A URL still within its lifetime: the cached list's, or a fresh list's. */
   const resolveUrl = async (participationId: number) => {
     const companies = await queryClient.fetchQuery({
-      queryKey: membershipPdfsQueryKey(projectId),
+      queryKey: projectCompaniesQueryKey(projectId),
       queryFn: () => getProjectMembershipPdfs(projectId),
-      staleTime: MEMBERSHIP_PDF_STALE_MS,
+      staleTime: PROJECT_COMPANIES_STALE_MS,
     });
     const url = companies.find((company) => company.participationId === participationId)?.pdfUrl;
     if (!url) throw new Error('PDFが見つかりませんでした。');
