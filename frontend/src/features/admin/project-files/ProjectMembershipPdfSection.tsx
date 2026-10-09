@@ -135,7 +135,9 @@ export function ProjectMembershipPdfSection({ projectId }: Readonly<{ projectId:
               <span className="flex items-center gap-2 text-small text-muted-foreground sm:contents">
                 {/* 社, not 件: one PDF per company, so the count is of companies. */}
                 <StatusBadge className="w-fit tabular-nums">{companies.length}社</StatusBadge>
-                <span>参加企業ごと・閲覧のみ</span>
+                <span className="whitespace-nowrap">
+                  参加企業ごと・閲覧のみ
+                </span>
               </span>
             </span>
           </AccordionPrimitive.Trigger>

@@ -166,7 +166,7 @@ const listedFiles = dataGroups
         >
           アップロード済みファイル
         </h3>
-        <span className="text-base text-secondary-foreground tabular-nums">
+        <span className="text-sm text-secondary-foreground tabular-nums">
           {fileCount}件
         </span>
       </div>
