@@ -15,7 +15,6 @@ import {
   PageSkeleton,
   SkeletonCard,
 } from '@/components/feedback/loading';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
 import {
   dashboardPageContainerClassName,
   dashboardPageHeaderClassName,
@@ -31,6 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { storage, storageKeys } from '@/lib/storage';
@@ -749,6 +749,16 @@ const Dashboard = () => {
     `${site?.picLastName ?? ''} ${site?.picFirstName ?? ''}`.trim() || '-';
   const address = site?.address || '-';
 
+  // A master opens a site from the dashboard's 拠点 tab; a site user lands here as home.
+  usePageBreadcrumb(
+    user?.role === 'master'
+      ? [
+          { label: '拠点', to: `${paths.masterDashboard}?tab=sites` },
+          { label: site?.siteName || '拠点ダッシュボード' },
+        ]
+      : [],
+  );
+
   if (isRefreshingUserSite) {
     return <PageSkeleton />;
   }
@@ -769,14 +779,6 @@ const Dashboard = () => {
 
   return (
     <div className='relative min-h-screen bg-background'>
-      {user?.role === 'master' && (
-        <PageBackButton
-          onClick={() => navigate('/master/dashboard?tab=sites')}
-          label=''
-          className='absolute left-4 top-10 z-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
-        />
-      )}
-
       <header className='relative border-b border-border bg-background'>
         <div
           className={cn(
@@ -785,9 +787,6 @@ const Dashboard = () => {
           )}
         >
           <div className='min-w-0'>
-            {/* <span className='text-small pl-[60px] text-muted-foreground'>
-              拠点ダッシュボード
-            </span> */}
             <div className='mt-1 flex min-w-0 items-center gap-3'>
               <span className='flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-primary'>
                 <Factory className='h-6 w-6' />
@@ -796,7 +795,7 @@ const Dashboard = () => {
                 <InlineLoader label='拠点情報を読み込んでいます' />
               ) : (
                 <h1 className='min-w-0 break-words text-metric leading-[1.111] text-foreground'>
-                  {site?.siteName || '株式会社ABC'}
+                  {site?.siteName || '拠点名未設定'}
                 </h1>
               )}
             </div>

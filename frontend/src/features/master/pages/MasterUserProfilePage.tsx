@@ -1,5 +1,5 @@
-﻿import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   getUserProfileById,
   type ProfileCompanyViewModel,
@@ -10,23 +10,12 @@ import {
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import {
-  PageBackButton,
-  floatingPageBackButtonClassName,
-} from '@/components/navigation/PageBackButton';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
 import { formatPersonName } from '@/features/master/components/masterDashboardUtils';
 import { ProfileInfoCards } from '@/features/user/profile/ProfileInfoCards';
 import { handleError } from '@/lib/errors';
 import { paths } from '@/routes/paths';
 import { ActionButton } from '@/components/actions';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 
 /** Converts a profile display value into a value that is safe for an editable input. */
 function getEditableProfileValue(value?: string): string {
@@ -89,8 +78,10 @@ export default function MasterUserProfilePage() {
     };
   }, [userId]);
 
-  /** Returns to the employee list on the master dashboard. */
-  const handleBack = () => navigate(paths.masterDashboard);
+  usePageBreadcrumb([
+    { label: '社員', to: `${paths.masterDashboard}?tab=users` },
+    { label: accountName || 'プロファイル' },
+  ]);
 
   /** Opens the shared employee edit flow from the profile being displayed. */
   const handleEdit = () => {
@@ -127,30 +118,7 @@ export default function MasterUserProfilePage() {
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={handleBack}
-        label=""
-        aria-label="ダッシュボードに戻る"
-        className={floatingPageBackButtonClassName}
-      />
-
       <FormPageContent>
-        <Breadcrumb>
-          <BreadcrumbList className="flex-nowrap">
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={paths.masterDashboard}>ダッシュボード</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem className="min-w-0">
-              <BreadcrumbPage className="block max-w-48 truncate">
-                {accountName}
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <FormPageTitle as="h2">プロファイル</FormPageTitle>

@@ -11,8 +11,8 @@ import {
   FormStandalonePage,
 } from '@/components/forms/form-layout';
 import { ConfirmationItem } from '@/components/feedback/Confirmation/ConfirmationItem';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import {
   addSiteProjectEquipment,
   uploadSiteProjectEquipmentFile,
@@ -172,6 +172,11 @@ export default function EquipmentConfirmationPage() {
     }
   };
 
+  usePageBreadcrumb([
+    { label: confirmationState?.isEdit ? '設備編集' : '設備登録', onClick: navigateBack },
+    { label: '確認' },
+  ]);
+
   if (!data) {
     return (
       <FormStandalonePage>
@@ -190,12 +195,6 @@ export default function EquipmentConfirmationPage() {
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={navigateBack}
-        label=""
-        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
-      />
-
       <FormPageContent>
         <div className="space-y-3">
           <FormPageTitle>設備登録の確認</FormPageTitle>

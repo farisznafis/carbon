@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import type { Site } from '@/api/site';
 import type { UserList } from '@/api/users';
 import { deleteUser, updateUser, validateUpdateUser } from '@/api/users/mutations';
@@ -9,18 +9,8 @@ import {
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import {
-  PageBackButton,
-  floatingPageBackButtonClassName,
-} from '@/components/navigation/PageBackButton';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import { PageLoadingOverlay } from '@/components/feedback/loading';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { formatPersonName } from '@/features/master/components/masterDashboardUtils';
 import { UserForm, UserFormData } from '@/features/master/forms/UserForm';
 import UserConfirmation from '@/features/master/pages/UserConfirmation';
@@ -107,6 +97,14 @@ export default function UserEdit() {
     mode === 'profile' ? getHomePath(initialUser) : paths.masterDashboard;
   const profilePath =
     mode === 'profile' || !id ? paths.profile : paths.masterUserProfile(id);
+
+  usePageBreadcrumb([
+    mode === 'profile'
+      ? { label: 'ダッシュボード', to: dashboardPath }
+      : { label: '社員', to: `${paths.masterDashboard}?tab=users` },
+    { label: accountName || 'プロファイル', to: profilePath },
+    { label: '編集' },
+  ]);
 
   useEffect(() => {
     if (sitesQuery.data?.sites) {
@@ -246,7 +244,7 @@ export default function UserEdit() {
   };
 
   if (!id || !initialUser) {
-    return <div>読み込み中...</div>;
+    return <PageLoadingOverlay message="社員情報を読み込んでいます" />;
   }
 
   if (step === 'confirm') {
@@ -265,36 +263,7 @@ export default function UserEdit() {
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={handleFormBack}
-        label=""
-        aria-label={mode === 'profile' ? 'プロファイルに戻る' : '社員管理に戻る'}
-        className={floatingPageBackButtonClassName}
-      />
-
       <FormPageContent>
-        <Breadcrumb>
-          <BreadcrumbList className="flex-nowrap">
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={dashboardPath}>ダッシュボード</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem className="min-w-0">
-              <BreadcrumbLink asChild>
-                <Link className="block max-w-48 truncate" to={profilePath}>
-                  {accountName}
-                </Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>更新</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-
         <div>
           <FormPageTitle as="h2">
             {mode === 'profile' ? 'プロファイルの編集' : '社員情報の編集'}

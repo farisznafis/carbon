@@ -1,15 +1,10 @@
-﻿import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   getProjectDetails,
   type ProjectDetail as ProjectDetailApi,
 } from '@/api/projects';
 import { getSiteProjectEquipment, type SiteProjectEquipment } from '@/api/site';
-import {
-  useLocation,
-  useParams,
-  useNavigate,
-  useSearchParams,
-} from 'react-router-dom';
+import { useLocation, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -44,10 +39,6 @@ import {
 } from '@/api/batch';
 import { logger } from '@/lib/logger';
 import {
-  PageBackButton,
-  // floatingPageBackButtonClassName,
-} from '@/components/navigation/PageBackButton';
-import {
   PageSkeleton,
   SkeletonCard,
   SkeletonChart,
@@ -68,6 +59,7 @@ import { paths } from '@/routes/paths';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { EmissionReductionProgressCard } from './components/EmissionReductionProgressCard';
 import { PageTabsList, PageTabsTrigger } from '@/components/navigation/PageTabs';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 
 function formatNumber(n: number | null | undefined) {
   if (n == null || Number.isNaN(n)) return '-';
@@ -610,6 +602,14 @@ const ProjectDetail = () => {
         }))
       : [fallbackMonitoringRow];
 
+  usePageBreadcrumb([
+    {
+      label: siteName !== '-' ? siteName : '拠点ダッシュボード',
+      to: siteId ? paths.siteDashboard(siteId) : paths.masterDashboard,
+    },
+    { label: project?.name || 'プロジェクト詳細' },
+  ]);
+
   if (loading) {
     return (
       <PageSkeleton className='py-8'>
@@ -691,16 +691,6 @@ const ProjectDetail = () => {
       .join(' / ') || '-';
   return (
     <div className='relative min-h-screen bg-background py-6 sm:py-8'>
-      <PageBackButton
-        onClick={() => {
-          if (siteId) {
-            navigate(`/sites/${siteId}/dashboard`);
-          } else {
-            navigate(-1);
-          }
-        }}
-        placement='floating'
-      />
       <div className={dashboardPageContainerClassName}>
         <div className='space-y-6'>
           {/* =========================

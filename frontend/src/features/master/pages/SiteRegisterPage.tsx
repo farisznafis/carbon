@@ -7,13 +7,13 @@ import { registerSite, validateCreateSite, type Site } from '@/api/site';
 import { SiteForm, SiteFormData } from '@/features/master/forms/SiteForm';
 import { SiteConfirmation } from './SiteConfirmation';
 import { logger } from '@/lib/logger';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { useUsersQuery } from '@/hooks/users/useUsersQuery';
 import {
   FormPageContent,
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import {
   getSiteRegistrationReturnTarget,
 } from '@/features/master/navigation/siteRegistrationFlow';
@@ -156,6 +156,13 @@ function SiteRegister() {
     navigate(-1);
   };
 
+  usePageBreadcrumb([
+    registrationReturnTarget
+      ? { label: 'プロジェクト参加申請', onClick: handlePageBack }
+      : { label: '拠点', to: `${paths.masterDashboard}?tab=sites` },
+    { label: '拠点追加' },
+  ]);
+
   if (step === 'confirm') {
     return (
       <SiteConfirmation
@@ -170,12 +177,6 @@ function SiteRegister() {
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={handlePageBack}
-        label=''
-        className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
-      />
-
       <FormPageContent>
         <FormPageTitle>拠点追加</FormPageTitle>
 

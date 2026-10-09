@@ -10,7 +10,6 @@ import {
   FormStandalonePage,
 } from '@/components/forms/form-layout';
 import { ConfirmationItem } from '@/components/feedback/Confirmation/ConfirmationItem';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
 import { UserFormData } from '@/features/master/forms/UserForm';
 import { useDashboardStore } from '@/stores/dashboardStore';
@@ -67,12 +66,6 @@ export function UserConfirmation({
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={onBack}
-        label=""
-        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
-      />
-
       <FormPageContent>
         <div className="space-y-3">
           <FormPageTitle>

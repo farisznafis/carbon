@@ -22,6 +22,8 @@ import {
   type SiteProjectEquipment,
 } from '@/api/site';
 import { logger } from '@/lib/logger';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
+import { paths } from '@/routes/paths';
 import { buildMonitoringPayload } from './monitoringPayload';
 import type { FileUploadProgressItem } from '@/components/feedback/loading';
 
@@ -164,6 +166,14 @@ const MonitoringRegister = () => {
       isActive = false;
     };
   }, [equipmentReloadKey, equipmentSiteId, projectType]);
+
+  const routeProjectId = routeState.projectId ? String(routeState.projectId) : '';
+  usePageBreadcrumb([
+    equipmentSiteId && routeProjectId
+      ? { label: 'プロジェクト詳細', to: paths.siteProjectDetail(equipmentSiteId, routeProjectId) }
+      : { label: '戻る', onClick: () => navigate(-1) },
+    { label: 'モニタリング登録' },
+  ]);
 
   if (!definition || !projectType) {
     return (

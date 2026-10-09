@@ -43,7 +43,6 @@ const SiteRegister = lazy(() => import("./features/master/pages/SiteRegisterPage
 const SiteEdit = lazy(() => import("./features/master/pages/SiteEditPage"));
 const UserEdit = lazy(() => import("./features/master/pages/UserEditPage"));
 const MasterUserProfile = lazy(() => import("./features/master/pages/MasterUserProfilePage"));
-const SiteDetail = lazy(() => import("./features/user/sites/SiteDetailPage"));
 const ProjectMembership = lazy(() => import("./features/user/project-registration/ProjectMembershipPage"));
 const ProjectRegister = lazy(() => import("./features/user/project-registration/ProjectRegisterPage"));
 const EquipmentForm = lazy(() => import("./features/user/project-registration/EquipmentFormPage"));
@@ -279,7 +278,7 @@ const App = () => {
               path={paths.monitoringRegisterRoute}
               element={<MonitoringRegister />}
             />
-            <Route path={paths.siteDetailRoute} element={<SiteDetail />} />
+            <Route path={paths.siteDetailRoute} element={<LegacyDashboardRedirect />} />
             <Route path={paths.profile} element={<Profile />} />
           </Route>
 

@@ -16,7 +16,6 @@ import {
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Form } from '@/components/ui/form';
 import { SolarPowerEquipmentForm } from '@/features/user/project-registration/components/equipment-forms/SolarPowerEquipmentForm';
 import { mapEquipmentValidationFieldErrors } from '@/features/user/project-registration/solarEquipmentFormModel';
@@ -36,6 +35,7 @@ import {
   mergeEquipmentFilesForChange,
 } from './equipmentEditMapper';
 import { ActionButton } from '@/components/actions';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 
 type EquipmentEditStep = 'form' | 'confirmation';
 
@@ -262,6 +262,11 @@ export default function EquipmentEditPage() {
     }
   };
 
+  usePageBreadcrumb([
+    { label: 'プロジェクト詳細', to: returnPath },
+    { label: '設備変更' },
+  ]);
+
   if (isLoading) {
     return (
       <FormStandalonePage>
@@ -277,11 +282,6 @@ export default function EquipmentEditPage() {
   if (loadError || !originalValues) {
     return (
       <FormStandalonePage>
-        <PageBackButton
-          onClick={navigateBack}
-          label=""
-          className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
-        />
         <FormPageContent>
           <FormPageTitle>設備変更</FormPageTitle>
           <FormCard className="space-y-5 text-center">
@@ -314,12 +314,6 @@ export default function EquipmentEditPage() {
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={navigateBack}
-        label=""
-        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
-      />
-
       <FormPageContent className="animate-slide-up">
         <div className="space-y-3">
           <FormPageTitle>設備変更</FormPageTitle>

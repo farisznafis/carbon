@@ -1,4 +1,4 @@
-﻿import { useEffect } from 'react';
+import { useEffect } from 'react';
 import type { ComponentProps } from 'react';
 import { useForm, type FieldPath } from 'react-hook-form';
 import { z } from 'zod';
@@ -15,7 +15,6 @@ import {
   FormStandalonePage,
 } from '@/components/forms/form-layout';
 import { RequiredLabel } from '@/components/forms/shared';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
 import {
   Form,
   FormControl,
@@ -220,12 +219,6 @@ export function MonitoringSolarForm({
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={onBack}
-        label=""
-        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
-      />
-
       <FormPageContent>
         <FormPageTitle>モニタリング登録</FormPageTitle>
 
@@ -554,8 +547,6 @@ export function MonitoringSolarForm({
                       </FormItem>
                     )}
                   />
-
-
 
                   <FormField
                     control={form.control}

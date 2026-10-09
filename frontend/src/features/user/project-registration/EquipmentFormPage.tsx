@@ -1,10 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import {
-  useLocation,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ApiError } from '@/api/_shared/errors';
 import { validateSiteProjectEquipment } from '@/api/site';
@@ -15,9 +10,9 @@ import {
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { SolarPowerEquipmentForm } from '@/features/user/project-registration/components/equipment-forms/SolarPowerEquipmentForm';
 import type {
   Equipment,
@@ -350,14 +345,20 @@ export default function EquipmentFormPage() {
   const equipmentTypeLabel =
     formType === 'solar' ? '太陽光発電設備' : 'その他設備';
 
+  usePageBreadcrumb([
+    {
+      label: returnPath
+        ? 'プロジェクト参加申請'
+        : enteredFromMasterDashboard
+          ? 'プロジェクトの入会届'
+          : 'プロジェクトへの入会',
+      onClick: handleCancel,
+    },
+    { label: pageTitle },
+  ]);
+
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={handleCancel}
-        label=""
-        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
-      />
-
       <FormPageContent>
         <FormPageTitle>{pageTitle}</FormPageTitle>
         <p className="text-sm text-foreground">

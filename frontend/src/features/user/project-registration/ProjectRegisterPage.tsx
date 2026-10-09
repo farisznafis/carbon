@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePageBreadcrumb } from "@/components/navigation/pageBreadcrumbContext";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDashboardStore } from "@/stores/dashboardStore";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,10 +36,6 @@ import {
   EquipmentRegistrationStep,
   type EquipmentRegistrationStepRef,
 } from "@/features/user/project-registration/components/EquipmentRegistrationStep";
-import {
-  floatingPageBackButtonClassName,
-  PageBackButton,
-} from "@/components/navigation/PageBackButton";
 import type {
   Equipment,
   SolarEquipment,
@@ -959,6 +956,14 @@ const ProjectRegister = () => {
   };
 
   // ── Loading / error states ─────────────────────────────────────────────────
+  usePageBreadcrumb([
+    {
+      label: enteredFromMasterDashboard ? "プロジェクトの入会届" : "プロジェクトへの入会",
+      onClick: navigateToMembership,
+    },
+    { label: selectedProject?.projectName || "プロジェクト参加申請" },
+  ]);
+
   if (isProjectLoading) {
     return (
       <PageSkeleton label="プロジェクト情報を読み込んでいます" />
@@ -1003,15 +1008,6 @@ const ProjectRegister = () => {
   return (
     <FormPageShell className="relative">
       <div className="space-y-8">
-        {!isCompletionStep && (
-          <PageBackButton
-            onClick={handleBack}
-            label=""
-            aria-label={currentStep === EQUIPMENT_STEP ? "入会届に戻る" : "前へ"}
-            className={floatingPageBackButtonClassName}
-          />
-        )}
-
         <FormPageHeader
           icon={<FileSignature className="h-6 w-6" />}
           title="プロジェクト参加申請"

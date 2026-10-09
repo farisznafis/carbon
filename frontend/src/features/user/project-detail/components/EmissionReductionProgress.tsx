@@ -113,20 +113,22 @@ export function EmissionReductionProgress({
             <div className='px-2'>
               <dt className='text-subtle text-foreground'>達成</dt>
               <dd className='mt-1 font-bold tabular-nums text-foreground'>
-                {emissionNumberFormatter.format(metrics.reductionAmount)} tCO₂
+                {emissionNumberFormatter.format(metrics.reductionAmount)}
+                <span className='block font-normal sm:inline sm:pl-1'>tCO₂</span>
               </dd>
             </div>
             <div className='px-2'>
               <dt className='text-subtle text-foreground'>目標</dt>
               <dd className='mt-1 font-bold tabular-nums text-foreground'>
-                {emissionNumberFormatter.format(targetReduction)} tCO₂
+                {emissionNumberFormatter.format(targetReduction)}
+                <span className='block font-normal sm:inline sm:pl-1'>tCO₂</span>
               </dd>
             </div>
             <div className='px-2'>
               <dt className='text-subtle text-foreground'>残り</dt>
               <dd className='mt-1 font-bold tabular-nums text-foreground'>
-                {emissionNumberFormatter.format(metrics.remainingReduction)}{' '}
-                tCO₂
+                {emissionNumberFormatter.format(metrics.remainingReduction)}
+                <span className='block font-normal sm:inline sm:pl-1'>tCO₂</span>
               </dd>
             </div>
           </dl>

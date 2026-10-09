@@ -10,12 +10,13 @@ import { logger } from '@/lib/logger';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useUsersQuery } from '@/hooks/users/useUsersQuery';
 import { PageSkeleton } from '@/components/feedback/loading';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
 import {
   FormPageContent,
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
+import { paths } from '@/routes/paths';
 
 const resolveSiteAssigneeId = (site: Site, users: UserList[] = []) => {
   if (site.picId) return site.picId;
@@ -113,6 +114,14 @@ function SiteEdit() {
       ),
     [users, siteId, formData?.userId],
   );
+
+  usePageBreadcrumb([
+    { label: '拠点', to: `${paths.masterDashboard}?tab=sites` },
+    ...(siteId
+      ? [{ label: initialSite?.siteName || '拠点ダッシュボード', to: paths.siteDashboard(siteId) }]
+      : []),
+    { label: '編集' },
+  ]);
 
   if (!siteId) {
     return <PageSkeleton />;
@@ -241,12 +250,6 @@ function SiteEdit() {
     <>
       {step === 'form' && (
         <FormStandalonePage>
-          <PageBackButton
-            onClick={() => navigate(-1)}
-            label=''
-            className='absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
-          />
-
           <FormPageContent>
             <FormPageTitle>拠点編集</FormPageTitle>
 

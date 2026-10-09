@@ -1,4 +1,4 @@
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { ApiError } from '@/api/_shared/errors';
@@ -14,18 +14,6 @@ import {
   FormStandalonePage,
 } from '@/components/forms/form-layout';
 import {
-  PageBackButton,
-  floatingPageBackButtonClassName,
-} from '@/components/navigation/PageBackButton';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
-import {
   Form,
   FormControl,
   FormDescription,
@@ -34,6 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
@@ -78,6 +67,13 @@ const PasswordChange = () => {
   const profileBreadcrumbLabel = isManagedUserPasswordChange
     ? '社員プロファイル'
     : 'プロファイル';
+  usePageBreadcrumb([
+    isManagedUserPasswordChange
+      ? { label: '社員', to: `${paths.masterDashboard}?tab=users` }
+      : { label: 'ダッシュボード', to: homePath },
+    { label: profileBreadcrumbLabel, to: backPath },
+    { label: 'パスワード変更' },
+  ]);
   const pageDescription = isManagedUserPasswordChange
     ? '社員アカウントのパスワードを変更します。'
     : '安全のため、現在のパスワードを確認して新しいパスワードを設定します。';
@@ -150,36 +146,7 @@ const PasswordChange = () => {
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={() => navigate(backPath)}
-        label=""
-        aria-label={`${profileBreadcrumbLabel}に戻る`}
-        className={floatingPageBackButtonClassName}
-      />
-
       <FormPageContent>
-        <Breadcrumb>
-          <BreadcrumbList className="flex-nowrap">
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={homePath}>ダッシュボード</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={backPath}>{profileBreadcrumbLabel}</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem className="min-w-0">
-              <BreadcrumbPage className="block truncate">
-                パスワード変更
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-
         <header>
           <FormPageTitle as="h2">パスワード変更</FormPageTitle>
           <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">

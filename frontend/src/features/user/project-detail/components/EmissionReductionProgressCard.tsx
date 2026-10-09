@@ -78,22 +78,25 @@ export function EmissionReductionProgressCard({
         <div className='mt-8 grid grid-cols-3 gap-4 border-t border-border pt-6'>
           <div className='text-center'>
             <p className='text-small text-foreground'>達成</p>
-            <p className='mt-2 text-large font-bold text-foreground'>
-              {formatNumber(metrics?.reductionAmount ?? null)} tCO₂
+            <p className='mt-2 text-large font-bold tabular-nums text-foreground'>
+              {formatNumber(metrics?.reductionAmount ?? null)}
+              <span className='block text-small font-normal sm:inline sm:pl-1'>tCO₂</span>
             </p>
           </div>
 
           <div className='text-center'>
             <p className='text-small text-foreground'>目標</p>
-            <p className='mt-2 text-large font-bold text-foreground'>
-              {formatNumber(targetReduction)} tCO₂
+            <p className='mt-2 text-large font-bold tabular-nums text-foreground'>
+              {formatNumber(targetReduction)}
+              <span className='block text-small font-normal sm:inline sm:pl-1'>tCO₂</span>
             </p>
           </div>
 
           <div className='text-center'>
             <p className='text-small text-foreground'>残り</p>
-            <p className='mt-2 text-large font-bold text-foreground'>
-              {formatNumber(metrics?.remainingReduction ?? null)} tCO₂
+            <p className='mt-2 text-large font-bold tabular-nums text-foreground'>
+              {formatNumber(metrics?.remainingReduction ?? null)}
+              <span className='block text-small font-normal sm:inline sm:pl-1'>tCO₂</span>
             </p>
           </div>
         </div>

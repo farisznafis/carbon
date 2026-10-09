@@ -23,8 +23,8 @@ export const paths = {
   siteDashboardRoute: '/sites/:siteId/dashboard',
   userDashboard: '/dashboard',
   siteDashboard: (siteId: string) => `/sites/${siteId}/dashboard`,
+  /** Legacy site detail URL; it now redirects to the site dashboard. */
   siteDetailRoute: '/sites/:siteId',
-  siteDetail: (siteId: string) => `/sites/${siteId}`,
 
   legacyDashboardRoute: '/dashboard/:siteId',
   legacyProjectRoute: '/project/:id',

@@ -7,11 +7,7 @@ import {
 } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
-import {
-  useLocation,
-  useNavigate,
-  useParams,
-} from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   getSiteData,
   getSiteProjects,
@@ -24,10 +20,6 @@ import {
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import {
-  PageBackButton,
-  floatingPageBackButtonClassName,
-} from '@/components/navigation/PageBackButton';
 import { Card, CardContent } from '@/components/ui/card';
 import { MembershipPreparationDialog } from '@/features/user/project-registration/components/MembershipPreparationDialog';
 import { MembershipStatusFilter } from '@/features/user/project-registration/components/MembershipStatusFilter';
@@ -48,6 +40,7 @@ import { useDashboardStore } from '@/stores/dashboardStore';
 import { downloadFromUrl } from '@/utils/download';
 import { useToast } from '@/hooks/use-toast';
 import { ActionButton } from '@/components/actions';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 
 gsap.registerPlugin(useGSAP);
 
@@ -524,16 +517,7 @@ export function ProjectMembershipContent({
 
   return (
     <FormStandalonePage className="overflow-visible">
-      <PageBackButton
-        onClick={handleBack}
-        label=""
-        aria-label="前の画面へ戻る"
-        className={
-          floatingPageBackButtonClassName
-        }
-      />
-
-      <FormPageContent className="max-w-[1200px] space-y-10 pt-16 sm:pt-0">
+      <FormPageContent className="max-w-[1200px] space-y-10">
         {content}
       </FormPageContent>
     </FormStandalonePage>
@@ -549,6 +533,15 @@ export default function ProjectMembershipPage() {
     useParams<{
       siteId: string;
     }>();
+  const location = useLocation();
+
+  // The embedded variant lives inside the master dashboard, which has no trail of its own.
+  usePageBreadcrumb([
+    isFromMasterDashboard(location.state)
+      ? { label: 'プロジェクトの入会届', to: paths.masterDashboardMembership }
+      : { label: '拠点ダッシュボード', to: paths.siteDashboard(siteId) },
+    { label: 'プロジェクトへの入会' },
+  ]);
 
   return (
     <ProjectMembershipContent
