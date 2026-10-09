@@ -15,7 +15,7 @@ import {
   PageSkeleton,
   SkeletonCard,
 } from '@/components/feedback/loading';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import {
   dashboardPageContainerClassName,
   dashboardPageHeaderClassName,
@@ -749,6 +749,16 @@ const Dashboard = () => {
     `${site?.picLastName ?? ''} ${site?.picFirstName ?? ''}`.trim() || '-';
   const address = site?.address || '-';
 
+  // Users land here as their home; masters drill in from the 拠点 tab.
+  usePageBreadcrumb(
+    user?.role === 'master'
+      ? [
+          { label: '拠点', to: `${paths.masterDashboard}?tab=sites` },
+          { label: site?.siteName || '拠点ダッシュボード' },
+        ]
+      : [],
+  );
+
   if (isRefreshingUserSite) {
     return <PageSkeleton />;
   }
@@ -769,14 +779,6 @@ const Dashboard = () => {
 
   return (
     <div className='relative min-h-screen bg-background'>
-      {user?.role === 'master' && (
-        <PageBackButton
-          onClick={() => navigate('/master/dashboard?tab=sites')}
-          label=''
-          className='absolute left-4 top-10 z-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16'
-        />
-      )}
-
       <header className='relative border-b border-border bg-background'>
         <div
           className={cn(

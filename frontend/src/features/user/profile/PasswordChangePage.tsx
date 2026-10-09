@@ -1,4 +1,4 @@
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { ApiError } from '@/api/_shared/errors';
@@ -13,18 +13,7 @@ import {
   FormSectionStack,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import {
-  PageBackButton,
-  floatingPageBackButtonClassName,
-} from '@/components/navigation/PageBackButton';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import {
   Form,
   FormControl,
@@ -37,7 +26,6 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
-import { getHomePath } from '@/utils/getHomePath';
 
 const passwordSchema = z
   .object({
@@ -74,13 +62,20 @@ const PasswordChange = () => {
     isManagedUserPasswordChange && requestedUserId
       ? paths.masterUserProfile(requestedUserId)
       : paths.profile;
-  const homePath = getHomePath(user);
   const profileBreadcrumbLabel = isManagedUserPasswordChange
     ? '社員プロファイル'
     : 'プロファイル';
   const pageDescription = isManagedUserPasswordChange
     ? '社員アカウントのパスワードを変更します。'
     : '安全のため、現在のパスワードを確認して新しいパスワードを設定します。';
+
+  usePageBreadcrumb([
+    ...(isManagedUserPasswordChange
+      ? [{ label: '社員', to: `${paths.masterDashboard}?tab=users` }]
+      : []),
+    { label: profileBreadcrumbLabel, to: backPath },
+    { label: 'パスワード変更' },
+  ]);
 
   const passwordForm = useForm<PasswordData>({
     // resolver: zodResolver(passwordSchema),
@@ -150,36 +145,7 @@ const PasswordChange = () => {
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={() => navigate(backPath)}
-        label=""
-        aria-label={`${profileBreadcrumbLabel}に戻る`}
-        className={floatingPageBackButtonClassName}
-      />
-
       <FormPageContent>
-        <Breadcrumb>
-          <BreadcrumbList className="flex-nowrap">
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={homePath}>ダッシュボード</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={backPath}>{profileBreadcrumbLabel}</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem className="min-w-0">
-              <BreadcrumbPage className="block truncate">
-                パスワード変更
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-
         <header>
           <FormPageTitle as="h2">パスワード変更</FormPageTitle>
           <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">

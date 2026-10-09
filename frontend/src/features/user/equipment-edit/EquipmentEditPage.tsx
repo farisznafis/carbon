@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '@/api/_shared/errors';
 import {
   getSiteEquipmentById,
@@ -16,7 +16,8 @@ import {
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
+import { useSiteBreadcrumbRoot } from '@/features/user/navigation/useSiteBreadcrumbRoot';
 import { Form } from '@/components/ui/form';
 import { SolarPowerEquipmentForm } from '@/features/user/project-registration/components/equipment-forms/SolarPowerEquipmentForm';
 import { mapEquipmentValidationFieldErrors } from '@/features/user/project-registration/solarEquipmentFormModel';
@@ -48,8 +49,14 @@ function parseEquipmentId(value: string | undefined) {
     : null;
 }
 
+type EquipmentEditNavigationState = {
+  siteName?: string;
+  projectName?: string;
+};
+
 export default function EquipmentEditPage() {
   const navigate = useNavigate();
+  const navigationState = useLocation().state as EquipmentEditNavigationState | null;
   const { toast } = useToast();
   const {
     siteId = '',
@@ -262,6 +269,16 @@ export default function EquipmentEditPage() {
     }
   };
 
+  const siteBreadcrumbRoot = useSiteBreadcrumbRoot(siteId, navigationState?.siteName);
+  usePageBreadcrumb([
+    ...siteBreadcrumbRoot,
+    { label: navigationState?.projectName || 'プロジェクト詳細', to: returnPath },
+    step === 'confirmation' && confirmedValues
+      ? { label: '設備変更', onClick: () => setStep('form') }
+      : { label: '設備変更' },
+    ...(step === 'confirmation' && confirmedValues ? [{ label: '確認' }] : []),
+  ]);
+
   if (isLoading) {
     return (
       <FormStandalonePage>
@@ -277,11 +294,6 @@ export default function EquipmentEditPage() {
   if (loadError || !originalValues) {
     return (
       <FormStandalonePage>
-        <PageBackButton
-          onClick={navigateBack}
-          label=""
-          className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
-        />
         <FormPageContent>
           <FormPageTitle>設備変更</FormPageTitle>
           <FormCard className="space-y-5 text-center">
@@ -314,12 +326,6 @@ export default function EquipmentEditPage() {
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={navigateBack}
-        label=""
-        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
-      />
-
       <FormPageContent className="animate-slide-up">
         <div className="space-y-3">
           <FormPageTitle>設備変更</FormPageTitle>

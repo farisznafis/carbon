@@ -335,3 +335,6 @@ export const useAuth = () => {
   }
   return context;
 };
+
+/** For decoration that adapts to the role but must not require a provider, e.g. breadcrumbs. */
+export const useOptionalAuth = () => useContext(AuthContext);

@@ -43,10 +43,8 @@ import {
   type ProjectEmissionBreakdown,
 } from '@/api/batch';
 import { logger } from '@/lib/logger';
-import {
-  PageBackButton,
-  // floatingPageBackButtonClassName,
-} from '@/components/navigation/PageBackButton';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
+import { useSiteBreadcrumbRoot } from '@/features/user/navigation/useSiteBreadcrumbRoot';
 import {
   PageSkeleton,
   SkeletonCard,
@@ -610,6 +608,12 @@ const ProjectDetail = () => {
         }))
       : [fallbackMonitoringRow];
 
+  const siteBreadcrumbRoot = useSiteBreadcrumbRoot(siteId, siteName);
+  usePageBreadcrumb([
+    ...siteBreadcrumbRoot,
+    { label: project?.name || 'プロジェクト詳細' },
+  ]);
+
   if (loading) {
     return (
       <PageSkeleton className='py-8'>
@@ -653,7 +657,7 @@ const ProjectDetail = () => {
             <Button
               onClick={() =>
                 navigate('/monitoring/register/solar', {
-                  state: { projectId, siteId },
+                  state: { projectId, siteId, siteName },
                 })
               }
             >
@@ -691,16 +695,6 @@ const ProjectDetail = () => {
       .join(' / ') || '-';
   return (
     <div className='relative min-h-screen bg-background py-6 sm:py-8'>
-      <PageBackButton
-        onClick={() => {
-          if (siteId) {
-            navigate(`/sites/${siteId}/dashboard`);
-          } else {
-            navigate(-1);
-          }
-        }}
-        placement='floating'
-      />
       <div className={dashboardPageContainerClassName}>
         <div className='space-y-6'>
           {/* =========================
@@ -762,6 +756,8 @@ const ProjectDetail = () => {
                         state: {
                           projectId,
                           siteId,
+                          siteName,
+                          projectName: project.name,
                         },
                       })
                     }
@@ -988,6 +984,7 @@ const ProjectDetail = () => {
                         projectId,
                         equipmentId,
                       ),
+                      { state: { siteName, projectName: project.name } },
                     )
                   }
                 />

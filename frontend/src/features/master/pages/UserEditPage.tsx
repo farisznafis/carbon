@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import type { Site } from '@/api/site';
 import type { UserList } from '@/api/users';
 import { deleteUser, updateUser, validateUpdateUser } from '@/api/users/mutations';
@@ -9,18 +9,7 @@ import {
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import {
-  PageBackButton,
-  floatingPageBackButtonClassName,
-} from '@/components/navigation/PageBackButton';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { formatPersonName } from '@/features/master/components/masterDashboardUtils';
 import { UserForm, UserFormData } from '@/features/master/forms/UserForm';
 import UserConfirmation from '@/features/master/pages/UserConfirmation';
@@ -29,7 +18,6 @@ import { useSitesQuery } from '@/hooks/sites/useSitesQuery';
 import { logger } from '@/lib/logger';
 import { paths } from '@/routes/paths';
 import { useDashboardStore } from '@/stores/dashboardStore';
-import { getHomePath } from '@/utils/getHomePath';
 
 type UserEditLocationState = {
   mode?: 'edit' | 'profile';
@@ -103,8 +91,6 @@ export default function UserEdit() {
     formattedUserName === '-'
       ? initialUser?.username || ''
       : formattedUserName;
-  const dashboardPath =
-    mode === 'profile' ? getHomePath(initialUser) : paths.masterDashboard;
   const profilePath =
     mode === 'profile' || !id ? paths.profile : paths.masterUserProfile(id);
 
@@ -245,6 +231,20 @@ export default function UserEdit() {
     navigate(-1);
   };
 
+  const editCrumbLabel = mode === 'profile' ? '編集' : '更新';
+  usePageBreadcrumb([
+    ...(mode === 'profile'
+      ? [{ label: 'プロファイル', to: paths.profile }]
+      : [
+          { label: '社員', to: `${paths.masterDashboard}?tab=users` },
+          { label: accountName || '社員', to: profilePath },
+        ]),
+    step === 'confirm'
+      ? { label: editCrumbLabel, onClick: handleConfirmBack }
+      : { label: editCrumbLabel },
+    ...(step === 'confirm' ? [{ label: '確認' }] : []),
+  ]);
+
   if (!id || !initialUser) {
     return <div>読み込み中...</div>;
   }
@@ -265,36 +265,7 @@ export default function UserEdit() {
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={handleFormBack}
-        label=""
-        aria-label={mode === 'profile' ? 'プロファイルに戻る' : '社員管理に戻る'}
-        className={floatingPageBackButtonClassName}
-      />
-
       <FormPageContent>
-        <Breadcrumb>
-          <BreadcrumbList className="flex-nowrap">
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={dashboardPath}>ダッシュボード</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem className="min-w-0">
-              <BreadcrumbLink asChild>
-                <Link className="block max-w-48 truncate" to={profilePath}>
-                  {accountName}
-                </Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>更新</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-
         <div>
           <FormPageTitle as="h2">
             {mode === 'profile' ? 'プロファイルの編集' : '社員情報の編集'}

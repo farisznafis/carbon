@@ -1,17 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
-import { ArrowLeft, MapPin, User, Calendar, Save, X } from 'lucide-react';
+import { MapPin, User, Calendar, Save, X } from 'lucide-react';
 import { FormActions } from '@/components/forms/form-layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { PageLoadingOverlay } from '@/components/feedback/loading';
 import { paths } from '@/routes/paths';
 import { ActionButton } from '@/components/actions';
@@ -205,6 +204,11 @@ const SiteDetail = () => {
     }
   };
 
+  usePageBreadcrumb([
+    { label: 'プロファイル', to: paths.profile },
+    { label: site?.name || '拠点詳細' },
+  ]);
+
   if (loading) {
     // Skeleton halaman dinonaktifkan sementara sampai layout final halaman ini dipetakan.
     return <PageLoadingOverlay message="拠点情報を読み込んでいます" />;
@@ -224,20 +228,6 @@ const SiteDetail = () => {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <PageBackButton
-        onClick={() => navigate('/profile')}
-        label='プロファイルに戻る'
-        className='mb-4 rounded-full'
-      />
-      <Button 
-        variant="ghost" 
-        onClick={() => navigate('/profile')}
-        className="hidden"
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        プロフィールに戻る
-      </Button>
-
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-form-title font-bold flex items-center gap-2">

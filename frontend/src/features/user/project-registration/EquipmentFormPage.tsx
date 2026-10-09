@@ -15,7 +15,8 @@ import {
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
+import { useEquipmentBreadcrumbRoot } from './useEquipmentBreadcrumbRoot';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { SolarPowerEquipmentForm } from '@/features/user/project-registration/components/equipment-forms/SolarPowerEquipmentForm';
@@ -347,17 +348,18 @@ export default function EquipmentFormPage() {
   };
 
   const pageTitle = equipmentId ? '設備編集' : '設備登録';
+  const breadcrumbRoot = useEquipmentBreadcrumbRoot({
+    siteId,
+    returnTo: returnPath,
+    fromMasterDashboard: enteredFromMasterDashboard,
+    onReturn: handleCancel,
+  });
+  usePageBreadcrumb([...breadcrumbRoot, { label: pageTitle }]);
   const equipmentTypeLabel =
     formType === 'solar' ? '太陽光発電設備' : 'その他設備';
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={handleCancel}
-        label=""
-        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
-      />
-
       <FormPageContent>
         <FormPageTitle>{pageTitle}</FormPageTitle>
         <p className="text-sm text-foreground">

@@ -11,7 +11,8 @@ import {
   FormStandalonePage,
 } from '@/components/forms/form-layout';
 import { ConfirmationItem } from '@/components/feedback/Confirmation/ConfirmationItem';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
+import { useEquipmentBreadcrumbRoot } from './useEquipmentBreadcrumbRoot';
 import { Button } from '@/components/ui/button';
 import {
   addSiteProjectEquipment,
@@ -109,6 +110,30 @@ export default function EquipmentConfirmationPage() {
     });
   };
 
+  /** Leaves the equipment flow for wherever the form was opened from. */
+  const navigateOut = () => {
+    const fromMasterDashboard = Boolean(confirmationState?.fromMasterDashboard);
+    navigate(
+      confirmationState?.returnTo ??
+        (fromMasterDashboard
+          ? paths.masterDashboardMembership
+          : paths.projectMembership(siteId)),
+      { state: fromMasterDashboard ? masterDashboardProjectMembershipState : undefined },
+    );
+  };
+
+  const breadcrumbRoot = useEquipmentBreadcrumbRoot({
+    siteId,
+    returnTo: confirmationState?.returnTo,
+    fromMasterDashboard: Boolean(confirmationState?.fromMasterDashboard),
+    onReturn: navigateOut,
+  });
+  usePageBreadcrumb([
+    ...breadcrumbRoot,
+    { label: confirmationState?.isEdit ? '設備編集' : '設備登録', onClick: navigateBack },
+    { label: '確認' },
+  ]);
+
   const handleRegister = async () => {
     if (!confirmationState || !data || isSubmitting) return;
     setIsSubmitting(true);
@@ -190,12 +215,6 @@ export default function EquipmentConfirmationPage() {
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={navigateBack}
-        label=""
-        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
-      />
-
       <FormPageContent>
         <div className="space-y-3">
           <FormPageTitle>設備登録の確認</FormPageTitle>

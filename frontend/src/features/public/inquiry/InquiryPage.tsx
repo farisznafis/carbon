@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle2, Mail } from 'lucide-react';
 import { useForm, type UseFormSetError } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { ApiError } from '@/api/_shared/errors';
 import { createInquiry, type InquiryRequest } from '@/api/notifications';
@@ -16,9 +16,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
+import { useOptionalAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
 import { HomeFooter } from '@/pages/home/HomeFooter';
+import { getHomePath } from '@/utils/getHomePath';
 import {
   PageBackButton,
   floatingPageBackButtonClassName,
@@ -206,9 +209,12 @@ function InquiryInformationPanel() {
 
 function InquirySuccess({
   message,
+  returnLabel,
   onReturnHome,
 }: Readonly<{
   message: string;
+  /** Where the page returns to: ホーム, or ヘルプ・FAQ when opened from it. */
+  returnLabel: string;
   onReturnHome: () => void;
 }>) {
   return (
@@ -288,7 +294,7 @@ function InquirySuccess({
           text-muted-foreground
         '
       >
-        3秒後にホームへ戻ります。
+        3秒後に{returnLabel}へ戻ります。
       </p>
 
       <FormActions
@@ -297,7 +303,7 @@ function InquirySuccess({
         actions={[
           {
             id: 'home',
-            label: 'ホームへ戻る',
+            label: `${returnLabel}へ戻る`,
             onClick: onReturnHome,
           },
         ]}
@@ -307,9 +313,26 @@ function InquirySuccess({
 }
 
 /** Renders the inquiry form and its submission result. */
+/** A caller page passed in navigation state, e.g. the ヘルプ・FAQ page. */
+function getReturnTo(state: unknown): string | null {
+  const returnTo = (state as { returnTo?: unknown } | null)?.returnTo;
+  return typeof returnTo === 'string' && returnTo.startsWith('/') ? returnTo : null;
+}
+
 export default function InquiryPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const auth = useOptionalAuth();
+  // Signed-in accounts reach this from the in-app ヘルプ・FAQ and should stay in the app.
+  const signedInUser = auth?.isAuthenticated ? auth.user : null;
+  const returnTo = signedInUser ? getReturnTo(location.state) : null;
+  const exitPath = signedInUser ? (returnTo ?? getHomePath(signedInUser)) : paths.home;
+  const exitLabel = returnTo === paths.adminHelpFaq ? 'ヘルプ・FAQ' : 'ホーム';
+
+  usePageBreadcrumb(
+    signedInUser ? [{ label: exitLabel, to: exitPath }, { label: 'お問い合わせ' }] : [],
+  );
   const handleBack = () => {
     navigate(paths.home);
   };
@@ -317,10 +340,11 @@ export default function InquiryPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const form = useForm<InquiryRequest>({
+    // Saves signed-in accounts retyping what the app already knows.
     defaultValues: {
-      companyName: '',
-      name: '',
-      email: '',
+      companyName: signedInUser?.companyName ?? '',
+      name: signedInUser?.name ?? '',
+      email: signedInUser?.email ?? '',
       content: '',
     },
   });
@@ -331,7 +355,7 @@ export default function InquiryPage() {
     }
 
     const timerId = window.setTimeout(() => {
-      navigate(paths.home, {
+      navigate(exitPath, {
         replace: true,
       });
     }, SUCCESS_REDIRECT_DELAY_MS);
@@ -339,7 +363,7 @@ export default function InquiryPage() {
     return () => {
       window.clearTimeout(timerId);
     };
-  }, [navigate, successMessage]);
+  }, [exitPath, navigate, successMessage]);
 
   const handleSubmit = async (inquiry: InquiryRequest) => {
     form.clearErrors();
@@ -367,7 +391,7 @@ export default function InquiryPage() {
   };
 
   const handleReturnHome = () => {
-    navigate(paths.home, {
+    navigate(exitPath, {
       replace: true,
     });
   };
@@ -429,6 +453,7 @@ export default function InquiryPage() {
               {successMessage !== null ? (
                 <InquirySuccess
                   message={successMessage}
+                  returnLabel={exitLabel}
                   onReturnHome={handleReturnHome}
                 />
               ) : (
@@ -607,7 +632,8 @@ export default function InquiryPage() {
         </section>
       </main>
 
-      <HomeFooter />
+      {/* The marketing footer belongs to the public site, not the app shell. */}
+      {!signedInUser && <HomeFooter />}
     </>
   );
 }

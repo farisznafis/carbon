@@ -77,6 +77,9 @@ vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     user: { id: 'user-1', companyId: 'company-1', role: 'master' },
   }),
+  useOptionalAuth: () => ({
+    user: { id: 'user-1', companyId: 'company-1', role: 'master' },
+  }),
 }));
 
 vi.mock('@/hooks/use-toast', () => ({

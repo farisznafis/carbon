@@ -18,6 +18,7 @@ const currentProject = {
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ user: { role: 'master' } }),
+  useOptionalAuth: () => ({ user: { role: 'master' } }),
 }));
 
 vi.mock('@/hooks/use-toast', () => ({

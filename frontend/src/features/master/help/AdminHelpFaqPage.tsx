@@ -1,5 +1,6 @@
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, LifeBuoy } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ArrowRight, LifeBuoy } from 'lucide-react';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
@@ -9,6 +10,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { useOptionalAuth } from '@/contexts/AuthContext';
+import { paths } from '@/routes/paths';
+import { getHomePath } from '@/utils/getHomePath';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -93,7 +97,13 @@ const FAQ_SECTIONS: FaqSection[] = [
 ];
 
 export default function AdminHelpFaqPage() {
-  const navigate = useNavigate();
+  const user = useOptionalAuth()?.user;
+
+  // Opened from the sidebar help menu, like プロファイル from the account menu.
+  usePageBreadcrumb([
+    { label: 'ホーム', to: getHomePath(user) },
+    { label: 'ヘルプ・FAQ' },
+  ]);
 
   return (
     <main className="min-h-screen bg-background px-4 py-8 sm:px-6">
@@ -101,19 +111,8 @@ export default function AdminHelpFaqPage() {
 
         {/* ── Page header ─────────────────────────────────────────────── */}
         <div className="space-y-3">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate(-1)}
-            className="-ml-3 w-fit text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-            戻る
-          </Button>
-
           <div className="flex items-center gap-3">
-            <LifeBuoy className="h-6 w-6 text-muted-foreground" />
+            <LifeBuoy className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
             <div>
               <p className="text-sm text-foreground tracking-wide">
                 サポート
@@ -141,8 +140,12 @@ export default function AdminHelpFaqPage() {
                 平日 9:00〜18:00 対応 / 返信は翌営業日以降になる場合があります
               </p>
             </div>
-            <Button type="button" size="sm" variant="outline" disabled>
-              お問い合わせ（準備中）
+            <Button asChild size="sm" variant="outline" className="shrink-0">
+              {/* The inquiry page reads returnTo to come back here once sent. */}
+              <Link to={paths.contact} state={{ returnTo: paths.adminHelpFaq }}>
+                お問い合わせ
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
             </Button>
           </CardContent>
         </Card>

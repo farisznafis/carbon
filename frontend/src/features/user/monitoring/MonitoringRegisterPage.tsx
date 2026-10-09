@@ -22,6 +22,9 @@ import {
   type SiteProjectEquipment,
 } from '@/api/site';
 import { logger } from '@/lib/logger';
+import { paths } from '@/routes/paths';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
+import { useSiteBreadcrumbRoot } from '@/features/user/navigation/useSiteBreadcrumbRoot';
 import { buildMonitoringPayload } from './monitoringPayload';
 import type { FileUploadProgressItem } from '@/components/feedback/loading';
 
@@ -29,6 +32,8 @@ type MonitoringFormData = typeof formDefinitions[ProjectType]['emptyData'];
 type RouteState = {
   projectId?: string;
   siteId?: string;
+  siteName?: string;
+  projectName?: string;
 };
 
 type EvidenceUploadKey =
@@ -164,6 +169,25 @@ const MonitoringRegister = () => {
       isActive = false;
     };
   }, [equipmentReloadKey, equipmentSiteId, projectType]);
+
+  const breadcrumbProjectId = String(
+    routeState.projectId ?? new URLSearchParams(location.search).get('projectId') ?? '',
+  );
+  const siteBreadcrumbRoot = useSiteBreadcrumbRoot(equipmentSiteId, routeState.siteName);
+  usePageBreadcrumb([
+    ...siteBreadcrumbRoot,
+    {
+      label: routeState.projectName || 'プロジェクト詳細',
+      to:
+        equipmentSiteId && breadcrumbProjectId
+          ? paths.siteProjectDetail(equipmentSiteId, breadcrumbProjectId)
+          : undefined,
+    },
+    step === 'confirm'
+      ? { label: 'モニタリング登録', onClick: () => setStep('form') }
+      : { label: 'モニタリング登録' },
+    ...(step === 'confirm' ? [{ label: '確認' }] : []),
+  ]);
 
   if (!definition || !projectType) {
     return (

@@ -5,7 +5,6 @@
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { ChangedConfirmationValue } from '@/components/feedback/Confirmation/ChangedConfirmationValue';
 import {
   FileUploadProgress,
@@ -37,12 +36,6 @@ export function MonitoringConfirmationLayout({
 }: ConfirmationLayoutProps) {
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={onBack}
-        label=""
-        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
-      />
-
       <FormPageContent>
         <div className="space-y-3">
           <FormPageTitle>{title}</FormPageTitle>

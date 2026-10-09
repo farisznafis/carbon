@@ -9,7 +9,6 @@ import {
   FormSectionStack,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import { PageBackButton } from '@/components/navigation/PageBackButton';
 import { Button } from '@/components/ui/button';
 import type {
   SiteProjectEquipmentFile,
@@ -76,12 +75,6 @@ export function EquipmentEditConfirmation({
 }: EquipmentEditConfirmationProps) {
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={onBack}
-        label=""
-        className="absolute left-4 top-10 h-12 w-12 rounded-full p-0 sm:left-10 lg:left-16"
-      />
-
       <FormPageContent className="animate-slide-up">
         <div className="space-y-3">
           <FormPageTitle>設備変更の確認</FormPageTitle>

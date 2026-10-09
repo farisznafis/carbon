@@ -35,10 +35,8 @@ import {
   EquipmentRegistrationStep,
   type EquipmentRegistrationStepRef,
 } from "@/features/user/project-registration/components/EquipmentRegistrationStep";
-import {
-  floatingPageBackButtonClassName,
-  PageBackButton,
-} from "@/components/navigation/PageBackButton";
+import { usePageBreadcrumb } from "@/components/navigation/pageBreadcrumbContext";
+import { useSiteBreadcrumbRoot } from "@/features/user/navigation/useSiteBreadcrumbRoot";
 import type {
   Equipment,
   SolarEquipment,
@@ -958,6 +956,20 @@ const ProjectRegister = () => {
     }
   };
 
+  // Earlier wizard steps are reached with each step's own 戻る button.
+  const siteBreadcrumbRoot = useSiteBreadcrumbRoot(resolvedSiteId);
+  usePageBreadcrumb([
+    ...(enteredFromMasterDashboard
+      ? [{ label: 'プロジェクトの入会届', to: paths.masterDashboardMembership }]
+      : [
+          ...siteBreadcrumbRoot,
+          ...(resolvedSiteId
+            ? [{ label: 'プロジェクトへの入会', to: paths.projectMembership(resolvedSiteId) }]
+            : []),
+        ]),
+    { label: selectedProject?.projectName || 'プロジェクト参加申請' },
+  ]);
+
   // ── Loading / error states ─────────────────────────────────────────────────
   if (isProjectLoading) {
     return (
@@ -1003,15 +1015,6 @@ const ProjectRegister = () => {
   return (
     <FormPageShell className="relative">
       <div className="space-y-8">
-        {!isCompletionStep && (
-          <PageBackButton
-            onClick={handleBack}
-            label=""
-            aria-label={currentStep === EQUIPMENT_STEP ? "入会届に戻る" : "前へ"}
-            className={floatingPageBackButtonClassName}
-          />
-        )}
-
         <FormPageHeader
           icon={<FileSignature className="h-6 w-6" />}
           title="プロジェクト参加申請"

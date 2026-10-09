@@ -1,21 +1,10 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   FormPageContent,
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import {
-  PageBackButton,
-  floatingPageBackButtonClassName,
-} from '@/components/navigation/PageBackButton';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatPersonName } from '@/features/master/components/masterDashboardUtils';
 import { paths } from '@/routes/paths';
@@ -39,8 +28,10 @@ const Profile = () => {
       ? profile?.username || user?.username || ''
       : formattedUserName;
 
-  /** Returns the signed-in account to its role-specific home page. */
-  const handleBack = () => navigate(homePath);
+  usePageBreadcrumb([
+    { label: 'ホーム', to: homePath },
+    { label: accountName || 'プロファイル' },
+  ]);
 
   /** Opens the existing password change flow from the profile page. */
   const handlePasswordChange = () => navigate(paths.passwordChange);
@@ -75,30 +66,7 @@ const Profile = () => {
 
   return (
     <FormStandalonePage>
-      <PageBackButton
-        onClick={handleBack}
-        label=""
-        aria-label="ホームに戻る"
-        className={floatingPageBackButtonClassName}
-      />
-
       <FormPageContent>
-        <Breadcrumb>
-          <BreadcrumbList className="flex-nowrap">
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={homePath}>ダッシュボード</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem className="min-w-0">
-              <BreadcrumbPage className="block max-w-48 truncate">
-                {accountName}
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <FormPageTitle as="h2">プロファイル</FormPageTitle>

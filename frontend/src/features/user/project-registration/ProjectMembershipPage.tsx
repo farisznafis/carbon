@@ -24,10 +24,8 @@ import {
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
-import {
-  PageBackButton,
-  floatingPageBackButtonClassName,
-} from '@/components/navigation/PageBackButton';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
+import { useSiteBreadcrumbRoot } from '@/features/user/navigation/useSiteBreadcrumbRoot';
 import { Card, CardContent } from '@/components/ui/card';
 import { MembershipPreparationDialog } from '@/features/user/project-registration/components/MembershipPreparationDialog';
 import { MembershipStatusFilter } from '@/features/user/project-registration/components/MembershipStatusFilter';
@@ -379,16 +377,6 @@ export function ProjectMembershipContent({
    * Returns the standalone page
    * to the entry context.
    */
-  const handleBack = () => {
-    navigate(
-      enteredFromMasterDashboard
-        ? paths.masterDashboardMembership
-        : paths.siteDashboard(
-            siteId,
-          ),
-    );
-  };
-
   const emptyMessage =
     projects.length === 0
       ? '公開中のプロジェクトはありません。'
@@ -524,16 +512,7 @@ export function ProjectMembershipContent({
 
   return (
     <FormStandalonePage className="overflow-visible">
-      <PageBackButton
-        onClick={handleBack}
-        label=""
-        aria-label="前の画面へ戻る"
-        className={
-          floatingPageBackButtonClassName
-        }
-      />
-
-      <FormPageContent className="max-w-[1200px] space-y-10 pt-16 sm:pt-0">
+      <FormPageContent className="max-w-[1200px] space-y-10">
         {content}
       </FormPageContent>
     </FormStandalonePage>
@@ -549,6 +528,17 @@ export default function ProjectMembershipPage() {
     useParams<{
       siteId: string;
     }>();
+
+  const location = useLocation();
+  const siteBreadcrumbRoot = useSiteBreadcrumbRoot(siteId);
+
+  // Declared here, not in the content: the Master dashboard embeds it as a tab.
+  usePageBreadcrumb([
+    ...(isFromMasterDashboard(location.state)
+      ? [{ label: 'プロジェクトの入会届', to: paths.masterDashboardMembership }]
+      : siteBreadcrumbRoot),
+    { label: 'プロジェクトへの入会' },
+  ]);
 
   return (
     <ProjectMembershipContent

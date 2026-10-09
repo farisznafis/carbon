@@ -57,6 +57,8 @@ const APPLICATION_ROUTE_PATTERNS = [
 
   paths.profile,
   paths.passwordChange,
+  // Public too; signed-in accounts open it from ヘルプ・FAQ and keep the sidebar.
+  paths.contact,
 ] as const;
 
 const ADMIN_ROUTE_PREFIX =
