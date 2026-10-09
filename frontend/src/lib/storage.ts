@@ -10,6 +10,7 @@ export const storageKeys = {
   dashboardStorage: 'dashboard-storage',
   sessionExpiresAt: 'sessionExpiresAt',
   sidebarCollapsed: 'sidebarCollapsed',
+  guideToursSeen: 'guideToursSeen',
 } as const;
 
 type StorageKey = (typeof storageKeys)[keyof typeof storageKeys];

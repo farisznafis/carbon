@@ -133,7 +133,7 @@ type ProjectDetailNavigationState = {
 
 function ProjectDetailTabs() {
   return (
-    <PageTabsList aria-label='プロジェクト詳細の表示'>
+    <PageTabsList aria-label='プロジェクト詳細の表示' data-tour='project-tabs'>
       <PageTabsTrigger value='overview'>概要</PageTabsTrigger>
       <PageTabsTrigger value='equipment'>設備一覧</PageTabsTrigger>
     </PageTabsList>
@@ -701,6 +701,7 @@ const ProjectDetail = () => {
               PROJECT HEADER
           ========================== */}
           <header
+            data-tour='project-header'
             className={cn(
               projectDetailCardClassName,
               'overflow-hidden animate-slide-up',
@@ -736,7 +737,7 @@ const ProjectDetail = () => {
                   </div>
                 </div>
 
-                <div className='flex shrink-0 flex-col gap-2 sm:flex-row'>
+                <div className='flex shrink-0 flex-col gap-2 sm:flex-row' data-tour='project-monitoring'>
                   <Button
                     type='button'
                     variant='outline'
@@ -874,7 +875,7 @@ const ProjectDetail = () => {
               )}
 
               {/* Analytics */}
-              <section aria-labelledby='emission-analysis-title'>
+              <section aria-labelledby='emission-analysis-title' data-tour='project-emissions'>
                 <div className='mb-4'>
                   <h2
                     id='emission-analysis-title'

@@ -779,7 +779,7 @@ const Dashboard = () => {
 
   return (
     <div className='relative min-h-screen bg-background'>
-      <header className='relative border-b border-border bg-background'>
+      <header className='relative border-b border-border bg-background' data-tour='site-header'>
         <div
           className={cn(
             dashboardPageHeaderClassName,
@@ -840,6 +840,7 @@ const Dashboard = () => {
               variant='outline'
               size='md'
               className='shrink-0'
+              data-tour='site-edit'
               onClick={() => navigate(`/master/site-edit/${activeSiteId}`)}
             >
               拠点情報を更新
@@ -848,7 +849,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <section className='bg-card py-12 lg:py-[calc(var(--section-gap)*1.5)]'>
+      <section className='bg-card py-12 lg:py-[calc(var(--section-gap)*1.5)]' data-tour='joined-projects'>
         <div className={pageContainer}>
           <div className='mb-6'>
             <h2 className='text-foreground'>入会中のプロジェクト</h2>
@@ -900,7 +901,7 @@ const Dashboard = () => {
         </div>
       </section>
 
-      <section className='bg-background py-12 lg:py-[calc(var(--section-gap)*1.5)]'>
+      <section className='bg-background py-12 lg:py-[calc(var(--section-gap)*1.5)]' data-tour='available-projects'>
         <div className={pageContainer}>
           <div className='mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
             <div>
@@ -916,6 +917,7 @@ const Dashboard = () => {
                 type='button'
                 size='md'
                 className='shrink-0'
+                data-tour='join-project'
                 onClick={() => navigate(paths.projectMembership(activeSiteId))}
               >
                 プロジェクトに入会する

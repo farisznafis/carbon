@@ -46,7 +46,7 @@ export function SidebarNavItem({
   );
 
   return (
-    <li>
+    <li data-tour={`nav-${item.key}`}>
       {collapsed ? (
         <Tooltip>
           <TooltipTrigger asChild>{link}</TooltipTrigger>

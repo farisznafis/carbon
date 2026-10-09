@@ -47,6 +47,7 @@ export function AccountMenu({
       <DropdownMenuTrigger asChild>
         <Button
           type="button"
+          data-tour="account-menu"
           variant="ghost"
           className="group h-12 w-12 gap-2 border border-border px-2 sm:px-3 lg:w-fit"
           aria-label={`アカウントメニューを開く：${displayName}`}

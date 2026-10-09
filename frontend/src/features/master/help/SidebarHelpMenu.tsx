@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { matchPath, useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Portal as TooltipPortal } from '@radix-ui/react-tooltip';
 import { BookOpen, HelpCircle, MessageCircleQuestion } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,30 +16,9 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { paths } from '@/routes/paths';
-import { GuideModal } from './GuideModal';
-import type { GuideContext } from './guideSteps';
+import { useGuideTour } from './GuideTourProvider';
 
 const HELP_LABEL = 'ヘルプ・ガイド';
-
-const GUIDE_CONTEXT_ROUTES: ReadonlyArray<{
-  path: string;
-  context: GuideContext;
-}> = [
-  { path: paths.masterDashboard, context: 'master-dashboard' },
-  { path: paths.userDashboard, context: 'site-dashboard' },
-  { path: paths.siteDashboardRoute, context: 'site-dashboard' },
-  { path: paths.siteProjectDetailRoute, context: 'project-detail' },
-  { path: paths.legacyProjectRoute, context: 'project-detail' },
-];
-
-/** Resolves which page guide applies to the current route, if any. */
-export function getGuideContextForPath(pathname: string): GuideContext | null {
-  return (
-    GUIDE_CONTEXT_ROUTES.find(({ path }) =>
-      Boolean(matchPath({ path, end: true }, pathname)),
-    )?.context ?? null
-  );
-}
 
 type SidebarHelpMenuProps = {
   collapsed: boolean;
@@ -52,18 +31,16 @@ export function SidebarHelpMenu({
   onNavigate,
 }: Readonly<SidebarHelpMenuProps>) {
   const navigate = useNavigate();
-  const location = useLocation();
-  const guideContext = getGuideContextForPath(location.pathname);
+  const { currentContext: guideContext, startTour } = useGuideTour();
   const [popoverOpen, setPopoverOpen] = useState(false);
-  const [guideOpen, setGuideOpen] = useState(false);
-  // Keeps the guide content stable while the modal animates closed.
-  const [shownGuideContext, setShownGuideContext] =
-    useState<GuideContext | null>(null);
 
+  /** Replays the same page tour shown on the first visit. */
   const handleOpenGuide = () => {
+    if (!guideContext) return;
     setPopoverOpen(false);
-    setShownGuideContext(guideContext);
-    setGuideOpen(true);
+    // Closes the mobile drawer so the tour can point at the page behind it.
+    onNavigate?.();
+    startTour(guideContext);
   };
 
   const handleOpenFaq = () => {
@@ -93,65 +70,63 @@ export function SidebarHelpMenu({
   );
 
   return (
-    <>
-      <div className='shrink-0 px-3 pb-3'>
-        <Popover
-          open={popoverOpen}
-          onOpenChange={setPopoverOpen}
+    <div className='shrink-0 px-3 pb-3' data-tour='help-menu'>
+      <Popover
+        open={popoverOpen}
+        onOpenChange={setPopoverOpen}
+      >
+        {collapsed ? (
+          <TooltipProvider delayDuration={150}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipPortal>
+                <TooltipContent side='right'>{HELP_LABEL}</TooltipContent>
+              </TooltipPortal>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+        )}
+
+        <PopoverContent
+          side='right'
+          align='end'
+          sideOffset={12}
+          className='w-56 p-1.5'
         >
-          {collapsed ? (
-            <TooltipProvider delayDuration={150}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-                </TooltipTrigger>
-                <TooltipPortal>
-                  <TooltipContent side='right'>{HELP_LABEL}</TooltipContent>
-                </TooltipPortal>
-              </Tooltip>
-            </TooltipProvider>
-          ) : (
-            <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-          )}
-
-          <PopoverContent
-            side='right'
-            align='end'
-            sideOffset={12}
-            className='w-48 p-1.5'
+          {/* Kept visible when unavailable so it does not seem to vanish between pages. */}
+          <Button
+            type='button'
+            variant='ghost'
+            onClick={handleOpenGuide}
+            disabled={!guideContext}
+            aria-describedby={guideContext ? undefined : 'guide-unavailable-note'}
+            className='h-auto min-h-9 w-full items-start justify-start rounded-md px-3 py-2 text-left'
           >
-            {guideContext && (
-              <Button
-                type='button'
-                variant='ghost'
-                onClick={handleOpenGuide}
-                className='h-9 w-full justify-start rounded-md px-3'
-              >
-                <BookOpen className='h-4 w-4 shrink-0 text-muted-foreground' />
-                使い方ガイド
-              </Button>
-            )}
+            <BookOpen className='mt-0.5 h-4 w-4 shrink-0 text-muted-foreground' aria-hidden='true' />
+            <span className='flex flex-col'>
+              使い方ガイド
+              {!guideContext && (
+                <span id='guide-unavailable-note' className='text-xs font-normal text-muted-foreground'>
+                  このページにはガイドがありません
+                </span>
+              )}
+            </span>
+          </Button>
 
-            <Button
-              type='button'
-              variant='ghost'
-              onClick={handleOpenFaq}
-              className='h-9 w-full justify-start rounded-md px-3'
-            >
-              <MessageCircleQuestion className='h-4 w-4 shrink-0 text-muted-foreground' />
-              ヘルプ・FAQ
-            </Button>
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      {shownGuideContext && (
-        <GuideModal
-          open={guideOpen}
-          context={shownGuideContext}
-          onClose={() => setGuideOpen(false)}
-        />
-      )}
-    </>
+          <Button
+            type='button'
+            variant='ghost'
+            onClick={handleOpenFaq}
+            className='h-9 w-full justify-start rounded-md px-3'
+          >
+            <MessageCircleQuestion className='h-4 w-4 shrink-0 text-muted-foreground' />
+            ヘルプ・FAQ
+          </Button>
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 }

@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { AdminSidebar } from '@/features/admin/navigation/AdminSidebar';
+import { GuideTourProvider } from '@/features/master/help/GuideTourProvider';
 import { MasterSidebar } from '@/features/master/navigation/MasterSidebar';
 import { UserSidebar } from '@/features/user/navigation/UserSidebar';
 import { storage, storageKeys } from '@/lib/storage';
@@ -362,7 +363,7 @@ function AppShellLayout({
   );
 }
 
-/** Lets pages publish their breadcrumb to the topbar via `usePageBreadcrumb`. */
+/** Lets pages publish their breadcrumb to the topbar via `usePageBreadcrumb`, and runs page tours. */
 export function AppShell({
   children,
 }: {
@@ -370,7 +371,9 @@ export function AppShell({
 }) {
   return (
     <BreadcrumbProvider>
-      <AppShellLayout>{children}</AppShellLayout>
+      <GuideTourProvider>
+        <AppShellLayout>{children}</AppShellLayout>
+      </GuideTourProvider>
     </BreadcrumbProvider>
   );
 }
