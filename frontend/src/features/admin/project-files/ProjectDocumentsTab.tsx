@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
+import { Upload } from 'lucide-react';
 import type { ProjectFileType } from '@/api/admin/projectFiles';
 import { PageTabsList, PageTabsTrigger } from '@/components/navigation/PageTabs';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 import { ProjectDocumentDataPanel } from './ProjectDocumentDataPanel';
@@ -56,13 +58,29 @@ export function ProjectDocumentsTab({ projectId }: Readonly<{ projectId: string 
 
   return (
     <Tabs value={activeView} onValueChange={changeView} className="min-w-0 space-y-5">
-      <PageTabsList aria-label="書類の表示">
-        {DOCUMENT_VIEWS.map((view) => (
-          <PageTabsTrigger key={view.value} value={view.value}>
-            {view.label}
-          </PageTabsTrigger>
-        ))}
-      </PageTabsList>
+      {/* The row carries the underline so the upload button sits on the same line as the tabs. */}
+      <div className="flex items-center gap-3 border-b border-border">
+        <PageTabsList aria-label="書類の表示" className="min-w-0 flex-1 border-b-0">
+          {DOCUMENT_VIEWS.map((view) => (
+            <PageTabsTrigger key={view.value} value={view.value}>
+              {view.label}
+            </PageTabsTrigger>
+          ))}
+        </PageTabsList>
+        {activeView === 'forms' && (
+          <Button
+            type="button"
+            size="sm"
+            className="shrink-0"
+            onClick={() =>
+              permissions.guardAction('PROJECT_UPDATE', () => setUploadRequest({ type: null }))
+            }
+          >
+            <Upload aria-hidden="true" />
+            ファイルをアップロード
+          </Button>
+        )}
+      </div>
 
       <TabsContent value="forms" className="m-0">
         <ProjectFilesPanel

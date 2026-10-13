@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { FileText, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 
 import {
   PROJECT_FILE_ACCEPT,
@@ -76,17 +76,15 @@ export function ProjectFileUploadDialog({
   useEffect(() => {
     if (!open) return;
 
+    // Preselected from the 概要 card, but still changeable here.
     setFileType(initialType);
     setFile(null);
     setFileError(null);
     setSubmitError(null);
   }, [open, initialType]);
 
-  const hasPresetType = initialType !== null;
-  const effectiveFileType = initialType ?? fileType;
-
   const selectedGroup = groups.find(
-    (group) => group.type === effectiveFileType
+    (group) => group.type === fileType
   );
 
   const isFull = selectedGroup
@@ -123,12 +121,12 @@ export function ProjectFileUploadDialog({
   };
 
   const handleSubmit = async () => {
-    if (!effectiveFileType || !file || isFull || isUploading) return;
+    if (!fileType || !file || isFull || isUploading) return;
 
     setSubmitError(null);
 
     try {
-      await onUpload(effectiveFileType, file);
+      await onUpload(fileType, file);
       onOpenChange(false);
     } catch (error) {
       setSubmitError(errorMessage(error));
@@ -159,9 +157,7 @@ export function ProjectFileUploadDialog({
           </DialogTitle>
 
           <DialogDescription className="text-sm leading-5 text-muted-foreground">
-            {hasPresetType
-              ? 'アップロードするファイルを選択してください。'
-              : '書類の種類とアップロードするファイルを選択してください。'}
+            書類の種類とアップロードするファイルを選択してください。
           </DialogDescription>
         </DialogHeader>
 
@@ -169,98 +165,58 @@ export function ProjectFileUploadDialog({
         <div className="space-y-5 px-6 pb-6">
 
           {/* Document type */}
-          {hasPresetType ? (
-            <div
-              className="
-                flex items-start gap-3
-                rounded-lg
-                border border-border
-                bg-muted/50
-                p-3.5
-              "
+          <div className="space-y-2">
+            <Label
+              htmlFor="project-file-type"
+              className="inline-flex items-center gap-1 text-sm font-medium"
             >
-              <span
-                className="
-                  flex h-9 w-9 shrink-0
-                  items-center justify-center
-                  rounded-lg border border-border
-                  bg-card text-primary-strong
-                "
+              書類の種類
+              <RequiredBadge />
+            </Label>
+
+            <Select
+              value={fileType ?? ''}
+              onValueChange={handleTypeChange}
+              disabled={isUploading}
+            >
+              <SelectTrigger
+                id="project-file-type"
+                aria-required="true"
+                aria-describedby="project-file-type-help"
+                className="w-full"
               >
-                <FileText
-                  aria-hidden="true"
-                  className="h-4 w-4"
-                />
-              </span>
+                <SelectValue placeholder="選択してください" />
+              </SelectTrigger>
 
-              <div className="min-w-0 flex-1 space-y-1">
-                <p className="text-xs text-muted-foreground">
-                  書類の種類
-                </p>
+              <SelectContent>
+                {PROJECT_FILE_STAGES.map(({ stage, label }) => (
+                  <SelectGroup key={stage}>
+                    <SelectLabel className="text-small text-muted-foreground">
+                      {label}
+                    </SelectLabel>
 
-                <p className="break-words text-sm font-semibold text-foreground">
-                  {selectedGroup?.label ?? '—'}
-                </p>
+                    {groups
+                      .filter((group) => group.stage === stage)
+                      .map((group) => (
+                        <SelectItem
+                          key={group.type}
+                          value={group.type}
+                        >
+                          {group.label}
+                        </SelectItem>
+                      ))}
+                  </SelectGroup>
+                ))}
+              </SelectContent>
+            </Select>
 
-                <p className="text-xs leading-5 text-muted-foreground">
-                  各書類は{versionLimit}件まで保存できます。
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Label
-                htmlFor="project-file-type"
-                className="inline-flex items-center gap-1 text-sm font-medium"
-              >
-                書類の種類
-                <RequiredBadge />
-              </Label>
-
-              <Select
-                value={fileType ?? ''}
-                onValueChange={handleTypeChange}
-                disabled={isUploading}
-              >
-                <SelectTrigger
-                  id="project-file-type"
-                  aria-required="true"
-                  aria-describedby="project-file-type-help"
-                  className="w-full"
-                >
-                  <SelectValue placeholder="選択してください" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {PROJECT_FILE_STAGES.map(({ stage, label }) => (
-                    <SelectGroup key={stage}>
-                      <SelectLabel className="text-small text-muted-foreground">
-                        {label}
-                      </SelectLabel>
-
-                      {groups
-                        .filter((group) => group.stage === stage)
-                        .map((group) => (
-                          <SelectItem
-                            key={group.type}
-                            value={group.type}
-                          >
-                            {group.label}
-                          </SelectItem>
-                        ))}
-                    </SelectGroup>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <p
-                id="project-file-type-help"
-                className="text-xs text-muted-foreground"
-              >
-                各書類は{versionLimit}件まで保存できます。
-              </p>
-            </div>
-          )}
+            <p
+              id="project-file-type-help"
+              className="text-xs text-muted-foreground"
+            >
+              各書類は{versionLimit}件まで保存できます。
+            </p>
+          </div>
 
           {/* File upload or limit warning */}
           {isFull && selectedGroup ? (
@@ -381,7 +337,7 @@ export function ProjectFileUploadDialog({
                 label: 'アップロード',
                 pendingLabel: 'アップロード中…',
                 variant: 'default',
-                disabled: !effectiveFileType || !file || isFull,
+                disabled: !fileType || !file || isFull,
                 onClick: () => void handleSubmit(),
               },
             ]}

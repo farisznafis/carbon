@@ -26,10 +26,9 @@ vi.mock('@/features/admin/permissions/useAdminPermissions', () => ({
   }),
 }));
 
-import { useState } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { ProjectDocumentsSummaryCard } from './ProjectDocumentsSummaryCard';
-import { ProjectFilesPanel, type ProjectFileUploadRequest } from './ProjectFilesPanel';
+import { ProjectDocumentsTab } from './ProjectDocumentsTab';
 import { groupProjectFiles } from './projectFileTypes';
 
 const listing = {
@@ -45,26 +44,22 @@ const listing = {
   ],
 };
 
-/** The panel with the upload request held the way ProjectDocumentsTab holds it. */
-function PanelHarness() {
-  const [uploadRequest, setUploadRequest] = useState<ProjectFileUploadRequest>(null);
-  return (
-    <ProjectFilesPanel
-      projectId="PROJ1"
-      uploadRequest={uploadRequest}
-      onUploadRequestChange={setUploadRequest}
-    />
-  );
-}
-
 function renderPanel() {
   return render(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
       <MemoryRouter>
-        <PanelHarness />
+        <ProjectDocumentsTab projectId="PROJ1" />
       </MemoryRouter>
     </QueryClientProvider>,
   );
+}
+
+/** Picks a 書類の種類 in the upload dialog's select. */
+async function chooseType(dialog: HTMLElement, label: string) {
+  fireEvent.click(within(dialog).getByRole('combobox'));
+  const options = await screen.findAllByRole('option');
+  expect(options.map((option) => option.textContent)).not.toContain('入会届');
+  fireEvent.click(options.find((option) => option.textContent === label) as HTMLElement);
 }
 
 describe('groupProjectFiles', () => {
@@ -128,6 +123,11 @@ describe('ProjectFilesPanel', () => {
     filesApi.deleteProjectFile.mockResolvedValue(undefined);
     filesApi.getProjectFileDownloadUrl.mockResolvedValue('https://signed');
     vi.spyOn(window, 'open').mockImplementation(() => null);
+    // jsdom lacks what the Radix Select calls.
+    Element.prototype.hasPointerCapture = vi.fn();
+    Element.prototype.setPointerCapture = vi.fn();
+    Element.prototype.releasePointerCapture = vi.fn();
+    Element.prototype.scrollIntoView = vi.fn();
   });
 
   it('groups versions per type, newest first, with the latest marked and no limit shown', async () => {
@@ -146,7 +146,7 @@ describe('ProjectFilesPanel', () => {
     expect(within(rows[1]).getByText('最新')).toBeInTheDocument();
   });
 
-  it('lists every document type under its J-Credit stage, each with its own 追加', async () => {
+  it('lists every document type under its J-Credit stage, with one upload button above', async () => {
     renderPanel();
 
     for (const stage of ['プロジェクト登録', 'モニタリング・検証・認証', '審査中のやり取り']) {
@@ -155,7 +155,8 @@ describe('ProjectFilesPanel', () => {
     const registration = screen.getByRole('region', { name: 'プロジェクト登録' });
     expect(within(registration).getByText('妥当性確認報告書')).toBeInTheDocument();
     expect(within(registration).getByText('登録通知')).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: /にファイルを追加$/ })).toHaveLength(9);
+    expect(screen.queryByRole('button', { name: /にファイルを追加$/ })).toBeNull();
+    expect(screen.getAllByRole('button', { name: 'ファイルをアップロード' })).toHaveLength(1);
     expect(within(registration).getByText('1 / 3 アップロード済')).toBeInTheDocument();
     // Only types with files expand; an empty one has nothing to show.
     expect(within(registration).getAllByRole('button', { expanded: true })).toHaveLength(1);
@@ -167,9 +168,8 @@ describe('ProjectFilesPanel', () => {
 
     const trigger = await screen.findByRole('button', { name: /入会届.*2社/ });
     const monitoring = screen.getByRole('region', { name: 'モニタリング・検証・認証' });
-    // Not a versioned type: no add button, and it does not count toward the stage's uploads.
+    // Not a versioned type: it does not count toward the stage's uploads.
     expect(within(monitoring).getByText('1 / 4 アップロード済')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '入会届にファイルを追加' })).toBeNull();
 
     fireEvent.click(trigger);
     const list = await screen.findByRole('list', { name: '入会届の一覧' });
@@ -199,14 +199,13 @@ describe('ProjectFilesPanel', () => {
     await waitFor(() => expect(filesApi.deleteProjectFile).toHaveBeenCalledWith('PROJ1', 11));
   });
 
-  it('uploads into the section whose 追加 was pressed', async () => {
+  it('uploads into the type chosen in the dialog, offering every type but 入会届', async () => {
     renderPanel();
 
-    fireEvent.click(
-      await screen.findByRole('button', { name: '個別活動実績報告リストにファイルを追加' }),
-    );
+    fireEvent.click(await screen.findByRole('button', { name: 'ファイルをアップロード' }));
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText('各書類は10件まで保存できます。')).toBeInTheDocument();
+    await chooseType(dialog, '個別活動実績報告リスト');
 
     const file = new File(['x'], 'list.xlsx');
     fireEvent.change(dialog.querySelector('input[type="file"]') as HTMLInputElement, {
@@ -222,8 +221,7 @@ describe('ProjectFilesPanel', () => {
   });
 
   it('warns instead of offering the upload when the type already holds its limit', async () => {
-    // The server's summary decides; here it reports the empty section's type as full,
-    // which reaches the dialog with that type preselected.
+    // The server's summary decides; here it reports the empty section's type as full.
     filesApi.getProjectFileListing.mockResolvedValue({
       ...listing,
       versionSummary: listing.versionSummary.map((item) =>
@@ -234,10 +232,9 @@ describe('ProjectFilesPanel', () => {
     });
     renderPanel();
 
-    fireEvent.click(
-      await screen.findByRole('button', { name: '個別活動実績報告リストにファイルを追加' }),
-    );
+    fireEvent.click(await screen.findByRole('button', { name: 'ファイルをアップロード' }));
     const dialog = await screen.findByRole('dialog');
+    await chooseType(dialog, '個別活動実績報告リスト');
 
     expect(
       within(dialog).getByText('アップロードできるファイル数の上限に達しています'),

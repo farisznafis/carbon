@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import * as AccordionPrimitive from '@radix-ui/react-accordion';
-import { ChevronRight, Plus, Upload } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import type { ProjectFileType } from '@/api/admin/projectFiles';
 import { ActionButton } from '@/components/actions';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { Accordion, AccordionContent, AccordionItem } from '@/components/ui/accordion';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { useAdminPermissions } from '@/features/admin/permissions/useAdminPermissions';
 import { formatUploadedAt } from '@/features/admin/project-plan/planFiles';
 import { toast } from '@/hooks/use-toast';
@@ -32,15 +31,15 @@ export type ProjectFileUploadRequest = { type: ProjectFileType | null } | null;
 
 type ProjectFilesPanelProps = Readonly<{
   projectId: string;
-  /** Owned by the tab, whose toolbar holds the global upload button. */
+  /** Owned by the tab, so links from other screens can open the upload dialog. */
   uploadRequest: ProjectFileUploadRequest;
   onUploadRequestChange: (request: ProjectFileUploadRequest) => void;
 }>;
 
 /**
  * The フォーム tab: one collapsible section per document type, like Swagger's
- * operation list, each holding its versions newest first. Each section adds
- * to itself, so the upload dialog opens with its type already chosen.
+ * operation list, each holding its versions newest first. The upload button
+ * sits in the tab row (ProjectDocumentsTab); the type is chosen in the dialog.
  */
 export function ProjectFilesPanel({
   projectId,
@@ -57,11 +56,6 @@ export function ProjectFilesPanel({
 
   const expandedSections =
     openSections ?? groups.filter((group) => group.files.length > 0).map((group) => group.type);
-
-  const openUpload = (presetType: ProjectFileType | null = null) =>
-    permissions.guardAction('PROJECT_UPDATE', () =>
-      onUploadRequestChange({ type: presetType }),
-    );
 
   const expandSection = (fileType: ProjectFileType) =>
     setOpenSections((current) => {
@@ -134,7 +128,7 @@ export function ProjectFilesPanel({
     }
 
     /**
-     * A type with nothing in it yet: nothing to expand, so the row only invites the first upload.
+     * A type with nothing in it yet: nothing to expand.
      * Its name keeps the siblings' weight; only the status dims, or the row reads as a child.
      */
     const renderEmptySection = (group: ProjectFileGroup) => (
@@ -146,17 +140,6 @@ export function ProjectFilesPanel({
           </span>
           <span className="text-small text-muted-foreground sm:col-span-2">未アップロード</span>
         </span>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="shrink-0 text-primary-strong"
-          aria-label={`${group.label}にファイルを追加`}
-          onClick={() => openUpload(group.type)}
-        >
-          <Upload aria-hidden="true" />
-          アップロード
-        </Button>
       </div>
     );
 
@@ -165,8 +148,7 @@ export function ProjectFilesPanel({
       if (!latest) return renderEmptySection(group);
       return (
         <AccordionItem key={group.type} value={group.type} className="border-b-0">
-          {/* The add button sits beside the trigger, not in it: a button cannot hold a button. */}
-          <AccordionPrimitive.Header className="flex items-center gap-2 pr-3 transition-colors hover:bg-muted/60">
+          <AccordionPrimitive.Header className="flex items-center pr-3 transition-colors hover:bg-muted/60">
             <AccordionPrimitive.Trigger className="group flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
               <ChevronRight
                 aria-hidden="true"
@@ -180,25 +162,6 @@ export function ProjectFilesPanel({
                 </span>
               </span>
             </AccordionPrimitive.Trigger>
-            {/*
-              Icon only, as most rows carry one, but outlined like the empty rows'
-              button so it reads as a control and both line up at one height.
-            */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="w-8 shrink-0 px-0 text-primary-strong"
-                  aria-label={`${group.label}にファイルを追加`}
-                  onClick={() => openUpload(group.type)}
-                >
-                  <Plus aria-hidden="true" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>新しい版を追加</TooltipContent>
-            </Tooltip>
           </AccordionPrimitive.Header>
           <AccordionContent className="border-t border-border bg-muted/30 p-0">
             <ul className="divide-y divide-border">
