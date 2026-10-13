@@ -10,7 +10,7 @@ import { projectFilesQueryPrefix } from './useProjectFiles';
 export const projectDocumentDataQueryKey = (projectId: string, fileType: ProjectFileType) =>
   [...projectFilesQueryPrefix(projectId), 'document-data', fileType] as const;
 
-/** The data read from the latest file of one type; idle while `enabled` is false. */
+/** The latest data entered for one form; idle while `enabled` is false. */
 export function useProjectDocumentData(
   projectId: string,
   fileType: ProjectFileType,

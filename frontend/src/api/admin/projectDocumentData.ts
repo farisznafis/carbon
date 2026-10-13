@@ -3,7 +3,7 @@ import { ApiError } from '@/api/_shared/errors';
 import type { ProjectFileType } from '@/api/admin/projectFiles';
 
 /**
- * The values the server reads out of a project's latest uploaded form, grouped
+ * The latest values entered in the SaaS for one of a project's forms, grouped
  * the way the form groups them: plain label/value items, and a table where the
  * form has one.
  */
@@ -58,7 +58,7 @@ const normalizeTable = (table: DocumentDataTable | null | undefined): DocumentDa
     ? { columns: table.columns, rows: Array.isArray(table.rows) ? table.rows : [] }
     : null;
 
-/** GET /project/{projectId}/document-data/{fileType} — the data read from the latest file of one type. */
+/** GET /project/{projectId}/document-data/{fileType} — the latest data entered for one form. */
 export async function getProjectDocumentData(
   projectId: string,
   fileType: ProjectFileType,

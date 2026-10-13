@@ -2,34 +2,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const filesApi = vi.hoisted(() => ({
-  getProjectFileListing: vi.fn(),
-  uploadProjectFile: vi.fn(),
-  deleteProjectFile: vi.fn(),
-  getProjectFileDownloadUrl: vi.fn(),
-  projectFileProblem: vi.fn(),
-  PROJECT_FILE_ACCEPT: '.xlsx,.pdf',
-}));
 const dataApi = vi.hoisted(() => ({ getProjectDocumentData: vi.fn() }));
 const toastMock = vi.hoisted(() => vi.fn());
 
-vi.mock('@/api/admin/projectFiles', () => filesApi);
 vi.mock('@/api/admin/projectDocumentData', () => dataApi);
 vi.mock('@/hooks/use-toast', () => ({ toast: toastMock }));
 
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { ApiError } from '@/api/_shared/errors';
 import { ProjectDocumentDataPanel } from './ProjectDocumentDataPanel';
-
-const listing = {
-  files: [
-    { id: 12, fileType: 'MONITORING_REPORT', originalFileName: 'report.xlsx', uploadedAt: '2026-10-01T10:00:00', versionNo: 2 },
-    { id: 5, fileType: 'PROJECT_PLAN', originalFileName: 'plan.xlsx', uploadedAt: '2026-09-01T10:00:00', versionNo: 3 },
-    { id: 4, fileType: 'PROJECT_PLAN', originalFileName: 'plan_old.xlsx', uploadedAt: '2026-08-01T10:00:00', versionNo: 2 },
-    { id: 9, fileType: 'VALIDATION_REPORT', originalFileName: 'validation.pdf', uploadedAt: '2026-09-10T10:00:00', versionNo: 1 },
-  ],
-  versionSummary: [],
-};
 
 const planData = {
   projectId: 'PROJ1',
@@ -82,38 +63,35 @@ const nav = () => screen.getByRole('navigation', { name: 'データを表示す�
 describe('ProjectDocumentDataPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    filesApi.getProjectFileListing.mockResolvedValue(listing);
     dataApi.getProjectDocumentData.mockResolvedValue(planData);
     writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
   });
 
-  it('opens the first uploaded document and shows its items and table', async () => {
+  it('opens the first form and shows its items and table', async () => {
     renderPanel();
 
     expect(await screen.findByText('GX太陽光')).toBeInTheDocument();
     expect(dataApi.getProjectDocumentData).toHaveBeenCalledWith('PROJ1', 'PROJECT_PLAN');
-    expect(screen.getByRole('heading', { level: 2, name: 'plan.xlsx' })).toBeInTheDocument();
-    expect(screen.getByText('解析済み')).toBeInTheDocument();
-    expect(within(nav()).getByRole('button', { name: /プロジェクト計画書.*plan\.xlsx.*v3/ })).toHaveAttribute(
+    expect(screen.getByRole('heading', { level: 2, name: 'プロジェクト計画書' })).toBeInTheDocument();
+    expect(within(nav()).getByRole('button', { name: /プロジェクト計画書/ })).toHaveAttribute(
       'aria-current',
       'true',
     );
-    expect(within(nav()).getByRole('button', { name: /個別活動実績報告リスト.*未アップロード/ })).toBeInTheDocument();
     expect(screen.getByRole('table', { name: '認証対象期間・会員数計画の表' })).toBeInTheDocument();
     // Units are left out: values go into Excel cells that already carry them.
     expect(screen.getByRole('columnheader', { name: '会員数' })).toBeInTheDocument();
     expect(screen.queryByText(/社/)).not.toBeInTheDocument();
   });
 
-  it('lists only the three readable forms, counting every version of them', async () => {
+  it('lists only the three forms entered in the SaaS, with no file filters', async () => {
     renderPanel();
     await screen.findByText('GX太陽光');
 
     expect(within(nav()).getAllByRole('button')).toHaveLength(3);
     expect(within(nav()).queryByRole('button', { name: /妥当性確認報告書/ })).not.toBeInTheDocument();
-    // plan v3 + plan v2 + report v2; the 妥当性確認報告書 is not counted.
-    expect(screen.getByText('3件')).toBeInTheDocument();
+    expect(screen.queryByRole('searchbox', { name: 'ファイル名を検索' })).not.toBeInTheDocument();
+    expect(screen.queryByText('アップロード済みファイル')).not.toBeInTheDocument();
   });
 
   it('ignores a dataType the tab does not read', async () => {
@@ -121,22 +99,6 @@ describe('ProjectDocumentDataPanel', () => {
 
     expect(await screen.findByText('GX太陽光')).toBeInTheDocument();
     expect(dataApi.getProjectDocumentData).toHaveBeenCalledWith('PROJ1', 'PROJECT_PLAN');
-  });
-
-  it('searches the list by file name', async () => {
-    renderPanel();
-    await screen.findByText('GX太陽光');
-
-    fireEvent.change(screen.getByRole('searchbox', { name: 'ファイル名を検索' }), {
-      target: { value: 'REPORT' },
-    });
-    expect(within(nav()).getAllByRole('button')).toHaveLength(1);
-    expect(within(nav()).getByRole('button', { name: /report\.xlsx/ })).toBeInTheDocument();
-
-    fireEvent.change(screen.getByRole('searchbox', { name: 'ファイル名を検索' }), {
-      target: { value: 'zzz' },
-    });
-    expect(within(nav()).getByText('一致するファイルはありません。')).toBeInTheDocument();
   });
 
   it('copies one value without its unit and announces it', async () => {
@@ -168,24 +130,11 @@ describe('ProjectDocumentDataPanel', () => {
     expect(screen.getByTestId('search')).toHaveTextContent('dataType=MONITORING_REPORT');
   });
 
-  it('asks for an upload, without a request, when the document has no file', async () => {
-    renderPanel('/?doc=acquisition&dataType=ACTIVITY_RESULT_LIST');
-
-    expect(await screen.findByText('この書類はまだアップロードされていません。')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: '個別活動実績報告リスト' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '個別活動実績報告リストをアップロード' })).toHaveAttribute(
-      'href',
-      '/?doc=forms&upload=ACTIVITY_RESULT_LIST',
-    );
-    expect(dataApi.getProjectDocumentData).not.toHaveBeenCalled();
-  });
-
-  it('explains when the file holds no readable data', async () => {
+  it('explains when nothing has been entered for the form yet', async () => {
     dataApi.getProjectDocumentData.mockRejectedValue(new ApiError('not found', { status: 404 }));
     renderPanel();
 
-    expect(await screen.findByText('読み取れるデータがありません。')).toBeInTheDocument();
-    expect(screen.getByText('解析不可')).toBeInTheDocument();
+    expect(await screen.findByText('まだデータがありません。')).toBeInTheDocument();
   });
 
   it('retries after a failed request', async () => {

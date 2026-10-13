@@ -1,34 +1,29 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { FileSearch, Search, Upload } from 'lucide-react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { FileSearch, Search } from 'lucide-react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { ApiError } from '@/api/_shared/errors';
 import type { ProjectFileType } from '@/api/admin/projectFiles';
 import { ActionButton } from '@/components/actions';
-import { StatusBadge, type StatusBadgeTone } from '@/components/data-display/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { formatUploadedAt } from '@/features/admin/project-plan/planFiles';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { DocumentDataSectionCard, type CopyHandler } from './DocumentDataSectionCard';
 import { copyToClipboard, filterSections } from './documentDataCopy';
 import { PROJECT_FILE_TYPES } from './projectFileTypes';
 import { useProjectDocumentData } from './useProjectDocumentData';
-import { useProjectFiles } from './useProjectFiles';
-import { DOCUMENT_UPLOAD_QUERY_PARAM, DOCUMENT_VIEW_QUERY_PARAM } from './ProjectDocumentsTab';
 
 /** Which document the データ取得 view shows, kept in the URL for back/forward and links. */
 export const DOCUMENT_DATA_TYPE_QUERY_PARAM = 'dataType';
 /** How long a copy control shows its ✓. */
 const COPIED_FEEDBACK_MS = 1500;
 
-/** The forms the server reads values out of; the other types are kept as files only. */
+/** The forms whose values are entered in the SaaS; the other types are kept as files only. */
 const DATA_FILE_TYPES: readonly ProjectFileType[] = ['PROJECT_PLAN', 'MONITORING_REPORT', 'ACTIVITY_RESULT_LIST'];
 const DATA_FILE_DEFINITIONS = PROJECT_FILE_TYPES.filter((definition) => DATA_FILE_TYPES.includes(definition.type));
-const ALL_TYPES = 'ALL';
 
 const isFileType = (value: string | null): value is ProjectFileType =>
   DATA_FILE_TYPES.some((type) => type === value);
@@ -36,7 +31,7 @@ const isFileType = (value: string | null): value is ProjectFileType =>
 const errorMessage = (error: unknown, fallback: string) =>
   error instanceof Error && error.message ? error.message : fallback;
 
-/** The server answers 404 when the latest file holds nothing it can read (a PDF, say). */
+/** The server answers 404 when nothing has been entered for the form yet. */
 const isNoDataError = (error: unknown) => error instanceof ApiError && error.status === 404;
 
 /** Copies text, shows a ✓ on the control that asked, and tells screen readers once. */
@@ -68,73 +63,26 @@ function useCopyFeedback() {
 }
 
 /**
- * The データ取得 tab: the values read from the latest file of each form, one
- * document at a time, each value copied on its own into an Excel form.
- * Files on the left (a select on narrow screens), the data on the right.
+ * The データ取得 tab: the latest values entered in the SaaS for each of the
+ * three forms, one at a time, each value copied on its own into an Excel form.
+ * Forms on the left (a select on narrow screens), the data on the right.
  */
 export function ProjectDocumentDataPanel({ projectId }: Readonly<{ projectId: string }>) {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { listingQuery, groups } = useProjectFiles(projectId);
   const [filter, setFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>(ALL_TYPES);
-  const [fileNameQuery, setFileNameQuery] = useState('');
   const { copiedKey, announcement, copy } = useCopyFeedback();
 
-  const dataGroups = groups.filter((group) => DATA_FILE_TYPES.includes(group.type));
   const requestedType = searchParams.get(DOCUMENT_DATA_TYPE_QUERY_PARAM);
-  const firstUploaded = dataGroups.find((group) => group.files.length > 0)?.type;
-  const activeType: ProjectFileType = isFileType(requestedType)
-    ? requestedType
-    : firstUploaded ?? DATA_FILE_TYPES[0];
+  const activeType: ProjectFileType = isFileType(requestedType) ? requestedType : DATA_FILE_TYPES[0];
   const activeDefinition = DATA_FILE_DEFINITIONS.find((definition) => definition.type === activeType)!;
-  const latestFile = dataGroups.find((group) => group.type === activeType)?.files[0];
-  // Every version counts, though each row shows its type's latest file.
-  const fileCount = dataGroups.reduce((total, group) => total + group.files.length, 0);
 
-  
-const fileNameNeedle = fileNameQuery.trim().toLowerCase();
-
-const listedFiles = dataGroups
-  .flatMap((group) =>
-    group.files.map((file, index) => ({
-      file,
-      type: group.type,
-      label: group.label,
-      isLatest: index === 0,
-    })),
-  )
-  .filter(({ file, type }) => {
-    const matchesType = typeFilter === ALL_TYPES || type === typeFilter;
-    const matchesName = (file.originalFileName ?? '')
-      .toLowerCase()
-      .includes(fileNameNeedle);
-
-    return matchesType && matchesName;
-  });
-
-
-  // Unknown until the listing loads; when it fails, ask for the data anyway.
-  const hasFile = listingQuery.isSuccess ? Boolean(latestFile) : null;
-  const dataQuery = useProjectDocumentData(
-    projectId,
-    activeType,
-    !listingQuery.isLoading && hasFile !== false,
-  );
-  const isLoading = listingQuery.isLoading || dataQuery.isLoading;
+  const dataQuery = useProjectDocumentData(projectId, activeType);
+  const isLoading = dataQuery.isLoading;
   const hasFailed = dataQuery.isError && !isNoDataError(dataQuery.error);
 
   const sections = useMemo(() => dataQuery.data?.sections ?? [], [dataQuery.data]);
   const visibleSections = useMemo(() => filterSections(sections, filter), [sections, filter]);
-
-  const status = ((): { label: string; tone: StatusBadgeTone } | null => {
-    if (hasFile === false) return { label: '未アップロード', tone: 'neutral' };
-    if (isLoading) return null;
-    if (hasFailed) return { label: '取得エラー', tone: 'danger' };
-    return sections.length > 0
-      ? { label: '解析済み', tone: 'success' }
-      : { label: '解析不可', tone: 'warning' };
-  })();
 
   const selectType = (type: string) => {
     if (!isFileType(type)) return;
@@ -144,126 +92,51 @@ const listedFiles = dataGroups
     setFilter('');
   };
 
-  const uploadSearch = () => {
-    const nextSearchParams = new URLSearchParams(searchParams);
-    nextSearchParams.set(DOCUMENT_VIEW_QUERY_PARAM, 'forms');
-    nextSearchParams.set(DOCUMENT_UPLOAD_QUERY_PARAM, activeType);
-    nextSearchParams.delete(DOCUMENT_DATA_TYPE_QUERY_PARAM);
-    return `?${nextSearchParams.toString()}`;
-  };
-
-  
-  const renderFileList = () => (
+  const renderFormList = () => (
     <aside
-      aria-labelledby="document-data-files-heading"
-      className="hidden overflow-hidden rounded-[10px] border border-border bg-card lg:block"
+      aria-labelledby="document-data-forms-heading"
+      className="hidden self-start overflow-hidden rounded-[10px] border border-border bg-card lg:block"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-3">
-        <h3
-          id="document-data-files-heading"
-          className="text-base font-bold text-foreground"
-        >
-          アップロード済みファイル
-        </h3>
-        <span className="text-sm text-secondary-foreground tabular-nums">
-          {fileCount}件
-        </span>
-      </div>
+      <h3
+        id="document-data-forms-heading"
+        className="border-b border-border px-[18px] py-3 text-base font-bold text-foreground"
+      >
+        様式
+      </h3>
 
-      {/* Filters */}
-      <div className="flex items-center justify-between gap-2 px-[18px] py-3">
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger
-            aria-label="ファイル種類で絞り込み"
-            className="h-[38px] w-[134px] shrink-0 rounded-lg border-border px-[14px] text-[13px] shadow-none"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_TYPES}>ファイル種類</SelectItem>
-            {DATA_FILE_DEFINITIONS.map((definition) => (
-              <SelectItem key={definition.type} value={definition.type}>
-                {definition.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <div className="relative min-w-0 max-w-[212px] flex-1">
-          <Search
-            aria-hidden="true"
-            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-secondary-foreground"
-          />
-          <Input
-            type="search"
-            value={fileNameQuery}
-            onChange={(event) => setFileNameQuery(event.target.value)}
-            placeholder="ファイル名を検索"
-            aria-label="ファイル名を検索"
-            className="h-[38px] w-full rounded-lg border-border pl-10 text-[13px] shadow-none"
-          />
-        </div>
-      </div>
-
-      {/* File list */}
       <nav aria-label="データを表示する書類">
-        {listedFiles.length === 0 ? (
-          <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-            一致するファイルはありません。
-          </p>
-        ) : (
-          <ul className="space-y-[3px]">
-            {listedFiles.map(({ file, type, label, isLatest }) => {
-              const isActive = type === activeType && isLatest;
-
-              return (
-                <li key={file.id}>
-                  <button
-                    type="button"
-                    disabled={!isLatest}
-                    aria-current={isActive ? 'true' : undefined}
-                    onClick={() => selectType(type)}
+        <ul className="divide-y divide-border">
+          {DATA_FILE_DEFINITIONS.map((definition) => {
+            const isActive = definition.type === activeType;
+            return (
+              <li key={definition.type}>
+                <button
+                  type="button"
+                  aria-current={isActive ? 'true' : undefined}
+                  onClick={() => selectType(definition.type)}
+                  className={cn(
+                    'flex w-full flex-col gap-1 px-[18px] py-3 text-left transition-colors',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                    isActive ? 'bg-accent' : 'hover:bg-muted/50',
+                  )}
+                >
+                  <span
                     className={cn(
-                      'flex min-h-[72px] w-full items-center justify-between gap-4 px-[18px] py-3 text-left transition-colors',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
-                      'disabled:cursor-default',
-                      isActive
-                        ? 'bg-accent'
-                        : 'enabled:hover:bg-muted/50',
+                      'text-sm font-medium text-foreground',
+                      isActive && 'font-bold text-primary-strong',
                     )}
                   >
-                    {/* File information */}
-                    <span className="flex min-w-0 flex-1 flex-col gap-1">
-                      <span className="truncate text-[11px] font-medium text-secondary-foreground">
-                        {label}
-                      </span>
-
-                      <span
-                        className={cn(
-                          'block truncate text-[13px] font-medium text-foreground',
-                          isActive && 'font-bold text-primary-strong',
-                        )}
-                        title={file.originalFileName ?? undefined}
-                      >
-                        {file.originalFileName ?? label}
-                      </span>
-                    </span>
-
-                    {/* Version */}
-                    <StatusBadge className="flex h-7 w-[50px] shrink-0 items-center justify-center bg-muted px-0 py-0 text-xs font-bold text-secondary-foreground tabular-nums">
-                      v{file.version}
-                    </StatusBadge>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+                    {definition.label}
+                  </span>
+                  <span className="text-xs text-secondary-foreground">{definition.description}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </nav>
     </aside>
   );
-
 
   const renderMobileSelect = () => (
     <div className="lg:hidden">
@@ -311,20 +184,6 @@ const listedFiles = dataGroups
       );
     }
 
-    if (hasFile === false) {
-      return renderEmpty(
-        <Upload className="size-5" />,
-        'この書類はまだアップロードされていません。',
-        'フォームタブでファイルをアップロードすると、読み取ったデータがここに表示されます。',
-        <Button asChild size="sm" variant="outline" className="text-primary-strong">
-          <Link to={{ search: uploadSearch() }} state={location.state}>
-            <Upload aria-hidden="true" />
-            {activeDefinition.label}をアップロード
-          </Link>
-        </Button>,
-      );
-    }
-
     if (hasFailed) {
       return (
         <div
@@ -342,8 +201,8 @@ const listedFiles = dataGroups
     if (sections.length === 0) {
       return renderEmpty(
         <FileSearch className="size-5" />,
-        '読み取れるデータがありません。',
-        'PDFでアップロードされた書類からはデータを取得できません。Excel様式（.xlsx）をアップロードしてください。',
+        'まだデータがありません。',
+        'この書類の内容が入力されると、ここに表示されます。',
       );
     }
 
@@ -370,7 +229,7 @@ const listedFiles = dataGroups
   return (
     <TooltipProvider delayDuration={250}>
       <div className="grid min-w-0 gap-4 lg:grid-cols-[clamp(18rem,32vw,29.625rem)_minmax(0,1fr)] lg:gap-6">
-        {renderFileList()}
+        {renderFormList()}
 
         {/* gap, not space-y: the hidden mobile select would push the card below the list. */}
         <div className="flex min-w-0 flex-col gap-4">
@@ -382,33 +241,10 @@ const listedFiles = dataGroups
           >
             <header className="flex flex-col gap-3 border-b border-border px-5 py-4 md:flex-row md:items-center md:justify-between">
               <div className="min-w-0 space-y-1">
-                {/* The badge sits with the file name: it is the state of that file. */}
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <h2
-                    id="document-data-title"
-                    className="min-w-0 text-lg font-semibold text-foreground [overflow-wrap:anywhere]"
-                  >
-                    {latestFile?.originalFileName ?? activeDefinition.label}
-                  </h2>
-                  {status && (
-                    <StatusBadge tone={status.tone} className="shrink-0 px-2 py-0.5">
-                      {status.label}
-                    </StatusBadge>
-                  )}
-                </div>
-                <p className="flex flex-wrap items-center gap-x-1.5 text-small text-muted-foreground">
-                  {latestFile ? (
-                    <>
-                      <span>{activeDefinition.label}</span>
-                      <span aria-hidden="true">・</span>
-                      <span className="tabular-nums">v{latestFile.version}</span>
-                      <span aria-hidden="true">・</span>
-                      <span className="tabular-nums">{formatUploadedAt(latestFile.uploadedAt)}</span>
-                    </>
-                  ) : (
-                    <span>{activeDefinition.description}</span>
-                  )}
-                </p>
+                <h2 id="document-data-title" className="text-lg font-semibold text-foreground">
+                  {activeDefinition.label}
+                </h2>
+                <p className="text-small text-muted-foreground">{activeDefinition.description}</p>
               </div>
               {sections.length > 0 && (
                 <div className="relative w-full shrink-0 md:w-64">
