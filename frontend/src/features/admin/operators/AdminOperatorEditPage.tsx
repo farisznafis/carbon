@@ -117,7 +117,7 @@ export default function AdminOperatorEditPage() {
 
   /** Returns to the operator profile without saving changes. */
   usePageBreadcrumb([
-    { label: '運用者管理', to: paths.adminOperatorList },
+    { label: '運用者', to: paths.adminOperatorList },
     ...(operator
       ? [
           {

@@ -45,7 +45,7 @@ export default function AdminOperatorProfilePage() {
   const effectiveRole = operator?.role ?? '';
 
   usePageBreadcrumb([
-    { label: '運用者管理', to: paths.adminOperatorList },
+    { label: '運用者', to: paths.adminOperatorList },
     { label: operator ? formatOperatorName(operator) : '運用者のプロファイル' },
   ]);
 

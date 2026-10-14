@@ -24,7 +24,6 @@ export const paths = {
   userDashboard: '/dashboard',
   siteDashboard: (siteId: string) => `/sites/${siteId}/dashboard`,
   siteDetailRoute: '/sites/:siteId',
-  siteDetail: (siteId: string) => `/sites/${siteId}`,
 
   legacyDashboardRoute: '/dashboard/:siteId',
   legacyProjectRoute: '/project/:id',
@@ -47,8 +46,6 @@ export const paths = {
     siteId: string,
     projectId: string,
   ) => `/projects/${siteId}/${projectId}/equipment/confirmation`,
-  equipmentAddRoute: '/equipment/add/:type',
-  equipmentAdd: (type: string) => `/equipment/add/${type}`,
   siteProjectDetailRoute: '/sites/:siteId/projects/:projectId',
   siteProjectDetail: (
     siteId: string,

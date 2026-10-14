@@ -32,7 +32,7 @@ export default function AdminOperatorRegisterPage() {
   const handleBack = () => navigate(paths.adminOperatorList);
 
   usePageBreadcrumb([
-    { label: '運用者管理', to: paths.adminOperatorList },
+    { label: '運用者', to: paths.adminOperatorList },
     { label: '運用者を追加' },
   ]);
 

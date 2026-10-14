@@ -36,6 +36,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CompanySuspendDialog } from '@/features/admin/dashboard/tables/CompanySuspendDialog';
 import { CompanySuspensionResolveDialog } from '@/features/admin/dashboard/tables/CompanySuspensionResolveDialog';
 import { useAdminCompanyDetailQuery } from '@/hooks/admin/useAdminCompanyDetailQuery';
+import { useAdminProjectDetailQuery } from '@/hooks/admin/useAdminProjectDetailQuery';
 import { PageSkeleton, SkeletonCard, SkeletonTable } from '@/components/feedback/loading';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
@@ -67,11 +68,18 @@ const DEFAULT_SUSPEND_PAYLOAD: SuspendCompanyPayload = {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /** Returns to the filtered company list the detail was opened from, else the dashboard. */
-function resolveCompanyDetailBackTo(state: unknown): string {
-  const returnTo = (state as { returnTo?: unknown } | null)?.returnTo;
-  return typeof returnTo === 'string' && returnTo.startsWith(paths.adminCompanyList)
-    ? returnTo
-    : paths.adminDashboard;
+/** Where the page was opened from: a project's 参加企業 tab, or the company list (also the fallback for direct visits). */
+function resolveCompanyDetailOrigin(state: unknown): { backTo: string; projectId?: string } {
+  const { returnTo, projectId } = (state ?? {}) as { returnTo?: unknown; projectId?: unknown };
+  if (typeof projectId === 'string' && projectId) {
+    return { backTo: paths.adminProjectDetailTab(projectId, 'companies'), projectId };
+  }
+  return {
+    backTo:
+      typeof returnTo === 'string' && returnTo.startsWith(paths.adminCompanyList)
+        ? returnTo
+        : paths.adminCompanyList,
+  };
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -163,7 +171,8 @@ export default function AdminCompanyDetailPage() {
   const { companyId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const backTo = resolveCompanyDetailBackTo(location.state);
+  const { backTo, projectId: originProjectId } = resolveCompanyDetailOrigin(location.state);
+  const originProjectName = useAdminProjectDetailQuery(originProjectId).data?.projectName;
   const { user } = useAuth();
   const { toast } = useToast();
   const permissions = useAdminPermissions();
@@ -354,7 +363,12 @@ export default function AdminCompanyDetailPage() {
 
   const loadedCompany = companyDetailQuery.data?.company;
   usePageBreadcrumb([
-    { label: backTo === paths.adminDashboard ? 'ダッシュボード' : '企業一覧', to: backTo },
+    ...(originProjectId
+      ? [
+          { label: 'プロジェクト', to: paths.adminProjectList },
+          { label: originProjectName || 'プロジェクト詳細', to: backTo },
+        ]
+      : [{ label: '企業', to: backTo }]),
     {
       label: loadedCompany
         ? loadedCompany.nameJA || `企業ID: ${loadedCompany.companyId}`

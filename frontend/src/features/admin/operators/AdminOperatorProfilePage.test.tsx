@@ -73,7 +73,7 @@ describe('AdminOperatorProfilePage', () => {
     renderProfilePage();
 
     expect(screen.getByRole('heading', { name: '運用者のプロファイル' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '運用者管理' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '運用者' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '編集' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '基本情報' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'アカウント情報' })).toBeInTheDocument();

@@ -348,6 +348,7 @@ export default function ProjectDetailAdmin() {
     <AdminProjectDetailLayout
       projectId={projectId}
       projectName={project.projectName}
+      fromHome={Boolean(navigationState)}
       title={formatProjectDetailValue(project.projectName)}
       description="登録済みプロジェクトの進捗、排出量、関連データを確認します。"
     >

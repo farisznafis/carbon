@@ -10,6 +10,7 @@ import {
   FormStandalonePage,
 } from '@/components/forms/form-layout';
 import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { formatPersonName } from '@/features/master/components/masterDashboardUtils';
 import { UserForm, UserFormData } from '@/features/master/forms/UserForm';
 import UserConfirmation from '@/features/master/pages/UserConfirmation';
@@ -18,6 +19,7 @@ import { useSitesQuery } from '@/hooks/sites/useSitesQuery';
 import { logger } from '@/lib/logger';
 import { paths } from '@/routes/paths';
 import { useDashboardStore } from '@/stores/dashboardStore';
+import { getHomePath } from '@/utils/getHomePath';
 
 type UserEditLocationState = {
   mode?: 'edit' | 'profile';
@@ -70,6 +72,7 @@ export default function UserEdit() {
   const queryClient = useQueryClient();
   const location = useLocation();
   const { id } = useParams();
+  const { user } = useAuth();
   const locationState = location.state as UserEditLocationState | null;
   const storedUser = useDashboardStore((state) => state.getUser(id));
   const routedUser =
@@ -231,17 +234,19 @@ export default function UserEdit() {
     navigate(-1);
   };
 
-  const editCrumbLabel = mode === 'profile' ? '編集' : '更新';
   usePageBreadcrumb([
     ...(mode === 'profile'
-      ? [{ label: 'プロファイル', to: paths.profile }]
+      ? [
+          { label: 'ホーム', to: getHomePath(user) },
+          { label: accountName || 'プロファイル', to: paths.profile },
+        ]
       : [
           { label: '社員', to: `${paths.masterDashboard}?tab=users` },
           { label: accountName || '社員', to: profilePath },
         ]),
     step === 'confirm'
-      ? { label: editCrumbLabel, onClick: handleConfirmBack }
-      : { label: editCrumbLabel },
+      ? { label: '編集', onClick: handleConfirmBack }
+      : { label: '編集' },
     ...(step === 'confirm' ? [{ label: '確認' }] : []),
   ]);
 

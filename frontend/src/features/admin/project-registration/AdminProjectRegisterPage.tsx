@@ -86,7 +86,7 @@ export const AdminProjectRegister: React.FC = () => {
   const navigate = useNavigate();
 
   usePageBreadcrumb([
-    { label: 'プロジェクト管理', to: paths.adminProjectList },
+    { label: 'プロジェクト', to: paths.adminProjectList },
     { label: 'プロジェクト作成' },
   ]);
 

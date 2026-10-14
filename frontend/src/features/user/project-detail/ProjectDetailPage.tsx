@@ -942,6 +942,7 @@ const ProjectDetail = () => {
                     navigate(paths.projectEquipment(siteId, projectId), {
                       state: {
                         submissionMode: 'create',
+                        projectName: project?.name,
                         returnTo: `${paths.siteProjectDetail(
                           siteId,
                           projectId,

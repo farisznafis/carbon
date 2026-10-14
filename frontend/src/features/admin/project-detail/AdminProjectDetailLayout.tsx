@@ -18,6 +18,8 @@ type AdminProjectDetailLayoutProps = {
   description: string;
   /** Set on sub-pages; the project name then links back to the project detail. */
   currentBreadcrumb?: string;
+  /** Opened from admin Home, so the trail starts there instead of the project list. */
+  fromHome?: boolean;
   /**
    * Where 更新 leads. Defaults to the project edit flow; the plan page sends
    * the operator to the wizard page they are reading instead.
@@ -33,6 +35,7 @@ export function AdminProjectDetailLayout({
   title,
   description,
   currentBreadcrumb,
+  fromHome = false,
   onEdit,
   children,
 }: Readonly<AdminProjectDetailLayoutProps>) {
@@ -40,7 +43,9 @@ export function AdminProjectDetailLayout({
   const permissions = useAdminPermissions();
 
   usePageBreadcrumb([
-    { label: 'プロジェクト管理', to: paths.adminProjectList },
+    fromHome
+      ? { label: 'ホーム', to: paths.adminDashboard }
+      : { label: 'プロジェクト', to: paths.adminProjectList },
     currentBreadcrumb
       ? { label: projectName || 'プロジェクト詳細', to: paths.adminProjectDetail(projectId) }
       : { label: projectName || 'プロジェクト詳細' },

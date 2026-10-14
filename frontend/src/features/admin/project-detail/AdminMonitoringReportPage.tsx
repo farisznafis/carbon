@@ -10,14 +10,16 @@ import {
 import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { ActionButton } from '@/components/actions';
 import { paths } from '@/routes/paths';
+import { useAdminProjectDetailQuery } from '@/hooks/admin/useAdminProjectDetailQuery';
 
 export default function AdminMonitoringReportPage() {
   const { projectId } = useParams();
 
+  const projectName = useAdminProjectDetailQuery(projectId).data?.projectName;
   usePageBreadcrumb([
-    { label: 'プロジェクト管理', to: paths.adminProjectList },
+    { label: 'プロジェクト', to: paths.adminProjectList },
     {
-      label: 'プロジェクト詳細',
+      label: projectName || 'プロジェクト詳細',
       to: projectId ? paths.adminProjectDetail(projectId) : undefined,
     },
     { label: 'モニタリング報告書' },

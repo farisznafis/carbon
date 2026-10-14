@@ -23,6 +23,7 @@ import { FormActions, FormPageContent } from '@/components/forms/form-layout';
 import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
+import { useAdminProjectDetailQuery } from '@/hooks/admin/useAdminProjectDetailQuery';
 import { downloadFromUrl } from '@/utils/download';
 import { isForbiddenApiError } from '@/api/_shared/errors';
 import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionDeniedNotice';
@@ -142,11 +143,11 @@ export default function ParticipationReviewDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
+  const projectName = useAdminProjectDetailQuery(projectId).data?.projectName;
   usePageBreadcrumb([
-    { label: 'プロジェクト管理', to: paths.adminProjectList },
-    { label: 'プロジェクト詳細', to: paths.adminProjectDetail(projectId) },
+    { label: 'プロジェクト', to: paths.adminProjectList },
     {
-      label: '入会届一覧',
+      label: projectName || 'プロジェクト詳細',
       to: paths.adminProjectMembership(projectId, requestedStatus ?? 'OPEN'),
     },
     { label: '入会届の詳細' },

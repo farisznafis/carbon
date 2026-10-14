@@ -121,7 +121,7 @@ export function ProjectCompaniesPanel({ projectId }: Readonly<{ projectId: strin
         emptyMessage="このプロジェクトに参加している企業はありません。"
         onRowClick={
           canOpenCompany
-            ? (company) => navigate(paths.adminCompanyDetail(company.companyId))
+            ? (company) => navigate(paths.adminCompanyDetail(company.companyId), { state: { projectId } })
             : undefined
         }
         getRowActionLabel={(company) => `${company.companyName}の企業詳細を開く`}

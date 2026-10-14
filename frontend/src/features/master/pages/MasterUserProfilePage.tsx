@@ -113,7 +113,7 @@ export default function MasterUserProfilePage() {
   /** Opens password change for the employee currently displayed. */
   const handlePasswordChange = () => {
     if (!userId) return;
-    navigate(paths.passwordChangeForUser(userId));
+    navigate(paths.passwordChangeForUser(userId), { state: { accountName } });
   };
 
   return (

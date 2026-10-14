@@ -24,6 +24,10 @@ vi.mock('@/api/monitoring', async (importOriginal) => {
   };
 });
 
+vi.mock('@/hooks/admin/useAdminProjectDetailQuery', () => ({
+  useAdminProjectDetailQuery: () => ({ data: { projectName: 'テストプロジェクト' } }),
+}));
+
 const record: MonitoringRecordListItem = {
   id: 'MON0001',
   projectId: 'PROJ0123',
@@ -173,7 +177,7 @@ describe('ProjectMonitoringDetailPage', () => {
 
     fireEvent.click(
       await screen.findByRole('link', {
-        name: 'モニタリングデータ',
+        name: 'テストプロジェクト',
       }),
     );
 

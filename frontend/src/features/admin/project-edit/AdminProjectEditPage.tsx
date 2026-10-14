@@ -356,7 +356,7 @@ export default function AdminProjectEditPage() {
   const projectName = form.getValues('projectName');
 
   usePageBreadcrumb([
-    { label: 'プロジェクト管理', to: paths.adminProjectList },
+    { label: 'プロジェクト', to: paths.adminProjectList },
     {
       label: !loading && !error && projectName ? projectName : 'プロジェクト詳細',
       to: detailPath,

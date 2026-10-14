@@ -1,8 +1,13 @@
 import type { ReactNode } from 'react';
-import { useParams } from 'react-router-dom';
+import { matchPath, useLocation, useParams } from 'react-router-dom';
 import type { AdminOperatorPermissionCode } from '@/api/admin/operators';
 import { adminPageContainerClassName } from '@/components/layout/DashboardLayout';
 import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
+import {
+  ADMIN_NAVIGATION_ITEMS,
+  getActiveAdminNavigationKey,
+} from '@/features/admin/navigation/adminNavigationConfig';
+import { useAdminProjectDetailQuery } from '@/hooks/admin/useAdminProjectDetailQuery';
 import { PermissionDeniedNotice } from './PermissionDeniedNotice';
 import { useAdminPermissions } from './useAdminPermissions';
 import { paths } from '@/routes/paths';
@@ -29,7 +34,21 @@ function PermissionDeniedPage({
   title,
   description,
 }: Readonly<PermissionDeniedPageProps>) {
-  usePageBreadcrumb([{ label: 'ホーム', to: paths.adminDashboard }, { label: title }]);
+  // Starts from the section the sidebar highlights, plus the project when the page sits under one.
+  const { pathname } = useLocation();
+  const activeKey = getActiveAdminNavigationKey(pathname) ?? 'home';
+  const section = ADMIN_NAVIGATION_ITEMS.find((item) => item.key === activeKey)!;
+  const projectMatch = matchPath(`${paths.adminProjectDetailRoute}/*`, pathname);
+  // Only pages below the project detail get the project crumb; the detail page itself is the title.
+  const projectId = projectMatch?.params['*'] ? projectMatch.params.projectId : undefined;
+  const projectName = useAdminProjectDetailQuery(projectId).data?.projectName;
+  usePageBreadcrumb([
+    { label: section.label, to: section.href },
+    ...(projectId
+      ? [{ label: projectName || 'プロジェクト詳細', to: paths.adminProjectDetail(projectId) }]
+      : []),
+    { label: title },
+  ]);
 
   return (
     <main className={`${adminPageContainerClassName} py-8`}>

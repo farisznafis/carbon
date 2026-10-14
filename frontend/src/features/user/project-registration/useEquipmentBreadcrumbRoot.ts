@@ -1,9 +1,13 @@
 import type { PageBreadcrumbItem } from '@/components/navigation/PageBreadcrumb';
 import { useSiteBreadcrumbRoot } from '@/features/user/navigation/useSiteBreadcrumbRoot';
 import { paths } from '@/routes/paths';
+import { useDashboardStore } from '@/stores/dashboardStore';
 
 type EquipmentBreadcrumbRootOptions = {
   siteId: string;
+  projectId: string;
+  /** Handed over by the project detail page; the registration wizard keeps it in the dashboard store. */
+  projectName?: string;
   /** Where the equipment form returns to, as carried in its navigation state. */
   returnTo?: string | null;
   fromMasterDashboard: boolean;
@@ -18,20 +22,33 @@ type EquipmentBreadcrumbRootOptions = {
  */
 export function useEquipmentBreadcrumbRoot({
   siteId,
+  projectId,
+  projectName,
   returnTo,
   fromMasterDashboard,
   onReturn,
 }: EquipmentBreadcrumbRootOptions): PageBreadcrumbItem[] {
   const siteRoot = useSiteBreadcrumbRoot(siteId);
+  const currentProject = useDashboardStore((state) => state.currentProject);
+  const name =
+    projectName || (currentProject?.id === projectId ? currentProject.projectName : undefined);
   const root = fromMasterDashboard
     ? [{ label: 'プロジェクトの入会届', to: paths.masterDashboardMembership }]
     : siteRoot;
 
+  if (returnTo?.startsWith('/sites/')) {
+    return [...root, { label: name || 'プロジェクト詳細', onClick: onReturn }];
+  }
+
   if (returnTo) {
-    const parentLabel = returnTo.startsWith('/sites/')
-      ? 'プロジェクト詳細'
-      : 'プロジェクト参加申請';
-    return [...root, { label: parentLabel, onClick: onReturn }];
+    // Mirrors the registration wizard's own trail so the step it came from keeps its place.
+    return [
+      ...root,
+      ...(fromMasterDashboard
+        ? []
+        : [{ label: 'プロジェクトへの入会', to: paths.projectMembership(siteId) }]),
+      { label: name || 'プロジェクト参加申請', onClick: onReturn },
+    ];
   }
 
   return fromMasterDashboard

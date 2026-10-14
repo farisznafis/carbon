@@ -27,6 +27,7 @@ import {
 import { logger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 import { paths } from '@/routes/paths';
+import { useAdminProjectDetailQuery } from '@/hooks/admin/useAdminProjectDetailQuery';
 import { ProjectDetailItem } from '../project-detail/ProjectDetailItem';
 import {
   formatMonitoringDate,
@@ -184,9 +185,10 @@ export default function ProjectMonitoringDetailPage() {
       })
     : paths.adminProjectList;
 
+  const projectName = useAdminProjectDetailQuery(projectId).data?.projectName;
   usePageBreadcrumb([
-    { label: 'プロジェクト管理', to: paths.adminProjectList },
-    { label: 'モニタリングデータ', to: listPath },
+    { label: 'プロジェクト', to: paths.adminProjectList },
+    { label: projectName || 'プロジェクト詳細', to: listPath },
     { label: 'モニタリング詳細' },
   ]);
 

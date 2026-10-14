@@ -1,5 +1,4 @@
 ﻿export { default as DashboardPage } from './dashboard/DashboardPage';
-export { default as SiteDetailPage } from './sites/SiteDetailPage';
 export { default as ProjectRegisterPage } from './project-registration/ProjectRegisterPage';
 export { default as EquipmentFormPage } from './project-registration/EquipmentFormPage';
 export { default as MonitoringRegisterPage } from './monitoring/MonitoringRegisterPage';

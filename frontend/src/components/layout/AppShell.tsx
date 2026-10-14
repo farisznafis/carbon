@@ -48,7 +48,6 @@ const APPLICATION_ROUTE_PATTERNS = [
   paths.projectRegisterRoute,
   paths.projectEquipmentRoute,
   paths.projectEquipmentConfirmationRoute,
-  paths.equipmentAddRoute,
   paths.siteProjectDetailRoute,
   paths.siteProjectEquipmentEditRoute,
   paths.legacyProjectRoute,

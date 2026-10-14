@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { ApiError } from '@/api/_shared/errors';
@@ -24,8 +24,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
+import { formatPersonName } from '@/features/master/components/masterDashboardUtils';
 import { useToast } from '@/hooks/use-toast';
 import { paths } from '@/routes/paths';
+import { useProfileStore } from '@/stores/ProfileStore';
+import { getHomePath } from '@/utils/getHomePath';
 
 const passwordSchema = z
   .object({
@@ -62,9 +65,14 @@ const PasswordChange = () => {
     isManagedUserPasswordChange && requestedUserId
       ? paths.masterUserProfile(requestedUserId)
       : paths.profile;
+  const location = useLocation();
+  const profile = useProfileStore((state) => state.profile);
+  const ownName = formatPersonName(profile?.lastName, profile?.firstName);
+  // The employee's name is handed over by their profile page; a direct visit falls back to a generic label.
+  const managedName = (location.state as { accountName?: unknown } | null)?.accountName;
   const profileBreadcrumbLabel = isManagedUserPasswordChange
-    ? '社員プロファイル'
-    : 'プロファイル';
+    ? (typeof managedName === 'string' && managedName) || '社員プロファイル'
+    : (ownName !== '-' ? ownName : profile?.username || user?.username) || 'プロファイル';
   const pageDescription = isManagedUserPasswordChange
     ? '社員アカウントのパスワードを変更します。'
     : '安全のため、現在のパスワードを確認して新しいパスワードを設定します。';
@@ -72,7 +80,7 @@ const PasswordChange = () => {
   usePageBreadcrumb([
     ...(isManagedUserPasswordChange
       ? [{ label: '社員', to: `${paths.masterDashboard}?tab=users` }]
-      : []),
+      : [{ label: 'ホーム', to: getHomePath(user) }]),
     { label: profileBreadcrumbLabel, to: backPath },
     { label: 'パスワード変更' },
   ]);

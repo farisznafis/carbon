@@ -160,6 +160,8 @@ export default function EquipmentFormPage() {
   const submissionMode = getEquipmentSubmissionMode(location.state);
   const enteredFromMasterDashboard = isFromMasterDashboard(location.state);
   const equipmentDraft = getSolarEquipmentDraft(location.state);
+  const projectNameState = (location.state as { projectName?: unknown } | null)?.projectName;
+  const projectName = typeof projectNameState === 'string' ? projectNameState : undefined;
   const { toast } = useToast();
   const sitesQuery = useSitesQuery();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -284,6 +286,7 @@ export default function EquipmentFormPage() {
           returnTo: returnPath ?? undefined,
           submissionMode,
           fromMasterDashboard: enteredFromMasterDashboard,
+          projectName,
         },
       });
     } catch (error) {
@@ -350,6 +353,8 @@ export default function EquipmentFormPage() {
   const pageTitle = equipmentId ? '設備編集' : '設備登録';
   const breadcrumbRoot = useEquipmentBreadcrumbRoot({
     siteId,
+    projectId,
+    projectName,
     returnTo: returnPath,
     fromMasterDashboard: enteredFromMasterDashboard,
     onReturn: handleCancel,

@@ -43,7 +43,6 @@ const SiteRegister = lazy(() => import("./features/master/pages/SiteRegisterPage
 const SiteEdit = lazy(() => import("./features/master/pages/SiteEditPage"));
 const UserEdit = lazy(() => import("./features/master/pages/UserEditPage"));
 const MasterUserProfile = lazy(() => import("./features/master/pages/MasterUserProfilePage"));
-const SiteDetail = lazy(() => import("./features/user/sites/SiteDetailPage"));
 const ProjectMembership = lazy(() => import("./features/user/project-registration/ProjectMembershipPage"));
 const ProjectRegister = lazy(() => import("./features/user/project-registration/ProjectRegisterPage"));
 const EquipmentForm = lazy(() => import("./features/user/project-registration/EquipmentFormPage"));
@@ -57,11 +56,6 @@ const MasterDashboard = lazy(() => import("./features/master/pages/MasterDashboa
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Dashboard = lazy(() => import("./features/user/dashboard/DashboardPage"));
 const PasswordChange = lazy(() => import("./features/user/profile/PasswordChangePage"));
-const EquipmentPage = lazy(() =>
-  import("./features/user/project-registration/components/EquipmentPage").then((module) => ({
-    default: module.EquipmentPage,
-  })),
-);
 const Profile = lazy(() => import("./features/user/profile/ProfilePage"));
 const AdminDashboard = lazy(() => import("./features/admin/dashboard/AdminDashboardPage"));
 const AdminOperatorList = lazy(() =>
@@ -268,7 +262,6 @@ const App = () => {
                 </RequireMaster>
               }
             />
-            <Route path={paths.equipmentAddRoute} element={<EquipmentPage />} />
             <Route path={paths.siteProjectDetailRoute} element={<ProjectDetail />} />
             <Route
               path={paths.siteProjectEquipmentEditRoute}
@@ -279,7 +272,7 @@ const App = () => {
               path={paths.monitoringRegisterRoute}
               element={<MonitoringRegister />}
             />
-            <Route path={paths.siteDetailRoute} element={<SiteDetail />} />
+            <Route path={paths.siteDetailRoute} element={<LegacyDashboardRedirect />} />
             <Route path={paths.profile} element={<Profile />} />
           </Route>
 

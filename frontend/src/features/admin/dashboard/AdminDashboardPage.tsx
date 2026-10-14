@@ -1064,7 +1064,7 @@ const AdminDashboard = () => {
             item={detailCompany}
             reviewMode={detailReviewMode}
             backLabel={
-              companyDetailReturnTo === paths.adminDashboard ? 'ダッシュボード' : '企業一覧'
+              companyDetailReturnTo === paths.adminDashboard ? 'ホーム' : '企業'
             }
             onBack={closeCompanyDetail}
             onApprove={openApproveCompany}

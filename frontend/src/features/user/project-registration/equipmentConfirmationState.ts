@@ -8,6 +8,7 @@ export type EquipmentConfirmationState = {
   returnTo?: string;
   submissionMode: 'draft' | 'create';
   fromMasterDashboard: boolean;
+  projectName?: string;
 };
 
 export function getEquipmentConfirmationState(
@@ -32,6 +33,8 @@ export function getEquipmentConfirmationState(
       typeof candidate.returnTo === 'string' ? candidate.returnTo : undefined,
     submissionMode: candidate.submissionMode === 'create' ? 'create' : 'draft',
     fromMasterDashboard: candidate.fromMasterDashboard === true,
+    projectName:
+      typeof candidate.projectName === 'string' ? candidate.projectName : undefined,
   };
 }
 

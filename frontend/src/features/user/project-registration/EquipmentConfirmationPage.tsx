@@ -105,6 +105,7 @@ export default function EquipmentConfirmationPage() {
           : {}),
         returnTo: confirmationState?.returnTo,
         submissionMode: confirmationState?.submissionMode,
+        projectName: confirmationState?.projectName,
         equipmentDraft: data,
       },
     });
@@ -124,6 +125,8 @@ export default function EquipmentConfirmationPage() {
 
   const breadcrumbRoot = useEquipmentBreadcrumbRoot({
     siteId,
+    projectId,
+    projectName: confirmationState?.projectName,
     returnTo: confirmationState?.returnTo,
     fromMasterDashboard: Boolean(confirmationState?.fromMasterDashboard),
     onReturn: navigateOut,
