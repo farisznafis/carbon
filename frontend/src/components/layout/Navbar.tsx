@@ -128,6 +128,8 @@ export const Navbar = ({
     loadNotifications,
     markAsRead,
     deleteNotification,
+    panelOpen,
+    setPanelOpen,
   } = useNotifications();
 
   const loadedAdminNotificationSessionRef =
@@ -306,7 +308,7 @@ export const Navbar = ({
           >
             {isAuthenticated && user ? (
               <>
-                <Sheet>
+                <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
                   <SheetTrigger asChild>
                     <Button
                       type="button"

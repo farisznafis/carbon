@@ -33,6 +33,7 @@ export function mapSiteProject(item: SiteProjectApiItem): SiteProject {
     pdfStatus: item.pdfStatus ?? undefined,
     isCompanyJoined: item.isCompanyJoined === true,
     hasSiteRelation: item.hasSiteRelation === true,
+    startedAt: item.startedAt ?? undefined,
     projectNumber: item.projectNumber ?? "",
     repFirstName: item.repFirstName ?? undefined,
     repFirstNameKana: item.repFirstNameKana ?? undefined,

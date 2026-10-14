@@ -163,6 +163,7 @@ export type SiteProjectApiItem = {
   pdfStatus?: string | null;
   isCompanyJoined?: boolean | null;
   hasSiteRelation?: boolean | null;
+  startedAt?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 };
@@ -184,6 +185,7 @@ export type SiteProject = Project & {
   isCompanyJoined: boolean;
   hasSiteRelation: boolean;
   projectNumber: string;
+  startedAt?: string;
   repFirstName?: string;
   repFirstNameKana?: string;
   repLastName?: string;

@@ -20,16 +20,8 @@ import { useDashboardStore } from '@/stores/dashboardStore';
 import { PageLoadingOverlay } from '@/components/feedback/loading';
 import { UserInvitationDialog } from '@/features/master/user-invitations/UserInvitationDialog';
 import { ActionButton } from '@/components/actions';
-
-/** Renders a quiet placeholder for Master destinations awaiting content. */
-function MasterPlaceholderSection({ title }: { title: string }) {
-  return (
-    <section>
-      <h2 className="mb-5 text-foreground">{title}</h2>
-      <DashboardEmptyState title="準備中" description="この画面は準備中です。" />
-    </section>
-  );
-}
+import { MasterHomeSection } from '@/features/master/home/MasterHomeSection';
+import { MasterAnalyticsSection } from '@/features/master/analytics/MasterAnalyticsSection';
 
 /** Displays one Master dashboard destination selected through the URL. */
 const MasterDashboard = () => {
@@ -95,8 +87,8 @@ const MasterDashboard = () => {
   return (
     <div className="flex min-h-[calc(100dvh-var(--app-header-height))] flex-col bg-background">
       <main className={cn(adminPageContainerClassName, 'flex-1 py-8')}>
-        {activeTab === 'home' && <MasterPlaceholderSection title="ホーム" />}
-        {activeTab === 'analytics' && <MasterPlaceholderSection title="アナリティクス" />}
+        {activeTab === 'home' && <MasterHomeSection />}
+        {activeTab === 'analytics' && <MasterAnalyticsSection />}
         {activeTab === 'membership' && (
           errorMessage ? (
             <DashboardEmptyState>{errorMessage}</DashboardEmptyState>

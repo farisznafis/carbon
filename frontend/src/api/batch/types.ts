@@ -27,6 +27,15 @@ export type ReductionResultResponse = {
   items?: ReductionResultPayload;
 };
 
+/** One processing record with its EmPJ components (tCO₂); missing values stay null. */
+export type ReductionResultItem = {
+  processingDate: string;
+  empj: number | null;
+  empjM: number | null;
+  empjSControl: number | null;
+  empjSBattery: number | null;
+};
+
 export type EmissionTrendPoint = {
   x: string;
   y: number;

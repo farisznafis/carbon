@@ -15,6 +15,9 @@ type NotificationState = {
   loading: boolean;
   error: string | null;
   unreadCount: number;
+  /** Whether the navbar notification sheet is open, so pages can open it too. */
+  panelOpen: boolean;
+  setPanelOpen: (open: boolean) => void;
   loadNotifications: () => Promise<void>;
   markAsRead: (notificationId: UserNotification['id']) => Promise<void>;
   deleteNotification: (
@@ -29,6 +32,8 @@ export const useNotificationStore = create<NotificationState>((set) => ({
   loading: false,
   error: null,
   unreadCount: 0,
+  panelOpen: false,
+  setPanelOpen: (panelOpen) => set({ panelOpen }),
 
   loadNotifications: async () => {
     set({ loading: true, error: null });

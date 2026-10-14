@@ -10,6 +10,7 @@ import type {
   ProjectEmissionSummary,
   ProjectReductionResultResponse,
   ReductionResultApiItem,
+  ReductionResultItem,
   ReductionResultPayload,
   ReductionResultResponse,
 } from './types';
@@ -196,6 +197,31 @@ function toFiniteEmission(value: number | string | null | undefined) {
 
   const emission = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(emission) ? emission : null;
+}
+
+/** Loads reduction results with their EmPJ breakdown, oldest first. */
+export async function getReductionResults(
+  siteId: string,
+  projectId: string,
+): Promise<ReductionResultItem[]> {
+  const json = await fetchReductionResults(siteId, projectId);
+  if (!json) return [];
+
+  return extractReductionResults(json)
+    .flatMap((result) => {
+      const processingDate =
+        result.processing_date?.trim() || result.created_at?.trim();
+      return processingDate
+        ? [{
+            processingDate,
+            empj: toFiniteEmission(result.empj),
+            empjM: toFiniteEmission(result.empj_m),
+            empjSControl: toFiniteEmission(result.empj_s_control),
+            empjSBattery: toFiniteEmission(result.empj_s_battery),
+          }]
+        : [];
+    })
+    .sort((left, right) => left.processingDate.localeCompare(right.processingDate));
 }
 
 /**
