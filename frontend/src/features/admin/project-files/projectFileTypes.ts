@@ -58,7 +58,7 @@ export const PROJECT_FILE_TYPES: readonly ProjectFileTypeDefinition[] = [
   {
     type: 'ACTIVITY_RESULT_LIST',
     label: '個別活動実績報告リスト',
-    description: '別紙10-1。方法論ごとの様式で作成します。',
+    description: '別紙10-1の方法論ごとの様式で作成します。',
     stage: 'monitoring',
     authoredByUs: true,
   },

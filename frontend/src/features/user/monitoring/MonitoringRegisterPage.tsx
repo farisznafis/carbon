@@ -20,7 +20,7 @@ import { ApiError } from '@/api/_shared/errors';
 import { monitoringRecordsQueryKey } from '@/hooks/monitoring/useMonitoringRecordsQuery';
 import { useToast } from '@/hooks/use-toast';
 import {
-  getSiteEquipmentList,
+  getSiteProjectEquipment,
   type SiteProjectEquipment,
 } from '@/api/site';
 import { logger } from '@/lib/logger';
@@ -131,6 +131,9 @@ const MonitoringRegister = () => {
       asRecord(formData).siteId ??
       '',
   );
+  const breadcrumbProjectId = String(
+    routeState.projectId ?? new URLSearchParams(location.search).get('projectId') ?? '',
+  );
 
   useEffect(() => {
     if (!definition) return;
@@ -139,10 +142,12 @@ const MonitoringRegister = () => {
   }, [definition]);
 
   useEffect(() => {
-    if (!equipmentSiteId || projectType !== 'solar') {
+    if (!equipmentSiteId || !breadcrumbProjectId || projectType !== 'solar') {
       setEquipmentList([]);
       setEquipmentLoadError(
-        equipmentSiteId ? null : '設備一覧を取得する拠点を特定できませんでした。',
+        equipmentSiteId && breadcrumbProjectId
+          ? null
+          : '設備一覧を取得する拠点またはプロジェクトを特定できませんでした。',
       );
       return;
     }
@@ -151,7 +156,7 @@ const MonitoringRegister = () => {
     setIsEquipmentLoading(true);
     setEquipmentLoadError(null);
 
-    void getSiteEquipmentList(equipmentSiteId)
+    void getSiteProjectEquipment(equipmentSiteId, breadcrumbProjectId)
       .then((equipments) => {
         if (isActive) setEquipmentList(equipments);
       })
@@ -171,11 +176,8 @@ const MonitoringRegister = () => {
     return () => {
       isActive = false;
     };
-  }, [equipmentReloadKey, equipmentSiteId, projectType]);
+  }, [breadcrumbProjectId, equipmentReloadKey, equipmentSiteId, projectType]);
 
-  const breadcrumbProjectId = String(
-    routeState.projectId ?? new URLSearchParams(location.search).get('projectId') ?? '',
-  );
   const siteBreadcrumbRoot = useSiteBreadcrumbRoot(equipmentSiteId, routeState.siteName);
   usePageBreadcrumb([
     ...siteBreadcrumbRoot,

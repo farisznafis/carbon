@@ -3,7 +3,11 @@ import {
   getProjectDetails,
   type ProjectDetail as ProjectDetailApi,
 } from '@/api/projects';
-import { getSiteProjectEquipment, type SiteProjectEquipment } from '@/api/site';
+import {
+  getSiteData,
+  getSiteProjectEquipment,
+  type SiteProjectEquipment,
+} from '@/api/site';
 import {
   useLocation,
   useParams,
@@ -350,7 +354,23 @@ const ProjectDetail = () => {
 
   const projectId = routeProjectId || id || '';
   const siteId = routeSiteId || searchParams.get('siteId') || '';
-  const siteName = navigationState?.siteName?.trim() || '-';
+  const stateSiteName = navigationState?.siteName?.trim();
+  const [fetchedSiteName, setFetchedSiteName] = useState('');
+  const siteName = stateSiteName || fetchedSiteName || '-';
+
+  // Pages that link back here (breadcrumbs, post-submit redirects) don't pass siteName in state.
+  useEffect(() => {
+    if (stateSiteName || !siteId) return;
+    let isCancelled = false;
+    getSiteData(siteId)
+      .then(({ site }) => {
+        if (!isCancelled) setFetchedSiteName(site?.siteName?.trim() ?? '');
+      })
+      .catch((error) => logger.error('Failed to fetch site name', error));
+    return () => {
+      isCancelled = true;
+    };
+  }, [siteId, stateSiteName]);
 
   type ProjectView = {
     name: string;

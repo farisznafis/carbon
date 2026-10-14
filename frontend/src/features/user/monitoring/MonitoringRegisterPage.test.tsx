@@ -10,11 +10,11 @@ import {
   uploadElpvrFile,
   validateMonitoringData,
 } from '@/api/monitoring';
-import { getSiteEquipmentList } from '@/api/site';
+import { getSiteProjectEquipment } from '@/api/site';
 import { paths } from '@/routes/paths';
 import MonitoringRegister from './MonitoringRegisterPage';
 
-vi.mock('@/api/site', () => ({ getSiteEquipmentList: vi.fn() }));
+vi.mock('@/api/site', () => ({ getSiteProjectEquipment: vi.fn() }));
 vi.mock('@/api/monitoring', () => ({
   validateMonitoringData: vi.fn().mockResolvedValue(undefined),
   submitMonitoringData: vi.fn().mockResolvedValue({ success: true, message: '', dataId: 'MON0001' }),
@@ -30,7 +30,7 @@ describe('Monitoring registration evidence upload', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it.each([true, false])('uploads evidence and sends the DTO for equipment.hasBattery=%s', async (hasBattery) => {
-    vi.mocked(getSiteEquipmentList).mockResolvedValue([{ equipmentId: 100, hasBattery }]);
+    vi.mocked(getSiteProjectEquipment).mockResolvedValue([{ equipmentId: 100, hasBattery }]);
     const { container } = render(
       <QueryClientProvider client={new QueryClient()}>
       <MemoryRouter
@@ -48,6 +48,7 @@ describe('Monitoring registration evidence upload', () => {
       </QueryClientProvider>,
     );
     await waitFor(() => expect(screen.getByRole('combobox', { name: '設備ID' })).toHaveTextContent('設備ID：100'));
+    expect(getSiteProjectEquipment).toHaveBeenCalledWith('SITE0001', 'PROJ0001');
 
     for (const input of screen.getAllByRole('spinbutton')) {
       fireEvent.change(input, { target: { value: '0' } });
