@@ -49,7 +49,7 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
       >
         <LoginForm
           title="ログイン"
-          description="GXデータの登録・管理を続けるにはログインしてください。"
+          // description="GXデータの登録・管理を続けるにはログインしてください。"
           submitLabel="ログイン"
           error={error}
           isSubmitting={form.formState.isSubmitting}
@@ -63,8 +63,8 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
             control={form.control}
             name="companyId"
             render={({ field }) => (
-              <FormItem className="[@media(max-height:700px)]:space-y-1">
-                <FormLabel className="[@media(max-heigght:700px)]:text-sm [@media(max-height:700px)]:leading-5">
+              <FormItem>
+                <FormLabel>
                   企業ID
                 </FormLabel>
                 <FormControl>
@@ -83,13 +83,14 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem className="[@media(max-height:700px)]:space-y-1">
-                <FormLabel className="[@media(max-height:700px)]:text-sm [@media(max-height:700px)]:leading-5">
+              <FormItem>
+                <FormLabel>
                   メールアドレスまたはユーザー名
                 </FormLabel>
                 <FormControl>
                   <Input
                     type="text"
+                    autoComplete="username"
                     placeholder="例）user@example.com または name_company"
                     {...field}
                   />
@@ -103,12 +104,13 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem className="[@media(max-height:700px)]:space-y-1">
-                <FormLabel className="[@media(max-height:700px)]:text-sm [@media(max-height:700px)]:leading-5">
+              <FormItem>
+                <FormLabel>
                   パスワード
                 </FormLabel>
                 <FormControl>
                   <PasswordInput
+                    autoComplete="current-password"
                     placeholder="パスワードを入力"
                     {...field}
                   />
@@ -118,12 +120,12 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
             )}
           />
 
-          <div className="text-right">
+          <div className="!mt-3 text-right">
             <Link
               to={paths.forgotPassword}
-              className="text-sm font-medium text-foreground hover:text-primary"
+              className="rounded-sm text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              企業IDまたはパスワードをお忘れの方
+              パスワードをお忘れの方
             </Link>
           </div>
         </LoginForm>

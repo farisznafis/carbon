@@ -15,7 +15,7 @@ export type LoginFormProps = {
 
 export function LoginForm({
   title = 'ログイン',
-  description = 'GXデータの登録・管理を続けるにはログインしてください。',
+  // description = 'GXデータの登録・管理を続けるにはログインしてください。',
   submitLabel = 'ログイン',
   error = null,
   isSubmitting = false,
@@ -27,7 +27,7 @@ export function LoginForm({
   return (
     <AuthPageLayout
       title={title}
-      description={description}
+      // description={description}
       error={error}
       footer={footer}
     >

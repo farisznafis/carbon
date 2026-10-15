@@ -51,7 +51,6 @@ const ForgotPassword = () => {
         key="password-reset-success"
         title="パスワード再設定メールを送信しました"
         headerIcon={<MailCheck className="h-8 w-8" aria-hidden="true" />}
-        preserveHeaderOnShortViewport
       >
         <p role="status" className="text-sm leading-6 text-foreground sm:text-base">
           ご入力いただいたメールアドレスが登録されている場合、パスワード再設定用のリンクをお送りします。メールが届かない場合は、迷惑メールフォルダをご確認ください。
