@@ -13,6 +13,7 @@ import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { DocumentDataSectionCard, type CopyHandler } from './DocumentDataSectionCard';
 import { copyToClipboard, filterSections } from './documentDataCopy';
+import { IndividualActivityView } from './IndividualActivityView';
 import { PROJECT_FILE_TYPES } from './projectFileTypes';
 import { useProjectDocumentData } from './useProjectDocumentData';
 
@@ -77,7 +78,9 @@ export function ProjectDocumentDataPanel({ projectId }: Readonly<{ projectId: st
   const activeType: ProjectFileType = isFileType(requestedType) ? requestedType : DATA_FILE_TYPES[0];
   const activeDefinition = DATA_FILE_DEFINITIONS.find((definition) => definition.type === activeType)!;
 
-  const dataQuery = useProjectDocumentData(projectId, activeType);
+  // 個別活動実績報告リスト has its own per-equipment endpoints.
+  const isIndividualActivity = activeType === 'ACTIVITY_RESULT_LIST';
+  const dataQuery = useProjectDocumentData(projectId, activeType, !isIndividualActivity);
   const isLoading = dataQuery.isLoading;
   const hasFailed = dataQuery.isError && !isNoDataError(dataQuery.error);
 
@@ -169,6 +172,10 @@ export function ProjectDocumentDataPanel({ projectId }: Readonly<{ projectId: st
   );
 
   const renderBody = () => {
+    if (isIndividualActivity) {
+      return <IndividualActivityView projectId={projectId} copiedKey={copiedKey} onCopy={copy} />;
+    }
+
     if (isLoading) {
       return (
         <div role="status" aria-label="データを読み込んでいます" className="space-y-6">

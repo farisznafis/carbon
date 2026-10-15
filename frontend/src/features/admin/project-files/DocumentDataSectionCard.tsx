@@ -1,5 +1,6 @@
+import type { ReactNode } from 'react';
 import { Check, Copy } from 'lucide-react';
-import type { DocumentDataSection } from '@/api/admin/projectDocumentData';
+import type { DocumentDataItem, DocumentDataSection } from '@/api/admin/projectDocumentData';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -45,13 +46,17 @@ type DocumentDataSectionCardProps = Readonly<{
   section: DocumentDataSection;
   copiedKey: string | null;
   onCopy: CopyHandler;
+  /** Shown instead of a dash for a blank value, e.g. where to find it. */
+  renderMissing?: (item: DocumentDataItem) => ReactNode;
+  /** Replaces the plain label, e.g. to add the item's Excel column. */
+  renderLabel?: (item: DocumentDataItem) => ReactNode;
 }>;
 
 /**
  * One section of a form: its label/value items, then its table if it has one.
  * Each value copies on its own, to be pasted into one cell at a time.
  */
-export function DocumentDataSectionCard({ section, copiedKey, onCopy }: DocumentDataSectionCardProps) {
+export function DocumentDataSectionCard({ section, copiedKey, onCopy, renderMissing, renderLabel }: DocumentDataSectionCardProps) {
   const headingId = `document-data-${section.key}`;
   const { table } = section;
 
@@ -61,7 +66,7 @@ export function DocumentDataSectionCard({ section, copiedKey, onCopy }: Document
         {section.title}
       </h3>
 
-      <div className="overflow-hidden rounded-lg border border-border">
+      <div className="overflow-hidden rounded-lg border border-border bg-card">
         {section.items.length > 0 && (
           <dl className="divide-y divide-border">
             {section.items.map((item) => {
@@ -72,7 +77,7 @@ export function DocumentDataSectionCard({ section, copiedKey, onCopy }: Document
                   key={item.key}
                   className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 py-2 pl-4 pr-2 transition-colors hover:bg-muted/40 sm:grid-cols-[minmax(10rem,16rem)_minmax(0,1fr)_auto]"
                 >
-                  <dt className="text-small text-muted-foreground">{item.label}</dt>
+                  <dt className="text-small text-muted-foreground">{renderLabel ? renderLabel(item) : item.label}</dt>
                   <dd
                     className={cn(
                       'order-3 min-w-0 text-sm font-semibold text-foreground [overflow-wrap:anywhere] sm:order-none',
@@ -80,7 +85,7 @@ export function DocumentDataSectionCard({ section, copiedKey, onCopy }: Document
                       !text && 'font-normal text-muted-foreground',
                     )}
                   >
-                    {displayValue(item.value)}
+                    {!text && renderMissing ? renderMissing(item) : displayValue(item.value)}
                   </dd>
                   <dd className="row-span-2 sm:row-span-1">
                     <CopyIconButton
