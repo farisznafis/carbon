@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,10 @@ type SidebarHeaderProps = {
 };
 
 
-/** Keeps the product mark aligned with sidebar icons in both desktop widths. */
+/**
+ * Expanded: logo on the left, collapse toggle on the right.
+ * Collapsed: the toggle takes the logo's place; ホーム stays reachable from the nav.
+ */
 export function SidebarHeader({
   homeHref,
   collapsed,
@@ -20,27 +23,23 @@ export function SidebarHeader({
   return (
     <div
       className={cn(
-        'relative flex h-header shrink-0 items-center',
+        'flex h-header shrink-0 items-center gap-2 px-3',
         'border-b border-sidebar-border',
-        collapsed ? 'justify-center px-3' : 'px-3',
+        collapsed ? 'justify-center' : 'justify-between',
       )}
     >
-      <Link
-        to={homeHref}
-        aria-label="ホーム"
-        className={cn(
-          'flex min-w-0 items-center',
-          collapsed ? 'justify-center' : 'ml-1.5 gap-3',
-        )}
-      >
-        <div className="h-9 w-9 shrink-0 rounded-lg gradient-primary" />
-
-        {!collapsed && (
+      {!collapsed && (
+        <Link
+          to={homeHref}
+          aria-label="ホーム"
+          className="ml-1.5 flex min-w-0 items-center gap-3"
+        >
+          <div className="h-9 w-9 shrink-0 rounded-lg gradient-primary" />
           <span className="truncate text-xl font-bold text-foreground">
             GX
           </span>
-        )}
-      </Link>
+        </Link>
+      )}
 
       <Button
         type="button"
@@ -52,32 +51,14 @@ export function SidebarHeader({
             ? 'サイドバーを展開'
             : 'サイドバーを折りたたむ'
         }
+        title={collapsed ? 'サイドバーを展開' : 'サイドバーを折りたたむ'}
         aria-expanded={!collapsed}
-        className={cn(
-          'absolute right-0 top-1/2 z-30',
-          'h-8 w-8',
-          'translate-x-1/2 -translate-y-1/2',
-          'rounded-full',
-          'border border-border',
-          'bg-card',
-          'shadow-app-sm',
-          'hover:bg-muted',
-          'focus-visible:outline-none',
-          'focus-visible:ring-2',
-          'focus-visible:ring-ring',
-          'focus-visible:ring-offset-2',
-        )}
+        className="h-9 w-9 shrink-0 text-muted-foreground hover:bg-muted hover:text-foreground"
       >
         {collapsed ? (
-          <ChevronRight
-            className="h-4 w-4"
-            aria-hidden="true"
-          />
+          <PanelLeftOpen className="h-5 w-5" aria-hidden="true" />
         ) : (
-          <ChevronLeft
-            className="h-4 w-4"
-            aria-hidden="true"
-          />
+          <PanelLeftClose className="h-5 w-5" aria-hidden="true" />
         )}
       </Button>
     </div>

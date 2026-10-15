@@ -242,7 +242,7 @@ export const Navbar = ({
   return (
     <nav
       className={cn(
-        'sticky top-0 shrink-0 border-b border-border bg-card/50 backdrop-blur-sm',
+        'sticky top-0 shrink-0 border-b border-border bg-card',
         appShell ? 'z-40' : 'z-50',
       )}
     >

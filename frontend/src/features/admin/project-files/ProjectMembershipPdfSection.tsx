@@ -26,9 +26,6 @@ export const MEMBERSHIP_SECTION_VALUE = 'MEMBERSHIP';
 
 const LABEL = '入会届';
 
-/** Stands in for the add button the versioned rows carry, so every row's columns line up. */
-const actionSpacer = <span aria-hidden="true" className="w-8 shrink-0" />;
-
 /** A row that does not expand: loading, failed, or no companies yet. */
 function StaticRow({ status, action }: Readonly<{ status: ReactNode; action?: ReactNode }>) {
   return (
@@ -38,7 +35,7 @@ function StaticRow({ status, action }: Readonly<{ status: ReactNode; action?: Re
         <span className="truncate text-sm font-medium text-foreground">{LABEL}</span>
         <span className="text-small text-muted-foreground sm:col-span-2">{status}</span>
       </span>
-      {action ?? actionSpacer}
+      {action}
     </div>
   );
 }
@@ -117,7 +114,7 @@ export function ProjectMembershipPdfSection({ projectId }: Readonly<{ projectId:
   return (
     <>
       <AccordionItem value={MEMBERSHIP_SECTION_VALUE} className="border-b-0">
-        <AccordionPrimitive.Header className="flex items-center gap-2 pr-3 transition-colors hover:bg-muted/60">
+        <AccordionPrimitive.Header className="flex items-center pr-3 transition-colors hover:bg-muted/60">
           <AccordionPrimitive.Trigger className="group flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
             <ChevronRight
               aria-hidden="true"
@@ -134,7 +131,6 @@ export function ProjectMembershipPdfSection({ projectId }: Readonly<{ projectId:
               </span>
             </span>
           </AccordionPrimitive.Trigger>
-          {actionSpacer}
         </AccordionPrimitive.Header>
         <AccordionContent className="border-t border-border bg-muted/30 p-0">
           <ul className="divide-y divide-border" aria-label={`${LABEL}の一覧`}>
