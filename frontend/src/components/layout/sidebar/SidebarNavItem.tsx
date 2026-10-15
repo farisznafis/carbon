@@ -41,7 +41,11 @@ export function SidebarNavItem({
         className='h-5 w-5 shrink-0'
         aria-hidden='true'
       />
-      {!collapsed && <span>{item.label}</span>}
+      {!collapsed && (
+        <span className='min-w-0 truncate' title={item.label}>
+          {item.label}
+        </span>
+      )}
     </Link>
   );
 

@@ -290,7 +290,8 @@ function AppShellLayout({
               'border-r border-sidebar-border bg-sidebar',
               'overflow-visible',
               'lg:flex',
-              collapsed ? 'w-[72px]' : 'w-[220px] 2xl:w-[240px] min-[1800px]:w-[280px]',
+              // rem so the sidebar follows the laptop density scale in index.css.
+              collapsed ? 'w-[4.5rem]' : 'w-[14.5rem] 2xl:w-[15rem] min-[1800px]:w-[17.5rem]',
             )}
           >
             <SidebarHeader

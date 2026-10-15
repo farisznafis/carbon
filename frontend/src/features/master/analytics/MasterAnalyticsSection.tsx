@@ -324,7 +324,10 @@ function SubmissionCalendar({
         <div className="overflow-x-auto">
           <div role="table" aria-label="モニタリング提出カレンダー" className="min-w-max space-y-2">
             <div role="row" className="grid items-end gap-1.5 text-subtle text-muted-foreground" style={{ gridTemplateColumns }}>
-              <span role="columnheader" className="sr-only">拠点 / プロジェクト</span>
+              {/* The visible cell keeps the month columns aligned; sr-only alone would leave the grid. */}
+              <span role="columnheader">
+                <span className="sr-only">拠点 / プロジェクト</span>
+              </span>
               {months.map((month, index) => (
                 <span role="columnheader" key={month} className="text-center tabular-nums" aria-label={formatChartPeriod(month)}>
                   {shortMonth(month, index)}
@@ -413,7 +416,6 @@ export function MasterAnalyticsSection() {
     <AdminPageHeader
       title="アナリティクス"
       description="プロジェクトまたは拠点を軸に、排出量の推移と内訳、モニタリングの提出状況を比較できます。"
-      action={controls}
     />
   );
 
@@ -421,6 +423,7 @@ export function MasterAnalyticsSection() {
     return (
       <div className="space-y-section">
         {header}
+        {controls}
         <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center text-small text-destructive">
           {data.error instanceof Error ? data.error.message : 'データの取得に失敗しました'}
         </div>
@@ -439,14 +442,20 @@ export function MasterAnalyticsSection() {
 
   return (
     <div className="space-y-section">
-      <div className="space-y-3">
+      <div className="space-y-4">
         {header}
-        {active && (
-          <p className="text-subtle text-muted-foreground">
-            表示中：<span className="font-bold text-foreground">{active.name}</span>
-            （{active.members.length}{memberUnit}）・{periodLabel}
-          </p>
-        )}
+        {/* Controls sit on their own row so the description never wraps around them at 1280px. */}
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          {active ? (
+            <p className="min-w-0 text-subtle text-muted-foreground">
+              表示中：<span className="font-bold text-foreground">{active.name}</span>
+              （{active.members.length}{memberUnit}）・{periodLabel}
+            </p>
+          ) : (
+            <span />
+          )}
+          {controls}
+        </div>
       </div>
 
       {!data.isBaseLoading && !data.hasTargets ? (

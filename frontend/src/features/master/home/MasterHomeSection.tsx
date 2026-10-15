@@ -78,7 +78,7 @@ function MonthlyEmissionCard({
 }) {
   const recent = series.slice(-CHART_MONTHS);
   return (
-    <Card className={cn(panelCardClassName, 'flex h-full flex-col xl:min-h-[34rem]')}>
+    <Card className={cn(panelCardClassName, 'flex h-full flex-col xl:min-h-[30rem]')}>
       <CardHeader className="gap-1.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className={panelTitleClassName}>月別の排出量</CardTitle>
@@ -164,14 +164,15 @@ function ActionPanel({ actions, loading }: { actions: ActionItem[]; loading: boo
               {visible.map((action) => {
                 const presentation = ACTION_PRESENTATION[action.kind];
                 return (
-                  <li key={action.key} className="flex items-start gap-3 py-3">
-                    <StatusBadge tone={presentation.tone} className="mt-0.5 shrink-0">
-                      {presentation.tag}
-                    </StatusBadge>
-                    <p className="min-w-0 flex-1 break-words text-body text-foreground">{action.text}</p>
-                    <ActionButton kind="link" hideIcon className="-my-1 shrink-0" onClick={() => open(action)}>
-                      {presentation.link}
-                    </ActionButton>
+                  <li key={action.key} className="py-2.5">
+                    {/* Tag and link share the first line so the message gets the full width. */}
+                    <div className="flex items-center justify-between gap-2">
+                      <StatusBadge tone={presentation.tone}>{presentation.tag}</StatusBadge>
+                      <ActionButton kind="link" hideIcon className="-my-1 -mr-2 h-7" onClick={() => open(action)}>
+                        {presentation.link}
+                      </ActionButton>
+                    </div>
+                    <p className="mt-1 break-words text-body text-foreground">{action.text}</p>
                   </li>
                 );
               })}
@@ -272,7 +273,7 @@ const THIS_MONTH_BADGE: Record<SiteRow['thisMonth'], ReactNode> = {
 };
 
 const SITE_TABLE_MIN_WIDTH = 720;
-const siteGridColumns = 'minmax(9rem,1.4fr) minmax(8rem,1.2fr) 7rem 5.5rem 7.5rem 6rem';
+const siteGridColumns = 'minmax(10rem,1.4fr) minmax(9rem,1.2fr) 9rem 6.5rem 8rem 6rem';
 
 function SiteTable({ rows, loading, monitoringLoading }: { rows: SiteRow[]; loading: boolean; monitoringLoading: boolean }) {
   const navigate = useNavigate();
@@ -402,7 +403,7 @@ export function MasterHomeSection() {
         />
       </section>
 
-      <div className="grid gap-grid xl:grid-cols-[minmax(0,1.7fr)_minmax(20rem,1fr)]">
+      <div className="grid gap-grid xl:grid-cols-[minmax(0,1.5fr)_minmax(20rem,1fr)]">
         <MonthlyEmissionCard
           series={home.monthlyEmissions}
           loading={home.isEmissionLoading}

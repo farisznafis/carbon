@@ -229,7 +229,37 @@ All colors MUST be HSL.
       0 0 64px hsl(var(--neutral-950) / 0.16);
   }
 
-  @media (min-width: 1024px) and (max-width: 1919px) {
+  /*
+   * Laptop density: 1920px panels at Windows 125–150% scaling report a
+   * 1280–1536px viewport. A 15px root (93.75%, so user font settings still
+   * apply) scales every rem-based size, and the tokens below tighten the
+   * shell further so labels stay on one line at 1280×720.
+   */
+  @media (min-width: 1024px) and (max-width: 1599px) {
+    html {
+      font-size: 93.75%;
+    }
+
+    :root {
+      --page-title-size: 1.625rem;
+      --form-title-size: 1.5rem;
+      --section-title-size: 1.25rem;
+      --subsection-title-size: 1.0625rem;
+      --marketing-title-size: 1.875rem;
+      --home-section-title-size: 1.5rem;
+      --hero-title-size: 2.5rem;
+      --metric-size: 1.75rem;
+      --card-padding: 1.125rem;
+      --section-gap: 1.5rem;
+      --marketing-section-padding: 4rem;
+      --app-header-height: 3.75rem;
+      --page-gutter: 1.5rem;
+      --page-padding-y: 1.5rem;
+      --grid-gap: 1rem;
+    }
+  }
+
+  @media (min-width: 1600px) and (max-width: 1919px) {
     :root {
       --page-title-size: clamp(1.75rem, 1.7vw, 2rem);
       --form-title-size: clamp(1.75rem, 1.56vw, 1.875rem);

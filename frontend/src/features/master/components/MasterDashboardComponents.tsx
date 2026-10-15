@@ -126,13 +126,13 @@ export function UserDashboardCard({
           )}
         </div>
 
-        <div className="pl-3 mt-2 grid gap-x-8 gap-y-2 text-sm font-bold leading-6 text-foreground xl:grid-cols-[minmax(360px,1.7fr)_minmax(220px,1fr)_minmax(220px,1fr)]">
+        <div className="pl-3 mt-2 grid gap-x-8 gap-y-2 text-sm font-bold leading-6 text-foreground xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)]">
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <Mail className="h-4 w-4 shrink-0 text-muted-foreground" />
             <span className="shrink-0 text-foreground">
               メールアドレス
             </span>
-            <span className="min-w-0 break-all">{user.email || '-'}</span>
+            <span className="min-w-0 truncate" title={user.email || undefined}>{user.email || '-'}</span>
           </span>
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <User className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -155,7 +155,7 @@ export function UserDashboardCard({
                 未設定
               </StatusBadge>
             ) : (
-              <span className="truncate">
+              <span className="min-w-0 truncate" title={user.siteName || undefined}>
                 {user.siteName || user.siteId || '-'}
               </span>
             )}
@@ -163,7 +163,7 @@ export function UserDashboardCard({
         </div>
       </div>
 
-      <div className="flex items-center justify-end border-t border-border px-4 py-3 md:w-[152px] md:shrink-0 md:justify-center md:border-l md:border-t-0">
+      <div className="flex items-center justify-end border-t border-border px-4 py-3 md:w-32 md:shrink-0 md:justify-center md:border-l md:border-t-0">
         <RowActionButton
           aria-label={`${fullName || '社員'}のプロファイル`}
           onClick={() => onProfile(user)}
