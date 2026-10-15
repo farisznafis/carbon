@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const api = vi.hoisted(() => ({
@@ -7,11 +7,13 @@ const api = vi.hoisted(() => ({
   getIndividualActivityDetail: vi.fn(),
 }));
 vi.mock('@/api/admin/individualActivity', () => api);
+const siteApi = vi.hoisted(() => ({ getSiteProjectEquipmentPresignedUrl: vi.fn() }));
+vi.mock('@/api/site', () => siteApi);
 
 import { TooltipProvider } from '@/components/ui/tooltip';
 import type { IndividualActivityDetail } from '@/api/admin/individualActivity';
 import { IndividualActivityView } from './IndividualActivityView';
-import { countBlanks, toSheetRow } from './individualActivitySections';
+import { evidenceFilesOf, toActivityGroups } from './individualActivitySections';
 
 const row = (equipmentId: number, companyName: string, hasBattery: boolean, reportReadiness: string) => ({
   equipmentId,
@@ -32,8 +34,8 @@ const rows = [
   row(9, '鈴木電機', false, 'READY'),
 ];
 
-const detail: IndividualActivityDetail = {
-  equipmentId: 7,
+const detailOf = (equipmentId: number): IndividualActivityDetail => ({
+  equipmentId,
   member: {
     companyId: 'C7',
     companyName: '山田工業',
@@ -45,114 +47,126 @@ const detail: IndividualActivityDetail = {
   },
   equipment: {
     pcs: { manufacturer: 'オムロン', model: null, unitCount: 1, serialNumber: 'SN-1', standbyPowerKw: 0.01, meterClass: null, maxErrorRatePercent: null },
-    nominalOutputKw: 5.5,
+    nominalOutputKw: null,
     battery: { manufacturer: null, model: null, capacityKwh: 9.8, chargeEfficiencyPercent: null, dischargeEfficiencyPercent: null },
     ictConsumptionKw: null,
     operationStartDate: '2024-01-01',
     effectiveFrom: null,
     effectiveTo: null,
-    evidenceFiles: [{ fileType: 'PCS_PHOTO', url: 'https://files.example/equipment/pcs.pdf?sig=1' }],
+    evidenceFiles: [
+      { fileType: 'pcs_spec', url: 's3://gx-equipments-files-dev/equipment/3/pcs_spec/abc.pdf' },
+      { fileType: 'solar_contract', url: 's3://gx-equipments-files-dev/equipment/3/solar_contract/def.pdf' },
+    ],
   },
   additionality: null,
   registrationRequirements: { operatingInJapan: true, withinTwoYearsOfApplication: false, hasAdditionality: null, noDuplicateRegistration: null },
   monitoring: { samplingStatus: null, meteringPosition: null, generationMethod: null, saleMethod: null, windowStart: null, windowEnd: null, evidenceFiles: [] },
-};
-
-let writeText: ReturnType<typeof vi.fn>;
+});
 
 const renderView = () =>
   render(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
       <TooltipProvider>
-        <IndividualActivityView projectId="P1" copiedKey={null} onCopy={(_key, text) => void writeText(text)} />
+        <IndividualActivityView projectId="P1" copiedKey={null} onCopy={vi.fn()} />
       </TooltipProvider>
     </QueryClientProvider>,
   );
 
-const itemsOf = (groups: ReturnType<typeof toSheetRow>['groups']) =>
+const itemsOf = (groups: ReturnType<typeof toActivityGroups>) =>
   Object.fromEntries(groups.flatMap((g) => g.sections.flatMap((s) => s.items)).map((i) => [i.key, i]));
 
-describe('toSheetRow', () => {
-  it('lays the 蓄電池なし row out on the sheet’s columns, C to BB', () => {
-    const { groups, tsv, range } = toSheetRow(detail, 'without', '1-1');
-    const items = itemsOf(groups);
-    expect(range).toBe('C〜BB');
-    expect(tsv.split('\t')).toHaveLength(52);
-    expect(items.id).toMatchObject({ value: '1-1', column: 'C' });
-    expect(items.pcsUnitCount.column).toBe('M');
-    expect(items.operatingInJapan).toMatchObject({ value: '○', column: 'AK' });
-    expect(items.withinTwoYearsOfApplication.value).toBe('×');
-    expect(items).not.toHaveProperty('batteryCapacityKwh');
+describe('toActivityGroups', () => {
+  it('follows the sheet’s columns, adding battery ones only on 蓄電池あり', () => {
+    const titles = (sheet: 'with' | 'without') =>
+      toActivityGroups(detailOf(7), sheet).flatMap((g) => g.sections.map((s) => s.title));
+    expect(titles('without')).toEqual([
+      '会員基本情報',
+      'パワーコンディショナー設備情報',
+      '太陽光発電設備情報',
+      'ICT機器',
+      '追加的設備情報',
+      '基準日',
+      '認証対象期間',
+      '追加性評価',
+      'プロジェクト登録要件',
+      'モニタリング',
+      '今回認証のモニタリング開始日',
+      '今回認証のモニタリング終了日',
+    ]);
+    expect(titles('with')).toContain('蓄電池');
   });
 
-  it('adds the three battery columns on 蓄電池あり, shifting the rest', () => {
-    const { groups, tsv, range } = toSheetRow(detail, 'with', '2-1');
-    const items = itemsOf(groups);
-    expect(range).toBe('C〜BE');
-    expect(tsv.split('\t')).toHaveLength(55);
-    expect(items.batteryCapacityKwh).toMatchObject({ value: '9.8', column: 'S' });
-    expect(items.operatingInJapan.column).toBe('AN');
-  });
-
-  it('uses the pulldown wording and tells blanks to look up from manual ones', () => {
-    const items = itemsOf(toSheetRow(detail, 'without', '1-1').groups);
+  it('uses the pulldown wording and pairs each column with its evidence', () => {
+    const items = itemsOf(toActivityGroups(detailOf(7), 'without'));
+    expect(items).not.toHaveProperty('id');
     expect(items.eligibilityStatus.value).toBe('可');
     expect(items.carbonNeutralActionPlan.value).toBe('有');
-    expect(items.energySavingActSpecifiedOperator.value).toBe('無');
-    expect(items.pcsModel).toMatchObject({ value: null, source: 'equipment' });
+    expect(items.operatingInJapan.value).toBe('○');
+    expect(items.withinTwoYearsOfApplication.value).toBe('×');
+    expect(items.pcsModel).toMatchObject({ value: null, source: 'evidence', evidence: 'pcs_spec' });
+    expect(items.nominalOutputKw).toMatchObject({ value: null, evidence: 'panel_catalog' });
+    expect(items.totalInvestment.evidence).toBe('construction_invoice');
     expect(items.pcsMeterClass).toMatchObject({ value: null, source: 'manual' });
-    expect(countBlanks(toSheetRow(detail, 'without', '1-1').groups).manual).toBeGreaterThan(20);
+  });
+});
+
+describe('evidenceFilesOf', () => {
+  it('keeps the S3 key to sign, in upload order', () => {
+    expect(evidenceFilesOf(detailOf(7))).toEqual([
+      { location: 'equipment/3/solar_contract/def.pdf', kind: 'solar_contract', fileName: 'def.pdf' },
+      { location: 'equipment/3/pcs_spec/abc.pdf', kind: 'pcs_spec', fileName: 'abc.pdf' },
+    ]);
   });
 });
 
 describe('IndividualActivityView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    writeText = vi.fn();
     api.getIndividualActivityRows.mockResolvedValue(rows);
-    api.getIndividualActivityDetail.mockResolvedValue(detail);
+    siteApi.getSiteProjectEquipmentPresignedUrl.mockResolvedValue('https://signed.example/abc.pdf');
+    api.getIndividualActivityDetail.mockImplementation((_projectId: string, id: number) => Promise.resolve(detailOf(id)));
   });
 
-  it('splits rows by sheet and numbers them per sheet', async () => {
+  it('lists one sheet at a time and shows the first row', async () => {
     renderView();
-    expect(await screen.findByText('山田工業')).toBeInTheDocument();
-    expect(screen.getByText('1-1')).toBeInTheDocument();
-    expect(screen.getByText('1-2')).toBeInTheDocument();
-    expect(screen.queryByText('佐藤商事')).not.toBeInTheDocument();
+    const list = await screen.findByRole('complementary', { name: '設備一覧' });
+    expect(within(list).getByText('山田工業')).toBeInTheDocument();
+    expect(within(list).getByText('鈴木電機')).toBeInTheDocument();
+    expect(within(list).queryByText(/^\d-\d+$/)).not.toBeInTheDocument();
+    expect(within(list).queryByText('佐藤商事')).not.toBeInTheDocument();
+    // The first row opens on its own, on the 会員 group.
+    expect(await screen.findByText('会員基本情報')).toBeInTheDocument();
+    expect(api.getIndividualActivityDetail).toHaveBeenCalledWith('P1', 7);
 
     fireEvent.mouseDown(screen.getByRole('tab', { name: /蓄電池あり/ }));
-    expect(await screen.findByText('佐藤商事')).toBeInTheDocument();
-    expect(screen.getByText('2-1')).toBeInTheDocument();
+    expect(await within(list).findByText('佐藤商事')).toBeInTheDocument();
   });
 
-  it('keeps IDs while filtering by report status', async () => {
+  it('walks the rows with previous/next', async () => {
     renderView();
-    await screen.findByText('山田工業');
-    fireEvent.click(within(screen.getByRole('group', { name: '報告状況で絞り込み' })).getByRole('button', { name: /報告可/ }));
-    expect(screen.queryByText('山田工業')).not.toBeInTheDocument();
-    expect(screen.getByText('1-2')).toBeInTheDocument();
+    const next = await screen.findByRole('button', { name: '次の設備' });
+    expect(screen.getByText('1 / 2')).toBeInTheDocument();
+    fireEvent.click(next);
+    expect(screen.getByText('2 / 2')).toBeInTheDocument();
+    expect(api.getIndividualActivityDetail).toHaveBeenCalledWith('P1', 9);
+    expect(screen.getByRole('button', { name: '次の設備' })).toBeDisabled();
   });
 
-  it('copies a whole row without opening it', async () => {
+  it('shows blanks as a dash, with each evidence source under its own tab', async () => {
     renderView();
-    fireEvent.click(await screen.findByRole('button', { name: 'ID 1-1の行をコピー' }));
-    await waitFor(() => expect(writeText).toHaveBeenCalled());
-    expect(api.getIndividualActivityDetail).toHaveBeenCalledWith('P1', 7);
-    expect(writeText.mock.calls[0][0].split('\t').slice(0, 4)).toEqual(['1-1', '可', '2025-04-01', '山田工業']);
-  });
+    fireEvent.mouseDown(await screen.findByRole('tab', { name: '設備' }));
 
-  it('loads the detail when a row opens, with each group’s evidence and column letters', async () => {
-    renderView();
-    fireEvent.click(await screen.findByRole('button', { name: /山田工業/ }));
-    expect(await screen.findByText('パワーコンディショナー設備情報')).toBeInTheDocument();
+    const details = screen.getByRole('region', { name: '設備の詳細' });
+    expect(await within(details).findByText('パワーコンディショナー設備情報')).toBeInTheDocument();
+    expect(within(details).getAllByText('—').length).toBeGreaterThan(0);
 
-    const equipment = screen.getByRole('region', { name: '設備' });
-    expect(within(equipment).getByRole('button', { name: 'pcs.pdf' })).toBeInTheDocument();
-    expect(within(equipment).getAllByText('設備の証憑で確認').length).toBeGreaterThan(0);
+    fireEvent.mouseDown(within(details).getByRole('tab', { name: 'モニタリング' }));
+    expect(within(details).getByText('登録されていません')).toBeInTheDocument();
+    expect(within(details).queryByRole('button', { name: 'PCS仕様書' })).not.toBeInTheDocument();
 
-    const monitoring = screen.getByRole('region', { name: 'モニタリング情報' });
-    expect(within(monitoring).getByText('まだ登録されていません')).toBeInTheDocument();
-    expect(within(monitoring).getAllByText('Excelで手入力').length).toBeGreaterThan(0);
-    expect(screen.getByText('C〜BB')).toBeInTheDocument();
+    fireEvent.mouseDown(within(details).getByRole('tab', { name: '設備' }));
+    fireEvent.click(within(details).getByRole('button', { name: 'PCS仕様書' }));
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    expect(siteApi.getSiteProjectEquipmentPresignedUrl).toHaveBeenCalledWith('equipment/3/pcs_spec/abc.pdf');
   });
 });

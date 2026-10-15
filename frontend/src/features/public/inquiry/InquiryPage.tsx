@@ -311,7 +311,9 @@ function InquirySuccess({
 /** A caller page passed in navigation state, e.g. the ヘルプ・FAQ page. */
 function getReturnTo(state: unknown): string | null {
   const returnTo = (state as { returnTo?: unknown } | null)?.returnTo;
-  return typeof returnTo === 'string' && returnTo.startsWith('/') ? returnTo : null;
+  return typeof returnTo === 'string' && returnTo.startsWith('/')
+    ? returnTo
+    : null;
 }
 
 export default function InquiryPage() {
@@ -322,11 +324,15 @@ export default function InquiryPage() {
   // Signed-in accounts reach this from the in-app ヘルプ・FAQ and should stay in the app.
   const signedInUser = auth?.isAuthenticated ? auth.user : null;
   const returnTo = signedInUser ? getReturnTo(location.state) : null;
-  const exitPath = signedInUser ? (returnTo ?? getHomePath(signedInUser)) : paths.home;
+  const exitPath = signedInUser
+    ? (returnTo ?? getHomePath(signedInUser))
+    : paths.home;
   const exitLabel = returnTo === paths.adminHelpFaq ? 'ヘルプ・FAQ' : 'ホーム';
 
   usePageBreadcrumb(
-    signedInUser ? [{ label: exitLabel, to: exitPath }, { label: 'お問い合わせ' }] : [],
+    signedInUser
+      ? [{ label: exitLabel, to: exitPath }, { label: 'お問い合わせ' }]
+      : [],
   );
   const handleBack = () => {
     navigate(paths.home);
@@ -584,11 +590,11 @@ export default function InquiryPage() {
                                 {...field}
                               />
                             </FormControl>
-
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+                      
                     </div>
 
                     <div

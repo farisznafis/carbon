@@ -58,7 +58,7 @@ function renderPanel(initialEntry = '/?doc=acquisition') {
   );
 }
 
-const nav = () => screen.getByRole('navigation', { name: 'データを表示する書類' });
+const nav = () => screen.getByRole('tablist', { name: 'データを表示する書類' });
 
 describe('ProjectDocumentDataPanel', () => {
   beforeEach(() => {
@@ -74,8 +74,8 @@ describe('ProjectDocumentDataPanel', () => {
     expect(await screen.findByText('GX太陽光')).toBeInTheDocument();
     expect(dataApi.getProjectDocumentData).toHaveBeenCalledWith('PROJ1', 'PROJECT_PLAN');
     expect(screen.getByRole('heading', { level: 2, name: 'プロジェクト計画書' })).toBeInTheDocument();
-    expect(within(nav()).getByRole('button', { name: /プロジェクト計画書/ })).toHaveAttribute(
-      'aria-current',
+    expect(within(nav()).getByRole('tab', { name: /プロジェクト計画書/ })).toHaveAttribute(
+      'aria-selected',
       'true',
     );
     expect(screen.getByRole('table', { name: '認証対象期間・会員数計画の表' })).toBeInTheDocument();
@@ -88,8 +88,8 @@ describe('ProjectDocumentDataPanel', () => {
     renderPanel();
     await screen.findByText('GX太陽光');
 
-    expect(within(nav()).getAllByRole('button')).toHaveLength(3);
-    expect(within(nav()).queryByRole('button', { name: /妥当性確認報告書/ })).not.toBeInTheDocument();
+    expect(within(nav()).getAllByRole('tab')).toHaveLength(3);
+    expect(within(nav()).queryByRole('tab', { name: /妥当性確認報告書/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('searchbox', { name: 'ファイル名を検索' })).not.toBeInTheDocument();
     expect(screen.queryByText('アップロード済みファイル')).not.toBeInTheDocument();
   });
@@ -122,7 +122,7 @@ describe('ProjectDocumentDataPanel', () => {
     renderPanel();
     await screen.findByText('GX太陽光');
 
-    fireEvent.click(within(nav()).getByRole('button', { name: /モニタリング報告書/ }));
+    fireEvent.mouseDown(within(nav()).getByRole('tab', { name: /モニタリング報告書/ }));
 
     await waitFor(() =>
       expect(dataApi.getProjectDocumentData).toHaveBeenCalledWith('PROJ1', 'MONITORING_REPORT'),

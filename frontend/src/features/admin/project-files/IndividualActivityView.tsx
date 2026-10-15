@@ -1,96 +1,62 @@
-import { useMemo, useState } from 'react';
-import * as AccordionPrimitive from '@radix-ui/react-accordion';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, ChevronRight, ClipboardCopy, FileSearch, FileText, Loader2, PenLine, Search } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { ChevronLeft, ChevronRight, FileSearch, FileText, Search } from 'lucide-react';
 import {
   getIndividualActivityDetail,
   getIndividualActivityRows,
+  type IndividualActivityDetail,
   type IndividualActivityRow,
   type ReportReadiness,
 } from '@/api/admin/individualActivity';
-import type { DocumentDataItem } from '@/api/admin/projectDocumentData';
 import { ActionButton } from '@/components/actions';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import {
-  SegmentButton,
-  SegmentGroup,
+  PageTabsList,
+  PageTabsTrigger,
   SegmentTabsList,
   SegmentTabsTrigger,
   TabCount,
 } from '@/components/navigation/PageTabs';
-import { Accordion, AccordionContent, AccordionItem } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs } from '@/components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { getSiteProjectEquipmentPresignedUrl } from '@/api/site';
 import { toast } from '@/hooks/use-toast';
 import { downloadFromUrl } from '@/utils/download';
+import { cn } from '@/lib/utils';
 import { DocumentDataSectionCard, type CopyHandler } from './DocumentDataSectionCard';
 import { EMPTY_VALUE } from './documentDataCopy';
 import { FilePreviewDialog, type FilePreviewTarget } from './ProjectFilePreviewDialog';
 import { previewKindOf } from './projectFileTypes';
 import {
+  ACTIVITY_GROUPS,
   ELIGIBILITY_LABELS,
+  MONITORING_EVIDENCE,
   READINESS_LABELS,
   SHEETS,
-  countBlanks,
-  evidenceLinks,
+  evidenceFilesOf,
+  evidenceLabel,
   sheetOf,
-  sheetRowId,
-  toSheetRow,
-  type ActivityItem,
+  toActivityGroups,
   type BatterySheet,
   type EvidenceLink,
 } from './individualActivitySections';
 
 const READINESS_FILTERS: ReportReadiness[] = ['MISSING_EVIDENCE', 'NO_BATCH_RESULT', 'READY'];
+const ALL = 'ALL';
 const SHEET_ORDER: BatterySheet[] = ['without', 'with'];
-const EVIDENCE_LABELS = { equipment: '設備の証憑', monitoring: 'モニタリングの証憑' } as const;
+/** Below this the list and the detail stack, so choosing a row scrolls to its detail. */
+const STACKED_QUERY = '(max-width: 1199px)';
 
-type SheetRow = IndividualActivityRow & { rowId: string };
+type GroupKey = (typeof ACTIVITY_GROUPS)[number]['key'];
 
 const errorMessage = (error: unknown, fallback: string) =>
   error instanceof Error && error.message ? error.message : fallback;
 
 const formatKwh = (value: number | null) =>
   value === null || value === undefined ? EMPTY_VALUE : value.toLocaleString('ja-JP');
-
-const detailQueryOptions = (projectId: string, equipmentId: number) => ({
-  queryKey: ['admin', 'individual-activity', projectId, 'detail', equipmentId],
-  queryFn: () => getIndividualActivityDetail(projectId, equipmentId),
-});
-
-/** A blank says what to do about it: type it in, or read it off the evidence. */
-function MissingValue({ item }: Readonly<{ item: DocumentDataItem }>) {
-  const { source } = item as ActivityItem;
-  if (source === 'manual') {
-    return (
-      <span className="inline-flex items-center gap-1.5 text-small font-normal text-muted-foreground">
-        <PenLine aria-hidden="true" className="size-3.5 shrink-0" />
-        Excelで手入力
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1.5 text-small font-medium text-[hsl(var(--warning-800))]">
-      <FileSearch aria-hidden="true" className="size-3.5 shrink-0" />
-      {source === 'member' ? '未登録・会員に確認' : `${EVIDENCE_LABELS[source]}で確認`}
-    </span>
-  );
-}
-
-/** The label with its Excel column, so the operator finds the cell at a glance. */
-function ColumnLabel({ item }: Readonly<{ item: DocumentDataItem }>) {
-  return (
-    <span className="inline-flex items-baseline gap-2">
-      <span className="inline-flex min-w-7 justify-center rounded bg-muted px-1 font-mono text-xs text-secondary-foreground">
-        {(item as ActivityItem).column}
-      </span>
-      <span>{item.label}</span>
-    </span>
-  );
-}
 
 function LoadError({ error, fallback, onRetry }: Readonly<{ error: unknown; fallback: string; onRetry: () => void }>) {
   return (
@@ -104,18 +70,25 @@ function LoadError({ error, fallback, onRetry }: Readonly<{ error: unknown; fall
   );
 }
 
+/** Evidence comes as S3 keys; they are signed only when opened, since a signed URL expires. */
+const resolveEvidenceUrl = (location: string) =>
+  /^https?:\/\//.test(location) ? Promise.resolve(location) : getSiteProjectEquipmentPresignedUrl(location);
+
 type ViewProps = Readonly<{ projectId: string; copiedKey: string | null; onCopy: CopyHandler }>;
 
 /**
- * 個別活動実績報告リスト in データ取得, one tab per 会員情報 sheet of the Excel.
- * Each equipment is a sheet row: copied whole into the ID cell, or opened to
- * copy single values and see which blanks to look up.
+ * 個別活動実績報告リスト in データ取得. The equipment list on the left, one tab
+ * per 会員情報 sheet of the Excel; the chosen equipment's columns on the right,
+ * where every blank says which file to read it from.
  */
 export function IndividualActivityView({ projectId, copiedKey, onCopy }: ViewProps) {
   const [sheet, setSheet] = useState<BatterySheet>('without');
   const [filter, setFilter] = useState('');
-  const [readiness, setReadiness] = useState<ReportReadiness | null>(null);
-  const [preview, setPreview] = useState<EvidenceLink | null>(null);
+  const [readiness, setReadiness] = useState<ReportReadiness | typeof ALL>(ALL);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  // Kept across equipment, so the operator can walk one group through every row.
+  const [groupKey, setGroupKey] = useState<GroupKey>('member');
+  const detailRef = useRef<HTMLElement>(null);
 
   const rowsQuery = useQuery({
     queryKey: ['admin', 'individual-activity', projectId, 'rows'],
@@ -123,13 +96,9 @@ export function IndividualActivityView({ projectId, copiedKey, onCopy }: ViewPro
     enabled: Boolean(projectId),
   });
 
-  // IDs are numbered before any filter, so a row keeps its ID while the list is narrowed.
   const rowsBySheet = useMemo(() => {
-    const bySheet: Record<BatterySheet, SheetRow[]> = { without: [], with: [] };
-    for (const row of rowsQuery.data ?? []) {
-      const target = bySheet[sheetOf(row.hasBattery)];
-      target.push({ ...row, rowId: sheetRowId(sheetOf(row.hasBattery), target.length) });
-    }
+    const bySheet: Record<BatterySheet, IndividualActivityRow[]> = { without: [], with: [] };
+    for (const row of rowsQuery.data ?? []) bySheet[sheetOf(row.hasBattery)].push(row);
     return bySheet;
   }, [rowsQuery.data]);
 
@@ -138,11 +107,22 @@ export function IndividualActivityView({ projectId, copiedKey, onCopy }: ViewPro
     const needle = filter.trim().toLowerCase();
     return sheetRows.filter(
       (row) =>
-        (!readiness || row.reportReadiness === readiness) &&
+        (readiness === ALL || row.reportReadiness === readiness) &&
         (!needle ||
-          [row.rowId, row.companyName, row.siteAddress].some((value) => (value ?? '').toLowerCase().includes(needle))),
+          [row.companyName, row.siteAddress].some((value) => (value ?? '').toLowerCase().includes(needle))),
     );
   }, [sheetRows, filter, readiness]);
+
+  // The chosen row, or the first one shown when it was filtered out or nothing is chosen yet.
+  const selectedIndex = Math.max(0, visibleRows.findIndex((row) => row.equipmentId === selectedId));
+  const selected = visibleRows[selectedIndex];
+
+  const select = (row: IndividualActivityRow) => {
+    setSelectedId(row.equipmentId);
+    if (window.matchMedia?.(STACKED_QUERY).matches) {
+      detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   if (rowsQuery.isLoading) {
     return (
@@ -178,56 +158,28 @@ export function IndividualActivityView({ projectId, copiedKey, onCopy }: ViewPro
     );
   }
 
-  const changeSheet = (value: string) => {
-    setSheet(value as BatterySheet);
-    setReadiness(null);
-  };
-
-  const previewTarget: FilePreviewTarget | null = preview
-    ? {
-        cacheKey: ['individual-activity-evidence', preview.url],
-        fileName: preview.fileName,
-        description: preview.fileType ?? '証憑ファイル',
-        kind: previewKindOf({ originalFileName: preview.fileName }),
-        resolveUrl: () => Promise.resolve(preview.url),
-        download: () => downloadFromUrl(preview.url),
-      }
-    : null;
-
   return (
-    <div className="space-y-4">
-      <Tabs value={sheet} onValueChange={changeSheet} className="space-y-2">
-        <SegmentTabsList aria-label="Excelのシート">
-          {SHEET_ORDER.map((key) => (
-            <SegmentTabsTrigger key={key} value={key}>
-              {SHEETS[key].label}
-              <TabCount count={rowsBySheet[key].length} />
-            </SegmentTabsTrigger>
-          ))}
-        </SegmentTabsList>
-        <p className="text-small text-muted-foreground">
-          Excelの「{SHEETS[sheet].sheetName}」シートに対応します。「行をコピー」して、同じIDの行のC列（ID）に貼り付けると1行分がまとめて入ります。
-        </p>
-      </Tabs>
+    <div className="grid min-w-0 gap-4 xl:grid-cols-[18rem_minmax(0,1fr)] xl:gap-5">
+      <aside aria-label="設備一覧" className="flex min-w-0 flex-col gap-3">
+        <Tabs
+          value={sheet}
+          onValueChange={(value) => {
+            setSheet(value as BatterySheet);
+            setSelectedId(null);
+          }}
+        >
+          <SegmentTabsList aria-label="Excelのシート" className="flex w-full flex-nowrap">
+            {SHEET_ORDER.map((key) => (
+              <SegmentTabsTrigger key={key} value={key} className="flex-1 justify-center px-3">
+                {SHEETS[key].label}
+                <TabCount count={rowsBySheet[key].length} />
+              </SegmentTabsTrigger>
+            ))}
+          </SegmentTabsList>
+        </Tabs>
+        <p className="text-xs text-muted-foreground">Excel「{SHEETS[sheet].sheetName}」シート</p>
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <SegmentGroup aria-label="報告状況で絞り込み">
-          <SegmentButton active={readiness === null} onClick={() => setReadiness(null)}>
-            すべて
-          </SegmentButton>
-          {READINESS_FILTERS.map((status) => (
-            <SegmentButton
-              key={status}
-              active={readiness === status}
-              tone={READINESS_LABELS[status].tone}
-              onClick={() => setReadiness(status)}
-            >
-              {READINESS_LABELS[status].label}
-              <TabCount count={sheetRows.filter((row) => row.reportReadiness === status).length} />
-            </SegmentButton>
-          ))}
-        </SegmentGroup>
-        <div className="relative w-full shrink-0 md:w-64">
+        <div className="relative">
           <Search
             aria-hidden="true"
             className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
@@ -236,46 +188,221 @@ export function IndividualActivityView({ projectId, copiedKey, onCopy }: ViewPro
             type="search"
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
-            placeholder="ID・会員名・住所で検索"
-            aria-label="ID・会員名・住所で検索"
+            placeholder="会員名・住所で検索"
+            aria-label="会員名・住所で検索"
             className="h-9 pl-9"
           />
         </div>
-      </div>
+        <Select value={readiness} onValueChange={(value) => setReadiness(value as ReportReadiness | typeof ALL)}>
+          <SelectTrigger aria-label="報告状況で絞り込み" className="h-9">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>すべての報告状況（{sheetRows.length}）</SelectItem>
+            {READINESS_FILTERS.map((status) => (
+              <SelectItem key={status} value={status}>
+                {READINESS_LABELS[status].label}（{sheetRows.filter((row) => row.reportReadiness === status).length}）
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-      {visibleRows.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-border px-4 py-8 text-center">
-          <p className="text-small text-muted-foreground">
-            {sheetRows.length === 0 ? `${SHEETS[sheet].label}の設備はありません。` : '条件に一致する設備はありません。'}
-          </p>
-          {sheetRows.length > 0 && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setFilter('');
-                setReadiness(null);
-              }}
-            >
-              絞り込みをクリア
-            </Button>
-          )}
+        {visibleRows.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border px-4 py-6 text-center">
+            <p className="text-small text-muted-foreground">
+              {sheetRows.length === 0 ? `${SHEETS[sheet].label}の設備はありません。` : '条件に一致する設備はありません。'}
+            </p>
+            {sheetRows.length > 0 && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setFilter('');
+                  setReadiness(ALL);
+                }}
+              >
+                絞り込みをクリア
+              </Button>
+            )}
+          </div>
+        ) : (
+          <ul className="max-h-80 divide-y divide-border overflow-y-auto rounded-lg border border-border xl:max-h-[min(42rem,70vh)]">
+            {visibleRows.map((row) => {
+              const isSelected = row === selected;
+              const status = row.reportReadiness && READINESS_LABELS[row.reportReadiness];
+              const name = row.companyName ?? '会員名未登録';
+              return (
+                <li key={row.equipmentId}>
+                  <button
+                    type="button"
+                    aria-current={isSelected ? 'true' : undefined}
+                    onClick={() => select(row)}
+                    className={cn(
+                      'flex w-full items-start gap-3 px-3 py-2.5 text-left transition-colors',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                      isSelected ? 'bg-accent' : 'hover:bg-muted/60',
+                    )}
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className={cn('block truncate text-sm font-medium text-foreground', isSelected && 'font-bold text-primary-strong')}
+                        title={name}
+                      >
+                        {name}
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground" title={row.siteAddress ?? undefined}>
+                        {row.siteAddress ?? EMPTY_VALUE}
+                      </span>
+                    </span>
+                    {status && (
+                      <StatusBadge tone={status.tone} className="shrink-0 whitespace-nowrap px-2 py-0.5">
+                        {status.label}
+                      </StatusBadge>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </aside>
+
+      <section ref={detailRef} aria-label="設備の詳細" className="min-w-0 scroll-mt-24">
+        {selected ? (
+          <EquipmentDetail
+            key={selected.equipmentId}
+            projectId={projectId}
+            row={selected}
+            sheet={sheet}
+            position={{ index: selectedIndex, total: visibleRows.length }}
+            onPrevious={selectedIndex > 0 ? () => select(visibleRows[selectedIndex - 1]) : undefined}
+            onNext={selectedIndex < visibleRows.length - 1 ? () => select(visibleRows[selectedIndex + 1]) : undefined}
+            groupKey={groupKey}
+            onGroupChange={setGroupKey}
+            copiedKey={copiedKey}
+            onCopy={onCopy}
+          />
+        ) : (
+          <div className="flex h-full min-h-40 items-center justify-center rounded-lg border border-dashed border-border p-6 text-small text-muted-foreground">
+            設備を選択してください。
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+type DetailProps = Readonly<{
+  projectId: string;
+  row: IndividualActivityRow;
+  sheet: BatterySheet;
+  position: { index: number; total: number };
+  onPrevious?: () => void;
+  onNext?: () => void;
+  groupKey: GroupKey;
+  onGroupChange: (key: GroupKey) => void;
+  copiedKey: string | null;
+  onCopy: CopyHandler;
+}>;
+
+function EquipmentDetail({
+  projectId,
+  row,
+  sheet,
+  position,
+  onPrevious,
+  onNext,
+  groupKey,
+  onGroupChange,
+  copiedKey,
+  onCopy,
+}: DetailProps) {
+  const [preview, setPreview] = useState<EvidenceLink | null>(null);
+  const detailQuery = useQuery({
+    queryKey: ['admin', 'individual-activity', projectId, 'detail', row.equipmentId],
+    queryFn: () => getIndividualActivityDetail(projectId, row.equipmentId),
+  });
+  const eligibility = row.eligibilityStatus && ELIGIBILITY_LABELS[row.eligibilityStatus];
+  const status = row.reportReadiness && READINESS_LABELS[row.reportReadiness];
+
+  const previewTarget: FilePreviewTarget | null = preview
+    ? {
+        cacheKey: ['individual-activity-evidence', preview.location],
+        fileName: evidenceLabel(preview.kind),
+        description: row.companyName ?? '証憑ファイル',
+        kind: previewKindOf({ originalFileName: preview.fileName }),
+        resolveUrl: () => resolveEvidenceUrl(preview.location),
+        download: () =>
+          void resolveEvidenceUrl(preview.location).then(downloadFromUrl, (error: unknown) =>
+            toast({
+              title: 'ファイルをダウンロードできませんでした',
+              description: errorMessage(error, 'ファイルの取得に失敗しました。'),
+              variant: 'destructive',
+            }),
+          ),
+      }
+    : null;
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-border bg-card">
+      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3">
+        <div className="min-w-0 space-y-1.5">
+          <h3 className="truncate text-base font-semibold text-foreground">{row.companyName ?? '会員名未登録'}</h3>
+          <p className="text-small text-muted-foreground [overflow-wrap:anywhere]">{row.siteAddress ?? EMPTY_VALUE}</p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-small text-muted-foreground">
+            {eligibility && <StatusBadge tone={eligibility.tone}>{eligibility.label}</StatusBadge>}
+            {status && <StatusBadge tone={status.tone}>{status.label}</StatusBadge>}
+            <span>
+              発電 <span className="font-medium tabular-nums text-foreground">{formatKwh(row.generationKwh)}</span> kWh
+            </span>
+            <span>
+              売電 <span className="font-medium tabular-nums text-foreground">{formatKwh(row.saleKwh)}</span> kWh
+            </span>
+          </div>
         </div>
-      ) : (
-        <Accordion type="multiple" className="divide-y divide-border overflow-hidden rounded-lg border border-border">
-          {visibleRows.map((row) => (
-            <ActivityRow
-              key={row.equipmentId}
-              row={row}
-              sheet={sheet}
-              projectId={projectId}
-              copiedKey={copiedKey}
-              onCopy={onCopy}
-              onPreview={setPreview}
-            />
+        <div className="flex shrink-0 items-center gap-1">
+          <span className="mr-1 text-small tabular-nums text-muted-foreground">
+            {position.index + 1} / {position.total}
+          </span>
+          <Button type="button" size="icon" variant="outline" className="size-8" aria-label="前の設備" disabled={!onPrevious} onClick={onPrevious}>
+            <ChevronLeft aria-hidden="true" />
+          </Button>
+          <Button type="button" size="icon" variant="outline" className="size-8" aria-label="次の設備" disabled={!onNext} onClick={onNext}>
+            <ChevronRight aria-hidden="true" />
+          </Button>
+        </div>
+      </header>
+
+      {detailQuery.isLoading && (
+        <div role="status" aria-label="設備の詳細を読み込んでいます" className="space-y-2 p-4">
+          <Skeleton className="h-9 w-full" />
+          {[0, 1, 2, 3].map((line) => (
+            <Skeleton key={line} className="h-9 w-full" />
           ))}
-        </Accordion>
+        </div>
+      )}
+
+      {detailQuery.isError && (
+        <div className="p-4">
+          <LoadError
+            error={detailQuery.error}
+            fallback="設備の詳細を取得できませんでした。"
+            onRetry={() => void detailQuery.refetch()}
+          />
+        </div>
+      )}
+
+      {detailQuery.data && (
+        <DetailGroups
+          detail={detailQuery.data}
+          sheet={sheet}
+          groupKey={groupKey}
+          onGroupChange={onGroupChange}
+          copiedKey={copiedKey}
+          onCopy={onCopy}
+          onPreview={setPreview}
+        />
       )}
 
       <FilePreviewDialog target={previewTarget} onOpenChange={(open) => !open && setPreview(null)} />
@@ -283,197 +410,81 @@ export function IndividualActivityView({ projectId, copiedKey, onCopy }: ViewPro
   );
 }
 
-type RowProps = Readonly<{
-  row: SheetRow;
+/** The files one source of evidence holds: the equipment's, or the monitoring's. */
+function EvidenceBar({
+  title,
+  files,
+  onPreview,
+}: Readonly<{ title: string; files: EvidenceLink[]; onPreview: (file: EvidenceLink) => void }>) {
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+      <span className="text-xs font-semibold text-muted-foreground">{title}</span>
+      {files.length > 0 ? (
+        files.map((file) => (
+          <Button
+            key={file.location}
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-8 bg-card"
+            onClick={() => onPreview(file)}
+          >
+            <FileText aria-hidden="true" />
+            {evidenceLabel(file.kind)}
+          </Button>
+        ))
+      ) : (
+        <span className="text-small text-muted-foreground">登録されていません</span>
+      )}
+    </div>
+  );
+}
+
+type GroupsProps = Readonly<{
+  detail: IndividualActivityDetail;
   sheet: BatterySheet;
-  projectId: string;
+  groupKey: GroupKey;
+  onGroupChange: (key: GroupKey) => void;
   copiedKey: string | null;
   onCopy: CopyHandler;
   onPreview: (file: EvidenceLink) => void;
 }>;
 
-function ActivityRow(props: RowProps) {
-  const { row, sheet, projectId, copiedKey, onCopy } = props;
-  const queryClient = useQueryClient();
-  const [isCopying, setIsCopying] = useState(false);
-  const eligibility = row.eligibilityStatus && ELIGIBILITY_LABELS[row.eligibilityStatus];
-  const status = row.reportReadiness && READINESS_LABELS[row.reportReadiness];
-  const name = row.companyName ?? '会員名未登録';
-  const copyKey = `row::${row.equipmentId}`;
-  const copied = copiedKey === copyKey;
-
-  // Fetches the detail the same way opening the row does, so a later open is instant.
-  const copyRow = async () => {
-    setIsCopying(true);
-    try {
-      const detail = await queryClient.fetchQuery(detailQueryOptions(projectId, row.equipmentId));
-      onCopy(copyKey, toSheetRow(detail, sheet, row.rowId).tsv, `ID ${row.rowId}の行`);
-    } catch (error) {
-      toast({
-        title: '行をコピーできませんでした',
-        description: errorMessage(error, '設備の詳細を取得できませんでした。'),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsCopying(false);
-    }
-  };
+function DetailGroups({ detail, sheet, groupKey, onGroupChange, copiedKey, onCopy, onPreview }: GroupsProps) {
+  const groups = useMemo(() => toActivityGroups(detail, sheet), [detail, sheet]);
+  const files = useMemo(() => evidenceFilesOf(detail), [detail]);
 
   return (
-    <AccordionItem value={String(row.equipmentId)} className="border-b-0">
-      <AccordionPrimitive.Header className="flex items-center gap-2 pr-3 transition-colors hover:bg-muted/60">
-        <AccordionPrimitive.Trigger className="group grid min-w-0 flex-1 grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 py-3 pl-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring lg:grid-cols-[auto_auto_minmax(0,1fr)_auto_auto]">
-          <ChevronRight
-            aria-hidden="true"
-            className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90 motion-reduce:transition-none"
-          />
-          <span className="inline-flex min-w-12 justify-center rounded-md border border-border bg-card px-2 py-0.5 font-mono text-small font-semibold tabular-nums text-foreground">
-            {row.rowId}
-          </span>
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-semibold text-foreground" title={name}>{name}</span>
-            <span className="block truncate text-small text-muted-foreground" title={row.siteAddress ?? undefined}>
-              {row.siteAddress ?? EMPTY_VALUE}
-            </span>
-          </span>
-          <span className="col-start-3 flex flex-wrap items-center gap-1.5 lg:col-start-auto">
-            {eligibility && <StatusBadge tone={eligibility.tone}>{eligibility.label}</StatusBadge>}
-            {status && <StatusBadge tone={status.tone}>{status.label}</StatusBadge>}
-          </span>
-          <span className="col-start-3 flex gap-4 text-small text-muted-foreground lg:col-start-auto lg:w-52 lg:justify-end">
-            <span>
-              発電 <span className="font-medium tabular-nums text-foreground">{formatKwh(row.generationKwh)}</span> kWh
-            </span>
-            <span>
-              売電 <span className="font-medium tabular-nums text-foreground">{formatKwh(row.saleKwh)}</span> kWh
-            </span>
-          </span>
-        </AccordionPrimitive.Trigger>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className={copied ? 'shrink-0 text-success-strong hover:text-success-strong' : 'shrink-0'}
-              aria-label={`ID ${row.rowId}の行をコピー`}
-              disabled={isCopying}
-              onClick={() => void copyRow()}
-            >
-              {isCopying ? (
-                <Loader2 aria-hidden="true" className="animate-spin" />
-              ) : copied ? (
-                <Check aria-hidden="true" />
-              ) : (
-                <ClipboardCopy aria-hidden="true" />
-              )}
-              <span className="hidden sm:inline">{copied ? 'コピーしました' : '行をコピー'}</span>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>C列（ID）のセルを選択して貼り付け</TooltipContent>
-        </Tooltip>
-      </AccordionPrimitive.Header>
-      <AccordionContent className="border-t border-border bg-muted/30 p-0">
-        <ActivityDetail {...props} />
-      </AccordionContent>
-    </AccordionItem>
-  );
-}
-
-/** Mounted only while its row is open, so the detail is fetched on first open. */
-function ActivityDetail({ projectId, row, sheet, copiedKey, onCopy, onPreview }: RowProps) {
-  const detailQuery = useQuery(detailQueryOptions(projectId, row.equipmentId));
-  const detail = detailQuery.data;
-  const sheetRow = useMemo(() => (detail ? toSheetRow(detail, sheet, row.rowId) : null), [detail, sheet, row.rowId]);
-
-  if (detailQuery.isLoading) {
-    return (
-      <div role="status" aria-label="設備の詳細を読み込んでいます" className="space-y-2 p-4">
-        <Skeleton className="h-4 w-40" />
-        {[0, 1, 2].map((line) => (
-          <Skeleton key={line} className="h-9 w-full" />
-        ))}
-      </div>
-    );
-  }
-
-  if (detailQuery.isError || !detail || !sheetRow) {
-    return (
-      <div className="p-4">
-        <LoadError
-          error={detailQuery.error}
-          fallback="設備の詳細を取得できませんでした。"
-          onRetry={() => void detailQuery.refetch()}
-        />
-      </div>
-    );
-  }
-
-  const { toCheck, manual } = countBlanks(sheetRow.groups);
-  const evidenceOf = { equipment: detail.equipment?.evidenceFiles, monitoring: detail.monitoring?.evidenceFiles };
-
-  return (
-    <div className="space-y-6 p-4">
-      <p className="flex flex-wrap gap-x-4 gap-y-1 text-small text-muted-foreground">
-        <span>
-          シートの列 <span className="font-mono text-foreground">{sheetRow.range}</span>
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <FileSearch aria-hidden="true" className="size-3.5 text-[hsl(var(--warning-800))]" />
-          要確認 <span className="font-semibold tabular-nums text-foreground">{toCheck}</span>件
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <PenLine aria-hidden="true" className="size-3.5" />
-          Excelで手入力 <span className="font-semibold tabular-nums text-foreground">{manual}</span>件
-        </span>
-      </p>
-
-      {sheetRow.groups.map((group) => {
-        const headingId = `activity-${row.equipmentId}-${group.key}`;
-        const files = group.evidence ? evidenceLinks(evidenceOf[group.evidence]) : [];
-        return (
-          <section key={group.key} aria-labelledby={headingId} className="space-y-3">
-            <h4 id={headingId} className="border-b border-border pb-1.5 text-xs font-semibold tracking-wide text-muted-foreground">
+    <Tabs value={groupKey} onValueChange={(value) => onGroupChange(value as GroupKey)}>
+      <div className="px-4">
+        <PageTabsList aria-label="項目のグループ" className="gap-5">
+          {groups.map((group) => (
+            <PageTabsTrigger key={group.key} value={group.key} className="text-small">
               {group.title}
-            </h4>
+            </PageTabsTrigger>
+          ))}
+        </PageTabsList>
+      </div>
 
-            {group.evidence && (
-              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
-                <span className="text-small font-medium text-foreground">{EVIDENCE_LABELS[group.evidence]}</span>
-                {files.length > 0 ? (
-                  files.map((file, index) => (
-                    <Button
-                      key={`${file.url}-${index}`}
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="h-8 max-w-[16rem]"
-                      title={file.fileName}
-                      onClick={() => onPreview(file)}
-                    >
-                      <FileText aria-hidden="true" />
-                      <span className="truncate">{file.fileName}</span>
-                    </Button>
-                  ))
-                ) : (
-                  <span className="text-small text-muted-foreground">まだ登録されていません</span>
-                )}
-              </div>
-            )}
-
-            {group.sections.map((section) => (
-              <DocumentDataSectionCard
-                key={section.key}
-                section={section}
-                copiedKey={copiedKey}
-                onCopy={onCopy}
-                renderMissing={(item) => <MissingValue item={item} />}
-                renderLabel={(item) => <ColumnLabel item={item} />}
-              />
-            ))}
-          </section>
-        );
-      })}
-    </div>
+      {groups.map((group) => (
+        <TabsContent key={group.key} value={group.key} className="mt-0 space-y-5 p-4">
+          {(group.key === 'equipment' || group.key === 'monitoring') && (
+            <EvidenceBar
+              title={group.key === 'equipment' ? '設備の証憑' : 'モニタリングの証憑'}
+              files={files.filter((file) => (file.kind === MONITORING_EVIDENCE) === (group.key === 'monitoring'))}
+              onPreview={onPreview}
+            />
+          )}
+          {group.sections.map((section) => (
+            <DocumentDataSectionCard
+              key={section.key}
+              section={section}
+              copiedKey={copiedKey}
+              onCopy={onCopy}
+            />
+          ))}
+        </TabsContent>
+      ))}
+    </Tabs>
   );
 }

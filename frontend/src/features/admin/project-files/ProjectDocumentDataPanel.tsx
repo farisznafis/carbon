@@ -6,11 +6,11 @@ import type { ProjectFileType } from '@/api/admin/projectFiles';
 import { ActionButton } from '@/components/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SegmentTabsList, SegmentTabsTrigger } from '@/components/navigation/PageTabs';
+import { Tabs } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { toast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 import { DocumentDataSectionCard, type CopyHandler } from './DocumentDataSectionCard';
 import { copyToClipboard, filterSections } from './documentDataCopy';
 import { IndividualActivityView } from './IndividualActivityView';
@@ -66,7 +66,7 @@ function useCopyFeedback() {
 /**
  * The データ取得 tab: the latest values entered in the SaaS for each of the
  * three forms, one at a time, each value copied on its own into an Excel form.
- * Forms on the left (a select on narrow screens), the data on the right.
+ * The forms as tabs above, the selected form's data below at full width.
  */
 export function ProjectDocumentDataPanel({ projectId }: Readonly<{ projectId: string }>) {
   const location = useLocation();
@@ -95,67 +95,19 @@ export function ProjectDocumentDataPanel({ projectId }: Readonly<{ projectId: st
     setFilter('');
   };
 
-  const renderFormList = () => (
-    <aside
-      aria-labelledby="document-data-forms-heading"
-      className="hidden self-start overflow-hidden rounded-[10px] border border-border bg-card lg:block"
-    >
-      <h3
-        id="document-data-forms-heading"
-        className="border-b border-border px-[18px] py-3 text-base font-bold text-foreground"
-      >
-        様式
-      </h3>
-
-      <nav aria-label="データを表示する書類">
-        <ul className="divide-y divide-border">
-          {DATA_FILE_DEFINITIONS.map((definition) => {
-            const isActive = definition.type === activeType;
-            return (
-              <li key={definition.type}>
-                <button
-                  type="button"
-                  aria-current={isActive ? 'true' : undefined}
-                  onClick={() => selectType(definition.type)}
-                  className={cn(
-                    'flex w-full flex-col gap-1 px-[18px] py-3 text-left transition-colors',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
-                    isActive ? 'bg-accent' : 'hover:bg-muted/50',
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'text-sm font-medium text-foreground',
-                      isActive && 'font-bold text-primary-strong',
-                    )}
-                  >
-                    {definition.label}
-                  </span>
-                  <span className="text-xs text-secondary-foreground">{definition.description}</span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-    </aside>
-  );
-
-  const renderMobileSelect = () => (
-    <div className="lg:hidden">
-      <Select value={activeType} onValueChange={selectType}>
-        <SelectTrigger aria-label="データを表示する書類">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
+  const renderFormTabs = () => (
+    <Tabs value={activeType} onValueChange={selectType}>
+      {/* Three forms fit a segmented control; a side list would take width the data needs. */}
+      <div className="overflow-x-auto">
+        <SegmentTabsList aria-label="データを表示する書類" className="flex-nowrap">
           {DATA_FILE_DEFINITIONS.map((definition) => (
-            <SelectItem key={definition.type} value={definition.type}>
+            <SegmentTabsTrigger key={definition.type} value={definition.type}>
               {definition.label}
-            </SelectItem>
+            </SegmentTabsTrigger>
           ))}
-        </SelectContent>
-      </Select>
-    </div>
+        </SegmentTabsList>
+      </div>
+    </Tabs>
   );
 
   const renderEmpty = (icon: ReactNode, title: string, body: string, action?: ReactNode) => (
@@ -235,47 +187,42 @@ export function ProjectDocumentDataPanel({ projectId }: Readonly<{ projectId: st
 
   return (
     <TooltipProvider delayDuration={250}>
-      <div className="grid min-w-0 gap-4 lg:grid-cols-[clamp(18rem,32vw,29.625rem)_minmax(0,1fr)] lg:gap-6">
-        {renderFormList()}
+      <div className="flex min-w-0 flex-col gap-4">
+        {renderFormTabs()}
 
-        {/* gap, not space-y: the hidden mobile select would push the card below the list. */}
-        <div className="flex min-w-0 flex-col gap-4">
-          {renderMobileSelect()}
-
-          <article
-            aria-labelledby="document-data-title"
-            className="min-w-0 rounded-lg border border-border bg-card shadow-app-sm"
-          >
-            <header className="flex flex-col gap-3 border-b border-border px-5 py-4 md:flex-row md:items-center md:justify-between">
-              <div className="min-w-0 space-y-1">
-                <h2 id="document-data-title" className="text-lg font-semibold text-foreground">
-                  {activeDefinition.label}
-                </h2>
-                <p className="text-small text-muted-foreground">{activeDefinition.description}</p>
-              </div>
-              {sections.length > 0 && (
-                <div className="relative w-full shrink-0 md:w-64">
-                  <Search
-                    aria-hidden="true"
-                    className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-                  />
-                  <Input
-                    type="search"
-                    value={filter}
-                    onChange={(event) => setFilter(event.target.value)}
-                    placeholder="項目名・値で絞り込み"
-                    aria-label="項目名・値で絞り込み"
-                    className="h-9 pl-9"
-                  />
-                </div>
-              )}
-            </header>
-
-            <div className="px-5 py-5">
-              {renderBody()}
+        <article
+          aria-labelledby="document-data-title"
+          className="min-w-0 rounded-lg border border-border bg-card shadow-app-sm"
+        >
+          <header className="flex flex-col gap-3 border-b border-border px-5 py-4 md:flex-row md:items-center md:justify-between">
+            <div className="min-w-0 space-y-1">
+              <h2 id="document-data-title" className="text-lg font-semibold text-foreground">
+                {activeDefinition.label}
+              </h2>
+              <p className="text-small text-muted-foreground">{activeDefinition.description}</p>
             </div>
-          </article>
-        </div>
+            {sections.length > 0 && (
+              <div className="relative w-full shrink-0 md:w-64">
+                <Search
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                />
+                <Input
+                  type="search"
+                  value={filter}
+                  onChange={(event) => setFilter(event.target.value)}
+                  placeholder="項目名・値で絞り込み"
+                  aria-label="項目名・値で絞り込み"
+                  className="h-9 pl-9"
+                />
+              </div>
+            )}
+          </header>
+
+          <div className="px-5 py-5">
+            {renderBody()}
+          </div>
+        </article>
       </div>
 
       <p role="status" aria-live="polite" className="sr-only">
