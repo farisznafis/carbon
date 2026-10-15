@@ -109,12 +109,8 @@ function InquiryInformationPanel() {
         surface-brand-dark
         relative
         overflow-hidden
-        px-6
-        py-10
-        sm:px-10
-        sm:py-12
-        lg:px-[clamp(2rem,2.5vw,3rem)]
-        lg:py-[clamp(2rem,2.9vw,3.5rem)]
+        p-6
+        sm:p-8
       '
     >
       <div
@@ -160,12 +156,9 @@ function InquiryInformationPanel() {
           <h1
             className='
               text-brand-dark
-              mt-6
-              text-3xl
+              text-form-title
               font-bold
-              leading-tight
               tracking-tight
-              sm:text-marketing-title
             '
           >
             お問い合わせ
@@ -173,10 +166,11 @@ function InquiryInformationPanel() {
           <p
             className='
               text-brand-dark-muted
-              mt-5
+              mt-2
               max-w-sm
               text-sm
-              leading-7
+              leading-6
+              [word-break:auto-phrase]
             '
           >
             サービスについてのご質問や導入のご相談はこちらから。
@@ -185,10 +179,10 @@ function InquiryInformationPanel() {
 
         <div
           className='
-            mt-12
+            mt-8
             border-t
             border-brand-dark
-            pt-7
+            pt-5
             lg:mt-auto
           '
         >
@@ -196,7 +190,8 @@ function InquiryInformationPanel() {
             className='
               text-brand-dark-muted
               text-sm
-              leading-7
+              leading-6
+              [word-break:auto-phrase]
             '
           >
             通常、3営業日以内に担当者よりご返信します。
@@ -222,7 +217,7 @@ function InquirySuccess({
       role='status'
       className='
         flex
-        min-h-[460px]
+        min-h-[22rem]
         flex-col
         items-center
         justify-center
@@ -408,14 +403,13 @@ export default function InquiryPage() {
           className='
             mx-auto
             flex
-            min-h-[calc(100dvh-4rem-1px)]
+            min-h-[calc(100dvh-var(--app-header-height))]
             w-full
-            max-w-page
+            max-w-[min(84vw,100rem)]
             flex-col
             justify-center
             px-4
-            pb-16
-            pt-8
+            py-6
             sm:px-6
             lg:px-8
           '
@@ -429,12 +423,13 @@ export default function InquiryPage() {
           <div
             className='
               overflow-hidden
-              rounded-lg
+              rounded-2xl
               border
-              border-border
+              border-border/70
               bg-card
               shadow-app-md
               lg:grid
+              lg:flex-1
               lg:grid-cols-[0.36fr_0.64fr]
             '
           >
@@ -442,12 +437,10 @@ export default function InquiryPage() {
 
             <div
               className='
-                px-5
-                py-10
-                sm:px-10
-                sm:py-12
-                lg:px-[clamp(2rem,2.9vw,3.5rem)]
-                lg:py-[clamp(2rem,2.9vw,3.5rem)]
+                flex
+                flex-col
+                p-6
+                sm:p-8
               '
             >
               {successMessage !== null ? (
@@ -459,14 +452,15 @@ export default function InquiryPage() {
               ) : (
                 <Form {...form}>
                   <form
+                    className='flex flex-1 flex-col'
                     noValidate
                     onSubmit={form.handleSubmit(handleSubmit)}
                   >
-                    <div
+                    {/* <div
                       className='
                         border-b
                         border-border
-                        pb-7
+                        pb-5
                       '
                     >
                       <h2
@@ -489,18 +483,21 @@ export default function InquiryPage() {
                       >
                         すべての項目をご入力ください。
                       </p>
-                    </div>
+                    </div> */}
 
                     <div
                       className='
-                        mt-8
-                        space-y-6
+                        mt-6
+                        flex
+                        flex-1
+                        flex-col
+                        space-y-5
                       '
                     >
                       <FormGrid
                         columns={2}
                         className='
-                          gap-6
+                          gap-5
                         '
                       >
                         <FormField
@@ -572,14 +569,15 @@ export default function InquiryPage() {
                         control={form.control}
                         name='content'
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className='flex flex-1 flex-col'>
                             <RequiredLabel>お問い合わせ内容</RequiredLabel>
 
                             <FormControl>
                               <Textarea
                                 placeholder='お問い合わせ内容をご入力ください。'
                                 className='
-                                  min-h-48
+                                  min-h-28
+                                  flex-1
                                   resize-y
                                 '
                                 aria-required='true'
@@ -595,7 +593,7 @@ export default function InquiryPage() {
 
                     <div
                       className='
-                        mt-8
+                        mt-6
                       '
                     >
                       <div
