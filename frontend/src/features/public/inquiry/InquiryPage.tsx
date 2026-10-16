@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, Mail } from 'lucide-react';
 import { useForm, type UseFormSetError } from 'react-hook-form';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -340,6 +340,10 @@ export default function InquiryPage() {
 
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // AWS WAF CAPTCHA
+  const captchaContainerRef = useRef<HTMLDivElement>(null);
+  const [captchaCompleted, setCaptchaCompleted] = useState(false);
+
   const form = useForm<InquiryRequest>({
     // Saves signed-in accounts retyping what the app already knows.
     defaultValues: {
@@ -349,6 +353,28 @@ export default function InquiryPage() {
       content: '',
     },
   });
+
+  useEffect(() => {
+    const container = captchaContainerRef.current;
+
+    if (!container || !window.AwsWafCaptcha) {
+      return;
+    }
+
+    window.AwsWafCaptcha.renderCaptcha(container, {
+      apiKey: import.meta.env.VITE_AWS_WAF_CAPTCHA_API_KEY,
+
+      onSuccess: (_wafToken: string) => {
+        setCaptchaCompleted(true);
+      },
+
+      onError: () => {
+        setCaptchaCompleted(false);
+      },
+
+      defaultLocale: 'ja-JP',
+    });
+  }, []);
 
   useEffect(() => {
     if (successMessage === null) {
@@ -594,7 +620,10 @@ export default function InquiryPage() {
                           </FormItem>
                         )}
                       />
-                      
+                      <div
+                        ref={captchaContainerRef}
+                        className="mt-6"
+                      />
                     </div>
 
                     <div
@@ -623,7 +652,8 @@ export default function InquiryPage() {
                               label: '送信する',
                               pendingLabel: '送信中...',
                               type: 'submit',
-                            },
+                              disabled: !captchaCompleted,
+                            }
                           ]}
                         />
                       </div>
