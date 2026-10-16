@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Building2, Factory, Leaf } from 'lucide-react';
+import { Building2, ChevronRight, Factory, Leaf } from 'lucide-react';
 import { getProfile } from '@/api/profile';
 import {
   getSiteData,
@@ -20,6 +20,7 @@ import {
   dashboardPageContainerClassName,
   dashboardPageHeaderClassName,
 } from '@/components/layout/DashboardLayout';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -326,30 +327,127 @@ function KpiCard({
   );
 }
 
-/** Displays whether a project is available, joined, or awaiting admin approval. */
-function ProjectStatus({
-  joined,
-  pending = false,
-}: {
-  joined: boolean;
-  pending?: boolean;
-}) {
+type ProjectState = 'joined' | 'pending' | 'notJoined';
+
+const projectStateBadge: Record<
+  ProjectState,
+  { label: string; tone: 'success' | 'warning' | 'neutral' }
+> = {
+  joined: { label: '入会済み', tone: 'success' },
+  pending: { label: '申請中', tone: 'warning' },
+  notJoined: { label: '未入会', tone: 'neutral' },
+};
+
+// One label/value style for every project surface on this page (rows, 未入会
+// cards, progress), so the same field never renders at two sizes.
+const metaLabelClassName = 'text-subtle text-muted-foreground';
+const metaValueClassName = 'text-small font-medium text-foreground';
+const projectSurfaceClassName =
+  'rounded-2xl border border-border bg-card p-5 lg:px-[var(--card-padding)]';
+
+function ProjectIcon() {
   return (
-    <span className='inline-flex items-center gap-2 font-bold'>
-      <span
-        className={cn(
-          'h-3 w-3 rounded-full',
-          joined && !pending ? 'bg-success' : 'bg-warning',
-        )}
-      />
-      {pending ? '申請中' : joined ? '入会済み' : '未入会'}
+    <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary'>
+      <Building2 className='h-5 w-5' aria-hidden='true' />
     </span>
   );
 }
 
-// Renders a company-joined project and adapts its action to the current site's relation.
-/** Renders a joined project and its participation action. */
-function JoinedProjectCard({
+/**
+ * Joined-row summary: name on its own line, then status badge + 方法論番号 +
+ * 方法論 on one line. The badge sits at the start of the second line so a
+ * long name never pushes it to a different place. 方法論 truncates (full
+ * text in the tooltip) to keep every row the same height.
+ */
+function ProjectSummary({
+  project,
+  state,
+  titleSlot,
+}: {
+  project: SiteProject;
+  state: ProjectState;
+  titleSlot?: ReactNode;
+}) {
+  const badge = projectStateBadge[state];
+  const methodology = getMethodologyLabel(project);
+
+  return (
+    <div className='flex min-w-0 items-start gap-3'>
+      <ProjectIcon />
+      <div className='min-w-0 flex-1'>
+        <h3 className='break-words text-subsection-title text-foreground'>
+          {titleSlot ?? project.projectName ?? '-'}
+        </h3>
+        {/* Dividers + smaller muted labels keep each label/value pair readable as its own unit. */}
+        <div className='mt-1.5 flex min-w-0 items-center'>
+          <StatusBadge tone={badge.tone} className='shrink-0'>
+            {badge.label}
+          </StatusBadge>
+          <dl className='ml-3 flex min-w-0 items-baseline divide-x divide-border border-l border-border'>
+            <div className='flex shrink-0 items-baseline gap-1.5 px-3'>
+              <dt className={metaLabelClassName}>方法論番号</dt>
+              <dd className={cn(metaValueClassName, 'tabular-nums')}>
+                {project.methodNumber} {project.methodologyVersion}
+              </dd>
+            </div>
+            <div className='flex min-w-0 items-baseline gap-1.5 px-3'>
+              <dt className={cn(metaLabelClassName, 'shrink-0')}>方法論</dt>
+              <dd
+                className={cn(metaValueClassName, 'min-w-0 truncate')}
+                title={methodology}
+              >
+                {methodology}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 未入会 card: header (icon, name, badge) is separated from the methodology
+ * details by a divider, and the details are a label/value list with labels
+ * in their own column so they don't blend into the header.
+ */
+function AvailableProjectCard({ project }: { project: SiteProject }) {
+  const badge = projectStateBadge.notJoined;
+  const methodology = getMethodologyLabel(project);
+
+  return (
+    <li className={cn(projectSurfaceClassName, 'flex flex-col')}>
+      <div className='flex min-w-0 items-start gap-3'>
+        <ProjectIcon />
+        <div className='min-w-0 flex-1'>
+          <h3 className='break-words text-subsection-title text-foreground'>
+            {project.projectName || '-'}
+          </h3>
+          <StatusBadge tone={badge.tone} className='mt-1.5'>
+            {badge.label}
+          </StatusBadge>
+        </div>
+      </div>
+
+      <dl className='mt-4 grid grid-cols-[max-content_minmax(0,1fr)] items-baseline gap-x-4 gap-y-2 border-t border-border pt-4'>
+        <dt className={metaLabelClassName}>方法論番号</dt>
+        <dd className={cn(metaValueClassName, 'tabular-nums')}>
+          {project.methodNumber} {project.methodologyVersion}
+        </dd>
+        <dt className={metaLabelClassName}>方法論</dt>
+        <dd className={metaValueClassName}>{methodology}</dd>
+      </dl>
+    </li>
+  );
+}
+
+/**
+ * A joined project as one row: summary | progress or note | action.
+ * Rows that open the detail page are clickable as a whole (a stretched
+ * button on the title), with a chevron as the visible affordance. The
+ * プロジェクト参加 row keeps an explicit button because it opens a dialog.
+ */
+function JoinedProjectRow({
   project,
   requiresSiteParticipation,
   onAction,
@@ -359,109 +457,64 @@ function JoinedProjectCard({
   onAction: () => void;
 }) {
   const isPendingReview = project.participationStatus === 'OPEN';
+  const opensDetail = !requiresSiteParticipation && !isPendingReview;
 
   return (
-    <Card className='rounded-2xl border-border bg-card shadow-none'>
-      <CardContent className='p-5 md:p-6 lg:p-[var(--card-padding)]'>
-        <div className='mb-5 flex items-center gap-3'>
-          <span className='flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-primary'>
-            <Building2 className='h-5 w-5' />
+    <li
+      className={cn(
+        projectSurfaceClassName,
+        'relative grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_9.5rem] lg:items-center lg:gap-6',
+        opensDetail &&
+          'transition-colors hover:border-primary/40 hover:bg-secondary/30 has-[button:focus-visible]:ring-2 has-[button:focus-visible]:ring-ring',
+      )}
+    >
+      <ProjectSummary
+        project={project}
+        state={isPendingReview ? 'pending' : 'joined'}
+        titleSlot={
+          opensDetail ? (
+            <button
+              type='button'
+              onClick={onAction}
+              className='text-left focus-visible:outline-none after:absolute after:inset-0 after:rounded-2xl after:content-[""]'
+            >
+              {project.projectName || '-'}
+            </button>
+          ) : undefined
+        }
+      />
+
+      <div className='min-w-0'>
+        {opensDetail ? (
+          <DashboardEmissionReductionProgress projectId={project.id} />
+        ) : (
+          <p className='text-small text-muted-foreground'>
+            {isPendingReview
+              ? '入会申請を審査中です。承認後に排出削減量を確認できます。'
+              : 'この拠点はまだ参加していません。参加すると排出削減量を確認できます。'}
+          </p>
+        )}
+      </div>
+
+      <div className='flex lg:justify-end'>
+        {opensDetail ? (
+          <span className='hidden items-center gap-1 text-small font-medium text-primary lg:inline-flex'>
+            詳細
+            <ChevronRight className='h-4 w-4' aria-hidden='true' />
           </span>
-          <h3 className='text-foreground'>{project.projectName}</h3>
-        </div>
-
-        <div
-          className={cn(
-            'grid gap-6',
-            !requiresSiteParticipation &&
-              !isPendingReview &&
-              'xl:grid-cols-[minmax(0,1fr)_400px]',
-          )}
-        >
-          <div
-            className={cn(
-              'space-y-4',
-              !requiresSiteParticipation && !isPendingReview && 'xl:order-2',
-            )}
+        ) : requiresSiteParticipation ? (
+          <Button
+            type='button'
+            variant='outline'
+            size='md'
+            className='w-full lg:w-auto'
+            onClick={onAction}
           >
-            <div className='rounded-2xl border border-border bg-transparent p-5'>
-              <dl className='space-y-4'>
-                <div>
-                  <dt className='text-small text-foreground'>方法論</dt>
-                  <dd className='mt-1 font-bold'>
-                    {getMethodologyLabel(project)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className='text-small text-foreground'>方法論番号</dt>
-                  <dd className='mt-1 font-bold'>
-                    {project.methodNumber} {project.methodologyVersion}
-                  </dd>
-                </div>
-                <div>
-                  <dt className='text-small text-foreground'>ステータス</dt>
-                  <dd className='mt-1'>
-                    <ProjectStatus
-                      joined={!isPendingReview}
-                      pending={isPendingReview}
-                    />
-                  </dd>
-                </div>
-              </dl>
-            </div>
-
-            {!isPendingReview && (
-              <Button
-                type='button'
-                size='md'
-                className='w-full text-base'
-                onClick={onAction}
-              >
-                {requiresSiteParticipation
-                  ? 'プロジェクト参加'
-                  : 'プロジェクト詳細'}
-              </Button>
-            )}
-          </div>
-
-          {!requiresSiteParticipation && !isPendingReview && (
-            <DashboardEmissionReductionProgress projectId={project.id} />
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-/** Renders a project that the current site can join. */
-function AvailableProjectCard({ project }: { project: SiteProject }) {
-  return (
-    <Card className='rounded-2xl border-border bg-card shadow-none'>
-      <CardContent className='h-full p-6 lg:p-[var(--card-padding)]'>
-        <h3 className='text-foreground'>
-          {project.projectName || 'PROJECT ABC'}
-        </h3>
-
-        <dl className='mt-6 space-y-4'>
-          <div>
-            <dt className='text-small text-foreground'>方法論</dt>
-            <dd className='mt-1 font-bold'>{getMethodologyLabel(project)}</dd>
-          </div>
-          <div>
-            <dt className='text-small text-foreground'>方法論番号</dt>
-            <dd className='mt-1 font-bold'>
-              {project.methodNumber} {project.methodologyVersion}
-            </dd>
-          </div>
-          <div>
-            <dt className='text-small text-foreground'>ステータス</dt>
-            <dd className='mt-1'>
-              <ProjectStatus joined={false} />
-            </dd>
-          </div>
-        </dl>
-      </CardContent>
-    </Card>
+            プロジェクト参加
+          </Button>
+        ) : null}
+      </div>
+    </li>
   );
 }
 
@@ -859,11 +912,11 @@ const Dashboard = () => {
           </div>
 
           {isProjectsLoading ? (
-            <div className='space-y-4'>
+            <div className='space-y-3'>
               {Array.from({ length: 2 }, (_, index) => (
                 <SkeletonCard
                   key={index}
-                  className='min-h-80 rounded-2xl'
+                  className='min-h-24 rounded-2xl'
                 />
               ))}
             </div>
@@ -877,9 +930,9 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           ) : companyJoinedProjects.length > 0 ? (
-            <div className='space-y-4'>
+            <ul className='space-y-3'>
               {companyJoinedProjects.map((project) => (
-                <JoinedProjectCard
+                <JoinedProjectRow
                   key={project.id}
                   project={project}
                   requiresSiteParticipation={!project.hasSiteRelation}
@@ -890,7 +943,7 @@ const Dashboard = () => {
                   }
                 />
               ))}
-            </div>
+            </ul>
           ) : (
             <Card className='rounded-2xl border-border'>
               <CardContent className='p-10 text-center text-foreground'>
@@ -926,11 +979,11 @@ const Dashboard = () => {
           </div>
 
           {isProjectsLoading ? (
-            <div className='grid gap-5 md:grid-cols-2 xl:grid-cols-4'>
-              {Array.from({ length: 4 }, (_, index) => (
+            <div className='grid gap-3 md:grid-cols-2 xl:grid-cols-3'>
+              {Array.from({ length: 3 }, (_, index) => (
                 <SkeletonCard
                   key={index}
-                  className='min-h-72 rounded-2xl'
+                  className='min-h-24 rounded-2xl'
                 />
               ))}
             </div>
@@ -944,14 +997,11 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           ) : availableProjects.length > 0 ? (
-            <div className='grid gap-5 md:grid-cols-2 xl:grid-cols-4'>
+            <ul className='grid gap-3 md:grid-cols-2 xl:grid-cols-3'>
               {availableProjects.map((project) => (
-                <AvailableProjectCard
-                  key={project.id}
-                  project={project}
-                />
+                <AvailableProjectCard key={project.id} project={project} />
               ))}
-            </div>
+            </ul>
           ) : (
             <Card className='rounded-2xl border-border'>
               <CardContent className='p-10 text-center text-foreground'>

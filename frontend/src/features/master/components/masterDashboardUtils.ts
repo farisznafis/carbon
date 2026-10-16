@@ -1,6 +1,17 @@
 import type { Site } from '@/api/site';
 import type { UserList } from '@/api/users';
 
+/**
+ * Cards with a single destination (拠点, 社員) are clickable as a whole: the
+ * card's own action button is stretched over it with an ::after overlay, so
+ * there is still exactly one interactive element per card.
+ */
+export const clickableCardClassName =
+  'relative flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-app-sm transition-colors hover:border-primary/40 hover:bg-secondary/30 has-[button:focus-visible]:ring-2 has-[button:focus-visible]:ring-ring md:flex-row';
+
+export const stretchedActionClassName =
+  'after:absolute after:inset-0 after:content-[""]';
+
 export const formatDashboardDateTime = (date: Date | null) => {
   if (!date) return '-';
 

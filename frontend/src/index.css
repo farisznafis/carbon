@@ -253,9 +253,21 @@ All colors MUST be HSL.
       --section-gap: 1.5rem;
       --marketing-section-padding: 4rem;
       --app-header-height: 3.75rem;
-      --page-gutter: 1.5rem;
+      --page-gutter: 2rem;
       --page-padding-y: 1.5rem;
       --grid-gap: 1rem;
+    }
+  }
+
+  /*
+   * Windows 150–175% scaling (device pixel ratio 1.5–1.99) on a laptop-sized
+   * viewport still reads too large at 15px; 13.5px matches the 90% browser
+   * zoom that looked right. Monitors at 100% (dppx 1) and Retina Macs
+   * (dppx 2) keep the rule above.
+   */
+  @media (min-width: 1024px) and (max-width: 1599px) and (min-resolution: 1.5dppx) and (max-resolution: 1.99dppx) {
+    html {
+      font-size: 84.375%;
     }
   }
 

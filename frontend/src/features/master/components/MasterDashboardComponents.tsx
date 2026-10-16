@@ -7,7 +7,11 @@ import {
   dashboardEmptyStateClassName,
 } from '@/components/layout/DashboardLayout';
 import { MasterSiteCard } from '@/features/master/components/MasterSiteCard';
-import { formatPersonName } from '@/features/master/components/masterDashboardUtils';
+import {
+  clickableCardClassName,
+  formatPersonName,
+  stretchedActionClassName,
+} from '@/features/master/components/masterDashboardUtils';
 import { cn } from '@/lib/utils';
 import { Building2, Mail, User } from 'lucide-react';
 import { ActionButton } from '@/components/actions';
@@ -110,7 +114,7 @@ export function UserDashboardCard({
     user.role !== 'master' && !user.siteId && !user.siteName;
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-app-sm md:flex-row">
+    <article className={clickableCardClassName}>
       <div className="min-w-0 flex-1 px-5 py-4 md:px-6">
         <div className="flex flex-wrap items-center gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
@@ -166,6 +170,7 @@ export function UserDashboardCard({
       <div className="flex items-center justify-end border-t border-border px-4 py-3 md:w-32 md:shrink-0 md:justify-center md:border-l md:border-t-0">
         <RowActionButton
           aria-label={`${fullName || '社員'}のプロファイル`}
+          className={stretchedActionClassName}
           onClick={() => onProfile(user)}
         >
           プロファイル

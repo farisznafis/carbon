@@ -1,7 +1,9 @@
 import { cn } from '@/lib/utils';
 
+// The gutter is added to max-width too, so wide monitors keep the same 77.5rem
+// content width while laptops get breathing room from the sidebar and edge.
 export const dashboardPageContainerClassName =
-  'mx-auto w-full max-w-app px-4 sm:px-6 lg:px-0';
+  'mx-auto w-full max-w-app px-4 sm:px-6 lg:max-w-[calc(77.5rem+2*var(--page-gutter))] lg:px-gutter';
 
 export const dashboardWidePageContainerClassName =
 'mx-auto w-full max-w-page px-4 sm:px-6 lg:px-8';
