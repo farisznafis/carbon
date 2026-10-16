@@ -1,24 +1,19 @@
 import { useState, type ReactNode } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
-import { Check, Clock } from 'lucide-react';
 import { ChartCard, TimeSeriesLineChart, formatChartPeriod } from '@/components/data-display/charts';
-import { SkeletonList, SkeletonTable } from '@/components/feedback/loading';
+import { SkeletonList } from '@/components/feedback/loading';
 import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
-import { AdminTableCard } from '@/components/layout/AdminTableCard';
 import { SegmentButton, SegmentGroup } from '@/components/navigation/PageTabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, type ChartConfig } from '@/components/ui/chart';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { MasterStatCard } from '@/features/master/shared/MasterStatCard';
 import { formatChange, formatTons } from '@/features/master/shared/masterFormatters';
 import type {
   AnalysisAxis,
   AnalyticsPeriod,
-  CalendarRow,
-  CalendarStatus,
   EmissionRow,
   RankingRow,
 } from './masterAnalyticsModel';
@@ -45,8 +40,6 @@ const panelTitleClassName = 'text-subsection-title font-bold';
 const panelCardClassName = 'rounded-xl border-border shadow-app-sm';
 
 const monthNumber = (month: string) => Number(month.split('-')[1]);
-const shortMonth = (month: string, index: number) =>
-  index === 0 || monthNumber(month) === 1 ? `${month.slice(2, 4)}年${monthNumber(month)}月` : `${monthNumber(month)}月`;
 const formatDate = (value?: string | null) => (value ? formatChartPeriod(value.slice(0, 10)) : '—');
 const formatTonsUnit = (value: number | null | undefined) =>
   value === null || value === undefined ? '—' : `${formatTons(value)} tCO₂`;
@@ -259,121 +252,6 @@ function SelectorCardItem({
   );
 }
 
-const CALENDAR_STATUS: Record<CalendarStatus, { label: string; className: string; icon: ReactNode }> = {
-  processed: {
-    label: '処理済',
-    className: 'bg-primary text-primary-foreground',
-    icon: <Check className="h-3.5 w-3.5" strokeWidth={3} />,
-  },
-  submitted: {
-    label: '提出済・未処理',
-    className: 'border-2 border-primary bg-background text-primary',
-    icon: <Clock className="h-3.5 w-3.5" strokeWidth={2.5} />,
-  },
-  missing: {
-    label: '未提出',
-    className: 'border-2 border-dashed border-warning bg-warning-subtle text-warning-strong',
-    icon: <span className="text-xs font-bold leading-none">!</span>,
-  },
-  outOfScope: { label: '対象外', className: 'bg-muted', icon: null },
-};
-
-function StatusSwatch({ status, className }: { status: CalendarStatus; className?: string }) {
-  const presentation = CALENDAR_STATUS[status];
-  return (
-    <span className={cn('flex items-center justify-center rounded-md', presentation.className, className)} aria-hidden="true">
-      {presentation.icon}
-    </span>
-  );
-}
-
-function SubmissionCalendar({
-  rows,
-  months,
-  loading,
-  error,
-}: {
-  rows: CalendarRow[];
-  months: string[];
-  loading: boolean;
-  error: boolean;
-}) {
-  const gridTemplateColumns = `minmax(11rem,14rem) repeat(${months.length}, minmax(2.25rem,1fr)) 4.5rem`;
-  return (
-    <AdminTableCard
-      title="モニタリング提出カレンダー"
-      description="記録日（dateRecorded）の月ごとの提出状況"
-      action={
-        <ul aria-label="凡例" className="flex flex-wrap items-center gap-x-4 gap-y-2 text-subtle text-foreground">
-          {(Object.keys(CALENDAR_STATUS) as CalendarStatus[]).map((status) => (
-            <li key={status} className="flex items-center gap-1.5">
-              <StatusSwatch status={status} className="h-5 w-5" />
-              {CALENDAR_STATUS[status].label}
-            </li>
-          ))}
-        </ul>
-      }
-    >
-      {loading ? (
-        <SkeletonTable columns={3} rows={3} />
-      ) : error ? (
-        <p role="alert" className="py-6 text-center text-small text-destructive">モニタリングデータを取得できませんでした。</p>
-      ) : rows.length === 0 ? (
-        <p className="py-6 text-center text-small text-muted-foreground">対象の拠点・プロジェクトはありません</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <div role="table" aria-label="モニタリング提出カレンダー" className="min-w-max space-y-2">
-            <div role="row" className="grid items-end gap-1.5 text-subtle text-muted-foreground" style={{ gridTemplateColumns }}>
-              {/* The visible cell keeps the month columns aligned; sr-only alone would leave the grid. */}
-              <span role="columnheader">
-                <span className="sr-only">拠点 / プロジェクト</span>
-              </span>
-              {months.map((month, index) => (
-                <span role="columnheader" key={month} className="text-center tabular-nums" aria-label={formatChartPeriod(month)}>
-                  {shortMonth(month, index)}
-                </span>
-              ))}
-              <span role="columnheader" className="text-right">提出率</span>
-            </div>
-            {rows.map((row) => (
-              <div role="row" key={`${row.pair.siteId}-${row.pair.projectId}`} className="grid items-center gap-1.5" style={{ gridTemplateColumns }}>
-                <span role="rowheader" className="min-w-0 pr-2">
-                  <span className="block truncate text-body font-bold text-foreground">{row.pair.siteName}</span>
-                  <span className="block truncate text-subtle text-muted-foreground">{row.pair.projectName}</span>
-                </span>
-                {row.cells.map((cell) => (
-                  <span role="cell" key={cell.month}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          className="block w-full rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          aria-label={`${formatChartPeriod(cell.month)} ${CALENDAR_STATUS[cell.status].label}`}
-                        >
-                          <StatusSwatch status={cell.status} className="h-8 w-full" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent className="space-y-0.5 text-xs">
-                        <p className="font-bold">{formatChartPeriod(cell.month)}：{CALENDAR_STATUS[cell.status].label}</p>
-                        <p>記録数：{cell.count}件</p>
-                        <p>最終記録日：{formatDate(cell.lastRecordedAt)}</p>
-                        <p>発電量合計：{cell.elPvTotal === null ? '—' : `${new Intl.NumberFormat('ja-JP').format(cell.elPvTotal)} kWh`}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </span>
-                ))}
-                <span role="cell" className="text-right text-body font-bold tabular-nums text-foreground">
-                  {row.submitted} / {row.eligible}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </AdminTableCard>
-  );
-}
-
 /** Master アナリティクス: compare emissions and submissions by project or by site. */
 export function MasterAnalyticsSection() {
   const [axis, setAxis] = useState<AnalysisAxis>('project');
@@ -549,13 +427,6 @@ export function MasterAnalyticsSection() {
               onSelect={(row) => select(axis === 'project' ? 'site' : 'project', row.id)}
             />
           </div>
-
-          <SubmissionCalendar
-            rows={data.calendarRows}
-            months={data.monitoringMonths}
-            loading={data.isRecordsLoading}
-            error={data.recordsError}
-          />
         </>
       )}
     </div>
