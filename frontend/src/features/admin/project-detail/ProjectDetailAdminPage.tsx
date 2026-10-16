@@ -38,6 +38,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { ProjectMonitoringTable } from '@/features/admin/monitoring/ProjectMonitoringTable';
+import { MonitoringDeletionHistoryDialog } from '@/features/admin/monitoring/MonitoringDeletionHistoryTable';
 import {
   DOCUMENT_UPLOAD_QUERY_PARAM,
   ProjectDocumentsTab,
@@ -207,13 +208,22 @@ function ProjectNavigationCard({
 function ProjectDetailTabCard({
   title,
   description,
+  action,
   children,
-}: Readonly<{ title: string; description: string; children: React.ReactNode }>) {
+}: Readonly<{
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}>) {
   return (
     <Card className="rounded-xl shadow-app-sm">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+      <CardHeader className="flex-row items-center justify-between gap-4 space-y-0">
+        <div className="min-w-0 space-y-1.5">
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </div>
+        {action}
       </CardHeader>
       <CardContent>{children}</CardContent>
     </Card>
@@ -434,6 +444,11 @@ export default function ProjectDetailAdmin() {
           <ProjectDetailTabCard
             title="モニタリングデータ一覧"
             description="このプロジェクトに登録されたモニタリングデータを確認できます。"
+            action={
+              permissions.hasPermission('MONITORING_READ') ? (
+                <MonitoringDeletionHistoryDialog key={projectId} projectId={projectId} />
+              ) : undefined
+            }
           >
             {!permissions.hasPermission('MONITORING_READ') ? (
               <PermissionDeniedNotice permission="MONITORING_READ" />

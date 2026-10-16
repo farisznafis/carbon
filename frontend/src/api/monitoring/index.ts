@@ -2,8 +2,13 @@ export { normalizeRecentMonitoringItem } from './mappers';
 export {
   getAdminProjectMonitoringRecords,
   getMonitoringCancelRequests,
+  getMonitoringDeletionHistory,
   getMonitoringRecent,
   getMonitoringRecords,
+} from './queries';
+export type {
+  MonitoringDeletionHistoryItem,
+  MonitoringDeletionHistoryResult,
 } from './queries';
 export {
   createMonitoringCancelRequest,

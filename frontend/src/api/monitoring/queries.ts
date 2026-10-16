@@ -4,6 +4,7 @@
  * Fetch recent monitoring data for a project (and optional site)
  */
 import { apiFetch, apiRequest, parseJsonResponse } from '../_shared/httpClient';
+import type { ApiPagination } from '../_shared/types';
 import {
   normalizeMonitoringRecordListItem,
   normalizeRecentMonitoringItem,
@@ -141,6 +142,60 @@ export async function getAdminProjectMonitoringRecords(params: {
   }
 
   return normalizeMonitoringRecordListResult(json, page, limit);
+}
+
+export type MonitoringDeletionHistoryItem = {
+  id: number;
+  monitoringRecordId: string;
+  recordTimeUpdated: string;
+  dateRecorded: string;
+  projectId: number;
+  siteId: number;
+  result: 'SUCCESS' | 'FAILED' | (string & {});
+  failureReason: string | null;
+  deletedAt: string;
+  deletedBy: string;
+};
+
+export type MonitoringDeletionHistoryResult = {
+  history: MonitoringDeletionHistoryItem[];
+  pagination: ApiPagination;
+};
+
+/** GET /admin/monitoring-data/deletion-history?projectId= */
+export async function getMonitoringDeletionHistory(params: {
+  projectId: string;
+  page?: number;
+  limit?: number;
+}): Promise<MonitoringDeletionHistoryResult> {
+  const page = params.page ?? DEFAULT_MONITORING_LIST_PAGE;
+  const limit = params.limit ?? DEFAULT_MONITORING_LIST_LIMIT;
+  const query = new URLSearchParams({
+    projectId: params.projectId,
+    page: String(page),
+    limit: String(limit),
+  });
+
+  const response = await apiRequest<Partial<MonitoringDeletionHistoryResult>>(
+    `/admin/monitoring-data/deletion-history?${query.toString()}`,
+    {
+      method: 'GET',
+      fallbackErrorMessage: '削除履歴の取得に失敗しました。',
+    },
+  );
+  const history = Array.isArray(response?.history) ? response.history : [];
+
+  return {
+    history,
+    pagination: {
+      page: response?.pagination?.page ?? page,
+      limit: response?.pagination?.limit ?? limit,
+      totalItems: response?.pagination?.totalItems ?? history.length,
+      totalPages: Math.max(response?.pagination?.totalPages ?? 1, 1),
+      nextPageToken: response?.pagination?.nextPageToken ?? null,
+      hasMore: response?.pagination?.hasMore ?? false,
+    },
+  };
 }
 
 export async function getMonitoringCancelRequests(): Promise<

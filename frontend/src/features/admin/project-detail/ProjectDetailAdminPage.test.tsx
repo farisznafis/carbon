@@ -35,6 +35,9 @@ vi.mock('@/api/admin', async (importOriginal) => ({
 vi.mock('./components/ProjectEmissionTrendCard', () => ({
   ProjectEmissionTrendCard: () => <div>emission chart</div>,
 }));
+vi.mock('@/features/admin/monitoring/MonitoringDeletionHistoryTable', () => ({
+  MonitoringDeletionHistoryDialog: () => <button type="button">削除履歴</button>,
+}));
 vi.mock('@/features/admin/monitoring/ProjectMonitoringTable', () => ({
   ProjectMonitoringTable: () => <div>monitoring table</div>,
 }));
