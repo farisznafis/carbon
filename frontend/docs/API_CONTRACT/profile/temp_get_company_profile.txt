@@ -1,0 +1,46 @@
+法人プロフィール取得
+
+GET /api/company/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "company": {
+    "id": "5678",
+    "nameJA": "株式会社サンプル",
+    "nameFurigana": "カブシキガイシャサンプル",
+    "nameEN": "Sample Corporation",
+    "email": "info@example.com",
+    "phoneNumber": "0312345678",
+    "fax": "0312345670",
+    "corpNumber": "1234567890123",
+    "address": "千代田区千代田1-1",
+    "repFirstName": "太郎",
+    "repLastName": "山田",
+    "repFirstNameKana": "タロウ",
+    "repLastNameKana": "ヤマダ",
+    "repEmail": "rep@example.com",
+    "repPhoneNumber": "0312345678",
+    "repPosition": "代表取締役",
+    "applicationDate": "2026-01-01"
+  }
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する企業が見つかりませんでした。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

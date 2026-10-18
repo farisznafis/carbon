@@ -1,0 +1,107 @@
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { PasswordInput } from '@/components/inputs';
+import { LoginForm } from '@/components/forms/shared/LoginForm';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { adminLoginSchema, type AdminLoginFormData } from '@/lib/schemas/loginSchemas';
+
+type AdminLoginFormProps = {
+  onSubmit: (values: AdminLoginFormData) => Promise<void> | void;
+};
+
+export function AdminLoginForm({ onSubmit }: AdminLoginFormProps) {
+  const [error, setError] = useState<string | null>(null);
+
+  const form = useForm<AdminLoginFormData>({
+    resolver: zodResolver(adminLoginSchema),
+    defaultValues: {
+      identifier: '',
+      password: '',
+    },
+  });
+
+  const handleSubmit = async (values: AdminLoginFormData) => {
+    setError(null);
+
+    try {
+      await onSubmit(values);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'ログインに失敗しました');
+    }
+  };
+
+  return (
+    <Form {...form}>
+      <form
+        className="absolute inset-0 h-full w-full min-w-0 max-w-full overflow-hidden"
+        onSubmit={form.handleSubmit(handleSubmit)}
+        noValidate
+      >
+        <LoginForm
+          title="管理者ログイン"
+          description="管理画面にアクセスするにはログインしてください。"
+          submitLabel="ログイン"
+          error={error}
+          isSubmitting={form.formState.isSubmitting}
+          footer={
+            import.meta.env.VITE_USE_MOCK === 'true' && (
+              <p className="text-xs text-muted-foreground">
+                デモ: <code>admin@carbon-ops.example.jp</code> / パスワード任意
+              </p>
+            )
+          }
+        >
+          <FormField
+            control={form.control}
+            name="identifier"
+            render={({ field }) => (
+              <FormItem className="[@media(max-height:700px)]:space-y-1">
+                <FormLabel className="[@media(max-height:700px)]:text-sm [@media(max-height:700px)]:leading-5">
+                  管理者ID
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="text"
+                    placeholder="社員名またはメールアドレス"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem className="[@media(max-height:700px)]:space-y-1">
+                <FormLabel className="[@media(max-height:700px)]:text-sm [@media(max-height:700px)]:leading-5">
+                  パスワード
+                </FormLabel>
+                <FormControl>
+                  <PasswordInput
+                    placeholder="パスワードを入力"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </LoginForm>
+      </form>
+    </Form>
+  );
+}
+
+export default AdminLoginForm;

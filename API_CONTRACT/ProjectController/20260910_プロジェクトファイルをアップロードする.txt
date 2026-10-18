@@ -1,0 +1,45 @@
+POST /project/{projectId}/files?fileType={fileType}
+Authorization: Bearer {token}
+Content-Type: multipart/form-data
+
+Response - Success (HTTP 201)
+{
+  "statusCode": "OK",
+  "message": null,
+  "id": 12,
+  "fileType": "PROJECT_PLAN",
+  "ownedByKanrisha": true,
+  "originalFileName": "project_plan_v1.4.0.xlsx",
+  "uploadedBy": "operator1",
+  "uploadedAt": "2026-09-10T14:20:00"
+}
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "プロジェクトが見つかりません。"
+},
+{
+  "statusCode": "BAD_REQUEST",
+  "message": "アップロードするファイルが空です。"
+},
+{
+  "statusCode": "BAD_REQUEST",
+  "message": "ファイルサイズが上限（10MB）を超えています。"
+},
+{
+  "statusCode": "BAD_REQUEST",
+  "message": "対応していないファイル形式です。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

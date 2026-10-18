@@ -1,0 +1,581 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* =========================================================
+      PRIMITIVE COLORS
+      Source: J-Credit Carbon Web Design System
+      ========================================================= */
+
+    /* Brand blue */
+    --blue-50: 211.8 100% 96.7%;   /* #EEF6FF */
+    --blue-100: 211.6 100% 92.5%;  /* #D9EBFF */
+    --blue-200: 211.7 100% 86.3%;  /* #B9DAFF */
+    --blue-300: 211.3 100% 76.7%;  /* #88C1FF */
+    --blue-400: 211.9 100% 65.7%;  /* #50A2FF */
+    --blue-500: 213 92.1% 55.1%;   /* #2382F6 */
+    --blue-600: 214.4 83.1% 46.5%; /* #1468D9 */
+    --blue-700: 214.9 82.5% 38%;   /* #1154B1 */
+    --blue-800: 213.4 77.2% 31%;   /* #12488C */
+    --blue-900: 213 67.9% 25.7%;   /* #153D6E */
+
+    /* Marketing dark surface */
+    --brand-dark-start: var(--blue-900);
+    --brand-dark-middle: var(--blue-800);
+    --brand-dark-end: var(--blue-700);
+    --brand-dark-foreground: var(--neutral-0);
+    --brand-dark-muted: var(--blue-100);
+
+    /* Neutral */
+    --neutral-0: 0 0% 100%;        /* #FFFFFF */
+    --neutral-25: 220 60% 99%;     /* #FBFCFE */
+    --neutral-50: 216 38.5% 97.5%; /* #F6F8FB */
+    --neutral-100: 214.3 25.9% 94.7%; /* #EEF1F5 */
+    --neutral-200: 212.7 20.8% 89.6%; /* #DFE4EA */
+    --neutral-300: 215.3 19.5% 82.9%; /* #CBD2DC */
+    --neutral-400: 214.6 14.4% 64.7%; /* #98A3B2 */
+    --neutral-500: 214.8 13% 46.9%;   /* #687587 */
+    --neutral-600: 214 16.7% 35.3%;   /* #4B5869 */
+    --neutral-700: 215.6 23.5% 26.7%; /* #344154 */
+    --neutral-800: 215.2 31.2% 18.2%; /* #202C3D */
+    --neutral-900: 216.4 45.2% 12.2%; /* #111C2D */
+    --neutral-950: 218.2 52.4% 8.2%;  /* #0A1220 */
+
+    /* Success */
+    --success-50: 144.7 81% 95.9%;    /* #ECFDF3 */
+    --success-600: 154.6 82.8% 34.1%; /* #0F9F62 */
+    --success-700: 155 87.6% 25.3%;   /* #08794A */
+    --success-800: 164.2 85.7% 16.5%; /* #064E3B */
+    --success-border: 148.1 54% 82.9%; /* #BCEBD2 */
+
+    /* Warning */
+    --warning-50: 44.3 100% 95.5%;   /* #FFF9E8 */
+    --warning-600: 35.9 100% 39%;    /* #C77700 */
+    --warning-700: 35 100% 29.6%;    /* #975800 */
+    --warning-800: 28.4 72.5% 25.7%; /* #713F12 */
+    --warning-border: 42.3 73.6% 79.2%; /* #F1DAA3 */
+
+    /* Danger */
+    --danger-50: 0 100% 97.1%;       /* #FFF0F0 */
+    --danger-600: 357 66.7% 52.9%;   /* #D7373F */
+    --danger-700: 356.5 66.3% 40.8%; /* #AD232B */
+    --danger-border: 356.4 69.4% 85.9%; /* #F4C2C5 */
+
+    /* Info */
+    --info-50: 213.8 100% 96.9%;  /* #EFF6FF */
+    --info-600: 221.2 83.2% 53.3%; /* #2563EB */
+
+    /* Purple */
+    --purple-50: 250 100% 97.6%;  /* #F5F3FF */
+    --purple-600: 252.9 63.1% 59.6%; /* #7357D9 */
+
+
+    /* =========================================================
+      SEMANTIC COLORS
+      Components should consume these instead of primitives.
+      ========================================================= */
+
+    /* Brand / action */
+    --primary: var(--blue-600);
+    --primary-strong: var(--blue-700);
+    --primary-foreground: var(--neutral-0);
+
+    /*
+    * Keep "secondary" as a subtle semantic surface because
+    * many existing Carbon components already consume it.
+    */
+    --secondary: var(--neutral-100);
+    --secondary-foreground: var(--neutral-700);
+
+    /* Main content */
+    --foreground: 217.7 43.2% 15.9%; /* #17243A */
+    --background: 214.3 46.7% 97.1%; /* #F4F7FB */
+
+    /* Dashboard */
+    --dashboard-bg: 214.3 46.7% 97.1%; /* #F4F7FB */
+
+    /* Surfaces */
+    --card: var(--neutral-0);
+    --card-foreground: var(--foreground);
+
+    --popover: var(--neutral-0);
+    --popover-foreground: var(--foreground);
+
+    --muted: var(--neutral-50);
+    --muted-foreground: var(--neutral-600);
+
+    /* Selected / subtle brand surface */
+    --accent: var(--blue-50);
+    --accent-foreground: var(--blue-700);
+
+    /* Form / borders */
+    --border: var(--neutral-200);
+    --input: var(--neutral-300);
+    --ring: var(--blue-500);
+
+    --placeholder: var(--neutral-500);
+
+    --disabled: var(--neutral-100);
+    --disabled-foreground: var(--neutral-400);
+
+
+    /* =========================================================
+      FEEDBACK
+      ========================================================= */
+
+    --success: var(--success-600);
+    --success-foreground: var(--neutral-0);
+    --success-subtle: var(--success-50);
+    --success-strong: var(--success-700);
+
+    --warning: var(--warning-600);
+    --warning-foreground: var(--neutral-0);
+    --warning-subtle: var(--warning-50);
+    --warning-strong: var(--warning-700);
+
+    --destructive: var(--danger-600);
+    --destructive-foreground: var(--neutral-0);
+    --destructive-subtle: var(--danger-50);
+    --destructive-strong: var(--danger-700);
+
+    --info: var(--info-600);
+    --info-foreground: var(--neutral-0);
+    --info-subtle: var(--info-50);
+    --info-strong: var(--blue-700);
+    --info-border: var(--blue-200);
+
+    --purple: var(--purple-600);
+    --purple-subtle: var(--purple-50);
+
+
+    /* =========================================================
+      SIDEBAR / NAVIGATION
+      ========================================================= */
+
+    --sidebar-background: var(--neutral-0);
+    --sidebar-foreground: var(--foreground);
+
+    --sidebar-primary: var(--blue-500);
+    --sidebar-primary-foreground: var(--neutral-0);
+
+    --sidebar-accent: var(--blue-50);
+    --sidebar-accent-foreground: var(--blue-700);
+
+    --sidebar-border: var(--neutral-200);
+    --sidebar-ring: var(--blue-500);
+
+
+    /* =========================================================
+      CHART
+      ========================================================= */
+
+    --chart-1: var(--blue-500);      /* #2382F6 */
+    --chart-2: var(--success-600);   /* #0F9F62 */
+    --chart-3: var(--purple-600);    /* #7357D9 */
+    --chart-4: var(--warning-600);   /* #C77700 */
+    --chart-5: var(--neutral-600);   /* #4B5869 */
+
+
+    /* =========================================================
+      SHAPE
+      Keep current Carbon geometry
+      ========================================================= */
+
+    --radius: 0.5rem;
+
+    /* Desktop density keeps the existing 1920px geometry as its upper bound. */
+    --page-title-size: 1.75rem;
+    --form-title-size: 1.75rem;
+    --section-title-size: 1.25rem;
+    --subsection-title-size: 1.0625rem;
+    --marketing-title-size: 2.25rem;
+    --home-section-title-size: 1.875rem;
+    --hero-title-size: 3.75rem;
+    --metric-size: 2rem;
+    --card-padding: 1.5rem;
+    --section-gap: 2rem;
+    --marketing-section-padding: 6rem;
+
+    /* Application shell geometry shared by the navbar, sidebar and page containers. */
+    --app-header-height: 5rem;
+    --page-gutter: 2rem;
+    --page-padding-y: 2rem;
+    --grid-gap: 1.5rem;
+
+
+    /* =========================================================
+      ELEVATION
+      Same geometry, neutralized shadow color
+      ========================================================= */
+
+    --shadow-sm:
+      0 1px 2px hsl(var(--neutral-950) / 0.06),
+      0 1px 1px hsl(var(--neutral-950) / 0.04);
+
+    --shadow-md:
+      0 10px 24px hsl(var(--neutral-950) / 0.08),
+      0 2px 8px hsl(var(--neutral-950) / 0.05);
+
+    --shadow-marketing:
+      0 0 64px hsl(var(--neutral-950) / 0.16);
+  }
+
+  @media (min-width: 1024px) and (max-width: 1919px) {
+    :root {
+      --page-title-size: clamp(1.5rem, 1.5vw, 1.75rem);
+      --form-title-size: clamp(1.5rem, 1.5vw, 1.75rem);
+      --section-title-size: clamp(1.125rem, 1.1vw, 1.25rem);
+      --subsection-title-size: 1.0625rem;
+      --marketing-title-size: clamp(1.875rem, 1.875vw, 2.25rem);
+      --home-section-title-size: clamp(1.625rem, 1.56vw, 1.875rem);
+      --hero-title-size: clamp(2.5rem, 3.125vw, 3.75rem);
+      --metric-size: clamp(1.75rem, 1.7vw, 2rem);
+      --card-padding: clamp(1.25rem, 1.25vw, 1.5rem);
+      --section-gap: clamp(1.5rem, 1.67vw, 2rem);
+      --marketing-section-padding: clamp(4rem, 5vw, 6rem);
+      --app-header-height: clamp(4rem, 4.17vw, 5rem);
+      --page-gutter: clamp(1.5rem, 1.67vw, 2rem);
+      --page-padding-y: clamp(1.5rem, 1.67vw, 2rem);
+      --grid-gap: clamp(1rem, 1.25vw, 1.5rem);
+    }
+  }
+
+}
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Noto Sans JP', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
+      'Yu Gothic UI', Meiryo, system-ui, sans-serif;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    letter-spacing: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    font-feature-settings: "palt" 1;
+    text-wrap: balance;
+  }
+
+  h1 {
+    font-size: var(--page-title-size);
+    line-height: 1.4;
+  }
+
+  h2 {
+    font-size: var(--section-title-size);
+    line-height: 1.4;
+  }
+
+  h3 {
+    font-size: var(--subsection-title-size);
+    line-height: 1.5;
+  }
+
+  h4 {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  p {
+    font-size: inherit;
+    font-weight: 400;
+    line-height: inherit;
+    letter-spacing: 0;
+  }
+
+  ::placeholder {
+    color: hsl(var(--placeholder));
+    opacity: 1;
+  }
+
+  ::selection {
+    background: hsl(var(--blue-100));
+    color: hsl(var(--foreground));
+  }
+
+  input,
+  textarea {
+    caret-color: hsl(var(--primary));
+  }
+
+  .tabular-nums,
+  td,
+  [data-figure] {
+    font-variant-numeric: tabular-nums;
+  }
+}
+@layer utilities {
+  .password-input-hide-native-toggle::-ms-reveal,
+  .password-input-hide-native-toggle::-ms-clear {
+    display: none;
+  }
+
+  .password-input-hide-native-toggle::-webkit-credentials-auto-fill-button {
+    display: none !important;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .gradient-primary {
+    background: hsl(var(--primary));
+  }
+
+  .gradient-card {
+    background: linear-gradient(to bottom right, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
+  }
+
+  .text-small {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    letter-spacing: 0;
+  }
+
+  .text-body {
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    letter-spacing: 0;
+  }
+
+  .text-table {
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.6;
+    letter-spacing: 0;
+  }
+
+  .text-label {
+    font-size: 0.8125rem;
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .text-lead {
+    font-size: 1.125rem;
+    font-weight: 400;
+    line-height: 1.625rem;
+    letter-spacing: 0;
+  }
+
+  .text-large {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.5rem;
+    letter-spacing: 0;
+  }
+
+  .text-subtle {
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1.125rem;
+    letter-spacing: 0;
+  }
+
+  .shadow-app-sm {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .shadow-app-md {
+    box-shadow: var(--shadow-md);
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.4s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .animate-pop-up {
+    animation: pop-up 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .animate-ambient-drift {
+    animation: ambient-drift 9s ease-in-out infinite;
+  }
+
+  .animate-ambient-drift-slow {
+    animation: ambient-drift 16s ease-in-out infinite reverse;
+  }
+
+  .loading-orbit {
+    animation: loading-orbit 1.6s ease-in-out infinite;
+  }
+
+  .loading-leaf-breathe {
+    animation: loading-leaf-breathe 2s ease-in-out infinite;
+  }
+
+  .loading-progress-indeterminate {
+    animation: loading-progress-indeterminate 1.5s ease-in-out infinite;
+  }
+
+  .surface-brand-dark {
+    background: linear-gradient(
+      130deg,
+      hsl(var(--brand-dark-start)),
+      hsl(var(--brand-dark-middle)) 70%,
+      hsl(var(--brand-dark-end))
+    );
+    color: hsl(var(--brand-dark-foreground));
+  }
+
+  .text-brand-dark {
+    color: hsl(var(--brand-dark-foreground));
+  }
+
+  .text-brand-dark-muted {
+    color: hsl(var(--brand-dark-muted));
+  }
+
+  .border-brand-dark {
+    border-color: hsl(var(--brand-dark-foreground) / 0.18);
+  }
+
+  @keyframes loading-orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes loading-leaf-breathe {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.92;
+    }
+
+    50% {
+      transform: scale(1.04);
+      opacity: 1;
+    }
+  }
+
+  @keyframes loading-progress-indeterminate {
+    0% {
+      transform: translateX(-120%);
+    }
+
+    100% {
+      transform: translateX(320%);
+    }
+  }
+
+  @keyframes ambient-drift {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    50% {
+      transform: translate3d(6%, -4%, 0) scale(1.08);
+    }
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes pop-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.92);
+    }
+
+    70% {
+      opacity: 1;
+      transform: translateY(-2px) scale(1.02);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /*
+   * 申請書-style rows on desktop: label in a fixed left column, hint, input and
+   * error in the right one. Fields laid out side by side in a .grid keep the
+   * stacked layout, which suits their narrow columns.
+   */
+  @media (min-width: 768px) {
+    .form-label-left :not(.grid) > [data-form-item] {
+      display: grid;
+      grid-template-columns: 13rem minmax(0, 1fr);
+      column-gap: 1.5rem;
+      row-gap: 0.375rem;
+      align-items: start;
+    }
+
+    .form-label-left :not(.grid) > [data-form-item] > * {
+      grid-column: 2;
+      margin-top: 0 !important;
+    }
+
+    /* A field titled by its section heading has no label: let it use the full row. */
+    .form-label-left :not(.grid) > [data-form-item]:not(:has(> label:first-child)) > * {
+      grid-column: 1 / -1;
+    }
+
+    .form-label-left :not(.grid) > [data-form-item] > label:first-child {
+      grid-column: 1;
+      grid-row: 1 / span 4;
+      padding-top: 0.625rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loading-orbit,
+    .loading-leaf-breathe,
+    .loading-progress-indeterminate {
+      animation: none;
+    }
+
+    .loading-progress-indeterminate {
+      transform: translateX(100%);
+    }
+  }
+  
+
+}

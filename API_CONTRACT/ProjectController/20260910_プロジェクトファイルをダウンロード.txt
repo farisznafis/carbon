@@ -1,0 +1,28 @@
+GET /project/{projectId}/files/{fileId}/download
+Authorization: Bearer {token}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "message": null,
+  "downloadUrl": "https://gxcarbon.s3.ap-northeast-1.amazonaws.com/project/1/files/project_plan/file_a1b2c3d4_project_plan_v1.4.0_final.xlsx?X-Amz-Algorithm=...",
+  "originalFileName": "project_plan_v1.4.0_final.xlsx"
+}
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "ファイルが見つかりません。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

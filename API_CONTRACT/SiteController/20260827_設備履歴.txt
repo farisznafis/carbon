@@ -1,0 +1,73 @@
+GET /site/{siteId}/equipment/{equipmentId}/history
+指定した設備の変更履歴を、一番古いものから新しいものの順で返却します。 どの設備IDを指定しても、同じ履歴チェーン全体が返却されます （古いIDでも新しいIDでも結果は同じ）。
+Authorization: Bearer {token}
+
+Response - Success (HTTP 200)
+[
+  {
+    "id": 12,
+    "changeDate": null,
+    "previousEquipmentId": null,
+    "monitoringStartDate": "2026-03-20",
+    "monitoringEndDate": "2026-08-11",
+    "isActive": false,
+    "registeredBy": "user001",
+    "registeredAt": "2026-03-20T10:00:00",
+    "equipment": {
+      "id": 12,
+      "siteId": "site001",
+      "pcsManufacturer": "株式会社テスト製作所",
+      "pcsModel": "TP-100",
+      "files": [
+        {
+          "id": 20,
+          "fileType": "pcs_spec",
+          "fileId": "e6235e00-ab6f-4d03-87bd-c42f495c877c",
+          "s3Key": "sites/site001/equipments/12/pcs_spec.png"
+        }
+      ]
+    }
+  },
+  {
+    "id": 15,
+    "changeDate": "2026-08-12",
+    "previousEquipmentId": 12,
+    "monitoringStartDate": "2026-08-12",
+    "monitoringEndDate": null,
+    "isActive": true,
+    "registeredBy": "user001",
+    "registeredAt": "2026-08-12T14:30:00",
+    "equipment": {
+      "id": 15,
+      "siteId": "site001",
+      "pcsManufacturer": "株式会社オムロン",
+      "pcsModel": "KPW-A2-SET",
+      "files": [
+        {
+          "id": 35,
+          "fileType": "pcs_spec",
+          "fileId": "550e8400-e29b-41d4-a716-446655440000",
+          "s3Key": "sites/site001/equipments/15/pcs_spec_new.pdf"
+        }
+      ]
+    }
+  }
+]
+
+Error Responses
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "設備情報が見つかりません。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

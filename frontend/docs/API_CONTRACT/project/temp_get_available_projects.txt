@@ -1,0 +1,53 @@
+拠点向け未参加プロジェクト一覧
+
+GET /api/projects/available?siteId=123&status=準備中&methodology=ENR-002
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+Filters:
+  siteId=123
+  status=作成済み、準備中、更新中、妥当性確認処理、却下、実施中、検証中、クレジット申請中、終了、未参加
+  methodology=ENR-002, ENS-004, ENS-006, ENS-016
+  search=太陽光プロジェクト
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "projects": [
+    {
+      "id": "1",
+      "projectName": "太陽光プロジェクト",
+      "projectStatus": "準備中",
+      "methodologyVersion": "3.4",
+      "methodCategory": "EN-R",
+      "methodNumber": "002",
+      "methodName": "太陽光発電設備の導入",
+      "methodMainEmission": "CO2",
+      "methodCombiFeasibility": false
+    },
+    {
+      "id": "2",
+      "projectName": "冷凍・冷蔵設備の導入プロジェクト",
+      "projectStatus": "準備中",
+      "methodologyVersion": "4.3",
+      "methodCategory": "EN-S",
+      "methodNumber": "016",
+      "methodName": "冷凍・冷蔵設備の導入",
+      "methodMainEmission": "CO2",
+      "methodCombiFeasibility": true
+    }
+  ]
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

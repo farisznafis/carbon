@@ -1,0 +1,24 @@
+3-2 お知らせの既読 (Read Announcements)
+
+URL: Patch /api/user/notifications
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request:
+{
+  "announcementIds": [
+    "001",
+    "002"
+  ]
+}
+
+Response - Success (HTTP 200):
+{
+  "statusCode": "OK",
+}
+
+Response - Error (HTTP 401):
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "認証に失敗しました。"
+}

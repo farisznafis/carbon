@@ -1,0 +1,46 @@
+﻿POST /api/company/sites
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body (JSON): 
+{
+  "siteName": "ABC工場";
+  "postalCode": "1234567",
+  "prefecture": "東京",
+  "municipality": "渋谷区桜丘町",
+  "blocknum": "1-1"
+  "buildingName": "サンプルビル 3F",
+  "userId": "1234" //担当者id
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "siteId": 1234 //拠点ID
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+},
+{
+  "statusCode": "LIMIT_EXCEEDED",
+  "message": "上限に達しています。"
+}
+
+
+
+

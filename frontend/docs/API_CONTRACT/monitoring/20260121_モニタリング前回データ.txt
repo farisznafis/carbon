@@ -1,0 +1,46 @@
+20260121_モニタリング前回データ
+# get_monitoring_data
+
+GET /api/monitoring
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Param
+siteId = 123
+projectId = 123
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "data": {
+    "projectId": "123456";
+    "siteId": "123456"; //added 20260209
+    "userId": "123456"; //added 20260209
+    "projectType": "ENR002",
+    "timestamp": "2025-12-31",
+    "ELpv": "480.5", //electricityUsage
+    "ELpvr": "610.2", //electricityGiven
+    "ELPJControl": "80.0", //added 20260209
+　}
+}　
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当するプロジェクトが見つかりませんでした。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+
+

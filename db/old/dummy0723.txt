@@ -1,0 +1,145 @@
+-- ============================
+-- DUMMY DATA
+-- ============================
+
+-- operator_company
+INSERT INTO operator_company (is_active, company_id, name_ja, name_furigana, name_en, email, phone_number, corp_number, postal_code, prefecture, municipality, blocknum, building_name, rep_first_name, rep_first_name_kana, rep_last_name, rep_last_name_kana, rep_email, rep_phone_number, rep_position)
+VALUES
+(TRUE, 'OC000000001', '株式会社グリーンエナジー', 'グリーンエナジー', 'Green Energy Co., Ltd.', 'contact@green-energy.co.jp', '03-1234-5678', '1234567890123', '100-0001', '東京都', '千代田区', '1-1-1', '丸の内ビル', '太郎', 'タロウ', '田中', 'タナカ', 'tanaka@green-energy.co.jp', '03-1234-5679', '代表取締役'),
+(TRUE, 'OC000000002', '株式会社エコパワー', 'エコパワー', 'Eco Power Co., Ltd.', 'info@ecopower.co.jp', '06-9876-5432', '9876543210987', '530-0001', '大阪府', '大阪市北区', '2-2-2', 'エコビル', '花子', 'ハナコ', '鈴木', 'スズキ', 'suzuki@ecopower.co.jp', '06-9876-5433', '代表取締役社長');
+
+-- account
+INSERT INTO account (is_active, acct_no, holder_account_name_kana, holder_account_name, holder_corp_number, holder_prefecture, holder_city, holder_address, is_holder_undecided, operator_company_id)
+VALUES
+(TRUE, 'ACCT-0000001', 'グリーンエナジー', '株式会社グリーンエナジー', '1234567890123', '東京都', '千代田区', '1-1-1 丸の内ビル', FALSE, 1),
+(TRUE, 'ACCT-0000002', 'エコパワー', '株式会社エコパワー', '9876543210987', '大阪府', '大阪市北区', '2-2-2 エコビル', FALSE, 2);
+
+-- project
+INSERT INTO project (is_active, project_name, project_number, project_status, rep_first_name, rep_first_name_kana, rep_last_name, rep_last_name_kana, rep_email, rep_phone_number, rep_position, pic_first_name, pic_first_name_kana, pic_last_name, pic_last_name_kana, pic_email, pic_phone_number, pic_position, data_management_pic, emission_reduction, baseline_emission, post_project_emission, regional_category, new_members_total, withdrawn_members, cumulative_members_total, members_total, methodology_version, method_category, method_number, method_name, method_main_emission, method_combi_feasibility, method_details, operator_company_id)
+VALUES
+(TRUE, '太陽光発電導入プロジェクト', 'P001', 'active', '太郎', 'タロウ', '田中', 'タナカ', 'tanaka@green-energy.co.jp', '03-1234-5678', 'プロジェクトマネージャー', '次郎', 'ジロウ', '佐藤', 'サトウ', 'sato@green-energy.co.jp', '03-1234-5670', '担当者', '山田 一郎', 1200.5, 2000.0, 800.0, '関東', 10, 1, 25, 24, 'Ver.1.0', 'EN-R', '002', '太陽光発電による電力消費削減', 'CO2', TRUE, '太陽光パネルの導入により電力消費を削減する方法論', 1),
+(TRUE, '省エネ設備改修プロジェクト', 'P002', 'active', '花子', 'ハナコ', '鈴木', 'スズキ', 'suzuki@ecopower.co.jp', '06-9876-5432', 'プロジェクトマネージャー', '三郎', 'サブロウ', '山本', 'ヤマモト', 'yamamoto@ecopower.co.jp', '06-9876-5433', '担当者', '中村 二郎', 800.0, 1500.0, 700.0, '近畿', 5, 0, 15, 15, 'Ver.1.0', 'EN-S', '003', '省エネ設備による電力消費削減', 'CO2', FALSE, '省エネ設備の導入により電力消費を削減する方法論', 2);
+
+-- participating_company
+INSERT INTO participating_company (is_active, company_id, name_ja, name_furigana, name_en, email, phone_number, corp_number, postal_code, prefecture, municipality, blocknum, building_name, fax, rep_first_name, rep_first_name_kana, rep_last_name, rep_last_name_kana, rep_phone_number, rep_position, requested_methodologies, activity_information, contract_end_date, payment_method, subscription_status, reg_status)
+VALUES
+(TRUE, 'PC000000001', '株式会社ソーラーテック', 'ソーラーテック', 'Solar Tech Co., Ltd.', 'info@solartech.co.jp', '03-1111-2222', '1111111111111', '150-0001', '東京都', '渋谷区', '3-3-3', 'ソーラービル', '03-1111-2223', '一郎', 'イチロウ', '高橋', 'タカハシ', '03-1111-2222', '代表取締役', 'EN-R002', '太陽光発電事業', '2026-03-31', 'credit_card', 'active', 'approved'),
+(TRUE, 'PC000000002', '有限会社エコホーム', 'エコホーム', 'Eco Home Ltd.', 'info@ecohome.co.jp', '06-3333-4444', '2222222222222', '542-0081', '大阪府', '大阪市中央区', '4-4-4', NULL, NULL, '二郎', 'ジロウ', '中村', 'ナカムラ', '06-3333-4444', '代表', 'EN-R002', '住宅用太陽光', '2026-03-31', 'bank_transfer', 'active', 'approved'),
+(TRUE, 'PC000000003', '合同会社グリーンライフ', 'グリーンライフ', 'Green Life LLC.', 'contact@greenlife.co.jp', '052-5555-6666', '3333333333333', '460-0008', '愛知県', '名古屋市中区', '5-5-5', 'グリーンビル', '052-5555-6667', '三郎', 'サブロウ', '伊藤', 'イトウ', '052-5555-6666', '代表社員', 'EN-S003', '省エネ機器導入', '2025-12-31', 'credit_card', 'active', 'approved');
+
+-- site
+INSERT INTO site (is_active, site_name, postal_code, prefecture, municipality, blocknum, building_name, pic_first_name, pic_first_name_kana, pic_last_name, pic_last_name_kana, pic_email, pic_phone_number, pic_position, participating_company_id)
+VALUES
+(TRUE, 'ソーラーテック渋谷サイト', '150-0001', '東京都', '渋谷区', '3-3-3', 'ソーラービル屋上', '一郎', 'イチロウ', '高橋', 'タカハシ', 'takahashi@solartech.co.jp', '03-1111-2222', '設備担当', 1),
+(TRUE, 'ソーラーテック新宿サイト', '160-0022', '東京都', '新宿区', '6-6-6', NULL, '四郎', 'シロウ', '小林', 'コバヤシ', 'kobayashi@solartech.co.jp', '03-1111-3333', '現場担当', 1),
+(TRUE, 'エコホーム大阪サイト', '542-0081', '大阪府', '大阪市中央区', '4-4-4', NULL, '二郎', 'ジロウ', '中村', 'ナカムラ', 'nakamura@ecohome.co.jp', '06-3333-4444', '設備担当', 2),
+(TRUE, 'グリーンライフ名古屋サイト', '460-0008', '愛知県', '名古屋市中区', '5-5-5', 'グリーンビル1F', '三郎', 'サブロウ', '伊藤', 'イトウ', 'ito@greenlife.co.jp', '052-5555-6666', '担当者', 3);
+
+-- site_project_relation
+INSERT INTO site_project_relation (is_active, activity_start_date, status, site_id, project_id)
+VALUES
+(TRUE, '2024-04-01', 'active', 1, 1),
+(TRUE, '2024-04-01', 'active', 2, 1),
+(TRUE, '2024-07-01', 'active', 3, 1),
+(TRUE, '2024-10-01', 'active', 4, 2);
+
+-- project_files
+INSERT INTO project_files (is_active, project_id, certificate_registration, report_validation, report_verification)
+VALUES
+(TRUE, 1, 's3://bucket/project1/cert_registration.pdf', 's3://bucket/project1/report_validation.pdf', 's3://bucket/project1/report_verification.pdf'),
+(TRUE, 2, 's3://bucket/project2/cert_registration.pdf', NULL, NULL);
+
+-- operating_user
+INSERT INTO operating_user (is_active, username, first_name, first_name_kana, last_name, last_name_kana, email, phone_number, password, role, login_attempts, company_id)
+VALUES
+('TRUE', 'op_tanaka', '太郎', 'タロウ', '田中', 'タナカ', 'tanaka@green-energy.co.jp', '03-1234-5678', '$2b$12$dummyhashvalue1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'operator', 0, 1),
+('TRUE', 'op_suzuki', '花子', 'ハナコ', '鈴木', 'スズキ', 'suzuki@ecopower.co.jp', '06-9876-5432', '$2b$12$dummyhashvalue2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'operator', 0, 2),
+('TRUE', 'usr_yamada', '一郎', 'イチロウ', '山田', 'ヤマダ', 'yamada@green-energy.co.jp', '03-1234-0001', '$2b$12$dummyhashvalue3xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'user', 0, 1);
+
+-- en_r002_equipment
+INSERT INTO en_r002_equipment (is_active, site_id, equipment_op_date, nominal_max_output, pcs_manufacturer, pcs_model, pcs_unit_count, device_no, pcs_standby, has_battery, battery_maker, battery_model, battery_capacity, total_investment, has_subsidy, subsidy_name, subsidy_amount, pre_project_unit_price)
+VALUES
+(TRUE, 1, '2024-04-01', 10.5, 'パナソニック', 'HIT-250', 20, 'DEV-001', 0.50, TRUE, '東芝', 'SCiB-20', 20.0, 5000000, TRUE, '再エネ補助金A', 1000000, 28.50),
+(TRUE, 2, '2024-04-01', 8.0, '京セラ', 'ECONOROOTS-255', 15, 'DEV-002', 0.45, FALSE, NULL, NULL, NULL, 3000000, FALSE, NULL, NULL, 27.00),
+(TRUE, 3, '2024-07-01', 6.5, 'シャープ', 'NU-250', 12, 'DEV-003', 0.40, TRUE, 'ニチコン', 'ESS-U2M1', 12.0, 2500000, TRUE, '再エネ補助金B', 500000, 29.00),
+(TRUE, 4, '2024-10-01', 5.0, '三菱電機', 'PV-MA2550', 10, 'DEV-004', 0.35, FALSE, NULL, NULL, NULL, 2000000, FALSE, NULL, NULL, 26.50);
+
+-- en_r002_equipment_file
+INSERT INTO en_r002_equipment_file (is_active, equipment_id, file_type, file_id, s3_key)
+VALUES
+(TRUE, 1, 'spec_sheet', 'FILE-001', 's3://bucket/equipment/1/spec_sheet.pdf'),
+(TRUE, 1, 'installation_photo', 'FILE-002', 's3://bucket/equipment/1/install_photo.jpg'),
+(TRUE, 2, 'spec_sheet', 'FILE-003', 's3://bucket/equipment/2/spec_sheet.pdf'),
+(TRUE, 3, 'spec_sheet', 'FILE-004', 's3://bucket/equipment/3/spec_sheet.pdf'),
+(TRUE, 4, 'spec_sheet', 'FILE-005', 's3://bucket/equipment/4/spec_sheet.pdf');
+
+-- site_r002_member_data
+INSERT INTO site_r002_member_data (is_active, site_id, project_id)
+VALUES
+(TRUE, 1, 1),
+(TRUE, 2, 1),
+(TRUE, 3, 1),
+(TRUE, 4, 2);
+
+-- participating_user
+INSERT INTO participating_user (is_active, username, first_name, first_name_kana, last_name, last_name_kana, email, phone_number, user_position, password, role, login_attempts, site_id, company_id)
+VALUES
+(TRUE, 'pu_takahashi', '一郎', 'イチロウ', '高橋', 'タカハシ', 'takahashi@solartech.co.jp', '03-1111-2222', '代表取締役', '$2b$12$dummyhashvalue4xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'master', 0, 1, 1),
+(TRUE, 'pu_kobayashi', '四郎', 'シロウ', '小林', 'コバヤシ', 'kobayashi@solartech.co.jp', '03-1111-3333', '現場担当', '$2b$12$dummyhashvalue5xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'user', 0, 2, 1),
+(TRUE, 'pu_nakamura', '二郎', 'ジロウ', '中村', 'ナカムラ', 'nakamura@ecohome.co.jp', '06-3333-4444', '代表', '$2b$12$dummyhashvalue6xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'master', 0, 3, 2),
+(TRUE, 'pu_ito', '三郎', 'サブロウ', '伊藤', 'イトウ', 'ito@greenlife.co.jp', '052-5555-6666', '代表社員', '$2b$12$dummyhashvalue7xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'master', 0, 4, 3);
+
+-- participating_project
+INSERT INTO participating_project (is_active, project_id, user_id, is_eligible, equipment_id, s3_key_pdf_membership)
+VALUES
+(TRUE, 1, 1, TRUE, 1, 's3://bucket/membership/1/membership.pdf'),
+(TRUE, 1, 2, TRUE, 2, 's3://bucket/membership/2/membership.pdf'),
+(TRUE, 1, 3, TRUE, 3, 's3://bucket/membership/3/membership.pdf'),
+(TRUE, 2, 4, TRUE, 4, 's3://bucket/membership/4/membership.pdf');
+
+-- batch_process_history
+INSERT INTO batch_process_history (is_active, start_time, end_time, status, claimed_by, claimed_at)
+VALUES
+(TRUE, '2025-01-01 00:00:00', '2025-01-01 01:00:00', 'completed', 'op_tanaka', '2025-01-01 00:00:00'),
+(TRUE, '2025-04-01 00:00:00', '2025-04-01 01:30:00', 'completed', 'op_tanaka', '2025-04-01 00:00:00'),
+(TRUE, '2025-07-01 00:00:00', NULL, 'running', 'op_suzuki', '2025-07-01 00:00:00');
+
+-- EN_R002_reduction_result_total
+INSERT INTO EN_R002_reduction_result_total (is_active, batch_id, processing_date, project_id, start_time, end_time, empj, empj_m, empj_s, empj_s_control, empj_s_battery, elpj, embl, elbl, er)
+VALUES
+(TRUE, 1, '2025-01-01', 1, '2024-04-01 00:00:00', '2024-12-31 23:59:59', 1200.500, 800.200, 400.300, 200.150, 200.150, 1100.000, 2000.000, 1900.000, 900.000),
+(TRUE, 2, '2025-04-01', 1, '2025-01-01 00:00:00', '2025-03-31 23:59:59', 650.250, 430.100, 220.150, 110.075, 110.075, 600.000, 1000.000, 950.000, 400.000);
+
+-- EN_R002_reduction_result
+INSERT INTO EN_R002_reduction_result (is_active, batch_id, processing_date, project_id, start_time, end_time, site_id, equipment_id, empj, empj_m, empj_s, empj_s_control, empj_s_battery, elpj, embl, elbl, er)
+VALUES
+(TRUE, 1, '2025-01-01', 1, '2024-04-01 00:00:00', '2024-12-31 23:59:59', 1, 1, 500.200, 330.100, 170.100, 85.050, 85.050, 460.000, 850.000, 800.000, 390.000),
+(TRUE, 1, '2025-01-01', 1, '2024-04-01 00:00:00', '2024-12-31 23:59:59', 2, 2, 400.150, 270.050, 130.100, 65.050, 65.050, 360.000, 650.000, 600.000, 290.000),
+(TRUE, 1, '2025-01-01', 1, '2024-04-01 00:00:00', '2024-12-31 23:59:59', 3, 3, 300.150, 200.050, 100.100, 50.050, 50.050, 280.000, 500.000, 500.000, 220.000);
+
+-- record_cancel_request
+INSERT INTO record_cancel_request (is_active, record_pk, record_sk, status, requested_by, requested_at, reason, site_id)
+VALUES
+(TRUE, 'P001', 'SITE#1#2024-Q1', 'pending', 'pu_takahashi', '2025-06-01 10:00:00', '計測値に誤りがあったため取消を申請します', 1),
+(TRUE, 'P001', 'SITE#2#2024-Q1', 'approved', 'pu_kobayashi', '2025-05-15 09:00:00', '設備の不具合により正確なデータが取得できなかった', 2);
+
+-- subscription_log
+INSERT INTO subscription_log (company_id, action_type, action_date, amount, payment_method, transaction_id, status, previous_end_date, new_end_date)
+VALUES
+(1, 'new_subscription', '2024-04-01 09:00:00', 50000.00, 'credit_card', 'TXN-000001', 'success', NULL, '2026-03-31'),
+(2, 'new_subscription', '2024-04-01 10:00:00', 50000.00, 'bank_transfer', 'TXN-000002', 'success', NULL, '2026-03-31'),
+(3, 'new_subscription', '2024-07-01 11:00:00', 50000.00, 'credit_card', 'TXN-000003', 'success', NULL, '2025-12-31'),
+(1, 'renewal', '2025-04-01 09:00:00', 50000.00, 'credit_card', 'TXN-000004', 'success', '2026-03-31', '2027-03-31');
+
+-- notification
+INSERT INTO notification (is_active, title, message, read, operating_user_id, participating_user_id)
+VALUES
+(TRUE, 'バッチ処理完了', '2025年第1四半期のバッチ処理が正常に完了しました。', TRUE, 1, NULL),
+(TRUE, 'バッチ処理完了', '2025年第2四半期のバッチ処理が正常に完了しました。', FALSE, 1, NULL),
+(TRUE, '参加登録が承認されました', 'プロジェクトP001への参加が承認されました。', TRUE, NULL, 1),
+(TRUE, '書類提出のお願い', '設備登録に必要な書類をご提出ください。', FALSE, NULL, 3);
+
+-- company_deletion_request
+INSERT INTO company_deletion_request (is_active, company_id, requested_by, requested_at, reason, status)
+VALUES
+(TRUE, 3, 'op_tanaka', '2025-07-01 10:00:00', '契約期間満了のため退会申請', 'PENDING');

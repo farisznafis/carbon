@@ -1,0 +1,53 @@
+20251205_法人情報更新
+# update_company
+# This API allows authenticated users to update their company's information, including contact details and representative information.
+
+
+PATCH /api/company
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request Body (JSON):
+{
+  "phoneNumber": "123453789",
+  "fax": "1234567890123",
+  "email": "info@example.com",
+}
+
+Response - Success (HTTP 201)
+{
+  "deviceId": "dev-001",
+  "memberId": "member-123",
+  "deviceType": "temperature-sensor",
+  "model": "TS-2000",
+  "firmwareVersion": "1.1.0",
+  "location": "東京本社 4F 会議室",
+  "description": "4F 会議室用に移設・アップデート済み",
+  "status": "ACTIVE",
+  "iotCoreThingName": "member-123-dev-001",
+  "lastSeenAt": "2025-04-07T11:05:00Z",
+  "lastConnectionStatus": "ONLINE",
+  "lastErrorCode": null,
+  "lastErrorMessage": null,
+  "createdAt": "2025-04-01T08:00:00Z",
+  "lastUpdatedAt": "2025-04-08T09:30:00Z"
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する企業が見つかりませんでした。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+

@@ -1,0 +1,152 @@
+API CONTRACT - OPERATOR COMPANY DETAIL
+
+URL: GET /api/admin/companies/{companyId}
+Example: GET /api/admin/companies/COMP00000001
+
+Authorization: Bearer <operator_access_token>
+Required Role: operator
+Accept: application/json
+
+
+PATH PARAMETERS
+
+companyId
+- Type: String
+- Required: Yes
+- Description: Business ID participating company.
+- Example: COMP00000001
+
+
+Response - Success (HTTP 200)
+
+{
+  "statusCode": "OK",
+  "message": "企業詳細を取得しました。",
+  "timestamp": "2026-07-15T09:30:00",
+  "masterAccount": {
+    "username": "master@example.com",
+    "fullName": "山田 太郎",
+    "fullNameKana": "ヤマダ タロウ",
+    "firstName": "太郎",
+    "lastName": "山田",
+    "firstNameKana": "タロウ",
+    "lastNameKana": "ヤマダ",
+    "phoneNumber": "09012345678",
+    "email": "master@example.com",
+    "userPosition": "代表取締役",
+    "role": "master",
+    "isActive": true,
+    "createdAt": "2026-05-06T12:23:00",
+    "updatedAt": "2026-05-08T10:00:00",
+    "createdBy": "operator@example.com",
+    "updatedBy": "operator@example.com"
+  },
+  "company": {
+    "companyId": "COMP00000001",
+    "corpNumber": "1234567890123",
+    "nameJA": "株式会社サンプル",
+    "nameFurigana": "カブシキガイシャサンプル",
+    "nameEN": "Sample Company",
+    "email": "company@example.com",
+    "phoneNumber": "0312345678",
+    "faxNumber": "0312345679",
+    "address": "1000001 東京都 千代田区 千代田1-1 サンプルビル",
+    "postalCode": "1000001",
+    "prefecture": "東京都",
+    "municipality": "千代田区",
+    "blocknum": "千代田1-1",
+    "buildingName": "サンプルビル",
+    "companyStatus": "ACTIVE",
+    "subscriptionStatus": "ACTIVE",
+    "isActive": true,
+    "createdAt": "2026-05-01T09:00:00",
+    "updatedAt": "2026-05-06T12:23:00",
+    "createdBy": "system",
+    "updatedBy": "operator@example.com"
+  },
+  "users": [
+    {
+      "username": "master@example.com",
+      "fullName": "山田 太郎",
+      "email": "master@example.com",
+      "role": "master",
+      "siteName": null
+    },
+    {
+      "username": "site_user_01",
+      "fullName": "鈴木 花子",
+      "email": "user01@example.com",
+      "role": "user",
+      "siteName": "ABC本店"
+    }
+  ],
+  "sites": [
+    {
+      "siteName": "ABC本店",
+      "picEmail": "pic@example.com",
+      "createdAt": "2026-05-10T09:00:00",
+      "address": "1500001 東京都 渋谷区 神宮前1-2-3 ABCビル",
+      "postalCode": "1500001",
+      "prefecture": "東京都",
+      "municipality": "渋谷区",
+      "blocknum": "神宮前1-2-3",
+      "buildingName": "ABCビル",
+      "projectNames": [
+        "Project A",
+        "Project B"
+      ]
+    }
+  ]
+}
+
+
+COMPANY STATUS VALUES
+
+companyStatus:
+- PENDING
+- ACTIVE
+- SUSPENDED
+- REJECTED
+
+subscriptionStatus:
+- ACTIVE
+- PENDING_RENEWAL
+- PAST_DUE
+- EXPIRED
+- CANCELLED
+
+
+ERROR RESPONSES
+
+
+Response - Unauthorized (HTTP 401)
+
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "ログインが必要です。"
+}
+
+
+Response - Forbidden / Non-operator User (HTTP 403)
+
+{
+  "statusCode": "FORBIDDEN",
+  "message": "アクセスできません。"
+}
+
+
+Response - Company Not Found (HTTP 404)
+
+{
+  "statusCode": "NOT_FOUND",
+  "message": "対象の企業が見つかりませんでした。",
+  "timestamp": "2026-07-15T09:30:00"
+}
+
+
+Response - Internal Server Error (HTTP 500)
+
+{
+  "statusCode": "INTERNAL_SERVER_ERROR",
+  "message": "サイト情報の取得中にエラーが発生しました。"
+}

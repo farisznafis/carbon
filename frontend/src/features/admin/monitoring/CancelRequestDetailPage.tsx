@@ -1,0 +1,345 @@
+import { useCallback, useEffect, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import {
+  decideMonitoringCancelRequest,
+  getMonitoringCancelRequests,
+  type MonitoringCancelDecision,
+  type MonitoringCancelRequestListItem,
+} from '@/api/monitoring';
+import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { FormActions } from '@/components/forms/form-layout';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { CancelRequestStatusBadge } from '@/features/admin/monitoring/CancelRequestStatusBadge';
+import { formatCancelRequestDateTime } from '@/features/admin/monitoring/cancelRequestFormatters';
+import { useToast } from '@/hooks/use-toast';
+import { paths } from '@/routes/paths';
+import { ActionButton } from '@/components/actions';
+
+const CANCEL_REQUEST_LIST_PATH = `${paths.adminDashboard}?panel=cancel`;
+type DetailFieldProps = {
+  label: string;
+  children: React.ReactNode;
+  fullWidth?: boolean;
+};
+
+type CancelRequestLocationState = {
+  cancelRequest?: MonitoringCancelRequestListItem;
+};
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
+function DetailField({ label, children, fullWidth }: DetailFieldProps) {
+  return (
+    <div className={fullWidth ? 'space-y-2 md:col-span-2' : 'space-y-2'}>
+      <dt className="text-small font-bold text-foreground">{label}</dt>
+      <dd className="break-words text-body font-bold text-foreground">
+        {children}
+      </dd>
+    </div>
+  );
+}
+
+export default function CancelRequestDetailPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { cancelRequestId } = useParams();
+  const { toast } = useToast();
+  const requestId = Number(cancelRequestId);
+  const locationRequest = (
+    location.state as CancelRequestLocationState | null
+  )?.cancelRequest;
+  const initialRequest =
+    locationRequest?.id === requestId ? locationRequest : null;
+
+  const [cancelRequest, setCancelRequest] =
+    useState<MonitoringCancelRequestListItem | null>(initialRequest);
+  const [isLoading, setIsLoading] = useState(!initialRequest);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [decision, setDecision] = useState<MonitoringCancelDecision | null>(
+    null,
+  );
+  const [managerRemarks, setManagerRemarks] = useState('');
+  const [remarksError, setRemarksError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const returnToList = useCallback(() => {
+    navigate(CANCEL_REQUEST_LIST_PATH);
+  }, [navigate]);
+
+  const loadCancelRequest = useCallback(async () => {
+    if (!Number.isInteger(requestId) || requestId <= 0) {
+      setCancelRequest(null);
+      setLoadError(null);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setLoadError(null);
+
+    try {
+      const requests = await getMonitoringCancelRequests();
+      setCancelRequest(
+        requests.find((request) => request.id === requestId) ?? null,
+      );
+    } catch (error) {
+      setLoadError(
+        getErrorMessage(error, '取消申請情報の取得に失敗しました。'),
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [requestId]);
+
+  useEffect(() => {
+    void loadCancelRequest();
+  }, [loadCancelRequest]);
+
+  const openDecisionDialog = (nextDecision: MonitoringCancelDecision) => {
+    setDecision(nextDecision);
+    setManagerRemarks('');
+    setRemarksError(null);
+    setSubmitError(null);
+  };
+
+  const handleDialogOpenChange = (open: boolean) => {
+    if (open || isSubmitting) return;
+
+    setDecision(null);
+    setManagerRemarks('');
+    setRemarksError(null);
+    setSubmitError(null);
+  };
+
+  const handleDecisionSubmit = async () => {
+    if (!cancelRequest || !decision || isSubmitting) return;
+
+    const trimmedRemarks = managerRemarks.trim();
+    if (decision === 'REJECTED' && !trimmedRemarks) {
+      setRemarksError('却下理由を入力してください。');
+      return;
+    }
+
+    setRemarksError(null);
+    setSubmitError(null);
+    setIsSubmitting(true);
+
+    try {
+      await decideMonitoringCancelRequest(cancelRequest.id, {
+        decision,
+        ...(trimmedRemarks ? { managerRemarks: trimmedRemarks } : {}),
+      });
+
+      const isApproval = decision === 'APPROVE';
+      toast({
+        title: isApproval ? '取消申請を承認しました' : '取消申請を却下しました',
+        variant: isApproval ? 'success' : 'warning',
+      });
+      returnToList();
+    } catch (error) {
+      const message = getErrorMessage(
+        error,
+        '取消申請の処理に失敗しました。',
+      );
+      setSubmitError(message);
+      toast({
+        title: '取消申請を処理できませんでした',
+        description: message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  usePageBreadcrumb([
+    { label: 'ホーム', to: paths.adminDashboard },
+    { label: '取消申請一覧', to: CANCEL_REQUEST_LIST_PATH },
+    { label: '取消申請内容の詳細' },
+  ]);
+
+  if (isLoading && !cancelRequest) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-background px-6 text-small text-foreground">
+        取消申請情報を読み込んでいます...
+      </main>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-background px-6">
+        <div className="space-y-4 text-center">
+          <p role="alert" className="text-small text-destructive">
+            {loadError}
+          </p>
+          <div className="flex justify-center gap-3">
+            <ActionButton kind="back" onClick={returnToList}>
+              一覧へ戻る
+            </ActionButton>
+            <ActionButton kind="retry" onClick={() => void loadCancelRequest()} />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!cancelRequest) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-background px-6">
+        <div className="space-y-4 text-center">
+          <p className="text-small text-foreground">
+            取消申請情報が見つかりませんでした。
+          </p>
+          <ActionButton kind="back" onClick={returnToList}>
+            一覧へ戻る
+          </ActionButton>
+        </div>
+      </main>
+    );
+  }
+
+  const isPending = cancelRequest.status.toUpperCase() === 'PENDING';
+  const isRejection = decision === 'REJECTED';
+
+  return (
+    <main className="relative min-h-screen bg-background px-4 py-10 sm:px-6">
+      <div className="mx-auto w-full max-w-[960px] space-y-10">
+        <h1 className="text-foreground">取消申請内容の詳細</h1>
+
+        <section className="rounded-xl border border-border bg-card p-8 shadow-app-sm md:p-12">
+          <dl className="grid grid-cols-1 gap-x-16 gap-y-8 md:grid-cols-2">
+            <DetailField label="申請ID">{cancelRequest.id}</DetailField>
+            <DetailField label="ステータス">
+              <CancelRequestStatusBadge status={cancelRequest.status} />
+            </DetailField>
+            <DetailField label="拠点名">
+              {cancelRequest.siteName || '-'}
+            </DetailField>
+            <DetailField label="申請者">
+              {cancelRequest.requestedBy || '-'}
+            </DetailField>
+            <DetailField label="申請日時">
+              {formatCancelRequestDateTime(cancelRequest.requestedAt)}
+            </DetailField>
+            <DetailField label="決定日時">
+              {formatCancelRequestDateTime(cancelRequest.decidedAt)}
+            </DetailField>
+            <DetailField label="決定者">
+              {cancelRequest.decidedBy || '-'}
+            </DetailField>
+            <DetailField label="取消理由" fullWidth>
+              <span className="whitespace-pre-wrap">
+                {cancelRequest.reason || '-'}
+              </span>
+            </DetailField>
+          </dl>
+
+          {isPending && (
+            <FormActions
+              className="mt-12"
+              actions={[
+                {
+                  id: 'reject',
+                  label: '却下',
+                  variant: 'destructive',
+                  onClick: () => openDecisionDialog('REJECTED'),
+                },
+                {
+                  id: 'approve',
+                  label: '承認',
+                  variant: 'success',
+                  onClick: () => openDecisionDialog('APPROVE'),
+                },
+              ]}
+            />
+          )}
+        </section>
+      </div>
+
+      <AlertDialog
+        open={Boolean(decision)}
+        onOpenChange={handleDialogOpenChange}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              取消申請を{isRejection ? '却下' : '承認'}しますか？
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              申請ID: {cancelRequest.id}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-2">
+            <Label htmlFor="manager-remarks">
+              管理者コメント{isRejection ? '（必須）' : '（任意）'}
+            </Label>
+            <Textarea
+              id="manager-remarks"
+              value={managerRemarks}
+              onChange={(event) => {
+                setManagerRemarks(event.target.value);
+                if (remarksError) setRemarksError(null);
+              }}
+              placeholder={
+                isRejection
+                  ? '却下理由を入力してください'
+                  : '必要に応じてコメントを入力してください'
+              }
+              disabled={isSubmitting}
+              aria-invalid={Boolean(remarksError)}
+              aria-describedby={remarksError ? 'manager-remarks-error' : undefined}
+            />
+            {remarksError && (
+              <p id="manager-remarks-error" className="text-sm text-destructive">
+                {remarksError}
+              </p>
+            )}
+            {submitError && (
+              <p role="alert" className="text-sm text-destructive">
+                {submitError}
+              </p>
+            )}
+          </div>
+
+          <AlertDialogFooter>
+            <FormActions
+              context="compact"
+              className="w-full"
+              disabled={isSubmitting}
+              pendingActionId={isSubmitting ? 'confirm' : null}
+              actions={[
+                {
+                  id: 'cancel',
+                  label: 'キャンセル',
+                  variant: 'outline',
+                  onClick: () => handleDialogOpenChange(false),
+                },
+                {
+                  id: 'confirm',
+                  label: isRejection ? '却下する' : '承認する',
+                  pendingLabel: '処理中...',
+                  variant: isRejection ? 'destructive' : 'success',
+                  onClick: handleDecisionSubmit,
+                },
+              ]}
+            />
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </main>
+  );
+}

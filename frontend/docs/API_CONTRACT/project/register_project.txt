@@ -1,0 +1,84 @@
+プロジェクト参加申請（汎用）
+
+POST /api/projects/:projectId/register
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: multipart/form-data
+
+Request Body:
+{
+  "siteId": "123",
+  "projectId": "123",
+  "equipment": [
+    {
+      "formType": "solar",
+      "solarData": {
+        "equipmentOpDate": "2025-04-07",
+        "nominalMaxOutput": "10.5",
+        "totalInvestment": "2480000"
+      }
+    },
+    {
+      "formType": "other",
+      "oldEquipmentName": "旧型照明器具",
+      "oldEquipmentId": "OLD-001",
+      "oldEquipmentType": "蛍光灯",
+      "newEquipmentName": "LED照明器具",
+      "newEquipmentId": "NEW-001",
+      "newEquipmentType": "LED"
+    }
+  ],
+  "agreements": {
+    "useRegisteredInfo": true,
+    "provideAdditionalInfo": true,
+    "transferEnvironmentalValue": true,
+    "notRegisteredElsewhere": true,
+    "keidanrenParticipation": "false",
+    "specifiedEmitterStatus": "true",
+    "energyRationalizationCompliance": "true"
+  },
+  "contract": {
+    "businessName": "株式会社サンプル",
+    "representativePosition": "代表取締役",
+    "representativeName": "山田太郎",
+    "contractAgreed": true
+  },
+  "finalTermsAgreed": true
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "applicationId": "app_12345"
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "VALIDATION_ERROR",
+  "message": "入力内容に誤りがあります。",
+  "fields": {
+    "equipment": "設備情報を入力してください。",
+    "agreements": "同意項目を確認してください。",
+    "contract.contractAgreed": "契約条項への同意が必要です。",
+    "finalTermsAgreed": "最終規約への同意が必要です。"
+  }
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当するプロジェクトが見つかりませんでした。"
+},
+{
+  "statusCode": "ALREADY_SUBMITTED",
+  "message": "こちらのフォームはすでに提出済みのため、内容の変更はできません。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}

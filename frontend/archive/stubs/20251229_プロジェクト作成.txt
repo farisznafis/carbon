@@ -1,0 +1,132 @@
+URL: POST /api/projects
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Request
+{
+  "projectName": "太陽光発電導入プロジェクト",
+  "projectNumber": "1234",
+  "projectStatus": "準備中",
+
+  "emissionReduction": 1250, //should be derived: baselineEmissions - postProjectEmission
+  "baselineEmissions": 3200,
+  "postProjectEmission": 1950,
+
+  "repFirstName": "太郎",
+  "repFirstNameKana": "タロウ",
+  "repLastName": "山田",
+  "repLastNameKana": "ヤマダ",
+  "repEmail": "taro.yamada@example.com",
+  "repPhoneNumber": "0312345678",
+  "repPosition": "代表取締役",
+
+  "picFirstName": "花子",
+  "picFirstNameKana": "ハナコ",
+  "picLastName": "佐藤",
+  "picLastNameKana": "サトウ",
+  "picEmail": "hanako.sato@example.com",
+  "picPhoneNumber": "09012345678",
+  "picPosition": "プロジェクト担当",
+  "dataManagementPic": "佐藤 花子",
+
+  "companyName": "株式会社グリーンエナジー",
+  "regionalCategory": "関東",
+
+  "newMembersTotal": 120,
+  "withdrawnMembers": 5,
+  "cumulativeMembers": 115,
+  "membersTotal": 115,
+
+  "methodologyVersion": "v1.2",
+  "methodCategory": "エネルギー",
+  "methodNumber": "EN-001",
+  "methodName": "再生可能エネルギー発電方法論",
+  "methodMainEmission": "化石燃料由来電力の代替",
+  "methodCombiFeasibility": true,
+  "methodDetails": "本方法論は太陽光発電設備の導入により、系統電力由来のCO2排出を削減することを目的とする。",
+
+  "operatorCompanyId": 42
+}
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK"
+  "project": {
+    "id": 12345, //project ID
+    "projectName": "太陽光発電導入プロジェクト",
+    "projectNumber": "1234",
+    "projectStatus": "準備中",
+
+    "emissionReduction": 1250,
+    "baselineEmissions": 3200,
+    "postProjectEmission": 1950,
+
+    "repFirstName": "太郎",
+    "repFirstNameKana": "タロウ",
+    "repLastName": "山田",
+    "repLastNameKana": "ヤマダ",
+    "repEmail": "taro.yamada@example.com",
+    "repPhoneNumber": "0312345678",
+    "repPosition": "代表取締役",
+
+    "picFirstName": "花子",
+    "picFirstNameKana": "ハナコ",
+    "picLastName": "佐藤",
+    "picLastNameKana": "サトウ",
+    "picEmail": "hanako.sato@example.com",
+    "picPhoneNumber": "09012345678",
+    "picPosition": "プロジェクト担当",
+    "dataManagementPic": "佐藤 花子",
+
+    "companyName": "株式会社グリーンエナジー",
+    "regionalCategory": "関東",
+
+    "newMembersTotal": 120,
+    "withdrawnMembers": 5,
+    "cumulativeMembers": 115,
+    "membersTotal": 115,
+
+    "methodologyVersion": "v1.2",
+    "methodCategory": "エネルギー",
+    "methodNumber": "EN-001",
+    "methodName": "再生可能エネルギー発電方法論",
+    "methodMainEmission": "化石燃料由来電力の代替",
+    "methodCombiFeasibility": true,
+    "methodDetails": "本方法論は太陽光発電設備の導入により、系統電力由来のCO2排出を削減することを目的とする。",
+
+    "operatorCompanyId": 42
+  }
+}
+
+ERROR RESPONSES
+
+{ //error 422
+  "statusCode": "VALIDATION_ERROR",
+  "fields": { //add more field validations
+    "projectName": "必須項目です",
+    "repEmail": "メールアドレスの形式が正しくありません",
+    "methodCombiFeasibility": "真偽値を指定してください"
+  }
+},
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "statusCode": "NOT_FOUND",
+  "message": "該当する拠点が見つかりませんでした。"
+},
+{ //error 409
+  "statusCode": "ALREADY_SUBMITTED",
+  "message": "こちらのフォームはすでに提出済みのため、内容の変更はできません。"
+},
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+

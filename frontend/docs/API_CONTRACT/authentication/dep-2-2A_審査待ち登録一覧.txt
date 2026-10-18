@@ -1,0 +1,41 @@
+# 2-2A 審査後対応(承認・非承認) - 一覧取得
+# get_pending_registration
+# This API is called by the Admin Dashboard page to display a table of companies that are pending approval.
+
+GET /api/admin/registrations?status=PENDING
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "totalPending": 1,
+  "registrations": [
+    {
+      "registrationId": "REG-20260423-001",
+      "corporateName": "株式会社サンプル",
+      "picName": "佐藤 次郎", # take from picFirstName & picLastName
+      "submittedAt": "2026-04-23T10:00:00Z",
+      "status": "PENDING"
+    }
+  ]
+}
+
+Response - Error (HTTP 401)
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "認証に失敗しました。有効なトークンを提供してください。"
+}
+
+Response - Error (HTTP 403)
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+}
+
+Response - Error (HTTP 500)
+{
+  "statusCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+

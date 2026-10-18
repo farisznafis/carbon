@@ -1,0 +1,67 @@
+20260213_運営者・管理者プロジェクト一覧
+# get_all_projects
+
+運営者・管理者プロジェクト一覧（operator専用）
+GET /api/projects?page=1&limit=20&sort=updatedAt&sortOrder=desc&status=準備中&methodology=ENR-002&createdFrom=2026-01-01&createdTo=2026-02-02
+
+Filters: 
+  status=作成済み、準備中、更新中、妥当性確認処理、却下、実施中、検証中、クレジット申請中、終了、未参加
+  methodology=ENR-002, ENS-004, ENS-006, ENS-016
+  createdFrom=2026-01-01
+  createdTo=2026-02-02
+  updatedFrom=2026-01-01
+  updatedTo=2026-02-02
+  search=太陽光プロジェクト
+
+
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "projects": [
+    {
+      "id": "1",
+      "projectName": "太陽光プロジェクト",
+      "methodologyVersion": "3.4",
+      "methodologyNumber": "002",
+      "methodologyName": "EN-R",
+      "projectStatus": "登録済み" 
+      "createdAt": "2026-01-22T09:15:00Z",　
+      "updatedAt": "2026-01-22T09:15:00Z"
+    },
+    {
+      "id": "2",
+      "projectName": "冷凍・冷蔵設備の導入プロジェクト",
+      "methodologyVersion": "4.3",
+      "methodologyNumber": "016",
+      "methodologyName": "EN-S",
+      "projectStatus": "準備中" 
+      "createdAt": "2026-01-23T09:15:00Z",　
+      "updatedAt": "2026-01-24T09:15:00Z"
+    }
+  ],
+   "pagination": {
+    "page": 1,
+    "limit": 20,
+    "totalItems": 83,
+    "totalPages": 5
+  }
+}
+
+ERROR RESPONSES
+{
+  "statusCode": "UNAUTHORIZED",
+  "message": "この操作を行うにはログインが必要です。"
+},
+{
+  "statusCode": "FORBIDDEN",
+  "message": "このリソースにアクセスする権限がありません。"
+},
+{
+  "errorCode": "SERVER_ERROR",
+  "message": "サーバー内部でエラーが発生しました。"
+}
+
+
+

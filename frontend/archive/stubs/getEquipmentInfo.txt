@@ -1,0 +1,22 @@
+プロジェクト参加(太陽光発電)
+
+URL: GET /api/company/{companyId}/equipment //相談が必須
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+Response - Success (HTTP 200)
+{
+  "statusCode": "OK",
+  "nameJA": "株式会社サンプル", //企業名
+  "equipmentList": [
+    {
+      "id": "1",
+      "equipmentOpDate" = "2025-01-01",
+      "nominalMaxOutput" = "30",
+      "manufacturer" = "PANASONIC",
+      "modelNo" = "PNS-PCX4500J",
+      "powerCondUnitCount" = "10",
+      "subsidyName" = "設備導入補助金"
+    }
+  ]
+}
