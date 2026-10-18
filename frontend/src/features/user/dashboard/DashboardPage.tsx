@@ -335,11 +335,11 @@ function ProjectStatus({
   pending?: boolean;
 }) {
   return (
-    <span className='inline-flex items-center gap-2 font-bold'>
+    <span className='inline-flex items-center gap-2 font-medium'>
       <span
         className={cn(
           'h-3 w-3 rounded-full',
-          joined && !pending ? 'bg-success' : 'bg-warning',
+          pending ? 'bg-warning' : joined ? 'bg-success' : 'bg-muted-foreground',
         )}
       />
       {pending ? '申請中' : joined ? '入会済み' : '未入会'}
@@ -384,22 +384,22 @@ function JoinedProjectCard({
               !requiresSiteParticipation && !isPendingReview && 'xl:order-2',
             )}
           >
-            <div className='rounded-lg border border-border bg-transparent p-5'>
+            <div className='rounded-lg bg-muted p-5'>
               <dl className='space-y-4'>
                 <div>
-                  <dt className='text-small text-foreground'>方法論</dt>
-                  <dd className='mt-1 font-bold'>
+                  <dt className='text-label'>方法論</dt>
+                  <dd className='mt-1 font-medium'>
                     {getMethodologyLabel(project)}
                   </dd>
                 </div>
                 <div>
-                  <dt className='text-small text-foreground'>方法論番号</dt>
-                  <dd className='mt-1 font-bold'>
+                  <dt className='text-label'>方法論番号</dt>
+                  <dd className='mt-1 font-medium'>
                     {project.methodNumber} {project.methodologyVersion}
                   </dd>
                 </div>
                 <div>
-                  <dt className='text-small text-foreground'>ステータス</dt>
+                  <dt className='text-label'>ステータス</dt>
                   <dd className='mt-1'>
                     <ProjectStatus
                       joined={!isPendingReview}
@@ -444,17 +444,17 @@ function AvailableProjectCard({ project }: { project: SiteProject }) {
 
         <dl className='mt-6 space-y-4'>
           <div>
-            <dt className='text-small text-foreground'>方法論</dt>
-            <dd className='mt-1 font-bold'>{getMethodologyLabel(project)}</dd>
+            <dt className='text-label'>方法論</dt>
+            <dd className='mt-1 font-medium'>{getMethodologyLabel(project)}</dd>
           </div>
           <div>
-            <dt className='text-small text-foreground'>方法論番号</dt>
-            <dd className='mt-1 font-bold'>
+            <dt className='text-label'>方法論番号</dt>
+            <dd className='mt-1 font-medium'>
               {project.methodNumber} {project.methodologyVersion}
             </dd>
           </div>
           <div>
-            <dt className='text-small text-foreground'>ステータス</dt>
+            <dt className='text-label'>ステータス</dt>
             <dd className='mt-1'>
               <ProjectStatus joined={false} />
             </dd>
@@ -802,7 +802,7 @@ const Dashboard = () => {
             <dl className='ml-[60px] mt-2 grid gap-x-10 gap-y-3 sm:grid-cols-[max-content_minmax(0,1fr)]'>
               <div>
                 <dt className='text-small text-muted-foreground'>担当者</dt>
-                <dd className='mt-1 font-bold'>
+                <dd className='mt-1 font-medium'>
                   {isSiteLoading ? (
                     <InlineLoader label='担当者を読み込んでいます' />
                   ) : (
@@ -812,7 +812,7 @@ const Dashboard = () => {
               </div>
               <div className='min-w-0'>
                 <dt className='text-small text-muted-foreground'>所在地</dt>
-                <dd className='mt-1 break-words font-bold'>
+                <dd className='mt-1 break-words font-medium'>
                   {isSiteLoading ? (
                     <InlineLoader label='所在地を読み込んでいます' />
                   ) : (
@@ -921,7 +921,7 @@ const Dashboard = () => {
           </div>
 
           {isProjectsLoading ? (
-            <div className='grid gap-5 md:grid-cols-2 xl:grid-cols-4'>
+            <div className='grid gap-5 md:grid-cols-2 xl:grid-cols-3'>
               {Array.from({ length: 4 }, (_, index) => (
                 <SkeletonCard
                   key={index}
@@ -939,7 +939,7 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           ) : availableProjects.length > 0 ? (
-            <div className='grid gap-5 md:grid-cols-2 xl:grid-cols-4'>
+            <div className='grid gap-5 md:grid-cols-2 xl:grid-cols-3'>
               {availableProjects.map((project) => (
                 <AvailableProjectCard
                   key={project.id}

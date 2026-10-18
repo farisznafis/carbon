@@ -53,7 +53,7 @@ const SEGMENT_CONTAINER_CLASS_NAME =
   'inline-flex h-auto max-w-full flex-wrap items-center justify-start gap-1 rounded-full border border-border bg-muted p-1';
 
 const SEGMENT_ITEM_CLASS_NAME =
-  'inline-flex h-8 items-center gap-2 whitespace-nowrap rounded-full border border-transparent bg-transparent px-4 text-small font-medium text-muted-foreground shadow-none transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-[state=active]:font-bold data-[state=active]:shadow-app-sm aria-pressed:font-bold aria-pressed:shadow-app-sm';
+  'inline-flex h-8 [@media(pointer:coarse)]:h-11 items-center gap-2 whitespace-nowrap rounded-full border border-transparent bg-transparent px-4 text-small font-medium text-muted-foreground shadow-none transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-[state=active]:font-bold data-[state=active]:shadow-app-sm aria-pressed:font-bold aria-pressed:shadow-app-sm';
 
 /** Selected-state colours per tone; mirrors StatusBadge so both read the same. */
 const SEGMENT_ACTIVE_TONE_CLASS_NAMES: Record<StatusBadgeTone, string> = {

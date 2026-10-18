@@ -56,7 +56,7 @@ export function DashboardEmissionReductionProgress({
   }, [projectId]);
 
   return (
-    <div className='min-h-[280px] rounded-lg p-5 xl:order-1 border-border border'>
+    <div className='min-h-[280px] border-t border-border pt-5 xl:order-1 xl:border-r xl:border-t-0 xl:pr-6 xl:pt-0'>
       {isLoading ? (
         <SkeletonChart className='min-h-[240px] border-0 p-0 shadow-none' />
       ) : error ? (

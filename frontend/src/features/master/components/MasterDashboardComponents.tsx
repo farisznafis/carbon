@@ -35,7 +35,7 @@ export function DashboardSection({
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-foreground">{title}</h2>
-          <p className="text-small mt-2 text-foreground">
+          <p className="text-small mt-2 text-muted-foreground">
             {description}
           </p>
         </div>
@@ -126,24 +126,24 @@ export function UserDashboardCard({
           )}
         </div>
 
-        <div className="pl-3 mt-2 grid gap-x-8 gap-y-2 text-sm font-bold leading-6 text-foreground xl:grid-cols-[minmax(360px,1.7fr)_minmax(220px,1fr)_minmax(220px,1fr)]">
+        <div className="pl-3 mt-2 grid gap-x-8 gap-y-2 text-sm font-medium leading-6 text-foreground xl:grid-cols-[minmax(360px,1.7fr)_minmax(220px,1fr)_minmax(220px,1fr)]">
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <Mail className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="shrink-0 text-foreground">
+            <span className="shrink-0 font-normal text-muted-foreground">
               メールアドレス
             </span>
             <span className="min-w-0 break-all">{user.email || '-'}</span>
           </span>
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <User className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="shrink-0 text-foreground">
+            <span className="shrink-0 font-normal text-muted-foreground">
               社員名
             </span>
             <span className="truncate">{user.username || '-'}</span>
           </span>
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <Building2 className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="shrink-0 text-foreground">
+            <span className="shrink-0 font-normal text-muted-foreground">
               拠点
             </span>
             {user.role === 'master' ? (

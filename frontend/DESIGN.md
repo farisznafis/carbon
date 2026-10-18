@@ -12,7 +12,7 @@ colors:
   surface: "#FFFFFF"
   surface-subtle: "#F6F8FB"
   hairline: "#DFE4EA"
-  input-border: "#CBD2DC"
+  input-border: "#828FA1"
   success: "#0F9F62"
   success-strong: "#08794A"
   success-surface: "#ECFDF3"
@@ -125,6 +125,7 @@ Mode: **Operate**. Familiar patterns win over expression. The brand lives in pre
 - **Ink muted** `#4B5869`: labels, descriptions, metadata. 7:1 on white.
 - **Placeholder** `#687587`: input placeholders only, 4.7:1 on white. Example values should be written as `例：…` **(pending)**.
 - **Canvas** `#F4F7FB` page, **Surface** `#FFFFFF` cards, **Hairline** `#DFE4EA` borders.
+- **Input border** `#828FA1`: field and outline-button boundaries, 3.3:1 on white (WCAG 1.4.11 needs 3:1). Hairline is for dividers only, never for a field edge.
 
 ### Status
 Success, warning and danger each have a base, a strong text tone and a pale surface. They mean workflow state only: 承認 / 入会済 / 参加中 = success, 申請中 = warning, 却下 / 取消 = danger, 未参加 / 未入会 = neutral.
@@ -169,7 +170,7 @@ Flat. Cards are defined by a 1px hairline border on the canvas. Shadows are rese
 ## Components
 
 ### Buttons
-40px tall, 8px radius, 15px medium text. Primary is solid blue. Outline is a white surface with a hairline border. Ghost is for tertiary actions and icon buttons. One primary per view. Row actions in tables are outline buttons at 36px.
+40px tall (44px on touch screens via `pointer: coarse`), 8px radius, 15px medium text. Primary is solid blue. Outline is a white surface with an input-border edge. Ghost is for tertiary actions and icon buttons. One primary per view. Row actions in tables are outline buttons at 36px (44px on touch).
 
 ### Chips
 Status chips are full-radius with a pale status surface, strong status text and a 6px dot. Text always accompanies the dot.

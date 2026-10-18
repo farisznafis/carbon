@@ -43,6 +43,7 @@ All colors MUST be HSL.
     --neutral-200: 212.7 20.8% 89.6%; /* #DFE4EA */
     --neutral-300: 215.3 19.5% 82.9%; /* #CBD2DC */
     --neutral-400: 214.6 14.4% 64.7%; /* #98A3B2 */
+    --neutral-450: 214.7 14% 57%;     /* #828FA1, 3.3:1 on white, 3.1:1 on canvas */
     --neutral-500: 214.8 13% 46.9%;   /* #687587 */
     --neutral-600: 214 16.7% 35.3%;   /* #4B5869 */
     --neutral-700: 215.6 23.5% 26.7%; /* #344154 */
@@ -119,7 +120,8 @@ All colors MUST be HSL.
 
     /* Form / borders */
     --border: var(--neutral-200);
-    --input: var(--neutral-300);
+    /* Field boundaries need 3:1 (WCAG 1.4.11); neutral-300 was 1.5:1. */
+    --input: var(--neutral-450);
     --ring: var(--blue-500);
 
     --placeholder: var(--neutral-500);

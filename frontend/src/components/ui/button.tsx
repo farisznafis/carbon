@@ -39,11 +39,12 @@ const buttonVariants = cva(
         link: 'text-primary-strong underline-offset-4 hover:underline',
       },
       size: {
-        default: 'h-10 px-5 py-2 text-sm',
-        md: 'h-10 px-5 py-2 text-sm',
-        sm: 'h-9 px-3 text-sm',
+        // Touch screens get 44px targets (WCAG 2.5.8 / Apple HIG); mouse layouts keep their density.
+        default: 'h-10 px-5 py-2 text-sm [@media(pointer:coarse)]:h-11',
+        md: 'h-10 px-5 py-2 text-sm [@media(pointer:coarse)]:h-11',
+        sm: 'h-9 px-3 text-sm [@media(pointer:coarse)]:h-11',
         lg: 'h-12 px-6 text-base',
-        icon: 'h-10 w-10 p-0',
+        icon: 'h-10 w-10 p-0 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11',
       },
     },
     defaultVariants: {
