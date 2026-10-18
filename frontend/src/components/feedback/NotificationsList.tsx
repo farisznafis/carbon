@@ -112,7 +112,7 @@ export function NotificationsList({
 
   return (
     <>
-      <ul className='space-y-3'>
+      <ul className='divide-y divide-border'>
         {orderedNotifications.map((notification) => {
           const isProcessing = processingNotificationIds.includes(
             notification.id,
@@ -125,7 +125,7 @@ export function NotificationsList({
               key={notification.id}
               aria-busy={isProcessing || undefined}
               className={cn(
-                'relative rounded-lg border border-border p-4 shadow-app-sm transition-colors hover:border-primary/50 hover:bg-secondary/20',
+                'relative rounded-lg px-3 py-4 transition-colors hover:bg-muted',
                 isRead ? 'bg-muted/40' : 'bg-card',
               )}
             >

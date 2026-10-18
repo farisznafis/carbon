@@ -21,6 +21,10 @@ const buttonVariants = cva(
         destructive:
           'bg-destructive text-destructive-foreground hover:bg-destructive-strong',
 
+        // A reject/decline choice shown next to the primary action; the solid variant confirms it.
+        'destructive-outline':
+          'border border-destructive-border bg-card text-destructive-strong hover:bg-destructive-subtle',
+
         secondary:
           'bg-foreground text-background shadow-app-sm hover:bg-foreground/90',
 

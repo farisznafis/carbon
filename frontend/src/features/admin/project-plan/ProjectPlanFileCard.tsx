@@ -15,7 +15,7 @@ export function ProjectPlanFileCard({ projectId }: Readonly<{ projectId: string 
   const latest = files[0];
 
   return (
-    <Card className="h-full rounded-xl border-border shadow-app-sm">
+    <Card className="h-full rounded-lg border-border">
       <CardHeader>
         <CardTitle>計画書</CardTitle>
         <CardDescription>アップロードされた最新の計画書ファイルです。</CardDescription>

@@ -9,7 +9,7 @@ import {
 } from './projectStatusFlow';
 
 const BRANCH_BAR_CLASS_NAMES: Readonly<Record<string, string>> = {
-  変更中: 'bg-warning',
+  変更中: 'bg-info',
   却下: 'bg-destructive',
 };
 

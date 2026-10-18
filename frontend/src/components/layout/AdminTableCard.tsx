@@ -34,7 +34,7 @@ export function AdminTableCard({
   return (
     <Card
       className={cn(
-        'rounded-lg border-border bg-card shadow-app-sm',
+        'rounded-lg border-border bg-card',
         className,
       )}
     >

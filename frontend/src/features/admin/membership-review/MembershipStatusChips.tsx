@@ -27,7 +27,7 @@ export function MembershipStatusChips({
               type="button"
               onClick={() => onSelect(status)}
               aria-label={`${label}の入会届${count ?? ''}件を表示`}
-              className="rounded-full transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="relative rounded-full transition before:absolute before:inset-x-0 before:-inset-y-[10px] before:content-[''] hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <MembershipStatusBadge status={status} className="gap-1.5 py-0.5">
                 {label}

@@ -114,7 +114,7 @@ export default function ContributionTimeline({
   return (
     <div
       className={cn(
-        'group relative flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card p-5 shadow-app-sm',
+        'group relative flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card p-5',
         className,
       )}
     >

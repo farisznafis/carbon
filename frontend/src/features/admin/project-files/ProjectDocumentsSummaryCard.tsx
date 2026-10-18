@@ -192,7 +192,7 @@ export function ProjectDocumentsSummaryCard({
 
   return (
     <TooltipProvider delayDuration={250}>
-      <Card className="flex h-full flex-col rounded-xl border-border shadow-app-sm">
+      <Card className="flex h-full flex-col rounded-lg border-border">
         <CardHeader className="flex-row items-center justify-between gap-3 space-y-0">
           <div className="flex items-center gap-2">
             <CardTitle>書類</CardTitle>

@@ -118,7 +118,7 @@ function ProjectOverviewCard({
   onOpenMembership: (status: ParticipationReviewStatus) => void;
 }>) {
   return (
-    <Card className="h-full rounded-xl border-border shadow-app-sm">
+    <Card className="h-full rounded-lg border-border">
       <CardHeader>
         <CardTitle>プロジェクト概要</CardTitle>
       </CardHeader>
@@ -175,7 +175,7 @@ function ProjectNavigationCard({
   onClick,
 }: Readonly<ProjectNavigationCardProps>) {
   return (
-    <Card className="rounded-xl border-border shadow-app-sm">
+    <Card className="rounded-lg border-border">
       <CardContent className="flex min-h-32 items-center gap-4 p-5 sm:p-6">
         <span
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-primary"
@@ -210,7 +210,7 @@ function ProjectDetailTabCard({
   children,
 }: Readonly<{ title: string; description: string; children: React.ReactNode }>) {
   return (
-    <Card className="rounded-xl shadow-app-sm">
+    <Card className="rounded-lg">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -500,7 +500,7 @@ export default function ProjectDetailAdmin() {
 
         <TabsContent value="documents" className="m-0 pt-5">
           {/* No card heading: the page tab already says 書類, and the sub-tabs lead the card. */}
-          <Card className="rounded-xl shadow-app-sm">
+          <Card className="rounded-lg">
             <CardContent className="pt-[var(--card-padding)]">
               {!permissions.hasPermission('PROJECT_READ') ? (
                 <PermissionDeniedNotice permission="PROJECT_READ" />

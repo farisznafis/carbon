@@ -202,7 +202,7 @@ export function UserForm({
   const formContent = (
     <Form {...form}>
       <form onSubmit={handleFormSubmit}>
-        <FormCard className="form-label-left">
+        <FormCard>
           <FormSectionStack spacing="relaxed">
             <FormSection number={1} title="個人情報">
               <FormGrid>
@@ -455,7 +455,7 @@ export function UserForm({
       title=""
       onBack={onBack}
       backText="戻る"
-      contentMaxWidth="max-w-[880px]"
+      contentMaxWidth="max-w-[768px]"
       wrapInCard={false}
     >
       {formContent}

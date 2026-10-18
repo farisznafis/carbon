@@ -246,7 +246,7 @@ export function ProjectFilesPanel({
                   {uploadedCount} / {stageGroups.length} アップロード済
                 </span>
               </div>
-              <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card shadow-app-sm">
+              <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
                 {stageGroups.flatMap((group) =>
                   // 入会届 sits with the monitoring forms but is not one of the versioned types.
                   group.type === 'ACTIVITY_RESULT_LIST'

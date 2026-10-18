@@ -137,7 +137,7 @@ function DetailErrorState({
   return (
     <main className="min-h-screen bg-background px-4 py-10 sm:px-6">
       <div className="mx-auto w-full max-w-7xl">
-        <Card className="mx-auto max-w-lg rounded-xl">
+        <Card className="mx-auto max-w-lg rounded-lg">
           <CardHeader>
             <CardTitle className="text-base font-bold text-foreground">
               企業情報を取得できませんでした

@@ -44,7 +44,7 @@ export function BatchHistoryDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-2rem)] max-w-2xl overflow-y-auto rounded-xl p-8">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-2rem)] max-w-2xl overflow-y-auto rounded-lg p-8">
         <DialogHeader>
           <DialogTitle className="text-foreground">バッチ履歴の詳細</DialogTitle>
           <DialogDescription className="sr-only">

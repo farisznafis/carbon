@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { getProjectStatusTone } from '@/features/admin/dashboard/projectStatusPresentation';
 import type { ParticipationReviewDetail } from '@/api/admin';
 import type { Project } from '@/api/projects';
 import {
@@ -37,16 +38,6 @@ type AdminProjectStatusTableProps = {
   onOpenProjectDetail: (project: Project) => void;
   onOpenMembership: (project: Project) => void;
 };
-
-/** Resolves a design-system tone for a project status. */
-function getProjectStatusTone(status: string) {
-  const normalizedStatus = status.trim().toUpperCase();
-
-  if (['ACTIVE', 'RUNNING', '実施中'].includes(normalizedStatus)) return 'success' as const;
-  if (['REJECTED', '却下', 'ENDED', 'INACTIVE', '終了'].includes(normalizedStatus)) return 'danger' as const;
-  if (['CREATED', '作成済み'].includes(normalizedStatus)) return 'neutral' as const;
-  return 'warning' as const;
-}
 
 /** Counts OPEN membership reviews that belong to one project. */
 function countOpenReviews(
@@ -183,7 +174,7 @@ export function AdminProjectStatusTable({
 
   if (projectsError) {
     return (
-      <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center text-small text-destructive">
+      <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center text-small text-destructive">
         {projectsError}
       </div>
     );

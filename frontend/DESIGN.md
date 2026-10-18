@@ -133,6 +133,7 @@ Success, warning and danger each have a base, a strong text tone and a pale surf
 ### Named Rules
 - **Color is a status, not a decoration.** A status hue never appears on an element that carries no status.
 - **Neutral means "not yet".** Not-yet-joined is neutral grey, not warning amber. Amber means a person is waiting.
+- **One status, one tone, everywhere.** Project statuses map once, in `features/admin/dashboard/projectStatusPresentation.ts`: 作成済み/終了 = neutral, 準備中/変更中 = info (the project side is working), 妥当性確認処理/検証中/クレジット申請中 = warning (waiting on another party's review), 実施中 = success, 却下 = danger. Badges, table selects and charts read from that map; no local colour tables.
 
 ## Typography
 
@@ -170,7 +171,7 @@ Flat. Cards are defined by a 1px hairline border on the canvas. Shadows are rese
 ## Components
 
 ### Buttons
-40px tall (44px on touch screens via `pointer: coarse`), 8px radius, 15px medium text. Primary is solid blue. Outline is a white surface with an input-border edge. Ghost is for tertiary actions and icon buttons. One primary per view. Row actions in tables are outline buttons at 36px (44px on touch).
+40px tall (44px on touch screens via `pointer: coarse`), 8px radius, 15px medium text. Primary is solid blue. Outline is a white surface with an input-border edge. Ghost is for tertiary actions and icon buttons. One primary per view. A reject or decline choice beside the primary uses `destructive-outline`; solid `destructive` is reserved for the confirming step (e.g. inside the dialog). Row actions in tables are outline buttons at 36px (44px on touch).
 
 ### Chips
 Status chips are full-radius with a pale status surface, strong status text and a 6px dot. Text always accompanies the dot.

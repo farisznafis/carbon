@@ -75,7 +75,7 @@ export function PendingCompanyDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[92%] max-w-3xl overflow-y-auto rounded-xl">
+      <DialogContent className="max-h-[90vh] w-[92%] max-w-3xl overflow-y-auto rounded-lg">
         <DialogHeader>
           <DialogTitle>申請情報の詳細</DialogTitle>
         </DialogHeader>

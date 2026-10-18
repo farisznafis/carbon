@@ -59,7 +59,7 @@ export function ChartCard({
   return (
     <Card
       className={cn(
-        'flex h-full flex-col rounded-lg border-border shadow-app-sm',
+        'flex h-full flex-col rounded-lg border-border',
         className,
       )}
     >

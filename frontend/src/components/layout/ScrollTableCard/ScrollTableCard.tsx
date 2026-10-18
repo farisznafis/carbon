@@ -26,7 +26,7 @@ export function ScrollTableCard({
   onRowClick,
 }: ScrollTableCardProps) {
   return (
-    <Card className="max-w-lg border-border shadow-app-sm">
+    <Card className="max-w-lg border-border">
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-bold tracking-tight">
           {cardTitle}

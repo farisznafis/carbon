@@ -141,7 +141,7 @@ export function ProjectDocumentDataPanel({ projectId }: Readonly<{ projectId: st
   const renderFileList = () => (
     <aside
       aria-labelledby="document-data-files-heading"
-      className="hidden overflow-hidden rounded-lg border border-border bg-card shadow-app-sm lg:block"
+      className="hidden overflow-hidden rounded-lg border border-border bg-card lg:block"
     >
       <div className="flex items-baseline justify-between gap-3 border-b border-border px-4 py-3">
         <h3 id="document-data-files-heading" className="text-sm font-bold text-foreground">
@@ -345,7 +345,7 @@ export function ProjectDocumentDataPanel({ projectId }: Readonly<{ projectId: st
 
           <article
             aria-labelledby="document-data-title"
-            className="min-w-0 rounded-lg border border-border bg-card shadow-app-sm"
+            className="min-w-0 rounded-lg border border-border bg-card"
           >
             <header className="flex flex-col gap-3 border-b border-border px-5 py-4 md:flex-row md:items-center md:justify-between">
               <div className="min-w-0 space-y-1">

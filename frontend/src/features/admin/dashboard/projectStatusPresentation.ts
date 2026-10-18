@@ -1,20 +1,28 @@
 import type { ProjectStatus } from '@/api/admin/projects';
+import type { StatusBadgeTone } from '@/components/data-display/StatusBadge';
 
+/**
+ * One tone per project status, shared by every admin surface (badges, table
+ * selects, filters). Tones follow StatusBadge meaning:
+ * - info: the project side is working on it (準備中, 変更中)
+ * - warning: waiting on another party's review (妥当性確認処理, 検証中, クレジット申請中)
+ * - success: running (実施中) · danger: rejected (却下) · neutral: no activity (作成済み, 終了)
+ */
 export type ProjectStatusPresentation = {
   status: ProjectStatus;
-  dotClassName: string;
+  tone: StatusBadgeTone;
 };
 
 export const PROJECT_STATUS_PRESENTATIONS: readonly ProjectStatusPresentation[] = [
-  { status: '作成済み', dotClassName: 'bg-muted-foreground' },
-  { status: '準備中', dotClassName: 'bg-info' },
-  { status: '変更中', dotClassName: 'bg-primary' },
-  { status: '妥当性確認処理', dotClassName: 'bg-primary-strong' },
-  { status: '却下', dotClassName: 'bg-destructive' },
-  { status: '実施中', dotClassName: 'bg-success' },
-  { status: '検証中', dotClassName: 'bg-warning' },
-  { status: 'クレジット申請中', dotClassName: 'bg-success-strong' },
-  { status: '終了', dotClassName: 'bg-muted-foreground' },
+  { status: '作成済み', tone: 'neutral' },
+  { status: '準備中', tone: 'info' },
+  { status: '変更中', tone: 'info' },
+  { status: '妥当性確認処理', tone: 'warning' },
+  { status: '却下', tone: 'danger' },
+  { status: '実施中', tone: 'success' },
+  { status: '検証中', tone: 'warning' },
+  { status: 'クレジット申請中', tone: 'warning' },
+  { status: '終了', tone: 'neutral' },
 ] as const;
 
 const PROJECT_STATUS_ALIASES: Readonly<Record<string, ProjectStatus>> = {
@@ -60,4 +68,10 @@ export function formatProjectDateTime(value?: string | null) {
     hour: '2-digit',
     minute: '2-digit',
   }).format(date);
+}
+
+/** Tone for any API status value (Japanese or English alias); unknown values stay neutral. */
+export function getProjectStatusTone(status: string): StatusBadgeTone {
+  const normalized = normalizeProjectStatus(String(status ?? ''));
+  return PROJECT_STATUS_PRESENTATIONS.find((item) => item.status === normalized)?.tone ?? 'neutral';
 }

@@ -19,8 +19,7 @@ export type DataGridTableColumn<T> = {
 type SortDirection = 'asc' | 'desc';
 
 /** Row tone for records waiting on the user (pending review, incomplete plan). Pass via `getRowClassName`. */
-export const ATTENTION_ROW_CLASS_NAME =
-  'bg-warning-subtle/50 shadow-[inset_3px_0_0_hsl(var(--warning))]';
+export const ATTENTION_ROW_CLASS_NAME = 'bg-warning-subtle/60';
 /** Row tone for records that are no longer active (rejected, suspended). Pass via `getRowClassName`. */
 export const INACTIVE_ROW_CLASS_NAME = 'bg-muted/70';
 
@@ -280,7 +279,7 @@ export function DataGridTable<T>({
                   type='button'
                   aria-label={getRowActionLabel?.(row) ?? DEFAULT_ROW_ACTION_LABEL}
                   onClick={() => onRowClick(row)}
-                  className='inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition group-hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                  className="relative inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition before:absolute before:-inset-1.5 before:content-[''] group-hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <ChevronRight className='h-4 w-4' aria-hidden='true' />
                 </button>
