@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import type { Site } from '@/api/site';
 import type { UserList } from '@/api/users';
-import { deleteUser, updateUser, validateUpdateUser } from '@/api/users/mutations';
+import { updateUser, validateUpdateUser } from '@/api/users/mutations';
 import {
   FormPageContent,
   FormPageTitle,
@@ -78,7 +77,7 @@ export default function UserEdit() {
   const routedUser =
     locationState?.user?.id === id ? locationState.user : undefined;
   const initialUser = storedUser ?? routedUser;
-  const { editUser, editSite, deleteUserStore, setSites } = useDashboardStore();
+  const { editUser, editSite, setSites } = useDashboardStore();
   const sitesQuery = useSitesQuery();
   const [formData, setFormData] = useState<UserFormData>(() =>
     mapUserToForm(initialUser),
@@ -190,37 +189,6 @@ export default function UserEdit() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!id) return;
-
-    try {
-      const result = await deleteUser(
-        id,
-        initialUser?.siteId ? ({ siteId: initialUser.siteId } as Site) : undefined,
-      );
-
-      deleteUserStore(id);
-
-      if (result.site) {
-        editSite(result.site.siteId, result.site);
-      }
-
-      toast({
-        title: '削除完了',
-        description: '社員を削除しました',
-      });
-
-      navigate('/master/dashboard');
-    } catch (error) {
-      logger.error(error);
-      toast({
-        title: 'エラー',
-        description: '削除中にエラーが発生しました',
-        variant: 'destructive',
-      });
-    }
-  };
-
   const handleConfirmBack = () => {
     setStep('form');
   };
@@ -289,7 +257,6 @@ export default function UserEdit() {
           onChange={setFormData}
           onNext={handleDraftSubmit}
           onBack={handleFormBack}
-          onDelete={handleDelete}
           siteOptions={sitesQuery.data?.sites ?? []}
           isSiteOptionsLoading={sitesQuery.isLoading}
           siteOptionsError={

@@ -1,5 +1,5 @@
 export { getUsers } from "./list";
-export { deleteUser, updateUser } from "./mutations";
+export { updateUser } from "./mutations";
 export type {
   Company,
   User,

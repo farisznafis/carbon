@@ -46,7 +46,7 @@ export type {
 export { getProfile, getUserProfileById } from "./profile";
 export type { ProfileViewModel } from "./profile";
 
-export { deleteUser, getUsers, updateUser } from "./users";
+export { getUsers, updateUser } from "./users";
 export type {
   Company,
   User,

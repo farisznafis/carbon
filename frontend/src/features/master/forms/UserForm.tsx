@@ -1,6 +1,5 @@
 import {
   useMemo,
-  useState,
   type FormEventHandler,
   type ReactNode,
 } from 'react';
@@ -8,7 +7,6 @@ import { useForm } from 'react-hook-form';
 import { X } from 'lucide-react';
 import { ApiError } from '@/api/_shared/errors';
 import { PasswordInput } from '@/components/inputs';
-import { DeleteAlertDialog } from '@/components/feedback/DeleteAlertDialog/DeleteAlertDialog';
 import {
   FormActions,
   FormCard,
@@ -71,7 +69,6 @@ interface UserFormProps {
   onChange: (data: UserFormData) => void;
   onNext: (data: UserFormData) => void | Promise<void>;
   onBack: () => void;
-  onDelete?: () => void;
   siteOptions?: Site[];
   isSiteOptionsLoading?: boolean;
   siteOptionsError?: string | null;
@@ -93,7 +90,6 @@ export function UserForm({
   onChange,
   onNext,
   onBack,
-  onDelete,
   siteOptions,
   isSiteOptionsLoading = false,
   siteOptionsError = null,
@@ -107,7 +103,6 @@ export function UserForm({
   submitDisabled = false,
   hasExternalChanges = false,
 }: Readonly<UserFormProps>) {
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { joinableSites, getSiteById } = useDashboardStore();
 
   const originalSite = originalData?.siteId
@@ -411,17 +406,6 @@ export function UserForm({
             {additionalSections}
 
             <FormActions
-              leadingAction={
-                onDelete ? (
-                  <DeleteAlertDialog
-                    label="社員"
-                    open={isDeleteDialogOpen}
-                    onOpenChange={setIsDeleteDialogOpen}
-                    onDelete={onDelete}
-                    iconOnly
-                  />
-                ) : undefined
-              }
               actions={[
                 {
                   id: 'cancel',

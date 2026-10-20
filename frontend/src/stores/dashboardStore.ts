@@ -20,7 +20,6 @@ interface DashboardState {
   users: UserList[];
   setUsers: (users: UserList[]) => void;
   editUser: (userId: string, updatedData: Partial<UserList>) => void;
-  deleteUserStore: (userId: string) => void;
   getUser: (userId: string) => UserList | undefined;
 
   projects: Project[];
@@ -173,38 +172,6 @@ export const useDashboardStore = create<DashboardState>()(
       getUser: (id: string) => {
         return get().users.find((user) => user.id === id);
       },
-
-      deleteUserStore: (userId: string) => {
-        const state = get();
-
-        //find master
-        const masterUser = state.users.find(u => u.role === "master");
-        if (!masterUser) {
-          logger.error("Master user was not found while deleting user");
-          return;
-        }
-        const masterId = masterUser.id;
-
-        set((state) => ({
-          users: state.users.filter(user => user.id !== userId), //remove deleted user
-          sites: state.sites.map(s => //finds previously assigned site and assigns to master user
-            s.picId === userId ? { ...s, picId: masterId } : s
-          ),
-        }));
-      },
-
-
-
-      //call API for delete User
-      // try {
-      //   await dashboardApi.deleteUser(userId);
-      //   // success, no further action needed
-      // } catch (err) {
-      //   // rollback on error
-      //   set({ users: prevUsers });
-      //   console.error("Failed to delete user:", err);
-      // }
-
 
       getUserSites: (userId: string) => {
         const { users, sites } = get();

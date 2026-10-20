@@ -142,12 +142,3 @@ export const updateUser = async (
     updatedSites,
   };
 };
-
-export const deleteUser = async (userId: string, site?: Site) => {
-  await apiVoidRequest(`/user/${encodeURIComponent(userId)}`, {
-    method: "DELETE",
-    fallbackErrorMessage: "Failed to delete user",
-  });
-
-  return { statusCode: "OK", userId, site };
-};
