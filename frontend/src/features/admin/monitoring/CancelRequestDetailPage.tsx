@@ -219,7 +219,7 @@ export default function CancelRequestDetailPage() {
       <div className="mx-auto w-full max-w-[960px] space-y-10">
         <h1 className="text-foreground">取消申請内容の詳細</h1>
 
-        <section className="rounded-xl border border-border bg-card p-8 shadow-app-sm md:p-12">
+        <section className="rounded-lg border border-border bg-card p-8 md:p-12">
           <dl className="grid grid-cols-1 gap-x-16 gap-y-8 md:grid-cols-2">
             <DetailField label="申請ID">{cancelRequest.id}</DetailField>
             <DetailField label="ステータス">

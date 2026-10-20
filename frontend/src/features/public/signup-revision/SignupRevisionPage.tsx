@@ -332,7 +332,7 @@ export default function SignupRevisionPage() {
           <div className="flex items-start gap-3">
             <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" aria-hidden="true" />
             <div className="min-w-0">
-              <h2 id="rejection-reason-title" className="text-base font-semibold">
+              <h2 id="rejection-reason-title" className="text-base font-bold">
                 却下理由
               </h2>
               <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground">

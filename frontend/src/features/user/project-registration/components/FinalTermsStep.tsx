@@ -134,25 +134,25 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
           <div className="max-h-[600px] overflow-y-auto p-6 border rounded-lg">
             <div className="text-sm leading-relaxed space-y-6">
               <section>
-                <h3 className="font-semibold mb-2">(名称)</h3>
-                <h4 className="font-semibold mb-2">第1条</h4>
+                <h3 className="font-bold mb-2">(名称)</h3>
+                <h4 className="font-bold mb-2">第1条</h4>
                 <p>本会の名称は、{resolvedProjectName} (以下「本会」という) とする。</p>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(目的)</h3>
-                <h4 className="font-semibold mb-2">第2条</h4>
+                <h3 className="font-bold mb-2">(目的)</h3>
+                <h4 className="font-bold mb-2">第2条</h4>
                 <p>本会は、{operatorName}が実施する「{projectOverview}」の一環として、会員が太陽光発電設備を使用することで削減された温室効果ガス排出量を、国内における地球温暖化対策のための排出削減・吸収量認証制度 (以下「Ｊ－クレジット制度」という) 実施要綱 (平成25年4月17日経済産業省、環境省、農林水産省策定) に基づきＪ－クレジットとしてＪ－クレジット制度認証委員会 (Ｊ－クレジット制度を管理する経済産業省、環境省、農林水産省が共同で設置した、Ｊ－クレジットの認証を行う委員会) より認証を受けることで、環境価値の「見える化」を図るとともに、創出されたＪ－クレジットを{operatorName}における{usePurpose}に利用することを目的とする。</p>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(運営・管理)</h3>
-                <h4 className="font-semibold mb-2">第3条</h4>
+                <h3 className="font-bold mb-2">(運営・管理)</h3>
+                <h4 className="font-bold mb-2">第3条</h4>
                 <p>本会の運営・管理は{operatorName} (以下「運営・管理者」という) が行う。</p>
               </section>
 
               <section>
-                <h4 className="font-semibold mb-2">第3条の2</h4>
+                <h4 className="font-bold mb-2">第3条の2</h4>
                 <p className="mb-2">運営・管理者はＪ－クレジット制度に関し、次に掲げる業務を行う。</p>
                 <ul className="list-disc pl-6 space-y-1">
                   <li>会員情報の管理・記録</li>
@@ -169,18 +169,18 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
               </section>
 
               <section>
-                <h4 className="font-semibold mb-2">第3条の3</h4>
+                <h4 className="font-bold mb-2">第3条の3</h4>
                 <p>運営・管理者として必要な事務は{operatorName}において行う。</p>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(会員)</h3>
-                <h4 className="font-semibold mb-2">第4条</h4>
+                <h3 className="font-bold mb-2">(会員)</h3>
+                <h4 className="font-bold mb-2">第4条</h4>
                 <p>本規約において、会員とは、本規約に同意の上、運営・管理者に入会を申し込んだ者をいう。</p>
               </section>
 
               <section>
-                <h4 className="font-semibold mb-2">第4条の2</h4>
+                <h4 className="font-bold mb-2">第4条の2</h4>
                 <p className="mb-2">会員は次に掲げる全ての要件を満たすものとする。</p>
                 <ul className="list-decimal pl-6 space-y-1">
                   <li>事業所等であること（家庭でないこと）。</li>
@@ -195,14 +195,14 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(Ｊ－クレジット売却益の取り扱い)</h3>
-                <h4 className="font-semibold mb-2">第5条</h4>
+                <h3 className="font-bold mb-2">(Ｊ－クレジット売却益の取り扱い)</h3>
+                <h4 className="font-bold mb-2">第5条</h4>
                 <p>Ｊ－クレジットの売買による売却益は、{usePurpose}に活用することとする。</p>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(運営・管理者への協力)</h3>
-                <h4 className="font-semibold mb-2">第6条</h4>
+                <h3 className="font-bold mb-2">(運営・管理者への協力)</h3>
+                <h4 className="font-bold mb-2">第6条</h4>
                 <p className="mb-2">会員は、運営・管理者が求めるときは、次に掲げる全ての事項について同意し、協力しなければならない。</p>
                 <ul className="list-decimal pl-6 space-y-1">
                   <li>Ｊ－クレジット制度における各種申請に際し、運営・管理者が必要とする情報を提供すること。</li>
@@ -212,8 +212,8 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(報告)</h3>
-                <h4 className="font-semibold mb-2">第7条</h4>
+                <h3 className="font-bold mb-2">(報告)</h3>
+                <h4 className="font-bold mb-2">第7条</h4>
                 <p className="mb-2">運営・管理者は、次に掲げる事項について、会員に対して年1回報告することとする。</p>
                 <ul className="list-decimal pl-6 space-y-1">
                   <li>Ｊ－クレジット制度認証委員会への実績報告及び認証申請の結果について</li>
@@ -222,13 +222,13 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
               </section>
 
               <section>
-                <h4 className="font-semibold mb-2">第7条の2</h4>
+                <h4 className="font-bold mb-2">第7条の2</h4>
                 <p>前項の報告は、運営・管理者がウェブサイト上に結果概要を掲載することを以て行うこととする。</p>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(設備の処分等)</h3>
-                <h4 className="font-semibold mb-2">第8条</h4>
+                <h3 className="font-bold mb-2">(設備の処分等)</h3>
+                <h4 className="font-bold mb-2">第8条</h4>
                 <p className="mb-2">会員は、第11条に規定する会員資格の有効期間内において、次の各号の一に該当するときは、その旨を運営・管理者に届け出なければならない。</p>
                 <ul className="list-decimal pl-6 space-y-1">
                   <li>太陽光発電設備が毀損され、又は滅失したとき。</li>
@@ -237,14 +237,14 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(退会)</h3>
+                <h3 className="font-bold mb-2">(退会)</h3>
                 <p className="mb-2 text-small font-normal text-foreground">※補助金受給者を対象としたプロジェクト等で退会を禁ずる場合や、その他プロジェクトの実際に応じて適宜ご修正ください。</p>
-                <h4 className="font-semibold mb-2">第9条</h4>
+                <h4 className="font-bold mb-2">第9条</h4>
                 <p>会員は、本会を退会しようとするときは、運営・管理者にその旨を届け出、その承認を得なければならない。</p>
               </section>
 
               <section>
-                <h4 className="font-semibold mb-2">第9条の2</h4>
+                <h4 className="font-bold mb-2">第9条の2</h4>
                 <p className="mb-2">運営・管理者は、会員が次の各号の一に該当するときは、当該会員を退会させることができる。</p>
                 <ul className="list-decimal pl-6 space-y-1">
                   <li>第4条第2項に掲げる要件を満たしていないとき。</li>
@@ -254,32 +254,32 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(会費)</h3>
-                <h4 className="font-semibold mb-2">第10条</h4>
+                <h3 className="font-bold mb-2">(会費)</h3>
+                <h4 className="font-bold mb-2">第10条</h4>
                 <p>本会の会費は無料とする。</p>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(会員資格の有効期間)</h3>
-                <h4 className="font-semibold mb-2">第11条</h4>
+                <h3 className="font-bold mb-2">(会員資格の有効期間)</h3>
+                <h4 className="font-bold mb-2">第11条</h4>
                 <p>会員資格の有効期間は入会申込日若しくはプロジェクトが実施された日（※）のいずれか遅い日から8年間とする。ただし、運営・管理者が提出し、Ｊ－クレジット制度管理者が承認した、認証対象期間の延長に係るプロジェクト計画変更届に記載された手続きに沿って延長を行う場合、会員資格は8年間延長されるものとする。</p>
                 <p className="mt-1 text-small font-normal text-foreground">※プロジェクトが実施された日は、温室効果ガス排出量の削減又は温室効果ガスの除去をもたらす活動が実質的に開始された日とする。</p>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(個人情報・重要情報等の取扱い)</h3>
-                <h4 className="font-semibold mb-2">第12条</h4>
+                <h3 className="font-bold mb-2">(個人情報・重要情報等の取扱い)</h3>
+                <h4 className="font-bold mb-2">第12条</h4>
                 <p>運営・管理者は、あらかじめ会員の同意がある場合、本規約に規定する場合又は法令等に基づく要請がある場合を除き、会員から得られた個人情報、重要情報及びこれらに類する情報を第三者に提供又は開示しないこととする。</p>
               </section>
 
               <section>
-                <h3 className="font-semibold mb-2">(委任)</h3>
-                <h4 className="font-semibold mb-2">第13条</h4>
+                <h3 className="font-bold mb-2">(委任)</h3>
+                <h4 className="font-bold mb-2">第13条</h4>
                 <p>本規約に定めるもののほか、本会の入会に関し必要な事項は運営・管理者が定める。</p>
               </section>
 
               <section className="mt-8">
-                <h3 className="font-semibold mb-2">附則</h3>
+                <h3 className="font-bold mb-2">附則</h3>
                 <p>本規約は、{formattedStartedAt}から施行する。</p>
               </section>
             </div>

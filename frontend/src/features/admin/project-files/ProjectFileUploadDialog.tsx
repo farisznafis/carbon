@@ -141,7 +141,7 @@ export function ProjectFileUploadDialog({
           w-[calc(100%-2rem)]
           gap-0
           overflow-y-auto
-          rounded-xl
+          rounded-lg
           border
           border-border
           bg-card

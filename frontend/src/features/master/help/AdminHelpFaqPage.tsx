@@ -117,7 +117,7 @@ export default function AdminHelpFaqPage() {
               <p className="text-sm text-foreground tracking-wide">
                 サポート
               </p>
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
                 ヘルプ・FAQ
               </h1>
             </div>
@@ -154,7 +154,7 @@ export default function AdminHelpFaqPage() {
         {FAQ_SECTIONS.map((section) => (
           <Card key={section.category}>
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
+              <CardTitle className="flex items-center gap-2 text-base font-bold">
                 {section.category}
                 <StatusBadge className="font-normal">
                   {section.items.length}件

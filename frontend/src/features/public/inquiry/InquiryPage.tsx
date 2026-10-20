@@ -455,7 +455,7 @@ export default function InquiryPage() {
           <div
             className='
               overflow-hidden
-              rounded-2xl
+              rounded-lg
               border
               border-border/70
               bg-card

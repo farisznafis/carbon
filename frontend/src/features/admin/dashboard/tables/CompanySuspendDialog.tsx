@@ -38,7 +38,7 @@ export function CompanySuspendDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-[640px] rounded-xl p-8">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-[640px] rounded-lg p-8">
         <DialogHeader>
           <DialogTitle className="text-foreground">
             アカウントを停止しますか？
@@ -46,7 +46,7 @@ export function CompanySuspendDialog({
         </DialogHeader>
 
         <div className="space-y-5">
-          <div className="space-y-4 rounded-xl border border-border bg-card p-5">
+          <div className="space-y-4 rounded-lg bg-muted p-5">
             <div className="space-y-1">
               <p className="text-small text-foreground">企業名</p>
               <p className="break-all text-small font-bold text-foreground">

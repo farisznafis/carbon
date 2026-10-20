@@ -60,7 +60,7 @@ export function AccountMenu({
           </span>
           <span className="hidden min-w-0 max-w-56 flex-col items-start lg:flex">
             <span
-              className="w-full truncate text-left text-sm font-semibold leading-5 text-foreground"
+              className="w-full truncate text-left text-sm font-bold leading-5 text-foreground"
               title={displayName}
             >
               {displayName}
@@ -84,7 +84,7 @@ export function AccountMenu({
 
       <DropdownMenuContent align="end" className="w-80 max-w-[calc(100vw-2rem)] p-2">
         <DropdownMenuLabel className="min-w-0 px-3 py-3 font-normal">
-          <span className="block truncate text-base font-semibold text-foreground">
+          <span className="block truncate text-base font-bold text-foreground">
             {displayName}
           </span>
           <span className="mt-0.5 block truncate text-sm text-muted-foreground">

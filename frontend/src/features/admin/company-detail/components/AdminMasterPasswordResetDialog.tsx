@@ -27,7 +27,7 @@ export function AdminMasterPasswordResetDialog({
 }: AdminMasterPasswordResetDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="w-[calc(100vw-2rem)] max-w-md rounded-xl">
+      <AlertDialogContent className="w-[calc(100vw-2rem)] max-w-md rounded-lg">
         <AlertDialogHeader>
           <AlertDialogTitle>パスワードリセットの確認</AlertDialogTitle>
           <AlertDialogDescription>

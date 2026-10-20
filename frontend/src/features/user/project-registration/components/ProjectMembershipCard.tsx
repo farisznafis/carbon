@@ -20,28 +20,6 @@ type ProjectMembershipCardProps = Readonly<{
   isDownloadingPdf?: boolean;
 }>;
 
-/** Card accent per state; neutral 未入会 gets a neutral bar to match its badge. */
-const STATUS_ACCENT_CLASS_NAMES: Record<ProjectMembershipStatus, string> = {
-  available: 'border-l-border',
-  pending: 'border-l-warning',
-  joined: 'border-l-success',
-};
-
-const STATUS_PRESENTATION = {
-  available: {
-    ...MEMBERSHIP_STATUS_PRESENTATION.available,
-    accentClassName: STATUS_ACCENT_CLASS_NAMES.available,
-  },
-  pending: {
-    ...MEMBERSHIP_STATUS_PRESENTATION.pending,
-    accentClassName: STATUS_ACCENT_CLASS_NAMES.pending,
-  },
-  joined: {
-    ...MEMBERSHIP_STATUS_PRESENTATION.joined,
-    accentClassName: STATUS_ACCENT_CLASS_NAMES.joined,
-  },
-};
-
 // Builds the compact methodology reference shown on membership project cards.
 function formatMethodologyReference(
   project: SiteProject,
@@ -124,13 +102,12 @@ export function ProjectMembershipCard({
     status === 'joined';
 
   const statusPresentation =
-    STATUS_PRESENTATION[status];
+    MEMBERSHIP_STATUS_PRESENTATION[status];
 
   return (
     <Card
       className={cn(
-        'overflow-hidden rounded-lg border-l-4 border-border shadow-app-sm',
-        statusPresentation.accentClassName,
+        'overflow-hidden rounded-lg border border-border',
         showsJoinedState
           ? 'bg-muted'
           : status === 'pending'
@@ -141,7 +118,7 @@ export function ProjectMembershipCard({
       <CardContent className="grid min-w-0 p-0 xl:grid-cols-[minmax(0,1fr)_15rem]">
         {/* Project information */}
         <div className="min-w-0 px-5 py-5 sm:px-6">
-          <h3 className="min-w-0 break-words font-semibold leading-snug text-foreground">
+          <h3 className="min-w-0 break-words font-bold leading-snug text-foreground">
             {project.projectName || '-'}
           </h3>
 
@@ -151,7 +128,7 @@ export function ProjectMembershipCard({
                 方法論名称
               </dt>
 
-              <dd className="mt-1 break-words font-semibold text-foreground">
+              <dd className="mt-1 break-words font-bold text-foreground">
                 {project.methodName || '-'}
               </dd>
             </div>
@@ -161,7 +138,7 @@ export function ProjectMembershipCard({
                 方法論番号・バージョン
               </dt>
 
-              <dd className="mt-1 break-words font-semibold text-foreground">
+              <dd className="mt-1 break-words font-bold text-foreground">
                 {formatMethodologyReference(
                   project,
                 )}
@@ -173,7 +150,7 @@ export function ProjectMembershipCard({
                 排出削減活動
               </dt>
 
-              <dd className="mt-1 whitespace-pre-wrap break-words font-semibold text-foreground">
+              <dd className="mt-1 whitespace-pre-wrap break-words font-bold text-foreground">
                 {project.methodMainEmission ||
                   '-'}
               </dd>
@@ -186,7 +163,7 @@ export function ProjectMembershipCard({
           <div className="flex justify-end">
             <StatusBadge
               tone={statusPresentation.tone}
-              className="shrink-0 font-semibold"
+              className="shrink-0 font-bold"
             >
               {statusPresentation.label}
             </StatusBadge>

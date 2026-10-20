@@ -883,7 +883,7 @@ const ProjectDetail = () => {
 
               {/* Latest monitoring */}
               {recentLoading ? (
-                <SkeletonCard className='min-h-44 rounded-2xl' />
+                <SkeletonCard className='min-h-44 rounded-lg' />
               ) : (
                 <RecentDataBar row={monitoringRows[0]} />
               )}
@@ -938,7 +938,7 @@ const ProjectDetail = () => {
             >
               <section className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
                 <div className='flex items-center gap-3'>
-                  <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary'>
+                  <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary'>
                     <PackageCheck className='h-5 w-5' />
                   </span>
 
@@ -979,7 +979,7 @@ const ProjectDetail = () => {
               </section>
 
               {equipmentLoading ? (
-                <SkeletonCard className='min-h-40 rounded-2xl' />
+                <SkeletonCard className='min-h-40 rounded-lg' />
               ) : equipmentError ? (
                 <Card className={projectDetailCardClassName}>
                   <CardContent

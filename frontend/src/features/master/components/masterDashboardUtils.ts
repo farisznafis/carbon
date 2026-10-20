@@ -7,7 +7,7 @@ import type { UserList } from '@/api/users';
  * there is still exactly one interactive element per card.
  */
 export const clickableCardClassName =
-  'relative flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-app-sm transition-colors hover:border-primary/40 hover:bg-secondary/30 has-[button:focus-visible]:ring-2 has-[button:focus-visible]:ring-ring md:flex-row';
+  'relative flex flex-col overflow-hidden rounded-lg border border-border bg-card transition-colors hover:border-primary/40 hover:bg-secondary/30 has-[button:focus-visible]:ring-2 has-[button:focus-visible]:ring-ring md:flex-row';
 
 export const stretchedActionClassName =
   'after:absolute after:inset-0 after:content-[""]';

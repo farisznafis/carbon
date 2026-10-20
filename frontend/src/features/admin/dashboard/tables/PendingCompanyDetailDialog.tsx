@@ -75,7 +75,7 @@ export function PendingCompanyDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[92%] max-w-3xl overflow-y-auto rounded-xl">
+      <DialogContent className="max-h-[90vh] w-[92%] max-w-3xl overflow-y-auto rounded-lg">
         <DialogHeader>
           <DialogTitle>申請情報の詳細</DialogTitle>
         </DialogHeader>
@@ -146,7 +146,7 @@ export function PendingCompanyDetailDialog({
                       className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted"
                     >
                       <div className="flex flex-1 items-center gap-3 text-left">
-                        <span className="text-sm font-semibold">{methodology.methodology}</span>
+                        <span className="text-sm font-bold">{methodology.methodology}</span>
                         <span className="rounded bg-accent px-2 py-1 text-xs font-medium text-accent-foreground">
                           {methodology.hasSubsidy
                             ? `補助金: ${methodology.subsidyName || '未設定'}`

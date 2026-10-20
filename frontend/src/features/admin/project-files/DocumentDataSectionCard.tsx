@@ -57,7 +57,7 @@ export function DocumentDataSectionCard({ section, copiedKey, onCopy }: Document
 
   return (
     <section aria-labelledby={headingId} className="space-y-2">
-      <h3 id={headingId} className="px-1 text-sm font-semibold text-foreground">
+      <h3 id={headingId} className="px-1 text-sm font-bold text-foreground">
         {section.title}
       </h3>
 
@@ -75,7 +75,7 @@ export function DocumentDataSectionCard({ section, copiedKey, onCopy }: Document
                   <dt className="text-small text-muted-foreground">{item.label}</dt>
                   <dd
                     className={cn(
-                      'order-3 min-w-0 text-sm font-semibold text-foreground [overflow-wrap:anywhere] sm:order-none',
+                      'order-3 min-w-0 text-sm font-bold text-foreground [overflow-wrap:anywhere] sm:order-none',
                       (isNumericType(item.type) || item.type === 'DATE') && 'tabular-nums',
                       !text && 'font-normal text-muted-foreground',
                     )}

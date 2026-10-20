@@ -141,7 +141,7 @@ export function UserInvitationDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-xl overflow-y-auto rounded-xl"
+        className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-xl overflow-y-auto rounded-lg"
         hideCloseButton={isSubmitting}
         onEscapeKeyDown={(event) => {
           if (isSubmitting) event.preventDefault();

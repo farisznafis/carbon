@@ -29,7 +29,7 @@ export function EmissionReductionProgressCard({
   return (
     <section
       className={cn(
-        'flex min-h-[320px] flex-col rounded-2xl border border-border bg-card p-5 shadow-app-sm',
+        'flex min-h-[320px] flex-col rounded-lg border border-border bg-card p-5',
         className,
       )}
     >

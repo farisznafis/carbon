@@ -151,7 +151,7 @@ export function OperatorPermissionFilter({
         className="w-[min(26rem,calc(100vw-2rem))] p-0"
       >
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4">
-          <p className="text-sm font-semibold text-primary" aria-live="polite">
+          <p className="text-sm font-bold text-primary" aria-live="polite">
             選択済み {selectedPermissionCount} / {OPERATOR_PERMISSION_CODES.length}
           </p>
           <PermissionFilterCheckbox

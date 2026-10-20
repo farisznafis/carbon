@@ -96,8 +96,8 @@ function InvitationReadonlyItem({
       <dd
         className={
           breakAll
-            ? 'break-all text-sm font-semibold text-foreground'
-            : 'break-words text-sm font-semibold text-foreground'
+            ? 'break-all text-sm font-bold text-foreground'
+            : 'break-words text-sm font-bold text-foreground'
         }
       >
         {value}

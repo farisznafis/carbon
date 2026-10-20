@@ -175,7 +175,7 @@ export function GuideTour({ context, onClose }: Readonly<GuideTourProps>) {
             sideOffset={12}
             collisionPadding={16}
             updatePositionStrategy="always"
-            className="z-[101] w-[min(22rem,calc(100vw-2rem))] space-y-4 rounded-xl p-5"
+            className="z-[101] w-[min(22rem,calc(100vw-2rem))] space-y-4 rounded-lg p-5"
             onOpenAutoFocus={(event) => {
               event.preventDefault();
               nextButtonRef.current?.focus();

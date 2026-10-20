@@ -4,6 +4,7 @@ import type { ParticipationReviewFile } from '@/api/admin';
 import { getSiteProjectEquipmentPresignedUrl } from '@/api/site';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { formatFileType } from './participationReviewDisplay';
 
 type FileAction = 'preview' | 'download';
 
@@ -57,7 +58,7 @@ export function ParticipationReviewFileActions({
   const { toast } = useToast();
   const [activeAction, setActiveAction] = useState<FileAction | null>(null);
   const isBusy = activeAction !== null;
-  const fileLabel = file.fileType || getFileName(file);
+  const fileLabel = file.fileType ? formatFileType(file.fileType) : getFileName(file);
 
   const runFileAction = async (action: FileAction) => {
     if (!file.s3Key || isBusy) return;

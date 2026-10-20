@@ -36,7 +36,7 @@ export function HomeFaqSection({ contactPath }: HomeFaqSectionProps) {
                 <LifeBuoy className="h-5 w-5" aria-hidden="true" />
               </span> */}
               <div className="space-y-2">
-                <h3 className="text-lg font-semibold">解決しない場合はこちら</h3>
+                <h3 className="text-lg font-bold">解決しない場合はこちら</h3>
                 <p className="text-sm leading-6 text-muted-foreground">
                   サービスに関するご質問や導入のご相談は、お問い合わせフォームからご連絡ください。
                 </p>
@@ -51,7 +51,7 @@ export function HomeFaqSection({ contactPath }: HomeFaqSectionProps) {
         <Accordion type="single" collapsible defaultValue="multiple-sites">
           {HOME_FAQ_ITEMS.map((faq) => (
             <AccordionItem key={faq.value} value={faq.value}>
-              <AccordionTrigger className="py-5 text-left text-base font-semibold leading-7 hover:no-underline sm:text-lg 2xl:py-6">
+              <AccordionTrigger className="py-5 text-left text-base font-bold leading-7 hover:no-underline sm:text-lg 2xl:py-6">
                 {faq.question}
               </AccordionTrigger>
               <AccordionContent className="pb-5 text-sm leading-6 text-neutral-800 sm:text-base sm:leading-7 2xl:pb-6">

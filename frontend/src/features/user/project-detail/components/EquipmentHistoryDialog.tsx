@@ -111,7 +111,7 @@ function HistoryDetail({
         一覧へ戻る
       </ActionButton>
 
-      <section className="rounded-xl border border-border bg-card p-5">
+      <section className="rounded-lg border border-border bg-card p-5">
         <h3 className="mb-4 text-large text-foreground">履歴情報</h3>
         <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
           <HistoryValue label="履歴ID">{history.id ?? '-'}</HistoryValue>
@@ -257,7 +257,7 @@ export function EquipmentHistoryDialog({
     >
       <DialogContent
         hideCloseButton={selectedHistory !== null}
-        className="flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-6xl flex-col overflow-hidden rounded-xl"
+        className="flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-6xl flex-col overflow-hidden rounded-lg"
       >
         {selectedHistory && (
           <Button
@@ -292,7 +292,7 @@ export function EquipmentHistoryDialog({
               設備変更履歴を読み込んでいます...
             </div>
           ) : errorMessage ? (
-            <div className="space-y-4 rounded-xl border border-destructive/30 bg-destructive/5 p-8 text-center">
+            <div className="space-y-4 rounded-lg border border-destructive/30 bg-destructive/5 p-8 text-center">
               <p role="alert" className="text-small text-destructive">
                 {errorMessage}
               </p>

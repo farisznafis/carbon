@@ -37,7 +37,7 @@ function EquipmentDetailDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[90vh] w-[calc(100vw-2rem)] max-w-4xl overflow-y-auto rounded-xl'>
+      <DialogContent className='max-h-[90vh] w-[calc(100vw-2rem)] max-w-4xl overflow-y-auto rounded-lg'>
         <DialogHeader>
           <DialogTitle>設備詳細</DialogTitle>
           <DialogDescription>

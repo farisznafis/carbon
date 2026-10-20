@@ -247,7 +247,7 @@ function KpiCard({
   return (
     <Card
       className={cn(
-        'relative h-full min-h-[200px] overflow-hidden rounded-2xl border-border shadow-app-sm',
+        'relative h-full min-h-[200px] overflow-hidden rounded-lg border-border',
         variant === 'primary'
           ? 'border-primary bg-primary text-primary-foreground'
           : 'bg-card text-foreground',
@@ -340,10 +340,10 @@ const projectStateBadge: Record<
 
 // One label/value style for every project surface on this page (rows, 未入会
 // cards, progress), so the same field never renders at two sizes.
-const metaLabelClassName = 'text-subtle text-muted-foreground';
+const metaLabelClassName = 'text-label';
 const metaValueClassName = 'text-small font-medium text-foreground';
 const projectSurfaceClassName =
-  'rounded-2xl border border-border bg-card p-5 lg:px-[var(--card-padding)]';
+  'rounded-lg border border-border bg-card p-5 lg:px-[var(--card-padding)]';
 
 function ProjectIcon() {
   return (
@@ -476,7 +476,7 @@ function JoinedProjectRow({
             <button
               type='button'
               onClick={onAction}
-              className='text-left focus-visible:outline-none after:absolute after:inset-0 after:rounded-2xl after:content-[""]'
+              className='text-left focus-visible:outline-none after:absolute after:inset-0 after:rounded-lg after:content-[""]'
             >
               {project.projectName || '-'}
             </button>
@@ -857,8 +857,8 @@ const Dashboard = () => {
             </div>
             <dl className='ml-[60px] mt-2 grid gap-x-10 gap-y-3 sm:grid-cols-[max-content_minmax(0,1fr)]'>
               <div>
-                <dt className='text-small text-muted-foreground'>担当者</dt>
-                <dd className='mt-1 font-bold'>
+                <dt className='text-label'>担当者</dt>
+                <dd className='mt-1 font-medium'>
                   {isSiteLoading ? (
                     <InlineLoader label='担当者を読み込んでいます' />
                   ) : (
@@ -867,8 +867,8 @@ const Dashboard = () => {
                 </dd>
               </div>
               <div className='min-w-0'>
-                <dt className='text-small text-muted-foreground'>所在地</dt>
-                <dd className='mt-1 break-words font-bold'>
+                <dt className='text-label'>所在地</dt>
+                <dd className='mt-1 break-words font-medium'>
                   {isSiteLoading ? (
                     <InlineLoader label='所在地を読み込んでいます' />
                   ) : (
@@ -916,12 +916,12 @@ const Dashboard = () => {
               {Array.from({ length: 2 }, (_, index) => (
                 <SkeletonCard
                   key={index}
-                  className='min-h-24 rounded-2xl'
+                  className='min-h-24 rounded-lg'
                 />
               ))}
             </div>
           ) : projectsError ? (
-            <Card className='rounded-2xl border-border'>
+            <Card className='rounded-lg border-border'>
               <CardContent
                 className='p-10 text-center text-destructive'
                 role='alert'
@@ -945,7 +945,7 @@ const Dashboard = () => {
               ))}
             </ul>
           ) : (
-            <Card className='rounded-2xl border-border'>
+            <Card className='rounded-lg border-border'>
               <CardContent className='p-10 text-center text-foreground'>
                 入会中のプロジェクトがありません
               </CardContent>
@@ -983,12 +983,12 @@ const Dashboard = () => {
               {Array.from({ length: 3 }, (_, index) => (
                 <SkeletonCard
                   key={index}
-                  className='min-h-24 rounded-2xl'
+                  className='min-h-24 rounded-lg'
                 />
               ))}
             </div>
           ) : projectsError ? (
-            <Card className='rounded-2xl border-border'>
+            <Card className='rounded-lg border-border'>
               <CardContent
                 className='p-10 text-center text-destructive'
                 role='alert'
@@ -1003,7 +1003,7 @@ const Dashboard = () => {
               ))}
             </ul>
           ) : (
-            <Card className='rounded-2xl border-border'>
+            <Card className='rounded-lg border-border'>
               <CardContent className='p-10 text-center text-foreground'>
                 未入会のプロジェクトがありません
               </CardContent>

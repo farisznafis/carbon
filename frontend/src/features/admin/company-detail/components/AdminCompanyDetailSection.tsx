@@ -24,7 +24,7 @@ export function AdminCompanyDetailSection({
   className,
 }: AdminCompanyDetailSectionProps) {
   return (
-    <Card className={cn('rounded-xl', className)}>
+    <Card className={cn('rounded-lg', className)}>
       <CardHeader className="flex-row items-center gap-3 space-y-0 pb-4">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           {icon}

@@ -130,7 +130,7 @@ function RequiredFieldLabel({
 
 function AgreementCard({ children }: { children: ReactNode }) {
   return (
-    <Card className="rounded-xl border-border shadow-sm">
+    <Card className="rounded-lg border-border shadow-sm">
       <CardContent className="p-5 sm:p-6">{children}</CardContent>
     </Card>
   );
@@ -258,7 +258,7 @@ export const DynamicAgreementsStep = forwardRef<
       </p>
 
       <Form {...form}>
-        <Card className="rounded-xl border-border shadow-sm">
+        <Card className="rounded-lg border-border shadow-sm">
           <CardContent className="space-y-4 p-4 sm:space-y-6 sm:p-6">
             {checkboxAgreements.map((fieldName) => (
               <AgreementCard key={fieldName}>

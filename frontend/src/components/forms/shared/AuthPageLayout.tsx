@@ -75,11 +75,11 @@ export function AuthPageLayout({
       <div className="relative z-10 flex min-h-0 w-full overflow-y-auto px-4 py-8 sm:px-6">
         <div
           ref={cardRef}
-          className="m-auto w-full max-w-[30rem] rounded-2xl border border-white/70 bg-card/90 p-6 shadow-app-md backdrop-blur-md sm:p-8"
+          className="m-auto w-full max-w-[30rem] rounded-lg border border-white/70 bg-card/90 p-6 shadow-app-md backdrop-blur-md sm:p-8"
         >
           <header>
             {headerIcon && (
-              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-primary">
+              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-lg bg-secondary text-primary">
                 {headerIcon}
               </div>
             )}

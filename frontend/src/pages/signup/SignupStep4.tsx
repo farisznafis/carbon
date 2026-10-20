@@ -30,7 +30,7 @@ export const SignupStep4 = () => {
       </div>
 
       <div>
-        <h3 className="text-form-title font-semibold mb-2">登録完了！</h3>
+        <h3 className="text-form-title font-bold mb-2">登録完了！</h3>
         <p className="text-foreground text-lg">
           ご登録ありがとうございます
         </p>
@@ -42,7 +42,7 @@ export const SignupStep4 = () => {
               <Mail className="h-6 w-6 text-primary" />
             </div>
             <div className="text-left">
-              <h4 className="font-semibold mb-1">確認メールを送信しました</h4>
+              <h4 className="font-bold mb-1">確認メールを送信しました</h4>
               <p className="text-sm text-foreground">
                 <strong>{signupData.email}</strong>で登録申請を受け付けました。
 登録内容を確認後、管理者による承認が行われます。

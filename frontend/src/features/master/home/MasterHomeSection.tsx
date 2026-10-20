@@ -31,7 +31,7 @@ const COLLAPSED_ACTION_LIMIT = 6;
 const NOTICE_LIMIT = 5;
 
 const panelTitleClassName = 'text-subsection-title font-bold';
-const panelCardClassName = 'scroll-mt-24 rounded-xl border-border shadow-app-sm';
+const panelCardClassName = 'scroll-mt-24 rounded-lg border-border';
 /** On xl the side panels split the chart's height and scroll inside instead of growing. */
 const sidePanelClassName = 'flex flex-col xl:min-h-0 xl:flex-1 xl:overflow-hidden';
 const sidePanelBodyClassName = 'xl:min-h-0 xl:flex-1 xl:overflow-y-auto';
@@ -347,7 +347,7 @@ export function MasterHomeSection() {
     return (
       <div className="space-y-section">
         {header}
-        <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center text-small text-destructive">
+        <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center text-small text-destructive">
           {home.error instanceof Error ? home.error.message : 'ダッシュボードデータの取得に失敗しました'}
         </div>
       </div>

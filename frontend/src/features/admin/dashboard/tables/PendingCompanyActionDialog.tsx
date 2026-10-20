@@ -38,7 +38,7 @@ export function PendingCompanyActionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-[640px] rounded-xl p-8">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-[640px] rounded-lg p-8">
         <DialogHeader>
           <DialogTitle className="text-foreground">
             {isApprove
@@ -54,7 +54,7 @@ export function PendingCompanyActionDialog({
               : 'この操作を行うと、申請者のアカウントは作成されません。却下理由を入力してください。'}
           </p>
 
-          <div className="space-y-4 rounded-xl border border-border bg-card p-5">
+          <div className="space-y-4 rounded-lg bg-muted p-5">
             <div className="space-y-1">
               <p className="text-small text-foreground">メールアドレス</p>
               <p className="break-all text-large font-bold text-foreground">

@@ -52,13 +52,13 @@ describe('NotificationsList', () => {
 
     const notificationCards = screen.getAllByRole('listitem');
     notificationCards.forEach((notificationCard) => {
-      expect(notificationCard).toHaveClass('rounded-xl', 'border', 'p-4');
+      expect(notificationCard).toHaveClass('rounded-lg', 'px-3', 'py-4');
     });
     expect(
       within(notificationCards[0]).getByText(
         'プロジェクト申請が承認されました',
       ),
-    ).toHaveClass('font-semibold');
+    ).toHaveClass('font-bold');
     expect(notificationCards[0]).toHaveClass('bg-card');
     expect(
       within(notificationCards[0]).getByText(

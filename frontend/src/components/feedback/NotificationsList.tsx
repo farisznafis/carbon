@@ -112,7 +112,7 @@ export function NotificationsList({
 
   return (
     <>
-      <ul className='space-y-3'>
+      <ul className='divide-y divide-border'>
         {orderedNotifications.map((notification) => {
           const isProcessing = processingNotificationIds.includes(
             notification.id,
@@ -125,7 +125,7 @@ export function NotificationsList({
               key={notification.id}
               aria-busy={isProcessing || undefined}
               className={cn(
-                'relative rounded-xl border border-border p-4 shadow-app-sm transition-colors hover:border-primary/50 hover:bg-secondary/20',
+                'relative rounded-lg px-3 py-4 transition-colors hover:bg-muted',
                 isRead ? 'bg-muted/40' : 'bg-card',
               )}
             >
@@ -133,7 +133,7 @@ export function NotificationsList({
                 type='button'
                 variant='ghost'
                 aria-label={`「${notificationTitle}」の詳細を表示`}
-                className='absolute inset-0 z-0 h-full w-full rounded-xl p-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+                className='absolute inset-0 z-0 h-full w-full rounded-lg p-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
                 onClick={(event) =>
                   handleOpenNotification(notification, event.currentTarget)
                 }
@@ -152,7 +152,7 @@ export function NotificationsList({
                       <p
                         className={cn(
                           'break-words leading-6',
-                          isRead ? 'font-normal' : 'font-semibold',
+                          isRead ? 'font-normal' : 'font-bold',
                         )}
                       >
                         {notificationTitle}

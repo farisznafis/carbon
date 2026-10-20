@@ -122,7 +122,7 @@ export function MasterSidebarCompanyContext({
                 'flex h-9 w-9 items-center justify-center',
                 'rounded-lg',
                 'bg-accent text-accent-foreground',
-                'text-xs font-semibold',
+                'text-xs font-bold',
                 'outline-none',
                 'focus-visible:ring-2',
                 'focus-visible:ring-sidebar-ring',

@@ -23,7 +23,7 @@ export function AdminBusinessAccessBoundary({ children }: { children: ReactNode 
       <main className="mx-auto w-full max-w-lg px-4 py-12 sm:px-6">
         <Card>
           <CardContent className="p-8 text-center">
-            <p className="font-semibold text-foreground">権限情報を取得できませんでした。</p>
+            <p className="font-bold text-foreground">権限情報を取得できませんでした。</p>
             <p className="mt-2 text-small text-muted-foreground">通信状況を確認して、もう一度お試しください。</p>
             <ActionButton kind="retry" className="mt-6" onClick={() => void permissions.retry()} />
           </CardContent>

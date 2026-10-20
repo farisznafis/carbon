@@ -192,11 +192,11 @@ export function ProjectDocumentDataPanel({ projectId }: Readonly<{ projectId: st
 
         <article
           aria-labelledby="document-data-title"
-          className="min-w-0 rounded-lg border border-border bg-card shadow-app-sm"
+          className="min-w-0 rounded-lg border border-border bg-card"
         >
           <header className="flex flex-col gap-3 border-b border-border px-5 py-4 md:flex-row md:items-center md:justify-between">
             <div className="min-w-0 space-y-1">
-              <h2 id="document-data-title" className="text-lg font-semibold text-foreground">
+              <h2 id="document-data-title" className="text-lg font-bold text-foreground">
                 {activeDefinition.label}
               </h2>
               <p className="text-small text-muted-foreground">{activeDefinition.description}</p>

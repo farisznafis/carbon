@@ -165,7 +165,7 @@ export function MonitoringDeletionHistoryTable({
                     </button>
                   </PopoverTrigger>
                   <PopoverContent align="start" className="w-80 space-y-1">
-                    <p className="text-subtle font-semibold text-destructive">
+                    <p className="text-subtle font-bold text-destructive">
                       失敗理由
                     </p>
                     <p className="whitespace-pre-wrap break-words text-small text-foreground">

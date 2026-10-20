@@ -56,7 +56,7 @@ export function PendingCompanyApplicationDetail({
           {/* Title row */}
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1.5 min-w-0">
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground truncate">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground truncate">
                 {companyName}
               </h1>
 
@@ -118,7 +118,7 @@ export function PendingCompanyApplicationDetail({
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-muted-foreground" />
-                <CardTitle className="text-lg font-semibold">企業情報</CardTitle>
+                <CardTitle className="text-lg font-bold">企業情報</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
@@ -138,7 +138,7 @@ export function PendingCompanyApplicationDetail({
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <UserRound className="h-5 w-5 text-muted-foreground" />
-                <CardTitle className="text-lg font-semibold">責任者情報</CardTitle>
+                <CardTitle className="text-lg font-bold">責任者情報</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
@@ -159,7 +159,7 @@ export function PendingCompanyApplicationDetail({
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               <BriefcaseBusiness className="h-5 w-5 text-muted-foreground" />
-              <CardTitle className="text-lg font-semibold">参加希望プロジェクト</CardTitle>
+              <CardTitle className="text-lg font-bold">参加希望プロジェクト</CardTitle>
             </div>
           </CardHeader>
           <CardContent>

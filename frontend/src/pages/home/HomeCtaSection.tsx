@@ -58,7 +58,7 @@ export function HomeCtaSection({ signupPath }: HomeCtaSectionProps) {
               className='
                 mb-2
                 text-small
-                font-semibold
+                font-bold
                 text-[hsl(var(--blue-200))]
               '
             >

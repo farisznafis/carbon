@@ -122,7 +122,7 @@ export const Confirmation: React.FC<ConfirmationProps> = ({
       <div
         className={[
           "bg-white shadow-lg w-full p-6",
-          asModal ? `${styles.content}` : "max-w-lg mx-auto rounded-xl",
+          asModal ? `${styles.content}` : "max-w-lg mx-auto rounded-lg",
         ].join(" ")}
       >
         <h2 className="text-2xl font-bold text-center mb-6">

@@ -26,15 +26,15 @@ export function MasterStatCard({
       <span className="text-body !font-bold text-foreground">{label}</span>
       <span className="flex items-baseline gap-1.5">
         <span className="text-metric font-bold leading-none tracking-tight tabular-nums text-foreground">{value}</span>
-        {unit && <span className="text-base font-semibold text-foreground">{unit}</span>}
+        {unit && <span className="text-base font-bold text-foreground">{unit}</span>}
       </span>
       {note && <span className="text-subtle text-muted-foreground">{note}</span>}
     </>
   );
-  const bodyClassName = 'flex h-full w-full flex-col gap-3 rounded-xl p-card text-left';
+  const bodyClassName = 'flex h-full w-full flex-col gap-3 rounded-lg p-card text-left';
 
   return (
-    <Card className={cn('h-full rounded-xl border-border shadow-app-sm', onClick && 'transition-colors hover:border-primary/40')}>
+    <Card className={cn('h-full rounded-lg border-border', onClick && 'transition-colors hover:border-primary/40')}>
       {onClick ? (
         <button
           type="button"

@@ -40,7 +40,7 @@ describe('ParticipationReviewFileActions', () => {
     render(<ParticipationReviewFileActions file={file} />);
 
     await user.click(
-      screen.getByRole('button', { name: 'solar_contractを表示' }),
+      screen.getByRole('button', { name: '太陽光発電電力受給契約確認書を表示' }),
     );
 
     await waitFor(() => {
@@ -76,7 +76,7 @@ describe('ParticipationReviewFileActions', () => {
 
     await user.click(
       screen.getByRole('button', {
-        name: 'solar_contractをダウンロード',
+        name: '太陽光発電電力受給契約確認書をダウンロード',
       }),
     );
 

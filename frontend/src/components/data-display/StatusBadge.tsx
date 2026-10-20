@@ -22,7 +22,7 @@ type StatusBadgeProps = Readonly<{
   className?: string;
 }>;
 
-const statusBadgeToneClassNames: Record<
+export const statusBadgeToneClassNames: Record<
   StatusBadgeTone,
   string
 > = {

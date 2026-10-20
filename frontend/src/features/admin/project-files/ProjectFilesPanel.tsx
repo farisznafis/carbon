@@ -201,7 +201,7 @@ export function ProjectFilesPanel({
               <div className="flex items-baseline justify-between gap-3 px-1">
                 <h3
                   id={`project-file-stage-${stage}`}
-                  className="text-sm font-semibold text-foreground"
+                  className="text-sm font-bold text-foreground"
                 >
                   {label}
                 </h3>
@@ -209,7 +209,7 @@ export function ProjectFilesPanel({
                   {uploadedCount} / {stageGroups.length} アップロード済
                 </span>
               </div>
-              <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card shadow-app-sm">
+              <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
                 {stageGroups.flatMap((group) =>
                   // 入会届 sits with the monitoring forms but is not one of the versioned types.
                   group.type === 'ACTIVITY_RESULT_LIST'

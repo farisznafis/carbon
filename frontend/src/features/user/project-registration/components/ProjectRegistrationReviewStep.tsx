@@ -110,7 +110,7 @@ export function ProjectRegistrationReviewStep({
               {equipments.map((equipment, index) => (
                 <section key={equipment.id} className="space-y-5">
                   {equipments.length > 1 && (
-                    <h4 className="font-semibold text-foreground">
+                    <h4 className="font-bold text-foreground">
                       設備 {index + 1}
                     </h4>
                   )}

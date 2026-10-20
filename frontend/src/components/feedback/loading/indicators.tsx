@@ -104,7 +104,7 @@ export function LoadingPanel({
       aria-busy="true"
       aria-label={message}
       className={cn(
-        'flex min-h-36 cursor-wait select-none items-center justify-center rounded-xl border border-border bg-card/95 p-5 text-center',
+        'flex min-h-36 cursor-wait select-none items-center justify-center rounded-lg border border-border bg-card/95 p-5 text-center',
         className,
       )}
       {...props}

@@ -31,7 +31,7 @@ export function AdminProjectOverviewCards({
 
   if (projectsError) {
     return (
-      <Card className="rounded-xl border-border shadow-app-sm">
+      <Card className="rounded-lg border-border">
         <CardContent>
           <p role="alert" className="py-8 text-center text-small text-destructive">
             {projectsError}

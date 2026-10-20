@@ -145,7 +145,7 @@ function DetailErrorState({
   return (
     <main className="min-h-screen bg-background px-4 py-10 sm:px-6">
       <div className="mx-auto w-full max-w-7xl">
-        <Card className="mx-auto max-w-lg rounded-xl">
+        <Card className="mx-auto max-w-lg rounded-lg">
           <CardHeader>
             <CardTitle className="text-base font-bold text-foreground">
               企業情報を取得できませんでした
@@ -443,7 +443,7 @@ export default function AdminCompanyDetailPage() {
             {/* Title row */}
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1.5 min-w-0">
-                <h1 className="text-2xl font-semibold tracking-tight text-foreground truncate">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground truncate">
                   {company.nameJA || `企業ID: ${company.companyId}`}
                 </h1>
 
@@ -536,7 +536,7 @@ export default function AdminCompanyDetailPage() {
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-muted-foreground" />
-                <CardTitle className="text-lg font-semibold">企業情報</CardTitle>
+                <CardTitle className="text-lg font-bold">企業情報</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
@@ -559,7 +559,7 @@ export default function AdminCompanyDetailPage() {
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-5 w-5 text-muted-foreground" />
-                  <CardTitle className="text-lg font-semibold">
+                  <CardTitle className="text-lg font-bold">
                     マスターアカウント
                   </CardTitle>
                 </div>
@@ -614,7 +614,7 @@ export default function AdminCompanyDetailPage() {
         {/* ── 関連情報 (Tabs) ──────────────────────────────────────────────── */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold">関連情報</CardTitle>
+            <CardTitle className="text-lg font-bold">関連情報</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="users">
@@ -649,7 +649,7 @@ export default function AdminCompanyDetailPage() {
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               <Clock3 className="h-5 w-5 text-muted-foreground" />
-              <CardTitle className="text-lg font-semibold">登録・更新情報</CardTitle>
+              <CardTitle className="text-lg font-bold">登録・更新情報</CardTitle>
             </div>
           </CardHeader>
           <CardContent>

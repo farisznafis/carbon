@@ -27,7 +27,7 @@ export function NotificationDetailDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className='max-h-[90vh] w-[calc(100vw-2rem)] max-w-lg overflow-y-auto rounded-xl p-6 sm:p-8'
+        className='max-h-[90vh] w-[calc(100vw-2rem)] max-w-lg overflow-y-auto rounded-lg p-6 sm:p-8'
         onCloseAutoFocus={(event) => {
           if (returnFocusRef.current) {
             event.preventDefault();
@@ -44,7 +44,7 @@ export function NotificationDetailDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className='rounded-xl border border-border bg-card p-4'>
+        <div className='rounded-lg border border-border bg-card p-4'>
           <p className='whitespace-pre-wrap break-words text-body text-foreground'>
             {notification.message || '-'}
           </p>

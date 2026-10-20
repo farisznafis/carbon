@@ -39,7 +39,7 @@ const EMISSION_SERIES = [
 ] as const;
 
 const panelTitleClassName = 'text-subsection-title font-bold';
-const panelCardClassName = 'rounded-xl border-border shadow-app-sm';
+const panelCardClassName = 'rounded-lg border-border';
 
 const monthNumber = (month: string) => Number(month.split('-')[1]);
 const formatDate = (value?: string | null) => (value ? formatChartPeriod(value.slice(0, 10)) : '—');
@@ -265,7 +265,7 @@ export function MasterAnalyticsSection() {
       <div className="space-y-section">
         {header}
         {controls}
-        <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center text-small text-destructive">
+        <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center text-small text-destructive">
           {data.error instanceof Error ? data.error.message : 'データの取得に失敗しました'}
         </div>
       </div>
@@ -314,7 +314,7 @@ export function MasterAnalyticsSection() {
       </div>
 
       {!data.isBaseLoading && !data.hasTargets ? (
-        <div className="rounded-xl border border-border bg-card p-8 text-center text-small text-muted-foreground shadow-app-sm">
+        <div className="rounded-lg border border-border bg-card p-8 text-center text-small text-muted-foreground">
           参加中の拠点・プロジェクトがありません。入会が承認されると、ここに分析が表示されます。
         </div>
       ) : (

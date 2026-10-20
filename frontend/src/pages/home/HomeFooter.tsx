@@ -42,7 +42,7 @@ export function HomeFooter() {
           </div>
 
           <nav aria-label="ホームページ内ナビゲーション" className="space-y-4">
-            <p className="font-semibold text-foreground">ナビゲーション</p>
+            <p className="font-bold text-foreground">ナビゲーション</p>
             <ul className="space-y-3 text-sm ">
               {HOME_NAVIGATION_LINKS.map((link) => (
                 <li key={link.href}>
@@ -58,7 +58,7 @@ export function HomeFooter() {
           </nav>
 
           <address className="space-y-4 not-italic md:col-span-2 lg:col-span-1">
-            <p className="font-semibold text-foreground">接触</p>
+            <p className="font-bold text-foreground">接触</p>
             <ul className="space-y-3 text-sm text-foreground">
               <li className="flex items-start gap-3">
                 <MapPin

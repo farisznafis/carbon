@@ -13,7 +13,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ProjectCompletionDialog } from './ProjectCompletionDialog';
-import { formatProjectDateTime } from '../projectStatusPresentation';
+import { statusBadgeToneClassNames } from '@/components/data-display/StatusBadge';
+import { cn } from '@/lib/utils';
+import { formatProjectDateTime, getProjectStatusTone } from '../projectStatusPresentation';
 
 type ProjectTableProps = {
   projects: Project[];
@@ -27,7 +29,7 @@ type ProjectTableProps = {
 };
 
 const projectTableGridColumns =
-  'minmax(240px,1.6fr) minmax(100px,.5fr) minmax(240px,1.35fr) minmax(140px,.7fr) minmax(155px,.75fr)';
+  'minmax(220px,1.5fr) minmax(200px,.9fr) minmax(200px,1.1fr) minmax(172px,.75fr) minmax(150px,.7fr)';
 
 const projectStatusOptions: ProjectStatus[] = [
   '作成済み',
@@ -41,98 +43,12 @@ const projectStatusOptions: ProjectStatus[] = [
   '終了',
 ];
 
-const statusColors: Record<
-  ProjectStatus,
-  { bg: string; text: string; border: string }
-> = {
-  作成済み: {
-    bg: '#F1F5F9',
-    text: '#465467',
-    border: '#CBD5E1',
-  },
-  準備中: {
-    bg: '#FEF3C7',
-    text: '#8A3908',
-    border: '#FCD34D',
-  },
-  変更中: {
-    bg: '#DBEAFE',
-    text: '#0C3CC3',
-    border: '#93C5FD',
-  },
-  妥当性確認処理: {
-    bg: '#E0E7FF',
-    text: '#3D32C0',
-    border: '#A5B4FC',
-  },
-  却下: {
-    bg: '#FEE2E2',
-    text: '#9B0909',
-    border: '#FCA5A5',
-  },
-  実施中: {
-    bg: '#DCFCE7',
-    text: '#006024',
-    border: '#86EFAC',
-  },
-  検証中: {
-    bg: '#CCFBF1',
-    text: '#005B54',
-    border: '#5EEAD4',
-  },
-  クレジット申請中: {
-    bg: '#F3E8FF',
-    text: '#6F13BF',
-    border: '#D8B4FE',
-  },
-  終了: {
-    bg: '#E5E7EB',
-    text: '#000000',
-    border: '#D1D5DB',
-  },
-};
-
-const projectStatusAliases: Partial<Record<string, ProjectStatus>> = {
-  CREATED: '作成済み',
-  PREPARING: '準備中',
-  CHANGING: '変更中',
-  VALIDATING: '妥当性確認処理',
-  REJECTED: '却下',
-  ACTIVE: '実施中',
-  RUNNING: '実施中',
-  VERIFYING: '検証中',
-  VERIFICATION: '検証中',
-  CREDIT_APPLICATION: 'クレジット申請中',
-  ENDED: '終了',
-  INACTIVE: '終了',
-};
-
 function isProjectStatus(
   status: string,
 ): status is ProjectStatus {
   return projectStatusOptions.includes(
     status as ProjectStatus,
   );
-}
-
-function getProjectStatusColors(
-  status: Project['projectStatus'],
-) {
-  const normalizedStatus =
-    String(status).trim();
-
-  if (isProjectStatus(normalizedStatus)) {
-    return statusColors[normalizedStatus];
-  }
-
-  const aliasedStatus =
-    projectStatusAliases[
-      normalizedStatus.toUpperCase()
-    ];
-
-  return statusColors[
-    aliasedStatus ?? '作成済み'
-  ];
 }
 
 function getStatusOptions(
@@ -204,12 +120,20 @@ function MethodologyIdentityCell({
 
   return (
     <div className="min-w-0 leading-5">
-      <div className="font-medium text-foreground">
-        {methodologyId || '-'}
+      <div className="font-medium text-foreground [word-break:keep-all]">
+        {/* Only break after the hyphen so the number never splits; the text is unchanged. */}
+        {project.methodCategory && project.methodNumber ? (
+          <>
+            {project.methodCategory}-<wbr />
+            <span className="whitespace-nowrap">{project.methodNumber}</span>
+          </>
+        ) : (
+          methodologyId || '-'
+        )}
       </div>
 
       {project.methodologyVersion ? (
-        <div className="mt-0.5 text-small text-foreground">
+        <div className="mt-0.5 text-small text-muted-foreground">
           {project.methodologyVersion}
         </div>
       ) : null}
@@ -331,11 +255,6 @@ export function ProjectTable({
           project.projectStatus,
 
         render: (project) => {
-          const statusColor =
-            getProjectStatusColors(
-              project.projectStatus,
-            );
-
           const statusIsTerminal =
             isTerminalProjectStatus(
               project.projectStatus,
@@ -366,12 +285,10 @@ export function ProjectTable({
                 }
               >
                 <SelectTrigger
-                  className="h-8 w-full rounded-full border px-3 text-table font-bold shadow-none focus:ring-1"
-                  style={{
-                    backgroundColor: statusColor.bg,
-                    color: statusColor.text,
-                    borderColor: statusColor.border,
-                  }}
+                  className={cn(
+                    'h-8 w-full rounded-full border px-3 text-table font-medium shadow-none focus:ring-1 [@media(pointer:coarse)]:h-11',
+                    statusBadgeToneClassNames[getProjectStatusTone(String(project.projectStatus))],
+                  )}
                 >
                   <SelectValue />
                 </SelectTrigger>

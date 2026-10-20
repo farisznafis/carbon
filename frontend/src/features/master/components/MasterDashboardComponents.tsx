@@ -78,7 +78,7 @@ export function DashboardEmptyState({
         'flex flex-col items-center justify-center',
       )}
     >
-      {title && <h3 className="text-base font-semibold text-foreground">{title}</h3>}
+      {title && <h3 className="text-base font-bold text-foreground">{title}</h3>}
       {description && (
         <p className={cn('max-w-2xl text-muted-foreground', title && 'mt-2')}>
           {description}
@@ -130,24 +130,24 @@ export function UserDashboardCard({
           )}
         </div>
 
-        <div className="pl-3 mt-2 grid gap-x-8 gap-y-2 text-sm font-bold leading-6 text-foreground xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)]">
+        <div className="pl-3 mt-2 grid gap-x-8 gap-y-2 text-sm font-medium leading-6 text-foreground xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)]">
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <Mail className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="shrink-0 text-foreground">
+            <span className="shrink-0 font-normal text-muted-foreground">
               メールアドレス
             </span>
             <span className="min-w-0 truncate" title={user.email || undefined}>{user.email || '-'}</span>
           </span>
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <User className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="shrink-0 text-foreground">
+            <span className="shrink-0 font-normal text-muted-foreground">
               社員名
             </span>
             <span className="truncate">{user.username || '-'}</span>
           </span>
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <Building2 className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="shrink-0 text-foreground">
+            <span className="shrink-0 font-normal text-muted-foreground">
               拠点
             </span>
             {user.role === 'master' ? (

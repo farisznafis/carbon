@@ -114,7 +114,7 @@ export default function ContributionTimeline({
   return (
     <div
       className={cn(
-        'group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-app-sm',
+        'group relative flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card p-5',
         className,
       )}
     >
@@ -217,7 +217,7 @@ export default function ContributionTimeline({
               fontSize='10'
               fontFamily='monospace'
               textAnchor='middle'
-              className='font-semibold opacity-80'
+              className='font-bold opacity-80'
             >
               {formatDateLabel(item.timestamp)}
             </text>
@@ -253,7 +253,7 @@ export default function ContributionTimeline({
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className='pointer-events-none absolute z-30 w-56 rounded-xl border border-border bg-card p-3.5 text-left shadow-app-md'
+              className='pointer-events-none absolute z-30 w-56 rounded-lg border border-border bg-card p-3.5 text-left shadow-app-md'
               style={{
                 left: tooltipLeft,
                 top: '5%',

@@ -41,7 +41,7 @@ export function ProjectMembershipList({
       <div className="mb-4 flex items-center justify-between gap-3">
         <Heading
           id="public-projects-heading"
-          className="text-base font-semibold text-foreground"
+          className="text-base font-bold text-foreground"
         >
           公開中のプロジェクト
         </Heading>

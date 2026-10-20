@@ -167,7 +167,7 @@ export function ProjectMonitoringDataTab({
   return (
     <>
       <section className='flex items-center gap-3'>
-        <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary'>
+        <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary'>
           <ClipboardList className='h-5 w-5' aria-hidden='true' />
         </span>
         <div>
@@ -180,7 +180,7 @@ export function ProjectMonitoringDataTab({
       </section>
 
       {recordsQuery.isPending ? (
-        <SkeletonCard className='min-h-40 rounded-2xl' />
+        <SkeletonCard className='min-h-40 rounded-lg' />
       ) : loadError ? (
         <Card className={projectDetailCardClassName}>
           <CardContent className='flex flex-col items-center gap-3 p-6 text-center'>

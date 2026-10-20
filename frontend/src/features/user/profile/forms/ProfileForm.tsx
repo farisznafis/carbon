@@ -124,7 +124,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">法人情報</h3>
+          <h3 className="text-lg font-bold">法人情報</h3>
 
           <FormField
             control={form.control}
@@ -284,7 +284,7 @@ export function ProfileForm({ onNext, onBack, onDelete }: Readonly<ProfileFormPr
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">個人情報</h3>
+          <h3 className="text-lg font-bold">個人情報</h3>
 
           <div className="grid grid-cols-2 gap-4">
             <FormField

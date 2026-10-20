@@ -31,7 +31,7 @@ export function SidebarNavItem({
         'relative flex min-h-11 items-center gap-3 rounded-lg px-3.5 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         collapsed && 'justify-center px-0',
         item.isActive && (
-          'bg-sidebar-accent font-semibold text-sidebar-accent-foreground '
+          'bg-sidebar-accent font-bold text-sidebar-accent-foreground '
           // 'before:absolute before:bottom-2 before:left-0 before:top-2 ' +
           // 'before:w-1 before:rounded-full before:bg-primary'
         ),

@@ -40,20 +40,20 @@ export function MasterSiteCard({
         <dl className="grid gap-x-8 gap-y-1.5 text-sm leading-6 text-foreground sm:grid-cols-[minmax(0,auto)_minmax(0,1fr)]">
           <div className="flex min-w-0 items-center gap-1.5">
             <User className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-            <dt className="shrink-0 text-muted-foreground">責任者</dt>
-            <dd className="truncate font-bold">{formatPersonName(site.picLastName, site.picFirstName)}</dd>
+            <dt className="shrink-0 font-normal text-muted-foreground">責任者</dt>
+            <dd className="truncate font-medium">{formatPersonName(site.picLastName, site.picFirstName)}</dd>
           </div>
           <div className="flex min-w-0 items-center gap-1.5">
             <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-            <dt className="shrink-0 text-muted-foreground">所在地</dt>
-            <dd className="truncate font-bold" title={address}>{address}</dd>
+            <dt className="shrink-0 font-normal text-muted-foreground">所在地</dt>
+            <dd className="truncate font-medium" title={address}>{address}</dd>
           </div>
         </dl>
 
         {/* Labelled like 責任者 / 所在地 above, so the chips read as projects rather than loose tags. */}
         <div className="flex min-w-0 items-start gap-1.5 text-sm leading-6">
           <FolderKanban className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <span id={`site-${site.siteId}-projects`} className="shrink-0 text-muted-foreground">
+          <span id={`site-${site.siteId}-projects`} className="shrink-0 font-normal text-muted-foreground">
             参加プロジェクト
             {projects.length > 0 ? (
               <span className="tabular-nums">（{projects.length}件）</span>

@@ -23,7 +23,7 @@ export function OtherEquipmentForm({ data, onChange }: OtherEquipmentFormProps) 
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <h3 className="font-semibold text-lg">旧設備情報</h3>
+        <h3 className="font-bold text-lg">旧設備情報</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="old-equipment-name">旧設備名 *</Label>
@@ -56,7 +56,7 @@ export function OtherEquipmentForm({ data, onChange }: OtherEquipmentFormProps) 
       </div>
 
       <div className="space-y-4">
-        <h3 className="font-semibold text-lg">新設備情報</h3>
+        <h3 className="font-bold text-lg">新設備情報</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="new-equipment-name">新設備名 *</Label>

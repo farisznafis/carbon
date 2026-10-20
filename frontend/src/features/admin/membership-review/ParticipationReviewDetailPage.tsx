@@ -447,7 +447,7 @@ export default function ParticipationReviewDetailPage() {
         {!isReviewable && (
           <div
             role="status"
-            className="rounded-xl border border-border bg-muted/30 px-5 py-4 text-small text-foreground"
+            className="rounded-lg border border-border bg-muted/30 px-5 py-4 text-small text-foreground"
           >
             {getReadOnlyReviewMessage(reviewStatus)}
           </div>

@@ -21,8 +21,8 @@ function DetailField({
 }) {
   return (
     <div className={fullWidth ? 'space-y-1.5 md:col-span-2' : 'space-y-1.5'}>
-      <dt className="text-small font-bold text-foreground">{label}</dt>
-      <dd className="break-words text-body text-foreground">{children}</dd>
+      <dt className="text-label">{label}</dt>
+      <dd className="break-words text-body font-medium text-foreground">{children}</dd>
     </div>
   );
 }
@@ -147,7 +147,7 @@ export function ParticipationReviewSections({
                 {equipment.evidenceDocuments.map((document, index) => (
                   <li
                     key={`${document}-${index}`}
-                    className="rounded-lg border border-border bg-muted/20 px-4 py-3 text-small"
+                    className="rounded-lg bg-muted px-4 py-3 text-small"
                   >
                     {document}
                   </li>
@@ -167,7 +167,7 @@ export function ParticipationReviewSections({
                 {equipment.files.map((file, index) => (
                   <li
                     key={file.fileId || file.s3Key || String(index)}
-                    className="rounded-lg border border-border bg-muted/20 px-4 py-3"
+                    className="rounded-lg bg-muted px-4 py-3"
                   >
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0">

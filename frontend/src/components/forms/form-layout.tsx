@@ -81,7 +81,7 @@ type FormPageTitleProps = React.HTMLAttributes<HTMLHeadingElement> & {
 };
 
 export function FormPageTitle({
-  as: Component = 'h2',
+  as: Component = 'h1',
   align = 'left',
   className,
   ...props
@@ -105,7 +105,7 @@ type FormPageHeaderProps = React.HTMLAttributes<HTMLDivElement> & {
 };
 
 export function FormPageHeader({
-  icon,
+  icon: _icon,
   title,
   description,
   className,
@@ -116,15 +116,9 @@ export function FormPageHeader({
       className={cn('text-center', className)}
       {...props}
     >
-      {icon && (
-        <div className='
-        mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-accent-foreground'>
-          {icon}
-        </div>
-      )}
-      <h2>{title}</h2>
+      <h1>{title}</h1>
       {description && (
-        <p className='mt-2 text-sm font-medium leading-5 text-foreground'>
+        <p className='mt-2 text-muted-foreground'>
           {description}
         </p>
       )}
@@ -224,7 +218,7 @@ export function FormCard({
   return (
     <div
       className={cn(
-        'rounded-xl border border-border bg-card p-5 shadow-app-sm sm:p-8',
+        'rounded-lg border border-border bg-card p-5 sm:p-8',
         className,
       )}
       {...props}

@@ -2,7 +2,6 @@ import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
-  darkMode: ["class"],
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
@@ -20,14 +19,14 @@ export default {
 			xl: '1200px',
 		},
 		fontSize: {
-			'page-title': ['var(--page-title-size)', { lineHeight: '1.1875' }],
-			'form-title': ['var(--form-title-size)', { lineHeight: '1.2' }],
-			'section-title': ['var(--section-title-size)', { lineHeight: '1.25' }],
-			'subsection-title': ['var(--subsection-title-size)', { lineHeight: '1.3' }],
+			'page-title': ['var(--page-title-size)', { lineHeight: '1.4' }],
+			'form-title': ['var(--form-title-size)', { lineHeight: '1.4' }],
+			'section-title': ['var(--section-title-size)', { lineHeight: '1.4' }],
+			'subsection-title': ['var(--subsection-title-size)', { lineHeight: '1.5' }],
 			'marketing-title': ['var(--marketing-title-size)', { lineHeight: '1.2' }],
 			'home-section-title': ['var(--home-section-title-size)', { lineHeight: '1.25' }],
 			'hero-title': ['var(--hero-title-size)', { lineHeight: '1.25' }],
-			'metric': ['var(--metric-size)', { lineHeight: '1' }],
+			'metric': ['var(--metric-size)', { lineHeight: '1.2' }],
 		},
 		spacing: {
 			card: 'var(--card-padding)',

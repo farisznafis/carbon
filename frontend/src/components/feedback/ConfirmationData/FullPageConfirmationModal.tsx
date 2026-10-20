@@ -28,7 +28,7 @@ export function FullPageConfirmationModal({
         <div className="fixed inset-0 bg-foreground/30" />
 
         <div className="fixed inset-0 flex items-center justify-center">
-          <Dialog.Panel className="w-full max-w-3xl rounded-xl bg-card p-6 text-card-foreground shadow-app-md">
+          <Dialog.Panel className="w-full max-w-3xl rounded-lg bg-card p-6 text-card-foreground shadow-app-md">
             <Dialog.Title className="text-lg font-medium text-foreground">
               {title}
             </Dialog.Title>

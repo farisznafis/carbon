@@ -152,7 +152,7 @@ export function FileSelectButton({
     <div className={cn('space-y-2', className)}>
       <label
         htmlFor={id}
-        className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground shadow-app-sm hover:bg-secondary/80"
+        className="flex w-fit cursor-pointer items-center rounded-md bg-secondary px-3 py-1 text-sm text-secondary-foreground hover:bg-secondary/80"
       >
         <IconCloudUpload className="mr-2 h-4 w-4" />
         {label}

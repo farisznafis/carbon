@@ -17,7 +17,7 @@ export const dashboardPageHeaderClassName = cn(
 );
 
 export const dashboardEmptyStateClassName =
-  'rounded-xl border border-dashed border-border bg-card px-6 py-8 text-center text-small text-foreground';
+  'rounded-lg border border-dashed border-border bg-card px-6 py-8 text-center text-small text-foreground';
 
 export const adminHomePageContainerClassName =
 `

@@ -57,7 +57,7 @@ export default function ConfirmationModal<T extends Record<string, unknown>>({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md w-[92%] rounded-xl">
+      <DialogContent className="max-w-md w-[92%] rounded-lg">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <p className="text-foreground text-sm mt-1">{description}</p>}

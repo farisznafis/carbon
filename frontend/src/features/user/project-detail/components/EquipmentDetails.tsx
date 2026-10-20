@@ -37,7 +37,7 @@ export function EquipmentDetails({
         return (
           <section
             key={section.title}
-            className="rounded-xl border border-border bg-card p-5"
+            className="rounded-lg border border-border bg-card p-5"
           >
             <h3 className="mb-4 text-large text-foreground">
               {section.title}

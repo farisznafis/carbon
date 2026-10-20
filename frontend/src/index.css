@@ -43,6 +43,7 @@ All colors MUST be HSL.
     --neutral-200: 212.7 20.8% 89.6%; /* #DFE4EA */
     --neutral-300: 215.3 19.5% 82.9%; /* #CBD2DC */
     --neutral-400: 214.6 14.4% 64.7%; /* #98A3B2 */
+    --neutral-450: 214.7 14% 57%;     /* #828FA1, 3.3:1 on white, 3.1:1 on canvas */
     --neutral-500: 214.8 13% 46.9%;   /* #687587 */
     --neutral-600: 214 16.7% 35.3%;   /* #4B5869 */
     --neutral-700: 215.6 23.5% 26.7%; /* #344154 */
@@ -111,7 +112,7 @@ All colors MUST be HSL.
     --popover-foreground: var(--foreground);
 
     --muted: var(--neutral-50);
-    --muted-foreground: var(--neutral-700);
+    --muted-foreground: var(--neutral-600);
 
     /* Selected / subtle brand surface */
     --accent: var(--blue-50);
@@ -119,10 +120,11 @@ All colors MUST be HSL.
 
     /* Form / borders */
     --border: var(--neutral-200);
-    --input: var(--neutral-300);
+    /* Field boundaries need 3:1 (WCAG 1.4.11); neutral-300 was 1.5:1. */
+    --input: var(--neutral-450);
     --ring: var(--blue-500);
 
-    --placeholder: var(--neutral-700);
+    --placeholder: var(--neutral-500);
 
     --disabled: var(--neutral-100);
     --disabled-foreground: var(--neutral-400);
@@ -190,17 +192,17 @@ All colors MUST be HSL.
       Keep current Carbon geometry
       ========================================================= */
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
     /* Desktop density keeps the existing 1920px geometry as its upper bound. */
-    --page-title-size: 2rem;
-    --form-title-size: 1.875rem;
-    --section-title-size: 1.5rem;
-    --subsection-title-size: 1.25rem;
+    --page-title-size: 1.75rem;
+    --form-title-size: 1.75rem;
+    --section-title-size: 1.25rem;
+    --subsection-title-size: 1.0625rem;
     --marketing-title-size: 2.25rem;
     --home-section-title-size: 1.875rem;
     --hero-title-size: 3.75rem;
-    --metric-size: 2.25rem;
+    --metric-size: 2rem;
     --card-padding: 1.5rem;
     --section-gap: 2rem;
     --marketing-section-padding: 6rem;
@@ -241,9 +243,9 @@ All colors MUST be HSL.
     }
 
     :root {
-      --page-title-size: 1.625rem;
+      --page-title-size: 1.5rem;
       --form-title-size: 1.5rem;
-      --section-title-size: 1.25rem;
+      --section-title-size: 1.125rem;
       --subsection-title-size: 1.0625rem;
       --marketing-title-size: 1.875rem;
       --home-section-title-size: 1.5rem;
@@ -273,14 +275,14 @@ All colors MUST be HSL.
 
   @media (min-width: 1600px) and (max-width: 1919px) {
     :root {
-      --page-title-size: clamp(1.75rem, 1.7vw, 2rem);
-      --form-title-size: clamp(1.75rem, 1.56vw, 1.875rem);
-      --section-title-size: clamp(1.375rem, 1.3vw, 1.5rem);
-      --subsection-title-size: clamp(1.125rem, 1.1vw, 1.25rem);
+      --page-title-size: clamp(1.5rem, 1.5vw, 1.75rem);
+      --form-title-size: clamp(1.5rem, 1.5vw, 1.75rem);
+      --section-title-size: clamp(1.125rem, 1.1vw, 1.25rem);
+      --subsection-title-size: 1.0625rem;
       --marketing-title-size: clamp(1.875rem, 1.875vw, 2.25rem);
       --home-section-title-size: clamp(1.625rem, 1.56vw, 1.875rem);
       --hero-title-size: clamp(2.5rem, 3.125vw, 3.75rem);
-      --metric-size: clamp(2rem, 1.875vw, 2.25rem);
+      --metric-size: clamp(1.75rem, 1.7vw, 2rem);
       --card-padding: clamp(1.25rem, 1.25vw, 1.5rem);
       --section-gap: clamp(1.5rem, 1.67vw, 2rem);
       --marketing-section-padding: clamp(4rem, 5vw, 6rem);
@@ -291,57 +293,6 @@ All colors MUST be HSL.
     }
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --dashboard-bg: 40 20% 97%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
-
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-
-    --sidebar-background: 215 28% 10%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 20% 20%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 215 20% 20%;
-    --sidebar-ring: 199 89% 48%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
 }
 @layer base {
   * {
@@ -351,47 +302,51 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    font-family: 'Noto Sans JP', system-ui, -apple-system, BlinkMacSystemFont,
-      'Segoe UI', sans-serif;
-    font-size: 0.875rem;
-    line-height: 1.375rem;
+    font-family: 'Noto Sans JP', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
+      'Yu Gothic UI', Meiryo, system-ui, sans-serif;
+    font-size: 0.9375rem;
+    line-height: 1.7;
     letter-spacing: 0;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
+  h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
-    letter-spacing: 0;
+    letter-spacing: 0.02em;
+    font-feature-settings: "palt" 1;
+    text-wrap: balance;
   }
 
-  h1 {
-    @apply text-page-title;
-  }
-
-  h2 {
-    font-size: var(--section-title-size);
-    line-height: 1.25;
-  }
-
-  h3 {
-    font-size: var(--subsection-title-size);
-    line-height: 1.3;
-  }
-
-  h4 {
-    font-size: 1rem;
-    line-height: 1.375rem;
-  }
+  h1 { font-size: var(--page-title-size); line-height: 1.4; }
+  h2 { font-size: var(--section-title-size); line-height: 1.4; }
+  h3 { font-size: var(--subsection-title-size); line-height: 1.5; }
+  h4 { font-size: 1rem; line-height: 1.5; }
 
   p {
-    font-size: 0.875rem;
+    font-size: inherit;
     font-weight: 400;
-    line-height: 1.375rem;
+    line-height: inherit;
     letter-spacing: 0;
+  }
+
+  ::placeholder {
+    color: hsl(var(--placeholder));
+    opacity: 1;
+  }
+
+  ::selection {
+    background: hsl(var(--blue-100));
+    color: hsl(var(--foreground));
+  }
+
+  input,
+  textarea {
+    caret-color: hsl(var(--primary));
+  }
+
+  .tabular-nums,
+  td,
+  [data-figure] {
+    font-variant-numeric: tabular-nums;
   }
 
 }
@@ -408,11 +363,7 @@ All colors MUST be HSL.
   }
 
   .gradient-primary {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--primary)) 0%,
-      hsl(var(--primary-strong)) 100%
-    );
+    background: hsl(var(--primary));
   }
 
   .gradient-card {
@@ -421,23 +372,30 @@ All colors MUST be HSL.
 
   .text-small {
     font-size: 0.875rem;
-    font-weight: 500;
-    line-height: 1.25rem;
+    line-height: 1.6;
     letter-spacing: 0;
   }
 
   .text-body {
-    font-size: 0.875rem;
-    /* font-weight: 400; */
-    line-height: 1.375rem;
+    font-size: 0.9375rem;
+    line-height: 1.7;
     letter-spacing: 0;
   }
 
   .text-table {
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.6;
+    letter-spacing: 0;
+  }
+
+  /* Field / definition label */
+  .text-label {
     font-size: 0.8125rem;
     font-weight: 400;
-    line-height: 1.25rem;
-    letter-spacing: 0;
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+    color: hsl(var(--muted-foreground));
   }
 
   .text-lead {

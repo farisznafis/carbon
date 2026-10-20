@@ -343,7 +343,7 @@ export const Navbar = ({
                             bg-destructive
                             px-1
                             text-[0.625rem]
-                            font-semibold
+                            font-bold
                             leading-none
                             text-destructive-foreground
                           "

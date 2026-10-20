@@ -345,7 +345,7 @@ function EquipmentDetail({
     <div className="overflow-hidden rounded-lg border border-border bg-card">
       <header className="flex flex-col gap-3 border-b border-border px-4 py-3 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0 space-y-1.5">
-          <h3 className="truncate text-base font-semibold text-foreground">{row.companyName ?? '会員名未登録'}</h3>
+          <h3 className="truncate text-base font-bold text-foreground">{row.companyName ?? '会員名未登録'}</h3>
           <p className="text-small text-muted-foreground [overflow-wrap:anywhere]">{row.siteAddress ?? EMPTY_VALUE}</p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-small text-muted-foreground">
             {eligibility && <StatusBadge tone={eligibility.tone}>{eligibility.label}</StatusBadge>}
@@ -420,7 +420,7 @@ function EvidenceBar({
 }: Readonly<{ title: string; files: EvidenceLink[]; onPreview: (file: EvidenceLink) => void }>) {
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
-      <span className="text-xs font-semibold text-muted-foreground">{title}</span>
+      <span className="text-xs font-bold text-muted-foreground">{title}</span>
       {files.length > 0 ? (
         files.map((file) => (
           <Button

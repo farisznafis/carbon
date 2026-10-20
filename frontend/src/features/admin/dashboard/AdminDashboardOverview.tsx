@@ -176,7 +176,7 @@ function MetricCard({
 
   if (!permissionGranted || error) {
     return (
-      <Card className='h-full rounded-xl border-border shadow-app-sm'>
+      <Card className='h-full rounded-lg border-border'>
         <div className='flex h-full flex-col gap-3 p-card'>
           {header}
           {!permissionGranted ? (
@@ -199,18 +199,18 @@ function MetricCard({
   }
 
   return (
-    <Card className='h-full rounded-xl border-border shadow-app-sm transition-colors hover:border-primary/40'>
+    <Card className='h-full rounded-lg border-border transition-colors hover:border-primary/40'>
       <button
         type='button'
         onClick={onClick}
-        className='group flex h-full w-full flex-col gap-3 rounded-xl p-card text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+        className='group flex h-full w-full flex-col gap-3 rounded-lg p-card text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
       >
         {header}
         <span className='flex items-baseline gap-1.5'>
           <span className='text-metric font-bold leading-none tracking-tight tabular-nums text-foreground'>
             {value.toLocaleString('ja-JP')}
           </span>
-          <span className='text-base font-semibold text-foreground'>件</span>
+          <span className='text-base font-bold text-foreground'>件</span>
         </span>
       </button>
     </Card>
@@ -265,7 +265,7 @@ function CompanyApplicationSummary({
   const hasError = Boolean(pendingError || rejectedError);
 
   return (
-    <Card className='min-h-72 rounded-xl border-border shadow-app-sm'>
+    <Card className='min-h-72 rounded-lg border-border'>
       <CardHeader className='flex-row items-center justify-between space-y-0'>
         <CardTitle className={panelTitleClassName}>企業申請</CardTitle>
         <ActionButton kind='link' onClick={onOpenAll}>
@@ -278,7 +278,7 @@ function CompanyApplicationSummary({
         ) : (
           <>
             <div className='grid grid-cols-2 gap-3'>
-              <div className='rounded-lg border border-border bg-muted/20 px-4 py-3'>
+              <div className='rounded-lg bg-muted px-4 py-3'>
                 <p className='text-subtle text-muted-foreground'>確認待ち</p>
                 <p className='mt-1 text-xl font-bold text-foreground'>
                   {pendingLoading || pendingError
@@ -286,7 +286,7 @@ function CompanyApplicationSummary({
                     : `${pendingTotal.toLocaleString('ja-JP')}件`}
                 </p>
               </div>
-              <div className='rounded-lg border border-border bg-muted/20 px-4 py-3'>
+              <div className='rounded-lg bg-muted px-4 py-3'>
                 <p className='text-subtle text-muted-foreground'>却下</p>
                 <p className='mt-1 text-xl font-bold text-foreground'>
                   {rejectedLoading || rejectedError
@@ -426,7 +426,7 @@ function BatchHistorySummary({
   )[0];
 
   return (
-    <Card className='rounded-xl border-border shadow-app-sm'>
+    <Card className='rounded-lg border-border'>
       <CardHeader className='flex-row items-center justify-between space-y-0'>
         <CardTitle className={panelTitleClassName}>バッチ処理</CardTitle>
         <ActionButton kind='link' onClick={onOpenPanel}>
@@ -450,7 +450,7 @@ function BatchHistorySummary({
             バッチ処理履歴はありません。
           </p>
         ) : (
-          <div className='flex items-center justify-between gap-4 rounded-lg border border-border bg-muted/20 p-4'>
+          <div className='flex items-center justify-between gap-4 rounded-lg bg-muted p-4'>
             <div>
               <p className='text-subtle text-foreground'>最新の開始日時</p>
               <p className='mt-2 text-body font-bold text-foreground'>
@@ -501,7 +501,7 @@ function NotificationSummary() {
   };
 
   return (
-    <Card className='rounded-xl border-border shadow-app-sm xl:flex xl:min-h-0 xl:flex-1 xl:flex-col xl:overflow-hidden'>
+    <Card className='rounded-lg border-border xl:flex xl:min-h-0 xl:flex-1 xl:flex-col xl:overflow-hidden'>
       <CardHeader className='shrink-0'>
         <CardTitle className={panelTitleClassName}>お知らせ</CardTitle>
       </CardHeader>
@@ -630,9 +630,9 @@ export function AdminDashboardOverview(
       <section
         aria-label='主要な登録状況'
         className='
-          grid items-stretch
-          gap-grid
-          sm:grid-cols-2
+          grid grid-cols-2 items-stretch
+          gap-3
+          sm:gap-grid
           lg:grid-cols-4
         '
       >

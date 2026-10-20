@@ -112,7 +112,7 @@ export function ProcessingProgress({
       role="status"
       aria-live="polite"
       aria-busy={!isComplete}
-      className={cn('rounded-xl border border-border bg-card p-5 shadow-app-sm', className)}
+      className={cn('rounded-lg border border-border bg-card p-5', className)}
       {...props}
     >
       <h3 className="text-foreground">{title}</h3>

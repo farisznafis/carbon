@@ -105,7 +105,7 @@ describe('FormActions', () => {
       />,
     );
     expect(screen.getByRole('button', { name: '確定' })).toHaveClass(
-      'h-8',
+      'h-9',
       'w-full',
     );
   });

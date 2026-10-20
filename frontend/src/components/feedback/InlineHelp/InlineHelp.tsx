@@ -48,6 +48,7 @@ export const InlineHelp: React.FC<InlineHelpProps> = (rawProps) => {
       <button
         type='button'
         onClick={toggle}
+        className="relative before:absolute before:-inset-[14px] before:content-['']"
         style={{
           // smaller overall size
           width: '1rem',

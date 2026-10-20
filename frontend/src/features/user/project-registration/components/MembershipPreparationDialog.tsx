@@ -72,11 +72,11 @@ export function MembershipPreparationDialog({
         }
       }}
     >
-      <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-2xl flex-col gap-0 overflow-hidden rounded-xl p-0">
+      <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-2xl flex-col gap-0 overflow-hidden rounded-lg p-0">
         <DialogHeader className="shrink-0 border-b border-border p-6 pr-12">
           <DialogTitle>入会届の提出に必要なもの</DialogTitle>
           <DialogDescription className="text-small font-normal text-muted-foreground">
-            <span className="block font-semibold text-foreground">
+            <span className="block font-bold text-foreground">
               {project?.projectName || '-'}
             </span>
             <span className="mt-1 block">
@@ -89,7 +89,7 @@ export function MembershipPreparationDialog({
           <div className="space-y-6">
             {MEMBERSHIP_PREPARATION_SECTIONS.map((section) => (
               <section key={section.title} className="space-y-3">
-                <h3 className="text-base font-semibold leading-6 text-foreground">
+                <h3 className="text-base font-bold leading-6 text-foreground">
                   {section.title}
                 </h3>
                 <ul className="list-disc space-y-2 pl-5 text-small font-normal text-foreground marker:text-primary">

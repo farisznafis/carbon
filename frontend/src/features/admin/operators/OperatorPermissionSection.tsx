@@ -102,7 +102,7 @@ export function OperatorPermissionSection({
       description="権限は登録後でも追加・変更できます。"
       actions={
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-          <p className="text-sm font-semibold text-primary" aria-live="polite">
+          <p className="text-sm font-bold text-primary" aria-live="polite">
             選択済み {selectedPermissionCount} / {ASSIGNABLE_OPERATOR_PERMISSION_CODES.length}
           </p>
           <PermissionSelectAll

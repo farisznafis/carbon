@@ -52,7 +52,7 @@ export function EquipmentDocuments({
   };
 
   return (
-    <section className="space-y-4 rounded-xl border border-border bg-card p-5">
+    <section className="space-y-4 rounded-lg border border-border bg-card p-5">
       <h3 className="text-large text-foreground">確認資料</h3>
 
       {files.length === 0 && evidenceDocuments.length === 0 ? (
