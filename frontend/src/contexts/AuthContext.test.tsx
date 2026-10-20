@@ -7,7 +7,7 @@ const storedUser = {
   email: 'user@example.com',
   role: 'master',
   companyId: 'C-1',
-  siteId: '1',
+  siteId: 'site001',
 };
 
 /** Mirrors a storage change made by another tab, which never notifies the writer. */
@@ -63,6 +63,17 @@ describe('AuthProvider cross-tab synchronization', () => {
     dispatchStorageEvent('authToken');
 
     expect(screen.getByTestId('session')).toHaveTextContent('authenticated');
+  });
+
+  it('drops a stored session that still holds a numeric 拠点 DB ID', () => {
+    localStorage.setItem('user', JSON.stringify({ ...storedUser, role: 'user', siteId: '3' }));
+    localStorage.setItem('sessionExpiresAt', String(Date.now() + 60 * 60 * 1000));
+    localStorage.setItem('authToken', 'token');
+
+    renderProvider();
+
+    expect(screen.getByTestId('session')).toHaveTextContent('anonymous');
+    expect(localStorage.getItem('authToken')).toBeNull();
   });
 
   it('signs out when another tab clears the session', () => {

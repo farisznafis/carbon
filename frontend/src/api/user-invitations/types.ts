@@ -1,6 +1,6 @@
 export type CreateUserInvitationPayload = {
   email: string;
-  siteId: string | number | null;
+  siteId: string | null;
 };
 
 export type CreateUserInvitationResponse = {
@@ -12,7 +12,7 @@ export type CreateUserInvitationResponse = {
 export type UserInvitationContext = {
   email: string;
   companyName: string;
-  siteId: string | number | null;
+  siteId: string | null;
   siteName: string | null;
 };
 

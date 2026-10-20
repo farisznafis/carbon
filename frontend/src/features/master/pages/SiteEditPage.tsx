@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { Site } from '@/api/site';
 import type { UserList } from '@/api/users';
-import { deleteSite, updateSite, validateUpdateSite } from '@/api/site';
+import { updateSite, validateUpdateSite } from '@/api/site';
 import { SiteForm, SiteFormData } from '@/features/master/forms/SiteForm';
 import { SiteConfirmation } from './SiteConfirmation';
 import { toast } from '@/hooks/use-toast';
@@ -62,10 +62,8 @@ function SiteEdit() {
   const sites = useDashboardStore((state) => state.sites) ?? [];
   const initialSite = sites.find((site) => site.siteId === siteId);
   const editSite = useDashboardStore((state) => state.editSite);
-  const deleteSiteStore = useDashboardStore((state) => state.deleteSiteStore);
   const setUsers = useDashboardStore((state) => state.setUsers);
   const storedUsers = useDashboardStore((state) => state.users);
-  const { joinableSites } = useDashboardStore();
   const usersQuery = useUsersQuery();
   const users = useMemo(
     () => (storedUsers.length > 0 ? storedUsers : usersQuery.data?.users ?? []),
@@ -216,39 +214,6 @@ function SiteEdit() {
     setStep('form');
   };
 
-  const handleDelete = async () => {
-    if (!siteId) return;
-
-    if (!joinableSites().some((site) => site.siteId === siteId)) {
-      toast({
-        title: 'エラー',
-        description:
-          'この拠点には削除できない利用データがあるため、削除できません。',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      await deleteSite(siteId);
-      deleteSiteStore(siteId);
-
-      toast({
-        title: '削除完了',
-        description: '拠点を削除しました',
-      });
-
-      navigate('/master/dashboard');
-    } catch (error) {
-      logger.error(error);
-      toast({
-        title: 'エラー',
-        description: '削除中にエラーが発生しました',
-        variant: 'destructive',
-      });
-    }
-  };
-
   return (
     <>
       {step === 'form' && (
@@ -262,7 +227,6 @@ function SiteEdit() {
               onChange={setFormData}
               onNext={handleFormSubmit}
               defaultValues={formData || initialFormData}
-              onDelete={handleDelete}
               userOptions={selectableUsers}
               isUserOptionsLoading={usersQuery.isLoading}
               userOptionsError={

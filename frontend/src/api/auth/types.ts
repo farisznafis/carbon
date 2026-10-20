@@ -21,11 +21,11 @@ export interface LoginResponse {
     name?: string | null;
     role?: string | null;
     companyId?: string | null;
-    siteId?: string | number | null;
+    siteId?: string | null;
     siteName?: string | null;
   } | null;
   companyName: string;
-  siteId?: string | number | null;
+  siteId?: string | null;
 }
 
 export interface SignUpData {

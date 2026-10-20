@@ -32,7 +32,7 @@ export type {
   SubmitDataResponse,
 } from "./monitoring";
 
-export { deleteSite, getSiteData, getSiteProjects, getSites, registerSite, updateSite } from "./site";
+export { getSiteData, getSiteProjects, getSites, registerSite, updateSite } from "./site";
 export type {
   CreateSiteData,
   Site,

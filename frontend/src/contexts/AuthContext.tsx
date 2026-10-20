@@ -190,9 +190,14 @@ function needsAdminSessionIdMigration(user: User): boolean {
   return user.role === 'admin' && !normalizeAdminOperatorId(user.id);
 }
 
+/** Sessions saved before the switch to public 拠点 IDs ("site001") hold DB IDs like "3". */
+function hasLegacyNumericSiteId(user: User): boolean {
+  return user.role !== 'admin' && /^\d+$/.test(user.siteId?.trim() ?? '');
+}
+
 /** Maps a snapshot to a session, or null when it holds no usable login. Writes nothing. */
 function toAuthSession(snapshot: StoredSessionSnapshot): AuthSession | null {
-  if (snapshot.status !== 'active') {
+  if (snapshot.status !== 'active' || hasLegacyNumericSiteId(snapshot.user)) {
     return null;
   }
 
@@ -303,7 +308,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           role: data.role,
           companyId,
           companyName: data.companyName,
-          siteId: data.siteId != null ? String(data.siteId) : '',
+          siteId: data.siteId ?? '',
           siteName: data.companyName,
         };
 

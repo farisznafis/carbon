@@ -12,7 +12,6 @@ interface DashboardState {
   sites: Site[];
   setSites: (sites: Site[]) => void;
   editSite: (siteId: string, updatedData: Partial<Site>) => void;
-  deleteSiteStore: (siteId: string) => void;
   getSiteById: (siteId: string) => Site | undefined;
   getUserSites: (userId: string) => Site[];
   getMasterSites: () => Site[];
@@ -117,12 +116,6 @@ export const useDashboardStore = create<DashboardState>()(
           sites: state.sites.map((site) =>
             site.siteId === siteId ? { ...site, ...updatedData } : site
           ),
-        }));
-      },
-
-      deleteSiteStore: (siteId: string) => {
-        set((state) => ({
-          sites: state.sites.filter(site => site.siteId !== siteId), //remove deleted user
         }));
       },
 

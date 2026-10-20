@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { ApiError } from '@/api/_shared/errors';
@@ -10,7 +10,6 @@ import {
   FormSectionStack,
 } from '@/components/forms/form-layout';
 import { RequiredBadge, RequiredLabel } from '@/components/forms/shared';
-import { DeleteAlertDialog } from '@/components/feedback/DeleteAlertDialog/DeleteAlertDialog';
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
 import { Button } from '@/components/ui/button';
 import {
@@ -65,7 +64,6 @@ interface SiteFormProps {
   originalData: SiteFormData;
   onChange: (data: SiteFormData) => void;
   onNext: (data: SiteFormData) => void | Promise<void>;
-  onDelete?: () => void;
   defaultValues?: Partial<SiteFormData>;
   disableSubmit?: boolean;
   userOptions?: UserList[];
@@ -91,7 +89,6 @@ export function SiteForm({
   originalData,
   onChange,
   onNext,
-  onDelete,
   defaultValues,
   disableSubmit = false,
   userOptions = [],
@@ -101,7 +98,6 @@ export function SiteForm({
   onAddUser,
   embedded = false,
 }: Readonly<SiteFormProps>) {
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const postalCodeLookupAbortRef = useRef<AbortController | null>(null);
   const navigate = useNavigate();
   const isCreateMode = mode === 'create';
@@ -483,17 +479,6 @@ export function SiteForm({
               </FormSection>
 
             <FormActions
-              leadingAction={
-                !isCreateMode && onDelete ? (
-                  <DeleteAlertDialog
-                    label="拠点"
-                    open={isDeleteDialogOpen}
-                    onOpenChange={setIsDeleteDialogOpen}
-                    onDelete={onDelete}
-                    iconOnly
-                  />
-                ) : undefined
-              }
               actions={[
                 {
                   id: 'cancel',

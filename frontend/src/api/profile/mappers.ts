@@ -58,7 +58,7 @@ export function mapProfileApiResponseToProfileViewModel(
     companyId: profile.companyId,
     username: normalizeText(profile.username),
     role: profile.role?.trim() || undefined,
-    siteId: profile.siteId != null ? String(profile.siteId) : '',
+    siteId: profile.siteId ?? '',
     siteName: profile.siteName?.trim() || undefined,
     firstName: normalizeText(profile.firstName),
     lastName: normalizeText(profile.lastName),

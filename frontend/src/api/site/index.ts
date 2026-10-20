@@ -1,7 +1,6 @@
 export { getSiteData } from './dashboard';
 export { getSites } from './list';
 export {
-  deleteSite,
   registerSite,
   updateSite,
   validateCreateSite,

@@ -46,7 +46,7 @@ describe('user invitation API', () => {
     const fetchMock = mockSuccessfulRequest({
       email: 'invitee@example.com',
       companyName: 'GX株式会社',
-      siteId: 42,
+      siteId: 'site001',
       siteName: '東京拠点',
     });
 

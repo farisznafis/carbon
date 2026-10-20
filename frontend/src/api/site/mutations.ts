@@ -32,7 +32,7 @@ export async function validateUpdateSite(
 ): Promise<void> {
   await apiVoidRequest(`/site/validate-update/${encodeURIComponent(siteId)}`, {
     method: 'POST',
-    body: mapUpdateSitePayload(formData, siteId, picuserId),
+    body: mapUpdateSitePayload(formData, picuserId),
     fallbackErrorMessage: '拠点更新内容の検証に失敗しました',
   });
 }
@@ -83,7 +83,7 @@ export async function updateSite(
   formData: SiteFormData,
   picuserId: number | null = null,
 ): Promise<{ statusCode: string; site?: Site }> {
-  const payload = mapUpdateSitePayload(formData, siteId, picuserId);
+  const payload = mapUpdateSitePayload(formData, picuserId);
 
   const response = await apiFetch(`/site/${encodeURIComponent(siteId)}`, {
     method: 'PATCH',
@@ -101,10 +101,3 @@ export async function updateSite(
     site: json?.site,
   };
 }
-
-export const deleteSite = async (siteId: string) => {
-  await apiVoidRequest(`/site/${encodeURIComponent(siteId)}`, {
-    method: 'DELETE',
-    fallbackErrorMessage: '拠点の削除に失敗しました。',
-  });
-};

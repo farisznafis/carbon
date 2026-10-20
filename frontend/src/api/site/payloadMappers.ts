@@ -33,7 +33,6 @@ export function mapCreateSitePayload(formData: SiteFormData): CreateSitePayload 
 
 export function mapUpdateSitePayload(
   formData: SiteFormData,
-  siteId: string,
   picuserId: number | null,
 ): UpdateSitePayload {
   return {
@@ -43,7 +42,6 @@ export function mapUpdateSitePayload(
     municipality: formData.cityName,
     blocknum: formData.blockName,
     buildingName: formData.addressDetail,
-    siteId,
     picuserId,
   };
 }
