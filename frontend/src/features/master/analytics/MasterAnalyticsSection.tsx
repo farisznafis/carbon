@@ -1,14 +1,16 @@
 import { useState, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { ChartCard, TimeSeriesLineChart, formatChartPeriod } from '@/components/data-display/charts';
 import { SkeletonList } from '@/components/feedback/loading';
 import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import { SegmentButton, SegmentGroup } from '@/components/navigation/PageTabs';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, type ChartConfig } from '@/components/ui/chart';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ActionButton } from '@/components/actions';
 import { cn } from '@/lib/utils';
+import { paths } from '@/routes/paths';
 import { MasterStatCard } from '@/features/master/shared/MasterStatCard';
 import { formatChange, formatTons } from '@/features/master/shared/masterFormatters';
 import type {
@@ -17,7 +19,7 @@ import type {
   EmissionRow,
   RankingRow,
 } from './masterAnalyticsModel';
-import { useMasterAnalyticsData, type SelectorCard } from './useMasterAnalyticsData';
+import { useMasterAnalyticsData } from './useMasterAnalyticsData';
 
 const PERIOD_OPTIONS: { value: AnalyticsPeriod; label: string }[] = [
   { value: '6', label: '直近6か月' },
@@ -46,8 +48,8 @@ const formatTonsUnit = (value: number | null | undefined) =>
 
 function ControlField({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-small font-bold text-foreground">{label}</span>
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <span className="text-subtle font-bold text-muted-foreground">{label}</span>
       {children}
     </div>
   );
@@ -192,79 +194,21 @@ function RankingCard({
   );
 }
 
-function SelectorCardItem({
-  axis,
-  card,
-  active,
-  onSelect,
-}: {
-  axis: AnalysisAxis;
-  card: SelectorCard;
-  active: boolean;
-  onSelect: () => void;
-}) {
-  const row = (label: string, value: ReactNode) => (
-    <div className="flex items-baseline justify-between gap-3 text-subtle">
-      <dt className="text-foreground">{label}</dt>
-      <dd className="font-bold tabular-nums text-foreground">{value}</dd>
-    </div>
-  );
-  return (
-    <Card
-      onClick={onSelect}
-      className={cn(
-        panelCardClassName,
-        'flex cursor-pointer flex-col gap-4 p-card transition-colors',
-        active ? 'border-2 border-primary' : 'hover:border-primary/40',
-      )}
-    >
-      <h3 className="truncate text-body font-bold text-foreground" title={card.name}>{card.name}</h3>
-      <dl className="space-y-2">
-        {row(axis === 'project' ? '期間の排出量（自社）' : '期間の排出量', formatTonsUnit(card.total))}
-        {row(axis === 'project' ? '参加拠点' : '参加プロジェクト', axis === 'project' ? `${card.members.length}拠点` : `${card.members.length}件`)}
-        {axis === 'site' && row('最終提出日', formatDate(card.lastSubmittedAt))}
-      </dl>
-      {axis === 'project' && (
-        <ul className="flex flex-wrap gap-1.5" aria-label="参加拠点">
-          {card.members.map((name) => (
-            <li key={name} className="rounded-md bg-muted px-2 py-0.5 text-xs text-foreground">{name}</li>
-          ))}
-        </ul>
-      )}
-      {axis === 'project' && card.projectReduction != null && (
-        <div className="border-t border-border pt-3">
-          {row('プロジェクト全体の削減量', formatTonsUnit(card.projectReduction))}
-        </div>
-      )}
-      <Button
-        type="button"
-        variant={active ? 'default' : 'outline'}
-        className="mt-auto w-full rounded-full"
-        aria-pressed={active}
-        onClick={(event) => {
-          event.stopPropagation();
-          onSelect();
-        }}
-      >
-        {active ? 'グラフに表示中' : 'グラフに表示'}
-      </Button>
-    </Card>
-  );
-}
-
 /** Master アナリティクス: compare emissions and submissions by project or by site. */
 export function MasterAnalyticsSection() {
   const [axis, setAxis] = useState<AnalysisAxis>('project');
   const [period, setPeriod] = useState<AnalyticsPeriod>('12');
   const [selected, setSelected] = useState<Record<AnalysisAxis, string | null>>({ project: null, site: null });
+  const navigate = useNavigate();
   const data = useMasterAnalyticsData({ axis, period, selectedId: selected[axis] });
+  const targetLabel = axis === 'project' ? 'プロジェクト' : '拠点';
   const select = (nextAxis: AnalysisAxis, id: string) => {
     setAxis(nextAxis);
     setSelected((current) => ({ ...current, [nextAxis]: id }));
   };
 
   const controls = (
-    <div className="flex flex-wrap items-end gap-4">
+    <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
       <ControlField label="分析軸">
         <SegmentGroup aria-label="分析軸">
           {AXIS_OPTIONS.map((option) => (
@@ -274,9 +218,28 @@ export function MasterAnalyticsSection() {
           ))}
         </SegmentGroup>
       </ControlField>
+      {/* A dropdown, not cards: the chart only ever shows one target, and the card details repeated the summary. */}
+      <ControlField label={targetLabel}>
+        <Select
+          value={data.activeCard?.id ?? ''}
+          onValueChange={(id) => select(axis, id)}
+          disabled={data.cards.length === 0}
+        >
+          <SelectTrigger selectSize="sm" className="w-[min(24rem,80vw)]" aria-label={targetLabel}>
+            <SelectValue placeholder="—" />
+          </SelectTrigger>
+          <SelectContent>
+            {data.cards.map((card) => (
+              <SelectItem key={card.id} value={card.id}>
+                {card.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </ControlField>
       <ControlField label="期間">
         <Select value={period} onValueChange={(value) => setPeriod(value as AnalyticsPeriod)}>
-          <SelectTrigger className="w-44" aria-label="期間">
+          <SelectTrigger selectSize="sm" className="w-40" aria-label="期間">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -322,17 +285,31 @@ export function MasterAnalyticsSection() {
     <div className="space-y-section">
       <div className="space-y-4">
         {header}
-        {/* Controls sit on their own row so the description never wraps around them at 1280px. */}
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        {/* Controls get a full row (one line at laptop width), and the 表示中 line sits under them
+            at full width instead of being squeezed beside them. */}
+        {controls}
+        <div>
           {active ? (
-            <p className="min-w-0 text-subtle text-muted-foreground">
-              表示中：<span className="font-bold text-foreground">{active.name}</span>
-              （{active.members.length}{memberUnit}）・{periodLabel}
-            </p>
-          ) : (
-            <span />
-          )}
-          {controls}
+            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+              <p className="min-w-0 text-subtle text-muted-foreground">
+                表示中：<span className="font-bold text-foreground">{active.name}</span>
+                （{active.members.length}{memberUnit}）・{periodLabel}
+                {axis === 'project' && active.projectReduction != null && (
+                  <>
+                    ・プロジェクト全体の削減量{' '}
+                    <span className="font-bold tabular-nums text-foreground">{formatTonsUnit(active.projectReduction)}</span>
+                  </>
+                )}
+                {axis === 'site' && <>・最終提出日 {formatDate(active.lastSubmittedAt)}</>}
+              </p>
+              {/* Only sites have a page of their own; a project's detail lives under each site. */}
+              {axis === 'site' && (
+                <ActionButton kind="link" onClick={() => navigate(paths.siteDashboard(active.id))}>
+                  拠点ダッシュボード
+                </ActionButton>
+              )}
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -390,28 +367,6 @@ export function MasterAnalyticsSection() {
               ariaLabel={trendTitle}
             />
           </ChartCard>
-
-          <section aria-label={axis === 'project' ? 'プロジェクト' : '拠点'} className="space-y-4">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-subsection-title font-bold text-foreground">{axis === 'project' ? 'プロジェクト' : '拠点'}</h2>
-              <p className="text-subtle text-muted-foreground">カードを選択すると上のグラフが切り替わります</p>
-            </div>
-            {data.isEmissionLoading ? (
-              <SkeletonList items={3} />
-            ) : (
-              <div className="grid gap-grid sm:grid-cols-2 xl:grid-cols-3">
-                {data.cards.map((card) => (
-                  <SelectorCardItem
-                    key={card.id}
-                    axis={axis}
-                    card={card}
-                    active={card.id === active?.id}
-                    onSelect={() => select(axis, card.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
 
           <div className="grid gap-grid xl:grid-cols-[minmax(0,1.65fr)_minmax(18rem,1fr)]">
             <EmissionBreakdownCard

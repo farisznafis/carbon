@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, FileSearch, FileText, Search } from 'lucide-react';
+import { FileSearch, FileText, Search } from 'lucide-react';
 import {
   getIndividualActivityDetail,
   getIndividualActivityRows,
@@ -27,7 +27,7 @@ import { toast } from '@/hooks/use-toast';
 import { downloadFromUrl } from '@/utils/download';
 import { cn } from '@/lib/utils';
 import { DocumentDataSectionCard, type CopyHandler } from './DocumentDataSectionCard';
-import { EMPTY_VALUE } from './documentDataCopy';
+import { EMPTY_VALUE, filterSections } from './documentDataCopy';
 import { FilePreviewDialog, type FilePreviewTarget } from './ProjectFilePreviewDialog';
 import { previewKindOf } from './projectFileTypes';
 import {
@@ -88,6 +88,7 @@ export function IndividualActivityView({ projectId, copiedKey, onCopy }: ViewPro
   const [selectedId, setSelectedId] = useState<number | null>(null);
   // Kept across equipment, so the operator can walk one group through every row.
   const [groupKey, setGroupKey] = useState<GroupKey>('member');
+  const [itemFilter, setItemFilter] = useState('');
   const detailRef = useRef<HTMLElement>(null);
 
   const rowsQuery = useQuery({
@@ -114,8 +115,7 @@ export function IndividualActivityView({ projectId, copiedKey, onCopy }: ViewPro
   }, [sheetRows, filter, readiness]);
 
   // The chosen row, or the first one shown when it was filtered out or nothing is chosen yet.
-  const selectedIndex = Math.max(0, visibleRows.findIndex((row) => row.equipmentId === selectedId));
-  const selected = visibleRows[selectedIndex];
+  const selected = visibleRows.find((row) => row.equipmentId === selectedId) ?? visibleRows[0];
 
   const select = (row: IndividualActivityRow) => {
     setSelectedId(row.equipmentId);
@@ -275,11 +275,10 @@ export function IndividualActivityView({ projectId, copiedKey, onCopy }: ViewPro
             projectId={projectId}
             row={selected}
             sheet={sheet}
-            position={{ index: selectedIndex, total: visibleRows.length }}
-            onPrevious={selectedIndex > 0 ? () => select(visibleRows[selectedIndex - 1]) : undefined}
-            onNext={selectedIndex < visibleRows.length - 1 ? () => select(visibleRows[selectedIndex + 1]) : undefined}
             groupKey={groupKey}
             onGroupChange={setGroupKey}
+            filter={itemFilter}
+            onFilterChange={setItemFilter}
             copiedKey={copiedKey}
             onCopy={onCopy}
           />
@@ -297,11 +296,10 @@ type DetailProps = Readonly<{
   projectId: string;
   row: IndividualActivityRow;
   sheet: BatterySheet;
-  position: { index: number; total: number };
-  onPrevious?: () => void;
-  onNext?: () => void;
   groupKey: GroupKey;
   onGroupChange: (key: GroupKey) => void;
+  filter: string;
+  onFilterChange: (filter: string) => void;
   copiedKey: string | null;
   onCopy: CopyHandler;
 }>;
@@ -310,11 +308,10 @@ function EquipmentDetail({
   projectId,
   row,
   sheet,
-  position,
-  onPrevious,
-  onNext,
   groupKey,
   onGroupChange,
+  filter,
+  onFilterChange,
   copiedKey,
   onCopy,
 }: DetailProps) {
@@ -346,7 +343,7 @@ function EquipmentDetail({
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card">
-      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3">
+      <header className="flex flex-col gap-3 border-b border-border px-4 py-3 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0 space-y-1.5">
           <h3 className="truncate text-base font-semibold text-foreground">{row.companyName ?? '会員名未登録'}</h3>
           <p className="text-small text-muted-foreground [overflow-wrap:anywhere]">{row.siteAddress ?? EMPTY_VALUE}</p>
@@ -361,16 +358,19 @@ function EquipmentDetail({
             </span>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <span className="mr-1 text-small tabular-nums text-muted-foreground">
-            {position.index + 1} / {position.total}
-          </span>
-          <Button type="button" size="icon" variant="outline" className="size-8" aria-label="前の設備" disabled={!onPrevious} onClick={onPrevious}>
-            <ChevronLeft aria-hidden="true" />
-          </Button>
-          <Button type="button" size="icon" variant="outline" className="size-8" aria-label="次の設備" disabled={!onNext} onClick={onNext}>
-            <ChevronRight aria-hidden="true" />
-          </Button>
+        <div className="relative w-full shrink-0 md:w-60">
+          <Search
+            aria-hidden="true"
+            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            type="search"
+            value={filter}
+            onChange={(event) => onFilterChange(event.target.value)}
+            placeholder="項目名・値で絞り込み"
+            aria-label="項目名・値で絞り込み"
+            className="h-9 pl-9"
+          />
         </div>
       </header>
 
@@ -399,6 +399,8 @@ function EquipmentDetail({
           sheet={sheet}
           groupKey={groupKey}
           onGroupChange={onGroupChange}
+          filter={filter}
+          onClearFilter={() => onFilterChange('')}
           copiedKey={copiedKey}
           onCopy={onCopy}
           onPreview={setPreview}
@@ -445,13 +447,37 @@ type GroupsProps = Readonly<{
   sheet: BatterySheet;
   groupKey: GroupKey;
   onGroupChange: (key: GroupKey) => void;
+  filter: string;
+  onClearFilter: () => void;
   copiedKey: string | null;
   onCopy: CopyHandler;
   onPreview: (file: EvidenceLink) => void;
 }>;
 
-function DetailGroups({ detail, sheet, groupKey, onGroupChange, copiedKey, onCopy, onPreview }: GroupsProps) {
-  const groups = useMemo(() => toActivityGroups(detail, sheet), [detail, sheet]);
+function DetailGroups({
+  detail,
+  sheet,
+  groupKey,
+  onGroupChange,
+  filter,
+  onClearFilter,
+  copiedKey,
+  onCopy,
+  onPreview,
+}: GroupsProps) {
+  const filtering = filter.trim() !== '';
+  const groups = useMemo(
+    () =>
+      toActivityGroups(detail, sheet).map((group) => {
+        const sections = filterSections(group.sections, filter);
+        const matchCount = sections.reduce(
+          (sum, section) => sum + section.items.length + (section.table?.rows.length ?? 0),
+          0,
+        );
+        return { ...group, sections, matchCount };
+      }),
+    [detail, sheet, filter],
+  );
   const files = useMemo(() => evidenceFilesOf(detail), [detail]);
 
   return (
@@ -461,6 +487,7 @@ function DetailGroups({ detail, sheet, groupKey, onGroupChange, copiedKey, onCop
           {groups.map((group) => (
             <PageTabsTrigger key={group.key} value={group.key} className="text-small">
               {group.title}
+              {filtering && <TabCount count={group.matchCount} />}
             </PageTabsTrigger>
           ))}
         </PageTabsList>
@@ -468,12 +495,22 @@ function DetailGroups({ detail, sheet, groupKey, onGroupChange, copiedKey, onCop
 
       {groups.map((group) => (
         <TabsContent key={group.key} value={group.key} className="mt-0 space-y-5 p-4">
-          {(group.key === 'equipment' || group.key === 'monitoring') && (
+          {!filtering && (group.key === 'equipment' || group.key === 'monitoring') && (
             <EvidenceBar
               title={group.key === 'equipment' ? '設備の証憑' : 'モニタリングの証憑'}
               files={files.filter((file) => (file.kind === MONITORING_EVIDENCE) === (group.key === 'monitoring'))}
               onPreview={onPreview}
             />
+          )}
+          {filtering && group.sections.length === 0 && (
+            <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border px-4 py-6 text-center">
+              <p className="text-small text-muted-foreground">
+                「{filter.trim()}」に一致する項目はこのグループにありません。
+              </p>
+              <Button type="button" size="sm" variant="outline" onClick={onClearFilter}>
+                絞り込みをクリア
+              </Button>
+            </div>
           )}
           {group.sections.map((section) => (
             <DocumentDataSectionCard

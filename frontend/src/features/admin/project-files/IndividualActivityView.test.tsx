@@ -142,14 +142,20 @@ describe('IndividualActivityView', () => {
     expect(await within(list).findByText('佐藤商事')).toBeInTheDocument();
   });
 
-  it('walks the rows with previous/next', async () => {
+  it('filters the detail by item, kept across equipment', async () => {
     renderView();
-    const next = await screen.findByRole('button', { name: '次の設備' });
-    expect(screen.getByText('1 / 2')).toBeInTheDocument();
-    fireEvent.click(next);
-    expect(screen.getByText('2 / 2')).toBeInTheDocument();
+    const search = await screen.findByRole('searchbox', { name: '項目名・値で絞り込み' });
+    const details = screen.getByRole('region', { name: '設備の詳細' });
+    fireEvent.change(search, { target: { value: 'オムロン' } });
+
+    expect(await within(details).findByText('「オムロン」に一致する項目はこのグループにありません。')).toBeInTheDocument();
+    fireEvent.mouseDown(within(details).getByRole('tab', { name: /^設備/ }));
+    expect(within(details).getByText('オムロン')).toBeInTheDocument();
+    expect(within(details).queryByText('設備の証憑')).not.toBeInTheDocument();
+
+    fireEvent.click(within(screen.getByRole('complementary', { name: '設備一覧' })).getByText('鈴木電機'));
     expect(api.getIndividualActivityDetail).toHaveBeenCalledWith('P1', 9);
-    expect(screen.getByRole('button', { name: '次の設備' })).toBeDisabled();
+    expect(screen.getByRole('searchbox', { name: '項目名・値で絞り込み' })).toHaveValue('オムロン');
   });
 
   it('shows blanks as a dash, with each evidence source under its own tab', async () => {
