@@ -65,7 +65,7 @@ describe('applyBackendValidationErrors', () => {
     );
     const error = new ApiError('入力内容に誤りがあります。', {
       status: 400,
-      payload: { errors: { 'years[3].newMembersTotal': '0以上で入力してください。' } },
+      payload: { errors: { 'unknownField': '0以上で入力してください。' } },
     });
 
     const message = applyBackendValidationErrors(result.current, error);

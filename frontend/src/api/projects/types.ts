@@ -45,10 +45,6 @@ export interface ProjectDetail {
   dataManagementPic: string;
   companyName: string;
   regionalCategory: string;
-  newMembersTotal?: number;
-  withdrawnMembers?: number;
-  cumulativeMembers?: number;
-  membersTotal?: number;
   methodologyVersion: string;
   methodologyCategory: string;
   methodologyNumber: string;

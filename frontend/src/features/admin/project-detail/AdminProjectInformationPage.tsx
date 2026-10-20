@@ -19,7 +19,6 @@ import { paths } from '@/routes/paths';
 import { AdminProjectDetailLayout } from './AdminProjectDetailLayout';
 import {
   formatProjectDetailDateTime,
-  formatProjectDetailNumber,
   formatProjectDetailValue,
   formatProjectEmission,
   formatProjectPersonName,
@@ -196,28 +195,7 @@ export default function AdminProjectInformationPage() {
             </dl>
           </FormSection>
 
-          <FormSection number={5} title="社員数">
-            <dl className="grid gap-x-10 gap-y-6 md:grid-cols-2">
-              <ProfileDetailField
-                label="新規社員数"
-                value={formatProjectDetailNumber(project.newMembersTotal)}
-              />
-              <ProfileDetailField
-                label="脱退数"
-                value={formatProjectDetailNumber(project.withdrawnMembers)}
-              />
-              <ProfileDetailField
-                label="累計社員数"
-                value={formatProjectDetailNumber(project.cumulativeMembers)}
-              />
-              <ProfileDetailField
-                label="社員数合計"
-                value={formatProjectDetailNumber(project.membersTotal)}
-              />
-            </dl>
-          </FormSection>
-
-          <FormSection number={6} title="方法論">
+          <FormSection number={5} title="方法論">
             <dl className="grid gap-x-10 gap-y-6 md:grid-cols-2">
               <ProfileDetailField
                 label="方法論区分"
@@ -254,7 +232,7 @@ export default function AdminProjectInformationPage() {
             </dl>
           </FormSection>
 
-          <FormSection number={7} title="管理情報">
+          <FormSection number={6} title="管理情報">
             <dl className="grid gap-x-10 gap-y-6 md:grid-cols-2">
               <ProfileDetailField
                 label="運営会社ID"

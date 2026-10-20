@@ -1,7 +1,6 @@
 export {
   allProjectFields,
   emissionFields,
-  membersFields,
   methodologyFields,
   operatorInfo,
   picFields,

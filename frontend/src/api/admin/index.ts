@@ -14,8 +14,6 @@ export {
 export {
   createAdminProject,
   getAdminProjectDetail,
-  getProjectPlanForm,
-  saveProjectPlanForm,
   updateAdminProject,
 } from './projects';
 export {
@@ -62,8 +60,6 @@ export type {
   SortOrder,
   SuspendCompanyPayload,
   SuspensionReasonCode,
-  ProjectPlanAutofillResponse,
-  ProjectPlanFormResponse,
   UpdateAdminProjectPayload,
 } from './types';
 export type {

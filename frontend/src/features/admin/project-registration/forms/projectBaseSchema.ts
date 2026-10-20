@@ -161,10 +161,6 @@ export const projectBaseSchema = z.object({
   regionalCategory: RegionalCategorySchema,
 
   // Members
-  newMembersTotal: z.coerce.number().optional(),
-  withdrawnMembers: z.coerce.number().optional(),
-  cumulativeMembers: z.coerce.number().optional(),
-  membersTotal: z.coerce.number().optional(),
 
   // 方法論
   methodologyVersion: z

@@ -27,10 +27,6 @@ export type AdminProjectDetail = {
   dataManagementPic: string;
   companyName: string;
   regionalCategory: string;
-  newMembersTotal: number | null;
-  withdrawnMembers: number | null;
-  cumulativeMembers: number | null;
-  membersTotal: number | null;
   methodologyVersion: string;
   methodologyCategory: string;
   methodologyNumber: string;
@@ -79,10 +75,6 @@ export type CreateAdminProjectPayload = {
     picPosition?: string;
     dataManagementPic?: string;
     regionalCategory?: string;
-    newMembersTotal?: number;
-    withdrawnMembers?: number;
-    cumulativeMembers?: number;
-    membersTotal?: number;
     methodologyVersion?: string;
     methodCategory?: string;
     methodNumber?: string;
@@ -103,60 +95,6 @@ export type CreateAdminProjectResponse = {
   project?: Array<Partial<AdminProjectDetail> & {
     id?: string;
   }>;
-};
-
-export type ProjectPlanAutofillResponse = {
-  statusCode?: string;
-  message?: string | null;
-  errors?: unknown;
-  data?: Record<string, unknown>;
-};
-
-/** A page is stored only once it fully validates, so there is no partial state. */
-export type ProjectPlanFormStatus = 'NOT_STARTED' | 'COMPLETE';
-
-/** A field that is only shown, and only required, when `when` equals `is`. */
-export type ProjectPlanConditionalField = {
-  field: string;
-  when: string;
-  is: boolean;
-};
-
-export type ProjectPlanFormResponse = {
-  statusCode?: string;
-  message?: string | null;
-  errors?: Record<string, string>;
-  formSlug?: string;
-  displayName?: string;
-  status?: ProjectPlanFormStatus;
-  updatedAt?: string | null;
-  updatedBy?: string | null;
-  /** Autofilled from the backend's SQL data — render these read-only. */
-  readOnlyFields?: string[];
-  conditionalFields?: ProjectPlanConditionalField[];
-  data?: Record<string, unknown>;
-};
-
-export type ProjectPlanFormProgress = {
-  formSlug: string;
-  displayName: string;
-  order: number;
-  status: ProjectPlanFormStatus;
-  updatedAt?: string | null;
-  updatedBy?: string | null;
-  /** Filed only when it applies; not counted towards completion. */
-  optional?: boolean;
-};
-
-export type ProjectPlanProgressResponse = {
-  statusCode?: string;
-  message?: string | null;
-  errors?: unknown;
-  totalForms?: number;
-  completedForms?: number;
-  /** First page not yet complete — where an interrupted operator resumes. */
-  nextIncompleteSlug?: string | null;
-  forms?: ProjectPlanFormProgress[];
 };
 
 export type UpdateAdminProjectPayload = {
@@ -220,10 +158,6 @@ export type AdminProjectPayloadFormValues = {
     picDataManagement?: string;
     // companyName?: string;
     regionalCategory?: string;
-    newMembersTotal?: number;
-    withdrawnMembers?: number;
-    cumulativeMembers?: number;
-    membersTotal?: number;
     methodologyVersion?: string;
     methodCategory?: string;
     methodNumber?: string;
@@ -234,12 +168,6 @@ export type AdminProjectPayloadFormValues = {
     operatorCompanyId?: string | number;
   };
 };
-
-export type AdminProjectPlanApplicationPayloadFormValues = AdminProjectPayloadFormValues & {
-  projectApplication?: Record<string, unknown>;
-};
-
-export type CreateAdminProjectPlanApplicationPayload = Record<string, unknown>;
 
 export type PendingCompanyEquipmentItem = {
   installationDate: string;
@@ -568,44 +496,3 @@ export type UpdateProjectStatusPayload = {
 };
 
 export type UpdateProjectStatusResponse = UpdateProjectStatusPayload;
-
-/** How far one project's plan is filled, for list views. */
-export type ProjectPlanProgressSummary = {
-  projectId: string;
-  totalForms: number;
-  completedForms: number;
-  /** First page not yet complete; null once everything is done. */
-  nextIncompleteSlug?: string | null;
-  /** True when the operator may pick any page instead of resuming. */
-  complete: boolean;
-};
-
-export type ProjectPlanBatchProgressResponse = {
-  statusCode?: string;
-  message?: string | null;
-  errors?: unknown;
-  /** Projects the caller cannot see are omitted rather than reported. */
-  projects?: ProjectPlanProgressSummary[];
-};
-
-/**
- * A provisional upload against a project-plan page. The s3Key still points
- * under tmp/; it becomes permanent only when that page is saved.
- */
-export type ProjectPlanFileResponse = {
-  statusCode?: string;
-  message?: string;
-  s3Key?: string;
-  fileId?: string;
-  originalName?: string;
-};
-
-/** A short-lived URL to view a file stored on a saved plan page. */
-export type ProjectPlanFileDownloadResponse = {
-  statusCode?: string;
-  message?: string;
-  errors?: Record<string, string>;
-  url?: string;
-  /** Seconds until `url` stops working. */
-  expiresIn?: number;
-};

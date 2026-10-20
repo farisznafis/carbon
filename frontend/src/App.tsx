@@ -86,9 +86,6 @@ const ProjectDetailAdmin = lazy(() => import("./features/admin/project-detail/Pr
 const AdminProjectInformation = lazy(() =>
   import('./features/admin/project-detail/AdminProjectInformationPage'),
 );
-const AdminProjectPlan = lazy(() =>
-  import("./features/admin/project-detail/AdminProjectPlanPage"),
-);
 const AdminMonitoringReport = lazy(() =>
   import("./features/admin/project-detail/AdminMonitoringReportPage"),
 );
@@ -435,16 +432,6 @@ const App = () => {
                   <RequireAdmin>
                     <AdminPermissionRoute permission="PROJECT_UPDATE" title="プロジェクト更新" description="登録済みプロジェクトの情報を更新します。">
                       <AdminProjectEdit />
-                    </AdminPermissionRoute>
-              </RequireAdmin>
-            }
-          />
-          <Route
-            path={paths.adminProjectPlanRoute}
-            element={
-                  <RequireAdmin>
-                    <AdminPermissionRoute permission="PROJECT_READ" title="プロジェクト計画書" description="計画書ファイルと、認証対象期間・会員数計画を確認します。">
-                      <AdminProjectPlan />
                     </AdminPermissionRoute>
               </RequireAdmin>
             }

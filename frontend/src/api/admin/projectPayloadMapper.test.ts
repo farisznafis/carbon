@@ -31,11 +31,10 @@ describe('mapAdminProjectUpdatePayload', () => {
     });
   });
 
-  it('maps project totals and operator ID without removed display fields', () => {
+  it('maps emissions and operator ID without removed fields', () => {
     const payload = mapAdminProjectPayload(
       {
         projectBase: {
-          membersTotal: 0,
           operatorCompanyId: 'operator-1',
           postProjectEmission: 0,
         },
@@ -44,10 +43,13 @@ describe('mapAdminProjectUpdatePayload', () => {
     );
 
     expect(payload.project[0]).toMatchObject({
-      membersTotal: 0,
       operatorCompanyId: 'operator-1',
       postProjectEmission: 0,
     });
+    // 会員数 is filled in by hand on the Excel forms and is not sent.
+    for (const removed of ['newMembersTotal', 'withdrawnMembers', 'cumulativeMembers', 'membersTotal']) {
+      expect(payload.project[0]).not.toHaveProperty(removed);
+    }
     expect(payload.operatorCompanyId).toBe('operator-1');
     expect(payload.project[0]).not.toHaveProperty('companyName');
     expect(payload.project[0]).not.toHaveProperty('emissionReduction');

@@ -130,9 +130,6 @@ export const paths = {
   ) => `/admin/projects/${projectId}/monitoring/${monitoringId}`,
   adminProjectEditRoute: '/admin/projects/:projectId/edit',
   adminProjectEdit: (projectId: string) => `/admin/projects/${projectId}/edit`,
-  adminProjectPlanRoute: '/admin/projects/:projectId/project-plan',
-  adminProjectPlan: (projectId: string) =>
-    `/admin/projects/${projectId}/project-plan`,
   adminProjectMonitoringReportRoute:
     '/admin/projects/:projectId/monitoring-report',
   adminProjectMonitoringReport: (projectId: string) =>

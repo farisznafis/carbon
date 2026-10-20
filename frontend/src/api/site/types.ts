@@ -146,10 +146,6 @@ export type SiteProjectApiItem = {
   dataManagementPic?: string | null;
   companyName?: string | null;
   regionalCategory?: string | null;
-  newMembersTotal?: number | null;
-  withdrawnMembers?: number | null;
-  cumulativeMembers?: number | null;
-  membersTotal?: number | null;
   methodologyVersion?: string | null;
   methodologyCategory?: string | null;
   methodologyNumber?: string | null;
@@ -203,10 +199,6 @@ export type SiteProject = Project & {
   dataManagementPic?: string;
   companyName?: string;
   regionalCategory?: string;
-  newMembersTotal?: number;
-  withdrawnMembers?: number;
-  cumulativeMembers?: number;
-  membersTotal?: number;
   methodDetails?: string;
   operatorCompanyId?: string | number;
   updatedAt?: string;
