@@ -198,11 +198,13 @@ export async function getMonitoringDeletionHistory(params: {
   };
 }
 
-export async function getMonitoringCancelRequests(): Promise<
-  MonitoringCancelRequestListItem[]
-> {
+// Backend defaults to PENDING only; callers here need history, so default to ALL.
+export async function getMonitoringCancelRequests(
+  status: 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' = 'ALL',
+): Promise<MonitoringCancelRequestListItem[]> {
+  const query = new URLSearchParams({ status });
   const response = await apiRequest<MonitoringCancelRequestListResponse>(
-    '/monitoring/cancel-requests',
+    `/monitoring/cancel-requests?${query.toString()}`,
     {
       method: 'GET',
       fallbackErrorMessage: 'Failed to fetch monitoring cancel requests',
