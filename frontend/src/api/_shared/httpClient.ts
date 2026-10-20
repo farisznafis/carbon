@@ -59,13 +59,30 @@ export async function apiFetch(path: string, options: ApiFetchOptions = {}): Pro
   const body = hasJsonBody ? JSON.stringify(options.body) : options.body;
   const { forbiddenHandling: _forbiddenHandling, ...requestOptions } = options;
 
-  const response = await fetch(`${BASE_URL}${path}`, {
-    ...requestOptions,
-    body: body as BodyInit | null | undefined,
-    headers: createHeaders(options, hasJsonBody),
-  });
+  const send = () =>
+    fetch(`${BASE_URL}${path}`, {
+      ...requestOptions,
+      body: body as BodyInit | null | undefined,
+      headers: createHeaders(options, hasJsonBody),
+    });
+
+  const response = await send();
+
+  if (import.meta.env.VITE_USE_MOCK === 'true' && missedMockApi(response)) {
+    const { reactivateMockApi } = await import('@/mocks/browser');
+    await reactivateMockApi();
+    return send();
+  }
 
   return response;
+}
+
+/** A request the mock worker let through reaches the static host, which has no `/api`. */
+function missedMockApi(response: Response): boolean {
+  return (
+    response.status === 405 ||
+    (response.headers.get('Content-Type') ?? '').includes('text/html')
+  );
 }
 
 export async function parseJsonResponse<T>(response: Response): Promise<ParsedResponse<T>> {
