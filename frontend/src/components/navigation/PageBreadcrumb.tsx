@@ -20,7 +20,7 @@ export type PageBreadcrumbItem = {
   onClick?: () => void;
 };
 
-const crumbLinkClassName = 'inline-flex min-h-6 max-w-60 items-center gap-1';
+const crumbLinkClassName = 'inline-flex min-h-6 max-w-60 items-center gap-1 [@media(pointer:coarse)]:min-h-11';
 
 type PageBreadcrumbProps = {
   /** Ordered from the section root to the current page. */

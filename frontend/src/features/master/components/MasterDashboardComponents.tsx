@@ -117,7 +117,7 @@ export function UserDashboardCard({
     <article className={clickableCardClassName}>
       <div className="min-w-0 flex-1 px-5 py-4 md:px-6">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-primary-strong">
             <User className="h-5 w-5" />
           </span>
           <h3 className="text-foreground">

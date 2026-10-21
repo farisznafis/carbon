@@ -95,7 +95,7 @@ function OperatorPermissionSummary({
 function OperatorEmptyState({ onAdd }: Readonly<{ onAdd: () => void }>) {
   return (
     <div className='flex flex-col items-center px-6 py-14 text-center sm:py-16'>
-      <span className='flex h-[72px] w-[72px] items-center justify-center rounded-full bg-secondary text-primary'>
+      <span className='flex h-[72px] w-[72px] items-center justify-center rounded-full bg-secondary text-primary-strong'>
         <Plus
           className='h-8 w-8'
           aria-hidden='true'

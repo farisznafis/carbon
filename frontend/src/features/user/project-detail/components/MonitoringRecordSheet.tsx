@@ -110,7 +110,7 @@ export function MonitoringRecordSheet({
                 <Button
                   type='button'
                   variant='outline'
-                  className='w-full border-destructive/40 text-destructive hover:bg-destructive/5 hover:text-destructive'
+                  className='w-full border-destructive/40 text-destructive-strong hover:bg-destructive/5 hover:text-destructive-strong'
                   onClick={() => onRequestCancel(record)}
                 >
                   取消申請

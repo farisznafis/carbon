@@ -229,7 +229,7 @@ function SummaryMetric({
         <span
           className={cn(
             'text-form-title font-bold tabular-nums',
-            emphasis ? 'text-primary' : 'text-foreground',
+            emphasis ? 'text-primary-strong' : 'text-foreground',
           )}
         >
           {value}
@@ -254,7 +254,7 @@ function MonitoringMetric({ icon, label, value, unit }: MonitoringMetricProps) {
   return (
     <div className='min-w-0 bg-card px-4 py-5'>
       <div className='flex min-w-0 items-center gap-2'>
-        <span className='shrink-0 text-primary'>{icon}</span>
+        <span className='shrink-0 text-primary-strong'>{icon}</span>
 
         <span className='truncate text-table font-bold text-foreground'>
           {label}
@@ -784,7 +784,7 @@ const ProjectDetail = () => {
             </div>
 
             {/* Project metadata */}
-            <div className='grid gap-px border-t border-border bg-neutral-100 md:grid-cols-3'>
+            <div className='grid gap-px border-t border-border bg-border md:grid-cols-3'>
               <ProjectMetaItem
                 icon={<MapPin className='h-5 w-5' />}
                 label='拠点'
@@ -938,7 +938,7 @@ const ProjectDetail = () => {
             >
               <section className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
                 <div className='flex items-center gap-3'>
-                  <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary'>
+                  <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary-strong'>
                     <PackageCheck className='h-5 w-5' />
                   </span>
 
@@ -983,7 +983,7 @@ const ProjectDetail = () => {
               ) : equipmentError ? (
                 <Card className={projectDetailCardClassName}>
                   <CardContent
-                    className='p-6 text-center text-destructive'
+                    className='p-6 text-center text-destructive-strong'
                     role='alert'
                   >
                     {equipmentError}

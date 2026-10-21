@@ -207,7 +207,7 @@ export function HomeHeroSection({
             "
           >
             カーボンデータを、
-            <span className="whitespace-nowrap text-primary">
+            <span className="whitespace-nowrap text-primary-strong">
               「意思決定」
             </span>
             に変える。

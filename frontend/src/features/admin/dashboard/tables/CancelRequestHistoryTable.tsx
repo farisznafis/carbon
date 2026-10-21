@@ -137,7 +137,7 @@ export function CancelRequestHistoryTable({
   if (loadError) {
     return (
       <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center">
-        <p className="text-sm text-destructive">{loadError}</p>
+        <p className="text-sm text-destructive-strong">{loadError}</p>
         <ActionButton kind="retry" onClick={reloadRequests} />
       </div>
     );

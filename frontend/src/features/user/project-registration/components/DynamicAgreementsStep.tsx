@@ -120,7 +120,7 @@ function RequiredFieldLabel({
       className="flex cursor-pointer items-start gap-1 text-small font-medium leading-5 text-foreground"
     >
       <span className="min-w-0">{children}</span>
-      <span aria-hidden="true" className="shrink-0 text-destructive">
+      <span aria-hidden="true" className="shrink-0 text-destructive-strong">
         *
       </span>
       <span className="sr-only">必須</span>
@@ -367,7 +367,7 @@ export const DynamicAgreementsStep = forwardRef<
                                       href="https://policies.env.go.jp/earth/ghg-santeikohyo/search.html"
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="break-all text-primary hover:underline"
+                                      className="break-all text-primary-strong hover:underline"
                                     >
                                       https://policies.env.go.jp/earth/ghg-santeikohyo/search.html
                                     </a>
@@ -523,7 +523,7 @@ export const DynamicAgreementsStep = forwardRef<
                                 href="https://www.enecho.meti.go.jp/category/saving_and_new/saving/004/"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="break-all text-primary hover:underline"
+                                className="break-all text-primary-strong hover:underline"
                               >
                                 https://www.enecho.meti.go.jp/category/saving_and_new/saving/004/
                               </a>

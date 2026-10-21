@@ -76,7 +76,7 @@ export function DashboardEmissionReductionProgress({
 
   if (error) {
     return (
-      <p role='alert' className='text-small text-destructive'>
+      <p role='alert' className='text-small text-destructive-strong'>
         {error}
       </p>
     );

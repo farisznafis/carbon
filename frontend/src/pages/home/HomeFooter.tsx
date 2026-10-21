@@ -32,7 +32,7 @@ export function HomeFooter() {
           <div className="max-w-sm space-y-4">
             <div className="flex items-center gap-2">
               <span className="text-3xl font-bold tracking-tight text-foreground">
-                <span className="text-primary">G</span>X
+                <span className="text-primary-strong">G</span>X
               </span>
               <span className="text-3xl font-bold tracking-tight text-foreground">Project</span>
             </div>
@@ -48,7 +48,7 @@ export function HomeFooter() {
                 <li key={link.href}>
                   <a
                     href={link.href}
-                    className="text-muted-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="text-muted-foreground transition-colors hover:text-primary-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
                     {link.label}
                   </a>
@@ -73,7 +73,7 @@ export function HomeFooter() {
               <li>
                 <a
                   href={`mailto:${HOME_CONTACT_DETAILS.email}`}
-                  className="flex w-fit items-center gap-3 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="flex w-fit items-center gap-3 transition-colors hover:text-primary-strong [@media(pointer:coarse)]:min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   <Mail className="h-5 w-5 shrink-0" aria-hidden="true" />
                   {HOME_CONTACT_DETAILS.email}
@@ -82,7 +82,7 @@ export function HomeFooter() {
               <li>
                 <a
                   href={`tel:${HOME_CONTACT_DETAILS.phoneHref}`}
-                  className="flex w-fit items-center gap-3 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="flex w-fit items-center gap-3 transition-colors hover:text-primary-strong [@media(pointer:coarse)]:min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   <Phone className="h-5 w-5 shrink-0" aria-hidden="true" />
                   {HOME_CONTACT_DETAILS.phoneDisplay}

@@ -69,7 +69,7 @@ export function EmissionTrendChart({
 
       <div className='mt-4 flex min-h-[280px] flex-1 items-center justify-center'>
         {error ? (
-          <p className='text-subtle text-destructive' role='alert'>
+          <p className='text-subtle text-destructive-strong' role='alert'>
             {error}
           </p>
         ) : data.length === 0 ? (

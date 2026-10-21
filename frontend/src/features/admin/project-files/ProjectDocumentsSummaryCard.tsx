@@ -85,8 +85,8 @@ function DocumentRow({
           !latest
             ? 'border border-dashed border-border text-muted-foreground'
             : isExcel
-              ? 'bg-success-subtle text-success'
-              : 'bg-destructive-subtle text-destructive',
+              ? 'bg-success-subtle text-success-strong'
+              : 'bg-destructive-subtle text-destructive-strong',
         )}
       >
         <FileIcon className="h-5 w-5" />
@@ -170,7 +170,7 @@ export function ProjectDocumentsSummaryCard({
     if (listingQuery.isError) {
       return (
         <div role="alert" className="flex flex-col items-start gap-3 py-2">
-          <p className="text-small text-destructive">書類を取得できませんでした。</p>
+          <p className="text-small text-destructive-strong">書類を取得できませんでした。</p>
           <ActionButton kind="retry" onClick={() => void listingQuery.refetch()} />
         </div>
       );

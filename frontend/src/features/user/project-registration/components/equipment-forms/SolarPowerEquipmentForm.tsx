@@ -240,7 +240,7 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
                       {sites.length > 0 && <SelectSeparator />}
                       <SelectItem
                         value={ADD_SITE_OPTION_VALUE}
-                        className="font-medium text-primary focus:text-primary"
+                        className="font-medium text-primary-strong focus:text-primary-strong"
                       >
                         <span className="flex items-center gap-2">
                           <Plus className="h-4 w-4" aria-hidden="true" />
@@ -252,7 +252,7 @@ export function SolarPowerEquipmentForm(props: SolarPowerEquipmentFormProps) {
                 </SelectContent>
               </Select>
               {siteOptionsError && (
-                <p className="text-sm text-destructive">{siteOptionsError}</p>
+                <p className="text-sm text-destructive-strong">{siteOptionsError}</p>
               )}
               <FormMessage />
             </FormItem>

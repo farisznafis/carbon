@@ -215,7 +215,7 @@ export function DataGridTable<T>({
               variant='ghost'
               onClick={() => handleHeaderClick(column)}
               className={cn(
-                'h-auto justify-start gap-1 p-0 text-table font-bold text-foreground hover:text-primary',
+                'h-auto justify-start gap-1 p-0 text-table font-bold text-foreground hover:text-primary-strong',
                 getStickyHeaderClass(column.sticky),
                 !column.sticky && 'hover:bg-transparent',
                 column.className,

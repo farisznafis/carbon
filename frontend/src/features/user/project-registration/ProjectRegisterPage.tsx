@@ -835,7 +835,7 @@ const ProjectRegister = () => {
       return (
         <Card className="rounded-lg border-border shadow-none">
           <CardContent className="space-y-5 p-6 text-center sm:p-10">
-            <p className="text-destructive">
+            <p className="text-destructive-strong">
               {memberTermsLoadError || '入会規約情報を取得できませんでした'}
             </p>
             <FormActions

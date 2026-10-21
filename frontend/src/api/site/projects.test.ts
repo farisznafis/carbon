@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  getMyProjectParticipations,
   getSiteProjects,
 } from './projects';
 
@@ -40,40 +39,6 @@ describe('getSiteProjects', () => {
         isCompanyJoined: true,
         hasSiteRelation: false,
       }),
-    );
-  });
-});
-
-describe('getMyProjectParticipations', () => {
-  it('loads participation IDs using the encoded project ID', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify([
-          {
-            participationId: 42,
-            siteId: 'site001',
-            siteName: '東京拠点',
-            status: 'APPROVED',
-            pdfStatus: 'READY',
-          },
-        ]),
-        { status: 200, headers: { 'Content-Type': 'application/json' } },
-      ),
-    );
-    vi.stubGlobal('fetch', fetchMock);
-
-    await expect(getMyProjectParticipations('PROJ/001')).resolves.toEqual([
-      {
-        participationId: 42,
-        siteId: 'site001',
-        siteName: '東京拠点',
-        status: 'APPROVED',
-        pdfStatus: 'READY',
-      },
-    ]);
-    expect(fetchMock).toHaveBeenCalledWith(
-      '/api/site/project/PROJ%2F001/my-participations',
-      expect.objectContaining({ method: 'GET' }),
     );
   });
 });

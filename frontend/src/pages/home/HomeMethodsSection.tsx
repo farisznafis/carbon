@@ -39,7 +39,7 @@ export function HomeMethodsSection() {
                   <SolarPanel className="h-6 w-6" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-base font-bold leading-6 text-primary">
+                  <p className="text-base font-bold leading-6 text-primary-strong">
                     {methodology.value}
                   </p>
                   <h3 className="mt-1 text-lg font-bold leading-7">

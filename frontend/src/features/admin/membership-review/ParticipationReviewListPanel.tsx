@@ -164,7 +164,7 @@ export function ParticipationReviewListPanel({
   if (isError) {
     return (
       <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center">
-        <p role="alert" className="text-small text-destructive">
+        <p role="alert" className="text-small text-destructive-strong">
           入会届一覧を取得できませんでした。
         </p>
         <ActionButton kind="retry" onClick={onRetry} />

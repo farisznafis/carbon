@@ -36,8 +36,8 @@ const noticeBannerStyles: Record<
   info: {
     container:
       'border-primary/25 bg-primary/5',
-    icon: 'text-primary',
-    title: 'text-primary',
+    icon: 'text-primary-strong',
+    title: 'text-primary-strong',
   },
 
   warning: {

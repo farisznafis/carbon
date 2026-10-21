@@ -72,7 +72,7 @@ export function PendingCompanyActionDialog({
           {!isApprove && (
             <div className="space-y-2">
               <label htmlFor="rejectReason" className="text-small font-bold">
-                却下理由 <span className="text-destructive">*</span>
+                却下理由 <span className="text-destructive-strong">*</span>
               </label>
               <p className="text-subtle text-foreground">
                 この内容は申請者に通知されます。
@@ -85,7 +85,7 @@ export function PendingCompanyActionDialog({
                 className="min-h-[120px] w-full rounded-md border border-input bg-background px-4 py-3 text-body outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               />
               {fieldErrors?.rejectionReason && (
-                <p className="text-small font-medium text-destructive">
+                <p className="text-small font-medium text-destructive-strong">
                   {fieldErrors.rejectionReason}
                 </p>
               )}

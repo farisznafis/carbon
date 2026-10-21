@@ -92,7 +92,7 @@ export function MembershipPreparationDialog({
                 <h3 className="text-base font-bold leading-6 text-foreground">
                   {section.title}
                 </h3>
-                <ul className="list-disc space-y-2 pl-5 text-small font-normal text-foreground marker:text-primary">
+                <ul className="list-disc space-y-2 pl-5 text-small font-normal text-foreground marker:text-primary-strong">
                   {section.items.map((item) => (
                     <li key={item} className="pl-1">
                       {item}

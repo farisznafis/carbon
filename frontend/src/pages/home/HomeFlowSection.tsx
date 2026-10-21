@@ -99,7 +99,7 @@ export function HomeFlowSection() {
 
             <span
               aria-hidden='true'
-              className='text-sm text-primary'
+              className='text-sm text-primary-strong'
             >
               →
             </span>
@@ -149,7 +149,7 @@ export function HomeFlowSection() {
                 '
               >
                 {HOME_FLOW_STEPS.map((step, index) => {
-                  const number = String(index + 1).padStart(2, '0');
+                  const number = String(index + 1);
 
                   return (
                     <li
@@ -202,7 +202,7 @@ export function HomeFlowSection() {
                             bg-card
                             text-xs
                             font-bold
-                            text-primary
+                            text-primary-strong
                             shadow-app-sm
                             transition
                             duration-200
@@ -272,7 +272,7 @@ export function HomeFlowSection() {
             '
           >
             登録するだけで終わらない。
-            <span className='text-primary'> 次の判断までつながる運用へ。</span>
+            <span className='text-primary-strong'> 次の判断までつながる運用へ。</span>
           </p>
         </div> */}
       </div>

@@ -84,7 +84,7 @@ const FileInput = React.forwardRef<HTMLInputElement, FileInputProps>(
           )}
           aria-disabled={disabled}
         >
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-primary/30 bg-secondary text-primary">
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-primary/30 bg-secondary text-primary-strong">
             {value ? (
               <FileText className="h-7 w-7" />
             ) : (
@@ -94,7 +94,7 @@ const FileInput = React.forwardRef<HTMLInputElement, FileInputProps>(
           <span className="min-w-0 flex-1">
             <span className="block text-xl font-medium leading-7 text-foreground">
               {value ? value.name : label}
-              {required && <span className="ml-1 text-destructive">*</span>}
+              {required && <span className="ml-1 text-destructive-strong">*</span>}
             </span>
           </span>
           {value && !disabled && (
@@ -115,7 +115,7 @@ const FileInput = React.forwardRef<HTMLInputElement, FileInputProps>(
           <p
             className={cn(
               "text-sm leading-6 text-foreground",
-              error && "text-destructive",
+              error && "text-destructive-strong",
             )}
           >
             {error || helperText || `対応形式: ${accept}`}

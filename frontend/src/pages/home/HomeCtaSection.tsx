@@ -18,7 +18,7 @@ export function HomeCtaSection({ signupPath }: HomeCtaSectionProps) {
           max-w-page
           overflow-hidden
           rounded-3xl
-          bg-[linear-gradient(130deg,hsl(var(--blue-900)),hsl(var(--blue-700))_70%,hsl(var(--blue-600)))]
+          bg-[linear-gradient(130deg,hsl(var(--blue-900)),hsl(var(--blue-800))_70%,hsl(var(--blue-700)))]
           shadow-marketing
         '
       >
@@ -85,7 +85,7 @@ export function HomeCtaSection({ signupPath }: HomeCtaSectionProps) {
                 max-w-2xl
                 text-base
                 leading-7
-                text-white/80
+                text-white
                 sm:text-lg
               '
             >

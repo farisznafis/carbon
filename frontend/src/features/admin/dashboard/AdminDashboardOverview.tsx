@@ -188,7 +188,7 @@ function MetricCard({
           ) : (
             <div
               role='alert'
-              className='w-full rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-small text-destructive'
+              className='w-full rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-small text-destructive-strong'
             >
               取得できませんでした
             </div>
@@ -312,10 +312,10 @@ function CompanyApplicationSummary({
                 role='alert'
               >
                 {pendingError && (
-                  <p className='text-subtle text-destructive'>{pendingError}</p>
+                  <p className='text-subtle text-destructive-strong'>{pendingError}</p>
                 )}
                 {rejectedError && (
-                  <p className='text-subtle text-destructive'>
+                  <p className='text-subtle text-destructive-strong'>
                     {rejectedError}
                   </p>
                 )}
@@ -441,7 +441,7 @@ function BatchHistorySummary({
         ) : error ? (
           <p
             role='alert'
-            className='py-6 text-center text-small text-destructive'
+            className='py-6 text-center text-small text-destructive-strong'
           >
             {error}
           </p>

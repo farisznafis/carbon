@@ -297,7 +297,7 @@ export default function EquipmentEditPage() {
         <FormPageContent>
           <FormPageTitle>設備変更</FormPageTitle>
           <FormCard className="space-y-5 text-center">
-            <p role="alert" className="text-destructive">
+            <p role="alert" className="text-destructive-strong">
               {loadError ?? '設備情報を取得できませんでした。'}
             </p>
             {equipmentId !== null && siteId && projectId && (

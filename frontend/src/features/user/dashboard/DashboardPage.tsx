@@ -249,7 +249,7 @@ function KpiCard({
       className={cn(
         'relative h-full min-h-[200px] overflow-hidden rounded-lg border-border',
         variant === 'primary'
-          ? 'border-primary bg-primary text-primary-foreground'
+          ? 'border-primary-strong bg-primary-strong text-primary-foreground'
           : 'bg-card text-foreground',
       )}
     >
@@ -257,7 +257,7 @@ function KpiCard({
         <p
           className={cn(
             'text-small',
-            variant === 'primary' ? 'text-white/85' : 'text-foreground',
+            variant === 'primary' ? 'text-primary-foreground' : 'text-foreground',
           )}
         >
           {title}
@@ -268,7 +268,7 @@ function KpiCard({
         <p
           className={cn(
             'text-subtle',
-            variant === 'primary' ? 'text-white/80' : 'text-foreground',
+            variant === 'primary' ? 'text-primary-foreground' : 'text-foreground',
           )}
         >
           {unit}
@@ -347,7 +347,7 @@ const projectSurfaceClassName =
 
 function ProjectIcon() {
   return (
-    <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary'>
+    <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary-strong'>
       <Building2 className='h-5 w-5' aria-hidden='true' />
     </span>
   );
@@ -498,7 +498,7 @@ function JoinedProjectRow({
 
       <div className='flex lg:justify-end'>
         {opensDetail ? (
-          <span className='hidden items-center gap-1 text-small font-medium text-primary lg:inline-flex'>
+          <span className='hidden items-center gap-1 text-small font-medium text-primary-strong lg:inline-flex'>
             詳細
             <ChevronRight className='h-4 w-4' aria-hidden='true' />
           </span>
@@ -844,7 +844,7 @@ const Dashboard = () => {
               拠点ダッシュボード
             </span> */}
             <div className='mt-1 flex min-w-0 items-center gap-3'>
-              <span className='flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-primary'>
+              <span className='flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-primary-strong'>
                 <Factory className='h-6 w-6' />
               </span>
               {isSiteLoading ? (
@@ -881,7 +881,7 @@ const Dashboard = () => {
           {siteError ? (
             <p
               role='alert'
-              className='mt-4 text-small text-destructive'
+              className='mt-4 text-small text-destructive-strong'
             >
               {siteError}
             </p>
@@ -923,7 +923,7 @@ const Dashboard = () => {
           ) : projectsError ? (
             <Card className='rounded-lg border-border'>
               <CardContent
-                className='p-10 text-center text-destructive'
+                className='p-10 text-center text-destructive-strong'
                 role='alert'
               >
                 {projectsError}
@@ -990,7 +990,7 @@ const Dashboard = () => {
           ) : projectsError ? (
             <Card className='rounded-lg border-border'>
               <CardContent
-                className='p-10 text-center text-destructive'
+                className='p-10 text-center text-destructive-strong'
                 role='alert'
               >
                 {projectsError}

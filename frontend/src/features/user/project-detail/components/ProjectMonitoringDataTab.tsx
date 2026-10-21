@@ -167,7 +167,7 @@ export function ProjectMonitoringDataTab({
   return (
     <>
       <section className='flex items-center gap-3'>
-        <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary'>
+        <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary-strong'>
           <ClipboardList className='h-5 w-5' aria-hidden='true' />
         </span>
         <div>
@@ -184,7 +184,7 @@ export function ProjectMonitoringDataTab({
       ) : loadError ? (
         <Card className={projectDetailCardClassName}>
           <CardContent className='flex flex-col items-center gap-3 p-6 text-center'>
-            <p className='text-destructive' role='alert'>
+            <p className='text-destructive-strong' role='alert'>
               {loadError}
             </p>
             <ActionButton kind='retry' onClick={() => void recordsQuery.refetch()} />
@@ -258,7 +258,7 @@ export function ProjectMonitoringDataTab({
 
           <div className='space-y-2'>
             <label htmlFor='monitoring-cancel-reason' className='text-sm font-medium'>
-              理由 <span className='text-destructive'>*</span>
+              理由 <span className='text-destructive-strong'>*</span>
             </label>
             <Textarea
               id='monitoring-cancel-reason'
@@ -269,7 +269,7 @@ export function ProjectMonitoringDataTab({
               disabled={isSubmitting}
             />
             {submitError ? (
-              <p className='text-sm text-destructive' role='alert'>
+              <p className='text-sm text-destructive-strong' role='alert'>
                 {submitError}
               </p>
             ) : null}

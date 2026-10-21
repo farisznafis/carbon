@@ -168,7 +168,7 @@ export function HomeBenefitsSection() {
                       font-bold
                       ${
                         isActive
-                          ? 'text-primary'
+                          ? 'text-primary-strong'
                           : 'text-background/40'
                       }
                     `}
@@ -241,7 +241,7 @@ export function HomeBenefitsSection() {
                       transition-transform
                       ${
                         isActive
-                          ? 'translate-x-1 text-primary'
+                          ? 'translate-x-1 text-primary-strong'
                           : 'text-background/30 group-hover:translate-x-1 group-hover:text-background/60'
                       }
                     `}

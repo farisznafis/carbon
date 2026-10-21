@@ -130,7 +130,7 @@ export function DocumentDataSectionCard({ section, copiedKey, onCopy }: Document
                             <button
                               type="button"
                               className={cn(
-                                'group flex min-h-9 w-full items-center gap-1.5 whitespace-nowrap px-3 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:cursor-default disabled:text-muted-foreground disabled:hover:bg-transparent',
+                                'group flex min-h-9 w-full items-center [@media(pointer:coarse)]:min-h-11 gap-1.5 whitespace-nowrap px-3 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:cursor-default disabled:text-muted-foreground disabled:hover:bg-transparent',
                                 isNumericType(column.type) && 'justify-end tabular-nums',
                                 copied && 'bg-success-subtle',
                               )}

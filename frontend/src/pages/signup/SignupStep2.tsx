@@ -326,7 +326,7 @@ export const SignupStep2 = ({
                 <div className="pointer-events-none">
                   <Textarea
                     rows={4}
-                    className="min-h-24 resize-y border-border bg-[#B1B5BB]/20 disabled:border-border disabled:bg-[#B1B5BB]/20 disabled:opacity-100"
+                    className="min-h-24 resize-y border-border bg-disabled disabled:border-border disabled:bg-disabled disabled:opacity-100"
                     disabled
                     value=""
                   />

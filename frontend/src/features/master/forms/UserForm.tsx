@@ -392,7 +392,7 @@ export function UserForm({
                         )}
                       </div>
                       {siteOptionsError && (
-                        <FormDescription className="text-destructive">
+                        <FormDescription className="text-destructive-strong">
                           {siteOptionsError}
                         </FormDescription>
                       )}

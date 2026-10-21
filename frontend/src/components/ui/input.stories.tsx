@@ -38,7 +38,7 @@ export const States: Story = {
       <div className="space-y-2">
         <label className="text-small block text-foreground">Error</label>
         <Input aria-invalid placeholder="Email" />
-        <p className="text-sm leading-6 text-destructive">
+        <p className="text-sm leading-6 text-destructive-strong">
           有効なメールアドレスを入力してください
         </p>
       </div>

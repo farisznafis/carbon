@@ -195,7 +195,7 @@ export function WizardProgress({
                 <span
                   className={cn(
                     "truncate text-xs font-medium",
-                    isActive && "text-primary",
+                    isActive && "text-primary-strong",
                     isComplete && "text-success-strong",
                     !isReached && "text-muted-foreground",
                   )}
@@ -255,7 +255,7 @@ export function FormSection({
       <div className='flex items-center gap-3'>
         {number != null || icon ? (
           <span className='
-            flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-xl font-bold text-primary
+            flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-xl font-bold text-primary-strong
             '>
             {icon ?? number}
           </span>

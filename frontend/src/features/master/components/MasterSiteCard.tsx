@@ -29,7 +29,7 @@ export function MasterSiteCard({
     <article className={clickableCardClassName}>
       <div className="min-w-0 flex-1 space-y-3 px-5 py-4 md:px-6">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-primary-strong">
             <Building2 className="h-5 w-5" aria-hidden="true" />
           </span>
           <h3 className="min-w-0 truncate text-foreground" title={site.siteName}>

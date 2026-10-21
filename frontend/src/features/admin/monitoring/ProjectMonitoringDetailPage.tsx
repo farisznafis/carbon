@@ -100,7 +100,7 @@ function DetailSection({
     <Card>
       <CardHeader>
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-primary">
+          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-primary-strong">
             {icon}
           </span>
           <div>

@@ -234,7 +234,7 @@ function InquirySuccess({
           justify-center
           rounded-full
           bg-accent
-          text-primary
+          text-primary-strong
         '
       >
         <CheckCircle2
@@ -249,7 +249,7 @@ function InquirySuccess({
           text-xs
           font-bold
           tracking-widest
-          text-primary
+          text-primary-strong
         '
       >
         THANK YOU

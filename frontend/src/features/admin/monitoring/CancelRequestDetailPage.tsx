@@ -182,7 +182,7 @@ export default function CancelRequestDetailPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background px-6">
         <div className="space-y-4 text-center">
-          <p role="alert" className="text-small text-destructive">
+          <p role="alert" className="text-small text-destructive-strong">
             {loadError}
           </p>
           <div className="flex justify-center gap-3">
@@ -304,12 +304,12 @@ export default function CancelRequestDetailPage() {
               aria-describedby={remarksError ? 'manager-remarks-error' : undefined}
             />
             {remarksError && (
-              <p id="manager-remarks-error" className="text-sm text-destructive">
+              <p id="manager-remarks-error" className="text-sm text-destructive-strong">
                 {remarksError}
               </p>
             )}
             {submitError && (
-              <p role="alert" className="text-sm text-destructive">
+              <p role="alert" className="text-sm text-destructive-strong">
                 {submitError}
               </p>
             )}

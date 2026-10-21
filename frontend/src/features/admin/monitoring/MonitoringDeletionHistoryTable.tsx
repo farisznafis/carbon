@@ -159,13 +159,13 @@ export function MonitoringDeletionHistoryTable({
                     <button
                       type="button"
                       aria-label="失敗理由を表示"
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="relative inline-flex h-7 w-7 items-center justify-center rounded-full before:absolute before:-inset-2 before:content-[''] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <Info className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </PopoverTrigger>
                   <PopoverContent align="start" className="w-80 space-y-1">
-                    <p className="text-subtle font-bold text-destructive">
+                    <p className="text-subtle font-bold text-destructive-strong">
                       失敗理由
                     </p>
                     <p className="whitespace-pre-wrap break-words text-small text-foreground">
@@ -200,7 +200,7 @@ export function MonitoringDeletionHistoryTable({
         />
       ) : loadError ? (
         <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center">
-          <p role="alert" className="text-small text-destructive">
+          <p role="alert" className="text-small text-destructive-strong">
             {loadError}
           </p>
           <ActionButton kind="retry" onClick={() => void loadHistory()} />

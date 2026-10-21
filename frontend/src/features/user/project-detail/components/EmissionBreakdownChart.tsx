@@ -106,7 +106,7 @@ export function EmissionBreakdownChart({
       <div className='mt-5 flex min-h-[260px] flex-1 items-center justify-center'>
         {error ? (
           <p
-            className='text-small text-destructive'
+            className='text-small text-destructive-strong'
             role='alert'
           >
             {error}

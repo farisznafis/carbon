@@ -99,7 +99,7 @@ export function NotificationsList({
   }
 
   if (error) {
-    return <div className='text-sm text-destructive'>{error}</div>;
+    return <div className='text-sm text-destructive-strong'>{error}</div>;
   }
 
   if (notifications.length === 0) {
@@ -183,7 +183,7 @@ export function NotificationsList({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align='end'>
                           <DropdownMenuItem
-                            className='text-destructive focus:text-destructive'
+                            className='text-destructive-strong focus:text-destructive-strong'
                             onSelect={() =>
                               void runNotificationAction(
                                 notification.id,

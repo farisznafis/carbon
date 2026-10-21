@@ -32,7 +32,7 @@ export function HomeFaqSection({ contactPath }: HomeFaqSectionProps) {
           />
           <Card className="max-w-xl border-border/70 shadow-app-md">
             <CardContent className="space-y-5 p-6 lg:p-[var(--card-padding)]">
-              {/* <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-primary">
+              {/* <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-primary-strong">
                 <LifeBuoy className="h-5 w-5" aria-hidden="true" />
               </span> */}
               <div className="space-y-2">
@@ -54,7 +54,7 @@ export function HomeFaqSection({ contactPath }: HomeFaqSectionProps) {
               <AccordionTrigger className="py-5 text-left text-base font-bold leading-7 hover:no-underline sm:text-lg 2xl:py-6">
                 {faq.question}
               </AccordionTrigger>
-              <AccordionContent className="pb-5 text-sm leading-6 text-neutral-800 sm:text-base sm:leading-7 2xl:pb-6">
+              <AccordionContent className="pb-5 text-sm leading-6 text-foreground sm:text-base sm:leading-7 2xl:pb-6">
                 {faq.answer}
               </AccordionContent>
             </AccordionItem>

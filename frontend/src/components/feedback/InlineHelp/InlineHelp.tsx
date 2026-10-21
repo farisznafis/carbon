@@ -31,8 +31,15 @@ export const InlineHelp: React.FC<InlineHelpProps> = (rawProps) => {
   React.useEffect(() => {
     if (!open) return;
     const handle = () => close();
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close();
+    };
     window.addEventListener('click', handle);
-    return () => window.removeEventListener('click', handle);
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      window.removeEventListener('click', handle);
+      window.removeEventListener('keydown', handleKey);
+    };
   }, [open]);
 
   return (
@@ -48,6 +55,7 @@ export const InlineHelp: React.FC<InlineHelpProps> = (rawProps) => {
       <button
         type='button'
         onClick={toggle}
+        aria-expanded={open}
         className="relative before:absolute before:-inset-[14px] before:content-['']"
         style={{
           // smaller overall size
@@ -55,11 +63,11 @@ export const InlineHelp: React.FC<InlineHelpProps> = (rawProps) => {
           height: '1rem',
           borderRadius: '9999px',
           border: 'none',
-          backgroundColor: '#6b7280',
-          color: '#ffffff',
+          backgroundColor: 'hsl(var(--muted-foreground))',
+          color: 'hsl(var(--card))',
           // smaller font size for "?"
           fontSize: '0.7rem',
-          fontWeight: 600,
+          fontWeight: 700,
           cursor: 'pointer',
           display: 'inline-flex',
           alignItems: 'center',
@@ -82,10 +90,10 @@ export const InlineHelp: React.FC<InlineHelpProps> = (rawProps) => {
             // width: '120px',
             maxWidth: '12rem',
             minWidth: '12rem',
-            backgroundColor: '#ffffff',
+            backgroundColor: 'hsl(var(--popover))',
             borderRadius: '0.375rem',
-            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
-            border: '1px solid #e5e7eb',
+            boxShadow: 'var(--shadow-md)',
+            border: '1px solid hsl(var(--border))',
             padding: '0.5rem 1.5rem 0.75rem 0.75rem',
             fontSize: '0.875rem',
           }}
@@ -94,6 +102,8 @@ export const InlineHelp: React.FC<InlineHelpProps> = (rawProps) => {
           <button
             type='button'
             onClick={close}
+            aria-label='閉じる'
+            className="before:absolute before:-inset-3 before:content-['']"
             style={{
               position: 'absolute',
               top: '0.25rem',
@@ -103,7 +113,7 @@ export const InlineHelp: React.FC<InlineHelpProps> = (rawProps) => {
               cursor: 'pointer',
               // darker and larger
               fontSize: '1rem',
-              color: '#111827',
+              color: 'hsl(var(--foreground))',
               lineHeight: 1,
               padding: 0,
             }}

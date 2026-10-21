@@ -440,7 +440,7 @@ export function SiteForm({
                                   {userOptions.length > 0 && <SelectSeparator />}
                                   <SelectItem
                                     value={ADD_USER_OPTION_VALUE}
-                                    className="font-medium text-primary focus:text-primary"
+                                    className="font-medium text-primary-strong focus:text-primary-strong"
                                   >
                                     <span className="flex items-center gap-2">
                                       <UserPlus
@@ -467,7 +467,7 @@ export function SiteForm({
                           </FormDescription>
                         )}
                         {userOptionsError && (
-                          <FormDescription className="text-destructive">
+                          <FormDescription className="text-destructive-strong">
                             {userOptionsError}
                           </FormDescription>
                         )}

@@ -48,8 +48,8 @@ export function FileUploadProgress({ items, onRetry, className, ...props }: File
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 flex-1">
                 <p className="break-all text-small font-bold text-foreground">{item.fileName}</p>
-                <div className={cn('mt-1 flex items-center gap-2 text-subtle', item.status === 'error' ? 'text-destructive' : 'text-muted-foreground')}>
-                  {item.status === 'success' ? <Check className="h-4 w-4 text-success" aria-hidden="true" /> : null}
+                <div className={cn('mt-1 flex items-center gap-2 text-subtle', item.status === 'error' ? 'text-destructive-strong' : 'text-muted-foreground')}>
+                  {item.status === 'success' ? <Check className="h-4 w-4 text-success-strong" aria-hidden="true" /> : null}
                   {item.status === 'error' ? <AlertCircle className="h-4 w-4" aria-hidden="true" /> : null}
                   {item.status === 'queued' ? <Clock3 className="h-4 w-4" aria-hidden="true" /> : null}
                   {item.status === 'uploading' && item.progress === null ? <InlineLoader label="アップロード中" showLabel={false} /> : null}
@@ -130,7 +130,7 @@ export function ProcessingProgress({
         <ol className="mt-5 space-y-3">
           {stages.map((stage) => (
             <li key={stage.id} className="flex items-center gap-3 text-small text-foreground">
-              <span className={cn('flex h-6 w-6 shrink-0 items-center justify-center rounded-full border', stage.status === 'complete' && 'border-success bg-success text-success-foreground', stage.status === 'active' && 'border-primary bg-secondary text-primary', stage.status === 'error' && 'border-destructive bg-destructive/10 text-destructive', stage.status === 'pending' && 'border-border text-muted-foreground')}>
+              <span className={cn('flex h-6 w-6 shrink-0 items-center justify-center rounded-full border', stage.status === 'complete' && 'border-success bg-success text-success-foreground', stage.status === 'active' && 'border-primary bg-secondary text-primary-strong', stage.status === 'error' && 'border-destructive bg-destructive/10 text-destructive-strong', stage.status === 'pending' && 'border-border text-muted-foreground')}>
                 {stage.status === 'complete' ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : null}
                 {stage.status === 'active' ? <span className="h-2 w-2 rounded-full bg-primary" aria-hidden="true" /> : null}
                 {stage.status === 'error' ? <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" /> : null}

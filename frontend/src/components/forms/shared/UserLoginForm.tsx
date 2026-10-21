@@ -54,7 +54,7 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
           error={error}
           isSubmitting={form.formState.isSubmitting}
           // footer={
-          //   <a href="/contact" className="text-sm font-medium text-foreground hover:text-primary">
+          //   <a href="/contact" className="text-sm font-medium text-foreground hover:text-primary-strong">
           //     ログインに関するお問い合わせはこちら
           //   </a>
           // }
@@ -123,7 +123,7 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
           <div className="!mt-3 text-right">
             <Link
               to={paths.forgotPassword}
-              className="rounded-sm text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="rounded-sm text-sm font-medium text-primary-strong underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               パスワードをお忘れの方
             </Link>

@@ -151,7 +151,7 @@ export function UserInvitationDialog({
         }}
       >
         <DialogHeader>
-          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-primary">
+          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-primary-strong">
             <Mail className="h-5 w-5" aria-hidden="true" />
           </div>
           <DialogTitle>社員を招待</DialogTitle>
@@ -163,7 +163,7 @@ export function UserInvitationDialog({
         <form className="space-y-6" noValidate onSubmit={handleSubmit}>
           {formError && (
             <p
-              className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+              className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive-strong"
               role="alert"
             >
               {formError}
@@ -195,7 +195,7 @@ export function UserInvitationDialog({
             {fieldErrors.email && (
               <p
                 id="invitation-email-error"
-                className="text-small text-destructive"
+                className="text-small text-destructive-strong"
               >
                 {fieldErrors.email}
               </p>
@@ -242,14 +242,14 @@ export function UserInvitationDialog({
               </p>
             )}
             {sitesQuery.isError && (
-              <p className="text-small text-destructive">
+              <p className="text-small text-destructive-strong">
                 拠点を取得できませんでした。拠点を指定せずに送信できます。
               </p>
             )}
             {fieldErrors.siteId && (
               <p
                 id="invitation-site-error"
-                className="text-small text-destructive"
+                className="text-small text-destructive-strong"
               >
                 {fieldErrors.siteId}
               </p>

@@ -340,7 +340,7 @@ export const Navbar = ({
                             items-center
                             justify-center
                             rounded-full
-                            bg-destructive
+                            bg-destructive-strong
                             px-1
                             text-[0.625rem]
                             font-bold

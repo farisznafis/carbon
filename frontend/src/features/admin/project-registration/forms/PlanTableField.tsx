@@ -165,7 +165,7 @@ export function PlanTableField<TFormValues extends FieldValues = FieldValues>({
         </Button>
       )}
 
-      {tableMessage && <p className="text-sm text-destructive">{tableMessage}</p>}
+      {tableMessage && <p className="text-sm text-destructive-strong">{tableMessage}</p>}
     </div>
   );
 }
@@ -207,7 +207,7 @@ function TableCell<TFormValues extends FieldValues = FieldValues>({
             }}
           />
           {error && (
-            <p id={errorId} className={cn('mt-1 text-xs text-destructive')}>
+            <p id={errorId} className={cn('mt-1 text-xs text-destructive-strong')}>
               {error.message?.toString()}
             </p>
           )}

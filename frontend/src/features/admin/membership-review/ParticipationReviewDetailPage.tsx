@@ -411,7 +411,7 @@ export default function ParticipationReviewDetailPage() {
             role={loadError ? 'alert' : undefined}
             className={
               loadError
-                ? 'text-small text-destructive'
+                ? 'text-small text-destructive-strong'
                 : 'text-small text-foreground'
             }
           >

@@ -18,7 +18,6 @@
 - Keep feature-specific tables and dialogs inside `src/features/*`.
 - Prefer direct category imports, for example:
   - `@/components/layout/FormPageWrapper/FormPageWrapper`
-  - `@/components/feedback/DeleteAlertDialog/DeleteAlertDialog`
   - `@/components/data-display/DataGridTable`
   - `@/components/forms/shared/GenericFormFields/GenericFormFields`
   - `@/components/inputs/FileSelectButton/FileSelectButton`
@@ -27,7 +26,6 @@
 
 - `src/components/FormPageWrapper/*` -> `src/components/layout/FormPageWrapper/*`
 - `src/components/ScrollTableCard/*` -> `src/components/layout/ScrollTableCard/*`
-- `src/components/DeleteAlertDialog/*` -> `src/components/feedback/DeleteAlertDialog/*`
 - `src/components/Confirmation*` -> `src/components/feedback/*`
 - `src/components/ConfirmationData/*` -> `src/components/feedback/ConfirmationData/*`
 - `src/components/InlineHelp/*` -> `src/components/feedback/InlineHelp/*`

@@ -174,7 +174,7 @@ export function AdminProjectStatusTable({
 
   if (projectsError) {
     return (
-      <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center text-small text-destructive">
+      <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center text-small text-destructive-strong">
         {projectsError}
       </div>
     );

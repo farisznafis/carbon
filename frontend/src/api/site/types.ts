@@ -164,16 +164,6 @@ export type SiteProjectApiItem = {
   createdAt?: string | null;
 };
 
-export type MyProjectParticipationApiItem = {
-  participationId: number;
-  siteId: string;
-  siteName: string;
-  status: string;
-  pdfStatus: string;
-};
-
-export type MyProjectParticipation = MyProjectParticipationApiItem;
-
 export type SiteProject = Project & {
   participationId?: number;
   participationStatus?: SiteProjectParticipationStatus;
@@ -470,18 +460,6 @@ export type SiteProjectJoinSustainabilityCommitmentResponse = {
   message?: string | null;
   errors?: Record<string, string> | null;
   timestamp?: string;
-};
-
-export type SiteProjectSustainabilityCommitmentDefaultResponse = {
-  statusCode?: string;
-  message?: string | null;
-  errors?: Record<string, string> | null;
-  timestamp?: string;
-  companyName?: string | null;
-  repName?: string | null;
-  repRole?: string | null;
-  hasConsent?: boolean | null;
-  isAgreeTerms?: boolean | null;
 };
 
 export type SiteProjectFinalAgreementValidationRequest = {

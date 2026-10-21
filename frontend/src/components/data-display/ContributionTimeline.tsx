@@ -259,7 +259,7 @@ export default function ContributionTimeline({
                 top: '5%',
               }}
             >
-              <div className='text-subtle mb-1.5 flex items-center gap-1.5 border-b border-border pb-1.5 font-bold text-primary'>
+              <div className='text-subtle mb-1.5 flex items-center gap-1.5 border-b border-border pb-1.5 font-bold text-primary-strong'>
                 <Calendar className='h-3 w-3' />
                 <span>{timelineData[hoveredIdx].timestamp}</span>
               </div>
@@ -272,7 +272,7 @@ export default function ContributionTimeline({
                 <div className='flex justify-between text-foreground'>
                   <span>貢献数</span>
                   <div className='flex items-center gap-1'>
-                    <span className='font-mono font-bold text-primary'>
+                    <span className='font-mono font-bold text-primary-strong'>
                       {timelineData[hoveredIdx].contributions}
                     </span>
                     <span>件</span>

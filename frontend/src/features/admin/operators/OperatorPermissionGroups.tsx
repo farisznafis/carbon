@@ -51,7 +51,7 @@ export function OperatorPermissionGroups({
             {group.permissions.map((permission) => (
               <li
                 key={permission}
-                className="rounded-full border border-primary/25 bg-primary/5 px-3 py-1.5 text-xs text-blue-900"
+                className="rounded-full border border-primary/25 bg-primary/5 px-3 py-1.5 text-xs text-primary-strong"
               >
                 {getOperatorPermissionLabel(permission)}
               </li>

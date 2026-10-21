@@ -103,7 +103,7 @@ export function FileSelectButton({
         >
           <span
             className={cn(
-              'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-primary transition-all duration-200',
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-primary-strong transition-all duration-200',
               isDragging
                 ? 'scale-110 border-primary bg-card'
                 : hasFile
@@ -122,7 +122,7 @@ export function FileSelectButton({
             </span>
           </span>
           {hasFile && (
-            <span className="ml-auto inline-flex shrink-0 items-center rounded-full bg-primary px-3 py-1 text-xs font-medium leading-4 text-primary-foreground">
+            <span className="ml-auto inline-flex shrink-0 items-center rounded-full bg-primary-strong px-3 py-1 text-xs font-medium leading-4 text-primary-foreground">
               アップロード済み
             </span>
           )}

@@ -179,7 +179,7 @@ function ProjectNavigationCard({
     <Card className="rounded-lg border-border">
       <CardContent className="flex min-h-32 items-center gap-4 p-5 sm:p-6">
         <span
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-primary"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-primary-strong"
           aria-hidden="true"
         >
           {icon}
@@ -460,7 +460,7 @@ export default function ProjectDetailAdmin() {
                     className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center"
                   >
                     <AlertTriangle
-                      className="h-5 w-5 text-destructive"
+                      className="h-5 w-5 text-destructive-strong"
                       aria-hidden="true"
                     />
                     <p className="text-small font-medium text-foreground">

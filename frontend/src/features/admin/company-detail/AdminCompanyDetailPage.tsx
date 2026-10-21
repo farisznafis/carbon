@@ -497,7 +497,7 @@ export default function AdminCompanyDetailPage() {
                       <DropdownMenuItem
                         disabled={isOwnCompany}
                         onSelect={handleOpenSuspendDialog}
-                        className="flex-col items-start gap-0.5 px-3 py-2.5 text-destructive focus:bg-destructive/10 focus:text-destructive"
+                        className="flex-col items-start gap-0.5 px-3 py-2.5 text-destructive-strong focus:bg-destructive/10 focus:text-destructive-strong"
                       >
                         <span className="inline-flex items-center gap-2 font-medium">
                           <Ban className="h-4 w-4" aria-hidden="true" />

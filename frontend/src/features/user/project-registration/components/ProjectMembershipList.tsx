@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import type { SiteProject } from '@/api/site';
 import { Card, CardContent } from '@/components/ui/card';
 import { ProjectMembershipCard } from './ProjectMembershipCard';
@@ -57,10 +58,11 @@ export function ProjectMembershipList({
             ({
               project,
               status,
-            }) => (
+            }, index) => (
               <div
                 key={project.id}
                 data-membership-project
+                style={{ '--reveal-index': index } as CSSProperties}
               >
                 <ProjectMembershipCard
                   project={project}

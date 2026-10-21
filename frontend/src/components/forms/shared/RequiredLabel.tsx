@@ -21,7 +21,7 @@ export function RequiredBadge({
   return (
     <span
       className={cn(
-        'inline-flex shrink-0 items-center text-small font-bold leading-none text-destructive',
+        'inline-flex shrink-0 items-center text-small font-bold leading-none text-destructive-strong',
         className,
       )}
     >

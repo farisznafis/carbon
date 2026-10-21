@@ -106,7 +106,7 @@ export function ProjectRecordForm({
         </FormSection>
 
         {submitError ? (
-          <p role='alert' className='text-sm text-destructive'>
+          <p role='alert' className='text-sm text-destructive-strong'>
             {submitError}
           </p>
         ) : null}

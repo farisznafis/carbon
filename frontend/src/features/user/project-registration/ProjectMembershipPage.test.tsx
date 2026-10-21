@@ -21,14 +21,11 @@ import ProjectMembershipPage from './ProjectMembershipPage';
 const {
   getSiteData,
   getSiteProjects,
-  getMyProjectParticipations,
   downloadProjectMembershipPdf,
   downloadFromUrl,
 } = vi.hoisted(() => ({
   getSiteData: vi.fn(),
   getSiteProjects: vi.fn(),
-  getMyProjectParticipations:
-    vi.fn(),
   downloadProjectMembershipPdf:
     vi.fn(),
   downloadFromUrl: vi.fn(),
@@ -46,7 +43,6 @@ vi.mock(
       ...actual,
       getSiteData,
       getSiteProjects,
-      getMyProjectParticipations,
     };
   },
 );
@@ -185,8 +181,6 @@ describe(
     beforeEach(() => {
       getSiteData.mockReset();
       getSiteProjects.mockReset();
-
-      getMyProjectParticipations.mockReset();
 
       downloadProjectMembershipPdf.mockReset();
 
@@ -555,10 +549,6 @@ describe(
             },
           ),
         ).toBeVisible();
-
-        expect(
-          getMyProjectParticipations,
-        ).not.toHaveBeenCalled();
       },
     );
 

@@ -53,7 +53,7 @@ export function AccountMenu({
           aria-label={`アカウントメニューを開く：${displayName}`}
         >
           <span
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-medium text-primary"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-medium text-primary-strong"
             aria-hidden="true"
           >
             {avatarInitial ?? <User className="h-4 w-4" />}
@@ -102,7 +102,7 @@ export function AccountMenu({
         <DropdownMenuItem
           disabled={isLoggingOut}
           onSelect={() => void handleLogout()}
-          className="mt-1 gap-3 px-3 py-3 text-destructive focus:bg-destructive/10 focus:text-destructive"
+          className="mt-1 gap-3 px-3 py-3 text-destructive-strong focus:bg-destructive/10 focus:text-destructive-strong"
         >
           <LogOut className="h-4 w-4" aria-hidden="true" />
           <span>{isLoggingOut ? 'ログアウト中...' : 'ログアウト'}</span>

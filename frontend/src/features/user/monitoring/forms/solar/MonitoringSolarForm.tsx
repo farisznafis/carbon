@@ -296,7 +296,7 @@ export function MonitoringSolarForm({
                     ) : null}
                     {equipmentLoadError ? (
                       <div className="space-y-2" role="alert">
-                        <p className="text-sm text-destructive">
+                        <p className="text-sm text-destructive-strong">
                           {equipmentLoadError}
                         </p>
                         {onEquipmentRetry ? (

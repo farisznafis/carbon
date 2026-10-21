@@ -91,7 +91,7 @@ export function ProjectMembershipPdfSection({ projectId }: Readonly<{ projectId:
   if (query.isError) {
     return (
       <StaticRow
-        status={<span className="text-destructive">取得できませんでした</span>}
+        status={<span className="text-destructive-strong">取得できませんでした</span>}
         action={<ActionButton kind="retry" onClick={() => void query.refetch()} />}
       />
     );
@@ -145,7 +145,7 @@ export function ProjectMembershipPdfSection({ projectId }: Readonly<{ projectId:
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     <FileText
                       aria-hidden="true"
-                      className={cn('h-5 w-5 shrink-0', ready ? 'text-destructive' : 'text-muted-foreground')}
+                      className={cn('h-5 w-5 shrink-0', ready ? 'text-destructive-strong' : 'text-muted-foreground')}
                     />
                     <div className="min-w-0">
                       <p className="break-all text-sm font-medium text-foreground">

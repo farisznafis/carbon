@@ -43,7 +43,7 @@ export function RowIconButton({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className={cn(destructive && 'text-destructive hover:bg-destructive-subtle hover:text-destructive-strong')}
+      className={cn(destructive && 'text-destructive-strong hover:bg-destructive-subtle hover:text-destructive-strong')}
     >
       {children}
     </Button>
@@ -88,7 +88,7 @@ export function ProjectFileRow({
       <div className="flex min-w-0 flex-1 items-start gap-3">
         <FileIcon
           aria-hidden="true"
-          className={cn('mt-0.5 h-5 w-5 shrink-0', isExcel ? 'text-success' : 'text-destructive')}
+          className={cn('mt-0.5 h-5 w-5 shrink-0', isExcel ? 'text-success-strong' : 'text-destructive-strong')}
         />
         <div className="min-w-0">
           <p className="flex flex-wrap items-center gap-2 text-sm text-foreground">

@@ -78,7 +78,7 @@ const ForgotPassword = () => {
         <button
           type="button"
           onClick={() => navigate(paths.login)}
-          className="text-sm font-medium text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="relative text-sm font-medium text-foreground transition-colors hover:text-primary-strong before:absolute before:inset-x-0 before:-inset-y-3 before:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           ログインページに戻る
         </button>

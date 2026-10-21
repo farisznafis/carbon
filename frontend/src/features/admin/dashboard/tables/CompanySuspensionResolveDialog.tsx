@@ -98,7 +98,7 @@ export function CompanySuspensionResolveDialog({
               </div>
             )}
             {fieldErrors?.suspensionId && (
-              <p className="text-small font-medium text-destructive">
+              <p className="text-small font-medium text-destructive-strong">
                 {fieldErrors.suspensionId}
               </p>
             )}
@@ -112,7 +112,7 @@ export function CompanySuspensionResolveDialog({
 
           <div className="space-y-2">
             <label htmlFor="resolutionNote" className="text-small font-bold">
-              解除メモ <span className="text-destructive">*</span>
+              解除メモ <span className="text-destructive-strong">*</span>
             </label>
             <textarea
               id="resolutionNote"
@@ -122,7 +122,7 @@ export function CompanySuspensionResolveDialog({
               className="min-h-[120px] w-full rounded-md border border-input bg-background px-4 py-3 text-body outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             />
             {fieldErrors?.resolutionNote && (
-              <p className="text-small font-medium text-destructive">
+              <p className="text-small font-medium text-destructive-strong">
                 {fieldErrors.resolutionNote}
               </p>
             )}

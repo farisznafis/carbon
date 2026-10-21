@@ -41,7 +41,7 @@ export function ChartCard({
     if (isLoading) return <SkeletonChart className="min-h-72" />;
     if (error) {
       return (
-        <p role="alert" className="py-12 text-center text-small text-destructive">
+        <p role="alert" className="py-12 text-center text-small text-destructive-strong">
           {error}
         </p>
       );

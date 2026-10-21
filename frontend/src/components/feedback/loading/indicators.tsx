@@ -27,7 +27,7 @@ function BrandedLoadingMark({ message, secondaryMessage, compact = false }: Bran
         <span className="loading-orbit absolute inset-0 motion-reduce:animate-none">
           <span className="absolute left-1/2 top-[6px] h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-primary shadow-app-sm" />
         </span>
-        <span className={cn('loading-leaf-breathe flex items-center justify-center rounded-full bg-card text-primary shadow-app-md motion-reduce:animate-none', compact ? 'h-10 w-10' : 'h-14 w-14')}>
+        <span className={cn('loading-leaf-breathe flex items-center justify-center rounded-full bg-card text-primary-strong shadow-app-md motion-reduce:animate-none', compact ? 'h-10 w-10' : 'h-14 w-14')}>
           <Leaf className={compact ? 'h-6 w-6' : 'h-8 w-8'} strokeWidth={1.7} />
         </span>
       </div>

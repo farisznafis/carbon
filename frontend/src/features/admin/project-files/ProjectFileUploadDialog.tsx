@@ -262,7 +262,7 @@ export function ProjectFileUploadDialog({
               {fileError && (
                 <p
                   role="alert"
-                  className="text-sm leading-5 text-destructive"
+                  className="text-sm leading-5 text-destructive-strong"
                 >
                   {fileError}
                 </p>
@@ -299,7 +299,7 @@ export function ProjectFileUploadDialog({
           {submitError && (
             <p
               role="alert"
-              className="text-sm leading-5 text-destructive"
+              className="text-sm leading-5 text-destructive-strong"
             >
               {submitError}
             </p>

@@ -82,7 +82,7 @@ function EquipmentSummaryCard({
       <CardHeader className='px-6 pb-4 pt-6'>
         <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
           <div className='flex min-w-0 items-center gap-3'>
-            <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary'>
+            <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary-strong'>
               <Wrench className='h-5 w-5' />
             </span>
             <div className='min-w-0'>

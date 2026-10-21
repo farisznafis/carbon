@@ -184,7 +184,7 @@ export function GuideTour({ context, onClose }: Readonly<GuideTourProps>) {
             onInteractOutside={(event) => event.preventDefault()}
           >
             <div className="space-y-1.5" aria-live="polite">
-              <p className="text-xs font-medium tabular-nums text-primary">
+              <p className="text-xs font-medium tabular-nums text-primary-strong">
                 {index + 1} / {steps.length}
               </p>
               <h2 id={titleId} className="text-base font-bold text-foreground">

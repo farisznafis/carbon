@@ -138,7 +138,7 @@ export default function AdminOperatorProfilePage() {
                 number={3}
                 title="権限設定"
                 meta={(
-                  <span className="text-sm font-medium text-primary">
+                  <span className="text-sm font-medium text-primary-strong">
                     {operator.permissions.length}機能
                   </span>
                 )}

@@ -67,7 +67,7 @@ describe('FormActions', () => {
 
     const actionGroup = screen.getByRole('button', { name: '承認' }).parentElement;
     expect(actionGroup).toHaveClass('sm:grid-cols-3');
-    expect(screen.getByRole('button', { name: '承認' })).toHaveClass('bg-success');
+    expect(screen.getByRole('button', { name: '承認' })).toHaveClass('bg-success-strong');
   });
 
   it('supports an independent leading action slot', () => {

@@ -1,5 +1,4 @@
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { lazy, Suspense, useCallback, useEffect, useRef } from "react";
 import {
   Routes,
@@ -197,7 +196,6 @@ const App = () => {
         )}
       >
         <Toaster />
-        <Sonner />
         <ScrollToTop onRouteScrollReset={resetSmoothScrollPosition} />
         <SessionExpiryGuard />
         <AppShell>

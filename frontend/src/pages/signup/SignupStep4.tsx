@@ -25,7 +25,7 @@ export const SignupStep4 = () => {
       <div className="space-y-6 text-center">
       <div className="flex justify-center">
         <div className="h-20 w-20 rounded-full bg-success/10 flex items-center justify-center">
-          <CheckCircle className="h-10 w-10 text-success" />
+          <CheckCircle className="h-10 w-10 text-success-strong" />
         </div>
       </div>
 
@@ -39,7 +39,7 @@ export const SignupStep4 = () => {
       <div className="mx-auto max-w-md rounded-md border p-6">
           <div className="flex items-start space-x-4">
             <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Mail className="h-6 w-6 text-primary" />
+              <Mail className="h-6 w-6 text-primary-strong" />
             </div>
             <div className="text-left">
               <h4 className="font-bold mb-1">確認メールを送信しました</h4>

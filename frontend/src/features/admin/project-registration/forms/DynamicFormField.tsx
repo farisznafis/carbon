@@ -129,7 +129,7 @@ export function DynamicFormField<TFormValues extends FieldValues = FieldValues>(
       />
 
       {error && (
-        <p id={errorId} className="text-sm text-destructive">
+        <p id={errorId} className="text-sm text-destructive-strong">
           {error.message?.toString()}
         </p>
       )}
@@ -422,7 +422,7 @@ function PostalCodeInput<TFormValues extends FieldValues = FieldValues>({
           住所を入力しました。番地・建物名を追記してください。
         </p>
       )}
-      {status.kind === 'error' && <p className="text-sm text-destructive">{status.message}</p>}
+      {status.kind === 'error' && <p className="text-sm text-destructive-strong">{status.message}</p>}
     </div>
   );
 }
@@ -580,7 +580,7 @@ function PlanFileInput<TFormValues extends FieldValues = FieldValues>({
       {!uploading && attached && (
         <p className="text-sm text-muted-foreground">添付済み: {attached}</p>
       )}
-      {uploadError && <p className="text-sm text-destructive">{uploadError}</p>}
+      {uploadError && <p className="text-sm text-destructive-strong">{uploadError}</p>}
     </div>
   );
 }

@@ -33,7 +33,7 @@ export function AdminProjectOverviewCards({
     return (
       <Card className="rounded-lg border-border">
         <CardContent>
-          <p role="alert" className="py-8 text-center text-small text-destructive">
+          <p role="alert" className="py-8 text-center text-small text-destructive-strong">
             {projectsError}
           </p>
         </CardContent>

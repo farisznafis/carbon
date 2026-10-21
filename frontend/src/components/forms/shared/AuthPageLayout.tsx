@@ -1,9 +1,4 @@
 import type { ReactNode } from 'react';
-import { useRef } from 'react';
-import { useGSAP } from '@gsap/react';
-import gsap from 'gsap';
-
-gsap.registerPlugin(useGSAP);
 
 type AuthPageLayoutProps = {
   title: string;
@@ -35,38 +30,8 @@ export function AuthPageLayout({
   children,
   footer,
 }: AuthPageLayoutProps) {
-  const layoutRef = useRef<HTMLElement>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  useGSAP(
-    () => {
-      const prefersReducedMotion =
-        typeof window.matchMedia === 'function' &&
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      if (prefersReducedMotion) return;
-
-      const timeline = gsap.timeline({ defaults: { ease: 'power3.out' } });
-
-      if (cardRef.current) {
-        timeline.from(cardRef.current, { y: 16, opacity: 0, duration: 0.5 });
-      }
-
-      if (contentRef.current?.children.length) {
-        timeline.from(
-          contentRef.current.children,
-          { y: 8, opacity: 0, duration: 0.3, stagger: 0.05 },
-          '-=0.3',
-        );
-      }
-    },
-    { scope: layoutRef },
-  );
-
   return (
     <main
-      ref={layoutRef}
       className="relative flex h-full min-h-0 w-full min-w-0 max-w-full overflow-hidden"
     >
       <AuthAmbientBackground />
@@ -74,12 +39,11 @@ export function AuthPageLayout({
       {/* Scrolls instead of hiding content when the viewport is short. */}
       <div className="relative z-10 flex min-h-0 w-full overflow-y-auto px-4 py-8 sm:px-6">
         <div
-          ref={cardRef}
-          className="m-auto w-full max-w-[30rem] rounded-lg border border-white/70 bg-card/90 p-6 shadow-app-md backdrop-blur-md sm:p-8"
+          className="m-auto w-full max-w-[30rem] animate-slide-up motion-reduce:animate-none rounded-lg border border-white/70 bg-card/90 p-6 shadow-app-md backdrop-blur-md sm:p-8"
         >
           <header>
             {headerIcon && (
-              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-lg bg-secondary text-primary">
+              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-lg bg-secondary text-primary-strong">
                 {headerIcon}
               </div>
             )}
@@ -96,13 +60,13 @@ export function AuthPageLayout({
           {error && (
             <p
               role="alert"
-              className="mt-5 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
+              className="mt-5 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive-strong"
             >
               {error}
             </p>
           )}
 
-          <div ref={contentRef} className="mt-7 space-y-5">
+          <div className="mt-7 space-y-5">
             {children}
           </div>
 

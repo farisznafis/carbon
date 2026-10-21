@@ -16,7 +16,7 @@ export function CompletionStep({ onNavigateToDashboard }: CompletionStepProps) {
     <FormCard className="mx-auto w-full max-w-lg">
       <CardHeader className="px-0 pt-0">
         <CheckCircle2
-          className="mb-2 h-9 w-9 text-primary"
+          className="mb-2 h-9 w-9 text-primary-strong"
           aria-hidden="true"
         />
         <CardTitle>申請完了</CardTitle>

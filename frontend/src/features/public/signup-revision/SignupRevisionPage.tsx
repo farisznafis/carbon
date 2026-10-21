@@ -225,7 +225,7 @@ export default function SignupRevisionPage() {
         contentClassName="flex justify-center"
       >
         <div className="flex items-center gap-3 text-sm text-foreground" role="status">
-          <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
+          <Loader2 className="h-5 w-5 animate-spin text-primary-strong" aria-hidden="true" />
           登録情報を読み込んでいます...
         </div>
       </FormPageShell>
@@ -290,7 +290,7 @@ export default function SignupRevisionPage() {
       <FormPageShell className={centeredStateShellClassName}>
         <FormCard className={`${centeredStateCardClassName} text-center`}>
           <CardHeader className="items-center">
-            <CheckCircle2 className="mb-2 h-10 w-10 text-primary" aria-hidden="true" />
+            <CheckCircle2 className="mb-2 h-10 w-10 text-primary-strong" aria-hidden="true" />
             <CardTitle>再申請が完了しました</CardTitle>
             <CardDescription>
               修正した登録情報を送信しました。審査結果はメールでお知らせします。
@@ -330,7 +330,7 @@ export default function SignupRevisionPage() {
           className="rounded-lg border border-destructive/20 bg-destructive/5 p-5"
         >
           <div className="flex items-start gap-3">
-            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" aria-hidden="true" />
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive-strong" aria-hidden="true" />
             <div className="min-w-0">
               <h2 id="rejection-reason-title" className="text-base font-bold">
                 却下理由

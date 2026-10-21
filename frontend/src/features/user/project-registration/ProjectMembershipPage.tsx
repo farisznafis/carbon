@@ -2,11 +2,8 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
-import { useGSAP } from '@gsap/react';
-import gsap from 'gsap';
 import {
   useLocation,
   useNavigate,
@@ -47,8 +44,6 @@ import { downloadFromUrl } from '@/utils/download';
 import { useToast } from '@/hooks/use-toast';
 import { ActionButton } from '@/components/actions';
 
-gsap.registerPlugin(useGSAP);
-
 type ProjectMembershipContentProps = Readonly<{
   siteId: string;
   embedded?: boolean;
@@ -65,7 +60,6 @@ export function ProjectMembershipContent({
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const contentRef = useRef<HTMLDivElement>(null);
 
   const enteredFromMasterDashboard =
     embedded ||
@@ -215,68 +209,6 @@ export function ProjectMembershipContent({
       [projectItems],
     );
 
-  useGSAP(
-    () => {
-      if (
-        isLoading ||
-        errorMessage ||
-        typeof window.matchMedia !== 'function'
-      ) {
-        return;
-      }
-
-      const prefersReducedMotion =
-        window.matchMedia(
-          '(prefers-reduced-motion: reduce)',
-        ).matches;
-
-      if (prefersReducedMotion) {
-        return;
-      }
-
-      gsap.fromTo(
-        '[data-membership-reveal]',
-        {
-          autoAlpha: 0,
-          y: embedded ? 0 : 16,
-        },
-        {
-          autoAlpha: 1,
-          y: 0,
-          duration: 0.45,
-          ease: 'power2.out',
-          stagger: 0.06,
-        },
-      );
-
-      gsap.fromTo(
-        '[data-membership-project]',
-        {
-          autoAlpha: 0,
-          y: embedded ? 0 : 20,
-          scale: embedded ? 1 : 0.985,
-        },
-        {
-          autoAlpha: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.5,
-          ease: 'power2.out',
-          stagger: 0.05,
-        },
-      );
-    },
-    {
-      scope: contentRef,
-      dependencies: [
-        errorMessage,
-        isLoading,
-        siteId,
-      ],
-      revertOnUpdate: true,
-    },
-  );
-
   /** Opens the preparation dialog for the selected project. */
   const handleJoin = (
     project: SiteProject,
@@ -384,7 +316,7 @@ export function ProjectMembershipContent({
 
   const content = (
     <div
-      ref={contentRef}
+      data-membership-embedded={embedded || undefined}
       className="min-w-0 space-y-6 overflow-x-hidden"
     >
       <header
@@ -434,7 +366,7 @@ export function ProjectMembershipContent({
       ) : errorMessage ? (
         <Card className="border-border shadow-none">
           <CardContent className="space-y-5 p-10 text-center">
-            <p className="text-destructive">
+            <p className="text-destructive-strong">
               {errorMessage}
             </p>
 

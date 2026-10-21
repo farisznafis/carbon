@@ -34,7 +34,7 @@ describe('DynamicFormField', () => {
   it('shows the shared required marker and accessibility state by default', () => {
     render(<TestField />);
 
-    expect(screen.getByText('*')).toHaveClass('text-destructive');
+    expect(screen.getByText('*')).toHaveClass('text-destructive-strong');
     expect(screen.getByLabelText('プロジェクト名称*')).toHaveAttribute(
       'aria-required',
       'true',

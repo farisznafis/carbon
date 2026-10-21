@@ -92,7 +92,7 @@ function MonthlyEmissionCard({
         {loading ? (
           <SkeletonChart className="min-h-64" />
         ) : error && recent.length === 0 ? (
-          <p role="alert" className="py-12 text-center text-small text-destructive">排出量を取得できませんでした。</p>
+          <p role="alert" className="py-12 text-center text-small text-destructive-strong">排出量を取得できませんでした。</p>
         ) : recent.length === 0 ? (
           <p className="py-12 text-center text-small text-muted-foreground">まだ集計結果がありません</p>
         ) : (
@@ -145,7 +145,7 @@ function ActionPanel({ actions, loading }: { actions: ActionItem[]; loading: boo
       <CardHeader className="shrink-0 flex-row items-center gap-2 space-y-0">
         <CardTitle className={panelTitleClassName}>対応が必要なこと</CardTitle>
         {!loading && actions.length > 0 && (
-          <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold tabular-nums text-primary-foreground">
+          <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary-strong px-1.5 text-xs font-bold tabular-nums text-primary-foreground">
             {actions.length}
           </span>
         )}
@@ -222,7 +222,7 @@ function NoticePanel() {
         {loading && latest.length === 0 ? (
           <SkeletonList items={3} />
         ) : error ? (
-          <p role="alert" className="py-6 text-center text-small text-destructive">{error}</p>
+          <p role="alert" className="py-6 text-center text-small text-destructive-strong">{error}</p>
         ) : latest.length === 0 ? (
           <p className="py-6 text-center text-small text-muted-foreground">お知らせはありません</p>
         ) : (
@@ -347,7 +347,7 @@ export function MasterHomeSection() {
     return (
       <div className="space-y-section">
         {header}
-        <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center text-small text-destructive">
+        <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center text-small text-destructive-strong">
           {home.error instanceof Error ? home.error.message : 'ダッシュボードデータの取得に失敗しました'}
         </div>
       </div>

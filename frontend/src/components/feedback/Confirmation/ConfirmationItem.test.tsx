@@ -14,7 +14,7 @@ describe('ConfirmationItem', () => {
 
     const changedValue = screen.getByText('0354321235');
     expect(changedValue).toHaveClass(
-      'text-primary',
+      'text-primary-strong',
       'bg-secondary/60',
       'rounded',
     );
@@ -32,7 +32,7 @@ describe('ConfirmationItem', () => {
     );
 
     expect(screen.getByText('0354321235')).toHaveClass('text-foreground');
-    expect(screen.getByText('0354321235')).not.toHaveClass('text-primary');
+    expect(screen.getByText('0354321235')).not.toHaveClass('text-primary-strong');
     expect(screen.queryByText('変更あり')).not.toBeInTheDocument();
   });
 });

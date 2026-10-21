@@ -24,14 +24,14 @@ All colors MUST be HSL.
     --blue-400: 211.9 100% 65.7%;  /* #50A2FF */
     --blue-500: 213 92.1% 55.1%;   /* #2382F6 */
     --blue-600: 214.4 83.1% 46.5%; /* #1468D9 */
-    --blue-700: 214.9 82.5% 38%;   /* #1154B1 */
+    --blue-700: 214.9 82.5% 34.8%; /* #104DA2, AAA 7:1 on white, canvas and blue-50 */
     --blue-800: 213.4 77.2% 31%;   /* #12488C */
     --blue-900: 213 67.9% 25.7%;   /* #153D6E */
 
     /* Marketing dark surface */
     --brand-dark-start: var(--blue-900);
     --brand-dark-middle: var(--blue-800);
-    --brand-dark-end: var(--blue-700);
+    --brand-dark-end: var(--blue-800); /* keeps blue-100 muted text at 7:1 across the gradient */
     --brand-dark-foreground: var(--neutral-0);
     --brand-dark-muted: var(--blue-100);
 
@@ -45,7 +45,7 @@ All colors MUST be HSL.
     --neutral-400: 214.6 14.4% 64.7%; /* #98A3B2 */
     --neutral-450: 214.7 14% 57%;     /* #828FA1, 3.3:1 on white, 3.1:1 on canvas */
     --neutral-500: 214.8 13% 46.9%;   /* #687587 */
-    --neutral-600: 214 16.7% 35.3%;   /* #4B5869 */
+    --neutral-600: 214 16.7% 32.5%;   /* #455161, AAA 7:1 on white, canvas and neutral-100 */
     --neutral-700: 215.6 23.5% 26.7%; /* #344154 */
     --neutral-800: 215.2 31.2% 18.2%; /* #202C3D */
     --neutral-900: 216.4 45.2% 12.2%; /* #111C2D */
@@ -54,21 +54,22 @@ All colors MUST be HSL.
     /* Success */
     --success-50: 144.7 81% 95.9%;    /* #ECFDF3 */
     --success-600: 154.6 82.8% 34.1%; /* #0F9F62 */
-    --success-700: 155 87.6% 25.3%;   /* #08794A */
+    --success-700: 155 87.6% 19.3%;   /* #065C38, AAA 7:1 on white, canvas and success-50 */
     --success-800: 164.2 85.7% 16.5%; /* #064E3B */
     --success-border: 148.1 54% 82.9%; /* #BCEBD2 */
 
     /* Warning */
     --warning-50: 44.3 100% 95.5%;   /* #FFF9E8 */
     --warning-600: 35.9 100% 39%;    /* #C77700 */
-    --warning-700: 35 100% 29.6%;    /* #975800 */
+    --warning-700: 35 100% 22.9%;    /* #754400, AAA 7:1 on white, canvas and warning-50 */
     --warning-800: 28.4 72.5% 25.7%; /* #713F12 */
     --warning-border: 42.3 73.6% 79.2%; /* #F1DAA3 */
 
     /* Danger */
     --danger-50: 0 100% 97.1%;       /* #FFF0F0 */
     --danger-600: 357 66.7% 52.9%;   /* #D7373F */
-    --danger-700: 356.5 66.3% 40.8%; /* #AD232B */
+    --danger-700: 356.5 66.3% 36.3%; /* #9A1F26, AAA 7:1 on white, canvas and danger-50 */
+    --danger-800: 356.5 66.3% 29%;   /* #7B191E */
     --danger-border: 356.4 69.4% 85.9%; /* #F4C2C5 */
 
     /* Info */
@@ -85,7 +86,11 @@ All colors MUST be HSL.
       Components should consume these instead of primitives.
       ========================================================= */
 
-    /* Brand / action */
+    /*
+     * Contrast rule: text (and fills that carry text) meets WCAG AAA 7:1, so it
+     * uses the -strong tokens. Essential graphics (bars, dots, borders, icons)
+     * follow WCAG 1.4.11 (3:1) and use the base tokens.
+     */
     --primary: var(--blue-600);
     --primary-strong: var(--blue-700);
     --primary-foreground: var(--neutral-0);
@@ -124,6 +129,7 @@ All colors MUST be HSL.
     --input: var(--neutral-450);
     --ring: var(--blue-500);
 
+    /* Deliberate AA exception (4.7:1 on cards): an AAA placeholder would read as entered data. */
     --placeholder: var(--neutral-500);
 
     --disabled: var(--neutral-100);
@@ -134,6 +140,7 @@ All colors MUST be HSL.
       FEEDBACK
       ========================================================= */
 
+    /* Base = graphics (3:1). -strong = text and text-carrying fills (7:1). */
     --success: var(--success-600);
     --success-foreground: var(--neutral-0);
     --success-subtle: var(--success-50);
@@ -166,7 +173,7 @@ All colors MUST be HSL.
     --sidebar-background: var(--neutral-0);
     --sidebar-foreground: var(--foreground);
 
-    --sidebar-primary: var(--blue-500);
+    --sidebar-primary: var(--blue-700);
     --sidebar-primary-foreground: var(--neutral-0);
 
     --sidebar-accent: var(--blue-50);
@@ -184,7 +191,7 @@ All colors MUST be HSL.
     --chart-2: var(--success-600);   /* #0F9F62 */
     --chart-3: var(--purple-600);    /* #7357D9 */
     --chart-4: var(--warning-600);   /* #C77700 */
-    --chart-5: var(--neutral-600);   /* #4B5869 */
+    --chart-5: var(--neutral-600);   /* #455161 */
 
 
     /* =========================================================
@@ -557,6 +564,20 @@ All colors MUST be HSL.
     to {
       opacity: 1;
       transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Membership page entrance: sections, then project cards one after another. */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-membership-reveal],
+    [data-membership-project] {
+      animation: slide-up 0.45s ease-out both;
+      animation-delay: calc(var(--reveal-index, 0) * 50ms);
+    }
+
+    /* Embedded in the master tab: fade only, the surrounding page does not move. */
+    [data-membership-embedded] :is([data-membership-reveal], [data-membership-project]) {
+      animation-name: fade-in;
     }
   }
 

@@ -49,7 +49,7 @@ export const FormPageWrapper: React.FC<FormPageWrapperProps> = ({
     <div className='min-h-screen bg-background'>
       <div
         className={cn(
-          'bg-primary px-4 py-6 text-primary-foreground',
+          'bg-primary-strong px-4 py-6 text-primary-foreground',
           headerClassName,
         )}
       >

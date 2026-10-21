@@ -159,7 +159,7 @@ export function ParticipationReviewDecisionDialog({
             </div>
 
             {fieldErrors.checklist && (
-              <p role="alert" className="text-small text-destructive">
+              <p role="alert" className="text-small text-destructive-strong">
                 {fieldErrors.checklist}
               </p>
             )}
@@ -190,7 +190,7 @@ export function ParticipationReviewDecisionDialog({
                 <p
                   id="reviewer-name-error"
                   role="alert"
-                  className="text-small text-destructive"
+                  className="text-small text-destructive-strong"
                 >
                   {fieldErrors.reviewerName}
                 </p>
@@ -221,7 +221,7 @@ export function ParticipationReviewDecisionDialog({
                 <p
                   id="reviewer-inkan-error"
                   role="alert"
-                  className="text-small text-destructive"
+                  className="text-small text-destructive-strong"
                 >
                   {fieldErrors.reviewerInkan}
                 </p>
@@ -259,7 +259,7 @@ export function ParticipationReviewDecisionDialog({
                   <p
                     id="reject-reason-error"
                     role="alert"
-                    className="text-small text-destructive"
+                    className="text-small text-destructive-strong"
                   >
                     {fieldErrors.rejectReason}
                   </p>
@@ -268,7 +268,7 @@ export function ParticipationReviewDecisionDialog({
             )}
 
             {submitError && (
-              <p role="alert" className="text-small text-destructive">
+              <p role="alert" className="text-small text-destructive-strong">
                 {submitError}
               </p>
             )}

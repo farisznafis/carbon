@@ -50,7 +50,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
 
   return (
     <div className='min-h-screen bg-background py-8'>
-      <div className='bg-primary text-primary-foreground py-6 px-4 mb-8'>
+      <div className='bg-primary-strong text-primary-foreground py-6 px-4 mb-8'>
         <div className='max-w-md mx-auto'>
           <h2 className='text-form-title font-bold text-center'>法人情報の更新</h2>
         </div>

@@ -265,7 +265,7 @@ export function MasterAnalyticsSection() {
       <div className="space-y-section">
         {header}
         {controls}
-        <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center text-small text-destructive">
+        <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center text-small text-destructive-strong">
           {data.error instanceof Error ? data.error.message : 'データの取得に失敗しました'}
         </div>
       </div>

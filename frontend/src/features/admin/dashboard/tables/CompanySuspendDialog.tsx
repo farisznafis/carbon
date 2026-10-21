@@ -63,7 +63,7 @@ export function CompanySuspendDialog({
 
           <div className="space-y-2">
             <Label htmlFor="suspensionReasonDetail" className="text-small font-bold">
-              停止理由 <span className="text-destructive">*</span>
+              停止理由 <span className="text-destructive-strong">*</span>
             </Label>
             <Textarea
               id="suspensionReasonDetail"
@@ -75,7 +75,7 @@ export function CompanySuspendDialog({
               className="min-h-[120px] resize-y"
             />
             {fieldErrors?.reasonDetail && (
-              <p className="text-small font-medium text-destructive">
+              <p className="text-small font-medium text-destructive-strong">
                 {fieldErrors.reasonDetail}
               </p>
             )}

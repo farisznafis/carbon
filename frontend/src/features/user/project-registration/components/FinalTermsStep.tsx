@@ -125,7 +125,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2">「{resolvedProjectName}」入会規約 <span className="ml-1 text-destructive">*</span></h2>
+        <h2 className="text-2xl font-bold mb-2">「{resolvedProjectName}」入会規約 <span className="ml-1 text-destructive-strong">*</span></h2>
         <p className="text-foreground">入会規約をご確認の上、同意してください</p>
       </div>
 

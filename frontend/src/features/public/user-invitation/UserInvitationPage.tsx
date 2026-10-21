@@ -135,8 +135,8 @@ function PasswordConfirmationStatus({
       aria-live="polite"
       className={
         isMatch
-          ? 'flex items-center gap-1.5 text-sm text-success'
-          : 'flex items-center gap-1.5 text-sm text-destructive'
+          ? 'flex items-center gap-1.5 text-sm text-success-strong'
+          : 'flex items-center gap-1.5 text-sm text-destructive-strong'
       }
     >
       <StatusIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -240,7 +240,7 @@ function InvitationStateCard({
       <FormCard className="mx-auto w-full max-w-lg">
         <CardHeader className="px-0 pt-0">
           <AlertCircle
-            className="mb-2 h-9 w-9 text-primary"
+            className="mb-2 h-9 w-9 text-primary-strong"
             aria-hidden="true"
           />
           <CardTitle>{title}</CardTitle>
@@ -462,7 +462,7 @@ export default function UserInvitationPage() {
     return (
       <FormPageShell className="flex min-h-[calc(100dvh-4rem-1px)] items-center justify-center">
         <div className="flex items-center gap-3" role="status">
-          <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
+          <Loader2 className="h-5 w-5 animate-spin text-primary-strong" aria-hidden="true" />
           招待情報を読み込み中です...
         </div>
       </FormPageShell>
@@ -734,7 +734,7 @@ export default function UserInvitationPage() {
 
                 {formError && (
                   <p
-                    className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+                    className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive-strong"
                     role="alert"
                   >
                     {formError}

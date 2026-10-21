@@ -9,18 +9,16 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary-strong',
+        // Design-system exception (see PRODUCT.md): the primary action keeps the brand gradient #1468D9 → blue-700.
+        // White text is 5.2:1 at the top (AA, not AAA). hover:to is required: hover:from alone resets the end color to transparent.
+        default: 'bg-gradient-to-b from-[hsl(var(--blue-600))] to-[hsl(var(--blue-700))] text-primary-foreground hover:from-[hsl(var(--blue-700))] hover:to-[hsl(var(--blue-800))]',
 
-        primary: 'bg-primary text-primary-foreground hover:bg-primary-strong',
+        primary: 'bg-gradient-to-b from-[hsl(var(--blue-600))] to-[hsl(var(--blue-700))] text-primary-foreground hover:from-[hsl(var(--blue-700))] hover:to-[hsl(var(--blue-800))]',
 
-        success: 'bg-success text-success-foreground hover:bg-success-strong',
+        success: 'bg-success-strong text-success-foreground hover:bg-[hsl(var(--success-800))]',
 
         destructive:
-          'bg-destructive text-destructive-foreground hover:bg-destructive-strong',
-
-        // A reject/decline choice shown next to the primary action; the solid variant confirms it.
-        'destructive-outline':
-          'border border-destructive-border bg-card text-destructive-strong hover:bg-destructive-subtle',
+          'bg-destructive-strong text-destructive-foreground hover:bg-[hsl(var(--danger-800))]',
 
         secondary:
           'bg-foreground text-background shadow-app-sm hover:bg-foreground/90',

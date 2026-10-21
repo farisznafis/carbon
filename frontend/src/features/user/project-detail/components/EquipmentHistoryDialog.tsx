@@ -293,7 +293,7 @@ export function EquipmentHistoryDialog({
             </div>
           ) : errorMessage ? (
             <div className="space-y-4 rounded-lg border border-destructive/30 bg-destructive/5 p-8 text-center">
-              <p role="alert" className="text-small text-destructive">
+              <p role="alert" className="text-small text-destructive-strong">
                 {errorMessage}
               </p>
               <ActionButton kind="retry" onClick={() => void loadHistory(true)} />
