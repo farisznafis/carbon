@@ -678,7 +678,7 @@ export function AdminDashboardOverview(
         <MetricCard
           label='企業申請'
           value={props.applicationTotal}
-          description='申請中・却下'
+          description='申請中・設定待ち・却下'
           icon={<ClipboardCheck />}
           loading={props.canReviewCompanies && props.applicationsLoading}
           error={props.applicationsError}

@@ -36,6 +36,9 @@ const SignupRevision = lazy(() =>
 const UserInvitation = lazy(() =>
   import('./features/public/user-invitation/UserInvitationPage'),
 );
+const MasterAccountSetup = lazy(() =>
+  import('./features/public/master-setup/MasterSetupPage'),
+);
 const ProjectDetail = lazy(() => import("./features/user/project-detail/ProjectDetailPage"));
 const MonitoringRegister = lazy(() => import("./features/user/monitoring/MonitoringRegisterPage"));
 const SiteRegister = lazy(() => import("./features/master/pages/SiteRegisterPage"));
@@ -216,6 +219,7 @@ const App = () => {
           <Route path={paths.signup} element={<Signup />} />
           <Route path={paths.signupRevision} element={<SignupRevision />} />
           <Route path={paths.userInvitation} element={<UserInvitation />} />
+          <Route path={paths.masterAccountSetup} element={<MasterAccountSetup />} />
           <Route element={<ProtectedRoute />}>
             <Route path={paths.masterDashboard} element={<MasterDashboard />} />
             <Route path={paths.masterSiteRegister} element={<SiteRegister />} />

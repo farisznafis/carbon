@@ -4,13 +4,15 @@ import type { StatusBadgeTone } from '@/components/data-display/StatusBadge';
 
 export const COMPANY_STATUSES: CompanyStatus[] = [
   'PENDING',
+  'APPROVED_PENDING_SETUP',
   'REJECTED',
   'ACTIVE',
   'SUSPENDED',
 ];
 
 /** Statuses that belong to the application review flow (not yet participating). */
-export const COMPANY_APPLICATION_STATUSES: CompanyStatus[] = ['PENDING', 'REJECTED'];
+// 設定待ち belongs here: it is the last step of onboarding, and resending the link needs the review permission.
+export const COMPANY_APPLICATION_STATUSES: CompanyStatus[] = ['PENDING', 'APPROVED_PENDING_SETUP', 'REJECTED'];
 
 /** Statuses of companies that were approved and participate in the program. */
 export const COMPANY_PARTICIPATING_STATUSES: CompanyStatus[] = ['ACTIVE', 'SUSPENDED'];
@@ -35,6 +37,13 @@ export const COMPANY_STATUS_CONTENT: Record<
     tone: 'warning',
     description: '参加申請を受け付けた企業です。内容を確認し、承認または却下を行ってください。',
     emptyMessage: '申請受付中の企業はありません。',
+    permission: 'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+  },
+  APPROVED_PENDING_SETUP: {
+    label: 'アカウント設定待ち',
+    tone: 'warning',
+    description: '承認済みで、マスターアカウントの設定を待っている企業です。設定リンクの有効期限が切れた場合は再送してください。',
+    emptyMessage: 'アカウント設定待ちの企業はありません。',
     permission: 'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
   },
   REJECTED: {

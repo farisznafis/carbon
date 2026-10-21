@@ -668,10 +668,10 @@ export default function UserInvitationPage() {
                     name="username"
                     render={({ field }) => (
                       <FormItem>
-                        <RequiredLabel>ユーザーネーム</RequiredLabel>
+                        <RequiredLabel>ユーザー名</RequiredLabel>
                         <FormControl>
                           <Input
-                            aria-label="ユーザーネーム"
+                            aria-label="ユーザー名"
                             placeholder="例）yamada_taro"
                             {...field}
                           />

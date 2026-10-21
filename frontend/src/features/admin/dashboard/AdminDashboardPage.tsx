@@ -1004,8 +1004,11 @@ const AdminDashboard = () => {
     setSubmitting(true);
     setActionFieldErrors({});
     try {
+      // Null masterUsername means the master sets up their own account from an emailed link.
+      let awaitingMasterSetup = false;
       if (pendingDialogMode === 'approve') {
-        await approveAdminCompany(selectedCompany.companyId);
+        const approval = await approveAdminCompany(selectedCompany.companyId);
+        awaitingMasterSetup = approval.masterUsername === null;
       } else {
         await rejectAdminCompany(selectedCompany.companyId, rejectReason);
       }
@@ -1025,6 +1028,9 @@ const AdminDashboard = () => {
           pendingDialogMode === 'approve'
             ? '申請を承認しました'
             : '申請を却下しました',
+        description: awaitingMasterSetup
+          ? 'マスターアカウントの設定リンクをメールで送信しました。'
+          : undefined,
         variant: pendingDialogMode === 'approve' ? 'success' : 'warning',
       });
     } catch (error) {

@@ -7,6 +7,7 @@ export {
   login,
   logout,
   requestPasswordReset,
+  setupMasterAccount,
   signUp,
 } from './auth';
 export type {
@@ -15,6 +16,8 @@ export type {
   ChangePasswordResponse,
   EquipmentItem,
   LoginResponse,
+  MasterAccountSetupPayload,
+  MasterAccountSetupResponse,
   MethodologyRequest,
   PasswordResetCompleteResponse,
   PasswordResetRequestResponse,

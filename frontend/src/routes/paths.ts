@@ -8,6 +8,8 @@ export const paths = {
   signup: '/signup',
   signupRevision: '/signup/revision',
   userInvitation: '/user/invitation',
+  /** Emailed to the master after approval when FEATURE_MASTER_SETUP_LINK is on; the token rides in the fragment. */
+  masterAccountSetup: '/account/setup',
 
   masterDashboard: '/master/dashboard',
   masterDashboardMembership: '/master/dashboard?tab=membership',

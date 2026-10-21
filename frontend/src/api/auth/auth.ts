@@ -10,6 +10,8 @@ import type {
   ChangePasswordPayload,
   ChangePasswordResponse,
   LoginResponse,
+  MasterAccountSetupPayload,
+  MasterAccountSetupResponse,
   PasswordResetCompleteResponse,
   PasswordResetRequestResponse,
   SignUpData,
@@ -147,6 +149,22 @@ export async function exchangePasswordResetActionLink(
   token: string,
 ): Promise<ActionLinkExchangeResponse> {
   return exchangeActionLink(token);
+}
+
+/** POST /auth/master-account/setup: creates the master account from the emailed setup link. */
+export async function setupMasterAccount(
+  actionSessionToken: string,
+  payload: MasterAccountSetupPayload,
+): Promise<MasterAccountSetupResponse> {
+  return apiRequest<MasterAccountSetupResponse>('/auth/master-account/setup', {
+    method: 'POST',
+    auth: false,
+    headers: {
+      'X-Action-Session': actionSessionToken,
+    },
+    body: payload,
+    fallbackErrorMessage: 'マスターアカウントを設定できませんでした。',
+  });
 }
 
 export async function completePasswordReset(

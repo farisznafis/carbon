@@ -52,7 +52,7 @@ export function ProfileInfoCards({
         >
           <dl className="grid gap-x-10 gap-y-6 md:grid-cols-2">
             <ProfileDetailField label="企業ID" value={profile?.companyId} />
-            <ProfileDetailField label="ユーザーネーム" value={profile?.username} />
+            <ProfileDetailField label="ユーザー名" value={profile?.username} />
             <ProfileDetailField
               label="氏名"
               value={formatProfileName(profile?.lastName, profile?.firstName)}

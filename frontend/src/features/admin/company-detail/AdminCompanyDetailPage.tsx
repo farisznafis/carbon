@@ -6,6 +6,7 @@ import {
   ChevronDown,
   Clock3,
   KeyRound,
+  Mail,
   ShieldCheck,
 } from 'lucide-react';
 import type {
@@ -16,6 +17,7 @@ import type {
 } from '@/api/admin';
 import {
   getCompanySuspensions,
+  resendMasterSetupLink,
   resolveCompanySuspension,
   sendAdminCompanyPasswordResetLink,
   suspendAdminCompany,
@@ -184,6 +186,7 @@ export default function AdminCompanyDetailPage() {
     useState(false);
   const [passwordResetSubmitting, setPasswordResetSubmitting] =
     useState(false);
+  const [setupLinkResending, setSetupLinkResending] = useState(false);
 
   // Suspend dialog
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
@@ -356,6 +359,30 @@ export default function AdminCompanyDetailPage() {
       });
     } finally {
       setPasswordResetSubmitting(false);
+    }
+  };
+
+  /** Emails the master a fresh setup link; the old one stops working (links last 72 hours). */
+  const handleResendSetupLink = async () => {
+    if (!permissions.guardAction('PARTICIPATING_COMPANY_APPLICATION_REVIEW', () => undefined)) return;
+    if (!detail) return;
+
+    setSetupLinkResending(true);
+    try {
+      await resendMasterSetupLink(detail.company.companyId);
+      toast({
+        title: '設定リンクを再送しました',
+        description: `${detail.company.email} に送信しました。`,
+        variant: 'success',
+      });
+    } catch (error) {
+      toast({
+        title: '設定リンクを再送できませんでした',
+        description: error instanceof Error ? error.message : 'しばらくしてからもう一度お試しください。',
+        variant: 'destructive',
+      });
+    } finally {
+      setSetupLinkResending(false);
     }
   };
 
@@ -599,6 +626,24 @@ export default function AdminCompanyDetailPage() {
                     >
                       <KeyRound />
                       パスワードリセット
+                    </Button>
+                  </div>
+                </>
+              ) : company.companyStatus === 'APPROVED_PENDING_SETUP' ? (
+                <>
+                  <p className="py-4 text-sm leading-6 text-foreground">
+                    マスターが設定リンクからユーザー名とパスワードを設定するのを待っています。リンクの有効期限は72時間です。期限が切れた場合は再送してください。
+                  </p>
+                  <div className="flex justify-end border-t border-border/50 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={setupLinkResending}
+                      onClick={() => void handleResendSetupLink()}
+                    >
+                      <Mail />
+                      {setupLinkResending ? '送信中...' : '設定リンクを再送'}
                     </Button>
                   </div>
                 </>

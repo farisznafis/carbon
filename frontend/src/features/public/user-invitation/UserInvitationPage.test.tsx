@@ -143,7 +143,7 @@ describe('UserInvitationPage', () => {
       '09012345678',
     );
     await user.type(screen.getByLabelText('役職'), '部長');
-    await user.type(screen.getByLabelText('ユーザーネーム'), 'yamada_taro');
+    await user.type(screen.getByLabelText('ユーザー名'), 'yamada_taro');
     await user.type(
       screen.getByLabelText('パスワード'),
       'Strong-password-123',
@@ -212,7 +212,7 @@ describe('UserInvitationPage', () => {
           statusCode: 'VALIDATION_ERROR',
           message: '入力内容に不備があります。',
           errors: {
-            username: 'ユーザーネームを入力してください。',
+            username: 'ユーザー名を入力してください。',
             password: 'パスワードは15文字以上で入力してください。',
           },
         },
@@ -229,7 +229,7 @@ describe('UserInvitationPage', () => {
       expect.objectContaining({ username: '', password: '' }),
     );
     expect(
-      await screen.findByText('ユーザーネームを入力してください。'),
+      await screen.findByText('ユーザー名を入力してください。'),
     ).toBeVisible();
     expect(
       screen.getByText('パスワードは15文字以上で入力してください。'),

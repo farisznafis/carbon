@@ -123,7 +123,7 @@ export default function AdminOperatorProfilePage() {
               <FormSection number={2} title="アカウント情報">
                 <dl className="grid gap-x-10 gap-y-6 md:grid-cols-2">
                   <ProfileDetailField
-                    label="ユーザネーム"
+                    label="ユーザー名"
                     value={operator.username || '-'}
                   />
                   <ProfileDetailField

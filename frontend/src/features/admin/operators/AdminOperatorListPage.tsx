@@ -202,7 +202,7 @@ export default function AdminOperatorListPage() {
       },
       {
         id: 'username',
-        label: 'ユーザネーム',
+        label: 'ユーザー名',
         sortable: true,
         sortValue: (operator) => operator.username,
         render: (operator) => operator.username || '-',

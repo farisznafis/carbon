@@ -79,6 +79,16 @@ export type ActionLinkExchangeResponse = {
   expiresInSeconds: number;
 };
 
+export type MasterAccountSetupPayload = {
+  username: string;
+  password: string;
+};
+
+export type MasterAccountSetupResponse = {
+  statusCode: string;
+  message?: string | null;
+};
+
 export type PasswordResetCompleteResponse = {
   statusCode: string;
   message?: string | null;

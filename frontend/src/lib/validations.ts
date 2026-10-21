@@ -121,6 +121,21 @@ export const emailSchema = z
   .email('有効なメールアドレスを入力してください')
   .max(255, 'メールアドレスは255文字以内で入力してください');
 
+/**
+ * Mirrors the backend @Size(3, 50) + @ValidUsername: ASCII letters and digits, space, @, _ and emoji.
+ * Length counts UTF-16 units on both sides, so emoji count as two like in Java.
+ */
+export const usernameSchema = z
+  .string()
+  .trim()
+  .min(1, 'ユーザー名を入力してください。')
+  .min(3, 'ユーザー名は3文字以上で入力してください。')
+  .max(50, 'ユーザー名は50文字以内で入力してください。')
+  .regex(
+    /^(?:[A-Za-z0-9 @_]|\u200D|\uFE0F|\p{Extended_Pictographic}|\p{Emoji_Component}|\p{Emoji_Modifier})+$/u,
+    'ユーザー名は半角英数字、スペース、@、_ で入力してください。',
+  );
+
 /** Mirrors the backend policy; the common-password blocklist is only checked server-side (errors.newPassword). */
 export const passwordSchema = z
   .string()

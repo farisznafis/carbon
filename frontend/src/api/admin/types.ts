@@ -184,7 +184,8 @@ export type Methodology = {
   equipmentItems?: PendingCompanyEquipmentItem[];
 };
 
-export type CompanyStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'REJECTED';
+/** APPROVED_PENDING_SETUP: approved, waiting for the master to finish the emailed account setup. */
+export type CompanyStatus = 'PENDING' | 'APPROVED_PENDING_SETUP' | 'ACTIVE' | 'SUSPENDED' | 'REJECTED';
 
 export type CompanySort = 'createdAt' | 'updatedAt' | 'nameJa' | 'companyId';
 
@@ -378,6 +379,8 @@ export type CompanyMutationResponse = {
   errors?: unknown;
   companyStatus?: CompanyStatus;
   activeSuspensionCount?: number;
+  /** Null when the master chooses their own username through the setup link. */
+  masterUsername?: string | null;
 };
 
 export type PendingCompanyItem = {
@@ -410,7 +413,7 @@ export type PendingCompanyItem = {
   methodologies?: Methodology[];
 };
 
-export type PendingCompanyStatus = '申請受付' | '却下' | '承認済み' | '停止';
+export type PendingCompanyStatus = '申請受付' | '却下' | 'アカウント設定待ち' | '承認済み' | '停止';
 
 export type PendingCompanyApiItem = {
   id?: string;

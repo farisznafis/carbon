@@ -156,6 +156,19 @@ export async function getAdminCompanyDetail(
   };
 }
 
+/** POST /admin/companies/{companyId}/master-setup-link/resend: emails a fresh 72-hour setup link. */
+export async function resendMasterSetupLink(
+  companyId: string,
+): Promise<CompanyMutationResponse> {
+  return apiRequest<CompanyMutationResponse>(
+    `/admin/companies/${encodeURIComponent(companyId)}/master-setup-link/resend`,
+    {
+      method: 'POST',
+      fallbackErrorMessage: '設定リンクの再送に失敗しました。',
+    },
+  );
+}
+
 export async function sendAdminCompanyPasswordResetLink(
   companyId: string,
 ): Promise<AdminCompanyPasswordResetLinkResponse> {
@@ -261,6 +274,7 @@ export async function resolveCompanySuspension(
 
 function toLegacyPendingStatus(status: CompanyStatus): PendingCompanyStatus {
   if (status === 'REJECTED') return '却下';
+  if (status === 'APPROVED_PENDING_SETUP') return 'アカウント設定待ち';
   if (status === 'ACTIVE') return '承認済み';
   if (status === 'SUSPENDED') return '停止';
   return '申請受付';
