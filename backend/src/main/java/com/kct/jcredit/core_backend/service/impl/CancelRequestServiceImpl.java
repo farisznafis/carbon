@@ -14,6 +14,7 @@ import com.kct.jcredit.core_backend.repository.postgres.RecordCancelRequestRepos
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.repository.dynamodb.MonitoringTableRecordSolarRepository;
 import com.kct.jcredit.core_backend.service.CancelRequestService;
+import com.kct.jcredit.core_backend.service.NotificationMessages;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,7 @@ public class CancelRequestServiceImpl implements CancelRequestService {
     private final SiteRepository siteRepository;
     private final MonitoringTableRecordSolarRepository monitoringRecordSolarRepository;
     private final NotificationService notificationService;
+    private final NotificationMessages messages;
     
     private static final DateTimeFormatter ISO_FORMATTER = 
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneOffset.UTC);
@@ -121,11 +123,14 @@ public class CancelRequestServiceImpl implements CancelRequestService {
             
             // Notify all operators about the new cancel request
             try {
-                String title = "取消申請が作成されました";
-                String body = String.format("サイトID %d の取消申請がユーザー %s により登録されました。申請ID=%d", 
-                    savedRequest.getSite().getPublicId(), savedRequest.getRequestedBy(), savedRequest.getId());
-                notificationService.createNotificationForAllOperatingUsers(title, body);
-                notificationService.sendEmailToAllOperatingUsers(title, body);
+                NotificationMessages.Content created = messages.of("cancel.created",
+                    String.valueOf(savedRequest.getSite().getPublicId()),
+                    savedRequest.getRequestedBy(),
+                    String.valueOf(savedRequest.getId()));
+                notificationService.createNotificationForAllOperatingUsers(
+                    created.subject(), created.body());
+                notificationService.sendEmailToAllOperatingUsers(
+                    created.subject(), created.body());
             } catch (Exception e) {
                 log.warn("Operator notification failed for cancelRequestId={}: {}", savedRequest.getId(), e.getMessage());
             }
@@ -223,7 +228,6 @@ public class CancelRequestServiceImpl implements CancelRequestService {
        Optional<EnR002MonitoringRecord> originalRecord = 
                     monitoringRecordSolarRepository.findByPKandSK(cancelRequest.getRecordPk(), cancelRequest.getRecordSk());
         if (!originalRecord.isPresent()) {
-             System.err.println("DEB:UG: 元のレコードが見つかりません: recordPk=" + cancelRequest.getRecordPk() + ", recordSk=" + cancelRequest.getRecordSk());
             response.setStatusCode(ResponseConstants.NOT_FOUND);
             response.setMessage(ResponseConstants.MSG_NOT_FOUND);
             return response;
@@ -262,9 +266,10 @@ public class CancelRequestServiceImpl implements CancelRequestService {
             try {
                 Integer participantId = originalRecord.get().getParticipatingUserID();
                 if (participantId != null) {
-                    String title = "取消申請が承認されました";
-                    String body = String.format("あなたの取消申請 (ID=%d) は承認され、相殺レコードが作成されました。", saved.getId());
-                    notificationService.createNotification(title, body, participantId, null);
+                    NotificationMessages.Content approved = messages.of(
+                        "cancel.approved", String.valueOf(saved.getId()));
+                    notificationService.createNotification(
+                        approved.subject(), approved.body(), participantId, null);
                 }
             } catch (Exception e) {
                 log.warn("Participant notification failed for cancelRequestId={}: {}", saved.getId(), e.getMessage());
@@ -308,9 +313,10 @@ public class CancelRequestServiceImpl implements CancelRequestService {
         try {
             if (originalRecord.isPresent() && originalRecord.get().getParticipatingUserID() != null) {
                 Integer participantId = originalRecord.get().getParticipatingUserID();
-                String title = "取消申請が却下されました";
-                String body = String.format("あなたの取消申請 (ID=%d) は却下されました。理由: %s", saved.getId(), request.getManagerRemarks());
-                notificationService.createNotification(title, body, participantId, null);
+                NotificationMessages.Content rejected = messages.of("cancel.rejected",
+                    String.valueOf(saved.getId()), request.getManagerRemarks());
+                notificationService.createNotification(
+                    rejected.subject(), rejected.body(), participantId, null);
             }
         } catch (Exception e) {
             log.warn("Participant rejection notification failed for cancelRequestId={}: {}", saved.getId(), e.getMessage());

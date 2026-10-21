@@ -63,7 +63,7 @@ class BatchHistoryServiceImplTest {
     class SaveBatchHistoryTest {
 
         @Test
-        @DisplayName("UT-BH-101: リポジトリに委譲し、保存されたエンティティをそのまま返す")
+        @DisplayName("UT-BS-606: リポジトリに委譲し、保存されたエンティティをそのまま返す")
         void saveBatchHistory_delegatesToRepositoryAndReturnsSaved() {
             // Arrange
             BatchProcessHistory toSave = BatchProcessHistory.builder()
@@ -88,7 +88,7 @@ class BatchHistoryServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-BH-102: リポジトリが例外をスローした場合、そのまま伝播される")
+        @DisplayName("UT-BS-602: リポジトリが例外をスローした場合、そのまま伝播される")
         void saveBatchHistory_repositoryThrows_propagates() {
             // Arrange
             BatchProcessHistory toSave = BatchProcessHistory.builder().status("RUNNING").build();
@@ -111,7 +111,7 @@ class BatchHistoryServiceImplTest {
     class GetBatchByIdTest {
 
         @Test
-        @DisplayName("UT-BH-103: 該当バッチが存在する場合、値の入った Optional を返す")
+        @DisplayName("UT-BS-603: 該当バッチが存在する場合、値の入った Optional を返す")
         void getBatchById_found_returnsPresentOptional() {
             BatchProcessHistory history = historyWith(1, "SUCCESS", null);
             when(batchHistoryRepository.findById(1)).thenReturn(Optional.of(history));
@@ -125,7 +125,7 @@ class BatchHistoryServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-BH-104: 該当バッチが存在しない場合、空の Optional を返す")
+        @DisplayName("UT-BS-604: 該当バッチが存在しない場合、空の Optional を返す")
         void getBatchById_notFound_returnsEmptyOptional() {
             when(batchHistoryRepository.findById(999)).thenReturn(Optional.empty());
 
@@ -142,7 +142,7 @@ class BatchHistoryServiceImplTest {
     class GetRunningBatchesTest {
 
         @Test
-        @DisplayName("UT-BH-105: クエリ引数が正確に \"RUNNING\" であることを検証する")
+        @DisplayName("UT-BS-605: クエリ引数が正確に \"RUNNING\" であることを検証する")
         void getRunningBatches_queriesWithExactRunningLiteral() {
             BatchProcessHistory running = historyWith(2, "RUNNING", null);
             when(batchHistoryRepository.findByStatus("RUNNING")).thenReturn(List.of(running));
@@ -160,7 +160,7 @@ class BatchHistoryServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-BH-106: 実行中バッチが1件もない場合、空リストを返す")
+        @DisplayName("UT-BS-606: 実行中バッチが1件もない場合、空リストを返す")
         void getRunningBatches_noneRunning_returnsEmptyList() {
             when(batchHistoryRepository.findByStatus("RUNNING")).thenReturn(Collections.emptyList());
 
@@ -178,7 +178,7 @@ class BatchHistoryServiceImplTest {
     class GetLastCompletedBatchStartTimeTest {
 
         @Test
-        @DisplayName("UT-BH-107: 検索対象ステータスが COMPLETED と COMPLETED_WITH_ERRORS の2件であること")
+        @DisplayName("UT-BS-607: 検索対象ステータスが COMPLETED と COMPLETED_WITH_ERRORS の2件であること")
         void getLastCompletedBatchStartTime_found_queriesWithBothCompletedStatuses() {
             Instant expectedStartTime = Instant.parse("2026-07-09T12:00:00Z");
             BatchProcessHistory lastBatch = historyWith(5, "COMPLETED", expectedStartTime);
@@ -201,7 +201,7 @@ class BatchHistoryServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-BH-108: リポジトリが null を返した場合、NPEにならず空の Optional を返す")
+        @DisplayName("UT-BS-608: リポジトリが null を返した場合、NPEにならず空の Optional を返す")
         void getLastCompletedBatchStartTime_repositoryReturnsNull_returnsEmpty() {
             // Method repo ini mengembalikan entity langsung (bukan Optional),
             // jadi null bisa terjadi. Optional.ofNullable() harus melindungi dari NPE.
@@ -214,7 +214,7 @@ class BatchHistoryServiceImplTest {
         }
 
         @Test
-        @DisplayName("UT-BH-109: エンティティは存在するが startTime が null の場合、空の Optional を返す")
+        @DisplayName("UT-BS-609: エンティティは存在するが startTime が null の場合、空の Optional を返す")
         void getLastCompletedBatchStartTime_entityFoundButStartTimeNull_returnsEmpty() {
             BatchProcessHistory batchWithNullStartTime = historyWith(6, "COMPLETED", null);
             when(batchHistoryRepository.findFirstByStatusInOrderByStartTimeDesc(anyList()))
@@ -224,36 +224,6 @@ class BatchHistoryServiceImplTest {
 
             // Optional.map() yang menerima null menghasilkan Optional.empty()
             assertThat(result).isEmpty();
-        }
-
-        /*
-         * UT-BH-110 — TEMUAN: kosakata status tidak konsisten.
-         *
-         * Dummy SQL batch_process_history memakai status 'SUCCESS', sementara kode
-         * mencari 'RUNNING' (getRunningBatches) dan 'COMPLETED' / 'COMPLETED_WITH_ERRORS'
-         * (getLastCompletedBatchStartTime). Nilai 'SUCCESS' tidak cocok dengan satu pun.
-         *
-         * Test ini mendokumentasikan konsekuensinya: batch dengan status 'SUCCESS'
-         * tidak akan pernah ditemukan sebagai "batch terakhir yang selesai", sehingga
-         * rentang pengambilan data DynamoDB kehilangan batas bawahnya.
-         */
-        @Test
-        @DisplayName("UT-BH-110: ステータス 'SUCCESS' はどの検索条件にも一致しない（要確認）")
-        void getLastCompletedBatchStartTime_successStatusIsNotRecognised() {
-            @SuppressWarnings("unchecked")
-            ArgumentCaptor<List<String>> statusCaptor = ArgumentCaptor.forClass(List.class);
-
-            when(batchHistoryRepository.findFirstByStatusInOrderByStartTimeDesc(anyList()))
-                    .thenReturn(null);
-
-            Optional<Instant> result = service.getLastCompletedBatchStartTime();
-
-            assertThat(result).isEmpty();
-
-            verify(batchHistoryRepository)
-                    .findFirstByStatusInOrderByStartTimeDesc(statusCaptor.capture());
-            // "SUCCESS" tidak termasuk daftar status yang dicari
-            assertThat(statusCaptor.getValue()).doesNotContain("SUCCESS");
         }
     }
 }

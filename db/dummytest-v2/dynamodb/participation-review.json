@@ -1,0 +1,347 @@
+[
+  {
+    "pk": {
+      "S": "PART#1"
+    },
+    "is_solar_contract_doc": {
+      "BOOL": true
+    },
+    "is_pcs_spec_doc": {
+      "BOOL": true
+    },
+    "is_battery_spec_doc": {
+      "BOOL": true
+    },
+    "is_operation_start_doc": {
+      "BOOL": true
+    },
+    "is_generation_data_doc": {
+      "BOOL": true
+    },
+    "is_reverse_power_doc": {
+      "BOOL": true
+    },
+    "is_investment_proof_doc": {
+      "BOOL": true
+    },
+    "is_application_complete_check": {
+      "BOOL": true
+    },
+    "is_forms_attach_check": {
+      "BOOL": true
+    },
+    "is_emissions_reduction_activity_list_check": {
+      "BOOL": true
+    },
+    "is_original_spec_check": {
+      "BOOL": true
+    },
+    "is_subsidy_check": {
+      "BOOL": true
+    },
+    "primary_appl_reviewer_name": {
+      "S": "増田 真耶"
+    },
+    "primary_appl_reviewer_inkan": {
+      "S": "増田"
+    },
+    "primary_reviewer_id": {
+      "N": "1"
+    },
+    "secondary_appl_reviewer_name": {
+      "S": "鳥居 沙奈"
+    },
+    "secondary_appl_reviewer_inkan": {
+      "S": "鳥居"
+    },
+    "secondary_reviewer_id": {
+      "N": "2"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#2"
+    },
+    "is_solar_contract_doc": {
+      "BOOL": true
+    },
+    "is_pcs_spec_doc": {
+      "BOOL": true
+    },
+    "is_battery_spec_doc": {
+      "BOOL": true
+    },
+    "is_operation_start_doc": {
+      "BOOL": true
+    },
+    "is_generation_data_doc": {
+      "BOOL": true
+    },
+    "is_reverse_power_doc": {
+      "BOOL": true
+    },
+    "is_investment_proof_doc": {
+      "BOOL": true
+    },
+    "is_application_complete_check": {
+      "BOOL": true
+    },
+    "is_forms_attach_check": {
+      "BOOL": true
+    },
+    "is_emissions_reduction_activity_list_check": {
+      "BOOL": true
+    },
+    "is_original_spec_check": {
+      "BOOL": true
+    },
+    "is_subsidy_check": {
+      "BOOL": true
+    },
+    "primary_appl_reviewer_name": {
+      "S": "増田 真耶"
+    },
+    "primary_appl_reviewer_inkan": {
+      "S": "増田"
+    },
+    "primary_reviewer_id": {
+      "N": "1"
+    },
+    "secondary_appl_reviewer_name": {
+      "S": "鳥居 沙奈"
+    },
+    "secondary_appl_reviewer_inkan": {
+      "S": "鳥居"
+    },
+    "secondary_reviewer_id": {
+      "N": "2"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#3"
+    },
+    "is_solar_contract_doc": {
+      "BOOL": true
+    },
+    "is_pcs_spec_doc": {
+      "BOOL": true
+    },
+    "is_battery_spec_doc": {
+      "BOOL": true
+    },
+    "is_operation_start_doc": {
+      "BOOL": true
+    },
+    "is_generation_data_doc": {
+      "BOOL": true
+    },
+    "is_reverse_power_doc": {
+      "BOOL": true
+    },
+    "is_investment_proof_doc": {
+      "BOOL": true
+    },
+    "is_application_complete_check": {
+      "BOOL": true
+    },
+    "is_forms_attach_check": {
+      "BOOL": true
+    },
+    "is_emissions_reduction_activity_list_check": {
+      "BOOL": true
+    },
+    "is_original_spec_check": {
+      "BOOL": true
+    },
+    "is_subsidy_check": {
+      "BOOL": true
+    },
+    "primary_appl_reviewer_name": {
+      "S": "増田 真耶"
+    },
+    "primary_appl_reviewer_inkan": {
+      "S": "増田"
+    },
+    "primary_reviewer_id": {
+      "N": "1"
+    },
+    "secondary_appl_reviewer_name": {
+      "S": "鳥居 沙奈"
+    },
+    "secondary_appl_reviewer_inkan": {
+      "S": "鳥居"
+    },
+    "secondary_reviewer_id": {
+      "N": "2"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#4"
+    },
+    "is_solar_contract_doc": {
+      "BOOL": true
+    },
+    "is_pcs_spec_doc": {
+      "BOOL": true
+    },
+    "is_battery_spec_doc": {
+      "BOOL": true
+    },
+    "is_operation_start_doc": {
+      "BOOL": true
+    },
+    "is_generation_data_doc": {
+      "BOOL": true
+    },
+    "is_reverse_power_doc": {
+      "BOOL": true
+    },
+    "is_investment_proof_doc": {
+      "BOOL": true
+    },
+    "is_application_complete_check": {
+      "BOOL": true
+    },
+    "is_forms_attach_check": {
+      "BOOL": true
+    },
+    "is_emissions_reduction_activity_list_check": {
+      "BOOL": true
+    },
+    "is_original_spec_check": {
+      "BOOL": true
+    },
+    "is_subsidy_check": {
+      "BOOL": true
+    },
+    "primary_appl_reviewer_name": {
+      "S": "増田 真耶"
+    },
+    "primary_appl_reviewer_inkan": {
+      "S": "増田"
+    },
+    "primary_reviewer_id": {
+      "N": "1"
+    },
+    "secondary_appl_reviewer_name": {
+      "S": "鳥居 沙奈"
+    },
+    "secondary_appl_reviewer_inkan": {
+      "S": "鳥居"
+    },
+    "secondary_reviewer_id": {
+      "N": "2"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#5"
+    },
+    "is_solar_contract_doc": {
+      "BOOL": true
+    },
+    "is_pcs_spec_doc": {
+      "BOOL": true
+    },
+    "is_battery_spec_doc": {
+      "BOOL": true
+    },
+    "is_operation_start_doc": {
+      "BOOL": true
+    },
+    "is_generation_data_doc": {
+      "BOOL": true
+    },
+    "is_reverse_power_doc": {
+      "BOOL": true
+    },
+    "is_investment_proof_doc": {
+      "BOOL": true
+    },
+    "is_application_complete_check": {
+      "BOOL": true
+    },
+    "is_forms_attach_check": {
+      "BOOL": true
+    },
+    "is_emissions_reduction_activity_list_check": {
+      "BOOL": true
+    },
+    "is_original_spec_check": {
+      "BOOL": true
+    },
+    "is_subsidy_check": {
+      "BOOL": true
+    },
+    "primary_appl_reviewer_name": {
+      "S": "増田 真耶"
+    },
+    "primary_appl_reviewer_inkan": {
+      "S": "増田"
+    },
+    "primary_reviewer_id": {
+      "N": "1"
+    },
+    "secondary_appl_reviewer_name": {
+      "S": "鳥居 沙奈"
+    },
+    "secondary_appl_reviewer_inkan": {
+      "S": "鳥居"
+    },
+    "secondary_reviewer_id": {
+      "N": "2"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#7"
+    },
+    "is_solar_contract_doc": {
+      "BOOL": true
+    },
+    "is_pcs_spec_doc": {
+      "BOOL": true
+    },
+    "is_battery_spec_doc": {
+      "BOOL": true
+    },
+    "is_operation_start_doc": {
+      "BOOL": true
+    },
+    "is_generation_data_doc": {
+      "BOOL": true
+    },
+    "is_reverse_power_doc": {
+      "BOOL": true
+    },
+    "is_investment_proof_doc": {
+      "BOOL": true
+    },
+    "is_application_complete_check": {
+      "BOOL": true
+    },
+    "is_forms_attach_check": {
+      "BOOL": true
+    },
+    "is_emissions_reduction_activity_list_check": {
+      "BOOL": true
+    },
+    "is_original_spec_check": {
+      "BOOL": true
+    },
+    "is_subsidy_check": {
+      "BOOL": true
+    },
+    "primary_appl_reviewer_name": {
+      "S": "増田 真耶"
+    },
+    "primary_appl_reviewer_inkan": {
+      "S": "増田"
+    },
+    "primary_reviewer_id": {
+      "N": "1"
+    }
+  }
+]

@@ -31,6 +31,7 @@ import com.kct.jcredit.core_backend.service.ParticipationProjectService;
 import com.kct.jcredit.core_backend.service.ParticipationProjectValidationService;
 import com.kct.jcredit.core_backend.service.ProjectParticipationPdfService;
 import com.kct.jcredit.core_backend.service.EnR002FileUploadService;
+import com.kct.jcredit.core_backend.service.NotificationMessages;
 import com.kct.jcredit.core_backend.service.NotificationService;
 import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.dynamodb.EnR002ApplicationConfirmationRepository;
@@ -83,6 +84,7 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
     private final ParticipationProjectValidationService      validationService;
     private final ProjectParticipationPdfService             pdfService;
         private final NotificationService                    notificationService;
+    private final NotificationMessages                       messages;
 
     // ─────────────────────────────────────────────────────────────
     // BROWSE
@@ -177,13 +179,19 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
         OperatorCompany operatorCompany = project.getOperatorCompany();
 
-        String adminRepName = safe(operatorCompany.getRepFirstName())
-                + safe(operatorCompany.getRepLastName());
+        // This page is the membership terms a member company consents to, so it cannot be shown
+        // without naming the operator it is an agreement with. A project with no operator company
+        // is incomplete data, not a display gap.
+        if (operatorCompany == null) {
+        return MemberTermsInfoResponse.builder()
+                .statusCode(ResponseConstants.NOT_FOUND)
+                .message(ResponseConstants.MSG_COMPANY_NOT_FOUND)
+                .build();
+        }
 
-        String effectiveDate = project.getCreatedAt() != null
-                ? project.getCreatedAt().toLocalDate().format(
-                        DateTimeFormatter.ofPattern("yyyy年MM月dd日"))
-                : "";
+        // Japanese name order is family name first, matching UserServiceImpl's mapping.
+        String adminRepName = safe(operatorCompany.getRepLastName())
+                + safe(operatorCompany.getRepFirstName());
 
         return MemberTermsInfoResponse.builder()
                 .statusCode(ResponseConstants.OK)
@@ -261,11 +269,17 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
         final Integer participationId = participation.getId();
 
+        saveConfirmationItems(request.getConfirmationItems(), participationId, companyId);
+        saveSustainabilityCommitment(
+                request.getSustainabilityCommitment(),
+                request.getFinalAgreement().getIsAgreeTerms(),
+                participationId, companyId);
+
         // 8. afterCommit
         TransactionSynchronizationManager.registerSynchronization(
-                new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
+        new TransactionSynchronization() {
+        @Override
+        public void afterCommit() {
                 savedFiles.forEach(fileEntity -> {
                     try {
                         fileUploadSolarService.moveToPermanent(
@@ -277,33 +291,34 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                 }
                         });
 
-                        try {
-                                saveConfirmationItems(request.getConfirmationItems(), participationId, companyId);
-                        } catch (Exception e) {
-                                log.error("ConfirmationItems save failed. participationId={}, error={}",
-                                        participationId, e.getMessage());
-                        }
+                        // try {
+                        //         saveConfirmationItems(request.getConfirmationItems(), participationId, companyId);
+                        // } catch (Exception e) {
+                        //         log.error("ConfirmationItems save failed. participationId={}, error={}",
+                        //                 participationId, e.getMessage());
+                        // }
+
+                        // try {
+                        //         saveSustainabilityCommitment(
+                        //                 request.getSustainabilityCommitment(),
+                        //                 request.getFinalAgreement().getIsAgreeTerms(),
+                        //                 participationId, companyId);
+                        // } catch (Exception e) {
+                        //         log.error("SustainabilityCommitment save failed. participationId={}, error={}",
+                        //                 participationId, e.getMessage());
+                        // }
 
                         try {
-                                saveSustainabilityCommitment(
-                                        request.getSustainabilityCommitment(),
-                                        request.getFinalAgreement().getIsAgreeTerms(),
-                                        participationId, companyId);
-                        } catch (Exception e) {
-                                log.error("SustainabilityCommitment save failed. participationId={}, error={}",
-                                        participationId, e.getMessage());
-                        }
-
-                        try {
+                                NotificationMessages.Content submitted = messages.of("participation.submitted");
                                 notificationService.createNotification(
-                                        "入会届申請完了のお知らせ",
-                                        "入会届の提出が完了しました。運営事務局による二重承認をお待ちください。",
+                                        submitted.subject(),
+                                        submitted.body(),
                                         userId,
                                         null);
+                                NotificationMessages.Content operatorNotice = messages.of(
+                                        "participation.submitted.operator", project.getProjectName());
                                 notificationService.createNotificationForAllOperatingUsers(
-                                        "新しい入会届が提出されました",
-                                        "新しい入会届が提出されました。内容を確認し、二重承認を行ってください。\n"
-                                                + "プロジェクト: " + project.getProjectName());
+                                        operatorNotice.subject(), operatorNotice.body());
                         } catch (Exception e) {
                                 log.error("Participation notification creation failed. participationId={}, error={}",
                                         participationId, e.getMessage());
@@ -609,10 +624,14 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
 
         String presignedUrl = pdfService.generatePresignedUrl(s3Key);
 
-        return ProjectPdfDownloadResponse.builder()
+        ProjectPdfDownloadResponse response = ProjectPdfDownloadResponse.builder()
                 .pdfUrl(presignedUrl)
                 .expiresIn(900)
                 .build();
+        response.setStatusCode(ResponseConstants.OK);
+        response.setMessage("PDFのダウンロードURLを取得しました。");
+        return response;
+        
         }
 
 
@@ -667,16 +686,27 @@ public class ParticipationProjectServiceImpl implements ParticipationProjectServ
                                 }
                                 
                         }
+
                         Site site = siteRepository
                                 .findByPublicId(siteId)
                                 .orElseThrow(() -> new CustomException(
                                         ResponseConstants.NOT_FOUND,
                                         ResponseConstants.MSG_SITE_NOT_FOUND));
+
+                        // Same ownership gate as submitParticipation: a site may only be attached to a
+                        // project by the company that owns it.
+                        if (site.getCompany() == null
+                                || !companyId.equals(site.getCompany().getCompanyId())) {
+                                throw new CustomException(
+                                        ResponseConstants.FORBIDDEN,
+                                        ResponseConstants.MSG_UNAUTHORIZED);
+                        }
+
                         Project project = projectRepository.findByPublicIdWithFallback(projectId)
                                 .orElseThrow(() -> new CustomException(
                                         ResponseConstants.NOT_FOUND,
                                         ResponseConstants.MSG_PROJECT_NOT_FOUND));
-                        
+
                         SiteProjectRelation relation = saveSiteProjectRelation(site, project, companyId);
 
                         ProjectJoinResponse response = ProjectJoinResponse.builder()       

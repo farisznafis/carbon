@@ -9,10 +9,9 @@ import com.kct.jcredit.core_backend.enums.SecurityActionPurpose;
 import com.kct.jcredit.core_backend.enums.SecurityActionStatus;
 import com.kct.jcredit.core_backend.enums.SecurityActionSubjectType;
 import com.kct.jcredit.core_backend.exception.CustomException;
+import com.kct.jcredit.core_backend.repository.dynamodb.SecurityTempStateRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SecurityActionLinkRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,20 +26,35 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class SecurityActionLinkService {
-    private static final String SESSION_PREFIX = "security:action-session:";
+    private static final String SESSION_PREFIX = "action-session#";
     private static final List<SecurityActionStatus> ACTIVE = List.of(
             SecurityActionStatus.PENDING, SecurityActionStatus.OPENED);
 
     private final SecurityActionLinkRepository repository;
     private final SecuritySecretService secretService;
     private final SecurityFlowProperties properties;
-    private final StringRedisTemplate redisTemplate;
+    private final SecurityTempStateRepository store;
     private final ObjectMapper objectMapper;
 
     @Transactional
     public IssuedActionLink issue(SecurityActionPurpose purpose, SecurityActionSubjectType subjectType,
                                   Integer subjectId, String createdBy) {
-        revokeActive(subjectType, subjectId, purpose);
+        return issue(purpose, subjectType, subjectId, createdBy, null, null);
+    }
+
+    /**
+     * Issues a link carrying invitation details.
+     *
+     * <p>When {@code inviteEmail} is set the revocation that precedes the new link is narrowed to
+     * links for that same address. A subject can therefore hold several live invitations at once,
+     * which is what lets one company invite more than one person; re-inviting an address still
+     * supersedes its earlier invitation.
+     */
+    @Transactional
+    public IssuedActionLink issue(SecurityActionPurpose purpose, SecurityActionSubjectType subjectType,
+                                  Integer subjectId, String createdBy,
+                                  String inviteEmail, Integer inviteSiteId) {
+        revokeActive(subjectType, subjectId, purpose, inviteEmail);
         repository.flush();
         String rawToken = secretService.newActionToken();
         SecurityActionLink link = SecurityActionLink.builder()
@@ -55,6 +69,8 @@ public class SecurityActionLinkService {
                 .expiresAt(LocalDateTime.now().plus(linkTtl(purpose)))
                 .createdAt(LocalDateTime.now())
                 .createdBy(createdBy == null || createdBy.isBlank() ? "system" : createdBy)
+                .inviteEmail(inviteEmail)
+                .inviteSiteId(inviteSiteId)
                 .build();
         repository.save(link);
         return new IssuedActionLink(link.getId(), rawToken, link.getExpiresAt(),
@@ -109,7 +125,7 @@ public class SecurityActionLinkService {
         link.setStatus(SecurityActionStatus.CONSUMED);
         link.setConsumedAt(LocalDateTime.now());
         repository.save(link);
-        afterCommit(() -> redisTemplate.delete(sessionKey(sessionToken)));
+        afterCommit(() -> store.delete(sessionKey(sessionToken)));
     }
 
     @Transactional
@@ -131,14 +147,18 @@ public class SecurityActionLinkService {
     }
 
     private void revokeActive(SecurityActionSubjectType subjectType, Integer subjectId,
-                              SecurityActionPurpose purpose) {
+                              SecurityActionPurpose purpose, String inviteEmail) {
         LocalDateTime now = LocalDateTime.now();
-        repository.findBySubjectTypeAndSubjectIdAndPurposeAndStatusIn(subjectType, subjectId, purpose, ACTIVE)
-                .forEach(link -> {
-                    link.setStatus(SecurityActionStatus.REVOKED);
-                    link.setRevokedAt(now);
-                    repository.save(link);
-                });
+        List<SecurityActionLink> active = inviteEmail == null
+                ? repository.findBySubjectTypeAndSubjectIdAndPurposeAndStatusIn(
+                        subjectType, subjectId, purpose, ACTIVE)
+                : repository.findBySubjectTypeAndSubjectIdAndPurposeAndStatusInAndInviteEmailIgnoreCase(
+                        subjectType, subjectId, purpose, ACTIVE, inviteEmail);
+        active.forEach(link -> {
+            link.setStatus(SecurityActionStatus.REVOKED);
+            link.setRevokedAt(now);
+            repository.save(link);
+        });
     }
 
     private Duration linkTtl(SecurityActionPurpose purpose) {
@@ -146,6 +166,7 @@ public class SecurityActionLinkService {
             case MASTER_ACCOUNT_SETUP -> properties.getMasterSetupLinkTtl();
             case REJECTED_SIGNUP_REVISION -> properties.getRevisionLinkTtl();
             case PASSWORD_RESET -> properties.getPasswordResetLinkTtl();
+            case USER_INVITATION -> properties.getUserInvitationLinkTtl();
         };
     }
 
@@ -154,6 +175,7 @@ public class SecurityActionLinkService {
             case MASTER_ACCOUNT_SETUP -> properties.getMasterSetupSessionTtl();
             case REJECTED_SIGNUP_REVISION -> properties.getRevisionSessionTtl();
             case PASSWORD_RESET -> properties.getPasswordResetSessionTtl();
+            case USER_INVITATION -> properties.getUserInvitationSessionTtl();
         };
     }
 
@@ -162,31 +184,25 @@ public class SecurityActionLinkService {
             case MASTER_ACCOUNT_SETUP -> "/account/setup";
             case REJECTED_SIGNUP_REVISION -> "/signup/revision";
             case PASSWORD_RESET -> "/reset-password";
+            case USER_INVITATION -> "/user/invitation";
         };
         return properties.getFrontendBaseUrl().replaceAll("/+$", "") + path + "#token=" + rawToken;
     }
 
     private void writeSession(String token, ActionSessionData data, Duration ttl) {
+        String json;
         try {
-            redisTemplate.opsForValue().set(sessionKey(token), objectMapper.writeValueAsString(data), ttl);
-        } catch (DataAccessException ex) {
-            throw unavailable(ex);
+            json = objectMapper.writeValueAsString(data);
         } catch (Exception ex) {
             throw new IllegalStateException("Unable to serialize action session", ex);
         }
+        store.put(sessionKey(token), json, ttl);
     }
 
     private ActionSessionData readSession(String token) {
+        String json = store.get(sessionKey(token)).orElseThrow(this::invalidToken);
         try {
-            String json = redisTemplate.opsForValue().get(sessionKey(token));
-            if (json == null) {
-                throw invalidToken();
-            }
             return objectMapper.readValue(json, ActionSessionData.class);
-        } catch (CustomException ex) {
-            throw ex;
-        } catch (DataAccessException ex) {
-            throw unavailable(ex);
         } catch (Exception ex) {
             throw new IllegalStateException("Invalid action session payload", ex);
         }
@@ -212,11 +228,6 @@ public class SecurityActionLinkService {
     private CustomException invalidToken() {
         return new CustomException(ResponseConstants.INVALID_OR_EXPIRED_TOKEN,
                 ResponseConstants.MSG_INVALID_OR_EXPIRED_TOKEN);
-    }
-
-    private CustomException unavailable(Exception cause) {
-        return new CustomException(ResponseConstants.SERVICE_UNAVAILABLE,
-                ResponseConstants.MSG_SERVICE_UNAVAILABLE, cause);
     }
 
     public record IssuedActionLink(UUID linkId, String rawToken, LocalDateTime expiresAt, String url) {}

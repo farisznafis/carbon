@@ -11,7 +11,6 @@ import com.kct.jcredit.core_backend.validation.PhoneNumber;
 import com.kct.jcredit.core_backend.validation.Zenkaku;
 import com.kct.jcredit.core_backend.validation.ZenkakuWithSymbols;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
@@ -137,22 +136,6 @@ public class ProjectDtoReq {
     @Size(max = 10, message = "地域区分は10文字以内で入力してください。")
     @Zenkaku(message = "地域区分は全角文字で入力してください。")
     private String regionalCategory;
-
-    @NotNull(message = "新規会員数は必須です。")
-    @Min(value = 0, message = "新規会員数は0以上で入力してください。")
-    private Integer newMembersTotal;
-
-    @NotNull(message = "脱退会員数は必須です。")
-    @Min(value = 0, message = "脱退会員数は0以上で入力してください。")
-    private Integer withdrawnMembers;
-
-    @NotNull(message = "累計会員数は必須です。")
-    @Min(value = 0, message = "累計会員数は0以上で入力してください。")
-    private Integer cumulativeMembers;
-
-    @NotNull(message = "会員数は必須です。")
-    @Min(value = 0, message = "会員数は0以上で入力してください。")
-    private Integer membersTotal;
 
     @NotBlank(message = "方法論バージョンは必須です。")
     @Pattern(regexp = "^Ver\\.[0-9]+(\\.[0-9]+)?$", message = "方法論バージョンはVer.1またはVer.1.2の形式で入力してください。")

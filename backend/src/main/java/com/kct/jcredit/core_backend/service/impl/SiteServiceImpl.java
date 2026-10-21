@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -168,10 +169,10 @@ public class SiteServiceImpl implements SiteService {
         }
 
         if (user.getCompany() == null || !user.getCompany().getId().equals(company.getId())) {
-            errors.put("userId", ResponseConstants.MSG_FORBIDDEN);
+            errors.put("userId.company", ResponseConstants.MSG_FORBIDDEN);
         }
         if (!RoleConstants.MASTER.equals(user.getRole()) && !Objects.isNull(user.getSite())) {
-            errors.put("userId", ResponseConstants.MSG_BAD_REQUEST);
+            errors.put("userId.site", ResponseConstants.MSG_BAD_REQUEST);
         }
 
         return errors.isEmpty()
@@ -204,7 +205,7 @@ public class SiteServiceImpl implements SiteService {
             return response;
         }
 
-        if(!user.getCompany().getId().equals(company.getId())){
+        if (user.getCompany() == null || !user.getCompany().getId().equals(company.getId())) {
             response.setStatusCode(ResponseConstants.FORBIDDEN);
             response.setMessage(ResponseConstants.MSG_FORBIDDEN);
             return response;
@@ -306,9 +307,10 @@ public class SiteServiceImpl implements SiteService {
             return response;
         }
         //check if PIC can change to selected user
-        ParticipatingUser user = participatingUserRepository.findById(request.getPICUserId()).orElse(null);
+        ParticipatingUser user = request.getPICUserId() == null
+        ? null
+        : participatingUserRepository.findById(request.getPICUserId()).orElse(null);
 
-            
         if (!Objects.isNull(user)) {
             if(!user.getCompany().getCompanyId().equals(companyId)){
             response.setStatusCode(ResponseConstants.FORBIDDEN);
@@ -401,7 +403,22 @@ public class SiteServiceImpl implements SiteService {
                 return response;
             }
     
-            EnR002Equipment equipment = equipments.get(0);
+        Set<Integer> supersededIds = equipments.stream()
+                .map(EnR002Equipment::getPreviousEquipment)
+                .filter(Objects::nonNull)
+                .map(EnR002Equipment::getId)
+                .collect(Collectors.toSet());
+
+        EnR002Equipment equipment = equipments.stream()
+                .filter(e -> !supersededIds.contains(e.getId()))
+                .findFirst()
+                .orElse(null);
+
+        if (equipment == null) {
+            response.setStatusCode(ResponseConstants.NOT_FOUND);
+            response.setMessage(ResponseConstants.MSG_SITE_NOT_FOUND);
+            return response;
+        }
     
             List<EnR002EquipmentFile> equipmentFiles = siteR002EquipmentFileRepository
                     .findByEquipment_Id(equipment.getId());

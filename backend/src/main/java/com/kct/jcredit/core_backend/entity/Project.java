@@ -90,14 +90,20 @@ public class Project extends BaseEntity {
     @Column(name = "regional_category", nullable = false, length = 10)
     private String regionalCategory;
 
+    // 会員数 is no longer entered or shown in the system: it is filled in by
+    // hand on the official Excel forms. The columns are still in the schema,
+    // three of them NOT NULL, so a new project is stored with zeros.
+    @Builder.Default
     @Column(name = "new_members_total", nullable = false)
-    private Integer newMembersTotal;
+    private Integer newMembersTotal = 0;
 
+    @Builder.Default
     @Column(name = "withdrawn_members", nullable = false)
-    private Integer withdrawnMembers;
+    private Integer withdrawnMembers = 0;
 
+    @Builder.Default
     @Column(name = "cumulative_members_total", nullable = false)
-    private Integer cumulativeMembersTotal;
+    private Integer cumulativeMembersTotal = 0;
 
     @Column(name = "members_total")
     private Integer membersTotal;
@@ -123,7 +129,7 @@ public class Project extends BaseEntity {
     @Column(name = "project_started_at", nullable = false)
     private Instant startedAt;
 
-    @Column(name = "use_purpose", nullable = false, length = 500)
+    @Column(name = "use_purpose", nullable = false, length = 1000)
     private String usePurpose;
 
     @Column(name = "method_details", nullable = false, length = 1000)

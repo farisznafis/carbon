@@ -1,23 +1,18 @@
 package com.kct.jcredit.core_backend.controller;
 
-import com.kct.jcredit.core_backend.dto.request.MonitoringDeletionExecutionRequest;
 import com.kct.jcredit.core_backend.dto.response.MonitoringDataDeletionHistoryListResponse;
-import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionCandidateListResponse;
-import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionCandidateRecordListResponse;
-import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionExecutionResponse;
+import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionScheduleListResponse;
 import com.kct.jcredit.core_backend.service.EnR002IndividualActivityService;
 import com.kct.jcredit.core_backend.service.MonitoringDataDeletionService;
 import com.kct.jcredit.core_backend.dto.response.CompanyActivityGroupResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002IndividualActivityDetailResponse;
 import com.kct.jcredit.core_backend.dto.response.EnR002IndividualActivityRowResponse;
 import com.kct.jcredit.core_backend.service.EnR002IndividualActivityService;
-import com.kct.jcredit.core_backend.util.JwtUtil;
 import com.kct.jcredit.core_backend.util.ResponseUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -30,59 +25,29 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Exposes operator-only monitoring data deletion operations.
+ * Exposes operator-only views of the automatic monitoring data deletion.
  */
 @RestController
 @RequestMapping("/admin/monitoring-data")
-@Tag(name = "モニタリングデータ管理", description = "モニタリングデータの削除候補抽出、削除実行、削除履歴取得を管理するAPIです。")
+@Tag(name = "モニタリングデータ管理", description = "モニタリングデータの自動削除について、削除予定と削除履歴を取得するAPIです。")
 @RequiredArgsConstructor
 @Validated
 public class AdminMonitoringController {
 
     private final MonitoringDataDeletionService monitoringDataDeletionService;
-    private final JwtUtil jwtUtil;
     private final EnR002IndividualActivityService individualActivityService;
 
-    @GetMapping("/deletion-candidates")
+    @GetMapping("/deletion-schedule")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "削除対象データ抽出", description = "認証対象期間終了から2年が経過したモニタリングデータを削除候補として抽出します。")
-    public ResponseEntity<MonitoringDeletionCandidateListResponse> getDeletionCandidates() {
-        MonitoringDeletionCandidateListResponse response = monitoringDataDeletionService.previewDeletionCandidates();
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
-    }
-
-    @GetMapping("/deletion-candidates/{projectPublicId}")
-    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "削除対象データ明細取得", description = "指定したプロジェクト・拠点の削除候補モニタリングデータを、レコード単位の明細で取得します。")
-    public ResponseEntity<MonitoringDeletionCandidateRecordListResponse> getDeletionCandidateRecords(
-            @PathVariable String projectPublicId,
-            @RequestParam String sitePublicId) {
-        MonitoringDeletionCandidateRecordListResponse response =
-                monitoringDataDeletionService.previewDeletionCandidateRecords(projectPublicId, sitePublicId);
-        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
-    }
-
-    @PostMapping("/deletion")
-    @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_DELETE.name()))")
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "モニタリングデータ削除実行", description = "指定されたプロジェクトの削除対象モニタリングデータを削除し、削除履歴を記録します。")
-    public ResponseEntity<MonitoringDeletionExecutionResponse> executeDeletion(
-            Authentication authentication,
-            @RequestBody @Valid MonitoringDeletionExecutionRequest request) {
-        String actor = jwtUtil.extractUsername(authentication.getCredentials().toString());
-        MonitoringDeletionExecutionResponse response = monitoringDataDeletionService.executeDeletion(
-                actor,
-                request.getProjectPublicIds()
-        );
+    @Operation(summary = "削除予定取得", description = "プロジェクトの終了から保存期間が経過すると自動で削除されるモニタリングデータの削除予定日を、プロジェクト単位で取得します。")
+    public ResponseEntity<MonitoringDeletionScheduleListResponse> getDeletionSchedule() {
+        MonitoringDeletionScheduleListResponse response = monitoringDataDeletionService.findDeletionSchedule();
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
@@ -96,9 +61,10 @@ public class AdminMonitoringController {
             @Min(value = 1, message = "ページ番号は1以上で指定してください。") int page,
             @RequestParam(defaultValue = "20")
             @Min(value = 1, message = "表示件数は1以上で指定してください。")
-            @Max(value = 100, message = "表示件数は100以下で指定してください。") int limit) {
+            @Max(value = 100, message = "表示件数は100以下で指定してください。") int limit,
+            Authentication authentication) {
         MonitoringDataDeletionHistoryListResponse response =
-                monitoringDataDeletionService.findDeletionHistory(projectId, page, limit);
+                monitoringDataDeletionService.findDeletionHistory(projectId, page, limit, authentication.getName());
         return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
@@ -108,6 +74,8 @@ public class AdminMonitoringController {
     @GetMapping("/projects/{projectId}/individual-activity/rows")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "個別活動データ一覧取得（プロジェクト単位）",
+           description = "指定プロジェクトに紐づく報告対象設備の一覧を取得します。companyIdを指定すると、特定の参加企業の設備のみに絞り込めます。")
     public List<EnR002IndividualActivityRowResponse> getRowsByProject(
             @PathVariable String projectId,
             @RequestParam(required = false) String companyId,
@@ -119,6 +87,8 @@ public class AdminMonitoringController {
     @GetMapping("/companies/{companyId}/individual-activity")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "個別活動データ一覧取得（企業単位）",
+           description = "指定企業が保有する報告対象設備を、参加プロジェクトごとにまとめて取得します。")
     public List<CompanyActivityGroupResponse> getRowsByCompany(
             @PathVariable String companyId,
             @RequestParam(required = false) String projectId,
@@ -130,9 +100,12 @@ public class AdminMonitoringController {
     @GetMapping("/individual-activity/rows/{equipmentId}")
     @PreAuthorize("hasRole('admin') or( hasRole('operator') and hasAuthority(T(com.kct.jcredit.core_backend.constant.PermissionCode).MONITORING_READ.name()))")
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "個別活動データ詳細取得",
+           description = "設備1件分の個別活動データの詳細を取得します。")
     public EnR002IndividualActivityDetailResponse getRowDetail(
             @PathVariable Integer equipmentId,
+            @RequestParam String projectPublicId,
             Authentication authentication) {
-        return individualActivityService.getRowDetail(equipmentId, authentication.getName());
+        return individualActivityService.getRowDetail(equipmentId, projectPublicId, authentication.getName());
     }
 }

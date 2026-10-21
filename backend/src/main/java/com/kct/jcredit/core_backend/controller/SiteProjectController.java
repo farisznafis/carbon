@@ -110,14 +110,14 @@ public class SiteProjectController {
         return ResponseEntity.ok(BaseResponse.success("入力内容に問題ありません。"));
     }
 
-    @GetMapping("/sites/{siteId}/sustainability-commitment/default")
-    @PreAuthorize("hasRole('master')")
-    @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<EnR002SustainabilityCommitmentResponse> getSustainabilityCommitmentDefault(
-            @PathVariable String siteId) {
-        return ResponseEntity.ok(
-                participationService.getSustainabilityCommitmentDefault(siteId));
-    }
+    // @GetMapping("/sites/{siteId}/sustainability-commitment/default")
+    // @PreAuthorize("hasRole('master')")
+    // @SecurityRequirement(name = "bearerAuth")
+    // public ResponseEntity<EnR002SustainabilityCommitmentResponse> getSustainabilityCommitmentDefault(
+    //         @PathVariable String siteId) {
+    //     return ResponseEntity.ok(
+    //             participationService.getSustainabilityCommitmentDefault(siteId));
+    // }
 
     @PostMapping("/sustainability-commitment/validate")
     @PreAuthorize("hasRole('master')")
@@ -184,9 +184,9 @@ public class SiteProjectController {
         return jwtUtil.extractCompanyId(auth.getCredentials().toString());
     }
 
-    private String extractUsername(Authentication auth) {
-        return jwtUtil.extractUsername(auth.getCredentials().toString());
-    }
+    // private String extractUsername(Authentication auth) {
+    //     return jwtUtil.extractUsername(auth.getCredentials().toString());
+    // }
 
     private Integer extractUserId(Authentication auth) {
         return jwtUtil.extractUserId(auth.getCredentials().toString());
@@ -206,58 +206,60 @@ public class SiteProjectController {
             @PathVariable String projectId) {
 
         String companyId = jwtUtil.extractCompanyId(authentication.getCredentials().toString());
-        return ResponseEntity.ok(participationService.getMembershipPdfByCompany(projectId, companyId));
+        ProjectPdfDownloadResponse response =
+                participationService.getMembershipPdfByCompany(projectId, companyId);
+        return new ResponseEntity<>(response, ResponseUtil.getHttpStatus(response.getStatusCode()));
     }
 
-    @PostMapping("/generate/{participationId}")
-    @PreAuthorize("hasAnyRole('admin','operator')")
-    @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<String> generate(@PathVariable Integer participationId) {
-        log.warn("generateAndProcess を手動実行します。participationId={}", participationId);
+    // @PostMapping("/generate/{participationId}")
+    // @PreAuthorize("hasAnyRole('admin','operator')")
+    // @SecurityRequirement(name = "bearerAuth")
+    // public ResponseEntity<String> generate(@PathVariable Integer participationId) {
+    //     log.warn("generateAndProcess を手動実行します。participationId={}", participationId);
 
-        try {
-            pdfService.generateAndProcess(participationId);
-            return ResponseEntity.ok("PDF生成処理が完了しました。participationId=" + participationId);
-        } catch (Exception e) {
-            log.error("PDF生成失敗", e);
-            return ResponseEntity.internalServerError()
-                    .body("エラー: " + e.getMessage());
-        }
-    }
+    //     try {
+    //         pdfService.generateAndProcess(participationId);
+    //         return ResponseEntity.ok("PDF生成処理が完了しました。participationId=" + participationId);
+    //     } catch (Exception e) {
+    //         log.error("PDF生成失敗", e);
+    //         return ResponseEntity.internalServerError()
+    //                 .body("エラー: " + e.getMessage());
+    //     }
+    // }
 
-    @GetMapping("/presigned-url")
-    @PreAuthorize("hasAnyRole('admin','operator')")
-    @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<String> presignedUrl(@RequestParam String s3Key) {
-        log.warn("[DEBUG] Presigned URL を手動生成します。s3Key={}", s3Key);
+    // @GetMapping("/presigned-url")
+    // @PreAuthorize("hasAnyRole('admin','operator')")
+    // @SecurityRequirement(name = "bearerAuth")
+    // public ResponseEntity<String> presignedUrl(@RequestParam String s3Key) {
+    //     log.warn("[DEBUG] Presigned URL を手動生成します。s3Key={}", s3Key);
 
-        try {
-            String url = pdfService.generatePresignedUrl(s3Key);
-            return ResponseEntity.ok(url);
-        } catch (Exception e) {
-            log.error("[DEBUG] Presigned URL生成失敗", e);
-            return ResponseEntity.internalServerError()
-                    .body("エラー: " + e.getMessage());
-        }
-    }
+    //     try {
+    //         String url = pdfService.generatePresignedUrl(s3Key);
+    //         return ResponseEntity.ok(url);
+    //     } catch (Exception e) {
+    //         log.error("[DEBUG] Presigned URL生成失敗", e);
+    //         return ResponseEntity.internalServerError()
+    //                 .body("エラー: " + e.getMessage());
+    //     }
+    // }
 
-    @PostMapping("/generate-and-get-url/{participationId}")
-    @PreAuthorize("hasAnyRole('admin','operator')")
-    @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<String> generateAndGetUrl(
-            @PathVariable Integer participationId,
-            @RequestParam String s3Key) {
+    // @PostMapping("/generate-and-get-url/{participationId}")
+    // @PreAuthorize("hasAnyRole('admin','operator')")
+    // @SecurityRequirement(name = "bearerAuth")
+    // public ResponseEntity<String> generateAndGetUrl(
+    //         @PathVariable Integer participationId,
+    //         @RequestParam String s3Key) {
 
-        try {
-            pdfService.generateAndProcess(participationId);
-            String url = pdfService.generatePresignedUrl(s3Key);
-            log.warn("生成完了。ブラウザで以下URLを開いてPDFを確認してください: {}", url);
-            return ResponseEntity.ok(url);
-        } catch (Exception e) {
-            log.error("[DEBUG] end-to-endテスト失敗", e);
-            return ResponseEntity.internalServerError()
-                    .body("エラー: " + e.getMessage());
-        }
-    }
+    //     try {
+    //         pdfService.generateAndProcess(participationId);
+    //         String url = pdfService.generatePresignedUrl(s3Key);
+    //         log.warn("生成完了。ブラウザで以下URLを開いてPDFを確認してください: {}", url);
+    //         return ResponseEntity.ok(url);
+    //     } catch (Exception e) {
+    //         log.error("[DEBUG] end-to-endテスト失敗", e);
+    //         return ResponseEntity.internalServerError()
+    //                 .body("エラー: " + e.getMessage());
+    //     }
+    // }
 
 }

@@ -1,0 +1,21 @@
+-- Static EN-R-002 dummytest-v2 data. Run only on a dedicated test database.
+BEGIN;
+DELETE FROM en_r002_reduction_result_total WHERE project_id IN (SELECT id FROM project WHERE public_id IN ('ITPROJ001','ITPROJ002'));
+DELETE FROM en_r002_reduction_result WHERE project_id IN (SELECT id FROM project WHERE public_id IN ('ITPROJ001','ITPROJ002'));
+DELETE FROM batch_process_history WHERE claimed_by='fixture-snapshot';
+DELETE FROM monitoring_data_deletion_history WHERE project_id IN (SELECT id FROM project WHERE public_id IN ('ITPROJ001','ITPROJ002'));
+DELETE FROM participating_project WHERE equipment_id IN (SELECT id FROM en_r002_equipment WHERE device_no LIKE 'IT-S%-PCS-%');
+DELETE FROM en_r002_equipment_file WHERE equipment_id IN (SELECT id FROM en_r002_equipment WHERE device_no LIKE 'IT-S%-PCS-%');
+DELETE FROM en_r002_equipment WHERE device_no LIKE 'IT-S%-PCS-%';
+DELETE FROM site_project_relation WHERE project_id IN (SELECT id FROM project WHERE public_id IN ('ITPROJ001','ITPROJ002'));
+DELETE FROM notification WHERE participating_user_id IN (SELECT id FROM participating_user WHERE username ~ '^(master\.c0[1-6]|user\.s0[1-8])$');
+DELETE FROM participating_user WHERE username ~ '^(master\.c0[1-6]|user\.s0[1-8])$';
+DELETE FROM site WHERE public_id BETWEEN 'ITSITE001' AND 'ITSITE008';
+DELETE FROM participating_company WHERE company_id BETWEEN 'PC000000001' AND 'PC000000006';
+DELETE FROM project_files WHERE project_id IN (SELECT id FROM project WHERE public_id IN ('ITPROJ001','ITPROJ002'));
+DELETE FROM project WHERE public_id IN ('ITPROJ001','ITPROJ002');
+DELETE FROM account WHERE operator_company_id IN (SELECT id FROM operator_company WHERE company_id='OP000000001');
+DELETE FROM operating_user_permission WHERE operating_user_id IN (SELECT id FROM operating_user WHERE username IN ('it.admin','it.operator'));
+DELETE FROM operating_user WHERE username IN ('it.admin','it.operator');
+DELETE FROM operator_company WHERE company_id='OP000000001';
+COMMIT;

@@ -1,35 +1,27 @@
 package com.kct.jcredit.core_backend.service;
 
 import com.kct.jcredit.core_backend.dto.response.MonitoringDataDeletionHistoryListResponse;
-import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionCandidateListResponse;
-import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionCandidateRecordListResponse;
-import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionExecutionResponse;
+import com.kct.jcredit.core_backend.dto.response.MonitoringDeletionScheduleListResponse;
 
-import java.util.List;
+import java.time.LocalDate;
 
 public interface MonitoringDataDeletionService {
 
     /**
-     * Lists monitoring data deletion candidates, grouped by project/site.
+     * Lists finalized projects whose monitoring data is still waiting for its deletion date.
      */
-    MonitoringDeletionCandidateListResponse previewDeletionCandidates();
+    MonitoringDeletionScheduleListResponse findDeletionSchedule();
 
     /**
-     * Lists the individual candidate records for one project/site combination,
-     * for operators drilling into a single row of previewDeletionCandidates().
+     * One pass of the automatic deletion job: sends the advance and same-day notices, then
+     * deletes the monitoring data of every project whose deletion date has been reached.
+     * Safe to run repeatedly; whatever a previous pass left behind is picked up again.
      */
-    MonitoringDeletionCandidateRecordListResponse previewDeletionCandidateRecords(
-            String projectPublicId,
-            String sitePublicId
-    );
-
-    /**
-     * Deletes monitoring data for the given eligible projects and records the outcome per record.
-     */
-    MonitoringDeletionExecutionResponse executeDeletion(String actor, List<String> projectPublicIds);
+    void runAutomaticDeletion(LocalDate today);
 
     /**
      * Returns paginated deletion history, optionally filtered by project.
      */
-    MonitoringDataDeletionHistoryListResponse findDeletionHistory(Integer projectId, int page, int limit);
+    MonitoringDataDeletionHistoryListResponse findDeletionHistory(
+        Integer projectId, int page, int limit, String currentUserId);
 }

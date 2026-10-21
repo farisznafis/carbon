@@ -14,6 +14,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -169,6 +171,78 @@ class CompanyAuthorizationFilterTest {
         assertEquals(403, response.getStatus());
         assertTrue(response.getContentAsString().contains("\"statusCode\":\"SUSPENDED\""));
         verifyNoInteractions(operatingUserRepository);
+    }
+
+    @Test
+    void adminIsAuthorizedWithoutAnyParticipatingAccounts() throws Exception {
+        stubAdminClaims();
+        OperatingUser admin = buildOperator(1, true, true, OPERATOR_COMPANY_ID);
+        admin.setRole(RoleConstants.ADMIN);
+        when(operatingUserRepository.findForAuthorization(OPERATOR_USERNAME, OPERATOR_COMPANY_ID))
+                .thenReturn(Optional.of(admin));
+        MockHttpServletRequest request = protectedRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+        verifyNoInteractions(participatingCompanyRepository, participatingUserRepository);
+        assertEquals(200, response.getStatus());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void adminWithInactiveUserOrCompanyIsForbidden(boolean userActive) throws Exception {
+        stubAdminClaims();
+        OperatingUser admin = buildOperator(1, userActive, !userActive, OPERATOR_COMPANY_ID);
+        admin.setRole(RoleConstants.ADMIN);
+        when(operatingUserRepository.findForAuthorization(OPERATOR_USERNAME, OPERATOR_COMPANY_ID))
+                .thenReturn(Optional.of(admin));
+
+        assertForbidden(executeProtectedRequest());
+        verify(filterChain, never()).doFilter(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+        verifyNoInteractions(participatingCompanyRepository, participatingUserRepository);
+    }
+
+    @Test
+    void adminTokenCannotAuthorizeAnOperatorAccount() throws Exception {
+        stubAdminClaims();
+        when(operatingUserRepository.findForAuthorization(OPERATOR_USERNAME, OPERATOR_COMPANY_ID))
+                .thenReturn(Optional.of(buildOperator(1, true, true, OPERATOR_COMPANY_ID)));
+
+        assertForbidden(executeProtectedRequest());
+        verify(filterChain, never()).doFilter(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void adminWithMismatchedUserIdIsForbidden() throws Exception {
+        stubAdminClaims();
+        OperatingUser admin = buildOperator(2, true, true, OPERATOR_COMPANY_ID);
+        admin.setRole(RoleConstants.ADMIN);
+        when(operatingUserRepository.findForAuthorization(OPERATOR_USERNAME, OPERATOR_COMPANY_ID))
+                .thenReturn(Optional.of(admin));
+
+        assertForbidden(executeProtectedRequest());
+        verify(filterChain, never()).doFilter(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void missingAdminIsForbiddenRatherThanFallingThroughToParticipatingDomain() throws Exception {
+        stubAdminClaims();
+        when(operatingUserRepository.findForAuthorization(OPERATOR_USERNAME, OPERATOR_COMPANY_ID))
+                .thenReturn(Optional.empty());
+
+        assertForbidden(executeProtectedRequest());
+        verify(filterChain, never()).doFilter(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+        verifyNoInteractions(participatingCompanyRepository, participatingUserRepository);
+    }
+
+    private void stubAdminClaims() {
+        stubOperatorClaims(1, OPERATOR_COMPANY_ID);
+        when(jwtUtil.extractRole(TOKEN)).thenReturn(RoleConstants.ADMIN);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(OPERATOR_USERNAME, TOKEN,
+                        List.of(new SimpleGrantedAuthority("ROLE_admin"))));
     }
 
     private void stubOperatorClaims(Integer userId, String companyId) {

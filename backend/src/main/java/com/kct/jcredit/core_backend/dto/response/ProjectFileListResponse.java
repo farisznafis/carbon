@@ -10,4 +10,5 @@ import java.util.List;
 @Setter
 public class ProjectFileListResponse extends BaseResponse {
     private List<ProjectFileItem> files;
+    private List<FileVersionSummaryResponse> versionSummary;   
 }

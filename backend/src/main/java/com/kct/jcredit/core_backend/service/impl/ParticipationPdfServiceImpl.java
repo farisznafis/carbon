@@ -177,7 +177,7 @@ public class ParticipationPdfServiceImpl implements ProjectParticipationPdfServi
 
             participatingProjectRepository.updatePdfS3Key(participationId, s3Key);
 
-            log.warn("[TODO] DocuSign envelope belum dikirim — akun belum siap. participationId={}",
+            log.warn("[TODO] docusign is not sent. participationId={}",
                     participationId);
 
         } catch (IOException e) {

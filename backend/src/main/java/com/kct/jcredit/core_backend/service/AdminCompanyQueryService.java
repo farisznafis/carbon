@@ -12,7 +12,7 @@ public interface AdminCompanyQueryService {
     /**
      * Returns one validated and deterministically sorted page of companies.
      */
-    AdminCompanyListResponse findCompanies(CompanyListQuery query);
+    AdminCompanyListResponse findCompanies(CompanyListQuery query, String projectId);
 
     /**
      * Returns the operator-facing detail view for one participating company.

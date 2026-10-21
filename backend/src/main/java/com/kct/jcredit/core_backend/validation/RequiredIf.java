@@ -12,7 +12,7 @@ import jakarta.validation.Payload;
 
 /**
  * Makes one field required only when a boolean toggle on the same object has a
- * given value — the 有/無 pattern that runs through the whole project-plan form
+ * given value — the 有/無 pattern of the official J-Credit forms
  * ("if 特定排出者である, then 特定排出者コード is required").
  *
  * <p>Declared at class level and repeatable, so a page lists all of its
@@ -21,16 +21,12 @@ import jakarta.validation.Payload;
  * <pre>{@code
  * @RequiredIf(field = "emitterCode", when = "isDesignatedEmitter", is = true)
  * @RequiredIf(field = "energyActOperationNumber", when = "hasEnergyActPeriodReport", is = true)
- * public class ProjectApplicationRequest extends ProjectPlanFormBase { ... }
+ * public class SomeRequest { ... }
  * }</pre>
  *
  * <p>The violation is reported against {@link #field()} rather than the class,
  * so the {@code errors} map stays keyed by field name and matches the shape the
  * frontend already consumes.
- *
- * <p>These declarations are also read back by the form registry and exposed via
- * {@code GET /projectplan/forms}, so the frontend's show/hide logic is driven by
- * the same source as server-side validation and cannot drift from it.
  */
 @Documented
 @Repeatable(RequiredIf.List.class)

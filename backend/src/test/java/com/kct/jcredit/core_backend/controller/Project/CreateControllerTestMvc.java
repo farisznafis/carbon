@@ -104,7 +104,6 @@ class CreateControllerTestMvc extends ProjectControllerBaseTest {
             // ARRANGE
             validRequest.getProject().get(0).setBaselineEmissions(null);
             validRequest.getProject().get(0).setPostProjectEmission(null);
-            validRequest.getProject().get(0).setNewMembersTotal(null);
 
             CreateProjectResponse mockResponse = TestDataBuilder.buildSuccessCreateProjectResponse();
             when(projectService.createProject(any(CreateProjectRequest.class))).thenReturn(mockResponse);
@@ -128,7 +127,6 @@ class CreateControllerTestMvc extends ProjectControllerBaseTest {
         void testCreateProject_Success_MaxNumericValues() {
             // ARRANGE
             validRequest.getProject().get(0).setBaselineEmissions(99999999999.9);
-            validRequest.getProject().get(0).setNewMembersTotal(Integer.MAX_VALUE);
 
             CreateProjectResponse mockResponse = TestDataBuilder.buildSuccessCreateProjectResponse();
             when(projectService.createProject(any(CreateProjectRequest.class))).thenReturn(mockResponse);
@@ -329,20 +327,6 @@ class CreateControllerTestMvc extends ProjectControllerBaseTest {
 
             // ASSERT
             assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        }
-
-        @Test
-        @DisplayName("UT_C_PRJ_B_011 - newMembersTotalが負数")
-        void testCreateProject_Boundary_NegativeNewMembers() {
-            // ARRANGE
-            validRequest.getProject().get(0).setNewMembersTotal(-1);
-            when(projectService.createProject(any(CreateProjectRequest.class)))
-                .thenThrow(new RuntimeException("会員数は0以上である必要があります"));
-
-            // ACT & ASSERT
-            assertThrows(RuntimeException.class, () -> {
-                controller.createProject(authentication, validRequest);
-            });
         }
     }
 

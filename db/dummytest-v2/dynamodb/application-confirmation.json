@@ -1,0 +1,306 @@
+[
+  {
+    "pk": {
+      "S": "PART#1"
+    },
+    "is_agree_data_use": {
+      "BOOL": true
+    },
+    "is_agree_extra_data": {
+      "BOOL": true
+    },
+    "is_agree_transfer": {
+      "BOOL": true
+    },
+    "is_not_registered": {
+      "BOOL": true
+    },
+    "is_keidanren_participation": {
+      "BOOL": false
+    },
+    "is_emitter": {
+      "BOOL": false
+    },
+    "is_adjusted_emissions_added": {
+      "BOOL": false
+    },
+    "is_subject_to_periodic_report": {
+      "BOOL": false
+    },
+    "is_periodic_report_type_one": {
+      "BOOL": false
+    },
+    "agreed_at": {
+      "S": "2026-08-01 09:00:00"
+    },
+    "created_by": {
+      "S": "master.c01"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#2"
+    },
+    "is_agree_data_use": {
+      "BOOL": true
+    },
+    "is_agree_extra_data": {
+      "BOOL": true
+    },
+    "is_agree_transfer": {
+      "BOOL": true
+    },
+    "is_not_registered": {
+      "BOOL": true
+    },
+    "is_keidanren_participation": {
+      "BOOL": false
+    },
+    "is_emitter": {
+      "BOOL": false
+    },
+    "is_adjusted_emissions_added": {
+      "BOOL": false
+    },
+    "is_subject_to_periodic_report": {
+      "BOOL": false
+    },
+    "is_periodic_report_type_one": {
+      "BOOL": false
+    },
+    "agreed_at": {
+      "S": "2026-08-01 09:00:00"
+    },
+    "created_by": {
+      "S": "master.c01"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#3"
+    },
+    "is_agree_data_use": {
+      "BOOL": true
+    },
+    "is_agree_extra_data": {
+      "BOOL": true
+    },
+    "is_agree_transfer": {
+      "BOOL": true
+    },
+    "is_not_registered": {
+      "BOOL": true
+    },
+    "is_keidanren_participation": {
+      "BOOL": false
+    },
+    "is_emitter": {
+      "BOOL": false
+    },
+    "is_adjusted_emissions_added": {
+      "BOOL": false
+    },
+    "is_subject_to_periodic_report": {
+      "BOOL": false
+    },
+    "is_periodic_report_type_one": {
+      "BOOL": false
+    },
+    "agreed_at": {
+      "S": "2026-08-01 09:00:00"
+    },
+    "created_by": {
+      "S": "master.c02"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#4"
+    },
+    "is_agree_data_use": {
+      "BOOL": true
+    },
+    "is_agree_extra_data": {
+      "BOOL": true
+    },
+    "is_agree_transfer": {
+      "BOOL": true
+    },
+    "is_not_registered": {
+      "BOOL": true
+    },
+    "is_keidanren_participation": {
+      "BOOL": false
+    },
+    "is_emitter": {
+      "BOOL": false
+    },
+    "is_adjusted_emissions_added": {
+      "BOOL": false
+    },
+    "is_subject_to_periodic_report": {
+      "BOOL": false
+    },
+    "is_periodic_report_type_one": {
+      "BOOL": false
+    },
+    "agreed_at": {
+      "S": "2026-08-01 09:00:00"
+    },
+    "created_by": {
+      "S": "master.c02"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#5"
+    },
+    "is_agree_data_use": {
+      "BOOL": true
+    },
+    "is_agree_extra_data": {
+      "BOOL": true
+    },
+    "is_agree_transfer": {
+      "BOOL": true
+    },
+    "is_not_registered": {
+      "BOOL": true
+    },
+    "is_keidanren_participation": {
+      "BOOL": false
+    },
+    "is_emitter": {
+      "BOOL": false
+    },
+    "is_adjusted_emissions_added": {
+      "BOOL": false
+    },
+    "is_subject_to_periodic_report": {
+      "BOOL": false
+    },
+    "is_periodic_report_type_one": {
+      "BOOL": false
+    },
+    "agreed_at": {
+      "S": "2026-08-01 09:00:00"
+    },
+    "created_by": {
+      "S": "master.c03"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#6"
+    },
+    "is_agree_data_use": {
+      "BOOL": true
+    },
+    "is_agree_extra_data": {
+      "BOOL": true
+    },
+    "is_agree_transfer": {
+      "BOOL": true
+    },
+    "is_not_registered": {
+      "BOOL": true
+    },
+    "is_keidanren_participation": {
+      "BOOL": false
+    },
+    "is_emitter": {
+      "BOOL": false
+    },
+    "is_adjusted_emissions_added": {
+      "BOOL": false
+    },
+    "is_subject_to_periodic_report": {
+      "BOOL": false
+    },
+    "is_periodic_report_type_one": {
+      "BOOL": false
+    },
+    "agreed_at": {
+      "S": "2026-08-01 09:00:00"
+    },
+    "created_by": {
+      "S": "master.c04"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#7"
+    },
+    "is_agree_data_use": {
+      "BOOL": true
+    },
+    "is_agree_extra_data": {
+      "BOOL": true
+    },
+    "is_agree_transfer": {
+      "BOOL": true
+    },
+    "is_not_registered": {
+      "BOOL": true
+    },
+    "is_keidanren_participation": {
+      "BOOL": false
+    },
+    "is_emitter": {
+      "BOOL": false
+    },
+    "is_adjusted_emissions_added": {
+      "BOOL": false
+    },
+    "is_subject_to_periodic_report": {
+      "BOOL": false
+    },
+    "is_periodic_report_type_one": {
+      "BOOL": false
+    },
+    "agreed_at": {
+      "S": "2026-08-01 09:00:00"
+    },
+    "created_by": {
+      "S": "master.c05"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#8"
+    },
+    "is_agree_data_use": {
+      "BOOL": true
+    },
+    "is_agree_extra_data": {
+      "BOOL": true
+    },
+    "is_agree_transfer": {
+      "BOOL": true
+    },
+    "is_not_registered": {
+      "BOOL": true
+    },
+    "is_keidanren_participation": {
+      "BOOL": false
+    },
+    "is_emitter": {
+      "BOOL": false
+    },
+    "is_adjusted_emissions_added": {
+      "BOOL": false
+    },
+    "is_subject_to_periodic_report": {
+      "BOOL": false
+    },
+    "is_periodic_report_type_one": {
+      "BOOL": false
+    },
+    "agreed_at": {
+      "S": "2026-08-01 09:00:00"
+    },
+    "created_by": {
+      "S": "master.c06"
+    }
+  }
+]

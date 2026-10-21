@@ -60,8 +60,8 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (RoleConstants.OPERATOR.equals(role)) {
-            authorizeOperator(request, response, filterChain, token, companyId, role);
+        if (RoleConstants.OPERATOR.equals(role) || RoleConstants.ADMIN.equals(role)) {
+            authorizeOperatingUser(request, response, filterChain, token, companyId, role);
             return;
         }
 
@@ -105,9 +105,9 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Validates an operator against the operator domain without consulting participating companies.
+     * Validates an admin or operator against the operating domain without consulting participating companies.
      */
-    private void authorizeOperator(
+    private void authorizeOperatingUser(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain,
@@ -118,7 +118,7 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
         String tokenUsername = jwtUtil.extractUsername(token);
         if (tokenUserId == null || tokenUsername == null) {
             log.warn(
-                    "Operator access blocked. tokenUserIdPresent={}, tokenUsernamePresent={}, uri={}",
+                    "Operating user access blocked. tokenUserIdPresent={}, tokenUsernamePresent={}, uri={}",
                     tokenUserId != null,
                     tokenUsername != null,
                     request.getRequestURI()
@@ -133,7 +133,7 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
         );
         if (operatorOpt.isEmpty()) {
             log.warn(
-                    "Operator access blocked. operatorDomainMatch=false, uri={}",
+                    "Operating user access blocked. operatorDomainMatch=false, uri={}",
                     request.getRequestURI()
             );
             sendErrorResponse(response, ResponseConstants.FORBIDDEN, ResponseConstants.MSG_FORBIDDEN);
@@ -142,8 +142,7 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
 
         OperatingUser operator = operatorOpt.get();
         boolean userIdMatches = Objects.equals(tokenUserId, operator.getId());
-        boolean roleMatches = RoleConstants.OPERATOR.equals(tokenRole)
-                && RoleConstants.OPERATOR.equals(operator.getRole());
+        boolean roleMatches = Objects.equals(tokenRole, operator.getRole());
         boolean usernameMatches = Objects.equals(tokenUsername, operator.getUsername());
         boolean companyPresent = operator.getCompany() != null;
         boolean userActive = Boolean.TRUE.equals(operator.getIsActive());
@@ -158,7 +157,7 @@ public class CompanyAuthorizationFilter extends OncePerRequestFilter {
                 && companyIdMatches;
         if (!authorized) {
             log.warn(
-                    "Operator access blocked. userIdMatches={}, roleMatches={}, usernameMatches={}, "
+                    "Operating user access blocked. userIdMatches={}, roleMatches={}, usernameMatches={}, "
                             + "userActive={}, companyPresent={}, companyActive={}, companyIdMatches={}, uri={}",
                     userIdMatches,
                     roleMatches,

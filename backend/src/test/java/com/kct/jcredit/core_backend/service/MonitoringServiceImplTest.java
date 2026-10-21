@@ -3,6 +3,7 @@ package com.kct.jcredit.core_backend.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -477,7 +478,6 @@ class MonitoringServiceImplTest {
         String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
-        request.setChangedBattery(true);
         request.setElpjBatteryValue(new BigDecimal("10.00"));
         request.setElpjBatterySpecificationUrl(null);
 
@@ -500,7 +500,6 @@ class MonitoringServiceImplTest {
         String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
-        request.setChangedBattery(false);
         request.setElpjBatterySpecificationUrl(null);
 
         stubValidMonitoringContext(username, projectId, siteId);
@@ -544,7 +543,6 @@ class MonitoringServiceImplTest {
         String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
-        request.setChangedBattery(null);
         request.setElpjBatteryValue(null);
         request.setElpjBatterySpecificationUrl(null);
 
@@ -571,7 +569,6 @@ class MonitoringServiceImplTest {
         String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
-        request.setChangedBattery(true);
         request.setElpjBatteryValue(new BigDecimal("10.00"));
         request.setElpjBatterySpecificationUrl("https://example.com/battery.pdf");
 
@@ -599,7 +596,6 @@ class MonitoringServiceImplTest {
         String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
-        request.setChangedBattery(null);
         request.setElpjBatteryValue(new BigDecimal("10.00"));
         request.setElpjBatterySpecificationUrl(null);
 
@@ -781,9 +777,9 @@ class MonitoringServiceImplTest {
     }
 
     @Test
-    //監視記録が存在しない場合はNOT_FOUNDを返すべきです
-    @DisplayName("Should return NOT_FOUND when no monitoring record exists")
-    void testReadLastMonitoringRecord_NoData_NotFound() {
+    //監視記録が存在しない場合はdataなしのOKを返すべきです
+    @DisplayName("Should return OK without data when no monitoring record exists")
+    void testReadLastMonitoringRecord_NoData_OkWithoutData() {
         // Arrange
         String username = "multi_site_master";
         String companyId = "COMP00000002";
@@ -803,7 +799,8 @@ class MonitoringServiceImplTest {
 
         // Assert
         assertNotNull(response);
-        assertEquals(ResponseConstants.NOT_FOUND, response.getStatusCode());
+        assertEquals(ResponseConstants.OK, response.getStatusCode());
+        assertNull(response.getData());
     }
 
     // ============ SUITE 3: File Upload Methods ============
@@ -1302,7 +1299,6 @@ class MonitoringServiceImplTest {
         String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
-        request.setChangedBattery(true);
         request.setElpjBatteryValue(new BigDecimal("10.00"));
         request.setElpjBatterySpecificationUrl("   ");
 
@@ -1325,7 +1321,6 @@ class MonitoringServiceImplTest {
         String projectId = "PROJ0001";
         String siteId = "21";
         RegisterMonitoringRecordSolarRequest request = buildValidMonitoringRequest(projectId, siteId);
-        request.setChangedBattery(false);
         request.setElpjBatterySpecificationUrl(null);
 
         stubValidMonitoringContext(username, projectId, siteId);
@@ -1524,7 +1519,6 @@ class MonitoringServiceImplTest {
         request.setElPvr(new BigDecimal("50.25"));
         request.setElpjControl(new BigDecimal("75.00"));
         request.setElpjAccuracy(new BigDecimal("95.5"));
-        request.setChangedBattery(false);
         request.setDateRecorded(LocalDate.now().toString()); // Convert to String
         request.setProjectType("ENR002");
         return request;

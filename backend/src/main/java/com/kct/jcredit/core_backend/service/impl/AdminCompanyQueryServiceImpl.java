@@ -12,11 +12,14 @@ import com.kct.jcredit.core_backend.dto.response.details.AdminCompanyDetailUserR
 import com.kct.jcredit.core_backend.dto.response.details.AdminCompanyListItemResponse;
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
+import com.kct.jcredit.core_backend.entity.Project;
 import com.kct.jcredit.core_backend.entity.Site;
+import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.entity.base.PaginationDetailResponse;
 import com.kct.jcredit.core_backend.enums.CompanyStatus;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingCompanyRepository;
 import com.kct.jcredit.core_backend.repository.postgres.ParticipatingUserRepository;
+import com.kct.jcredit.core_backend.repository.postgres.ProjectRepository;
 import com.kct.jcredit.core_backend.repository.postgres.SiteRepository;
 import com.kct.jcredit.core_backend.service.AdminCompanyQueryService;
 import com.kct.jcredit.core_backend.util.ParticipatingCompanySpecification;
@@ -43,6 +46,7 @@ import java.util.List;
 public class AdminCompanyQueryServiceImpl implements AdminCompanyQueryService {
 
     private final ParticipatingCompanyRepository companyRepository;
+    private final ProjectRepository projectRepository;
     private final ParticipatingUserRepository userRepository;
     private final SiteRepository siteRepository;
 
@@ -51,10 +55,11 @@ public class AdminCompanyQueryServiceImpl implements AdminCompanyQueryService {
      */
     @Override
     @Transactional(readOnly = true)
-    public AdminCompanyListResponse findCompanies(CompanyListQuery query) {
+    public AdminCompanyListResponse findCompanies(CompanyListQuery query, String projectId) {
         Sort.Direction direction = Sort.Direction.fromString(query.getSortOrder());
         Sort sort = Sort.by(direction, query.getSort()).and(Sort.by(direction, "id"));
         PageRequest pageRequest = PageRequest.of(query.getPage() - 1, query.getLimit(), sort);
+        AdminCompanyListResponse response = new AdminCompanyListResponse();
 
         Specification<ParticipatingCompany> specification = Specification.unrestricted();
         if (query.getStatus() != null && !query.getStatus().isEmpty()) {
@@ -82,13 +87,26 @@ public class AdminCompanyQueryServiceImpl implements AdminCompanyQueryService {
                     ParticipatingCompanySpecification.createdBefore(query.getCreatedTo().plusDays(1).atStartOfDay())
             );
         }
+        if (projectId != null) {
+        // Get list of site ids related to the project through site-project relation
+         Project project = projectRepository.findByPublicIdWithFallback(projectId).orElse(null);
+            if (project == null) {
+                response.setStatusCode(ResponseConstants.NOT_FOUND);
+                response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
+                return response;
+            }
+        Integer DBProjectId = project.getId();
+
+        specification = specification.and(
+                ParticipatingCompanySpecification.associatedWithProject(DBProjectId)
+        );
+        }
 
         Page<ParticipatingCompany> page = companyRepository.findAll(specification, pageRequest);
         List<AdminCompanyListItemResponse> companies = page.getContent().stream()
                 .map(this::toListItem)
                 .toList();
 
-        AdminCompanyListResponse response = new AdminCompanyListResponse();
         response.setStatusCode(ResponseConstants.OK);
         response.setMessage(ResponseConstants.MSG_COMPANY_LIST_RETRIEVED);
         response.setCompanies(companies);
@@ -102,6 +120,8 @@ public class AdminCompanyQueryServiceImpl implements AdminCompanyQueryService {
         ));
         return response;
     }
+
+
 
     @Override
     @Transactional(readOnly = true)

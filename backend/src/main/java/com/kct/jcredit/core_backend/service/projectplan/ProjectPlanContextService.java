@@ -11,7 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
- * Resolves the PostgreSQL project context shared by project-plan forms.
+ * Resolves a project for a caller from the operating side and decides whether
+ * they may see it. Used by the document data of a project.
  *
  * The context is authorized only when the caller is an admin or operator,
  * the project belongs to their operator company, and their username is
@@ -60,17 +61,11 @@ public class ProjectPlanContextService {
     }
 
     /**
-     * Whether this caller may work on an operator company's plan data.
+     * Whether this caller may work on an operator company's project data.
      *
      * <p>admin and operator are both roles of operating_user, both with a NOT
      * NULL company_id, so the same membership check scopes them equally. Other
-     * roles (user, master) have no business in the plan.
-     *
-     * <p>Public and shared on purpose: this check used to be duplicated in
-     * {@link ProjectPlanAutofillService}, and the copies diverged — admin was
-     * allowed here and still refused there, so the corporation autofill
-     * endpoint returned 403 while the project one returned 200 for the same
-     * caller.
+     * roles (user, master) have no business here.
      */
     public boolean canAccessCompany(String role, String username, OperatorCompany company) {
         if (company == null) {

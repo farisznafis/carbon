@@ -1,5 +1,6 @@
 package com.kct.jcredit.core_backend.service;
 
+import com.kct.jcredit.core_backend.constant.RoleConstants;
 import com.kct.jcredit.core_backend.entity.OperatingUser;
 import com.kct.jcredit.core_backend.entity.ParticipatingUser;
 import com.kct.jcredit.core_backend.repository.postgres.OperatingUserRepository;
@@ -16,7 +17,7 @@ public class AuthVersionService {
 
     @Transactional(readOnly = true)
     public int current(Integer userId, String role) {
-        if ("operator".equals(role)) {
+        if (RoleConstants.OPERATOR.equals(role) || RoleConstants.ADMIN.equals(role)) {
             return operatingUserRepository.findById(userId)
                     .map(OperatingUser::getAuthVersion)
                     .orElse(-1);

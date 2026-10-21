@@ -2,7 +2,6 @@ package com.kct.jcredit.core_backend.service;
 
 import com.kct.jcredit.core_backend.dto.request.EnR002JoinProjectRequest;
 import com.kct.jcredit.core_backend.dto.request.EnR002SustainabilityCommitmentRequest;
-import com.kct.jcredit.core_backend.dto.projectplan.ProjectApplicationRequest;
 import com.kct.jcredit.core_backend.dto.response.EnR002SustainabilityCommitmentResponse;
 import com.kct.jcredit.core_backend.dto.response.MemberTermsInfoResponse;
 import com.kct.jcredit.core_backend.dto.response.MyParticipationResponse;

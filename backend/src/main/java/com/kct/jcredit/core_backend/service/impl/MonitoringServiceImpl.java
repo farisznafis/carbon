@@ -337,16 +337,12 @@ public class MonitoringServiceImpl implements MonitoringService {
             EnR002MonitoringRecord entity = monitoringRecordSolarRepository.findLatest(recordId)
                     .orElse(null);
 
-            //entityがnullの場合
-            if (entity == null) {
-                response.setStatusCode(ResponseConstants.NOT_FOUND);
-                response.setMessage(ResponseConstants.MSG_PROJECT_NOT_FOUND);
-                return response;
-            }
-
             // 5) Build response
             // レスポンスの作成
-            response.setData(mapEntityToResponse(entity, null));
+            // 未登録（entityがnull）の場合はエラーではなく、dataなしのOKを返す
+            if (entity != null) {
+                response.setData(mapEntityToResponse(entity, null));
+            }
             response.setStatusCode(ResponseConstants.OK);
             response.setMessage(ResponseConstants.OK);
             return response;
@@ -413,14 +409,8 @@ public class MonitoringServiceImpl implements MonitoringService {
             List<EnR002MonitoringRecord> entities = 
                 monitoringRecordSolarRepository.findAllByProjectIdPaginated(targetPks, pagination);
 
-            //entitiesが空文字の場合
-            if (entities.isEmpty()) {
-                response.setStatusCode(ResponseConstants.NOT_FOUND);
-                response.setMessage(ResponseConstants.MSG_MONITORING_RECORD_NOT_FOUND);
-                return response;
-            }
-
             // Map to DTOs
+            // 0件の場合はエラーではなく、空のitemsでOKを返す
             List<MonitoringDataSolarResponse> items = entities.stream()
                     .map(entity -> mapEntityToResponse(entity, null))
                     .collect(java.util.stream.Collectors.toList());
@@ -541,14 +531,8 @@ public class MonitoringServiceImpl implements MonitoringService {
             List<EnR002MonitoringRecord> entities = 
                 monitoringRecordSolarRepository.findAllByRecordIdPaginated(recordId, pagination);
 
-            //entitiesが空文字の場合
-            if (entities.isEmpty()) {
-                response.setStatusCode(ResponseConstants.NOT_FOUND);
-                response.setMessage(ResponseConstants.MSG_MONITORING_RECORD_NOT_FOUND);
-                return response;
-            }
-
             // Map to DTOs
+            // 0件の場合はエラーではなく、空のitemsでOKを返す
             List<MonitoringDataSolarResponse> items = entities.stream()
                     .map(entity -> mapEntityToResponse(entity, null))
                     .collect(java.util.stream.Collectors.toList());
@@ -841,10 +825,6 @@ public class MonitoringServiceImpl implements MonitoringService {
         }
         if (isBlank(request.getElPvrEvidenceUrl())) {
             errors.put("elpvr_evidence", ResponseConstants.MSG_ELPVR_EVIDENCE_REQUIRED);
-        }
-        if (Boolean.TRUE.equals(request.getChangedBattery())
-                && isBlank(request.getElpjBatterySpecificationUrl())) {
-            errors.put("elpj_battery_evidence", ResponseConstants.MSG_ELPJ_BATTERY_EVIDENCE_REQUIRED);
         }
         // if (isBlank(request.getElpjControlEvidenceUrl())) {
         //     errors.put("elpj_control_evidence", ResponseConstants.MSG_ELPJ_CONTROL_EVIDENCE_REQUIRED);

@@ -16,6 +16,7 @@ public class ResponseConstants {
     public static final String USED_USERNAME = "USED_USERNAME";
     public static final String ACCOUNT_LOCKED = "ACCOUNT_LOCKED";
     public static final String FILE_TOO_LARGE = "FILE_TOO_LARGE";
+    public static final String PDF_NOT_READY = "PDF_NOT_READY";
     public static final String UNSUPPORTED_FILE_TYPE = "UNSUPPORTED_FILE_TYPE";
     public static final String ALREADY_SUBMITTED = "ALREADY_SUBMITTED";
     public static final String SUSPENDED = "SUSPENDED";
@@ -144,30 +145,40 @@ public class ResponseConstants {
     public static final String MSG_EMAIL_OTP_SETTING_UPDATED = "メールログイン認証設定を更新しました。";
     public static final String MSG_OTP_CODE_SENT = "認証コードを送信しました。";
 
+    // User invitation
+    public static final String MSG_USER_INVITATION_SENT = "招待メールを送信しました。";
+    public static final String MSG_USER_INVITATION_COMPLETED = "アカウントを作成しました。ログインしてください。";
+
     public static final String MSG_PAYMENT_FAILED = "支払いに失敗しました。";
     public static final String MSG_PAYMENT_DECLINED = "カード情報が無効です。";
 
     // Monitoring data deletion messages
-    public static final String MSG_MONITORING_DELETION_CANDIDATES_RETRIEVED = "モニタリングデータの削除候補を取得しました。";
-    public static final String MSG_MONITORING_DELETION_NO_CANDIDATES = "削除対象のモニタリングデータはありません。";
-    public static final String MSG_MONITORING_DELETION_COMPLETED = "モニタリングデータの削除が完了しました。";
+    public static final String MSG_MONITORING_DELETION_SCHEDULE_RETRIEVED = "モニタリングデータの削除予定を取得しました。";
     public static final String MSG_MONITORING_DELETION_HISTORY_RETRIEVED = "モニタリングデータの削除履歴を取得しました。";
-    public static final String MSG_MONITORING_DELETION_CANDIDATE_RECORDS_RETRIEVED = "モニタリングデータの削除候補明細を取得しました。";
-    public static final String MSG_MONITORING_DELETION_PROJECT_NOT_CANDIDATE = "対象のプロジェクトは削除候補ではありません。";
     public static final String OPEN = "OPEN";
     public static final String APPROVED = "APPROVED";
     public static final String REJECTED = "REJECTED";
-
-    // --- Project plan (プロジェクト計画書) ---
-    public static final String MSG_FORM_NOT_DEFINED = "指定されたフォームは存在しません。";
-    public static final String MSG_FORM_RETRIEVED = "フォーム情報を取得しました。";
-    public static final String MSG_FORM_SAVED = "フォームを保存しました。";
-    public static final String MSG_PROGRESS_RETRIEVED = "入力状況を取得しました。";
 
     // --- Project file upload ---
         public static final String MSG_FILE_UPLOADED = "ファイルをアップロードしました。";
         public static final String MSG_FILE_NOT_FOUND = "ファイルが見つかりません。";
         public static final String MSG_FILE_DELETED = "ファイルを削除しました。";
+
+    // Equipment domain-specific status codes
+    public static final String SITE_NOT_JOINED = "SITE_NOT_JOINED";
+    public static final String EQUIPMENT_ALREADY_CHANGED = "EQUIPMENT_ALREADY_CHANGED";
+    public static final String INVALID_CHANGE_DATE = "INVALID_CHANGE_DATE";
+    public static final String INVALID_FILE_REFERENCE = "INVALID_FILE_REFERENCE";
+
+    // Corresponding messages
+    public static final String MSG_SITE_NOT_JOINED =
+            "このサイトはまだプロジェクトに参加していません。先に参加登録を行ってください。";
+    public static final String MSG_EQUIPMENT_ALREADY_CHANGED =
+            "この設備は既に変更済みです。最新の設備に対して変更を行ってください。";
+    public static final String MSG_INVALID_CHANGE_DATE =
+            "変更日は変更前設備のモニタリング開始日より後である必要があります。";
+    public static final String MSG_INVALID_FILE_REFERENCE =
+            "設備変更では新規アップロードファイルのみ指定可能です。s3Key=";
 
     private ResponseConstants() {}
 }

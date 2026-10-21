@@ -6,9 +6,11 @@ import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
 
+import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
+
 @Getter 
 @Builder
-public class EnR002EquipmentHistoryResponse {
+public class EnR002EquipmentHistoryResponse extends BaseResponse {
     private Integer id;
     private LocalDate changeDate;
     private Integer previousEquipmentId;

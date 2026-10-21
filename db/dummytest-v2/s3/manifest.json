@@ -1,0 +1,779 @@
+[
+  {
+    "file": "fixtures/equipment/E01/solar_contract.pdf",
+    "key": "dummytest-v2/enr002/equipment/E01/solar_contract.pdf",
+    "contentType": "application/pdf",
+    "owner": "E01",
+    "sha256": "ea882b98e2eb741e94697921aadcb4cbaf656516f25fc871407db8a63126192d"
+  },
+  {
+    "file": "fixtures/equipment/E01/panel_catalog.pdf",
+    "key": "dummytest-v2/enr002/equipment/E01/panel_catalog.pdf",
+    "contentType": "application/pdf",
+    "owner": "E01",
+    "sha256": "97a0215fcf105e495192e6bf027549c982dc0d5b6e1ac1b898472dd442b9c5b0"
+  },
+  {
+    "file": "fixtures/equipment/E01/pcs_spec.pdf",
+    "key": "dummytest-v2/enr002/equipment/E01/pcs_spec.pdf",
+    "contentType": "application/pdf",
+    "owner": "E01",
+    "sha256": "84f24301bf37c96dfc3fe246d8de52fd85d50f7e5ad301229850f8f5a0562cb8"
+  },
+  {
+    "file": "fixtures/equipment/E01/construction_invoice.pdf",
+    "key": "dummytest-v2/enr002/equipment/E01/construction_invoice.pdf",
+    "contentType": "application/pdf",
+    "owner": "E01",
+    "sha256": "72c71559339c315280a9654eea27a8d2bcfb42ac4af6d4353afd09868cb9524e"
+  },
+  {
+    "file": "fixtures/equipment/E01/electricity_bill.pdf",
+    "key": "dummytest-v2/enr002/equipment/E01/electricity_bill.pdf",
+    "contentType": "application/pdf",
+    "owner": "E01",
+    "sha256": "e58702dc2f101c28801ef09117458be165e0471b55d0f8986a7e313f6fabd9a6"
+  },
+  {
+    "file": "fixtures/equipment/E01/battery_catalog.pdf",
+    "key": "dummytest-v2/enr002/equipment/E01/battery_catalog.pdf",
+    "contentType": "application/pdf",
+    "owner": "E01",
+    "sha256": "7a2d3fc52215a25236f4997e6c4531b026590387edf8f34aae3b8b0402a2f58a"
+  },
+  {
+    "file": "fixtures/equipment/E02/solar_contract.pdf",
+    "key": "dummytest-v2/enr002/equipment/E02/solar_contract.pdf",
+    "contentType": "application/pdf",
+    "owner": "E02",
+    "sha256": "c37facc3910354f256533807cf95fdc8762b497cd9eb64e3c37c27d85514bbd1"
+  },
+  {
+    "file": "fixtures/equipment/E02/panel_catalog.pdf",
+    "key": "dummytest-v2/enr002/equipment/E02/panel_catalog.pdf",
+    "contentType": "application/pdf",
+    "owner": "E02",
+    "sha256": "a17b5f1e112a0daba5239a5a152fa6da0ad8b929cc01dc7d7fa26dfd547c94c0"
+  },
+  {
+    "file": "fixtures/equipment/E02/pcs_spec.pdf",
+    "key": "dummytest-v2/enr002/equipment/E02/pcs_spec.pdf",
+    "contentType": "application/pdf",
+    "owner": "E02",
+    "sha256": "dcbded43454fdcd5f973b2bceb087588d7db5fcf3837e6a3b151266f3e08b733"
+  },
+  {
+    "file": "fixtures/equipment/E02/construction_invoice.pdf",
+    "key": "dummytest-v2/enr002/equipment/E02/construction_invoice.pdf",
+    "contentType": "application/pdf",
+    "owner": "E02",
+    "sha256": "11bdf11e3042b327e1d156a9120c381eb53f1017d58a42ea2fe3228f2569a222"
+  },
+  {
+    "file": "fixtures/equipment/E02/electricity_bill.pdf",
+    "key": "dummytest-v2/enr002/equipment/E02/electricity_bill.pdf",
+    "contentType": "application/pdf",
+    "owner": "E02",
+    "sha256": "36b82861458ddf82788e06691b69cadfabf0ea3b3c710e51e4596d18b03c90f2"
+  },
+  {
+    "file": "fixtures/equipment/E02/battery_catalog.pdf",
+    "key": "dummytest-v2/enr002/equipment/E02/battery_catalog.pdf",
+    "contentType": "application/pdf",
+    "owner": "E02",
+    "sha256": "d840561d35580326622d548c4bb70e6c11a29cc8885ceb7551c44b12421eb973"
+  },
+  {
+    "file": "fixtures/equipment/E02/subsidy_notice.pdf",
+    "key": "dummytest-v2/enr002/equipment/E02/subsidy_notice.pdf",
+    "contentType": "application/pdf",
+    "owner": "E02",
+    "sha256": "02f1a7a017563be15a369b2cc650a5fed31e7e3b260eb7b42827d2585727433e"
+  },
+  {
+    "file": "fixtures/equipment/E03/solar_contract.pdf",
+    "key": "dummytest-v2/enr002/equipment/E03/solar_contract.pdf",
+    "contentType": "application/pdf",
+    "owner": "E03",
+    "sha256": "c87ca0d5fc3497eebde6e44c62e80ba52d279431ed03460b12b8088ec56792b5"
+  },
+  {
+    "file": "fixtures/equipment/E03/panel_catalog.pdf",
+    "key": "dummytest-v2/enr002/equipment/E03/panel_catalog.pdf",
+    "contentType": "application/pdf",
+    "owner": "E03",
+    "sha256": "f34fece4f72c31eae6572592c9b5a73769847cbcc7ad6f79a63e2e9efe0f0aa6"
+  },
+  {
+    "file": "fixtures/equipment/E03/pcs_spec.pdf",
+    "key": "dummytest-v2/enr002/equipment/E03/pcs_spec.pdf",
+    "contentType": "application/pdf",
+    "owner": "E03",
+    "sha256": "ff3364a50c8607d9eb3e52601ccd43c06617fa6d9986b2c6f563d305735e853b"
+  },
+  {
+    "file": "fixtures/equipment/E03/construction_invoice.pdf",
+    "key": "dummytest-v2/enr002/equipment/E03/construction_invoice.pdf",
+    "contentType": "application/pdf",
+    "owner": "E03",
+    "sha256": "e0c854a3966d6b863225c1da2cd70c237c3816b2325287a8453d107f64f00a8a"
+  },
+  {
+    "file": "fixtures/equipment/E03/electricity_bill.pdf",
+    "key": "dummytest-v2/enr002/equipment/E03/electricity_bill.pdf",
+    "contentType": "application/pdf",
+    "owner": "E03",
+    "sha256": "7a38a3a310f53f30559e6981c278fa5f872f86c3666e4555c6ec638c39f612ea"
+  },
+  {
+    "file": "fixtures/equipment/E04/solar_contract.pdf",
+    "key": "dummytest-v2/enr002/equipment/E04/solar_contract.pdf",
+    "contentType": "application/pdf",
+    "owner": "E04",
+    "sha256": "47b17ffab047cc73e75ff34224214194e3b87f26e6bfcff0fae7c20e457eb2ba"
+  },
+  {
+    "file": "fixtures/equipment/E04/panel_catalog.pdf",
+    "key": "dummytest-v2/enr002/equipment/E04/panel_catalog.pdf",
+    "contentType": "application/pdf",
+    "owner": "E04",
+    "sha256": "b762540e5656d0cc00a72c58804a30b0d30b97082be7a7782766832c3f2630c8"
+  },
+  {
+    "file": "fixtures/equipment/E04/pcs_spec.pdf",
+    "key": "dummytest-v2/enr002/equipment/E04/pcs_spec.pdf",
+    "contentType": "application/pdf",
+    "owner": "E04",
+    "sha256": "dfa12ebc433b87b9d2f7bd8b066fa4aaed9185b712d1ef03373c8eddaf2b16f1"
+  },
+  {
+    "file": "fixtures/equipment/E04/construction_invoice.pdf",
+    "key": "dummytest-v2/enr002/equipment/E04/construction_invoice.pdf",
+    "contentType": "application/pdf",
+    "owner": "E04",
+    "sha256": "fff6016d5d8e2a074440f073ea9631d7c8f94295650662c87c934d30ccdee109"
+  },
+  {
+    "file": "fixtures/equipment/E04/electricity_bill.pdf",
+    "key": "dummytest-v2/enr002/equipment/E04/electricity_bill.pdf",
+    "contentType": "application/pdf",
+    "owner": "E04",
+    "sha256": "e4f291841a8906b56606c78db569b16aad2bd8cefa3d4941c0a411c1ca5cc874"
+  },
+  {
+    "file": "fixtures/equipment/E04/battery_catalog.pdf",
+    "key": "dummytest-v2/enr002/equipment/E04/battery_catalog.pdf",
+    "contentType": "application/pdf",
+    "owner": "E04",
+    "sha256": "9788b8add7dc02b2f0c771b666e2eef0ae838901e95936a68d2798b0a06982f6"
+  },
+  {
+    "file": "fixtures/equipment/E04/subsidy_notice.pdf",
+    "key": "dummytest-v2/enr002/equipment/E04/subsidy_notice.pdf",
+    "contentType": "application/pdf",
+    "owner": "E04",
+    "sha256": "4aac10df8c792895063ce748dad122679430284fa9f0b208050d590ffcff9ffc"
+  },
+  {
+    "file": "fixtures/equipment/E05/solar_contract.pdf",
+    "key": "dummytest-v2/enr002/equipment/E05/solar_contract.pdf",
+    "contentType": "application/pdf",
+    "owner": "E05",
+    "sha256": "0102ef3d351b87fd5a82c2b53d20830d596399cc1ce761cb28f49509be3b080f"
+  },
+  {
+    "file": "fixtures/equipment/E05/panel_catalog.pdf",
+    "key": "dummytest-v2/enr002/equipment/E05/panel_catalog.pdf",
+    "contentType": "application/pdf",
+    "owner": "E05",
+    "sha256": "a022243ac57963792fce7cb1617d2ad4e4cb3e63a8ae2fc59ad67dcaacd4ea3c"
+  },
+  {
+    "file": "fixtures/equipment/E05/pcs_spec.pdf",
+    "key": "dummytest-v2/enr002/equipment/E05/pcs_spec.pdf",
+    "contentType": "application/pdf",
+    "owner": "E05",
+    "sha256": "f87a23f2f5992556c17901c0b2824ef405e1e940ab01cba9150d132fa0270f20"
+  },
+  {
+    "file": "fixtures/equipment/E05/construction_invoice.pdf",
+    "key": "dummytest-v2/enr002/equipment/E05/construction_invoice.pdf",
+    "contentType": "application/pdf",
+    "owner": "E05",
+    "sha256": "ba796c5d5ffea5b9dbcf8339b47a0bea7571995c281b71a323c594c5e7ca8337"
+  },
+  {
+    "file": "fixtures/equipment/E05/electricity_bill.pdf",
+    "key": "dummytest-v2/enr002/equipment/E05/electricity_bill.pdf",
+    "contentType": "application/pdf",
+    "owner": "E05",
+    "sha256": "fba6a0d37cf6cd4a0436b353e20b7c30fc4be57984bc54e7d35f053a10cf6547"
+  },
+  {
+    "file": "fixtures/equipment/E05/battery_catalog.pdf",
+    "key": "dummytest-v2/enr002/equipment/E05/battery_catalog.pdf",
+    "contentType": "application/pdf",
+    "owner": "E05",
+    "sha256": "ff97826336a9c642495050a99dac878a19e3452335fefc7cb638e35ce7cd9e3f"
+  },
+  {
+    "file": "fixtures/equipment/E06/solar_contract.pdf",
+    "key": "dummytest-v2/enr002/equipment/E06/solar_contract.pdf",
+    "contentType": "application/pdf",
+    "owner": "E06",
+    "sha256": "515ab8830db6112b55a6505de9a23d387a4bae2133a9e988712bee1f4ba37a6c"
+  },
+  {
+    "file": "fixtures/equipment/E06/panel_catalog.pdf",
+    "key": "dummytest-v2/enr002/equipment/E06/panel_catalog.pdf",
+    "contentType": "application/pdf",
+    "owner": "E06",
+    "sha256": "8d3f2866e8b0d96438cb5040bdd1f7d835d5aa74870d4086a9187f2656713f57"
+  },
+  {
+    "file": "fixtures/equipment/E06/pcs_spec.pdf",
+    "key": "dummytest-v2/enr002/equipment/E06/pcs_spec.pdf",
+    "contentType": "application/pdf",
+    "owner": "E06",
+    "sha256": "63cd8c76252aa8b9cde0cb93a9a79a35a91927100ab01d5df0b37a32d67e1b63"
+  },
+  {
+    "file": "fixtures/equipment/E06/construction_invoice.pdf",
+    "key": "dummytest-v2/enr002/equipment/E06/construction_invoice.pdf",
+    "contentType": "application/pdf",
+    "owner": "E06",
+    "sha256": "8adebe985fb2f6a45fb63f69b3999548c24fbacf5f13d8daa50ec41f0cdc1d42"
+  },
+  {
+    "file": "fixtures/equipment/E06/electricity_bill.pdf",
+    "key": "dummytest-v2/enr002/equipment/E06/electricity_bill.pdf",
+    "contentType": "application/pdf",
+    "owner": "E06",
+    "sha256": "03fd55bfcd3153d054a59dd429b581337a8a8f9db263a8448ed42b461bb3f08c"
+  },
+  {
+    "file": "fixtures/equipment/E06/subsidy_notice.pdf",
+    "key": "dummytest-v2/enr002/equipment/E06/subsidy_notice.pdf",
+    "contentType": "application/pdf",
+    "owner": "E06",
+    "sha256": "1045a19e7219d1fbf8d87acc6542b1354a4994380c52dc99249540de88270327"
+  },
+  {
+    "file": "fixtures/equipment/E07/solar_contract.pdf",
+    "key": "dummytest-v2/enr002/equipment/E07/solar_contract.pdf",
+    "contentType": "application/pdf",
+    "owner": "E07",
+    "sha256": "b48445212369365d1089bd57c14871e67493bc7a72b6797ab1c48aa44c98eaa1"
+  },
+  {
+    "file": "fixtures/equipment/E07/panel_catalog.pdf",
+    "key": "dummytest-v2/enr002/equipment/E07/panel_catalog.pdf",
+    "contentType": "application/pdf",
+    "owner": "E07",
+    "sha256": "c3546abd8744835539b125d655ee99d7961492139328bc668f1ce412e98e5016"
+  },
+  {
+    "file": "fixtures/equipment/E07/pcs_spec.pdf",
+    "key": "dummytest-v2/enr002/equipment/E07/pcs_spec.pdf",
+    "contentType": "application/pdf",
+    "owner": "E07",
+    "sha256": "6cb672fb5065545cf179ff8f0816a85eddfee42691ac3960918ef16a2601dc17"
+  },
+  {
+    "file": "fixtures/equipment/E07/construction_invoice.pdf",
+    "key": "dummytest-v2/enr002/equipment/E07/construction_invoice.pdf",
+    "contentType": "application/pdf",
+    "owner": "E07",
+    "sha256": "9af6affa92fe18ad40a1f9364a9d771f9dbcbbb0e702ff52804430e442685d9c"
+  },
+  {
+    "file": "fixtures/equipment/E07/electricity_bill.pdf",
+    "key": "dummytest-v2/enr002/equipment/E07/electricity_bill.pdf",
+    "contentType": "application/pdf",
+    "owner": "E07",
+    "sha256": "4fa0dd6c6b8b494f7261f9cd80be74e41865ca224b9a74cd21d58fb01072a683"
+  },
+  {
+    "file": "fixtures/equipment/E07/battery_catalog.pdf",
+    "key": "dummytest-v2/enr002/equipment/E07/battery_catalog.pdf",
+    "contentType": "application/pdf",
+    "owner": "E07",
+    "sha256": "cbac7a4dce5e0a88f862fb0501c6f8e1e6277b67f7e097d0b32fa52d7dcbc799"
+  },
+  {
+    "file": "fixtures/equipment/E08/solar_contract.pdf",
+    "key": "dummytest-v2/enr002/equipment/E08/solar_contract.pdf",
+    "contentType": "application/pdf",
+    "owner": "E08",
+    "sha256": "9f1ff515de75898a99953283427782987816b55057a5f4a119dc0dc45bd16e12"
+  },
+  {
+    "file": "fixtures/equipment/E08/panel_catalog.pdf",
+    "key": "dummytest-v2/enr002/equipment/E08/panel_catalog.pdf",
+    "contentType": "application/pdf",
+    "owner": "E08",
+    "sha256": "c0f5a936af4b62c2e2dfe0b3cce20cf1708e371c17b68662b41b38713ddc97f3"
+  },
+  {
+    "file": "fixtures/equipment/E08/pcs_spec.pdf",
+    "key": "dummytest-v2/enr002/equipment/E08/pcs_spec.pdf",
+    "contentType": "application/pdf",
+    "owner": "E08",
+    "sha256": "9ea1d241a6399a58f2a8fd4553667eba09064f820626fd174e6bbf858c1100b0"
+  },
+  {
+    "file": "fixtures/equipment/E08/construction_invoice.pdf",
+    "key": "dummytest-v2/enr002/equipment/E08/construction_invoice.pdf",
+    "contentType": "application/pdf",
+    "owner": "E08",
+    "sha256": "a25635967b1391cf5f69219008ea6595d8d18ffc70786347aca5681a27ad67b8"
+  },
+  {
+    "file": "fixtures/equipment/E08/electricity_bill.pdf",
+    "key": "dummytest-v2/enr002/equipment/E08/electricity_bill.pdf",
+    "contentType": "application/pdf",
+    "owner": "E08",
+    "sha256": "32005692767edd72f986eb952bfd3d88852c6eb79352a240259d3cc18632888e"
+  },
+  {
+    "file": "fixtures/equipment/E08/battery_catalog.pdf",
+    "key": "dummytest-v2/enr002/equipment/E08/battery_catalog.pdf",
+    "contentType": "application/pdf",
+    "owner": "E08",
+    "sha256": "e27bb443a2a0a2c2afed0123a17de5f0a9b77768b6c5287f5de2aee4d12a1e78"
+  },
+  {
+    "file": "fixtures/equipment/E08/subsidy_notice.pdf",
+    "key": "dummytest-v2/enr002/equipment/E08/subsidy_notice.pdf",
+    "contentType": "application/pdf",
+    "owner": "E08",
+    "sha256": "1ca76e27c74b27eb8b6585b02ca061d98446219885ab81c0ee613b4b99e07638"
+  },
+  {
+    "file": "fixtures/project-plan/P01-plan.xlsx",
+    "key": "dummytest-v2/enr002/projects/P01-plan.xlsx",
+    "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "owner": "P01",
+    "sha256": "01991cb44824516a2e133f8bd98750685f3fb11354cf544d75c75b2c5b752bd9"
+  },
+  {
+    "file": "fixtures/project-plan/P01-registration_result.pdf",
+    "key": "dummytest-v2/enr002/projects/P01-registration_result.pdf",
+    "contentType": "application/pdf",
+    "owner": "P01",
+    "sha256": "e21131347d732e7d11e6ae727d13b207a7cae7d441a0de98dd4eb1b49e59c8bd"
+  },
+  {
+    "file": "fixtures/project-plan/P01-validation_report.pdf",
+    "key": "dummytest-v2/enr002/projects/P01-validation_report.pdf",
+    "contentType": "application/pdf",
+    "owner": "P01",
+    "sha256": "59f869a10fa7e49b2bf44a29959e43e5f037eb1799ce4dc05392a7422471d344"
+  },
+  {
+    "file": "fixtures/project-plan/P02-plan.xlsx",
+    "key": "dummytest-v2/enr002/projects/P02-plan.xlsx",
+    "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "owner": "P02",
+    "sha256": "d08e8d0459d4abf0a3b6fddc43b30730ef03029b08d4c32e51719078d25c539b"
+  },
+  {
+    "file": "fixtures/project-plan/P02-registration_result.pdf",
+    "key": "dummytest-v2/enr002/projects/P02-registration_result.pdf",
+    "contentType": "application/pdf",
+    "owner": "P02",
+    "sha256": "b415cbb2b57ef6bc62729cf3b9f30a4b9894d5e42daad54c6272612bd3c48db0"
+  },
+  {
+    "file": "fixtures/project-plan/P02-validation_report.pdf",
+    "key": "dummytest-v2/enr002/projects/P02-validation_report.pdf",
+    "contentType": "application/pdf",
+    "owner": "P02",
+    "sha256": "260b40138fdbdd94f5031b1632373c41f6846b6a1c2896c57bd59fc890624ccf"
+  },
+  {
+    "file": "fixtures/membership/E01.pdf",
+    "key": "dummytest-v2/enr002/membership/E01.pdf",
+    "contentType": "application/pdf",
+    "owner": "PART#1",
+    "sha256": "1752042fd8145450549aad8c903ddd6c8fcf5f7e584065fcd545c613c9e6f589"
+  },
+  {
+    "file": "fixtures/membership/E02.pdf",
+    "key": "dummytest-v2/enr002/membership/E02.pdf",
+    "contentType": "application/pdf",
+    "owner": "PART#2",
+    "sha256": "0530b6d66b167045119791e35480c258d84ceca0b40fc7bc54b9b90ac8bce350"
+  },
+  {
+    "file": "fixtures/membership/E03.pdf",
+    "key": "dummytest-v2/enr002/membership/E03.pdf",
+    "contentType": "application/pdf",
+    "owner": "PART#3",
+    "sha256": "dabfc9c40a6a820ee2c9261d6318ed8c35cde40c71d7bc21cd8de2a726943f20"
+  },
+  {
+    "file": "fixtures/membership/E04.pdf",
+    "key": "dummytest-v2/enr002/membership/E04.pdf",
+    "contentType": "application/pdf",
+    "owner": "PART#4",
+    "sha256": "8c2c8478d49dbbc607af4ac2d2c43c31bb344d33140f5229f3d8e71c383cb799"
+  },
+  {
+    "file": "fixtures/membership/E05.pdf",
+    "key": "dummytest-v2/enr002/membership/E05.pdf",
+    "contentType": "application/pdf",
+    "owner": "PART#5",
+    "sha256": "00f2a51938eb65db6586b06ab9caf8dfa3299fbb397a6cc6d5382b570b759ebc"
+  },
+  {
+    "file": "fixtures/monitoring/E01-1-generation.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E01-1-generation.pdf",
+    "contentType": "application/pdf",
+    "owner": "E01-M1",
+    "sha256": "49d4fbbebd0aa07c31ab5cd554e25862497e512f42845cda939792d5da777eb3"
+  },
+  {
+    "file": "fixtures/monitoring/E01-1-reverse-flow.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E01-1-reverse-flow.pdf",
+    "contentType": "application/pdf",
+    "owner": "E01-M1",
+    "sha256": "e8eee43d57b8056f499918f81afa52c69e8fe155bfc6effb67ed69ab3f43e22b"
+  },
+  {
+    "file": "fixtures/monitoring/E01-1-control.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E01-1-control.pdf",
+    "contentType": "application/pdf",
+    "owner": "E01-M1",
+    "sha256": "fea36b313029e14d7da31fd4c46fce080f56b4f4c53cde369f3ae8dbdc4815cc"
+  },
+  {
+    "file": "fixtures/monitoring/E01-1-battery.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E01-1-battery.pdf",
+    "contentType": "application/pdf",
+    "owner": "E01-M1",
+    "sha256": "cf15566a061a25c94616746977b522bd4a2c05a00d83a27dc2f7b9b988cd20cf"
+  },
+  {
+    "file": "fixtures/monitoring/E01-1-meter.png",
+    "key": "dummytest-v2/enr002/monitoring/E01-1-meter.png",
+    "contentType": "image/png",
+    "owner": "E01-M1",
+    "sha256": "5d0b89b469cb5f016738e9a722a3e18cbf01036273fe3d97953360ed1fd922a5"
+  },
+  {
+    "file": "fixtures/monitoring/E01-2-generation.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E01-2-generation.pdf",
+    "contentType": "application/pdf",
+    "owner": "E01-M2",
+    "sha256": "c9e5756255eb7f8c805ce85a8bec1612b9e80fd033ba774eaae145d9e3380b3c"
+  },
+  {
+    "file": "fixtures/monitoring/E01-2-reverse-flow.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E01-2-reverse-flow.pdf",
+    "contentType": "application/pdf",
+    "owner": "E01-M2",
+    "sha256": "65f8e062b5b3153bf39bd35a108cc16c1e7a5218f5dae8bed16efd3833559954"
+  },
+  {
+    "file": "fixtures/monitoring/E01-2-control.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E01-2-control.pdf",
+    "contentType": "application/pdf",
+    "owner": "E01-M2",
+    "sha256": "45c017f787573bf8437574cd596e109f990c686d99014823b905031adb21d00e"
+  },
+  {
+    "file": "fixtures/monitoring/E01-2-battery.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E01-2-battery.pdf",
+    "contentType": "application/pdf",
+    "owner": "E01-M2",
+    "sha256": "19a316aec59cd0c13446cce48a1dbf074ee89d3252f3e826113afe2dc5337e0f"
+  },
+  {
+    "file": "fixtures/monitoring/E01-2-meter.png",
+    "key": "dummytest-v2/enr002/monitoring/E01-2-meter.png",
+    "contentType": "image/png",
+    "owner": "E01-M2",
+    "sha256": "a3a202b5c3bbba1781bfbc2afda43bc1e39ec637036bd085fed29ab06fab3bd8"
+  },
+  {
+    "file": "fixtures/monitoring/E02-1-generation.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E02-1-generation.pdf",
+    "contentType": "application/pdf",
+    "owner": "E02-M1",
+    "sha256": "57c3c80aa500f55e14e21b52e762c5a52baa0cd4c9533898316c1828056c39f2"
+  },
+  {
+    "file": "fixtures/monitoring/E02-1-reverse-flow.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E02-1-reverse-flow.pdf",
+    "contentType": "application/pdf",
+    "owner": "E02-M1",
+    "sha256": "e036182534853ba0f346694ac6be9a0f6266c11c3f3e65430a185fa464a0f259"
+  },
+  {
+    "file": "fixtures/monitoring/E02-1-control.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E02-1-control.pdf",
+    "contentType": "application/pdf",
+    "owner": "E02-M1",
+    "sha256": "49b60bce62e06fe3f6a20aed68069d6d5b1bf8351afa6307b0fd5e5387a9c962"
+  },
+  {
+    "file": "fixtures/monitoring/E02-1-battery.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E02-1-battery.pdf",
+    "contentType": "application/pdf",
+    "owner": "E02-M1",
+    "sha256": "7a39dd900710b5286427e0abe982496b81d5650c542d40c7c0839c2afd2b12be"
+  },
+  {
+    "file": "fixtures/monitoring/E02-1-meter.png",
+    "key": "dummytest-v2/enr002/monitoring/E02-1-meter.png",
+    "contentType": "image/png",
+    "owner": "E02-M1",
+    "sha256": "cac1c75bc7b3dd9a61b7a0b18639482536b049f695c05578960d5dd8a82b4541"
+  },
+  {
+    "file": "fixtures/monitoring/E02-2-generation.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E02-2-generation.pdf",
+    "contentType": "application/pdf",
+    "owner": "E02-M2",
+    "sha256": "eafc2dd324a89980bfe3ddcf71a6df0579ab2d9d93b68b86f70d42707c7654c3"
+  },
+  {
+    "file": "fixtures/monitoring/E02-2-reverse-flow.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E02-2-reverse-flow.pdf",
+    "contentType": "application/pdf",
+    "owner": "E02-M2",
+    "sha256": "dfe2fc950b0c839343dc23abc457990a3b1978ba102eb6c719080730986a4ecb"
+  },
+  {
+    "file": "fixtures/monitoring/E02-2-control.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E02-2-control.pdf",
+    "contentType": "application/pdf",
+    "owner": "E02-M2",
+    "sha256": "ed7be723fe8457e477a34f8a28c59ef16e012ac86f8168f901df92d04225ede8"
+  },
+  {
+    "file": "fixtures/monitoring/E02-2-battery.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E02-2-battery.pdf",
+    "contentType": "application/pdf",
+    "owner": "E02-M2",
+    "sha256": "a4bb8b45342ae644b6b2c7dce3f73c3350bc8c2613b5b5e57abda4f0184a0886"
+  },
+  {
+    "file": "fixtures/monitoring/E02-2-meter.png",
+    "key": "dummytest-v2/enr002/monitoring/E02-2-meter.png",
+    "contentType": "image/png",
+    "owner": "E02-M2",
+    "sha256": "f3349bf4da2aafa921d8bdb7e13aab5e6aaa3bed6f28f2c5a416bcd8ef10d0b2"
+  },
+  {
+    "file": "fixtures/monitoring/E03-1-generation.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E03-1-generation.pdf",
+    "contentType": "application/pdf",
+    "owner": "E03-M1",
+    "sha256": "d811383dac1b2deba0a4eb9db4ba73fb5894f6396443873996dc781ce9704000"
+  },
+  {
+    "file": "fixtures/monitoring/E03-1-reverse-flow.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E03-1-reverse-flow.pdf",
+    "contentType": "application/pdf",
+    "owner": "E03-M1",
+    "sha256": "98e43369bd1285d77105e329123ebd9807acc97ba4a4afea810971155409b20e"
+  },
+  {
+    "file": "fixtures/monitoring/E03-1-control.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E03-1-control.pdf",
+    "contentType": "application/pdf",
+    "owner": "E03-M1",
+    "sha256": "423ef87523120a4a04205817c85edd4824a7826a5edc6089dea0d0092a0ee8aa"
+  },
+  {
+    "file": "fixtures/monitoring/E03-1-meter.png",
+    "key": "dummytest-v2/enr002/monitoring/E03-1-meter.png",
+    "contentType": "image/png",
+    "owner": "E03-M1",
+    "sha256": "a10b6463cc799b2f1ad24c2be1dfba811b5dfbb070e8a6ada02fda3f60877212"
+  },
+  {
+    "file": "fixtures/monitoring/E03-2-generation.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E03-2-generation.pdf",
+    "contentType": "application/pdf",
+    "owner": "E03-M2",
+    "sha256": "e324c846d6b88b319b5298acbeed41e1b84bba49842483f3ae6495a5cda0c8a7"
+  },
+  {
+    "file": "fixtures/monitoring/E03-2-reverse-flow.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E03-2-reverse-flow.pdf",
+    "contentType": "application/pdf",
+    "owner": "E03-M2",
+    "sha256": "7770a571f97d16a63805ba9fd2d3d7b6a9c725257f4c3ac228ec467dade007c6"
+  },
+  {
+    "file": "fixtures/monitoring/E03-2-control.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E03-2-control.pdf",
+    "contentType": "application/pdf",
+    "owner": "E03-M2",
+    "sha256": "7f7f3bdb5c2d72ef38f71c987d34a67871c0e1c4a2ff7b706bd213bcea68318a"
+  },
+  {
+    "file": "fixtures/monitoring/E03-2-meter.png",
+    "key": "dummytest-v2/enr002/monitoring/E03-2-meter.png",
+    "contentType": "image/png",
+    "owner": "E03-M2",
+    "sha256": "3d809db65868d2bbf8ce214d99dac1c265fcc62f65b890dd894e419d696d336f"
+  },
+  {
+    "file": "fixtures/monitoring/E04-1-generation.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E04-1-generation.pdf",
+    "contentType": "application/pdf",
+    "owner": "E04-M1",
+    "sha256": "85a0e2232f290b897c5f98c81caa9bea9d7f279f52d95c36f6890e9074752f11"
+  },
+  {
+    "file": "fixtures/monitoring/E04-1-reverse-flow.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E04-1-reverse-flow.pdf",
+    "contentType": "application/pdf",
+    "owner": "E04-M1",
+    "sha256": "cd1b21813ea234dd8179ccea775f151f71f6a34d396a41fe7ba59b2b3374775a"
+  },
+  {
+    "file": "fixtures/monitoring/E04-1-control.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E04-1-control.pdf",
+    "contentType": "application/pdf",
+    "owner": "E04-M1",
+    "sha256": "80ff86a1371a60ba8c0cc3c8fd8c2dd031d16d342b9dc73ac30460811c1508d8"
+  },
+  {
+    "file": "fixtures/monitoring/E04-1-battery.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E04-1-battery.pdf",
+    "contentType": "application/pdf",
+    "owner": "E04-M1",
+    "sha256": "904b8b8174d06f76e3036bc65b3660366d11bbebf16a8a2644ad46dbd0242257"
+  },
+  {
+    "file": "fixtures/monitoring/E04-1-meter.png",
+    "key": "dummytest-v2/enr002/monitoring/E04-1-meter.png",
+    "contentType": "image/png",
+    "owner": "E04-M1",
+    "sha256": "6ee580c4e872a249f1295d10439347434da7d427009a888a3fc05dc73ac7e9fc"
+  },
+  {
+    "file": "fixtures/monitoring/E04-2-generation.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E04-2-generation.pdf",
+    "contentType": "application/pdf",
+    "owner": "E04-M2",
+    "sha256": "f184bc4176e7023056d50a49e30814e98fd6cdfef9f5e956950a73bcf08951f9"
+  },
+  {
+    "file": "fixtures/monitoring/E04-2-reverse-flow.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E04-2-reverse-flow.pdf",
+    "contentType": "application/pdf",
+    "owner": "E04-M2",
+    "sha256": "80c8d5f84c32c512004a199051c84fb1c238a7e5bbdbe2499f590ab4cea1abdd"
+  },
+  {
+    "file": "fixtures/monitoring/E04-2-control.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E04-2-control.pdf",
+    "contentType": "application/pdf",
+    "owner": "E04-M2",
+    "sha256": "d5bf9b2b3fafbbb29abd6c29c7f8a25a607d3ee1a8b1b6bf1750c4a135cfae25"
+  },
+  {
+    "file": "fixtures/monitoring/E04-2-battery.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E04-2-battery.pdf",
+    "contentType": "application/pdf",
+    "owner": "E04-M2",
+    "sha256": "5b2a0f44fbcef02dfe3ff55cdc8722484328fc828e2ad76d5ec931286978ff58"
+  },
+  {
+    "file": "fixtures/monitoring/E04-2-meter.png",
+    "key": "dummytest-v2/enr002/monitoring/E04-2-meter.png",
+    "contentType": "image/png",
+    "owner": "E04-M2",
+    "sha256": "5ad200c0e905ec1cf69efaa1f3bc2b5bd7f285c8f95b1193506631a6ab1a6e66"
+  },
+  {
+    "file": "fixtures/monitoring/E05-1-generation.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E05-1-generation.pdf",
+    "contentType": "application/pdf",
+    "owner": "E05-M1",
+    "sha256": "5b4861cd2e2e75f259f8273c4b0036efaa181a3622136821994046ae2fe6d951"
+  },
+  {
+    "file": "fixtures/monitoring/E05-1-reverse-flow.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E05-1-reverse-flow.pdf",
+    "contentType": "application/pdf",
+    "owner": "E05-M1",
+    "sha256": "66dbf6ffa7e93ccebec09f9ce14659410088717d3b5fe70da3d6d54bf58cfc03"
+  },
+  {
+    "file": "fixtures/monitoring/E05-1-control.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E05-1-control.pdf",
+    "contentType": "application/pdf",
+    "owner": "E05-M1",
+    "sha256": "25d5da679f26e87c275a8fae134c007399f1de0eccfcad826ca5090f7b703056"
+  },
+  {
+    "file": "fixtures/monitoring/E05-1-battery.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E05-1-battery.pdf",
+    "contentType": "application/pdf",
+    "owner": "E05-M1",
+    "sha256": "90e309057fa081fd19bc966167330121b155b73b70994ec6e72875a1b4791b50"
+  },
+  {
+    "file": "fixtures/monitoring/E05-1-meter.png",
+    "key": "dummytest-v2/enr002/monitoring/E05-1-meter.png",
+    "contentType": "image/png",
+    "owner": "E05-M1",
+    "sha256": "588c54cfc3b1a4ae58072e581adaacf73deb3a436652c48ce1502b2da3d4e119"
+  },
+  {
+    "file": "fixtures/monitoring/E05-2-generation.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E05-2-generation.pdf",
+    "contentType": "application/pdf",
+    "owner": "E05-M2",
+    "sha256": "9d453eb54936828f62c314d9868f9dd37a1aa8b7137d10a54088d3c4776e6d0e"
+  },
+  {
+    "file": "fixtures/monitoring/E05-2-reverse-flow.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E05-2-reverse-flow.pdf",
+    "contentType": "application/pdf",
+    "owner": "E05-M2",
+    "sha256": "90e1bd76b0d90c59f5e8e2c5503f02835ede568cb1d423fa5baa64eff51b753b"
+  },
+  {
+    "file": "fixtures/monitoring/E05-2-control.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E05-2-control.pdf",
+    "contentType": "application/pdf",
+    "owner": "E05-M2",
+    "sha256": "d02bcdfc5b2cb6f8f4a2b43268a0112c6f415bbda5e780b38e25f2acb47f3e63"
+  },
+  {
+    "file": "fixtures/monitoring/E05-2-battery.pdf",
+    "key": "dummytest-v2/enr002/monitoring/E05-2-battery.pdf",
+    "contentType": "application/pdf",
+    "owner": "E05-M2",
+    "sha256": "0a1d9c58dda4c1e975cf387efd0f4d33dcea486cf3699a24d676b3d7d3c86383"
+  },
+  {
+    "file": "fixtures/monitoring/E05-2-meter.png",
+    "key": "dummytest-v2/enr002/monitoring/E05-2-meter.png",
+    "contentType": "image/png",
+    "owner": "E05-M2",
+    "sha256": "ac2615a3c2d30eb1ed9449d2d15ffe24cd8b26127460cc50b85634a0bfac4bc2"
+  },
+  {
+    "file": "fixtures/individual-activity/P01-individual-activity.xlsx",
+    "key": "dummytest-v2/enr002/individual-activity/P01-individual-activity.xlsx",
+    "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "owner": "P01",
+    "sha256": "df2e5d1d65e10d8c82da584a52208a029c90a93a255338b8553c6cbafe696d06"
+  },
+  {
+    "file": "fixtures/houkoku/P01-monitoring-report.xlsx",
+    "key": "dummytest-v2/enr002/houkoku/P01-monitoring-report.xlsx",
+    "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "owner": "P01",
+    "sha256": "e41ff887ec12cb00618c2838d08e003d56c39a2035d7bb95dea01a4a07673f91"
+  }
+]

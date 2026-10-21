@@ -26,7 +26,6 @@ public class EnR002EquipmentResponse extends BaseResponse {
     private BigDecimal nominalMaxOutput;
     private String pcsManufacturer;
     private String pcsModel;
-    // private Integer pcsUnitCount;
     private String deviceNo;
     private BigDecimal pcsStandby;
 

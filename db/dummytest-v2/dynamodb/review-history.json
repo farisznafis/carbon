@@ -1,0 +1,28 @@
+[
+  {
+    "pk": {
+      "S": "PART#8"
+    },
+    "sk": {
+      "S": "ATTEMPT#1"
+    },
+    "attempt_number": {
+      "N": "1"
+    },
+    "decision": {
+      "S": "REJECTED"
+    },
+    "reject_reason": {
+      "S": "運転開始日の証憑が不鮮明です。再提出してください。"
+    },
+    "primary_reviewer_name": {
+      "S": "増田 真耶"
+    },
+    "reviewed_by_operator_id": {
+      "N": "1"
+    },
+    "reviewed_at": {
+      "S": "2026-08-01 09:00:00"
+    }
+  }
+]

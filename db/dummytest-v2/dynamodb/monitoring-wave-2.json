@@ -1,0 +1,276 @@
+[
+  {
+    "PK": {
+      "S": "ITSITE001#ITPROJ001"
+    },
+    "SK": {
+      "S": "2026-10-01T08:01:00Z"
+    },
+    "projectID": {
+      "N": "1"
+    },
+    "siteID": {
+      "N": "1"
+    },
+    "equipmentID": {
+      "N": "1"
+    },
+    "participatingUserID": {
+      "N": "16"
+    },
+    "date_recorder": {
+      "S": "2026-09-30"
+    },
+    "ELpv": {
+      "N": "1120"
+    },
+    "ELpvr": {
+      "N": "224.00"
+    },
+    "ELPJ_control_value": {
+      "N": "22.40"
+    },
+    "ELPJ_accuracy": {
+      "N": "99.0"
+    },
+    "isActive": {
+      "BOOL": true
+    },
+    "changedBattery": {
+      "BOOL": false
+    },
+    "ELPJ_battery_value": {
+      "N": "11.20"
+    },
+    "elPvEvidenceUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E01-2-generation.pdf"
+    },
+    "elPvrEvidenceUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E01-2-reverse-flow.pdf"
+    },
+    "elpjControlEvidenceUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E01-2-control.pdf"
+    },
+    "elpjBatterySpecificationUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E01-2-battery.pdf"
+    }
+  },
+  {
+    "PK": {
+      "S": "ITSITE002#ITPROJ001"
+    },
+    "SK": {
+      "S": "2026-10-01T08:02:00Z"
+    },
+    "projectID": {
+      "N": "1"
+    },
+    "siteID": {
+      "N": "2"
+    },
+    "equipmentID": {
+      "N": "2"
+    },
+    "participatingUserID": {
+      "N": "17"
+    },
+    "date_recorder": {
+      "S": "2026-09-30"
+    },
+    "ELpv": {
+      "N": "1280"
+    },
+    "ELpvr": {
+      "N": "256.00"
+    },
+    "ELPJ_control_value": {
+      "N": "25.60"
+    },
+    "ELPJ_accuracy": {
+      "N": "99.0"
+    },
+    "isActive": {
+      "BOOL": true
+    },
+    "changedBattery": {
+      "BOOL": false
+    },
+    "ELPJ_battery_value": {
+      "N": "12.80"
+    },
+    "elPvEvidenceUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E02-2-generation.pdf"
+    },
+    "elPvrEvidenceUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E02-2-reverse-flow.pdf"
+    },
+    "elpjControlEvidenceUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E02-2-control.pdf"
+    },
+    "elpjBatterySpecificationUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E02-2-battery.pdf"
+    }
+  },
+  {
+    "PK": {
+      "S": "ITSITE003#ITPROJ001"
+    },
+    "SK": {
+      "S": "2026-10-01T08:03:00Z"
+    },
+    "projectID": {
+      "N": "1"
+    },
+    "siteID": {
+      "N": "3"
+    },
+    "equipmentID": {
+      "N": "3"
+    },
+    "participatingUserID": {
+      "N": "18"
+    },
+    "date_recorder": {
+      "S": "2026-09-30"
+    },
+    "ELpv": {
+      "N": "1440"
+    },
+    "ELpvr": {
+      "N": "288.00"
+    },
+    "ELPJ_control_value": {
+      "N": "28.80"
+    },
+    "ELPJ_accuracy": {
+      "N": "99.0"
+    },
+    "isActive": {
+      "BOOL": true
+    },
+    "changedBattery": {
+      "BOOL": false
+    },
+    "elPvEvidenceUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E03-2-generation.pdf"
+    },
+    "elPvrEvidenceUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E03-2-reverse-flow.pdf"
+    },
+    "elpjControlEvidenceUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E03-2-control.pdf"
+    }
+  },
+  {
+    "PK": {
+      "S": "ITSITE004#ITPROJ001"
+    },
+    "SK": {
+      "S": "2026-10-01T08:04:00Z"
+    },
+    "projectID": {
+      "N": "1"
+    },
+    "siteID": {
+      "N": "4"
+    },
+    "equipmentID": {
+      "N": "4"
+    },
+    "participatingUserID": {
+      "N": "19"
+    },
+    "date_recorder": {
+      "S": "2026-09-30"
+    },
+    "ELpv": {
+      "N": "1600"
+    },
+    "ELpvr": {
+      "N": "320.00"
+    },
+    "ELPJ_control_value": {
+      "N": "32.00"
+    },
+    "ELPJ_accuracy": {
+      "N": "99.0"
+    },
+    "isActive": {
+      "BOOL": true
+    },
+    "changedBattery": {
+      "BOOL": false
+    },
+    "ELPJ_battery_value": {
+      "N": "16.00"
+    },
+    "elPvEvidenceUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E04-2-generation.pdf"
+    },
+    "elPvrEvidenceUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E04-2-reverse-flow.pdf"
+    },
+    "elpjControlEvidenceUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E04-2-control.pdf"
+    },
+    "elpjBatterySpecificationUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E04-2-battery.pdf"
+    }
+  },
+  {
+    "PK": {
+      "S": "ITSITE005#ITPROJ001"
+    },
+    "SK": {
+      "S": "2026-10-01T08:05:00Z"
+    },
+    "projectID": {
+      "N": "1"
+    },
+    "siteID": {
+      "N": "5"
+    },
+    "equipmentID": {
+      "N": "5"
+    },
+    "participatingUserID": {
+      "N": "20"
+    },
+    "date_recorder": {
+      "S": "2026-09-30"
+    },
+    "ELpv": {
+      "N": "1760"
+    },
+    "ELpvr": {
+      "N": "352.00"
+    },
+    "ELPJ_control_value": {
+      "N": "35.20"
+    },
+    "ELPJ_accuracy": {
+      "N": "99.0"
+    },
+    "isActive": {
+      "BOOL": true
+    },
+    "changedBattery": {
+      "BOOL": false
+    },
+    "ELPJ_battery_value": {
+      "N": "17.60"
+    },
+    "elPvEvidenceUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E05-2-generation.pdf"
+    },
+    "elPvrEvidenceUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E05-2-reverse-flow.pdf"
+    },
+    "elpjControlEvidenceUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E05-2-control.pdf"
+    },
+    "elpjBatterySpecificationUrl": {
+      "S": "dummytest-v2/enr002/monitoring/E05-2-battery.pdf"
+    }
+  }
+]

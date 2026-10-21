@@ -159,9 +159,6 @@ public abstract class ProjectControllerBaseTest {
             projectData.setMethodDetails("家庭用太陽光発電による排出削減");
             projectData.setBaselineEmissions(3200.0);
             projectData.setPostProjectEmission(1950.0);
-            projectData.setNewMembersTotal(120);
-            projectData.setWithdrawnMembers(5);
-            projectData.setCumulativeMembers(115);
             
             request.setProject(Collections.singletonList(projectData));
             

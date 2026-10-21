@@ -25,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -51,6 +52,10 @@ class CancelRequestServiceImplTest {
     private MonitoringTableRecordSolarRepository monitoringRecordSolarRepository;
     @Mock
     private NotificationService notificationService;
+
+    // 実バンドルを使う。文面抽出が忠実かどうかを既存アサーションがそのまま検証する。
+    @Spy
+    private NotificationMessages messages = new NotificationMessages();
 
     @InjectMocks
     private CancelRequestServiceImpl service;
@@ -167,6 +172,36 @@ class CancelRequestServiceImplTest {
                         .createNotificationForAllOperatingUsers(anyString(), anyString());
                 verify(notificationService, times(1))
                         .sendEmailToAllOperatingUsers(anyString(), anyString());
+            }
+
+            @Test
+            @DisplayName("SC-1b: [回帰] サイトIDが文字列でもオペレーター通知が本文付きで送られる")
+            void operatorNotificationCarriesSiteIdAndRequestId() {
+                // 抽出前は String.format("...%d...", site.getPublicId(), ...) だったため、
+                // publicId が String の実データでは毎回 IllegalFormatConversionException になり、
+                // 外側の catch に飲み込まれて通知が一度も飛んでいなかった。
+                Site site = siteFor(COMPANY_ID);
+                EnR002MonitoringRecord record = monitoringRecord(true);
+                RecordCancelRequest saved = pendingCancelRequest(site);
+
+                when(siteRepository.findByPublicIdWithFallback("site-1")).thenReturn(Optional.of(site));
+                when(monitoringRecordSolarRepository.findByPKandSK(RECORD_PK, RECORD_SK))
+                        .thenReturn(Optional.of(record));
+                when(cancelRequestRepository.existsPendingRequestForRecord(RECORD_PK, RECORD_SK))
+                        .thenReturn(false);
+                when(cancelRequestRepository.save(any(RecordCancelRequest.class))).thenReturn(saved);
+
+                service.createCancelRequest(USERNAME, COMPANY_ID, createRequest());
+
+                ArgumentCaptor<String> subject = ArgumentCaptor.forClass(String.class);
+                ArgumentCaptor<String> body = ArgumentCaptor.forClass(String.class);
+                verify(notificationService).sendEmailToAllOperatingUsers(subject.capture(), body.capture());
+
+                assertThat(subject.getValue()).isEqualTo("取消申請が作成されました");
+                assertThat(body.getValue())
+                        .contains(String.valueOf(site.getPublicId()))
+                        .contains(USERNAME)
+                        .contains("申請ID=10");
             }
 
             @Test

@@ -73,7 +73,7 @@ class AdminCompanyQueryServiceImplTest {
                 any(Pageable.class)
         )).thenReturn(new PageImpl<>(List.of(company)));
 
-        AdminCompanyListResponse response = service.findCompanies(query);
+        AdminCompanyListResponse response = service.findCompanies(query,null);
 
         assertThat(response.getStatusCode()).isEqualTo(ResponseConstants.OK);
         assertThat(response.getCompanies()).hasSize(1);

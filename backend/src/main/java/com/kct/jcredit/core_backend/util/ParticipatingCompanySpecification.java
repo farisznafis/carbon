@@ -1,6 +1,7 @@
 package com.kct.jcredit.core_backend.util;
 
 import com.kct.jcredit.core_backend.entity.ParticipatingCompany;
+import com.kct.jcredit.core_backend.entity.SiteProjectRelation;
 import com.kct.jcredit.core_backend.enums.CompanyStatus;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -66,5 +67,26 @@ public final class ParticipatingCompanySpecification {
         return value.replace("\\", "\\\\")
                 .replace("%", "\\%")
                 .replace("_", "\\_");
+    }
+
+    public static Specification<ParticipatingCompany> associatedWithProject(Integer projectId) {
+        return (root, query, cb) -> {
+                var subquery = query.subquery(Integer.class);
+                var relation = subquery.from(SiteProjectRelation.class);
+
+                subquery.select(cb.literal(1))
+                        .where(
+                                cb.equal(
+                                        relation.get("site").get("company").get("companyId"),
+                                        root.get("companyId")
+                                ),
+                                cb.equal(
+                                        relation.get("project").get("id"),
+                                        projectId
+                                )
+                        );
+
+                return cb.exists(subquery);
+        };
     }
 }

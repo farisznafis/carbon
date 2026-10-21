@@ -1,0 +1,210 @@
+[
+  {
+    "pk": {
+      "S": "PART#1"
+    },
+    "company_name": {
+      "S": "株式会社さくらエナジー"
+    },
+    "rep_name": {
+      "S": "佐藤陽斗"
+    },
+    "rep_role": {
+      "S": "代表取締役"
+    },
+    "has_consent": {
+      "BOOL": true
+    },
+    "is_agree_terms": {
+      "BOOL": true
+    },
+    "committed_at": {
+      "S": "2026-08-01 09:00:00"
+    },
+    "created_by": {
+      "S": "master.c01"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#2"
+    },
+    "company_name": {
+      "S": "株式会社さくらエナジー"
+    },
+    "rep_name": {
+      "S": "佐藤陽斗"
+    },
+    "rep_role": {
+      "S": "代表取締役"
+    },
+    "has_consent": {
+      "BOOL": true
+    },
+    "is_agree_terms": {
+      "BOOL": true
+    },
+    "committed_at": {
+      "S": "2026-08-01 09:00:00"
+    },
+    "created_by": {
+      "S": "master.c01"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#3"
+    },
+    "company_name": {
+      "S": "株式会社みなと物流"
+    },
+    "rep_name": {
+      "S": "高橋美月"
+    },
+    "rep_role": {
+      "S": "代表取締役"
+    },
+    "has_consent": {
+      "BOOL": true
+    },
+    "is_agree_terms": {
+      "BOOL": true
+    },
+    "committed_at": {
+      "S": "2026-08-01 09:00:00"
+    },
+    "created_by": {
+      "S": "master.c02"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#4"
+    },
+    "company_name": {
+      "S": "株式会社みなと物流"
+    },
+    "rep_name": {
+      "S": "高橋美月"
+    },
+    "rep_role": {
+      "S": "代表取締役"
+    },
+    "has_consent": {
+      "BOOL": true
+    },
+    "is_agree_terms": {
+      "BOOL": true
+    },
+    "committed_at": {
+      "S": "2026-08-01 09:00:00"
+    },
+    "created_by": {
+      "S": "master.c02"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#5"
+    },
+    "company_name": {
+      "S": "株式会社あおば製作所"
+    },
+    "rep_name": {
+      "S": "鈴木蓮"
+    },
+    "rep_role": {
+      "S": "代表取締役"
+    },
+    "has_consent": {
+      "BOOL": true
+    },
+    "is_agree_terms": {
+      "BOOL": true
+    },
+    "committed_at": {
+      "S": "2026-08-01 09:00:00"
+    },
+    "created_by": {
+      "S": "master.c03"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#6"
+    },
+    "company_name": {
+      "S": "株式会社北海食品"
+    },
+    "rep_name": {
+      "S": "田中葵"
+    },
+    "rep_role": {
+      "S": "代表取締役"
+    },
+    "has_consent": {
+      "BOOL": true
+    },
+    "is_agree_terms": {
+      "BOOL": true
+    },
+    "committed_at": {
+      "S": "2026-08-01 09:00:00"
+    },
+    "created_by": {
+      "S": "master.c04"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#7"
+    },
+    "company_name": {
+      "S": "株式会社東都印刷"
+    },
+    "rep_name": {
+      "S": "伊藤健一"
+    },
+    "rep_role": {
+      "S": "代表取締役"
+    },
+    "has_consent": {
+      "BOOL": true
+    },
+    "is_agree_terms": {
+      "BOOL": true
+    },
+    "committed_at": {
+      "S": "2026-08-01 09:00:00"
+    },
+    "created_by": {
+      "S": "master.c05"
+    }
+  },
+  {
+    "pk": {
+      "S": "PART#8"
+    },
+    "company_name": {
+      "S": "株式会社信州精密"
+    },
+    "rep_name": {
+      "S": "渡辺結衣"
+    },
+    "rep_role": {
+      "S": "代表取締役"
+    },
+    "has_consent": {
+      "BOOL": true
+    },
+    "is_agree_terms": {
+      "BOOL": true
+    },
+    "committed_at": {
+      "S": "2026-08-01 09:00:00"
+    },
+    "created_by": {
+      "S": "master.c06"
+    }
+  }
+]

@@ -58,6 +58,9 @@ public class ProjectFiles extends BaseEntity {
     @Column(name = "owned_by", nullable = false)
     private Boolean ownedByKanrisha;
 
+    @Column(name = "file_version", nullable = false)
+    private Integer versionNo;
+
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 

@@ -13,8 +13,6 @@ import com.kct.jcredit.core_backend.dto.response.base.BaseResponse;
 public interface UserService {
     UserProfileResponse getUserProfile(String username);
     UserListResponse getUsersByCompany(String companyId);
-    BaseResponse validateCreateUser(String companyId, String username, CreateUserRequest request);
-    CreateUserResponse createUser(String companyId, String username, CreateUserRequest request);
     BaseResponse validateUpdateUser(String companyId, String username, UpdateUserRequest request);
     UpdateUserResponse updateUser(String companyId, String username, UpdateUserRequest request);
     void changePassword(String targetUsername, String newPassword);

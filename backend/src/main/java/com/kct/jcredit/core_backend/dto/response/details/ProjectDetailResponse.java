@@ -49,12 +49,6 @@ public class ProjectDetailResponse {
     private String companyName;
     private String regionalCategory;
 
-    // 会員数
-    private Integer newMembersTotal;
-    private Integer withdrawnMembers;
-    private Integer cumulativeMembers;
-    private Integer membersTotal;
-
     // 方法論
     private String methodologyVersion;
     private String methodologyCategory;
