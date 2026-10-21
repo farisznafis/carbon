@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
@@ -9,6 +10,11 @@ const { authState } = vi.hoisted(() => ({
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => authState }));
+// Page tours stay closed here; GuideTourProvider.test.tsx covers when they open.
+vi.mock('@/api/guideTours', () => ({
+  getSeenGuideTours: () => new Promise(() => undefined),
+  markGuideTourSeen: vi.fn(),
+}));
 vi.mock('./Navbar', () => ({
   Navbar: ({ sidebarControl }: { sidebarControl?: React.ReactNode }) => <header>{sidebarControl}</header>,
 }));
@@ -16,9 +22,11 @@ vi.mock('./Navbar', () => ({
 /** Mounts the shell at an existing route with a lightweight page. */
 function renderShell(pathname: string, children: React.ReactNode = <div>Page content</div>) {
   return render(
-    <MemoryRouter initialEntries={[pathname]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <AppShell>{children}</AppShell>
-    </MemoryRouter>,
+    <QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter initialEntries={[pathname]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <AppShell>{children}</AppShell>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

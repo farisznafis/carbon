@@ -25,7 +25,7 @@ const Signup = () => {
       <div className="space-y-8">
         <FormPageHeader
           icon={<UserPlus className="h-6 w-6" />}
-          title="サインアップ"
+          title="新規登録"
           description="排出量・カーボンクレジット・コンプライアンスを一つの画面で管理します。"
         />
 

@@ -1,10 +1,9 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   GUIDE_CONTENT,
   getGuideContextForPath,
   type GuideContext,
 } from './guideSteps';
-import { hasSeenGuideTour, markGuideTourSeen } from './guideTourStorage';
 
 const contexts = Object.keys(GUIDE_CONTENT) as GuideContext[];
 
@@ -29,19 +28,3 @@ describe('getGuideContextForPath', () => {
   });
 });
 
-describe('guideTourStorage', () => {
-  beforeEach(() => localStorage.clear());
-
-  it('remembers a seen tour per account and page', () => {
-    markGuideTourSeen('user-1', 'site-dashboard');
-
-    expect(hasSeenGuideTour('user-1', 'site-dashboard')).toBe(true);
-    expect(hasSeenGuideTour('user-1', 'project-detail')).toBe(false);
-    expect(hasSeenGuideTour('user-2', 'site-dashboard')).toBe(false);
-  });
-
-  it('treats unreadable storage as not seen', () => {
-    localStorage.setItem('guideToursSeen', '{broken');
-    expect(hasSeenGuideTour('user-1', 'site-dashboard')).toBe(false);
-  });
-});

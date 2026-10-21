@@ -73,6 +73,19 @@ describe('GuideTour', () => {
     expect(onClose).toHaveBeenCalledTimes(2);
   });
 
+  it('keeps the explanation inside a section taller than the screen', async () => {
+    vi.mocked(Element.prototype.getBoundingClientRect).mockReturnValue({
+      top: 0, left: 10, bottom: 3000, right: 1010, width: 1000, height: 3000, x: 10, y: 0,
+      toJSON: () => ({}),
+    } as DOMRect);
+    renderPage();
+
+    const dialog = await screen.findByRole('dialog', { name: 'ホーム' });
+    // GUIDE_CONTENT gives these steps side 'right'; a pinned explanation sits above the bottom edge.
+    expect(dialog).toHaveAttribute('data-side', 'top');
+    expect(screen.getByRole('button', { name: '次へ' })).toBeInTheDocument();
+  });
+
   it('closes itself when none of its targets exist', async () => {
     const onClose = vi.fn();
     vi.useFakeTimers({ shouldAdvanceTime: true });

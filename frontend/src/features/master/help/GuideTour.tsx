@@ -10,6 +10,10 @@ const TARGET_WAIT_MS = 3000;
 const TARGET_POLL_MS = 100;
 /** Space between the highlighted element and the spotlight edge. */
 const SPOTLIGHT_PADDING = 6;
+/** Targets taller than this share of the viewport are tall sections. */
+const TALL_TARGET_RATIO = 0.6;
+/** Gap between a tall target's bottom edge and the explanation pinned inside it. */
+const PINNED_INSET = 16;
 
 type Rect = { top: number; left: number; width: number; height: number };
 
@@ -59,7 +63,7 @@ function revealTarget(element: HTMLElement) {
   element.scrollIntoView({
     behavior: prefersReducedMotion() ? 'auto' : 'smooth',
     // Tall sections start at their heading; small elements are centred.
-    block: rect.height > window.innerHeight * 0.6 ? 'start' : 'center',
+    block: rect.height > window.innerHeight * TALL_TARGET_RATIO ? 'start' : 'center',
   });
 }
 
@@ -141,6 +145,13 @@ export function GuideTour({ context, onClose }: Readonly<GuideTourProps>) {
 
   if (!steps || !step) return null;
 
+  // A tall section leaves no room above or below, so the explanation would be pushed off
+  // screen with its buttons; pin it inside the section's visible bottom edge instead.
+  const pinned = rect !== null && rect.height > window.innerHeight * TALL_TARGET_RATIO;
+  const anchorRect = rect && pinned
+    ? { top: rect.top + rect.height - PINNED_INSET, left: rect.left + PINNED_INSET, width: rect.width - PINNED_INSET * 2, height: 0 }
+    : rect;
+
   const isFirst = index === 0;
   const isLast = index === steps.length - 1;
   const goNext = () => (isLast ? onClose() : setIndex(index + 1));
@@ -150,19 +161,25 @@ export function GuideTour({ context, onClose }: Readonly<GuideTourProps>) {
       {/* Swallows clicks so the page is not used mid-tour; the spotlight itself casts the dimming. */}
       <div aria-hidden="true" className="fixed inset-0 z-[100]" />
 
-      {rect && (
+      {rect && anchorRect && (
         <Popover open modal>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none fixed z-[100] rounded-lg transition-all duration-200 ease-out motion-reduce:transition-none"
+            style={{
+              top: rect.top,
+              left: rect.left,
+              width: rect.width,
+              height: rect.height,
+              // One shadow for both the outline and the dimming; a ring class would be overridden.
+              boxShadow: '0 0 0 2px hsl(var(--primary)), 0 0 0 9999px rgb(0 0 0 / 0.6)',
+            }}
+          />
           <PopoverPrimitive.Anchor asChild>
             <div
               aria-hidden="true"
-              className="pointer-events-none fixed z-[100] rounded-lg ring-2 ring-primary transition-all duration-200 ease-out motion-reduce:transition-none"
-              style={{
-                top: rect.top,
-                left: rect.left,
-                width: rect.width,
-                height: rect.height,
-                boxShadow: '0 0 0 9999px rgb(0 0 0 / 0.6)',
-              }}
+              className="pointer-events-none fixed"
+              style={anchorRect}
             />
           </PopoverPrimitive.Anchor>
 
@@ -170,7 +187,7 @@ export function GuideTour({ context, onClose }: Readonly<GuideTourProps>) {
             role="dialog"
             aria-labelledby={titleId}
             aria-describedby={descriptionId}
-            side={step.side ?? 'bottom'}
+            side={pinned ? 'top' : (step.side ?? 'bottom')}
             align="start"
             sideOffset={12}
             collisionPadding={16}

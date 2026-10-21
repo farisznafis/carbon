@@ -160,11 +160,11 @@ export const HOME_FAQ_ITEMS: readonly HomeFaqItem[] = [
     value: 'multiple-sites',
     question: '複数の拠点を登録できますか？',
     answer:
-      'はい。マスターユーザーは企業に属する複数の拠点を登録し、それぞれの設備・担当者・参加プロジェクトを管理できます。',
+      'はい。企業の代表アカウントから、複数の拠点を登録し、それぞれの設備・担当者・参加プロジェクトを管理できます。',
   },
   {
     value: 'evidence-management',
-    question: '提出した証憑はどのように管理されますか？',
+    question: '提出した証憑はどこで確認できますか？',
     answer:
       '証憑は対象の設備や申請に紐づけて管理され、確認画面や履歴から必要な情報を参照できます。',
   },
