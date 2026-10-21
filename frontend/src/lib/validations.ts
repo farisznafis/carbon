@@ -121,12 +121,15 @@ export const emailSchema = z
   .email('有効なメールアドレスを入力してください')
   .max(255, 'メールアドレスは255文字以内で入力してください');
 
+/** Mirrors the backend policy; the common-password blocklist is only checked server-side (errors.newPassword). */
 export const passwordSchema = z
   .string()
-  .min(8, "8文字以上で入力してください")
+  .min(8, "パスワードは8文字以上で入力してください")
+  .max(64, "パスワードは64文字以内で入力してください")
+  .regex(/^[\x20-\x7E]+$/, "パスワードは半角英数字・記号で入力してください")
   .regex(
-    /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).+$/,
-    "大文字・小文字・数字を含めてください"
+    /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)/,
+    "大文字・小文字・数字をそれぞれ1文字以上含めてください"
   );
 
 export const profileFormSchema = z.object({

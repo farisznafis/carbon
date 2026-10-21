@@ -65,8 +65,8 @@ export const paths = {
 
   profile: '/profile',
   passwordChange: '/password-change',
-  passwordChangeForUser: (userId: string | number) =>
-    `/password-change?userId=${encodeURIComponent(String(userId))}`,
+  passwordChangeForUser: (userId: string) =>
+    `/password-change?userId=${encodeURIComponent(userId)}`,
 
   adminDashboard: '/admin/dashboard',
   adminProjectList: '/admin/projects',
@@ -74,13 +74,13 @@ export const paths = {
   adminOperatorList: '/admin/operators',
   adminOperatorRegister: '/admin/operators/new',
   adminOperatorProfileRoute: '/admin/operators/:userId',
-  adminOperatorProfile: (userId: string | number) =>
-    `/admin/operators/${encodeURIComponent(String(userId))}`,
+  adminOperatorProfile: (userId: string) =>
+    `/admin/operators/${encodeURIComponent(userId)}`,
   adminOperatorEditRoute: '/admin/operators/:userId/edit',
-  adminOperatorEdit: (userId: string | number) =>
-    `/admin/operators/${encodeURIComponent(String(userId))}/edit`,
-  adminOperatorPermissionEdit: (userId: string | number) =>
-    `/admin/operators/${encodeURIComponent(String(userId))}/edit#permissions`,
+  adminOperatorEdit: (userId: string) =>
+    `/admin/operators/${encodeURIComponent(userId)}/edit`,
+  adminOperatorPermissionEdit: (userId: string) =>
+    `/admin/operators/${encodeURIComponent(userId)}/edit#permissions`,
   adminMethodologyList: '/admin/methodologies',
   adminMonitoring: '/admin/monitoring',
   adminCompanyDetailRoute: '/admin/companies/:companyId',

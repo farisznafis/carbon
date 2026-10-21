@@ -27,7 +27,7 @@ describe('admin operator API', () => {
           statusCode: 'OK',
           users: [
             {
-              id: 12,
+              id: 'OPR-7K3M9Q12',
               username: 'yamada.taro',
               firstName: '太郎',
               lastName: '山田',
@@ -48,7 +48,7 @@ describe('admin operator API', () => {
       expect.objectContaining({ method: 'GET' }),
     );
     expect(response.users[0]).toMatchObject({
-      id: '12',
+      id: 'OPR-7K3M9Q12',
       firstName: '太郎',
       lastName: '山田',
       userPosition: '担当者',

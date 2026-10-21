@@ -26,13 +26,14 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
+import { passwordSchema } from '@/lib/validations';
 import { paths } from '@/routes/paths';
 
 const INVALID_TOKEN_STATUS = 'INVALID_OR_EXPIRED_TOKEN';
 
 const resetPasswordSchema = z
   .object({
-    newPassword: z.string(),
+    newPassword: passwordSchema,
     passwordConfirmation: z.string(),
   })
   .refine((values) => values.newPassword === values.passwordConfirmation, {

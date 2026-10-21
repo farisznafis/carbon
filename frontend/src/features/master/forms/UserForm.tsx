@@ -338,7 +338,7 @@ export function UserForm({
                         />
                       </FormControl>
                       <FormDescription>
-                        8文字以上で、大文字・小文字・数字をそれぞれ1文字以上含むパスワードを設定してください。
+                        8〜64文字の半角英数字・記号で、大文字・小文字・数字をそれぞれ1文字以上含むパスワードを設定してください。
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

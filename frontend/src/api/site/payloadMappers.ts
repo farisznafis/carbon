@@ -25,7 +25,7 @@ export function mapCreateSitePayload(formData: SiteFormData): CreateSitePayload 
   };
 
   if (formData.userId) {
-    payload.userId = Number(formData.userId);
+    payload.userId = formData.userId;
   }
 
   return payload;
@@ -33,7 +33,7 @@ export function mapCreateSitePayload(formData: SiteFormData): CreateSitePayload 
 
 export function mapUpdateSitePayload(
   formData: SiteFormData,
-  picuserId: number | null,
+  picuserId: string | null,
 ): UpdateSitePayload {
   return {
     siteName: formData.siteName,

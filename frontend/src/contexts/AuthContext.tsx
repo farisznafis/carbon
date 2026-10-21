@@ -11,7 +11,6 @@ import * as authApi from '@/api/auth';
 import type { User } from '@/api/users';
 import { logger } from '@/lib/logger';
 import { storage, storageKeys } from '@/lib/storage';
-import { getJwtUserId } from '@/lib/jwt';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useProfileStore } from '@/stores/ProfileStore';
@@ -26,29 +25,6 @@ interface AuthContextType {
   loading: boolean;
 }
 
-type AdminLoginResponse = {
-  token: string;
-  id?: string | number | null;
-  userId?: string | number | null;
-  operatorId?: string | number | null;
-  user?: Partial<User> & {
-    userId?: string | number | null;
-    operatorId?: string | number | null;
-  };
-  admin?: {
-    id?: string | number | null;
-    userId?: string | number | null;
-    operatorId?: string | number | null;
-    username?: string | null;
-    name?: string | null;
-    email?: string | null;
-    role?: User['role'];
-    companyId?: string | null;
-    siteId?: string | null;
-    siteName?: string | null;
-  };
-};
-
 type AuthSession = {
   user: User | null;
   isAuthenticated: boolean;
@@ -56,7 +32,6 @@ type AuthSession = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const SESSION_DURATION_MS = 60 * 60 * 1000;
-const LEGACY_ADMIN_SESSION_ID = 'admin';
 const transientSessionKeys = [
   storageKeys.sites,
   storageKeys.users,
@@ -172,22 +147,15 @@ const EMPTY_AUTH_SESSION: AuthSession = {
   isAuthenticated: false,
 };
 
-/** Normalizes an operator ID and ignores the legacy placeholder value. */
-function normalizeAdminOperatorId(
-  operatorId: string | number | null | undefined,
+/** Returns the public user ID ("ADM-…"/"OPR-…" for admin logins, "USR-…" otherwise), or null when the value is not one. */
+function normalizePublicUserId(
+  role: User['role'],
+  userId: string | null | undefined,
 ): string | null {
-  if (operatorId === null || operatorId === undefined) return null;
+  const normalizedUserId = userId?.trim() ?? '';
+  const prefix = role === 'admin' ? /^(ADM|OPR)-/ : /^USR-/;
 
-  const normalizedOperatorId = String(operatorId).trim();
-  return normalizedOperatorId &&
-    normalizedOperatorId.toLocaleLowerCase('en-US') !== LEGACY_ADMIN_SESSION_ID
-    ? normalizedOperatorId
-    : null;
-}
-
-/** Returns whether an admin session still uses the legacy placeholder ID. */
-function needsAdminSessionIdMigration(user: User): boolean {
-  return user.role === 'admin' && !normalizeAdminOperatorId(user.id);
+  return prefix.test(normalizedUserId) ? normalizedUserId : null;
 }
 
 /** Sessions saved before the switch to public 拠点 IDs ("site001") hold DB IDs like "3". */
@@ -197,20 +165,16 @@ function hasLegacyNumericSiteId(user: User): boolean {
 
 /** Maps a snapshot to a session, or null when it holds no usable login. Writes nothing. */
 function toAuthSession(snapshot: StoredSessionSnapshot): AuthSession | null {
-  if (snapshot.status !== 'active' || hasLegacyNumericSiteId(snapshot.user)) {
+  // Sessions from before public user IDs hold numeric or placeholder IDs the API now rejects.
+  if (
+    snapshot.status !== 'active' ||
+    hasLegacyNumericSiteId(snapshot.user) ||
+    !normalizePublicUserId(snapshot.user.role, snapshot.user.id)
+  ) {
     return null;
   }
 
-  if (!needsAdminSessionIdMigration(snapshot.user)) {
-    return { user: snapshot.user, isAuthenticated: true };
-  }
-
-  const jwtUserId = getJwtUserId(snapshot.token);
-  if (!jwtUserId) {
-    return null;
-  }
-
-  return { user: { ...snapshot.user, id: jwtUserId }, isAuthenticated: true };
+  return { user: snapshot.user, isAuthenticated: true };
 }
 
 /**
@@ -227,10 +191,6 @@ function loadInitialSession(): AuthSession {
     }
 
     return EMPTY_AUTH_SESSION;
-  }
-
-  if (snapshot.status === 'active' && session.user?.id !== snapshot.user.id) {
-    storage.setJson(storageKeys.user, session.user);
   }
 
   return session;
@@ -298,11 +258,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       try {
         const data = await authApi.login(companyId, email, password);
-        const accountId =
-          data.user?.userId ?? data.user?.id ?? data.userId ?? data.id ?? companyId;
+        const accountId = normalizePublicUserId(data.role, data.userId);
+
+        if (!accountId) {
+          throw new Error(
+            'ログイン情報からユーザーIDを取得できませんでした。管理者にお問い合わせください。',
+          );
+        }
 
         const loginUser: User = {
-          id: String(accountId),
+          id: accountId,
           email: data.user?.email ?? email,
           username: data.user?.username ?? undefined,
           role: data.role,
@@ -337,26 +302,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       clearTransientSessionState();
 
       try {
-        const data = (await authApi.adminLogin(
-          identifier,
-          password,
-        )) as AdminLoginResponse;
-
-        const adminSource = data.admin ?? data.user ?? null;
-        const accountId = [
-          adminSource?.operatorId,
-          adminSource?.userId,
-          adminSource?.id,
-          data.user?.operatorId,
-          data.user?.userId,
-          data.user?.id,
-          data.operatorId,
-          data.userId,
-          data.id,
-          getJwtUserId(data.token),
-        ]
-          .map(normalizeAdminOperatorId)
-          .find((candidateId): candidateId is string => Boolean(candidateId));
+        const data = await authApi.adminLogin(identifier, password);
+        const adminSource = data.admin;
+        const accountId = normalizePublicUserId('admin', adminSource?.id);
 
         if (!accountId) {
           throw new Error(

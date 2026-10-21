@@ -788,7 +788,7 @@ const AdminDashboard = () => {
         project.companyId ?? project.operatorCompanyId ?? user?.companyId ?? '';
       const projectStatusPayload = {
         id: project.id,
-        processedBy: user?.id ? String(user.id) : 'admin',
+        processedBy: user?.id || 'admin',
         companyId: String(companyId),
         projectStatus: status,
       };

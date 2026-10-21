@@ -23,7 +23,7 @@ export function mapAdminOperator(item: AdminOperatorApiItem): AdminOperator {
   const lastName = item.lastName?.trim() ?? '';
 
   return {
-    id: item.id === null || item.id === undefined ? '' : String(item.id),
+    id: item.id ?? '',
     username: item.username?.trim() ?? '',
     name: item.name?.trim() ?? [lastName, firstName].filter(Boolean).join(' '),
     role: item.role?.trim() ?? 'operator',

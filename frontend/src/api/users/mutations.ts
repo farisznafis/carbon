@@ -8,7 +8,7 @@ type UpdateUserInput = Omit<Partial<UserFormData>, "siteId"> & {
 };
 
 type UpdateUserPayload = {
-  userId: number;
+  userId: string;
   firstName: string;
   firstNameKana: string;
   lastName: string;
@@ -51,7 +51,7 @@ function mapUpdateUserPayload(
     resolvedSiteId === '' || resolvedSiteId === null ? null : resolvedSiteId;
 
   return {
-    userId: Number(userId),
+    userId,
     firstName: userData.firstName ?? mergedData?.firstName ?? "",
     firstNameKana: userData.firstNameKana ?? mergedData?.firstNameKana ?? "",
     lastName: userData.lastName ?? mergedData?.lastName ?? "",
@@ -102,7 +102,7 @@ export const updateUser = async (
           position: json.user.position, // ✅ normalize API response
         }
       : {
-          id: String(userId),
+          id: userId,
           firstName: payload.firstName,
           firstNameKana: payload.firstNameKana,
           lastName: payload.lastName,

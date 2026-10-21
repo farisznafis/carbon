@@ -135,7 +135,7 @@ function SiteEdit() {
   const handleFormSubmit = async (values: SiteFormData) => {
     if (!siteId) return;
 
-    const picuserId = values.userId ? Number(values.userId) : null;
+    const picuserId = values.userId || null;
 
     try {
       await validateUpdateSite(siteId, values, picuserId);
@@ -156,7 +156,7 @@ function SiteEdit() {
   const handleFinalSubmit = async () => {
     if (!siteId || !formData) return;
 
-    const picuserId = formData.userId ? Number(formData.userId) : null;
+    const picuserId = formData.userId || null;
     const selectedUser = formData.userId
       ? users.find((user) => user.id === formData.userId)
       : null;

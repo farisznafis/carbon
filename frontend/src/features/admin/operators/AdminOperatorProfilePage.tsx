@@ -22,6 +22,7 @@ import {
   isAdminOperatorRole,
 } from './operatorRoles';
 import { ActionButton } from '@/components/actions';
+import { Button } from '@/components/ui/button';
 
 /** Formats a Japanese operator name in family-name-first order. */
 function formatOperatorName(operator: AdminOperator): string {
@@ -43,6 +44,8 @@ export default function AdminOperatorProfilePage() {
   const profileQuery = useAdminOperatorProfileQuery(userId);
   const operator = profileQuery.data;
   const effectiveRole = operator?.role ?? '';
+  // change-password only accepts one's own account from operators, so the button is self-only.
+  const isOwnProfile = Boolean(operator && operator.id === permissions.operatorId);
 
   usePageBreadcrumb([
     { label: '運用者', to: paths.adminOperatorList },
@@ -153,6 +156,22 @@ export default function AdminOperatorProfilePage() {
                   }
                 />
               </FormSection>
+
+              {isOwnProfile ? (
+                <FormSection
+                  number={4}
+                  title="パスワード変更"
+                  description="アカウントのセキュリティを保つためにパスワードを更新できます。"
+                >
+                  <Button
+                    type="button"
+                    className="w-full"
+                    onClick={() => navigate(paths.passwordChange)}
+                  >
+                    パスワードを変更
+                  </Button>
+                </FormSection>
+              ) : null}
             </FormSectionStack>
           </FormCard>
         )}

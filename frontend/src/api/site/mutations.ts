@@ -28,7 +28,7 @@ export async function validateCreateSite(formData: SiteFormData): Promise<void> 
 export async function validateUpdateSite(
   siteId: string,
   formData: SiteFormData,
-  picuserId: number | null = null,
+  picuserId: string | null = null,
 ): Promise<void> {
   await apiVoidRequest(`/site/validate-update/${encodeURIComponent(siteId)}`, {
     method: 'POST',
@@ -81,7 +81,7 @@ export async function registerSite(
 export async function updateSite(
   siteId: string,
   formData: SiteFormData,
-  picuserId: number | null = null,
+  picuserId: string | null = null,
 ): Promise<{ statusCode: string; site?: Site }> {
   const payload = mapUpdateSitePayload(formData, picuserId);
 

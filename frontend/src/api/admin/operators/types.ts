@@ -20,7 +20,8 @@ export type AdminOperatorPermissionCode =
   | 'APPLICATION_FORM_READ';
 
 export type AdminOperatorApiItem = {
-  id?: string | number | null;
+  /** Admin or operator public ID ("ADM-…" or "OPR-…"). */
+  id?: string | null;
   username?: string | null;
   name?: string | null;
   role?: string | null;

@@ -1,5 +1,6 @@
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ApiError } from '@/api/_shared/errors';
 import { changePassword } from '@/api/auth';
@@ -26,25 +27,27 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { formatPersonName } from '@/features/master/components/masterDashboardUtils';
 import { useToast } from '@/hooks/use-toast';
+import { passwordSchema } from '@/lib/validations';
 import { paths } from '@/routes/paths';
 import { useProfileStore } from '@/stores/ProfileStore';
 import { getHomePath } from '@/utils/getHomePath';
 
-const passwordSchema = z
-  .object({
-    current: z.string().min(1, '現在のパスワードを入力してください'),
-    new: z
-      .string()
-      .min(8, 'パスワードは8文字以上で入力してください')
-      .max(100, 'パスワードは100文字以内で入力してください'),
-    confirm: z.string().min(1, '確認用パスワードを入力してください'),
-  })
-  .refine((data) => data.new === data.confirm, {
-    message: '新しいパスワードが一致しません',
-    path: ['confirm'],
-  });
+const passwordFields = z.object({
+  current: z.string(),
+  new: passwordSchema,
+  confirm: z.string().min(1, '確認用パスワードを入力してください'),
+});
 
-type PasswordData = z.infer<typeof passwordSchema>;
+const confirmMatches = (data: z.infer<typeof passwordFields>) => data.new === data.confirm;
+const confirmMismatch = { message: '新しいパスワードが一致しません', path: ['confirm'] };
+
+// A master setting an employee's password has no current password to enter.
+const managedPasswordSchema = passwordFields.refine(confirmMatches, confirmMismatch);
+const ownPasswordSchema = passwordFields
+  .extend({ current: z.string().min(1, '現在のパスワードを入力してください') })
+  .refine(confirmMatches, confirmMismatch);
+
+type PasswordData = z.infer<typeof passwordFields>;
 
 const PasswordChange = () => {
   const navigate = useNavigate();
@@ -52,19 +55,19 @@ const PasswordChange = () => {
   const { toast } = useToast();
   const { user, logout } = useAuth();
   const requestedUserId = searchParams.get('userId')?.trim() || null;
+  // Only a master may name another account; everyone else, operators included, changes their own.
   const isManagedUserPasswordChange = Boolean(
     user?.role === 'master' &&
       requestedUserId &&
       requestedUserId !== user.id,
   );
-  const targetUserId =
-    isManagedUserPasswordChange && requestedUserId
-      ? requestedUserId
-      : user?.id;
+  const isAdmin = user?.role === 'admin';
   const backPath =
     isManagedUserPasswordChange && requestedUserId
       ? paths.masterUserProfile(requestedUserId)
-      : paths.profile;
+      : isAdmin && user
+        ? paths.adminOperatorProfile(user.id)
+        : paths.profile;
   const location = useLocation();
   const profile = useProfileStore((state) => state.profile);
   const ownName = formatPersonName(profile?.lastName, profile?.firstName);
@@ -86,7 +89,9 @@ const PasswordChange = () => {
   ]);
 
   const passwordForm = useForm<PasswordData>({
-    // resolver: zodResolver(passwordSchema),
+    resolver: zodResolver(
+      isManagedUserPasswordChange ? managedPasswordSchema : ownPasswordSchema,
+    ),
     defaultValues: {
       current: '',
       new: '',
@@ -96,7 +101,7 @@ const PasswordChange = () => {
 
   /** Changes the selected account password while preserving the master session for employee updates. */
   const handlePasswordChange = async (data: PasswordData) => {
-    if (!user || !targetUserId) {
+    if (!user) {
       toast({
         title: 'エラー',
         description: 'ログイン情報を確認できませんでした',
@@ -107,7 +112,7 @@ const PasswordChange = () => {
 
     try {
       await changePassword({
-        userId: targetUserId,
+        userId: isManagedUserPasswordChange ? requestedUserId : null,
         currentPassword: isManagedUserPasswordChange ? null : data.current,
         newPassword: data.new,
       });
@@ -126,7 +131,7 @@ const PasswordChange = () => {
       }
 
       await logout();
-      navigate(paths.login, { replace: true });
+      navigate(isAdmin ? paths.adminLogin : paths.login, { replace: true });
     } catch (error) {
       if (error instanceof ApiError && error.payload?.errors) {
         const errors = error.payload.errors as Record<string, string>;
@@ -138,14 +143,17 @@ const PasswordChange = () => {
           passwordForm.setError('current', { message: errors.currentPassword });
           return;
         }
-        return;
       }
+      // Errors for fields this form does not show still need to reach the user.
+      const fieldErrors =
+        error instanceof ApiError && error.payload?.errors
+          ? Object.values(error.payload.errors as Record<string, string>)
+          : [];
       toast({
         title: 'エラー',
         description:
-          error instanceof Error
-            ? error.message
-            : 'パスワードの更新に失敗しました',
+          fieldErrors[0] ??
+          (error instanceof Error ? error.message : 'パスワードの更新に失敗しました'),
         variant: 'destructive',
       });
     }
@@ -199,7 +207,7 @@ const PasswordChange = () => {
                             />
                           </FormControl>
                           <FormDescription>
-                            8文字以上で、大文字・小文字・数字をそれぞれ1文字以上含むパスワードを設定してください。
+                            8〜64文字の半角英数字・記号で、大文字・小文字・数字をそれぞれ1文字以上含むパスワードを設定してください。
                           </FormDescription>
                           <FormMessage />
                         </FormItem>

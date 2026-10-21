@@ -6,7 +6,7 @@ export type CreateSitePayload = {
   municipality: string;
   blocknum: string;
   buildingName: string;
-  userId?: number;
+  userId?: string;
 };
 
 export type UpdateSitePayload = {
@@ -16,5 +16,5 @@ export type UpdateSitePayload = {
   municipality: string;
   blocknum: string;
   buildingName: string;
-  picuserId: number | null;
+  picuserId: string | null;
 };

@@ -49,7 +49,7 @@ export default function AdminProjectEditPage() {
   // Bumped by 再試行 to rerun the load effect after a failed fetch.
   const [reloadKey, setReloadKey] = useState(0);
 
-  const processedBy = user?.id ? String(user.id) : 'admin';
+  const processedBy = user?.id || 'admin';
 
   const form = useForm<AdminProjectRegisterFormInputValues>({
     mode: 'onChange',

@@ -2,20 +2,15 @@ export interface LoginResponse {
   statusCode: string;
   role: 'master' | 'user' | 'admin';
   token: string;
-  id?: string | number | null;
-  userId?: string | number | null;
-  operatorId?: string | number | null;
+  /** Participating user public ID ("USR-…"). */
+  userId?: string | null;
   user?: {
-    id?: string | number | null;
-    userId?: string | number | null;
-    operatorId?: string | number | null;
     email?: string | null;
     username?: string | null;
   } | null;
   admin?: {
-    id?: string | number | null;
-    userId?: string | number | null;
-    operatorId?: string | number | null;
+    /** Admin or operator public ID ("ADM-…" or "OPR-…"). */
+    id?: string | null;
     email?: string | null;
     username?: string | null;
     name?: string | null;
@@ -59,7 +54,8 @@ export interface SignUpResponse {
 }
 
 export type ChangePasswordPayload = {
-  userId: string;
+  /** Only set when a master changes an employee's password; null for one's own. */
+  userId: string | null;
   currentPassword: string | null;
   newPassword: string;
 };

@@ -90,11 +90,11 @@ describe('ResetPassword', () => {
 
     await user.type(
       await screen.findByLabelText('新しいパスワード'),
-      'same-password',
+      'Password123',
     );
     await user.type(
       screen.getByLabelText('新しいパスワード（確認）'),
-      'same-password',
+      'Password123',
     );
     await user.click(
       screen.getByRole('button', { name: 'パスワードを再設定' }),
