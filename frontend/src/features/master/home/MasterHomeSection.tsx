@@ -1,20 +1,19 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
-import { CheckCircle2 } from 'lucide-react';
 import { ActionButton } from '@/components/actions';
 import {
   DataGridTable,
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
+import { StatusBadge } from '@/components/data-display/StatusBadge';
 import {
-  StatusBadge,
-  type StatusBadgeTone,
-} from '@/components/data-display/StatusBadge';
+  ActionRequiredPanel,
+  type ActionRequiredItem,
+} from '@/components/feedback/ActionRequiredPanel';
 import { NotificationsList } from '@/components/feedback/NotificationsList';
 import {
   SkeletonChart,
-  SkeletonList,
   SkeletonTable,
 } from '@/components/feedback/loading';
 import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
@@ -45,8 +44,6 @@ import { useMasterHomeData } from './useMasterHomeData';
 
 const SITES_ID = 'master-home-sites';
 const CHART_MONTHS = 6;
-// Three rows keep the chart in the first screen on a laptop; the rest is one click away.
-const COLLAPSED_ACTION_LIMIT = 3;
 // Three keeps お知らせ about as tall as the chart beside it; the rest is one click away.
 const NOTICE_LIMIT = 3;
 
@@ -191,107 +188,35 @@ function MonthlyEmissionCard({
   );
 }
 
-const ACTION_PRESENTATION: Record<
-  ActionItem['kind'],
-  { tag: string; tone: StatusBadgeTone; link: string }
-> = {
-  pending: { tag: '入会申請中', tone: 'info', link: '入会届を見る' },
-  unsubmitted: { tag: '今月未提出', tone: 'warning', link: '拠点を開く' },
-  noSite: { tag: '拠点未設定', tone: 'danger', link: '社員を編集' },
-};
-
-function ActionPanel({
-  actions,
-  loading,
-}: {
-  actions: ActionItem[];
-  loading: boolean;
-}) {
-  const navigate = useNavigate();
-  const [expanded, setExpanded] = useState(false);
-  const visible = expanded ? actions : actions.slice(0, COLLAPSED_ACTION_LIMIT);
-
-  const open = (action: ActionItem) => {
-    if (action.kind === 'pending') navigate(paths.masterDashboardMembership);
-    else if (action.kind === 'unsubmitted' && action.siteId)
-      navigate(paths.siteDashboard(action.siteId));
-    else if (action.kind === 'noSite' && action.userId)
-      navigate(paths.userEdit(action.userId), {
-        state: { returnTo: paths.masterDashboard },
-      });
-  };
-
-  return (
-    <Card
-      className={cn(
-        panelCardClassName,
-        actions.length > 0 && 'border-primary/60',
-      )}
-    >
-      <CardHeader className='flex-row items-center gap-2 space-y-0'>
-        <CardTitle className={panelTitleClassName}>対応が必要なこと</CardTitle>
-        {!loading && actions.length > 0 && (
-          <span className='inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary-strong px-1.5 text-xs font-bold tabular-nums text-primary-foreground'>
-            {actions.length}
-          </span>
-        )}
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <SkeletonList items={3} />
-        ) : actions.length === 0 ? (
-          <div className='flex items-center gap-2 rounded-lg border border-success-border bg-success-subtle px-4 py-3 text-small text-success-strong'>
-            <CheckCircle2
-              className='h-4 w-4 shrink-0'
-              aria-hidden='true'
-            />
-            対応が必要なことはありません
-          </div>
-        ) : (
-          <>
-            <ul className='divide-y divide-border'>
-              {visible.map((action) => {
-                const presentation = ACTION_PRESENTATION[action.kind];
-                return (
-                  // One line per to-do from sm up; on phones the message wraps under tag and link.
-                  <li
-                    key={action.key}
-                    className='flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5'
-                  >
-                    <StatusBadge
-                      tone={presentation.tone}
-                      className='shrink-0'
-                    >
-                      {presentation.tag}
-                    </StatusBadge>
-                    <p className='order-last min-w-0 basis-full break-words text-body text-foreground sm:order-none sm:flex-1 sm:basis-0'>
-                      {action.text}
-                    </p>
-                    <ActionButton
-                      kind='link'
-                      hideIcon
-                      className='-my-1 -mr-2 ml-auto h-7 shrink-0'
-                      onClick={() => open(action)}
-                    >
-                      {presentation.link}
-                    </ActionButton>
-                  </li>
-                );
-              })}
-            </ul>
-            {actions.length > COLLAPSED_ACTION_LIMIT && (
-              <ActionButton
-                kind='link'
-                className='mt-2'
-                onClick={() => setExpanded((value) => !value)}
-              >
-                {expanded ? '折りたたむ' : `すべて表示（${actions.length}件）`}
-              </ActionButton>
-            )}
-          </>
-        )}
-      </CardContent>
-    </Card>
+/** Turns the master's to-dos into panel rows; a single affected 拠点 or 社員 links straight to it. */
+function toActionRequiredItems(
+  actions: ActionItem[],
+  navigate: ReturnType<typeof useNavigate>,
+): ActionRequiredItem[] {
+  return actions.map((action) =>
+    action.kind === 'unsubmitted'
+      ? {
+          key: action.key,
+          tag: '今月未提出',
+          text: action.text,
+          actionLabel: action.siteId ? '拠点を開く' : '拠点ごとの状況',
+          onAction: () =>
+            action.siteId
+              ? navigate(paths.siteDashboard(action.siteId))
+              : scrollToSection(SITES_ID),
+        }
+      : {
+          key: action.key,
+          tag: '拠点未設定',
+          text: action.text,
+          actionLabel: action.userId ? '社員を編集' : '社員一覧を見る',
+          onAction: () =>
+            action.userId
+              ? navigate(paths.userEdit(action.userId), {
+                  state: { returnTo: paths.masterDashboard },
+                })
+              : navigate(`${paths.masterDashboard}?tab=users`),
+        },
   );
 }
 
@@ -551,8 +476,8 @@ export function MasterHomeSection() {
       </section>
 
       {/* The next action comes before the reports, so to-dos get their own full-width row. */}
-      <ActionPanel
-        actions={home.actions}
+      <ActionRequiredPanel
+        items={toActionRequiredItems(home.actions, navigate)}
         loading={home.isMonitoringLoading}
       />
 

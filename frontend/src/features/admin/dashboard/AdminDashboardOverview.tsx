@@ -17,7 +17,10 @@ import type { Project } from '@/api/projects';
 import { RowActionButton } from '@/components/data-display/RowActionButton';
 import { CompanyStatusBadge } from '@/features/admin/company-detail/CompanyStatusBadge';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
-import { NoticeBanner } from '@/components/feedback/NoticeBanner';
+import {
+  ActionRequiredPanel,
+  type ActionRequiredItem,
+} from '@/components/feedback/ActionRequiredPanel';
 import { NotificationsList } from '@/components/feedback/NotificationsList';
 import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import { AdminTableCard } from '@/components/layout/AdminTableCard';
@@ -156,19 +159,19 @@ function MetricCard({
     <span className='flex items-start justify-between gap-3'>
       {/* Same anatomy as the master MasterStatCard: description on its own line, number pinned below. */}
       <span className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-body !font-bold text-foreground">
+        <span className="text-body !font-bold text-foreground [word-break:auto-phrase]">
           {label}
         </span>
 
         {description && (
-          <span className="text-subtle text-muted-foreground">
+          <span className="text-subtle text-muted-foreground [overflow-wrap:anywhere] [word-break:keep-all]">
             {description}
           </span>
         )}
       </span>
       {permissionGranted && (
         <ArrowRight
-          className='mt-0.5 h-4 w-4 shrink-0 text-primary-strong transition-transform group-hover:translate-x-0.5'
+          className='mt-0.5 hidden h-4 w-4 shrink-0 text-primary-strong transition-transform group-hover:translate-x-0.5 sm:block'
           aria-hidden='true'
         />
       )}
@@ -377,38 +380,57 @@ function CompanyApplicationSummary({
   );
 }
 
-/**
- * Announces pending monitoring-data cancel requests. Renders nothing when none
- * are waiting; load errors are shown by the データ取消依頼 metric card.
- */
-function CancelRequestBanner({
-  pendingCount,
-  loading,
-  error,
-  onOpen,
-}: Readonly<{
-  pendingCount: number;
-  loading: boolean;
-  error: string | null;
-  onOpen: () => void;
-}>) {
-  if (loading || error || pendingCount === 0) return null;
+const PROJECT_TABLE_ID = 'admin-home-projects';
 
-  return (
-    <NoticeBanner
-      tone='warning'
-      action={
-        <ActionButton kind='review' onClick={onOpen}>
-          確認する
-        </ActionButton>
-      }
-    >
-      未処理のモニタリングデータ取消依頼が{pendingCount.toLocaleString('ja-JP')}件あります。
-    </NoticeBanner>
-  );
+/**
+ * The operator's own to-dos for 対応が必要なこと, one row per kind and only for
+ * permitted work. Sources that failed to load are left out; their cards show the error.
+ */
+function getAdminActionItems(
+  props: Readonly<AdminDashboardOverviewProps>,
+  pendingCancelCount: number,
+): ActionRequiredItem[] {
+  const items: ActionRequiredItem[] = [];
+
+  // Cancel requests change submitted data and credits, so they are the one urgent kind.
+  if (props.canCancelMonitoring && !props.cancelRequestsError && pendingCancelCount > 0) {
+    items.push({
+      key: 'cancel',
+      tag: '取消依頼',
+      text: `未処理のモニタリングデータ取消依頼が${pendingCancelCount.toLocaleString('ja-JP')}件あります`,
+      actionLabel: '確認する',
+      onAction: () => props.onPanelChange('cancel'),
+      urgent: true,
+    });
+  }
+
+  if (props.canReviewCompanies && !props.pendingApplicationsError && props.pendingApplicationTotal > 0) {
+    items.push({
+      key: 'applications',
+      tag: '企業申請',
+      text: `確認待ちの企業申請が${props.pendingApplicationTotal.toLocaleString('ja-JP')}件あります`,
+      actionLabel: '確認する',
+      onAction: props.onNavigateApplications,
+    });
+  }
+
+  if (props.canReadProjects && !props.openMembershipReviewsError && props.openMembershipReviews.length > 0) {
+    items.push({
+      key: 'memberships',
+      tag: '入会届',
+      text: `審査待ちの入会届が${props.openMembershipReviews.length.toLocaleString('ja-JP')}件あります`,
+      // Reviews open per project; the project table already lists those with waiting 入会届 first.
+      actionLabel: 'プロジェクト一覧へ',
+      onAction: () =>
+        document
+          .getElementById(PROJECT_TABLE_ID)
+          ?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    });
+  }
+
+  return items;
 }
 
-/** Renders the newest batch execution summary. */
 function BatchHistorySummary({
   items,
   loading,
@@ -620,14 +642,6 @@ export function AdminDashboardOverview(
         title='ホーム'
         // description="運用業務を担当するユーザーのアカウントを管理します。"
       />
-      {props.canCancelMonitoring && (
-        <CancelRequestBanner
-          pendingCount={pendingCancelCount}
-          loading={props.cancelRequestsLoading}
-          error={props.cancelRequestsError}
-          onOpen={() => props.onPanelChange('cancel')}
-        />
-      )}
       <section
         aria-label='主要な登録状況'
         className='
@@ -684,6 +698,16 @@ export function AdminDashboardOverview(
           requiredPermission='MONITORING_CANCEL'
         />
       </section>
+      {/* Hidden only when this account may do none of the kinds of work it lists. */}
+      {(props.canCancelMonitoring || props.canReviewCompanies || props.canReadProjects) && (
+        <ActionRequiredPanel
+          items={getAdminActionItems(props, pendingCancelCount)}
+          loading={
+            (props.canCancelMonitoring && props.cancelRequestsLoading) ||
+            (props.canReviewCompanies && props.pendingApplicationsLoading)
+          }
+        />
+      )}
       <div
         className='
           grid
@@ -696,25 +720,27 @@ export function AdminDashboardOverview(
           ref={mainColumnRef}
           className='min-w-0 space-y-grid'
         >
-          <AdminTableCard
-            title='プロジェクト一覧'
-            count={props.projects.length}
-            // description='確認が必要な入会届が多いプロジェクトから表示します。'
-          >
-            {props.canReadProjects ? (
-              <AdminProjectStatusTable
-                projects={props.projects}
-                openReviews={props.openMembershipReviews}
-                projectsLoading={props.projectsLoading}
-                projectsError={props.projectsError}
-                openReviewsError={props.openMembershipReviewsError}
-                onOpenProjectDetail={props.onOpenProjectDetail}
-                onOpenMembership={props.onOpenProjectMembership}
-              />
-            ) : (
-              <PermissionDeniedNotice permission='PROJECT_READ' />
-            )}
-          </AdminTableCard>
+          <div id={PROJECT_TABLE_ID} className='scroll-mt-24'>
+            <AdminTableCard
+              title='プロジェクト一覧'
+              count={props.projects.length}
+              // description='確認が必要な入会届が多いプロジェクトから表示します。'
+            >
+              {props.canReadProjects ? (
+                <AdminProjectStatusTable
+                  projects={props.projects}
+                  openReviews={props.openMembershipReviews}
+                  projectsLoading={props.projectsLoading}
+                  projectsError={props.projectsError}
+                  openReviewsError={props.openMembershipReviewsError}
+                  onOpenProjectDetail={props.onOpenProjectDetail}
+                  onOpenMembership={props.onOpenProjectMembership}
+                />
+              ) : (
+                <PermissionDeniedNotice permission='PROJECT_READ' />
+              )}
+            </AdminTableCard>
+          </div>
           <CompanyApplicationSummary
             pendingApplications={props.pendingApplications}
             pendingTotal={props.pendingApplicationTotal}

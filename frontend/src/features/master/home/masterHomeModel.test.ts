@@ -37,7 +37,11 @@ describe('buildMasterHome', () => {
     expect(home.approvedProjectCount).toBe(2);
     expect(home.pendingProjectCount).toBe(1);
     expect([home.submittedCount, home.targets.length]).toEqual([1, 2]);
-    expect(home.actions.map((action) => action.kind)).toEqual(['pending', 'unsubmitted', 'noSite']);
+    // One row per kind; the pending application waits on the operator, so it is not the master's to-do.
+    expect(home.actions).toEqual([
+      { kind: 'unsubmitted', key: 'unsubmitted', text: '拠点S2：今月のモニタリングが未提出です（1件）', siteId: 'S2' },
+      { kind: 'noSite', key: 'no-site', text: '山田 u2 さんの拠点が未設定です', userId: 'u2' },
+    ]);
     expect(home.siteRows.map((row) => [row.projectCount, row.userCount, row.thisMonth])).toEqual([
       [1, 1, 'submitted'],
       [1, 0, 'unsubmitted'],

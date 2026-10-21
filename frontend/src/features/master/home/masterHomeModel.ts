@@ -14,8 +14,9 @@ export type SiteProjects = { siteId: string; projects: SiteProject[] };
 
 export type MonthlyEmission = { month: string; empj: number; siteCount: number };
 
+/** One row per kind of work the master itself has to do; set only when exactly one 拠点 or 社員 is affected. */
 export type ActionItem = {
-  kind: 'pending' | 'unsubmitted' | 'noSite';
+  kind: 'unsubmitted' | 'noSite';
   key: string;
   text: string;
   siteId?: string;
@@ -129,24 +130,31 @@ export function buildMasterHome({
   const unsubmitted = targets.filter((pair) => !isSubmitted(pair));
   const usersWithoutSite = users.filter((user) => user.role !== 'master' && !user.siteId);
 
+  // 入会申請中 is left out on purpose: it waits on the operator, not on the master.
+  const unsubmittedSiteIds = [...new Set(unsubmitted.map((pair) => pair.siteId))];
+  const onlyUserWithoutSite = usersWithoutSite.length === 1 ? usersWithoutSite[0] : undefined;
   const actions: ActionItem[] = [
-    ...pendingProjects.map((project) => ({
-      kind: 'pending' as const,
-      key: `pending-${project.id}`,
-      text: `${project.projectName} の入会申請が審査中です`,
-    })),
-    ...unsubmitted.map((pair) => ({
-      kind: 'unsubmitted' as const,
-      key: `unsubmitted-${pairKey(pair.siteId, pair.projectId)}`,
-      text: `${pair.siteName}・${pair.projectName}：今月のモニタリングが未提出です`,
-      siteId: pair.siteId,
-    })),
-    ...usersWithoutSite.map((user) => ({
-      kind: 'noSite' as const,
-      key: `no-site-${user.id}`,
-      text: `${user.lastName ?? ''} ${user.firstName ?? ''} さんの拠点が未設定です`.trim(),
-      userId: user.id,
-    })),
+    ...(unsubmitted.length > 0
+      ? [{
+          kind: 'unsubmitted' as const,
+          key: 'unsubmitted',
+          text:
+            unsubmittedSiteIds.length === 1
+              ? `${unsubmitted[0].siteName}：今月のモニタリングが未提出です（${unsubmitted.length}件）`
+              : `今月のモニタリングが未提出です（${unsubmittedSiteIds.length}拠点・${unsubmitted.length}件）`,
+          siteId: unsubmittedSiteIds.length === 1 ? unsubmittedSiteIds[0] : undefined,
+        }]
+      : []),
+    ...(usersWithoutSite.length > 0
+      ? [{
+          kind: 'noSite' as const,
+          key: 'no-site',
+          text: onlyUserWithoutSite
+            ? `${onlyUserWithoutSite.lastName ?? ''} ${onlyUserWithoutSite.firstName ?? ''} さんの拠点が未設定です`.trim()
+            : `拠点が未設定の社員が${usersWithoutSite.length}人います`,
+          userId: onlyUserWithoutSite?.id,
+        }]
+      : []),
   ];
 
   const siteRows: SiteRow[] = sites.map((site) => {
