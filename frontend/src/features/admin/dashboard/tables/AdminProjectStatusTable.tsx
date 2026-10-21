@@ -15,7 +15,7 @@ import { ArrowRight } from 'lucide-react';
 import { getProjectStatusTone } from '../projectStatusPresentation';
 
 const PROJECT_STATUS_PAGE_SIZE = 5;
-const DUMMY_REDUCTION_VALUES = [320, 160, 90, 20, 10] as const;
+const DUMMY_REDUCTION_VALUES = [108, 132, 96, 20, 10] as const;
 const MAX_DUMMY_REDUCTION_VALUE = Math.max(...DUMMY_REDUCTION_VALUES);
 /** Narrow minimums keep the table unscrolled in the Home main column down to ~1280px viewports. */
 const projectStatusGridColumns =

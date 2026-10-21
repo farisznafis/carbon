@@ -1,5 +1,3 @@
-import { formatNotificationDate } from '@/components/feedback/notificationFormatters';
-
 /**
  * Values under 1 t get up to 3 decimals: per-site monthly emissions are often
  * 0.0x t, and rounding them to 0.1 makes different sites look identical.
@@ -17,18 +15,3 @@ export const formatTons = (value: number | null | undefined) => {
 export const formatChange = (label: string, change: number | null) =>
   change === null ? null : `${label} ${change > 0 ? '+' : change < 0 ? '−' : '±'}${Math.abs(change).toFixed(1)}%`;
 
-/** 10分前 / 2時間前 / 昨日 / n日前, then the full date after a week. */
-export function formatRelativeTime(value: string | null, now = new Date()) {
-  if (!value) return '—';
-  const time = new Date(value.replace(/(\.\d{3})\d+/, '$1')).getTime();
-  if (Number.isNaN(time)) return value;
-  const minutes = Math.floor((now.getTime() - time) / 60000);
-  if (minutes < 1) return 'たった今';
-  if (minutes < 60) return `${minutes}分前`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}時間前`;
-  const days = Math.floor(hours / 24);
-  if (days === 1) return '昨日';
-  if (days < 7) return `${days}日前`;
-  return formatNotificationDate(value).split(' ')[0];
-}

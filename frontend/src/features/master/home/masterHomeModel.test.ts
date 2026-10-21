@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { Site, SiteProject } from '@/api/site';
 import type { UserList } from '@/api/users';
-import { formatChange, formatRelativeTime } from '@/features/master/shared/masterFormatters';
+import { formatRelativeTime } from '@/components/feedback/notificationFormatters';
+import { formatChange } from '@/features/master/shared/masterFormatters';
 import { buildMasterHome, pairKey, toJstMonth, toMonthlyEmissions } from './masterHomeModel';
 
 const site = (siteId: string): Site =>
@@ -28,7 +29,6 @@ describe('buildMasterHome', () => {
         [pairKey('S1', 'A'), '2026-11-01T01:00:00Z'],
         [pairKey('S2', 'A'), '2026-10-15'],
       ]),
-      unreadCount: 3,
       now,
     });
 
@@ -37,8 +37,7 @@ describe('buildMasterHome', () => {
     expect(home.approvedProjectCount).toBe(2);
     expect(home.pendingProjectCount).toBe(1);
     expect([home.submittedCount, home.targets.length]).toEqual([1, 2]);
-    expect(home.actions.map((action) => action.kind)).toEqual(['pending', 'unsubmitted', 'noSite', 'unread']);
-    expect(home.actions[3].text).toBe('未読のお知らせが3件あります');
+    expect(home.actions.map((action) => action.kind)).toEqual(['pending', 'unsubmitted', 'noSite']);
     expect(home.siteRows.map((row) => [row.projectCount, row.userCount, row.thisMonth])).toEqual([
       [1, 1, 'submitted'],
       [1, 0, 'unsubmitted'],

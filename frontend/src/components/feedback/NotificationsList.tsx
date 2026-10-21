@@ -9,8 +9,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { SkeletonList } from './loading';
 import { NotificationDetailDialog } from './NotificationDetailDialog';
-import { formatNotificationDate } from './notificationFormatters';
+import { formatNotificationDate, formatRelativeTime } from './notificationFormatters';
 
 type NotificationAction = (
   notificationId: UserNotification['id'],
@@ -94,25 +95,31 @@ export function NotificationsList({
     }
   };
 
-  if (loading) {
-    return <div className='text-sm text-foreground'>読み込み中...</div>;
+  // A refetch keeps the current items on screen instead of blanking the list.
+  if (loading && notifications.length === 0) {
+    return <SkeletonList items={3} />;
   }
 
   if (error) {
-    return <div className='text-sm text-destructive-strong'>{error}</div>;
+    return (
+      <p role='alert' className='py-6 text-center text-small text-destructive-strong'>
+        {error}
+      </p>
+    );
   }
 
   if (notifications.length === 0) {
     return (
-      <div className='text-sm text-foreground ml-2'>
-        お知らせはありません。
-      </div>
+      <p className='py-6 text-center text-small text-muted-foreground'>
+        お知らせはありません
+      </p>
     );
   }
 
   return (
     <>
-      <ul className='divide-y divide-border'>
+      {/* Pulled out by the row padding so text lines up with the surrounding heading. */}
+      <ul className='-mx-3 divide-y divide-border'>
         {orderedNotifications.map((notification) => {
           const isProcessing = processingNotificationIds.includes(
             notification.id,
@@ -124,85 +131,86 @@ export function NotificationsList({
             <li
               key={notification.id}
               aria-busy={isProcessing || undefined}
-              className={cn(
-                'relative rounded-lg px-3 py-4 transition-colors hover:bg-muted',
-                isRead ? 'bg-muted/40' : 'bg-card',
-              )}
+              className='relative px-3 py-3'
             >
+              {/* The row's hover fill lives on the button, so the divider above stays a straight line. */}
               <Button
                 type='button'
                 variant='ghost'
                 aria-label={`「${notificationTitle}」の詳細を表示`}
-                className='absolute inset-0 z-0 h-full w-full rounded-lg p-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+                className='absolute inset-0 z-0 h-full w-full rounded-lg p-0 hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
                 onClick={(event) =>
                   handleOpenNotification(notification, event.currentTarget)
                 }
               />
 
-              <div className='pointer-events-none relative z-[1] min-w-0 space-y-2'>
-                <div className='flex items-start justify-between gap-3'>
-                  <div className='flex min-w-0 items-start gap-2'>
-                    {!isRead && (
-                      <span
-                        className='mt-2 h-2 w-2 shrink-0 rounded-full bg-primary'
-                        aria-label='未読'
-                      />
+              <div className='pointer-events-none relative z-[1] flex min-w-0 gap-2.5'>
+                {/* Read rows keep the dot's slot so every title starts on the same line. */}
+                <span
+                  className={cn(
+                    'mt-2 h-2 w-2 shrink-0 rounded-full',
+                    isRead ? 'invisible' : 'bg-primary',
+                  )}
+                  {...(isRead ? { 'aria-hidden': true } : { 'aria-label': '未読' })}
+                />
+
+                <div className='min-w-0 flex-1'>
+                  <div className='flex items-start justify-between gap-3'>
+                    <p
+                      className={cn(
+                        'min-w-0 break-words text-body',
+                        isRead ? 'font-normal' : 'font-bold',
+                      )}
+                    >
+                      {notificationTitle}
+                    </p>
+
+                    {onDelete && (
+                      <div className='pointer-events-auto relative z-10 -my-1 -mr-1'>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='icon'
+                              className='h-8 w-8 shrink-0 text-muted-foreground'
+                              disabled={isProcessing}
+                              aria-label='通知メニュー'
+                            >
+                              <MoreHorizontal className='h-4 w-4' />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align='end'>
+                            <DropdownMenuItem
+                              className='text-destructive-strong focus:text-destructive-strong'
+                              onSelect={() =>
+                                void runNotificationAction(
+                                  notification.id,
+                                  onDelete,
+                                )
+                              }
+                            >
+                              <Trash2 className='mr-2 h-4 w-4' />
+                              削除
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     )}
-                    <div className='min-w-0'>
-                      <p
-                        className={cn(
-                          'break-words leading-6',
-                          isRead ? 'font-normal' : 'font-bold',
-                        )}
-                      >
-                        {notificationTitle}
-                      </p>
-                      <time
-                        dateTime={notification.createdAt ?? undefined}
-                        className='block text-xs text-foreground'
-                      >
-                        {formatNotificationDate(notification.createdAt)}
-                      </time>
-                    </div>
                   </div>
 
-                  {onDelete && (
-                    <div className='pointer-events-auto relative z-10'>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            type='button'
-                            variant='ghost'
-                            size='icon'
-                            className='h-8 w-8 shrink-0'
-                            disabled={isProcessing}
-                            aria-label='通知メニュー'
-                          >
-                            <MoreHorizontal className='h-4 w-4' />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align='end'>
-                          <DropdownMenuItem
-                            className='text-destructive-strong focus:text-destructive-strong'
-                            onSelect={() =>
-                              void runNotificationAction(
-                                notification.id,
-                                onDelete,
-                              )
-                            }
-                          >
-                            <Trash2 className='mr-2 h-4 w-4' />
-                            削除
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  )}
-                </div>
+                  <p className='mt-0.5 line-clamp-2 break-words text-small text-muted-foreground'>
+                    {notification.message || '-'}
+                  </p>
 
-                <p className='line-clamp-2 break-words text-sm leading-6 text-foreground'>
-                  {notification.message || '-'}
-                </p>
+                  <time
+                    dateTime={notification.createdAt ?? undefined}
+                    title={formatNotificationDate(notification.createdAt)}
+                    className='mt-1 block text-subtle tabular-nums text-muted-foreground'
+                  >
+                    {formatRelativeTime(notification.createdAt)}
+                  </time>
+                </div>
               </div>
             </li>
           );

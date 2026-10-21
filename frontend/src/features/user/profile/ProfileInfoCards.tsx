@@ -94,7 +94,7 @@ export function ProfileInfoCards({
             <ProfileDetailField label="所在地" value={company?.address} />
             <ProfileDetailField label="電話番号" value={company?.phoneNumber} />
             <ProfileDetailField label="FAX番号" value={company?.fax} />
-            <ProfileDetailField label="メールアドレス" value={company?.email} />
+            {/* <ProfileDetailField label="メールアドレス" value={company?.email} /> */}
           </dl>
         </FormSection>
 

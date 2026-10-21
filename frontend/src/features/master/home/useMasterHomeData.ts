@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { useNotificationStore } from '@/stores/notificationStore';
 import {
   useLatestMonitoring,
   useMasterBaseData,
@@ -11,7 +10,6 @@ import { buildMasterHome, pairKey, toMonthlyEmissions } from './masterHomeModel'
 export function useMasterHomeData() {
   const base = useMasterBaseData();
   const { sites, users, siteProjects, targets } = base;
-  const unreadCount = useNotificationStore((state) => state.unreadCount);
   const monitoring = useLatestMonitoring(targets);
   const reductions = useReductionResults(targets);
 
@@ -19,8 +17,8 @@ export function useMasterHomeData() {
     const latestSubmissions = new Map(
       targets.map((pair, index) => [pairKey(pair.siteId, pair.projectId), monitoring.data[index] ?? null]),
     );
-    return buildMasterHome({ sites, users, siteProjects, latestSubmissions, unreadCount });
-  }, [sites, users, siteProjects, targets, monitoring.data, unreadCount]);
+    return buildMasterHome({ sites, users, siteProjects, latestSubmissions });
+  }, [sites, users, siteProjects, targets, monitoring.data]);
 
   const monthlyEmissions = useMemo(
     () => toMonthlyEmissions(targets.map((pair, index) => ({ pair, items: reductions.data[index] ?? [] }))),

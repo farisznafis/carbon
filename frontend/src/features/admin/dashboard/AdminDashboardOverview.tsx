@@ -154,7 +154,8 @@ function MetricCard({
 
   const header = (
     <span className='flex items-start justify-between gap-3'>
-      <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+      {/* Same anatomy as the master MasterStatCard: description on its own line, number pinned below. */}
+      <span className="flex min-w-0 flex-col gap-0.5">
         <span className="text-body !font-bold text-foreground">
           {label}
         </span>
@@ -206,7 +207,7 @@ function MetricCard({
         className='group flex h-full w-full flex-col gap-3 rounded-lg p-card text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
       >
         {header}
-        <span className='flex items-baseline gap-1.5'>
+        <span className='mt-auto flex items-baseline gap-1.5'>
           <span className='text-metric font-bold leading-none tracking-tight tabular-nums text-foreground'>
             {value.toLocaleString('ja-JP')}
           </span>

@@ -42,7 +42,8 @@ describe('NotificationsList', () => {
     expect(
       screen.queryByRole('button', { name: '既読にする' }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText('2026年07月29日 10:30')).toBeInTheDocument();
+    // Rows show relative time; the exact timestamp stays on hover and in the dialog.
+    expect(screen.getByTitle('2026年07月29日 10:30')).toHaveTextContent('2026年07月29日');
     expect(
       screen.getByRole('button', {
         name: '「プロジェクト申請が承認されました」の詳細を表示',
@@ -51,15 +52,11 @@ describe('NotificationsList', () => {
     expect(screen.getAllByLabelText('通知メニュー')).toHaveLength(2);
 
     const notificationCards = screen.getAllByRole('listitem');
-    notificationCards.forEach((notificationCard) => {
-      expect(notificationCard).toHaveClass('rounded-lg', 'px-3', 'py-4');
-    });
     expect(
       within(notificationCards[0]).getByText(
         'プロジェクト申請が承認されました',
       ),
     ).toHaveClass('font-bold');
-    expect(notificationCards[0]).toHaveClass('bg-card');
     expect(
       within(notificationCards[0]).getByText(
         '拠点Aの参加申請が承認されました。',
@@ -68,7 +65,6 @@ describe('NotificationsList', () => {
     expect(
       within(notificationCards[1]).getByText('既読のお知らせ'),
     ).toHaveClass('font-normal');
-    expect(notificationCards[1]).toHaveClass('bg-muted/40');
     expect(within(notificationCards[1]).queryByLabelText('未読')).toBeNull();
   });
 

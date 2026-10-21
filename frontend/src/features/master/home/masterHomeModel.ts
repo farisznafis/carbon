@@ -15,7 +15,7 @@ export type SiteProjects = { siteId: string; projects: SiteProject[] };
 export type MonthlyEmission = { month: string; empj: number; siteCount: number };
 
 export type ActionItem = {
-  kind: 'pending' | 'unsubmitted' | 'noSite' | 'unread';
+  kind: 'pending' | 'unsubmitted' | 'noSite';
   key: string;
   text: string;
   siteId?: string;
@@ -99,14 +99,12 @@ export function buildMasterHome({
   users,
   siteProjects,
   latestSubmissions,
-  unreadCount,
   now = new Date(),
 }: {
   sites: Site[];
   users: UserList[];
   siteProjects: SiteProjects[];
   latestSubmissions: LatestSubmissions;
-  unreadCount: number;
   now?: Date;
 }) {
   const currentMonth = toJstMonth(now);
@@ -149,9 +147,6 @@ export function buildMasterHome({
       text: `${user.lastName ?? ''} ${user.firstName ?? ''} さんの拠点が未設定です`.trim(),
       userId: user.id,
     })),
-    ...(unreadCount > 0
-      ? [{ kind: 'unread' as const, key: 'unread', text: `未読のお知らせが${unreadCount}件あります` }]
-      : []),
   ];
 
   const siteRows: SiteRow[] = sites.map((site) => {
