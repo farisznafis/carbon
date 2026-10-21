@@ -141,7 +141,7 @@ export function UserDashboardCard({
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <User className="h-4 w-4 shrink-0 text-muted-foreground" />
             <span className="shrink-0 font-normal text-muted-foreground">
-              社員名
+              ユーザーネーム
             </span>
             <span className="truncate">{user.username || '-'}</span>
           </span>

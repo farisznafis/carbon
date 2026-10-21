@@ -857,10 +857,10 @@ const Dashboard = () => {
             </div>
             <dl className='ml-[60px] mt-2 grid gap-x-10 gap-y-3 sm:grid-cols-[max-content_minmax(0,1fr)]'>
               <div>
-                <dt className='text-label'>担当者</dt>
+                <dt className='text-label'>責任者</dt>
                 <dd className='mt-1 font-medium'>
                   {isSiteLoading ? (
-                    <InlineLoader label='担当者を読み込んでいます' />
+                    <InlineLoader label='責任者を読み込んでいます' />
                   ) : (
                     picName
                   )}
@@ -962,7 +962,7 @@ const Dashboard = () => {
               <p className='text-small mt-2 whitespace-pre-line text-foreground'>
                 {user?.role === 'master'
                   ? 'プロジェクトへの入会をご希望の場合は、「プロジェクトに入会する」ボタンから、入会するプロジェクトを選択してください。'
-                  : 'この拠点は、以下のプロジェクトにまだ入会していません。\n入会をご希望の場合は、マスター権限を持つ担当者へお問い合わせください。'}
+                  : 'この拠点は、以下のプロジェクトにまだ入会していません。\n入会をご希望の場合は、マスター権限を持つ責任者へお問い合わせください。'}
               </p>
             </div>
             {user?.role === 'master' && activeSiteId && (

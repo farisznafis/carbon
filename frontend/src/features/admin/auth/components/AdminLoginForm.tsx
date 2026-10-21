@@ -62,7 +62,7 @@ export function AdminLoginForm({ onSubmit }: AdminLoginFormProps) {
                 <FormControl>
                   <Input
                     type="text"
-                    placeholder="社員名またはメールアドレス"
+                    placeholder="ユーザーネームまたはメールアドレス"
                     {...field}
                   />
                 </FormControl>

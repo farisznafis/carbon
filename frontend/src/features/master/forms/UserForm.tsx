@@ -296,7 +296,7 @@ export function UserForm({
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <RequiredLabel>社員名</RequiredLabel>
+                      <RequiredLabel>ユーザーネーム</RequiredLabel>
                       <FormControl>
                         <Input placeholder="例）yamada_taro" {...field} />
                       </FormControl>

@@ -67,7 +67,7 @@ export function UserTable({
     },
     {
       id: 'username',
-      label: '社員名',
+      label: 'ユーザーネーム',
       sortable: true,
       sortValue: (user) => user.username,
       render: (user) => (

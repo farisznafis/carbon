@@ -372,7 +372,7 @@ export function SiteForm({
                 name="addressDetail"
                 render={({ field }) => (
                   <FormItem>
-                    <RequiredLabel required={true}>建物名・部屋番号</RequiredLabel>
+                    <RequiredLabel required={false}>建物名・部屋番号</RequiredLabel>
                     <FormControl>
                       <Input placeholder="東京ビル3F 305号" {...field} />
                     </FormControl>
@@ -419,7 +419,7 @@ export function SiteForm({
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="担当者を選択してください" />
+                                <SelectValue placeholder="責任者を選択してください" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -458,12 +458,12 @@ export function SiteForm({
                         </div>
                         {isUserOptionsLoading && (
                           <FormDescription>
-                            担当者候補を読み込み中です。
+                            責任者候補を読み込み中です。
                           </FormDescription>
                         )}
                         {hasNoSelectableUsers && (
                           <FormDescription>
-                            選択可能な社員がいません。未選択の場合はマスターが担当者になります。
+                            選択可能な社員がいません。未選択の場合はマスターが責任者になります。
                           </FormDescription>
                         )}
                         {userOptionsError && (

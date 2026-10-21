@@ -120,7 +120,7 @@ export function UserConfirmation({
               <FormGrid>
                 {!hideUsernameField && (
                   <ConfirmationItem
-                    label="社員名"
+                    label="ユーザーネーム"
                     value={displayValue(data.username)}
                     originalValue={originalValue(originalData.username, isCreateMode)}
                   />
