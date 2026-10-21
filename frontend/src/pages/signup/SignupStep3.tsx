@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useSignup, type SignupData } from '@/contexts/SignupContext';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorToastContent, parseError } from '@/lib/errors';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { participationMethodologies } from './signupStep2Model';
 
 const methodologyLabels = Object.fromEntries(
@@ -90,6 +90,32 @@ export const SignupStep3 = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const reviewData = data ?? signupData;
   const selectedMethodologies = getSelectedMethodologies(reviewData);
+
+  // AWS WAF CAPTCHA
+  const captchaContainerRef = useRef<HTMLDivElement>(null);
+  const [captchaCompleted, setCaptchaCompleted] = useState(false);
+
+  useEffect(() => {
+    const container = captchaContainerRef.current;
+
+    if (!container || !window.AwsWafCaptcha) {
+      return;
+    }
+
+    window.AwsWafCaptcha.renderCaptcha(container, {
+      apiKey: import.meta.env.VITE_AWS_WAF_CAPTCHA_API_KEY,
+
+      onSuccess: (_wafToken: string) => {
+        setCaptchaCompleted(true);
+      },
+
+      onError: () => {
+        setCaptchaCompleted(false);
+      },
+
+      defaultLocale: 'ja-JP',
+    });
+  }, []);
 
   const handleConfirm = async () => {
     if (isSubmitting) return;
@@ -204,6 +230,8 @@ export const SignupStep3 = ({
           </div>
         </FormSection>
 
+        <div ref={captchaContainerRef} className="flex justify-center" />
+
         <FormActions
           pendingActionId={isSubmitting ? 'confirm' : null}
           actions={[
@@ -218,6 +246,7 @@ export const SignupStep3 = ({
               label: confirmLabel,
               pendingLabel: '送信中...',
               onClick: handleConfirm,
+              disabled: !captchaCompleted,
             },
           ]}
         />
