@@ -25,6 +25,16 @@ vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => authState,
 }));
 
+vi.mock('@/features/admin/permissions/useAdminPermissions', () => ({
+  useAdminPermissions: () => ({
+    hasPermission: () => true,
+    guardAction: (_permission: string, action: () => void) => {
+      action();
+      return true;
+    },
+  }),
+}));
+
 vi.mock('@/hooks/admin/useAdminOperatorsQuery', () => ({
   useAdminOperatorsQuery: () => queryState,
 }));
@@ -93,16 +103,28 @@ describe('AdminOperatorListPage', () => {
     queryState.refetch.mockReset();
   });
 
-  it('does not show the signed-in account in the manageable operator list', () => {
+  it('shows the signed-in account with a 自分 badge and no permission link', () => {
     authState.user = {
-      id: operators[0].id,
-      username: operators[0].username,
-      email: operators[0].email,
+      id: operators[1].id,
+      username: operators[1].username,
+      email: operators[1].email,
     };
     renderPage();
 
-    expect(screen.queryByText(operators[0].username)).not.toBeInTheDocument();
+    expect(screen.getByText('2件')).toBeInTheDocument();
     expect(screen.getByText(operators[1].username)).toBeInTheDocument();
+    expect(screen.getByText('自分')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: '権限を設定 →' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows the admins together with the empty state when no 運用者 exists', () => {
+    queryState.data = { statusCode: 'OK', message: '', users: [operators[0]] };
+    renderPage();
+
+    expect(screen.getByText(operators[0].username)).toBeInTheDocument();
+    expect(screen.getByText('運用者がまだ登録されていません')).toBeInTheDocument();
   });
 
   it('uses immutable operator IDs for the default row order', () => {

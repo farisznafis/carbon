@@ -117,7 +117,7 @@ const MasterDashboard = () => {
             >
               {errorMessage ? (
                 <DashboardEmptyState>{errorMessage}</DashboardEmptyState>
-              ) : sortedUsers.length > 0 ? (
+              ) : (
                 <div className="space-y-3">
                   {sortedUsers.map((dashboardUser) => (
                     <UserDashboardCard
@@ -130,11 +130,14 @@ const MasterDashboard = () => {
                       }
                     />
                   ))}
+                  {/* The master account always exists, so "empty" means no employee yet. */}
+                  {sortedUsers.some((dashboardUser) => dashboardUser.role !== 'master') ? null : (
+                    <DashboardEmptyState
+                      title="まだ社員が登録されていません"
+                      description="「社員を追加」から招待すると、社員がここに表示されます。"
+                    />
+                  )}
                 </div>
-              ) : (
-                <DashboardEmptyState>
-                  まだ社員が登録されていません
-                </DashboardEmptyState>
               )}
             </DashboardSection>
           </div>

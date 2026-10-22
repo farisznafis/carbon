@@ -12,6 +12,7 @@ import { LoadingPanel } from '@/components/feedback/loading';
 import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import { AdminTableCard } from '@/components/layout/AdminTableCard';
 import { adminPageContainerClassName } from '@/components/layout/DashboardLayout';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAdminOperatorsQuery } from '@/hooks/admin/useAdminOperatorsQuery';
@@ -136,18 +137,17 @@ export default function AdminOperatorListPage() {
       user ? (findCurrentAdminOperator(operators, user)?.id ?? null) : null,
     [operators, user],
   );
-  const manageableOperators = useMemo(
-    () =>
-      operators
-        .filter((operator) => operator.id !== currentOperatorId)
-        .sort(compareOperatorStableOrder),
-    [currentOperatorId, operators],
+  const sortedOperators = useMemo(
+    () => [...operators].sort(compareOperatorStableOrder),
+    [operators],
   );
+  // Admin accounts always exist, so "empty" means no 運用者-role account yet.
+  const hasOperatorRole = operators.some((operator) => operator.role !== 'admin');
 
   const filteredOperators = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLocaleLowerCase('ja');
 
-    return manageableOperators.filter((operator) => {
+    return sortedOperators.filter((operator) => {
       if (
         !matchesOperatorPermissionFilter(operator.permissions, permissionFilter)
       ) {
@@ -165,7 +165,7 @@ export default function AdminOperatorListPage() {
 
       return searchableText.includes(normalizedSearch);
     });
-  }, [manageableOperators, permissionFilter, searchTerm]);
+  }, [sortedOperators, permissionFilter, searchTerm]);
 
   const pagination = usePagination(filteredOperators, { itemsPerPage: 10 });
   const { setCurrentPage } = pagination;
@@ -195,8 +195,11 @@ export default function AdminOperatorListPage() {
         sortable: true,
         sortValue: getOperatorDisplayName,
         render: (operator) => (
-          <span className='font-medium text-foreground'>
+          <span className='inline-flex flex-wrap items-center gap-2 font-medium text-foreground'>
             {getOperatorDisplayName(operator)}
+            {operator.id === currentOperatorId ? (
+              <Badge variant='secondary'>自分</Badge>
+            ) : null}
           </span>
         ),
       },
@@ -230,7 +233,7 @@ export default function AdminOperatorListPage() {
           <OperatorPermissionSummary
             permissions={operator.permissions}
             configureHref={
-              operator.role === 'admin'
+              operator.role === 'admin' || operator.id === currentOperatorId
                 ? undefined
                 : paths.adminOperatorPermissionEdit(operator.id)
             }
@@ -238,7 +241,7 @@ export default function AdminOperatorListPage() {
         ),
       },
     ],
-    [],
+    [currentOperatorId],
   );
 
   return (
@@ -268,7 +271,7 @@ export default function AdminOperatorListPage() {
 
         <AdminTableCard
           title="運用者一覧"
-          count={manageableOperators.length}
+          count={operators.length}
           filters={
             canReadOperators && !operatorsQuery.isLoading && !operatorsQuery.isError ? (
               <OperatorPermissionFilter
@@ -298,7 +301,7 @@ export default function AdminOperatorListPage() {
             canReadOperators &&
             !operatorsQuery.isLoading &&
             !operatorsQuery.isError &&
-            manageableOperators.length > 0 ? (
+            operators.length > 0 ? (
               <PaginationControls
                 currentPage={pagination.currentPage}
                 totalPages={pagination.totalPages}
@@ -331,19 +334,24 @@ export default function AdminOperatorListPage() {
               </p>
               <ActionButton kind="retry" onClick={() => operatorsQuery.refetch()} />
             </div>
-          ) : manageableOperators.length === 0 ? (
-            <OperatorEmptyState onAdd={handleAddOperator} />
           ) : (
-            <DataGridTable
-              rows={pagination.paginatedItems}
-              columns={columns}
-              gridTemplateColumns="1.1fr 1fr 1.6fr 0.7fr 1.2fr"
-              minWidth={1040}
-              getRowKey={(operator) => operator.id}
-              emptyMessage="条件に一致する運用者はいません。"
-              onRowClick={handleViewProfile}
-              getRowActionLabel={() => 'プロファイル'}
-            />
+            <>
+              {operators.length > 0 ? (
+                <DataGridTable
+                  rows={pagination.paginatedItems}
+                  columns={columns}
+                  gridTemplateColumns="1.1fr 1fr 1.6fr 0.7fr 1.2fr"
+                  minWidth={1040}
+                  getRowKey={(operator) => operator.id}
+                  emptyMessage="条件に一致する運用者はいません。"
+                  onRowClick={handleViewProfile}
+                  getRowActionLabel={() => 'プロファイル'}
+                />
+              ) : null}
+              {hasOperatorRole ? null : (
+                <OperatorEmptyState onAdd={handleAddOperator} />
+              )}
+            </>
           )}
         </AdminTableCard>
       </div>
