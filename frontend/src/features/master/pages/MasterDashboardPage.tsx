@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   DashboardEmptyState,
   DashboardSection,
+  NoSiteEmptyState,
   SiteDashboardCard,
   UserDashboardCard,
 } from '@/features/master/components/MasterDashboardComponents';
@@ -19,7 +20,6 @@ import { useNotificationStore } from '@/stores/notificationStore';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { PageLoadingOverlay } from '@/components/feedback/loading';
 import { UserInvitationDialog } from '@/features/master/user-invitations/UserInvitationDialog';
-import { ActionButton } from '@/components/actions';
 import { MasterHomeSection } from '@/features/master/home/MasterHomeSection';
 import { MasterAnalyticsSection } from '@/features/master/analytics/MasterAnalyticsSection';
 
@@ -100,10 +100,7 @@ const MasterDashboard = () => {
           ) : (
             <section className="space-y-5">
               <h2 className="text-foreground">入会</h2>
-              <DashboardEmptyState
-                title="まだ拠点が登録されていません"
-                description="拠点登録後に利用できます。"
-              />
+              <NoSiteEmptyState description="プロジェクトに入会するには、対象となる拠点の登録が必要です。まず拠点を登録してください。" />
             </section>
           )
         )}
@@ -167,18 +164,7 @@ const MasterDashboard = () => {
                   ))}
                 </div>
               ) : (
-                <DashboardEmptyState
-                  title="まだ拠点が登録されていません"
-                  description="プロジェクトに入会するには、対象となる拠点の登録が必要です。まず拠点を登録してください。"
-                  action={
-                    <ActionButton
-                      kind="add"
-                      onClick={() => navigate(paths.masterSiteRegister)}
-                    >
-                      拠点を追加
-                    </ActionButton>
-                  }
-                />
+                <NoSiteEmptyState description="プロジェクトに入会するには、対象となる拠点の登録が必要です。まず拠点を登録してください。" />
               )}
             </DashboardSection>
           </div>

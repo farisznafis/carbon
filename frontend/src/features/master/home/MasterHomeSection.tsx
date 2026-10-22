@@ -36,6 +36,7 @@ import { cn } from '@/lib/utils';
 import { paths } from '@/routes/paths';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { MasterStatCard } from '@/features/master/shared/MasterStatCard';
+import { NoSiteEmptyState } from '@/features/master/components/MasterDashboardComponents';
 import {
   formatChange,
   formatTons,
@@ -402,6 +403,15 @@ export function MasterHomeSection() {
             ? home.error.message
             : 'ダッシュボードデータの取得に失敗しました'}
         </div>
+      </div>
+    );
+  }
+
+  if (!home.isBaseLoading && home.siteCount === 0) {
+    return (
+      <div className='space-y-section'>
+        {header}
+        <NoSiteEmptyState description='拠点を登録してプロジェクトに入会すると、排出量やモニタリングの状況をここで確認できます。' />
       </div>
     );
   }

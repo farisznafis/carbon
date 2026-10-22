@@ -19,6 +19,7 @@ import type {
   EmissionRow,
   RankingRow,
 } from './masterAnalyticsModel';
+import { NoSiteEmptyState } from '@/features/master/components/MasterDashboardComponents';
 import { useMasterAnalyticsData } from './useMasterAnalyticsData';
 
 const PERIOD_OPTIONS: { value: AnalyticsPeriod; label: string }[] = [
@@ -268,6 +269,16 @@ export function MasterAnalyticsSection() {
         <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center text-small text-destructive-strong">
           {data.error instanceof Error ? data.error.message : 'データの取得に失敗しました'}
         </div>
+      </div>
+    );
+  }
+
+  // 拠点がなければ分析軸・期間を選んでも何も表示できないため、操作部品ごと隠す
+  if (!data.isBaseLoading && !data.hasSites) {
+    return (
+      <div className="space-y-section">
+        {header}
+        <NoSiteEmptyState description="拠点を登録してプロジェクトに入会すると、排出量の推移や提出状況を分析できます。" />
       </div>
     );
   }

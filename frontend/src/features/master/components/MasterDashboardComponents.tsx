@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Site } from '@/api/site';
 import type { UserList } from '@/api/users';
 import { RowActionButton } from '@/components/data-display/RowActionButton';
@@ -15,6 +16,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Building2, Mail, User } from 'lucide-react';
 import { ActionButton } from '@/components/actions';
+import { paths } from '@/routes/paths';
 
 /** Renders one dashboard section with shared heading and action spacing. */
 export function DashboardSection({
@@ -89,6 +91,22 @@ export function DashboardEmptyState({
       )}
       {action && <div className="mt-5">{action}</div>}
     </div>
+  );
+}
+
+/** 拠点未登録時の共通の空表示。どのタブからでも同じ見出しと「拠点を追加」で拠点登録へ誘導する。 */
+export function NoSiteEmptyState({ description }: { description: string }) {
+  const navigate = useNavigate();
+  return (
+    <DashboardEmptyState
+      title="まだ拠点が登録されていません"
+      description={description}
+      action={
+        <ActionButton kind="add" onClick={() => navigate(paths.masterSiteRegister)}>
+          拠点を追加
+        </ActionButton>
+      }
+    />
   );
 }
 

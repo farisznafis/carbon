@@ -176,6 +176,7 @@ export function useMasterAnalyticsData({
     ...selection,
     ...calendar,
     hasTargets: targets.length > 0,
+    hasSites: base.sites.length > 0,
     isBaseLoading: base.isPending,
     isEmissionLoading: base.isPending || reductions.isPending,
     isRecordsLoading: base.isPending || reductions.isPending || records.isPending,

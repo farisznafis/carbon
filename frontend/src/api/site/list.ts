@@ -42,6 +42,10 @@ export const getSites = async (companyId?: string): Promise<{ sites: Site[] }> =
   const { data: json, rawBody } = await parseJsonResponse<SitesResponse>(response);
 
   if (!response.ok) {
+    // 拠点が1件もない会社では API が 404 を返すため、エラーではなく空の一覧として扱う
+    if (response.status === 404) {
+      return { sites: [] };
+    }
     throw new Error(json?.message || rawBody || `Failed to fetch sites: HTTP ${response.status}`);
   }
 
