@@ -8,6 +8,8 @@ import { GUIDE_CONTENT, type GuideContext, type GuideStep } from './guideSteps';
 /** How long to wait for a page's tour targets to render before giving up. */
 const TARGET_WAIT_MS = 3000;
 const TARGET_POLL_MS = 100;
+/** How long the found targets must stay unchanged before the tour starts. */
+const TARGET_STABLE_MS = 400;
 /** Space between the highlighted element and the spotlight edge. */
 const SPOTLIGHT_PADDING = 6;
 /** Targets taller than this share of the viewport are tall sections. */
@@ -67,15 +69,30 @@ function revealTarget(element: HTMLElement) {
   });
 }
 
-/** Resolves once the first step can be shown, then keeps only steps whose targets exist. */
+/**
+ * Resolves once the page has rendered: the first step's target exists and the found targets
+ * stop changing, so shared targets (sidebar, header) do not start the tour while content loads.
+ * Steps whose targets never appear (role-dependent buttons) are dropped.
+ */
 function useAvailableSteps(steps: readonly GuideStep[]) {
   const [available, setAvailable] = useState<GuideStep[] | null>(null);
 
   useEffect(() => {
     const startedAt = Date.now();
+    let lastKey = '';
+    let stableSince = startedAt;
     const timer = window.setInterval(() => {
+      const now = Date.now();
       const found = steps.filter((step) => findTarget(step.target));
-      if (found.length > 0 || Date.now() - startedAt > TARGET_WAIT_MS) {
+      const key = found.map((step) => step.target).join('|');
+      if (key !== lastKey) {
+        lastKey = key;
+        stableSince = now;
+      }
+      const pageReady =
+        found[0] === steps[0] &&
+        (found.length === steps.length || now - stableSince >= TARGET_STABLE_MS);
+      if (pageReady || now - startedAt > TARGET_WAIT_MS) {
         window.clearInterval(timer);
         setAvailable(found);
       }

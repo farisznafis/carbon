@@ -86,6 +86,34 @@ describe('GuideTour', () => {
     expect(screen.getByRole('button', { name: '次へ' })).toBeInTheDocument();
   });
 
+  it('waits for the page content instead of starting on the shared help menu', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const tour = <GuideTour context="project-detail" onClose={vi.fn()} />;
+    const { rerender } = render(
+      <>
+        <span data-tour="help-menu">ヘルプ</span>
+        {tour}
+      </>,
+    );
+
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    rerender(
+      <>
+        <span data-tour="help-menu">ヘルプ</span>
+        <span data-tour="project-header">情報</span>
+        <span data-tour="project-monitoring">登録</span>
+        <span data-tour="project-tabs">タブ</span>
+        <span data-tour="project-emissions">排出量</span>
+        {tour}
+      </>,
+    );
+    await vi.advanceTimersByTimeAsync(200);
+    expect(await screen.findByRole('dialog', { name: 'プロジェクト情報' })).toHaveTextContent('1 / 5');
+    vi.useRealTimers();
+  });
+
   it('closes itself when none of its targets exist', async () => {
     const onClose = vi.fn();
     vi.useFakeTimers({ shouldAdvanceTime: true });
