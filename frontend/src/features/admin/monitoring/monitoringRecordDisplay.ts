@@ -26,8 +26,8 @@ export function formatMonitoringDate(value: string | null | undefined): string {
 
   return new Intl.DateTimeFormat('ja-JP', {
     year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+    month: 'long',
+    day: 'numeric',
   }).format(date);
 }
 
@@ -41,8 +41,8 @@ export function formatMonitoringDateTime(
 
   return new Intl.DateTimeFormat('ja-JP', {
     year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+    month: 'long',
+    day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
   }).format(date);

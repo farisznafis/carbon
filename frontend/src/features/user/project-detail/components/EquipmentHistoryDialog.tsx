@@ -35,8 +35,8 @@ function formatDate(value: string | null) {
 
   return new Intl.DateTimeFormat('ja-JP', {
     year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+    month: 'long',
+    day: 'numeric',
   }).format(date);
 }
 
@@ -47,8 +47,8 @@ function formatDateTime(value: string | null) {
 
   return new Intl.DateTimeFormat('ja-JP', {
     year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+    month: 'long',
+    day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,

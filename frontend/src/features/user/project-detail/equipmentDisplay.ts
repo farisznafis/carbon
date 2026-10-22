@@ -100,8 +100,8 @@ function formatDate(value: string) {
 
   return new Intl.DateTimeFormat('ja-JP', {
     year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+    month: 'long',
+    day: 'numeric',
   }).format(date);
 }
 

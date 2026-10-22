@@ -5,7 +5,7 @@ export function formatBatchHistoryDateTime(value: string | null) {
   if (Number.isNaN(date.getTime())) return value;
 
   return new Intl.DateTimeFormat('ja-JP', {
-    dateStyle: 'medium',
+    dateStyle: 'long',
     timeStyle: 'short',
     timeZone: 'UTC',
   }).format(date);

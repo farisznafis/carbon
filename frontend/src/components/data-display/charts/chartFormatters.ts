@@ -8,7 +8,7 @@ export function formatChartPeriod(period: string) {
   if (!dateParts) return period;
 
   const [, year, month, day] = dateParts;
-  return day ? `${year}年${month}月${day}日` : `${year}年${month}月`;
+  return day ? `${year}年${Number(month)}月${Number(day)}日` : `${year}年${Number(month)}月`;
 }
 
 /** Formats an emission amount with up to three fraction digits. */

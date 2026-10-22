@@ -16,8 +16,8 @@ export function useProjectPlanFiles(projectId: string) {
 
 const dateTimeFormat = new Intl.DateTimeFormat('ja-JP', {
   year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
+  month: 'long',
+  day: 'numeric',
   hour: '2-digit',
   minute: '2-digit',
 });

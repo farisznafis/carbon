@@ -75,12 +75,12 @@ function formatNumber(value?: string | number | null) {
 
 function formatProjectDate(project: SiteProject) {
   const value = project.updatedAt || project.createdAt;
-  if (!value) return '2026/01/01';
+  if (!value) return '-';
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
 
-  return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
 function getMethodologyLabel(project: SiteProject) {

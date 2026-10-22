@@ -7,6 +7,7 @@ import {
   type DataGridTableColumn,
 } from '@/components/data-display/DataGridTable';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
+import { formatChartPeriod } from '@/components/data-display/charts';
 import {
   ActionRequiredPanel,
   type ActionRequiredItem,
@@ -61,15 +62,15 @@ const formatMonth = (month: string) =>
 
 const formatJstDate = (value: string | null) => {
   if (!value) return '—';
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value.replace(/-/g, '/');
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return formatChartPeriod(value);
   const date = new Date(value);
   return Number.isNaN(date.getTime())
     ? value
     : new Intl.DateTimeFormat('ja-JP', {
         timeZone: 'Asia/Tokyo',
         year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
+        month: 'long',
+        day: 'numeric',
       }).format(date);
 };
 

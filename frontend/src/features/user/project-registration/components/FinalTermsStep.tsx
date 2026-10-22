@@ -36,22 +36,17 @@ interface FinalTermsStepProps {
   errors?: Record<string, string>;
 }
 
-/** Formats the project terms start timestamp as a zero-padded Japanese date in JST. */
+/** Formats the project terms start timestamp as a Japanese date (2026年10月4日) in JST. */
 function formatMemberTermsStartedAt(startedAt: string): string {
   const date = new Date(startedAt);
   if (Number.isNaN(date.getTime())) return '';
 
-  const dateParts = new Intl.DateTimeFormat('ja-JP', {
+  return new Intl.DateTimeFormat('ja-JP', {
     timeZone: 'Asia/Tokyo',
     year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(date);
-  const valueByType = Object.fromEntries(
-    dateParts.map(({ type, value }) => [type, value]),
-  );
-
-  return `${valueByType.year}年${valueByType.month}月${valueByType.day}日`;
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
 }
 
 export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({

@@ -108,14 +108,14 @@ describe('ProjectMonitoringDataTab', () => {
     });
     renderTab();
 
-    await user.click(await screen.findByRole('button', { name: '2026年09月30日のモニタリングデータの詳細を開く' }));
-    const panel = await screen.findByRole('dialog', { name: '2026年09月30日 のモニタリングデータ' });
+    await user.click(await screen.findByRole('button', { name: '2026年9月30日のモニタリングデータの詳細を開く' }));
+    const panel = await screen.findByRole('dialog', { name: '2026年9月30日 のモニタリングデータ' });
 
     expect(within(panel).getByText('15.5 kWh')).toBeInTheDocument();
     expect(within(panel).getByText('24 時間')).toBeInTheDocument();
     expect(within(panel).getByText('98 %')).toBeInTheDocument();
     // Nanosecond timestamps from the API still format.
-    expect(within(panel).getByText(/2026年08月07日 \d{2}:\d{2}/)).toBeInTheDocument();
+    expect(within(panel).getByText(/2026年8月7日 \d{2}:\d{2}/)).toBeInTheDocument();
     expect(within(panel).getByText('未集計')).toBeInTheDocument();
     expect(within(panel).getByRole('button', { name: '取消申請' })).toBeInTheDocument();
   });

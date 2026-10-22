@@ -4,19 +4,14 @@ export function formatNotificationDate(value: string | null): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
 
-  const parts = new Intl.DateTimeFormat('ja-JP', {
+  return new Intl.DateTimeFormat('ja-JP', {
     year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+    month: 'long',
+    day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
-  }).formatToParts(date);
-  const valueByType = Object.fromEntries(
-    parts.map((part) => [part.type, part.value]),
-  );
-
-  return `${valueByType.year}年${valueByType.month}月${valueByType.day}日 ${valueByType.hour}:${valueByType.minute}`;
+  }).format(date);
 }
 
 /** 10分前 / 2時間前 / 昨日 / n日前, then the full date after a week. */

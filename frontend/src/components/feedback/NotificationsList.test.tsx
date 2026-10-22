@@ -43,7 +43,7 @@ describe('NotificationsList', () => {
       screen.queryByRole('button', { name: '既読にする' }),
     ).not.toBeInTheDocument();
     // Rows show relative time; the exact timestamp stays on hover and in the dialog.
-    expect(screen.getByTitle('2026年07月29日 10:30')).toHaveTextContent('2026年07月29日');
+    expect(screen.getByTitle('2026年7月29日 10:30')).toHaveTextContent('2026年7月29日');
     expect(
       screen.getByRole('button', {
         name: '「プロジェクト申請が承認されました」の詳細を表示',
@@ -99,7 +99,7 @@ describe('NotificationsList', () => {
       ),
     ).toBeInTheDocument();
     expect(
-      within(screen.getByRole('dialog')).getByText('2026年07月29日 10:30'),
+      within(screen.getByRole('dialog')).getByText('2026年7月29日 10:30'),
     ).toBeInTheDocument();
 
     await user.keyboard('{Escape}');

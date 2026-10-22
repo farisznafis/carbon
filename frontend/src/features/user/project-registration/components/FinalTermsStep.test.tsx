@@ -36,7 +36,7 @@ describe('FinalTermsStep', () => {
     expect(screen.getByText(/株式会社ABC・山田太郎が実施する/)).toBeVisible();
     expect(screen.getByText(/「地域の太陽光発電設備を集約する事業」/)).toBeVisible();
     expect(screen.getAllByText(/地域脱炭素施策/).length).toBeGreaterThan(0);
-    expect(screen.getByText('本規約は、2026年09月03日から施行する。')).toBeVisible();
+    expect(screen.getByText('本規約は、2026年9月3日から施行する。')).toBeVisible();
     expect(document.body).not.toHaveTextContent('プログラム型運営・管理者名');
     expect(document.body).not.toHaveTextContent('「プロジェクト概要」');
     expect(document.body).not.toHaveTextContent('YYYY年MM月DD');
