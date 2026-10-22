@@ -63,6 +63,7 @@ export type SiteDashboardApiData = SiteDashboardMetrics & {
   municipality?: string | null;
   blocknum?: string | null;
   buildingName?: string | null;
+  picUserId?: string | null;
   picFirstName?: string | null;
   picLastName?: string | null;
   projects?: string[] | null;
@@ -89,6 +90,8 @@ export type SiteDashboardApiResponse = {
     blocknum?: string | null;
     address?: string | null;
     buildingName?: string | null;
+    /** Public user ID (USR-…) of the current PIC; null when the site has none. */
+    picUserId?: string | null;
     picFirstName?: string | null;
     picLastName?: string | null;
     projects?: string[] | null;
@@ -511,6 +514,8 @@ export interface SiteListItem {
   blockName?: string;
   address?: string;
   buildingName?: string;
+  /** Public user ID (USR-…) of the current PIC; null when the site has none. */
+  picUserId?: string | null;
   picFirstName?: string;
   picLastName?: string;
   projects?: string[];

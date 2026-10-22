@@ -14,7 +14,7 @@ type UpdateSiteResponse = {
   statusCode?: string;
   message?: string | null;
   errors?: unknown;
-  site?: Site;
+  site?: Partial<Site> & { picUserId?: string | null };
 };
 
 export async function validateCreateSite(formData: SiteFormData): Promise<void> {
@@ -82,7 +82,7 @@ export async function updateSite(
   siteId: string,
   formData: SiteFormData,
   picuserId: string | null = null,
-): Promise<{ statusCode: string; site?: Site }> {
+): Promise<{ statusCode: string; site?: UpdateSiteResponse['site'] }> {
   const payload = mapUpdateSitePayload(formData, picuserId);
 
   const response = await apiFetch(`/site/${encodeURIComponent(siteId)}`, {

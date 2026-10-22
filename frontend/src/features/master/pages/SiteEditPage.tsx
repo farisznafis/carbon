@@ -18,18 +18,24 @@ import {
   FormStandalonePage,
 } from '@/components/forms/form-layout';
 
+/** Mirrors the backend rule: a site's PIC is the master, an unassigned user, or a user of this site. */
+const canBeSitePic = (user: UserList, siteId: string) =>
+  user.role !== 'admin' &&
+  (user.role === 'master' || !user.siteId || user.siteId === siteId);
+
 const resolveSiteAssigneeId = (site: Site, users: UserList[] = []) => {
   if (site.picId) return site.picId;
 
-  const siteAssignee = users.find(
+  // Fallback for sites without picUserId: names are not unique, so only accept one clear match.
+  const candidates = users.filter(
     (user) =>
-      user.role !== 'admin' &&
-      (user.siteId === site.siteId || user.role === 'master') &&
+      canBeSitePic(user, site.siteId) &&
       user.firstName === site.picFirstName &&
-      user.lastName === site.picLastName,
+      user.lastName === site.picLastName &&
+      (!site.picEmail || user.email === site.picEmail),
   );
 
-  return siteAssignee?.id ?? '';
+  return candidates.length === 1 ? candidates[0].id : '';
 };
 
 const mapSiteToFormData = (
@@ -106,9 +112,7 @@ function SiteEdit() {
       users.filter(
         (user) =>
           user.role !== 'admin' &&
-          (user.role === 'master' ||
-            user.siteId === siteId ||
-            user.id === formData?.userId),
+          ((siteId && canBeSitePic(user, siteId)) || user.id === formData?.userId),
       ),
     [users, siteId, formData?.userId],
   );
@@ -173,7 +177,11 @@ function SiteEdit() {
         blockName: formData.blockName,
         addressDetail: formData.addressDetail,
         buildingName: formData.addressDetail,
-        picId: formData.userId ?? initialSite.picId,
+        // The response is the source of truth; null there means the site has no PIC.
+        picId:
+          result.site?.picUserId !== undefined
+            ? (result.site.picUserId ?? '')
+            : (formData.userId ?? initialSite.picId),
         picFirstName: selectedUser?.firstName ?? initialSite.picFirstName,
         picLastName: selectedUser?.lastName ?? initialSite.picLastName,
         picEmail: selectedUser?.email ?? initialSite.picEmail,
@@ -232,7 +240,7 @@ function SiteEdit() {
               userOptionsError={
                 usersQuery.isError ? '責任者候補を取得できませんでした' : null
               }
-              userOptionsHelperText="この拠点に紐づいている社員のみ表示されます。"
+              userOptionsHelperText="マスター、拠点未所属の社員、この拠点の社員が表示されます。"
               embedded
             />
           </FormPageContent>

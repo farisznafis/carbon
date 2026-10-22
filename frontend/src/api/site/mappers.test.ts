@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapSiteListItem } from './mappers';
+import { mapSiteDashboard, mapSiteListItem } from './mappers';
 import type { SiteListItem } from './types';
 
 describe('mapSiteListItem', () => {
@@ -20,5 +20,22 @@ describe('mapSiteListItem', () => {
     } as SiteListItem);
 
     expect(site.siteId).toBe('12');
+  });
+
+  it('maps picUserId to picId and keeps it empty when null', () => {
+    expect(
+      mapSiteListItem({ siteId: 'SITE-1', siteName: '東京拠点', picUserId: 'USR-1' }).picId,
+    ).toBe('USR-1');
+    expect(
+      mapSiteListItem({ siteId: 'SITE-1', siteName: '東京拠点', picUserId: null }).picId,
+    ).toBe('');
+  });
+});
+
+describe('mapSiteDashboard', () => {
+  it('maps picUserId to picId', () => {
+    expect(
+      mapSiteDashboard({ siteId: 'SITE-1', siteName: '東京拠点', picUserId: 'USR-1' }).picId,
+    ).toBe('USR-1');
   });
 });

@@ -119,6 +119,7 @@ export const updateUser = async (
       ? [
           {
             ...currSite,
+            picId: updatedUser.id,
             picFirstName: updatedUser.firstName,
             picLastName: updatedUser.lastName,
             picPosition: updatedUser.position,
@@ -127,6 +128,7 @@ export const updateUser = async (
           },
           {
             ...prevSite,
+            picId: masterUser.id,
             picFirstName: masterUser.firstName,
             picLastName: masterUser.lastName,
             picPosition: masterUser.position,
