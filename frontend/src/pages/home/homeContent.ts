@@ -28,14 +28,6 @@ export type HomeFaqItem = Readonly<{
   answer: string;
 }>;
 
-type HomeContactDetails = Readonly<{
-  postalCode: string;
-  address: string;
-  email: string;
-  phoneDisplay: string;
-  phoneHref: string;
-}>;
-
 export const HOME_SECTION_IDS = {
   features: 'features',
   flow: 'flow',
@@ -169,20 +161,3 @@ export const HOME_FAQ_ITEMS: readonly HomeFaqItem[] = [
       '証憑は対象の設備や申請に紐づけて管理され、確認画面や履歴から必要な情報を参照できます。',
   },
 ];
-
-/* =========================================================
-   CONTACT / LEGAL
-   ========================================================= */
-
-export const HOME_CONTACT_DETAILS: HomeContactDetails = {
-  postalCode: '〒100-0005',
-  address: '東京都千代田区丸の内1-1-1',
-  email: 'info@company.com',
-  phoneDisplay: '+81 70-1234-5678',
-  phoneHref: '+817012345678',
-};
-
-export const HOME_LEGAL_LABELS = [
-  '利用規約',
-  'プライバシーポリシー',
-] as const;

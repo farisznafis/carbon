@@ -1,9 +1,6 @@
-import { Mail, MapPin, Phone } from 'lucide-react';
-import {
-  HOME_CONTACT_DETAILS,
-  HOME_LEGAL_LABELS,
-  HOME_SECTION_IDS,
-} from './homeContent';
+import { Link } from 'react-router-dom';
+import { paths } from '@/routes/paths';
+import { HOME_SECTION_IDS } from './homeContent';
 
 const HOME_NAVIGATION_LINKS = [
   { label: 'ご利用の流れ', href: `#${HOME_SECTION_IDS.flow}` },
@@ -12,7 +9,8 @@ const HOME_NAVIGATION_LINKS = [
   { label: 'よくある質問', href: `#${HOME_SECTION_IDS.faq}` },
 ] as const;
 
-/** Renders the homepage footer with navigation, contact, and legal information. */
+// shortcut: company info, 利用規約 and プライバシーポリシー are left out until the real content and pages exist.
+/** Renders the homepage footer with navigation and the contact form link. */
 export function HomeFooter() {
   const currentYear = new Date().getFullYear();
 
@@ -57,48 +55,24 @@ export function HomeFooter() {
             </ul>
           </nav>
 
-          <address className="space-y-4 not-italic md:col-span-2 lg:col-span-1">
-            <p className="font-bold text-foreground">接触</p>
-            <ul className="space-y-3 text-sm text-foreground">
-              <li className="flex items-start gap-3">
-                <MapPin
-                  className="mt-0.5 h-5 w-5 shrink-0"
-                  aria-hidden="true"
-                />
-                <span>
-                  <span className="block">{HOME_CONTACT_DETAILS.postalCode}</span>
-                  <span className="block">{HOME_CONTACT_DETAILS.address}</span>
-                </span>
-              </li>
-              <li>
-                <a
-                  href={`mailto:${HOME_CONTACT_DETAILS.email}`}
-                  className="flex w-fit items-center gap-3 transition-colors hover:text-primary-strong [@media(pointer:coarse)]:min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <Mail className="h-5 w-5 shrink-0" aria-hidden="true" />
-                  {HOME_CONTACT_DETAILS.email}
-                </a>
-              </li>
-              <li>
-                <a
-                  href={`tel:${HOME_CONTACT_DETAILS.phoneHref}`}
-                  className="flex w-fit items-center gap-3 transition-colors hover:text-primary-strong [@media(pointer:coarse)]:min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <Phone className="h-5 w-5 shrink-0" aria-hidden="true" />
-                  {HOME_CONTACT_DETAILS.phoneDisplay}
-                </a>
-              </li>
-            </ul>
-          </address>
+          <div className="space-y-4 md:col-span-2 lg:col-span-1">
+            <p className="font-bold text-foreground">お問い合わせ</p>
+            <p className="text-sm leading-6 text-muted-foreground">
+              サービスに関するご質問や導入のご相談は、
+              <br className="hidden lg:block" />
+              お問い合わせフォームからご連絡ください。
+            </p>
+            <Link
+              to={paths.contact}
+              className="inline-flex text-sm font-medium text-primary-strong transition-colors hover:underline [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              お問い合わせフォーム →
+            </Link>
+          </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-4 border-t border-border pt-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-10 border-t border-border pt-6 text-sm text-muted-foreground">
           <p>© {currentYear} GX Project. All rights reserved.</p>
-          <div className="flex flex-wrap gap-x-6 gap-y-2">
-            {HOME_LEGAL_LABELS.map((label) => (
-              <span key={label}>{label}</span>
-            ))}
-          </div>
         </div>
       </div>
     </footer>

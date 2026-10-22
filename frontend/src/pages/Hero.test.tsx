@@ -44,19 +44,12 @@ describe('Hero', () => {
     ).toHaveAttribute('src', '/assets/hero/dashboard-preview.mp4');
     expect(screen.queryByText(/お問い合わせ（準備中）/)).not.toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'お問い合わせ' })).toHaveLength(2);
-    expect(screen.getByText('接触')).toBeVisible();
-    expect(screen.getByText('〒100-0005')).toBeVisible();
-    expect(screen.getByText('東京都千代田区丸の内1-1-1')).toBeVisible();
-    expect(screen.getByRole('link', { name: 'info@company.com' })).toHaveAttribute(
+    expect(screen.queryByText('接触')).not.toBeInTheDocument();
+    expect(screen.queryByText('info@company.com')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'お問い合わせフォーム →' })).toHaveAttribute(
       'href',
-      'mailto:info@company.com',
+      '/contact',
     );
-    expect(screen.getByRole('link', { name: '+81 70-1234-5678' })).toHaveAttribute(
-      'href',
-      'tel:+817012345678',
-    );
-    expect(screen.getByText('利用規約')).toBeVisible();
-    expect(screen.getByText('プライバシーポリシー')).toBeVisible();
   });
 
   it.each(['無料で始める', '今すぐ登録する'])(
