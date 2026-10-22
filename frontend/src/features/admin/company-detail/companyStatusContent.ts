@@ -69,7 +69,35 @@ export const COMPANY_STATUS_CONTENT: Record<
   },
 };
 
-export type CompanyStatusFilter = 'all' | CompanyStatus;
+/** 企業一覧の区分。ホームの「参加企業」「企業申請」カードの件数と同じステータスの組み合わせ。 */
+export type CompanyStatusGroup = 'participating' | 'applications';
+
+export const COMPANY_STATUS_GROUPS: CompanyStatusGroup[] = ['participating', 'applications'];
+
+export const COMPANY_STATUS_GROUP_CONTENT: Record<
+  CompanyStatusGroup,
+  {
+    label: string;
+    statuses: CompanyStatus[];
+    description: string;
+    emptyMessage: string;
+  }
+> = {
+  participating: {
+    label: '参加企業',
+    statuses: COMPANY_PARTICIPATING_STATUSES,
+    description: '承認済み・利用停止中の参加企業を表示しています。',
+    emptyMessage: '参加企業はありません。',
+  },
+  applications: {
+    label: '企業申請',
+    statuses: COMPANY_APPLICATION_STATUSES,
+    description: '申請受付・アカウント設定待ち・却下の企業申請を表示しています。',
+    emptyMessage: '企業申請はありません。',
+  },
+};
+
+export type CompanyStatusFilter = 'all' | CompanyStatusGroup | CompanyStatus;
 
 export const ALL_COMPANIES_CONTENT = {
   label: 'すべて',
@@ -77,11 +105,56 @@ export const ALL_COMPANIES_CONTENT = {
   emptyMessage: '企業はありません。',
 } as const;
 
+function isCompanyStatusGroup(value: string | null): value is CompanyStatusGroup {
+  return COMPANY_STATUS_GROUPS.includes(value as CompanyStatusGroup);
+}
+
+/** フィルター値が属する区分。ステータス単体の場合はその所属区分、すべての場合は 'all'。 */
+export function getCompanyStatusGroup(filter: CompanyStatusFilter): CompanyStatusGroup | 'all' {
+  if (filter === 'all' || isCompanyStatusGroup(filter)) return filter;
+  return COMPANY_APPLICATION_STATUSES.includes(filter) ? 'applications' : 'participating';
+}
+
+/** フィルター値に対応し、かつ閲覧者が参照できるステータスの一覧（表示順）。 */
+export function getCompanyFilterStatuses(
+  filter: CompanyStatusFilter,
+  visibleStatuses: readonly CompanyStatus[],
+): CompanyStatus[] {
+  if (filter === 'all') return [...visibleStatuses];
+  if (isCompanyStatusGroup(filter)) {
+    return visibleStatuses.filter((status) =>
+      COMPANY_STATUS_GROUP_CONTENT[filter].statuses.includes(status),
+    );
+  }
+  return [filter];
+}
+
+/** 閲覧者が両方の区分を参照できる場合のみ、区分での絞り込みに意味がある。 */
+export function getVisibleCompanyStatusGroups(
+  visibleStatuses: readonly CompanyStatus[],
+): CompanyStatusGroup[] {
+  const groups = COMPANY_STATUS_GROUPS.filter(
+    (group) => getCompanyFilterStatuses(group, visibleStatuses).length > 0,
+  );
+  return groups.length > 1 ? groups : [];
+}
+
+/** 一覧の説明文・空表示の文言。 */
+export function getCompanyFilterContent(filter: CompanyStatusFilter) {
+  if (filter === 'all') return ALL_COMPANIES_CONTENT;
+  if (isCompanyStatusGroup(filter)) return COMPANY_STATUS_GROUP_CONTENT[filter];
+  return COMPANY_STATUS_CONTENT[filter];
+}
+
 /** Resolves a status query value to one the viewer may see, defaulting to すべて. */
 export function resolveCompanyStatusFilter(
   value: string | null,
   visibleStatuses: readonly CompanyStatus[],
 ): CompanyStatusFilter {
+  if (isCompanyStatusGroup(value)) {
+    // 片方の区分しか参照できない閲覧者には、区分の絞り込みは「すべて」と同じ
+    return getVisibleCompanyStatusGroups(visibleStatuses).includes(value) ? value : 'all';
+  }
   return visibleStatuses.includes(value as CompanyStatus)
     ? (value as CompanyStatus)
     : 'all';

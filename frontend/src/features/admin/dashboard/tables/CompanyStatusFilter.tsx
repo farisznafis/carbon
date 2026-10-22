@@ -15,6 +15,10 @@ import {
 import {
   ALL_COMPANIES_CONTENT,
   COMPANY_STATUS_CONTENT,
+  COMPANY_STATUS_GROUP_CONTENT,
+  getCompanyFilterStatuses,
+  getCompanyStatusGroup,
+  getVisibleCompanyStatusGroups,
   type CompanyStatusFilter as CompanyStatusFilterValue,
 } from '@/features/admin/company-detail/companyStatusContent';
 
@@ -39,40 +43,42 @@ function getStatusCount(
   counts: Partial<Record<CompanyStatus, number>> | null,
 ) {
   if (!counts) return null;
-  if (status === 'all') {
-    return statuses.reduce((total, item) => total + (counts[item] ?? 0), 0);
-  }
-  return counts[status] ?? 0;
+  return getCompanyFilterStatuses(status, statuses).reduce(
+    (total, item) => total + (counts[item] ?? 0),
+    0,
+  );
 }
 
+type FilterControlProps = Readonly<{
+  label: string;
+  ariaLabel: string;
+  options: readonly FilterOption[];
+  statuses: readonly CompanyStatus[];
+  counts: Partial<Record<CompanyStatus, number>> | null;
+  activeValue: CompanyStatusFilterValue;
+  onChange: (value: CompanyStatusFilterValue) => void;
+}>;
+
 /**
- * Company status filter, in the same tones as the status badges.
- *
- * Desktop: segmented controls with status counts.
+ * Desktop: segmented controls with counts.
  * Tablet/mobile: select control to avoid horizontal overflow.
  */
-export function CompanyStatusFilter({
+function FilterControl({
+  label,
+  ariaLabel,
+  options,
   statuses,
   counts,
-  activeStatus,
-  onStatusChange,
-}: CompanyStatusFilterProps) {
-  const options: FilterOption[] = [
-    { value: 'all', label: ALL_COMPANIES_CONTENT.label, tone: 'neutral' },
-    ...statuses.map((status) => ({
-      value: status,
-      label: COMPANY_STATUS_CONTENT[status].label,
-      tone: COMPANY_STATUS_CONTENT[status].tone,
-    })),
-  ];
-
+  activeValue,
+  onChange,
+}: FilterControlProps) {
   return (
-    <div className="shrink-0">
+    <>
       {/* Desktop */}
       <div className="hidden items-center gap-2 lg:flex">
-        <span className="text-small text-muted-foreground">ステータス</span>
+        <span className="text-small text-muted-foreground">{label}</span>
 
-        <SegmentGroup aria-label="企業ステータスで絞り込む">
+        <SegmentGroup aria-label={ariaLabel}>
           {options.map((option) => {
             const count = getStatusCount(option.value, statuses, counts);
 
@@ -80,11 +86,11 @@ export function CompanyStatusFilter({
               <SegmentButton
                 key={option.value}
                 tone={option.tone}
-                active={activeStatus === option.value}
+                active={activeValue === option.value}
                 aria-label={
                   count === null ? option.label : `${option.label} ${count}件`
                 }
-                onClick={() => onStatusChange(option.value)}
+                onClick={() => onChange(option.value)}
               >
                 <span>{option.label}</span>
                 {count !== null && (
@@ -101,16 +107,14 @@ export function CompanyStatusFilter({
       {/* Tablet / mobile */}
       <div className="flex items-center gap-2 lg:hidden">
         <span className="shrink-0 text-small text-muted-foreground">
-          ステータス
+          {label}
         </span>
 
         <Select
-          value={activeStatus}
-          onValueChange={(value) =>
-            onStatusChange(value as CompanyStatusFilterValue)
-          }
+          value={activeValue}
+          onValueChange={(value) => onChange(value as CompanyStatusFilterValue)}
         >
-          <SelectTrigger className="w-[180px]" aria-label="企業ステータスで絞り込む">
+          <SelectTrigger className="w-[180px]" aria-label={ariaLabel}>
             <SelectValue />
           </SelectTrigger>
 
@@ -128,6 +132,65 @@ export function CompanyStatusFilter({
           </SelectContent>
         </Select>
       </div>
+    </>
+  );
+}
+
+/**
+ * Company status filter, in the same tones as the status badges.
+ *
+ * 区分（参加企業 / 企業申請）を選ぶと、ステータスの選択肢はその区分のものに絞られる。
+ * 区分はホームのカードの件数と一致させるため、閲覧者が両方の区分を参照できる場合のみ表示する。
+ */
+export function CompanyStatusFilter({
+  statuses,
+  counts,
+  activeStatus,
+  onStatusChange,
+}: CompanyStatusFilterProps) {
+  const groups = getVisibleCompanyStatusGroups(statuses);
+  const activeGroup = groups.length > 0 ? getCompanyStatusGroup(activeStatus) : 'all';
+
+  const groupOptions: FilterOption[] = [
+    { value: 'all', label: ALL_COMPANIES_CONTENT.label, tone: 'neutral' },
+    ...groups.map((group) => ({
+      value: group,
+      label: COMPANY_STATUS_GROUP_CONTENT[group].label,
+      tone: 'neutral' as const,
+    })),
+  ];
+  // 区分を選択中は、その区分内の「すべて」が区分そのものを指す
+  const statusOptions: FilterOption[] = [
+    { value: activeGroup, label: ALL_COMPANIES_CONTENT.label, tone: 'neutral' },
+    ...getCompanyFilterStatuses(activeGroup, statuses).map((status) => ({
+      value: status,
+      label: COMPANY_STATUS_CONTENT[status].label,
+      tone: COMPANY_STATUS_CONTENT[status].tone,
+    })),
+  ];
+
+  return (
+    <div className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-3">
+      {groups.length > 0 && (
+        <FilterControl
+          label="区分"
+          ariaLabel="企業の区分で絞り込む"
+          options={groupOptions}
+          statuses={statuses}
+          counts={counts}
+          activeValue={activeGroup}
+          onChange={onStatusChange}
+        />
+      )}
+      <FilterControl
+        label="ステータス"
+        ariaLabel="企業ステータスで絞り込む"
+        options={statusOptions}
+        statuses={statuses}
+        counts={counts}
+        activeValue={activeStatus}
+        onChange={onStatusChange}
+      />
     </div>
   );
 }

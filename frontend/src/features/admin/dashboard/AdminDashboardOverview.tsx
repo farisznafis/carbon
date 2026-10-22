@@ -90,7 +90,9 @@ type AdminDashboardOverviewProps = {
   projectsError: string | null;
   openMembershipReviews: ParticipationReviewDetail[];
   openMembershipReviewsError: string | null;
-  applicationTotal: number;
+  /** 企業申請カードの主数値。対応が必要な申請受付のみ（却下は対応不要で増え続けるため含めない） */
+  pendingCompanyCount: number;
+  setupPendingCompanyCount: number;
   applicationsLoading: boolean;
   applicationsError: string | null;
   pendingApplications: AdminCompanyListItem[];
@@ -102,6 +104,7 @@ type AdminDashboardOverviewProps = {
   rejectedApplicationsLoading: boolean;
   rejectedApplicationsError: string | null;
   participatingCompanyTotal: number;
+  suspendedCompanyCount: number;
   participatingCompaniesLoading: boolean;
   participatingCompaniesError: string | null;
   cancelRequests: MonitoringCancelRequestListItem[];
@@ -120,6 +123,8 @@ type AdminDashboardOverviewProps = {
   onNavigateProjects: () => void;
   onNavigateCompanies: () => void;
   onNavigateApplications: () => void;
+  /** 企業申請カードと「確認待ち」の案内から、申請受付のみに絞った一覧を開く */
+  onNavigatePendingApplications: () => void;
   canReadProjects: boolean;
   canReadCompanies: boolean;
   canReviewCompanies: boolean;
@@ -410,7 +415,7 @@ function getAdminActionItems(
       tag: '企業申請',
       text: `確認待ちの企業申請が${props.pendingApplicationTotal.toLocaleString('ja-JP')}件あります`,
       actionLabel: '確認する',
-      onAction: props.onNavigateApplications,
+      onAction: props.onNavigatePendingApplications,
     });
   }
 
@@ -665,7 +670,11 @@ export function AdminDashboardOverview(
         <MetricCard
           label='参加企業'
           value={props.participatingCompanyTotal}
-          description='稼働中・一時停止中'
+          description={
+            props.participatingCompaniesLoading || props.participatingCompaniesError
+              ? '承認済み・利用停止'
+              : `うち利用停止 ${props.suspendedCompanyCount.toLocaleString('ja-JP')}件`
+          }
           icon={<Building2 />}
           loading={
             props.canReadCompanies && props.participatingCompaniesLoading
@@ -677,12 +686,16 @@ export function AdminDashboardOverview(
         />
         <MetricCard
           label='企業申請'
-          value={props.applicationTotal}
-          description='申請中・設定待ち・却下'
+          value={props.pendingCompanyCount}
+          description={
+            props.applicationsLoading || props.applicationsError
+              ? '確認待ち'
+              : `確認待ち（ほか設定待ち ${props.setupPendingCompanyCount.toLocaleString('ja-JP')}件）`
+          }
           icon={<ClipboardCheck />}
           loading={props.canReviewCompanies && props.applicationsLoading}
           error={props.applicationsError}
-          onClick={props.onNavigateApplications}
+          onClick={props.onNavigatePendingApplications}
           permissionGranted={props.canReviewCompanies}
           requiredPermission='PARTICIPATING_COMPANY_APPLICATION_REVIEW'
         />

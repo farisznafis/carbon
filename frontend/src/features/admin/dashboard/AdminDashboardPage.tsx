@@ -49,11 +49,12 @@ import {
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  ALL_COMPANIES_CONTENT,
   COMPANY_APPLICATION_STATUSES,
   COMPANY_PARTICIPATING_STATUSES,
   COMPANY_STATUSES,
   COMPANY_STATUS_CONTENT,
+  getCompanyFilterContent,
+  getCompanyFilterStatuses,
   resolveCompanyStatusFilter,
   type CompanyStatusFilter as CompanyStatusFilterValue,
 } from '@/features/admin/company-detail/companyStatusContent';
@@ -401,9 +402,7 @@ const AdminDashboard = () => {
       ? canReviewCompanies
         ? COMPANY_APPLICATION_STATUSES
         : []
-      : activeCompanyStatusFilter === 'all'
-        ? visibleCompanyStatuses
-        : [activeCompanyStatusFilter]
+      : getCompanyFilterStatuses(activeCompanyStatusFilter, visibleCompanyStatuses)
   ).join(',');
 
   /**
@@ -1121,13 +1120,9 @@ const AdminDashboard = () => {
   );
   const sumCompanyCounts = (statuses: CompanyStatus[]) =>
     statuses.reduce((total, status) => total + (companyStatusCounts[status] ?? 0), 0);
-  const applicationCompanyTotal = sumCompanyCounts(COMPANY_APPLICATION_STATUSES);
   const participatingCompanyTotal = sumCompanyCounts(COMPANY_PARTICIPATING_STATUSES);
   const pendingCompanyCount = companyStatusCounts.PENDING ?? 0;
-  const activeCompanyStatusContent =
-    activeCompanyStatusFilter === 'all'
-      ? ALL_COMPANIES_CONTENT
-      : COMPANY_STATUS_CONTENT[activeCompanyStatusFilter];
+  const activeCompanyStatusContent = getCompanyFilterContent(activeCompanyStatusFilter);
   const cancelSectionAllowed =
     canCancelMonitoring && cancelRequestError !== FORBIDDEN_SECTION_ERROR;
   const batchSectionAllowed =
@@ -1147,7 +1142,8 @@ const AdminDashboard = () => {
               projectsError={projectsError}
               openMembershipReviews={openMembershipReviews}
               openMembershipReviewsError={openMembershipReviewsError}
-              applicationTotal={applicationCompanyTotal}
+              pendingCompanyCount={pendingCompanyCount}
+              setupPendingCompanyCount={companyStatusCounts.APPROVED_PENDING_SETUP ?? 0}
               applicationsLoading={companyStatusCountsLoading}
               applicationsError={applicationCountsError}
               pendingApplications={homePendingApplications}
@@ -1159,6 +1155,7 @@ const AdminDashboard = () => {
               rejectedApplicationsLoading={homeRejectedApplicationsLoading}
               rejectedApplicationsError={homeRejectedApplicationsError}
               participatingCompanyTotal={participatingCompanyTotal}
+              suspendedCompanyCount={companyStatusCounts.SUSPENDED ?? 0}
               participatingCompaniesLoading={companyStatusCountsLoading}
               participatingCompaniesError={participatingCountsError}
               cancelRequests={cancelRequestItems}
@@ -1182,13 +1179,13 @@ const AdminDashboard = () => {
               onNavigateCompanies={() =>
                 adminPermissions.guardAction(
                   'PARTICIPATING_COMPANY_READ',
-                  () => navigate(paths.adminCompanyList),
+                  () => navigate(`${paths.adminCompanyList}?${COMPANY_STATUS_QUERY_PARAM}=participating`),
                 )
               }
               onNavigateApplications={() =>
                 adminPermissions.guardAction(
                   'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
-                  () => navigate(paths.adminCompanyList),
+                  () => navigate(`${paths.adminCompanyList}?${COMPANY_STATUS_QUERY_PARAM}=applications`),
                 )
               }
               canReadProjects={projectSectionAllowed}
@@ -1209,7 +1206,8 @@ const AdminDashboard = () => {
               projectsError={projectsError}
               openMembershipReviews={openMembershipReviews}
               openMembershipReviewsError={openMembershipReviewsError}
-              applicationTotal={applicationCompanyTotal}
+              pendingCompanyCount={pendingCompanyCount}
+              setupPendingCompanyCount={companyStatusCounts.APPROVED_PENDING_SETUP ?? 0}
               applicationsLoading={companyStatusCountsLoading}
               applicationsError={applicationCountsError}
               pendingApplications={homePendingApplications}
@@ -1221,6 +1219,7 @@ const AdminDashboard = () => {
               rejectedApplicationsLoading={homeRejectedApplicationsLoading}
               rejectedApplicationsError={homeRejectedApplicationsError}
               participatingCompanyTotal={participatingCompanyTotal}
+              suspendedCompanyCount={companyStatusCounts.SUSPENDED ?? 0}
               participatingCompaniesLoading={companyStatusCountsLoading}
               participatingCompaniesError={participatingCountsError}
               cancelRequests={cancelRequestItems}
@@ -1244,10 +1243,16 @@ const AdminDashboard = () => {
               onNavigateCompanies={() =>
                 adminPermissions.guardAction(
                   'PARTICIPATING_COMPANY_READ',
-                  () => navigate(paths.adminCompanyList),
+                  () => navigate(`${paths.adminCompanyList}?${COMPANY_STATUS_QUERY_PARAM}=participating`),
                 )
               }
               onNavigateApplications={() =>
+                adminPermissions.guardAction(
+                  'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
+                  () => navigate(`${paths.adminCompanyList}?${COMPANY_STATUS_QUERY_PARAM}=applications`),
+                )
+              }
+              onNavigatePendingApplications={() =>
                 adminPermissions.guardAction(
                   'PARTICIPATING_COMPANY_APPLICATION_REVIEW',
                   () => navigate(`${paths.adminCompanyList}?${COMPANY_STATUS_QUERY_PARAM}=PENDING`),
