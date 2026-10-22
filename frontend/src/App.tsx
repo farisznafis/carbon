@@ -17,7 +17,7 @@ import { ErrorBoundary } from "@/components/feedback/ErrorBoundary";
 import { AdminPermissionProvider } from '@/features/admin/permissions/AdminPermissionContext';
 import { AdminBusinessAccessBoundary } from '@/features/admin/permissions/AdminBusinessAccessBoundary';
 import { AdminPermissionRoute } from '@/features/admin/permissions/AdminPermissionRoute';
-import { AppLoadingScreen, PageSkeleton } from '@/components/feedback/loading';
+import { AppLoadingScreen, PageLoadingOverlay } from '@/components/feedback/loading';
 import { isAuthPagePath, paths } from "@/routes/paths";
 import { cn } from "@/lib/utils";
 import Lenis from "lenis";
@@ -208,7 +208,8 @@ const App = () => {
             isAuthPage && 'relative overflow-hidden',
           )}
         >
-            <Suspense fallback={<PageSkeleton />}>
+            {/* ページ遷移（画面のコード読み込み）なので葉のアニメーションを使う */}
+            <Suspense fallback={<PageLoadingOverlay />}>
               <Routes>
           <Route path={paths.home} element={<Index />} />
           <Route path={paths.contact} element={<Inquiry />} />

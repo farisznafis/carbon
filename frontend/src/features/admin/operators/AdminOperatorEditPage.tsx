@@ -8,7 +8,7 @@ import {
 import { ApiError } from '@/api/_shared/errors';
 import { updateAdminOperator } from '@/api/admin/operators';
 import type { UserFormData } from '@/api/users';
-import { LoadingPanel } from '@/components/feedback/loading';
+import { SkeletonCard } from '@/components/feedback/loading';
 import {
   FormCard,
   FormPageContent,
@@ -194,7 +194,7 @@ export default function AdminOperatorEditPage() {
         </div>
 
         {profileQuery.isLoading ? (
-          <LoadingPanel message="運用者情報を読み込んでいます" />
+          <SkeletonCard label="運用者情報を読み込んでいます" className="min-h-96" />
         ) : profileQuery.isError || !operator || !formValues ? (
           <FormCard className="text-center">
             <p className="text-sm text-foreground">

@@ -8,7 +8,7 @@ import {
   type DataGridTableColumn,
 } from '@/components/data-display';
 import { PaginationControls } from '@/components/data-display/Pagination/PaginationControls';
-import { LoadingPanel } from '@/components/feedback/loading';
+import { SkeletonList } from '@/components/feedback/loading';
 import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import { AdminTableCard } from '@/components/layout/AdminTableCard';
 import { adminPageContainerClassName } from '@/components/layout/DashboardLayout';
@@ -320,10 +320,7 @@ export default function AdminOperatorListPage() {
               className="min-h-32"
             />
           ) : operatorsQuery.isLoading ? (
-            <LoadingPanel
-              className="min-h-72 border-0 bg-transparent"
-              message="運用者一覧を読み込んでいます"
-            />
+            <SkeletonList items={4} label="運用者一覧を読み込んでいます" />
           ) : operatorsQuery.isError ? (
             <div
               role="alert"

@@ -3,7 +3,6 @@ export {
   AppLoadingScreen,
   ButtonLoader,
   InlineLoader,
-  LoadingPanel,
   PageLoadingOverlay,
 } from './indicators';
 export {

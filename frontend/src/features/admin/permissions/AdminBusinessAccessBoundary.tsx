@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-import { LoadingPanel } from '@/components/feedback/loading';
+import { PageSkeleton } from '@/components/feedback/loading';
 import { ForbiddenAccessPage } from '@/components/feedback/ForbiddenAccessPage';
 import { paths } from '@/routes/paths';
 import { useAdminPermissions } from './useAdminPermissions';
@@ -16,7 +16,7 @@ export function AdminBusinessAccessBoundary({ children }: { children: ReactNode 
   const selfEditPath = permissions.operatorId ? paths.adminOperatorEdit(permissions.operatorId) : null;
   const isSelfProfileFlow = selfProfilePath === location.pathname || selfEditPath === location.pathname;
 
-  if (permissions.isLoading) return <LoadingPanel message="権限情報を読み込んでいます" />;
+  if (permissions.isLoading) return <PageSkeleton label="権限情報を読み込んでいます" />;
 
   if (permissions.isError) {
     return (

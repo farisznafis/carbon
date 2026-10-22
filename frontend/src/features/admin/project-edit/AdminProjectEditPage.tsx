@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getAdminProjectDetail, updateAdminProject } from '@/api/admin';
 import { mapAdminProjectUpdatePayload } from '@/api/admin/projectPayloadMapper';
 import { ActionButton } from '@/components/actions';
-import { LoadingPanel } from '@/components/feedback/loading';
+import { SkeletonCard } from '@/components/feedback/loading';
 import { FormCard } from '@/components/forms/form-layout';
 import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -139,7 +139,7 @@ export default function AdminProjectEditPage() {
   return (
     <ProjectRecordPage title='プロジェクト更新'>
       {loading ? (
-        <LoadingPanel message='プロジェクト情報を読み込んでいます' />
+        <SkeletonCard label='プロジェクト情報を読み込んでいます' className='min-h-96' />
       ) : loadError ? (
         <FormCard className='text-center'>
           <p className='text-sm text-foreground'>

@@ -87,33 +87,6 @@ export function PageLoadingOverlay({
   );
 }
 
-type LoadingPanelProps = HTMLAttributes<HTMLDivElement> & {
-  message?: string;
-};
-
-/** Shows compact branded motion for an independently loading page section. */
-export function LoadingPanel({
-  message = 'データを読み込んでいます',
-  className,
-  ...props
-}: LoadingPanelProps) {
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      aria-busy="true"
-      aria-label={message}
-      className={cn(
-        'flex min-h-36 cursor-wait select-none items-center justify-center rounded-lg border border-border bg-card/95 p-5 text-center',
-        className,
-      )}
-      {...props}
-    >
-      <BrandedLoadingMark message={message} compact />
-    </div>
-  );
-}
-
 type InlineLoaderProps = HTMLAttributes<HTMLDivElement> & {
   label?: string;
   showLabel?: boolean;

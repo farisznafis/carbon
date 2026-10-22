@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDashboardStore } from "@/stores/dashboardStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LoadingPanel, PageSkeleton } from "@/components/feedback/loading";
+import { PageSkeleton, SkeletonCard } from "@/components/feedback/loading";
 import {
   FormActions,
   FormPageHeader,
@@ -828,7 +828,7 @@ const ProjectRegister = () => {
       currentStep === FINAL_AGREEMENT_STEP;
 
     if (requiresMemberTerms && isMemberTermsLoading) {
-      return <LoadingPanel message="入会規約情報を読み込んでいます" />;
+      return <SkeletonCard label="入会規約情報を読み込んでいます" className="min-h-72" />;
     }
 
     if (requiresMemberTerms && (!memberTermsInfo || memberTermsLoadError)) {

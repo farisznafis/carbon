@@ -2,7 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import type { AdminOperator } from '@/api/admin/operators';
 import { isForbiddenApiError } from '@/api/_shared/errors';
 import { ProfileDetailField } from '@/components/data-display/ProfileDetailField';
-import { LoadingPanel } from '@/components/feedback/loading';
+import { SkeletonCard } from '@/components/feedback/loading';
 import {
   FormCard,
   FormPageContent,
@@ -86,7 +86,7 @@ export default function AdminOperatorProfilePage() {
         </header>
 
         {profileQuery.isLoading ? (
-          <LoadingPanel message="プロファイルを読み込んでいます" />
+          <SkeletonCard label="プロファイルを読み込んでいます" className="min-h-72" />
         ) : isForbiddenApiError(profileQuery.error) && userId !== permissions.operatorId ? (
           <PermissionDeniedNotice permission="OPERATOR_USER_READ" />
         ) : profileQuery.isError || !operator ? (

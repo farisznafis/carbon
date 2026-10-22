@@ -41,19 +41,21 @@ describe('shared loading experience', () => {
     expect(screen.getByText('ダッシュボードを読み込んでいます')).toBeVisible();
   });
 
-  it('routes legacy table skeleton calls to one animated loading panel', () => {
+  // ページ内のデータ読み込みは葉のアニメーションではなくスケルトンで表示する
+  it('renders a table skeleton with one placeholder per cell', () => {
     const { container } = render(<SkeletonTable columns={4} rows={12} />);
 
-    expect(screen.getByRole('status', { name: '一覧を読み込んでいます' })).toBeVisible();
-    expect(container.querySelector('.loading-orbit')).toBeInTheDocument();
-    expect(container.querySelectorAll('[class*="animate-pulse"]')).toHaveLength(0);
+    expect(screen.getByRole('status', { name: '一覧を読み込んでいます' })).toBeInTheDocument();
+    expect(container.querySelector('.loading-orbit')).not.toBeInTheDocument();
+    // 見出し行 + 12行、各4列
+    expect(container.querySelectorAll('[class*="animate-pulse"]')).toHaveLength(4 * 13);
   });
 
-  it('routes legacy page skeleton calls to the branded page animation', () => {
+  it('renders the page skeleton without the branded leaf animation', () => {
     const { container } = render(<PageSkeleton />);
-    expect(screen.getByRole('status')).toHaveTextContent('ページを読み込んでいます');
-    expect(container.querySelector('.loading-orbit')).toBeInTheDocument();
-    expect(container.querySelectorAll('[class*="animate-pulse"]')).toHaveLength(0);
+    expect(screen.getByRole('status', { name: 'ページを読み込んでいます' })).toBeInTheDocument();
+    expect(container.querySelector('.loading-orbit')).not.toBeInTheDocument();
+    expect(container.querySelectorAll('[class*="animate-pulse"]').length).toBeGreaterThan(0);
   });
 
   it('renders measured and failed file states with a targeted retry action', () => {

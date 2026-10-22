@@ -18,7 +18,7 @@ import { ProjectMembershipContent } from '@/features/user/project-registration/P
 import { paths } from '@/routes/paths';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useDashboardStore } from '@/stores/dashboardStore';
-import { PageLoadingOverlay } from '@/components/feedback/loading';
+import { PageSkeleton, Skeleton, SkeletonList } from '@/components/feedback/loading';
 import { UserInvitationDialog } from '@/features/master/user-invitations/UserInvitationDialog';
 import { MasterHomeSection } from '@/features/master/home/MasterHomeSection';
 import { MasterAnalyticsSection } from '@/features/master/analytics/MasterAnalyticsSection';
@@ -81,7 +81,17 @@ const MasterDashboard = () => {
   const hasRegisteredSites = sortedSites.length > 0;
 
   if ((activeTab === 'sites' || activeTab === 'users' || activeTab === 'membership') && (loading || loadingStore)) {
-    return <PageLoadingOverlay message="ダッシュボードを読み込んでいます" />;
+    return (
+      <PageSkeleton
+        label="ダッシュボードを読み込んでいます"
+        className={cn(adminPageContainerClassName, 'py-page-y')}
+      >
+        <div className="space-y-5">
+          <Skeleton className="h-7 w-32" />
+          <SkeletonList items={3} />
+        </div>
+      </PageSkeleton>
+    );
   }
 
   return (
