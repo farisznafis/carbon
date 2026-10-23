@@ -73,7 +73,8 @@ export async function getMonitoringRecent(params: {
     );
   }
 
-  const payload = json?.data ?? json;
+  // `data` is absent when nothing is registered yet; the envelope itself must not become a record.
+  const payload = Array.isArray(json) ? json : json?.data;
   const items: MonitoringRecentApiItem[] = Array.isArray(payload)
     ? payload
     : payload && typeof payload === "object"

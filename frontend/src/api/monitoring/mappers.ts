@@ -14,11 +14,6 @@ function toNumberOrNull(value: unknown): number | null {
   return Number.isNaN(parsed) ? null : parsed;
 }
 
-function toNumberOrZero(value: unknown): number {
-  const parsed = toNumberOrNull(value);
-  return parsed ?? 0;
-}
-
 function toStringOrEmpty(value: unknown): string {
   return value == null ? '' : String(value);
 }
@@ -65,17 +60,19 @@ export function normalizeRecentMonitoringItem(
     equipmentId: toNumberOrNull(item.equipmentId),
     userId: toNumberOrNull(item.userId),
 
-    ELpv_value: toNumberOrZero(item.ELpv_value),
-    ELpvr_value: toNumberOrZero(item.ELpvr_value),
+    // The API sends camelCase (elPv, …); reading only the legacy names turned every value into 0.
+    // A missing value stays null so the screen shows "-" instead of a fake 0.
+    ELpv_value: toNumberOrNull(item.elPv ?? item.ELpv_value),
+    ELpvr_value: toNumberOrNull(item.elPvr ?? item.ELpvr_value),
     ELPJ_battery_value:
-      toNumberOrNull(item.ELPJ_battery_value) ??
+      toNumberOrNull(item.elpjBatteryValue ?? item.ELPJ_battery_value) ??
       toNumberOrNull(legacyBatteryValue),
-    ELPJ_control_value: toNumberOrZero(item.ELPJ_control_value),
-    ELPJ_accuracy: toNumberOrZero(item.ELPJ_accuracy),
+    ELPJ_control_value: toNumberOrNull(item.elpjControlValue ?? item.ELPJ_control_value),
+    ELPJ_accuracy: toNumberOrNull(item.elpjAccuracy ?? item.ELPJ_accuracy),
 
-    elpv_evidence: item.elpv_evidence ?? null,
-    elpvr_evidence: item.elpvr_evidence ?? null,
-    elpj_battery_evidence: item.elpj_battery_evidence ?? null,
+    elpv_evidence: item.elPvEvidence ?? item.elpv_evidence ?? null,
+    elpvr_evidence: item.elPvrEvidence ?? item.elpvr_evidence ?? null,
+    elpj_battery_evidence: item.elpjBatteryEvidence ?? item.elpj_battery_evidence ?? null,
     elpj_control_evidence:
       item.elpj_control_evidence ?? null,
   };

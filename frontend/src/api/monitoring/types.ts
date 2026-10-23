@@ -48,6 +48,16 @@ export type MonitoringRecentApiItem = {
   ELPJ_control_value?: number | string | null;
   ELPJ_accuracy?: number | string | null;
 
+  // Current GET /monitoring field names (MonitoringDataSolarResponse); the snake_case ones above are legacy.
+  elPv?: number | string | null;
+  elPvr?: number | string | null;
+  elpjBatteryValue?: number | string | null;
+  elpjControlValue?: number | string | null;
+  elpjAccuracy?: number | string | null;
+  elPvEvidence?: string | null;
+  elPvrEvidence?: string | null;
+  elpjBatteryEvidence?: string | null;
+
   elpv_evidence?: string | null;
   elpvr_evidence?: string | null;
   elpj_battery_evidence?: string | null;
