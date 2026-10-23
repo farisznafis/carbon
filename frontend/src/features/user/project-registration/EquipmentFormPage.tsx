@@ -15,6 +15,7 @@ import {
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
+import { FormErrorSummary } from '@/components/forms/FormErrorSummary';
 import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { useEquipmentBreadcrumbRoot } from './useEquipmentBreadcrumbRoot';
 import { Button } from '@/components/ui/button';
@@ -309,14 +310,17 @@ export default function EquipmentFormPage() {
           });
         }
 
-      toast({
-        title: '設備情報を確認できませんでした',
-        description:
-          error instanceof Error
-            ? error.message
-            : '設備情報の検証に失敗しました。',
-        variant: 'destructive',
-      });
+      // Field errors are listed by FormErrorSummary; only an unmapped error needs a toast.
+      if (Object.keys(solarForm.formState.errors).length === 0) {
+        toast({
+          title: '設備情報を確認できませんでした',
+          description:
+            error instanceof Error
+              ? error.message
+              : '設備情報の検証に失敗しました。',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -384,6 +388,7 @@ export default function EquipmentFormPage() {
                   isSiteOptionsLoading={sitesQuery.isLoading}
                   siteOptionsError={siteOptionsError}
                 />
+                <FormErrorSummary className="mt-6" />
                 <FormActions
                   className="pt-6"
                   pendingActionId={isSubmitting ? 'confirm' : null}

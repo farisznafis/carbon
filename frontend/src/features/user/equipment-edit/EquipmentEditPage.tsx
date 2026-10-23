@@ -16,6 +16,7 @@ import {
   FormPageTitle,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
+import { FormErrorSummary } from '@/components/forms/FormErrorSummary';
 import { usePageBreadcrumb } from '@/components/navigation/pageBreadcrumbContext';
 import { useSiteBreadcrumbRoot } from '@/features/user/navigation/useSiteBreadcrumbRoot';
 import { Form } from '@/components/ui/form';
@@ -197,14 +198,17 @@ export default function EquipmentEditPage() {
           message,
         });
       });
-      toast({
-        title: '変更内容を確認できませんでした',
-        description:
-          error instanceof Error
-            ? error.message
-            : '設備情報の検証に失敗しました。',
-        variant: 'destructive',
-      });
+      // Field errors are listed by FormErrorSummary; only an unmapped error needs a toast.
+      if (fieldErrors.length === 0) {
+        toast({
+          title: '変更内容を確認できませんでした',
+          description:
+            error instanceof Error
+              ? error.message
+              : '設備情報の検証に失敗しました。',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -342,6 +346,7 @@ export default function EquipmentEditPage() {
                 mode="edit"
                 existingFiles={existingFiles}
               />
+              <FormErrorSummary className="mt-8" />
               <FormActions
                 className="pt-8"
                 pendingActionId={isSubmitting ? 'confirm' : null}

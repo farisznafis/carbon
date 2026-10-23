@@ -58,7 +58,17 @@ describe('FormErrorSummary', () => {
     act(() => form.setError('email', { type: 'server', message: '形式が正しくありません' }));
 
     expect(await screen.findByText('入力内容を確認してください（1件）')).toBeInTheDocument();
-    expect(screen.getByLabelText(/メールアドレス/)).toHaveFocus();
+    await vi.waitFor(() => expect(screen.getByLabelText(/メールアドレス/)).toHaveFocus());
+  });
+
+  it('focuses the summary when errors arrive one render at a time', async () => {
+    render(<TestForm />);
+
+    act(() => form.setError('name', { type: 'server', message: '入力してください' }));
+    act(() => form.setError('email', { type: 'server', message: '形式が正しくありません' }));
+
+    expect(await screen.findByText('入力内容を確認してください（2件）')).toBeInTheDocument();
+    await vi.waitFor(() => expect(screen.getByRole('alert')).toHaveFocus());
   });
 
   it('lists field errors under their section and jumps to the field', async () => {
@@ -71,7 +81,7 @@ describe('FormErrorSummary', () => {
     });
 
     expect(await screen.findByText('入力内容を確認してください（2件）')).toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveFocus();
+    await vi.waitFor(() => expect(screen.getByRole('alert')).toHaveFocus());
 
     await user.click(screen.getByRole('button', { name: 'メールアドレス：形式が正しくありません' }));
     expect(screen.getByLabelText(/メールアドレス/)).toHaveFocus();

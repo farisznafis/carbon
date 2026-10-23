@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { FormActions } from '@/components/forms/form-layout';
+import { FormErrorSummary } from '@/components/forms/FormErrorSummary';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import {
@@ -296,6 +297,7 @@ export const ContractStep = forwardRef<ContractStepRef, ContractStepProps>(
                   </FormItem>
                 )}
               />
+              <FormErrorSummary />
               <FormActions
                 pendingActionId={isSubmitting ? 'next' : null}
                 actions={[

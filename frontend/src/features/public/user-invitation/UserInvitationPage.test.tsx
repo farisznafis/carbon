@@ -234,7 +234,9 @@ describe('UserInvitationPage', () => {
     expect(
       screen.getByText('パスワードは15文字以上で入力してください。'),
     ).toBeVisible();
-    expect(screen.getByText('入力内容に不備があります。')).toBeVisible();
+    // Field errors are listed in the summary; the generic line would only repeat them.
+    expect(screen.getByText('入力内容を確認してください（2件）')).toBeVisible();
+    expect(screen.queryByText('入力内容に不備があります。')).not.toBeInTheDocument();
   });
 
   it('processes a new invitation token opened in the same tab', async () => {

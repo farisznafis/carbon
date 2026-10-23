@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { ApiError } from '@/api/_shared/errors';
 import { validateSiteProjectEquipment } from '@/api/site';
 import { FormActions, FormCard } from '@/components/forms/form-layout';
+import { FormErrorSummary } from '@/components/forms/FormErrorSummary';
 import { Form } from '@/components/ui/form';
 import { SolarPowerEquipmentForm } from '@/features/user/project-registration/components/equipment-forms/SolarPowerEquipmentForm';
 import type { SolarEquipment } from '@/features/user/project-registration/components/types';
@@ -22,6 +23,8 @@ const EMPTY_SITE_OPTIONS: never[] = [];
 
 export type EquipmentRegistrationStepRef = {
   validate: () => Promise<SolarEquipment>;
+  /** True when the last validate marked fields, so the page needs no extra toast. */
+  hasFieldErrors: () => boolean;
 };
 
 type EquipmentRegistrationStepProps = {
@@ -75,6 +78,7 @@ export const EquipmentRegistrationStep = forwardRef<
   }, [form, sites]);
 
   useImperativeHandle(ref, () => ({
+    hasFieldErrors: () => Object.keys(form.formState.errors).length > 0,
     validate: async () => {
       form.clearErrors();
       const formData = form.getValues();
@@ -144,6 +148,7 @@ export const EquipmentRegistrationStep = forwardRef<
             siteOptionsError={siteOptionsError}
             onAddSite={onAddSite}
           />
+          <FormErrorSummary />
           <FormActions
             pendingActionId={isSubmitting ? 'next' : null}
             actions={[

@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/input-otp';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { FormActions } from '@/components/forms/form-layout';
+import { FormErrorSummary } from '@/components/forms/FormErrorSummary';
 import {
   agreementsConfig,
   createAgreementsConfig,
@@ -543,6 +544,7 @@ export const DynamicAgreementsStep = forwardRef<
                 )}
               />
             </AgreementCard>
+            <FormErrorSummary />
             <FormActions
               pendingActionId={isSubmitting ? 'next' : null}
               actions={[

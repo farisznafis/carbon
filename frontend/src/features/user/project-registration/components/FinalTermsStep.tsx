@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { Form, FormItem, FormField, FormControl, FormMessage } from "@/components/ui/form";
 import { FormActions } from "@/components/forms/form-layout";
+import { FormErrorSummary } from "@/components/forms/FormErrorSummary";
 
 const FinalTermsSchema = z.object({
   finalTermsAgreed: z.boolean().refine(val => val === true, "同意してください"),
@@ -308,6 +309,7 @@ export const FinalTermsStep = forwardRef<FinalTermsRef, FinalTermsStepProps>(({
                 </FormItem>
               )}
             />
+            <FormErrorSummary />
             <FormActions
               pendingActionId={isSubmitting ? "next" : null}
               actions={[

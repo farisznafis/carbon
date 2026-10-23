@@ -20,17 +20,36 @@ function cleanText(text: string | null | undefined) {
   return (text ?? '').replace(/\*\s*$/, '').trim();
 }
 
+function isShown(element: Element) {
+  return window.getComputedStyle(element).display !== 'none';
+}
+
 /** The control a field error belongs to, made addressable by id. */
 function resolveTarget(error: HTMLElement, controlId: string | null): string | undefined {
   const control = controlId ? document.getElementById(controlId) : null;
-  // Radio groups, checkbox lists and custom sections have no focusable control of their own.
-  const target = control?.matches(FOCUSABLE)
-    ? control
-    : (control ?? error.closest('[data-form-item]') ?? error.closest('[data-form-section]'))
-        ?.querySelector<HTMLElement>(FOCUSABLE);
+  const container = control ?? error.closest('[data-form-item]') ?? error.closest('[data-form-section]');
+  // Radio groups, checkbox lists and custom sections have no focusable control of their own;
+  // a file input is display:none, so its field can only be scrolled to.
+  const target =
+    (control?.matches(FOCUSABLE) && isShown(control) ? control : null) ??
+    Array.from(container?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).find(isShown) ??
+    (container instanceof HTMLElement ? container : null);
   if (!target) return undefined;
   if (!target.id) target.id = `form-error-target-${++generatedTargetId}`;
   return target.id;
+}
+
+/** The field's name: its own label, a `data-error-label` (file inputs), or the item's only label. */
+function resolveLabel(error: HTMLElement, controlId: string | null, labels: HTMLLabelElement[]) {
+  const own = controlId ? labels.find((candidate) => candidate.htmlFor === controlId) : undefined;
+  if (own) return cleanText(own.textContent);
+
+  const item = error.closest('[data-form-item]');
+  const named = item?.querySelector('[data-error-label]')?.getAttribute('data-error-label');
+  if (named) return cleanText(named);
+
+  const itemLabels = item?.querySelectorAll('label') ?? [];
+  return itemLabels.length === 1 ? cleanText(itemLabels[0].textContent) : '';
 }
 
 /** Reads every visible field error in the scope, in page order. */
@@ -42,12 +61,11 @@ function collectErrors(scope: Element, summary: Element): ErrorSummaryItem[] {
     .map((element) => {
       // FormMessage is `${id}-form-item-message`; its control is `${id}-form-item`.
       const controlId = element.id.endsWith('-message') ? element.id.slice(0, -'-message'.length) : null;
-      const label = controlId ? labels.find((candidate) => candidate.htmlFor === controlId) : undefined;
       const section = element.closest('[data-form-section]');
 
       return {
         section: cleanText(section?.querySelector('h3')?.textContent),
-        label: cleanText(label?.textContent),
+        label: resolveLabel(element, controlId, labels),
         message: element.textContent?.trim() ?? '',
         targetId: resolveTarget(element, controlId),
       };
@@ -70,7 +88,8 @@ function jumpTo(item: ErrorSummaryItem) {
   if (!target) return;
 
   // Centering keeps the field clear of the sticky header without per-page offsets.
-  target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  // Optional call: jsdom (tests) has no scrollIntoView.
+  target.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
   target.focus({ preventScroll: true });
 }
 
@@ -108,14 +127,28 @@ export function FormErrorSummary({ className }: Readonly<{ className?: string }>
     return () => observer.disconnect();
   }, []);
 
+  const latestItems = useRef(items);
+  latestItems.current = items;
+  const focusTimer = useRef<number>();
+  useEffect(() => () => window.clearTimeout(focusTimer.current), []);
+
   useEffect(() => {
-    if (previousCount.current === 0 && items.length === 1) {
-      jumpTo(items[0]);
-    } else if (previousCount.current === 0 && items.length > 1) {
-      ref.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      ref.current?.focus({ preventScroll: true });
-    }
+    const appeared = previousCount.current === 0 && items.length > 0;
     previousCount.current = items.length;
+    if (!appeared) return;
+
+    // One submit can set its errors over several renders; count them once they settle,
+    // or two errors would be taken for one.
+    window.clearTimeout(focusTimer.current);
+    focusTimer.current = window.setTimeout(() => {
+      const settled = latestItems.current;
+      if (settled.length === 1) {
+        jumpTo(settled[0]);
+      } else if (settled.length > 1) {
+        ref.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+        ref.current?.focus({ preventScroll: true });
+      }
+    }, 0);
   }, [items]);
 
   return (

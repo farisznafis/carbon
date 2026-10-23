@@ -14,6 +14,7 @@ import {
   FormSectionStack,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
+import { FormErrorSummary } from '@/components/forms/FormErrorSummary';
 import { RequiredLabel } from '@/components/forms/shared';
 import {
   Form,
@@ -580,6 +581,8 @@ export function MonitoringSolarForm({
                   />
                 </FormSection>
               </FormSectionStack>
+
+              <FormErrorSummary className="mt-8" />
 
               <FormActions
                 className="mt-8"

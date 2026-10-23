@@ -590,14 +590,17 @@ const ProjectRegister = () => {
           setEquipment([validatedEquipment]);
           return true;
         } catch (error) {
-          toast({
-            title: "設備情報を確認できませんでした",
-            description:
-              error instanceof Error
-                ? error.message
-                : "設備情報の検証に失敗しました。",
-            variant: "destructive",
-          });
+          // Field errors are listed by the step's FormErrorSummary; only an unmapped error needs a toast.
+          if (!equipmentStepRef.current?.hasFieldErrors()) {
+            toast({
+              title: "設備情報を確認できませんでした",
+              description:
+                error instanceof Error
+                  ? error.message
+                  : "設備情報の検証に失敗しました。",
+              variant: "destructive",
+            });
+          }
           return false;
         } finally {
           setIsSubmitting(false);
@@ -627,14 +630,16 @@ const ProjectRegister = () => {
               ? mapConfirmationItemErrors(error.payload?.errors)
               : {};
           setAgreementErrors(fieldErrors);
-          toast({
-            title: "同意事項を確認できませんでした",
-            description:
-              error instanceof Error
-                ? error.message
-                : "同意事項の検証に失敗しました。",
-            variant: "destructive",
-          });
+          if (Object.keys(fieldErrors).length === 0) {
+            toast({
+              title: "同意事項を確認できませんでした",
+              description:
+                error instanceof Error
+                  ? error.message
+                  : "同意事項の検証に失敗しました。",
+              variant: "destructive",
+            });
+          }
           return false;
         } finally {
           setIsSubmitting(false);
@@ -659,14 +664,16 @@ const ProjectRegister = () => {
               ? mapSustainabilityCommitmentErrors(error.payload?.errors)
               : {};
           setContractErrors(fieldErrors);
-          toast({
-            title: "持続可能性の同意内容を確認できませんでした",
-            description:
-              error instanceof Error
-                ? error.message
-                : "持続可能性約束の検証に失敗しました。",
-            variant: "destructive",
-          });
+          if (Object.keys(fieldErrors).length === 0) {
+            toast({
+              title: "持続可能性の同意内容を確認できませんでした",
+              description:
+                error instanceof Error
+                  ? error.message
+                  : "持続可能性約束の検証に失敗しました。",
+              variant: "destructive",
+            });
+          }
           return false;
         } finally {
           setIsSubmitting(false);
@@ -691,14 +698,16 @@ const ProjectRegister = () => {
               ? mapFinalAgreementErrors(error.payload?.errors)
               : {};
           setFinalTermsErrors(fieldErrors);
-          toast({
-            title: "入会規約を確認できませんでした",
-            description:
-              error instanceof Error
-                ? error.message
-                : "入会規約の検証に失敗しました。",
-            variant: "destructive",
-          });
+          if (Object.keys(fieldErrors).length === 0) {
+            toast({
+              title: "入会規約を確認できませんでした",
+              description:
+                error instanceof Error
+                  ? error.message
+                  : "入会規約の検証に失敗しました。",
+              variant: "destructive",
+            });
+          }
           return false;
         } finally {
           setIsSubmitting(false);
@@ -815,9 +824,10 @@ const ProjectRegister = () => {
   };
 
   const handleNext = async () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
     if (await validateStep()) {
       setCurrentStep((prev) => prev + 1);
+      // Only a new step starts at the top; a failed one stays by its error summary.
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 

@@ -15,6 +15,8 @@ import {
   FormSectionStack,
 } from '@/components/forms/form-layout';
 import { FormErrorSummary } from '@/components/forms/FormErrorSummary';
+// Messages below match the backend's @NotBlank wording.
+import { requiredRule } from '@/components/forms/requiredRule';
 import { RequiredLabel } from '@/components/forms/shared';
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
 import { Button } from '@/components/ui/button';
@@ -53,11 +55,6 @@ const userBackendFieldMap: Partial<Record<string, keyof UserFormData>> = {
   password: 'password',
   siteId: 'siteId',
 };
-
-/** Same rule and wording as the backend's @NotBlank, so an empty form fails here, not on the server. */
-const requiredRule = (message: string) => ({
-  validate: (value: unknown) => String(value ?? '').trim() !== '' || message,
-});
 
 function toValidationMessage(value: unknown): string {
   if (typeof value === 'string') return value;

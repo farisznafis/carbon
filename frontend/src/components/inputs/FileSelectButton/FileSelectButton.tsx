@@ -74,7 +74,8 @@ export function FileSelectButton({
     const hasFile = Boolean(value);
 
     return (
-      <div className={cn('flex w-full flex-col items-start gap-2', className)}>
+      // data-error-label names this field in FormErrorSummary (the visible label is not a <label>).
+      <div data-error-label={label} className={cn('flex w-full flex-col items-start gap-2', className)}>
         <div className="space-y-1">
           <p className="inline-flex items-center gap-1 text-small text-foreground">
             <span>{label}</span>

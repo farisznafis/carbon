@@ -27,6 +27,7 @@ import {
   FormSection,
   FormSectionStack,
 } from '@/components/forms/form-layout';
+import { FormErrorSummary } from '@/components/forms/FormErrorSummary';
 import { RequiredLabel } from '@/components/forms/shared';
 import { PasswordInput } from '@/components/inputs';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
@@ -444,8 +445,10 @@ export default function UserInvitationPage() {
       }
 
       if (error instanceof ApiError) {
-        applyInvitationFieldErrors(error, form.setError);
-        setFormError(error.message);
+        // Field errors are listed by FormErrorSummary; the generic line is for the rest.
+        if (!applyInvitationFieldErrors(error, form.setError)) {
+          setFormError(error.message);
+        }
       } else {
         setFormError(
           error instanceof Error
@@ -731,6 +734,8 @@ export default function UserInvitationPage() {
                     )}
                   />
                 </FormSection>
+
+                <FormErrorSummary />
 
                 {formError && (
                   <p

@@ -10,6 +10,8 @@ import {
   FormSectionStack,
 } from '@/components/forms/form-layout';
 import { RequiredBadge, RequiredLabel } from '@/components/forms/shared';
+import { FormErrorSummary } from '@/components/forms/FormErrorSummary';
+import { requiredRule } from '@/components/forms/requiredRule';
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
 import { Button } from '@/components/ui/button';
 import {
@@ -147,6 +149,8 @@ export function SiteForm({
   );
 
   const form = useForm<SiteFormData>({
+    // FormErrorSummary decides where focus goes after a failed submit.
+    shouldFocusError: false,
     defaultValues: defaultData,
   });
 
@@ -267,6 +271,7 @@ export function SiteForm({
               <FormField
                 control={form.control}
                 name="siteName"
+                rules={requiredRule('拠点名を入力してください。')}
                 render={({ field }) => (
                   <FormItem>
                     <RequiredLabel>拠点名</RequiredLabel>
@@ -282,6 +287,7 @@ export function SiteForm({
                 <FormField
                   control={form.control}
                   name="siteNameKana"
+                  rules={requiredRule('拠点名カナを入力してください。')}
                   render={({ field }) => (
                     <FormItem>
                       <RequiredLabel>拠点名カナ</RequiredLabel>
@@ -299,6 +305,7 @@ export function SiteForm({
               <FormField
                 control={form.control}
                 name="postalCode"
+                rules={requiredRule('郵便番号を入力してください。')}
                 render={({ field }) => (
                   <FormItem>
                     <RequiredLabel>郵便番号（ハイフン無し）</RequiredLabel>
@@ -317,6 +324,7 @@ export function SiteForm({
               <FormField
                 control={form.control}
                 name="prefectureName"
+                rules={requiredRule('都道府県を選択してください。')}
                 render={({ field }) => (
                   <FormItem>
                     <RequiredLabel>都道府県</RequiredLabel>
@@ -342,6 +350,7 @@ export function SiteForm({
               <FormField
                 control={form.control}
                 name="cityName"
+                rules={requiredRule('市区町村を入力してください。')}
                 render={({ field }) => (
                   <FormItem>
                     <RequiredLabel>市区町村</RequiredLabel>
@@ -356,6 +365,7 @@ export function SiteForm({
               <FormField
                 control={form.control}
                 name="blockName"
+                rules={requiredRule('番地を入力してください。')}
                 render={({ field }) => (
                   <FormItem>
                     <RequiredLabel>番地</RequiredLabel>
@@ -478,6 +488,8 @@ export function SiteForm({
                 />
               </FormSection>
 
+            <FormErrorSummary />
+
             <FormActions
               actions={[
                 {
@@ -490,7 +502,8 @@ export function SiteForm({
                   id: 'submit',
                   label: submitLabel,
                   type: 'submit',
-                  disabled: !isDirty || disableSubmit,
+                  // A new site stays pressable so an empty submit explains what is missing.
+                  disabled: (!isCreateMode && !isDirty) || disableSubmit,
                 },
               ]}
             />
