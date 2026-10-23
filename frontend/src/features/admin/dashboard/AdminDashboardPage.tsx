@@ -775,7 +775,7 @@ const AdminDashboard = () => {
     project: Project,
     status: ProjectStatus,
   ) => {
-    if (project.projectStatus === status || updatingProjectStatusId) return;
+    if (normalizeProjectStatus(project.projectStatus) === status || updatingProjectStatusId) return;
     if (!adminPermissions.hasPermission('PROJECT_STATUS_UPDATE')) {
       adminPermissions.guardAction('PROJECT_STATUS_UPDATE', () => undefined);
       return;

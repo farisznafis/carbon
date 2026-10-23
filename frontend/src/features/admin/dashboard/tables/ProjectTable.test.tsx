@@ -66,4 +66,16 @@ describe('ProjectTable completion confirmation', () => {
     expect(screen.getByTitle('ステータスを変更')).toBeDisabled();
     expect(screen.getByText('終了')).toBeInTheDocument();
   });
+
+  it('shows English API status codes with the Japanese filter labels', () => {
+    render(
+      <ProjectTable
+        projects={[{ ...activeProject, projectStatus: 'ACTIVE' }]}
+        onStatusChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('実施中')).toBeInTheDocument();
+    expect(screen.queryByText('ACTIVE')).not.toBeInTheDocument();
+  });
 });

@@ -80,7 +80,7 @@ export const AdminProjectRegister: React.FC = () => {
   return (
     <ProjectRecordPage
       title='プロジェクト作成'
-      toolbar={<TemporaryAdminProjectAutofillButton form={form} />}
+      // toolbar={<TemporaryAdminProjectAutofillButton form={form} />}
     >
       <ProjectRecordForm
         form={form}

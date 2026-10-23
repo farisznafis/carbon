@@ -53,6 +53,7 @@ import { AdminProjectDetailLayout } from './AdminProjectDetailLayout';
 import { ProjectCompaniesPanel } from './components/ProjectCompaniesPanel';
 import { ProjectEmissionTrendCard } from './components/ProjectEmissionTrendCard';
 import { formatProjectDetailValue } from './projectDetailDisplay';
+import { normalizeProjectStatus } from '@/features/admin/dashboard/projectStatusPresentation';
 
 const DEFAULT_MONITORING_PAGE = 1;
 const DEFAULT_MONITORING_LIMIT = 10;
@@ -128,7 +129,7 @@ function ProjectOverviewCard({
           <div className="flex items-center justify-between gap-4">
             <dt className="text-small text-muted-foreground">ステータス</dt>
             <dd className="text-small font-bold text-foreground">
-              {formatProjectDetailValue(project.projectStatus)}
+              {formatProjectDetailValue(normalizeProjectStatus(project.projectStatus))}
             </dd>
           </div>
           <div className="flex items-center justify-between gap-4">

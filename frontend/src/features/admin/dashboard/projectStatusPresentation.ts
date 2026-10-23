@@ -41,8 +41,8 @@ const PROJECT_STATUS_ALIASES: Readonly<Record<string, ProjectStatus>> = {
 };
 
 /** Converts an API project status into the canonical Japanese status when known. */
-export function normalizeProjectStatus(status: string) {
-  const normalizedStatus = status.trim();
+export function normalizeProjectStatus(status: string | null | undefined) {
+  const normalizedStatus = String(status ?? '').trim();
   const knownStatus = PROJECT_STATUS_PRESENTATIONS.find(
     (presentation) => presentation.status === normalizedStatus,
   );
@@ -56,7 +56,7 @@ export function normalizeProjectStatus(status: string) {
 
 /** Tone for any API status value (Japanese or English alias); unknown values stay neutral. */
 export function getProjectStatusTone(status: string): StatusBadgeTone {
-  const normalized = normalizeProjectStatus(String(status ?? ''));
+  const normalized = normalizeProjectStatus(status);
   return PROJECT_STATUS_PRESENTATIONS.find((item) => item.status === normalized)?.tone ?? 'neutral';
 }
 

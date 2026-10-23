@@ -15,7 +15,12 @@ import {
 import { ProjectCompletionDialog } from './ProjectCompletionDialog';
 import { statusBadgeToneClassNames } from '@/components/data-display/StatusBadge';
 import { cn } from '@/lib/utils';
-import { formatProjectDateTime, getProjectStatusTone } from '../projectStatusPresentation';
+import {
+  formatProjectDateTime,
+  getProjectStatusTone,
+  normalizeProjectStatus,
+  PROJECT_STATUS_PRESENTATIONS,
+} from '../projectStatusPresentation';
 
 type ProjectTableProps = {
   projects: Project[];
@@ -31,17 +36,10 @@ type ProjectTableProps = {
 const projectTableGridColumns =
   'minmax(220px,1.5fr) minmax(200px,.9fr) minmax(200px,1.1fr) minmax(172px,.75fr) minmax(150px,.7fr)';
 
-const projectStatusOptions: ProjectStatus[] = [
-  '作成済み',
-  '準備中',
-  '変更中',
-  '妥当性確認処理',
-  '却下',
-  '実施中',
-  '検証中',
-  'クレジット申請中',
-  '終了',
-];
+// Same list as the 「すべてのステータス」 filter, so the table and filter always use the same labels.
+const projectStatusOptions: ProjectStatus[] = PROJECT_STATUS_PRESENTATIONS.map(
+  (presentation) => presentation.status,
+);
 
 function isProjectStatus(
   status: string,
@@ -65,20 +63,6 @@ function getStatusOptions(
     currentStatus,
     ...projectStatusOptions,
   ];
-}
-
-function isTerminalProjectStatus(
-  status: string,
-) {
-  const normalizedStatus = status
-    .trim()
-    .toUpperCase();
-
-  return [
-    '終了',
-    'ENDED',
-    'INACTIVE',
-  ].includes(normalizedStatus);
 }
 
 function displayValue(value: unknown) {
@@ -252,13 +236,14 @@ export function ProjectTable({
         label: 'ステータス',
         sortable: true,
         sortValue: (project) =>
-          project.projectStatus,
+          normalizeProjectStatus(project.projectStatus),
 
         render: (project) => {
-          const statusIsTerminal =
-            isTerminalProjectStatus(
-              project.projectStatus,
-            );
+          // The API may return English codes (ACTIVE); show the Japanese label instead.
+          const status = normalizeProjectStatus(
+            project.projectStatus,
+          );
+          const statusIsTerminal = status === '終了';
 
           const isUpdating =
             updatingProjectStatusId ===
@@ -270,9 +255,7 @@ export function ProjectTable({
               data-row-click-ignore
             >
               <Select
-                value={
-                  project.projectStatus
-                }
+                value={status}
                 disabled={
                   isUpdating ||
                   statusIsTerminal
@@ -287,21 +270,19 @@ export function ProjectTable({
                 <SelectTrigger
                   className={cn(
                     'h-8 w-full rounded-full border px-3 text-table font-medium shadow-none focus:ring-1 [@media(pointer:coarse)]:h-11',
-                    statusBadgeToneClassNames[getProjectStatusTone(String(project.projectStatus))],
+                    statusBadgeToneClassNames[getProjectStatusTone(status)],
                   )}
                 >
                   <SelectValue />
                 </SelectTrigger>
 
                 <SelectContent>
-                  {getStatusOptions(
-                    project.projectStatus,
-                  ).map((status) => (
+                  {getStatusOptions(status).map((option) => (
                     <SelectItem
-                      key={status}
-                      value={status}
+                      key={option}
+                      value={option}
                     >
-                      {status}
+                      {option}
                     </SelectItem>
                   ))}
                 </SelectContent>

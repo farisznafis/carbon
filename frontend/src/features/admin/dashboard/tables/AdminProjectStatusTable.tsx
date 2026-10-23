@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { isParticipationReviewForProject } from '@/features/admin/membership-review/participationReviewProjectMatch';
 import { usePagination } from '@/hooks/usePagination';
 import { ArrowRight } from 'lucide-react';
-import { getProjectStatusTone } from '../projectStatusPresentation';
+import { getProjectStatusTone, normalizeProjectStatus } from '../projectStatusPresentation';
 
 const PROJECT_STATUS_PAGE_SIZE = 5;
 const DUMMY_REDUCTION_VALUES = [108, 132, 96, 20, 10] as const;
@@ -138,10 +138,10 @@ export function AdminProjectStatusTable({
         id: 'status',
         label: 'ステータス',
         sortable: true,
-        sortValue: (row) => row.project.projectStatus,
+        sortValue: (row) => normalizeProjectStatus(row.project.projectStatus),
         render: ({ project }) => (
           <StatusBadge tone={getProjectStatusTone(project.projectStatus)}>
-            {project.projectStatus || '—'}
+            {normalizeProjectStatus(project.projectStatus) || '—'}
           </StatusBadge>
         ),
       },

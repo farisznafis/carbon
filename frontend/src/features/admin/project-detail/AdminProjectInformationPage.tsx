@@ -23,6 +23,7 @@ import {
   formatProjectEmission,
   formatProjectPersonName,
 } from './projectDetailDisplay';
+import { normalizeProjectStatus } from '@/features/admin/dashboard/projectStatusPresentation';
 
 /** Converts a nullable relationship flag into a readable Japanese status. */
 function formatRelationshipStatus(
@@ -95,7 +96,7 @@ export default function AdminProjectInformationPage() {
               />
               <ProfileDetailField
                 label="ステータス"
-                value={formatProjectDetailValue(project.projectStatus)}
+                value={formatProjectDetailValue(normalizeProjectStatus(project.projectStatus))}
               />
               <ProfileDetailField
                 label="会社名"
