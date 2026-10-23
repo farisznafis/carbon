@@ -462,11 +462,7 @@ export function MasterHomeSection() {
           label='参加プロジェクト'
           value={home.approvedProjectCount.toLocaleString('ja-JP')}
           unit='件'
-          note={
-            home.pendingProjectCount > 0
-              ? `入会申請中 ${home.pendingProjectCount}件`
-              : undefined
-          }
+          note={`入会申請中 ${home.pendingProjectCount}件`}
           loading={home.isBaseLoading}
           onClick={() => navigate(paths.masterDashboardMembership)}
         />
@@ -475,12 +471,18 @@ export function MasterHomeSection() {
           value={
             home.targets.length > 0
               ? home.submittedCount.toLocaleString('ja-JP')
-              : '対象なし'
+              : '—'
           }
           unit={
             home.targets.length > 0 ? `/ ${home.targets.length}件` : undefined
           }
-          note={home.targets.length > 0 ? '提出済み' : undefined}
+          note={
+            home.targets.length === 0
+              ? '今月の提出対象はありません'
+              : home.submittedCount >= home.targets.length
+                ? 'すべて提出済み'
+                : `未提出 ${home.targets.length - home.submittedCount}件`
+          }
           loading={home.isMonitoringLoading}
           onClick={() => scrollToSection(SITES_ID)}
         />
