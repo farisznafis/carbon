@@ -32,6 +32,10 @@ import {
   type SignupRevisionStep,
 } from './signupRevisionMapper';
 import { ActionButton } from '@/components/actions';
+import { ActionSessionDeadline } from '@/components/feedback/ActionSessionDeadline';
+import { clearActionSession, readActionSession, saveActionSession } from '@/lib/actionSession';
+
+const SESSION_PAGE = 'signup-revision';
 
 const revisionSteps = [
   { number: 1, title: '法人・個人情報' },
@@ -91,6 +95,7 @@ export default function SignupRevisionPage() {
   const [challengeId, setChallengeId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<SignupRevisionFieldErrors>({});
+  const [sessionExpiresAt, setSessionExpiresAt] = useState<number | null>(null);
 
   const loadRevision = useCallback(async (actionSessionToken: string) => {
     setPageState('loading');
@@ -105,6 +110,7 @@ export default function SignupRevisionPage() {
     } catch (error) {
       if (isInvalidActionSession(error)) {
         actionSessionTokenRef.current = null;
+        clearActionSession(SESSION_PAGE);
         setPageState('invalid');
         return;
       }
@@ -125,22 +131,38 @@ export default function SignupRevisionPage() {
     );
 
     if (!token) {
-      setPageState('invalid');
+      // A refresh: the token left the URL, but the session from the first opening may still run.
+      const stored = readActionSession(SESSION_PAGE);
+      if (!stored) {
+        setPageState('invalid');
+        return;
+      }
+      actionSessionTokenRef.current = stored.actionSessionToken;
+      setSessionExpiresAt(stored.expiresAt);
+      void loadRevision(stored.actionSessionToken);
       return;
     }
 
     void exchangeActionLink(token)
       .then((response) => {
         if (!response.actionSessionToken) {
+          clearActionSession(SESSION_PAGE);
           setPageState('invalid');
           return;
         }
 
         actionSessionTokenRef.current = response.actionSessionToken;
+        const session = saveActionSession(
+          SESSION_PAGE,
+          response.actionSessionToken,
+          response.expiresInSeconds,
+        );
+        setSessionExpiresAt(session.expiresAt);
         return loadRevision(response.actionSessionToken);
       })
       .catch(() => {
         actionSessionTokenRef.current = null;
+        clearActionSession(SESSION_PAGE);
         setPageState('invalid');
       });
   }, [loadRevision]);
@@ -178,6 +200,7 @@ export default function SignupRevisionPage() {
         mapFormDataToSignupRevision(revisionData, challengeId),
       );
       actionSessionTokenRef.current = null;
+      clearActionSession(SESSION_PAGE);
       setRevisionData(null);
       setChallengeId(null);
       setRejectionReason(null);
@@ -186,6 +209,7 @@ export default function SignupRevisionPage() {
     } catch (error) {
       if (isInvalidActionSession(error)) {
         actionSessionTokenRef.current = null;
+        clearActionSession(SESSION_PAGE);
         setPageState('invalid');
         return;
       }
@@ -239,7 +263,7 @@ export default function SignupRevisionPage() {
           <CardHeader>
             <CardTitle>リンクが無効または期限切れです</CardTitle>
             <CardDescription>
-              このリンクは既に使用されたか、有効期限が切れています。メールに記載された案内をご確認ください。
+              このリンクは既に使用されたか、有効期限が切れています。再申請がお済みでない場合は、メールに記載されたリンクをもう一度開いてください。リンクを開いてから2時間が過ぎた場合は、運営事務局に修正用リンクの再送をご依頼ください。
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -341,6 +365,8 @@ export default function SignupRevisionPage() {
             </div>
           </div>
         </section>
+
+        {sessionExpiresAt !== null && <ActionSessionDeadline expiresAt={sessionExpiresAt} />}
 
         <div className="space-y-6">
           <WizardProgress currentStep={currentStep} steps={revisionSteps} />

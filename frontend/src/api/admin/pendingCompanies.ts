@@ -169,6 +169,22 @@ export async function resendMasterSetupLink(
   );
 }
 
+/**
+ * POST /admin/companies/{companyId}/signup-revision-link/resend: emails a REJECTED
+ * company a fresh revision link; the previous link stops working.
+ */
+export async function resendSignupRevisionLink(
+  companyId: string,
+): Promise<CompanyMutationResponse> {
+  return apiRequest<CompanyMutationResponse>(
+    `/admin/companies/${encodeURIComponent(companyId)}/signup-revision-link/resend`,
+    {
+      method: 'POST',
+      fallbackErrorMessage: 'リンクを再送信できませんでした。',
+    },
+  );
+}
+
 export async function sendAdminCompanyPasswordResetLink(
   companyId: string,
 ): Promise<AdminCompanyPasswordResetLinkResponse> {

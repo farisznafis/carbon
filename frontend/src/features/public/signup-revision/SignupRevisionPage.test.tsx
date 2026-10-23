@@ -97,11 +97,49 @@ describe('SignupRevisionPage', () => {
       purpose: 'COMPANY_SIGNUP_REVISION',
       expiresInSeconds: 900,
     });
+    sessionStorage.clear();
     window.history.replaceState(
       window.history.state,
       '',
       '/signup/revision#token=email-link-token',
     );
+  });
+
+  it('reloads the revision with the stored session after a refresh', async () => {
+    getSignupRevisionMock.mockResolvedValue(revisionResponse);
+    sessionStorage.setItem(
+      'action-session:signup-revision',
+      JSON.stringify({ actionSessionToken: 'stored-session', expiresAt: Date.now() + 60_000 }),
+    );
+    window.history.replaceState(window.history.state, '', '/signup/revision');
+
+    render(
+      <MemoryRouter initialEntries={['/signup/revision']}>
+        <SignupRevisionPage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText('法人情報フォーム')).toBeInTheDocument();
+    expect(exchangeActionLinkMock).not.toHaveBeenCalled();
+    expect(getSignupRevisionMock).toHaveBeenCalledWith('stored-session');
+  });
+
+  it('shows the invalid state and removes an expired stored session', async () => {
+    sessionStorage.setItem(
+      'action-session:signup-revision',
+      JSON.stringify({ actionSessionToken: 'old-session', expiresAt: Date.now() - 1 }),
+    );
+    window.history.replaceState(window.history.state, '', '/signup/revision');
+
+    render(
+      <MemoryRouter initialEntries={['/signup/revision']}>
+        <SignupRevisionPage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText('リンクが無効または期限切れです')).toBeInTheDocument();
+    expect(sessionStorage.getItem('action-session:signup-revision')).toBeNull();
+    expect(getSignupRevisionMock).not.toHaveBeenCalled();
   });
 
   it('reads and clears the fragment once in React StrictMode', async () => {

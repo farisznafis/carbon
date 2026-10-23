@@ -52,7 +52,65 @@ describe('MasterSetupPage', () => {
     });
     setupMasterAccountMock.mockReset().mockResolvedValue({ statusCode: 'OK', message: '完了' });
     toastMock.mockReset();
+    sessionStorage.clear();
     window.history.replaceState(window.history.state, '', '/account/setup#token=email-link-token');
+  });
+
+  it('keeps the exchanged session so a refresh returns to the form', async () => {
+    renderSetupPage();
+    await screen.findByLabelText('ユーザー名');
+
+    const stored = JSON.parse(sessionStorage.getItem('action-session:master-setup') ?? '{}');
+    expect(stored.actionSessionToken).toBe('setup-session');
+    expect(stored.expiresAt).toBeGreaterThan(Date.now());
+  });
+
+  it('restores the form from the stored session after a refresh and clears it when done', async () => {
+    sessionStorage.setItem(
+      'action-session:master-setup',
+      JSON.stringify({ actionSessionToken: 'stored-session', expiresAt: Date.now() + 60_000 }),
+    );
+    window.history.replaceState(window.history.state, '', '/account/setup');
+    renderSetupPage();
+    await fillForm('yamada_taro');
+
+    expect(exchangeActionLinkMock).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(setupMasterAccountMock).toHaveBeenCalledWith('stored-session', expect.anything()),
+    );
+    expect(sessionStorage.getItem('action-session:master-setup')).toBeNull();
+  });
+
+  it('shows the invalid state and removes an expired stored session', async () => {
+    sessionStorage.setItem(
+      'action-session:master-setup',
+      JSON.stringify({ actionSessionToken: 'old-session', expiresAt: Date.now() - 1 }),
+    );
+    window.history.replaceState(window.history.state, '', '/account/setup');
+    renderSetupPage();
+
+    expect(await screen.findByText('設定リンクを利用できません')).toBeInTheDocument();
+    expect(sessionStorage.getItem('action-session:master-setup')).toBeNull();
+    expect(exchangeActionLinkMock).not.toHaveBeenCalled();
+  });
+
+  it('drops the stored session when the backend rejects it', async () => {
+    sessionStorage.setItem(
+      'action-session:master-setup',
+      JSON.stringify({ actionSessionToken: 'stored-session', expiresAt: Date.now() + 60_000 }),
+    );
+    window.history.replaceState(window.history.state, '', '/account/setup');
+    setupMasterAccountMock.mockRejectedValue(
+      new ApiError('期限切れです。', {
+        status: 401,
+        payload: { statusCode: 'INVALID_OR_EXPIRED_TOKEN', message: '期限切れです。' },
+      }),
+    );
+    renderSetupPage();
+    await fillForm('yamada_taro');
+
+    expect(await screen.findByText('設定リンクを利用できません')).toBeInTheDocument();
+    expect(sessionStorage.getItem('action-session:master-setup')).toBeNull();
   });
 
   it('exchanges the fragment token once, clears it, and sets up the account', async () => {

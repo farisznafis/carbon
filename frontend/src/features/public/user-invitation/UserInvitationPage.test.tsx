@@ -70,11 +70,38 @@ describe('UserInvitationPage', () => {
       siteId: 'site001',
       siteName: '東京拠点',
     });
+    sessionStorage.clear();
     window.history.replaceState(
       window.history.state,
       '',
       '/user/invitation#token=email-link-token',
     );
+  });
+
+  it('restores the form from the stored session after a refresh', async () => {
+    sessionStorage.setItem(
+      'action-session:user-invitation',
+      JSON.stringify({ actionSessionToken: 'stored-session', expiresAt: Date.now() + 60_000 }),
+    );
+    window.history.replaceState(window.history.state, '', '/user/invitation');
+    renderInvitationPage({ strict: true });
+
+    expect(await screen.findByRole('heading', { name: 'アカウント登録' })).toBeVisible();
+    expect(exchangeActionLinkMock).not.toHaveBeenCalled();
+    expect(getUserInvitationContextMock).toHaveBeenCalledWith('stored-session');
+  });
+
+  it('shows the invalid state and removes an expired stored session', async () => {
+    sessionStorage.setItem(
+      'action-session:user-invitation',
+      JSON.stringify({ actionSessionToken: 'old-session', expiresAt: Date.now() - 1 }),
+    );
+    window.history.replaceState(window.history.state, '', '/user/invitation');
+    renderInvitationPage();
+
+    expect(await screen.findByText('招待リンクを利用できません')).toBeInTheDocument();
+    expect(sessionStorage.getItem('action-session:user-invitation')).toBeNull();
+    expect(getUserInvitationContextMock).not.toHaveBeenCalled();
   });
 
   it('exchanges and clears the fragment once while showing readonly context', async () => {

@@ -157,6 +157,7 @@ export function UserInvitationDialog({
           <DialogTitle>社員を招待</DialogTitle>
           <DialogDescription className="leading-6">
             招待メールを送信します。氏名やアカウント情報は、招待を受け取ったユーザーが入力します。
+            登録が済んでいないメールアドレスに再度送信すると、新しい招待リンクが届き、以前のリンクは無効になります。
           </DialogDescription>
         </DialogHeader>
 

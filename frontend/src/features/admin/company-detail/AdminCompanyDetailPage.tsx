@@ -18,6 +18,7 @@ import type {
 import {
   getCompanySuspensions,
   resendMasterSetupLink,
+  resendSignupRevisionLink,
   resolveCompanySuspension,
   sendAdminCompanyPasswordResetLink,
   suspendAdminCompany,
@@ -47,6 +48,7 @@ import { PermissionDeniedNotice } from '@/features/admin/permissions/PermissionD
 import { AdminCompanySitesTable } from './components/AdminCompanySitesTable';
 import { AdminCompanyUsersTable } from './components/AdminCompanyUsersTable';
 import { AdminMasterPasswordResetDialog } from './components/AdminMasterPasswordResetDialog';
+import { ResendLinkDialog } from './components/ResendLinkDialog';
 import { DefinitionRow } from './components/DefinitionRow';
 import { CompanyStatusBadge } from './CompanyStatusBadge';
 import {
@@ -61,6 +63,32 @@ import { SegmentTabsList, SegmentTabsTrigger, TabCount } from '@/components/navi
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const SUSPEND_REASON_CODE: SuspensionReasonCode = 'POLICY_VIOLATION';
+
+/** setup: APPROVED_PENDING_SETUP master setup link · revision: REJECTED signup revision link. */
+type ResendLinkKind = 'setup' | 'revision';
+
+const RESEND_LINK_CONTENT: Record<
+  ResendLinkKind,
+  {
+    title: string;
+    description: string;
+    successTitle: string;
+    send: typeof resendMasterSetupLink;
+  }
+> = {
+  setup: {
+    title: '設定リンクの再送',
+    description: 'マスターアカウント設定用のリンクを企業のメールアドレスに再送信します。',
+    successTitle: '設定リンクを再送しました',
+    send: resendMasterSetupLink,
+  },
+  revision: {
+    title: '修正用リンクの再送',
+    description: '登録内容の修正用リンクを企業のメールアドレスに再送信します。',
+    successTitle: '修正用リンクを再送しました',
+    send: resendSignupRevisionLink,
+  },
+};
 
 const DEFAULT_SUSPEND_PAYLOAD: SuspendCompanyPayload = {
   reasonCode: SUSPEND_REASON_CODE,
@@ -186,7 +214,8 @@ export default function AdminCompanyDetailPage() {
     useState(false);
   const [passwordResetSubmitting, setPasswordResetSubmitting] =
     useState(false);
-  const [setupLinkResending, setSetupLinkResending] = useState(false);
+  const [resendLinkKind, setResendLinkKind] = useState<ResendLinkKind | null>(null);
+  const [linkResending, setLinkResending] = useState(false);
 
   // Suspend dialog
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
@@ -362,27 +391,42 @@ export default function AdminCompanyDetailPage() {
     }
   };
 
-  /** Emails the master a fresh setup link; the old one stops working (links last 72 hours). */
-  const handleResendSetupLink = async () => {
+  /** Emails a fresh setup / revision link; the old one stops working. */
+  const handleConfirmResendLink = async () => {
     if (!permissions.guardAction('PARTICIPATING_COMPANY_APPLICATION_REVIEW', () => undefined)) return;
-    if (!detail) return;
+    if (!detail || !resendLinkKind) return;
+    const content = RESEND_LINK_CONTENT[resendLinkKind];
 
-    setSetupLinkResending(true);
+    setLinkResending(true);
     try {
-      await resendMasterSetupLink(detail.company.companyId);
+      const response = await content.send(detail.company.companyId);
+      setResendLinkKind(null);
       toast({
-        title: '設定リンクを再送しました',
-        description: `${detail.company.email} に送信しました。`,
+        title: content.successTitle,
+        description: response.message || `${detail.company.email} に送信しました。`,
         variant: 'success',
       });
     } catch (error) {
+      const status = error instanceof ApiError ? error.status : null;
+      if (status === 409) {
+        // The company left the status this link is for (e.g. already re-applied); show its current state.
+        setResendLinkKind(null);
+        void companyDetailQuery.refetch();
+      }
       toast({
-        title: '設定リンクを再送できませんでした',
-        description: error instanceof Error ? error.message : 'しばらくしてからもう一度お試しください。',
+        title: 'リンクを再送信できませんでした',
+        description:
+          status === 409
+            ? 'この企業のステータスが変わっています。最新の情報を表示します。'
+            : status === 404
+              ? '企業が見つからないか、この機能は現在利用できません。'
+              : error instanceof Error
+                ? error.message
+                : 'しばらくしてからもう一度お試しください。',
         variant: 'destructive',
       });
     } finally {
-      setSetupLinkResending(false);
+      setLinkResending(false);
     }
   };
 
@@ -639,13 +683,35 @@ export default function AdminCompanyDetailPage() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      disabled={setupLinkResending}
-                      onClick={() => void handleResendSetupLink()}
+                      onClick={() =>
+                        permissions.guardAction('PARTICIPATING_COMPANY_APPLICATION_REVIEW', () =>
+                          setResendLinkKind('setup'),
+                        )
+                      }
                     >
                       <Mail />
-                      {setupLinkResending ? '送信中...' : '設定リンクを再送'}
+                      設定リンクを再送
                     </Button>
                   </div>
+                </>
+              ) : company.companyStatus === 'REJECTED' ? (
+                <>
+                  <p className="py-4 text-sm leading-6 text-foreground">
+                    参加申請は却下されています。企業は修正用リンクから登録内容を修正して再申請できます。リンクを開いてから2時間が過ぎた場合や、リンクが届いていない場合は再送してください。
+                  </p>
+                  {permissions.hasPermission('PARTICIPATING_COMPANY_APPLICATION_REVIEW') && (
+                    <div className="flex justify-end border-t border-border/50 pt-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setResendLinkKind('revision')}
+                      >
+                        <Mail />
+                        修正用リンクを再送
+                      </Button>
+                    </div>
+                  )}
                 </>
               ) : (
                 <p className="py-4 text-sm text-foreground">
@@ -751,6 +817,19 @@ export default function AdminCompanyDetailPage() {
           isSubmitting={passwordResetSubmitting}
           onOpenChange={handlePasswordResetDialogOpenChange}
           onConfirm={() => void handleConfirmPasswordReset()}
+        />
+      )}
+      {resendLinkKind && (
+        <ResendLinkDialog
+          open
+          title={RESEND_LINK_CONTENT[resendLinkKind].title}
+          description={RESEND_LINK_CONTENT[resendLinkKind].description}
+          email={company.email}
+          isSubmitting={linkResending}
+          onOpenChange={(open) => {
+            if (!open) setResendLinkKind(null);
+          }}
+          onConfirm={() => void handleConfirmResendLink()}
         />
       )}
     </main>

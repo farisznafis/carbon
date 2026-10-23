@@ -9,6 +9,7 @@ export {
   rejectPendingCompany,
   resolveCompanySuspension,
   resendMasterSetupLink,
+  resendSignupRevisionLink,
   sendAdminCompanyPasswordResetLink,
   suspendAdminCompany,
 } from './pendingCompanies';

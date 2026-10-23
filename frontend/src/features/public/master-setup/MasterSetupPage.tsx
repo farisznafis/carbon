@@ -27,11 +27,16 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { ActionSessionDeadline } from '@/components/feedback/ActionSessionDeadline';
 import { useToast } from '@/hooks/use-toast';
+import { clearActionSession, readActionSession, saveActionSession } from '@/lib/actionSession';
 import { passwordSchema, usernameSchema } from '@/lib/validations';
 import { paths } from '@/routes/paths';
 
 const SETUP_PURPOSE = 'MASTER_ACCOUNT_SETUP';
+const SESSION_PAGE = 'master-setup';
+/** Marks a page view that resumed a stored session instead of exchanging a token. */
+const STORED_SESSION_MARKER = 'stored-session';
 const INVALID_LINK_STATUS = 'INVALID_OR_EXPIRED_TOKEN';
 const USED_USERNAME_STATUS = 'USED_USERNAME';
 
@@ -141,6 +146,7 @@ export default function MasterSetupPage() {
   const actionSessionTokenRef = useRef<string | null>(null);
   const [pageState, setPageState] = useState<SetupPageState>('loading');
   const [formError, setFormError] = useState<string | null>(null);
+  const [sessionExpiresAt, setSessionExpiresAt] = useState<number | null>(null);
 
   const form = useForm<SetupFormValues>({
     resolver: zodResolver(setupSchema),
@@ -153,7 +159,17 @@ export default function MasterSetupPage() {
     const token = readSetupToken();
 
     if (!token) {
-      if (!processedTokenRef.current) setPageState('invalid');
+      if (processedTokenRef.current) return;
+      // A refresh: the token left the URL, but the session from the first opening may still run.
+      const stored = readActionSession(SESSION_PAGE);
+      processedTokenRef.current = STORED_SESSION_MARKER;
+      if (!stored) {
+        setPageState('invalid');
+        return;
+      }
+      actionSessionTokenRef.current = stored.actionSessionToken;
+      setSessionExpiresAt(stored.expiresAt);
+      setPageState('form');
       return;
     }
     if (processedTokenRef.current === token) return;
@@ -171,20 +187,29 @@ export default function MasterSetupPage() {
         if (processedTokenRef.current !== token) return;
 
         if (response.purpose !== SETUP_PURPOSE || !response.actionSessionToken) {
+          clearActionSession(SESSION_PAGE);
           setPageState('invalid');
           return;
         }
         actionSessionTokenRef.current = response.actionSessionToken;
+        const session = saveActionSession(
+          SESSION_PAGE,
+          response.actionSessionToken,
+          response.expiresInSeconds,
+        );
+        setSessionExpiresAt(session.expiresAt);
         setPageState('form');
       })
       .catch((error: unknown) => {
         if (processedTokenRef.current !== token) return;
 
         if (isUnavailable(error)) {
+          clearActionSession(SESSION_PAGE);
           setPageState('unavailable');
           return;
         }
         if (isInvalidLink(error)) {
+          clearActionSession(SESSION_PAGE);
           setPageState('invalid');
           return;
         }
@@ -208,6 +233,7 @@ export default function MasterSetupPage() {
     try {
       const response = await setupMasterAccount(actionSessionToken, { username, password });
       actionSessionTokenRef.current = null;
+      clearActionSession(SESSION_PAGE);
       toast({
         title: 'マスターアカウントの設定が完了しました。',
         description: response.message || '設定したユーザー名とパスワードでログインしてください。',
@@ -217,11 +243,13 @@ export default function MasterSetupPage() {
     } catch (error) {
       if (isInvalidLink(error)) {
         actionSessionTokenRef.current = null;
+        clearActionSession(SESSION_PAGE);
         setPageState('invalid');
         return;
       }
       if (isUnavailable(error)) {
         actionSessionTokenRef.current = null;
+        clearActionSession(SESSION_PAGE);
         setPageState('unavailable');
         return;
       }
@@ -253,7 +281,7 @@ export default function MasterSetupPage() {
     return (
       <SetupStateCard
         title="設定リンクを利用できません"
-        description="このリンクはすでに使用されたか、有効期限（72時間）が切れています。設定がお済みでない場合は、運営事務局に設定リンクの再送をご依頼ください。"
+        description="このリンクはすでに使用されたか、有効期限が切れています。設定がお済みでない場合は、メールに記載されたリンクをもう一度開いてください。リンクを開いてから30分が過ぎた場合や、72時間の有効期限が切れた場合は、運営事務局に設定リンクの再送をご依頼ください。"
         onAction={toLogin}
       />
     );
@@ -360,6 +388,10 @@ export default function MasterSetupPage() {
                   >
                     {formError}
                   </p>
+                )}
+
+                {sessionExpiresAt !== null && (
+                  <ActionSessionDeadline expiresAt={sessionExpiresAt} />
                 )}
 
                 <FormActions

@@ -48,9 +48,14 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { ActionSessionDeadline } from '@/components/feedback/ActionSessionDeadline';
+import { clearActionSession, readActionSession, saveActionSession } from '@/lib/actionSession';
 import { paths } from '@/routes/paths';
 
 const INVITATION_PURPOSE = 'USER_INVITATION';
+const SESSION_PAGE = 'user-invitation';
+/** Marks a page view that resumed a stored session instead of exchanging a token. */
+const STORED_SESSION_MARKER = 'stored-session';
 const INVALID_INVITATION_STATUS = 'INVALID_OR_EXPIRED_TOKEN';
 const INVITATION_READONLY_DESCRIPTION_ID = 'invitation-readonly-note';
 
@@ -270,6 +275,7 @@ export default function UserInvitationPage() {
   const [invitationContext, setInvitationContext] =
     useState<UserInvitationContext | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [sessionExpiresAt, setSessionExpiresAt] = useState<number | null>(null);
 
   const form = useForm<UserInvitationFormValues>({
     defaultValues: emptyInvitationForm,
@@ -301,11 +307,13 @@ export default function UserInvitationPage() {
 
         if (isInvalidInvitation(error)) {
           actionSessionTokenRef.current = null;
+          clearActionSession(SESSION_PAGE);
           setPageState('invalid');
           return;
         }
         if (error instanceof ApiError && error.status === 404) {
           actionSessionTokenRef.current = null;
+          clearActionSession(SESSION_PAGE);
           setPageState('unavailable');
           return;
         }
@@ -326,9 +334,20 @@ export default function UserInvitationPage() {
     const invitationToken = readInvitationToken();
 
     if (!invitationToken) {
-      if (!processedInvitationTokenRef.current) {
+      if (processedInvitationTokenRef.current) return;
+      // A refresh: the token left the URL, but the session from the first opening may still run.
+      const stored = readActionSession(SESSION_PAGE);
+      if (!stored) {
+        processedInvitationTokenRef.current = STORED_SESSION_MARKER;
         setPageState('invalid');
+        return;
       }
+      // The marker stands in for the email token in loadInvitationContext's stale-response check.
+      const marker = `${STORED_SESSION_MARKER}:${stored.actionSessionToken}`;
+      processedInvitationTokenRef.current = marker;
+      actionSessionTokenRef.current = stored.actionSessionToken;
+      setSessionExpiresAt(stored.expiresAt);
+      void loadInvitationContext(stored.actionSessionToken, marker);
       return;
     }
 
@@ -357,11 +376,18 @@ export default function UserInvitationPage() {
           !response.actionSessionToken
         ) {
           actionSessionTokenRef.current = null;
+          clearActionSession(SESSION_PAGE);
           setPageState('invalid');
           return;
         }
 
         actionSessionTokenRef.current = response.actionSessionToken;
+        const session = saveActionSession(
+          SESSION_PAGE,
+          response.actionSessionToken,
+          response.expiresInSeconds,
+        );
+        setSessionExpiresAt(session.expiresAt);
         return loadInvitationContext(
           response.actionSessionToken,
           invitationToken,
@@ -372,10 +398,12 @@ export default function UserInvitationPage() {
 
         actionSessionTokenRef.current = null;
         if (error instanceof ApiError && error.status === 404) {
+          clearActionSession(SESSION_PAGE);
           setPageState('unavailable');
           return;
         }
         if (isInvalidInvitation(error)) {
+          clearActionSession(SESSION_PAGE);
           setPageState('invalid');
           return;
         }
@@ -426,6 +454,7 @@ export default function UserInvitationPage() {
         payload,
       );
       actionSessionTokenRef.current = null;
+      clearActionSession(SESSION_PAGE);
       toast({
         title: 'アカウント登録が完了しました。',
         description: response.message || 'ログインしてください。',
@@ -435,11 +464,13 @@ export default function UserInvitationPage() {
     } catch (error) {
       if (isInvalidInvitation(error)) {
         actionSessionTokenRef.current = null;
+        clearActionSession(SESSION_PAGE);
         setPageState('invalid');
         return;
       }
       if (error instanceof ApiError && error.status === 404) {
         actionSessionTokenRef.current = null;
+        clearActionSession(SESSION_PAGE);
         setPageState('unavailable');
         return;
       }
@@ -476,7 +507,7 @@ export default function UserInvitationPage() {
     return (
       <InvitationStateCard
         title="招待リンクを利用できません"
-        description="このリンクはすでに使用されたか、有効期限が切れています。新しい招待について、招待した方へお問い合わせください。"
+        description="このリンクはすでに使用されたか、有効期限が切れています。登録がお済みでない場合は、メールに記載されたリンクをもう一度開いてください。リンクを開いてから1時間が過ぎた場合は、自社のマスター（招待した方）に招待の再送をご依頼ください。"
         onAction={() => navigate(paths.login, { replace: true })}
       />
     );
@@ -736,6 +767,10 @@ export default function UserInvitationPage() {
                 </FormSection>
 
                 <FormErrorSummary />
+
+                {sessionExpiresAt !== null && (
+                  <ActionSessionDeadline expiresAt={sessionExpiresAt} />
+                )}
 
                 {formError && (
                   <p
