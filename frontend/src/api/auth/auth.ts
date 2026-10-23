@@ -24,17 +24,13 @@ export async function login(
   email: string,
   password: string,
 ): Promise<LoginResponse> {
-  const response = await apiFetch('/auth/user/login', {
+  // apiRequest throws an ApiError, so the form can read the status and per-field errors.
+  const json = await apiRequest<LoginResponse & { message?: string }>('/auth/user/login', {
     method: 'POST',
     auth: false,
     body: { companyId, identifier: email, password },
+    fallbackErrorMessage: 'Error during login',
   });
-
-  const { data: json } = await parseJsonResponse<LoginResponse & { message?: string }>(response);
-
-  if (!response.ok) {
-    throw new Error(json?.message || `HTTP ${response.status} Error during login`);
-  }
 
   if (json?.statusCode !== 'OK' && json?.statusCode !== '200') {
     throw new Error(json?.message || 'Error during login');
@@ -47,19 +43,12 @@ export async function adminLogin(
   identifier: string,
   password: string,
 ): Promise<LoginResponse> {
-  const response = await apiFetch('/auth/admin/login', {
+  return apiRequest<LoginResponse>('/auth/admin/login', {
     method: 'POST',
     auth: false,
     body: { identifier, password },
+    fallbackErrorMessage: 'Error during admin login',
   });
-
-  const { data: json } = await parseJsonResponse<LoginResponse & { message?: string }>(response);
-
-  if (!response.ok) {
-    throw new Error(json?.message || `HTTP ${response.status}`);
-  }
-
-  return json as LoginResponse;
 }
 
 export async function logout() {

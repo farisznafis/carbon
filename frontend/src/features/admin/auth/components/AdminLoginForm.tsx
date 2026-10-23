@@ -1,7 +1,10 @@
 import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { ApiError } from '@/api/_shared/errors';
 import { PasswordInput } from '@/components/inputs';
 import { LoginForm } from '@/components/forms/shared/LoginForm';
+import { resolveLoginError } from '@/components/forms/shared/loginError';
 import {
   Form,
   FormControl,
@@ -11,7 +14,9 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import type { AdminLoginFormData } from '@/lib/schemas/loginSchemas';
+import { adminLoginSchema, type AdminLoginFormData } from '@/lib/schemas/loginSchemas';
+
+const FIELD_MAP = { identifier: 'identifier', password: 'password' } as const;
 
 type AdminLoginFormProps = {
   onSubmit: (values: AdminLoginFormData) => Promise<void> | void;
@@ -21,6 +26,7 @@ export function AdminLoginForm({ onSubmit }: AdminLoginFormProps) {
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<AdminLoginFormData>({
+    resolver: zodResolver(adminLoginSchema),
     defaultValues: {
       identifier: '',
       password: '',
@@ -28,12 +34,11 @@ export function AdminLoginForm({ onSubmit }: AdminLoginFormProps) {
   });
 
   const handleSubmit = async (values: AdminLoginFormData) => {
-    setError(null);
-
     try {
       await onSubmit(values);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'ログインに失敗しました');
+      if (err instanceof ApiError && err.status === 401) form.setValue('password', '');
+      setError(resolveLoginError(err, FIELD_MAP, (field, message) => form.setError(field, { message })));
     }
   };
 
@@ -41,7 +46,10 @@ export function AdminLoginForm({ onSubmit }: AdminLoginFormProps) {
     <Form {...form}>
       <form
         className="absolute inset-0 h-full w-full min-w-0 max-w-full overflow-hidden"
-        onSubmit={form.handleSubmit(handleSubmit)}
+        onSubmit={(event) => {
+          setError(null);
+          return form.handleSubmit(handleSubmit)(event);
+        }}
         noValidate
       >
         <LoginForm

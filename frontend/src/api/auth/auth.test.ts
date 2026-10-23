@@ -36,6 +36,27 @@ describe('user login API', () => {
     expect(response.statusCode).toBe(statusCode);
     expect(response.role).toBe('master');
   });
+
+  it('throws an ApiError that keeps the status and field errors', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            statusCode: 'VALIDATION_ERROR',
+            message: 'invalid',
+            errors: { password: 'パスワードを入力してください。' },
+          }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } },
+        ),
+      ),
+    );
+
+    await expect(login('company-1', 'user', '')).rejects.toMatchObject({
+      status: 400,
+      payload: { errors: { password: 'パスワードを入力してください。' } },
+    });
+  });
 });
 
 describe('password reset API', () => {

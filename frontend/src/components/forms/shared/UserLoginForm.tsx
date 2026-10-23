@@ -1,8 +1,11 @@
 import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
+import { ApiError } from '@/api/_shared/errors';
 import { PasswordInput } from '@/components/inputs';
 import { LoginForm } from '@/components/forms/shared/LoginForm';
+import { resolveLoginError } from '@/components/forms/shared/loginError';
 import {
   Form,
   FormControl,
@@ -12,8 +15,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import type { UserLoginFormData } from '@/lib/schemas/loginSchemas';
+import { userLoginSchema, type UserLoginFormData } from '@/lib/schemas/loginSchemas';
 import { paths } from '@/routes/paths';
+
+// The backend calls the email-or-username field "identifier".
+const FIELD_MAP = { companyId: 'companyId', identifier: 'email', password: 'password' } as const;
 
 type UserLoginFormProps = {
   onSubmit: (values: UserLoginFormData) => Promise<void> | void;
@@ -23,6 +29,7 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<UserLoginFormData>({
+    resolver: zodResolver(userLoginSchema),
     defaultValues: {
       companyId: '',
       email: '',
@@ -31,12 +38,11 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
   });
 
   const handleSubmit = async (values: UserLoginFormData) => {
-    setError(null);
-
     try {
       await onSubmit(values);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'ログインに失敗しました');
+      if (err instanceof ApiError && err.status === 401) form.setValue('password', '');
+      setError(resolveLoginError(err, FIELD_MAP, (field, message) => form.setError(field, { message })));
     }
   };
 
@@ -44,7 +50,10 @@ export function UserLoginForm({ onSubmit }: UserLoginFormProps) {
     <Form {...form}>
       <form
         className="absolute inset-0 h-full w-full min-w-0 max-w-full overflow-hidden"
-        onSubmit={form.handleSubmit(handleSubmit)}
+        onSubmit={(event) => {
+          setError(null);
+          return form.handleSubmit(handleSubmit)(event);
+        }}
         noValidate
       >
         <LoginForm

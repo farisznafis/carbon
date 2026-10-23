@@ -9,14 +9,9 @@ export default function AdminLoginPage() {
   const { adminLogin } = useAuth();
 
   const handleAdminLogin = async (data: AdminLoginFormData) => {
-    try {
-      await adminLogin(data.identifier, data.password);
-      navigate(paths.adminDashboard);
-    } catch (error) {
-      throw new Error(
-        error instanceof Error ? error.message : '無効な管理者認証情報です',
-      );
-    }
+    // Errors propagate as-is: AdminLoginForm reads the ApiError status and field errors.
+    await adminLogin(data.identifier, data.password);
+    navigate(paths.adminDashboard);
   };
 
   return <AdminLoginForm onSubmit={handleAdminLogin} />;
