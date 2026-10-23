@@ -9,6 +9,7 @@ import {
   FormSection,
   FormSectionStack,
 } from '@/components/forms/form-layout';
+import { FormErrorSummary } from '@/components/forms/FormErrorSummary';
 import { RequiredBadge } from '@/components/forms/shared';
 import {
   Form,
@@ -195,11 +196,14 @@ export const SignupStep2 = ({
     } catch (error) {
       const message = applyBackendValidationErrors(form, error);
 
-      toast({
-        title: '入力内容を確認してください',
-        description: message || '入力内容に誤りがあります。',
-        variant: 'destructive',
-      });
+      // Field errors are listed by FormErrorSummary; only an unmapped error needs a toast.
+      if (message) {
+        toast({
+          title: '入力内容を確認してください',
+          description: message,
+          variant: 'destructive',
+        });
+      }
       logger.error('Signup step 2 validation failed:', error);
     } finally {
       setIsValidating(false);
@@ -333,6 +337,8 @@ export const SignupStep2 = ({
                 </div>
               )}
             </FormSection>
+
+            <FormErrorSummary />
 
             <FormActions
               pendingActionId={isValidating ? 'submit' : null}

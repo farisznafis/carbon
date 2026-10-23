@@ -18,7 +18,7 @@ const steps = [
 ];
 
 const Signup = () => {
-  const { currentStep } = useSignup();
+  const { currentStep, fieldErrors } = useSignup();
 
   return (
     <FormPageShell>
@@ -33,8 +33,8 @@ const Signup = () => {
           <WizardProgress currentStep={currentStep} steps={steps} />
 
           <div className="animate-slide-up">
-            {currentStep === 1 && <SignupStep1 />}
-            {currentStep === 2 && <SignupStep2 />}
+            {currentStep === 1 && <SignupStep1 serverErrors={fieldErrors} />}
+            {currentStep === 2 && <SignupStep2 serverErrors={fieldErrors} />}
             {currentStep === 3 && <SignupStep3 />}
             {currentStep === 4 && <SignupStep4 />}
           </div>

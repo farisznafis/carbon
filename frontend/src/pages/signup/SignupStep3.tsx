@@ -1,4 +1,9 @@
 ﻿import { signUp, type SignUpData } from '@/api/auth';
+import { ApiError } from '@/api/_shared/errors';
+import {
+  getSignupRevisionErrorStep,
+  mapSignupRevisionFieldErrors,
+} from '@/features/public/signup-revision/signupRevisionMapper';
 import {
   FormActions,
   FormCard,
@@ -85,7 +90,7 @@ export const SignupStep3 = ({
   description = '登録を完了する前に、入力内容を確認してください。',
   confirmLabel = '確認して登録',
 }: SignupStep3Props = {}) => {
-  const { signupData, setCurrentStep } = useSignup();
+  const { signupData, setCurrentStep, setFieldErrors } = useSignup();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const reviewData = data ?? signupData;
@@ -135,6 +140,26 @@ export const SignupStep3 = ({
         description: res.message || 'Success',
       });
     } catch (err) {
+      // A field the user typed on an earlier step was refused (e.g. 法人番号 or email already used):
+      // take them to that step with the field marked, instead of a toast on a page without the field.
+      // The revision page passes onConfirm and does this itself.
+      if (!onConfirm && err instanceof ApiError) {
+        const { emailVerificationChallengeId: _challenge, ...errors } =
+          mapSignupRevisionFieldErrors(err.payload?.errors);
+        const errorStep = getSignupRevisionErrorStep(errors);
+        if (errorStep && errorStep < 3) {
+          setFieldErrors(errors);
+          setCurrentStep(errorStep);
+          // The page changes under the user; say why (same as the revision page).
+          toast?.({
+            title: '入力内容を確認してください',
+            description: '修正が必要な項目があるため、入力画面に戻りました。',
+            variant: 'destructive',
+          });
+          return;
+        }
+      }
+
       const apiError = parseError(err);
       const errorToast = getErrorToastContent(apiError);
 

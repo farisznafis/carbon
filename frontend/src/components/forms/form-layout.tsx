@@ -250,6 +250,8 @@ export function FormSection({
   return (
     <section
       className={cn('space-y-4', className)}
+      // FormErrorSummary groups errors under this section's title.
+      data-form-section=""
       {...props}
     >
       <div className='flex items-center gap-3'>

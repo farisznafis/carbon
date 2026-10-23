@@ -14,6 +14,7 @@ import {
   FormSection,
   FormSectionStack,
 } from '@/components/forms/form-layout';
+import { FormErrorSummary } from '@/components/forms/FormErrorSummary';
 import { RequiredLabel } from '@/components/forms/shared';
 import { FormPageWrapper } from '@/components/layout/FormPageWrapper/FormPageWrapper';
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,11 @@ const userBackendFieldMap: Partial<Record<string, keyof UserFormData>> = {
   password: 'password',
   siteId: 'siteId',
 };
+
+/** Same rule and wording as the backend's @NotBlank, so an empty form fails here, not on the server. */
+const requiredRule = (message: string) => ({
+  validate: (value: unknown) => String(value ?? '').trim() !== '' || message,
+});
 
 function toValidationMessage(value: unknown): string {
   if (typeof value === 'string') return value;
@@ -122,6 +128,8 @@ export function UserForm({
     (mode === 'create' || mode === 'edit') && !hideSiteSection;
 
   const form = useForm<UserFormData>({
+    // FormErrorSummary decides where focus goes after a failed submit.
+    shouldFocusError: false,
     defaultValues: {
       ...defaultValues,
       password: undefined,
@@ -204,6 +212,7 @@ export function UserForm({
                 <FormField
                   control={form.control}
                   name="lastName"
+                  rules={requiredRule('名前（姓）を入力してください。')}
                   render={({ field }) => (
                     <FormItem>
                       <RequiredLabel>姓</RequiredLabel>
@@ -218,6 +227,7 @@ export function UserForm({
                 <FormField
                   control={form.control}
                   name="firstName"
+                  rules={requiredRule('名前（名）を入力してください。')}
                   render={({ field }) => (
                     <FormItem>
                       <RequiredLabel>名</RequiredLabel>
@@ -232,6 +242,7 @@ export function UserForm({
                 <FormField
                   control={form.control}
                   name="lastNameKana"
+                  rules={requiredRule('名前カナ（姓）を入力してください。')}
                   render={({ field }) => (
                     <FormItem>
                       <RequiredLabel>姓（カナ）</RequiredLabel>
@@ -246,6 +257,7 @@ export function UserForm({
                 <FormField
                   control={form.control}
                   name="firstNameKana"
+                  rules={requiredRule('名前カナ（名）を入力してください。')}
                   render={({ field }) => (
                     <FormItem>
                       <RequiredLabel>名（カナ）</RequiredLabel>
@@ -261,6 +273,7 @@ export function UserForm({
               <FormField
                 control={form.control}
                 name="phoneNumber"
+                rules={requiredRule('電話番号を入力してください。')}
                 render={({ field }) => (
                   <FormItem>
                     <RequiredLabel>電話番号（ハイフン無し）</RequiredLabel>
@@ -276,6 +289,7 @@ export function UserForm({
                 <FormField
                   control={form.control}
                   name="userPosition"
+                  rules={requiredRule('役職を入力してください。')}
                   render={({ field }) => (
                     <FormItem>
                       <RequiredLabel>役職</RequiredLabel>
@@ -294,6 +308,7 @@ export function UserForm({
                 <FormField
                   control={form.control}
                   name="username"
+                  rules={requiredRule('ユーザー名を入力してください。')}
                   render={({ field }) => (
                     <FormItem>
                       <RequiredLabel>ユーザー名</RequiredLabel>
@@ -309,6 +324,7 @@ export function UserForm({
               <FormField
                 control={form.control}
                 name="email"
+                rules={requiredRule('メールアドレスを入力してください。')}
                 render={({ field }) => (
                   <FormItem>
                     <RequiredLabel>メールアドレス</RequiredLabel>
@@ -328,6 +344,7 @@ export function UserForm({
                 <FormField
                   control={form.control}
                   name="password"
+                  rules={requiredRule('パスワードを入力してください。')}
                   render={({ field }) => (
                     <FormItem>
                       <RequiredLabel>パスワード</RequiredLabel>
@@ -352,6 +369,7 @@ export function UserForm({
                 <FormField
                   control={form.control}
                   name="siteId"
+                  rules={requireSite ? requiredRule('拠点を選択してください。') : undefined}
                   render={({ field }) => (
                     <FormItem>
                       <RequiredLabel required={requireSite}>対象する拠点</RequiredLabel>
@@ -405,6 +423,8 @@ export function UserForm({
 
             {additionalSections}
 
+            <FormErrorSummary />
+
             <FormActions
               actions={[
                 {
@@ -418,7 +438,9 @@ export function UserForm({
                   label: submitLabel,
                   pendingLabel: '処理中...',
                   type: 'submit',
-                  disabled: !isTrulyDirty || submitDisabled,
+                  // A new form stays pressable so an empty submit explains what is missing;
+                  // edit forms still wait for a change.
+                  disabled: (mode !== 'create' && !isTrulyDirty) || submitDisabled,
                 },
               ]}
               pendingActionId={form.formState.isSubmitting ? 'submit' : null}

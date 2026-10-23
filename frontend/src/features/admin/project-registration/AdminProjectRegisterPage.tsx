@@ -70,8 +70,11 @@ export const AdminProjectRegister: React.FC = () => {
       const message =
         applyBackendValidationErrors(form, error) ??
         errorMessage(error, 'プロジェクトを保存できませんでした。');
-      setSubmitError(message);
-      toast({ title: '保存に失敗しました', description: message, variant: 'destructive' });
+      // Field errors are listed by FormErrorSummary; a generic toast on top only confuses.
+      if (Object.keys(form.formState.errors).length === 0) {
+        setSubmitError(message);
+        toast({ title: '保存に失敗しました', description: message, variant: 'destructive' });
+      }
     } finally {
       setIsSaving(false);
     }

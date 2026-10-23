@@ -10,6 +10,7 @@ import {
   FormSectionStack,
   FormStandalonePage,
 } from '@/components/forms/form-layout';
+import { FormErrorSummary } from '@/components/forms/FormErrorSummary';
 import { DynamicFormRenderer } from './DynamicFormRenderer';
 import {
   emissionFields,
@@ -104,6 +105,8 @@ export function ProjectRecordForm({
             {planFileNote}
           </p>
         </FormSection>
+
+        <FormErrorSummary />
 
         {submitError ? (
           <p role='alert' className='text-sm text-destructive-strong'>

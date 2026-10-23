@@ -25,11 +25,16 @@ export interface SignupData {
   activityInformation: string;
 }
 
+export type SignupFieldErrors = Partial<Record<keyof SignupData, string>>;
+
 interface SignupContextType {
   signupData: SignupData;
   updateSignupData: (data: Partial<SignupData>) => void;
   currentStep: number;
   setCurrentStep: (step: number) => void;
+  /** Errors from the final 登録, shown on the step that owns each field. */
+  fieldErrors: SignupFieldErrors;
+  setFieldErrors: (errors: SignupFieldErrors) => void;
   resetSignup: () => void;
 }
 
@@ -63,14 +68,18 @@ const SignupContext = createContext<SignupContextType | undefined>(undefined);
 export const SignupProvider = ({ children }: { children: ReactNode }) => {
   const [signupData, setSignupData] = useState<SignupData>(initialData);
   const [currentStep, setCurrentStep] = useState(1);
+  const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({});
 
   const updateSignupData = (data: Partial<SignupData>) => {
     setSignupData((prev) => ({ ...prev, ...data }));
+    // The errors were about the old values; a step that passes again must not show them.
+    setFieldErrors({});
   };
 
   const resetSignup = () => {
     setSignupData(initialData);
     setCurrentStep(1);
+    setFieldErrors({});
   };
 
   return (
@@ -80,6 +89,8 @@ export const SignupProvider = ({ children }: { children: ReactNode }) => {
         updateSignupData,
         currentStep,
         setCurrentStep,
+        fieldErrors,
+        setFieldErrors,
         resetSignup,
       }}
     >

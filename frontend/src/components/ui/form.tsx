@@ -125,7 +125,14 @@ const FormMessage = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<
     }
 
     return (
-      <p ref={ref} id={formMessageId} className={cn("text-small text-destructive-strong", className)} {...props}>
+      <p
+        ref={ref}
+        id={formMessageId}
+        // Read by FormErrorSummary; only real errors, not plain helper children.
+        data-form-error={error ? "" : undefined}
+        className={cn("text-small text-destructive-strong", className)}
+        {...props}
+      >
         {body}
       </p>
     );

@@ -172,7 +172,7 @@ export function OperatorPermissionSection({
         })}
       </div>
       {error && (
-        <p role="alert" className="text-sm text-destructive-strong">
+        <p role="alert" data-form-error="" className="text-sm text-destructive-strong">
           {error}
         </p>
       )}

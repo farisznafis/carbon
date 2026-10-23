@@ -7,6 +7,7 @@ import {
   FormSection,
   FormSectionStack,
 } from '@/components/forms/form-layout';
+import { FormErrorSummary } from '@/components/forms/FormErrorSummary';
 import { RequiredLabel } from '@/components/forms/shared/RequiredLabel';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
@@ -287,11 +288,14 @@ export const SignupStep1 = ({
     } catch (error) {
       const message = applyBackendValidationErrors(form, error);
 
-      toast({
-        title: '入力内容を確認してください',
-        description: message || '入力内容に誤りがあります。',
-        variant: 'destructive',
-      });
+      // Field errors are listed by FormErrorSummary; only an unmapped error needs a toast.
+      if (message) {
+        toast({
+          title: '入力内容を確認してください',
+          description: message,
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsValidatingCompanyInfo(false);
     }
@@ -586,6 +590,8 @@ export const SignupStep1 = ({
                 )}
               />
             </FormSection>
+
+            <FormErrorSummary />
 
             <FormActions
               disabled={form.formState.isSubmitting}
